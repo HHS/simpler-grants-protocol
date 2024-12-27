@@ -1,15 +1,9 @@
 {
-    "version": "0.2",
-    "ignorePaths": [
-        "dist/",
-        "astro/",
-        "*.svg"
-    ],
-    "dictionaryDefinitions": [],
-    "dictionaries": [],
-    "words": [
-        "Diátaxis"
-    ],
-    "ignoreWords": [],
-    "import": []
+  "version": "0.2",
+  "ignorePaths": ["dist/", "astro/", "*.svg"],
+  "dictionaryDefinitions": [],
+  "dictionaries": [],
+  "words": ["Diátaxis"],
+  "ignoreWords": [],
+  "import": []
 }
