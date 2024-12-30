@@ -16,12 +16,10 @@ We chose GitHub Pages as the hosting platform for our documentation site.
 If SSR or server-side functions (e.g. to process form submissions) become a requirement, we'd likely switch to Netlify or Cloudflare Pages.
 
 - **Positive consequences**
-
   - Zero cost to host.
   - Simple setup with SSL certificates and custom domain support.
   - Tight integration with GitHub actions and repo settings for automated deployment.
   - Doesn't require managing another service.
-
 - **Negative consequences**
   - Does not support server-side rendering (SSR) or dynamic functions, which may limit future enhancements.
   - PR previews are more difficult to set up than on other platforms.
@@ -32,32 +30,32 @@ If SSR or server-side functions (e.g. to process form submissions) become a requ
 - **Simplicity** - Easy setup with built-in SSL and custom domain support.
 - **GitHub integration** - Streamlined deployments via GitHub actions and support for PR previews.
 
-## Options considered
+### Options considered
 
-- **GitHub Pages** - [GitHub Pages](https://pages.github.com/) offers free hosting, SSL certificates, and GitHub integration for automated deployments.
-- **Cloudflare Pages** - [Cloudflare Pages](https://pages.cloudflare.com/) provides global CDN performance and edge functions but may require additional setup.
-- **AWS Amplify** - [AWS Amplify](https://aws.amazon.com/amplify/) supports dynamic features and scalability but introduces added complexity and cost.
-- **Netlify** - [Netlify](https://www.netlify.com/) simplifies deployments with rich integrations and functions but has a higher cost for advanced features.
-- **Vercel** - [Vercel](https://vercel.com/) is optimized for Next.js and modern frameworks but is more costly for advanced use cases.
+- **GitHub Pages** - [GitHub Pages](https://pages.github.com/) offers free hosting with each GitHub repo.
+- **Cloudflare Pages** - [Cloudflare Pages](https://pages.cloudflare.com/) provides free static site hosting with a global CDN and serverless "edge" functions.
+- **AWS Amplify** - [AWS Amplify](https://aws.amazon.com/amplify/) paired with S3 and CloudFront CDN provides static site hosting and options to add serverless functions.
+- **Netlify** - [Netlify](https://www.netlify.com/) offers static site hosting, serverless functions, and form processing.
+- **Vercel** - [Vercel](https://vercel.com/) provides both static site and hybrid rendering as well as serverless functions.
 
 ## Evaluation
 
 ### Side-by-side
 
-| Criteria           | GitHub Pages | Cloudflare Pages | AWS Amplify  | Netlify      | Vercel       |
-| ------------------ | ------------ | ---------------- | ------------ | ------------ | ------------ |
-| Cost               | ✅ Free      | ✅ Free          | 🟡 Low       | 🟡 Low       | 🟡 Low       |
-| Simplicity         | ✅ Easy      | 🟡 Moderate      | ❌ Complex   | ✅ Easy      | ✅ Easy      |
-| GitHub integration | ✅ Good      | ✅ Good          | 🟡 Partial   | ✅ Good      | ✅ Good      |
-| Dynamic features   | ❌ None      | ✅ Supported     | ✅ Supported | ✅ Supported | ✅ Supported |
-| CDN/Performance    | 🟡 Basic     | ✅ Global CDN    | ✅ CDN       | ✅ CDN       | ✅ CDN       |
+| Criteria           | GH Pages | Cloudflare Pages | AWS | Netlify | Vercel |
+| ------------------ | :------: | :--------------: | :-: | :-----: | :----: |
+| Cost               |    ✅    |        ✅        | 🟡  |   🟡    |   🟡   |
+| Simplicity         |    ✅    |        🟡        | ❌  |   ✅    |   ✅   |
+| GitHub integration |    ✅    |        ✅        | 🟡  |   ✅    |   ✅   |
+| Dynamic features   |    ❌    |        ✅        | ✅  |   ✅    |   ✅   |
+| CDN/Performance    |    🟡    |        ✅        | ✅  |   ✅    |   ✅   |
 
 ### Option 1: GitHub Pages
 
 :::note[Bottom line]
 GitHub Pages is best if:
 
-- we prioritize cost, simplicity, managing fewer services
+- we prioritize cost, simplicity, and managing fewer services
 - but can compromise on dynamic features and server-side rendering
   :::
 

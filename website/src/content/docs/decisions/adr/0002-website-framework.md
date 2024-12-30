@@ -30,7 +30,7 @@ We chose [Astro's Starlight template](https://starlight.astro.build/) for our do
 - **Popularity** - Supported by a growing community and used in open-source projects.
 - **Familiar tooling** - Leverages TypeScript, aligning with existing project frameworks.
 
-## Options considered
+### Options considered
 
 - **Astro's Starlight (TypeScript)** - [Starlight](https://docs.astro.build/) is a simple and extensible static site generator that supports dynamic routing and is built with TypeScript.
 - **Next.js (TypeScript)** - [Next.js](https://nextjs.org/docs) is a highly extensible React-based framework popular for dynamic applications and content-driven websites.
