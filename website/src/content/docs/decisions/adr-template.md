@@ -47,9 +47,9 @@ draft: true
 - 🟡 Partially met or unsure
 
 | Criteria    | Option 1 | Option 2 | Option 3 |
-| ----------- | -------- | -------- | -------- |
-| Criterion 1 | ✅       | ❌       | 🟡       |
-| Criterion 2 | ✅       | ❌       | 🟡       |
+| ----------- | :------: | :------: | :------: |
+| Criterion 1 |    ✅    |    ❌    |    🟡    |
+| Criterion 2 |    ✅    |    ❌    |    🟡    |
 
 ### Option 1
 
