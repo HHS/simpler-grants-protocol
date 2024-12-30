@@ -21,6 +21,17 @@ export default defineConfig({
           label: "Reference",
           autogenerate: { directory: "reference" },
         },
+        {
+          label: "Decisions",
+          items: [
+            "decisions/overview",
+            {
+              label: "ADRs",
+              collapsed: true,
+              autogenerate: { directory: "decisions/adr" },
+            },
+          ],
+        },
       ],
     }),
   ],
