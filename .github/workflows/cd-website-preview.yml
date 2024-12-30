@@ -1,4 +1,4 @@
-name: Deploy PR preview to GitHub Pages
+name: CD - Website (PR preview)
 
 on:
   pull_request:
@@ -14,6 +14,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # Skip job if the PR is from a fork
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,10 +33,12 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    # Uses the same github-pages environment, but GitHub Pages automatically
-    # associates the deployment with the PR number instead of the default production URL.
+
+    # Skip job if the PR is from a fork
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
     environment:
-      name: github-pages
+      name: github-pages-preview # Use the new environment for PR previews
       url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
     steps:
       - name: Deploy to GitHub Pages

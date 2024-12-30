@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: CD - Website (main)
 
 on:
   # Trigger the workflow every time we push to the `main` branch
