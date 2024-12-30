@@ -6,7 +6,7 @@ import eslintPluginAstro from "eslint-plugin-astro";
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   { files: ["**/*.{js,mjs,cjs,ts}"] },
-  { languageOptions: { globals: globals.browser } },
+  { languageOptions: { globals: globals.node } },
   {
     ignores: [
       // Ignore items that are also gitignored

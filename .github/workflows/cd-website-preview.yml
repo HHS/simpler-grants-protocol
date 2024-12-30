@@ -1,0 +1,48 @@
+name: Deploy PR preview to GitHub Pages
+
+on:
+  pull_request:
+    paths:
+      - "website/**" # Trigger only if changes are in the 'website' directory
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write # Required for PR comments
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set BASE_URL dynamically for each PR preview
+      - name: Install, build, and upload site
+        uses: withastro/action@v3
+        env:
+          BASE_URL: /pr-${{ github.event.pull_request.number }}/ # Dynamic base path for PR preview
+        with:
+          path: ./website # Path to the root of our Astro project
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Uses the same github-pages environment, but GitHub Pages automatically
+    # associates the deployment with the PR number instead of the default production URL.
+    environment:
+      name: github-pages
+      url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      # Add a comment to the PR with the preview link
+      - name: Comment Preview Link
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            🌐 **Preview URL**: [View Preview](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/)
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
