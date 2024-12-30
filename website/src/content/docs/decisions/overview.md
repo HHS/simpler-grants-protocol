@@ -44,7 +44,7 @@ When an architectural decision needs to be recorded, please use the following st
 
 1. Create a GitHub issue with the Internal - Decision template and describe the decision that needs to be made
 2. Create a new branch prefixed with the issue number
-3. Copy the ADR template and add it to `docs/decisions/adr/` with the date of the original decision in the title
+3. Copy the ADR template and add it to `src/content/docs/decisions/adr/` with the date of the original decision in the title
 4. Fill out the ADR template to record your decision and link your to your ADR in the decisions section below:
 5. Open up a PR and tag the reviewers who need to sign off on your decision
 
