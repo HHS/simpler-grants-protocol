@@ -5,7 +5,8 @@ import starlight from "@astrojs/starlight";
 // https://astro.build/config
 export default defineConfig({
   site: "https://hhs.github.io",
-  base: "simpler-grants-protocol",
+  // Base needs trailing slash to make relative links work when hosting locally
+  base: "simpler-grants-protocol/",
   integrations: [
     starlight({
       title: "Simpler Grant Protocol",
