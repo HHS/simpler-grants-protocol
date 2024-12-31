@@ -22,13 +22,14 @@ If SSR or server-side functions (e.g. to process form submissions) become a requ
   - Doesn't require managing another service.
 - **Negative consequences**
   - Does not support server-side rendering (SSR) or dynamic functions, which may limit future enhancements.
-  - PR previews are more difficult to set up than on other platforms.
+  - PR previews aren't supported by default.
 
 ### Decision drivers
 
 - **Cost** - Free or very low cost to host.
 - **Simplicity** - Easy setup with built-in SSL and custom domain support.
-- **GitHub integration** - Streamlined deployments via GitHub actions and support for PR previews.
+- **GitHub integration** - Streamlined deployments via GitHub actions.
+- **PR previews** - Ability to preview deployments from GitHub pull requests.
 
 ### Options considered
 
@@ -44,11 +45,11 @@ If SSR or server-side functions (e.g. to process form submissions) become a requ
 
 | Criteria           | GH Pages | Cloudflare Pages | AWS | Netlify | Vercel |
 | ------------------ | :------: | :--------------: | :-: | :-----: | :----: |
-| Cost               |    ✅    |        ✅        | 🟡  |   🟡    |   🟡   |
+| Cost               |    ✅    |        🟡        | 🟡  |   ❌    |   ❌   |
 | Simplicity         |    ✅    |        🟡        | ❌  |   ✅    |   ✅   |
 | GitHub integration |    ✅    |        ✅        | 🟡  |   ✅    |   ✅   |
+| PR previews        |    ❌    |        ✅        | 🟡  |   ✅    |   ✅   |
 | Dynamic features   |    ❌    |        ✅        | ✅  |   ✅    |   ✅   |
-| CDN/Performance    |    🟡    |        ✅        | ✅  |   ✅    |   ✅   |
 
 ### Option 1: GitHub Pages
 
@@ -60,11 +61,12 @@ GitHub Pages is best if:
   :::
 
 - **Pros**
-  - Free hosting with SSL and custom domains.
-  - Simple setup and integration with GitHub workflows.
-  - Ideal for static sites and documentation.
+  - Free hosting with SSL and custom domains
+  - Simple setup and integration with GitHub workflows
+  - Ideal for static sites and documentation
 - **Cons**
-  - No server-side rendering (SSR) or dynamic functions.
+  - No server-side rendering (SSR) or dynamic functions
+  - PR previews not easily supported
 
 ### Option 2: Cloudflare Pages
 
@@ -76,26 +78,30 @@ Cloudflare Pages is best if:
   :::
 
 - **Pros**
-  - Free tier with global CDN
+  - Free tier (up to 500 builds) with global CDN
+  - Easy setup with GitHub integration and deploys
   - Supports serverless edge functions
+  - No marginal cost per user (unlike Netlify and Vercel)
 - **Cons**
   - More complex setup for advanced features
+  - Costs money if we exceed free plan (though less than Netlify or Vercel)
 
-### Option 3: AWS Amplify
+### Option 3: AWS Amplify, S3, and CloudFront
 
 :::note[Bottom line]
-AWS Amplify is best if:
+AWS hosting is best if:
 
-- we prioritize scalability and dynamic features
-- but can compromise on simplicity and cost
+- we prioritize scalability and control
+- but can compromise on simplicity and managing multiple services
   :::
 
 - **Pros**
   - Supports SSR, API integrations, and scalability
   - Integration with AWS ecosystem
+  - Cheaper cost at scale than Netlify or Vercel
 - **Cons**
   - More complex setup
-  - Has upfront costs (unlike GitHub pages)
+  - More complex pricing structure
 
 ### Option 4: Netlify
 
@@ -109,9 +115,12 @@ Netlify is best if:
 - **Pros**
   - Easy setup with GitHub integration
   - Supports serverless functions and SSR
-  - Provides simple web form integration and storage
+  - Provides simple web form processing and storage
+  - Provides PR previews by default
+  - Integrated review process
 - **Cons**
   - More expensive for advanced features
+  - Monthly cost per GitHub user to trigger deploys by commit
   - Less commonly used for Government projects
 
 ### Option 5: Vercel
@@ -124,13 +133,16 @@ Vercel is best if:
   :::
 
 - **Pros**
+  - Easy setup with GitHub integration
   - Optimized for modern frameworks like Next.js
   - Supports server-side rendering and API routes
+  - Lots of advanced logging and monitoring features
 - **Cons**
   - More expensive for advanced features
+  - Monthly cost per GitHub user to trigger deploys by commit
   - Less commonly used for Government projects
   - Slight bias towards Next.js (compared to other JS frameworks like Astro)
 
 ## Conclusion
 
-GitHub Pages is the best fit for our documentation hosting needs, offering free hosting, simple setup, and seamless GitHub integration. While it lacks dynamic features, it aligns well with our current requirements for a static documentation site.
+GitHub Pages is the best fit for our documentation hosting needs, offering free hosting, simple setup, and seamless GitHub integration. While it lacks dynamic features and PR previews it aligns well with our current requirements for a static documentation site.
