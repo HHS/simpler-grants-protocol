@@ -1,0 +1,13 @@
+{
+  "name": "custom-api",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "typespec": "tsp compile src/main.tsp"
+  },
+  "peerDependencies": {
+    "@typespec/compiler": "^0.63.0",
+    "@opportunity-stream/core": "file:../../specs/opportunity-stream-core-0.1.0-alpha.1.tgz"
+  },
+  "private": true
+}
