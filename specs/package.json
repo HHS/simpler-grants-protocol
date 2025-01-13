@@ -1,0 +1,53 @@
+{
+  "name": "@opportunity-stream/core",
+  "version": "0.1.0-alpha.1",
+  "description": "TypeSpec library for defining grant opportunity data models and APIs",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "typespec": "./lib/main.tsp",
+      "default": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/src/**/*.js",
+    "dist/src/**/*.d.ts",
+    "lib/**/*.tsp",
+    "!src/**/*.test.*"
+  ],
+  "scripts": {
+    "clean": "rimraf dist tsp-output",
+    "build": "tsc -p .",
+    "watch": "tsc -p . --watch",
+    "typespec": "tsp compile lib/main.tsp",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "typespec",
+    "api",
+    "grants",
+    "opportunities"
+  ],
+  "author": "HHS",
+  "license": "CC0-1.0",
+  "peerDependencies": {
+    "@typespec/compiler": "^0.63.0",
+    "@typespec/http": "^0.63.0",
+    "@typespec/openapi3": "^0.63.0",
+    "@typespec/rest": "^0.63.0",
+    "@typespec/json-schema": "^0.63.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@typespec/compiler": "^0.63.0",
+    "@typespec/http": "^0.63.0",
+    "@typespec/openapi3": "^0.63.0",
+    "@typespec/rest": "^0.63.0",
+    "rimraf": "^5.0.5",
+    "source-map-support": "^0.5.21",
+    "typescript": "^5.3.3"
+  }
+}

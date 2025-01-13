@@ -1,0 +1,7 @@
+emit:
+  - "@typespec/openapi3"
+  - "@typespec/json-schema"
+options:
+  "@typespec/openapi3":
+    "output-file": "openapi.yaml"
+    "omit-unreachable-types": false
