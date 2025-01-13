@@ -24,5 +24,5 @@ model Opportunity {
   fundingDetails: FundingDetails;
 
   /** Additional custom fields specific to this opportunity */
-  customFields: CustomField[];
+  customFields: Record<CustomField>;
 }
