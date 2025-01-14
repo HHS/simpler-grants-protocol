@@ -1,0 +1,39 @@
+name: CI - Custom API example
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - examples/custom-api/**
+      - .github/workflows/ci-examples-custom-api.yml
+
+defaults:
+  run:
+    working-directory: ./examples/custom-api
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Prepare upstream dependencies
+        run: npm run prepare:deps
+
+      - name: Install dependencies
+        # Installs dependencies directly from package.lock
+        # and skips dependency resolution etc.
+        run: npm ci
+
+      - name: Lint and format
+        run: |
+          npm run check:lint
+          npm run check:format
+
+      - name: Compile TypeSpec
+        run: npm run typespec
+
+      - name: Audit dependencies
+        run: npm audit
