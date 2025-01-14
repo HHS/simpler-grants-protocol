@@ -1,4 +1,4 @@
-name: CI - Website
+name: CI - Specifications
 
 on:
   workflow_call:
