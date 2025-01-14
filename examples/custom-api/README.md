@@ -36,6 +36,14 @@ All commands are run from the root of the project, from a terminal:
 | `npm install`  | Installs dependencies                |
 | `npm typespec` | Compile and emit the custom TypeSpec |
 
+### Running locally
+
+Run the following steps from the root of this directory to install the custom API package and emit JSON Schema and OpenAPI specs for the custom API using TypeSpec:
+
+1. Prepare the upstream dependencies (i.e. local version of the specification library): `npm run prepare:deps`
+2. Install the package: `npm install`
+3. Compile and emit the specs for this custom API: `npm run typespec`
+
 ### Defining custom fields and routes
 
 You can define custom field by using `extends CustomField {}` where `CustomField` is a model from the base specification library, see an example below:
