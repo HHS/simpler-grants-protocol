@@ -1,6 +1,8 @@
 import "@typespec/json-schema";
 
 // Import individual models to provide a consistent interface
+// and make them available throughout the namespace
+import "./base.tsp";
 import "./custom-field.tsp";
 import "./currency.tsp";
 import "./funding.tsp";
