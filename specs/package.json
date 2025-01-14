@@ -23,7 +23,11 @@
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
     "typespec": "tsp compile lib/main.tsp",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "lint": "eslint . --fix",
+    "format": "prettier --write . && tsp format lib",
+    "check:lint": "eslint",
+    "check:format": "prettier --check . && tsp format lib --check"
   },
   "keywords": [
     "typespec",
@@ -36,14 +40,17 @@
   "peerDependencies": {
     "@typespec/compiler": "^0.63.0",
     "@typespec/http": "^0.63.0",
+    "@typespec/json-schema": "^0.63.0",
     "@typespec/openapi3": "^0.63.0",
-    "@typespec/rest": "^0.63.0",
-    "@typespec/json-schema": "^0.63.0"
+    "@typespec/rest": "^0.63.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
     "rimraf": "^5.0.5",
     "source-map-support": "^0.5.21",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.20.0"
   }
 }

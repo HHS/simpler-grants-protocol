@@ -8,7 +8,7 @@ The `specs/` sub-directory is organized like this:
 
 ```
 .
-├── lib/                # Defines reusable models and routes for the library 
+├── lib/                # Defines reusable models and routes for the library
 │   ├── models/         # Defines base models like Opportunity, CustomField, etc.
 │   ├── routes/         # Defines base routes like GET /opportunities
 │   └── main.tsp        # Exposes models and routes from the root of the library
@@ -49,12 +49,12 @@ The medium-term goal is to publish this library to npm so that it can be install
 2. Package the library as a tarball: `npm pack`
 3. Change directory into the node project where you want to install this library: `cd $path_to_other_project`
 4. Add the following to that project's `package.json`:
-    ```json
-    "peerDependencies": {
-        "@typespec/compiler": "^0.63.0",
-        "@opportunity-stream/core": "file:<relative-path-to-library>/opportunity-stream-core-0.1.0-alpha.1.tgz"
-    },
-    ```
+   ```json
+   "peerDependencies": {
+       "@typespec/compiler": "^0.63.0",
+       "@opportunity-stream/core": "file:<relative-path-to-library>/opportunity-stream-core-0.1.0-alpha.1.tgz"
+   },
+   ```
 5. Then run `npm install` to install this package
 
 ### Using the library

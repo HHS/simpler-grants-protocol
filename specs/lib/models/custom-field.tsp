@@ -13,8 +13,14 @@ enum CustomFieldType {
   array,
 }
 
-@example(CustomFieldExamples.programArea, #{ title: "String field for program area" })
-@example(CustomFieldExamples.eligibilityTypes, #{ title: "Array field for eligibility types" })
+@example(
+  CustomFieldExamples.programArea,
+  #{ title: "String field for program area" }
+)
+@example(
+  CustomFieldExamples.eligibilityTypes,
+  #{ title: "Array field for eligibility types" }
+)
 model CustomField {
   /** Name of the custom field */
   name: string;

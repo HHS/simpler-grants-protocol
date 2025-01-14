@@ -5,8 +5,14 @@ namespace OpportunityStream.Models;
 // ########################################
 
 @example(CurrencyExamples.usdWithCents, #{ title: "US dollars and cents" })
-@example(CurrencyExamples.euroWithoutCents, #{ title: "Euros displayed without cents" })
-@example(CurrencyExamples.usdNegative, #{ title: "Accounting loss in US dollars and cents" })
+@example(
+  CurrencyExamples.euroWithoutCents,
+  #{ title: "Euros displayed without cents" }
+)
+@example(
+  CurrencyExamples.usdNegative,
+  #{ title: "Accounting loss in US dollars and cents" }
+)
 model Currency {
   /** The amount of currency */
   amount: decimal;
