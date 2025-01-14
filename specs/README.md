@@ -14,8 +14,10 @@ The `specs/` sub-directory is organized like this:
 │   └── main.tsp        # Exposes models and routes from the root of the library
 |
 ├── src/
-│   ├── index.ts/       # Defines the entry point for the library
-│   └── lib.ts/         # Creates a new TypeSpec library definition
+│   ├── index.ts        # Defines the entry point for the library
+│   └── lib.ts          # Creates a new TypeSpec library definition
+|
+├── dist/               # .gitignored directory that stores the output of `npm build`
 |
 ├── package.json        # Manages dependencies, commands, and library metadata
 ├── tsconfig.json       # Manages TypeScript configuration
