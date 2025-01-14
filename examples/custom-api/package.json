@@ -4,11 +4,20 @@
   "type": "module",
   "scripts": {
     "prepare:deps": "cd ../../specs && npm run build && npm pack && cd ../examples/custom-api",
-    "typespec": "tsp compile src/main.tsp"
+    "typespec": "tsp compile src/main.tsp",
+    "lint": "eslint . --fix",
+    "format": "prettier --write . && tsp format lib",
+    "check:lint": "eslint",
+    "check:format": "prettier --check . && tsp format lib --check"
   },
   "peerDependencies": {
-    "@typespec/compiler": "^0.63.0",
-    "@opportunity-stream/core": "file:../../specs/opportunity-stream-core-0.1.0-alpha.1.tgz"
+    "@opportunity-stream/core": "file:../../specs/opportunity-stream-core-0.1.0-alpha.1.tgz",
+    "@typespec/compiler": "^0.63.0"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "typescript-eslint": "^8.20.0"
+  }
 }

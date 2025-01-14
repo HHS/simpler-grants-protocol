@@ -51,7 +51,7 @@ You can define custom field by using `extends CustomField {}` where `CustomField
 ```typespec
 import "@opportunity-stream/core"; // Import the base specification library
 
-// Allows us to use models defined in the specification library 
+// Allows us to use models defined in the specification library
 // without prefixing each model with `OpportunityStream.Models.`
 using OpportunityStream.Models;
 
