@@ -11,7 +11,13 @@ using TypeSpec.Rest;
 // Define the `/opportunities` router
 @route("/opportunities")
 interface Opportunities {
-  @get list(): Models.Opportunity[];
+  @summary("List opportunities")
+  @doc("Get a list of opportunities")
+  @get
+  list(): Models.Opportunity[];
 
-  @get read(@path title: string): Models.Opportunity;
+  @summary("View opportunity")
+  @doc("View additional details about an opportunity")
+  @get
+  read(@path title: string): Models.Opportunity;
 }
