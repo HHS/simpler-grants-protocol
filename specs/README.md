@@ -34,12 +34,16 @@ Node version 20 or later. Check with `node --version`
 
 All commands are run from the root of the project, from a terminal:
 
-| Command         | Action                                     |
-| :-------------- | :----------------------------------------- |
-| `npm install`   | Installs dependencies                      |
-| `npm run build` | Build package locally                      |
-| `npm pack`      | Create a tarball from the package          |
-| `npm typespec`  | Compile and emit the library with TypeSpec |
+| Command                | Action                                     |
+| :--------------------- | :----------------------------------------- |
+| `npm install`          | Installs dependencies                      |
+| `npm run build`        | Build package locally                      |
+| `npm pack`             | Create a tarball from the package          |
+| `npm typespec`         | Compile and emit the library with TypeSpec |
+| `npm run format`       | Run automatic formatting and fix issues    |
+| `npm run lint`         | Run automatic linting and fix issues       |
+| `npm run check:format` | Check formatting, fail if issues are found |
+| `npm run check:lint`   | Check linting, fail if issues are found    |
 
 ### Installing the library locally
 

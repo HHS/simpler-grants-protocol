@@ -31,10 +31,15 @@ Node version 20 or later. Check with `node --version`
 
 All commands are run from the root of the project, from a terminal:
 
-| Command        | Action                               |
-| :------------- | :----------------------------------- |
-| `npm install`  | Installs dependencies                |
-| `npm typespec` | Compile and emit the custom TypeSpec |
+| Command                | Action                                           |
+| :--------------------- | :----------------------------------------------- |
+| `npm install`          | Installs dependencies                            |
+| `npm typespec`         | Compile and emit the custom TypeSpec             |
+| `npm run docs`         | Generate and view the OpenAPI docs for this spec |
+| `npm run format`       | Run automatic formatting and fix issues          |
+| `npm run lint`         | Run automatic linting and fix issues             |
+| `npm run check:format` | Check formatting, fail if issues are found       |
+| `npm run check:lint`   | Check linting, fail if issues are found          |
 
 ### Running locally
 
@@ -43,6 +48,7 @@ Run the following steps from the root of this directory to install the custom AP
 1. Prepare the upstream dependencies (i.e. local version of the specification library): `npm run prepare:deps`
 2. Install the package: `npm install`
 3. Compile and emit the specs for this custom API: `npm run typespec`
+4. View the auto-generated OpenAPI spec docs: `npm run docs`
 
 ### Defining custom fields and routes
 
