@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "prepare:deps": "cd ../../specs && npm run build && npm pack && cd ../examples/custom-api",
+    "prepare:deps": "cd ../../specs && npm install && npm run build && npm pack && cd ../examples/custom-api",
     "typespec": "tsp compile src/main.tsp",
     "lint": "eslint . --fix",
     "format": "prettier --write . && tsp format lib",
