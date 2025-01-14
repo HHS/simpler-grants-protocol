@@ -9,7 +9,6 @@ namespace CustomAPI.CustomModels;
 
 model OpportunityNumber extends Models.CustomField {
     name: "Funding Opportunity Number";
-    format: "fundingOpportunityNumber";
     type: Models.CustomFieldType.string;
 
     @example("ABC-2025-001")
