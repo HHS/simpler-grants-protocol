@@ -7,7 +7,9 @@ description: ADR documenting the decision to define compliance as implementing a
 
 ### Problem statement
 
-In addition to defining the protocol, we also need to define what it means for a given implementation to “comply” with that protocol. While “compliance” could be defined as implementing the base specification exactly, a primary goal of this protocol is to enable platforms to extend the base spec to support data elements and operations that are unique to their implementation. As a result, we need to create a more expansive definition of compliance that accepts some differences between the base spec and a given implementation.
+In addition to defining the protocol, we need to define what it means to “comply” with that protocol. This definition should guarantee some consistency across implementations, while also enabling platforms to extend the spec to meet their unique needs.
+
+_What definition of compliance balances consistency with flexibility across implementations?_
 
 ### Decision outcome
 

@@ -7,7 +7,9 @@ description: This ADR documents the decision to focus on the models and routes n
 
 ### Problem statement
 
-Which data types and operations should we include in the v0.1.0 release of the protocol? The goal is to include enough functionality that we demonstrate immediate value, without prematurely defining requirements that may discourage adoption.
+The v0.1.0 release of the protocol should include enough functionality that we demonstrate immediate value, without prematurely defining requirements that may discourage adoption.
+
+_Which models and routes should the v0.1.0 release of the protocol include?_
 
 ### Decision outcome
 
