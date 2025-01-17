@@ -36,7 +36,7 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
 
 ### Data types
 
-1. **Foundational primitives (e.g., UUID, email, phone number):** Includes essential reusable fields such as currency, GeoJSON, and custom fields.
+1. **Base types:** Includes essential reusable fields such as currency, GeoJSON, and custom fields.
 2. **Grant opportunity models:** Models describing the metadata for grant opportunities.
 3. **Individuals and organizations:** Basic models for describing grantors and grant seekers.
 4. **Application forms and submissions:** Models describing application processes and submission structures.
@@ -55,13 +55,13 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
 
 ### Side-by-side
 
-| Criteria                      | Foundational types | + search | + apply | + post-award reporting |
-| ----------------------------- | ------------------ | -------- | ------- | ---------------------- |
-| Ease of adoption              | ✅                 | ✅       | 🟡      | ❌                     |
-| Completeness of functionality | ❌                 | 🟡       | ✅      | ✅                     |
-| Implementation simplicity     | ✅                 | ✅       | 🟡      | ❌                     |
+| Criteria                      | Base types | And Search | And Apply | And post-award |
+| ----------------------------- | ---------- | ---------- | --------- | -------------- |
+| Ease of adoption              | ✅         | ✅         | 🟡        | ❌             |
+| Completeness of functionality | ❌         | 🟡         | ✅        | ✅             |
+| Implementation simplicity     | ✅         | ✅         | 🟡        | ❌             |
 
-### Option 1: Foundational types only
+### Option 1: Base types only
 
 - **Pros**:
   - Very simple implementation.
@@ -69,7 +69,9 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
 - **Cons**:
   - Severely limited functionality; would not meet user expectations.
 
-### Option 2: Adding models and routes for search
+### Option 2: And for search
+
+Also include models and routes needed to support searching for opportunities.
 
 - **Pros**:
   - Enables users to discover funding opportunities effectively.
@@ -77,7 +79,9 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
 - **Cons**:
   - Leaves out application and reporting processes for future versions.
 
-### Option 3: Adding models and routes for apply
+### Option 3: And for apply
+
+Also include models and routes needed to support filling out and submitting applications.
 
 - **Pros**:
   - Allows users to engage directly with funding opportunities.
@@ -88,7 +92,9 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
   - Application processes can vary significantly by platform and grant.
   - Might be hard to land on a common standard in time for v0.1.0
 
-### Option 4: Adding models and routes for post-award reporting
+### Option 4: And for post-award reporting
+
+Also include models and routes needed to support post-award grant reporting.
 
 - **Pros**:
   - Provides end-to-end functionality for the entire grant lifecycle.
