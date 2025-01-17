@@ -64,7 +64,7 @@ Here's an example of that format:
 
 ### Option 1: Floating point
 
-Monetary values are represented as strings with fixed decimal points (e.g., `1234.56` for $1234.56).
+Monetary values are represented as a floating point number (e.g., `1234.56` for $1234.56).
 
 - **Pros**
   - Human-readable and easier for API consumers to debug.
@@ -76,13 +76,13 @@ Monetary values are represented as strings with fixed decimal points (e.g., `123
 
 ### Option 2: Decimal string
 
-Monetary values are represented as strings with fixed decimal points (e.g., `"1234.56"` for $1234.56).
+Monetary values are represented as a string-formatted decimal value (e.g., `"1234.56"` for $1234.56).
 
 - **Pros**
   - Human-readable and easier for API consumers to debug.
   - No conversion required for display or consumer-facing applications.
   - Suitable for currencies with non-standard subunits (e.g., cryptocurrencies).
-  - Commonly used format for monetary values, e.g. PayPal, ApplePay, etc.
+  - Commonly used format for monetary values, e.g., PayPal, Apple Pay, Google Pay, etc.
 - **Cons**
   - Vulnerable to floating-point precision issues if parsed into floating-point numbers.
   - Parsing and validation of string inputs are more complex than integers.
@@ -97,7 +97,7 @@ Monetary values are represented as integers in the smallest unit of the currency
   - Ideal for aggregation, sorting, and other arithmetic operations.
   - Compact representation (smaller payloads compared to string decimals).
   - Consistent format across implementations.
-  - Commonly used format for monetary values, e.g. Stripe, Square.
+  - Commonly used format for monetary values, e.g., Stripe, Square, etc.
 - **Cons**
   - Less human-readable than string representations.
   - Requires explicit documentation of smallest unit conventions (e.g., cents for USD, yen has no subunit).

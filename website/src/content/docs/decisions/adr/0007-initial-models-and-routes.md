@@ -22,7 +22,7 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
   - Lays the foundation for expansion in subsequent versions.
 - **Negative consequences**
   - Will require future updates to accommodate additional models and operations.
-  - Could limit initial functionality for specific advanced use cases, such as post-award reporting.
+  - Doesn't (yet) support key features like applications and reporting.
   - May be harder to make changes once platforms have started adopting the protocol.
 
 ### Decision drivers
@@ -39,12 +39,12 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
 1. **Base types:** Includes essential reusable fields such as currency, GeoJSON, and custom fields.
 2. **Grant opportunity models:** Models describing the metadata for grant opportunities.
 3. **Individuals and organizations:** Basic models for describing grantors and grant seekers.
-4. **Application forms and submissions:** Models describing application processes and submission structures.
+4. **Application forms and submissions:** Models describing application forms and submissions.
 5. **Grant awards and reporting:** Models for tracking awarded grants and reporting requirements.
 
 #### Operations
 
-1. Searching and viewing opportunities\*\*
+1. Searching and viewing opportunities
 2. Saving or subscribing to opportunities
 3. Managing organization membership
 4. Filling out and submitting applications
@@ -90,7 +90,7 @@ Also include models and routes needed to support filling out and submitting appl
 - **Cons**:
   - Increases implementation complexity.
   - Application processes can vary significantly by platform and grant.
-  - Might be hard to land on a common standard in time for v0.1.0
+  - Might be hard to align on a common standard in time for v0.1.0.
 
 ### Option 4: Also support post-award reporting
 
