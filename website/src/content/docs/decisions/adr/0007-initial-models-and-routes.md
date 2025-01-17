@@ -32,9 +32,9 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
 - Demonstrate immediate value while enabling iterative development.
 - Avoid discouraging adoption by imposing unnecessary burdens.
 
-## Options considered
+### Options considered
 
-### Data types
+#### Data types
 
 1. **Base types:** Includes essential reusable fields such as currency, GeoJSON, and custom fields.
 2. **Grant opportunity models:** Models describing the metadata for grant opportunities.
@@ -42,7 +42,7 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
 4. **Application forms and submissions:** Models describing application processes and submission structures.
 5. **Grant awards and reporting:** Models for tracking awarded grants and reporting requirements.
 
-### Operations
+#### Operations
 
 1. Searching and viewing opportunities\*\*
 2. Saving or subscribing to opportunities
@@ -69,7 +69,7 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
 - **Cons**:
   - Severely limited functionality; would not meet user expectations.
 
-### Option 2: And for search
+### Option 2: Also support search
 
 Also include models and routes needed to support searching for opportunities.
 
@@ -79,7 +79,7 @@ Also include models and routes needed to support searching for opportunities.
 - **Cons**:
   - Leaves out application and reporting processes for future versions.
 
-### Option 3: And for apply
+### Option 3: Also support apply
 
 Also include models and routes needed to support filling out and submitting applications.
 
@@ -92,7 +92,7 @@ Also include models and routes needed to support filling out and submitting appl
   - Application processes can vary significantly by platform and grant.
   - Might be hard to land on a common standard in time for v0.1.0
 
-### Option 4: And for post-award reporting
+### Option 4: Also support post-award reporting
 
 Also include models and routes needed to support post-award grant reporting.
 
