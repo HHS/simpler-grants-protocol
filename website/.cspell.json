@@ -3,7 +3,7 @@
   "ignorePaths": ["dist/", "astro/", "*.svg"],
   "dictionaryDefinitions": [],
   "dictionaries": [],
-  "words": ["Diátaxis", "transpiles"],
+  "words": ["Diátaxis", "transpiles", "FHIR"],
   "ignoreWords": [],
   "import": []
 }
