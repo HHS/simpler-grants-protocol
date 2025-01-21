@@ -9,11 +9,18 @@ export default defineConfig({
   base: "simpler-grants-protocol/",
   integrations: [
     starlight({
-      title: "Simpler Grant Protocol",
+      title: "CommonGrants",
       social: {
         github: "https://github.com/HHS/simpler-grants-protocol",
       },
       sidebar: [
+        {
+          label: "Welcome",
+          items: [
+            { label: "Getting started", link: "getting-started" },
+            { label: "About CommonGrants", link: "about" },
+          ],
+        },
         {
           label: "Guides",
           autogenerate: { directory: "guides" },
