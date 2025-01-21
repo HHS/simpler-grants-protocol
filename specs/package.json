@@ -1,5 +1,5 @@
 {
-  "name": "@opportunity-stream/core",
+  "name": "@common-grants/core",
   "version": "0.1.0-alpha.2",
   "description": "TypeSpec library for defining grant opportunity data models and APIs",
   "type": "module",

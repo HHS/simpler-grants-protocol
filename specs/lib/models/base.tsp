@@ -1,4 +1,4 @@
-namespace OpportunityStream.Models;
+namespace CommonGrants.Models;
 
 /** A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss */
 @example(isoTime.fromISO("17:00:00"))

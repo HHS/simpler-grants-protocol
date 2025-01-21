@@ -8,4 +8,4 @@ import "./models/index.tsp";
 import "./routes/index.tsp";
 
 // Define the top-level namespace for the library
-namespace OpportunityStream;
+namespace CommonGrants;

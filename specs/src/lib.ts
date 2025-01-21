@@ -1,7 +1,7 @@
 import { createTypeSpecLibrary } from "@typespec/compiler";
 
 export const $lib = createTypeSpecLibrary({
-  name: "@opportunity-stream/core",
+  name: "@common-grants/core",
   diagnostics: {
     // We'll add diagnostics later if needed
   },

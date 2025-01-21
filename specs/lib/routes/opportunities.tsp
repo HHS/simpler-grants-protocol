@@ -1,7 +1,7 @@
 import "../models/index.tsp";
 
-// Define the top-level namespace for OpportunityStream routes
-namespace OpportunityStream.Routes;
+// Define the top-level namespace for CommonGrants routes
+namespace CommonGrants.Routes;
 
 // Expose the contents of the Http and Rest namespaces
 // these include the decorators @route, @get, etc.

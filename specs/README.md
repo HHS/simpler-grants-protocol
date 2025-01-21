@@ -52,11 +52,11 @@ The medium-term goal is to publish this library to npm so that it can be install
 1. Build the library: `npm build`
 2. Package the library as a tarball: `npm pack`
 3. Change directory into the node project where you want to install this library: `cd $path_to_other_project`
-4. Add the following to that project's `package.json`:
+4. Add the following to that project's `package.json` (replacing the values between the angled brackets `<>`):
    ```json
    "peerDependencies": {
        "@typespec/compiler": "^0.63.0",
-       "@opportunity-stream/core": "file:<relative-path-to-library>/opportunity-stream-core-0.1.0-alpha.1.tgz"
+       "@common-grants/core": "file:<relative-path-to-library>/common-grants-core-<version>.tgz"
    },
    ```
 5. Then run `npm install` to install this package

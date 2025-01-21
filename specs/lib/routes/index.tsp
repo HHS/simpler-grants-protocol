@@ -5,4 +5,4 @@ import "@typespec/rest";
 import "./opportunities.tsp";
 
 // Define the
-namespace OpportunityStream.Routes;
+namespace CommonGrants.Routes;

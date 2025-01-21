@@ -1,4 +1,4 @@
-namespace OpportunityStream.Models;
+namespace CommonGrants.Models;
 
 // ########################################
 // Model definition
