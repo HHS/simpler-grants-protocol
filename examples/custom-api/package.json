@@ -14,7 +14,7 @@
     "docs": "npm run typespec && npm run docs:build && npm run docs:preview"
   },
   "peerDependencies": {
-    "@common-grants/core": "file:../../specs/common-grants-core-0.1.0-alpha.2.tgz",
+    "@common-grants/core": "file:../../specs/common-grants-core-0.1.0-alpha.3.tgz",
     "@typespec/compiler": "^0.63.0"
   },
   "private": true,
