@@ -1,8 +1,8 @@
-import "@opportunity-stream/core";
+import "@common-grants/core";
 import "@typespec/json-schema";
 
 using JsonSchema;
-using OpportunityStream;
+using CommonGrants;
 
 @jsonSchema
 namespace CustomAPI.CustomModels;

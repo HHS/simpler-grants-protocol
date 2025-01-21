@@ -55,11 +55,11 @@ Run the following steps from the root of this directory to install the custom AP
 You can define custom field by using `extends CustomField {}` where `CustomField` is a model from the base specification library, see an example below:
 
 ```typespec
-import "@opportunity-stream/core"; // Import the base specification library
+import "@common-grants/core"; // Import the base specification library
 
 // Allows us to use models defined in the specification library
-// without prefixing each model with `OpportunityStream.Models.`
-using OpportunityStream.Models;
+// without prefixing each model with `CommonGrants.Models.`
+using CommonGrants.Models;
 
 namespace CustomAPI.CustomModels;
 
@@ -89,10 +89,10 @@ model CustomOpportunity extends Opportunity {
 And finally this custom field can be used to override the the routes from the base specification library.
 
 ```typespec
-import "@opportunity-stream/core";
+import "@common-grants/core";
 import "./models.tsp"; // Import the custom field and model from above
 
-using OpportunityStream;
+using CommonGrants;
 using Http;
 
 namespace CustomAPI.CustomRoutes;

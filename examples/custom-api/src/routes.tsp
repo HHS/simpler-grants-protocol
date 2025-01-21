@@ -1,11 +1,11 @@
 import "@typespec/http";
 import "@typespec/rest";
 
-import "@opportunity-stream/core";
+import "@common-grants/core";
 
 import "./models.tsp";
 
-using OpportunityStream;
+using CommonGrants;
 using Http;
 
 namespace CustomAPI.CustomRoutes;
