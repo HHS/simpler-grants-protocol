@@ -11,7 +11,7 @@ What is the best way to document key architectural decisions made within the pro
 
 ### Decision outcome
 
-We've decided to use Architecture Decision Records (ADRs) as described in [Recording decisions](../../overview). These records will be published on the website for this project.
+We've decided to use Architecture Decision Records (ADRs) as described in [Recording decisions](/simpler-grants-protocol/decisions/overview). These records will be published on the website for this project.
 
 - **Positive consequences**
   - Decisions are documented explicitly
