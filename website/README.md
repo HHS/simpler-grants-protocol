@@ -1,6 +1,6 @@
-# Simpler grant protocol website
+# CommonGrants protocol website
 
-Code for the [simpler grant protocol website](https://hhs.github.io/simpler-grants-protocol/) and public docs. This site is built using the [Starlight docs](https://starlight.astro.build/) from Astro and hosted on GitHub pages.
+Code for the [CommonGrants protocol website](https://hhs.github.io/simpler-grants-protocol/) and public docs. This site is built using the [Starlight docs](https://starlight.astro.build/) from Astro and hosted on GitHub pages.
 
 ## 🚀 Project Structure
 
