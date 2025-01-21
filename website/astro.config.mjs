@@ -15,6 +15,10 @@ export default defineConfig({
       social: {
         github: "https://github.com/HHS/simpler-grants-protocol",
       },
+      editLink: {
+        baseUrl:
+          "https://github.com/HHS/simpler-grants-protocol/edit/main/website/",
+      },
       sidebar: [
         {
           label: "Welcome",
