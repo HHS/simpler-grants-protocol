@@ -36,9 +36,6 @@ model CustomField {
 
   /** Description of the custom field's purpose */
   description?: string;
-
-  /** Optional URL with additional information */
-  context?: url;
 }
 
 // ########################################
@@ -52,7 +49,7 @@ namespace CustomFieldExamples {
     type: CustomFieldType.string,
     value: "Healthcare Innovation",
     description: "Primary focus area of the grant program",
-    context: "https://example.com/program-areas",
+    schema: "https://example.com/program-areas.json",
   };
 
   /** An example of an array custom field */

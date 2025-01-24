@@ -19,9 +19,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Prepare upstream dependencies
-        run: npm run prepare:deps
-
       - name: Install dependencies
         run: npm install
 
