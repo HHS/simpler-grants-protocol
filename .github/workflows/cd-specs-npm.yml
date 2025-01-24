@@ -26,7 +26,7 @@ jobs:
       - name: Run checks
         run: npm run checks
 
-      - name: Dry run publish
+      - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --tag alpha --access public
