@@ -26,7 +26,6 @@ A basic project structure that uses the library might look like this:
 └── tspconfig.yaml  # Manages TypeSpec configuration, including emitters
 ```
 
-
 ### Define a custom field
 
 Define custom fields on an existing model by extending the `CustomField` model from the `@common-grants/core` library.
@@ -131,7 +130,6 @@ Both strategies will generate an OpenAPI specification in the `tsp-output/` dire
 
 - See the [TypeSpec documentation](https://typespec.org/docs/getting-started/overview) for more information on how to use TypeSpec.
 - See the [CommonGrants docs](https://hhs.github.io/simpler-grants-protocol/) to learn more about the CommonGrants protocol.
-
 
 ## 💻 Contributing to the library
 
