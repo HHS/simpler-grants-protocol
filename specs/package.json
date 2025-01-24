@@ -5,6 +5,9 @@
   "type": "module",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "typespec": "./lib/main.tsp",
@@ -35,7 +38,7 @@
     "grants",
     "opportunities"
   ],
-  "author": "HHS",
+  "author": "CommonGrants",
   "license": "CC0-1.0",
   "peerDependencies": {
     "@typespec/compiler": "^0.63.0",
