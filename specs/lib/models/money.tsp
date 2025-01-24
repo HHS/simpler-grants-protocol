@@ -11,7 +11,7 @@ namespace CommonGrants.Models;
 )
 @example(
   MoneyExamples.usdNegative,
-  #{ title: "Accounting loss in US dollars and cents" }
+  #{ title: "A negative amount of US dollars and cents" }
 )
 model Money {
   /** The amount of money */
@@ -30,7 +30,7 @@ namespace MoneyExamples {
   const usdWithCents = #{ amount: "10000.50", currency: "USD" };
 
   /** An example of a positive EUR amount without cents */
-  const euroWithoutCents = #{ amount: "5000.00", currency: "EUR" };
+  const euroWithoutCents = #{ amount: "5000", currency: "EUR" };
 
   /** An example of a negative USD amount in accounting format */
   const usdNegative = #{ amount: "-50.50", currency: "USD" };
