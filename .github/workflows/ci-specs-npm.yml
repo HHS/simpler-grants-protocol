@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "specs/**" # Trigger only if files in the `specs/` directory are changed
+      - ".github/workflows/ci-specs-npm.yml"
 
 defaults:
   run:
