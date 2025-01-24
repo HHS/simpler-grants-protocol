@@ -45,16 +45,16 @@ All commands are run from the root of the project, from a terminal:
 
 Run the following steps from the root of this directory to install the custom API package and emit JSON Schema and OpenAPI specs for the custom API using TypeSpec:
 
-1. Prepare the upstream dependencies (i.e. local version of the specification library): `npm run prepare:deps`
-2. Install the package: `npm install`
-3. Compile and emit the specs for this custom API: `npm run typespec`
-4. View the auto-generated OpenAPI spec docs: `npm run docs`
+1. Install the package: `npm install`
+2. Compile and emit the specs for this custom API: `npm run typespec`
+3. View the auto-generated OpenAPI spec docs: `npm run docs`
 
-### Defining custom fields and routes
+### Defining custom fields
 
 You can define custom field by using `extends CustomField {}` where `CustomField` is a model from the base specification library, see an example below:
 
 ```typespec
+// models.tsp
 import "@common-grants/core"; // Import the base specification library
 
 // Allows us to use models defined in the specification library
@@ -86,9 +86,12 @@ model CustomOpportunity extends Opportunity {
 }
 ```
 
-And finally this custom field can be used to override the the routes from the base specification library.
+### Overriding default routes
+
+Once defined, this custom field can be used to override the the routes from the base specification library.
 
 ```typespec
+// routes.tsp
 import "@common-grants/core";
 import "./models.tsp"; // Import the custom field and model from above
 
@@ -100,8 +103,27 @@ namespace CustomAPI.CustomRoutes;
 // Reuse the existing routes, extending functionality
 interface CustomOpportunities extends Routes.Opportunities {
     // Override the existing @read() route with the custom model
+    @summary("View an opportunity")
     @get read(@path id: string): CustomModels.CustomOpportunity;
 }
+```
+
+### Defining an API service
+
+Finally, you can use these updated routes to define an API service
+
+```typespec
+// main.tsp
+import "@typespec/http";
+
+import "./routes.tsp"; // Import the overridden route from above
+
+using TypeSpec.Http;
+
+@service({
+    title: "Custom API",
+})
+namespace CustomAPI;
 ```
 
 ### Full example
