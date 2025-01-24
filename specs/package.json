@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/core",
-  "version": "0.1.0-alpha.4",
+  "version": "0.1.0-alpha.5",
   "description": "TypeSpec library for defining grant opportunity data models and APIs",
   "type": "module",
   "main": "dist/src/index.js",
@@ -30,7 +30,8 @@
     "lint": "eslint . --fix",
     "format": "prettier --write . && tsp format lib",
     "check:lint": "eslint",
-    "check:format": "prettier --check . && tsp format lib --check"
+    "check:format": "prettier --check . && tsp format lib --check",
+    "checks": "npm run check:lint && npm run check:format"
   },
   "keywords": [
     "typespec",
