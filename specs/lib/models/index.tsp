@@ -4,7 +4,7 @@ import "@typespec/json-schema";
 // and make them available throughout the namespace
 import "./base.tsp";
 import "./custom-field.tsp";
-import "./currency.tsp";
+import "./monetary-amount.tsp";
 import "./funding.tsp";
 import "./event.tsp";
 import "./opportunity.tsp";
