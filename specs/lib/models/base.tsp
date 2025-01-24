@@ -15,8 +15,8 @@ scalar uuid extends string;
 
 /** A decimal number (with variable scale) encoded as a string, to avoid floating point issues */
 @pattern(
-    "^-?[0-9]+\\.?[0-9]*$",
-    "Must be a valid decimal number represented as a string"
+  "^-?[0-9]+\\.?[0-9]*$",
+  "Must be a valid decimal number represented as a string"
 )
 @example("100", #{ title: "Scale 0" })
 @example("100.5", #{ title: "Scale 1" })
