@@ -30,7 +30,8 @@
     "lint": "eslint . --fix",
     "format": "prettier --write . && tsp format lib",
     "check:lint": "eslint",
-    "check:format": "prettier --check . && tsp format lib --check"
+    "check:format": "prettier --check . && tsp format lib --check",
+    "checks": "npm run check:lint && npm run check:format"
   },
   "keywords": [
     "typespec",
