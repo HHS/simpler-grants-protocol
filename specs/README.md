@@ -1,8 +1,141 @@
-# Simpler grant protocol specifications
+# CommonGrants core library
 
-Code for the simpler grant protocol base specification libraries, written in TypeSpec. They are designed to be imported and extended by individual implementations of the grant protocol.
+Code for the CommonGrants core specification library, written in TypeSpec. This library is designed to be imported and extended by individual implementations of the CommonGrants protocol.
 
-## 🚀 Project Structure
+## 🚀 Quickstart
+
+### Install the library
+
+```bash
+npm install @common-grants/core
+```
+
+### Project setup
+
+A basic project structure that uses the library might look like this:
+
+```
+.
+├── models.tsp      # Extends @common-grants/core models with custom fields
+├── routes.tsp      # Overrides @common-grants/core routes to use the custom models
+├── main.tsp        # Defines an API service that uses the custom models and routes
+|
+├── tsp-output/     # Directory that stores the output of `tsp compile`, often .gitignored
+|
+├── package.json    # Manages dependencies, commands, and library metadata
+└── tspconfig.yaml  # Manages TypeSpec configuration, including emitters
+```
+
+
+### Define a custom field
+
+Define custom fields on an existing model by extending the `CustomField` model from the `@common-grants/core` library.
+
+```typespec
+// models.tsp
+
+import "@common-grants/core"; // Import the base specification library
+
+// Allows us to use models defined in the specification library
+// without prefixing each model with `CommonGrants.Models.`
+using CommonGrants.Models;
+
+namespace CustomAPI.CustomModels;
+
+model Agency extends CustomField {
+    name: "Agency";
+    type: CustomFieldType.string;
+
+    @example("Department of Transportation")
+    value: string;
+
+    description: "The unique identifier for a given opportunity within this API";
+}
+```
+
+Then extend the base `Opportunity` model to include these custom fields in the `customFields` property:
+
+```typespec
+// Include code from the previous code block
+
+model CustomOpportunity extends Opportunity {
+    customFields: {
+        agency: Agency;
+    };
+}
+```
+
+### Override a default route
+
+Use this `CustomOpportunity` model to override the the default routes from the `@common-grants/core` library.
+
+```typespec
+// routes.tsp
+
+import "@common-grants/core";
+import "./models.tsp"; // Import the custom field and model from above
+
+using CommonGrants.Routes;
+using Http;
+
+namespace CustomAPI.CustomRoutes;
+
+// Reuse the existing the existing routes from the core library
+interface CustomOpportunities extends Opportunities {
+    // Override the existing @read() route with the custom model
+    @summary("View an opportunity")
+    @get read(@path id: string): CustomModels.CustomOpportunity;
+}
+```
+
+### Define an API service
+
+Next, use these updated routes to define an API service:
+
+```typespec
+// main.tsp
+
+import "@typespec/http";
+
+import "./routes.tsp"; // Import the routes from above
+
+using TypeSpec.Http;
+
+@service({
+    title: "Custom API",
+})
+namespace CustomAPI;
+```
+
+### Generate the OpenAPI spec
+
+Finally, generate an OpenAPI specification from your `main.tsp` file.
+
+You can either specify the OpenAPI emitter directly via the CLI:
+
+```bash
+npx tsp compile main.tsp --emit "@typespec/openapi3"
+```
+
+Or you can specify the emitter in the `tspconfig.yaml` file and run `tsp compile main.tsp`:
+
+```yaml
+# tspconfig.yaml
+emitters:
+  - "@typespec/openapi3"
+```
+
+Both strategies will generate an OpenAPI specification in the `tsp-output/` directory.
+
+### Further reading
+
+- See the [TypeSpec documentation](https://typespec.org/docs/getting-started/overview) for more information on how to use TypeSpec.
+- See the [CommonGrants docs](https://hhs.github.io/simpler-grants-protocol/) to learn more about the CommonGrants protocol.
+
+
+## 💻 Contributing to the library
+
+### Project structure
 
 The `specs/` sub-directory is organized like this:
 
@@ -24,8 +157,6 @@ The `specs/` sub-directory is organized like this:
 └── tspconfig.yaml      # Manages TypeSpec configuration
 ```
 
-## 💻 Local development
-
 ### Pre-requisites
 
 Node version 20 or later. Check with `node --version`
@@ -44,23 +175,3 @@ All commands are run from the root of the project, from a terminal:
 | `npm run lint`         | Run automatic linting and fix issues       |
 | `npm run check:format` | Check formatting, fail if issues are found |
 | `npm run check:lint`   | Check linting, fail if issues are found    |
-
-### Installing the library locally
-
-The medium-term goal is to publish this library to npm so that it can be installed directly using `npm install`. For the interim, however, you can install the library locally by running the following steps from the root of this directory:
-
-1. Build the library: `npm build`
-2. Package the library as a tarball: `npm pack`
-3. Change directory into the node project where you want to install this library: `cd $path_to_other_project`
-4. Add the following to that project's `package.json` (replacing the values between the angled brackets `<>`):
-   ```json
-   "peerDependencies": {
-       "@typespec/compiler": "^0.63.0",
-       "@common-grants/core": "file:<relative-path-to-library>/common-grants-core-<version>.tgz"
-   },
-   ```
-5. Then run `npm install` to install this package
-
-### Using the library
-
-Check out the [Custom API codebase](../examples/custom-api/) for an example of how to use this library within your own project. A more detailed tutorial is in the works.
