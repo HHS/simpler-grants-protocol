@@ -26,10 +26,6 @@ namespace CommonGrants.Models;
  * ```
  */
 @example(
-  OpportunityExamples.complete,
-  #{ title: "Complete opportunity with all fields" }
-)
-@example(
   OpportunityExamples.minimal,
   #{ title: "Minimal opportunity with required fields only" }
 )
