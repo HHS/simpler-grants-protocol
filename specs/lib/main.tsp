@@ -11,15 +11,15 @@ using TypeSpec.Http;
 
 // Define the top-level namespace for the library
 @service({
-    name: "Base API",
+  name: "Base API",
 })
 namespace CommonGrants.API;
 
 @tag("Search")
 @route("/opportunities")
 namespace Opportunities {
-    alias Router = Routes.Opportunities;
+  alias Router = Routes.Opportunities;
 
-    op List is Router.list;
-    op Read is Router.read;
+  op List is Router.list;
+  op Read is Router.read;
 }
