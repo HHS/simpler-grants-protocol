@@ -26,9 +26,9 @@ A basic project structure that uses the library might look like this:
 └── tspconfig.yaml  # Manages TypeSpec configuration, including emitters
 ```
 
-### Define a custom field
+### Define custom fields
 
-Define custom fields on an existing model by extending the `CustomField` model from the `@common-grants/core` library.
+The Opportunity model is templated to support custom fields. First define your custom fields by extending the `CustomField` model:
 
 ```typespec
 // models.tsp
@@ -41,32 +41,28 @@ using CommonGrants.Models;
 
 namespace CustomAPI.CustomModels;
 
+// Define a custom field
 model Agency extends CustomField {
     name: "Agency";
     type: CustomFieldType.string;
 
     @example("Department of Transportation")
     value: string;
-
-    description: "The unique identifier for a given opportunity within this API";
+    description: "The agency responsible for this opportunity";
 }
+
+// Create a map of custom fields
+model CustomFields extends CustomFieldMap {
+    agency: Agency;
+}
+
+// Create a custom Opportunity type using the template
+alias CustomOpportunity = Opportunity<CustomFields>;
 ```
 
-Then extend the base `Opportunity` model to include these custom fields in the `customFields` property:
+### Override default routes
 
-```typespec
-// Include code from the previous code block
-
-model CustomOpportunity extends Opportunity {
-    customFields: {
-        agency: Agency;
-    };
-}
-```
-
-### Override a default route
-
-Use this `CustomOpportunity` model to override the the default routes from the `@common-grants/core` library.
+The router interfaces are templated to support your custom models. Override them like this:
 
 ```typespec
 // routes.tsp
@@ -75,15 +71,16 @@ import "@common-grants/core";
 import "./models.tsp"; // Import the custom field and model from above
 
 using CommonGrants.Routes;
-using Http;
+using TypeSpec.Http;
 
-namespace CustomAPI.CustomRoutes;
+@tag("Search")
+@route("/opportunities")
+namespace CustomAPI.CustomRoutes {
+    alias OpportunitiesRouter = Opportunities;
 
-// Reuse the existing the existing routes from the core library
-interface CustomOpportunities extends Opportunities {
-    // Override the existing @read() route with the custom model
-    @summary("View an opportunity")
-    @get read(@path id: string): CustomModels.CustomOpportunity;
+    // Use the default model for list but custom model for read
+    op list is OpportunitiesRouter.list;
+    op read is OpportunitiesRouter.read<CustomModels.CustomOpportunity>;
 }
 ```
 
@@ -108,15 +105,13 @@ namespace CustomAPI;
 
 ### Generate the OpenAPI spec
 
-Finally, generate an OpenAPI specification from your `main.tsp` file.
-
-You can either specify the OpenAPI emitter directly via the CLI:
+Generate an OpenAPI specification from your `main.tsp` file using either the CLI:
 
 ```bash
 npx tsp compile main.tsp --emit "@typespec/openapi3"
 ```
 
-Or you can specify the emitter in the `tspconfig.yaml` file and run `tsp compile main.tsp`:
+Or specify the emitter in `tspconfig.yaml`:
 
 ```yaml
 # tspconfig.yaml
