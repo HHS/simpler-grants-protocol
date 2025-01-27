@@ -4,6 +4,27 @@ namespace CommonGrants.Models;
 // Model definition
 // ########################################
 
+/** The base model for a funding opportunity.
+ *
+ * It supports customization by templating the customFields property.
+ *
+ * @template Fields A CustomFieldMap object with user-defined custom fields,
+ * that should be included in a given implementation of the Opportunity model.
+ * @example Declare a new Opportunity model with custom fields
+ *
+ * ```typespec
+ * model Agency extends CustomField {
+ *   type: CustomFieldType.string;
+ *   value: string;
+ * }
+ *
+ * model NewFields extends CustomFieldMap {
+ *   agency: Agency;
+ * }
+ *
+ * alias CustomOpportunity = Opportunity<NewFields>;
+ * ```
+ */
 @example(
   OpportunityExamples.complete,
   #{ title: "Complete opportunity with all fields" }
@@ -12,7 +33,7 @@ namespace CommonGrants.Models;
   OpportunityExamples.minimal,
   #{ title: "Minimal opportunity with required fields only" }
 )
-model Opportunity {
+model Opportunity<Fields = CustomFieldMap> {
   /** Globally unique id for the opportunity */
   id: uuid;
 
@@ -32,7 +53,7 @@ model Opportunity {
   applicationTimeline?: Event[];
 
   /** Additional custom fields specific to this opportunity */
-  customFields?: Record<CustomField>;
+  customFields?: Fields;
 }
 
 // ########################################

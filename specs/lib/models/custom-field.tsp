@@ -13,6 +13,9 @@ enum CustomFieldType {
   array,
 }
 
+/** An object that maps field names to CustomField instances */
+model CustomFieldMap is Record<CustomField>;
+
 @example(
   CustomFieldExamples.programArea,
   #{ title: "String field for program area" }
