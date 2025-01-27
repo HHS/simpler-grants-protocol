@@ -1,6 +1,6 @@
 ---
 title: Release workflow
-description: ADR documenting the decision to adopt a CI/CD workflow that prioritizes pre-releases initially, and then stable releases using Changesets.
+description: Records decision to adopt a CI/CD workflow that prioritizes pre-releases initially, and then stable releases using Changesets.
 ---
 
 ## Summary
@@ -14,9 +14,9 @@ The CommonGrants codebase is a monorepo containing multiple interrelated librari
 We will initially adopt Option 1 (CD for prereleases with manually triggered GitHub releases) since we only have a single package and haven't published a stable release yet. Once we have multiple packages and at least one stable release, we plan to migrate to Option 2 (Changesets) for better independent release management.
 
 - **Positive consequences**
-  - Quick and easy publishing of pre-releases while iterating on package APIs for the first release
-  - Simple setup with minimal configuration needed
-  - Automated workflows reduce manual intervention (for pre-releases)
+  - Pre-releases are easy to publish while preparing for the first stable release
+  - Simplifies setup with minimal configuration needed
+  - Automated CI/CD pipeline (for pre-releases) reduces manual intervention
   - Avoids committing to a long-term release workflow until we have a better understanding of our needs
 - **Negative consequences**
   - Limited traceability of changes before first stable release
