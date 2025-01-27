@@ -7,7 +7,7 @@ import "../dist/src/index.js";
 import "./models/index.tsp";
 import "./routes/index.tsp";
 
-using Http;
+using TypeSpec.Http;
 
 // Define the top-level namespace for the library
 @service({

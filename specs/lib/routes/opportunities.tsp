@@ -35,7 +35,7 @@ model PaginatedQuery {
  * @example Using the the default type for the list operation and
  * a custom model for the read operation:
  * ```typespec
- * using Http;
+ * using TypeSpec.Http;
  *
  * @tag("Search")
  * @route("/opportunities/")
