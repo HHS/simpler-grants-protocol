@@ -47,12 +47,12 @@ We will initially adopt Option 1 (CD for prereleases with manually triggered Git
 
 | Criteria                     | Option 1 | Option 2 | Option 3 |
 | ---------------------------- | :------: | :------: | :------: |
-| Easy pre-release workflow    |    ✅    |   🟡    |   🟡    |
+| Easy pre-release workflow    |    ✅    |    🟡    |    🟡    |
 | Managed stable releases      |    ✅    |    ✅    |    ✅    |
 | Decoupled package releases   |    ✅    |    ✅    |    ❌    |
 | Auto-generated changelogs    |    ❌    |    ✅    |    ✅    |
-| Easy setup and configuration |    ✅    |    ❌    |   🟡    |
-| Minimal overhead             |    ❌    |   🟡    |   🟡    |
+| Easy setup and configuration |    ✅    |    ❌    |    🟡    |
+| Minimal overhead             |    ❌    |    🟡    |    🟡    |
 
 ### Option 1
 
