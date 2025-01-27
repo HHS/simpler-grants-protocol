@@ -8,6 +8,7 @@ import "./money.tsp";
 import "./funding.tsp";
 import "./event.tsp";
 import "./opportunity.tsp";
+import "./responses.tsp";
 
 using TypeSpec.JsonSchema;
 

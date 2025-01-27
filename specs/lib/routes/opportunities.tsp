@@ -8,16 +8,64 @@ namespace CommonGrants.Routes;
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-// Define the `/opportunities` router
-@route("/opportunities")
-interface Opportunities {
-  @summary("List opportunities")
-  @doc("Get a list of opportunities")
-  @get
-  list(): Models.Opportunity[];
+model PaginatedQuery {
+  /** The page to return */
+  @query
+  @pageIndex
+  page?: int32 = 1;
 
+  /** The number of items to return per page */
+  @query
+  @pageSize
+  perPage?: int32 = 100;
+}
+
+/** A re-usable interface for an Opportunities router
+ *
+ * To implement this interface, we recommend declaring a namespace,
+ * instantiating the router using `alias` (instead of `extends`),
+ * and decorating the namespace with `@route` and `@tag` since they aren't
+ * inherited directly from the interface.
+ *
+ * For more information, see
+ * [TypeSpec docs](https://typespec.io/docs/language-basics/interfaces/#templating-interface-operations)
+ *
+ * @example Using the the default type for the list operation and
+ * a custom model for the read operation:
+ * ```typespec
+ * using Http;
+ *
+ * @tag("Search")
+ * @route("/opportunities/")
+ * namespace Opportunities {
+ * alias Router = Routes.Opportunities
+ *
+ * op list is Router.list;
+ * op read is Router.read<models.Opportunity>;
+ *
+ * }
+ * ```
+ */
+interface Opportunities {
+  /** `GET /opportunities/` Get a paginated list of opportunities
+   *
+   * @template T Type of the paginated response model, must be a extension of BaseOpportunity
+   */
+  @summary("List opportunities")
+  @doc("Get a paginated list of opportunities")
+  @list
+  list<T extends Models.Opportunity = Models.Opportunity>(
+    ...PaginatedQuery,
+  ): Models.PaginatedItems<T>;
+
+  /** `GET /opportunities/<id>` View opportunity details
+   *
+   * @template T Type of the response model
+   */
   @summary("View opportunity")
   @doc("View additional details about an opportunity")
   @get
-  read(@path title: string): Models.Opportunity;
+  read<T extends Models.Opportunity = Models.Opportunity>(
+    @path id: Models.uuid,
+  ): T;
 }
