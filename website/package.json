@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro build && astro preview",
     "astro": "astro",
+    "typespec": "tsp compile src/specs/main.tsp --emit '@typespec/openapi3'",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "check:lint": "eslint",
@@ -19,6 +20,7 @@
   "dependencies": {
     "@astrojs/check": "^0.9.4",
     "@astrojs/starlight": "^0.30.3",
+    "@common-grants/core": "^0.1.0-alpha.6",
     "astro": "^5.0.2",
     "sharp": "^0.32.5",
     "typescript": "^5.7.2"
