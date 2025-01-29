@@ -18,7 +18,7 @@ Here's an example of that format:
 ```json
 {
   "amount": "100.50",
-  "currencyCode": "USD"
+  "currency": "USD"
 }
 ```
 

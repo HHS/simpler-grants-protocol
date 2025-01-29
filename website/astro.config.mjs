@@ -2,6 +2,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightLinksValidator from "starlight-links-validator";
+import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
 // https://astro.build/config
 export default defineConfig({
@@ -10,7 +11,17 @@ export default defineConfig({
   base: "simpler-grants-protocol/",
   integrations: [
     starlight({
-      plugins: [starlightLinksValidator()],
+      plugins: [
+        starlightLinksValidator(),
+        // Generate the OpenAPI documentation pages.
+        starlightOpenAPI([
+          {
+            base: "reference/api",
+            label: "CommonGrants API spec",
+            schema: "./tsp-output/@typespec/openapi3/openapi.Base.yaml",
+          },
+        ]),
+      ],
       title: "CommonGrants",
       social: {
         github: "https://github.com/HHS/simpler-grants-protocol",
@@ -33,7 +44,10 @@ export default defineConfig({
         },
         {
           label: "Reference",
-          autogenerate: { directory: "reference" },
+          items: [
+            { label: "Specification", link: "reference/specification" },
+            ...openAPISidebarGroups,
+          ],
         },
         {
           label: "Decisions",
