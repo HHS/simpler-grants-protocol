@@ -3,7 +3,15 @@
   "ignorePaths": ["dist/", "astro/", "*.svg"],
   "dictionaryDefinitions": [],
   "dictionaries": [],
-  "words": ["CDFI", "Diátaxis", "FATA", "FHIR", "namespacing", "transpiles"],
+  "words": [
+    "CDFI",
+    "Diátaxis",
+    "FATA",
+    "FHIR",
+    "namespacing",
+    "transpiles",
+    "typespec"
+  ],
   "ignoreWords": [],
   "import": []
 }
