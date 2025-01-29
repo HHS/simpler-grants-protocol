@@ -4,9 +4,10 @@ import "@typespec/http";
 
 using TypeSpec.Http;
 
-// Define the top-level namespace for the library
+// The docstring is emitted as the OpenAPI spec "description" property.
+/** The base specification for a CommonGrants API */
 @service({
-    name: "Base API",
+    title: "CommonGrants API",
 })
 namespace Base;
 
@@ -15,6 +16,6 @@ namespace Base;
 namespace Opportunities {
     alias Router = CommonGrants.Routes.Opportunities;
 
-    op List is Router.list;
-    op Read is Router.read;
+    op list is Router.list;
+    op read is Router.read;
 }
