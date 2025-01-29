@@ -48,15 +48,17 @@ Here's an example of a potential model that follows this approach:
   "name": "Example grant",
   "description": "Description about this grant",
   "customFields": {
-    "gov.grants@opportunityNumber": {
-      "name": "fundingOpportunityNumber",
+    "gov.grants@agency": {
+      "name": "Agency",
       "type": "string",
-      "value": "CDFI-2025-FATA"
+      "value": "Department of Transportation",
+      "description": "The government department or agency managing the grant opportunity"
     },
     "gov.grants@eligibility": {
       "name": "eligibility",
       "type": "array",
-      "value": ["Individuals", "City or township governments"]
+      "value": ["Individuals", "City or township governments"],
+      "schema": "https://example-schema-store.org/eligibility.yaml"
     }
   }
 }
