@@ -31,6 +31,11 @@ export interface GenerateClientCommandOptions {
   docs?: boolean;
 }
 
+export interface CheckSpecCommandOptions {
+  version?: string;
+  base?: string;
+}
+
 // Validation functions
 export function validatePreviewOptions(options: any): PreviewCommandOptions {
   if (options.ui && !["swagger", "redocly"].includes(options.ui)) {
@@ -72,5 +77,17 @@ export function validateGenerateServerOptions(
   return {
     lang: options.lang,
     only: options.only,
+  };
+}
+
+export function validateCheckSpecOptions(
+  options: any
+): CheckSpecCommandOptions {
+  if (options.version && !/^v\d+\.\d+\.\d+$/.test(options.version)) {
+    throw new Error("Version must be in format vX.Y.Z (e.g., v2.0.1)");
+  }
+  return {
+    version: options.version,
+    base: options.base,
   };
 }
