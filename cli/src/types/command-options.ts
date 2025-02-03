@@ -83,7 +83,7 @@ export function validateGenerateServerOptions(
 export function validateCheckSpecOptions(
   options: any
 ): CheckSpecCommandOptions {
-  if (options.version && !/^v\d+\.\d+\.\d+$/.test(options.version)) {
+  if (options.version && !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(options.version)) {
     throw new Error("Version must be in format vX.Y.Z (e.g., v2.0.1)");
   }
   return {

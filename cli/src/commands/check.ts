@@ -39,7 +39,7 @@ export function checkCommand(program: Command) {
     .description("Validate a specification against the CommonGrants base spec")
     .argument("<specPath>", "Path or URL to TypeSpec or OpenAPI spec")
     .option(
-      "--version <version>",
+      "--spec-version <version>",
       "CommonGrants spec version to validate against"
     )
     .option("--base <path>", "Path to base spec for validation")
