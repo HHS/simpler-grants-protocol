@@ -9,11 +9,7 @@ export function previewCommand(program: Command) {
     .command("preview")
     .description("Preview an OpenAPI specification")
     .argument("<specPath>", "Path to TypeSpec file")
-    .option(
-      "--ui <tool>",
-      "Preview tool to use (swagger or redocly)",
-      "swagger"
-    )
+    .option("--ui <tool>", "Preview tool to use (swagger or redocly)", "swagger")
     .action(async (specPath, options) => {
       try {
         const validatedOptions = validatePreviewOptions(options);

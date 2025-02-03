@@ -30,13 +30,10 @@ describe("DefaultValidationService", () => {
         version: "v2.0.1",
         base: "base-spec.yaml",
       });
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Mock: Checking spec compliance",
-        {
-          specPath: "spec.yaml",
-          options: { version: "v2.0.1", base: "base-spec.yaml" },
-        }
-      );
+      expect(consoleSpy).toHaveBeenCalledWith("Mock: Checking spec compliance", {
+        specPath: "spec.yaml",
+        options: { version: "v2.0.1", base: "base-spec.yaml" },
+      });
     });
   });
 });

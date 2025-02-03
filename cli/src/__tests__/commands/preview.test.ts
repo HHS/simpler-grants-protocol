@@ -15,7 +15,7 @@ describe("previewCommand", () => {
 
   it("should register preview command", () => {
     previewCommand(program);
-    const cmd = program.commands.find((cmd) => cmd.name() === "preview");
+    const cmd = program.commands.find(cmd => cmd.name() === "preview");
     expect(cmd).toBeDefined();
     expect(cmd?.description()).toBe("Preview an OpenAPI specification");
   });
@@ -27,7 +27,7 @@ describe("previewCommand", () => {
     }));
 
     previewCommand(program);
-    const cmd = program.commands.find((cmd) => cmd.name() === "preview");
+    const cmd = program.commands.find(cmd => cmd.name() === "preview");
     await cmd?.parseAsync(["node", "test", "spec.yaml"]);
 
     expect(mockPreviewSpec).toHaveBeenCalledWith("spec.yaml", {
@@ -42,7 +42,7 @@ describe("previewCommand", () => {
     }));
 
     previewCommand(program);
-    const cmd = program.commands.find((cmd) => cmd.name() === "preview");
+    const cmd = program.commands.find(cmd => cmd.name() === "preview");
     await cmd?.parseAsync(["node", "test", "spec.yaml", "--ui", "redocly"]);
 
     expect(mockPreviewSpec).toHaveBeenCalledWith("spec.yaml", {

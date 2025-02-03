@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Define strict types for command options
 export interface InitCommandOptions {
   template?: string;
@@ -57,15 +58,11 @@ export function validateCheckApiOptions(options: any): CheckApiCommandOptions {
   };
 }
 
-export function validateGenerateServerOptions(
-  options: any
-): GenerateServerCommandOptions {
+export function validateGenerateServerOptions(options: any): GenerateServerCommandOptions {
   if (options.only) {
     const validComponents = ["controllers", "models", "routes"];
     const components = options.only.split(",");
-    const invalidComponents = components.filter(
-      (c: string) => !validComponents.includes(c)
-    );
+    const invalidComponents = components.filter((c: string) => !validComponents.includes(c));
     if (invalidComponents.length > 0) {
       throw new Error(
         `Invalid components: ${invalidComponents.join(
@@ -80,13 +77,8 @@ export function validateGenerateServerOptions(
   };
 }
 
-export function validateCheckSpecOptions(
-  options: any
-): CheckSpecCommandOptions {
-  if (
-    options.specVersion &&
-    !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(options.specVersion)
-  ) {
+export function validateCheckSpecOptions(options: any): CheckSpecCommandOptions {
+  if (options.specVersion && !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(options.specVersion)) {
     throw new Error("Version must be in format vX.Y.Z (e.g., v2.0.1)");
   }
   return {

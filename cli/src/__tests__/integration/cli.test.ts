@@ -27,15 +27,13 @@ describe("CLI Integration Tests", () => {
 
   describe("preview command", () => {
     it("should validate preview UI option", async () => {
-      await expect(
-        execAsync(`${CLI_PATH} preview spec.tsp --ui invalid`)
-      ).rejects.toThrow('UI option must be either "swagger" or "redocly"');
+      await expect(execAsync(`${CLI_PATH} preview spec.tsp --ui invalid`)).rejects.toThrow(
+        'UI option must be either "swagger" or "redocly"'
+      );
     });
 
     it("should accept valid UI option", async () => {
-      const { stdout } = await execAsync(
-        `${CLI_PATH} preview spec.tsp --ui swagger`
-      );
+      const { stdout } = await execAsync(`${CLI_PATH} preview spec.tsp --ui swagger`);
       expect(stdout).toContain("Mock: Previewing spec");
     });
   });
@@ -60,18 +58,14 @@ describe("CLI Integration Tests", () => {
     });
 
     it("should validate spec compliance", async () => {
-      const { stdout } = await execAsync(
-        `${CLI_PATH} check spec spec.yaml --spec-version v2.0.1`
-      );
+      const { stdout } = await execAsync(`${CLI_PATH} check spec spec.yaml --spec-version v2.0.1`);
       expect(stdout).toContain("Mock: Checking spec compliance");
     });
   });
 
   describe("generate command", () => {
     it("should generate server code", async () => {
-      const { stdout } = await execAsync(
-        `${CLI_PATH} generate server spec.yaml --lang typescript`
-      );
+      const { stdout } = await execAsync(`${CLI_PATH} generate server spec.yaml --lang typescript`);
       expect(stdout).toContain("Mock: Generating server");
     });
 

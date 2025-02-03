@@ -15,7 +15,7 @@ describe("initCommand", () => {
 
   it("should register init command", () => {
     initCommand(program);
-    const cmd = program.commands.find((cmd) => cmd.name() === "init");
+    const cmd = program.commands.find(cmd => cmd.name() === "init");
     expect(cmd).toBeDefined();
     expect(cmd?.description()).toBe("Initialize a new CommonGrants project");
     expect(cmd?.opts().template).toBeUndefined();
@@ -32,7 +32,7 @@ describe("initCommand", () => {
     }));
 
     initCommand(program);
-    const cmd = program.commands.find((cmd) => cmd.name() === "init");
+    const cmd = program.commands.find(cmd => cmd.name() === "init");
     await cmd?.parseAsync(["node", "test", "--list"]);
 
     expect(mockListTemplates).toHaveBeenCalled();

@@ -16,12 +16,8 @@ describe("generateCommand", () => {
   describe("generate server", () => {
     it("should register generate server command", () => {
       generateCommand(program);
-      const generateCmd = program.commands.find(
-        (cmd) => cmd.name() === "generate"
-      );
-      const serverCmd = generateCmd?.commands.find(
-        (cmd) => cmd.name() === "server"
-      );
+      const generateCmd = program.commands.find(cmd => cmd.name() === "generate");
+      const serverCmd = generateCmd?.commands.find(cmd => cmd.name() === "server");
       expect(serverCmd).toBeDefined();
       expect(serverCmd?.description()).toBe(
         "Generate API server code from a TypeSpec specification"
@@ -35,9 +31,7 @@ describe("generateCommand", () => {
       }));
 
       generateCommand(program);
-      const generateCmd = program.commands.find(
-        (cmd) => cmd.name() === "generate"
-      );
+      const generateCmd = program.commands.find(cmd => cmd.name() === "generate");
       await generateCmd?.parseAsync([
         "node",
         "test",
@@ -59,16 +53,10 @@ describe("generateCommand", () => {
   describe("generate client", () => {
     it("should register generate client command", () => {
       generateCommand(program);
-      const generateCmd = program.commands.find(
-        (cmd) => cmd.name() === "generate"
-      );
-      const clientCmd = generateCmd?.commands.find(
-        (cmd) => cmd.name() === "client"
-      );
+      const generateCmd = program.commands.find(cmd => cmd.name() === "generate");
+      const clientCmd = generateCmd?.commands.find(cmd => cmd.name() === "client");
       expect(clientCmd).toBeDefined();
-      expect(clientCmd?.description()).toBe(
-        "Generate client code from a TypeSpec specification"
-      );
+      expect(clientCmd?.description()).toBe("Generate client code from a TypeSpec specification");
     });
 
     it("should handle client generation with options", async () => {
@@ -78,9 +66,7 @@ describe("generateCommand", () => {
       }));
 
       generateCommand(program);
-      const generateCmd = program.commands.find(
-        (cmd) => cmd.name() === "generate"
-      );
+      const generateCmd = program.commands.find(cmd => cmd.name() === "generate");
       await generateCmd?.parseAsync([
         "node",
         "test",

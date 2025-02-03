@@ -19,19 +19,17 @@ describe("DefaultInitService", () => {
     it("should handle initialization with template", async () => {
       const consoleSpy = jest.spyOn(console, "log");
       await service.init({ template: "grants-api" });
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Initializing project with options:",
-        { template: "grants-api" }
-      );
+      expect(consoleSpy).toHaveBeenCalledWith("Initializing project with options:", {
+        template: "grants-api",
+      });
     });
 
     it("should handle initialization with directory", async () => {
       const consoleSpy = jest.spyOn(console, "log");
       await service.init({ output: "./my-project" });
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Initializing project with options:",
-        { output: "./my-project" }
-      );
+      expect(consoleSpy).toHaveBeenCalledWith("Initializing project with options:", {
+        output: "./my-project",
+      });
     });
   });
 });

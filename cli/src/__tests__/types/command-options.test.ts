@@ -50,15 +50,16 @@ describe("Command Options Validation", () => {
 
   describe("validateGenerateServerOptions", () => {
     it("should accept valid component options", () => {
-      expect(
-        validateGenerateServerOptions({ only: "controllers,models" })
-      ).toEqual({ lang: undefined, only: "controllers,models" });
+      expect(validateGenerateServerOptions({ only: "controllers,models" })).toEqual({
+        lang: undefined,
+        only: "controllers,models",
+      });
     });
 
     it("should reject invalid components", () => {
-      expect(() =>
-        validateGenerateServerOptions({ only: "invalid,components" })
-      ).toThrow(/Invalid components: invalid, components/);
+      expect(() => validateGenerateServerOptions({ only: "invalid,components" })).toThrow(
+        /Invalid components: invalid, components/
+      );
     });
   });
 });

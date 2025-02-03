@@ -1,16 +1,11 @@
 import { Command } from "commander";
 import { DefaultValidationService } from "../services/validation.service";
-import {
-  validateCheckApiOptions,
-  validateCheckSpecOptions,
-} from "../types/command-options";
+import { validateCheckApiOptions, validateCheckSpecOptions } from "../types/command-options";
 
 export function checkCommand(program: Command) {
   const validationService = new DefaultValidationService();
 
-  const check = program
-    .command("check")
-    .description("Validate APIs and specifications");
+  const check = program.command("check").description("Validate APIs and specifications");
 
   check
     .command("api")
@@ -38,10 +33,7 @@ export function checkCommand(program: Command) {
     .command("spec")
     .description("Validate a specification against the CommonGrants base spec")
     .argument("<specPath>", "Path or URL to TypeSpec or OpenAPI spec")
-    .option(
-      "--spec-version <version>",
-      "CommonGrants spec version to validate against"
-    )
+    .option("--spec-version <version>", "CommonGrants spec version to validate against")
     .option("--base <path>", "Path to base spec for validation")
     .action(async (specPath, options) => {
       try {

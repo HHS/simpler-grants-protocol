@@ -5,9 +5,7 @@ import { validateGenerateServerOptions } from "../types/command-options";
 export function generateCommand(program: Command) {
   const generationService = new DefaultCodeGenerationService();
 
-  const generate = program
-    .command("generate")
-    .description("Generate server or client code");
+  const generate = program.command("generate").description("Generate server or client code");
 
   generate
     .command("server")

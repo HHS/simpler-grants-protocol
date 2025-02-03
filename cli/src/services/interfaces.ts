@@ -54,11 +54,7 @@ export interface ValidationService {
    * @param options - API validation configuration options
    * @throws {Error} If validation fails or API is unreachable
    */
-  checkApi(
-    apiUrl: string,
-    specPath: string,
-    options: ValidationOptions
-  ): Promise<void>;
+  checkApi(apiUrl: string, specPath: string, options: ValidationOptions): Promise<void>;
 
   /**
    * Check if a specification complies with the CommonGrants base spec.
