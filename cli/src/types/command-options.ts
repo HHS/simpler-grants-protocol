@@ -32,7 +32,7 @@ export interface GenerateClientCommandOptions {
 }
 
 export interface CheckSpecCommandOptions {
-  version?: string;
+  specVersion?: string;
   base?: string;
 }
 
@@ -83,11 +83,14 @@ export function validateGenerateServerOptions(
 export function validateCheckSpecOptions(
   options: any
 ): CheckSpecCommandOptions {
-  if (options.version && !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(options.version)) {
+  if (
+    options.specVersion &&
+    !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(options.specVersion)
+  ) {
     throw new Error("Version must be in format vX.Y.Z (e.g., v2.0.1)");
   }
   return {
-    version: options.version,
+    specVersion: options.specVersion,
     base: options.base,
   };
 }
