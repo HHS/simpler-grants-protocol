@@ -1,3 +1,4 @@
+/* TODO: Explore options for mocking the CLI to improve test performance */
 import { exec } from "child_process";
 import { promisify } from "util";
 import { describe, it, expect } from "@jest/globals";
