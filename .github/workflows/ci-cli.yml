@@ -1,0 +1,39 @@
+name: CI - CLI package
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - cli/**
+      - .github/workflows/ci-cli.yml
+
+defaults:
+  run:
+    working-directory: ./cli
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        # Installs dependencies directly from package.lock
+        # and skips dependency resolution etc.
+        run: npm ci
+
+      - name: Lint and format
+        run: |
+          npm run check:lint
+          npm run check:format
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Build library
+        run: npm run build
+
+      - name: Audit dependencies
+        run: npm audit

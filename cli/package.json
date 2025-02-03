@@ -12,10 +12,10 @@
     "dev": "ts-node src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
+    "lint": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\""
+    "check:lint": "eslint . --ext .ts",
+    "check:format": "prettier --check \"src/**/*.ts\""
   },
   "dependencies": {
     "chalk": "^4.1.2",
