@@ -2,6 +2,7 @@ import "@typespec/json-schema";
 
 import "./status.tsp";
 import "./funding.tsp";
+import "./timeline.tsp";
 
 @JsonSchema.jsonSchema
 namespace CommonGrants.Models.Opportunity;
@@ -10,7 +11,7 @@ namespace CommonGrants.Models.Opportunity;
 // Model definition
 // ########################################
 
-@doc("A funding opportunity")
+@doc("A funding opportunity") // Overrides internal docstrings when emitting OpenAPI
 model OpportunityBase {
   /** Globally unique id for the opportunity */
   @visibility(Lifecycle.Read)
@@ -19,7 +20,7 @@ model OpportunityBase {
   /** Title or name of the funding opportunity */
   title: string;
 
-  /** The status of the opportunity */
+  /** Status of the opportunity */
   status: OppStatus;
 
   /** Description of the opportunity's purpose and scope */
@@ -28,14 +29,14 @@ model OpportunityBase {
   /** Details about the funding available */
   fundingDetails: FundingDetails;
 
-  /** Key dates and milestones in the application process */
-  applicationTimeline?: Event[];
+  /** Key dates for the opportunity, such as when the application opens and closes */
+  keyDates: OppTimeline;
 
   /** URL for the original source of the opportunity */
   source?: url;
 
   /** Additional custom fields specific to this opportunity */
-  customFields?: CustomFieldMap;
+  customFields?: Record<CustomField>;
 
   // Spreads the fields from the Metadata model into the Opportunity model
   ...SystemMetadata;
@@ -53,7 +54,7 @@ namespace OpportunityExamples {
     title: "Healthcare Innovation Research Grant",
     description: "Funding for innovative healthcare delivery solutions",
     fundingDetails: FundingExamples.allFields,
-    applicationTimeline: #[EventExamples.openDate, EventExamples.deadline],
+    keyDates: #[EventExamples.openDate, EventExamples.deadline],
     customFields: #{
       programArea: CustomFieldExamples.programArea,
       eligibilityType: CustomFieldExamples.programArea,

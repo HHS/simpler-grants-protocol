@@ -8,7 +8,7 @@ import "./money.tsp";
 import "./event.tsp";
 import "./metadata.tsp";
 import "./custom-enum.tsp";
-import "./opportunity/base.tsp";
+import "./opportunity/index.tsp";
 
 using TypeSpec.JsonSchema;
 
