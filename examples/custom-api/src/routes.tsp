@@ -1,29 +1,24 @@
-import "@typespec/http";
-import "@typespec/rest";
+// routes.tsp
 
 import "@common-grants/core";
+import "./models.tsp"; // Import the custom field and model from above
 
-import "./models.tsp";
+using CommonGrants.Routes;
+using TypeSpec.Http;
 
-using CommonGrants;
-using Http;
+@tag("Opportunities")
+@route("/opportunities")
+namespace CustomAPI.CustomRoutes {
+    alias OpportunitiesRouter = Opportunities;
 
-namespace CustomAPI.CustomRoutes;
+    op list is OpportunitiesRouter.list<CustomModels.CustomOpportunity>;
+    op read is OpportunitiesRouter.read<CustomModels.CustomOpportunity>;
 
-// Reuse the existing routes, extending functionality
-interface CustomOpportunities extends Routes.Opportunities {
-    // Override the existing @read() route with the custom model
-    @summary("View opportunity")
-    @doc("View the details for a given opportunity")
-    @get
-    read(@path id: string): CustomModels.CustomOpportunity;
-
-    // Add a new route with the custom model
-    @summary("Update opportunity")
-    @doc("Update a given opportunity's details")
     @put
-    update(@path id: string, @body data: CustomModels.CustomOpportunity): {
-        @statusCode statusCode: 200;
-        @body result: CustomModels.CustomOpportunity;
+    @summary("Update an opportunity")
+    @doc("Update the values of an opportunity")
+    op update(data: CustomModels.CustomOpportunity): {
+        status: Http.OkResponse;
+        data: CustomModels.CustomOpportunity;
     };
 }

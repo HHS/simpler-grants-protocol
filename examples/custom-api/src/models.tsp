@@ -7,6 +7,7 @@ using CommonGrants;
 @jsonSchema
 namespace CustomAPI.CustomModels;
 
+/** Custom */
 model OpportunityNumber extends Models.CustomField {
     name: "Funding Opportunity Number";
     type: Models.CustomFieldType.string;
@@ -17,7 +18,15 @@ model OpportunityNumber extends Models.CustomField {
     description: "The unique identifier for a given opportunity within this API";
 }
 
-model CustomOpportunity extends Models.Opportunity {
+model CustomOpportunity extends Models.OpportunityBase {
+    @example(#{
+        fundingOpportunityNumber: #{
+            name: "Funding Opportunity Number",
+            type: Models.CustomFieldType.string,
+            value: "ABC-2025-001",
+            description: "The unique identifier for a given opportunity within this API",
+        },
+    })
     customFields: {
         fundingOpportunityNumber: OpportunityNumber;
     };
