@@ -1,7 +1,7 @@
 namespace CommonGrants.Models;
 
 // ########################################
-// Model definition
+// Field types definition
 // ########################################
 
 /** The set of JSON schema types supported by a custom field */
@@ -13,9 +13,27 @@ enum CustomFieldType {
   array,
 }
 
-/** An object that maps field names to CustomField instances */
-model CustomFieldMap is Record<CustomField>;
+// ########################################
+// Models definition
+// ########################################
 
+/** Model for defining custom fields that are specific to a given implementation.
+ *
+ * @example How to define a custom field using this model
+ *
+ * ```typespec
+ * model Agency extends CustomField {
+ *   name: "agency";
+ *
+ *   type: CustomFieldType.string;
+ *
+ *   @example("Department of Transportation")
+ *   value: string;
+ *
+ *   description?: "The agency responsible for managing this opportunity";
+ * }
+ * ```
+ */
 @example(
   CustomFieldExamples.programArea,
   #{ title: "String field for program area" }
@@ -24,6 +42,7 @@ model CustomFieldMap is Record<CustomField>;
   CustomFieldExamples.eligibilityTypes,
   #{ title: "Array field for eligibility types" }
 )
+@doc("A custom field on a model") // Overrides internal docstrings when emitting OpenAPI
 model CustomField {
   /** Name of the custom field */
   name: string;

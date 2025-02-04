@@ -52,24 +52,24 @@ interface Opportunities {
   /** `GET /opportunities/` Get a paginated list of opportunities
    *
    * @template T Type of the paginated response model.
-   * Must be an extension of Models.Opportunity. Default is Models.Opportunity.
+   * Must be an extension of Models.OpportunityBase. Default is Models.OpportunityBase.
    */
   @summary("List opportunities")
-  @doc("Get a paginated list of opportunities")
+  @doc("Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.")
   @list
-  list<T extends Models.Opportunity = Models.Opportunity>(
+  list<T extends Models.OpportunityBase = Models.OpportunityBase>(
     ...PaginatedQuery,
   ): Success.Paginated<T> | Error.Unauthorized;
 
   /** `GET /opportunities/<id>` View opportunity details
    *
    * @template T Type of the response model.
-   * Must be an extension of Models.Opportunity. Default is Models.Opportunity.
+   * Must be an extension of Models.OpportunityBase. Default is Models.OpportunityBase.
    */
   @summary("View opportunity")
   @doc("View additional details about an opportunity")
   @get
-  read<T extends Models.Opportunity = Models.Opportunity>(
+  read<T extends Models.OpportunityBase = Models.OpportunityBase>(
     @path id: Models.uuid,
   ): Success.Ok<T> | Error.NotFound | Error.Unauthorized;
 }

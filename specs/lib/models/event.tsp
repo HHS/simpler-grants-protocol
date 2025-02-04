@@ -4,10 +4,11 @@ namespace CommonGrants.Models;
 // Model definition
 // ########################################
 
+/** Description of an event that has a date (and possible time) associated with it */
 @example(EventExamples.deadline, #{ title: "Application deadline with time" })
 @example(EventExamples.openDate, #{ title: "Opening date without time" })
 model Event {
-  /** Name of the timeline event (e.g., 'Open Date', 'Deadline') */
+  /** Human-readable name of the event (e.g., 'Application posted', 'Question deadline') */
   name: string;
 
   /** Date of the event in in ISO 8601 format: YYYY-MM-DD */
@@ -16,7 +17,7 @@ model Event {
   /** Time of the event in ISO 8601 format: HH:MM:SS */
   time?: isoTime;
 
-  /** Detailed description of the timeline event */
+  /** Description of what this event represents */
   description?: string;
 }
 
