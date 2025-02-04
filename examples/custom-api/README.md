@@ -79,7 +79,7 @@ Once defined, these custom fields can be used to specify a custom implementation
 ```typespec
 // Include code from above example
 
-model CustomOpportunity extends Opportunity {
+model CustomOpportunity extends OpportunityBase {
     customFields: {
         fundingOpportunityNumber: OpportunityNumber;
     };
@@ -92,19 +92,22 @@ Once defined, this custom field can be used to override the the routes from the 
 
 ```typespec
 // routes.tsp
+
 import "@common-grants/core";
 import "./models.tsp"; // Import the custom field and model from above
 
-using CommonGrants;
-using Http;
+using CommonGrants.Routes;
+using TypeSpec.Http;
 
-namespace CustomAPI.CustomRoutes;
+@tag("Opportunities")
+@route("/opportunities")
+namespace CustomAPI.CustomRoutes {
+    alias OpportunitiesRouter = Opportunities;
 
-// Reuse the existing routes, extending functionality
-interface CustomOpportunities extends Routes.Opportunities {
-    // Override the existing @read() route with the custom model
-    @summary("View an opportunity")
-    @get read(@path id: string): CustomModels.CustomOpportunity;
+    // Override the default return type for the lis and read operations
+    // using the new CustomOpportunity model
+    op list is OpportunitiesRouter.list<CustomModels.CustomOpportunity>;
+    op read is OpportunitiesRouter.read<CustomModels.CustomOpportunity>;
 }
 ```
 
@@ -120,11 +123,18 @@ import "./routes.tsp"; // Import the overridden route from above
 
 using TypeSpec.Http;
 
+/** Add the Custom API description here */
 @service({
     title: "Custom API",
 })
 namespace CustomAPI;
 ```
+
+### Preview the docs
+
+Preview the auto-generated docs with these changes by running `npm run docs` which should open a page that looks roughly like this:
+
+![Screenshot of auto-generated OpenAPI docs](./static/openapi-docs.png)
 
 ### Full example
 
