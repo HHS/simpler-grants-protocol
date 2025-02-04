@@ -18,7 +18,7 @@ export default defineConfig({
           {
             base: "reference/api",
             label: "CommonGrants API spec",
-            schema: "./tsp-output/@typespec/openapi3/openapi.Base.yaml",
+            schema: "./tsp-output/@typespec/openapi3/openapi.yaml",
           },
         ]),
       ],
