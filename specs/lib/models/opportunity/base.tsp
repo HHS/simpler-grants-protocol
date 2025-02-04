@@ -1,43 +1,26 @@
-namespace CommonGrants.Models;
+import "@typespec/json-schema";
+
+import "./status.tsp";
+import "./funding.tsp";
+
+@JsonSchema.jsonSchema
+namespace CommonGrants.Models.Opportunity;
 
 // ########################################
 // Model definition
 // ########################################
 
-/** The base model for a funding opportunity.
- *
- * It supports customization by templating the customFields property.
- *
- * @template Fields A CustomFieldMap object with user-defined custom fields,
- * that should be included in a given implementation of the Opportunity model.
- * @example Declare a new Opportunity model with custom fields
- *
- * ```typespec
- * model Agency extends CustomField {
- *   type: CustomFieldType.string;
- *   value: string;
- * }
- *
- * model NewFields extends CustomFieldMap {
- *   agency: Agency;
- * }
- *
- * alias CustomOpportunity = Opportunity<NewFields>;
- * ```
- */
-@example(
-  OpportunityExamples.minimal,
-  #{ title: "Minimal opportunity with required fields only" }
-)
-model Opportunity<Fields = CustomFieldMap> {
+@doc("A funding opportunity")
+model OpportunityBase {
   /** Globally unique id for the opportunity */
+  @visibility(Lifecycle.Read)
   id: uuid;
-
-  /** URL for the original source of the opportunity */
-  source: url;
 
   /** Title or name of the funding opportunity */
   title: string;
+
+  /** The status of the opportunity */
+  status: OppStatus;
 
   /** Description of the opportunity's purpose and scope */
   description: string;
@@ -48,8 +31,14 @@ model Opportunity<Fields = CustomFieldMap> {
   /** Key dates and milestones in the application process */
   applicationTimeline?: Event[];
 
+  /** URL for the original source of the opportunity */
+  source?: url;
+
   /** Additional custom fields specific to this opportunity */
-  customFields?: Fields;
+  customFields?: CustomFieldMap;
+
+  // Spreads the fields from the Metadata model into the Opportunity model
+  ...SystemMetadata;
 }
 
 // ########################################
@@ -69,6 +58,7 @@ namespace OpportunityExamples {
       programArea: CustomFieldExamples.programArea,
       eligibilityType: CustomFieldExamples.programArea,
     },
+    ...MetadataExample.system,
   };
 
   /** A minimal opportunity example with only required fields */
@@ -78,5 +68,6 @@ namespace OpportunityExamples {
     title: "Small Business Innovation Grant",
     description: "Supporting small business innovation projects",
     fundingDetails: FundingExamples.onlyLimit,
+    ...MetadataExample.system,
   };
 }

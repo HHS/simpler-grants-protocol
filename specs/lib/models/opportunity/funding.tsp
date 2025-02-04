@@ -1,11 +1,12 @@
-using TypeSpec.Http;
+import "../index.tsp";
 
-namespace CommonGrants.Models;
+namespace CommonGrants.Models.Opportunity;
 
 // ########################################
 // Model definition
 // ########################################
 
+/** Details about the funding available for this opportunity */
 @example(FundingExamples.allFields, #{ title: "All fields defined" })
 @example(
   FundingExamples.awardRange,
@@ -16,11 +17,22 @@ namespace CommonGrants.Models;
   #{ title: "Total funding limit but no award range" }
 )
 model FundingDetails {
+  /** Total amount of funding available for this opportunity */
   totalAmountAvailable?: Money;
+
+  /** Minimum amount of funding granted per award */
   minAwardAmount?: Money;
+
+  /** Maximum amount of funding granted per award */
   maxAwardAmount?: Money;
+
+  /** Minimum number of awards granted */
   minAwardCount?: integer;
+
+  /** Maximum number of awards granted */
   maxAwardCount?: integer;
+
+  /** Estimated number of awards that will be granted */
   estimatedAwardCount?: integer;
 }
 
