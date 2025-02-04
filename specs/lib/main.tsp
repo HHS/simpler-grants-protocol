@@ -19,7 +19,7 @@ using TypeSpec.Http;
 })
 namespace CommonGrants.API;
 
-@tag("Search")
+@tag("Opportunities")
 @route("/opportunities")
 namespace Opportunities {
   alias Router = Routes.Opportunities;
