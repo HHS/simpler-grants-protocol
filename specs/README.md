@@ -48,16 +48,17 @@ model Agency extends CustomField {
 
     @example("Department of Transportation")
     value: string;
+
     description: "The agency responsible for this opportunity";
 }
 
-// Create a map of custom fields
-model CustomFields extends CustomFieldMap {
-    agency: Agency;
-}
-
-// Create a custom Opportunity type using the template
-alias CustomOpportunity = Opportunity<CustomFields>;
+// Extend the `OpportunityBase` model to create a new `CustomOpportunity` model
+// that includes the new `Agency` field in its `customFields` property
+model CustomOpportunity extends OpportunityBase {
+    customFields: {
+        agency: Agency;
+    }
+};
 ```
 
 ### Override default routes
