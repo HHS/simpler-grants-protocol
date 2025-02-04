@@ -4,6 +4,7 @@ namespace CommonGrants.Models;
 // Model definition
 // ########################################
 
+/** A monetary amount and the currency in which its denominated */
 @example(MoneyExamples.usdWithCents, #{ title: "US dollars and cents" })
 @example(
   MoneyExamples.euroWithoutCents,

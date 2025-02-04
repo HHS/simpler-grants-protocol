@@ -4,6 +4,7 @@ import "./status.tsp";
 import "./funding.tsp";
 import "./timeline.tsp";
 
+/** Namespace for CommonGrants models that are specific to funding opportunities */
 @JsonSchema.jsonSchema
 namespace CommonGrants.Models.Opportunity;
 

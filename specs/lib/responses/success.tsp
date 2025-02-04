@@ -8,7 +8,24 @@ model Success {
   message: string;
 }
 
-/** Template for normal response data */
+/** Template for a 200 response with data
+ *
+ * @template T The schema for the value of the `"data"` property in this response
+ * @example How to specify a custom 200 response model
+ *
+ * ```typespec
+ *
+ * // Define a model
+ * model CustomModel {
+ *   id: string;
+ *   description: string;
+ * }
+ *
+ * // Pass that model to the `Ok` template
+ * alias CustomModel200 = Success.Ok<CustomModel>;
+ * ```
+ */
+@doc("A 200 response with data")
 model Ok<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
@@ -17,7 +34,24 @@ model Ok<T> extends Success {
   data: T;
 }
 
-/** Template for paginated responses */
+/** Template for a 200 response with paginated list of items
+ *
+ * @template T The schema for the value of the `"items"` property in this response
+ * @example How to specify a custom paginated response model
+ *
+ * ```typespec
+ *
+ * // Define a model
+ * model CustomModel {
+ *   id: string;
+ *   description: string;
+ * }
+ *
+ * // Pass that model to the `Ok` template
+ * alias CustomModelResponse = Success.Paginated<CustomModel>;
+ * ```
+ */
+@doc("A 200 response with a paginated list of items")
 model Paginated<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;

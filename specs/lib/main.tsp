@@ -9,9 +9,13 @@ import "./routes/index.tsp";
 
 using TypeSpec.Http;
 
-// Define the top-level namespace for the library
+/** The base OpenAPI specification for a CommonGrants API
+ *
+ * In order for an API to be "compliant" with the CommonGrants protocol,
+ * it must implement all of the routes included in this base specification.
+ */
 @service({
-  name: "Base API",
+  title: "Base API",
 })
 namespace CommonGrants.API;
 

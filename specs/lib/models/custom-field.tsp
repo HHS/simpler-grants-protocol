@@ -17,6 +17,23 @@ enum CustomFieldType {
 // Models definition
 // ########################################
 
+/** Model for defining custom fields that are specific to a given implementation.
+ *
+ * @example How to define a custom field using this model
+ *
+ * ```typespec
+ * model Agency extends CustomField {
+ *   name: "agency";
+ *
+ *   type: CustomFieldType.string;
+ *
+ *   @example("Department of Transportation")
+ *   value: string;
+ *
+ *   description?: "The agency responsible for managing this opportunity";
+ * }
+ * ```
+ */
 @example(
   CustomFieldExamples.programArea,
   #{ title: "String field for program area" }

@@ -12,9 +12,8 @@ import "./opportunity/index.tsp";
 
 using TypeSpec.JsonSchema;
 
-// Define the top-level namespace for the models
-// and emit these models as JSON schemas
-@jsonSchema
+/** Namespace for CommonGrants models that can be used in API routes */
+@jsonSchema // and emit these models as JSON schemas
 namespace CommonGrants.Models;
 
 /** The base model for a funding opportunity.
