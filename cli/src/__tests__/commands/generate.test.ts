@@ -1,23 +1,37 @@
-import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+import { describe, it, expect, beforeEach, beforeAll, jest } from "@jest/globals";
 import { Command } from "commander";
 import { generateCommand } from "../../commands/generate";
-import { DefaultCodeGenerationService } from "../../services/code-generation.service";
 
-jest.mock("../../services/code-generation.service");
+// Create mock functions outside
+const mockGenerateServer = jest.fn();
+const mockGenerateClient = jest.fn();
+
+// Mock the service with consistent implementation
+jest.mock("../../services/code-generation.service", () => ({
+  DefaultCodeGenerationService: jest.fn(() => ({
+    generateServer: mockGenerateServer,
+    generateClient: mockGenerateClient,
+  })),
+}));
 
 describe("generateCommand", () => {
   let program: Command;
+  let generateCmd: Command;
+
+  beforeAll(() => {
+    program = new Command();
+    generateCommand(program);
+    generateCmd = program.commands.find(cmd => cmd.name() === "generate")!;
+  });
 
   beforeEach(() => {
-    program = new Command();
-    (DefaultCodeGenerationService as jest.Mock).mockClear();
+    mockGenerateServer.mockClear();
+    mockGenerateClient.mockClear();
   });
 
   describe("generate server", () => {
     it("should register generate server command", () => {
-      generateCommand(program);
-      const generateCmd = program.commands.find(cmd => cmd.name() === "generate");
-      const serverCmd = generateCmd?.commands.find(cmd => cmd.name() === "server");
+      const serverCmd = generateCmd.commands.find(cmd => cmd.name() === "server");
       expect(serverCmd).toBeDefined();
       expect(serverCmd?.description()).toBe(
         "Generate API server code from a TypeSpec specification"
@@ -25,14 +39,7 @@ describe("generateCommand", () => {
     });
 
     it("should handle server generation with options", async () => {
-      const mockGenerateServer = jest.fn();
-      (DefaultCodeGenerationService as jest.Mock).mockImplementation(() => ({
-        generateServer: mockGenerateServer,
-      }));
-
-      generateCommand(program);
-      const generateCmd = program.commands.find(cmd => cmd.name() === "generate");
-      await generateCmd?.parseAsync([
+      await generateCmd.parseAsync([
         "node",
         "test",
         "server",
@@ -52,22 +59,13 @@ describe("generateCommand", () => {
 
   describe("generate client", () => {
     it("should register generate client command", () => {
-      generateCommand(program);
-      const generateCmd = program.commands.find(cmd => cmd.name() === "generate");
-      const clientCmd = generateCmd?.commands.find(cmd => cmd.name() === "client");
+      const clientCmd = generateCmd.commands.find(cmd => cmd.name() === "client");
       expect(clientCmd).toBeDefined();
       expect(clientCmd?.description()).toBe("Generate client code from a TypeSpec specification");
     });
 
     it("should handle client generation with options", async () => {
-      const mockGenerateClient = jest.fn();
-      (DefaultCodeGenerationService as jest.Mock).mockImplementation(() => ({
-        generateClient: mockGenerateClient,
-      }));
-
-      generateCommand(program);
-      const generateCmd = program.commands.find(cmd => cmd.name() === "generate");
-      await generateCmd?.parseAsync([
+      await generateCmd.parseAsync([
         "node",
         "test",
         "client",
