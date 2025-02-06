@@ -32,8 +32,8 @@ export const GenerateArgsSchema = z.object({
 // ############################################################
 
 export const InitCommandSchema = z.object({
-  template: z.string().optional(),
-  dir: z.string().optional(),
+  template: z.string().min(1).optional(),
+  dir: z.string().min(1).optional(),
   list: z.boolean().optional(),
 });
 

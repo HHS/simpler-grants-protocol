@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { InitService } from "../services/interfaces";
 import { DefaultInitService } from "../services/init.service";
 import { InitCommandSchema } from "../types/command-args";
+import { handleCommandError } from "../utils/error";
 
 export function initCommand(program: Command) {
   const initService: InitService = new DefaultInitService();
@@ -24,8 +25,7 @@ export function initCommand(program: Command) {
         const validatedOptions = InitCommandSchema.parse(options);
         await initService.init(validatedOptions);
       } catch (error) {
-        console.error("Error initializing project:", error);
-        process.exit(1);
+        handleCommandError(error);
       }
     });
 }
