@@ -1,6 +1,10 @@
 import { Command } from "commander";
 import { DefaultCodeGenerationService } from "../services/code-generation.service";
-import { validateGenerateServerOptions } from "../types/command-options";
+import {
+  GenerateArgsSchema,
+  GenerateServerCommandSchema,
+  GenerateClientCommandSchema,
+} from "../types/command-args";
 
 export function generateCommand(program: Command) {
   const generationService = new DefaultCodeGenerationService();
@@ -15,11 +19,9 @@ export function generateCommand(program: Command) {
     .option("--only <components>", "Generate only specific components")
     .action(async (specPath, options) => {
       try {
-        const validatedOptions = validateGenerateServerOptions(options);
-        await generationService.generateServer(specPath, {
-          lang: validatedOptions.lang,
-          only: validatedOptions.only?.split(","),
-        });
+        const validatedArgs = GenerateArgsSchema.parse({ specPath });
+        const validatedOptions = GenerateServerCommandSchema.parse(options);
+        await generationService.generateServer(validatedArgs.specPath, validatedOptions);
       } catch (error) {
         if (error instanceof Error) {
           console.error("Validation error:", error.message);
@@ -39,13 +41,15 @@ export function generateCommand(program: Command) {
     .option("--docs", "Include API documentation")
     .action(async (specPath, options) => {
       try {
-        await generationService.generateClient(specPath, {
-          lang: options.lang,
-          output: options.output,
-          docs: options.docs,
-        });
+        const validatedArgs = GenerateArgsSchema.parse({ specPath });
+        const validatedOptions = GenerateClientCommandSchema.parse(options);
+        await generationService.generateClient(validatedArgs.specPath, validatedOptions);
       } catch (error) {
-        console.error("Error generating client:", error);
+        if (error instanceof Error) {
+          console.error("Validation error:", error.message);
+        } else {
+          console.error("Error generating client:", error);
+        }
         process.exit(1);
       }
     });
