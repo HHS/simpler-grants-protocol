@@ -1,6 +1,11 @@
 import { Command } from "commander";
 import { DefaultValidationService } from "../services/validation.service";
-import { validateCheckApiOptions, validateCheckSpecOptions } from "../types/command-options";
+import {
+  CheckApiArgsSchema,
+  CheckApiCommandSchema,
+  CheckSpecArgsSchema,
+  CheckSpecCommandSchema,
+} from "../types/command-args";
 
 export function checkCommand(program: Command) {
   const validationService = new DefaultValidationService();
@@ -17,8 +22,13 @@ export function checkCommand(program: Command) {
     .option("--auth <auth>", "Authentication token or credentials")
     .action(async (apiUrl, specPath, options) => {
       try {
-        const validatedOptions = validateCheckApiOptions(options);
-        await validationService.checkApi(apiUrl, specPath, validatedOptions);
+        const validatedArgs = CheckApiArgsSchema.parse({ apiUrl, specPath });
+        const validatedOptions = CheckApiCommandSchema.parse(options);
+        await validationService.checkApi(
+          validatedArgs.apiUrl,
+          validatedArgs.specPath,
+          validatedOptions
+        );
       } catch (error) {
         if (error instanceof Error) {
           console.error("Validation error:", error.message);
@@ -37,8 +47,9 @@ export function checkCommand(program: Command) {
     .option("--base <path>", "Path to base spec for validation")
     .action(async (specPath, options) => {
       try {
-        const validatedOptions = validateCheckSpecOptions(options);
-        await validationService.checkSpec(specPath, validatedOptions);
+        const validatedArgs = CheckSpecArgsSchema.parse({ specPath });
+        const validatedOptions = CheckSpecCommandSchema.parse(options);
+        await validationService.checkSpec(validatedArgs.specPath, validatedOptions);
       } catch (error) {
         if (error instanceof Error) {
           console.error("Validation error:", error.message);
