@@ -1,224 +1,152 @@
 # CommonGrants CLI
 
-The CommonGrants CLI is a tool for working with the CommonGrants protocol. It's designed to simplify the process of defining, implementing, and validating CommonGrants APIs.
+The CommonGrants CLI (`cg`) is a tool for working with the CommonGrants protocol. It simplifies the process of defining, implementing, and validating CommonGrants APIs.
 
-## Initializing a project
+> **Note**: This package is currently in alpha. The commands described below are mocked implementations that will be replaced with full functionality in future releases.
 
-### User story
-
-As a developer implementing the CommonGrants protocol from scratch, I want to run a command that quickly sets up a new API, custom fields library, or other CommonGrants package, so that I don't have to spend a lot of time creating boilerplate code.
-
-### Developer experience
-
-Simplest use case: Developer runs `cg init` and is prompted to select from a list of templates.
+## Installation
 
 ```bash
-cg init
+# Install globally
+npm install -g @common-grants/cli
+
+# Or use with npx
+npx @common-grants/cli <command>
 ```
 
-#### Additional Features
-- Pass a `--template` flag to create a project using a predefined CommonGrants template.
-- Use `--dir` to specify a target directory for the generated project.
-- Run `cg init --list` to display available templates without starting initialization.
+## Usage
 
-#### Example Usage
+View available commands and options:
+
 ```bash
-# Initialize a new project interactively
+cg --help
+```
+
+Output:
+
+```
+Usage: cg [options] [command]
+
+CommonGrants CLI tools
+
+Options:
+  -V, --version   output the version number
+  -h, --help      display help for command
+
+Commands:
+  init [options]  Initialize a new CommonGrants project
+  preview         Preview an OpenAPI specification
+  add field       Add a custom field to the schema
+  check           Validate APIs and specifications
+  generate        Generate server or client code
+  help [command]  display help for command
+```
+
+## Development status
+
+This CLI is currently in alpha stage with the following limitations:
+
+- All commands are mocked and return simulated responses
+
+The first round of releases will implement the following core:
+
+- Basic project initialization
+- Previewing an OpenAPI spec using Swagger UI or Redocly
+- Validating an API specification against the CommonGrants standard
+
+Subsequent releases will add:
+
+- An expanded set of templates
+- Validating an API implementation against its specification
+- Generating server and client code
+
+## Anticipated features
+
+The following examples describe the anticipated features of the CLI, but these are not yet implemented and are subject to change.
+
+### Initialize a Project
+
+Create a new CommonGrants project from a template:
+
+```bash
+# Initialize interactively
 cg init
 
-# Initialize a new project using a specific template
+# Use a specific template
 cg init --template grants-api
 
-# Initialize a new project in a custom directory
+# Initialize in a custom directory
 cg init --template grants-api --dir ./my-grants-project
 
-# List available templates before choosing one
+# List available templates
 cg init --list
 ```
 
-### Technical details
-- If the user doesn't pass a `--template` flag to the command, it should prompt users with a list of optional templates.
-- This command should be a thin wrapper for the `tsp init` function so that users can also pass paths or URLs to valid TypeSpec templates to create their own templates.
+### Preview OpenAPI Specification
 
----
-
-## Previewing an OpenAPI spec
-
-### User story
-
-As a developer working on a CommonGrants API, I want to preview my OpenAPI specification using Swagger or Redocly, so that I can quickly inspect my API documentation.
-
-### Developer experience
-
-Simplest use case: Preview an OpenAPI spec in Swagger UI.
+Preview an API specification using Swagger UI or Redocly:
 
 ```bash
-cg preview spec <path-to-typespec>
+# Preview with Swagger UI (default)
+cg preview spec.tsp
+
+# Preview with Redocly
+cg preview spec.tsp --ui redocly
 ```
 
-#### Additional Features
-- Allow choosing a preview tool (`--ui swagger` or `--ui redocly`).
-- Open a local preview server for interactive exploration.
+### Add Custom Fields
 
-#### Example Usage
-```bash
-# Preview an OpenAPI spec with Swagger UI
-cg preview spec grants-api.tsp --ui swagger
-
-# Preview an OpenAPI spec with Redocly
-cg preview spec grants-api.tsp --ui redocly
-```
-
-### Technical details
-- The command should generate an OpenAPI spec from the TypeSpec project and serve it using Swagger UI or Redocly.
-- Defaults to Swagger UI if no `--ui` option is specified.
-
----
-
-## Adding a custom field
-
-### User story
-
-As a developer defining a CommonGrants API, I want to add a new custom field with configurable options, so that I can extend the API schema easily.
-
-### Developer experience
-
-Simplest use case: Add a custom field by specifying `name` and `type`.
+Extend the API schema with custom fields:
 
 ```bash
-cg add field <name> <type>
-```
-
-#### Additional Features
-- Provide an example value with `--example`.
-- Add a description using `--description`.
-
-#### Example Usage
-```bash
-# Add a simple custom field
+# Add a basic field
 cg add field fundingAmount number
 
-# Add a custom field with an example value
-cg add field fundingAmount number --example 100000
-
-# Add a custom field with a description
-cg add field fundingAmount number --description "The total amount of funding available"
+# Include example and description
+cg add field fundingAmount number --example 100000 --description "Total funding available"
 ```
 
-### Technical details
-- The command should append the new field to the appropriate schema definition in the TypeSpec project.
-- If `--example` or `--description` is provided, they should be included as metadata in the schema definition.
+### Validate API Implementation
 
----
-
-## Validating a CommonGrants API implementation
-
-### User story
-
-As a developer implementing a CommonGrants API, I want to run a command that checks whether a given API matches an OpenAPI spec, so that I can catch inconsistencies between the spec and the implementation.
-
-### Developer experience
+Check if an API implementation matches its specification:
 
 ```bash
-cg check api <url-for-root-of-the-api> <path-to-typespec-or-open-api-spec>
+# Basic validation
+cg check api https://api.example.com spec.yaml
+
+# Generate validation report
+cg check api https://api.example.com spec.yaml --report json
+
+# Validate with authentication
+cg check api https://api.example.com spec.yaml --auth bearer:token
 ```
 
-#### Additional Features
-- Allow selecting the HTTP client for validation (e.g., `curl`, `httpx`).
-- Provide an option to generate a report (`--report json` or `--report html`).
-- Support authentication with `--auth` flag for APIs requiring credentials.
+### Generate Server Code
 
-#### Example Usage
-```bash
-# Validate a running API against a spec
-cg check api https://api.example.com grants-api.yaml
-
-# Validate using a different HTTP client
-cg check api https://api.example.com grants-api.yaml --client httpx
-
-# Validate an authenticated API
-cg check api https://api.example.com grants-api.yaml --auth bearer:mytoken
-
-# Generate a validation report in JSON format
-cg check api https://api.example.com grants-api.yaml --report json
-```
-
-### Technical details
-- This command should leverage existing tools that validate OpenAPI spec implementations, where possible.
-
----
-
-## Generating server code
-
-### User story
-
-As a developer implementing a CommonGrants API, I want to run a command that auto-generates an API server interface from a specification, so that I can follow a pattern of specification-driven development and quickly build APIs from scratch using the CommonGrants library.
-
-### Developer experience
+Generate API server code from a specification:
 
 ```bash
-cg generate server <path-to-typespec>
+# Generate with default settings
+cg generate server spec.tsp
+
+# Specify language/framework
+cg generate server spec.tsp --lang python
+
+# Generate specific components
+cg generate server spec.tsp --only controllers,routes
 ```
 
-#### Additional Features
-- Allow specifying a language/framework with `--lang` (e.g., Python, Node.js).
-- Enable plugin support for custom server code generation.
-- Generate only specific components with `--only <controllers|models|routes>`.
+### Generate Client Code
 
-#### Example Usage
-```bash
-# Generate a server using the default framework
-cg generate server grants-api.tsp
-
-# Generate a server for a specific language or framework
-cg generate server grants-api.tsp --lang python
-
-# Generate only controllers and routes
-cg generate server grants-api.tsp --only controllers,routes
-```
-
-### Technical details
-- This may require a combination of TypeSpec emitters and OpenAPI codegen.
-- If an API framework isn't specified by the user via a flag, the CLI should prompt a user to choose one.
-- Ideally, this entry point would be designed to support plugins for custom server code generators.
-
----
-
-## Generating client code
-
-### User story
-
-As a developer consuming a CommonGrants API, I want to run a command that generates client code from an API spec, so that I don't have to manually set up the code to work with that API.
-
-### Developer experience
+Generate client SDKs from an API specification:
 
 ```bash
-cg generate client <path-to-typespec>
+# Generate default client
+cg generate client spec.tsp
+
+# Generate for specific language
+cg generate client spec.tsp --lang typescript
+
+# Include documentation
+cg generate client spec.tsp --docs
 ```
-
-#### Additional Features
-- Support multiple output formats (`--output <path>`).
-- Allow targeting specific programming languages (`--lang`).
-- Optionally include API documentation with `--docs`.
-
-#### Example Usage
-```bash
-# Generate a client SDK from a spec
-cg generate client grants-api.tsp
-
-# Generate a client SDK for TypeScript
-cg generate client grants-api.tsp --lang typescript
-
-# Save generated client SDK in a custom directory
-cg generate client grants-api.tsp --output ./sdk
-
-# Include API documentation
-cg generate client grants-api.tsp --docs
-```
-
-### Technical details
-- This may require a combination of TypeSpec emitters and OpenAPI codegen.
-- If a client framework isn't specified by the user via a flag, the CLI should prompt a user to choose one.
-- Ideally, this entry point would be designed to support plugins for custom client code generators.
-
-
