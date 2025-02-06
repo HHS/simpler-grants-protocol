@@ -40,7 +40,8 @@
     "lint": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "check:lint": "eslint . --ext .ts",
-    "check:format": "prettier --check \"src/**/*.ts\""
+    "check:format": "prettier --check \"src/**/*.ts\"",
+    "checks": "npm run check:lint && npm run check:format"
   },
   "dependencies": {
     "chalk": "^4.1.2",
