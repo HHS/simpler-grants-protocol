@@ -1,0 +1,81 @@
+{
+  "default-api": {
+    "title": "CommonGrants API spec",
+    "description": "Define a Custom API spec with default routes from the CommonGrants library",
+    "compilerVersion": "0.63.0",
+    "libraries": ["@common-grants/core"],
+    "config": {},
+    "files": [
+      {
+        "path": "./default-api/tspconfig.yaml",
+        "destination": "tspconfig.yaml"
+      },
+      { "path": "./default-api/main.tsp", "destination": "main.tsp" }
+    ],
+    "inputs": {
+      "apiName": {
+        "type": "text",
+        "description": "Name of the API"
+      },
+      "namespace": {
+        "type": "text",
+        "description": "Namespace for the API in PascalCase"
+      }
+    }
+  },
+  "custom-api": {
+    "title": "CommonGrants API spec with custom fields",
+    "description": "Define a CommonGrants API spec with custom fields",
+    "compilerVersion": "0.63.0",
+    "libraries": ["@common-grants/core"],
+    "config": {},
+    "files": [
+      {
+        "path": "./custom-api/tspconfig.yaml",
+        "destination": "tspconfig.yaml"
+      },
+      {
+        "path": "./custom-api/main.tsp",
+        "destination": "main.tsp"
+      },
+      {
+        "path": "./custom-api/routes.tsp",
+        "destination": "routes.tsp"
+      },
+      {
+        "path": "./custom-api/models.tsp",
+        "destination": "models.tsp"
+      }
+    ],
+    "inputs": {
+      "apiName": {
+        "type": "text",
+        "description": "Name of the API"
+      },
+      "namespace": {
+        "type": "text",
+        "description": "Namespace for the API in PascalCase"
+      },
+      "fieldNameDisplay": {
+        "type": "text",
+        "description": "Human readable display name for the custom field"
+      },
+      "fieldNamePascal": {
+        "type": "text",
+        "description": "Name of the custom field in PascalCase"
+      },
+      "fieldTypeJSON": {
+        "type": "text",
+        "description": "Type of the custom field in JSON (e.g. string, number, boolean, object, array)"
+      },
+      "fieldTypeTSP": {
+        "type": "text",
+        "description": "Type of the custom field in TypeSpec"
+      },
+      "fieldDescription": {
+        "type": "text",
+        "description": "Description of the custom field"
+      }
+    }
+  }
+}
