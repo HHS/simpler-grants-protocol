@@ -1,7 +1,7 @@
 {
   "default-api": {
-    "title": "CommonGrants API spec",
-    "description": "Define a Custom API spec with default routes from the CommonGrants library",
+    "title": "Default CommonGrants API",
+    "description": "Define an API spec with default routes from the CommonGrants library",
     "compilerVersion": "0.63.0",
     "libraries": ["@common-grants/core"],
     "config": {},
@@ -24,8 +24,8 @@
     }
   },
   "custom-api": {
-    "title": "CommonGrants API spec with custom fields",
-    "description": "Define a CommonGrants API spec with custom fields",
+    "title": "Custom CommonGrants API",
+    "description": "Extend the default CommonGrants API spec with custom fields and routes",
     "compilerVersion": "0.63.0",
     "libraries": ["@common-grants/core"],
     "config": {},
