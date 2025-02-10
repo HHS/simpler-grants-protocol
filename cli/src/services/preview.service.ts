@@ -7,21 +7,15 @@ import yaml from "js-yaml";
 export class DefaultPreviewService implements PreviewService {
   async createPreviewApp(specPath: string): Promise<Express> {
     const app: Express = express();
-
-    try {
-      const openapiSpec = await this.getOpenApiSpec(specPath);
-      app.use(
-        "/",
-        swaggerUi.serve,
-        swaggerUi.setup(openapiSpec, {
-          explorer: true,
-        })
-      );
-      return app;
-    } catch (error) {
-      console.error("Failed to create preview app:", error);
-      throw error;
-    }
+    const openapiSpec = await this.getOpenApiSpec(specPath);
+    app.use(
+      "/",
+      swaggerUi.serve,
+      swaggerUi.setup(openapiSpec, {
+        explorer: false,
+      })
+    );
+    return app;
   }
 
   async previewSpec(specPath: string): Promise<void> {
@@ -58,6 +52,18 @@ export class DefaultPreviewService implements PreviewService {
       return spec;
     } catch (error) {
       if (error instanceof Error) {
+        // Check if the error is a file not found error
+        if (error.message.includes("ENOENT")) {
+          throw new Error(
+            `File not found: ${specPath}\nPlease check that the file exists and you have the correct path.`
+          );
+        }
+        // For YAML parsing errors, provide a more helpful message
+        if (error.message.includes("yaml")) {
+          throw new Error(
+            `Failed to parse OpenAPI specification: The file is not valid YAML/JSON format.\nError: ${error.message}`
+          );
+        }
         throw new Error(`Failed to load OpenAPI specification: ${error.message}`);
       }
       throw error;

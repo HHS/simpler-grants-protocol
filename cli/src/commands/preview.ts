@@ -9,7 +9,6 @@ export function previewCommand(program: Command) {
     .command("preview")
     .description("Preview an OpenAPI specification")
     .argument("<specPath>", "Path to OpenAPI spec (.yaml or .json)")
-    .option("--ui <tool>", "Preview tool to use (swagger or redocly)", "swagger")
     .action(async specPath => {
       try {
         const validatedArgs = PreviewArgsSchema.parse({ specPath });
