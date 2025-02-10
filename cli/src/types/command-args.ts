@@ -29,6 +29,10 @@ export const GenerateArgsSchema = z.object({
   specPath: z.string().endsWith(".tsp").or(z.string().endsWith(".yaml")),
 });
 
+export const CompileArgsSchema = z.object({
+  typespecPath: z.string().endsWith(".tsp", { message: "File must be a .tsp file" }),
+});
+
 // ############################################################
 // Zod Schemas - Options
 // ############################################################
@@ -83,6 +87,7 @@ export type PreviewArgs = z.infer<typeof PreviewArgsSchema>;
 export type CheckApiArgs = z.infer<typeof CheckApiArgsSchema>;
 export type CheckSpecArgs = z.infer<typeof CheckSpecArgsSchema>;
 export type GenerateArgs = z.infer<typeof GenerateArgsSchema>;
+export type CompileArgs = z.infer<typeof CompileArgsSchema>;
 
 // ############################################################
 // Types - Options
