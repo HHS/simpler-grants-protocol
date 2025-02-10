@@ -11,14 +11,13 @@ export function initCommand(program: Command) {
     .command("init")
     .description("Initialize a new CommonGrants project")
     .option("-t, --template <template>", "Use a specific template")
-    .option("-d, --dir <directory>", "Target directory for the new project")
     .option("-l, --list", "List available templates")
     .action(async options => {
       try {
         if (options.list) {
           const templates = await initService.listTemplates();
           console.log("Available templates:");
-          templates.forEach(template => console.log(`  - ${template}`));
+          templates.forEach(template => console.log(`- ${template}`));
           return;
         }
 

@@ -94,8 +94,6 @@ export interface CodeGenerationService {
 export interface InitOptions {
   /** Template name or path to use for initialization */
   template?: string;
-  /** Output directory for the new project */
-  output?: string;
 }
 
 /**
