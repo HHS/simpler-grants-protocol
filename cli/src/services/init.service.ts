@@ -30,7 +30,7 @@ export class DefaultInitService implements InitService {
     } catch (error) {
       console.error("Failed to load templates:", error);
       // Fallback to default templates if loading fails
-      this.templates = ["grants-api", "custom-fields", "minimal-api"];
+      this.templates = ["default-api", "custom-api"];
     }
   }
 

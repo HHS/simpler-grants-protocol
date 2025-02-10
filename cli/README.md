@@ -42,6 +42,21 @@ Commands:
   help [command]  display help for command
 ```
 
+### Initialize a Project
+
+Create a new CommonGrants project from a template:
+
+```bash
+# Initialize interactively
+cg init
+
+# List available templates
+cg init --list
+
+# Use a specific template
+cg init --template custom-api
+```
+
 ## Development status
 
 This CLI is currently in alpha stage with the following limitations:
@@ -63,24 +78,6 @@ Subsequent releases will add:
 ## Anticipated features
 
 The following examples describe the anticipated features of the CLI, but these are not yet implemented and are subject to change.
-
-### Initialize a Project
-
-Create a new CommonGrants project from a template:
-
-```bash
-# Initialize interactively
-cg init
-
-# Use a specific template
-cg init --template grants-api
-
-# Initialize in a custom directory
-cg init --template grants-api --dir ./my-grants-project
-
-# List available templates
-cg init --list
-```
 
 ### Preview OpenAPI Specification
 
