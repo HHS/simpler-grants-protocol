@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, jest } from "@jest/globals";
+import { describe, it, expect, beforeAll, beforeEach, afterAll, jest } from "@jest/globals";
 import { Command } from "commander";
 import { compileCommand } from "../../commands/compile";
 
@@ -14,10 +14,11 @@ describe("compileCommand", () => {
   let program: Command;
   let compileCmd: Command;
 
-  // Mock process.exit
+  // Mock process.exit and console.error
   const mockExit = jest.spyOn(process, "exit").mockImplementation(() => {
     throw new Error("process.exit mock");
   });
+  const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
 
   beforeAll(() => {
     program = new Command();
@@ -28,10 +29,12 @@ describe("compileCommand", () => {
   beforeEach(() => {
     mockCompile.mockClear();
     mockExit.mockClear();
+    mockConsoleError.mockClear();
   });
 
   afterAll(() => {
     mockExit.mockRestore();
+    mockConsoleError.mockRestore();
   });
 
   it("should register compile command", () => {
@@ -47,6 +50,9 @@ describe("compileCommand", () => {
   it("should reject non-tsp files", async () => {
     await expect(compileCmd.parseAsync(["node", "test", "spec.txt"])).rejects.toThrow(
       "process.exit mock"
+    );
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining("File must be a .tsp file")
     );
   });
 });

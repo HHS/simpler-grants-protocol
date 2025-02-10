@@ -12,6 +12,7 @@ describe("DefaultCompileService", () => {
   let service: DefaultCompileService;
   let mockSpawn: jest.Mock;
   let mockChildProcess: Partial<ChildProcess> & EventEmitter;
+  const mockConsole = jest.spyOn(console, "error").mockImplementation(() => {});
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -19,6 +20,10 @@ describe("DefaultCompileService", () => {
     mockSpawn = spawn as jest.Mock;
     mockChildProcess = new EventEmitter() as Partial<ChildProcess> & EventEmitter;
     mockSpawn.mockReturnValue(mockChildProcess);
+  });
+
+  afterAll(() => {
+    mockConsole.mockRestore();
   });
 
   it("should spawn tsp compile with correct arguments", async () => {
@@ -44,5 +49,6 @@ describe("DefaultCompileService", () => {
     mockChildProcess.emit("error", error);
 
     await expect(compilePromise).rejects.toThrow("Command not found");
+    expect(mockConsole).toHaveBeenCalledWith("Error executing tsp compile:", error);
   });
 });
