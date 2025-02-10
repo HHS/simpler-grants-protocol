@@ -19,7 +19,6 @@ describe("initCommand", () => {
     expect(cmd).toBeDefined();
     expect(cmd?.description()).toBe("Initialize a new CommonGrants project");
     expect(cmd?.opts().template).toBeUndefined();
-    expect(cmd?.opts().dir).toBeUndefined();
     expect(cmd?.opts().list).toBeUndefined();
   });
 
