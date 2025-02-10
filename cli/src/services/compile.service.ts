@@ -1,19 +1,20 @@
 import { CompileService } from "./interfaces";
 import { spawn } from "child_process";
+import { tspBinPath } from "../utils/typespec";
 
 export class DefaultCompileService implements CompileService {
-  async compile(typespecPath: string): Promise<void> {
+  async compile(specPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const child = spawn("npx", ["tsp", "compile", typespecPath], {
+      const process = spawn("node", [tspBinPath, "compile", specPath], {
         stdio: "inherit",
       });
 
-      child.on("error", error => {
+      process.on("error", error => {
         console.error("Error executing tsp compile:", error);
         reject(error);
       });
 
-      child.on("exit", code => {
+      process.on("exit", code => {
         if (code === 0) {
           resolve();
         } else {

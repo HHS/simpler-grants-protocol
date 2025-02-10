@@ -3,6 +3,7 @@ import { DefaultCompileService } from "../../services/compile.service";
 import { spawn } from "child_process";
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
+import { tspBinPath } from "../../utils/typespec";
 
 jest.mock("child_process", () => ({
   spawn: jest.fn(),
@@ -31,7 +32,7 @@ describe("DefaultCompileService", () => {
     mockChildProcess.emit("exit", 0);
     await compilePromise;
 
-    expect(mockSpawn).toHaveBeenCalledWith("npx", ["tsp", "compile", "spec.tsp"], {
+    expect(mockSpawn).toHaveBeenCalledWith("node", [tspBinPath, "compile", "spec.tsp"], {
       stdio: "inherit",
     });
   });
