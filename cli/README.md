@@ -25,21 +25,20 @@ cg --help
 Output:
 
 ```
-Usage: cg [options] [command]
-
 CommonGrants CLI tools
 
 Options:
-  -V, --version   output the version number
-  -h, --help      display help for command
+  -V, --version           output the version number
+  -h, --help              display help for command
 
 Commands:
-  init [options]  Initialize a new CommonGrants project
-  preview         Preview an OpenAPI specification
-  add field       Add a custom field to the schema
-  check           Validate APIs and specifications
-  generate        Generate server or client code
-  help [command]  display help for command
+  init [options]          Initialize a new CommonGrants project
+  preview <specPath>      Preview an OpenAPI specification
+  add
+  check                   Validate APIs and specifications
+  generate                Generate server or client code
+  compile <typespecPath>  Compile a TypeSpec file to OpenAPI
+  help [command]          display help for command
 ```
 
 ### Initialize a Project
@@ -55,6 +54,28 @@ cg init --list
 
 # Use a specific template
 cg init --template custom-api
+```
+
+### Compile TypeSpec to OpenAPI
+
+Compile a TypeSpec file to an OpenAPI specification:
+
+```bash
+cg compile spec.tsp
+```
+
+This is a thin wrapper around the `tsp compile` command and uses your project's `tspconfig.yaml` file to determine the output format.
+
+### Preview OpenAPI Specification
+
+Preview an API specification using Swagger UI:
+
+```bash
+# Preview a YAML file
+cg preview openapi.yaml
+
+# Preview a JSON file
+cg preview openapi.json
 ```
 
 ## Development status
@@ -78,18 +99,6 @@ Subsequent releases will add:
 ## Anticipated features
 
 The following examples describe the anticipated features of the CLI, but these are not yet implemented and are subject to change.
-
-### Preview OpenAPI Specification
-
-Preview an API specification using Swagger UI or Redocly:
-
-```bash
-# Preview with Swagger UI (default)
-cg preview spec.tsp
-
-# Preview with Redocly
-cg preview spec.tsp --ui redocly
-```
 
 ### Add Custom Fields
 
