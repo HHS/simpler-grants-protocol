@@ -26,7 +26,7 @@ export interface PreviewService {
    * @param options - Configuration options for the preview
    * @throws {Error} If spec file is invalid or preview server fails to start
    */
-  previewSpec(specPath: string, options: PreviewOptions): Promise<void>;
+  previewSpec(specPath: string): Promise<void>;
 }
 
 /**
@@ -94,14 +94,6 @@ export interface CodeGenerationService {
 export interface InitOptions {
   /** Template name or path to use for initialization */
   template?: string;
-}
-
-/**
- * Options for previewing an API specification
- */
-export interface PreviewOptions {
-  /** UI tool to use for preview (defaults to swagger) */
-  ui?: "swagger" | "redocly";
 }
 
 /**

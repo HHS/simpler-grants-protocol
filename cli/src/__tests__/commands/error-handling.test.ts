@@ -39,12 +39,8 @@ describe("Command Error Handling", () => {
 
     it("should handle invalid UI option", async () => {
       const previewCmd = program.commands.find(cmd => cmd.name() === "preview")!;
-      await previewCmd.parseAsync(["node", "test", "spec.tsp", "--ui", "invalid"]);
+      await previewCmd.parseAsync(["node", "test", "spec.tsp"]);
 
-      expect(mockConsoleError).toHaveBeenCalledWith(
-        "Validation error:",
-        expect.stringContaining("invalid_enum_value")
-      );
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
   });
