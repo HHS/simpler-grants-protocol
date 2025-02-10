@@ -4,6 +4,7 @@ import { spawn } from "child_process";
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
 import { Readable } from "stream";
+import { tspBinPath } from "../../utils/typespec";
 
 // Mock child_process.spawn
 jest.mock("child_process", () => ({
@@ -64,11 +65,12 @@ describe("DefaultInitService", () => {
       // Create a promise that will resolve when init completes
       const initPromise = service.init({});
       // Simulate successful process exit
-      mockChildProcess.emit("exit", 0);
+      // Simulate successful process exit
       // Wait for init to complete
+      mockChildProcess.emit("exit", 0);
       await initPromise;
-      // Verify spawn was called with correct arguments
-      expect(mockSpawn).toHaveBeenCalledWith("npx", ["tsp", "init", templateUrl], {
+
+      expect(mockSpawn).toHaveBeenCalledWith("node", [tspBinPath, "init", templateUrl], {
         stdio: "inherit",
       });
     });
@@ -79,8 +81,8 @@ describe("DefaultInitService", () => {
       await initPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "npx",
-        ["tsp", "init", templateUrl, "--template", "grants-api"],
+        "node",
+        [tspBinPath, "init", templateUrl, "--template", "grants-api"],
         { stdio: "inherit" }
       );
     });

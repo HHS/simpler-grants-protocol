@@ -1,5 +1,6 @@
 import { InitService, InitOptions } from "./interfaces";
 import { spawn } from "child_process";
+import { tspBinPath } from "../utils/typespec";
 
 const cgTemplate =
   "https://raw.githubusercontent.com/HHS/simpler-grants-protocol/refs/heads/main/templates/template.json";
@@ -50,33 +51,25 @@ export class DefaultInitService implements InitService {
   async init(options: InitOptions): Promise<void> {
     return new Promise((resolve, reject) => {
       // Build the argument list for the tsp init command
-      // First two arguments are always "init" and the template URL
-      const args = ["init", cgTemplate];
+      const args = [tspBinPath, "init", cgTemplate];
 
       // Add template argument if specified in options
       if (options.template) {
         args.push("--template", options.template);
       }
 
-      // Spawn npx process to run the TypeSpec CLI
-      // - First argument is the command to run via npx ("tsp")
-      // - Second argument spreads our built args array
-      // - stdio: "inherit" connects the child process I/O directly to the parent,
-      //   allowing interactive prompts to work
-      const child = spawn("npx", ["tsp", ...args], {
+      // Spawn node process to run the TypeSpec CLI
+      const child = spawn("node", args, {
         stdio: "inherit",
       });
 
       // Handle any errors that occur while spawning/running the process
-      // This catches issues like "command not found" or permission errors
       child.on("error", error => {
         console.error("Error executing tsp init:", error);
         reject(error);
       });
 
       // Handle process completion
-      // - code 0 indicates success
-      // - any other code indicates failure
       child.on("exit", code => {
         if (code === 0) {
           resolve();

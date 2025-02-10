@@ -11,7 +11,9 @@ export const AddFieldArgsSchema = z.object({
 });
 
 export const PreviewArgsSchema = z.object({
-  specPath: z.string().endsWith(".tsp").or(z.string().endsWith(".yaml")),
+  specPath: z.string().refine(path => path.endsWith(".yaml") || path.endsWith(".json"), {
+    message: "Spec path must end with .yaml or .json",
+  }),
 });
 
 export const CheckApiArgsSchema = z.object({
@@ -27,6 +29,10 @@ export const GenerateArgsSchema = z.object({
   specPath: z.string().endsWith(".tsp").or(z.string().endsWith(".yaml")),
 });
 
+export const CompileArgsSchema = z.object({
+  typespecPath: z.string().endsWith(".tsp", { message: "File must be a .tsp file" }),
+});
+
 // ############################################################
 // Zod Schemas - Options
 // ############################################################
@@ -39,10 +45,6 @@ export const InitCommandSchema = z.object({
 export const AddFieldCommandSchema = z.object({
   example: z.string().optional(),
   description: z.string().optional(),
-});
-
-export const PreviewCommandSchema = z.object({
-  ui: z.enum(["swagger", "redocly"]).default("swagger"),
 });
 
 export const CheckApiCommandSchema = z.object({
@@ -85,6 +87,7 @@ export type PreviewArgs = z.infer<typeof PreviewArgsSchema>;
 export type CheckApiArgs = z.infer<typeof CheckApiArgsSchema>;
 export type CheckSpecArgs = z.infer<typeof CheckSpecArgsSchema>;
 export type GenerateArgs = z.infer<typeof GenerateArgsSchema>;
+export type CompileArgs = z.infer<typeof CompileArgsSchema>;
 
 // ############################################################
 // Types - Options
@@ -92,7 +95,6 @@ export type GenerateArgs = z.infer<typeof GenerateArgsSchema>;
 
 export type InitCommandOptions = z.infer<typeof InitCommandSchema>;
 export type AddFieldCommandOptions = z.infer<typeof AddFieldCommandSchema>;
-export type PreviewCommandOptions = z.infer<typeof PreviewCommandSchema>;
 export type CheckApiCommandOptions = z.infer<typeof CheckApiCommandSchema>;
 export type GenerateServerCommandOptions = z.infer<typeof GenerateServerCommandSchema>;
 export type CheckSpecCommandOptions = z.infer<typeof CheckSpecCommandSchema>;
