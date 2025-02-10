@@ -44,6 +44,7 @@
     "checks": "npm run check:lint && npm run check:format"
   },
   "dependencies": {
+    "@common-grants/core": "^0.1.0-alpha.7",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "inquirer": "^8.2.6",
