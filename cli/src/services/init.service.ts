@@ -5,7 +5,34 @@ const cgTemplate =
   "https://raw.githubusercontent.com/HHS/simpler-grants-protocol/refs/heads/main/templates/template.json";
 
 export class DefaultInitService implements InitService {
-  private readonly templates = ["grants-api", "custom-fields", "minimal-api"];
+  private templates: string[] = [];
+
+  async listTemplates(): Promise<string[]> {
+    // If templates haven't been loaded yet, load them
+    if (this.templates.length === 0) {
+      await this.loadTemplates();
+    }
+    return this.templates;
+  }
+
+  /**
+   * Loads available templates from the template.json file
+   * @private
+   */
+  private async loadTemplates(): Promise<void> {
+    try {
+      const response = await fetch(cgTemplate);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch templates: ${response.statusText}`);
+      }
+      const templateJson = (await response.json()) as Record<string, unknown>;
+      this.templates = Object.keys(templateJson);
+    } catch (error) {
+      console.error("Failed to load templates:", error);
+      // Fallback to default templates if loading fails
+      this.templates = ["grants-api", "custom-fields", "minimal-api"];
+    }
+  }
 
   /**
    * Initializes a new CommonGrants project using the TypeSpec CLI.
@@ -58,9 +85,5 @@ export class DefaultInitService implements InitService {
         }
       });
     });
-  }
-
-  async listTemplates(): Promise<string[]> {
-    return Promise.resolve(this.templates);
   }
 }

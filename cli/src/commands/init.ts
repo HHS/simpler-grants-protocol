@@ -18,7 +18,7 @@ export function initCommand(program: Command) {
         if (options.list) {
           const templates = await initService.listTemplates();
           console.log("Available templates:");
-          templates.forEach(template => console.log(`  - ${template}`));
+          templates.forEach(template => console.log(`- ${template}`));
           return;
         }
 
