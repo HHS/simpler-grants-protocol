@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/cli",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "license": "CC0-1.0",
   "description": "The CommonGrants protocol CLI tool",
   "main": "dist/index.js",
