@@ -5,6 +5,6 @@ using TypeSpec.Http;
 
 /** API description here */
 @service({
-  title: "{{parameters.apiName}}",
+  title: "Quickstart API",
 })
-namespace {{parameters.namespace}};
+namespace Quickstart;

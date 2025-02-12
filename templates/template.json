@@ -1,27 +1,18 @@
 {
-  "default-api": {
-    "title": "Default CommonGrants API",
-    "description": "Define an API spec with default routes from the CommonGrants library",
+  "quickstart": {
+    "title": "Quickstart example",
+    "description": "Example from the quickstart guide",
     "compilerVersion": "0.63.0",
     "libraries": ["@common-grants/core"],
     "config": {},
     "files": [
       {
-        "path": "./default-api/tspconfig.yaml",
+        "path": "./quickstart/tspconfig.yaml",
         "destination": "tspconfig.yaml"
       },
-      { "path": "./default-api/main.tsp", "destination": "main.tsp" }
-    ],
-    "inputs": {
-      "apiName": {
-        "type": "text",
-        "description": "Name of the API"
-      },
-      "namespace": {
-        "type": "text",
-        "description": "Namespace for the API in PascalCase"
-      }
-    }
+      { "path": "./quickstart/main.tsp", "destination": "main.tsp" },
+      { "path": "./quickstart/routes.tsp", "destination": "routes.tsp" }
+    ]
   },
   "custom-api": {
     "title": "Custom CommonGrants API",

@@ -1,5 +1,3 @@
-// routes.tsp
-
 import "@common-grants/core";
 import "./models.tsp";
 
@@ -8,12 +6,12 @@ import "./models.tsp";
 using CommonGrants.Routes;
 using TypeSpec.Http;
 
-@tag("Search")
+@tag("Opportunities")
 @route("/opportunities")
 namespace {{parameters.namespace}}.Routes {
   alias OpportunitiesRouter = Opportunities;
 
-  // Use the default model for list but custom model for read
+  // Use custom model for list and read
   op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
   op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
 }
