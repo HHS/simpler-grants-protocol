@@ -12,7 +12,9 @@ export default defineConfig({
   integrations: [
     starlight({
       plugins: [
-        starlightLinksValidator(),
+        starlightLinksValidator({
+          errorOnLocalLinks: false,
+        }),
         // Generate the OpenAPI documentation pages.
         starlightOpenAPI([
           {

@@ -1,0 +1,3 @@
+emit:
+  - "@typespec/openapi3"
+  - "@typespec/json-schema"

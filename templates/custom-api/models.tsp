@@ -1,5 +1,3 @@
-// models.tsp
-
 import "@common-grants/core";
 
 // Allows us to use models defined in the specification library
