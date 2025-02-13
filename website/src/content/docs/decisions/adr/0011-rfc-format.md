@@ -46,11 +46,11 @@ We've decided to use **GitHub Discussions** as the primary platform for hosting 
 
 | Criteria                            | GitHub Discussions | Dedicated Webpage | Google Groups | Discourse |
 | ----------------------------------- | :----------------: | :---------------: | :-----------: | :-------: |
-| Aligns with open-source RFCs        |         ✅          |         🟡         |       ❌       |     🟡     |
-| Accessible to a mix of stakeholders |         🟡          |         ✅         |       ✅       |     ✅     |
-| Open and transparent                |         ✅          |         ❌         |       ✅       |     ✅     |
-| Minimal overhead                    |         ✅          |         ❌         |       ❌       |     ❌     |
-| Easy to track engagement metrics    |         ✅          |         🟡         |       ❌       |     ❌     |
+| Aligns with open-source RFCs        |         ✅         |        🟡         |      ❌       |    🟡     |
+| Accessible to a mix of stakeholders |         🟡         |        ✅         |      ✅       |    ✅     |
+| Open and transparent                |         ✅         |        ❌         |      ✅       |    ✅     |
+| Minimal overhead                    |         ✅         |        ❌         |      ❌       |    ❌     |
+| Easy to track engagement metrics    |         ✅         |        🟡         |      ❌       |    ❌     |
 
 ### GitHub Discussions
 
