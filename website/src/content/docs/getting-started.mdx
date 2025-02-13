@@ -125,7 +125,7 @@ model CustomOpportunity extends Opportunity.OpportunityBase {
     #{
         agency: #{
             name: "Agency",
-            type: "string",
+            type: CustomFieldType.string,
             value: "Department of Energy",
             description: "The agency managing the funding opportunity."
         }
@@ -186,7 +186,7 @@ There's a lot happening here, so let's break it down section by section.
         #{
             agency: #{
                 name: "Agency",
-                type: "string",
+                type: CustomFieldType.string,
                 value: "Department of Energy",
                 description: "The agency managing the funding opportunity."
             }
