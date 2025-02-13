@@ -14,12 +14,12 @@ A description of an event with an associated date (and possible time).
 
 <Tabs>
   <TabItem label="Table">
-  | Property    | Type    | Required | Description                                         |
-  | ----------- | ------- | -------- | --------------------------------------------------- |
-  | name        | string  | Yes      | Human-readable name of the event                    |
-  | date        | isoDate | Yes      | Date of the event in in ISO 8601 format: YYYY-MM-DD |
-  | time        | isoTime | No       | Time of the event in in ISO 8601 format: HH:MM:SS   |
-  | description | string  | No       | A description of the event                          |
+  | Property    | Type                                                                    | Required | Description                                         |
+  | ----------- | ----------------------------------------------------------------------- | -------- | --------------------------------------------------- |
+  | name        | [string](/simpler-grants-protocol/reference/models/base-types#string)   | Yes      | Human-readable name of the event                    |
+  | date        | [isoDate](/simpler-grants-protocol/reference/models/base-types#isodate) | Yes      | Date of the event in in ISO 8601 format: YYYY-MM-DD |
+  | time        | [isoTime](/simpler-grants-protocol/reference/models/base-types#isotime) | No       | Time of the event in in ISO 8601 format: HH:MM:SS   |
+  | description | [string](/simpler-grants-protocol/reference/models/base-types#string)   | No       | A description of the event                          |
   </TabItem>
 
   <TabItem label="JSON Schema">

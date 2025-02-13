@@ -1,12 +1,11 @@
 ---
 title: Base types
 description: Core scalar types used throughout the protocol.
-tableOfContents: false
 sidebar:
-    order: 1
+  order: 1
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Core scalar types used throughout the protocol.
 
@@ -25,13 +24,12 @@ A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss.
   ```
   </TabItem>
 
-  <TabItem label="TypeSpec">
-  ```tsp
-  /** A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss */
-  @example(isoTime.fromISO("17:00:00"))
-  scalar isoTime extends plainTime;
-  ```
-  </TabItem>
+{" "}
+
+<TabItem label="TypeSpec">
+  ```tsp /** A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
+  */ @example(isoTime.fromISO("17:00:00")) scalar isoTime extends plainTime; ```
+</TabItem>
 
   <TabItem label="Example">
   ```json
@@ -55,17 +53,38 @@ A date on a calendar in ISO 8601 format YYYY-MM-DD.
   ```
   </TabItem>
 
-  <TabItem label="TypeSpec">
-  ```tsp
-  /** A date on a calendar in ISO 8601 format YYYY-MM-DD */
-  @example(isoDate.fromISO("2025-01-01"))
-  scalar isoDate extends plainTime;
+{" "}
+
+<TabItem label="TypeSpec">
+  ```tsp /** A date on a calendar in ISO 8601 format YYYY-MM-DD */
+  @example(isoDate.fromISO("2025-01-01")) scalar isoDate extends plainTime; ```
+</TabItem>
+
+  <TabItem label="Example">
+  ```json
+  "2025-01-01"
+  ```
+  </TabItem>
+</Tabs>
+
+### isoDateTime
+
+A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ.
+
+<Tabs>
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: isoDateTime.yaml
+  type: string
+  format: date-time
+  description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ
   ```
   </TabItem>
 
   <TabItem label="Example">
   ```json
-  "2025-01-01"
+  "2024-02-28T12:00:00Z"
   ```
   </TabItem>
 </Tabs>
@@ -85,14 +104,13 @@ A universally unique identifier.
   ```
   </TabItem>
 
-  <TabItem label="TypeSpec">
-  ```tsp
-  /** A universally unique identifier */
-  @example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
-  @format("uuid")
-  scalar uuid extends string;
-  ```
-  </TabItem>
+{" "}
+
+<TabItem label="TypeSpec">
+  ```tsp /** A universally unique identifier */
+  @example("30a12e5e-5940-4c08-921c-17a8960fcf4b") @format("uuid") scalar uuid
+  extends string; ```
+</TabItem>
 
   <TabItem label="Example">
   ```json
@@ -115,16 +133,11 @@ A decimal number (with variable scale) encoded as a string, to avoid floating po
   description: A decimal number (with variable scale) encoded as a string
   ```
   </TabItem>
-
   <TabItem label="TypeSpec">
-  ```tsp
-  /** A decimal number (with variable scale) encoded as a string, to avoid floating point issues */
-  @pattern(
-    "^-?[0-9]+\\.?[0-9]*$",
-    "Must be a valid decimal number represented as a string"
-  )
-  @example("100.50")
-  scalar decimalString extends string;
+  ```tsp /** A decimal number (with variable scale) encoded as a string, to
+  avoid floating point issues */ @pattern( "^-?[0-9]+\\.?[0-9]*$", "Must be a
+  valid decimal number represented as a string" ) @example("100.50") scalar
+  decimalString extends string;
   ```
   </TabItem>
 
@@ -140,4 +153,68 @@ A decimal number (with variable scale) encoded as a string, to avoid floating po
   "-100.50"
   ```
   </TabItem>
-</Tabs> 
+</Tabs>
+
+### url
+
+A Uniform Resource Locator (URL).
+
+<Tabs>
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: url.yaml
+  type: string
+  format: uri
+  description: A Uniform Resource Locator (URL)
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  "https://example.com/path"
+  ```
+  </TabItem>
+</Tabs>
+
+### integer
+
+A whole number without decimals.
+
+<Tabs>
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: integer.yaml
+  type: integer
+  description: A whole number without decimals
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  42
+  ```
+  </TabItem>
+</Tabs>
+
+### string
+
+A sequence of characters.
+
+<Tabs>
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: string.yaml
+  type: string
+  description: A sequence of characters
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  "Hello, world!"
+  ```
+  </TabItem>
+</Tabs>
