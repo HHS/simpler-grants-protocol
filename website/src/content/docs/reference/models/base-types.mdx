@@ -110,7 +110,8 @@ A universally unique identifier.
   ```tsp 
   /** A universally unique identifier */
   @example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
-  @format("uuid") scalar uuid extends string;
+  @format("uuid")
+  scalar uuid extends string;
   ```
   </TabItem>
 
@@ -131,7 +132,7 @@ A decimal number (with variable scale) encoded as a string, to avoid floating po
   $schema: https://json-schema.org/draft/2020-12/schema
   $id: decimalString.yaml
   type: string
-  pattern: "^-?[0-9]+\\.?[0-9]*$"
+  pattern: "^-?[0-9]+\.?[0-9]*$"
   description: A decimal number (with variable scale) encoded as a string
   ```
   </TabItem>
