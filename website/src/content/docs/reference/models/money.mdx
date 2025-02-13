@@ -2,6 +2,8 @@
 title: Money
 description: A model for representing monetary values
 tableOfContents: false
+sidebar:
+    order: 2
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
@@ -12,10 +14,10 @@ A monetary amount and the currency in which it is denominated.
 
 <Tabs>
   <TabItem label="Table">
-  | Property | Type          | Required | Description                                            |
-  | -------- | ------------- | -------- | ------------------------------------------------------ |
-  | amount   | decimalString | Yes      | The amount of money                                    |
-  | currency | string        | Yes      | The ISO 4217 currency code (e.g., "USD", "EUR", "GBP") |
+  | Property | Type          | Required | Description                                     |
+  | -------- | ------------- | -------- | ----------------------------------------------- |
+  | amount   | decimalString | Yes      | The amount of money                             |
+  | currency | string        | Yes      | The ISO 4217 currency code (e.g., "USD", "EUR") |
   </TabItem>
 
   <TabItem label="JSON Schema">
@@ -29,7 +31,7 @@ A monetary amount and the currency in which it is denominated.
       description: The amount of money
     currency:
       type: string
-      description: The ISO 4217 currency code (e.g., "USD", "EUR", "GBP")
+      description: The ISO 4217 currency code (e.g., "USD", "EUR")
   required:
     - amount
     - currency
@@ -38,16 +40,16 @@ A monetary amount and the currency in which it is denominated.
   </TabItem>
 
   <TabItem label="TypeSpec">
-    ```tsp
-    /** A monetary amount and the currency in which its denominated */
-    model Money {
-      /** The amount of money */
-      amount: decimalString;
+  ```tsp
+  /** A monetary amount and the currency in which its denominated */
+  model Money {
+    /** The amount of money */
+    amount: decimalString;
 
-      /** The ISO 4217 currency code in which the amount is denominated */
-      currency: string;
-    }
-    ```
+    /** The ISO 4217 currency code in which the amount is denominated */
+    currency: string;
+  }
+  ```
   </TabItem>
 
   <TabItem label="Example">

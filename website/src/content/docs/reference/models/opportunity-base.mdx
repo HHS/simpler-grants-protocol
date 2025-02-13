@@ -18,7 +18,7 @@ A funding opportunity, such as a grant or loan.
   | title          | string                | Yes      | Title or name of the funding opportunity                                     |
   | status         | OppStatus             | Yes      | Status of the opportunity                                                    |
   | description    | string                | Yes      | Description of the opportunity's purpose and scope                           |
-  | fundingDetails | FundingDetails        | Yes      | Details about the funding available                                          |
+  | fundingDetails | OppFunding            | Yes      | Details about the funding available                                          |
   | keyDates       | OppTimeline           | Yes      | Key dates for the opportunity, such as when the application opens and closes |
   | source         | url                   | No       | URL for the original source of the opportunity                               |
   | customFields   | Record\<CustomField\> | No       | Additional custom fields specific to this opportunity                        |
@@ -45,7 +45,7 @@ A funding opportunity, such as a grant or loan.
       type: string
       description: Description of the opportunity's purpose and scope
     fundingDetails:
-      $ref: FundingDetails.yaml
+      $ref: OppFunding.yaml
       description: Details about the funding available
     keyDates:
       $ref: OppTimeline.yaml
