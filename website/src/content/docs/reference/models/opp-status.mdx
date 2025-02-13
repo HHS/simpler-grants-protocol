@@ -1,0 +1,112 @@
+---
+title: OppStatus
+description: Union of values accepted for opportunity status
+tableOfContents: false
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Union of values accepted for opportunity status.
+
+### Status options
+
+| Value      | Description                                                    |
+| ---------- | -------------------------------------------------------------- |
+| forecasted | Opportunity is anticipated, but not yet accepting applications |
+| open       | Opportunity is actively accepting applications                 |
+| closed     | Opportunity is no longer accepting applications                |
+| custom     | Custom opportunity status defined within the record            |
+
+### Data model
+
+<Tabs>
+  <TabItem label="Table">
+  | Property    | Type   | Required | Description                                |
+  | ----------- | ------ | -------- | ------------------------------------------ |
+  | value       | enum   | Yes      | The status value                           |
+  | description | string | No       | A human-readable description of the status |
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: OppStatus.yaml
+  oneOf:
+    - type: object
+      properties:
+        value:
+          type: string
+          const: forecasted
+        description:
+          type: string
+          const: Opportunity is anticipated, but not yet accepting applications
+      required:
+        - value
+      description: Opportunity is anticipated, but not yet accepting applications
+    - type: object
+      properties:
+        value:
+          type: string
+          const: open
+        description:
+          type: string
+          const: Opportunity is actively accepting applications
+      required:
+        - value
+      description: Opportunity is actively accepting applications
+    - type: object
+      properties:
+        value:
+          type: string
+          const: closed
+        description:
+          type: string
+          const: Opportunity is no longer accepting applications
+      required:
+        - value
+      description: Opportunity is no longer accepting applications
+    - $ref: CustomEnumValue.yaml
+      description: Custom opportunity status
+  description: Union of values accepted for opportunity status
+  ```
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+    ```tsp
+    /** Union of values accepted for opportunity status */
+    @JsonSchema.oneOf
+    @discriminator("value")
+    union OppStatus {
+      /** Opportunity is anticipated, but not yet accepting applications */
+      forecasted: {
+        value: "forecasted",
+        description?: "Opportunity is anticipated, but not yet accepting applications",
+      },
+
+      /** Opportunity is actively accepting applications */
+      open: {
+        value: "open",
+        description?: "Opportunity is actively accepting applications",
+      },
+
+      /** Opportunity is no longer accepting applications */
+      closed: {
+        value: "closed",
+        description?: "Opportunity is no longer accepting applications",
+      },
+
+      /** Custom opportunity status */
+      custom: CustomEnumValue,
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  {
+    "value": "open",
+    "description": "Opportunity is actively accepting applications"
+  }
+  ```
+  </TabItem>
+</Tabs> 
