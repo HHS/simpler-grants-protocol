@@ -1,0 +1,132 @@
+---
+title: CustomField
+description: A model for defining custom fields that are specific to a given implementation
+tableOfContents: false
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+A model for defining custom fields on a record.
+
+### Data model
+
+<Tabs>
+  <TabItem label="Table">
+  | Property    | Type                                                                  | Required | Description                                               |
+  | ----------- | --------------------------------------------------------------------- | -------- | --------------------------------------------------------- |
+  | name        | [string](/simpler-grants-protocol/reference/models/base-types#string) | Yes      | Name of the custom field                                  |
+  | type        | [CustomFieldType](#customfieldtype)                                   | Yes      | The JSON schema type to use when de-serializing the value |
+  | schema      | [url](/simpler-grants-protocol/reference/models/base-types#url)       | No       | Link to the full JSON schema for this custom field        |
+  | value       | any                                                                   | Yes      | Value of the custom field                                 |
+  | description | [string](/simpler-grants-protocol/reference/models/base-types#string) | No       | Description of the custom field's purpose                 |
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: CustomField.yaml
+  type: object
+  properties:
+    name:
+      type: string
+      description: Name of the custom field
+    type:
+      $ref: CustomFieldType.yaml
+      description: The JSON schema type to use when de-serializing the value
+    schema:
+      type: string
+      format: uri
+      description: Link to the full JSON schema for this custom field
+    value:
+      description: Value of the custom field
+    description:
+      type: string
+      description: Description of the custom field's purpose
+  required:
+    - name
+    - type
+    - value
+  description: A custom field on a model
+  ```
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+  ```tsp
+  @doc("A custom field on a model")
+  model CustomField {
+    /** Name of the custom field */
+    name: string;
+
+    /** The JSON schema type to use when de-serializing the `value` field */
+    type: CustomFieldType;
+
+    /** Link to the full JSON schema for this custom field */
+    schema?: url;
+
+    /** Value of the custom field */
+    value: unknown;
+
+    /** Description of the custom field's purpose */
+    description?: string;
+  }
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  {
+    "name": "programArea",
+    "type": "string",
+    "value": "Healthcare Innovation",
+    "description": "Primary focus area of the grant program",
+    "schema": "https://example.com/program-areas.json"
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+
+### CustomFieldType
+
+The set of JSON schema types supported by a custom field.
+
+<Tabs>
+  <TabItem label="Options">
+  | Value   | Description             |
+  | ------- | ----------------------- |
+  | string  | Text values             |
+  | number  | Numeric values          |
+  | boolean | True/false values       |
+  | object  | Structured data objects |
+  | array   | Lists of values         |
+  </TabItem>
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: CustomFieldType.yaml
+  type: string
+  enum:
+    - string
+    - number
+    - boolean
+    - object
+    - array
+  description: The set of JSON schema types supported by a custom field
+  ```
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+  ```tsp
+  /** The set of JSON schema types supported by a custom field */
+  enum CustomFieldType {
+    string,
+    number,
+    boolean,
+    object,
+    array,
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## CustomField

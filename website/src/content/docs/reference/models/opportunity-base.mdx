@@ -1,0 +1,188 @@
+---
+title: OpportunityBase
+description: The data model for a funding opportunity
+tableOfContents: false
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+A funding opportunity, such as a grant or loan.
+
+### Data model
+
+<Tabs>
+  <TabItem label="Table">
+  | Property       | Type                                                                            | Required | Description                                                  |
+  | -------------- | ------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
+  | id             | [uuid](/simpler-grants-protocol/reference/models/base-types#uuid)               | Yes      | Globally unique id for the opportunity                       |
+  | title          | [string](/simpler-grants-protocol/reference/models/base-types#string)           | Yes      | Title or name of the funding opportunity                     |
+  | status         | [OppStatus](/simpler-grants-protocol/reference/models/opp-status)               | Yes      | Status of the opportunity                                    |
+  | description    | [string](/simpler-grants-protocol/reference/models/base-types#string)           | Yes      | Description of the opportunity's purpose and scope           |
+  | fundingDetails | [OppFunding](/simpler-grants-protocol/reference/models/opp-funding)             | Yes      | Details about the funding available                          |
+  | keyDates       | [OppTimeline](/simpler-grants-protocol/reference/models/opp-timeline)           | Yes      | Key dates for the opportunity                                |
+  | source         | [url](/simpler-grants-protocol/reference/models/base-types#url)                 | No       | URL for the original source of the opportunity               |
+  | customFields   | Record\<[CustomField](/simpler-grants-protocol/reference/models/custom-field)\> | No       | Additional custom fields specific to this opportunity        |
+  | createdAt      | [isoDateTime](/simpler-grants-protocol/reference/models/base-types#isodatetime) | Yes      | The timestamp (in UTC) at which the record was created       |
+  | lastModifiedAt | [isoDateTime](/simpler-grants-protocol/reference/models/base-types#isodatetime) | Yes      | The timestamp (in UTC) at which the record was last modified |
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: OpportunityBase.yaml
+  type: object
+  properties:
+    id:
+      $ref: uuid.yaml
+      description: Globally unique id for the opportunity
+    title:
+      type: string
+      description: Title or name of the funding opportunity
+    status:
+      $ref: OppStatus.yaml
+      description: Status of the opportunity
+    description:
+      type: string
+      description: Description of the opportunity's purpose and scope
+    fundingDetails:
+      $ref: OppFunding.yaml
+      description: Details about the funding available
+    keyDates:
+      $ref: OppTimeline.yaml
+      description: Key dates for the opportunity, such as when the application opens and closes
+    source:
+      type: string
+      format: uri
+      description: URL for the original source of the opportunity
+    customFields:
+      $ref: "#/$defs/RecordCustomField"
+      description: Additional custom fields specific to this opportunity
+    createdAt:
+      type: string
+      format: date-time
+      description: The timestamp (in UTC) at which the record was created.
+    lastModifiedAt:
+      type: string
+      format: date-time
+      description: The timestamp (in UTC) at which the record was last modified.
+  required:
+    - id
+    - title
+    - status
+    - description
+    - fundingDetails
+    - keyDates
+    - createdAt
+    - lastModifiedAt
+  description: A funding opportunity
+  $defs:
+    RecordCustomField:
+      type: object
+      properties: {}
+      additionalProperties:
+        $ref: CustomField.yaml
+  ```
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+  ```tsp
+  @doc("A funding opportunity")
+  model OpportunityBase {
+    /** Globally unique id for the opportunity */
+    @visibility(Lifecycle.Read)
+    id: uuid;
+
+    /** Title or name of the funding opportunity */
+    title: string;
+
+    /** Status of the opportunity */
+    status: OppStatus;
+
+    /** Description of the opportunity's purpose and scope */
+    description: string;
+
+    /** Details about the funding available */
+    fundingDetails: FundingDetails;
+
+    /** Key dates for the opportunity, such as when the application opens and closes */
+    keyDates: OppTimeline;
+
+    /** URL for the original source of the opportunity */
+    source?: url;
+
+    /** Additional custom fields specific to this opportunity */
+    customFields?: Record<CustomField>;
+
+    // Spreads the fields from the Metadata model into the Opportunity model
+    ...SystemMetadata;
+  }
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  {
+    "id": "049b4b15-f219-4037-901e-cd95ac32fbc8",
+    "title": "Healthcare Innovation Research Grant",
+    "description": "Funding for innovative healthcare delivery solutions",
+    "status": {
+      "value": "open",
+      "description": "Opportunity is actively accepting applications"
+    },
+    "fundingDetails": {
+      "totalAmountAvailable": {
+        "amount": "1000000.00",
+        "currency": "USD"
+      },
+      "minAwardAmount": {
+        "amount": "10000.00",
+        "currency": "USD"
+      },
+      "maxAwardAmount": {
+        "amount": "50000.00",
+        "currency": "USD"
+      },
+      "minAwardCount": 5,
+      "maxAwardCount": 20,
+      "estimatedAwardCount": 10
+    },
+    "keyDates": {
+      "appOpens": {
+        "name": "Application Opens",
+        "date": "2024-03-01",
+        "description": "Applications begin being accepted"
+      },
+      "appDeadline": {
+        "name": "Application Deadline",
+        "date": "2024-04-30",
+        "description": "Final deadline for all submissions"
+      },
+      "otherDates": {
+        "anticipatedAward": {
+          "name": "Anticipated award date",
+          "date": "2025-03-15",
+          "description": "When we expect to announce awards for this opportunity."
+        }
+      }
+    },
+    "source": "https://grants.gov/opportunity/123",
+    "customFields": {
+      "programArea": {
+        "name": "programArea",
+        "type": "string",
+        "value": "Healthcare Technology",
+        "description": "The primary focus area for this grant"
+      },
+      "eligibilityType": {
+        "name": "eligibilityType",
+        "type": "string",
+        "value": "Non-profit organizations",
+        "description": "The type of organizations eligible to apply"
+      }
+    },
+    "createdAt": "2024-02-28T12:00:00Z",
+    "lastModifiedAt": "2024-02-28T12:00:00Z"
+  }
+  ```
+  </TabItem>
+</Tabs>

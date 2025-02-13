@@ -1,0 +1,101 @@
+---
+title: OppStatus
+description: Union of values accepted for opportunity status
+tableOfContents: false
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+The status of an opportunity, such as whether it is accepting applications.
+
+### Data model
+
+<Tabs>
+  <TabItem label="Table">
+  | Property    | Type                                                                     | Required | Description                                |
+  | ----------- | ------------------------------------------------------------------------ | -------- | ------------------------------------------ |
+  | value       | [OppStatusOptions](#oppstatusoptions)                                    | Yes      | The status value                           |
+  | description | [string](/simpler-grants-protocol/reference/models/base-types#string)    | No       | A human-readable description of the status |
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: OppStatus.yaml
+  type: object
+  properties:
+    value:
+      $ref: OppStatusOptions.yaml
+      description: The status value
+    description:
+      type: string
+      description: A human-readable description of the status
+  required:
+    - value
+  description: The status of an opportunity, such as whether it is accepting applications
+  ```
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+    ```tsp
+    /** The status of the opportunity */
+    model OppStatus {
+      /** The status value */
+      value: OppStatusOptions;
+
+      /** A human-readable description of the status */
+      description?: string;
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  {
+    "value": "open",
+    "description": "Opportunity is actively accepting applications"
+  }
+  ```
+  </TabItem>
+</Tabs> 
+
+### OppStatusOptions
+
+The set of values accepted for opportunity status.
+
+<Tabs>
+  <TabItem label="Options">
+  | Value      | Description                                                    |
+  | ---------- | -------------------------------------------------------------- |
+  | forecasted | Opportunity is anticipated, but not yet accepting applications |
+  | open       | Opportunity is actively accepting applications                 |
+  | closed     | Opportunity is no longer accepting applications                |
+  | custom     | Custom opportunity status defined within the record            |
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: OppStatusOptions.yaml
+  type: string
+  enum:
+    - forecasted
+    - open
+    - closed
+    - custom
+  description: The set of values accepted for opportunity status
+  ```
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+  ```tsp
+  /** The set of values accepted for opportunity status */
+  enum OppStatusOptions {
+    forecasted,
+    open,
+    closed,
+    custom,
+  }
+  ```
+  </TabItem>
+</Tabs>

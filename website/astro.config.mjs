@@ -48,6 +48,11 @@ export default defineConfig({
           label: "Reference",
           items: [
             { label: "Specification", link: "reference/specification" },
+            {
+              label: "Models",
+              collapsed: true,
+              autogenerate: { directory: "reference/models" },
+            },
             ...openAPISidebarGroups,
           ],
         },
