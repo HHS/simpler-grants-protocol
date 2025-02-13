@@ -1,0 +1,7 @@
+# Ignore all model documentation files
+src/content/docs/reference/models/*.mdx
+
+# Other common files to ignore
+dist/
+.astro/
+node_modules/ 
