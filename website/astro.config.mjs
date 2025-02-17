@@ -12,9 +12,6 @@ export default defineConfig({
   integrations: [
     starlight({
       plugins: [
-        starlightLinksValidator({
-          errorOnLocalLinks: false,
-        }),
         // Generate the OpenAPI documentation pages.
         starlightOpenAPI([
           {
@@ -23,6 +20,10 @@ export default defineConfig({
             schema: "./tsp-output/@typespec/openapi3/openapi.yaml",
           },
         ]),
+        starlightLinksValidator({
+          errorOnLocalLinks: false,
+          exclude: ["/simpler-grants-protocol/reference/api/operations/*"],
+        }),
       ],
       title: "CommonGrants",
       social: {
