@@ -15,14 +15,14 @@ export default defineConfig({
         // Generate the OpenAPI documentation pages.
         starlightOpenAPI([
           {
-            base: "reference/api",
-            label: "CommonGrants API spec",
+            base: "protocol/api",
+            label: "Routes",
             schema: "./tsp-output/@typespec/openapi3/openapi.yaml",
           },
         ]),
         starlightLinksValidator({
           errorOnLocalLinks: false,
-          exclude: ["/simpler-grants-protocol/reference/api/operations/*"],
+          exclude: ["/simpler-grants-protocol/protocol/api/operations/*"],
         }),
       ],
       title: "CommonGrants",
@@ -46,13 +46,13 @@ export default defineConfig({
           autogenerate: { directory: "guides" },
         },
         {
-          label: "Reference",
+          label: "Protocol",
           items: [
-            { label: "Specification", link: "reference/specification" },
+            { label: "Specification", link: "protocol/specification" },
             {
-              label: "Models",
+              label: "Schemas",
               collapsed: true,
-              autogenerate: { directory: "reference/models" },
+              autogenerate: { directory: "protocol/models" },
             },
             ...openAPISidebarGroups,
           ],

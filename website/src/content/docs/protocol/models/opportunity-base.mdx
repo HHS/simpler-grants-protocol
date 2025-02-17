@@ -14,16 +14,16 @@ A funding opportunity, such as a grant or loan.
   <TabItem label="Table">
   | Property       | Type                                                                            | Required | Description                                                  |
   | -------------- | ------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
-  | id             | [uuid](/simpler-grants-protocol/reference/models/base-types#uuid)               | Yes      | Globally unique id for the opportunity                       |
-  | title          | [string](/simpler-grants-protocol/reference/models/base-types#string)           | Yes      | Title or name of the funding opportunity                     |
-  | status         | [OppStatus](/simpler-grants-protocol/reference/models/opp-status)               | Yes      | Status of the opportunity                                    |
-  | description    | [string](/simpler-grants-protocol/reference/models/base-types#string)           | Yes      | Description of the opportunity's purpose and scope           |
-  | fundingDetails | [OppFunding](/simpler-grants-protocol/reference/models/opp-funding)             | Yes      | Details about the funding available                          |
-  | keyDates       | [OppTimeline](/simpler-grants-protocol/reference/models/opp-timeline)           | Yes      | Key dates for the opportunity                                |
-  | source         | [url](/simpler-grants-protocol/reference/models/base-types#url)                 | No       | URL for the original source of the opportunity               |
-  | customFields   | Record\<[CustomField](/simpler-grants-protocol/reference/models/custom-field)\> | No       | Additional custom fields specific to this opportunity        |
-  | createdAt      | [isoDateTime](/simpler-grants-protocol/reference/models/base-types#isodatetime) | Yes      | The timestamp (in UTC) at which the record was created       |
-  | lastModifiedAt | [isoDateTime](/simpler-grants-protocol/reference/models/base-types#isodatetime) | Yes      | The timestamp (in UTC) at which the record was last modified |
+  | id             | [uuid](/simpler-grants-protocol/protocol/models/base-types#uuid)               | Yes      | Globally unique id for the opportunity                       |
+  | title          | [string](/simpler-grants-protocol/protocol/models/base-types#string)           | Yes      | Title or name of the funding opportunity                     |
+  | status         | [OppStatus](/simpler-grants-protocol/protocol/models/opp-status)               | Yes      | Status of the opportunity                                    |
+  | description    | [string](/simpler-grants-protocol/protocol/models/base-types#string)           | Yes      | Description of the opportunity's purpose and scope           |
+  | fundingDetails | [OppFunding](/simpler-grants-protocol/protocol/models/opp-funding)             | Yes      | Details about the funding available                          |
+  | keyDates       | [OppTimeline](/simpler-grants-protocol/protocol/models/opp-timeline)           | Yes      | Key dates for the opportunity                                |
+  | source         | [url](/simpler-grants-protocol/protocol/models/base-types#url)                 | No       | URL for the original source of the opportunity               |
+  | customFields   | Record\<[CustomField](/simpler-grants-protocol/protocol/models/custom-field)\> | No       | Additional custom fields specific to this opportunity        |
+  | createdAt      | [isoDateTime](/simpler-grants-protocol/protocol/models/base-types#isodatetime) | Yes      | The timestamp (in UTC) at which the record was created       |
+  | lastModifiedAt | [isoDateTime](/simpler-grants-protocol/protocol/models/base-types#isodatetime) | Yes      | The timestamp (in UTC) at which the record was last modified |
   </TabItem>
 
   <TabItem label="JSON Schema">

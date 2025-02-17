@@ -31,9 +31,9 @@ CommonGrants routes and operations provide a formal description of CommonGrants 
 
 There are three main categories of routes and operations:
 
-- Required routes and operations are stable and MUST be implemented by all CommonGrants APIs.
-- Optional routes and operations are stable, but are NOT REQUIRED.
-- Experimental routes and operations are unstable and intended for early-stage development and feedback, and are NOT REQUIRED.
+- Required routes that are stable and MUST be implemented.
+- Optional routes that are stable and MAY be implemented, but are NOT REQUIRED.
+- Experimental routes that are unstable, intended for feedback, and are NOT REQUIRED.
 
 #### Schemas
 
@@ -49,10 +49,15 @@ The protocol categorizes certain behaviors as _implementation-defined_, which me
 
 An API is "compliant" with the CommonGrants protocol if:
 
-- It correctly implements all REQUIRED routes and operations, with inputs and outputs that conform to the corresponding CommonGrants schemas
-- It follows the guidelines outlined in the CommonGrants protocol for all _implementation-defined_ extensions of these required routes, operations, and schemas
+- It correctly implements all required routes and operations, with inputs and outputs that conform to the corresponding CommonGrants schemas
+- It does not implement any API endpoints that directly conflict with the optional routes and operations defined by the protocol
+- It follows the guidelines outlined in the CommonGrants protocol for all _implementation-defined_ extensions of any default routes, operations, and schemas
 
 Developers MAY use the [CommonGrants CLI](https://www.npmjs.com/package/@common-grants/cli) to validate their API document and implementation against the CommonGrants protocol.
+
+:::note
+The requirements for compatibility do not extend to experimental routes and operations, since these are intended for feedback and are not yet stable.
+:::
 
 ## Specification
 
@@ -89,14 +94,14 @@ The CommonGrants protocol defines the following scalar types that are used to bu
 
 | Type                                                                                | Description                                               |
 | ----------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [string](/simpler-grants-protocol/reference/models/base-types#string)               | A sequence of characters                                  |
-| [integer](/simpler-grants-protocol/reference/models/base-types#integer)             | A whole number without decimals                           |
-| [isoTime](/simpler-grants-protocol/reference/models/base-types#isotime)             | A time on a clock, without a timezone, in ISO 8601 format |
-| [isoDate](/simpler-grants-protocol/reference/models/base-types#isodate)             | A date on a calendar in ISO 8601 format                   |
-| [isoDateTime](/simpler-grants-protocol/reference/models/base-types#isodatetime)     | A date and time with timezone in ISO 8601 format          |
-| [uuid](/simpler-grants-protocol/reference/models/base-types#uuid)                   | A universally unique identifier                           |
-| [decimalString](/simpler-grants-protocol/reference/models/base-types#decimalstring) | A decimal number encoded as a string                      |
-| [url](/simpler-grants-protocol/reference/models/base-types#url)                     | A Uniform Resource Locator                                |
+| [string](/simpler-grants-protocol/protocol/models/base-types#string)               | A sequence of characters                                  |
+| [integer](/simpler-grants-protocol/protocol/models/base-types#integer)             | A whole number without decimals                           |
+| [isoTime](/simpler-grants-protocol/protocol/models/base-types#isotime)             | A time on a clock, without a timezone, in ISO 8601 format |
+| [isoDate](/simpler-grants-protocol/protocol/models/base-types#isodate)             | A date on a calendar in ISO 8601 format                   |
+| [isoDateTime](/simpler-grants-protocol/protocol/models/base-types#isodatetime)     | A date and time with timezone in ISO 8601 format          |
+| [uuid](/simpler-grants-protocol/protocol/models/base-types#uuid)                   | A universally unique identifier                           |
+| [decimalString](/simpler-grants-protocol/protocol/models/base-types#decimalstring) | A decimal number encoded as a string                      |
+| [url](/simpler-grants-protocol/protocol/models/base-types#url)                     | A Uniform Resource Locator                                |
 
 #### Core fields
 
@@ -104,10 +109,10 @@ The CommonGrants protocol defines the following fields that are reused across mo
 
 | Model                                                                 | Description                                       |
 | --------------------------------------------------------------------- | ------------------------------------------------- |
-| [Money](/simpler-grants-protocol/reference/models/money)              | A monetary amount with a currency code            |
-| [Event](/simpler-grants-protocol/reference/models/event)              | A description of an event with an associated date |
-| [CustomField](/simpler-grants-protocol/reference/models/custom-field) | A model for defining custom fields on a record    |
-| [SystemMetadata](/simpler-grants-protocol/reference/models/metadata)  | System-managed metadata for records               |
+| [Money](/simpler-grants-protocol/protocol/models/money)              | A monetary amount with a currency code            |
+| [Event](/simpler-grants-protocol/protocol/models/event)              | A description of an event with an associated date |
+| [CustomField](/simpler-grants-protocol/protocol/models/custom-field) | A model for defining custom fields on a record    |
+| [SystemMetadata](/simpler-grants-protocol/protocol/models/metadata)  | System-managed metadata for records               |
 
 #### Opportunity models
 
@@ -115,10 +120,10 @@ The CommonGrants protocol defines the following models that are specific to fund
 
 | Model                                                                         | Description                                            |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [OpportunityBase](/simpler-grants-protocol/reference/models/opportunity-base) | The foundational model for a funding opportunity       |
-| [OppStatus](/simpler-grants-protocol/reference/models/opp-status)             | The status of an opportunity                           |
-| [OppFunding](/simpler-grants-protocol/reference/models/opp-funding)           | Details about the funding available for an opportunity |
-| [OppTimeline](/simpler-grants-protocol/reference/models/opp-timeline)         | Key dates in an opportunity's timeline                 |
+| [OpportunityBase](/simpler-grants-protocol/protocol/models/opportunity-base) | The foundational model for a funding opportunity       |
+| [OppStatus](/simpler-grants-protocol/protocol/models/opp-status)             | The status of an opportunity                           |
+| [OppFunding](/simpler-grants-protocol/protocol/models/opp-funding)           | Details about the funding available for an opportunity |
+| [OppTimeline](/simpler-grants-protocol/protocol/models/opp-timeline)         | Key dates in an opportunity's timeline                 |
 
 ### Routes and operations
 
@@ -126,8 +131,8 @@ The CommonGrants protocol defines the following routes and operations that are s
 
 | Route                                                                                              | Description                                                      |
 | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [`GET /opportunities`](/simpler-grants-protocol/reference/api/operations/opportunities_list/)      | Get a paginated list of opportunities sorted by `lastModifiedAt` |
-| [`GET /opportunities/{id}`](/simpler-grants-protocol/reference/api/operations/opportunities_read/) | View details about a specific opportunity                        |
+| [`GET /opportunities`](/simpler-grants-protocol/protocol/api/operations/opportunities_list/)      | Get a paginated list of opportunities sorted by `lastModifiedAt` |
+| [`GET /opportunities/{id}`](/simpler-grants-protocol/protocol/api/operations/opportunities_read/) | View details about a specific opportunity                        |
 
 #### Pagination
 
@@ -183,7 +188,7 @@ CommonGrants APIs may need to support attributes that are not explicitly include
 
 If a model supports custom fields, it MUST include an optional `customFields` property, an object whose values MUST conform to the `CustomField` type. CommonGrants APIs MAY use this `customFields` property to define custom fields for its implementation of that model.
 
-For example, to maintain compatibility with existing systems, a CommonGrants API might need each Opportunity record to have an `id` field that is an integer instead of a uuid. This API can create an _implementation-defined_ version of the `OpportunityBase` schema with the following:
+For example, to maintain compatibility with existing systems, a CommonGrants API might need each Opportunity record to have an `id` field that is an integer instead of a `uuid`. This API can create an _implementation-defined_ version of the `OpportunityBase` schema with the following:
 
 ```yaml {16-37}
 type: object
@@ -237,13 +242,13 @@ Similarly, APIs SHALL NOT add fields outside the `customFields` property. If a m
 
 #### Custom enum values
 
-Some CommonGrants schemas have fields with values from a limited set of options, known as "enums". Occasionally, APIs need to set these fields to _implementation-defined_ custom values.
+Some CommonGrants schemas have fields that accept values from a limited set of options, known as "enums". Occasionally, APIs need to set these fields to _implementation-defined_ custom values.
 
 To support this, the protocol defines a pattern for custom enum values. If a field supports custom enum values, it MUST match an object with these properties:
 
 - `value`: a required string that includes `custom` as one of its enum values
 - `customValue`: an optional string with the display value for the custom enum
-- `description`: an optional string that describes how to interpret the custom value
+- `description`: an optional string that describes how to interpret the custom enum
 
 ```yaml
 properties:
