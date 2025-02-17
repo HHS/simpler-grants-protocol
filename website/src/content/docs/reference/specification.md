@@ -7,77 +7,85 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ## Definitions
 
-#### OpenAPI document
-
-An OpenAPI document is a JSON or YAML document that conforms to the OpenAPI Specification, and provides a formal description of an API.
-
 #### CommonGrants protocol
 
 The CommonGrants protocol defines a set of REQUIRED API routes, operations, and schemas that a CommonGrants API MUST implement to be considered compliant. It also defines an OPTIONAL pattern for extending the base protocol with implementation-specific behavior.
 
+#### OpenAPI document
+
+An OpenAPI document is a JSON or YAML document that conforms to the [OpenAPI Specification](https://swagger.io/specification/) and formally describes an API.
+
 #### API document
 
-A CommonGrants API document is an OpenAPI document that conforms to the CommonGrants protocol and provides a formal description of a CommonGrants API.
+A CommonGrants API document is an OpenAPI document that conforms to the CommonGrants protocol and formally describes the routes and operations of a CommonGrants API.
 
-Developers SHOULD consider drafting their API document in TypeSpec, using the CommonGrants core library and CLI, and then compiling it to an OpenAPI document. This approach allows developers to take advantage of features such as intellisense and compile-time type checking.
+Developers MAY draft their API document in TypeSpec, using the [CommonGrants core library](https://www.npmjs.com/package/@common-grants/core) and [CLI](https://www.npmjs.com/package/@common-grants/cli), before compiling it to an OpenAPI document. This approach allows developers to leverage features such as intellisense and compile-time checks that increase the likelihood of compliance with the CommonGrants protocol.
 
 #### CommonGrants API
 
-A CommonGrants API is a software platform or system that implements a CommonGrants API document, with an OPTIONAL set of implementation-defined extensions.
-
-#### Schemas
-
-CommonGrants schemas formally describe how data SHALL be represented by a CommonGrants API. These schemas are defined using TypeSpec and compile to other formats, such as OpenAPI schemas and JSON schemas.
+A CommonGrants API is a software platform or system that implements all of the REQUIRED CommonGrants routes and operations, with an OPTIONAL set of _implementation-defined_ extensions.
 
 #### Routes and operations
 
-CommonGrants routes and operations formally describe a standard set of API endpoints that a CommonGrants API MUST implement. These routes and operations are defined using TypeSpec and compile to an OpenAPI document.
+CommonGrants routes and operations provide a formal description of CommonGrants API endpoints and the actions they perform, standardizing the interface between a CommonGrants API and its clients. These routes and operations are defined using TypeSpec and compile to an OpenAPI document.
+
+There are three main categories of routes and operations:
+
+- Required routes and operations are stable and MUST be implemented by all CommonGrants APIs.
+- Optional routes and operations are stable, but are NOT REQUIRED.
+- Experimental routes and operations are unstable and intended for early-stage development and feedback, and are NOT REQUIRED.
+
+#### Schemas
+
+CommonGrants schemas formally describe how data SHOULD be represented within a CommonGrants API route or operation. These schemas are defined using TypeSpec and compile to other formats, such as OpenAPI schemas and JSON schemas.
+
+Some CommonGrants schemas can be modified to support _implementation-defined_ behavior.
 
 #### Implementation-defined behavior
 
-Behavior described as _implementation-defined_ allows implementations to choose which of several different-but-compliant approaches to a requirement to implement. This highlights ways that CommonGrants APIs can tailor the protocol to their specific use case while still maintaining compatibility with other implementations.
+The protocol categorizes certain behaviors as _implementation-defined_, which means that CommonGrants APIs have modified the default behavior using a protocol-defined extension pattern. This pattern allows implementations to support custom functionality while maintaining consistency and compatibility with other CommonGrants APIs.
 
 #### Compliance
 
-A given API is considered "compliant" with the CommonGrants protocol if
+An API is "compliant" with the CommonGrants protocol if:
 
-- It implements all of the REQUIRED routes and operations
-- All _implementation-defined_ behavior follows the extension pattern outlined in the CommonGrants protocol
-- Each valid input to an _implementation-defined_ schema can be successfully validated against the corresponding CommonGrants schema
+- It correctly implements all REQUIRED routes and operations, with inputs and outputs that conform to the corresponding CommonGrants schemas
+- It follows the guidelines outlined in the CommonGrants protocol for all _implementation-defined_ extensions of these required routes, operations, and schemas
 
-For examples of compliant and non-compliant implementations, see [Appendix A](#appendix-a-compliance-examples).
-
-Developers SHOULD consider using the CommonGrants CLI to validate their API document and implementation against the CommonGrants protocol.
+Developers MAY use the [CommonGrants CLI](https://www.npmjs.com/package/@common-grants/cli) to validate their API document and implementation against the CommonGrants protocol.
 
 ## Specification
 
 ### Versions
 
-The CommonGrants protocol is versioned using the `Major.Minor.Patch` versioning scheme, where:
+The CommonGrants protocol follows the `Major.Minor.Patch` versioning scheme, where:
 
 - the `Major` version is incremented when backwards-incompatible changes are made to the protocol. These changes may include:
-  - Adding new REQUIRED routes or operations;
-  - Adding new REQUIRED fields to existing schemas;
+  - Adding new required routes or operations;
+  - Adding new required fields to existing schemas;
   - Removing existing fields from existing schemas;
   - Removing an option from an existing enum field;
   - Changing the type of an existing field; or
   - Changing the protocol in other ways that would make existing CommonGrants APIs non-compliant.
 - the `Minor` version is incremented when backwards-compatible changes are made to the protocol. These changes may include:
-  - Adding new OPTIONAL routes or operations;
-  - Adding new OPTIONAL fields to existing schemas;
-  - Adding support for new base data types and fields;
+  - Adding new optional routes or operations;
+  - Adding new optional fields to existing schemas;
   - Adding new options to existing enum fields; or
-  - Making other changes that preserve compatibility with existing implementations but introduce new functionality.
+  - Making other changes that introduce new functionality without making existing implementations non-compliant.
 - the `Patch` version is incremented when the protocol is updated in a backwards-compatible way that adds new optional functionality.
   - Updating the descriptions or metadata of existing routes, operations, and schemas in ways that don't change their behavior;
   - Fixing typos or other minor changes that don't affect the protocol's behavior; or
-  - Making other changes that preserve compatibility with existing implementations but do not add new functionality.
+  - Making other changes that neither introduce new functionality nor make existing implementations non-compliant.
+
+:::caution
+Because experimental routes and operations are considered unstable, breaking changes can be made to these routes and operations without incrementing the `Major` version.
+:::
 
 ### Schemas
 
 #### Base types
 
-The CommonGrants protocol defines the following set of scalar types that can be used to build more complex fields and models.
+The CommonGrants protocol defines the following scalar types that are used to build complex fields and models:
 
 | Type                                                                                | Description                                               |
 | ----------------------------------------------------------------------------------- | --------------------------------------------------------- |
@@ -92,7 +100,7 @@ The CommonGrants protocol defines the following set of scalar types that can be 
 
 #### Core fields
 
-The CommonGrants protocol defines the following set of core fields that are reused across different models.
+The CommonGrants protocol defines the following fields that are reused across models:
 
 | Model                                                                 | Description                                       |
 | --------------------------------------------------------------------- | ------------------------------------------------- |
@@ -103,18 +111,18 @@ The CommonGrants protocol defines the following set of core fields that are reus
 
 #### Opportunity models
 
-The CommonGrants protocol defines the following set of models that are specific to funding opportunities.
+The CommonGrants protocol defines the following models that are specific to funding opportunities:
 
-| Model                                                                         | Description                                               |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [OpportunityBase](/simpler-grants-protocol/reference/models/opportunity-base) | The core opportunity model that combines all other models |
-| [OppStatus](/simpler-grants-protocol/reference/models/opp-status)             | The status of an opportunity                              |
-| [OppFunding](/simpler-grants-protocol/reference/models/opp-funding)           | Details about the funding available for an opportunity    |
-| [OppTimeline](/simpler-grants-protocol/reference/models/opp-timeline)         | Key dates in the opportunity's timeline                   |
+| Model                                                                         | Description                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [OpportunityBase](/simpler-grants-protocol/reference/models/opportunity-base) | The foundational model for a funding opportunity       |
+| [OppStatus](/simpler-grants-protocol/reference/models/opp-status)             | The status of an opportunity                           |
+| [OppFunding](/simpler-grants-protocol/reference/models/opp-funding)           | Details about the funding available for an opportunity |
+| [OppTimeline](/simpler-grants-protocol/reference/models/opp-timeline)         | Key dates in an opportunity's timeline                 |
 
 ### Routes and operations
 
-The CommonGrants protocol defines the following set of routes and operations that are specific to funding opportunities.
+The CommonGrants protocol defines the following routes and operations that are specific to funding opportunities:
 
 | Route                                                                                              | Description                                                      |
 | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
@@ -123,14 +131,14 @@ The CommonGrants protocol defines the following set of routes and operations tha
 
 #### Pagination
 
-API routes that are used to retrieve multiple records from a given resource SHOULD support pagination. Paginated routes MUST accept the following parameters, either as query parameters (for `GET` routes) or as OPTIONAL parameters at the root of the request body (for `POST` and `PUT` routes):
+CommonGrants routes that return multiple records from a resource SHOULD support pagination. Paginated routes SHOULD accept the following parameters, either as query parameters (for `GET` routes) or as optional parameters at the root of the request body (for `POST` and `PUT` routes):
 
-| Parameter  | Type    | Default | Description                                                 |
-| ---------- | ------- | ------- | ----------------------------------------------------------- |
-| `page`     | integer | 1       | The page number of the results to return, starting at 1     |
-| `pageSize` | integer | 100     | The number of results to return per page, between 1 and 100 |
+| Parameter  | Type    | Default | Description                                       |
+| ---------- | ------- | ------- | ------------------------------------------------- |
+| `page`     | integer | 1       | The page number to return, starting at 1          |
+| `pageSize` | integer | 100     | The number of results per page, between 1 and 100 |
 
-Additionally, the response body for paginated requests MUST include a `paginationInfo` property with the following properties:
+Additionally, the response body for paginated requests SHOULD include a `paginationInfo` property with the following:
 
 | Property          | Type    | Required | Description                                               |
 | ----------------- | ------- | -------- | --------------------------------------------------------- |
@@ -141,42 +149,43 @@ Additionally, the response body for paginated requests MUST include a `paginatio
 | `nextPageUrl`     | url     | No       | The URL for the next page of results, if there is one     |
 | `previousPageUrl` | url     | No       | The URL for the previous page of results, if there is one |
 
-The paginated set of records MUST be returned in the `items` property of the response body.
+The response body for paginated requests SHOULD return the paginated set of records in the `items` property.
 
 #### Sorting
 
-CommonGrants routes and operations that support sorting MUST accept the following parameters, either as query parameters (for `GET` routes) or as OPTIONAL parameters at the root of the request body (for `POST` and `PUT` routes):
+CommonGrants routes that support sorting SHOULD accept the following parameters, either as query parameters (for `GET` routes) or as optional parameters at the root of the request body (for `POST` and `PUT` routes):
 
 | Parameter   | Type            | Description                            |
 | ----------- | --------------- | -------------------------------------- |
 | `sortBy`    | string          | The property to sort the results by    |
 | `sortOrder` | `asc` or `desc` | The order in which to sort the results |
 
-Additionally, the response body for sorted requests MUST include a `sortInfo` property with the following properties:
+Additionally, the response body for sorted requests SHOULD include a `sortInfo` property with the following:
 
-| Property    | Type   | Required | Description                                |
-| ----------- | ------ | -------- | ------------------------------------------ |
-| `sortBy`    | string | Yes      | The property that was sorted by            |
-| `sortOrder` | string | Yes      | The order in which the results were sorted |
-| `errors`    | array  | No       | Errors that occurred while sorting         |
+| Property       | Type    | Required | Description                                      |
+| -------------- | ------- | -------- | ------------------------------------------------ |
+| `sortBy`       | string  | Yes      | The property that was sorted by                  |
+| `customSortBy` | boolean | No       | Whether the `sortBy` property was a custom value |
+| `sortOrder`    | string  | Yes      | The order in which the results were sorted       |
+| `errors`       | array   | No       | Errors that occurred while sorting               |
 
-If the protocol defines a minimum set of supported options for the `sortBy` parameter, then implementations MUST support these options. CommonGrants APIs MAY support additional _implementation-defined_ options that are not defined in the protocol.
+If the protocol specifies a minimum set of `sortBy` options, implementations MUST support them. APIs MAY support additional _implementation-defined_ options using the `customSortBy` parameter.
 
-However, to preserve compatibility with other implementations, if a client includes a `sortBy` parameter with an unsupported value, the server SHOULD NOT return a non-2xx response code. Instead, the server SHOULD ignore the unsupported value and sort the results by the default `sortBy` value and only indicate the error in the `sortInfo.errors` property of the response body.
+To maintain compatibility, if a client uses an unsupported `customSortBy` value, the API SHOULD NOT return a non-2xx response. Instead, it SHOULD default to the standard `sortBy` value and note the error in `sortInfo.errors`.
 
 ### Extensions
 
-The CommonGrants protocol defines a mechanism for extending the base protocol that CommonGrants APIs can use to adapt the protocol to satisfy their specific use case.
+The CommonGrants protocol defines the following mechanisms for extending the base protocol with _implementation-defined_ behavior:
 
 #### Custom fields
 
-CommonGrants APIs may need to include attributes that are not defined explicitly in the CommonGrants schemas. To support this use case, the CommonGrants protocol has defined a pattern for adding custom fields to certain models.
+CommonGrants APIs may need to support attributes that are not explicitly included in the default schemas. To support this, the CommonGrants protocol has defined a pattern for adding custom fields to certain models, e.g. `OpportunityBase`.
 
-If a model supports custom fields, it MUST include an optional `customFields` property that is an object whose values MUST conform to the `CustomField` type. CommonGrants APIs MAY use this `customFields` property to define custom fields that are required by a given implementation.
+If a model supports custom fields, it MUST include an optional `customFields` property, an object whose values MUST conform to the `CustomField` type. CommonGrants APIs MAY use this `customFields` property to define custom fields for its implementation of that model.
 
-For example if, to maintain compatibility with existing systems, a CommonGrants API needs to include an `id` field on each Opportunity record that is an `integer` instead of a `uuid` (as defined by the CommonGrants protocol), that API may update the _implementation-defined_ schema for routes that require the `OpportunityBase` schema to the following:
+For example, to maintain compatibility with existing systems, a CommonGrants API might need each Opportunity record to have an `id` field that is an integer instead of a uuid. This API can create an _implementation-defined_ version of the `OpportunityBase` schema with the following:
 
-```yaml
+```yaml {16-37}
 type: object
 properties:
   id:
@@ -220,17 +229,17 @@ required:
   - customFields
 ```
 
-In this example, the CommonGrants API is extending the `OpportunityBase` model to include a `legacyId` custom field. The `legacyId` custom field is defined using the `CustomField` type, which is a model that describes a custom field.
+In this example, the API extends the OpportunityBase model to include a `legacyId` custom field, defined using the `CustomField` type.
 
-_Implementation-defined_ extensions of CommonGrants schemas MAY make the `customFields` property required (if the base schema already includes it as an optional property), but they SHALL NOT add a `customFields` property to a model that does not already have one.
+_Implementation-defined_ extensions MAY make the `customFields` property required if the base schema includes it as optional, but SHALL NOT add a `customFields` property to a model that lacks one.
 
-Similarly, CommonGrants APIs SHALL NOT add any fields to a model outside of the `customFields` property. If a model does not include a `customFields` property, then it doesn't support extension through custom fields.
+Similarly, APIs SHALL NOT add fields outside the `customFields` property. If a model lacks a `customFields` property, it doesn't support extension through custom fields.
 
 #### Custom enum values
 
-Some CommonGrants schemas include fields whose values are drawn from a limited set of options, known as "enums". Occasionally, CommonGrants APIs need to set these fields to _implementation-defined_ custom values.
+Some CommonGrants schemas have fields with values from a limited set of options, known as "enums". Occasionally, APIs need to set these fields to _implementation-defined_ custom values.
 
-To support this use case, the CommonGrants protocol has defined a pattern for defining custom enum values in a consistent manner. If a field supports custom enum values, it MUST match an object with the following properties:
+To support this, the protocol defines a pattern for custom enum values. If a field supports custom enum values, it MUST match an object with these properties:
 
 - `value`: a required string that includes `custom` as one of its enum values
 - `customValue`: an optional string with the display value for the custom enum
@@ -253,26 +262,26 @@ required:
   - value
 ```
 
-For example, the `OpportunityBase` model includes a `status` field that can have one of several predefined values. When an opportunity's status is set to one of these predefined values, it MUST include the `value` property and SHOULD omit the `customValue` and `description` properties:
+For example, the `OpportunityBase` model includes a `status` with predefined values (e.g. `forecasted`, `closed`). When an opportunity's status is set to one of these predefined values, it MUST include the `value` property and SHOULD omit the `customValue` and `description` properties:
 
 ```json
 {
   "id": "ad763210-5940-4c08-921c-17a8960fcf4b",
   "title": "Example Opportunity",
-  // other fields omitted for brevity
+  // other OpportunityBase fields omitted for brevity
   "status": {
     "value": "forecasted"
   }
 }
 ```
 
-When an opportunity's status is set to an _implementation-defined_ custom value, though, it SHOULD include the `customValue` and `description` properties as well:
+When set to a custom value, it SHOULD include `customValue` and `description`:
 
 ```json
 {
   "id": "ad763210-5940-4c08-921c-17a8960fcf4b",
   "title": "Example Opportunity",
-  // other fields omitted for brevity
+  // other OpportunityBase fields omitted for brevity
   "status": {
     "value": "custom",
     "customValue": "archived",
@@ -285,9 +294,9 @@ CommonGrants APIs SHALL NOT add custom enum values to any field that does not su
 
 #### Custom routes
 
-CommonGrants APIs MAY define custom routes that are not part of the core protocol. The path for these routes MUST be prefixed with `/custom/` to avoid conflicts with existing or future routes defined in the core protocol.
+CommonGrants APIs MAY define custom routes that are not part of the core protocol. The path for these routes MUST be prefixed with `/custom/` to avoid conflicts with existing or future protocol routes.
 
-For example, a CommonGrants API that wants to support updating existing opportunities can define the following route:
+For example, to allow clients to update existing opportunity records, an API can define this route:
 
 ```yaml
 /custom/opportunities/{opportunityId}:
@@ -295,7 +304,7 @@ For example, a CommonGrants API that wants to support updating existing opportun
     summary: Update an opportunity
 ```
 
-This pattern can also be used to maintain support for existing routes and operations that conflict with those defined by the CommonGrants protocol. For example, a CommonGrants API that wants to maintain support for an existing `GET /opportunities` route that doesn't conform to the `GET /opportunities` route defined by the CommonGrants protocol can continue to support that route by prefixing its path with `/custom/`:
+This pattern can also be used to maintain support for existing routes that conflict with those defined by the protocol. For example, an API can maintain a non-conforming `GET /opportunities` route by prefixing it with `/custom/`:
 
 ```yaml
 /custom/opportunities:
@@ -303,6 +312,4 @@ This pattern can also be used to maintain support for existing routes and operat
     summary: Get opportunities
 ```
 
-In this way, CommonGrants APIs can support incremental adoption of the CommonGrants protocol by maintaining support for existing routes and operations while implementing the routes and operations defined by the protocol.
-
-## Appendix A: Compliance examples
+This allows APIs to incrementally adopt the CommonGrants protocol while supporting existing routes and operations.
