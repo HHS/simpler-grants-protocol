@@ -17,7 +17,7 @@ The CommonGrants protocol defines a set of REQUIRED API routes, operations, and 
 
 #### API document
 
-A CommonGrants API document is an OpenAPI document that conforms to the CommonGrants protocol and provides a formal description of a CommonGrants API. 
+A CommonGrants API document is an OpenAPI document that conforms to the CommonGrants protocol and provides a formal description of a CommonGrants API.
 
 Developers SHOULD consider drafting their API document in TypeSpec, using the CommonGrants core library and CLI, and then compiling it to an OpenAPI document. This approach allows developers to take advantage of features such as intellisense and compile-time type checking.
 
@@ -33,21 +33,21 @@ CommonGrants schemas formally describe how data SHALL be represented by a Common
 
 CommonGrants routes and operations formally describe a standard set of API endpoints that a CommonGrants API MUST implement. These routes and operations are defined using TypeSpec and compile to an OpenAPI document.
 
+#### Implementation-defined behavior
+
+Behavior described as _implementation-defined_ allows implementations to choose which of several different-but-compliant approaches to a requirement to implement. This highlights ways that CommonGrants APIs can tailor the protocol to their specific use case while still maintaining compatibility with other implementations.
+
 #### Compliance
 
 A given API is considered "compliant" with the CommonGrants protocol if
 
 - It implements all of the REQUIRED routes and operations
-- Any *implementation-defined* behavior follows the extension pattern outlined in the CommonGrants protocol
-- Each valid input to an *implementation-defined* schema can be successfully validated against the corresponding CommonGrants schema
+- All _implementation-defined_ behavior follows the extension pattern outlined in the CommonGrants protocol
+- Each valid input to an _implementation-defined_ schema can be successfully validated against the corresponding CommonGrants schema
 
 For examples of compliant and non-compliant implementations, see [Appendix A](#appendix-a-compliance-examples).
 
 Developers SHOULD consider using the CommonGrants CLI to validate their API document and implementation against the CommonGrants protocol.
-
-#### Implementation-defined behavior
-
-Behavior described as _implementation-defined_ allows implementations to choose which of several different-but-compliant approaches to a requirement to implement. This highlights ways that CommonGrants APIs can tailor the protocol to their specific use case while still maintaining compatibility with other implementations.
 
 ## Specification
 
@@ -158,12 +158,11 @@ Additionally, the response body for sorted requests MUST include a `sortInfo` pr
 | ----------- | ------ | -------- | ------------------------------------------ |
 | `sortBy`    | string | Yes      | The property that was sorted by            |
 | `sortOrder` | string | Yes      | The order in which the results were sorted |
-| `errors`    | array  | No       | Errors that occurred while sorting        |
+| `errors`    | array  | No       | Errors that occurred while sorting         |
 
-If the protocol defines a minimum set of supported options for the `sortBy` parameter, then implementations MUST support these options. CommonGrants APIs MAY support additional *implementation-defined* options that are not defined in the protocol.
+If the protocol defines a minimum set of supported options for the `sortBy` parameter, then implementations MUST support these options. CommonGrants APIs MAY support additional _implementation-defined_ options that are not defined in the protocol.
 
-However, to preserve compatibility with other implementations, if a client includes a `sortBy` parameter with an unsupported value, the server SHOULD NOT return a non-2xx response code. Instead, the server SHOULD ignore the unsupported value and sort the results by the default property and only indicate the error in the `sortInfo.errors` property of the response body.
-
+However, to preserve compatibility with other implementations, if a client includes a `sortBy` parameter with an unsupported value, the server SHOULD NOT return a non-2xx response code. Instead, the server SHOULD ignore the unsupported value and sort the results by the default `sortBy` value and only indicate the error in the `sortInfo.errors` property of the response body.
 
 ### Extensions
 
@@ -175,7 +174,7 @@ CommonGrants APIs may need to include attributes that are not defined explicitly
 
 If a model supports custom fields, it MUST include an optional `customFields` property that is an object whose values MUST conform to the `CustomField` type. CommonGrants APIs MAY use this `customFields` property to define custom fields that are required by a given implementation.
 
-For example if, to maintain compatibility with existing systems, a CommonGrants API needs to include an `id` field on each Opportunity record that is an `integer` instead of a `uuid` (as defined by the CommonGrants protocol), that API may update the *implementation-defined* schema for routes that require the `OpportunityBase` schema to the following:
+For example if, to maintain compatibility with existing systems, a CommonGrants API needs to include an `id` field on each Opportunity record that is an `integer` instead of a `uuid` (as defined by the CommonGrants protocol), that API may update the _implementation-defined_ schema for routes that require the `OpportunityBase` schema to the following:
 
 ```yaml
 type: object
@@ -223,15 +222,15 @@ required:
 
 In this example, the CommonGrants API is extending the `OpportunityBase` model to include a `legacyId` custom field. The `legacyId` custom field is defined using the `CustomField` type, which is a model that describes a custom field.
 
-*Implementation-defined* extensions of CommonGrants schemas MAY make the `customFields` property required (if the base schema already includes it as an optional property), but they SHALL NOT add a `customFields` property to a model that does not already have one.
+_Implementation-defined_ extensions of CommonGrants schemas MAY make the `customFields` property required (if the base schema already includes it as an optional property), but they SHALL NOT add a `customFields` property to a model that does not already have one.
 
 Similarly, CommonGrants APIs SHALL NOT add any fields to a model outside of the `customFields` property. If a model does not include a `customFields` property, then it doesn't support extension through custom fields.
 
 #### Custom enum values
 
-Some CommonGrants schemas include fields whose values are drawn from a limited set of options, while also allowing CommonGrants APIs to set these fields to *implementation-defined* custom values. 
+Some CommonGrants schemas include fields whose values are drawn from a limited set of options, known as "enums". Occasionally, CommonGrants APIs need to set these fields to _implementation-defined_ custom values.
 
-To support this use case, the CommonGrants protocol has defined a pattern for adding custom enum values to certain fields. If a field supports custom enum values, it MUST match an object with the following properties:
+To support this use case, the CommonGrants protocol has defined a pattern for defining custom enum values in a consistent manner. If a field supports custom enum values, it MUST match an object with the following properties:
 
 - `value`: a required string that includes `custom` as one of its enum values
 - `customValue`: an optional string with the display value for the custom enum
@@ -251,7 +250,7 @@ properties:
     type: string
     description: A human-readable description of the value
 required:
-    - value
+  - value
 ```
 
 For example, the `OpportunityBase` model includes a `status` field that can have one of several predefined values. When an opportunity's status is set to one of these predefined values, it MUST include the `value` property and SHOULD omit the `customValue` and `description` properties:
@@ -264,10 +263,10 @@ For example, the `OpportunityBase` model includes a `status` field that can have
   "status": {
     "value": "forecasted"
   }
-} 
+}
 ```
 
-When an opportunity's status is set to an *implementation-defined* custom value, though, it MUST include the `customValue` and `description` properties as well:
+When an opportunity's status is set to an _implementation-defined_ custom value, though, it SHOULD include the `customValue` and `description` properties as well:
 
 ```json
 {
@@ -279,7 +278,7 @@ When an opportunity's status is set to an *implementation-defined* custom value,
     "customValue": "archived",
     "description": "Opportunity will no longer appear in search results, but will remain in the system for reporting purposes"
   }
-} 
+}
 ```
 
 CommonGrants APIs SHALL NOT add custom enum values to any field that does not support them in the base protocol.
