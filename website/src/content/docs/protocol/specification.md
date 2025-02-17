@@ -92,8 +92,8 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 The CommonGrants protocol defines the following scalar types that are used to build complex fields and models:
 
-| Type                                                                                | Description                                               |
-| ----------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Type                                                                               | Description                                               |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | [string](/simpler-grants-protocol/protocol/models/base-types#string)               | A sequence of characters                                  |
 | [integer](/simpler-grants-protocol/protocol/models/base-types#integer)             | A whole number without decimals                           |
 | [isoTime](/simpler-grants-protocol/protocol/models/base-types#isotime)             | A time on a clock, without a timezone, in ISO 8601 format |
@@ -107,8 +107,8 @@ The CommonGrants protocol defines the following scalar types that are used to bu
 
 The CommonGrants protocol defines the following fields that are reused across models:
 
-| Model                                                                 | Description                                       |
-| --------------------------------------------------------------------- | ------------------------------------------------- |
+| Model                                                                | Description                                       |
+| -------------------------------------------------------------------- | ------------------------------------------------- |
 | [Money](/simpler-grants-protocol/protocol/models/money)              | A monetary amount with a currency code            |
 | [Event](/simpler-grants-protocol/protocol/models/event)              | A description of an event with an associated date |
 | [CustomField](/simpler-grants-protocol/protocol/models/custom-field) | A model for defining custom fields on a record    |
@@ -118,8 +118,8 @@ The CommonGrants protocol defines the following fields that are reused across mo
 
 The CommonGrants protocol defines the following models that are specific to funding opportunities:
 
-| Model                                                                         | Description                                            |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Model                                                                        | Description                                            |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------ |
 | [OpportunityBase](/simpler-grants-protocol/protocol/models/opportunity-base) | The foundational model for a funding opportunity       |
 | [OppStatus](/simpler-grants-protocol/protocol/models/opp-status)             | The status of an opportunity                           |
 | [OppFunding](/simpler-grants-protocol/protocol/models/opp-funding)           | Details about the funding available for an opportunity |
@@ -129,8 +129,8 @@ The CommonGrants protocol defines the following models that are specific to fund
 
 The CommonGrants protocol defines the following routes and operations that are specific to funding opportunities:
 
-| Route                                                                                              | Description                                                      |
-| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Route                                                                                             | Description                                                      |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | [`GET /opportunities`](/simpler-grants-protocol/protocol/api/operations/opportunities_list/)      | Get a paginated list of opportunities sorted by `lastModifiedAt` |
 | [`GET /opportunities/{id}`](/simpler-grants-protocol/protocol/api/operations/opportunities_read/) | View details about a specific opportunity                        |
 
