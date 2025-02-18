@@ -5,6 +5,7 @@ import "@typespec/json-schema";
 import "./types.tsp";
 import "./fields/index.tsp";
 import "./opportunity/index.tsp";
+import "./responses/index.tsp";
 
 using TypeSpec.JsonSchema;
 

@@ -1,4 +1,4 @@
-namespace Responses.Error;
+namespace CommonGrants.Schemas.Responses;
 
 /** A standard error response schema, used to create custom error responses
  *

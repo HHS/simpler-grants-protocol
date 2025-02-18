@@ -1,5 +1,5 @@
 import "../schemas/index.tsp";
-import "../responses/index.tsp";
+import "./utils.tsp";
 
 // Define the top-level namespace for CommonGrants routes
 namespace CommonGrants.Routes;
@@ -8,19 +8,8 @@ namespace CommonGrants.Routes;
 // these include the decorators @route, @get, etc.
 using TypeSpec.Http;
 using TypeSpec.Rest;
-using Responses;
 
-model PaginatedQuery {
-  /** The page to return */
-  @query
-  @pageIndex
-  page?: int32 = 1;
-
-  /** The number of items to return per page */
-  @query
-  @pageSize
-  perPage?: int32 = 100;
-}
+alias Responses = CommonGrants.Schemas.Responses;
 
 /** A re-usable interface for an Opportunities router
  *
@@ -40,11 +29,10 @@ model PaginatedQuery {
  * @tag("Opportunities")
  * @route("/opportunities/")
  * namespace Opportunities {
- * alias Router = Routes.Opportunities
+ *   alias Router = Routes.Opportunities
  *
- * op list is Router.list;
- * op read is Router.read<CustomOpportunity>;
- *
+ *   op list is Router.list;
+ *   op read is Router.read<CustomOpportunity>;
  * }
  * ```
  */
@@ -58,8 +46,8 @@ interface Opportunities {
   @doc("Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.")
   @list
   list<T extends Schemas.OpportunityBase = Schemas.OpportunityBase>(
-    ...PaginatedQuery,
-  ): Success.Paginated<T> | Error.Unauthorized;
+    ...Utils.PaginatedQuery,
+  ): Responses.Paginated<T> | Responses.Unauthorized;
 
   /** `GET /opportunities/<id>` View opportunity details
    *
@@ -71,5 +59,5 @@ interface Opportunities {
   @get
   read<T extends Schemas.OpportunityBase = Schemas.OpportunityBase>(
     @path id: Schemas.Types.uuid,
-  ): Success.Ok<T> | Error.NotFound | Error.Unauthorized;
+  ): Responses.Ok<T> | Responses.NotFound | Responses.Unauthorized;
 }

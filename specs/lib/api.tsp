@@ -10,18 +10,18 @@ using TypeSpec.Http;
  * it must implement all of the routes with the "required" tag in this specification.
  */
 @service({
-    title: "Base API",
+  title: "Base API",
 })
 namespace CommonGrants.API;
 
 @tag("Opportunities")
 @route("/opportunities")
 namespace Opportunities {
-    alias Router = Routes.Opportunities;
+  alias Router = Routes.Opportunities;
 
-    @tag("required")
-    op List is Router.list;
+  @tag("required")
+  op List is Router.list;
 
-    @tag("required")
-    op Read is Router.read;
+  @tag("required")
+  op Read is Router.read;
 }
