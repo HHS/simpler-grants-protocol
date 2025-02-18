@@ -1,4 +1,4 @@
-import "../models/index.tsp";
+import "../schemas/index.tsp";
 import "../responses/index.tsp";
 
 // Define the top-level namespace for CommonGrants routes
@@ -37,7 +37,7 @@ model PaginatedQuery {
  * ```typespec
  * using TypeSpec.Http;
  *
- * @tag("Search")
+ * @tag("Opportunities")
  * @route("/opportunities/")
  * namespace Opportunities {
  * alias Router = Routes.Opportunities
@@ -52,24 +52,24 @@ interface Opportunities {
   /** `GET /opportunities/` Get a paginated list of opportunities
    *
    * @template T Type of the paginated response model.
-   * Must be an extension of Models.OpportunityBase. Default is Models.OpportunityBase.
+   * Must be an extension of Schemas.OpportunityBase. Default is Schemas.OpportunityBase.
    */
   @summary("List opportunities")
   @doc("Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.")
   @list
-  list<T extends Models.OpportunityBase = Models.OpportunityBase>(
+  list<T extends Schemas.OpportunityBase = Schemas.OpportunityBase>(
     ...PaginatedQuery,
   ): Success.Paginated<T> | Error.Unauthorized;
 
   /** `GET /opportunities/<id>` View opportunity details
    *
    * @template T Type of the response model.
-   * Must be an extension of Models.OpportunityBase. Default is Models.OpportunityBase.
+   * Must be an extension of Schemas.OpportunityBase. Default is Schemas.OpportunityBase.
    */
   @summary("View opportunity")
   @doc("View additional details about an opportunity")
   @get
-  read<T extends Models.OpportunityBase = Models.OpportunityBase>(
-    @path id: Models.uuid,
+  read<T extends Schemas.OpportunityBase = Schemas.OpportunityBase>(
+    @path id: Schemas.Types.uuid,
   ): Success.Ok<T> | Error.NotFound | Error.Unauthorized;
 }

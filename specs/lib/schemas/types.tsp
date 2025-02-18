@@ -1,4 +1,4 @@
-namespace CommonGrants.Models;
+namespace CommonGrants.Schemas.Types;
 
 /** A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss */
 @example(isoTime.fromISO("17:00:00"))

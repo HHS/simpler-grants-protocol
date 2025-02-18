@@ -1,4 +1,8 @@
-namespace CommonGrants.Models;
+import "../types.tsp";
+
+namespace CommonGrants.Schemas.Fields;
+
+using CommonGrants.Schemas.Types;
 
 // ########################################
 // Model definition

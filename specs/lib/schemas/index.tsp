@@ -1,20 +1,16 @@
 import "@typespec/json-schema";
 
-// Import individual models to provide a consistent interface
+// Import individual Schemas.to provide a consistent interface
 // and make them available throughout the namespace
-import "./base.tsp";
-import "./custom-field.tsp";
-import "./money.tsp";
-import "./event.tsp";
-import "./metadata.tsp";
-import "./custom-enum.tsp";
+import "./types.tsp";
+import "./fields/index.tsp";
 import "./opportunity/index.tsp";
 
 using TypeSpec.JsonSchema;
 
-/** Namespace for CommonGrants models that can be used in API routes */
-@jsonSchema // and emit these models as JSON schemas
-namespace CommonGrants.Models;
+/** Namespace for CommonGrants.Schemas that can be used in API routes */
+@jsonSchema // and emit these Schemas.as JSON schemas
+namespace CommonGrants.Schemas;
 
 /** The base model for a funding opportunity.
  *

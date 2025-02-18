@@ -1,12 +1,14 @@
-import "@typespec/json-schema";
-
 import "./status.tsp";
 import "./funding.tsp";
 import "./timeline.tsp";
+import "../fields/index.tsp";
+import "../types.tsp";
 
-/** Namespace for CommonGrants models that are specific to funding opportunities */
-@JsonSchema.jsonSchema
-namespace CommonGrants.Models.Opportunity;
+/** Namespace for CommonGrants.Schemas that are specific to funding opportunities */
+namespace CommonGrants.Schemas.Opportunity;
+
+using CommonGrants.Schemas.Fields;
+using CommonGrants.Schemas.Types;
 
 // ########################################
 // Model definition

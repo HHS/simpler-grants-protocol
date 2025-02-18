@@ -1,7 +1,10 @@
-import "../event.tsp";
-import "../custom-enum.tsp";
+import "../fields/index.tsp";
+import "../types.tsp";
 
-namespace CommonGrants.Models.Opportunity;
+namespace CommonGrants.Schemas.Opportunity;
+
+using CommonGrants.Schemas.Fields;
+using CommonGrants.Schemas.Types;
 
 // ########################################
 // Model definition

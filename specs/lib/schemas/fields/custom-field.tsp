@@ -1,4 +1,4 @@
-namespace CommonGrants.Models;
+namespace CommonGrants.Schemas;
 
 // ########################################
 // Field types definition
@@ -14,7 +14,7 @@ enum CustomFieldType {
 }
 
 // ########################################
-// Models definition
+// Schemas.definition
 // ########################################
 
 /** Model for defining custom fields that are specific to a given implementation.
