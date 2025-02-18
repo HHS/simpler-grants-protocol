@@ -3,7 +3,7 @@ import "@typespec/http";
 using TypeSpec.Http;
 
 /** Utility models and functions for API routes */
-namespace CommonGrants.Routes.Utils;
+namespace Core.Routes.Utils;
 
 /** A set of query parameters for paginated routes */
 model PaginatedQuery {

@@ -1,4 +1,6 @@
-namespace CommonGrants.Routes.Responses;
+import "@typespec/http";
+
+namespace Core.Responses;
 
 model Success {
   @example(200)

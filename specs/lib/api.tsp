@@ -1,6 +1,8 @@
 // Import Schemas.and Routes to make them available outside the package
-import "./schemas/index.tsp";
-import "./routes/index.tsp";
+import "./core/index.tsp";
+import "@typespec/http";
+
+using Core;
 
 using TypeSpec.Http;
 
@@ -10,7 +12,7 @@ using TypeSpec.Http;
  * it must implement all of the routes with the "required" tag in this specification.
  */
 @service({
-  title: "Base API",
+  title: "CommonGrants Base API",
 })
 namespace CommonGrants.API;
 

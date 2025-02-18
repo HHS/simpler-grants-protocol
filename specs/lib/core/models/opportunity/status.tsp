@@ -1,7 +1,7 @@
 import "@typespec/json-schema";
 import "@typespec/openapi3";
 
-namespace CommonGrants.Schemas.Opportunity;
+namespace Core.Models.Opportunity;
 
 // ########################################
 // Opportunity status options

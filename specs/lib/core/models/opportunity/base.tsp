@@ -1,14 +1,14 @@
 import "./status.tsp";
 import "./funding.tsp";
 import "./timeline.tsp";
-import "../fields/index.tsp";
-import "../types.tsp";
+import "../../fields/index.tsp";
+import "../../types.tsp";
 
-/** Namespace for CommonGrants.Schemas that are specific to funding opportunities */
-namespace CommonGrants.Schemas.Opportunity;
+/** Namespace for Core that are specific to funding opportunities */
+namespace Core.Models.Opportunity;
 
-using CommonGrants.Schemas.Fields;
-using CommonGrants.Schemas.Types;
+using Core.Fields;
+using Core.Types;
 
 // ########################################
 // Model definition

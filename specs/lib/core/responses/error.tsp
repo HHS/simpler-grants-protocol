@@ -1,4 +1,6 @@
-namespace CommonGrants.Routes.Responses;
+import "@typespec/http";
+
+namespace Core.Responses;
 
 /** A standard error response schema, used to create custom error responses
  *

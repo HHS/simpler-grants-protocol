@@ -3,9 +3,8 @@
 // https://typespec.io/docs/extending-typespec/basics/#h-add-your-main-typespec-file
 import "../dist/src/index.js";
 
-// Import Schemas and Routes to make them available outside the package
-import "./schemas/index.tsp";
-import "./routes/index.tsp";
+// Import items from the Core namespace to make them available outside the package
+import "./core/index.tsp";
 import "./api.tsp";
 
 namespace CommonGrants;
@@ -25,7 +24,7 @@ namespace CommonGrants;
  * }
  * ```
  */
-alias Types = CommonGrants.Schemas.Types;
+alias Types = Core.Types;
 
 /** A standard set of fields, e.g. `money` that can be reused across models
  *
@@ -41,7 +40,7 @@ alias Types = CommonGrants.Schemas.Types;
  * }
  * ```
  */
-alias Fields = CommonGrants.Schemas.Fields;
+alias Fields = Core.Fields;
 
 /** A standardized set of response schemas for CommonGrants API routes
  *
@@ -61,4 +60,35 @@ alias Fields = CommonGrants.Schemas.Fields;
  * }
  * ```
  */
-alias Responses = CommonGrants.Routes.Responses;
+alias Responses = Core.Responses;
+
+/** A collection of models for the CommonGrants API
+ *
+ * @example How to use the `Models` namespace
+ *
+ * ```tsp
+ * import "@common-grants/core";
+ *
+ * using CommonGrants; // exposes the Models namespace
+ *
+ * model MyModel extends Models.OpportunityBase {}
+ * ```
+ */
+alias Models = Core.Models;
+
+/** A series of routing interfaces for CommonGrants API endpoints
+ *
+ * @example How to use the `Routes` namespace
+ *
+ * ```tsp
+ * import "@common-grants/core";
+ *
+ * using CommonGrants; // exposes the Routes namespace
+ *
+ * namespace MyRoutes {
+ *   alias OpportunityRouter = Routes.Opportunities;
+ *
+ *   op List is OpportunityRouter.list;
+ * }
+ */
+alias Routes = Core.Routes;

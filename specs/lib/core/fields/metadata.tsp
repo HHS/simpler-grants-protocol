@@ -1,4 +1,4 @@
-namespace CommonGrants.Schemas.Fields;
+namespace Core.Fields;
 
 // ########################################
 // Model definition

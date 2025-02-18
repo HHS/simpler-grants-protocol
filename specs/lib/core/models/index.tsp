@@ -6,9 +6,9 @@ import "./opportunity/index.tsp";
 
 using TypeSpec.JsonSchema;
 
-/** Namespace for CommonGrants.Schemas that can be used in API routes */
+/** Namespace for Core that can be used in API routes */
 @jsonSchema // and emit these Schemas.as JSON schemas
-namespace CommonGrants.Schemas;
+namespace Core.Models;
 
 /** The base model for a funding opportunity.
  *
@@ -17,6 +17,9 @@ namespace CommonGrants.Schemas;
  * @example How to declare a new Opportunity model with custom fields
  *
  * ```typespec
+ * using Core.Fields;
+ * using Core.Models;
+ *
  * model Agency extends CustomField {
  *   type: CustomFieldType.string;
  *

@@ -3,4 +3,4 @@ import "./metadata.tsp";
 import "./money.tsp";
 import "./event.tsp";
 
-namespace CommonGrants.Schemas.Fields;
+namespace Internals.Schemas.Fields;

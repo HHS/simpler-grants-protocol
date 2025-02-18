@@ -1,14 +1,14 @@
-import "../schemas/index.tsp";
-import "./responses/index.tsp";
+import "../models/index.tsp";
+import "../responses/index.tsp";
 import "./utils.tsp";
 
 // Define the top-level namespace for CommonGrants routes
-namespace CommonGrants.Routes;
+namespace Core.Routes;
 
 // Expose the contents of the Http and Rest namespaces
 // these include the decorators @route, @get, etc.
 using TypeSpec.Http;
-using TypeSpec.Rest;
+using Core;
 
 /** A re-usable interface for an Opportunities router
  *
@@ -44,7 +44,7 @@ interface Opportunities {
   @summary("List opportunities")
   @doc("Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.")
   @list
-  list<T extends Schemas.OpportunityBase = Schemas.OpportunityBase>(
+  list<T extends Models.OpportunityBase = Models.OpportunityBase>(
     ...Utils.PaginatedQuery,
   ): Responses.Paginated<T> | Responses.Unauthorized;
 
@@ -56,8 +56,8 @@ interface Opportunities {
   @summary("View opportunity")
   @doc("View additional details about an opportunity")
   @get
-  read<T extends Schemas.OpportunityBase = Schemas.OpportunityBase>(
+  read<T extends Models.OpportunityBase = Models.OpportunityBase>(
     /** The ID of the opportunity to view */
-    @path id: Schemas.Types.uuid,
+    @path id: Types.uuid,
   ): Responses.Ok<T> | Responses.NotFound | Responses.Unauthorized;
 }
