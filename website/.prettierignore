@@ -1,5 +1,5 @@
 # Ignore all model documentation files
-src/content/docs/protocol/models/*.mdx
+src/content/docs/protocol/schemas/**/*.mdx
 
 # Other common files to ignore
 dist/
