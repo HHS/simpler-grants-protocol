@@ -94,14 +94,14 @@ The CommonGrants protocol defines the following scalar types that are used to bu
 
 | Type                                                                               | Description                                               |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [string](/simpler-grants-protocol/protocol/models/base-types#string)               | A sequence of characters                                  |
-| [integer](/simpler-grants-protocol/protocol/models/base-types#integer)             | A whole number without decimals                           |
-| [isoTime](/simpler-grants-protocol/protocol/models/base-types#isotime)             | A time on a clock, without a timezone, in ISO 8601 format |
-| [isoDate](/simpler-grants-protocol/protocol/models/base-types#isodate)             | A date on a calendar in ISO 8601 format                   |
-| [isoDateTime](/simpler-grants-protocol/protocol/models/base-types#isodatetime)     | A date and time with timezone in ISO 8601 format          |
-| [uuid](/simpler-grants-protocol/protocol/models/base-types#uuid)                   | A universally unique identifier                           |
-| [decimalString](/simpler-grants-protocol/protocol/models/base-types#decimalstring) | A decimal number encoded as a string                      |
-| [url](/simpler-grants-protocol/protocol/models/base-types#url)                     | A Uniform Resource Locator                                |
+| [string](/simpler-grants-protocol/protocol/schemas/base-types#string)               | A sequence of characters                                  |
+| [integer](/simpler-grants-protocol/protocol/schemas/base-types#integer)             | A whole number without decimals                           |
+| [isoTime](/simpler-grants-protocol/protocol/schemas/base-types#isotime)             | A time on a clock, without a timezone, in ISO 8601 format |
+| [isoDate](/simpler-grants-protocol/protocol/schemas/base-types#isodate)             | A date on a calendar in ISO 8601 format                   |
+| [isoDateTime](/simpler-grants-protocol/protocol/schemas/base-types#isodatetime)     | A date and time with timezone in ISO 8601 format          |
+| [uuid](/simpler-grants-protocol/protocol/schemas/base-types#uuid)                   | A universally unique identifier                           |
+| [decimalString](/simpler-grants-protocol/protocol/schemas/base-types#decimalstring) | A decimal number encoded as a string                      |
+| [url](/simpler-grants-protocol/protocol/schemas/base-types#url)                     | A Uniform Resource Locator                                |
 
 #### Core fields
 
@@ -109,10 +109,10 @@ The CommonGrants protocol defines the following fields that are reused across mo
 
 | Model                                                                | Description                                       |
 | -------------------------------------------------------------------- | ------------------------------------------------- |
-| [Money](/simpler-grants-protocol/protocol/models/money)              | A monetary amount with a currency code            |
-| [Event](/simpler-grants-protocol/protocol/models/event)              | A description of an event with an associated date |
-| [CustomField](/simpler-grants-protocol/protocol/models/custom-field) | A model for defining custom fields on a record    |
-| [SystemMetadata](/simpler-grants-protocol/protocol/models/metadata)  | System-managed metadata for records               |
+| [Money](/simpler-grants-protocol/protocol/schemas/money)              | A monetary amount with a currency code            |
+| [Event](/simpler-grants-protocol/protocol/schemas/event)              | A description of an event with an associated date |
+| [CustomField](/simpler-grants-protocol/protocol/schemas/custom-field) | A model for defining custom fields on a record    |
+| [SystemMetadata](/simpler-grants-protocol/protocol/schemas/metadata)  | System-managed metadata for records               |
 
 #### Opportunity models
 
@@ -120,10 +120,10 @@ The CommonGrants protocol defines the following models that are specific to fund
 
 | Model                                                                        | Description                                            |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [OpportunityBase](/simpler-grants-protocol/protocol/models/opportunity-base) | The foundational model for a funding opportunity       |
-| [OppStatus](/simpler-grants-protocol/protocol/models/opp-status)             | The status of an opportunity                           |
-| [OppFunding](/simpler-grants-protocol/protocol/models/opp-funding)           | Details about the funding available for an opportunity |
-| [OppTimeline](/simpler-grants-protocol/protocol/models/opp-timeline)         | Key dates in an opportunity's timeline                 |
+| [OpportunityBase](/simpler-grants-protocol/protocol/schemas/opportunity-base) | The foundational model for a funding opportunity       |
+| [OppStatus](/simpler-grants-protocol/protocol/schemas/opp-status)             | The status of an opportunity                           |
+| [OppFunding](/simpler-grants-protocol/protocol/schemas/opp-funding)           | Details about the funding available for an opportunity |
+| [OppTimeline](/simpler-grants-protocol/protocol/schemas/opp-timeline)         | Key dates in an opportunity's timeline                 |
 
 ### Routes and operations
 
