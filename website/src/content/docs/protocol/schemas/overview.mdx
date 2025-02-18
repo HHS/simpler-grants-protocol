@@ -14,11 +14,11 @@ Core scalar types used throughout the protocol.
 
 #### String types
 
-| Type                                                                      | Description                      |
-| ------------------------------------------------------------------------- | -------------------------------- |
-| [string](/simpler-grants-protocol/protocol/schemas/types/string#base)     | A sequence of characters         |
-| [uuid](/simpler-grants-protocol/protocol/schemas/types/string#identifier) | A universally unique identifier  |
-| [url](/simpler-grants-protocol/protocol/schemas/types/string#uri)         | A Uniform Resource Locator (URL) |
+| Type                                                                    | Description                      |
+| ----------------------------------------------------------------------- | -------------------------------- |
+| [string](/simpler-grants-protocol/protocol/schemas/types/string#string) | A sequence of characters         |
+| [uuid](/simpler-grants-protocol/protocol/schemas/types/string#uuid)     | A universally unique identifier  |
+| [url](/simpler-grants-protocol/protocol/schemas/types/string#url)       | A Uniform Resource Locator (URL) |
 
 #### Numeric types
 
@@ -64,7 +64,7 @@ Models specific to funding opportunities.
 
 | Model                                                                         | Description                                               |
 | ----------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [OpportunityBase](/simpler-grants-protocol/protocol/schemas/opportunity/base) | The core model for a funding opportunity                  |
 | [OppStatus](/simpler-grants-protocol/protocol/schemas/opportunity/status)     | The status of an opportunity                              |
 | [OppFunding](/simpler-grants-protocol/protocol/schemas/opportunity/funding)   | Details about the funding available for an opportunity    |
 | [OppTimeline](/simpler-grants-protocol/protocol/schemas/opportunity/timeline) | Key dates in the opportunity's timeline                   |
-| [OpportunityBase](/simpler-grants-protocol/protocol/schemas/opportunity/base) | The core opportunity model that combines all other models |

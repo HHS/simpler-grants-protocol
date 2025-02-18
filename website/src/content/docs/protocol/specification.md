@@ -92,11 +92,11 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 **String types**
 
-| Type                                                                   | Description                      |
-| ---------------------------------------------------------------------- | -------------------------------- |
-| [string](/simpler-grants-protocol/protocol/schemas/types/other#string) | A sequence of characters         |
-| [uuid](/simpler-grants-protocol/protocol/schemas/types/other#uuid)     | A universally unique identifier  |
-| [url](/simpler-grants-protocol/protocol/schemas/types/other#url)       | A Uniform Resource Locator (URL) |
+| Type                                                                    | Description                      |
+| ----------------------------------------------------------------------- | -------------------------------- |
+| [string](/simpler-grants-protocol/protocol/schemas/types/string#string) | A sequence of characters         |
+| [uuid](/simpler-grants-protocol/protocol/schemas/types/string#uuid)     | A universally unique identifier  |
+| [url](/simpler-grants-protocol/protocol/schemas/types/string#url)       | A Uniform Resource Locator (URL) |
 
 **Numeric types**
 
@@ -140,12 +140,12 @@ The CommonGrants protocol defines the following fields that are reused across mo
 
 The CommonGrants protocol defines the following models that are specific to funding opportunities:
 
-| Model                                                                        | Description                                            |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [OpportunityBase](/simpler-grants-protocol/protocol/schemas/opportunity-base) | The foundational model for a funding opportunity       |
-| [OppStatus](/simpler-grants-protocol/protocol/schemas/opp-status)             | The status of an opportunity                           |
-| [OppFunding](/simpler-grants-protocol/protocol/schemas/opp-funding)           | Details about the funding available for an opportunity |
-| [OppTimeline](/simpler-grants-protocol/protocol/schemas/opp-timeline)         | Key dates in an opportunity's timeline                 |
+| Model                                                                         | Description                                               |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [OpportunityBase](/simpler-grants-protocol/protocol/schemas/opportunity/base) | The core model for a funding opportunity                  |
+| [OppStatus](/simpler-grants-protocol/protocol/schemas/opportunity/status)     | The status of an opportunity                              |
+| [OppFunding](/simpler-grants-protocol/protocol/schemas/opportunity/funding)   | Details about the funding available for an opportunity    |
+| [OppTimeline](/simpler-grants-protocol/protocol/schemas/opportunity/timeline) | Key dates in the opportunity's timeline                   |
 
 ### Routes and operations
 
