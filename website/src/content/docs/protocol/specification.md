@@ -90,40 +90,62 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 #### Base types
 
-The CommonGrants protocol defines the following scalar types that are used to build complex fields and models:
+**String types**
 
-| Type                                                                               | Description                                               |
-| ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [string](/simpler-grants-protocol/protocol/models/base-types#string)               | A sequence of characters                                  |
-| [integer](/simpler-grants-protocol/protocol/models/base-types#integer)             | A whole number without decimals                           |
-| [isoTime](/simpler-grants-protocol/protocol/models/base-types#isotime)             | A time on a clock, without a timezone, in ISO 8601 format |
-| [isoDate](/simpler-grants-protocol/protocol/models/base-types#isodate)             | A date on a calendar in ISO 8601 format                   |
-| [isoDateTime](/simpler-grants-protocol/protocol/models/base-types#isodatetime)     | A date and time with timezone in ISO 8601 format          |
-| [uuid](/simpler-grants-protocol/protocol/models/base-types#uuid)                   | A universally unique identifier                           |
-| [decimalString](/simpler-grants-protocol/protocol/models/base-types#decimalstring) | A decimal number encoded as a string                      |
-| [url](/simpler-grants-protocol/protocol/models/base-types#url)                     | A Uniform Resource Locator                                |
+| Type                                                                    | Description                      |
+| ----------------------------------------------------------------------- | -------------------------------- |
+| [string](/simpler-grants-protocol/protocol/schemas/types/string#string) | A sequence of characters         |
+| [uuid](/simpler-grants-protocol/protocol/schemas/types/string#uuid)     | A universally unique identifier  |
+| [url](/simpler-grants-protocol/protocol/schemas/types/string#url)       | A Uniform Resource Locator (URL) |
+
+**Numeric types**
+
+| Type                                                                                   | Description                                            |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [numeric](/simpler-grants-protocol/protocol/schemas/types/numeric#numeric)             | A number with an arbitrary precision and scale         |
+| [integer](/simpler-grants-protocol/protocol/schemas/types/numeric#integer)             | A whole number without decimals                        |
+| [decimalString](/simpler-grants-protocol/protocol/schemas/types/numeric#decimalstring) | A decimal number encoded as a string to preserve scale |
+
+**Date and time types**
+
+| Type                                                                                  | Description                                                           |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [isoTime](/simpler-grants-protocol/protocol/schemas/types/date#isotime)               | Time without timezone in ISO 8601 format (HH:mm:ss)                   |
+| [isoDate](/simpler-grants-protocol/protocol/schemas/types/date#isodate)               | Calendar date in ISO 8601 format (YYYY-MM-DD)                         |
+| [utcDateTime](/simpler-grants-protocol/protocol/schemas/types/date#utcdatetime)       | Datetime with UTC timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ssZ)  |
+| [offsetDateTime](/simpler-grants-protocol/protocol/schemas/types/date#offsetdatetime) | Datetime with timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ss±hh:mm) |
+
+**Other types**
+
+| Type                                                                     | Description                     |
+| ------------------------------------------------------------------------ | ------------------------------- |
+| [boolean](/simpler-grants-protocol/protocol/schemas/types/other#boolean) | A true or false value           |
+| [array](/simpler-grants-protocol/protocol/schemas/types/other#array)     | An ordered list of values       |
+| [record](/simpler-grants-protocol/protocol/schemas/types/other#record)   | A collection of key-value pairs |
+| [null](/simpler-grants-protocol/protocol/schemas/types/other#null)       | A null value                    |
+| [unknown](/simpler-grants-protocol/protocol/schemas/types/other#unknown) | A value of with any type        |
 
 #### Core fields
 
 The CommonGrants protocol defines the following fields that are reused across models:
 
-| Model                                                                | Description                                       |
-| -------------------------------------------------------------------- | ------------------------------------------------- |
-| [Money](/simpler-grants-protocol/protocol/models/money)              | A monetary amount with a currency code            |
-| [Event](/simpler-grants-protocol/protocol/models/event)              | A description of an event with an associated date |
-| [CustomField](/simpler-grants-protocol/protocol/models/custom-field) | A model for defining custom fields on a record    |
-| [SystemMetadata](/simpler-grants-protocol/protocol/models/metadata)  | System-managed metadata for records               |
+| Field                                                                        | Description                                       |
+| ---------------------------------------------------------------------------- | ------------------------------------------------- |
+| [Money](/simpler-grants-protocol/protocol/schemas/fields/money)              | A monetary amount with a currency code            |
+| [Event](/simpler-grants-protocol/protocol/schemas/fields/event)              | A description of an event with an associated date |
+| [CustomField](/simpler-grants-protocol/protocol/schemas/fields/custom-field) | A model for defining custom fields on a record    |
+| [SystemMetadata](/simpler-grants-protocol/protocol/schemas/fields/metadata)  | System-managed metadata for records               |
 
 #### Opportunity models
 
 The CommonGrants protocol defines the following models that are specific to funding opportunities:
 
-| Model                                                                        | Description                                            |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [OpportunityBase](/simpler-grants-protocol/protocol/models/opportunity-base) | The foundational model for a funding opportunity       |
-| [OppStatus](/simpler-grants-protocol/protocol/models/opp-status)             | The status of an opportunity                           |
-| [OppFunding](/simpler-grants-protocol/protocol/models/opp-funding)           | Details about the funding available for an opportunity |
-| [OppTimeline](/simpler-grants-protocol/protocol/models/opp-timeline)         | Key dates in an opportunity's timeline                 |
+| Model                                                                         | Description                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [OpportunityBase](/simpler-grants-protocol/protocol/schemas/opportunity/base) | The core model for a funding opportunity               |
+| [OppStatus](/simpler-grants-protocol/protocol/schemas/opportunity/status)     | The status of an opportunity                           |
+| [OppFunding](/simpler-grants-protocol/protocol/schemas/opportunity/funding)   | Details about the funding available for an opportunity |
+| [OppTimeline](/simpler-grants-protocol/protocol/schemas/opportunity/timeline) | Key dates in the opportunity's timeline                |
 
 ### Routes and operations
 
@@ -160,19 +182,20 @@ The response body for paginated requests SHOULD return the paginated set of reco
 
 CommonGrants routes that support sorting SHOULD accept the following parameters, either as query parameters (for `GET` routes) or as optional parameters at the root of the request body (for `POST` and `PUT` routes):
 
-| Parameter   | Type            | Description                            |
-| ----------- | --------------- | -------------------------------------- |
-| `sortBy`    | string          | The property to sort the results by    |
-| `sortOrder` | `asc` or `desc` | The order in which to sort the results |
+| Parameter      | Type            | Description                                            |
+| -------------- | --------------- | ------------------------------------------------------ |
+| `sortBy`       | string          | The property to use to sort the results                |
+| `customSortBy` | string          | The _implementation-defined_ sort value, if applicable |
+| `sortOrder`    | `asc` or `desc` | The order in which to sort the results                 |
 
 Additionally, the response body for sorted requests SHOULD include a `sortInfo` property with the following:
 
-| Property       | Type    | Required | Description                                      |
-| -------------- | ------- | -------- | ------------------------------------------------ |
-| `sortBy`       | string  | Yes      | The property that was sorted by                  |
-| `customSortBy` | boolean | No       | Whether the `sortBy` property was a custom value |
-| `sortOrder`    | string  | Yes      | The order in which the results were sorted       |
-| `errors`       | array   | No       | Errors that occurred while sorting               |
+| Property       | Type            | Required | Description                                                                  |
+| -------------- | --------------- | -------- | ---------------------------------------------------------------------------- |
+| `sortBy`       | string          | Yes      | The property used to sort the results, or `custom` if a custom sort was used |
+| `customSortBy` | boolean         | No       | The custom sort value used, if applicable                                    |
+| `sortOrder`    | `asc` or `desc` | Yes      | The order in which the results were sorted                                   |
+| `errors`       | array           | No       | Errors that occurred while sorting                                           |
 
 If the protocol specifies a minimum set of `sortBy` options, implementations MUST support them. APIs MAY support additional _implementation-defined_ options using the `customSortBy` parameter.
 

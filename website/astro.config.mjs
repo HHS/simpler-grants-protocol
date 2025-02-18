@@ -52,7 +52,27 @@ export default defineConfig({
             {
               label: "Schemas",
               collapsed: true,
-              autogenerate: { directory: "protocol/models" },
+              items: [
+                {
+                  label: "Overview",
+                  link: "protocol/schemas/overview",
+                },
+                {
+                  label: "Base types",
+                  collapsed: true,
+                  autogenerate: { directory: "protocol/schemas/types" },
+                },
+                {
+                  label: "Core fields",
+                  collapsed: true,
+                  autogenerate: { directory: "protocol/schemas/fields" },
+                },
+                {
+                  label: "Opportunity models",
+                  collapsed: true,
+                  autogenerate: { directory: "protocol/schemas/opportunity" },
+                },
+              ],
             },
             ...openAPISidebarGroups,
           ],

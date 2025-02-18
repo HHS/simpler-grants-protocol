@@ -1,0 +1,145 @@
+---
+title: Other core types
+description: Other core types that are used throughout the protocol
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+### boolean
+
+A value that is either `true` or `false`, equivalent to `boolean` in JSON Schema.
+<Tabs>
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: boolean.yaml
+  type: boolean
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  true
+  ```
+  ```json
+  false
+  ```
+  </TabItem>
+</Tabs>
+
+### Array
+
+An ordered list of values, equivalent to `array` in JSON Schema.
+
+<Tabs>
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: array.yaml
+  type: array
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  [1, 2, 3]
+  ```
+  </TabItem>
+</Tabs>
+
+In TypeSpec, you can specify the type of the values in the array with [templating](https://typespec.io/docs/language-basics/templates/):
+
+```tsp
+/** An array of integers */
+alias IntegerArray = Array<integer>
+```
+
+This is equivalent to the following JSON Schema:
+
+```yaml
+$id: IntegerArray.yaml
+type: array
+items:
+  type: integer
+```
+
+### Record
+
+A collection of key-value pairs, equivalent to `object` in JSON Schema.
+
+<Tabs>
+  <TabItem label="JSON Schema"> 
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: record.yaml
+  type: object
+  ```
+  </TabItem>
+</Tabs>
+
+In TypeSpec, you can specify the type of the values in the record with [templating](https://typespec.io/docs/language-basics/templates/):
+
+```tsp
+/** A record with a string key and an integer value */
+alias StringIntRecord = Record<integer>
+```
+
+This is equivalent to the following JSON Schema:
+
+```yaml
+$id: StringIntRecord.yaml
+type: object
+additionalProperties:
+  type: integer
+```
+
+If you want to define specific keys in a record, you can do so with a [`model`](https://typespec.io/docs/language-basics/models/).
+
+### null
+
+The `null` type, equivalent to `null` in JSON Schema.
+
+<Tabs>
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: null.yaml
+  type: null
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  null
+  ```
+  </TabItem>
+</Tabs>
+
+### unknown
+
+The `unknown` type accepts any value. It is equivalent to an empty JSON Schema.
+
+<Tabs>
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: unknown.yaml
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  All of the following are valid values for the `unknown` type:
+  ```json
+  // String
+  "foo"
+  ```
+  ```json
+  // Integer
+  123
+  ```
+  ```json
+  // Boolean
+  true
+  ```
+  </TabItem>
+</Tabs>

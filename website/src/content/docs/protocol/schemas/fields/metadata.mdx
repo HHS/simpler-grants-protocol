@@ -1,0 +1,65 @@
+---
+title: SystemMetadata
+description: System-managed metadata for records
+tableOfContents: false
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+System-managed metadata that is automatically added to records.
+
+### Data model
+
+<Tabs>
+  <TabItem label="Table">
+  | Property       | Type                                                                            | Required | Description                                                  |
+  | -------------- | ------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
+  | createdAt      | [utcDateTime](/simpler-grants-protocol/protocol/schemas/types/date#utcdatetime) | Yes      | The timestamp (in UTC) at which the record was created       |
+  | lastModifiedAt | [utcDateTime](/simpler-grants-protocol/protocol/schemas/types/date#utcdatetime) | Yes      | The timestamp (in UTC) at which the record was last modified |
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: SystemMetadata.yaml
+  type: object
+  properties:
+    createdAt:
+      type: string
+      format: date-time
+      description: The timestamp (in UTC) at which the record was created.
+    lastModifiedAt:
+      type: string
+      format: date-time
+      description: The timestamp (in UTC) at which the record was last modified.
+  required:
+    - createdAt
+    - lastModifiedAt
+  description: System-managed metadata for records
+  ```
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+  ```tsp
+  /** System-managed metadata for records */
+  model SystemMetadata {
+    /** The timestamp (in UTC) at which the record was created */
+    @visibility(Lifecycle.Read)
+    createdAt: isoDatetime;
+
+    /** The timestamp (in UTC) at which the record was last modified */
+    @visibility(Lifecycle.Read)
+    lastModifiedAt: isoDatetime;
+  }
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  {
+    "createdAt": "2024-02-28T12:00:00Z",
+    "lastModifiedAt": "2024-02-28T12:00:00Z"
+  }
+  ```
+  </TabItem>
+</Tabs> 

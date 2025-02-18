@@ -1,0 +1,63 @@
+---
+title: Money
+description: A model for representing monetary values
+tableOfContents: false
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+A monetary amount and the currency in which it is denominated.
+
+### Data model
+
+<Tabs>
+  <TabItem label="Table">
+  | Property | Type                                                                                   | Required | Description                                     |
+  | -------- | -------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
+  | amount   | [decimalString](/simpler-grants-protocol/protocol/schemas/types/numeric#decimalstring) | Yes      | The amount of money                             |
+  | currency | [string](/simpler-grants-protocol/protocol/schemas/types/string#string)                | Yes      | The ISO 4217 currency code (e.g., "USD", "EUR") |
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+  ```yaml
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: Money.yaml
+  type: object
+  properties:
+    amount:
+      $ref: decimalString.yaml
+      description: The amount of money
+    currency:
+      type: string
+      description: The ISO 4217 currency code (e.g., "USD", "EUR")
+  required:
+    - amount
+    - currency
+  description: A monetary amount and the currency in which its denominated
+  ```
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+  ```tsp
+  /** A monetary amount and the currency in which its denominated */
+  model Money {
+    /** The amount of money */
+    amount: decimalString;
+
+    /** The ISO 4217 currency code in which the amount is denominated */
+    currency: string;
+  }
+  ```
+  </TabItem>
+
+  <TabItem label="Example">
+  ```json
+  {
+    "amount": "1000000.00",
+    "currency": "USD"
+  }
+  ```
+  </TabItem>
+</Tabs> 
