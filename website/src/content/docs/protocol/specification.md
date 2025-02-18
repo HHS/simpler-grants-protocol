@@ -90,29 +90,51 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 #### Base types
 
-The CommonGrants protocol defines the following scalar types that are used to build complex fields and models:
+**String types**
 
-| Type                                                                               | Description                                               |
-| ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [string](/simpler-grants-protocol/protocol/schemas/base-types#string)               | A sequence of characters                                  |
-| [integer](/simpler-grants-protocol/protocol/schemas/base-types#integer)             | A whole number without decimals                           |
-| [isoTime](/simpler-grants-protocol/protocol/schemas/base-types#isotime)             | A time on a clock, without a timezone, in ISO 8601 format |
-| [isoDate](/simpler-grants-protocol/protocol/schemas/base-types#isodate)             | A date on a calendar in ISO 8601 format                   |
-| [isoDateTime](/simpler-grants-protocol/protocol/schemas/base-types#isodatetime)     | A date and time with timezone in ISO 8601 format          |
-| [uuid](/simpler-grants-protocol/protocol/schemas/base-types#uuid)                   | A universally unique identifier                           |
-| [decimalString](/simpler-grants-protocol/protocol/schemas/base-types#decimalstring) | A decimal number encoded as a string                      |
-| [url](/simpler-grants-protocol/protocol/schemas/base-types#url)                     | A Uniform Resource Locator                                |
+| Type                                                                   | Description                      |
+| ---------------------------------------------------------------------- | -------------------------------- |
+| [string](/simpler-grants-protocol/protocol/schemas/types/other#string) | A sequence of characters         |
+| [uuid](/simpler-grants-protocol/protocol/schemas/types/other#uuid)     | A universally unique identifier  |
+| [url](/simpler-grants-protocol/protocol/schemas/types/other#url)       | A Uniform Resource Locator (URL) |
+
+**Numeric types**
+
+| Type                                                                                   | Description                                            |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [numeric](/simpler-grants-protocol/protocol/schemas/types/numeric#numeric)             | A number with an arbitrary precision and scale         |
+| [integer](/simpler-grants-protocol/protocol/schemas/types/numeric#integer)             | A whole number without decimals                        |
+| [decimalString](/simpler-grants-protocol/protocol/schemas/types/numeric#decimalstring) | A decimal number encoded as a string to preserve scale |
+
+**Date and time types**
+
+| Type                                                                                  | Description                                                           |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [isoTime](/simpler-grants-protocol/protocol/schemas/types/date#isotime)               | Time without timezone in ISO 8601 format (HH:mm:ss)                   |
+| [isoDate](/simpler-grants-protocol/protocol/schemas/types/date#isodate)               | Calendar date in ISO 8601 format (YYYY-MM-DD)                         |
+| [utcDateTime](/simpler-grants-protocol/protocol/schemas/types/date#utcdatetime)       | Datetime with UTC timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ssZ)  |
+| [offsetDateTime](/simpler-grants-protocol/protocol/schemas/types/date#offsetdatetime) | Datetime with timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ss±hh:mm) |
+
+**Other types**
+
+| Type                                                                     | Description                     |
+| ------------------------------------------------------------------------ | ------------------------------- |
+| [boolean](/simpler-grants-protocol/protocol/schemas/types/other#boolean) | A true or false value           |
+| [array](/simpler-grants-protocol/protocol/schemas/types/other#array)     | An ordered list of values       |
+| [record](/simpler-grants-protocol/protocol/schemas/types/other#record)   | A collection of key-value pairs |
+| [null](/simpler-grants-protocol/protocol/schemas/types/other#null)       | A null value                    |
+| [unknown](/simpler-grants-protocol/protocol/schemas/types/other#unknown) | A value of with any type        |
 
 #### Core fields
 
 The CommonGrants protocol defines the following fields that are reused across models:
 
-| Model                                                                | Description                                       |
-| -------------------------------------------------------------------- | ------------------------------------------------- |
-| [Money](/simpler-grants-protocol/protocol/schemas/money)              | A monetary amount with a currency code            |
-| [Event](/simpler-grants-protocol/protocol/schemas/event)              | A description of an event with an associated date |
-| [CustomField](/simpler-grants-protocol/protocol/schemas/custom-field) | A model for defining custom fields on a record    |
-| [SystemMetadata](/simpler-grants-protocol/protocol/schemas/metadata)  | System-managed metadata for records               |
+| Field                                                                        | Description                                       |
+| ---------------------------------------------------------------------------- | ------------------------------------------------- |
+| [Money](/simpler-grants-protocol/protocol/schemas/fields/money)              | A monetary amount with a currency code            |
+| [Event](/simpler-grants-protocol/protocol/schemas/fields/event)              | A description of an event with an associated date |
+| [CustomField](/simpler-grants-protocol/protocol/schemas/fields/custom-field) | A model for defining custom fields on a record    |
+| [SystemMetadata](/simpler-grants-protocol/protocol/schemas/fields/metadata)  | System-managed metadata for records               |
 
 #### Opportunity models
 
