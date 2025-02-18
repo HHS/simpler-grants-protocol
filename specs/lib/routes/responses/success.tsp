@@ -1,4 +1,4 @@
-namespace CommonGrants.Schemas.Responses;
+namespace CommonGrants.Routes.Responses;
 
 model Success {
   @example(200)

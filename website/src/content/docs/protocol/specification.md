@@ -182,19 +182,20 @@ The response body for paginated requests SHOULD return the paginated set of reco
 
 CommonGrants routes that support sorting SHOULD accept the following parameters, either as query parameters (for `GET` routes) or as optional parameters at the root of the request body (for `POST` and `PUT` routes):
 
-| Parameter   | Type            | Description                            |
-| ----------- | --------------- | -------------------------------------- |
-| `sortBy`    | string          | The property to sort the results by    |
-| `sortOrder` | `asc` or `desc` | The order in which to sort the results |
+| Parameter      | Type            | Description                                            |
+| -------------- | --------------- | ------------------------------------------------------ |
+| `sortBy`       | string          | The property to use to sort the results                |
+| `customSortBy` | string          | The _implementation-defined_ sort value, if applicable |
+| `sortOrder`    | `asc` or `desc` | The order in which to sort the results                 |
 
 Additionally, the response body for sorted requests SHOULD include a `sortInfo` property with the following:
 
-| Property       | Type    | Required | Description                                      |
-| -------------- | ------- | -------- | ------------------------------------------------ |
-| `sortBy`       | string  | Yes      | The property that was sorted by                  |
-| `customSortBy` | boolean | No       | Whether the `sortBy` property was a custom value |
-| `sortOrder`    | string  | Yes      | The order in which the results were sorted       |
-| `errors`       | array   | No       | Errors that occurred while sorting               |
+| Property       | Type            | Required | Description                                                                  |
+| -------------- | --------------- | -------- | ---------------------------------------------------------------------------- |
+| `sortBy`       | string          | Yes      | The property used to sort the results, or `custom` if a custom sort was used |
+| `customSortBy` | boolean         | No       | The custom sort value used, if applicable                                    |
+| `sortOrder`    | `asc` or `desc` | Yes      | The order in which the results were sorted                                   |
+| `errors`       | array           | No       | Errors that occurred while sorting                                           |
 
 If the protocol specifies a minimum set of `sortBy` options, implementations MUST support them. APIs MAY support additional _implementation-defined_ options using the `customSortBy` parameter.
 

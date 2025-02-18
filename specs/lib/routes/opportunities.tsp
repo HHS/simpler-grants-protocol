@@ -1,4 +1,5 @@
 import "../schemas/index.tsp";
+import "./responses/index.tsp";
 import "./utils.tsp";
 
 // Define the top-level namespace for CommonGrants routes
@@ -8,8 +9,6 @@ namespace CommonGrants.Routes;
 // these include the decorators @route, @get, etc.
 using TypeSpec.Http;
 using TypeSpec.Rest;
-
-alias Responses = CommonGrants.Schemas.Responses;
 
 /** A re-usable interface for an Opportunities router
  *
@@ -58,6 +57,7 @@ interface Opportunities {
   @doc("View additional details about an opportunity")
   @get
   read<T extends Schemas.OpportunityBase = Schemas.OpportunityBase>(
+    /** The ID of the opportunity to view */
     @path id: Schemas.Types.uuid,
   ): Responses.Ok<T> | Responses.NotFound | Responses.Unauthorized;
 }

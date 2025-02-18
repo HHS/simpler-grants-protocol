@@ -14,7 +14,7 @@ enum CustomFieldType {
 }
 
 // ########################################
-// Schemas.definition
+// Model definition
 // ########################################
 
 /** Model for defining custom fields that are specific to a given implementation.
