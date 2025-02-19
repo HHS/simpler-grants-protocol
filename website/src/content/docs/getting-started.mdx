@@ -101,36 +101,34 @@ This should start a local server that serves the OpenAPI specification using Swa
 
 ### Add a custom field
 
-Create a new file called `models.tsp` and with the following code:
+Create a new file called `schemas.tsp` and with the following code:
 
-```tsp title=models.tsp highlight={10-15}
+```tsp title=schemas.tsp
 import "@common-grants/core";
 
 // Allows us to use models defined in the specification library
-// without prefixing each model with `CommonGrants.Models.`
-using CommonGrants.Models;
+// without prefixing each model with `CommonGrants`
+using CommonGrants;
 
-namespace Quickstart.Models;
+namespace Quickstart.Schemas;
 
-model Agency extends CustomField {
+model Agency extends Fields.CustomField {
   name: "Agency";
-  type: CustomFieldType.string;
+  type: Fields.CustomFieldType.string;
   value: string;
   description: "The agency managing the funding opportunity.";
 }
 
 // Create a custom Opportunity type using the template
-model CustomOpportunity extends Opportunity.OpportunityBase {
-  @example(
-    #{
-        agency: #{
-            name: "Agency",
-            type: CustomFieldType.string,
-            value: "Department of Energy",
-            description: "The agency managing the funding opportunity."
-        }
-    }
-  )
+model CustomOpportunity extends Models.OpportunityBase {
+  @example(#{
+    agency: #{
+      name: "Agency",
+      type: Fields.CustomFieldType.string,
+      value: "Department of Energy",
+      description: "The agency managing the funding opportunity.",
+    },
+  })
   customFields: {
     agency: Agency;
   };
@@ -145,24 +143,24 @@ There's a lot happening here, so let's break it down section by section.
    ```tsp
    import "@common-grants/core";
    ```
-2. Make the CommonGrants models available in the current namespace.
+2. Make the CommonGrants fields, models, etc. available in the current namespace.
 
    ```tsp
-   using CommonGrants.Models;
+   using CommonGrants;
    ```
 
-   Without this, you would have to prefix each model with `CommonGrants.Models`. For example `CommonGrants.Models.CustomField`.
+   Without this, you would have to prefix each model with `CommonGrants`. For example `CommonGrants.Fields.CustomField`.
 
 3. Declare a namespace for the current file.
    ```tsp
-   namespace Quickstart.Models;
+   namespace Quickstart.Schemas;
    ```
 4. Define a custom field by extending the `CustomField` model.
 
    ```tsp
-   model Agency extends CustomField {
+   model Agency extends Fields.CustomField {
      name: "Agency";
-     type: CustomFieldType.string;
+     type: Fields.CustomFieldType.string;
      value: string;
      description: "The agency managing the funding opportunity.";
    }
@@ -172,7 +170,7 @@ There's a lot happening here, so let's break it down section by section.
 
 5. Extend the `OpportunityBase` model to include this custom field.
    ```tsp
-   model CustomOpportunity extends Opportunity.OpportunityBase {
+   model CustomOpportunity extends Models.OpportunityBase {
      // Example omitted for brevity
      customFields: {
        agency: Agency;
@@ -186,7 +184,7 @@ There's a lot happening here, so let's break it down section by section.
         #{
             agency: #{
                 name: "Agency",
-                type: CustomFieldType.string,
+                type: Fields.CustomFieldType.string,
                 value: "Department of Energy",
                 description: "The agency managing the funding opportunity."
             }
@@ -209,7 +207,7 @@ Update the `routes.tsp` file and make the following changes:
 
 ```tsp title=routes.tsp ins={2,13,14} del={11,12}
 import "@common-grants/core";
-import "./models.tsp";
+import "./schemas.tsp";
 
 using TypeSpec.Http;
 
@@ -220,8 +218,8 @@ namespace Quickstart.Routes {
 
   op list is OpportunitiesRouter.list;
   op read is OpportunitiesRouter.read;
-  op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
-  op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
+  op list is OpportunitiesRouter.list<Schemas.CustomOpportunity>;
+  op read is OpportunitiesRouter.read<Schemas.CustomOpportunity>;
 }
 ```
 
@@ -229,10 +227,10 @@ There's also a lot happening here, so let's break it down section by section.
 
 <Steps>
 
-1. Import the `models.tsp` file to expose the `CustomOpportunity` model.
+1. Import the `schemas.tsp` file to expose the `CustomOpportunity` model.
 
    ```tsp
-   import "./models.tsp";
+   import "./schemas.tsp";
    ```
 
 2. Define a namespace for the `OpportunitiesRouter`.
@@ -256,8 +254,8 @@ There's also a lot happening here, so let's break it down section by section.
    namespace Quickstart.Routes {
      alias OpportunitiesRouter = Opportunities;
 
-     op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
-     op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
+     op list is OpportunitiesRouter.list<Schemas.CustomOpportunity>;
+     op read is OpportunitiesRouter.read<Schemas.CustomOpportunity>;
    }
    ```
 
@@ -269,7 +267,7 @@ The update `routes.tsp` file should now look like this:
 
 ```tsp title=routes.tsp
 import "@common-grants/core";
-import "./models.tsp";
+import "./schemas.tsp";
 
 using TypeSpec.Http;
 
@@ -278,8 +276,8 @@ using TypeSpec.Http;
 namespace Quickstart.Routes {
   alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
 
-  op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
-  op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
+  op list is OpportunitiesRouter.list<Schemas.CustomOpportunity>;
+  op read is OpportunitiesRouter.read<Schemas.CustomOpportunity>;
 }
 ```
 
