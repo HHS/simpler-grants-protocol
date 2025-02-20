@@ -193,13 +193,142 @@ Additionally, the response body for sorted requests SHOULD include a `sortInfo` 
 | Property       | Type            | Required | Description                                                                  |
 | -------------- | --------------- | -------- | ---------------------------------------------------------------------------- |
 | `sortBy`       | string          | Yes      | The property used to sort the results, or `custom` if a custom sort was used |
-| `customSortBy` | boolean         | No       | The custom sort value used, if applicable                                    |
+| `customSortBy` | string          | No       | The custom sort value used, if applicable                                    |
 | `sortOrder`    | `asc` or `desc` | Yes      | The order in which the results were sorted                                   |
 | `errors`       | array           | No       | Errors that occurred while sorting                                           |
 
 If the protocol specifies a minimum set of `sortBy` options, implementations MUST support them. APIs MAY support additional _implementation-defined_ options using the `customSortBy` parameter.
 
 To maintain compatibility, if a client uses an unsupported `customSortBy` value, the API SHOULD NOT return a non-2xx response. Instead, it SHOULD default to the standard `sortBy` value and note the error in `sortInfo.errors`.
+
+#### Filtering
+
+CommonGrants routes that support filtering SHOULD be paginated POST operations that accept a `filters` parameter at the root of the request body, with one or more supported filters defined by the protocol.
+
+The value of each protocol-defined filter SHOULD conform to the `Filter` schema, which contains the following properties:
+
+| Property    | Type | Required | Description                              |
+| ----------- | ---- | -------- | ---------------------------------------- |
+| `operation` | enum | Yes      | The operation to perform on the value    |
+| `value`     | any  | Yes      | The data to use for the filter operation |
+
+The `operation` property SHOULD be one of the following, though individual filters are NOT REQUIRED to support all operations:
+
+| Operation | Description              | Supported `value` types                      |
+| --------- | ------------------------ | -------------------------------------------- |
+| `eq`      | Equal to                 | string, number, boolean, date                |
+| `neq`     | Not equal to             | string, number, boolean, date                |
+| `gt`      | Greater than             | number, date                                 |
+| `gte`     | Greater than or equal to | number, date                                 |
+| `lt`      | Less than                | number, date                                 |
+| `lte`     | Less than or equal to    | number, date                                 |
+| `like`    | Contains                 | string                                       |
+| `in`      | In list                  | array                                        |
+| `not_in`  | Not in list              | array                                        |
+| `between` | Between two values       | range object with `min` and `max` properties |
+
+Additionally, the response body for filtered requests SHOULD return the filtered set of records in the `items` property of a [paginated response](#pagination). This response body SHOULD also include a `filterInfo` property with the following:
+
+| Property  | Type   | Required | Description                                |
+| --------- | ------ | -------- | ------------------------------------------ |
+| `filters` | object | Yes      | The `filters` object from the request body |
+| `errors`  | array  | No       | Errors that occurred while filtering       |
+
+As an example, the `POST /opportunities/search` route may define the following schema for its `filters` request body parameter:
+
+```yaml
+id: OpportunitySearchFilters.yaml
+filters:
+  type: object
+  properties:
+    title:
+      description: Filter opportunities by title
+      type: object
+      properties:
+        value:
+          type: string
+        operation:
+          type: string
+          enum:
+            - eq
+            - neq
+            - like
+    closedDateRange:
+      description: Filter opportunities closed between two dates
+      type: object
+      properties:
+        value:
+          type: object
+          properties:
+            min:
+              type: string
+              format: date
+            max:
+              type: string
+              format: date
+        operation:
+          type: string
+          enum:
+            - eq
+            - neq
+            - gt
+            - gte
+            - lt
+            - lte
+          required:
+            - operation
+```
+
+Which would accept the following request body:
+
+```json
+{
+  "filters": {
+    "title": {
+      "value": "example",
+      "operation": "like"
+    },
+    "closedDateRange": {
+      "value": {
+        "min": "2024-01-01",
+        "max": "2024-01-31"
+      },
+      "operation": "between"
+    }
+  }
+}
+```
+
+And return the following response body:
+
+```json
+{
+  "items": [
+    // filtered results
+  ],
+  "paginationInfo": {
+    // pagination info
+  },
+  "filterInfo": {
+    "filters": {
+      "title": {
+        "value": "example",
+        "operation": "like"
+      },
+      "closedDateRange": {
+        "value": {
+          "min": "2024-01-01",
+          "max": "2024-01-31"
+        },
+        "operation": "between"
+      }
+    },
+    "errors": []
+  }
+}
+```
+
+For more information about implementation-defined filters, see the [Custom filters](#custom-filters) section.
 
 ### Extensions
 
@@ -320,24 +449,73 @@ When set to a custom value, it SHOULD include `customValue` and `description`:
 
 CommonGrants APIs SHALL NOT add custom enum values to any field that does not support them in the base protocol.
 
+#### Custom filters
+
+If a route supports _implementation-defined_ filters, it MUST include a `customFilters` property in its `filters` request body parameter. This property must be an object whose values match the `Filter` schema described in the [Filtering](#filtering) section.
+
+For example, to allow clients to filter opportunities by a custom field, an API can define this filter:
+
+```yaml
+id: OpportunityCustomFilter.yaml
+filters:
+  type: object
+  # protocol-defined filters omitted for brevity
+  customFilters:
+    type: object
+    properties:
+      agency:
+        description: Filter opportunities by a list of agencies
+        type: object
+        properties:
+          value:
+            type: array
+            items:
+              type: string
+          operation:
+            type: string
+            enum:
+              - in
+              - not_in
+```
+
+For compatibility, if a client provides an unsupported custom filter, the API SHOULD NOT return a non-2xx response. Instead, it SHOULD exclude that filter and note the error in `filterInfo.errors`.
+
+For example, if a client provides an unsupported `agencyType` filter, the API SHOULD exclude it and return the following response body:
+
+```json
+{
+  "filterInfo": {
+    "filters": {
+      "agencyType": {
+        "value": ["federal"],
+        "operation": "in"
+      }
+    },
+    "errors": ["Unsupported filter: agencyType"]
+  }
+}
+```
+
 #### Custom routes
 
 CommonGrants APIs MAY define custom routes that are not part of the core protocol. The path for these routes MUST be prefixed with `/custom/` to avoid conflicts with existing or future protocol routes.
 
-For example, to allow clients to update existing opportunity records, an API can define this route:
+For example, to allow clients to access the history of an opportunity record, an API can define this route:
 
 ```yaml
-/custom/opportunities/{opportunityId}:
-  put:
-    summary: Update an opportunity
+/custom/opportunities/{opportunityId}/history/:
+  get:
+    summary: Get opportunity history
+    description: Get the history of changes made to an opportunity
 ```
 
 This pattern can also be used to maintain support for existing routes that conflict with those defined by the protocol. For example, an API can maintain a non-conforming `GET /opportunities` route by prefixing it with `/custom/`:
 
 ```yaml
-/custom/opportunities:
+/custom/opportunities/:
   get:
-    summary: Get opportunities
+    summary: Get opportunities (legacy)
+    description: Get a list of opportunities, with legacy filtering and sorting
 ```
 
 This allows APIs to incrementally adopt the CommonGrants protocol while supporting existing routes and operations.
