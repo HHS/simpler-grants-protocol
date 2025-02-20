@@ -11,7 +11,7 @@ using CommonGrants.Types;
 // ########################################
 
 /** Key dates in the opportunity's timeline, such as when the application opens and closes */
-@example(TimelineExamples.opportunity)
+@example(Examples.Timeline.opportunity)
 model OppTimeline {
   /** The date (and time) at which the opportunity begins accepting applications */
   appOpens?: Event;
@@ -30,10 +30,11 @@ model OppTimeline {
 // Model examples
 // ########################################
 
-namespace TimelineExamples {
+/** Examples of the OppTimeline model */
+namespace Examples.Timeline {
   const opportunity = #{
-    appOpens: EventExamples.openDate,
-    appDeadline: EventExamples.deadline,
+    appOpens: Fields.Examples.Event.openDate,
+    appDeadline: Fields.Examples.Event.deadline,
     otherDates: #{
       anticipatedAward: #{
         name: "Anticipated award date",

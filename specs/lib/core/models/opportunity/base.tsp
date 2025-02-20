@@ -70,34 +70,3 @@ model OpportunityBase {
   // Spreads the fields from the Metadata model into the Opportunity model
   ...SystemMetadata;
 }
-
-// ########################################
-// Model examples
-// ########################################
-
-namespace OpportunityExamples {
-  /** A complete opportunity example with all optional fields defined */
-  const complete = #{
-    id: "049b4b15-f219-4037-901e-cd95ac32fbc8",
-    source: "https://grants.gov/opportunity/123",
-    title: "Healthcare Innovation Research Grant",
-    description: "Funding for innovative healthcare delivery solutions",
-    fundingDetails: FundingExamples.allFields,
-    keyDates: #[EventExamples.openDate, EventExamples.deadline],
-    customFields: #{
-      programArea: CustomFieldExamples.programArea,
-      eligibilityType: CustomFieldExamples.programArea,
-    },
-    ...MetadataExample.system,
-  };
-
-  /** A minimal opportunity example with only required fields */
-  const minimal = #{
-    id: "550e8400-e29b-41d4-a716-446655440001",
-    source: "https://grants.gov/opportunity/456",
-    title: "Small Business Innovation Grant",
-    description: "Supporting small business innovation projects",
-    fundingDetails: FundingExamples.onlyLimit,
-    ...MetadataExample.system,
-  };
-}

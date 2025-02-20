@@ -9,13 +9,13 @@ using CommonGrants.Types;
 // ########################################
 
 /** A monetary amount and the currency in which its denominated */
-@example(MoneyExamples.usdWithCents, #{ title: "US dollars and cents" })
+@example(Examples.Money.usdWithCents, #{ title: "US dollars and cents" })
 @example(
-  MoneyExamples.euroWithoutCents,
+  Examples.Money.euroWithoutCents,
   #{ title: "Euros displayed without cents" }
 )
 @example(
-  MoneyExamples.usdNegative,
+  Examples.Money.usdNegative,
   #{ title: "A negative amount of US dollars and cents" }
 )
 model Money {
@@ -30,7 +30,8 @@ model Money {
 // Model examples
 // ########################################
 
-namespace MoneyExamples {
+/** Examples of the Money model */
+namespace Examples.Money {
   /** An example of a positive USD amount with cents */
   const usdWithCents = #{ amount: "10000.50", currency: "USD" };
 

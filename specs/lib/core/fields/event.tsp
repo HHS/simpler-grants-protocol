@@ -9,8 +9,8 @@ using CommonGrants.Types;
 // ########################################
 
 /** Description of an event that has a date (and possible time) associated with it */
-@example(EventExamples.deadline, #{ title: "Application deadline with time" })
-@example(EventExamples.openDate, #{ title: "Opening date without time" })
+@example(Examples.Event.deadline, #{ title: "Application deadline with time" })
+@example(Examples.Event.openDate, #{ title: "Opening date without time" })
 model Event {
   /** Human-readable name of the event (e.g., 'Application posted', 'Question deadline') */
   name: string;
@@ -29,7 +29,7 @@ model Event {
 // Model examples
 // ########################################
 
-namespace EventExamples {
+namespace Examples.Event {
   /** An example of a deadline event with a specific time */
   const deadline = #{
     name: "Application Deadline",
