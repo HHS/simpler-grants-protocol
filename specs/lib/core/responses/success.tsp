@@ -1,6 +1,6 @@
 import "@typespec/http";
 
-namespace Core.Responses;
+namespace CommonGrants.Responses;
 
 model Success {
   @example(200)

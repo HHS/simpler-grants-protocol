@@ -2,8 +2,6 @@
 import "./core/index.tsp";
 import "@typespec/http";
 
-using Core;
-
 using TypeSpec.Http;
 
 /** The base OpenAPI specification for a CommonGrants API

@@ -3,12 +3,11 @@ import "../responses/index.tsp";
 import "./utils.tsp";
 
 // Define the top-level namespace for CommonGrants routes
-namespace Core.Routes;
+namespace CommonGrants.Routes;
 
 // Expose the contents of the Http and Rest namespaces
 // these include the decorators @route, @get, etc.
 using TypeSpec.Http;
-using Core;
 
 /** A re-usable interface for an Opportunities router
  *

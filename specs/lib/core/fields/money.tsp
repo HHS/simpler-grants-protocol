@@ -1,8 +1,8 @@
 import "../types.tsp";
 
-namespace Core.Fields;
+namespace CommonGrants.Fields;
 
-using Core.Types;
+using CommonGrants.Types;
 
 // ########################################
 // Model definition

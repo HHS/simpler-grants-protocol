@@ -1,4 +1,4 @@
-namespace Core.Fields;
+namespace CommonGrants.Fields;
 
 // ########################################
 // Field types definition

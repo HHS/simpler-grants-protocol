@@ -1,10 +1,10 @@
 import "../../fields/index.tsp";
 import "../../types.tsp";
 
-namespace Core.Models.Opportunity;
+namespace CommonGrants.Models.Opportunity;
 
-using Core.Fields;
-using Core.Types;
+using CommonGrants.Fields;
+using CommonGrants.Types;
 
 // ########################################
 // Model definition

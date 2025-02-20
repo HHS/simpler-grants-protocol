@@ -1,9 +1,9 @@
 import "../index.tsp";
 import "../../fields/index.tsp";
 
-namespace Core.Models.Opportunity;
+namespace CommonGrants.Models.Opportunity;
 
-using Core.Fields;
+using CommonGrants.Fields;
 
 // ########################################
 // Model definition
@@ -19,7 +19,7 @@ using Core.Fields;
   FundingExamples.onlyLimit,
   #{ title: "Total funding limit but no award range" }
 )
-model FundingDetails {
+model OppFunding {
   /** Total amount of funding available for this opportunity */
   totalAmountAvailable?: Money;
 

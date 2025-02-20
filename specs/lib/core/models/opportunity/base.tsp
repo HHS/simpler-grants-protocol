@@ -5,10 +5,10 @@ import "../../fields/index.tsp";
 import "../../types.tsp";
 
 /** Namespace for Core that are specific to funding opportunities */
-namespace Core.Models.Opportunity;
+namespace CommonGrants.Models.Opportunity;
 
-using Core.Fields;
-using Core.Types;
+using CommonGrants.Fields;
+using CommonGrants.Types;
 
 // ########################################
 // Model definition
@@ -30,7 +30,7 @@ model OpportunityBase {
   description: string;
 
   /** Details about the funding available */
-  fundingDetails: FundingDetails;
+  fundingDetails: OppFunding;
 
   /** Key dates for the opportunity, such as when the application opens and closes */
   keyDates: OppTimeline;
