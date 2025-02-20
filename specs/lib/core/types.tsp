@@ -1,3 +1,21 @@
+/** A collection of base data types used throughout the CommonGrants API
+ *
+ * @example How to use the `Types` namespace
+ *
+ * ```typespec
+ * import "@common-grants/core";
+ *
+ * using CommonGrants; // exposes the Types namespace
+ *
+ * model MyModel {
+ *   @example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
+ *   id: Types.uuid;
+ *
+ *   @example(Types.isoDate.fromISO("2025-01-01"))
+ *   keyDate: Types.isoDate;
+ * }
+ * ```
+ */
 namespace CommonGrants.Types;
 
 /** A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss */
