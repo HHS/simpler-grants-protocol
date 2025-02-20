@@ -6,7 +6,7 @@ using CommonGrants.Models;
 using CommonGrants.Fields;
 
 @TypeSpec.JsonSchema.jsonSchema
-namespace {{#casing.pascalCase}}{{name}}{{/casing.pascalCase}}.Models;
+namespace Custom.Models;
 
 // Define a custom field
 model {{#casing.pascalCase}}{{parameters.fieldName}}{{/casing.pascalCase}} extends CustomField {
