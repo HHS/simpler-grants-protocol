@@ -31,10 +31,6 @@
       "apiName": {
         "type": "text",
         "description": "Name of the API"
-      },
-      "namespace": {
-        "type": "text",
-        "description": "Namespace for the API in PascalCase"
       }
     }
   },
@@ -67,17 +63,9 @@
         "type": "text",
         "description": "Name of the API"
       },
-      "namespace": {
-        "type": "text",
-        "description": "Namespace for the API in PascalCase"
-      },
-      "fieldNameDisplay": {
+      "fieldName": {
         "type": "text",
         "description": "Human readable display name for the custom field"
-      },
-      "fieldNamePascal": {
-        "type": "text",
-        "description": "Name of the custom field in PascalCase"
       },
       "fieldTypeJSON": {
         "type": "text",

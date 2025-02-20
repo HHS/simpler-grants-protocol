@@ -6,8 +6,7 @@ using TypeSpec.Http;
 @service({
   title: "{{parameters.apiName}}",
 })
-namespace {{parameters.namespace}};
-
+namespace Default;
 
 @tag("Opportunities")
 @route("/opportunities")

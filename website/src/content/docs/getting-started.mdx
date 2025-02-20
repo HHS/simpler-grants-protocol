@@ -97,18 +97,19 @@ Preview the OpenAPI docs for the quickstart template.
 cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
 ```
 
-This should start a local server that serves the OpenAPI specification using Swagger UI. View your API specification at http://localhost:3000.
+This should start a local server that serves the OpenAPI specification using Swagger UI. View your API specification at `http://localhost:3000`.
 
 ### Add a custom field
 
-Create a new file called `models.tsp` and with the following code:
+Create a new file called `models.tsp` with the following code:
 
-```tsp title=models.tsp highlight={10-15}
+```tsp title=models.tsp
 import "@common-grants/core";
 
 // Allows us to use models defined in the specification library
-// without prefixing each model with `CommonGrants.Models.`
+// without prefixing each model with `CommonGrants`
 using CommonGrants.Models;
+using CommonGrants.Fields;
 
 namespace Quickstart.Models;
 
@@ -120,17 +121,15 @@ model Agency extends CustomField {
 }
 
 // Create a custom Opportunity type using the template
-model CustomOpportunity extends Opportunity.OpportunityBase {
-  @example(
-    #{
-        agency: #{
-            name: "Agency",
-            type: CustomFieldType.string,
-            value: "Department of Energy",
-            description: "The agency managing the funding opportunity."
-        }
-    }
-  )
+model CustomOpportunity extends OpportunityBase {
+  @example(#{
+    agency: #{
+      name: "Agency",
+      type: CustomFieldType.string,
+      value: "Department of Energy",
+      description: "The agency managing the funding opportunity.",
+    },
+  })
   customFields: {
     agency: Agency;
   };
@@ -145,13 +144,14 @@ There's a lot happening here, so let's break it down section by section.
    ```tsp
    import "@common-grants/core";
    ```
-2. Make the CommonGrants models available in the current namespace.
+2. Make the CommonGrants fields, models, etc. available in the current namespace.
 
    ```tsp
+   using CommonGrants.Fields;
    using CommonGrants.Models;
    ```
 
-   Without this, you would have to prefix each model with `CommonGrants.Models`. For example `CommonGrants.Models.CustomField`.
+   Without this, you would have to prefix each model `CommonGrants.Models` and each field `CommonGrants.Fields`. For example `CommonGrants.Fields.CustomField`.
 
 3. Declare a namespace for the current file.
    ```tsp
@@ -172,7 +172,7 @@ There's a lot happening here, so let's break it down section by section.
 
 5. Extend the `OpportunityBase` model to include this custom field.
    ```tsp
-   model CustomOpportunity extends Opportunity.OpportunityBase {
+   model CustomOpportunity extends Models.OpportunityBase {
      // Example omitted for brevity
      customFields: {
        agency: Agency;
@@ -186,7 +186,7 @@ There's a lot happening here, so let's break it down section by section.
         #{
             agency: #{
                 name: "Agency",
-                type: CustomFieldType.string,
+                type: Fields.CustomFieldType.string,
                 value: "Department of Energy",
                 description: "The agency managing the funding opportunity."
             }
@@ -265,7 +265,7 @@ There's also a lot happening here, so let's break it down section by section.
 
 </Steps>
 
-The update `routes.tsp` file should now look like this:
+The updated `routes.tsp` file should now look like this:
 
 ```tsp title=routes.tsp
 import "@common-grants/core";
@@ -290,7 +290,7 @@ cg compile main.tsp
 cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
 ```
 
-This should start a local server that serves the OpenAPI specification using Swagger UI. View your API specification at http://localhost:3000.
+This should start a local server that serves the OpenAPI specification using Swagger UI. View your API specification at `http://localhost:3000`.
 
 ## Next steps
 
