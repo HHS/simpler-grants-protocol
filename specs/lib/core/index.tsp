@@ -5,4 +5,4 @@ import "./routes/index.tsp";
 import "./responses/index.tsp";
 
 /** An internal namespace for the `@common-grants/core` package */
-namespace Core;
+namespace CommonGrants;

@@ -1,6 +1,6 @@
 import "@typespec/http";
 
-namespace Core.Responses;
+namespace CommonGrants.Responses;
 
 /** A standard error response schema, used to create custom error responses
  *

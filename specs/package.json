@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/core",
-  "version": "0.1.0-alpha.8",
+  "version": "0.1.0-alpha.9",
   "description": "TypeSpec library for defining grant opportunity data models and APIs",
   "type": "module",
   "main": "dist/src/index.js",
@@ -21,6 +21,15 @@
     "lib/**/*.tsp",
     "!src/**/*.test.*"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HHS/simpler-grants-protocol.git",
+    "directory": "specs"
+  },
+  "bugs": {
+    "url": "https://github.com/HHS/simpler-grants-protocol/issues"
+  },
+  "homepage": "https://github.com/HHS/simpler-grants-protocol/tree/main/specs#readme",
   "scripts": {
     "clean": "rimraf dist tsp-output",
     "build": "tsc -p .",

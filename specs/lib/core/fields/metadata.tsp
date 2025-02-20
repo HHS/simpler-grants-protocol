@@ -1,4 +1,4 @@
-namespace Core.Fields;
+namespace CommonGrants.Fields;
 
 // ########################################
 // Model definition
@@ -18,7 +18,7 @@ namespace Core.Fields;
  * }
  * ```
  * */
-@example(MetadataExample.system)
+@example(Examples.Metadata.system)
 model SystemMetadata {
   /** The timestamp (in UTC) at which the record was created. */
   @visibility(Lifecycle.Read)
@@ -33,7 +33,8 @@ model SystemMetadata {
 // Model examples
 // ########################################
 
-namespace MetadataExample {
+/** Examples of the SystemMetadata model */
+namespace Examples.Metadata {
   const system = #{
     createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
     lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),

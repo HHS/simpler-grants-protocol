@@ -1,4 +1,4 @@
-namespace Core.Fields;
+namespace CommonGrants.Fields;
 
 // ########################################
 // Field types definition
@@ -35,11 +35,11 @@ enum CustomFieldType {
  * ```
  */
 @example(
-  CustomFieldExamples.programArea,
+  Examples.CustomField.programArea,
   #{ title: "String field for program area" }
 )
 @example(
-  CustomFieldExamples.eligibilityTypes,
+  Examples.CustomField.eligibilityTypes,
   #{ title: "Array field for eligibility types" }
 )
 @doc("A custom field on a model") // Overrides internal docstrings when emitting OpenAPI
@@ -64,7 +64,8 @@ model CustomField {
 // Model examples
 // ########################################
 
-namespace CustomFieldExamples {
+/** Examples of the CustomField model */
+namespace Examples.CustomField {
   /** An example of a string custom field */
   const programArea = #{
     name: "programArea",

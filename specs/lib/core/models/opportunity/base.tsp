@@ -5,15 +5,41 @@ import "../../fields/index.tsp";
 import "../../types.tsp";
 
 /** Namespace for Core that are specific to funding opportunities */
-namespace Core.Models.Opportunity;
+namespace CommonGrants.Models;
 
-using Core.Fields;
-using Core.Types;
+using CommonGrants.Fields;
+using CommonGrants.Types;
 
 // ########################################
 // Model definition
 // ########################################
 
+/** The base model for a funding opportunity.
+ *
+ * It supports customization by extending the `customFields` property.
+ *
+ * @example How to declare a new Opportunity model with custom fields
+ *
+ * ```typespec
+ * using CommonGrants.Fields;
+ * using CommonGrants.Models;
+ *
+ * model Agency extends CustomField {
+ *   type: CustomFieldType.string;
+ *
+ *   @example("Department of Transportation")
+ *   value: string;
+ * }
+ *
+ * model NewFields extends CustomFieldMap {
+ *   agency: Agency;
+ * }
+ *
+ * model CustomOpportunity extends OpportunityBase {
+ *   customFields: NewFields;
+ * }
+ * ```
+ */
 @doc("A funding opportunity") // Overrides internal docstrings when emitting OpenAPI
 model OpportunityBase {
   /** Globally unique id for the opportunity */
@@ -30,7 +56,7 @@ model OpportunityBase {
   description: string;
 
   /** Details about the funding available */
-  fundingDetails: FundingDetails;
+  fundingDetails: OppFunding;
 
   /** Key dates for the opportunity, such as when the application opens and closes */
   keyDates: OppTimeline;
@@ -43,35 +69,4 @@ model OpportunityBase {
 
   // Spreads the fields from the Metadata model into the Opportunity model
   ...SystemMetadata;
-}
-
-// ########################################
-// Model examples
-// ########################################
-
-namespace OpportunityExamples {
-  /** A complete opportunity example with all optional fields defined */
-  const complete = #{
-    id: "049b4b15-f219-4037-901e-cd95ac32fbc8",
-    source: "https://grants.gov/opportunity/123",
-    title: "Healthcare Innovation Research Grant",
-    description: "Funding for innovative healthcare delivery solutions",
-    fundingDetails: FundingExamples.allFields,
-    keyDates: #[EventExamples.openDate, EventExamples.deadline],
-    customFields: #{
-      programArea: CustomFieldExamples.programArea,
-      eligibilityType: CustomFieldExamples.programArea,
-    },
-    ...MetadataExample.system,
-  };
-
-  /** A minimal opportunity example with only required fields */
-  const minimal = #{
-    id: "550e8400-e29b-41d4-a716-446655440001",
-    source: "https://grants.gov/opportunity/456",
-    title: "Small Business Innovation Grant",
-    description: "Supporting small business innovation projects",
-    fundingDetails: FundingExamples.onlyLimit,
-    ...MetadataExample.system,
-  };
 }
