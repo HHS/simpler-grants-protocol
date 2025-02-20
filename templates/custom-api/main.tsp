@@ -7,4 +7,4 @@ using TypeSpec.Http;
 @service({
   title: "{{parameters.apiName}}",
 })
-namespace {{parameters.namespace}};
+namespace {{#casing.pascalCase}}{{name}}{{/casing.pascalCase}};
