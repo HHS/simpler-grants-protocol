@@ -1,7 +1,7 @@
 import "../../fields/index.tsp";
 import "../../types.tsp";
 
-namespace CommonGrants.Models.Opportunity;
+namespace CommonGrants.Models;
 
 using CommonGrants.Fields;
 using CommonGrants.Types;

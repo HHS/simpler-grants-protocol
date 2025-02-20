@@ -10,7 +10,7 @@ using TypeSpec.JsonSchema;
  *
  * @example How to use the `Models` namespace
  *
- * ```tsp
+ * ```typespec
  * import "@common-grants/core";
  *
  * using CommonGrants; // exposes the Models namespace
@@ -20,31 +20,3 @@ using TypeSpec.JsonSchema;
  */
 @jsonSchema // and emit these Schemas.as JSON schemas
 namespace CommonGrants.Models;
-
-/** The base model for a funding opportunity.
- *
- * It supports customization by extending the `customFields` property.
- *
- * @example How to declare a new Opportunity model with custom fields
- *
- * ```typespec
- * using CommonGrants.Fields;
- * using CommonGrants.Models;
- *
- * model Agency extends CustomField {
- *   type: CustomFieldType.string;
- *
- *   @example("Department of Transportation")
- *   value: string;
- * }
- *
- * model NewFields extends CustomFieldMap {
- *   agency: Agency;
- * }
- *
- * model CustomOpportunity extends OpportunityBase {
- *   customFields: NewFields;
- * }
- * ```
- */
-alias OpportunityBase = Opportunity.OpportunityBase;

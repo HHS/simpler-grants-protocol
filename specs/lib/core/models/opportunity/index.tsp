@@ -3,4 +3,4 @@ import "./funding.tsp";
 import "./timeline.tsp";
 import "./base.tsp";
 
-namespace CommonGrants.Models.Opportunity;
+namespace CommonGrants.Models;
