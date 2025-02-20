@@ -7,7 +7,7 @@ import "./event.tsp";
  *
  * @example How to use the `Fields` namespace
  *
- * ```tsp
+ * ```typespec
  * import "@common-grants/core";
  *
  * using CommonGrants; // exposes the Fields namespace

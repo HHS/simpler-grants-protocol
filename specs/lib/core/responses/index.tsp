@@ -7,7 +7,7 @@ import "./success.tsp";
  *
  * @example How to use the `Responses` namespace
  *
- * ```tsp
+ * ```typespec
  * import "@typespec/http";
  * import "@common-grants/core";
  *
@@ -17,7 +17,7 @@ import "./success.tsp";
  * @route("/pets")
  * namespace Pets {
  *   @get
- *   getPets(): Responses.Ok<Pet> | Responses.Unauthorized;
+ *   op getPets(): Responses.Ok<Pet> | Responses.Unauthorized;
  * }
  * ```
  */

@@ -8,7 +8,7 @@ import "./opportunities.tsp";
  *
  * @example How to use the `Routes` namespace
  *
- * ```tsp
+ * ```typespec
  * import "@common-grants/core";
  *
  * using CommonGrants; // exposes the Routes namespace
@@ -16,7 +16,7 @@ import "./opportunities.tsp";
  * namespace MyRoutes {
  *   alias OpportunityRouter = Routes.Opportunities;
  *
- *   op List is OpportunityRouter.list;
+ *   op list is OpportunityRouter.list;
  * }
  */
 namespace CommonGrants.Routes;
