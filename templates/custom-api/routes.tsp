@@ -8,7 +8,7 @@ using TypeSpec.Http;
 
 @tag("Opportunities")
 @route("/opportunities")
-namespace {{parameters.namespace}}.Routes {
+namespace {{#casing.pascalCase}}{{name}}{{/casing.pascalCase}}.Routes {
   alias OpportunitiesRouter = Opportunities;
 
   // Use custom model for list and read
