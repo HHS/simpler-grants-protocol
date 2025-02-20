@@ -27,21 +27,42 @@ The following tutorial will walk you through:
 
 ### Install the CLI
 
-Install the CommonGrants CLI globally.
+Install the CommonGrants CLI and the TypeSpec compiler globally.
 
 ```bash
-npm install @common-grants/cli -g
+npm install @common-grants/cli @typespec/compiler -g
 ```
 
 ### Create a new project
 
-Create a new project using the quickstart template.
+Start by creating a new `common-grants-quickstart` folder for your project and navigating to it:
+
+```bash
+mkdir common-grants-quickstart
+cd common-grants-quickstart
+```
+
+Use the quickstart template to initialize your project.
 
 ```bash
 cg init --template quickstart
 ```
 
-This will create a new project in the current directory with the following files:
+And accept the default options for the interactive prompts:
+
+```bash
+TypeSpec compiler v0.63.0
+
+Example from the quickstart guide
+✔ Project name … common-grants-quickstart
+✔ Do you want to generate a .gitignore file? … yes
+✔ Update the libraries? › @common-grants/core
+
+TypeSpec init completed. You can run `tsp install` now to install dependencies.
+Project created successfully.
+```
+
+This will set up a new CommonGrants project in the `common-grants-quickstart` directory with the following files:
 
 <FileTree>
 
@@ -57,7 +78,7 @@ This will create a new project in the current directory with the following files
 ### Install the project dependencies
 
 ```bash
-npm install
+tsp install
 ```
 
 This will install the following dependencies:
