@@ -2,8 +2,12 @@ import { checkSchemaCompatibility } from "../../../services/validation/check-sch
 import { OpenAPIV3 } from "openapi-types";
 
 describe("Schema Compatibility Checks", () => {
+  // ############################################################
+  // Type checking
+  // ############################################################
+
   it("should allow impl to have a type if base does not specify type", () => {
-    // Base has no 'type', so it's effectively "any"
+    // Arrange - "foo" has no "type", so it's effectively "any"
     const baseSchema: OpenAPIV3.SchemaObject = {
       description: "Base schema with no type",
       type: "object",
@@ -19,11 +23,19 @@ describe("Schema Compatibility Checks", () => {
       },
     };
 
+    // Act
     const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+
+    // Assert
     expect(errors).toHaveLength(0);
   });
 
+  // ############################################################
+  // Required properties
+  // ############################################################
+
   it("should flag missing required property", () => {
+    // Arrange
     const baseSchema: OpenAPIV3.SchemaObject = {
       type: "object",
       required: ["id"],
@@ -39,12 +51,20 @@ describe("Schema Compatibility Checks", () => {
       },
     };
 
+    // Act
     const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+
+    // Assert
     expect(errors).toHaveLength(1);
     expect(errors[0].message).toMatch(/Missing required property 'id'/);
   });
 
+  // ############################################################
+  // Enum validation
+  // ############################################################
+
   it("should flag when base has enum but impl is missing a value", () => {
+    // Arrange
     const baseSchema: OpenAPIV3.SchemaObject = {
       type: "string",
       enum: ["A", "B", "C"],
@@ -54,12 +74,20 @@ describe("Schema Compatibility Checks", () => {
       enum: ["A", "C"],
     };
 
+    // Act
     const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+
+    // Assert
     expect(errors).toHaveLength(1);
     expect(errors[0].message).toMatch(/Enum mismatch. Missing 'B'/);
   });
 
+  // ############################################################
+  // Additional properties
+  // ############################################################
+
   it("should allow extra properties if base defines additionalProperties as a schema", () => {
+    // Arrange
     const baseSchema: OpenAPIV3.SchemaObject = {
       type: "object",
       properties: {
@@ -78,11 +106,15 @@ describe("Schema Compatibility Checks", () => {
       },
     };
 
+    // Act
     const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+
+    // Assert
     expect(errors).toHaveLength(0);
   });
 
   it("should flag extra properties if base has additionalProperties=false", () => {
+    // Arrange
     const baseSchema: OpenAPIV3.SchemaObject = {
       type: "object",
       properties: {
@@ -99,7 +131,10 @@ describe("Schema Compatibility Checks", () => {
       },
     };
 
+    // Act
     const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+
+    // Assert
     expect(errors).toHaveLength(1);
     expect(errors[0].message).toMatch(/extra property 'extra'/);
   });

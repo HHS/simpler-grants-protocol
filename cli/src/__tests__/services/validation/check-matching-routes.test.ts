@@ -2,7 +2,12 @@ import { checkMatchingRoutes } from "../../../services/validation/check-matching
 import { OpenAPIV3 } from "openapi-types";
 
 describe("checkMatchingRoutes", () => {
+  // ############################################################
+  // Status code validation
+  // ############################################################
+
   it("should detect mismatched status codes", () => {
+    // Arrange - Create base spec with 200 and 404 responses
     const baseDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
       info: { title: "Base", version: "1.0.0" },
@@ -18,6 +23,7 @@ describe("checkMatchingRoutes", () => {
       },
     };
 
+    // Arrange - Create impl spec missing 404 response
     const implDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
       info: { title: "Impl", version: "1.0.0" },
@@ -33,9 +39,10 @@ describe("checkMatchingRoutes", () => {
       },
     };
 
-    // We use checkMatchingRoutes which calls checkStatusCodes internally
+    // Act
     const errors = checkMatchingRoutes(baseDoc, implDoc);
-    // Expect at least 1 error about missing 404
+
+    // Assert - Should find 1 error about missing 404
     expect(errors).toHaveLength(1);
     expect(errors[0].message).toMatch(/Missing response status code \[404\]/);
   });
