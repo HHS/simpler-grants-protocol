@@ -48,19 +48,17 @@ export interface FieldService {
  */
 export interface ValidationService {
   /**
-   * Check if an API implementation matches its specification.
-   * @param apiUrl - Root URL of the API to validate
-   * @param specPath - Path to the TypeSpec or OpenAPI specification
-   * @param options - API validation configuration options
-   * @throws {Error} If validation fails or API is unreachable
+   * Check that an API implementation matches its base spec.
+   * @param apiUrl URL of the API to validate
+   * @param specPath Path to base spec to validate against
+   * @param options Validation options
    */
   checkApi(apiUrl: string, specPath: string, options: ValidationOptions): Promise<void>;
 
   /**
-   * Check if a specification complies with the CommonGrants base spec.
-   * @param specPath - Path or URL to the TypeSpec or OpenAPI specification
-   * @param options - Spec validation configuration options
-   * @throws {Error} If validation fails or spec is invalid
+   * Check that a spec is valid and compliant with CommonGrants rules.
+   * @param specPath Path to spec to validate
+   * @param options Validation options
    */
   checkSpec(specPath: string, options: SpecValidationOptions): Promise<void>;
 }
@@ -119,15 +117,14 @@ export interface FieldOptions {
 }
 
 /**
- * Options for API validation
+ * Options for validating an API implementation against its base spec.
  */
 export interface ValidationOptions {
-  /** HTTP client to use for validation */
-  client?: string;
-  /** Format for validation report output */
-  report?: "json" | "html";
-  /** Authentication token or credentials */
-  auth?: string;
+  /**
+   * Whether to allow extra routes not defined in base spec.
+   * Default: false
+   */
+  allowExtraRoutes?: boolean;
 }
 
 /**
@@ -145,11 +142,18 @@ export interface GenerateOptions {
 }
 
 /**
- * Options for spec validation
+ * Options for validating a spec for compliance with CommonGrants rules.
  */
 export interface SpecValidationOptions {
-  /** Version of CommonGrants spec to validate against */
-  version?: string;
-  /** URL or path to base spec for validation */
-  base?: string;
+  /**
+   * Path to base spec to validate against.
+   * If provided, checks that this spec is compatible with base spec.
+   */
+  baseSpecPath?: string;
+
+  /**
+   * Whether to allow extra routes not defined in base spec.
+   * Default: false
+   */
+  allowExtraRoutes?: boolean;
 }

@@ -12,13 +12,12 @@ describe("DefaultValidationService", () => {
     it("should validate API implementation", async () => {
       const consoleSpy = jest.spyOn(console, "log");
       await service.checkApi("http://api.example.com", "spec.yaml", {
-        client: "httpx",
-        report: "json",
+        allowExtraRoutes: true,
       });
       expect(consoleSpy).toHaveBeenCalledWith("Mock: Checking API", {
         apiUrl: "http://api.example.com",
         specPath: "spec.yaml",
-        options: { client: "httpx", report: "json" },
+        options: { allowExtraRoutes: true },
       });
     });
   });
@@ -27,12 +26,12 @@ describe("DefaultValidationService", () => {
     it("should validate spec compliance", async () => {
       const consoleSpy = jest.spyOn(console, "log");
       await service.checkSpec("spec.yaml", {
-        version: "v2.0.1",
-        base: "base-spec.yaml",
+        baseSpecPath: "base-spec.yaml",
+        allowExtraRoutes: true,
       });
       expect(consoleSpy).toHaveBeenCalledWith("Mock: Checking spec compliance", {
         specPath: "spec.yaml",
-        options: { version: "v2.0.1", base: "base-spec.yaml" },
+        options: { baseSpecPath: "base-spec.yaml", allowExtraRoutes: true },
       });
     });
   });
@@ -99,7 +98,7 @@ describe("checkMissingRequiredRoutes", () => {
           },
         },
       },
-    } as any;
+    };
 
     const implDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -114,7 +113,7 @@ describe("checkMissingRequiredRoutes", () => {
           },
         },
       },
-    } as any;
+    };
 
     const errors = checkMissingRequiredRoutes(baseDoc, implDoc);
     expect(errors).toHaveLength(0);
@@ -127,7 +126,7 @@ describe("checkExtraRoutes", () => {
       openapi: "3.0.0",
       info: { title: "Base", version: "1.0.0" },
       paths: {},
-    } as any;
+    };
 
     const implDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -141,7 +140,7 @@ describe("checkExtraRoutes", () => {
           },
         },
       },
-    } as any;
+    };
 
     const errors = checkExtraRoutes(baseDoc, implDoc);
     expect(errors).toHaveLength(1);
@@ -153,7 +152,7 @@ describe("checkExtraRoutes", () => {
       openapi: "3.0.0",
       info: { title: "Base", version: "1.0.0" },
       paths: {},
-    } as any;
+    };
 
     const implDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -167,7 +166,7 @@ describe("checkExtraRoutes", () => {
           },
         },
       },
-    } as any;
+    };
 
     const errors = checkExtraRoutes(baseDoc, implDoc);
     expect(errors).toHaveLength(0);
@@ -189,7 +188,7 @@ describe("checkMatchingRoutes", () => {
           },
         },
       },
-    } as any;
+    };
 
     const implDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -204,7 +203,7 @@ describe("checkMatchingRoutes", () => {
           },
         },
       },
-    } as any;
+    };
 
     // We use checkMatchingRoutes which calls checkStatusCodes internally
     const errors = checkMatchingRoutes(baseDoc, implDoc);
@@ -347,7 +346,7 @@ describe("compareOpenApiSpecs (top-level flow)", () => {
           },
         },
       },
-    } as any;
+    };
 
     const implDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -362,7 +361,7 @@ describe("compareOpenApiSpecs (top-level flow)", () => {
           },
         },
       },
-    } as any;
+    };
 
     // We can directly call compareOpenApiSpecs,
     // but it expects file paths and uses SwaggerParser,
