@@ -65,10 +65,6 @@ export const GenerateServerCommandSchema = z.object({
 });
 
 export const CheckSpecCommandSchema = z.object({
-  specVersion: z
-    .string()
-    .regex(/^v[0-9]+\.[0-9]+\.[0-9]+$/, "Version must be in format vX.Y.Z (e.g., v2.0.1)")
-    .optional(),
   base: z.string().optional(),
 });
 

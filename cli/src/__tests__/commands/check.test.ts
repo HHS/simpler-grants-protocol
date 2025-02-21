@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, beforeAll, jest } from "@jest/globals";
+import { describe, it, expect, beforeEach, afterAll, jest } from "@jest/globals";
 import { Command } from "commander";
 import { checkCommand } from "../../commands/check";
 
@@ -7,7 +7,7 @@ const mockCheckApi = jest.fn();
 const mockCheckSpec = jest.fn();
 
 // Mock the service with consistent implementation
-jest.mock("../../services/validation.service", () => ({
+jest.mock("../../services/validation/service.ts", () => ({
   DefaultValidationService: jest.fn(() => ({
     checkApi: mockCheckApi,
     checkSpec: mockCheckSpec,
@@ -18,15 +18,28 @@ describe("checkCommand", () => {
   let program: Command;
   let checkCmd: Command;
 
-  beforeAll(() => {
+  // Mock process.exit and console.error
+  const mockExit = jest.spyOn(process, "exit").mockImplementation(() => {
+    throw new Error("process.exit mock");
+  });
+  const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+
+  beforeEach(() => {
+    // Create fresh Command instances for each test
     program = new Command();
     checkCommand(program);
     checkCmd = program.commands.find(cmd => cmd.name() === "check")!;
-  });
 
-  beforeEach(() => {
+    // Clear mocks
     mockCheckApi.mockClear();
     mockCheckSpec.mockClear();
+    mockExit.mockClear();
+    mockConsoleError.mockClear();
+  });
+
+  afterAll(() => {
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
   });
 
   describe("check api", () => {
@@ -56,6 +69,16 @@ describe("checkCommand", () => {
         report: "json",
       });
     });
+
+    it("should validate API implementation", async () => {
+      await checkCmd.parseAsync(["node", "test", "api", "http://example.com", "spec.yaml"]);
+
+      expect(mockCheckApi).toHaveBeenCalledWith(
+        "http://example.com",
+        "spec.yaml",
+        expect.any(Object)
+      );
+    });
   });
 
   describe("check spec", () => {
@@ -66,14 +89,21 @@ describe("checkCommand", () => {
         "Validate a specification against the CommonGrants base spec"
       );
     });
+  });
 
-    it("should handle spec validation with version", async () => {
-      await checkCmd.parseAsync(["node", "test", "spec", "spec.yaml", "--spec-version", "v2.0.1"]);
+  describe("base spec path", () => {
+    it("should handle spec validation with base spec path", async () => {
+      await checkCmd.parseAsync(["node", "test", "spec", "spec.yaml", "--base", "base.yaml"]);
 
       expect(mockCheckSpec).toHaveBeenCalledWith("spec.yaml", {
-        specVersion: "v2.0.1",
-        base: undefined,
+        base: "base.yaml",
       });
+    });
+
+    it("should handle spec validation without base spec path", async () => {
+      await checkCmd.parseAsync(["node", "test", "spec", "foo.yaml"]);
+
+      expect(mockCheckSpec).toHaveBeenCalledWith("foo.yaml", {});
     });
   });
 });

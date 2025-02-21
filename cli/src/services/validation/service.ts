@@ -25,14 +25,12 @@ export class DefaultValidationService implements ValidationService {
     const doc = (await SwaggerParser.parse(specPath)) as Document;
 
     // If base spec provided, check compatibility
-    if (options.baseSpecPath) {
-      const baseDoc = (await SwaggerParser.parse(options.baseSpecPath)) as Document;
+    if (options.base) {
+      const baseDoc = (await SwaggerParser.parse(options.base)) as Document;
 
       const errors: ComplianceError[] = [];
       errors.push(...checkMissingRequiredRoutes(baseDoc, doc));
-      if (!options.allowExtraRoutes) {
-        errors.push(...checkExtraRoutes(baseDoc, doc));
-      }
+      errors.push(...checkExtraRoutes(baseDoc, doc));
       errors.push(...checkMatchingRoutes(baseDoc, doc));
 
       if (errors.length > 0) {

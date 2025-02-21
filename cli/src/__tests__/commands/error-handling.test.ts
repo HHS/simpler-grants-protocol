@@ -74,24 +74,6 @@ describe("Command Error Handling", () => {
       );
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
-
-    it("should handle invalid spec version", async () => {
-      const checkCmd = program.commands.find(cmd => cmd.name() === "check")!;
-      await checkCmd.parseAsync([
-        "node",
-        "test",
-        "spec",
-        "spec.tsp",
-        "--spec-version",
-        "invalid-version",
-      ]);
-
-      expect(mockConsoleError).toHaveBeenCalledWith(
-        "Validation error:",
-        expect.stringContaining("Version must be in format")
-      );
-      expect(mockProcessExit).toHaveBeenCalledWith(1);
-    });
   });
 
   describe("generate command", () => {
