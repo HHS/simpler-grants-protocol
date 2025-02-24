@@ -78,17 +78,22 @@ cg preview openapi.yaml
 cg preview openapi.json
 ```
 
+### Validate an API Specification
+
+Validate an API specification against the CommonGrants base protocol:
+
+```bash
+cg check spec openapi.yaml --base <path-to-base-spec>
+```
+
 ## Development status
 
-This CLI is currently in alpha stage with the following limitations:
+This CLI is currently in alpha stage and only supports the following commands:
 
-- All commands are mocked and return simulated responses
-
-The first round of releases will implement the following core:
-
-- Basic project initialization
-- Previewing an OpenAPI spec using Swagger UI or Redocly
-- Validating an API specification against the CommonGrants standard
+- `cg init` with only a limited set of templates
+- `cg compile`
+- `cg preview`
+- `cg check spec`
 
 Subsequent releases will add:
 
