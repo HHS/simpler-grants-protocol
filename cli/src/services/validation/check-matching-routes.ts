@@ -28,16 +28,19 @@ export function checkMatchingRoutes(
       continue;
     }
 
-    // For each method in the base path
-    for (const method of Object.keys(basePathItem)) {
-      const baseOp = (basePathItem as any)[method] as OpenAPIV3.OperationObject | undefined;
-      if (!baseOp) continue;
+    // Declare the types for base and impl paths for readability
+    const basePathObj = basePathItem as OpenAPIV3.PathItemObject;
+    const implPathObj = implPathItem as OpenAPIV3.PathItemObject;
 
-      const implOp = (implPathItem as any)[method] as OpenAPIV3.OperationObject | undefined;
-      if (!implOp) {
-        // Possibly flagged as missing
-        continue;
-      }
+    // For each method in the base path, check if it also exists in the impl path
+    for (const method of Object.keys(basePathObj) as OpenAPIV3.HttpMethods[]) {
+      // Get base and impl operations (e.g. get, post, put, delete, etc.)
+      const baseOp = basePathObj[method];
+      const implOp = implPathObj[method];
+
+      // If missing, already flagged in checkMissingRequiredRoutes
+      if (!baseOp) continue;
+      if (!implOp) continue;
 
       // Both base and impl define this route => deeper checks:
       errors.push(...checkMatchingRoute(basePathKey, method, baseOp, implOp));
