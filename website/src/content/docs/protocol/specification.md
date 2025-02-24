@@ -522,8 +522,6 @@ This allows APIs to incrementally adopt the CommonGrants protocol while supporti
 
 ## Appendix A: Compliance examples
 
-### Failures
-
 All of the following examples are non-compliant with the CommonGrants protocol.
 
 #### Extra routes
@@ -622,7 +620,7 @@ The implementation schemas are not valid against the base protocol schemas in on
 - The implementation schema misses a required field.
 - The implementation schema includes additional properties at the root of the schema.
 - The implementation schema assigns the wrong type to an existing field.
-- The implementation schema changes the enum values for an existing field.
+- The implementation schema adds to the list of enum values for an existing field.
 
 **Base protocol**
 
@@ -642,7 +640,7 @@ paths:
         - name: Opportunities
         - name: required
       responses:
-        '200':
+        "200":
           description: A 200 response with a paginated list of items
           content:
             application/json:
@@ -669,7 +667,7 @@ paths:
 
 **Implementation**
 
-```yaml
+```yaml {26-27, 33, 38}
 openapi: 3.0.0
 info:
   title: CommonGrants implementation API
@@ -684,7 +682,7 @@ paths:
         - name: Opportunities
         - name: required
       responses:
-        '200':
+        "200":
           description: A 200 response with a paginated list of items
           content:
             application/json:
@@ -702,9 +700,11 @@ paths:
                   status:
                     type: string
                     enum:
-                      # removed forecasted enum value
-                      - closed
+                      # adds an unsupported enum value "archived"
+                      - forecasted
                       - open
+                      - closed
                       - custom
+                      - archived
                   # other OpportunityBase fields omitted for brevity
 ```
