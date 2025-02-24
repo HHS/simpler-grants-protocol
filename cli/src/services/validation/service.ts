@@ -21,24 +21,29 @@ export class DefaultValidationService implements ValidationService {
    *   4) Checking that matching routes are compatible
    */
   async checkSpec(specPath: string, options: SpecValidationOptions): Promise<void> {
-    // Parse spec (validates OpenAPI syntax)
-    const doc = (await SwaggerParser.parse(specPath)) as Document;
+    // Parse and dereference the spec
+    const doc = (await SwaggerParser.dereference(specPath)) as Document;
 
-    // If base spec provided, check compatibility
-    if (options.base) {
-      const baseDoc = (await SwaggerParser.parse(options.base)) as Document;
+    if (!options.base) {
+      console.log("Base spec not provided, skipping compatibility check");
+      return;
+    }
 
-      const errors: ComplianceError[] = [];
-      errors.push(...checkMissingRequiredRoutes(baseDoc, doc));
-      errors.push(...checkExtraRoutes(baseDoc, doc));
-      errors.push(...checkMatchingRoutes(baseDoc, doc));
+    // If base spec provided, parse and dereference it
+    const baseDoc = (await SwaggerParser.dereference(options.base)) as Document;
 
-      if (errors.length > 0) {
-        const message = errors
-          .map(e => `${e.message}${e.location ? ` at ${e.location}` : ""}`)
-          .join("\n");
-        throw new Error(`Spec validation failed:\n${message}`);
-      }
+    const errors: ComplianceError[] = [];
+    errors.push(...checkMissingRequiredRoutes(baseDoc, doc));
+    errors.push(...checkExtraRoutes(baseDoc, doc));
+    errors.push(...checkMatchingRoutes(baseDoc, doc));
+
+    if (errors.length > 0) {
+      const message = errors
+        .map(e => `${e.message}${e.location ? ` at ${e.location}` : ""}`)
+        .join("\n");
+      throw new Error(`Spec validation failed:\n${message}`);
+    } else {
+      console.log("Spec is valid and compliant with base spec");
     }
   }
 }
