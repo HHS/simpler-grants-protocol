@@ -36,12 +36,12 @@ export function checkSchemaCompatibility(
     errors.push(...checkObjectCompatibility(location, baseSchema, implSchema));
   }
 
-  // 3) If the schema has an enum, verify that impl includes all base enum values
+  // 3) If the schema has an enum, verify that impl doesn't have extra values
   if (Array.isArray(baseSchema.enum) && Array.isArray(implSchema.enum)) {
-    for (const baseVal of baseSchema.enum) {
-      if (!implSchema.enum.includes(baseVal)) {
+    for (const implVal of implSchema.enum) {
+      if (!baseSchema.enum.includes(implVal)) {
         errors.push({
-          message: `Enum mismatch. Missing '${baseVal}' in implementation`,
+          message: `Enum mismatch. Extra value '${implVal}' in implementation not allowed by base spec`,
           location,
         });
       }

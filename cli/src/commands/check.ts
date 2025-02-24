@@ -46,12 +46,8 @@ export function checkCommand(program: Command) {
     .option("--base <path>", "Path to base spec for validation")
     .action(async (specPath, options) => {
       try {
-        console.log("Spec path:", specPath);
-        console.log("Options:", options);
         const validatedArgs = CheckSpecArgsSchema.parse({ specPath });
         const validatedOptions = CheckSpecCommandSchema.parse(options);
-        console.log("Validated args:", validatedArgs);
-        console.log("Validated options:", validatedOptions);
         await validationService.checkSpec(validatedArgs.specPath, validatedOptions);
       } catch (error) {
         if (error instanceof Error) {

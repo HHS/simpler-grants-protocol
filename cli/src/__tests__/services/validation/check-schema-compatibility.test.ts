@@ -67,11 +67,11 @@ describe("Schema Compatibility Checks", () => {
     // Arrange
     const baseSchema: OpenAPIV3.SchemaObject = {
       type: "string",
-      enum: ["A", "B", "C"],
+      enum: ["A", "B"],
     };
     const implSchema: OpenAPIV3.SchemaObject = {
       type: "string",
-      enum: ["A", "C"],
+      enum: ["A", "B", "C"],
     };
 
     // Act
@@ -79,7 +79,7 @@ describe("Schema Compatibility Checks", () => {
 
     // Assert
     expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Enum mismatch. Missing 'B'/);
+    expect(errors[0].message).toMatch(/Enum mismatch. Extra value 'C'/);
   });
 
   // ############################################################
