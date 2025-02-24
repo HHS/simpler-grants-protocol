@@ -519,3 +519,192 @@ This pattern can also be used to maintain support for existing routes that confl
 ```
 
 This allows APIs to incrementally adopt the CommonGrants protocol while supporting existing routes and operations.
+
+## Appendix A: Compliance examples
+
+All of the following examples are non-compliant with the CommonGrants protocol.
+
+#### Extra routes
+
+The implementation includes an extra route that is not prefixed with `/custom/`, and is not part of the base protocol.
+
+**Base protocol**
+
+```yaml
+openapi: 3.0.0
+info:
+  title: CommonGrants Base API
+  description: Base protocol specification to check a CommonGrants API against
+tags:
+  - name: Opportunities
+  - name: required
+paths:
+  /opportunities:
+    get:
+      # omitted for brevity
+      tags:
+        - name: Opportunities
+        - name: required
+```
+
+**Implementation**
+
+```yaml
+openapi: 3.0.0
+info:
+  title: CommonGrants implementation API
+  description: Implementation of the CommonGrants protocol
+tags:
+  - name: Opportunities
+paths:
+  /opportunities:
+    post:
+      # omitted for brevity
+      tags:
+        - name: Opportunities
+    get:
+      # omitted for brevity
+      tags:
+        - name: Opportunities
+```
+
+#### Missing routes
+
+The implementation does not include a required route.
+
+```yaml
+openapi: 3.0.0
+info:
+  title: CommonGrants Base API
+  description: Base protocol specification to check a CommonGrants API against
+tags:
+  - name: Opportunities
+  - name: required
+paths:
+  /opportunities:
+    get:
+      # omitted for brevity
+      tags:
+        - name: Opportunities
+        - name: required
+  /opportunities/{id}:
+    get:
+      # omitted for brevity
+      tags:
+        - name: Opportunities
+        - name: required
+```
+
+**Implementation**
+
+```yaml
+openapi: 3.0.0
+info:
+  title: CommonGrants implementation API
+  description: Implementation of the CommonGrants protocol
+tags:
+  - name: Opportunities
+paths:
+  /opportunities:
+    get:
+      # omitted for brevity
+      tags:
+        - name: Opportunities
+  # missing GET /opportunities/{id} route
+```
+
+#### Mismatched schemas
+
+The implementation schemas are not valid against the base protocol schemas in one of the following ways:
+
+- The implementation schema misses a required field.
+- The implementation schema includes additional properties at the root of the schema.
+- The implementation schema assigns the wrong type to an existing field.
+- The implementation schema adds to the list of enum values for an existing field.
+
+**Base protocol**
+
+```yaml
+openapi: 3.0.0
+info:
+  title: CommonGrants Base API
+  description: Base protocol specification to check a CommonGrants API against
+tags:
+  - name: Opportunities
+  - name: required
+paths:
+  /opportunities:
+    get:
+      # omitted for brevity
+      tags:
+        - name: Opportunities
+        - name: required
+      responses:
+        "200":
+          description: A 200 response with a paginated list of items
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - title
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - forecasted
+                      - open
+                      - closed
+                      - custom
+                # other OpportunityBase fields omitted for brevity
+```
+
+**Implementation**
+
+```yaml {26-27, 33, 38}
+openapi: 3.0.0
+info:
+  title: CommonGrants implementation API
+  description: Implementation of the CommonGrants protocol
+tags:
+  - name: Opportunities
+paths:
+  /opportunities:
+    get:
+      # omitted for brevity
+      tags:
+        - name: Opportunities
+        - name: required
+      responses:
+        "200":
+          description: A 200 response with a paginated list of items
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - title
+                properties:
+                  id:
+                    type: integer # wrong type
+                  # missing title field
+                  agency:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      # adds an unsupported enum value "archived"
+                      - forecasted
+                      - open
+                      - closed
+                      - custom
+                      - archived
+                  # other OpportunityBase fields omitted for brevity
+```

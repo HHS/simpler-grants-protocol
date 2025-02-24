@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { DefaultValidationService } from "../services/validation.service";
+import { DefaultValidationService } from "../services/validation/service";
 import {
   CheckApiArgsSchema,
   CheckApiCommandSchema,
@@ -43,7 +43,6 @@ export function checkCommand(program: Command) {
     .command("spec")
     .description("Validate a specification against the CommonGrants base spec")
     .argument("<specPath>", "Path or URL to TypeSpec or OpenAPI spec")
-    .option("--spec-version <version>", "CommonGrants spec version to validate against")
     .option("--base <path>", "Path to base spec for validation")
     .action(async (specPath, options) => {
       try {

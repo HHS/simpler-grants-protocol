@@ -148,8 +148,6 @@ export interface GenerateOptions {
  * Options for spec validation
  */
 export interface SpecValidationOptions {
-  /** Version of CommonGrants spec to validate against */
-  version?: string;
-  /** URL or path to base spec for validation */
+  /** Path to base spec for validation */
   base?: string;
 }
