@@ -20,8 +20,11 @@ namespace Opportunities {
   alias Router = Routes.Opportunities;
 
   @tag("required")
-  op List is Router.list;
+  op list is Router.list;
 
   @tag("required")
-  op Read is Router.read;
+  op read is Router.read;
+
+  @tag("required")
+  op search is Router.search;
 }
