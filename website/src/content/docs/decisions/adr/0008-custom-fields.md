@@ -24,7 +24,7 @@ _How can the specification allow developers to define custom fields for their ow
 - Custom fields can be re-used across multiple implementations.
 - The likelihood of naming collisions is low even when combining data from multiple implementations.
 
-### Decision outcome
+## Decision outcome
 
 We decided to define a `CustomObject` model as an object that has a:
 
