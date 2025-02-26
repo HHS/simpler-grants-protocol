@@ -24,11 +24,11 @@ We chose [Astro's Starlight template](https://starlight.astro.build/) for our do
 
 ### Decision drivers
 
-- **Simplicity** - Easy to set up, maintain, and host documentation.
-- **Extensibility** - Allows customization and supports reusable components.
-- **Dynamic routing** - Enables generating routes from structured data at build time.
-- **Popularity** - Supported by a growing community and used in open-source projects.
-- **Familiar tooling** - Leverages TypeScript, aligning with existing project frameworks.
+- **Simplicity:** Easy to set up, maintain, and host documentation.
+- **Extensibility:** Allows customization and supports reusable components.
+- **Dynamic routing:** Enables generating routes from structured data at build time.
+- **Popularity:** Supported by a growing community and used in open-source projects.
+- **Familiar tooling:** Leverages TypeScript, aligning with existing project frameworks.
 
 ### Options considered
 

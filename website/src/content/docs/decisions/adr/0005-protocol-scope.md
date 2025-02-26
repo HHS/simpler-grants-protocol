@@ -26,7 +26,7 @@ We decided to adopt a combined approach inspired by **FHIR**, defining both stan
 ### Decision drivers
 
 - **Interoperability**: Make it easier for third-party developers to build tools that work with multiple grant platforms.
-- **Scalability**: Make it easier to
+- **Scalability**: Make it easier to support a large number of grant platforms.
 - **Flexibility**: Accommodate multiple use cases without compromising core specifications.
 - **Ease of Adoption**: Simplicity to encourage widespread adoption by systems with limited resources.
 

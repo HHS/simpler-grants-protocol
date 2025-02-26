@@ -26,10 +26,10 @@ If SSR or server-side functions (e.g. to process form submissions) become a requ
 
 ### Decision drivers
 
-- **Cost** - Free or very low cost to host.
-- **Simplicity** - Easy setup with built-in SSL and custom domain support.
-- **GitHub integration** - Streamlined deployments via GitHub actions.
-- **PR previews** - Ability to preview deployments from GitHub pull requests.
+- **Cost:** Free or very low cost to host.
+- **Simplicity:** Easy setup with built-in SSL and custom domain support.
+- **GitHub integration:** Streamlined deployments via GitHub actions.
+- **PR previews:** Ability to preview deployments from GitHub pull requests.
 
 ### Options considered
 

@@ -38,8 +38,9 @@ The pagination strategy should:
 - Be widely used and understood
 - Be easy for clients to implement
 - Be easy for servers to support and scale
-- Allow for efficient filtering and sorting
-- Work well with caching mechanisms
+- Be consistent across endpoints
+- Be easy to combine with sorting and filtering
+- Easily support request caching
 
 ## Options considered
 

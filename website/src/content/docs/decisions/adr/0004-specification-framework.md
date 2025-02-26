@@ -25,11 +25,11 @@ We chose TypeSpec as the framework for defining the grant protocol and data stan
 
 ### Decision drivers
 
-- **Validation** - Specification format can be used to validate that implementations comply with the standard.
-- **Modularity** - Specification components can be broken into reusable modules.
-- **Extensibility** - Supports adding stricter validations and additional fields.
-- **Compatibility** - Compatible with existing developer tools and programming languages.
-- **Popularity** - Familiar to developers and widely used.
+- **Validation:** Specification format can be used to validate that implementations comply with the standard.
+- **Modularity:** Specification components can be broken into reusable modules.
+- **Extensibility:** Supports adding stricter validations and additional fields.
+- **Compatibility:** Compatible with existing developer tools and programming languages.
+- **Popularity:** Familiar to developers and widely used.
 
 ### Options considered
 
