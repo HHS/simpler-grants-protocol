@@ -1,3 +1,5 @@
+import "../pagination.tsp";
+import "../sorting.tsp";
 import "@typespec/http";
 
 namespace CommonGrants.Responses;
@@ -63,29 +65,5 @@ model Paginated<T> extends Success {
   items: T[];
 
   /** Details about the paginated results */
-  paginationInfo: {
-    /** Current page number (indexing starts at 1) */
-    @example(1)
-    page: int32;
-
-    /** Number of items per page */
-    @example(20)
-    pageSize: integer;
-
-    /** Total number of items across all pages */
-    @example(100)
-    totalItems: integer;
-
-    /** Total number of pages */
-    @example(5)
-    totalPages: integer;
-
-    /** URL for the next page if available */
-    @example("/opportunities?page=2&pageSize=20")
-    nextPageUrl?: string;
-
-    /** URL for the previous page if available */
-    @example("/opportunities?page=1&pageSize=20")
-    previousPageUrl?: string;
-  };
+  paginationInfo: Pagination.PaginationInfo;
 }
