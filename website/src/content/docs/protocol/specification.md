@@ -211,25 +211,26 @@ CommonGrants routes that support filtering SHOULD be paginated POST operations t
 
 The value of each protocol-defined filter SHOULD conform to the `Filter` schema, which contains the following properties:
 
-| Property    | Type | Required | Description                              |
-| ----------- | ---- | -------- | ---------------------------------------- |
-| `operation` | enum | Yes      | The operation to perform on the value    |
-| `value`     | any  | Yes      | The data to use for the filter operation |
+| Property   | Type | Required | Description                              |
+| ---------- | ---- | -------- | ---------------------------------------- |
+| `operator` | enum | Yes      | The operation to perform on the value    |
+| `value`    | any  | Yes      | The data to use for the filter operation |
 
-The `operation` property SHOULD be one of the following, though individual filters are NOT REQUIRED to support all operations:
+The `operator` property SHOULD be one of the following, though individual filters are NOT REQUIRED to support all operations:
 
-| Operation | Description              | Supported `value` types                      |
-| --------- | ------------------------ | -------------------------------------------- |
-| `eq`      | Equal to                 | string, number, boolean, date                |
-| `neq`     | Not equal to             | string, number, boolean, date                |
-| `gt`      | Greater than             | number, date                                 |
-| `gte`     | Greater than or equal to | number, date                                 |
-| `lt`      | Less than                | number, date                                 |
-| `lte`     | Less than or equal to    | number, date                                 |
-| `like`    | Contains                 | string                                       |
-| `in`      | In list                  | array                                        |
-| `not_in`  | Not in list              | array                                        |
-| `between` | Between two values       | range object with `min` and `max` properties |
+| Operation  | Description              | Supported `value` types                      |
+| ---------- | ------------------------ | -------------------------------------------- |
+| `eq`       | Equal to                 | string, number, boolean, date, money         |
+| `neq`      | Not equal to             | string, number, boolean, date, money         |
+| `gt`       | Greater than             | number, date, money                          |
+| `gte`      | Greater than or equal to | number, date, money                          |
+| `lt`       | Less than                | number, date, money                          |
+| `lte`      | Less than or equal to    | number, date, money                          |
+| `like`     | String contains          | string                                       |
+| `not_like` | String does not contain  | string                                       |
+| `in`       | In list                  | array                                        |
+| `not_in`   | Not in list              | array                                        |
+| `between`  | Between two values       | range object with `min` and `max` properties |
 
 Additionally, the response body for filtered requests SHOULD return the filtered set of records in the `items` property of a [paginated response](#pagination). This response body SHOULD also include a `filterInfo` property with the following:
 
