@@ -149,7 +149,11 @@ The CommonGrants protocol defines the following models that are specific to fund
 
 ### Routes and operations
 
-The CommonGrants protocol defines the following routes and operations that are specific to funding opportunities:
+The CommonGrants protocol defines the following routes and operations that are specific to funding opportunities.
+
+:::note
+While omitted for brevity in the following table, all protocol-defined routes MUST be prefixed with `/common-grants/`.
+:::
 
 | Route                                                                                             | Description                                                      |
 | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
@@ -158,7 +162,7 @@ The CommonGrants protocol defines the following routes and operations that are s
 
 #### Pagination
 
-CommonGrants routes that return multiple records from a resource SHOULD support pagination. Paginated routes SHOULD accept the following parameters, either as query parameters (for `GET` routes) or as optional parameters at the root of the request body (for `POST` and `PUT` routes):
+CommonGrants routes that return multiple records from a resource SHOULD support pagination. Paginated routes SHOULD accept the following, either as query parameters (for `GET` routes) or as properties in a `pagination` object at the root of the request body (for `POST` and `PUT` routes):
 
 | Parameter  | Type    | Default | Description                                       |
 | ---------- | ------- | ------- | ------------------------------------------------- |
@@ -180,7 +184,7 @@ The response body for paginated requests SHOULD return the paginated set of reco
 
 #### Sorting
 
-CommonGrants routes that support sorting SHOULD accept the following parameters, either as query parameters (for `GET` routes) or as optional parameters at the root of the request body (for `POST` and `PUT` routes):
+CommonGrants routes that support sorting SHOULD accept the following, either as query parameters (for `GET` routes) or as an properties in a `sorting` parameter in the request body (for `POST` and `PUT` routes):
 
 | Parameter      | Type            | Description                                            |
 | -------------- | --------------- | ------------------------------------------------------ |
@@ -498,21 +502,21 @@ For example, if a client provides an unsupported `agencyType` filter, the API SH
 
 #### Custom routes
 
-CommonGrants APIs MAY define custom routes that are not part of the core protocol. The path for these routes MUST be prefixed with `/custom/` to avoid conflicts with existing or future protocol routes.
+CommonGrants APIs MAY define custom routes that are not part of the core protocol. Any path that is **_not_** prefixed with `/common-grants/` is considered a custom route.
 
 For example, to allow clients to access the history of an opportunity record, an API can define this route:
 
 ```yaml
-/custom/opportunities/{opportunityId}/history/:
+/opportunities/{opportunityId}/history/:
   get:
     summary: Get opportunity history
     description: Get the history of changes made to an opportunity
 ```
 
-This pattern can also be used to maintain support for existing routes that conflict with those defined by the protocol. For example, an API can maintain a non-conforming `GET /opportunities` route by prefixing it with `/custom/`:
+This pattern can also be used to maintain support for existing routes that conflict with those defined by the protocol. For example, an API can maintain a non-conforming `GET /common-grants/opportunities` route by defining their own `GET /opportunities` route (without the `/common-grants` prefix):
 
 ```yaml
-/custom/opportunities/:
+/opportunities/:
   get:
     summary: Get opportunities (legacy)
     description: Get a list of opportunities, with legacy filtering and sorting
