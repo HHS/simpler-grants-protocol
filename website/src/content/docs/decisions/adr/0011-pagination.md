@@ -11,7 +11,7 @@ The CommonGrants protocol needs a standardized approach to pagination for API re
 
 ### Decision outcome
 
-The protocol will use **page-based pagination** with `page` and `pageSize` parameters. These parameters should be included as **query parameters** for `GET` requests and **request body parameters** for `POST` and `PUT` requests.
+The protocol will use **page-based pagination** with `page` and `pageSize` parameters. These parameters should be included as **query parameters** for `GET` requests and as properties in a `pagination` **request body parameters** for `POST` and `PUT` requests.
 
 The pagination response should also include a `paginationInfo` object with the following properties:
 
