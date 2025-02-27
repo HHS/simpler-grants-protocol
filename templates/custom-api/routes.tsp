@@ -7,11 +7,12 @@ using CommonGrants.Routes;
 using TypeSpec.Http;
 
 @tag("Opportunities")
-@route("/opportunities")
+@route("/common-grants/opportunities")
 namespace Custom.Routes {
   alias OpportunitiesRouter = Opportunities;
 
   // Use custom model for list and read
   op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
   op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
+  op search is OpportunitiesRouter.search<Models.CustomOpportunity>;
 }
