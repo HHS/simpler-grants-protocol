@@ -10,11 +10,13 @@ model PaginatedQueryParams {
   /** The page to return */
   @query
   @pageIndex
+  @minValue(1)
   page?: int32 = 1;
 
   /** The number of items to return per page */
   @query
   @pageSize
+  @minValue(1)
   pageSize?: int32 = 100;
 }
 
@@ -22,10 +24,12 @@ model PaginatedQueryParams {
 model PaginatedBodyParams {
   /** The page to return */
   @pageIndex
+  @minValue(1)
   page?: int32 = 1;
 
   /** The number of items to return per page */
   @pageSize
+  @minValue(1)
   pageSize?: int32 = 100;
 }
 
@@ -33,10 +37,12 @@ model PaginatedBodyParams {
 model PaginationInfo {
   /** Current page number (indexing starts at 1) */
   @example(1)
+  @minValue(1)
   page: int32;
 
   /** Number of items per page */
   @example(20)
+  @minValue(1)
   pageSize: integer;
 
   /** Total number of items across all pages */
