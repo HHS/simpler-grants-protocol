@@ -1,7 +1,6 @@
 import "../models/index.tsp";
 import "../responses/index.tsp";
-import "./utils.tsp";
-import "../filters/index.tsp";
+import "../pagination.tsp";
 
 // Define the top-level namespace for CommonGrants routes
 namespace CommonGrants.Routes;
@@ -49,7 +48,7 @@ interface Opportunities {
   @doc("Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.")
   @list
   list<T extends Models.OpportunityBase = Models.OpportunityBase>(
-    ...Utils.PaginatedQueryParams,
+    ...Pagination.PaginatedQueryParams,
   ): Responses.Paginated<T> | Responses.Unauthorized;
 
   // ##############################
@@ -83,10 +82,17 @@ interface Opportunities {
   @post
   @route("/search")
   search<T extends Models.OpportunityBase = Models.OpportunityBase>(
-    /** Filters to apply to the opportunity search */
-    filters: Models.OppFilters,
+    /** Filters to apply to the opportunity search
+     *
+     * Multiple filter conditions will be combined with AND logic, so that
+     * results only include opportunities that match all of the provided filters.
+     */
+    filters?: Models.OppFilters,
 
-    /** Pagination information for the results */
-    pagination: Utils.PaginatedBodyParams,
-  ): Responses.Ok<T> | Responses.Unauthorized;
+    /** The sort order to apply to the results */
+    sorting?: Models.OppSorting,
+
+    /** Pagination instructions for the results */
+    pagination?: Pagination.PaginatedBodyParams,
+  ): Responses.Filtered<T, Models.OppFilters> | Responses.Unauthorized;
 }

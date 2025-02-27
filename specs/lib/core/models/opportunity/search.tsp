@@ -1,10 +1,10 @@
-import "../../routes/utils.tsp";
 import "../../filters/index.tsp";
+import "../../sorting.tsp";
 
 namespace CommonGrants.Models;
 
 // ############################################################################
-// Helper models
+// Filter models
 // ############################################################################
 
 /** Filters to apply when searching for opportunities */
@@ -16,19 +16,16 @@ model OppFilters {
   customFilters?: Record<Filters.DefaultFilter>;
 }
 
-// ############################################################################
-// Payload models
-// ############################################################################
-
+/** The standard set of filters supported for opportunity searches */
 model OppDefaultFilters extends Record<Filters.DefaultFilter> {
-  /** The status of the opportunity matches one of the following values */
+  /** `status.value` matches one of the following values */
   @example(#{
     operator: Filters.ArrayOperators.in,
     value: #["forecasted", "open"],
   })
   status?: Filters.StringArrayFilter;
 
-  /** The close date of the opportunity is between the given range */
+  /** `keyDates.closeDate` is between the given range */
   @example(#{
     operator: Filters.RangeOperators.between,
     value: #{
@@ -37,4 +34,69 @@ model OppDefaultFilters extends Record<Filters.DefaultFilter> {
     },
   })
   closeDateRange?: Filters.DateRangeFilter;
+
+  /** `funding.totalAmountAvailable` is between the given range
+   *
+   * Funding amounts that are denominated in a different currency will
+   * be excluded from the search.
+   */
+  @example(#{
+    operator: Filters.RangeOperators.between,
+    value: #{
+      min: #{ amount: "1000000", currency: "USD" },
+      max: #{ amount: "2000000", currency: "USD" },
+    },
+  })
+  totalFundingAvailableRange?: Filters.MoneyRangeFilter;
+
+  /** `funding.minAwardAmount` is between the given range
+   *
+   * Funding amounts that are denominated in a different currency will
+   * be excluded from the search.
+   */
+  @example(#{
+    operator: Filters.RangeOperators.between,
+    value: #{
+      min: #{ amount: "1000000", currency: "USD" },
+      max: #{ amount: "2000000", currency: "USD" },
+    },
+  })
+  minAwardAmountRange?: Filters.MoneyRangeFilter;
+
+  /** `funding.maxAwardAmount` is between the given range.
+   *
+   * Funding amounts that are denominated in a different currency will
+   * be excluded from the search.
+   */
+  @example(#{
+    operator: Filters.RangeOperators.between,
+    value: #{
+      min: #{ amount: "1000000", currency: "USD" },
+      max: #{ amount: "2000000", currency: "USD" },
+    },
+  })
+  maxAwardAmountRange?: Filters.MoneyRangeFilter;
+}
+
+// ############################################################################
+// Sorting models
+// ############################################################################
+
+enum OppSortBy {
+  lastModifiedAt,
+  createdAt,
+  title,
+  status: "status.value",
+  closeDate: "keyDates.closeDate",
+  maxAwardAmount: "funding.maxAwardAmount",
+  minAwardAmount: "funding.minAwardAmount",
+  totalFundingAvailable: "funding.totalAmountAvailable",
+  estimatedAwardCount: "funding.estimatedAwardCount",
+  custom,
+}
+
+model OppSorting extends Sorting.SortBodyParams {
+  /** The field to sort by */
+  @example(OppSortBy.lastModifiedAt)
+  sortBy: OppSortBy;
 }
