@@ -1,8 +1,10 @@
 // Import Schemas.and Routes to make them available outside the package
 import "./core/index.tsp";
 import "@typespec/http";
+import "@typespec/openapi";
 
 using TypeSpec.Http;
+using TypeSpec.OpenAPI;
 
 /** The base OpenAPI specification for a CommonGrants API
  *
@@ -15,7 +17,7 @@ using TypeSpec.Http;
 namespace CommonGrants.API;
 
 @tag("Opportunities")
-@route("/opportunities")
+@route("/common-grants/opportunities")
 namespace Opportunities {
   alias Router = Routes.Opportunities;
 
@@ -25,6 +27,6 @@ namespace Opportunities {
   @tag("required")
   op read is Router.read;
 
-  @tag("required")
+  @tag("optional")
   op search is Router.search;
 }
