@@ -41,17 +41,9 @@ model PaginationInfo {
 
   /** Total number of items across all pages */
   @example(100)
-  totalItems: integer;
+  totalItems?: integer;
 
   /** Total number of pages */
   @example(5)
-  totalPages: integer;
-
-  /** URL for the next page if available */
-  @example("/opportunities?page=2&pageSize=20")
-  nextPageUrl?: string;
-
-  /** URL for the previous page if available */
-  @example("/opportunities?page=1&pageSize=20")
-  previousPageUrl?: string;
+  totalPages?: integer;
 }

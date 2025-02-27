@@ -173,8 +173,6 @@ Additionally, the response body for paginated requests SHOULD include a `paginat
 | `pageSize`        | integer | Yes      | The number of results per page                            |
 | `totalItems`      | integer | Yes      | The total number of results across all pages              |
 | `totalPages`      | integer | Yes      | The total number of pages of results                      |
-| `nextPageUrl`     | url     | No       | The URL for the next page of results, if there is one     |
-| `previousPageUrl` | url     | No       | The URL for the previous page of results, if there is one |
 
 The response body for paginated requests SHOULD return the paginated set of records in the `items` property.
 
