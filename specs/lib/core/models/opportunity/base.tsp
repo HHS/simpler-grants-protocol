@@ -56,7 +56,7 @@ model OpportunityBase {
   description: string;
 
   /** Details about the funding available */
-  fundingDetails: OppFunding;
+  funding: OppFunding;
 
   /** Key dates for the opportunity, such as when the application opens and closes */
   keyDates: OppTimeline;

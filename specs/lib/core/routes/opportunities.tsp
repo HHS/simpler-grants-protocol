@@ -1,6 +1,6 @@
 import "../models/index.tsp";
 import "../responses/index.tsp";
-import "./utils.tsp";
+import "../pagination.tsp";
 
 // Define the top-level namespace for CommonGrants routes
 namespace CommonGrants.Routes;
@@ -35,6 +35,10 @@ using TypeSpec.Http;
  * ```
  */
 interface Opportunities {
+  // ###############################
+  // List opportunities
+  // ###############################
+
   /** `GET /opportunities/` Get a paginated list of opportunities
    *
    * @template T Type of the paginated response model.
@@ -44,8 +48,12 @@ interface Opportunities {
   @doc("Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.")
   @list
   list<T extends Models.OpportunityBase = Models.OpportunityBase>(
-    ...Utils.PaginatedQuery,
+    ...Pagination.PaginatedQueryParams,
   ): Responses.Paginated<T> | Responses.Unauthorized;
+
+  // ##############################
+  // View an opportunity
+  // ##############################
 
   /** `GET /opportunities/<id>` View opportunity details
    *
@@ -59,4 +67,32 @@ interface Opportunities {
     /** The ID of the opportunity to view */
     @path id: Types.uuid,
   ): Responses.Ok<T> | Responses.NotFound | Responses.Unauthorized;
+
+  // ###############################
+  // Search opportunities
+  // ###############################
+
+  /** `POST /opportunities/search` Search opportunities
+   *
+   * @template T Type of the response model.
+   * Must be an extension of Schemas.OpportunityBase. Default is Schemas.OpportunityBase.
+   */
+  @summary("Search opportunities")
+  @doc("Search for opportunities based on the provided filters")
+  @post
+  @route("/search")
+  search<T extends Models.OpportunityBase = Models.OpportunityBase>(
+    /** Filters to apply to the opportunity search
+     *
+     * Multiple filter conditions will be combined with AND logic, so that
+     * results only include opportunities that match all of the provided filters.
+     */
+    filters?: Models.OppFilters,
+
+    /** The sort order to apply to the results */
+    sorting?: Models.OppSorting,
+
+    /** Pagination instructions for the results */
+    pagination?: Pagination.PaginatedBodyParams,
+  ): Responses.Filtered<T, Models.OppFilters> | Responses.Unauthorized;
 }

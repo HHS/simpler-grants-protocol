@@ -10,7 +10,6 @@ using CommonGrants.Fields;
 // ########################################
 
 /** Details about the funding available for this opportunity */
-@example(Examples.Funding.allFields, #{ title: "All fields defined" })
 @example(
   Examples.Funding.awardRange,
   #{ title: "Award range but no total limit" }
@@ -19,6 +18,7 @@ using CommonGrants.Fields;
   Examples.Funding.onlyLimit,
   #{ title: "Total funding limit but no award range" }
 )
+@example(Examples.Funding.allFields, #{ title: "All fields defined" })
 model OppFunding {
   /** Total amount of funding available for this opportunity */
   totalAmountAvailable?: Money;
