@@ -18,7 +18,7 @@ A funding opportunity, such as a grant or loan.
   | title          | [string](/simpler-grants-protocol/protocol/schemas/types/string#string)                                                                                | Yes      | Title or name of the funding opportunity                     |
   | status         | [OppStatus](/simpler-grants-protocol/protocol/schemas/opportunity/status)                                                                              | Yes      | Status of the opportunity                                    |
   | description    | [string](/simpler-grants-protocol/protocol/schemas/types/string#string)                                                                                | Yes      | Description of the opportunity's purpose and scope           |
-  | fundingDetails | [OppFunding](/simpler-grants-protocol/protocol/schemas/opportunity/funding)                                                                            | Yes      | Details about the funding available                          |
+  | funding | [OppFunding](/simpler-grants-protocol/protocol/schemas/opportunity/funding)                                                                            | Yes      | Details about the funding available                          |
   | keyDates       | [OppTimeline](/simpler-grants-protocol/protocol/schemas/opportunity/timeline)                                                                          | Yes      | Key dates for the opportunity                                |
   | source         | [url](/simpler-grants-protocol/protocol/schemas/types/string#url)                                                                                      | No       | URL for the original source of the opportunity               |
   | customFields   | [Record](/simpler-grants-protocol/protocol/schemas/types/other#record)\<[CustomField](/simpler-grants-protocol/protocol/schemas/fields/custom-field)\> | No       | Additional custom fields specific to this opportunity        |
@@ -44,7 +44,7 @@ A funding opportunity, such as a grant or loan.
     description:
       type: string
       description: Description of the opportunity's purpose and scope
-    fundingDetails:
+    funding:
       $ref: OppFunding.yaml
       description: Details about the funding available
     keyDates:
@@ -70,7 +70,7 @@ A funding opportunity, such as a grant or loan.
     - title
     - status
     - description
-    - fundingDetails
+    - funding
     - keyDates
     - createdAt
     - lastModifiedAt
@@ -102,7 +102,7 @@ A funding opportunity, such as a grant or loan.
     description: string;
 
     /** Details about the funding available */
-    fundingDetails: FundingDetails;
+    funding: OppFunding;
 
     /** Key dates for the opportunity, such as when the application opens and closes */
     keyDates: OppTimeline;
@@ -129,7 +129,7 @@ A funding opportunity, such as a grant or loan.
       "value": "open",
       "description": "Opportunity is actively accepting applications"
     },
-    "fundingDetails": {
+    "funding": {
       "totalAmountAvailable": {
         "amount": "1000000.00",
         "currency": "USD"
