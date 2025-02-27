@@ -167,12 +167,12 @@ CommonGrants routes that return multiple records from a resource SHOULD support 
 
 Additionally, the response body for paginated requests SHOULD include a `paginationInfo` property with the following:
 
-| Property          | Type    | Required | Description                                               |
-| ----------------- | ------- | -------- | --------------------------------------------------------- |
-| `page`            | integer | Yes      | The page number of the results                            |
-| `pageSize`        | integer | Yes      | The number of results per page                            |
-| `totalItems`      | integer | Yes      | The total number of results across all pages              |
-| `totalPages`      | integer | Yes      | The total number of pages of results                      |
+| Property     | Type    | Required | Description                                  |
+| ------------ | ------- | -------- | -------------------------------------------- |
+| `page`       | integer | Yes      | The page number of the results               |
+| `pageSize`   | integer | Yes      | The number of results per page               |
+| `totalItems` | integer | Yes      | The total number of results across all pages |
+| `totalPages` | integer | Yes      | The total number of pages of results         |
 
 The response body for paginated requests SHOULD return the paginated set of records in the `items` property.
 
