@@ -9,11 +9,12 @@ using TypeSpec.Http;
 namespace Default;
 
 @tag("Opportunities")
-@route("/opportunities")
+@route("/common-grants/opportunities")
 namespace Routes {
   alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
 
   // Use the default model for list but custom model for read
   op list is OpportunitiesRouter.list;
   op read is OpportunitiesRouter.read;
+  op search is OpportunitiesRouter.search;
 }

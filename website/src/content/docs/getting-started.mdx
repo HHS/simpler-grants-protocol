@@ -172,7 +172,7 @@ There's a lot happening here, so let's break it down section by section.
    using CommonGrants.Models;
    ```
 
-   Without this, you would have to prefix each model `CommonGrants.Models` and each field `CommonGrants.Fields`. For example `CommonGrants.Fields.CustomField`.
+   Without this, you would have to prefix each model with `CommonGrants.Models` and each field with `CommonGrants.Fields`. For example `CommonGrants.Fields.CustomField`.
 
 3. Declare a namespace for the current file.
    ```tsp
@@ -228,7 +228,7 @@ Update the `routes.tsp` file and make the following changes:
 - Import the `models.tsp` file to expose the `CustomOpportunity` model.
 - Update the routes to use the `CustomOpportunity` model.
 
-```tsp title=routes.tsp ins={2,13,14} del={11,12}
+```tsp title=routes.tsp ins={2,14-16} del={11-13}
 import "@common-grants/core";
 import "./models.tsp";
 
@@ -241,8 +241,10 @@ namespace Quickstart.Routes {
 
   op list is OpportunitiesRouter.list;
   op read is OpportunitiesRouter.read;
+  op search is OpportunitiesRouter.search;
   op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
   op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
+  op search is OpportunitiesRouter.search<Models.CustomOpportunity>;
 }
 ```
 
@@ -271,7 +273,7 @@ There's also a lot happening here, so let's break it down section by section.
 
 3. Update the default routes to use the `CustomOpportunity` model.
 
-   ```tsp {6,7}
+   ```tsp {6-8}
    @tag("Opportunities")
    @route("/opportunities")
    namespace Quickstart.Routes {
@@ -279,6 +281,7 @@ There's also a lot happening here, so let's break it down section by section.
 
      op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
      op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
+     op search is OpportunitiesRouter.search<Models.CustomOpportunity>;
    }
    ```
 
@@ -301,6 +304,7 @@ namespace Quickstart.Routes {
 
   op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
   op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
+  op search is OpportunitiesRouter.search<Models.CustomOpportunity>;
 }
 ```
 
