@@ -50,12 +50,17 @@ export default defineConfig({
           items: [
             { label: "Specification", link: "protocol/specification" },
             {
-              label: "Schemas",
+              label: "Core library",
               collapsed: true,
               items: [
                 {
                   label: "Overview",
                   link: "protocol/schemas/overview",
+                },
+                {
+                  label: "Filters",
+                  collapsed: true,
+                  autogenerate: { directory: "protocol/filters" },
                 },
                 {
                   label: "Base types",
