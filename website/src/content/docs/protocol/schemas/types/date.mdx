@@ -13,30 +13,35 @@ A date on a calendar in ISO 8601 format YYYY-MM-DD.
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: isoDate.yaml
-  type: string
-  format: date
-  description: A date on a calendar in ISO 8601 format YYYY-MM-DD
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: isoDate.yaml
+type: string
+format: date
+description: A date on a calendar in ISO 8601 format YYYY-MM-DD
+```
+
   </TabItem>
 
   <TabItem label="TypeSpec">
-  ```tsp 
-  /** A date on a calendar in ISO 8601 format YYYY-MM-DD */
-  @example(isoDate.fromISO("2025-01-01"))
-  scalar isoDate extends plainTime;
-  ```
+
+```tsp
+/** A date on a calendar in ISO 8601 format YYYY-MM-DD */
+@example(isoDate.fromISO("2025-01-01"))
+scalar isoDate extends plainTime;
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  "2025-01-01"
-  ```
+
+```json
+"2025-01-01"
+```
+
   </TabItem>
 </Tabs>
-
 
 ### isoTime
 
@@ -48,28 +53,34 @@ The `isoTime` type does not include timezone information. When representing a ti
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: isoTime.yaml
-  type: string
-  format: time
-  description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: isoTime.yaml
+type: string
+format: time
+description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
+```
+
   </TabItem>
 
   <TabItem label="TypeSpec">
-  ```typespec
-  /** A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss */
-  @example(isoTime.fromISO("17:00:00"))
-  @encode()
-  scalar isoTime extends plainTime;
-  ```
+
+```typespec
+/** A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss */
+@example(isoTime.fromISO("17:00:00"))
+@encode()
+scalar isoTime extends plainTime;
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  "17:00:00"
-  ```
+
+```json
+"17:00:00"
+```
+
   </TabItem>
 </Tabs>
 
@@ -79,22 +90,25 @@ A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ.
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: isoDateTime.yaml
-  type: string
-  format: date-time
-  description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: isoDateTime.yaml
+type: string
+format: date-time
+description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  "2024-02-28T17:00:00Z"
-  ```
+
+```json
+"2024-02-28T17:00:00Z"
+```
+
   </TabItem>
 </Tabs>
-
 
 ### offsetDateTime
 
@@ -102,21 +116,22 @@ A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm.
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: offsetDateTime.yaml
-  type: string  
-  format: date-time
-  description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: offsetDateTime.yaml
+type: string
+format: date-time
+description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  "2024-02-28T17:00:00+01:00"
-  ```
+
+```json
+"2024-02-28T17:00:00+01:00"
+```
+
   </TabItem>
 </Tabs>
-
-
-

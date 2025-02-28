@@ -13,18 +13,22 @@ A sequence of characters.
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: string.yaml
-  type: string
-  description: A sequence of characters
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: string.yaml
+type: string
+description: A sequence of characters
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  "Hello, world!"
-  ```
+
+```json
+"Hello, world!"
+```
+
   </TabItem>
 </Tabs>
 
@@ -34,22 +38,25 @@ A Uniform Resource Locator (URL).
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: url.yaml
-  type: string
-  format: uri
-  description: A Uniform Resource Locator (URL)
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: url.yaml
+type: string
+format: uri
+description: A Uniform Resource Locator (URL)
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  "https://example.com/path"
-  ```
+
+```json
+"https://example.com/path"
+```
+
   </TabItem>
 </Tabs>
-
 
 ## uuid
 
@@ -57,27 +64,33 @@ A universally unique identifier.
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: uuid.yaml
-  type: string
-  format: uuid
-  description: A universally unique identifier
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: uuid.yaml
+type: string
+format: uuid
+description: A universally unique identifier
+```
+
   </TabItem>
 
   <TabItem label="TypeSpec">
-  ```tsp 
-  /** A universally unique identifier */
-  @example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
-  @format("uuid")
-  scalar uuid extends string;
-  ```
+
+```tsp
+/** A universally unique identifier */
+@example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
+@format("uuid")
+scalar uuid extends string;
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  "30a12e5e-5940-4c08-921c-17a8960fcf4b"
-  ```
+
+```json
+"30a12e5e-5940-4c08-921c-17a8960fcf4b"
+```
+
   </TabItem>
 </Tabs>
