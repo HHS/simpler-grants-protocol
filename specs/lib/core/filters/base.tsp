@@ -71,6 +71,7 @@ enum AllOperators {
 model DefaultFilter {
   /** The operator to apply to the filter value */
   operator:
+    | EquivalenceOperators
     | ComparisonOperators
     | ArrayOperators
     | StringOperators

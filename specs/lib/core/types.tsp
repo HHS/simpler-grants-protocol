@@ -1,3 +1,5 @@
+using TypeSpec.JsonSchema;
+
 /** A collection of base data types used throughout the CommonGrants API
  *
  * @example How to use the `Types` namespace
@@ -16,6 +18,7 @@
  * }
  * ```
  */
+@jsonSchema
 namespace CommonGrants.Types;
 
 /** A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss */

@@ -4,6 +4,8 @@ import "./numeric.tsp";
 import "./money.tsp";
 import "./string.tsp";
 
+using TypeSpec.JsonSchema;
+
 /** A standard set of filters, e.g. `StringArrayFilter`, that can be reused across models
  *
  * @example How to use the `Filters` namespace
@@ -34,4 +36,5 @@ import "./string.tsp";
  * }
  * ```
  */
+@jsonSchema
 namespace CommonGrants.Filters;

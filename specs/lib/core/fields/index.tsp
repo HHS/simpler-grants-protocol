@@ -3,6 +3,8 @@ import "./metadata.tsp";
 import "./money.tsp";
 import "./event.tsp";
 
+using TypeSpec.JsonSchema;
+
 /** A standard set of fields, e.g. `money` that can be reused across models
  *
  * @example How to use the `Fields` namespace
@@ -17,4 +19,5 @@ import "./event.tsp";
  * }
  * ```
  */
+@jsonSchema
 namespace CommonGrants.Fields;
