@@ -28,7 +28,7 @@ model SortQueryParams {
   /** The field to sort by */
   @query
   @example("lastModifiedAt")
-  sortBy: string;
+  sortBy: unknown;
 
   /** Implementation-defined sort key */
   @query
