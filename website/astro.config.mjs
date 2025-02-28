@@ -77,6 +77,10 @@ export default defineConfig({
                   collapsed: true,
                   autogenerate: { directory: "protocol/filters" },
                 },
+                {
+                  label: "Pagination",
+                  link: "protocol/pagination",
+                },
               ],
             },
             ...openAPISidebarGroups,

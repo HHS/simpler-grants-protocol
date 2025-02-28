@@ -1,0 +1,267 @@
+---
+title: Pagination
+description: Defines a set of parameters and patterns for paginated routes
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+## PaginatedQueryParams
+
+Query parameters for paginated routes. These parameters should be used on GET routes that support pagination.
+
+<Tabs>
+<TabItem label="Table">
+
+| Parameter  | Type    | Default | Description                            |
+| ---------- | ------- | ------- | -------------------------------------- |
+| `page`     | `int32` | `1`     | The page to return                     |
+| `pageSize` | `int32` | `100`   | The number of items to return per page |
+
+</TabItem>
+
+<TabItem label="TypeSpec">
+
+```typespec
+/** Query parameters for paginated routes */
+model PaginatedQueryParams {
+  /** The page to return */
+  @query
+  @pageIndex
+  @minValue(1)
+  page?: int32 = 1;
+
+  /** The number of items to return per page */
+  @query
+  @pageSize
+  @minValue(1)
+  pageSize?: int32 = 100;
+}
+```
+
+</TabItem>
+
+<TabItem label="OpenAPI">
+
+```yaml
+/common-grants/opportunities:
+  get:
+    parameters:
+      - $ref: "#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page"
+      - $ref: "#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize"
+```
+
+Where the references to the parameters are defined as follows:
+
+```yaml
+components:
+  parameters:
+    CommonGrants.Pagination.PaginatedQueryParams.page:
+      name: page
+      in: query
+      required: false
+      description: The page to return
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+      explode: false
+    CommonGrants.Pagination.PaginatedQueryParams.pageSize:
+      name: pageSize
+      in: query
+      required: false
+      description: The number of items to return per page
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 100
+      explode: false
+```
+
+</TabItem>
+
+<TabItem label="Example">
+
+```
+/common-grants/opportunities?page=1&pageSize=100
+```
+
+</TabItem>
+</Tabs>
+
+## PaginatedBodyParams
+
+Body parameters for paginated routes. These parameters should be used on POST and PUT routes that support pagination.
+
+<Tabs>
+<TabItem label="Table">
+
+| Parameter  | Type    | Default | Description                            |
+| ---------- | ------- | ------- | -------------------------------------- |
+| `page`     | `int32` | `1`     | The page to return                     |
+| `pageSize` | `int32` | `100`   | The number of items to return per page |
+
+</TabItem>
+
+<TabItem label="TypeSpec">
+
+```typespec
+/** Body parameters for paginated routes */
+model PaginatedBodyParams {
+  /** The page to return */
+  @pageIndex
+  @minValue(1)
+  page?: int32 = 1;
+
+  /** The number of items to return per page */
+  @pageSize
+  @minValue(1)
+  pageSize?: int32 = 100;
+}
+```
+
+</TabItem>
+<TabItem label="OpenAPI">
+
+```yaml
+/common-grants/opportunities:
+  post:
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CommonGrants.Pagination.PaginatedBodyParams"
+```
+
+Where the referenced schema is defined as follows:
+
+```yaml
+components:
+  schemas:
+    CommonGrants.Pagination.PaginatedBodyParams:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The page to return
+          default: 1
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The number of items to return per page
+          default: 100
+      description: Body parameters for paginated routes
+```
+
+</TabItem>
+
+<TabItem label="Example">
+
+```json
+{
+  "page": 1,
+  "pageSize": 100
+}
+```
+
+</TabItem>
+</Tabs>
+
+## PaginationInfo
+
+Details about the paginated results. This model should be used to represent the response from a paginated route.
+
+<Tabs>
+<TabItem label="Table">
+
+| Parameter    | Type    | Description                                |
+| ------------ | ------- | ------------------------------------------ |
+| `page`       | `int32` | The page to return                         |
+| `pageSize`   | `int32` | The number of items to return per page     |
+| `totalItems` | `int32` | The total number of items across all pages |
+| `totalPages` | `int32` | The total number of pages                  |
+
+</TabItem>
+
+
+<TabItem label="TypeSpec">
+
+```typespec
+/** Details about the paginated results */
+model PaginationInfo {
+  /** Current page number (indexing starts at 1) */
+  @example(1)
+  @minValue(1)
+  page: int32;
+
+  /** Number of items per page */
+  @example(20)
+  @minValue(1)
+  pageSize: integer;
+
+  /** Total number of items across all pages */
+  @example(100)
+  totalItems?: integer;
+
+  /** Total number of pages */
+  @example(5)
+  totalPages?: integer;
+}
+```
+
+</TabItem>  
+
+<TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PaginationInfo.yaml
+type: object
+properties:
+  page:
+    type: integer
+    minimum: 1
+    maximum: 2147483647
+    examples:
+      - 1
+    description: Current page number (indexing starts at 1)
+  pageSize:
+    type: integer
+    examples:
+      - 20
+    minimum: 1
+    description: Number of items per page
+  totalItems:
+    type: integer
+    examples:
+      - 100
+    description: Total number of items across all pages
+  totalPages:
+    type: integer
+    examples:
+      - 5
+    description: Total number of pages
+required:
+  - page
+  - pageSize
+description: Details about the paginated results
+```
+</TabItem>
+
+<TabItem label="Example">
+
+```json
+{
+  "page": 1,
+  "pageSize": 100,
+  "totalItems": 1000,
+  "totalPages": 10
+}
+```
+
+</TabItem>
+</Tabs>
