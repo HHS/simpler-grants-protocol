@@ -92,60 +92,60 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 **String types**
 
-| Type                                                                    | Description                      |
-| ----------------------------------------------------------------------- | -------------------------------- |
-| [string](/simpler-grants-protocol/protocol/schemas/types/string#string) | A sequence of characters         |
-| [uuid](/simpler-grants-protocol/protocol/schemas/types/string#uuid)     | A universally unique identifier  |
-| [url](/simpler-grants-protocol/protocol/schemas/types/string#url)       | A Uniform Resource Locator (URL) |
+| Type                                                            | Description                      |
+| --------------------------------------------------------------- | -------------------------------- |
+| [string](/simpler-grants-protocol/protocol/types/string#string) | A sequence of characters         |
+| [uuid](/simpler-grants-protocol/protocol/types/string#uuid)     | A universally unique identifier  |
+| [url](/simpler-grants-protocol/protocol/types/string#url)       | A Uniform Resource Locator (URL) |
 
 **Numeric types**
 
-| Type                                                                                   | Description                                            |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [numeric](/simpler-grants-protocol/protocol/schemas/types/numeric#numeric)             | A number with an arbitrary precision and scale         |
-| [integer](/simpler-grants-protocol/protocol/schemas/types/numeric#integer)             | A whole number without decimals                        |
-| [decimalString](/simpler-grants-protocol/protocol/schemas/types/numeric#decimalstring) | A decimal number encoded as a string to preserve scale |
+| Type                                                                           | Description                                            |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric)             | A number with an arbitrary precision and scale         |
+| [integer](/simpler-grants-protocol/protocol/types/numeric#integer)             | A whole number without decimals                        |
+| [decimalString](/simpler-grants-protocol/protocol/types/numeric#decimalstring) | A decimal number encoded as a string to preserve scale |
 
 **Date and time types**
 
-| Type                                                                                  | Description                                                           |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [isoTime](/simpler-grants-protocol/protocol/schemas/types/date#isotime)               | Time without timezone in ISO 8601 format (HH:mm:ss)                   |
-| [isoDate](/simpler-grants-protocol/protocol/schemas/types/date#isodate)               | Calendar date in ISO 8601 format (YYYY-MM-DD)                         |
-| [utcDateTime](/simpler-grants-protocol/protocol/schemas/types/date#utcdatetime)       | Datetime with UTC timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ssZ)  |
-| [offsetDateTime](/simpler-grants-protocol/protocol/schemas/types/date#offsetdatetime) | Datetime with timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ss±hh:mm) |
+| Type                                                                          | Description                                                           |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [isoTime](/simpler-grants-protocol/protocol/types/date#isotime)               | Time without timezone in ISO 8601 format (HH:mm:ss)                   |
+| [isoDate](/simpler-grants-protocol/protocol/types/date#isodate)               | Calendar date in ISO 8601 format (YYYY-MM-DD)                         |
+| [utcDateTime](/simpler-grants-protocol/protocol/types/date#utcdatetime)       | Datetime with UTC timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ssZ)  |
+| [offsetDateTime](/simpler-grants-protocol/protocol/types/date#offsetdatetime) | Datetime with timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ss±hh:mm) |
 
 **Other types**
 
-| Type                                                                     | Description                     |
-| ------------------------------------------------------------------------ | ------------------------------- |
-| [boolean](/simpler-grants-protocol/protocol/schemas/types/other#boolean) | A true or false value           |
-| [array](/simpler-grants-protocol/protocol/schemas/types/other#array)     | An ordered list of values       |
-| [record](/simpler-grants-protocol/protocol/schemas/types/other#record)   | A collection of key-value pairs |
-| [null](/simpler-grants-protocol/protocol/schemas/types/other#null)       | A null value                    |
-| [unknown](/simpler-grants-protocol/protocol/schemas/types/other#unknown) | A value of with any type        |
+| Type                                                             | Description                     |
+| ---------------------------------------------------------------- | ------------------------------- |
+| [boolean](/simpler-grants-protocol/protocol/types/other#boolean) | A true or false value           |
+| [array](/simpler-grants-protocol/protocol/types/other#array)     | An ordered list of values       |
+| [record](/simpler-grants-protocol/protocol/types/other#record)   | A collection of key-value pairs |
+| [null](/simpler-grants-protocol/protocol/types/other#null)       | A null value                    |
+| [unknown](/simpler-grants-protocol/protocol/types/other#unknown) | A value of with any type        |
 
 #### Core fields
 
 The CommonGrants protocol defines the following fields that are reused across models:
 
-| Field                                                                        | Description                                       |
-| ---------------------------------------------------------------------------- | ------------------------------------------------- |
-| [Money](/simpler-grants-protocol/protocol/schemas/fields/money)              | A monetary amount with a currency code            |
-| [Event](/simpler-grants-protocol/protocol/schemas/fields/event)              | A description of an event with an associated date |
-| [CustomField](/simpler-grants-protocol/protocol/schemas/fields/custom-field) | A model for defining custom fields on a record    |
-| [SystemMetadata](/simpler-grants-protocol/protocol/schemas/fields/metadata)  | System-managed metadata for records               |
+| Field                                                                | Description                                       |
+| -------------------------------------------------------------------- | ------------------------------------------------- |
+| [Money](/simpler-grants-protocol/protocol/fields/money)              | A monetary amount with a currency code            |
+| [Event](/simpler-grants-protocol/protocol/fields/event)              | A description of an event with an associated date |
+| [CustomField](/simpler-grants-protocol/protocol/fields/custom-field) | A model for defining custom fields on a record    |
+| [SystemMetadata](/simpler-grants-protocol/protocol/fields/metadata)  | System-managed metadata for records               |
 
 #### Opportunity models
 
 The CommonGrants protocol defines the following models that are specific to funding opportunities:
 
-| Model                                                                         | Description                                            |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [OpportunityBase](/simpler-grants-protocol/protocol/schemas/opportunity/base) | The core model for a funding opportunity               |
-| [OppStatus](/simpler-grants-protocol/protocol/schemas/opportunity/status)     | The status of an opportunity                           |
-| [OppFunding](/simpler-grants-protocol/protocol/schemas/opportunity/funding)   | Details about the funding available for an opportunity |
-| [OppTimeline](/simpler-grants-protocol/protocol/schemas/opportunity/timeline) | Key dates in the opportunity's timeline                |
+| Model                                                                 | Description                                            |
+| --------------------------------------------------------------------- | ------------------------------------------------------ |
+| [OpportunityBase](/simpler-grants-protocol/protocol/opportunity/base) | The core model for a funding opportunity               |
+| [OppStatus](/simpler-grants-protocol/protocol/opportunity/status)     | The status of an opportunity                           |
+| [OppFunding](/simpler-grants-protocol/protocol/opportunity/funding)   | Details about the funding available for an opportunity |
+| [OppTimeline](/simpler-grants-protocol/protocol/opportunity/timeline) | Key dates in the opportunity's timeline                |
 
 ### Routes and operations
 
@@ -155,10 +155,10 @@ The CommonGrants protocol defines the following routes and operations that are s
 While omitted for brevity in the following table, all protocol-defined routes MUST be prefixed with `/common-grants/`.
 :::
 
-| Route                                                                                             | Description                                                      |
-| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [`GET /opportunities`](/simpler-grants-protocol/protocol/api/operations/opportunities_list/)      | Get a paginated list of opportunities sorted by `lastModifiedAt` |
-| [`GET /opportunities/{id}`](/simpler-grants-protocol/protocol/api/operations/opportunities_read/) | View details about a specific opportunity                        |
+| Route                                                                                                 | Status   | Description                                                      |
+| ----------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
+| [`GET /opportunities`](/simpler-grants-protocol/protocol/openapi/operations/opportunities_list/)      | Required | Get a paginated list of opportunities sorted by `lastModifiedAt` |
+| [`GET /opportunities/{id}`](/simpler-grants-protocol/protocol/openapi/operations/opportunities_read/) | Required | View details about a specific opportunity                        |
 
 #### Pagination
 

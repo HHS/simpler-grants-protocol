@@ -15,7 +15,7 @@ A filter that applies a comparison to a string value.
 | Property | Type                                                                              | Required | Description                               |
 | -------- | --------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
 | operator | [StringOperators](/simpler-grants-protocol/protocol/filters/base#stringoperators) | Yes      | The operator to apply to the filter value |
-| value    | [string](/simpler-grants-protocol/protocol/schemas/types/string#string)           | Yes      | The value to use for the filter operation |
+| value    | [string](/simpler-grants-protocol/protocol/types/string#string)                   | Yes      | The value to use for the filter operation |
 
   </TabItem>
 
@@ -40,6 +40,7 @@ properties:
 ```
 
   </TabItem>
+
   <TabItem label="TypeSpec">
 
 ```typespec
@@ -55,6 +56,7 @@ model StringComparisonFilter {
 ```
 
   </TabItem>
+
   <TabItem label="Example">
 
 ```json
@@ -72,7 +74,6 @@ model StringComparisonFilter {
 ```
 
   </TabItem>
-
 </Tabs>
 
 ### StringArrayFilter
@@ -85,9 +86,10 @@ A filter that applies a comparison to an array of string values.
 | Property | Type                                                                              | Required | Description                               |
 | -------- | --------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
 | operator | [StringOperators](/simpler-grants-protocol/protocol/filters/base#stringoperators) | Yes      | The operator to apply to the filter value |
-| value    | array of [string](/simpler-grants-protocol/protocol/schemas/types/string#string)  | Yes      | The value to use for the filter operation |
+| value    | array of [string](/simpler-grants-protocol/protocol/types/string#string)          | Yes      | The value to use for the filter operation |
 
   </TabItem>
+
   <TabItem label="JSON Schema">
 
 ```yaml
@@ -103,18 +105,18 @@ properties:
     items:
       type: string
     examples:
-      - - value1
-        - value2
+      - value1
+      - value2
     description: The value to use for the filter operation
 required:
   - operator
   - value
 description: A filter that applies a filter to an array of strings
-
 ```
 
   </TabItem>
-  <TabItem label="TypeSpec">  
+
+  <TabItem label="TypeSpec">
 
 ```typespec
 /** A filter that applies a filter to an array of strings */
@@ -127,6 +129,7 @@ model StringArrayFilter {
   value: string[];
 }
 ```
+
   </TabItem>
 
   <TabItem label="Example">
@@ -139,5 +142,4 @@ model StringArrayFilter {
 ```
 
   </TabItem>
-
 </Tabs>

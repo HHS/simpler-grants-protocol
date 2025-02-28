@@ -14,8 +14,8 @@ Filters by comparing a field to a numeric value.
 
 | Field      | Type                                                                             | Description                               |
 | ---------- | -------------------------------------------------------------------------------- | ----------------------------------------- |
-| `operator` | [ComparisonOperators](/simpler-grants-protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
-| `value`    | [numeric](/simpler-grants-protocol/protocol/schemas/types/numeric#numeric)       | The value to use for the filter operation |
+| `operator` | [ComparisonOperators](/simpler-grants-protocol/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
+| `value`    | [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric)               | The value to use for the filter operation |
 
   </TabItem>
 
@@ -77,15 +77,15 @@ Filters by comparing a field to a range of numeric values.
 
 | Field      | Type                                                                   | Description                               |
 | ---------- | ---------------------------------------------------------------------- | ----------------------------------------- |
-| `operator` | [RangeOperators](/simpler-grants-protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
+| `operator` | [RangeOperators](/simpler-grants-protocol/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
 | `value`    | range object                                                           | The value to use for the filter operation |
 
 Range object:
 
-| Field | Type                                                                       | Description                                               |
-| ----- | -------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `min` | [numeric](/simpler-grants-protocol/protocol/schemas/types/numeric#numeric) | The minimum numeric value to use for the filter operation |
-| `max` | [numeric](/simpler-grants-protocol/protocol/schemas/types/numeric#numeric) | The maximum numeric value to use for the filter operation |
+| Field | Type                                                               | Description                                               |
+| ----- | ------------------------------------------------------------------ | --------------------------------------------------------- |
+| `min` | [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric) | The minimum numeric value to use for the filter operation |
+| `max` | [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric) | The maximum numeric value to use for the filter operation |
 
   </TabItem>
 
@@ -162,10 +162,10 @@ Filters by comparing a field to an array of numeric values.
 <Tabs>
   <TabItem label="Table">
 
-| Field      | Type                                                                                       | Description                               |
-| ---------- | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| `operator` | [ArrayOperators](/simpler-grants-protocol/filters/base#arrayoperators)                     | The operator to apply to the filter value |
-| `value`    | array of [numeric](/simpler-grants-protocol/protocol/schemas/types/numeric#numeric) values | The value to use for the filter operation |
+| Field      | Type                                                                               | Description                               |
+| ---------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
+| `operator` | [ArrayOperators](/simpler-grants-protocol/protocol/filters/base#arrayoperators)             | The operator to apply to the filter value |
+| `value`    | array of [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric) values | The value to use for the filter operation |
 
   </TabItem>
 

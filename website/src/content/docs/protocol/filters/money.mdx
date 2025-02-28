@@ -14,15 +14,15 @@ Filters by comparing a field to a range of monetary values.
 
 | Field      | Type                                                                   | Description                               |
 | ---------- | ---------------------------------------------------------------------- | ----------------------------------------- |
-| `operator` | [RangeOperators](/simpler-grants-protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
+| `operator` | [RangeOperators](/simpler-grants-protocol/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
 | `value`    | range object                                                           | The value to use for the filter operation |
 
 Range object:
 
-| Field | Type                                                             | Description                                                |
-| ----- | ---------------------------------------------------------------- | ---------------------------------------------------------- |
-| `min` | [Money](/simpler-grants-protocol/protocol/schemas/fields/money/) | The minimum monetary value to use for the filter operation |
-| `max` | [Money](/simpler-grants-protocol/protocol/schemas/fields/money/) | The maximum monetary value to use for the filter operation |
+| Field | Type                                                     | Description                                                |
+| ----- | -------------------------------------------------------- | ---------------------------------------------------------- |
+| `min` | [Money](/simpler-grants-protocol/protocol/fields/money/) | The minimum monetary value to use for the filter operation |
+| `max` | [Money](/simpler-grants-protocol/protocol/fields/money/) | The maximum monetary value to use for the filter operation |
 
   </TabItem>
 
@@ -110,8 +110,8 @@ Filters by comparing a field to a monetary value.
 
 | Field      | Type                                                                             | Description                               |
 | ---------- | -------------------------------------------------------------------------------- | ----------------------------------------- |
-| `operator` | [ComparisonOperators](/simpler-grants-protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
-| `value`    | [Money](/simpler-grants-protocol/protocol/schemas/fields/money/)                 | The value to use for the filter operation |
+| `operator` | [ComparisonOperators](/simpler-grants-protocol/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
+| `value`    | [Money](/simpler-grants-protocol/protocol/fields/money/)                         | The value to use for the filter operation |
 
   </TabItem>
 

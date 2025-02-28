@@ -15,14 +15,14 @@ export default defineConfig({
         // Generate the OpenAPI documentation pages.
         starlightOpenAPI([
           {
-            base: "protocol/api",
-            label: "Routes",
+            base: "protocol/openapi",
+            label: "OpenAPI spec",
             schema: "./tsp-output/@typespec/openapi3/openapi.yaml",
           },
         ]),
         starlightLinksValidator({
           errorOnLocalLinks: false,
-          exclude: ["/simpler-grants-protocol/protocol/api/operations/*"],
+          exclude: ["/simpler-grants-protocol/protocol/openapi/*"],
         }),
       ],
       title: "CommonGrants",
@@ -55,27 +55,27 @@ export default defineConfig({
               items: [
                 {
                   label: "Overview",
-                  link: "protocol/schemas/overview",
+                  link: "protocol/overview",
+                },
+                {
+                  label: "Types",
+                  collapsed: true,
+                  autogenerate: { directory: "protocol/types" },
+                },
+                {
+                  label: "Fields",
+                  collapsed: true,
+                  autogenerate: { directory: "protocol/fields" },
+                },
+                {
+                  label: "Models",
+                  collapsed: true,
+                  autogenerate: { directory: "protocol/opportunity" },
                 },
                 {
                   label: "Filters",
                   collapsed: true,
                   autogenerate: { directory: "protocol/filters" },
-                },
-                {
-                  label: "Base types",
-                  collapsed: true,
-                  autogenerate: { directory: "protocol/schemas/types" },
-                },
-                {
-                  label: "Core fields",
-                  collapsed: true,
-                  autogenerate: { directory: "protocol/schemas/fields" },
-                },
-                {
-                  label: "Opportunity models",
-                  collapsed: true,
-                  autogenerate: { directory: "protocol/schemas/opportunity" },
                 },
               ],
             },

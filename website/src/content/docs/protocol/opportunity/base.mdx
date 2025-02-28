@@ -13,18 +13,18 @@ A funding opportunity, such as a grant or loan.
 <Tabs>
   <TabItem label="Table">
 
-| Property       | Type                                                                                                                                                   | Required | Description                                                  |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
-| id             | [uuid](/simpler-grants-protocol/protocol/schemas/types/string#uuid)                                                                                    | Yes      | Globally unique id for the opportunity                       |
-| title          | [string](/simpler-grants-protocol/protocol/schemas/types/string#string)                                                                                | Yes      | Title or name of the funding opportunity                     |
-| status         | [OppStatus](/simpler-grants-protocol/protocol/schemas/opportunity/status)                                                                              | Yes      | Status of the opportunity                                    |
-| description    | [string](/simpler-grants-protocol/protocol/schemas/types/string#string)                                                                                | Yes      | Description of the opportunity's purpose and scope           |
-| funding        | [OppFunding](/simpler-grants-protocol/protocol/schemas/opportunity/funding)                                                                            | Yes      | Details about the funding available                          |
-| keyDates       | [OppTimeline](/simpler-grants-protocol/protocol/schemas/opportunity/timeline)                                                                          | Yes      | Key dates for the opportunity                                |
-| source         | [url](/simpler-grants-protocol/protocol/schemas/types/string#url)                                                                                      | No       | URL for the original source of the opportunity               |
-| customFields   | [Record](/simpler-grants-protocol/protocol/schemas/types/other#record)\<[CustomField](/simpler-grants-protocol/protocol/schemas/fields/custom-field)\> | No       | Additional custom fields specific to this opportunity        |
-| createdAt      | [utcDateTime](/simpler-grants-protocol/protocol/schemas/types/date#utcdatetime)                                                                        | Yes      | The timestamp (in UTC) at which the record was created       |
-| lastModifiedAt | [utcDateTime](/simpler-grants-protocol/protocol/schemas/types/date#utcdatetime)                                                                        | Yes      | The timestamp (in UTC) at which the record was last modified |
+| Property       | Type                                                                                                                                   | Required | Description                                                  |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
+| id             | [uuid](/simpler-grants-protocol/protocol/types/string#uuid)                                                                            | Yes      | Globally unique id for the opportunity                       |
+| title          | [string](/simpler-grants-protocol/protocol/types/string#string)                                                                        | Yes      | Title or name of the funding opportunity                     |
+| status         | [OppStatus](/simpler-grants-protocol/protocol/opportunity/status)                                                                      | Yes      | Status of the opportunity                                    |
+| description    | [string](/simpler-grants-protocol/protocol/types/string#string)                                                                        | Yes      | Description of the opportunity's purpose and scope           |
+| funding        | [OppFunding](/simpler-grants-protocol/protocol/opportunity/funding)                                                                    | Yes      | Details about the funding available                          |
+| keyDates       | [OppTimeline](/simpler-grants-protocol/protocol/opportunity/timeline)                                                                  | Yes      | Key dates for the opportunity                                |
+| source         | [url](/simpler-grants-protocol/protocol/types/string#url)                                                                              | No       | URL for the original source of the opportunity               |
+| customFields   | [Record](/simpler-grants-protocol/protocol/types/other#record)\<[CustomField](/simpler-grants-protocol/protocol/fields/custom-field)\> | No       | Additional custom fields specific to this opportunity        |
+| createdAt      | [utcDateTime](/simpler-grants-protocol/protocol/types/date#utcdatetime)                                                                | Yes      | The timestamp (in UTC) at which the record was created       |
+| lastModifiedAt | [utcDateTime](/simpler-grants-protocol/protocol/types/date#utcdatetime)                                                                | Yes      | The timestamp (in UTC) at which the record was last modified |
 
   </TabItem>
 
