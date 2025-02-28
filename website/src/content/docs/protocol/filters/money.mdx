@@ -1,0 +1,168 @@
+---
+title: Money filters
+description: Filters applied to monetary values.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+### MoneyRangeFilter
+
+Filters by comparing a field to a range of monetary values.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Field      | Type                                                                   | Description                               |
+| ---------- | ---------------------------------------------------------------------- | ----------------------------------------- |
+| `operator` | [RangeOperators](/simpler-grants-protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
+| `value`    | range object                                                           | The value to use for the filter operation |
+
+Range object:
+
+| Field | Type                                                             | Description                                                |
+| ----- | ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| `min` | [Money](/simpler-grants-protocol/protocol/schemas/fields/money/) | The minimum monetary value to use for the filter operation |
+| `max` | [Money](/simpler-grants-protocol/protocol/schemas/fields/money/) | The maximum monetary value to use for the filter operation |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MoneyRangeFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: RangeOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: object
+    properties:
+      min:
+        $ref: Money.yaml
+      max:
+        $ref: Money.yaml
+    required:
+      - min
+      - max
+    examples:
+      - min: { amount: "1000", currency: "USD" }
+        max: { amount: "10000", currency: "USD" }
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a range of monetary values
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Filters by comparing a field to a range of monetary values */
+model MoneyRangeFilter {
+  /** The operator to apply to the filter value */
+  operator: RangeOperators;
+
+  /** The value to use for the filter operation */
+  @example(#{
+    min: #{ amount: "1000", currency: "USD" },
+    max: #{ amount: "10000", currency: "USD" },
+  })
+  value: {
+    min: Fields.Money;
+    max: Fields.Money;
+  };
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "operator": "within",
+  "value": {
+    "min": {
+      "amount": "1000",
+      "currency": "USD"
+    },
+    "max": {
+      "amount": "10000",
+      "currency": "USD"
+    }
+  }
+}
+```
+
+  </TabItem>
+</Tabs>
+
+### MoneyComparisonFilter
+
+Filters by comparing a field to a monetary value.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Field      | Type                                                                             | Description                               |
+| ---------- | -------------------------------------------------------------------------------- | ----------------------------------------- |
+| `operator` | [ComparisonOperators](/simpler-grants-protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
+| `value`    | [Money](/simpler-grants-protocol/protocol/schemas/fields/money/)                 | The value to use for the filter operation |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MoneyComparisonFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: ComparisonOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    $ref: Money.yaml
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a monetary value
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Filters by comparing a field to a monetary value */
+model MoneyComparisonFilter {
+  /** The operator to apply to the filter value */
+  operator: ComparisonOperators;
+
+  /** The value to use for the filter operation */
+  @example(#{ amount: "1000", currency: "USD" })
+  value: Fields.Money;
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "operator": "eq",
+  "value": {
+    "amount": "1000",
+    "currency": "USD"
+  }
+}
+```
+
+  </TabItem>
+</Tabs>

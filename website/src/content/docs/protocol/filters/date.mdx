@@ -1,0 +1,172 @@
+---
+title: Date filters
+description: Filters applied to date fields.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+### DateRangeFilter
+
+Filters by comparing a field to a range of date values.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Field      | Type                                                                   | Description                               |
+| ---------- | ---------------------------------------------------------------------- | ----------------------------------------- |
+| `operator` | [RangeOperators](/simpler-grants-protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
+| `value`    | range object                                                           | The value to use for the filter operation |
+
+Range object:
+
+| Field | Type                                           | Description                                            |
+| ----- | ---------------------------------------------- | ------------------------------------------------------ |
+| `min` | `isoDate` or `utcDateTime` or `offsetDateTime` | The minimum date value to use for the filter operation |
+| `max` | `isoDate` or `utcDateTime` or `offsetDateTime` | The maximum date value to use for the filter operation |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: DateRangeFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: RangeOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: object
+    properties:
+      min:
+        anyOf:
+          - $ref: isoDate.yaml
+          - type: string
+            format: date-time
+          - type: string
+            format: date-time
+      max:
+        anyOf:
+          - $ref: isoDate.yaml
+          - type: string
+            format: date-time
+    required:
+      - min
+      - max
+    examples:
+      - min: 2021-01-01
+        max: 2021-01-02
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a range of date values
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Filters by comparing a field to a range of date values */
+model DateRangeFilter {
+  /** The operator to apply to the filter value */
+  operator: RangeOperators;
+
+  /** The value to use for the filter operation */
+  @example(#{
+    min: Types.isoDate.fromISO("2021-01-01"),
+    max: Types.isoDate.fromISO("2021-01-02"),
+  })
+  value: {
+    min: Types.isoDate | utcDateTime | offsetDateTime;
+    max: Types.isoDate | utcDateTime | offsetDateTime;
+  };
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "operator": "between",
+  "value": {
+    "min": "2021-01-01",
+    "max": "2021-01-02"
+  }
+}
+```
+
+  </TabItem>
+</Tabs>
+
+### DateComparisonFilter
+
+Filters by comparing a field to a date value.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Field      | Type                                                                             | Description                               |
+| ---------- | -------------------------------------------------------------------------------- | ----------------------------------------- |
+| `operator` | [ComparisonOperators](/simpler-grants-protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
+| `value`    | `isoDate` or `utcDateTime` or `offsetDateTime`                                   | The value to use for the filter operation |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: DateComparisonFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: ComparisonOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    anyOf:
+      - $ref: isoDate.yaml
+      - type: string
+        format: date-time
+      - type: string
+        format: date-time
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a date value
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Filters by comparing a field to a date value */
+model DateComparisonFilter {
+  /** The operator to apply to the filter value */
+  operator: ComparisonOperators;
+
+  /** The value to use for the filter operation */
+  @example(Types.isoDate.fromISO("2021-01-01"))
+  value: Types.isoDate | utcDateTime | offsetDateTime;
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "operator": "eq",
+  "value": "2021-01-01"
+}
+```
+
+  </TabItem>
+</Tabs>
