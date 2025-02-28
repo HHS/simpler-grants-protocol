@@ -10,16 +10,16 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 Query parameters for paginated routes. These parameters should be used on GET routes that support pagination.
 
 <Tabs>
-<TabItem label="Table">
+  <TabItem label="Table">
 
 | Parameter  | Type    | Default | Description                            |
 | ---------- | ------- | ------- | -------------------------------------- |
 | `page`     | `int32` | `1`     | The page to return                     |
 | `pageSize` | `int32` | `100`   | The number of items to return per page |
 
-</TabItem>
+  </TabItem>
 
-<TabItem label="TypeSpec">
+  <TabItem label="TypeSpec">
 
 ```typespec
 /** Query parameters for paginated routes */
@@ -38,9 +38,9 @@ model PaginatedQueryParams {
 }
 ```
 
-</TabItem>
+  </TabItem>
 
-<TabItem label="OpenAPI">
+  <TabItem label="OpenAPI">
 
 ```yaml
 /common-grants/opportunities:
@@ -79,15 +79,15 @@ components:
       explode: false
 ```
 
-</TabItem>
+  </TabItem>
 
-<TabItem label="Example">
+  <TabItem label="Example">
 
 ```
 /common-grants/opportunities?page=1&pageSize=100
 ```
 
-</TabItem>
+  </TabItem>
 </Tabs>
 
 ## PaginatedBodyParams
@@ -95,16 +95,16 @@ components:
 Body parameters for paginated routes. These parameters should be used on POST and PUT routes that support pagination.
 
 <Tabs>
-<TabItem label="Table">
+  <TabItem label="Table">
 
 | Parameter  | Type    | Default | Description                            |
 | ---------- | ------- | ------- | -------------------------------------- |
 | `page`     | `int32` | `1`     | The page to return                     |
 | `pageSize` | `int32` | `100`   | The number of items to return per page |
 
-</TabItem>
+  </TabItem>
 
-<TabItem label="TypeSpec">
+  <TabItem label="TypeSpec">
 
 ```typespec
 /** Body parameters for paginated routes */
@@ -121,8 +121,8 @@ model PaginatedBodyParams {
 }
 ```
 
-</TabItem>
-<TabItem label="OpenAPI">
+  </TabItem>
+  <TabItem label="OpenAPI">
 
 ```yaml
 /common-grants/opportunities:
@@ -157,9 +157,9 @@ components:
       description: Body parameters for paginated routes
 ```
 
-</TabItem>
+  </TabItem>
 
-<TabItem label="Example">
+  <TabItem label="Example">
 
 ```json
 {
@@ -168,7 +168,7 @@ components:
 }
 ```
 
-</TabItem>
+  </TabItem>
 </Tabs>
 
 ## PaginationInfo
@@ -176,7 +176,7 @@ components:
 Details about the paginated results. This model should be used to represent the response from a paginated route.
 
 <Tabs>
-<TabItem label="Table">
+  <TabItem label="Table">
 
 | Parameter    | Type    | Description                                |
 | ------------ | ------- | ------------------------------------------ |
@@ -185,10 +185,9 @@ Details about the paginated results. This model should be used to represent the 
 | `totalItems` | `int32` | The total number of items across all pages |
 | `totalPages` | `int32` | The total number of pages                  |
 
-</TabItem>
+  </TabItem>
 
-
-<TabItem label="TypeSpec">
+  <TabItem label="TypeSpec">
 
 ```typespec
 /** Details about the paginated results */
@@ -213,9 +212,9 @@ model PaginationInfo {
 }
 ```
 
-</TabItem>  
+  </TabItem>
 
-<TabItem label="JSON Schema">
+  <TabItem label="JSON Schema">
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -250,9 +249,10 @@ required:
   - pageSize
 description: Details about the paginated results
 ```
-</TabItem>
 
-<TabItem label="Example">
+  </TabItem>
+
+  <TabItem label="Example">
 
 ```json
 {
@@ -263,5 +263,5 @@ description: Details about the paginated results
 }
 ```
 
-</TabItem>
+  </TabItem>
 </Tabs>
