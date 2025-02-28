@@ -140,12 +140,12 @@ The CommonGrants protocol defines the following fields that are reused across mo
 
 The CommonGrants protocol defines the following models that are specific to funding opportunities:
 
-| Model                                                                 | Description                                            |
-| --------------------------------------------------------------------- | ------------------------------------------------------ |
-| [OpportunityBase](/simpler-grants-protocol/protocol/opportunity/base) | The core model for a funding opportunity               |
-| [OppStatus](/simpler-grants-protocol/protocol/opportunity/status)     | The status of an opportunity                           |
-| [OppFunding](/simpler-grants-protocol/protocol/opportunity/funding)   | Details about the funding available for an opportunity |
-| [OppTimeline](/simpler-grants-protocol/protocol/opportunity/timeline) | Key dates in the opportunity's timeline                |
+| Model                                                                | Description                                            |
+| -------------------------------------------------------------------- | ------------------------------------------------------ |
+| [OpportunityBase](/simpler-grants-protocol/protocol/models/opp-base) | The core model for a funding opportunity               |
+| [OppStatus](/simpler-grants-protocol/protocol/models/opp-status)     | The status of an opportunity                           |
+| [OppFunding](/simpler-grants-protocol/protocol/models/opp-funding)   | Details about the funding available for an opportunity |
+| [OppTimeline](/simpler-grants-protocol/protocol/models/opp-timeline) | Key dates in the opportunity's timeline                |
 
 ### Routes and operations
 

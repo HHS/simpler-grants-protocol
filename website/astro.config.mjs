@@ -22,7 +22,7 @@ export default defineConfig({
         ]),
         starlightLinksValidator({
           errorOnLocalLinks: false,
-          exclude: ["/simpler-grants-protocol/protocol/openapi/*"],
+          exclude: ["/simpler-grants-protocol/protocol/openapi/**"],
         }),
       ],
       title: "CommonGrants",
@@ -80,6 +80,10 @@ export default defineConfig({
                 {
                   label: "Pagination",
                   link: "protocol/pagination",
+                },
+                {
+                  label: "Sorting",
+                  link: "protocol/sorting",
                 },
               ],
             },
