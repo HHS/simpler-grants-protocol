@@ -1,0 +1,221 @@
+---
+title: Numeric filters
+description: Filters that can be applied to numeric fields.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+### NumberComparisonFilter
+
+Filters by comparing a field to a numeric value.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Property | Type                                                                                      | Description                               |
+| -------- | ----------------------------------------------------------------------------------------- | ----------------------------------------- |
+| operator | [ComparisonOperators](/simpler-grants-protocol/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
+| value    | [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric)                        | The value to use for the filter operation |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: NumberComparisonFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: ComparisonOperators.yaml
+    description: The comparison operator to apply to the filter value
+  value:
+    type: number
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a numeric value
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Filters by comparing a field to a numeric value */
+model NumberComparisonFilter {
+  /** The comparison operator to apply to the filter value */
+  operator: ComparisonOperators;
+
+  /** The value to use for the filter operation */
+  @example(1000)
+  value: numeric;
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "operator": "eq",
+  "value": 1000
+}
+```
+
+  </TabItem>
+</Tabs>
+
+### NumberRangeFilter
+
+Filters by comparing a field to a range of numeric values.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Property | Type                                                                            | Description                               |
+| -------- | ------------------------------------------------------------------------------- | ----------------------------------------- |
+| operator | [RangeOperators](/simpler-grants-protocol/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
+| value    | range object                                                                    | The value to use for the filter operation |
+
+Range object:
+
+| Property | Type                                                               | Description                              |
+| -------- | ------------------------------------------------------------------ | ---------------------------------------- |
+| min      | [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric) | The minimum numeric value for this range |
+| max      | [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric) | The maximum numeric value for this range |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: NumberRangeFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: RangeOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: object
+    properties:
+      min:
+        type: number
+      max:
+        type: number
+    required:
+      - min
+      - max
+    examples:
+      - min: 1000
+        max: 10000
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a numeric range
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Filters by comparing a field to a numeric range */
+model NumberRangeFilter {
+  /** The operator to apply to the filter value */
+  operator: RangeOperators;
+
+  /** The value to use for the filter operation */
+  @example(#{ min: 1000, max: 10000 })
+  value: {
+    min: numeric;
+    max: numeric;
+  };
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "operator": "within",
+  "value": {
+    "min": 1000,
+    "max": 10000
+  }
+}
+```
+
+  </TabItem>
+</Tabs>
+
+### NumberArrayFilter
+
+Filters by comparing a field to an array of numeric values.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Property | Type                                                                                                                               | Description                               |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| operator | [ArrayOperators](/simpler-grants-protocol/protocol/filters/base#arrayoperators)                                                    | The operator to apply to the filter value |
+| value    | [Array](/simpler-grants-protocol/protocol/types/other#array)\<[numeric](/simpler-grants-protocol/protocol/types/numeric#numeric)\> | The value to use for the filter operation |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: NumberArrayFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: ArrayOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: array
+    items:
+      type: number
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to an array of numeric values
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Filters by comparing a field to an array of numeric values */
+model NumberArrayFilter {
+  /** The operator to apply to the filter value */
+  operator: ArrayOperators;
+
+  /** The value to use for the filter operation */
+  @example(#[1000, 2000, 3000])
+  value: Array<numeric>;
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "operator": "in",
+  "value": [1000, 2000, 3000]
+}
+```
+
+  </TabItem>
+</Tabs>

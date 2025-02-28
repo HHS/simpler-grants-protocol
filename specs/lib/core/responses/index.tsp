@@ -3,6 +3,8 @@ import "@typespec/http";
 import "./error.tsp";
 import "./success.tsp";
 
+using TypeSpec.JsonSchema;
+
 /** A standardized set of response schemas for CommonGrants API routes
  *
  * @example How to use the `Responses` namespace
@@ -21,4 +23,5 @@ import "./success.tsp";
  * }
  * ```
  */
+@jsonSchema
 namespace CommonGrants.Responses;

@@ -1,6 +1,3 @@
-# Ignore all model documentation files
-src/content/docs/protocol/schemas/**/*.mdx
-
 # Other common files to ignore
 dist/
 .astro/

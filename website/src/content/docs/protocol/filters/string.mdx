@@ -1,0 +1,145 @@
+---
+title: String filters
+description: Filters that can be applied to string or enum fields.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+### StringComparisonFilter
+
+A filter that applies a comparison to a string value.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Property | Type                                                                              | Required | Description                               |
+| -------- | --------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
+| operator | [StringOperators](/simpler-grants-protocol/protocol/filters/base#stringoperators) | Yes      | The operator to apply to the filter value |
+| value    | [string](/simpler-grants-protocol/protocol/types/string#string)                   | Yes      | The value to use for the filter operation |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StringComparisonFilter.yaml
+type: object
+properties:
+  operator:
+    type: string
+    description: The operator to apply to the filter value
+    enum:
+      - eq
+      - ne
+      - like
+      - not_like
+    value:
+      type: string
+      description: The value to use for the filter operation
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** A filter that applies a comparison to a string value */
+model StringComparisonFilter {
+  /** The operator to apply to the filter value */
+  operator: EquivalenceOperators | StringOperators;
+
+  /** The value to use for the filter operation */
+  @example("value")
+  value: string;
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "operator": "eq",
+  "value": "value"
+}
+```
+
+```json
+{
+  "operator": "like",
+  "value": "value"
+}
+```
+
+  </TabItem>
+</Tabs>
+
+### StringArrayFilter
+
+A filter that applies a comparison to an array of string values.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Property | Type                                                                                                                            | Required | Description                               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
+| operator | [StringOperators](/simpler-grants-protocol/protocol/filters/base#stringoperators)                                               | Yes      | The operator to apply to the filter value |
+| value    | [Array](/simpler-grants-protocol/protocol/types/other#array)\<[string](/simpler-grants-protocol/protocol/types/string#string)\> | Yes      | The value to use for the filter operation |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StringArrayFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: ArrayOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: array
+    items:
+      type: string
+    examples:
+      - value1
+      - value2
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: A filter that applies a filter to an array of strings
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** A filter that applies a filter to an array of strings */
+model StringArrayFilter {
+  /** The operator to apply to the filter value */
+  operator: ArrayOperators;
+
+  /** The value to use for the filter operation */
+  @example(["value1", "value2"])
+  value: string[];
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "operator": "eq",
+  "value": ["value1", "value2"]
+}
+```
+
+  </TabItem>
+</Tabs>

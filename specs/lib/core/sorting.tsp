@@ -1,7 +1,7 @@
 import "@typespec/http";
 
 using TypeSpec.Http;
-
+using TypeSpec.JsonSchema;
 /** Models for sorting
  *
  * @example How to use the `Sorting` namespace
@@ -15,6 +15,7 @@ using TypeSpec.Http;
  * op list(sorting: Sorting.SortQueryParams): Responses.Sorted<MyModel>;
  * ```
  */
+@jsonSchema
 namespace CommonGrants.Sorting;
 
 enum SortOrder {
@@ -27,7 +28,7 @@ model SortQueryParams {
   /** The field to sort by */
   @query
   @example("lastModifiedAt")
-  sortBy: string;
+  sortBy: unknown;
 
   /** Implementation-defined sort key */
   @query

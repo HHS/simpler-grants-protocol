@@ -1,0 +1,305 @@
+---
+title: Base filters
+description: Base models used to build field-specific filters.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+### Default filter
+
+The default filter model is a base model that can be used to create more specific filter models.
+
+<Tabs>
+  <TabItem label="TypeSpec">
+
+```typespec
+/** A base filter model that can be used to create more specific filter models */
+model DefaultFilter {
+  /** The operator to apply to the filter value */
+  operator:
+      | ComparisonOperators
+      | ArrayOperators
+      | StringOperators
+      | RangeOperators
+      | AllOperators;
+
+  /** The value to use for the filter operation */
+  value: unknown;
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: DefaultFilter.yaml
+type: object
+properties:
+  operator:
+    anyOf:
+      - $ref: ComparisonOperators.yaml
+      - $ref: ArrayOperators.yaml
+      - $ref: StringOperators.yaml
+      - $ref: RangeOperators.yaml
+      - $ref: AllOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: A base filter model that can be used to create more specific filter models
+```
+
+  </TabItem>
+
+</Tabs>
+
+### EquivalenceOperators
+
+Operators that filter a field based on an exact match to a value. Supported value types include:
+
+- string
+- number
+- boolean
+- date
+- money
+
+<Tabs>
+  <TabItem label="Table">
+
+| Operator | Description          | Property | True value | False value |
+| -------- | -------------------- | -------- | ---------- | ----------- |
+| `eq`     | Equal to a value     | `"foo"`  | `"foo"`    | `"bar"`     |
+| `neq`    | Not equal to a value | `"foo"`  | `"bar"`    | `"foo"`     |
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Operators that filter a field based on an exact match to a value */
+enum EquivalenceOperators {
+  /** Equal to a value */
+  eq,
+
+  /** Not equal to a value */
+  neq,
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EquivalenceOperators.yaml
+type: string
+enum:
+  - eq
+  - neq
+description: Operators that filter a field based on an exact match to a value
+```
+
+  </TabItem>
+</Tabs>
+
+### ComparisonOperators
+
+Operators that filter a field based on a comparison to a value. Supported value types include:
+
+- number
+- date
+- money
+
+<Tabs>
+  <TabItem label="Table">
+
+| Operator | Description                      | Property | True value | False value |
+| -------- | -------------------------------- | -------- | ---------- | ----------- |
+| `gt`     | Greater than a value             | `10`     | `15`       | `5`         |
+| `gte`    | Greater than or equal to a value | `10`     | `10`       | `9`         |
+| `lt`     | Less than a value                | `10`     | `5`        | `15`        |
+| `lte`    | Less than or equal to a value    | `10`     | `10`       | `11`        |
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Operators that filter a field based on a comparison to a value */
+enum ComparisonOperators {
+  /** Greater than a value */
+  gt,
+
+  /** Greater than or equal to a value */
+  gte,
+
+  /** Less than a value */
+  lt,
+
+  /** Less than or equal to a value */
+  lte,
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ComparisonOperators.yaml
+type: string
+enum:
+  - gt
+  - gte
+  - lt
+  - lte
+description: Operators that filter a field based on a comparison to a value
+```
+
+  </TabItem>
+</Tabs>
+
+### StringOperators
+
+Operators that filter a field based on a string value.
+
+<Tabs>
+  <TabItem label="Table">
+
+| Operator   | Description | Property  | True value | False value |
+| ---------- | ----------- | --------- | ---------- | ----------- |
+| `like`     | Like        | `"hello"` | `"hell"`   | `"world"`   |
+| `not_like` | Not like    | `"hello"` | `"world"`  | `"hell"`    |
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Operators that filter a field based on a string value */
+enum StringOperators {
+  /** Like */
+  like,
+
+  /** Not like */
+  not_like,
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StringOperators.yaml
+type: string
+enum:
+  - like
+  - not_like
+description: Operators that filter a field based on a string value
+```
+
+  </TabItem>
+</Tabs>
+
+### ArrayOperators
+
+Operators that filter a field based on an array of values. Supported value types include:
+
+- string
+- number
+
+<Tabs>
+  <TabItem label="Table">
+
+| Operator | Description               | Property | True value   | False value  |
+| -------- | ------------------------- | -------- | ------------ | ------------ |
+| `in`     | In an array of values     | `"A"`    | `["A", "B"]` | `["B", "C"]` |
+| `not_in` | Not in an array of values | `"A"`    | `["B", "C"]` | `["A", "B"]` |
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Operators that filter a field based on an array of values */
+enum ArrayOperators {
+  /** In an array of values */
+  in,
+
+  /** Not in an array of values */
+  not_in,
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ArrayOperators.yaml
+type: string
+enum:
+  - in
+  - not_in
+description: Operators that filter a field based on an array of values
+```
+
+  </TabItem>
+</Tabs>
+
+### RangeOperators
+
+Operators that filter a field based on a range of values. Supported value types include:
+
+- number
+- date
+- money
+
+<Tabs>
+  <TabItem label="Table">
+
+| Operator  | Description                              | Property | True value               | False value              |
+| --------- | ---------------------------------------- | -------- | ------------------------ | ------------------------ |
+| `between` | The value must be between the two values | `5`      | `{"min": 1, "max": 10}`  | `{"min": 10, "max": 20}` |
+| `outside` | The value must be outside the two values | `5`      | `{"min": 10, "max": 20}` | `{"min": 1, "max": 10}`  |
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```typespec
+/** Operators that filter a field based on a range of values */
+enum RangeOperators {
+  /** Between a range of values */
+  between,
+
+  /** Outside a range of values */
+  outside,
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RangeOperators.yaml
+type: string
+enum:
+  - between
+  - outside
+description: Operators that filter a field based on a range of values
+```
+
+  </TabItem>
+</Tabs>

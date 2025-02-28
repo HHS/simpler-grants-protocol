@@ -13,27 +13,33 @@ Any numeric value, equivalent to `number` in JSON Schema. The base type for all 
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: numeric.yaml
-  type: number
-  description: A numeric value
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: numeric.yaml
+type: number
+description: A numeric value
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  // Positive
-  100.50
-  ```
-  ```json
-  // Negative
-  -100.50
-  ```
-  ```json
-  // Zero
-  100
-  ```
+
+```json
+// Positive
+100.5
+```
+
+```json
+// Negative
+-100.5
+```
+
+```json
+// Zero
+100
+```
+
   </TabItem>
 </Tabs>
 
@@ -43,23 +49,28 @@ A whole number without decimals, equivalent to `integer` in JSON Schema.
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: integer.yaml
-  type: integer
-  description: A whole number without decimals
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: integer.yaml
+type: integer
+description: A whole number without decimals
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  // Positive
-  42
-  ```
-  ```json
-  // Negative
-  -42
-  ```
+
+```json
+// Positive
+42
+```
+
+```json
+// Negative
+-42
+```
+
   </TabItem>
 </Tabs>
 
@@ -69,37 +80,45 @@ A decimal number (with variable scale) encoded as a string, to avoid floating po
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: decimalString.yaml
-  type: string
-  pattern: "^-?[0-9]+\.?[0-9]*$"
-  description: A decimal number (with variable scale) encoded as a string
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: decimalString.yaml
+type: string
+pattern: "^-?[0-9]+\.?[0-9]*$"
+description: A decimal number (with variable scale) encoded as a string
+```
+
   </TabItem>
 
   <TabItem label="TypeSpec">
-  ```tsp
-  /** A decimal number (with variable scale) encoded as a string, to avoid floating point issues */ 
-  @pattern( "^-?[0-9]+\\.?[0-9]*$", "Must be a valid decimal number represented as a string" )
-  @example("100.50")
-  scalar decimalString extends string;
-  ```
+
+```tsp
+/** A decimal number (with variable scale) encoded as a string, to avoid floating point issues */
+@pattern( "^-?[0-9]+\\.?[0-9]*$", "Must be a valid decimal number represented as a string" )
+@example("100.50")
+scalar decimalString extends string;
+```
+
   </TabItem>
 
   <TabItem label="Examples">
-  ```json
-  // Scale 0
-  "100"
-  ```
-  ```json
-  // Scale 1
-  "100.5"
-  ```
-  ```json
-  // Negative, scale 2
-  "-100.50"
-  ```
+
+```json
+// Scale 0
+"100"
+```
+
+```json
+// Scale 1
+"100.5"
+```
+
+```json
+// Negative, scale 2
+"-100.50"
+```
+
   </TabItem>
 </Tabs>
 
@@ -110,4 +129,3 @@ TypeSpec supports several other numeric types, including `float` and `decimal`. 
 :::caution
 Because these other numeric types have limited support in JSON schema, they are NOT RECOMMENDED for use within a CommonGrants API specification.
 :::
-

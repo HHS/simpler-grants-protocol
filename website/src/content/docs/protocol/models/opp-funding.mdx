@@ -1,0 +1,107 @@
+---
+title: OppFunding
+description: Details about the funding available for an opportunity
+tableOfContents: false
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Details about the funding available for an opportunity.
+
+### Data model
+
+<Tabs>
+  <TabItem label="Table">
+
+| Property             | Type                                                               | Required | Description                                     |
+| -------------------- | ------------------------------------------------------------------ | -------- | ----------------------------------------------- |
+| totalAmountAvailable | [Money](/simpler-grants-protocol/protocol/fields/money)            | No       | Total amount of funding available               |
+| minAwardAmount       | [Money](/simpler-grants-protocol/protocol/fields/money)            | No       | Minimum amount of funding granted per award     |
+| maxAwardAmount       | [Money](/simpler-grants-protocol/protocol/fields/money)            | No       | Maximum amount of funding granted per award     |
+| minAwardCount        | [integer](/simpler-grants-protocol/protocol/types/numeric#integer) | No       | Minimum number of awards granted                |
+| maxAwardCount        | [integer](/simpler-grants-protocol/protocol/types/numeric#integer) | No       | Maximum number of awards granted                |
+| estimatedAwardCount  | [integer](/simpler-grants-protocol/protocol/types/numeric#integer) | No       | Estimated number of awards that will be granted |
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OppFunding.yaml
+type: object
+properties:
+  totalAmountAvailable:
+    $ref: Money.yaml
+    description: Total amount of funding available for this opportunity
+  minAwardAmount:
+    $ref: Money.yaml
+    description: Minimum amount of funding granted per award
+  maxAwardAmount:
+    $ref: Money.yaml
+    description: Maximum amount of funding granted per award
+  minAwardCount:
+    type: integer
+    description: Minimum number of awards granted
+  maxAwardCount:
+    type: integer
+    description: Maximum number of awards granted
+  estimatedAwardCount:
+    type: integer
+    description: Estimated number of awards that will be granted
+description: Details about the funding available for this opportunity
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```tsp
+/** Details about the funding available for this opportunity */
+model OppFunding {
+  /** Total amount of funding available for this opportunity */
+  totalAmountAvailable?: Money;
+
+  /** Minimum amount of funding granted per award */
+  minAwardAmount?: Money;
+
+  /** Maximum amount of funding granted per award */
+  maxAwardAmount?: Money;
+
+  /** Minimum number of awards granted */
+  minAwardCount?: integer;
+
+  /** Maximum number of awards granted */
+  maxAwardCount?: integer;
+
+  /** Estimated number of awards that will be granted */
+  estimatedAwardCount?: integer;
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Example">
+
+```json
+{
+  "totalAmountAvailable": {
+    "amount": "1000000.00",
+    "currency": "USD"
+  },
+  "minAwardAmount": {
+    "amount": "10000.00",
+    "currency": "USD"
+  },
+  "maxAwardAmount": {
+    "amount": "50000.00",
+    "currency": "USD"
+  },
+  "minAwardCount": 5,
+  "maxAwardCount": 20,
+  "estimatedAwardCount": 10
+}
+```
+
+  </TabItem>
+</Tabs>

@@ -15,14 +15,14 @@ export default defineConfig({
         // Generate the OpenAPI documentation pages.
         starlightOpenAPI([
           {
-            base: "protocol/api",
-            label: "Routes",
+            base: "protocol/openapi",
+            label: "OpenAPI spec",
             schema: "./tsp-output/@typespec/openapi3/openapi.yaml",
           },
         ]),
         starlightLinksValidator({
           errorOnLocalLinks: false,
-          exclude: ["/simpler-grants-protocol/protocol/api/operations/*"],
+          exclude: ["/simpler-grants-protocol/protocol/openapi/**"],
         }),
       ],
       title: "CommonGrants",
@@ -50,27 +50,40 @@ export default defineConfig({
           items: [
             { label: "Specification", link: "protocol/specification" },
             {
-              label: "Schemas",
+              label: "Core library",
               collapsed: true,
               items: [
                 {
                   label: "Overview",
-                  link: "protocol/schemas/overview",
+                  link: "protocol/overview",
                 },
                 {
-                  label: "Base types",
+                  label: "Types",
                   collapsed: true,
-                  autogenerate: { directory: "protocol/schemas/types" },
+                  autogenerate: { directory: "protocol/types" },
                 },
                 {
-                  label: "Core fields",
+                  label: "Fields",
                   collapsed: true,
-                  autogenerate: { directory: "protocol/schemas/fields" },
+                  autogenerate: { directory: "protocol/fields" },
                 },
                 {
-                  label: "Opportunity models",
+                  label: "Models",
                   collapsed: true,
-                  autogenerate: { directory: "protocol/schemas/opportunity" },
+                  autogenerate: { directory: "protocol/opportunity" },
+                },
+                {
+                  label: "Filters",
+                  collapsed: true,
+                  autogenerate: { directory: "protocol/filters" },
+                },
+                {
+                  label: "Pagination",
+                  link: "protocol/pagination",
+                },
+                {
+                  label: "Sorting",
+                  link: "protocol/sorting",
                 },
               ],
             },

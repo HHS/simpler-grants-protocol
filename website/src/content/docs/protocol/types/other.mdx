@@ -8,22 +8,28 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 ### boolean
 
 A value that is either `true` or `false`, equivalent to `boolean` in JSON Schema.
+
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: boolean.yaml
-  type: boolean
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: boolean.yaml
+type: boolean
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  true
-  ```
-  ```json
-  false
-  ```
+
+```json
+true
+```
+
+```json
+false
+```
+
   </TabItem>
 </Tabs>
 
@@ -33,17 +39,21 @@ An ordered list of values, equivalent to `array` in JSON Schema.
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: array.yaml
-  type: array
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: array.yaml
+type: array
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  [1, 2, 3]
-  ```
+
+```json
+[1, 2, 3]
+```
+
   </TabItem>
 </Tabs>
 
@@ -68,12 +78,14 @@ items:
 A collection of key-value pairs, equivalent to `object` in JSON Schema.
 
 <Tabs>
-  <TabItem label="JSON Schema"> 
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: record.yaml
-  type: object
-  ```
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: record.yaml
+type: object
+```
+
   </TabItem>
 </Tabs>
 
@@ -101,17 +113,21 @@ The `null` type, equivalent to `null` in JSON Schema.
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: null.yaml
-  type: null
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: null.yaml
+type: null
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  ```json
-  null
-  ```
+
+```json
+null
+```
+
   </TabItem>
 </Tabs>
 
@@ -121,25 +137,32 @@ The `unknown` type accepts any value. It is equivalent to an empty JSON Schema.
 
 <Tabs>
   <TabItem label="JSON Schema">
-  ```yaml
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: unknown.yaml
-  ```
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: unknown.yaml
+```
+
   </TabItem>
 
   <TabItem label="Example">
-  All of the following are valid values for the `unknown` type:
-  ```json
-  // String
-  "foo"
-  ```
-  ```json
-  // Integer
-  123
-  ```
-  ```json
-  // Boolean
-  true
-  ```
+
+All of the following are valid values for the `unknown` type:
+
+```json
+// String
+"foo"
+```
+
+```json
+// Integer
+123
+```
+
+```json
+// Boolean
+true
+```
+
   </TabItem>
 </Tabs>
