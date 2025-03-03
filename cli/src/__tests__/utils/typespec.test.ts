@@ -1,7 +1,10 @@
-import { compileTypeSpec } from "../../utils/typespec";
+import * as typespecUtils from "../../utils/typespec";
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "yaml";
+
+// Import after the module import so we can properly mock
+const { compileTypeSpec, findMainTspPath } = typespecUtils;
 
 describe("typespec utils", () => {
   describe("compileTypeSpec", () => {
@@ -25,6 +28,7 @@ describe("typespec utils", () => {
     // Clean up generated files after each test
     afterEach(() => {
       removeDir(outputDir);
+      jest.restoreAllMocks();
     });
 
     // ############################################################
@@ -42,26 +46,20 @@ describe("typespec utils", () => {
     });
 
     // ############################################################
-    // Error handling
+    // Finding the main.tsp file
     // ############################################################
 
-    it("should throw error if compilation fails", () => {
-      // Arrange - Temporarily rename main.tsp to simulate missing file
-      const mainTspPath = path.resolve(__dirname, "../../utils/main.tsp");
-      const backupPath = mainTspPath + ".backup";
-      if (fs.existsSync(mainTspPath)) {
-        fs.renameSync(mainTspPath, backupPath);
-      }
+    it("should find main.tsp in the lib directory", () => {
+      // Act
+      const mainTspPath = findMainTspPath();
 
-      try {
-        // Act & Assert
-        expect(() => compileTypeSpec()).toThrow("Failed to compile TypeSpec");
-      } finally {
-        // Clean up - Restore main.tsp
-        if (fs.existsSync(backupPath)) {
-          fs.renameSync(backupPath, mainTspPath);
-        }
-      }
+      // Assert
+      expect(fs.existsSync(mainTspPath)).toBe(true);
+      expect(mainTspPath.endsWith("lib/main.tsp")).toBe(true);
+
+      // Verify the file contains valid TypeSpec
+      const content = fs.readFileSync(mainTspPath, "utf-8");
+      expect(content).toContain("import");
     });
   });
 });

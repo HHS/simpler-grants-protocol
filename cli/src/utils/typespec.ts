@@ -8,12 +8,28 @@ import * as path from "path";
 import * as fs from "fs";
 
 /**
+ * Finds the main.tsp file in the CLI package
+ * @returns The path to the main.tsp file
+ */
+export function findMainTspPath(): string {
+  // In development, the file is in the lib directory at the root of the package
+  const libPath = path.resolve(__dirname, "../../lib/main.tsp");
+  if (fs.existsSync(libPath)) {
+    return libPath;
+  }
+
+  // When installed as a package, it might be in a different location
+  // This is a fallback for tests or other scenarios
+  throw new Error("Could not find main.tsp file");
+}
+
+/**
  * Compiles the main.tsp file and returns the path to the output OpenAPI spec
  * @returns The path to the compiled output file
  * @throws Error if compilation fails
  */
 export function compileTypeSpec(): string {
-  const mainTspPath = path.resolve(__dirname, "main.tsp");
+  const mainTspPath = findMainTspPath();
   const outputDir = path.resolve(__dirname, "../.generated");
   const outputFile = path.join(outputDir, "@typespec/openapi3/openapi.yaml");
 
