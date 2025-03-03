@@ -173,7 +173,7 @@ describe("checkMatchingRoutes", () => {
   });
 
   // ############################################################
-  // Schema compatibility
+  // Schema compatibility - missing schema
   // ############################################################
 
   it("should detect missing schema in matching content type", () => {
@@ -230,7 +230,7 @@ describe("checkMatchingRoutes", () => {
   });
 
   // ############################################################
-  // Schema compatibility
+  // Schema compatibility - compatible schema
   // ############################################################
 
   it("should pass when response schemas are compatible", () => {
@@ -296,6 +296,50 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should have no errors
+    expect(errors).toHaveLength(0);
+  });
+
+  // ############################################################
+  // Ignore experimental routes
+  // ############################################################
+
+  it("should ignore experimental routes", () => {
+    // Arrange - Create base spec with experimental route
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            tags: ["experimental"],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with mismatched experimental route
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            tags: ["experimental"],
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should have no errors because experimental routes are ignored
     expect(errors).toHaveLength(0);
   });
 });

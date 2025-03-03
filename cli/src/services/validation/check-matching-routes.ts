@@ -38,9 +38,12 @@ export function checkMatchingRoutes(
       const baseOp = basePathObj[method];
       const implOp = implPathObj[method];
 
-      // If missing, already flagged in checkMissingRequiredRoutes
+      // If missing, already flagged in either checkMissingRequiredRoutes or checkExtraRoutes
       if (!baseOp) continue;
       if (!implOp) continue;
+
+      // If experimental, skip deeper checks
+      if (baseOp.tags?.includes("experimental")) continue;
 
       // Both base and impl define this route => deeper checks:
       errors.push(...checkMatchingRoute(basePathKey, method, baseOp, implOp));
