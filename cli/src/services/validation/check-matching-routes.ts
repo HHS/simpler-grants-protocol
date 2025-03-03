@@ -69,10 +69,10 @@ function checkMatchingRoute(
   const location = `${path}.${method.toUpperCase()}`;
   let errors: ComplianceError[] = [];
 
-  // 1) Check status codes
+  // 1) Check for missing status codes
   errors = errors.concat(checkStatusCodes(location, baseOp, implOp));
 
-  // 2) For each matching status code, compare response schemas
+  // 2) For each matching status code, check that response schemas match
   if (baseOp.responses && implOp.responses) {
     for (const statusCode of Object.keys(baseOp.responses)) {
       const baseResp = baseOp.responses[statusCode] as OpenAPIV3.ResponseObject | undefined;
@@ -86,10 +86,9 @@ function checkMatchingRoute(
     }
   }
 
-  // 3) (Optional) Check requestBody schemas, parameters, etc.
-  // Check query parameters
+  // 3) Check that query parameters and request body match
   errors = errors.concat(checkQueryParameters(location, baseOp, implOp));
-
+  errors = errors.concat(checkRequestBody(location, baseOp, implOp));
   return errors;
 }
 
@@ -98,7 +97,9 @@ function checkMatchingRoute(
 // ############################################################
 
 /**
- * Check status codes: missing or extra codes
+ * Check status codes
+ *
+ * Extra status codes are okay, but missing status codes are not.
  */
 function checkStatusCodes(
   location: string,
@@ -116,52 +117,6 @@ function checkStatusCodes(
         message: `Missing response status code [${code}]`,
         location: `${location}.responses.${code}`,
       });
-    }
-  }
-
-  return errors;
-}
-
-// ############################################################
-// Response schema checks (for each status code)
-// ############################################################
-
-/**
- * Compare the response content schemas for a single status code.
- */
-function checkResponseSchemas(
-  location: string,
-  baseResponse: OpenAPIV3.ResponseObject | undefined,
-  implResponse: OpenAPIV3.ResponseObject | undefined
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
-  if (!baseResponse || !implResponse) return errors;
-
-  if (baseResponse.content) {
-    for (const [mimeType, baseMedia] of Object.entries(baseResponse.content)) {
-      if (!implResponse.content) {
-        errors.push({
-          message: `Implementation missing content for expected mime type(s)`,
-          location,
-        });
-        continue;
-      }
-
-      const implMedia = implResponse.content[mimeType];
-      if (!implMedia?.schema) {
-        errors.push({
-          message: `Implementation missing schema for expected mime type [${mimeType}]`,
-          location: `${location}.${mimeType}`,
-        });
-        continue;
-      }
-
-      // Flatten recursively
-      const baseSchema = deepFlattenAllOf(baseMedia.schema as OpenAPIV3.SchemaObject);
-      const implSchema = deepFlattenAllOf(implMedia.schema as OpenAPIV3.SchemaObject);
-
-      // Deeper check: see if implSchema is a valid "subset" of baseSchema
-      errors.push(...checkSchemaCompatibility(`${location}.${mimeType}`, baseSchema, implSchema));
     }
   }
 
@@ -222,5 +177,104 @@ function checkQueryParameters(
     }
   }
 
+  return errors;
+}
+
+// ############################################################
+// Content schema checks (shared between request and response)
+// ############################################################
+
+/**
+ * Compare content schemas between base and implementation content objects
+ */
+function checkContentSchemas(
+  location: string,
+  baseContent: { [key: string]: OpenAPIV3.MediaTypeObject } | undefined,
+  implContent: { [key: string]: OpenAPIV3.MediaTypeObject } | undefined
+): ComplianceError[] {
+  const errors: ComplianceError[] = [];
+
+  if (!baseContent) return errors;
+
+  if (!implContent) {
+    errors.push({
+      message: `Implementation missing content for expected mime type(s)`,
+      location,
+    });
+    return errors;
+  }
+
+  for (const [mimeType, baseMedia] of Object.entries(baseContent)) {
+    const implMedia = implContent[mimeType];
+    if (!implMedia?.schema) {
+      errors.push({
+        message: `Implementation missing schema for expected mime type [${mimeType}]`,
+        location: `${location}.${mimeType}`,
+      });
+      continue;
+    }
+
+    // Flatten recursively
+    const baseSchema = deepFlattenAllOf(baseMedia.schema as OpenAPIV3.SchemaObject);
+    const implSchema = deepFlattenAllOf(implMedia.schema as OpenAPIV3.SchemaObject);
+
+    // Deeper check: see if implSchema is a valid "subset" of baseSchema
+    errors.push(...checkSchemaCompatibility(`${location}.${mimeType}`, baseSchema, implSchema));
+  }
+
+  return errors;
+}
+
+// ############################################################
+// Response schema checks (for each status code)
+// ############################################################
+
+/**
+ * Compare the response content schemas for a single status code.
+ */
+function checkResponseSchemas(
+  location: string,
+  baseResponse: OpenAPIV3.ResponseObject | undefined,
+  implResponse: OpenAPIV3.ResponseObject | undefined
+): ComplianceError[] {
+  const errors: ComplianceError[] = [];
+  if (!baseResponse || !implResponse) return errors;
+
+  if (baseResponse.content) {
+    errors.push(...checkContentSchemas(location, baseResponse.content, implResponse.content));
+  }
+
+  return errors;
+}
+
+// ############################################################
+// Request body checks
+// ############################################################
+
+/**
+ * Compare the request body between base and implementation operations
+ */
+function checkRequestBody(
+  location: string,
+  baseOp: OpenAPIV3.OperationObject,
+  implOp: OpenAPIV3.OperationObject
+): ComplianceError[] {
+  const errors: ComplianceError[] = [];
+
+  if (baseOp.requestBody) {
+    const baseReq = baseOp.requestBody as OpenAPIV3.RequestBodyObject;
+    const implReq = implOp.requestBody as OpenAPIV3.RequestBodyObject | undefined;
+
+    if (!implReq) {
+      errors.push({
+        message: "Missing required request body",
+        location: `${location}.requestBody`,
+      });
+    } else if (baseReq.content) {
+      errors.push(
+        ...checkContentSchemas(`${location}.requestBody.content`, baseReq.content, implReq.content)
+      );
+    }
+  }
   return errors;
 }

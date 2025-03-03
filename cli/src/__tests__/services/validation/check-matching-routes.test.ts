@@ -512,4 +512,192 @@ describe("checkMatchingRoutes", () => {
     expect(errors).toHaveLength(1);
     expect(errors[0].message).toMatch(/Type mismatch/);
   });
+
+  // ############################################################
+  // Request body validation - missing request body
+  // ############################################################
+
+  it("should detect missing request body", () => {
+    // Arrange - Create base spec with required request body
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["name"],
+                    properties: {
+                      name: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec missing the request body
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            // Missing request body
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about missing request body
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Missing required request body/);
+  });
+
+  // ############################################################
+  // Request body validation - missing content type
+  // ############################################################
+
+  it("should detect missing content type in request body", () => {
+    // Arrange - Create base spec with JSON request body
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with empty content object
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {}, // Missing content type
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about missing content type
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Implementation missing schema for expected mime type/);
+  });
+
+  // ############################################################
+  // Request body validation - incompatible request body schemas
+  // ############################################################
+
+  it("should detect incompatible request body schemas", () => {
+    // Arrange - Create base spec with object schema
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["name"],
+                    properties: {
+                      name: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with incompatible schema
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      name: { type: "number" }, // Should be string
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about incompatible schema
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Type mismatch/);
+  });
 });
