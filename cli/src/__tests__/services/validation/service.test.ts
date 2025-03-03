@@ -172,7 +172,7 @@ describe("ValidationService", () => {
         openapi: "3.0.0",
         info: { title: "Impl", version: "1.0.0" },
         paths: {
-          "/extra": {
+          "/common-grants/extra": {
             get: {
               responses: {
                 "200": { description: "OK" },
