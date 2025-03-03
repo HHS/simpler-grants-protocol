@@ -342,4 +342,174 @@ describe("checkMatchingRoutes", () => {
     // Assert - Should have no errors because experimental routes are ignored
     expect(errors).toHaveLength(0);
   });
+
+  // ############################################################
+  // Query parameter validation - missing query parameters
+  // ############################################################
+
+  it("should detect missing query parameters", () => {
+    // Arrange - Create base spec with required query parameter
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec missing the required parameter
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [], // Missing required parameter
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about missing parameter
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Missing required query parameter \[q\]/);
+  });
+
+  // ############################################################
+  // Query parameter validation - parameter marked as optional
+  // ############################################################
+
+  it("should detect when required parameter is marked as optional", () => {
+    // Arrange - Create base spec with required query parameter
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with optional parameter
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: false, // Should be required
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about required status
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Query parameter \[q\] must be required/);
+  });
+
+  // ############################################################
+  // Query parameter validation - incompatible parameter schemas
+  // ############################################################
+
+  it("should detect incompatible parameter schemas", () => {
+    // Arrange - Create base spec with string parameter
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with number parameter
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: true,
+                schema: { type: "number" }, // Should be string
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about incompatible schema
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Type mismatch/);
+  });
 });

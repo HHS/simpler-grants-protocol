@@ -87,7 +87,8 @@ function checkMatchingRoute(
   }
 
   // 3) (Optional) Check requestBody schemas, parameters, etc.
-  // TODO: Implement
+  // Check query parameters
+  errors = errors.concat(checkQueryParameters(location, baseOp, implOp));
 
   return errors;
 }
@@ -161,6 +162,63 @@ function checkResponseSchemas(
 
       // Deeper check: see if implSchema is a valid "subset" of baseSchema
       errors.push(...checkSchemaCompatibility(`${location}.${mimeType}`, baseSchema, implSchema));
+    }
+  }
+
+  return errors;
+}
+
+// ############################################################
+// Query parameter checks
+// ############################################################
+
+/**
+ * Compare query parameters between base and implementation operations
+ */
+function checkQueryParameters(
+  location: string,
+  baseOp: OpenAPIV3.OperationObject,
+  implOp: OpenAPIV3.OperationObject
+): ComplianceError[] {
+  const errors: ComplianceError[] = [];
+
+  // Get query parameters from both specs
+  const baseParams = (baseOp.parameters || []).filter(
+    (p): p is OpenAPIV3.ParameterObject => "in" in p && p.in === "query"
+  );
+  const implParams = (implOp.parameters || []).filter(
+    (p): p is OpenAPIV3.ParameterObject => "in" in p && p.in === "query"
+  );
+
+  // Check for required parameters missing from implementation
+  for (const baseParam of baseParams) {
+    const implParam = implParams.find(p => p.name === baseParam.name);
+
+    if (!implParam) {
+      errors.push({
+        message: `Missing required query parameter [${baseParam.name}]`,
+        location: `${location}.parameters.${baseParam.name}`,
+      });
+      continue;
+    }
+
+    // If parameter exists, check if required status matches
+    if (baseParam.required && !implParam.required) {
+      errors.push({
+        message: `Query parameter [${baseParam.name}] must be required`,
+        location: `${location}.parameters.${baseParam.name}`,
+      });
+    }
+
+    // Check parameter schema compatibility if schemas exist
+    if (baseParam.schema && implParam.schema) {
+      errors.push(
+        ...checkSchemaCompatibility(
+          `${location}.parameters.${baseParam.name}`,
+          baseParam.schema as OpenAPIV3.SchemaObject,
+          implParam.schema as OpenAPIV3.SchemaObject
+        )
+      );
     }
   }
 
