@@ -1,10 +1,15 @@
 import { OpenAPIV3 } from "openapi-types";
 import { DefaultValidationService } from "../../../services/validation/service";
 import SwaggerParser from "@apidevtools/swagger-parser";
+import { compileTypeSpec } from "../../../utils/typespec";
 
-// Mock SwaggerParser
+// Mock dependencies
 jest.mock("@apidevtools/swagger-parser", () => ({
   dereference: jest.fn(),
+}));
+
+jest.mock("../../../utils/typespec", () => ({
+  compileTypeSpec: jest.fn(),
 }));
 
 describe("ValidationService", () => {
@@ -72,25 +77,66 @@ describe("ValidationService", () => {
 
   describe("checkSpec", () => {
     // ############################################################
-    // Base spec validation
+    // Base spec validation - using TypeSpec
     // ############################################################
 
-    it("should skip compatibility check when no base spec provided", async () => {
+    it("should use TypeSpec-generated spec when no base spec provided", async () => {
       // Arrange
+      const typeSpecPath = "/path/to/generated/openapi.yaml";
+      const baseDoc: OpenAPIV3.Document = {
+        openapi: "3.0.0",
+        info: { title: "Base", version: "1.0.0" },
+        paths: {
+          "/opportunities": {
+            get: {
+              tags: ["required"],
+              responses: {
+                "200": { description: "OK" },
+              },
+            },
+          },
+        },
+      };
+
       const implDoc: OpenAPIV3.Document = {
         openapi: "3.0.0",
-        info: { title: "Test API", version: "1.0.0" },
+        info: { title: "Implementation", version: "1.0.0" },
         paths: {},
       };
-      (SwaggerParser.dereference as jest.Mock).mockResolvedValueOnce(implDoc);
+
+      (compileTypeSpec as jest.Mock).mockReturnValue(typeSpecPath);
+      (SwaggerParser.dereference as jest.Mock)
+        .mockResolvedValueOnce(implDoc) // First call for impl spec
+        .mockResolvedValueOnce(baseDoc); // Second call for TypeSpec-generated base spec
+
+      // Act & Assert
+      await expect(service.checkSpec("spec.yaml", {})).rejects.toThrow(/Missing required path/);
+      expect(compileTypeSpec).toHaveBeenCalled();
+      expect(SwaggerParser.dereference).toHaveBeenCalledWith(typeSpecPath);
+    });
+
+    it("should use provided base spec even when TypeSpec is available", async () => {
+      // Arrange
+      const providedBasePath = "base.yaml";
+      const baseDoc: OpenAPIV3.Document = {
+        openapi: "3.0.0",
+        info: { title: "Base", version: "1.0.0" },
+        paths: {},
+      };
+
+      const implDoc = { ...baseDoc, info: { title: "Impl", version: "1.0.0" } };
+
+      (SwaggerParser.dereference as jest.Mock)
+        .mockResolvedValueOnce(implDoc)
+        .mockResolvedValueOnce(baseDoc);
 
       // Act
-      await service.checkSpec("spec.yaml", {});
+      await service.checkSpec("spec.yaml", { base: providedBasePath });
 
-      // Assert
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        "Base spec not provided, skipping compatibility check"
-      );
+      // Assert - Don't compile TypeSpec if base spec provided
+      expect(compileTypeSpec).not.toHaveBeenCalled();
+      expect(SwaggerParser.dereference).toHaveBeenCalledWith(providedBasePath);
+      expect(mockConsoleLog).toHaveBeenCalledWith("Spec is valid and compliant with base spec");
     });
 
     // ############################################################
@@ -172,7 +218,7 @@ describe("ValidationService", () => {
         openapi: "3.0.0",
         info: { title: "Impl", version: "1.0.0" },
         paths: {
-          "/extra": {
+          "/common-grants/extra": {
             get: {
               responses: {
                 "200": { description: "OK" },

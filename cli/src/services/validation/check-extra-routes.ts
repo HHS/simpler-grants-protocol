@@ -16,10 +16,10 @@ export function checkExtraRoutes(
   for (const [implPath, implPathItem] of Object.entries(implPaths)) {
     // If this path does not exist in the base
     if (!basePaths[implPath]) {
-      // And it's not under /custom/...
-      if (!implPath.startsWith("/custom/")) {
+      // And it is prefixed with /common-grants/
+      if (implPath.startsWith("/common-grants/")) {
         errors.push({
-          message: `Extra route found '${implPathItem?.summary}' at '${implPath}' that is not in base and not prefixed with '/custom/'`,
+          message: `Extra route found '${implPathItem?.summary}' at '${implPath}' that is prefixed with '/common-grants/' but not in base`,
           location: implPath,
         });
       }

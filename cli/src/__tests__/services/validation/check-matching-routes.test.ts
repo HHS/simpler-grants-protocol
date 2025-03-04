@@ -173,7 +173,7 @@ describe("checkMatchingRoutes", () => {
   });
 
   // ############################################################
-  // Schema compatibility
+  // Schema compatibility - missing schema
   // ############################################################
 
   it("should detect missing schema in matching content type", () => {
@@ -230,7 +230,7 @@ describe("checkMatchingRoutes", () => {
   });
 
   // ############################################################
-  // Schema compatibility
+  // Schema compatibility - compatible schema
   // ############################################################
 
   it("should pass when response schemas are compatible", () => {
@@ -297,5 +297,407 @@ describe("checkMatchingRoutes", () => {
 
     // Assert - Should have no errors
     expect(errors).toHaveLength(0);
+  });
+
+  // ############################################################
+  // Ignore experimental routes
+  // ############################################################
+
+  it("should ignore experimental routes", () => {
+    // Arrange - Create base spec with experimental route
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            tags: ["experimental"],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with mismatched experimental route
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            tags: ["experimental"],
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should have no errors because experimental routes are ignored
+    expect(errors).toHaveLength(0);
+  });
+
+  // ############################################################
+  // Query parameter validation - missing query parameters
+  // ############################################################
+
+  it("should detect missing query parameters", () => {
+    // Arrange - Create base spec with required query parameter
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec missing the required parameter
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [], // Missing required parameter
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about missing parameter
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Missing required query parameter \[q\]/);
+  });
+
+  // ############################################################
+  // Query parameter validation - parameter marked as optional
+  // ############################################################
+
+  it("should detect when required parameter is marked as optional", () => {
+    // Arrange - Create base spec with required query parameter
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with optional parameter
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: false, // Should be required
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about required status
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Query parameter \[q\] must be required/);
+  });
+
+  // ############################################################
+  // Query parameter validation - incompatible parameter schemas
+  // ############################################################
+
+  it("should detect incompatible parameter schemas", () => {
+    // Arrange - Create base spec with string parameter
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with number parameter
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "q",
+                in: "query",
+                required: true,
+                schema: { type: "number" }, // Should be string
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about incompatible schema
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Type mismatch/);
+  });
+
+  // ############################################################
+  // Request body validation - missing request body
+  // ############################################################
+
+  it("should detect missing request body", () => {
+    // Arrange - Create base spec with required request body
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["name"],
+                    properties: {
+                      name: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec missing the request body
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            // Missing request body
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about missing request body
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Missing required request body/);
+  });
+
+  // ############################################################
+  // Request body validation - missing content type
+  // ############################################################
+
+  it("should detect missing content type in request body", () => {
+    // Arrange - Create base spec with JSON request body
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with empty content object
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {}, // Missing content type
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about missing content type
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Implementation missing schema for expected mime type/);
+  });
+
+  // ############################################################
+  // Request body validation - incompatible request body schemas
+  // ############################################################
+
+  it("should detect incompatible request body schemas", () => {
+    // Arrange - Create base spec with object schema
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["name"],
+                    properties: {
+                      name: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with incompatible schema
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/users": {
+          post: {
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      name: { type: "number" }, // Should be string
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": { description: "Created" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Should find error about incompatible schema
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/Type mismatch/);
   });
 });

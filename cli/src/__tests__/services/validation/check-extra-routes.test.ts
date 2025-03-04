@@ -6,7 +6,7 @@ describe("checkExtraRoutes", () => {
   // Flag routes not prefixed with /custom/
   // ############################################################
 
-  it("should flag a route not in base and not prefixed with /custom/", () => {
+  it("should flag a route prefixed with /common-grants/ that is not in base", () => {
     // Arrange - Create base spec with no routes
     const baseDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -19,7 +19,7 @@ describe("checkExtraRoutes", () => {
       openapi: "3.0.0",
       info: { title: "Impl", version: "1.0.0" },
       paths: {
-        "/extra": {
+        "/common-grants/extra": {
           get: {
             responses: {
               "200": { description: "OK" },
@@ -41,7 +41,7 @@ describe("checkExtraRoutes", () => {
   // Ignore routes prefixed with /custom/
   // ############################################################
 
-  it("should not flag a route under /custom/", () => {
+  it("should not flag a route not prefixed with /common-grants/", () => {
     // Arrange - Create base spec with no routes
     const baseDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -54,7 +54,7 @@ describe("checkExtraRoutes", () => {
       openapi: "3.0.0",
       info: { title: "Impl", version: "1.0.0" },
       paths: {
-        "/custom/myCustomRoute": {
+        "/myCustomRoute": {
           get: {
             responses: {
               "200": { description: "OK" },

@@ -22,6 +22,6 @@
     "typescript-eslint": "^8.20.0"
   },
   "dependencies": {
-    "@common-grants/core": "^0.1.0-alpha.7"
+    "@common-grants/core": "^0.1.0-alpha.11"
   }
 }

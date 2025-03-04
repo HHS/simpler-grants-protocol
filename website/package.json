@@ -23,7 +23,7 @@
   "dependencies": {
     "@astrojs/check": "^0.9.4",
     "@astrojs/starlight": "^0.32.0",
-    "@common-grants/core": "^0.1.0-alpha.10",
+    "@common-grants/core": "^0.1.0-alpha.11",
     "astro": "^5.3.0",
     "sharp": "^0.32.5",
     "starlight-openapi": "^0.10.0",

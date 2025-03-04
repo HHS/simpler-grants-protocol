@@ -1,9 +1,11 @@
+import SwaggerParser from "@apidevtools/swagger-parser";
+
 import { ValidationService, ValidationOptions, SpecValidationOptions } from "../interfaces";
 import { checkExtraRoutes } from "./check-extra-routes";
 import { checkMatchingRoutes } from "./check-matching-routes";
 import { checkMissingRequiredRoutes } from "./check-missing-routes";
 import { ComplianceError, Document } from "./types";
-import SwaggerParser from "@apidevtools/swagger-parser";
+import { compileTypeSpec } from "../../utils/typespec";
 
 export class DefaultValidationService implements ValidationService {
   /** Check that an API implementation matches its spec. */
@@ -16,21 +18,17 @@ export class DefaultValidationService implements ValidationService {
    *
    * This involves:
    *   1) Fetching and parsing both specs
-   *   2) Checking for missing required routes
-   *   3) Checking for extra routes
+   *   2) Checking for required routes that are missing
+   *   3) Checking for unexpected routes prefixed with /common-grants/
    *   4) Checking that matching routes are compatible
    */
   async checkSpec(specPath: string, options: SpecValidationOptions): Promise<void> {
     // Parse and dereference the spec
     const doc = (await SwaggerParser.dereference(specPath)) as Document;
 
-    if (!options.base) {
-      console.log("Base spec not provided, skipping compatibility check");
-      return;
-    }
-
-    // If base spec provided, parse and dereference it
-    const baseDoc = (await SwaggerParser.dereference(options.base)) as Document;
+    // If no base spec provided, compile from TypeSpec
+    const baseSpecPath = options.base || compileTypeSpec();
+    const baseDoc = (await SwaggerParser.dereference(baseSpecPath)) as Document;
 
     const errors: ComplianceError[] = [];
     errors.push(...checkMissingRequiredRoutes(baseDoc, doc));
