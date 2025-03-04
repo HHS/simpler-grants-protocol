@@ -83,6 +83,10 @@ cg preview openapi.json
 Validate an API specification against the CommonGrants base protocol:
 
 ```bash
+# Using the base protocol spec installed by @common-grants/cli
+cg check spec openapi.yaml
+
+# Using the path to a locally compiled base spec
 cg check spec openapi.yaml --base <path-to-base-spec>
 ```
 
@@ -90,7 +94,7 @@ cg check spec openapi.yaml --base <path-to-base-spec>
 
 This CLI is currently in alpha stage and only supports the following commands:
 
-- `cg init` with only a limited set of templates
+- `cg init` with a limited set of templates
 - `cg compile`
 - `cg preview`
 - `cg check spec`
