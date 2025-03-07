@@ -96,12 +96,14 @@ class Event(BaseModel):
 
 class CustomField(BaseModel):
     name: str = Field(..., description="Name of the custom field")
-    type: CustomFieldType = Field(
+    field_type: CustomFieldType = Field(
         ...,
+        alias="type",
         description="The JSON schema type to use when de-serializing the `value` field",
     )
-    schema: Optional[Url] = Field(
+    schema_url: Optional[Url] = Field(
         None,
+        alias="schema",
         description="Link to the full JSON schema for this custom field",
     )
     value: Any = Field(..., description="Value of the custom field")

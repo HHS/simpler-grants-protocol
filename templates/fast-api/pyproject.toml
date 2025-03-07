@@ -9,9 +9,12 @@ version = "0.1.0"
 [tool.poetry.dependencies]
 fastapi = {extras = ["standard"], version = "^0.115.11"}
 python = "^3.11"
+pyright = "^1.1.396"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
+ruff = "^0.9.10"
+black = "^25.1.0"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
