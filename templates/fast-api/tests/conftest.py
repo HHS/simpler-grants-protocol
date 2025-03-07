@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from common_grants.api import app
-from common_grants.schemas.opportunity import (
+from common_grants.schemas import (
     Event,
     Money,
     OppFunding,

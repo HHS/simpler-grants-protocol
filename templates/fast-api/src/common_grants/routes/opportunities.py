@@ -5,14 +5,15 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from common_grants.schemas.opportunity import (
+from common_grants.schemas import (
     OppFilters,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
     OppSortBy,
     OppSorting,
-    PaginationParams,
+    PaginationBodyParams,
+    PaginationInfo,
 )
 from common_grants.services.opportunity import OpportunityService
 
@@ -37,15 +38,20 @@ async def list_opportunities(
 ) -> OpportunitiesListResponse:
     """Get a paginated list of opportunities."""
     opportunity_service = OpportunityService()
-    pagination = PaginationParams(page=page, page_size=page_size)
+    pagination = PaginationBodyParams(page=page, page_size=page_size)
     opportunities, total_count = await opportunity_service.list_opportunities(
         pagination,
     )
 
     return OpportunitiesListResponse(
-        data=opportunities,
-        pagination=pagination,
-        total_count=total_count,
+        message="Success",
+        items=opportunities,
+        paginationInfo=PaginationInfo(
+            page=pagination.page,
+            page_size=pagination.page_size,
+            total_pages=100,
+            total_count=total_count,
+        ),
     )
 
 
@@ -70,7 +76,10 @@ async def get_opportunity(
             detail="Opportunity not found",
         )
 
-    return OpportunityResponse(data=opportunity)
+    return OpportunityResponse(
+        message="Success",
+        data=opportunity,
+    )
 
 
 @opportunity_router.post(
@@ -81,19 +90,19 @@ async def get_opportunity(
 async def search_opportunities(
     filters: Optional[OppFilters] = None,
     sorting: Optional[OppSorting] = None,
-    pagination: Optional[PaginationParams] = None,
+    pagination: Optional[PaginationBodyParams] = None,
 ) -> OpportunitiesSearchResponse:
     """Search for opportunities based on the provided filters."""
     opportunity_service = OpportunityService()
 
     if pagination is None:
-        pagination = PaginationParams()
+        pagination = PaginationBodyParams()
 
     if filters is None:
         filters = OppFilters()
 
     if sorting is None:
-        sorting = OppSorting(sort_by=OppSortBy.LAST_MODIFIED_AT, sort_order="desc")
+        sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT, sortOrder="desc")
 
     opportunities, total_count = await opportunity_service.search_opportunities(
         filters=filters,
@@ -102,8 +111,14 @@ async def search_opportunities(
     )
 
     return OpportunitiesSearchResponse(
-        data=opportunities,
-        pagination=pagination,
-        total_count=total_count,
-        filters=filters,
+        message="Success",
+        items=opportunities,
+        paginationInfo=PaginationInfo(
+            page=pagination.page,
+            page_size=pagination.page_size,
+            total_pages=100,
+            total_count=total_count,
+        ),
+        sortInfo=sorting,
+        filterInfo=filters,
     )

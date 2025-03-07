@@ -3,11 +3,11 @@
 from typing import Optional
 from uuid import UUID
 
-from common_grants.schemas.opportunity import (
+from common_grants.schemas import (
     OppFilters,
     OpportunityBase,
     OppSorting,
-    PaginationParams,
+    PaginationBodyParams,
 )
 
 
@@ -26,7 +26,7 @@ class OpportunityService:
 
     async def list_opportunities(
         self,
-        pagination: PaginationParams,
+        pagination: PaginationBodyParams,
     ) -> tuple[list[OpportunityBase], int]:
         """
         Get a paginated list of opportunities.
@@ -57,7 +57,7 @@ class OpportunityService:
         self,
         filters: OppFilters,
         sorting: OppSorting,
-        pagination: PaginationParams,
+        pagination: PaginationBodyParams,
     ) -> tuple[list[OpportunityBase], int]:
         """
         Search for opportunities based on the provided filters.

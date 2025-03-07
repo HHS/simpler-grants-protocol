@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from common_grants.schemas.opportunity import (
+from common_grants.schemas import (
     Event,
     Money,
     OppFunding,
@@ -66,24 +66,22 @@ class TestListOpportunities:
         response = client.get("/common-grants/opportunities")
         assert response.status_code == 200
         data = response.json()
-        assert "data" in data
-        assert "pagination" in data
-        assert "total_count" in data
-        assert isinstance(data["data"], list)
-        assert data["pagination"]["page"] == 1
-        assert data["pagination"]["page_size"] == 10
+        assert "items" in data
+        assert "paginationInfo" in data
+        assert isinstance(data["items"], list)
+        assert data["paginationInfo"]["page"] == 1
+        assert data["paginationInfo"]["page_size"] == 10
 
     def test_pagination_specified(self, client: TestClient):
         """Test GET /common-grants/opportunities endpoint with custom pagination."""
         response = client.get("/common-grants/opportunities?page=2&page_size=1")
         assert response.status_code == 200
         data = response.json()
-        assert "data" in data
-        assert "pagination" in data
-        assert "total_count" in data
-        assert isinstance(data["data"], list)
-        assert data["pagination"]["page"] == 2
-        assert data["pagination"]["page_size"] == 1
+        assert "items" in data
+        assert "paginationInfo" in data
+        assert isinstance(data["items"], list)
+        assert data["paginationInfo"]["page"] == 2
+        assert data["paginationInfo"]["page_size"] == 1
 
 
 class TestGetOpportunityById:

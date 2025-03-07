@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
-from common_grants.schemas.opportunity import (
+from common_grants.schemas import (
     CustomField,
     CustomFieldType,
     Event,

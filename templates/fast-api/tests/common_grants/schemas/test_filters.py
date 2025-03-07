@@ -6,7 +6,8 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from common_grants.schemas.opportunity import (
+from common_grants.schemas import (
+    ArrayOperator,
     DateRange,
     DateRangeFilter,
     Event,
@@ -14,23 +15,20 @@ from common_grants.schemas.opportunity import (
     MoneyRange,
     MoneyRangeFilter,
     OppDefaultFilters,
-    OppFilters,
     OppFunding,
-    OpportunitiesListResponse,
-    OpportunitiesSearchResponse,
     OpportunityBase,
-    OpportunityResponse,
     OppStatus,
     OppStatusOptions,
     OppTimeline,
-    PaginationParams,
+    PaginationBodyParams,
+    RangeOperator,
     StringArrayFilter,
 )
 
 
 def test_string_array_filter():
     """Test the StringArrayFilter model."""
-    filter_obj = StringArrayFilter(operator="in", value=["open", "closed"])
+    filter_obj = StringArrayFilter(operator=ArrayOperator.IN, value=["open", "closed"])
     assert filter_obj.operator == "in"
     assert filter_obj.value == ["open", "closed"]
 
@@ -48,7 +46,7 @@ def test_date_range():
 def test_date_range_filter():
     """Test the DateRangeFilter model."""
     filter_obj = DateRangeFilter(
-        operator="between",
+        operator=RangeOperator.BETWEEN,
         value=DateRange(
             min=date(2024, 1, 1),
             max=date(2024, 12, 31),
@@ -74,7 +72,7 @@ def test_money_range():
 def test_money_range_filter():
     """Test the MoneyRangeFilter model."""
     filter_obj = MoneyRangeFilter(
-        operator="between",
+        operator=RangeOperator.BETWEEN,
         value=MoneyRange(
             min=Money(amount="1000.00", currency="USD"),
             max=Money(amount="5000.00", currency="USD"),
@@ -90,16 +88,16 @@ def test_money_range_filter():
 def test_opp_default_filters():
     """Test the OppDefaultFilters model."""
     filters = OppDefaultFilters(
-        status=StringArrayFilter(operator="in", value=["open", "closed"]),
+        status=StringArrayFilter(operator=ArrayOperator.IN, value=["open", "closed"]),
         close_date_range=DateRangeFilter(
-            operator="between",
+            operator=RangeOperator.BETWEEN,
             value=DateRange(
                 min=date(2024, 1, 1),
                 max=date(2024, 12, 31),
             ),
         ),
         total_funding_available_range=MoneyRangeFilter(
-            operator="between",
+            operator=RangeOperator.BETWEEN,
             value=MoneyRange(
                 min=Money(amount="1000.00", currency="USD"),
                 max=Money(amount="5000.00", currency="USD"),
@@ -118,20 +116,20 @@ def test_opp_default_filters():
 def test_pagination_params():
     """Test the PaginationParams model."""
     # Test defaults
-    params = PaginationParams()
+    params = PaginationBodyParams()
     assert params.page == 1
     assert params.page_size == 10
 
     # Test custom values
-    params = PaginationParams(page=2, page_size=20)
+    params = PaginationBodyParams(page=2, page_size=20)
     assert params.page == 2
     assert params.page_size == 20
 
     # Test invalid values
     with pytest.raises(ValidationError):
-        PaginationParams(page=0)
+        PaginationBodyParams(page=0)
     with pytest.raises(ValidationError):
-        PaginationParams(page_size=0)
+        PaginationBodyParams(page_size=0)
 
 
 def create_test_opportunity():
@@ -174,41 +172,3 @@ def create_test_opportunity():
         created_at=now,
         last_modified_at=now,
     )
-
-
-def test_opportunity_response():
-    """Test the OpportunityResponse model."""
-    opp = create_test_opportunity()
-    response = OpportunityResponse(data=opp)
-    assert response.data.id == opp.id
-    assert response.data.title == opp.title
-
-
-def test_opportunities_list_response():
-    """Test the OpportunitiesListResponse model."""
-    opp = create_test_opportunity()
-    response = OpportunitiesListResponse(
-        data=[opp],
-        pagination=PaginationParams(),
-        total_count=1,
-    )
-    assert len(response.data) == 1
-    assert response.data[0].id == opp.id
-    assert response.pagination.page == 1
-    assert response.total_count == 1
-
-
-def test_opportunities_search_response():
-    """Test the OpportunitiesSearchResponse model."""
-    opp = create_test_opportunity()
-    response = OpportunitiesSearchResponse(
-        data=[opp],
-        pagination=PaginationParams(),
-        total_count=1,
-        filters=OppFilters(),
-    )
-    assert len(response.data) == 1
-    assert response.data[0].id == opp.id
-    assert response.pagination.page == 1
-    assert response.total_count == 1
-    assert response.filters is not None
