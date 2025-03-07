@@ -10,9 +10,3 @@ app = FastAPI(
     version="0.1.0",
 )
 app.include_router(opportunity_router)
-
-
-@app.get("/")
-async def root() -> dict[str, str]:
-    """Root endpoint."""
-    return {"message": "Hello World"}
