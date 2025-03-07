@@ -1,15 +1,17 @@
+"""Routes for the opportunities API."""
+
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from common_grants.schemas.opportunity import (
     OppFilters,
-    OppSortBy,
-    OppSorting,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
+    OppSortBy,
+    OppSorting,
     PaginationParams,
 )
 from common_grants.services.opportunity import OpportunityService
@@ -22,23 +24,22 @@ opportunity_router = APIRouter(
 
 @opportunity_router.get(
     "",
-    response_model=OpportunitiesListResponse,
     summary="List opportunities",
-    description="Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.",
+    description="Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.",  # noqa: E501
 )
 async def list_opportunities(
     page: Optional[int] = Query(1, ge=1, description="The page number to retrieve"),
     page_size: Optional[int] = Query(
-        10, ge=1, le=100, description="The number of items per page"
+        10,
+        ge=1,
+        description="The number of items per page",
     ),
-    opportunity_service: OpportunityService = Depends(),
 ) -> OpportunitiesListResponse:
-    """
-    Get a paginated list of opportunities.
-    """
+    """Get a paginated list of opportunities."""
+    opportunity_service = OpportunityService()
     pagination = PaginationParams(page=page, page_size=page_size)
     opportunities, total_count = await opportunity_service.list_opportunities(
-        pagination
+        pagination,
     )
 
     return OpportunitiesListResponse(
@@ -50,7 +51,6 @@ async def list_opportunities(
 
 @opportunity_router.get(
     "/{id}",
-    response_model=OpportunityResponse,
     summary="View opportunity",
     description="View additional details about an opportunity",
     responses={
@@ -58,12 +58,10 @@ async def list_opportunities(
     },
 )
 async def get_opportunity(
-    id: UUID,
-    opportunity_service: OpportunityService = Depends(),
+    id: UUID,  # noqa: A002
 ) -> OpportunityResponse:
-    """
-    Get a specific opportunity by ID.
-    """
+    """Get a specific opportunity by ID."""
+    opportunity_service = OpportunityService()
     opportunity = await opportunity_service.get_opportunity(id)
 
     if not opportunity:
@@ -77,7 +75,6 @@ async def get_opportunity(
 
 @opportunity_router.post(
     "/search",
-    response_model=OpportunitiesSearchResponse,
     summary="Search opportunities",
     description="Search for opportunities based on the provided filters",
 )
@@ -85,11 +82,10 @@ async def search_opportunities(
     filters: Optional[OppFilters] = None,
     sorting: Optional[OppSorting] = None,
     pagination: Optional[PaginationParams] = None,
-    opportunity_service: OpportunityService = Depends(),
 ) -> OpportunitiesSearchResponse:
-    """
-    Search for opportunities based on the provided filters.
-    """
+    """Search for opportunities based on the provided filters."""
+    opportunity_service = OpportunityService()
+
     if pagination is None:
         pagination = PaginationParams()
 

@@ -1,10 +1,12 @@
-from typing import Dict, List, Optional, Tuple
+"""Service for handling opportunity data operations."""
+
+from typing import Optional
 from uuid import UUID
 
 from common_grants.schemas.opportunity import (
     OppFilters,
-    OppSorting,
     OpportunityBase,
+    OppSorting,
     PaginationParams,
 )
 
@@ -17,14 +19,15 @@ class OpportunityService:
     For this example, we're using an in-memory store.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the opportunity service."""
         # In-memory store for opportunities
-        self.opportunities: Dict[UUID, OpportunityBase] = {}
+        self.opportunities: dict[UUID, OpportunityBase] = {}
 
     async def list_opportunities(
         self,
         pagination: PaginationParams,
-    ) -> Tuple[List[OpportunityBase], int]:
+    ) -> tuple[list[OpportunityBase], int]:
         """
         Get a paginated list of opportunities.
 
@@ -33,6 +36,7 @@ class OpportunityService:
 
         Returns:
             A tuple containing the list of opportunities and the total count
+
         """
         return [], 0
 
@@ -45,6 +49,7 @@ class OpportunityService:
 
         Returns:
             The opportunity if found, None otherwise
+
         """
         return None
 
@@ -53,7 +58,7 @@ class OpportunityService:
         filters: OppFilters,
         sorting: OppSorting,
         pagination: PaginationParams,
-    ) -> Tuple[List[OpportunityBase], int]:
+    ) -> tuple[list[OpportunityBase], int]:
         """
         Search for opportunities based on the provided filters.
 
@@ -64,5 +69,6 @@ class OpportunityService:
 
         Returns:
             A tuple containing the list of filtered opportunities and the total count
+
         """
         return [], 0

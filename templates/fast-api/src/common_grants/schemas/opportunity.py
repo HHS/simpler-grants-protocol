@@ -1,12 +1,12 @@
+"""Schemas for the CommonGrants API."""
+
 from datetime import date, datetime, time
 from enum import StrEnum
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
 from pydantic.functional_validators import AfterValidator
-from typing_extensions import Annotated
-
 
 # Custom Types
 DecimalString = Annotated[
@@ -17,7 +17,7 @@ DecimalString = Annotated[
             if v.replace(".", "").replace("-", "").isdigit()
             and (v.startswith("-") or not v.startswith("-"))
             else None
-        )
+        ),
     ),
 ]
 ISODate = date
@@ -28,7 +28,7 @@ Url = HttpUrl
 
 # Enums
 class OppStatusOptions(StrEnum):
-    """The status of the opportunity"""
+    """The status of the opportunity."""
 
     FORECASTED = "forecasted"
     OPEN = "open"
@@ -37,7 +37,7 @@ class OppStatusOptions(StrEnum):
 
 
 class CustomFieldType(StrEnum):
-    """The type of the custom field"""
+    """The type of the custom field."""
 
     STRING = "string"
     NUMBER = "number"
@@ -47,6 +47,8 @@ class CustomFieldType(StrEnum):
 
 
 class OppSortBy(StrEnum):
+    """Fields by which opportunities can be sorted."""
+
     LAST_MODIFIED_AT = "lastModifiedAt"
     CREATED_AT = "createdAt"
     TITLE = "title"
@@ -61,6 +63,8 @@ class OppSortBy(StrEnum):
 
 # Base Models
 class SystemMetadata(BaseModel):
+    """System-managed metadata fields for tracking record creation and modification."""
+
     created_at: UTCDateTime = Field(
         ...,
         description="The timestamp (in UTC) at which the record was created.",
@@ -72,13 +76,18 @@ class SystemMetadata(BaseModel):
 
 
 class Money(BaseModel):
+    """Represents a monetary amount in a specific currency."""
+
     amount: DecimalString = Field(..., description="The amount of money")
     currency: str = Field(
-        ..., description="The ISO 4217 currency code in which the amount is denominated"
+        ...,
+        description="The ISO 4217 currency code in which the amount is denominated",
     )
 
 
 class Event(BaseModel):
+    """Represents a scheduled event with an optional time and description."""
+
     name: str = Field(..., description="Human-readable name of the event")
     date: ISODate = Field(
         ...,
@@ -95,6 +104,8 @@ class Event(BaseModel):
 
 
 class CustomField(BaseModel):
+    """Represents a custom field with type information and validation schema."""
+
     name: str = Field(..., description="Name of the custom field")
     field_type: CustomFieldType = Field(
         ...,
@@ -115,16 +126,22 @@ class CustomField(BaseModel):
 
 # Opportunity Models
 class OppStatus(BaseModel):
+    """Represents the status of a funding opportunity."""
+
     value: OppStatusOptions = Field(
-        ..., description="The status value, from a predefined set of options"
+        ...,
+        description="The status value, from a predefined set of options",
     )
     custom_value: Optional[str] = Field(None, description="A custom status value")
     description: Optional[str] = Field(
-        None, description="A human-readable description of the status"
+        None,
+        description="A human-readable description of the status",
     )
 
 
 class OppFunding(BaseModel):
+    """Details about the funding available for an opportunity."""
+
     total_amount_available: Optional[Money] = Field(
         None,
         description="Total amount of funding available for this opportunity",
@@ -152,25 +169,31 @@ class OppFunding(BaseModel):
 
 
 class OppTimeline(BaseModel):
+    """Key dates and events in the lifecycle of an opportunity."""
+
     app_opens: Optional[Event] = Field(
         None,
         description="The date (and time) at which the opportunity begins accepting applications",
     )
     app_deadline: Optional[Event] = Field(
-        None, description="The final deadline for submitting applications"
+        None,
+        description="The final deadline for submitting applications",
     )
-    other_dates: Optional[Dict[str, Event]] = Field(
+    other_dates: Optional[dict[str, Event]] = Field(
         None,
         description="An optional map of other key dates in the opportunity timeline",
     )
 
 
 class OpportunityBase(BaseModel):
+    """Base model for a funding opportunity with all core fields."""
+
     id: UUID = Field(..., description="Globally unique id for the opportunity")
     title: str = Field(..., description="Title or name of the funding opportunity")
     status: OppStatus = Field(..., description="Status of the opportunity")
     description: str = Field(
-        ..., description="Description of the opportunity's purpose and scope"
+        ...,
+        description="Description of the opportunity's purpose and scope",
     )
     funding: OppFunding = Field(..., description="Details about the funding available")
     key_dates: OppTimeline = Field(
@@ -181,7 +204,7 @@ class OpportunityBase(BaseModel):
         None,
         description="URL for the original source of the opportunity",
     )
-    custom_fields: Optional[Dict[str, CustomField]] = Field(
+    custom_fields: Optional[dict[str, CustomField]] = Field(
         None,
         description="Additional custom fields specific to this opportunity",
     )
@@ -199,37 +222,47 @@ class OpportunityBase(BaseModel):
 
 # Filter Models
 class StringArrayFilter(BaseModel):
+    """Filter that matches against an array of string values."""
+
     operator: str = Field(..., description="The operator to apply to the filter")
-    value: List[str] = Field(..., description="The values to filter by")
+    value: list[str] = Field(..., description="The values to filter by")
 
 
 class DateRange(BaseModel):
+    """Represents a range between two dates."""
+
     min: Optional[ISODate] = Field(None, description="The minimum date in the range")
     max: Optional[ISODate] = Field(None, description="The maximum date in the range")
 
 
 class DateRangeFilter(BaseModel):
+    """Filter that matches dates within a specified range."""
+
     operator: str = Field(..., description="The operator to apply to the filter")
     value: DateRange = Field(..., description="The date range to filter by")
 
 
 class MoneyRange(BaseModel):
+    """Represents a range between two monetary amounts."""
+
     min: Optional[Money] = Field(None, description="The minimum amount in the range")
     max: Optional[Money] = Field(None, description="The maximum amount in the range")
 
 
 class MoneyRangeFilter(BaseModel):
+    """Filter that matches monetary amounts within a specified range."""
+
     operator: str = Field(..., description="The operator to apply to the filter")
     value: MoneyRange = Field(..., description="The money range to filter by")
 
 
 class DefaultFilter(BaseModel):
-    """Base class for all filters"""
-
-    pass
+    """Base class for all filters."""
 
 
 class OppDefaultFilters(BaseModel):
+    """Standard filters available for searching opportunities."""
+
     status: Optional[StringArrayFilter] = Field(
         default=None,
         description="`status.value` matches one of the following values",
@@ -253,7 +286,9 @@ class OppDefaultFilters(BaseModel):
 
 
 class OppFilters(OppDefaultFilters):
-    custom_filters: Optional[Dict[str, DefaultFilter]] = Field(
+    """Filters for searching opportunities."""
+
+    custom_filters: Optional[dict[str, DefaultFilter]] = Field(
         default=None,
         description="Additional implementation-defined filters to apply to the search",
     )
@@ -261,12 +296,16 @@ class OppFilters(OppDefaultFilters):
 
 # Sorting Models
 class OppSorting(BaseModel):
+    """Sorting options for opportunities."""
+
     sort_by: OppSortBy = Field(..., description="The field to sort by")
     sort_order: str = Field("desc", description="The sort order (asc or desc)")
 
 
 # Pagination Models
 class PaginationParams(BaseModel):
+    """Parameters for pagination."""
+
     page: Optional[int] = Field(
         default=1,
         description="The page number to retrieve",
@@ -281,17 +320,23 @@ class PaginationParams(BaseModel):
 
 # Response Models
 class OpportunityResponse(BaseModel):
+    """Response model for a single opportunity."""
+
     data: OpportunityBase
 
 
 class OpportunitiesListResponse(BaseModel):
-    data: List[OpportunityBase]
+    """Response model for a list of opportunities."""
+
+    data: list[OpportunityBase]
     pagination: PaginationParams
     total_count: int
 
 
 class OpportunitiesSearchResponse(BaseModel):
-    data: List[OpportunityBase]
+    """Response model for a list of opportunities with pagination and filters."""
+
+    data: list[OpportunityBase]
     pagination: PaginationParams
     total_count: int
     filters: OppFilters

@@ -1,3 +1,5 @@
+"""CommonGrants API implementation."""
+
 from fastapi import FastAPI
 
 from common_grants.routes import opportunity_router
@@ -11,5 +13,6 @@ app.include_router(opportunity_router)
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, str]:
+    """Root endpoint."""
     return {"message": "Hello World"}
