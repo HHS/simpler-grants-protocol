@@ -1,0 +1,18 @@
+[tool.poetry]
+authors = ["Your Name <your.email@example.com>"]
+description = "An implementation of the CommonGrants API specification"
+name = "common-grants"
+packages = [{include = "common_grants", from = "src"}]
+readme = "README.md"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+fastapi = {extras = ["standard"], version = "^0.115.11"}
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
