@@ -67,7 +67,7 @@ async def get_opportunity(
     if not opportunity:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Opportunity with ID {id} not found",
+            detail="Opportunity not found",
         )
 
     return OpportunityResponse(data=opportunity)

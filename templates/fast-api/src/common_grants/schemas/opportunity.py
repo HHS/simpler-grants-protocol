@@ -78,7 +78,12 @@ class SystemMetadata(BaseModel):
 class Money(BaseModel):
     """Represents a monetary amount in a specific currency."""
 
-    amount: DecimalString = Field(..., description="The amount of money")
+    amount: str = Field(
+        ...,
+        description="The amount of money",
+        pattern=r"^-?[0-9]+\.?[0-9]*$",
+        examples=["1000000", "500.00", "-100.50"],
+    )
     currency: str = Field(
         ...,
         description="The ISO 4217 currency code in which the amount is denominated",
@@ -94,11 +99,11 @@ class Event(BaseModel):
         description="Date of the event in ISO 8601 format: YYYY-MM-DD",
     )
     time: Optional[ISOTime] = Field(
-        None,
+        default=None,
         description="Time of the event in ISO 8601 format: HH:MM:SS",
     )
     description: Optional[str] = Field(
-        None,
+        default=None,
         description="Description of what this event represents",
     )
 
@@ -132,9 +137,12 @@ class OppStatus(BaseModel):
         ...,
         description="The status value, from a predefined set of options",
     )
-    custom_value: Optional[str] = Field(None, description="A custom status value")
+    custom_value: Optional[str] = Field(
+        default=None,
+        description="A custom status value",
+    )
     description: Optional[str] = Field(
-        None,
+        default=None,
         description="A human-readable description of the status",
     )
 
@@ -143,27 +151,27 @@ class OppFunding(BaseModel):
     """Details about the funding available for an opportunity."""
 
     total_amount_available: Optional[Money] = Field(
-        None,
+        default=None,
         description="Total amount of funding available for this opportunity",
     )
     min_award_amount: Optional[Money] = Field(
-        None,
+        default=None,
         description="Minimum amount of funding granted per award",
     )
     max_award_amount: Optional[Money] = Field(
-        None,
+        default=None,
         description="Maximum amount of funding granted per award",
     )
     min_award_count: Optional[int] = Field(
-        None,
+        default=None,
         description="Minimum number of awards granted",
     )
     max_award_count: Optional[int] = Field(
-        None,
+        default=None,
         description="Maximum number of awards granted",
     )
     estimated_award_count: Optional[int] = Field(
-        None,
+        default=None,
         description="Estimated number of awards that will be granted",
     )
 
@@ -172,15 +180,15 @@ class OppTimeline(BaseModel):
     """Key dates and events in the lifecycle of an opportunity."""
 
     app_opens: Optional[Event] = Field(
-        None,
+        default=None,
         description="The date (and time) at which the opportunity begins accepting applications",
     )
     app_deadline: Optional[Event] = Field(
-        None,
+        default=None,
         description="The final deadline for submitting applications",
     )
     other_dates: Optional[dict[str, Event]] = Field(
-        None,
+        default=None,
         description="An optional map of other key dates in the opportunity timeline",
     )
 
@@ -201,11 +209,11 @@ class OpportunityBase(BaseModel):
         description="Key dates for the opportunity, such as when the application opens and closes",
     )
     source: Optional[Url] = Field(
-        None,
+        default=None,
         description="URL for the original source of the opportunity",
     )
     custom_fields: Optional[dict[str, CustomField]] = Field(
-        None,
+        default=None,
         description="Additional custom fields specific to this opportunity",
     )
 
