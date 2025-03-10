@@ -20,7 +20,7 @@ lint:
 test:
 	$(RUNTIME_PREFIX) pytest $(TEST_DIR) --cov=$(SRC_DIR) --cov-report=term-missing
 
-test-coverage:
+test-coverage: test
 	$(RUNTIME_PREFIX) coverage report --show-missing --fail-under=$(MIN_TEST_COVERAGE)
 
 check-format:
