@@ -281,6 +281,10 @@
         "destination": "README.md"
       },
       {
+        "path": "./fast-api/.coveragerc",
+        "destination": ".coveragerc"
+      },
+      {
         "path": "./fast-api/Makefile",
         "destination": "Makefile"
       }

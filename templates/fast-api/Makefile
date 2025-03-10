@@ -5,6 +5,9 @@ PYTHON_DIRS := $(SRC_DIR) $(TEST_DIR)
 MIN_TEST_COVERAGE := 80
 .PHONY: dev format lint check-format check-lint check-types checks
 
+install:
+	poetry install
+
 dev:
 	$(RUNTIME_PREFIX) fastapi dev src/common_grants/api.py
 
