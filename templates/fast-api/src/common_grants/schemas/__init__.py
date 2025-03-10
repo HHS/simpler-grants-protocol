@@ -24,6 +24,7 @@ __all__ = [  # noqa: RUF022
     "PaginationBodyParams",
     "PaginationBase",
     "PaginationInfo",
+    "PaginatedItems",
     # Response
     "DefaultResponse",
     "OpportunityResponse",
@@ -68,7 +69,12 @@ from .models import (
     OppStatusOptions,
     OppTimeline,
 )
-from .pagination import PaginationBase, PaginationBodyParams, PaginationInfo
+from .pagination import (
+    PaginatedItems,
+    PaginationBase,
+    PaginationBodyParams,
+    PaginationInfo,
+)
 from .response import (
     DefaultResponse,
     OpportunitiesListResponse,

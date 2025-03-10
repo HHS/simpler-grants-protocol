@@ -13,7 +13,6 @@ from common_grants.schemas import (
     OppSortBy,
     OppSorting,
     PaginationBodyParams,
-    PaginationInfo,
 )
 from common_grants.services.opportunity import OpportunityService
 
@@ -29,29 +28,23 @@ opportunity_router = APIRouter(
     description="Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.",  # noqa: E501
 )
 async def list_opportunities(
-    page: Optional[int] = Query(1, ge=1, description="The page number to retrieve"),
-    page_size: Optional[int] = Query(
-        10,
+    page: int = Query(
+        default=1,
+        ge=1,
+        description="The page number to retrieve",
+    ),
+    page_size: int = Query(
+        default=10,
+        alias="pageSize",
         ge=1,
         description="The number of items per page",
     ),
 ) -> OpportunitiesListResponse:
     """Get a paginated list of opportunities."""
     opportunity_service = OpportunityService()
-    pagination = PaginationBodyParams(page=page, page_size=page_size)
-    opportunities, total_count = await opportunity_service.list_opportunities(
-        pagination,
-    )
-
-    return OpportunitiesListResponse(
-        message="Success",
-        items=opportunities,
-        paginationInfo=PaginationInfo(
-            page=pagination.page,
-            page_size=pagination.page_size,
-            total_pages=100,
-            total_count=total_count,
-        ),
+    return await opportunity_service.list_opportunities(
+        page=page,
+        page_size=page_size,
     )
 
 
@@ -104,21 +97,8 @@ async def search_opportunities(
     if sorting is None:
         sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
 
-    opportunities, total_count = await opportunity_service.search_opportunities(
+    return await opportunity_service.search_opportunities(
         filters=filters,
         sorting=sorting,
         pagination=pagination,
-    )
-
-    return OpportunitiesSearchResponse(
-        message="Success",
-        items=opportunities,
-        paginationInfo=PaginationInfo(
-            page=pagination.page,
-            page_size=pagination.page_size,
-            total_pages=100,
-            total_count=total_count,
-        ),
-        sortInfo=sorting,
-        filterInfo=filters,
     )

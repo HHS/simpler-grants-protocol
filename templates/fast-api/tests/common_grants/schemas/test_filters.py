@@ -121,7 +121,7 @@ def test_pagination_params():
     assert params.page_size == 10
 
     # Test custom values
-    params = PaginationBodyParams(page=2, page_size=20)
+    params = PaginationBodyParams(page=2, pageSize=20)
     assert params.page == 2
     assert params.page_size == 20
 
@@ -129,7 +129,7 @@ def test_pagination_params():
     with pytest.raises(ValidationError):
         PaginationBodyParams(page=0)
     with pytest.raises(ValidationError):
-        PaginationBodyParams(page_size=0)
+        PaginationBodyParams(pageSize=0)
 
 
 def create_test_opportunity():
