@@ -29,7 +29,7 @@ class OppSorting(BaseModel):
         alias="sortBy",
     )
     sort_order: str = Field(
-        "desc",
+        default="desc",
         description="The sort order (asc or desc)",
         alias="sortOrder",
     )

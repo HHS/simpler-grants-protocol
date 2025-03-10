@@ -102,7 +102,7 @@ async def search_opportunities(
         filters = OppFilters()
 
     if sorting is None:
-        sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT, sortOrder="desc")
+        sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
 
     opportunities, total_count = await opportunity_service.search_opportunities(
         filters=filters,
