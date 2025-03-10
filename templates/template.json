@@ -83,7 +83,7 @@
   },
   "fast-api": {
     "title": "FastAPI example",
-    "description": "Example from the fastapi guide",
+    "description": "CommonGrants API implementation in FastAPI",
     "compilerVersion": "0.63.0",
     "libraries": ["@common-grants/core"],
     "config": {},
@@ -109,8 +109,64 @@
         "destination": "src/common_grants/schemas/__init__.py"
       },
       {
-        "path": "./fast-api/src/common_grants/schemas/opportunity.py",
-        "destination": "src/common_grants/schemas/opportunity.py"
+        "path": "./fast-api/src/common_grants/schemas/fields.py",
+        "destination": "src/common_grants/schemas/fields.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/sorting.py",
+        "destination": "src/common_grants/schemas/sorting.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/response.py",
+        "destination": "src/common_grants/schemas/response.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/pagination.py",
+        "destination": "src/common_grants/schemas/pagination.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/models/__init__.py",
+        "destination": "src/common_grants/schemas/models/__init__.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/models/opp_search.py",
+        "destination": "src/common_grants/schemas/models/opp_search.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/models/opp_timeline.py",
+        "destination": "src/common_grants/schemas/models/opp_timeline.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/models/opp_funding.py",
+        "destination": "src/common_grants/schemas/models/opp_funding.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/models/opp_base.py",
+        "destination": "src/common_grants/schemas/models/opp_base.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/models/opp_status.py",
+        "destination": "src/common_grants/schemas/models/opp_status.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/filters/__init__.py",
+        "destination": "src/common_grants/schemas/filters/__init__.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/filters/base.py",
+        "destination": "src/common_grants/schemas/filters/base.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/filters/string_filters.py",
+        "destination": "src/common_grants/schemas/filters/string_filters.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/filters/date_filters.py",
+        "destination": "src/common_grants/schemas/filters/date_filters.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/schemas/filters/money_filters.py",
+        "destination": "src/common_grants/schemas/filters/money_filters.py"
       },
       {
         "path": "./fast-api/src/common_grants/services/__init__.py",
@@ -119,6 +175,94 @@
       {
         "path": "./fast-api/src/common_grants/services/opportunity.py",
         "destination": "src/common_grants/services/opportunity.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/services/utils.py",
+        "destination": "src/common_grants/services/utils.py"
+      },
+      {
+        "path": "./fast-api/tests/__init__.py",
+        "destination": "tests/__init__.py"
+      },
+      {
+        "path": "./fast-api/tests/conftest.py",
+        "destination": "tests/conftest.py"
+      },
+      {
+        "path": "./fast-api/tests/ruff.toml",
+        "destination": "tests/ruff.toml"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/__init__.py",
+        "destination": "tests/common_grants/__init__.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/routes/__init__.py",
+        "destination": "tests/common_grants/routes/__init__.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/routes/test_opportunities.py",
+        "destination": "tests/common_grants/routes/test_opportunities.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/__init__.py",
+        "destination": "tests/common_grants/schemas/__init__.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/test_filters.py",
+        "destination": "tests/common_grants/schemas/test_filters.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/test_opportunity.py",
+        "destination": "tests/common_grants/schemas/test_opportunity.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/models/__init__.py",
+        "destination": "tests/common_grants/schemas/models/__init__.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/models/test_opp_base.py",
+        "destination": "tests/common_grants/schemas/models/test_opp_base.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/models/test_opp_timeline.py",
+        "destination": "tests/common_grants/schemas/models/test_opp_timeline.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/models/test_opp_status.py",
+        "destination": "tests/common_grants/schemas/models/test_opp_status.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/models/test_opp_funding.py",
+        "destination": "tests/common_grants/schemas/models/test_opp_funding.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/filters/__init__.py",
+        "destination": "tests/common_grants/schemas/filters/__init__.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/filters/test_base.py",
+        "destination": "tests/common_grants/schemas/filters/test_base.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/filters/test_money_filters.py",
+        "destination": "tests/common_grants/schemas/filters/test_money_filters.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/filters/test_date_filters.py",
+        "destination": "tests/common_grants/schemas/filters/test_date_filters.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/filters/test_string_filters.py",
+        "destination": "tests/common_grants/schemas/filters/test_string_filters.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/fields/__init__.py",
+        "destination": "tests/common_grants/schemas/fields/__init__.py"
+      },
+      {
+        "path": "./fast-api/tests/common_grants/schemas/fields/test_fields.py",
+        "destination": "tests/common_grants/schemas/fields/test_fields.py"
       },
       {
         "path": "./fast-api/pyproject.toml",
@@ -135,6 +279,10 @@
       {
         "path": "./fast-api/README.md",
         "destination": "README.md"
+      },
+      {
+        "path": "./fast-api/Makefile",
+        "destination": "Makefile"
       }
     ]
   }
