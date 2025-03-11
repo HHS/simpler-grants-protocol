@@ -289,5 +289,116 @@
         "destination": "Makefile"
       }
     ]
+  },
+  "express-js": {
+    "title": "Express.js example",
+    "description": "CommonGrants API implementation in Express.js",
+    "compilerVersion": "0.63.0",
+    "files": [
+      {
+        "path": "./express-js/.eslintrc.js",
+        "destination": ".eslintrc.js"
+      },
+      {
+        "path": "./express-js/.prettierignore",
+        "destination": ".prettierignore"
+      },
+      {
+        "path": "./express-js/.prettierrc",
+        "destination": ".prettierrc"
+      },
+      {
+        "path": "./express-js/package-lock.json",
+        "destination": "package-lock.json"
+      },
+      {
+        "path": "./express-js/package.json",
+        "destination": "package.json"
+      },
+      {
+        "path": "./express-js/README.md",
+        "destination": "README.md"
+      },
+      {
+        "path": "./express-js/tsconfig.json",
+        "destination": "tsconfig.json"
+      },
+      {
+        "path": "./express-js/tspconfig.yaml",
+        "destination": "tspconfig.yaml"
+      },
+      {
+        "path": "./express-js/src/api/index.ts",
+        "destination": "src/api/index.ts"
+      },
+      {
+        "path": "./express-js/src/api/controllers/docs.controller.ts",
+        "destination": "src/api/controllers/docs.controller.ts"
+      },
+      {
+        "path": "./express-js/src/api/controllers/opportunity.controller.ts",
+        "destination": "src/api/controllers/opportunity.controller.ts"
+      },
+      {
+        "path": "./express-js/src/api/errors/api-error.ts",
+        "destination": "src/api/errors/api-error.ts"
+      },
+      {
+        "path": "./express-js/src/api/middleware/error.middleware.ts",
+        "destination": "src/api/middleware/error.middleware.ts"
+      },
+      {
+        "path": "./express-js/src/api/middleware/validation.middleware.ts",
+        "destination": "src/api/middleware/validation.middleware.ts"
+      },
+      {
+        "path": "./express-js/src/api/routes/opportunities.ts",
+        "destination": "src/api/routes/opportunities.ts"
+      },
+      {
+        "path": "./express-js/src/api/schemas/fields.ts",
+        "destination": "src/api/schemas/fields.ts"
+      },
+      {
+        "path": "./express-js/src/api/schemas/filters.ts",
+        "destination": "src/api/schemas/filters.ts"
+      },
+      {
+        "path": "./express-js/src/api/schemas/index.ts",
+        "destination": "src/api/schemas/index.ts"
+      },
+      {
+        "path": "./express-js/src/api/schemas/models.ts",
+        "destination": "src/api/schemas/models.ts"
+      },
+      {
+        "path": "./express-js/src/api/schemas/pagination.ts",
+        "destination": "src/api/schemas/pagination.ts"
+      },
+      {
+        "path": "./express-js/src/api/schemas/responses.ts",
+        "destination": "src/api/schemas/responses.ts"
+      },
+      {
+        "path": "./express-js/src/api/services/documentation.service.ts",
+        "destination": "src/api/services/documentation.service.ts"
+      },
+      {
+        "path": "./express-js/src/api/services/opportunity.service.ts",
+        "destination": "src/api/services/opportunity.service.ts"
+      },
+      {
+        "path": "./express-js/src/api/services/utils.ts",
+        "destination": "src/api/services/utils.ts"
+      },
+      {
+        "path": "./express-js/src/api/services/validation.service.ts",
+        "destination": "src/api/services/validation.service.ts"
+      },
+      {
+        "path": "./express-js/src/typespec/main.tsp",
+        "destination": "src/typespec/main.tsp"
+      }
+    ]
   }
 }
