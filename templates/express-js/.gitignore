@@ -1,8 +1,9 @@
 # build output
 dist/
 tsp-output/
-*.tgz
 coverage/
+*.tgz
+*.tsbuildinfo
 
 # dependencies
 node_modules/

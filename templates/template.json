@@ -352,10 +352,6 @@
         "destination": "src/api/middleware/validation.middleware.ts"
       },
       {
-        "path": "./express-js/src/api/routes/opportunities.ts",
-        "destination": "src/api/routes/opportunities.ts"
-      },
-      {
         "path": "./express-js/src/api/schemas/fields.ts",
         "destination": "src/api/schemas/fields.ts"
       },

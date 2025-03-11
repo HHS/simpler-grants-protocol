@@ -1,4 +1,4 @@
-import { ApiError } from "../middleware/error-handler";
+import { ApiError } from "../middleware/error.middleware";
 import { z } from "zod";
 import {
   opportunityBaseSchema,
