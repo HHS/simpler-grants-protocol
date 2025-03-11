@@ -38,7 +38,6 @@
     "title": "Custom CommonGrants API",
     "description": "Extend the default CommonGrants API spec with custom fields and routes",
     "compilerVersion": "0.63.0",
-    "libraries": ["@common-grants/core"],
     "config": {},
     "files": [
       {
@@ -82,8 +81,8 @@
     }
   },
   "fast-api": {
-    "title": "FastAPI example",
-    "description": "CommonGrants API implementation in FastAPI",
+    "title": "FastAPI boilerplate",
+    "description": "Boilerplate for a CommonGrants API implemented with FastAPI",
     "compilerVersion": "0.63.0",
     "libraries": ["@common-grants/core"],
     "config": {},
@@ -291,8 +290,8 @@
     ]
   },
   "express-js": {
-    "title": "Express.js example",
-    "description": "CommonGrants API implementation in Express.js",
+    "title": "Express.js boilerplate",
+    "description": "Boilerplate for a CommonGrants API implemented with Express.js",
     "compilerVersion": "0.63.0",
     "files": [
       {

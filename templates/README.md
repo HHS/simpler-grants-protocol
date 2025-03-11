@@ -17,7 +17,10 @@ This will walk you through a series of prompts to initialize the your project.
 
 ## Templates
 
-| Template Name | Description                                                                      |
-| ------------- | -------------------------------------------------------------------------------- |
-| Default API   | Define a CommonGrants API spec with default routes from the CommonGrants library |
-| Custom API    | Extend the default CommonGrants API spec with custom fields and routes           |
+| Template Name          | Description                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| Default API            | Define a CommonGrants API spec with default routes from the CommonGrants library |
+| Custom API             | Extend the default CommonGrants API spec with custom fields and routes           |
+| Quickstart             | Template to use for the CommonGrants quickstart guide                            |
+| FastAPI boilerplate    | Boilerplate code for a CommonGrants API implemented with FastAPI                 |
+| Express.js boilerplate | Boilerplate code for a CommonGrants API implemented with Express.js              |

@@ -13,7 +13,7 @@ A template for a CommonGrants API implemented using Express.js and TypeScript.
 1. Create a new directory for your project: `mkdir express-api && cd express-api`
 2. Set up the project using this template and follow the instructions: `cg init --template express-js`
 3. Install the project dependencies: `npm install`
-4. Run the checks: `npm checks`
+4. Run the checks: `npm run checks`
 5. Run the local development server: `npm run dev`
 
 ## Commands
@@ -23,7 +23,6 @@ The npm scripts expose the following commands:
 | Command          | Description                                 |
 | ---------------- | ------------------------------------------- |
 | `npm install`    | Installs the project dependencies           |
-| `npm test`       | Runs the unit test suite                    |
 | `npm run format` | Runs formatting with prettier               |
 | `npm run lint`   | Runs linting with eslint                    |
 | `npm run build`  | Compiles TypeScript to JavaScript           |
