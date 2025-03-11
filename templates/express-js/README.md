@@ -5,7 +5,7 @@ A template for a CommonGrants API implemented using Express.js and TypeScript.
 ## Pre-requisites
 
 1. Node.js 18 or greater is installed globally: `node --version`
-2. npm is installed globally: `npm --version`   
+2. npm is installed globally: `npm --version`
 3. The TypeSpec compiler and CommonGrants CLI are installed globally: `npm install -g @common-grants/cli @typespec/compiler`
 
 ## Quickstart
