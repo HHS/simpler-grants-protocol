@@ -9,12 +9,7 @@ export const PaginatedQueryParamsSchema = z.object({
   /** The page to return (minimum value: 1) */
   page: z.coerce.number().int().min(1).optional().default(DEFAULT_PAGE),
   /** The number of items to return per page (minimum value: 1) */
-  pageSize: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .default(DEFAULT_PAGE_SIZE),
+  pageSize: z.coerce.number().int().min(1).optional().default(DEFAULT_PAGE_SIZE),
 });
 
 /** Body parameters for paginated routes */

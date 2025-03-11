@@ -5,9 +5,7 @@ import { z } from "zod";
 
 const handleValidationError = (error: unknown) => {
   if (error instanceof z.ZodError) {
-    const message = error.errors
-      .map((err) => `${err.path.join(".")}: ${err.message}`)
-      .join(", ");
+    const message = error.errors.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
     throw new ApiError(400, `Validation error: ${message}`);
   }
   throw error;
@@ -16,11 +14,7 @@ const handleValidationError = (error: unknown) => {
 /**
  * Validates a complete opportunity object in the request body
  */
-export const validateOpportunityBody = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const validateOpportunityBody = (req: Request, res: Response, next: NextFunction) => {
   try {
     ValidationService.validateOpportunity(req.body);
     next();
@@ -32,11 +26,7 @@ export const validateOpportunityBody = (
 /**
  * Validates pagination parameters in the request query
  */
-export const validatePagination = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const validatePagination = (req: Request, res: Response, next: NextFunction) => {
   try {
     ValidationService.validatePagination(req.query);
     next();
@@ -48,17 +38,9 @@ export const validatePagination = (
 /**
  * Validates search parameters in the request body
  */
-export const validateSearchParams = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const validateSearchParams = (req: Request, res: Response, next: NextFunction) => {
   try {
-    ValidationService.validateSearchParams(
-      req.body.filters,
-      req.body.sorting,
-      req.body.pagination
-    );
+    ValidationService.validateSearchParams(req.body.filters, req.body.sorting, req.body.pagination);
     next();
   } catch (error) {
     next(handleValidationError(error));

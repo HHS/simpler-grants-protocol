@@ -9,8 +9,7 @@ const checkSpecExists = (req: Request, res: Response, next: NextFunction) => {
   if (!DocumentationService.isSpecGenerated()) {
     return res.status(404).json({
       error: {
-        message:
-          "OpenAPI specification not found. Please run `npm run prepare` first.",
+        message: "OpenAPI specification not found. Please run `npm run prepare` first.",
       },
     });
   }
@@ -30,18 +29,14 @@ docsRouter.get(
 );
 
 // Raw OpenAPI spec endpoint
-docsRouter.get(
-  "/spec",
-  checkSpecExists,
-  (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const spec = DocumentationService.getOpenApiSpec();
-      res.json(spec);
-    } catch (error) {
-      next(error);
-    }
+docsRouter.get("/spec", checkSpecExists, (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const spec = DocumentationService.getOpenApiSpec();
+    res.json(spec);
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 // Documentation metadata
 docsRouter.get("/meta", checkSpecExists, (req: Request, res: Response) => {

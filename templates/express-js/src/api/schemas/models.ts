@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  eventSchema,
-  moneySchema,
-  customFieldSchema,
-  systemMetadataSchema,
-} from "./fields";
+import { eventSchema, moneySchema, customFieldSchema, systemMetadataSchema } from "./fields";
 import {
   stringArrayFilterSchema,
   dateRangeFilterSchema,
@@ -16,12 +11,7 @@ import {
 // Status models
 // ############################################################################
 
-export const oppStatusOptionsEnum = z.enum([
-  "forecasted",
-  "open",
-  "closed",
-  "custom",
-]);
+export const oppStatusOptionsEnum = z.enum(["forecasted", "open", "closed", "custom"]);
 
 export type OppStatusOptions = z.infer<typeof oppStatusOptionsEnum>;
 

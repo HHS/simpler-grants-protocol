@@ -24,7 +24,7 @@ export class ValidationService {
       if (error instanceof z.ZodError) {
         throw new ApiError(
           400,
-          `Invalid opportunity data: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+          `Invalid opportunity data: ${error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")}`
         );
       }
       throw error;
@@ -38,11 +38,7 @@ export class ValidationService {
    * @param pagination - The pagination parameters
    * @throws {ApiError} If validation fails
    */
-  static validateSearchParams(
-    filters: unknown,
-    sorting: unknown,
-    pagination: unknown
-  ): void {
+  static validateSearchParams(filters: unknown, sorting: unknown, pagination: unknown): void {
     try {
       oppDefaultFiltersSchema.parse(filters);
       oppSortingSchema.parse(sorting);
@@ -51,7 +47,7 @@ export class ValidationService {
       if (error instanceof z.ZodError) {
         throw new ApiError(
           400,
-          `Invalid search parameters: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+          `Invalid search parameters: ${error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")}`
         );
       }
       throw error;
@@ -70,7 +66,7 @@ export class ValidationService {
       if (error instanceof z.ZodError) {
         throw new ApiError(
           400,
-          `Invalid pagination parameters: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+          `Invalid pagination parameters: ${error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")}`
         );
       }
       throw error;

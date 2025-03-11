@@ -27,22 +27,17 @@ export const opportunitiesListResponseSchema = defaultResponseSchema.extend({
   paginationInfo: PaginationInfoSchema,
 });
 
-export type OpportunitiesListResponse = z.infer<
-  typeof opportunitiesListResponseSchema
->;
+export type OpportunitiesListResponse = z.infer<typeof opportunitiesListResponseSchema>;
 
 /** A paginated list of results from an opportunity search */
-export const opportunitiesSearchResponseSchema =
-  opportunitiesListResponseSchema.extend({
-    /** The sorting details */
-    sortInfo: oppSortingSchema,
-    /** The filter details */
-    filterInfo: oppDefaultFiltersSchema,
-  });
+export const opportunitiesSearchResponseSchema = opportunitiesListResponseSchema.extend({
+  /** The sorting details */
+  sortInfo: oppSortingSchema,
+  /** The filter details */
+  filterInfo: oppDefaultFiltersSchema,
+});
 
-export type OpportunitiesSearchResponse = z.infer<
-  typeof opportunitiesSearchResponseSchema
->;
+export type OpportunitiesSearchResponse = z.infer<typeof opportunitiesSearchResponseSchema>;
 
 /** A single opportunity */
 export const opportunityResponseSchema = defaultResponseSchema.extend({

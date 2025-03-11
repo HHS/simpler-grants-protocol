@@ -41,13 +41,7 @@ export type Money = z.infer<typeof moneySchema>;
 // CustomField schema
 // ############################################################################
 
-export const customFieldTypeEnum = z.enum([
-  "string",
-  "number",
-  "boolean",
-  "object",
-  "array",
-]);
+export const customFieldTypeEnum = z.enum(["string", "number", "boolean", "object", "array"]);
 
 export type CustomFieldType = z.infer<typeof customFieldTypeEnum>;
 

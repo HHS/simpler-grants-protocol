@@ -1,6 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { OpportunitiesService } from "../services/opportunity.service";
-import { errorHandler } from "../middleware/error.middleware";
 import { PaginatedQueryParamsSchema } from "../schemas/pagination";
 import { oppSortingSchema, oppDefaultFiltersSchema } from "../schemas/models";
 
@@ -21,9 +20,7 @@ const oppService = new OpportunitiesService();
  */
 oppRouter.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { page = 1, pageSize = 10 } = PaginatedQueryParamsSchema.parse(
-      req.query
-    );
+    const { page = 1, pageSize = 10 } = PaginatedQueryParamsSchema.parse(req.query);
     const response = await oppService.listOpportunities(page, pageSize);
     res.json(response);
   } catch (error) {
@@ -39,20 +36,17 @@ oppRouter.get("/", async (req: Request, res: Response, next: NextFunction) => {
  * @returns {Promise<OpportunityResponse>} The requested grant opportunity
  * @responses {404} Opportunity not found - Returns a JSON error object with a message
  */
-oppRouter.get(
-  "/:id",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const opportunity = await oppService.getOpportunityByTitle(req.params.id);
-      res.json({
-        message: "Success",
-        data: opportunity,
-      });
-    } catch (error) {
-      next(error);
-    }
+oppRouter.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const opportunity = await oppService.getOpportunityByTitle(req.params.id);
+    res.json({
+      message: "Success",
+      data: opportunity,
+    });
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 /**
  * POST /common-grants/opportunities/search
@@ -63,26 +57,17 @@ oppRouter.get(
  * @param {PaginationBodyParams} pagination - Pagination parameters
  * @returns {Promise<OpportunitiesSearchResponse>} Filtered and paginated opportunities
  */
-oppRouter.post(
-  "/search",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const filters = oppDefaultFiltersSchema.parse(req.body.filters ?? {});
-      const sorting = oppSortingSchema.parse(
-        req.body.sorting ?? { sortBy: "lastModifiedAt" }
-      );
-      const pagination = PaginatedQueryParamsSchema.parse(
-        req.body.pagination ?? { page: 1, pageSize: 10 }
-      );
+oppRouter.post("/search", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const filters = oppDefaultFiltersSchema.parse(req.body.filters ?? {});
+    const sorting = oppSortingSchema.parse(req.body.sorting ?? { sortBy: "lastModifiedAt" });
+    const pagination = PaginatedQueryParamsSchema.parse(
+      req.body.pagination ?? { page: 1, pageSize: 10 }
+    );
 
-      const opportunities = await oppService.searchOpportunities(
-        filters,
-        sorting,
-        pagination
-      );
-      res.json(opportunities);
-    } catch (error) {
-      next(error);
-    }
+    const opportunities = await oppService.searchOpportunities(filters, sorting, pagination);
+    res.json(opportunities);
+  } catch (error) {
+    next(error);
   }
-);
+});

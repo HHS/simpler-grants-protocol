@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 /**
  * Custom API error class that includes a status code and optional details.
@@ -18,7 +18,7 @@ export class ApiError extends Error {
     public details?: Record<string, unknown>
   ) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
@@ -26,33 +26,33 @@ export class ApiError extends Error {
  * Global error handling middleware.
  * Catches all errors thrown in the application and formats them into a consistent
  * error response structure.
- * 
+ *
  * @param err - The error object
  * @param req - Express request object
  * @param res - Express response object
- * @param next - Express next function
+ * @param _next - Express next function (intentionally unused)
  */
 export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
-  console.error('Error:', err);
+  console.error("Error:", err);
 
   if (err instanceof ApiError) {
     res.status(err.statusCode).json({
       error: {
         message: err.message,
-        ...(err.details && { details: err.details })
-      }
+        ...(err.details && { details: err.details }),
+      },
     });
     return;
   }
 
   res.status(500).json({
     error: {
-      message: 'Internal server error'
-    }
+      message: "Internal server error",
+    },
   });
-}; 
+};

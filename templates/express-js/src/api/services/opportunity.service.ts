@@ -107,10 +107,7 @@ export class OpportunitiesService {
    * Retrieves a list of all grant opportunities.
    * @returns Promise resolving to an array of opportunities
    */
-  async listOpportunities(
-    page: number,
-    pageSize: number
-  ): Promise<OpportunitiesListResponse> {
+  async listOpportunities(page: number, pageSize: number): Promise<OpportunitiesListResponse> {
     const pages = paginate(mockOpportunities, page, pageSize);
     return {
       message: "Opportunities retrieved successfully",
@@ -126,7 +123,7 @@ export class OpportunitiesService {
    * @throws {ApiError} If opportunity is not found
    */
   async getOpportunityByTitle(title: string): Promise<Opportunity> {
-    const opportunity = mockOpportunities.find((g) => g.title === title);
+    const opportunity = mockOpportunities.find(g => g.title === title);
     if (!opportunity) {
       throw new ApiError(404, `Opportunity with title ${title} not found`);
     }

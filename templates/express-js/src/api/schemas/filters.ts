@@ -56,9 +56,7 @@ export const stringComparisonFilterSchema = z.object({
   value: z.string(),
 });
 
-export type StringComparisonFilter = z.infer<
-  typeof stringComparisonFilterSchema
->;
+export type StringComparisonFilter = z.infer<typeof stringComparisonFilterSchema>;
 
 export const stringArrayFilterSchema = z.object({
   operator: arrayOperatorsEnum,
@@ -76,9 +74,7 @@ export const numberComparisonFilterSchema = z.object({
   value: z.number(),
 });
 
-export type NumberComparisonFilter = z.infer<
-  typeof numberComparisonFilterSchema
->;
+export type NumberComparisonFilter = z.infer<typeof numberComparisonFilterSchema>;
 
 export const numberRangeFilterSchema = z.object({
   operator: rangeOperatorsEnum,

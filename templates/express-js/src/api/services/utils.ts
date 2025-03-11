@@ -1,9 +1,5 @@
 import * as uuid from "uuid";
-import {
-  type Opportunity,
-  type OppStatusOptions,
-  type PaginationInfo,
-} from "../schemas";
+import { type Opportunity, type OppStatusOptions, type PaginationInfo } from "../schemas";
 
 // Namespace UUID for generating deterministic UUIDs
 const NAMESPACE = "58315de5-1411-4c17-a394-561f1a47376f";
@@ -15,11 +11,7 @@ export interface PaginatedItems<T> {
 }
 
 /** Paginate a list of items */
-export function paginate<T>(
-  items: T[],
-  page: number,
-  pageSize: number
-): PaginatedItems<T> {
+export function paginate<T>(items: T[], page: number, pageSize: number): PaginatedItems<T> {
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
 

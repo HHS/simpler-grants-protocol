@@ -24,10 +24,7 @@ export class DocumentationService {
       return spec;
     } catch (error) {
       if (error instanceof Error) {
-        throw new ApiError(
-          500,
-          `Failed to load OpenAPI specification: ${error.message}`
-        );
+        throw new ApiError(500, `Failed to load OpenAPI specification: ${error.message}`);
       }
       throw error;
     }
@@ -42,10 +39,7 @@ export class DocumentationService {
       const stats = fs.statSync(this.openApiPath);
       return stats.mtime;
     } catch {
-      throw new ApiError(
-        500,
-        "Failed to get OpenAPI specification modification time"
-      );
+      throw new ApiError(500, "Failed to get OpenAPI specification modification time");
     }
   }
 }
