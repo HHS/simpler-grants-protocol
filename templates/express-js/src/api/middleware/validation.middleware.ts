@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { ValidationService } from "../services/validation.service";
-import { ApiError } from "../errors/api-error";
-import { ZodError } from "zod";
+import { ApiError } from "./error.middleware";
+import { z } from "zod";
 
 const handleValidationError = (error: unknown) => {
-  if (error instanceof ZodError) {
+  if (error instanceof z.ZodError) {
     const message = error.errors
       .map((err) => `${err.path.join(".")}: ${err.message}`)
       .join(", ");
@@ -13,26 +13,52 @@ const handleValidationError = (error: unknown) => {
   throw error;
 };
 
-export const validateGrantBody = (
+/**
+ * Validates a complete opportunity object in the request body
+ */
+export const validateOpportunityBody = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    ValidationService.validateGrant(req.body);
+    ValidationService.validateOpportunity(req.body);
     next();
   } catch (error) {
     next(handleValidationError(error));
   }
 };
 
-export const validatePartialGrantBody = (
+/**
+ * Validates pagination parameters in the request query
+ */
+export const validatePagination = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    ValidationService.validatePartialGrant(req.body);
+    ValidationService.validatePagination(req.query);
+    next();
+  } catch (error) {
+    next(handleValidationError(error));
+  }
+};
+
+/**
+ * Validates search parameters in the request body
+ */
+export const validateSearchParams = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    ValidationService.validateSearchParams(
+      req.body.filters,
+      req.body.sorting,
+      req.body.pagination
+    );
     next();
   } catch (error) {
     next(handleValidationError(error));

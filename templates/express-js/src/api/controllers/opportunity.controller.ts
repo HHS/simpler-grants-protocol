@@ -1,6 +1,8 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { OpportunitiesService } from "../services/opportunity.service";
-import { ValidationService } from "../validation/validation.service";
+import { errorHandler } from "../middleware/error.middleware";
+import { PaginatedQueryParamsSchema } from "../schemas/pagination";
+import { oppSortingSchema, oppDefaultFiltersSchema } from "../schemas/models";
 
 /**
  * Router for handling grant opportunity endpoints.
@@ -10,36 +12,42 @@ export const oppRouter = Router();
 const oppService = new OpportunitiesService();
 
 /**
- * GET /grants
- * Lists all available grant opportunities.
- * @route GET /grants
- * @returns {Promise<Opportunity[]>} Array of grant opportunities
+ * GET /common-grants/opportunities
+ * Lists all available grant opportunities, sorted by lastModifiedAt with most recent first.
+ * @route GET /common-grants/opportunities
+ * @param {number} page - The page number to retrieve (default: 1)
+ * @param {number} pageSize - The number of items per page (default: 10)
+ * @returns {Promise<OpportunitiesListResponse>} Paginated list of opportunities
  */
 oppRouter.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const opportunities = await oppService.listOpportunities();
-    res.json(opportunities);
+    const { page = 1, pageSize = 10 } = PaginatedQueryParamsSchema.parse(
+      req.query
+    );
+    const response = await oppService.listOpportunities(page, pageSize);
+    res.json(response);
   } catch (error) {
     next(error);
   }
 });
 
 /**
- * GET /grants/:title
- * Retrieves a specific grant opportunity by its title.
- * @route GET /grants/:title
- * @param {string} title.path - Title of the grant opportunity
- * @returns {Promise<Opportunity>} The requested grant opportunity
- * @throws {404} If opportunity is not found
+ * GET /common-grants/opportunities/:id
+ * Retrieves a specific grant opportunity by its ID.
+ * @route GET /common-grants/opportunities/:id
+ * @param {string} id.path - UUID of the grant opportunity
+ * @returns {Promise<OpportunityResponse>} The requested grant opportunity
+ * @responses {404} Opportunity not found - Returns a JSON error object with a message
  */
 oppRouter.get(
-  "/:title",
+  "/:id",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const opportunity = await oppService.getOpportunityByTitle(
-        req.params.title
-      );
-      res.json(opportunity);
+      const opportunity = await oppService.getOpportunityByTitle(req.params.id);
+      res.json({
+        message: "Success",
+        data: opportunity,
+      });
     } catch (error) {
       next(error);
     }
@@ -47,20 +55,31 @@ oppRouter.get(
 );
 
 /**
- * GET /grants/search
- * Searches for grant opportunities matching the query.
- * @route GET /grants/search
- * @param {string} q.query - Search query string
- * @returns {Promise<Opportunity[]>} Array of matching grant opportunities
- * @throws {400} If search query is invalid
+ * POST /common-grants/opportunities/search
+ * Searches for grant opportunities based on provided filters.
+ * @route POST /common-grants/opportunities/search
+ * @param {OppFilters} filters - Filter criteria
+ * @param {OppSorting} sorting - Sort criteria
+ * @param {PaginationBodyParams} pagination - Pagination parameters
+ * @returns {Promise<OpportunitiesSearchResponse>} Filtered and paginated opportunities
  */
-oppRouter.get(
+oppRouter.post(
   "/search",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const query = req.query.q as string;
-      ValidationService.validateSearchQuery(query);
-      const opportunities = await oppService.searchOpportunities(query);
+      const filters = oppDefaultFiltersSchema.parse(req.body.filters ?? {});
+      const sorting = oppSortingSchema.parse(
+        req.body.sorting ?? { sortBy: "lastModifiedAt" }
+      );
+      const pagination = PaginatedQueryParamsSchema.parse(
+        req.body.pagination ?? { page: 1, pageSize: 10 }
+      );
+
+      const opportunities = await oppService.searchOpportunities(
+        filters,
+        sorting,
+        pagination
+      );
       res.json(opportunities);
     } catch (error) {
       next(error);

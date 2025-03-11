@@ -1,62 +1,79 @@
-import { z } from 'zod';
+import { ApiError } from "../middleware/error-handler";
+import { z } from "zod";
+import {
+  opportunityBaseSchema,
+  oppDefaultFiltersSchema,
+  oppSortingSchema,
+} from "../schemas/models";
+import { PaginatedQueryParamsSchema } from "../schemas/pagination";
 
-const FundingAmountSchema = z.object({
-  amount: z.number(),
-  currency: z.string()
-});
-
-const AwardRangeSchema = z.object({
-  min: FundingAmountSchema,
-  max: FundingAmountSchema
-});
-
-const MatchRequirementSchema = z.object({
-  required: z.boolean(),
-  percentage: z.number().optional()
-});
-
-const ApplicationTimelineSchema = z.object({
-  name: z.string().min(1),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  description: z.string().min(1)
-});
-
-const CustomFieldSchema = z.object({
-  name: z.string().min(1),
-  type: z.enum(['string', 'number', 'boolean', 'object', 'array']),
-  format: z.string().min(1),
-  value: z.unknown(),
-  description: z.string().optional(),
-  link: z.string().url().optional()
-});
-
-const FundingDetailsSchema = z.object({
-  awardRange: AwardRangeSchema,
-  matchRequirement: MatchRequirementSchema,
-  fundingURL: z.string().url()
-});
-
-const OpportunitySchema = z.object({
-  source: z.string().min(1),
-  title: z.string().min(1),
-  agencyDept: z.string().min(1),
-  status: z.string().min(1),
-  categories: z.array(z.string()),
-  description: z.string().min(1),
-  applicationTimeline: z.array(ApplicationTimelineSchema),
-  fundingDetails: FundingDetailsSchema,
-  geographicScope: z.string().min(1),
-  applicantEligibility: z.array(z.string()),
-  grantURL: z.string().url(),
-  customFields: z.record(CustomFieldSchema)
-});
-
+/**
+ * Service for validating API request data.
+ * Provides methods for validating opportunities, search parameters, and pagination.
+ */
 export class ValidationService {
-  static validateGrant(data: unknown) {
-    return OpportunitySchema.parse(data);
+  /**
+   * Validates a complete opportunity object against the schema.
+   * @param data - The opportunity data to validate
+   * @throws {ApiError} If validation fails
+   */
+  static validateOpportunity(data: unknown): void {
+    try {
+      opportunityBaseSchema.parse(data);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new ApiError(
+          400,
+          `Invalid opportunity data: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+        );
+      }
+      throw error;
+    }
   }
 
-  static validatePartialGrant(data: unknown) {
-    return OpportunitySchema.partial().parse(data);
+  /**
+   * Validates search parameters including filters, sorting, and pagination
+   * @param filters - The filter criteria
+   * @param sorting - The sort criteria
+   * @param pagination - The pagination parameters
+   * @throws {ApiError} If validation fails
+   */
+  static validateSearchParams(
+    filters: unknown,
+    sorting: unknown,
+    pagination: unknown
+  ): void {
+    try {
+      oppDefaultFiltersSchema.parse(filters);
+      oppSortingSchema.parse(sorting);
+      PaginatedQueryParamsSchema.parse(pagination);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new ApiError(
+          400,
+          `Invalid search parameters: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+        );
+      }
+      throw error;
+    }
   }
-} 
+
+  /**
+   * Validates pagination parameters
+   * @param params - The pagination parameters to validate
+   * @throws {ApiError} If validation fails
+   */
+  static validatePagination(params: unknown): void {
+    try {
+      PaginatedQueryParamsSchema.parse(params);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new ApiError(
+          400,
+          `Invalid pagination parameters: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+        );
+      }
+      throw error;
+    }
+  }
+}
