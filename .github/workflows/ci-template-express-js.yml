@@ -1,0 +1,34 @@
+name: CI - Express.js Template
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - templates/express-js/**
+      - .github/workflows/ci-template-express-js.yml
+
+defaults:
+  run:
+    working-directory: ./templates/express-js
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        # Installs dependencies directly from package.lock
+        # and skips dependency resolution etc.
+        run: npm ci
+
+      - name: Run checks
+        run: npm run checks
+
+      - name: Build library
+        run: npm run build
+
+      - name: Audit dependencies
+        run: npm audit
