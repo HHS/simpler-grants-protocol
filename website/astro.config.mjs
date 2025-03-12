@@ -70,7 +70,7 @@ export default defineConfig({
                 {
                   label: "Models",
                   collapsed: true,
-                  autogenerate: { directory: "protocol/opportunity" },
+                  autogenerate: { directory: "protocol/models" },
                 },
                 {
                   label: "Filters",
