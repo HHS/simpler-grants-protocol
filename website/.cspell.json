@@ -12,7 +12,9 @@
     "namespacing",
     "transpiles",
     "tspconfig",
-    "typespec"
+    "typespec",
+    "pydantic",
+    "pyproject"
   ],
   "ignoreWords": [],
   "import": []

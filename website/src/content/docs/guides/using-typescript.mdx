@@ -1,0 +1,266 @@
+---
+title: Building a TypeScript API
+description: Learn how to implement a CommonGrants API in TypeScript.
+sidebar:
+  order: 1
+---
+
+import { FileTree, Steps } from "@astrojs/starlight/components";
+
+Learn how to implement a CommonGrants API in TypeScript using the [Express.js](https://expressjs.com/) web framework.
+
+## Quickstart
+
+This guide will walk you through the process of setting up a new project using the CommonGrants Express.js template, and then outline steps for extending this template to meet your specific needs.
+
+### Prerequisites
+
+To follow this guide, you'll need to have the following installed on your machine:
+
+- Node.js 20+ and npm 10+
+- CommonGrants and TypeSpec CLIs
+
+Check your versions by running:
+
+```bash
+node --version
+npm --version
+cg --version
+tsp --version
+```
+
+### First steps
+
+Get a Express.js project up and running with the following steps:
+
+<Steps>
+1. Create a new directory for your project:
+
+    ```bash
+    mkdir common-grants-api
+    cd common-grants-api
+    ```
+
+2. Set up your project using the CommonGrants CLI:
+
+   ```bash
+   cg init --template express-js
+   ```
+
+3. Install the dependencies:
+
+   ```bash
+   npm install
+   ```
+
+4. Run the project:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open the API docs:
+
+   ```bash
+   open http://localhost:3000/docs
+   ```
+
+</Steps>
+
+### Project structure
+
+The boilerplate template includes the following files and directories:
+
+<FileTree>
+
+- package.json # Node.js project configuration and dependencies
+- package-lock.json # Locked versions of dependencies
+- tsconfig.json # TypeScript configuration
+- .eslintrc.js # ESLint configuration
+- .prettierrc # Prettier configuration
+- README.md # Project documentation
+- src/
+  - api/
+    - index.ts # Express application setup and config
+    - controllers/ # Request handlers and controllers
+    - middleware/ # Middleware functions
+    - schemas/ # Schemas for (de)serialization
+    - services/ # Business logic and data operations
+  - typespec/
+    - main.tsp # The main TypeSpec specification
+- tests/
+  - common_grants/
+    - schemas/ # Schema-related tests
+    - services/ # Service-related tests
+    - routes/ # Route-related tests
+
+</FileTree>
+
+## Next steps
+
+Once you've set up your initial project structure, you can start implementing the API routes and services.
+
+### Implementing services
+
+The services layer is responsible for implementing the business logic and data operations for the API. It includes the following files:
+
+<FileTree>
+
+- src/api/services/
+  - opportunity.service.ts # Opportunity service
+  - utils.ts # Utility functions
+
+</FileTree>
+
+In particular, you should focus on updating the `opportunity.service.ts` file. This file contains the implementation of the `OpportunityService` class, which is responsible for fetching and processing opportunities from the CommonGrants API.
+
+### Adding custom fields
+
+When adopting the CommonGrants protocol, you may need to include information about a funding opportunity that is not explicitly defined by the CommonGrants model for opportunities. The protocol defines a pattern for supporting these kinds of custom fields through the `custom_fields` property on the `OpportunityBase` model.
+
+For example, let's say you need to add a `legacyId` field to map opportunities to an existing ID system. Here's how to do it:
+
+#### Define the custom field
+
+```typescript models.ts
+// ############################################################################
+// Custom fields
+// ############################################################################
+
+/** Schema for the legacy ID custom field */
+export const legacyIdCustomFieldSchema = customFieldSchema.extend({
+  /** The name of the custom field */
+  name: z.literal("legacyId"),
+
+  /** The type of the custom field */
+  type: z.literal("number"),
+
+  /** The value of the custom field */
+  value: z.number().int(),
+
+  /** Description of the custom field */
+  description: z
+    .string()
+    .optional()
+    .default("Maps to the opportunity_id in the legacy system"),
+});
+
+export type LegacyIdCustomField = z.infer<typeof legacyIdCustomFieldSchema>;
+
+/** Schema for all custom fields in an opportunity */
+export const oppCustomFieldsSchema = z.object({
+  /** Legacy ID mapping to existing system */
+  legacyId: legacyIdCustomFieldSchema.optional(),
+
+  /** Additional custom fields specific to this opportunity */
+  customFields: z.record(customFieldSchema).optional(),
+});
+
+export type OppCustomFields = z.infer<typeof oppCustomFieldsSchema>;
+```
+
+#### Update the `OpportunityBase` model
+
+:::note
+
+The sample code below skips other imports and fields for brevity.
+
+:::
+
+```typescript models.ts ins={9-10}
+// ############################################################################
+// Base opportunity model
+// ############################################################################
+
+export const opportunityBaseSchema = z
+  .object({
+    // other fields omitted for brevity
+
+    /** Additional custom fields specific to this opportunity */
+    customFields: oppCustomFieldsSchema.optional(),
+  })
+  .merge(systemMetadataSchema);
+
+export type OpportunityBase = z.infer<typeof opportunityBaseSchema>;
+```
+
+#### Full example
+
+Here's the full example of defining a custom field within the `models.ts` file.
+
+```typescript models.ts
+// ############################################################################
+// Custom fields
+// ############################################################################
+
+/** Schema for the legacy ID custom field */
+export const legacyIdCustomFieldSchema = customFieldSchema.extend({
+  /** The name of the custom field */
+  name: z.literal("legacyId"),
+
+  /** The type of the custom field */
+  type: z.literal("number"),
+
+  /** The value of the custom field */
+  value: z.number().int(),
+
+  /** Description of the custom field */
+  description: z
+    .string()
+    .optional()
+    .default("Maps to the opportunity_id in the legacy system"),
+});
+
+export type LegacyIdCustomField = z.infer<typeof legacyIdCustomFieldSchema>;
+
+/** Schema for all custom fields in an opportunity */
+export const oppCustomFieldsSchema = z.object({
+  /** Legacy ID mapping to existing system */
+  legacyId: legacyIdCustomFieldSchema.optional(),
+
+  /** Additional custom fields specific to this opportunity */
+  customFields: z.record(customFieldSchema).optional(),
+});
+
+export type OppCustomFields = z.infer<typeof oppCustomFieldsSchema>;
+
+// ############################################################################
+// Base opportunity model
+// ############################################################################
+
+export const opportunityBaseSchema = z
+  .object({
+    /** Globally unique id for the opportunity */
+    id: z.string().uuid(),
+
+    /** Title or name of the funding opportunity */
+    title: z.string(),
+
+    /** Status of the opportunity */
+    status: oppStatusSchema,
+
+    /** Description of the opportunity's purpose and scope */
+    description: z.string(),
+
+    /** Details about the funding available */
+    funding: oppFundingSchema,
+
+    /** Key dates for the opportunity */
+    keyDates: oppTimelineSchema,
+
+    /** URL for the original source of the opportunity */
+    source: z.string().url().optional(),
+
+    /** Additional custom fields specific to this opportunity */
+    customFields: oppCustomFieldsSchema.optional(),
+  })
+  .merge(systemMetadataSchema);
+
+export type OpportunityBase = z.infer<typeof opportunityBaseSchema>;
+```
+
+## Additional resources
+
+- [TypeSpec](https://typespec.io/docs/)
+- [Zod](https://zod.dev/)
+- [Express.js](https://expressjs.com/)
