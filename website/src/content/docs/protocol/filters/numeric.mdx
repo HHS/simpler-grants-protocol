@@ -12,10 +12,10 @@ Filters by comparing a field to a numeric value.
 <Tabs>
   <TabItem label="Table">
 
-| Property | Type                                                                                      | Description                               |
-| -------- | ----------------------------------------------------------------------------------------- | ----------------------------------------- |
-| operator | [ComparisonOperators](/simpler-grants-protocol/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
-| value    | [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric)                        | The value to use for the filter operation |
+| Property | Type                                                              | Description                               |
+| -------- | ----------------------------------------------------------------- | ----------------------------------------- |
+| operator | [ComparisonOperators](/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
+| value    | [numeric](/protocol/types/numeric#numeric)                        | The value to use for the filter operation |
 
   </TabItem>
 
@@ -75,17 +75,17 @@ Filters by comparing a field to a range of numeric values.
 <Tabs>
   <TabItem label="Table">
 
-| Property | Type                                                                            | Description                               |
-| -------- | ------------------------------------------------------------------------------- | ----------------------------------------- |
-| operator | [RangeOperators](/simpler-grants-protocol/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
-| value    | range object                                                                    | The value to use for the filter operation |
+| Property | Type                                                    | Description                               |
+| -------- | ------------------------------------------------------- | ----------------------------------------- |
+| operator | [RangeOperators](/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
+| value    | range object                                            | The value to use for the filter operation |
 
 Range object:
 
-| Property | Type                                                               | Description                              |
-| -------- | ------------------------------------------------------------------ | ---------------------------------------- |
-| min      | [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric) | The minimum numeric value for this range |
-| max      | [numeric](/simpler-grants-protocol/protocol/types/numeric#numeric) | The maximum numeric value for this range |
+| Property | Type                                       | Description                              |
+| -------- | ------------------------------------------ | ---------------------------------------- |
+| min      | [numeric](/protocol/types/numeric#numeric) | The minimum numeric value for this range |
+| max      | [numeric](/protocol/types/numeric#numeric) | The maximum numeric value for this range |
 
   </TabItem>
 
@@ -162,10 +162,10 @@ Filters by comparing a field to an array of numeric values.
 <Tabs>
   <TabItem label="Table">
 
-| Property | Type                                                                                                                               | Description                               |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| operator | [ArrayOperators](/simpler-grants-protocol/protocol/filters/base#arrayoperators)                                                    | The operator to apply to the filter value |
-| value    | [Array](/simpler-grants-protocol/protocol/types/other#array)\<[numeric](/simpler-grants-protocol/protocol/types/numeric#numeric)\> | The value to use for the filter operation |
+| Property | Type                                                                               | Description                               |
+| -------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
+| operator | [ArrayOperators](/protocol/filters/base#arrayoperators)                            | The operator to apply to the filter value |
+| value    | [Array](/protocol/types/other#array)\<[numeric](/protocol/types/numeric#numeric)\> | The value to use for the filter operation |
 
   </TabItem>
 

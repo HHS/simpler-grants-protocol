@@ -13,12 +13,12 @@ Learn more about the standard models defined by the CommonGrants protocol:
 
 ### Opportunity Models
 
-| Model                                                                | Description                                            |
-| -------------------------------------------------------------------- | ------------------------------------------------------ |
-| [OpportunityBase](/simpler-grants-protocol/protocol/models/opp-base) | Base model for a funding opportunity                   |
-| [OppStatus](/simpler-grants-protocol/protocol/models/opp-status)     | Status of an opportunity                               |
-| [OppTimeline](/simpler-grants-protocol/protocol/models/opp-timeline) | Key dates in the opportunity's timeline                |
-| [OppFunding](/simpler-grants-protocol/protocol/models/opp-funding)   | Details about the funding available for an opportunity |
+| Model                                        | Description                                            |
+| -------------------------------------------- | ------------------------------------------------------ |
+| [OpportunityBase](/protocol/models/opp-base) | Base model for a funding opportunity                   |
+| [OppStatus](/protocol/models/opp-status)     | Status of an opportunity                               |
+| [OppTimeline](/protocol/models/opp-timeline) | Key dates in the opportunity's timeline                |
+| [OppFunding](/protocol/models/opp-funding)   | Details about the funding available for an opportunity |
 
 ## Usage
 

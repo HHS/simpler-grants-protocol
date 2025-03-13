@@ -11,16 +11,16 @@ The `CommonGrants.Fields` namespace contains a standard set of fields that are u
 
 Learn more about the standard fields defined by the CommonGrants protocol:
 
-| Field                                                                | Description                                       |
-| -------------------------------------------------------------------- | ------------------------------------------------- |
-| [Money](/simpler-grants-protocol/protocol/fields/money)              | A monetary amount with a currency code            |
-| [Event](/simpler-grants-protocol/protocol/fields/event)              | A description of an event with an associated date |
-| [CustomField](/simpler-grants-protocol/protocol/fields/custom-field) | A model for defining custom fields on a record    |
-| [SystemMetadata](/simpler-grants-protocol/protocol/fields/metadata)  | System-managed metadata for records               |
+| Field                                        | Description                                       |
+| -------------------------------------------- | ------------------------------------------------- |
+| [Money](/protocol/fields/money)              | A monetary amount with a currency code            |
+| [Event](/protocol/fields/event)              | A description of an event with an associated date |
+| [CustomField](/protocol/fields/custom-field) | A model for defining custom fields on a record    |
+| [SystemMetadata](/protocol/fields/metadata)  | System-managed metadata for records               |
 
 ## Usage
 
-You can use the fields listed above (along with basic [data types](/simpler-grants-protocol/protocol/types/)) above to define custom models in your TypeSpec project.
+You can use the fields listed above (along with basic [data types](/protocol/types/)) above to define custom models in your TypeSpec project.
 
 ```typespec
 import "@common-grants/core"

@@ -13,13 +13,13 @@ A model for defining custom fields on a record.
 <Tabs>
   <TabItem label="Table">
 
-| Property    | Type                                                            | Required | Description                                               |
-| ----------- | --------------------------------------------------------------- | -------- | --------------------------------------------------------- |
-| name        | [string](/simpler-grants-protocol/protocol/types/string#string) | Yes      | Name of the custom field                                  |
-| type        | [CustomFieldType](#customfieldtype)                             | Yes      | The JSON schema type to use when de-serializing the value |
-| schema      | [url](/simpler-grants-protocol/protocol/types/string#url)       | No       | Link to the full JSON schema for this custom field        |
-| value       | any                                                             | Yes      | Value of the custom field                                 |
-| description | [string](/simpler-grants-protocol/protocol/types/string#string) | No       | Description of the custom field's purpose                 |
+| Property    | Type                                    | Required | Description                                               |
+| ----------- | --------------------------------------- | -------- | --------------------------------------------------------- |
+| name        | [string](/protocol/types/string#string) | Yes      | Name of the custom field                                  |
+| type        | [CustomFieldType](#customfieldtype)     | Yes      | The JSON schema type to use when de-serializing the value |
+| schema      | [url](/protocol/types/string#url)       | No       | Link to the full JSON schema for this custom field        |
+| value       | any                                     | Yes      | Value of the custom field                                 |
+| description | [string](/protocol/types/string#string) | No       | Description of the custom field's purpose                 |
 
   </TabItem>
 

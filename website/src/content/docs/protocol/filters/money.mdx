@@ -12,17 +12,17 @@ Filters by comparing a field to a range of monetary values.
 <Tabs>
   <TabItem label="Table">
 
-| Property | Type                                                                            | Description                               |
-| -------- | ------------------------------------------------------------------------------- | ----------------------------------------- |
-| operator | [RangeOperators](/simpler-grants-protocol/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
-| value    | range object                                                                    | The value to use for the filter operation |
+| Property | Type                                                    | Description                               |
+| -------- | ------------------------------------------------------- | ----------------------------------------- |
+| operator | [RangeOperators](/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
+| value    | range object                                            | The value to use for the filter operation |
 
 Range object:
 
-| Property | Type                                                     | Description                               |
-| -------- | -------------------------------------------------------- | ----------------------------------------- |
-| min      | [Money](/simpler-grants-protocol/protocol/fields/money/) | The minimum monetary value for this range |
-| max      | [Money](/simpler-grants-protocol/protocol/fields/money/) | The maximum monetary value for this range |
+| Property | Type                             | Description                               |
+| -------- | -------------------------------- | ----------------------------------------- |
+| min      | [Money](/protocol/fields/money/) | The minimum monetary value for this range |
+| max      | [Money](/protocol/fields/money/) | The maximum monetary value for this range |
 
   </TabItem>
 
@@ -108,10 +108,10 @@ Filters by comparing a field to a monetary value.
 <Tabs>
   <TabItem label="Table">
 
-| Property | Type                                                                                      | Description                               |
-| -------- | ----------------------------------------------------------------------------------------- | ----------------------------------------- |
-| operator | [ComparisonOperators](/simpler-grants-protocol/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
-| value    | [Money](/simpler-grants-protocol/protocol/fields/money/)                                  | The value to use for the filter operation |
+| Property | Type                                                              | Description                               |
+| -------- | ----------------------------------------------------------------- | ----------------------------------------- |
+| operator | [ComparisonOperators](/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
+| value    | [Money](/protocol/fields/money/)                                  | The value to use for the filter operation |
 
   </TabItem>
 

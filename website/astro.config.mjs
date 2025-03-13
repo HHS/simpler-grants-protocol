@@ -7,8 +7,6 @@ import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 // https://astro.build/config
 export default defineConfig({
   site: "https://hhs.github.io",
-  // Base needs trailing slash to make relative links work when hosting locally
-  base: "simpler-grants-protocol/",
   integrations: [
     starlight({
       plugins: [
@@ -22,7 +20,7 @@ export default defineConfig({
         ]),
         starlightLinksValidator({
           errorOnLocalLinks: false,
-          exclude: ["/simpler-grants-protocol/protocol/openapi/**"],
+          exclude: ["/protocol/openapi/**"],
         }),
       ],
       title: "CommonGrants",
