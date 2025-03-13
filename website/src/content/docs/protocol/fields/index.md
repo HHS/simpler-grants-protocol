@@ -11,8 +11,8 @@ The `CommonGrants.Fields` namespace contains a standard set of fields that are u
 
 Learn more about the standard fields defined by the CommonGrants protocol:
 
-| Field                                                                | Description                                       |
-| -------------------------------------------------------------------- | ------------------------------------------------- |
+| Field                                        | Description                                       |
+| -------------------------------------------- | ------------------------------------------------- |
 | [Money](/protocol/fields/money)              | A monetary amount with a currency code            |
 | [Event](/protocol/fields/event)              | A description of an event with an associated date |
 | [CustomField](/protocol/fields/custom-field) | A model for defining custom fields on a record    |

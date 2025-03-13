@@ -13,41 +13,41 @@ Learn more about the default filters supported by the CommonGrants protocol:
 
 ### Base filter and operators
 
-| Filter                                                                                      | Description                                           |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Filter                                                              | Description                                           |
+| ------------------------------------------------------------------- | ----------------------------------------------------- |
 | [EquivalenceOperators](/protocol/filters/base#equivalenceoperators) | Operators that filter a field based on an exact match |
 | [ComparisonOperators](/protocol/filters/base#comparisonoperators)   | Operators that filter a field based on a comparison   |
 | [ArrayOperators](/protocol/filters/base#arrayoperators)             | Operators that filter a field based on an array       |
 | [StringOperators](/protocol/filters/base#stringoperators)           | Operators that filter a field based on a string       |
 | [RangeOperators](/protocol/filters/base#rangeoperators)             | Operators that filter a field based on a range        |
-| AllOperators                                                                                | Combined set of all filter operators                  |
+| AllOperators                                                        | Combined set of all filter operators                  |
 
 ### String
 
-| Filter                                                                                            | Description                                         |
-| ------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Filter                                                                    | Description                                         |
+| ------------------------------------------------------------------------- | --------------------------------------------------- |
 | [StringComparisonFilter](/protocol/filters/string#stringcomparisonfilter) | Filters by comparing a field to a string value      |
 | [StringArrayFilter](/protocol/filters/string#stringarrayfilter)           | Filters by comparing a field to an array of strings |
 
 ### Numeric
 
-| Filter                                                                                             | Description                                                |
-| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Filter                                                                     | Description                                                |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | [NumberComparisonFilter](/protocol/filters/numeric#numbercomparisonfilter) | Filters by comparing a field to a numeric value            |
 | [NumberRangeFilter](/protocol/filters/numeric#numberrangefilter)           | Filters by comparing a field to a range of numeric values  |
 | [NumberArrayFilter](/protocol/filters/numeric#numberarrayfilter)           | Filters by comparing a field to an array of numeric values |
 
 ### Money
 
-| Filter                                                                                         | Description                                                |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Filter                                                                 | Description                                                |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------- |
 | [MoneyComparisonFilter](/protocol/filters/money#moneycomparisonfilter) | Filters by comparing a field to a monetary value           |
 | [MoneyRangeFilter](/protocol/filters/money#moneyrangefilter)           | Filters by comparing a field to a range of monetary values |
 
 ### Date and time
 
-| Filter                                                                                      | Description                                                           |
-| ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Filter                                                              | Description                                                           |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | [DateComparisonFilter](/protocol/filters/date#datecomparisonfilter) | Filters by comparing a field to a date value                          |
 | [DateRangeFilter](/protocol/filters/date#daterangefilter)           | Filters by comparing a field to a range of date values                |
 | [isoTime](/protocol/types/date#isotime)                             | Time without timezone in ISO 8601 format (HH:mm:ss)                   |
@@ -57,8 +57,8 @@ Learn more about the default filters supported by the CommonGrants protocol:
 
 ### Other types
 
-| Filter                                                           | Description                     |
-| ---------------------------------------------------------------- | ------------------------------- |
+| Filter                                   | Description                     |
+| ---------------------------------------- | ------------------------------- |
 | [boolean](/protocol/types/other#boolean) | A true or false value           |
 | [array](/protocol/types/other#array)     | An ordered list of values       |
 | [record](/protocol/types/other#record)   | A collection of key-value pairs |

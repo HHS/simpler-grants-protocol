@@ -13,18 +13,18 @@ A funding opportunity, such as a grant or loan.
 <Tabs>
   <TabItem label="Table">
 
-| Property       | Type                                                                                                                                   | Required | Description                                                  |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
-| id             | [uuid](/protocol/types/string#uuid)                                                                            | Yes      | Globally unique id for the opportunity                       |
-| title          | [string](/protocol/types/string#string)                                                                        | Yes      | Title or name of the funding opportunity                     |
-| status         | [OppStatus](/protocol/models/opp-status)                                                                       | Yes      | Status of the opportunity                                    |
-| description    | [string](/protocol/types/string#string)                                                                        | Yes      | Description of the opportunity's purpose and scope           |
-| funding        | [OppFunding](/protocol/models/opp-funding)                                                                     | Yes      | Details about the funding available                          |
-| keyDates       | [OppTimeline](/protocol/models/opp-timeline)                                                                   | Yes      | Key dates for the opportunity                                |
-| source         | [url](/protocol/types/string#url)                                                                              | No       | URL for the original source of the opportunity               |
+| Property       | Type                                                                                   | Required | Description                                                  |
+| -------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
+| id             | [uuid](/protocol/types/string#uuid)                                                    | Yes      | Globally unique id for the opportunity                       |
+| title          | [string](/protocol/types/string#string)                                                | Yes      | Title or name of the funding opportunity                     |
+| status         | [OppStatus](/protocol/models/opp-status)                                               | Yes      | Status of the opportunity                                    |
+| description    | [string](/protocol/types/string#string)                                                | Yes      | Description of the opportunity's purpose and scope           |
+| funding        | [OppFunding](/protocol/models/opp-funding)                                             | Yes      | Details about the funding available                          |
+| keyDates       | [OppTimeline](/protocol/models/opp-timeline)                                           | Yes      | Key dates for the opportunity                                |
+| source         | [url](/protocol/types/string#url)                                                      | No       | URL for the original source of the opportunity               |
 | customFields   | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Additional custom fields specific to this opportunity        |
-| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                                                | Yes      | The timestamp (in UTC) at which the record was created       |
-| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime)                                                                | Yes      | The timestamp (in UTC) at which the record was last modified |
+| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created       |
+| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was last modified |
 
   </TabItem>
 

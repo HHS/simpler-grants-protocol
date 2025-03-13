@@ -12,8 +12,8 @@ Filters by comparing a field to a numeric value.
 <Tabs>
   <TabItem label="Table">
 
-| Property | Type                                                                                      | Description                               |
-| -------- | ----------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Property | Type                                                              | Description                               |
+| -------- | ----------------------------------------------------------------- | ----------------------------------------- |
 | operator | [ComparisonOperators](/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
 | value    | [numeric](/protocol/types/numeric#numeric)                        | The value to use for the filter operation |
 
@@ -75,15 +75,15 @@ Filters by comparing a field to a range of numeric values.
 <Tabs>
   <TabItem label="Table">
 
-| Property | Type                                                                            | Description                               |
-| -------- | ------------------------------------------------------------------------------- | ----------------------------------------- |
+| Property | Type                                                    | Description                               |
+| -------- | ------------------------------------------------------- | ----------------------------------------- |
 | operator | [RangeOperators](/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
-| value    | range object                                                                    | The value to use for the filter operation |
+| value    | range object                                            | The value to use for the filter operation |
 
 Range object:
 
-| Property | Type                                                               | Description                              |
-| -------- | ------------------------------------------------------------------ | ---------------------------------------- |
+| Property | Type                                       | Description                              |
+| -------- | ------------------------------------------ | ---------------------------------------- |
 | min      | [numeric](/protocol/types/numeric#numeric) | The minimum numeric value for this range |
 | max      | [numeric](/protocol/types/numeric#numeric) | The maximum numeric value for this range |
 
@@ -162,9 +162,9 @@ Filters by comparing a field to an array of numeric values.
 <Tabs>
   <TabItem label="Table">
 
-| Property | Type                                                                                                                               | Description                               |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| operator | [ArrayOperators](/protocol/filters/base#arrayoperators)                                                    | The operator to apply to the filter value |
+| Property | Type                                                                               | Description                               |
+| -------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
+| operator | [ArrayOperators](/protocol/filters/base#arrayoperators)                            | The operator to apply to the filter value |
 | value    | [Array](/protocol/types/other#array)\<[numeric](/protocol/types/numeric#numeric)\> | The value to use for the filter operation |
 
   </TabItem>

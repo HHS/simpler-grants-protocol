@@ -92,24 +92,24 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 **String types**
 
-| Type                                                            | Description                      |
-| --------------------------------------------------------------- | -------------------------------- |
+| Type                                    | Description                      |
+| --------------------------------------- | -------------------------------- |
 | [string](/protocol/types/string#string) | A sequence of characters         |
 | [uuid](/protocol/types/string#uuid)     | A universally unique identifier  |
 | [url](/protocol/types/string#url)       | A Uniform Resource Locator (URL) |
 
 **Numeric types**
 
-| Type                                                                           | Description                                            |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| Type                                                   | Description                                            |
+| ------------------------------------------------------ | ------------------------------------------------------ |
 | [numeric](/protocol/types/numeric#numeric)             | A number with an arbitrary precision and scale         |
 | [integer](/protocol/types/numeric#integer)             | A whole number without decimals                        |
 | [decimalString](/protocol/types/numeric#decimalstring) | A decimal number encoded as a string to preserve scale |
 
 **Date and time types**
 
-| Type                                                                          | Description                                                           |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Type                                                  | Description                                                           |
+| ----------------------------------------------------- | --------------------------------------------------------------------- |
 | [isoTime](/protocol/types/date#isotime)               | Time without timezone in ISO 8601 format (HH:mm:ss)                   |
 | [isoDate](/protocol/types/date#isodate)               | Calendar date in ISO 8601 format (YYYY-MM-DD)                         |
 | [utcDateTime](/protocol/types/date#utcdatetime)       | Datetime with UTC timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ssZ)  |
@@ -117,8 +117,8 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 **Other types**
 
-| Type                                                             | Description                     |
-| ---------------------------------------------------------------- | ------------------------------- |
+| Type                                     | Description                     |
+| ---------------------------------------- | ------------------------------- |
 | [boolean](/protocol/types/other#boolean) | A true or false value           |
 | [array](/protocol/types/other#array)     | An ordered list of values       |
 | [record](/protocol/types/other#record)   | A collection of key-value pairs |
@@ -129,8 +129,8 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 The CommonGrants protocol defines the following fields that are reused across models:
 
-| Field                                                                | Description                                       |
-| -------------------------------------------------------------------- | ------------------------------------------------- |
+| Field                                        | Description                                       |
+| -------------------------------------------- | ------------------------------------------------- |
 | [Money](/protocol/fields/money)              | A monetary amount with a currency code            |
 | [Event](/protocol/fields/event)              | A description of an event with an associated date |
 | [CustomField](/protocol/fields/custom-field) | A model for defining custom fields on a record    |
@@ -140,8 +140,8 @@ The CommonGrants protocol defines the following fields that are reused across mo
 
 The CommonGrants protocol defines the following models that are specific to funding opportunities:
 
-| Model                                                                | Description                                            |
-| -------------------------------------------------------------------- | ------------------------------------------------------ |
+| Model                                        | Description                                            |
+| -------------------------------------------- | ------------------------------------------------------ |
 | [OpportunityBase](/protocol/models/opp-base) | The core model for a funding opportunity               |
 | [OppStatus](/protocol/models/opp-status)     | The status of an opportunity                           |
 | [OppFunding](/protocol/models/opp-funding)   | Details about the funding available for an opportunity |
@@ -155,8 +155,8 @@ The CommonGrants protocol defines the following routes and operations that are s
 While omitted for brevity in the following table, all protocol-defined routes MUST be prefixed with `/common-grants/`.
 :::
 
-| Route                                                                                                 | Status   | Description                                                      |
-| ----------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
+| Route                                                                         | Status   | Description                                                      |
+| ----------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
 | [`GET /opportunities`](/protocol/openapi/operations/opportunities_list/)      | Required | Get a paginated list of opportunities sorted by `lastModifiedAt` |
 | [`GET /opportunities/{id}`](/protocol/openapi/operations/opportunities_read/) | Required | View details about a specific opportunity                        |
 
