@@ -20,7 +20,7 @@ export default defineConfig({
         ]),
         starlightLinksValidator({
           errorOnLocalLinks: false,
-          exclude: ["/simpler-grants-protocol/protocol/openapi/**"],
+          exclude: ["/protocol/openapi/**"],
         }),
       ],
       title: "CommonGrants",
