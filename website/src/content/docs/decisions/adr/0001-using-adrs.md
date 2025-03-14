@@ -3,13 +3,9 @@ title: Using ADRs
 description: ADR to document the use of ADRs to record decisions.
 ---
 
-## Summary
-
-### Problem statement
-
 What is the best way to document key architectural decisions made within the project so that future contributors can understand the rationale behind those decisions?
 
-### Decision outcome
+## Decision
 
 We've decided to use Architecture Decision Records (ADRs) as described in [Recording decisions](/decisions/overview). These records will be published on the website for this project.
 
@@ -22,7 +18,7 @@ We've decided to use Architecture Decision Records (ADRs) as described in [Recor
   - It may be harder for folks to create decision records if they are not familiar with markdown or GitHub
   - We'll need to spend time keeping these decision records up-to-date, so they aren't inaccurate
 
-### Decision drivers
+### Criteria
 
 - **Transparency:** We want our decisions to be transparent to project stakeholders.
 - **Discoverability:** We want our decisions to be easily discoverable by project maintainers and external stakeholders.

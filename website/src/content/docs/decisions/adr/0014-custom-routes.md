@@ -3,13 +3,9 @@ title: Custom routes
 description: ADR documenting the approach to supporting custom routes in the CommonGrants protocol.
 ---
 
-## Summary
-
-### Problem statement
-
 The CommonGrants protocol needs to provide a mechanism for APIs to define custom routes while ensuring compatibility with standard routes. This mechanism should balance ease of adoption, validation, and future compatibility.
 
-### Decision outcome
+## Decision
 
 All protocol-defined routes should be prefixed with `/common-grants/` and custom routes can be defined at the root level without any prefix.
 
@@ -22,7 +18,7 @@ All protocol-defined routes should be prefixed with `/common-grants/` and custom
   - Requires clients to be aware of the `/common-grants/` namespace.
   - May be more confusing for APIs that don't use custom routes.
 
-### Decision drivers
+### Criteria
 
 - Supports incremental adoption of protocol-defined routes.
 - Ensures ease of validation against the base protocol.

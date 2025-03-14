@@ -3,27 +3,23 @@ title: Filtering strategy
 description: ADR documenting the approach to filtering in the CommonGrants protocol.
 ---
 
-## Summary
-
-### Problem statement
-
 The CommonGrants protocol needs a standardized approach to filtering across endpoints that balances consistency, flexibility, and ease of implementation.
 
-### Sub-questions
+### Questions
 
 - Should filters be passed in the request body or as query parameters?
 - If the request body accepts a `filters` parameter, should it be an object or an array?
 - Which filter operators (e.g. `eq`, `neq`, `gt`, etc.) should be supported?
 - How should the protocol support implementation-defined filters?
 
-### Decision drivers
+### Criteria
 
 - **Consistency:** Filters should be consistent across endpoints.
 - **Flexibility:** Filters should support complex queries while keeping implementation straightforward.
 - **Compatibility:** Filters should be easy to combine with pagination and sorting.
 - **Extensibility:** Filters should provide a way to support implementation-defined filters.
 
-## Decision outcome
+## Decision
 
 API endpoints that support filtering should be POST operations that accept a `filters` parameter in the request body. Filters will be defined using a standard schema to ensure consistency across different endpoints.
 

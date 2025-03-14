@@ -3,13 +3,9 @@ title: Specification framework
 description: ADR documenting the decision to use TypeSpec as the framework for defining the grant protocol and data standard.
 ---
 
-## Summary
-
-### Problem statement
-
 We need a framework to define the specification for the grant protocol and data standard that prioritizes modularity, extensibility, validation, compatibility with developer tools, and widespread adoption.
 
-### Decision outcome
+## Decision
 
 We chose TypeSpec as the framework for defining the grant protocol and data standard, mainly for its ability to define types and API services using a modular approach that can transpile to more common formats like JSON schema and OpenAPI.
 
@@ -23,7 +19,7 @@ We chose TypeSpec as the framework for defining the grant protocol and data stan
   - Steeper learning curve compared to simpler formats.
   - Requires more upfront setup for developer tooling.
 
-### Decision drivers
+### Criteria
 
 - **Validation:** Specification format can be used to validate that implementations comply with the standard.
 - **Modularity:** Specification components can be broken into reusable modules.

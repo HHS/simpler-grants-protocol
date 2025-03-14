@@ -3,24 +3,20 @@ title: Pagination strategy
 description: ADR documenting the decision to use page-based pagination with query parameters for GET operations and request body parameters for POST/PUT operations that support pagination.
 ---
 
-## Summary
+The CommonGrants protocol needs a standardized approach to pagination for API responses that return multiple records. The decision should balance ease of use for clients, implementation simplicity for servers, and support for filtering and sorting.
 
-### Problem statement
+## Decision
 
-The CommonGrants protocol needs a standardized approach to pagination for API responses that return multiple records. The decision must balance ease of use for clients, implementation simplicity for servers, support for filtering and sorting, and compatibility with caching mechanisms.
-
-### Decision outcome
-
-The protocol will use **page-based pagination** with `page` and `pageSize` parameters. These parameters should be included as **query parameters** for `GET` requests and as properties in a `pagination` **request body parameters** for `POST` and `PUT` requests.
+The protocol will use page-based pagination with `page` and `pageSize` parameters. These parameters should be included as query parameters for `GET` requests and as properties in a `pagination` request body parameter for `POST` and `PUT` requests.
 
 The pagination response should also include a `paginationInfo` object with the following properties:
 
-- `page`: The current page number
-- `pageSize`: The number of items per page
-- `totalItems`: The total number of items across all pages
-- `totalPages`: The total number of pages
-- `nextPageUrl`: Optional URL for the next page of results, if there is one
-- `previousPageUrl`: Optional URL for the previous page of results, if there is one
+| Property     | Description                                |
+| ------------ | ------------------------------------------ |
+| `page`       | The current page number                    |
+| `pageSize`   | The number of items per page               |
+| `totalItems` | The total number of items across all pages |
+| `totalPages` | The total number of pages                  |
 
 - **Positive consequences**
   - Familiar and widely used pagination strategy, easy for clients to adopt
@@ -31,7 +27,7 @@ The pagination response should also include a `paginationInfo` object with the f
   - Less precise than cursor-based pagination for real-time data
   - Limits the ability to cache paginated requests (for POST/PUT operations)
 
-### Decision drivers
+### Criteria
 
 The pagination strategy should:
 
@@ -42,13 +38,13 @@ The pagination strategy should:
 - Be easy to combine with sorting and filtering
 - Easily support request caching
 
-## Options considered
+### Options considered
 
-- Pagination strategy
+- **Pagination strategy**
   - Cursor-based pagination
   - Page-based pagination
   - Limit-offset pagination
-- Parameter placement
+- **Parameter placement**
   - Query parameters only
   - Request body only
   - Hybrid approach

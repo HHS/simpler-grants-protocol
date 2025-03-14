@@ -3,13 +3,9 @@ title: Monetary fields
 description: ADR documenting the decision to follow PayPal's format for representing monetary values.
 ---
 
-## Summary
-
-### Problem statement
-
 We need to choose a format for representing monetary values that balances precision, readability, and flexibility.
 
-### Decision outcome
+## Decision
 
 We decided to represent monetary values using decimal string representation for the `amount` and an ISO 4217-compliant `currencyCode` field to indicate the denomination. This format is also used by PayPal, ApplePay, Google Wallet and other well known APIs that support monetary transactions.
 
@@ -32,7 +28,7 @@ Here's an example of that format:
   - **Precision issues:** Parsing string representations into numeric types could also introduce precision issues to individual implementations.
   - **Numeric operations:** Numeric operations (i.e. sorting, aggregating, etc.) will be harder to do with the raw JSON output.
 
-### Decision drivers
+### Criteria
 
 - Avoids common errors with floating point precision.
 - Easy for API consumers to understand and debug.

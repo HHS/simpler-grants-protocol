@@ -3,15 +3,9 @@ title: v0.1.0 models and routes
 description: This ADR documents the decision to focus on the models and routes needed for search.
 ---
 
-## Summary
+We need to determine which models and routes should be included in the v0.1.0 release of the protocol. A good v0.1.0 release should be immediately useful, while also laying the groundwork for future expansion.
 
-### Problem statement
-
-The v0.1.0 release of the protocol should include enough functionality that we demonstrate immediate value, without prematurely defining requirements that may discourage adoption.
-
-_Which models and routes should the v0.1.0 release of the protocol include?_
-
-### Decision outcome
+## Decision
 
 We'll limit the scope of the v0.1.0 protocol to the models and routes needed to support search, while also defining foundational types that make it easier to extend the base spec in the future.
 
@@ -25,7 +19,7 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
   - Doesn't (yet) support key features like applications and reporting.
   - May be harder to make changes once platforms have started adopting the protocol.
 
-### Decision drivers
+### Criteria
 
 - Encourage early adoption by multiple platforms and stakeholders.
 - Establish foundational elements without over-committing to complex use cases.
@@ -36,7 +30,7 @@ We'll limit the scope of the v0.1.0 protocol to the models and routes needed to 
 
 #### Data types
 
-1. **Base types:** Includes essential reusable fields such as currency, GeoJSON, and custom fields.
+1. **Base types and fields:** Defines essential types like UUIDs and dates; reusable fields like currency and custom fields; and other foundational patterns like pagination and filtering.
 2. **Grant opportunity models:** Models describing the metadata for grant opportunities.
 3. **Individuals and organizations:** Basic models for describing grantors and grant seekers.
 4. **Application forms and submissions:** Models describing application forms and submissions.

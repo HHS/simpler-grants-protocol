@@ -3,13 +3,9 @@ title: GitHub website hosting
 description: ADR documenting the decision to use GitHub Pages as the hosting platform for project documentation.
 ---
 
-## Summary
-
-### Problem statement
-
 We need a hosting platform for our documentation site that is cost-effective, simple to set up, and integrates seamlessly with our GitHub-based development workflow.
 
-### Decision outcome
+## Decision
 
 We chose GitHub Pages as the hosting platform for our documentation site.
 
@@ -24,7 +20,7 @@ If SSR or server-side functions (e.g. to process form submissions) become a requ
   - Does not support server-side rendering (SSR) or dynamic functions, which may limit future enhancements.
   - PR previews aren't supported by default.
 
-### Decision drivers
+### Criteria
 
 - **Cost:** Free or very low cost to host.
 - **Simplicity:** Easy setup with built-in SSL and custom domain support.
@@ -86,7 +82,9 @@ Cloudflare Pages is best if:
   - More complex setup for advanced features
   - Costs money if we exceed free plan (though less than Netlify or Vercel)
 
-### Option 3: AWS Amplify, S3, and CloudFront
+### Option 3: AWS
+
+Publish the site using AWS amplify with S3 static site hosting and CloudFront CDN.
 
 :::note[Bottom line]
 AWS hosting is best if:

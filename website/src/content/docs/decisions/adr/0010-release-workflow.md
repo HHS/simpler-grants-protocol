@@ -3,13 +3,11 @@ title: Release workflow
 description: Records decision to adopt a CI/CD workflow that prioritizes pre-releases initially, and then stable releases using Changesets.
 ---
 
-## Summary
+The CommonGrants codebase is a monorepo containing multiple interrelated libraries, including the core TypeSpec library, CLI tools, and other packages.
 
-### Problem statement
+We need a strategy for publishing these libraries to `npm` (and other package managers) that supports both releases and pre-releases effectively, while ensuring transparency and minimizing complexity.
 
-The CommonGrants codebase is a monorepo containing multiple interrelated libraries, including the core TypeSpec library, CLI tools, and TypeSpec emitters for server and client code generation. We need a strategy for publishing these libraries to `npm` that supports both releases and pre-releases effectively, while ensuring transparency and minimizing complexity.
-
-### Decision outcome
+## Decision
 
 We will initially adopt Option 1 (CD for prereleases with manually triggered GitHub releases) since we only have a single package and haven't published a stable release yet. Once we have multiple packages and at least one stable release, we plan to migrate to Option 2 (Changesets) for better independent release management.
 
@@ -23,7 +21,7 @@ We will initially adopt Option 1 (CD for prereleases with manually triggered Git
   - May require additional work to set up Changesets in the future
   - No automated changelog generation initially
 
-### Decision drivers
+### Criteria
 
 - Pre-releases are easy to publish.
 - Stable releases are easy to manage and audit.
