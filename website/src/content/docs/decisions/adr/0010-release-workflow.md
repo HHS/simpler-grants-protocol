@@ -3,7 +3,7 @@ title: Release workflow
 description: Records decision to adopt a CI/CD workflow that prioritizes pre-releases initially, and then stable releases using Changesets.
 ---
 
-The CommonGrants codebase is a monorepo containing multiple interrelated libraries, including the core TypeSpec library, CLI tools, and other packages. 
+The CommonGrants codebase is a monorepo containing multiple interrelated libraries, including the core TypeSpec library, CLI tools, and other packages.
 
 We need a strategy for publishing these libraries to `npm` (and other package managers) that supports both releases and pre-releases effectively, while ensuring transparency and minimizing complexity.
 
