@@ -5,13 +5,9 @@ description: ADR documenting the decision to use <decision outcome> for <decisio
 draft: true
 ---
 
-## Summary
-
-### Problem statement
-
 [A few brief sentences describing the decision that needs to be made]
 
-### Decision outcome
+## Decision
 
 [Brief summary of what was decided]
 
@@ -20,7 +16,7 @@ draft: true
 - **Negative consequences**
   - [Negative consequence of decision]
 
-### Decision drivers
+### Criteria
 
 <!-- Optional - Remove if unused -->
 

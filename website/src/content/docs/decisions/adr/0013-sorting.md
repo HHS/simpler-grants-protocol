@@ -3,26 +3,22 @@ title: Sorting strategy
 description: ADR documenting the approach to sorting in the CommonGrants protocol.
 ---
 
-## Summary
-
-### Problem statement
-
 The CommonGrants protocol needs a standardized approach to sorting across endpoints that balances consistency, flexibility, and ease of implementation.
 
-### Sub-questions
+### Questions
 
 - Should sorting parameters be passed as query parameters or in the request body?
 - How should the protocol support multiple sorting criteria?
 - Should the protocol allow implementation-defined sorting options?
 
-### Decision drivers
+### Criteria
 
 - **Consistency:** Sorting should be applied in a uniform way across all endpoints.
 - **Flexibility:** Sorting should allow for multiple criteria and customization while remaining easy to implement.
 - **Compatibility:** Sorting should integrate smoothly with pagination and filtering.
 - **Extensibility:** Sorting should provide a way to support implementation-defined sorting options.
 
-## Decision outcome
+## Decision
 
 API endpoints that support sorting should accept sorting parameters either as **query parameters** (for `GET` requests) or as properties in a `sorting` parameter in the request body (for `POST` and `PUT` requests).
 

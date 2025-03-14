@@ -3,15 +3,9 @@ title: Protocol compliance
 description: ADR documenting the decision to define compliance as implementing all required routes and models.
 ---
 
-## Summary
-
-### Problem statement
-
 In addition to defining the protocol, we need to define what it means to “comply” with that protocol. This definition should guarantee some consistency across implementations, while also enabling platforms to extend the spec to meet their unique needs.
 
-_What definition of compliance balances consistency with flexibility across implementations?_
-
-### Decision outcome
+## Decision
 
 We define compliance as implementing all required models and routes from the base spec while allowing implementations to support additional routes and models outside the spec.
 
@@ -32,6 +26,10 @@ We define compliance as implementing all required models and routes from the bas
 
 ### Options considered
 
+- **Strict implementation:** APIs must implement the base spec exactly as defined.
+- **Full implementation with extensions:** APIs must implement all required routes from the base spec (with approved extensions), and may also define additional routes.
+- **Partial implementation:** APIs only need to implement a subset of required routes.
+
 ## Evaluation
 
 ### Side-by-side
@@ -45,7 +43,7 @@ We define compliance as implementing all required models and routes from the bas
 
 ### Option 1: Strict implementation
 
-Each valid input to the implementation spec is also a valid input to the base spec. The implementation does not define additional routes or types that aren't defined by the base spec.
+The API implementation must match the base spec exactly.
 
 :::note[Bottom line]
 Option 1 is best if:
@@ -63,7 +61,7 @@ Option 1 is best if:
 
 ### Option 2: Full implementation with extensions
 
-The implementation spec includes _all_ of the required routes and types from the base spec, these routes and models provide valid inputs to the base spec. But a given implementation may define additional routes and models outside the base spec.
+The API implementation includes all required routes from the base spec (with approved extensions). It may also define additional routes that are not specified in the base spec, as long as they don't conflict with the base spec.
 
 :::note[Bottom line]
 Option 2 is best if:
@@ -82,7 +80,7 @@ Option 2 is best if:
 
 ### Option 3: Partial implementation
 
-Implementation doesn't have to implement all required routes and models, but the routes and models it implements do need to provide valid inputs to the base spec.
+The API implementation doesn't have to implement all required routes and models, but the routes and models it implements can't conflict with the base spec.
 
 :::note[Bottom line]
 Option 3 is best if:

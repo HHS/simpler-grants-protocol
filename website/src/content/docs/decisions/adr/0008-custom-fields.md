@@ -3,15 +3,11 @@ title: Custom fields
 description: ADR documenting the approach to defining custom fields.
 ---
 
-## Summary
-
-### Problem statement
-
 While the protocol defines a minimum set of fields that are consistent across all implementations, it should also provide a consistent mechanism for defining custom fields that may be shared by some, but not all, implementations.
 
 _How can the specification allow developers to define custom fields for their own implementations, while also enabling other implementations to re-use them?_
 
-### Sub-questions
+### Questions
 
 - Should custom fields have a single `value` property with an associated `type`, or multiple type-based properties (e.g., `stringValue`, `arrayValue`)?
 - Should the `customFields` property be an array of `CustomField` models? Or an object where each value is a `CustomField` model?

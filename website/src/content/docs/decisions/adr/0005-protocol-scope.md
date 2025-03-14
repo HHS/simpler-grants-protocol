@@ -3,17 +3,11 @@ title: Protocol design and scope
 description: ADR documenting the decision to use FHIR as a mental model for the grant protocol.
 ---
 
-## Summary
+We need to determine the scope of our grant protocol specification. Existing protocols range from simple data standards (like GeoJSON) to comprehensive specifications that include both data models and standardized operations (like FHIR and ActivityPub).
 
-### Problem statement
+## Decision
 
-The definition of a “protocol” and the scope of its specification depends heavily on sources from which we’re drawing inspiration. Some only focus on data standards (e.g., GeoJSON) without defining the kinds of operations that data supports. Others define both data standards and operations, but scope them in different ways (e.g., FHIR and ActivityPub).
-
-_Which existing protocol should we use as a mental model for the grant protocol? How does that impact the scope or design of our specification?_
-
-### Decision outcome
-
-We decided to adopt a combined approach inspired by **FHIR**, defining both standard models for grant data and a minimum set of client-to-server operations that grant platforms should support on that data (e.g. search for and applying to grant opportunities).
+We chose to adopt an approach inspired by **FHIR**, defining both standard models for grant data and a minimum set of client-to-server operations that grant platforms should support (e.g. searching for and applying to grant opportunities).
 
 - **Positive consequences**
   - Enables third-parties to build tools that are interoperable with any platform that adopts the protocol.
@@ -23,7 +17,7 @@ We decided to adopt a combined approach inspired by **FHIR**, defining both stan
   - The protocol's client-to-server operations might be too complex for some grant platforms to adopt and too restrictive for others that want to support additional functionality.
   - Some grant platforms may be hesitant to adopt the protocol if the required operations differ significantly from their existing API.
 
-### Decision drivers
+### Criteria
 
 - **Interoperability**: Make it easier for third-party developers to build tools that work with multiple grant platforms.
 - **Scalability**: Make it easier to support a large number of grant platforms.

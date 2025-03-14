@@ -3,13 +3,9 @@ title: Website framework
 description: ADR documenting the decision to use Astro's Starlight template for project documentation.
 ---
 
-## Summary
-
-### Problem statement
-
 We need a framework to build and maintain our documentation site for the protocol that balances simplicity, extensibility, and dynamic content generation. The solution should align with existing tooling for the project and be widely supported within the developer community.
 
-### Decision outcome
+## Decision
 
 We chose [Astro's Starlight template](https://starlight.astro.build/) for our documentation framework.
 
@@ -22,7 +18,7 @@ We chose [Astro's Starlight template](https://starlight.astro.build/) for our do
   - Fewer prebuilt themes than MkDocs or Hugo.
   - Less popular than MkDocs or Next.js, resulting in potentially fewer community resources.
 
-### Decision drivers
+### Criteria
 
 - **Simplicity:** Easy to set up, maintain, and host documentation.
 - **Extensibility:** Allows customization and supports reusable components.

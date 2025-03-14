@@ -3,13 +3,9 @@ title: RFC format
 description: ADR documenting the decision to use GitHub Discussions for the RFC process for the CommonGrants protocol.
 ---
 
-## Summary
+The CommonGrants protocol team needs to choose a forum for hosting a request for comment (RFC) period on the draft protocol to gather feedback from stakeholders. The format should align with open-source best practices, ensure accessibility, transparency, and minimize overhead.
 
-### Problem statement
-
-The CommonGrants protocol team needs to choose a forum for hosting a request for comment (RFC) period on the draft protocol to gather feedback from stakeholders, including public and private funders, grant platform executives, and developers. The format should align with open-source best practices, ensure accessibility, transparency, and minimize overhead.
-
-### Decision outcome
+## Decision
 
 We've decided to use **GitHub Discussions** as the primary platform for hosting the RFC process. We'll also plan to link to a Google Form in the GitHub Discussions thread as a secondary feedback option for who are not comfortable with GitHub.
 
@@ -25,7 +21,7 @@ We've decided to use **GitHub Discussions** as the primary platform for hosting 
   - Requires setting up guidelines for engagement to maintain productive discussions.
   - May result in conversations being fragmented across multiple platforms (GitHub Discussions and Google Form).
 
-### Decision drivers
+### Criteria
 
 - The RFC process and format should align with other open-source RFCs.
 - The RFC process should be accessible to a mix of funders, grant platform execs, and developers.
@@ -33,7 +29,7 @@ We've decided to use **GitHub Discussions** as the primary platform for hosting 
 - The RFC process should require minimal overhead.
 - It should be relatively easy to track engagement metrics (e.g., views, comments, response rate, etc.).
 
-## Options considered
+### Options considered
 
 - GitHub Discussions
 - A dedicated webpage with a form/email for feedback
