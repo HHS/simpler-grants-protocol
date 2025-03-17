@@ -40,10 +40,6 @@ export default defineConfig({
           ],
         },
         {
-          label: "Guides",
-          autogenerate: { directory: "guides" },
-        },
-        {
           label: "Protocol",
           items: [
             { label: "Specification", link: "protocol/specification" },
@@ -87,6 +83,10 @@ export default defineConfig({
             },
             ...openAPISidebarGroups,
           ],
+        },
+        {
+          label: "Guides",
+          autogenerate: { directory: "guides" },
         },
         {
           label: "Decisions",
