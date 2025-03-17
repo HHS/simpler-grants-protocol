@@ -3,9 +3,7 @@ import "@common-grants/core";
 
 using TypeSpec.Http;
 
-@service({
-  title: "CommonGrants API",
-})
+@service(#{ title: "CommonGrants API" })
 namespace Custom;
 
 @tag("Opportunities")
