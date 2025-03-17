@@ -31,10 +31,10 @@ First, we'll show you how to set up and preview the default CommonGrants API spe
 
 <Steps>
 
-1. Install the CLI and TypeSpec compiler globally
+1. Install the CLI globally
 
    ```bash
-   npm install @common-grants/cli @typespec/compiler -g
+   npm install @common-grants/cli -g
    ```
 
 2. Create a new directory for your project
@@ -46,6 +46,8 @@ First, we'll show you how to set up and preview the default CommonGrants API spe
 
 3. Initialize your project with the quickstart template.
 
+   **Note:** The TypeSpec compiler will warn you about using an untrusted template. This is expected and the template is safe to use.
+
    ```bash
    cg init --template quickstart
    ```
@@ -53,24 +55,14 @@ First, we'll show you how to set up and preview the default CommonGrants API spe
    Follow the prompts and accept the default options.
 
    ```bash
-   TypeSpec compiler v0.63.0
+   ✔ Continue Yes
+   ✔ Enter a project name: common-grants-quickstart
+   ✔ Installing dependencies
 
-   Example from the quickstart guide
-   ✔ Project name … common-grants-quickstart
-   ✔ Do you want to generate a .gitignore file? … yes
-   ✔ Update the libraries? › @common-grants/core
-
-   TypeSpec init completed. You can run `tsp install` now to install dependencies.
-   Project created successfully.
+   success: Project initialized!
    ```
 
-4. Install the project dependencies
-
-   ```bash
-   tsp install
-   ```
-
-5. Compile and preview your API specification at `http://localhost:3000`
+4. Compile and preview your API specification at `http://localhost:3000`
 
    ```bash
    cg compile main.tsp
@@ -82,6 +74,8 @@ First, we'll show you how to set up and preview the default CommonGrants API spe
 ### Deep dive
 
 Next, we'll take a step back and walk you through what happened behind the scenes when you ran the CLI commands listed above.
+
+If you want to jump straight into customizing the API spec, feel free to skip ahead to the [Customization](#customization) section.
 
 :::tip
 To make the deep dive sections easier to follow, we recommend installing the [TypeSpec VSCode extension](https://marketplace.visualstudio.com/items?itemName=typespec.typespec-vscode) which provides syntax highlighting and autocomplete for TypeSpec files.
@@ -241,9 +235,9 @@ emitters:
 
 This configures the TypeSpec compiler to emit the API definition as an OpenAPI document and a JSON Schema.
 
-#### Explore the packages installed by `tsp install`
+#### Explore the packages installed by `cg init`
 
-When you run `tsp install`, the following packages are installed (among others):
+When you run `cg init`, the following packages are installed (among others):
 
 - [`@common-grants/core`](https://www.npmjs.com/package/@common-grants/core) The CommonGrants TypeSpec library, which includes a default set of models and routes that can be used to define your own CommonGrants API.
 - [`@typespec/openapi3`](https://www.npmjs.com/package/@typespec/openapi3) The OpenAPI emitter for TypeSpec, which emits the CommonGrants API definition as an OpenAPI document.
@@ -462,6 +456,10 @@ cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
 ```
 
 This should start a local server that serves the OpenAPI specification using Swagger UI. View your API specification at `http://localhost:3000`.
+
+Specifically look for the `agency` field in the `customFields` property of the `Opportunity` model at `http://localhost:3000/#/Opportunities/Routes_read`. It should look something like this:
+
+![Screenshot of a custom field in OpenAPI docs](../../assets/custom-fields-screenshot.png)
 
 ## Next steps
 

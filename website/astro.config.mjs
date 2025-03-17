@@ -6,7 +6,7 @@ import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://hhs.github.io",
+  site: "https://commongrants.org",
   integrations: [
     starlight({
       plugins: [
@@ -38,10 +38,6 @@ export default defineConfig({
             { label: "Getting started", link: "getting-started" },
             { label: "About CommonGrants", link: "about" },
           ],
-        },
-        {
-          label: "Guides",
-          autogenerate: { directory: "guides" },
         },
         {
           label: "Protocol",
@@ -87,6 +83,10 @@ export default defineConfig({
             },
             ...openAPISidebarGroups,
           ],
+        },
+        {
+          label: "Guides",
+          autogenerate: { directory: "guides" },
         },
         {
           label: "Decisions",
