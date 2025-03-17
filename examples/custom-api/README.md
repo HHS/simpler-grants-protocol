@@ -124,9 +124,7 @@ import "./routes.tsp"; // Import the overridden route from above
 using TypeSpec.Http;
 
 /** Add the Custom API description here */
-@service({
-    title: "Custom API",
-})
+@service(#{ title: "Custom API" })
 namespace CustomAPI;
 ```
 

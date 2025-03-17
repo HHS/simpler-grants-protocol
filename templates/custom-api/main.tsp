@@ -4,7 +4,5 @@ import "./routes.tsp";
 using TypeSpec.Http;
 
 /** API description here */
-@service({
-  title: "{{parameters.apiName}}",
-})
+@service(#{ title: "{{parameters.apiName}}" })
 namespace Custom;

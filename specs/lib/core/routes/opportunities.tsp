@@ -49,7 +49,7 @@ interface Opportunities {
   @list
   list<T extends Models.OpportunityBase = Models.OpportunityBase>(
     ...Pagination.PaginatedQueryParams,
-  ): Responses.Paginated<T> | Responses.Unauthorized;
+  ): Responses.Paginated<T>;
 
   // ##############################
   // View an opportunity
@@ -66,7 +66,7 @@ interface Opportunities {
   read<T extends Models.OpportunityBase = Models.OpportunityBase>(
     /** The ID of the opportunity to view */
     @path id: Types.uuid,
-  ): Responses.Ok<T> | Responses.NotFound | Responses.Unauthorized;
+  ): Responses.Ok<T> | Responses.NotFound;
 
   // ###############################
   // Search opportunities
@@ -94,5 +94,5 @@ interface Opportunities {
 
     /** Pagination instructions for the results */
     pagination?: Pagination.PaginatedBodyParams,
-  ): Responses.Filtered<T, Models.OppFilters> | Responses.Unauthorized;
+  ): Responses.Filtered<T, Models.OppFilters>;
 }

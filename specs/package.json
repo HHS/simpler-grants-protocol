@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/core",
-  "version": "0.1.0-alpha.11",
+  "version": "0.1.0-alpha.12",
   "description": "TypeSpec library for defining grant opportunity data models and APIs",
   "type": "module",
   "main": "dist/src/index.js",
@@ -55,11 +55,11 @@
   "author": "CommonGrants",
   "license": "CC0-1.0",
   "peerDependencies": {
-    "@typespec/compiler": "^0.63.0",
-    "@typespec/http": "^0.63.0",
-    "@typespec/json-schema": "^0.63.0",
-    "@typespec/openapi3": "^0.63.0",
-    "@typespec/rest": "^0.63.0"
+    "@typespec/compiler": "^0.66.0",
+    "@typespec/http": "^0.66.0",
+    "@typespec/json-schema": "^0.66.0",
+    "@typespec/openapi3": "^0.66.0",
+    "@typespec/rest": "^0.66.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",

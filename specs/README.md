@@ -101,9 +101,7 @@ import "./routes.tsp"; // Import the routes from above
 using TypeSpec.Http;
 
 /** Description of your API goes here */
-@service({
-  title: "Custom API",
-})
+@service(#{ title: "Custom API" })
 namespace CustomAPI;
 ```
 
