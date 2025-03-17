@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/cli",
-  "version": "0.1.0-alpha.6",
+  "version": "0.1.0-alpha.7",
   "license": "CC0-1.0",
   "description": "The CommonGrants protocol CLI tool",
   "main": "dist/index.js",
@@ -45,8 +45,8 @@
     "checks": "npm run check:lint && npm run check:format"
   },
   "dependencies": {
-    "@common-grants/core": "^0.1.0-alpha.11",
-    "@typespec/compiler": "^0.63.0",
+    "@common-grants/core": "^0.1.0-alpha.12",
+    "@typespec/compiler": "^0.66.0",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "express": "^4.18.2",
