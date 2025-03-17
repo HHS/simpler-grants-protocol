@@ -6,7 +6,7 @@ import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://hhs.github.io",
+  site: "https://commongrants.org",
   integrations: [
     starlight({
       plugins: [
