@@ -58,11 +58,11 @@ First, we'll show you how to set up and preview the default CommonGrants API spe
    ✔ Continue Yes
    ✔ Enter a project name: common-grants-quickstart
    ✔ Installing dependencies
-   
+
    success: Project initialized!
    ```
 
-5. Compile and preview your API specification at `http://localhost:3000`
+4. Compile and preview your API specification at `http://localhost:3000`
 
    ```bash
    cg compile main.tsp
@@ -74,6 +74,8 @@ First, we'll show you how to set up and preview the default CommonGrants API spe
 ### Deep dive
 
 Next, we'll take a step back and walk you through what happened behind the scenes when you ran the CLI commands listed above.
+
+If you want to jump straight into customizing the API spec, feel free to skip ahead to the [Customization](#customization) section.
 
 :::tip
 To make the deep dive sections easier to follow, we recommend installing the [TypeSpec VSCode extension](https://marketplace.visualstudio.com/items?itemName=typespec.typespec-vscode) which provides syntax highlighting and autocomplete for TypeSpec files.
@@ -453,7 +455,7 @@ cg compile main.tsp
 cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
 ```
 
-This should start a local server that serves the OpenAPI specification using Swagger UI. View your API specification at `http://localhost:3000`. 
+This should start a local server that serves the OpenAPI specification using Swagger UI. View your API specification at `http://localhost:3000`.
 
 Specifically look for the `agency` field in the `customFields` property of the `Opportunity` model at `http://localhost:3000/#/Opportunities/Routes_read`. It should look something like this:
 
