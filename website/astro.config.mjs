@@ -89,13 +89,20 @@ export default defineConfig({
           autogenerate: { directory: "guides" },
         },
         {
-          label: "Decisions",
+          label: "Governance",
           items: [
-            "decisions/overview",
+            {
+              label: "Request for Comments",
+              link: "governance/rfc",
+            },
+            {
+              label: "Recording decisions",
+              link: "governance/decisions",
+            },
             {
               label: "ADRs",
               collapsed: true,
-              autogenerate: { directory: "decisions/adr" },
+              autogenerate: { directory: "governance/adr" },
             },
           ],
         },
