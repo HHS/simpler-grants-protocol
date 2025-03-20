@@ -9,7 +9,7 @@ export default defineConfig({
   site: "https://commongrants.org",
   integrations: [
     starlight({
-      favicon: "/favicon.ico",
+      favicon: "/public/favicon.ico",
       customCss: ["./src/styles/custom.css"],
       plugins: [
         // Generate the OpenAPI documentation pages.
