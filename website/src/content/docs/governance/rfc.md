@@ -5,6 +5,12 @@ description: The Request for Comments (RFC) process and scope for v0.1.0 draft o
 
 This document outlines the Request for Comments (RFC) process and scope for v0.1.0 draft of the CommonGrants protocol.
 
+:::tip[Join the conversation]
+
+Want to leave a comment on the RFC? Share your thoughts on our [Discourse forum](https://simplergrants.discourse.group/t/request-for-comments-commongrants-protocol-v0-1-0/49/1)!
+
+:::
+
 ## Process
 
 - **Participation** The RFC process is open to all members of the community. We're particularly interested in feedback from:
