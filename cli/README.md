@@ -34,9 +34,7 @@ Options:
 Commands:
   init [options]          Initialize a new CommonGrants project
   preview <specPath>      Preview an OpenAPI specification
-  add
   check                   Validate APIs and specifications
-  generate                Generate server or client code
   compile <typespecPath>  Compile a TypeSpec file to OpenAPI
   help [command]          display help for command
 ```
@@ -109,18 +107,6 @@ Subsequent releases will add:
 
 The following examples describe the anticipated features of the CLI, but these are not yet implemented and are subject to change.
 
-### Add Custom Fields
-
-Extend the API schema with custom fields:
-
-```bash
-# Add a basic field
-cg add field fundingAmount number
-
-# Include example and description
-cg add field fundingAmount number --example 100000 --description "Total funding available"
-```
-
 ### Validate API Implementation
 
 Check if an API implementation matches its specification:
@@ -134,34 +120,4 @@ cg check api https://api.example.com spec.yaml --report json
 
 # Validate with authentication
 cg check api https://api.example.com spec.yaml --auth bearer:token
-```
-
-### Generate Server Code
-
-Generate API server code from a specification:
-
-```bash
-# Generate with default settings
-cg generate server spec.tsp
-
-# Specify language/framework
-cg generate server spec.tsp --lang python
-
-# Generate specific components
-cg generate server spec.tsp --only controllers,routes
-```
-
-### Generate Client Code
-
-Generate client SDKs from an API specification:
-
-```bash
-# Generate default client
-cg generate client spec.tsp
-
-# Generate for specific language
-cg generate client spec.tsp --lang typescript
-
-# Include documentation
-cg generate client spec.tsp --docs
 ```

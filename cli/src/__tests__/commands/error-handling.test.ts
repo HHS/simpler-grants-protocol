@@ -2,9 +2,7 @@ import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { Command } from "commander";
 import { initCommand } from "../../commands/init";
 import { previewCommand } from "../../commands/preview";
-import { addFieldCommand } from "../../commands/add-field";
 import { checkCommand } from "../../commands/check";
-import { generateCommand } from "../../commands/generate";
 
 // Mock console.error and process.exit
 const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -45,20 +43,6 @@ describe("Command Error Handling", () => {
     });
   });
 
-  describe("add field command", () => {
-    beforeEach(() => {
-      addFieldCommand(program);
-    });
-
-    it("should handle invalid field type", async () => {
-      const addCmd = program.commands.find(cmd => cmd.name() === "add")!;
-      await addCmd.parseAsync(["node", "test", "field", "testField", "invalid-type"]);
-
-      expect(mockConsoleError).toHaveBeenCalledWith("Error adding field:", expect.any(Error));
-      expect(mockProcessExit).toHaveBeenCalledWith(1);
-    });
-  });
-
   describe("check command", () => {
     beforeEach(() => {
       checkCommand(program);
@@ -71,41 +55,6 @@ describe("Command Error Handling", () => {
       expect(mockConsoleError).toHaveBeenCalledWith(
         "Validation error:",
         expect.stringContaining("Invalid url")
-      );
-      expect(mockProcessExit).toHaveBeenCalledWith(1);
-    });
-  });
-
-  describe("generate command", () => {
-    beforeEach(() => {
-      generateCommand(program);
-    });
-
-    it("should handle invalid file extension", async () => {
-      const generateCmd = program.commands.find(cmd => cmd.name() === "generate")!;
-      await generateCmd.parseAsync(["node", "test", "client", "spec.invalid"]);
-
-      expect(mockConsoleError).toHaveBeenCalledWith(
-        "Validation error:",
-        expect.stringContaining("invalid_string")
-      );
-      expect(mockProcessExit).toHaveBeenCalledWith(1);
-    });
-
-    it("should handle invalid server components", async () => {
-      const generateCmd = program.commands.find(cmd => cmd.name() === "generate")!;
-      await generateCmd.parseAsync([
-        "node",
-        "test",
-        "server",
-        "spec.tsp",
-        "--only",
-        "invalid-component",
-      ]);
-
-      expect(mockConsoleError).toHaveBeenCalledWith(
-        "Validation error:",
-        expect.stringContaining("Only valid components are")
       );
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
