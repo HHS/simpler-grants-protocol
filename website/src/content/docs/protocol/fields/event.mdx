@@ -1,7 +1,6 @@
 ---
 title: Event
 description: A model for representing events with dates and descriptions
-tableOfContents: false
 sidebar:
   order: 3
 ---
@@ -10,10 +9,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 A description of an event with an associated date (and possible time).
 
-### Data model
-
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property    | Type                                    | Required | Description                                         |
 | ----------- | --------------------------------------- | -------- | --------------------------------------------------- |
@@ -22,9 +18,27 @@ A description of an event with an associated date (and possible time).
 | time        | [isoTime](/protocol/types/date#isotime) | No       | Time of the event in in ISO 8601 format: HH:MM:SS   |
 | description | [string](/protocol/types/string#string) | No       | A description of the event                          |
 
+### Formats
+
+<Tabs>
+  <TabItem label="JSON">
+
+A JSON example of this field is:
+
+```json
+{
+  "name": "Application Deadline",
+  "date": "2024-04-30",
+  "time": "17:00:00",
+  "description": "Final deadline for all submissions"
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -46,40 +60,29 @@ properties:
 required:
   - name
   - date
-description: An event with a date and optional description
+description: Description of an event with an associated date (and possible time)
 ```
 
   </TabItem>
 
   <TabItem label="TypeSpec">
 
-    ```tsp
-    /** Description of an event with an associated date (and possible time) */
-    model Event {
-      /** Human-readable name of the event (e.g., 'Application posted', 'Question deadline') */
-      name: string;
+The TypeSpec code for this field is:
 
-      /** Date of the event in in ISO 8601 format: YYYY-MM-DD */
-      date: isoDate;
+```tsp
+/** Description of an event with an associated date (and possible time) */
+model Event {
+  /** Human-readable name of the event (e.g., 'Application posted', 'Question deadline') */
+  name: string;
 
-      /** Time of the event in ISO 8601 format: HH:MM:SS */
-      time?: isoTime;
+  /** Date of the event in in ISO 8601 format: YYYY-MM-DD */
+  date: isoDate;
 
-      /** Description of what this event represents */
-      description?: string;
-    }
-    ```
+  /** Time of the event in ISO 8601 format: HH:MM:SS */
+  time?: isoTime;
 
-  </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "name": "Application Deadline",
-  "date": "2024-04-30",
-  "time": "17:00:00",
-  "description": "Final deadline for all submissions"
+  /** Description of what this event represents */
+  description?: string;
 }
 ```
 

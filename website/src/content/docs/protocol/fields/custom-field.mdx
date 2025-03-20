@@ -1,17 +1,15 @@
 ---
 title: CustomField
 description: A model for defining custom fields that are specific to a given implementation
-tableOfContents: false
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 A model for defining custom fields on a record.
 
-### Data model
+## CustomField
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property    | Type                                    | Required | Description                                               |
 | ----------- | --------------------------------------- | -------- | --------------------------------------------------------- |
@@ -21,9 +19,28 @@ A model for defining custom fields on a record.
 | value       | any                                     | Yes      | Value of the custom field                                 |
 | description | [string](/protocol/types/string#string) | No       | Description of the custom field's purpose                 |
 
+### Formats
+
+<Tabs>
+  <TabItem label="JSON">
+
+A JSON example of this field is:
+
+```json
+{
+  "name": "programArea",
+  "type": "string",
+  "value": "Healthcare Innovation",
+  "description": "Primary focus area of the grant program",
+  "schema": "https://example.com/program-areas.json"
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -56,6 +73,8 @@ description: A custom field on a model
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```tsp
 @doc("A custom field on a model")
 model CustomField {
@@ -77,28 +96,13 @@ model CustomField {
 ```
 
   </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "name": "programArea",
-  "type": "string",
-  "value": "Healthcare Innovation",
-  "description": "Primary focus area of the grant program",
-  "schema": "https://example.com/program-areas.json"
-}
-```
-
-  </TabItem>
 </Tabs>
 
-### CustomFieldType
+## CustomFieldType
 
 The set of JSON schema types supported by a custom field.
 
-<Tabs>
-  <TabItem label="Options">
+### Options
 
 | Value   | Description             |
 | ------- | ----------------------- |
@@ -108,8 +112,12 @@ The set of JSON schema types supported by a custom field.
 | object  | Structured data objects |
 | array   | Lists of values         |
 
-  </TabItem>
+### Formats
+
+<Tabs>
   <TabItem label="JSON Schema">
+
+The JSON schema for this enum is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -127,6 +135,8 @@ description: The set of JSON schema types supported by a custom field
   </TabItem>
 
   <TabItem label="TypeSpec">
+
+The TypeSpec code for this enum is:
 
 ```tsp
 /** The set of JSON schema types supported by a custom field */
