@@ -94,6 +94,12 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 ### Schemas
 
+The CommonGrants protocol defines the following schemas that are used to represent data in CommonGrants APIs. These schemas are roughly divided into three categories:
+
+- [Types](#base-types): Foundational data types, like strings, numbers, etc.
+- [Fields](#core-fields): Standardized fields that are reused across models.
+- [Models](#opportunity-models): Domain-specific models for funding opportunities.
+
 #### Base types
 
 **String types**
@@ -161,10 +167,11 @@ The CommonGrants protocol defines the following routes and operations that are s
 While omitted for brevity in the following table, all protocol-defined routes MUST be prefixed with `/common-grants/`.
 :::
 
-| Route                                                                         | Status   | Description                                                      |
-| ----------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
-| [`GET /opportunities`](/protocol/openapi/operations/opportunities_list/)      | Required | Get a paginated list of opportunities sorted by `lastModifiedAt` |
-| [`GET /opportunities/{id}`](/protocol/openapi/operations/opportunities_read/) | Required | View details about a specific opportunity                        |
+| Route                                                                              | Status   | Description                                                      |
+| ---------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
+| [`GET /opportunities`](/protocol/openapi/operations/opportunities_list/)           | Required | Get a paginated list of opportunities sorted by `lastModifiedAt` |
+| [`GET /opportunities/{id}`](/protocol/openapi/operations/opportunities_read/)      | Required | View details about a specific opportunity                        |
+| [`POST /opportunities/search`](/protocol/openapi/operations/opportunities_search/) | Optional | Search and filter funding opportunities                          |
 
 #### Pagination
 
