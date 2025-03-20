@@ -10,6 +10,7 @@ export default defineConfig({
   integrations: [
     starlight({
       favicon: "/favicon.ico",
+      customCss: ["./src/styles/custom.css"],
       plugins: [
         // Generate the OpenAPI documentation pages.
         starlightOpenAPI([
