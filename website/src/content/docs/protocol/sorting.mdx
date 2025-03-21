@@ -7,30 +7,31 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ## SortOrder
 
-The order to sort by.
+The order or direction to sort results by.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Value  | Description      |
 | ------ | ---------------- |
 | `asc`  | Ascending order  |
 | `desc` | Descending order |
 
-  </TabItem>
+### Formats
 
-  <TabItem label="TypeSpec">
+<Tabs>
+  <TabItem label="JSON">
 
-```typespec
-enum SortOrder {
-  asc,
-  desc,
-}
+A JSON example of this model is:
+
+```json
+"asc"
 ```
 
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this model is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -42,14 +43,26 @@ enum:
 ```
 
   </TabItem>
+  
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```typespec
+enum SortOrder {
+  asc,
+  desc,
+}
+```
+
+  </TabItem>
 </Tabs>
 
 ## SortQueryParams
 
 Query parameters for sorting. These parameters should be used on GET routes that support sorting.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Parameter      | Type                                     | Description                                                   |
 | -------------- | ---------------------------------------- | ------------------------------------------------------------- |
@@ -57,33 +70,22 @@ Query parameters for sorting. These parameters should be used on GET routes that
 | `customSortBy` | [string](/protocol/types/string#string)  | An implementation-defined sort key                            |
 | `sortOrder`    | [SortOrder](#sortorder)                  | The order to sort by                                          |
 
-  </TabItem>
+### Formats
 
-  <TabItem label="TypeSpec">
+<Tabs>
+  <TabItem label="Example">
 
-```typespec
-/** Query parameters for sorting */
-model SortQueryParams {
-  /** The field to sort by */
-  @query
-  @example("lastModifiedAt")
-  sortBy: unknown;
+An example URL using these parameters:
 
-  /** Implementation-defined sort key */
-  @query
-  @example("customField")
-  customSortBy?: string;
-
-  /** The order to sort by */
-  @query
-  @example(SortOrder.asc)
-  sortOrder?: SortOrder;
-}
+```
+/common-grants/opportunities?sortBy=lastModifiedAt&sortOrder=asc
 ```
 
   </TabItem>
 
   <TabItem label="OpenAPI">
+
+The OpenAPI specification for this model is:
 
 ```yaml
 /common-grants/opportunities:
@@ -134,10 +136,51 @@ components:
 
   </TabItem>
 
-  <TabItem label="Example">
+  <TabItem label="JSON Schema">
 
+The JSON schema for this model is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SortQueryParams.yaml
+type: object
+properties:
+  sortBy:
+    type: string
+    description: The field to sort by, should be an enum for individual routes
+  customSortBy:
+    type: string
+    description: An implementation-defined sort key
+  sortOrder:
+    $ref: SortOrder.yaml
+    description: The order to sort by
+description: Query parameters for sorting
 ```
-/common-grants/opportunities?sortBy=lastModifiedAt&sortOrder=asc
+
+  </TabItem>
+  
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```typespec
+/** Query parameters for sorting */
+model SortQueryParams {
+  /** The field to sort by */
+  @query
+  @example("lastModifiedAt")
+  sortBy: unknown;
+
+  /** Implementation-defined sort key */
+  @query
+  @example("customField")
+  customSortBy?: string;
+
+  /** The order to sort by */
+  @query
+  @example(SortOrder.asc)
+  sortOrder?: SortOrder;
+}
 ```
 
   </TabItem>
@@ -147,8 +190,7 @@ components:
 
 Body parameters for sorting. These parameters should be used on POST and PUT routes that support sorting.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Parameter      | Type                                     | Description                                                   |
 | -------------- | ---------------------------------------- | ------------------------------------------------------------- |
@@ -156,30 +198,37 @@ Body parameters for sorting. These parameters should be used on POST and PUT rou
 | `customSortBy` | [string](/protocol/types/string#string)  | An implementation-defined sort key                            |
 | `sortOrder`    | [SortOrder](#sortorder)                  | The order to sort by                                          |
 
-  </TabItem>
+### Formats
 
-  <TabItem label="TypeSpec">
+<Tabs>
+  <TabItem label="Example">
 
-```typespec
-/** Sorting parameters included in the request body */
-model SortBodyParams {
-  /** The field to sort by */
-  @example("lastModifiedAt")
-  sortBy: unknown;
+A JSON example of this model is:
 
-  /** Implementation-defined sort key */
-  @example("customField")
-  customSortBy?: string;
+Sorting by a protocol-defined field:
 
-  /** The order to sort by */
-  @example(SortOrder.asc)
-  sortOrder?: SortOrder;
+```json
+{
+  "sortBy": "lastModifiedAt",
+  "sortOrder": "asc"
+}
+```
+
+Sorting by an implementation-defined field:
+
+```json
+{
+  "sortBy": "custom",
+  "customSortBy": "customField",
+  "sortOrder": "asc"
 }
 ```
 
   </TabItem>
 
   <TabItem label="OpenAPI">
+
+The OpenAPI specification for this model is:
 
 ```yaml
 /common-grants/opportunities:
@@ -217,53 +266,39 @@ components:
 
   </TabItem>
 
-  <TabItem label="Example">
+  <TabItem label="JSON Schema">
 
-Sorting by a protocol-defined field:
+The JSON schema for this model is:
 
-```json
-{
-  "sortBy": "lastModifiedAt",
-  "sortOrder": "asc"
-}
-```
-
-Sorting by an implementation-defined field:
-
-```json
-{
-  "sortBy": "custom",
-  "customSortBy": "customField",
-  "sortOrder": "asc"
-}
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SortBodyParams.yaml
+type: object
+properties:
+  sortBy:
+    type: string
+    description: The field to sort by, should be an enum for individual routes
+  customSortBy:
+    type: string
+    description: An implementation-defined sort key
+  sortOrder:
+    $ref: SortOrder.yaml
+    description: The order to sort by
+description: Body parameters for sorting
 ```
 
   </TabItem>
-</Tabs>
-
-## SortInfo
-
-Information about the sort order of the items returned. This model should be used to represent the sorting details in responses.
-
-<Tabs>
-  <TabItem label="Table">
-
-| Parameter      | Type                                    | Description                        |
-| -------------- | --------------------------------------- | ---------------------------------- |
-| `sortBy`       | [string](/protocol/types/string#string) | The field to sort by               |
-| `customSortBy` | [string](/protocol/types/string#string) | An implementation-defined sort key |
-| `sortOrder`    | [SortOrder](#sortorder)                 | The order to sort by               |
-
-  </TabItem>
-
+  
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this model is:
+
 ```typespec
-/** Information about the sort order of the items returned */
-model SortInfo {
+/** Sorting parameters included in the request body */
+model SortBodyParams {
   /** The field to sort by */
   @example("lastModifiedAt")
-  sortBy: string;
+  sortBy: unknown;
 
   /** Implementation-defined sort key */
   @example("customField")
@@ -276,8 +311,41 @@ model SortInfo {
 ```
 
   </TabItem>
+</Tabs>
+
+## SortInfo
+
+Information about the sort order of the items returned. This model should be used to represent the sorting details in responses.
+
+### Table
+
+| Parameter      | Type                                                                            | Description                             |
+| -------------- | ------------------------------------------------------------------------------- | --------------------------------------- |
+| `sortBy`       | [string](/protocol/types/string#string)                                         | The field to sort by                    |
+| `customSortBy` | [string](/protocol/types/string#string)                                         | An implementation-defined sort key      |
+| `sortOrder`    | [SortOrder](#sortorder)                                                         | The order to sort by                    |
+| `errors`       | [Array](/protocol/types/other#array)\<[string](/protocol/types/string#string)\> | The errors that occurred during sorting |
+
+### Formats
+
+<Tabs>
+  <TabItem label="JSON">
+
+A JSON example of this model is:
+
+```json
+{
+  "sortBy": "lastModifiedAt",
+  "customSortBy": "customField",
+  "sortOrder": "asc"
+}
+```
+
+  </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this model is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -293,17 +361,37 @@ properties:
   sortOrder:
     $ref: "#/components/schemas/CommonGrants.Sorting.SortOrder"
     description: The order to sort by
+  errors:
+    type: array
+    items:
+      type: string
+    description: The errors that occurred during sorting
+description: Information about the sort order of the items returned
 ```
 
   </TabItem>
 
-  <TabItem label="Example">
+  <TabItem label="TypeSpec">
 
-```json
-{
-  "sortBy": "lastModifiedAt",
-  "customSortBy": "customField",
-  "sortOrder": "asc"
+The TypeSpec code for this model is:
+
+```typespec
+/** Information about the sort order of the items returned */
+model SortInfo {
+  /** The field to sort by */
+  @example("lastModifiedAt")
+  sortBy: string;
+
+  /** Implementation-defined sort key */
+  @example("customField")
+  customSortBy?: string;
+
+  /** The order to sort by */
+  @example(SortOrder.asc)
+  sortOrder?: SortOrder;
+  
+  /** The errors that occurred during sorting */
+  errors?: string[];
 }
 ```
 

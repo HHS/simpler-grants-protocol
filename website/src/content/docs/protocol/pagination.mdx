@@ -9,17 +9,53 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Query parameters for paginated routes. These parameters should be used on GET routes that support pagination.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
-| Parameter  | Type    | Default | Description                            |
-| ---------- | ------- | ------- | -------------------------------------- |
-| `page`     | `int32` | `1`     | The page to return                     |
-| `pageSize` | `int32` | `100`   | The number of items to return per page |
+| Parameter  | Type                                       | Default | Description                            |
+| ---------- | ------------------------------------------ | ------- | -------------------------------------- |
+| `page`     | [integer](/protocol/types/numeric#integer) | `1`     | The page to return                     |
+| `pageSize` | [integer](/protocol/types/numeric#integer) | `100`   | The number of items to return per page |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+An example URL using these parameters:
+
+```
+/common-grants/opportunities?page=1&pageSize=100
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+The JSON schema for this model is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PaginatedQueryParams.yaml
+type: object
+properties:
+  page:
+    type: integer
+    minimum: 1
+    default: 1
+    description: The page to return
+  pageSize:
+    type: integer
+    minimum: 1
+    default: 100
+    description: The number of items to return per page
+description: Query parameters for paginated routes
+```
 
   </TabItem>
 
   <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
 
 ```typespec
 /** Query parameters for paginated routes */
@@ -41,6 +77,8 @@ model PaginatedQueryParams {
   </TabItem>
 
   <TabItem label="OpenAPI">
+
+The OpenAPI specification for this model is:
 
 ```yaml
 /common-grants/opportunities:
@@ -80,31 +118,62 @@ components:
 ```
 
   </TabItem>
-
-  <TabItem label="Example">
-
-```
-/common-grants/opportunities?page=1&pageSize=100
-```
-
-  </TabItem>
 </Tabs>
 
 ## PaginatedBodyParams
 
 Body parameters for paginated routes. These parameters should be used on POST and PUT routes that support pagination.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
-| Parameter  | Type    | Default | Description                            |
-| ---------- | ------- | ------- | -------------------------------------- |
-| `page`     | `int32` | `1`     | The page to return                     |
-| `pageSize` | `int32` | `100`   | The number of items to return per page |
+| Parameter  | Type                                       | Default | Description                            |
+| ---------- | ------------------------------------------ | ------- | -------------------------------------- |
+| `page`     | [integer](/protocol/types/numeric#integer) | `1`     | The page to return                     |
+| `pageSize` | [integer](/protocol/types/numeric#integer) | `100`   | The number of items to return per page |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this model is:
+
+```json
+{
+  "page": 1,
+  "pageSize": 100
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+The JSON schema for this model is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PaginatedBodyParams.yaml
+type: object
+properties:
+  page:
+    type: integer
+    minimum: 1
+    default: 1
+    description: The page to return
+  pageSize:
+    type: integer
+    minimum: 1
+    default: 100
+    description: The number of items to return per page
+description: Body parameters for paginated routes
+```
 
   </TabItem>
 
   <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
 
 ```typespec
 /** Body parameters for paginated routes */
@@ -122,7 +191,10 @@ model PaginatedBodyParams {
 ```
 
   </TabItem>
+  
   <TabItem label="OpenAPI">
+
+The OpenAPI specification for this model is:
 
 ```yaml
 /common-grants/opportunities:
@@ -158,63 +230,42 @@ components:
 ```
 
   </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "page": 1,
-  "pageSize": 100
-}
-```
-
-  </TabItem>
 </Tabs>
 
 ## PaginationInfo
 
 Details about the paginated results. This model should be used to represent the response from a paginated route.
 
+### Table
+
+| Parameter    | Type                                       | Description                                |
+| ------------ | ------------------------------------------ | ------------------------------------------ |
+| `page`       | [integer](/protocol/types/numeric#integer) | The page to return                         |
+| `pageSize`   | [integer](/protocol/types/numeric#integer) | The number of items to return per page     |
+| `totalItems` | [integer](/protocol/types/numeric#integer) | The total number of items across all pages |
+| `totalPages` | [integer](/protocol/types/numeric#integer) | The total number of pages                  |
+
+### Formats
+
 <Tabs>
-  <TabItem label="Table">
+  <TabItem label="JSON">
 
-| Parameter    | Type    | Description                                |
-| ------------ | ------- | ------------------------------------------ |
-| `page`       | `int32` | The page to return                         |
-| `pageSize`   | `int32` | The number of items to return per page     |
-| `totalItems` | `int32` | The total number of items across all pages |
-| `totalPages` | `int32` | The total number of pages                  |
+A JSON example of this model is:
 
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-```typespec
-/** Details about the paginated results */
-model PaginationInfo {
-  /** Current page number (indexing starts at 1) */
-  @example(1)
-  @minValue(1)
-  page: int32;
-
-  /** Number of items per page */
-  @example(20)
-  @minValue(1)
-  pageSize: integer;
-
-  /** Total number of items across all pages */
-  @example(100)
-  totalItems?: integer;
-
-  /** Total number of pages */
-  @example(5)
-  totalPages?: integer;
+```json
+{
+  "page": 1,
+  "pageSize": 100,
+  "totalItems": 1000,
+  "totalPages": 10
 }
 ```
 
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this model is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -252,14 +303,30 @@ description: Details about the paginated results
 
   </TabItem>
 
-  <TabItem label="Example">
+  <TabItem label="TypeSpec">
 
-```json
-{
-  "page": 1,
-  "pageSize": 100,
-  "totalItems": 1000,
-  "totalPages": 10
+The TypeSpec code for this model is:
+
+```typespec
+/** Details about the paginated results */
+model PaginationInfo {
+  /** Current page number (indexing starts at 1) */
+  @example(1)
+  @minValue(1)
+  page: int32;
+
+  /** Number of items per page */
+  @example(20)
+  @minValue(1)
+  pageSize: integer;
+
+  /** Total number of items across all pages */
+  @example(100)
+  totalItems?: integer;
+
+  /** Total number of pages */
+  @example(5)
+  totalPages?: integer;
 }
 ```
 

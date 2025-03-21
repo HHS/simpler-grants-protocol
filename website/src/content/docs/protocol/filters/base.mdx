@@ -9,6 +9,13 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 The default filter model is a base model that can be used to create more specific filter models.
 
+### Table
+
+| Property | Type                   | Required | Description                               |
+| -------- | ---------------------- | -------- | ----------------------------------------- |
+| operator | one of the enums below | Yes      | The operator to apply to the filter value |
+| value    | any                    | Yes      | The value to use for the filter operation |
+
 ### Formats
 
 <Tabs>
@@ -236,6 +243,22 @@ A JSON example of this field is:
 
   </TabItem>
 
+  <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StringOperators.yaml
+type: string
+enum:
+  - like
+  - not_like
+description: Operators that filter a field based on a string value
+```
+
+  </TabItem>
+
   <TabItem label="TypeSpec">
 
 The TypeSpec code for this field is:
@@ -249,22 +272,6 @@ enum StringOperators {
   /** Not like */
   not_like,
 }
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: StringOperators.yaml
-type: string
-enum:
-  - like
-  - not_like
-description: Operators that filter a field based on a string value
 ```
 
   </TabItem>
@@ -297,6 +304,22 @@ A JSON example of this field is:
 
   </TabItem>
 
+  <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ArrayOperators.yaml
+type: string
+enum:
+  - in
+  - not_in
+description: Operators that filter a field based on an array of values
+```
+
+  </TabItem>
+
   <TabItem label="TypeSpec">
 
 The TypeSpec code for this field is:
@@ -310,22 +333,6 @@ enum ArrayOperators {
   /** Not in an array of values */
   not_in,
 }
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: ArrayOperators.yaml
-type: string
-enum:
-  - in
-  - not_in
-description: Operators that filter a field based on an array of values
 ```
 
   </TabItem>
@@ -359,6 +366,22 @@ A JSON example of this field is:
 
   </TabItem>
 
+  <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RangeOperators.yaml
+type: string
+enum:
+  - between
+  - outside
+description: Operators that filter a field based on a range of values
+```
+
+  </TabItem>
+
   <TabItem label="TypeSpec">
 
 The TypeSpec code for this field is:
@@ -372,22 +395,6 @@ enum RangeOperators {
   /** Outside a range of values */
   outside,
 }
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: RangeOperators.yaml
-type: string
-enum:
-  - between
-  - outside
-description: Operators that filter a field based on a range of values
 ```
 
   </TabItem>
