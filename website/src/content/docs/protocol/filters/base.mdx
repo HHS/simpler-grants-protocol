@@ -97,8 +97,8 @@ Operators that filter a field based on an exact match to a value. Supported valu
 
 | Operator | Description          | Property | True value | False value |
 | -------- | -------------------- | -------- | ---------- | ----------- |
-| `eq`     | Equal to a value     | `"foo"`  | `"foo"`    | `"bar"`     |
-| `neq`    | Not equal to a value | `"foo"`  | `"bar"`    | `"foo"`     |
+| eq       | Equal to a value     | `"foo"`  | `"foo"`    | `"bar"`     |
+| neq      | Not equal to a value | `"foo"`  | `"bar"`    | `"foo"`     |
 
 ### Formats
 
@@ -159,10 +159,10 @@ Operators that filter a field based on a comparison to a value. Supported value 
 
 | Operator | Description                      | Property | True value | False value |
 | -------- | -------------------------------- | -------- | ---------- | ----------- |
-| `gt`     | Greater than a value             | `10`     | `15`       | `5`         |
-| `gte`    | Greater than or equal to a value | `10`     | `10`       | `9`         |
-| `lt`     | Less than a value                | `10`     | `5`        | `15`        |
-| `lte`    | Less than or equal to a value    | `10`     | `10`       | `11`        |
+| gt       | Greater than a value             | `10`     | `15`       | `5`         |
+| gte      | Greater than or equal to a value | `10`     | `10`       | `9`         |
+| lt       | Less than a value                | `10`     | `5`        | `15`        |
+| lte      | Less than or equal to a value    | `10`     | `10`       | `11`        |
 
 ### Formats
 
@@ -225,10 +225,10 @@ Operators that filter a field based on a string value.
 
 ### Table
 
-| Operator   | Description | Property  | True value | False value |
-| ---------- | ----------- | --------- | ---------- | ----------- |
-| `like`     | Like        | `"hello"` | `"hell"`   | `"world"`   |
-| `not_like` | Not like    | `"hello"` | `"world"`  | `"hell"`    |
+| Operator | Description | Property  | True value | False value |
+| -------- | ----------- | --------- | ---------- | ----------- |
+| like     | Like        | `"hello"` | `"hell"`   | `"world"`   |
+| not_like | Not like    | `"hello"` | `"world"`  | `"hell"`    |
 
 ### Formats
 
@@ -288,8 +288,8 @@ Operators that filter a field based on an array of values. Supported value types
 
 | Operator | Description               | Property | True value   | False value  |
 | -------- | ------------------------- | -------- | ------------ | ------------ |
-| `in`     | In an array of values     | `"A"`    | `["A", "B"]` | `["B", "C"]` |
-| `not_in` | Not in an array of values | `"A"`    | `["B", "C"]` | `["A", "B"]` |
+| in       | In an array of values     | `"A"`    | `["A", "B"]` | `["B", "C"]` |
+| not_in   | Not in an array of values | `"A"`    | `["B", "C"]` | `["A", "B"]` |
 
 ### Formats
 
@@ -348,10 +348,10 @@ Operators that filter a field based on a range of values. Supported value types 
 
 ### Table
 
-| Operator  | Description                              | Property | True value               | False value              |
-| --------- | ---------------------------------------- | -------- | ------------------------ | ------------------------ |
-| `between` | The value must be between the two values | `5`      | `{"min": 1, "max": 10}`  | `{"min": 10, "max": 20}` |
-| `outside` | The value must be outside the two values | `5`      | `{"min": 10, "max": 20}` | `{"min": 1, "max": 10}`  |
+| Operator | Description                              | Property | True value               | False value              |
+| -------- | ---------------------------------------- | -------- | ------------------------ | ------------------------ |
+| between  | The value must be between the two values | `5`      | `{"min": 1, "max": 10}`  | `{"min": 10, "max": 20}` |
+| outside  | The value must be outside the two values | `5`      | `{"min": 10, "max": 20}` | `{"min": 1, "max": 10}`  |
 
 ### Formats
 

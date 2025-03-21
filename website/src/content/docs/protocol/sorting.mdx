@@ -11,10 +11,10 @@ The order or direction to sort results by.
 
 ### Table
 
-| Value  | Description      |
-| ------ | ---------------- |
-| `asc`  | Ascending order  |
-| `desc` | Descending order |
+| Value | Description      |
+| ----- | ---------------- |
+| asc   | Ascending order  |
+| desc  | Descending order |
 
 ### Formats
 
@@ -64,11 +64,11 @@ Query parameters for sorting. These parameters should be used on GET routes that
 
 ### Table
 
-| Parameter      | Type                                     | Description                                                   |
-| -------------- | ---------------------------------------- | ------------------------------------------------------------- |
-| `sortBy`       | [unknown](/protocol/types/other#unknown) | The field to sort by, should be an enum for individual routes |
-| `customSortBy` | [string](/protocol/types/string#string)  | An implementation-defined sort key                            |
-| `sortOrder`    | [SortOrder](#sortorder)                  | The order to sort by                                          |
+| Parameter    | Type                                     | Description                                                   |
+| ------------ | ---------------------------------------- | ------------------------------------------------------------- |
+| sortBy       | [unknown](/protocol/types/other#unknown) | The field to sort by, should be an enum for individual routes |
+| customSortBy | [string](/protocol/types/string#string)  | An implementation-defined sort key                            |
+| sortOrder    | [SortOrder](#sortorder)                  | The order to sort by                                          |
 
 ### Formats
 
@@ -192,11 +192,11 @@ Body parameters for sorting. These parameters should be used on POST and PUT rou
 
 ### Table
 
-| Parameter      | Type                                     | Description                                                   |
-| -------------- | ---------------------------------------- | ------------------------------------------------------------- |
-| `sortBy`       | [unknown](/protocol/types/other#unknown) | The field to sort by, should be an enum for individual routes |
-| `customSortBy` | [string](/protocol/types/string#string)  | An implementation-defined sort key                            |
-| `sortOrder`    | [SortOrder](#sortorder)                  | The order to sort by                                          |
+| Parameter    | Type                                     | Description                                                   |
+| ------------ | ---------------------------------------- | ------------------------------------------------------------- |
+| sortBy       | [unknown](/protocol/types/other#unknown) | The field to sort by, should be an enum for individual routes |
+| customSortBy | [string](/protocol/types/string#string)  | An implementation-defined sort key                            |
+| sortOrder    | [SortOrder](#sortorder)                  | The order to sort by                                          |
 
 ### Formats
 
@@ -319,12 +319,12 @@ Information about the sort order of the items returned. This model should be use
 
 ### Table
 
-| Parameter      | Type                                                                            | Description                             |
-| -------------- | ------------------------------------------------------------------------------- | --------------------------------------- |
-| `sortBy`       | [string](/protocol/types/string#string)                                         | The field to sort by                    |
-| `customSortBy` | [string](/protocol/types/string#string)                                         | An implementation-defined sort key      |
-| `sortOrder`    | [SortOrder](#sortorder)                                                         | The order to sort by                    |
-| `errors`       | [Array](/protocol/types/other#array)\<[string](/protocol/types/string#string)\> | The errors that occurred during sorting |
+| Parameter    | Type                                                                            | Description                             |
+| ------------ | ------------------------------------------------------------------------------- | --------------------------------------- |
+| sortBy       | [string](/protocol/types/string#string)                                         | The field to sort by                    |
+| customSortBy | [string](/protocol/types/string#string)                                         | An implementation-defined sort key      |
+| sortOrder    | [SortOrder](#sortorder)                                                         | The order to sort by                    |
+| errors       | [Array](/protocol/types/other#array)\<[string](/protocol/types/string#string)\> | The errors that occurred during sorting |
 
 ### Formats
 
@@ -389,7 +389,7 @@ model SortInfo {
   /** The order to sort by */
   @example(SortOrder.asc)
   sortOrder?: SortOrder;
-  
+
   /** The errors that occurred during sorting */
   errors?: string[];
 }
