@@ -4,6 +4,8 @@ import starlight from "@astrojs/starlight";
 import starlightLinksValidator from "starlight-links-validator";
 import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
+import react from "@astrojs/react";
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://commongrants.org",
@@ -110,5 +112,6 @@ export default defineConfig({
         },
       ],
     }),
+    react(),
   ],
 });
