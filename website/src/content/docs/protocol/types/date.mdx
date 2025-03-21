@@ -12,6 +12,14 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 A date on a calendar in ISO 8601 format YYYY-MM-DD.
 
 <Tabs>
+  <TabItem label="Example">
+
+```json
+"2025-01-01"
+```
+
+  </TabItem>
+
   <TabItem label="JSON Schema">
 
 ```yaml
@@ -33,14 +41,6 @@ scalar isoDate extends plainTime;
 ```
 
   </TabItem>
-
-  <TabItem label="Example">
-
-```json
-"2025-01-01"
-```
-
-  </TabItem>
 </Tabs>
 
 ### isoTime
@@ -52,6 +52,14 @@ The `isoTime` type does not include timezone information. When representing a ti
 :::
 
 <Tabs>
+  <TabItem label="Example">
+
+```json
+"17:00:00"
+```
+
+  </TabItem>
+
   <TabItem label="JSON Schema">
 
 ```yaml
@@ -73,14 +81,6 @@ scalar isoTime extends plainTime;
 ```
 
   </TabItem>
-
-  <TabItem label="Example">
-
-```json
-"17:00:00"
-```
-
-  </TabItem>
 </Tabs>
 
 ### utcDateTime
@@ -88,6 +88,14 @@ scalar isoTime extends plainTime;
 A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ.
 
 <Tabs>
+  <TabItem label="Example">
+
+```json
+"2024-02-28T17:00:00Z"
+```
+
+  </TabItem>
+
   <TabItem label="JSON Schema">
 
 ```yaml
@@ -99,14 +107,6 @@ description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:s
 ```
 
   </TabItem>
-
-  <TabItem label="Example">
-
-```json
-"2024-02-28T17:00:00Z"
-```
-
-  </TabItem>
 </Tabs>
 
 ### offsetDateTime
@@ -114,6 +114,14 @@ description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:s
 A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm.
 
 <Tabs>
+  <TabItem label="Example">
+
+```json
+"2024-02-28T17:00:00+01:00"
+```
+
+  </TabItem>
+
   <TabItem label="JSON Schema">
 
 ```yaml
@@ -122,14 +130,6 @@ $id: offsetDateTime.yaml
 type: string
 format: date-time
 description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm
-```
-
-  </TabItem>
-
-  <TabItem label="Example">
-
-```json
-"2024-02-28T17:00:00+01:00"
 ```
 
   </TabItem>

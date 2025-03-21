@@ -1,17 +1,13 @@
 ---
 title: OppFunding
 description: Details about the funding available for an opportunity
-tableOfContents: false
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Details about the funding available for an opportunity.
 
-### Data model
-
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property             | Type                                       | Required | Description                                     |
 | -------------------- | ------------------------------------------ | -------- | ----------------------------------------------- |
@@ -22,9 +18,38 @@ Details about the funding available for an opportunity.
 | maxAwardCount        | [integer](/protocol/types/numeric#integer) | No       | Maximum number of awards granted                |
 | estimatedAwardCount  | [integer](/protocol/types/numeric#integer) | No       | Estimated number of awards that will be granted |
 
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "totalAmountAvailable": {
+    "amount": "1000000.00",
+    "currency": "USD"
+  },
+  "minAwardAmount": {
+    "amount": "10000.00",
+    "currency": "USD"
+  },
+  "maxAwardAmount": {
+    "amount": "50000.00",
+    "currency": "USD"
+  },
+  "minAwardCount": 5,
+  "maxAwardCount": 20,
+  "estimatedAwardCount": 10
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -56,6 +81,8 @@ description: Details about the funding available for this opportunity
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```tsp
 /** Details about the funding available for this opportunity */
 model OppFunding {
@@ -76,30 +103,6 @@ model OppFunding {
 
   /** Estimated number of awards that will be granted */
   estimatedAwardCount?: integer;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "totalAmountAvailable": {
-    "amount": "1000000.00",
-    "currency": "USD"
-  },
-  "minAwardAmount": {
-    "amount": "10000.00",
-    "currency": "USD"
-  },
-  "maxAwardAmount": {
-    "amount": "50000.00",
-    "currency": "USD"
-  },
-  "minAwardCount": 5,
-  "maxAwardCount": 20,
-  "estimatedAwardCount": 10
 }
 ```
 

@@ -5,21 +5,36 @@ description: Filters that can be applied to numeric fields.
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-### NumberComparisonFilter
+## NumberComparisonFilter
 
 Filters by comparing a field to a numeric value.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property | Type                                                              | Description                               |
 | -------- | ----------------------------------------------------------------- | ----------------------------------------- |
 | operator | [ComparisonOperators](/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
 | value    | [numeric](/protocol/types/numeric#numeric)                        | The value to use for the filter operation |
 
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "operator": "eq",
+  "value": 1000
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -42,6 +57,8 @@ description: Filters by comparing a field to a numeric value
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```typespec
 /** Filters by comparing a field to a numeric value */
 model NumberComparisonFilter {
@@ -55,41 +72,50 @@ model NumberComparisonFilter {
 ```
 
   </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "operator": "eq",
-  "value": 1000
-}
-```
-
-  </TabItem>
 </Tabs>
 
-### NumberRangeFilter
+## NumberRangeFilter
 
 Filters by comparing a field to a range of numeric values.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
+
+##### Filter schema
 
 | Property | Type                                                    | Description                               |
 | -------- | ------------------------------------------------------- | ----------------------------------------- |
 | operator | [RangeOperators](/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
-| value    | range object                                            | The value to use for the filter operation |
+| value    | [range object](#range-object)                           | The value to use for the filter operation |
 
-Range object:
+##### Range object
 
 | Property | Type                                       | Description                              |
 | -------- | ------------------------------------------ | ---------------------------------------- |
 | min      | [numeric](/protocol/types/numeric#numeric) | The minimum numeric value for this range |
 | max      | [numeric](/protocol/types/numeric#numeric) | The maximum numeric value for this range |
 
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "operator": "within",
+  "value": {
+    "min": 1000,
+    "max": 10000
+  }
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -123,6 +149,8 @@ description: Filters by comparing a field to a numeric range
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```typespec
 /** Filters by comparing a field to a numeric range */
 model NumberRangeFilter {
@@ -139,37 +167,38 @@ model NumberRangeFilter {
 ```
 
   </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "operator": "within",
-  "value": {
-    "min": 1000,
-    "max": 10000
-  }
-}
-```
-
-  </TabItem>
 </Tabs>
 
-### NumberArrayFilter
+## NumberArrayFilter
 
 Filters by comparing a field to an array of numeric values.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property | Type                                                                               | Description                               |
 | -------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
 | operator | [ArrayOperators](/protocol/filters/base#arrayoperators)                            | The operator to apply to the filter value |
 | value    | [Array](/protocol/types/other#array)\<[numeric](/protocol/types/numeric#numeric)\> | The value to use for the filter operation |
 
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "operator": "in",
+  "value": [1000, 2000, 3000]
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -194,6 +223,8 @@ description: Filters by comparing a field to an array of numeric values
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```typespec
 /** Filters by comparing a field to an array of numeric values */
 model NumberArrayFilter {
@@ -203,17 +234,6 @@ model NumberArrayFilter {
   /** The value to use for the filter operation */
   @example(#[1000, 2000, 3000])
   value: Array<numeric>;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "operator": "in",
-  "value": [1000, 2000, 3000]
 }
 ```
 

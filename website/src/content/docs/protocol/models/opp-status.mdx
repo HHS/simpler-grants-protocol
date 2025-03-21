@@ -1,17 +1,15 @@
 ---
 title: OppStatus
 description: Union of values accepted for opportunity status
-tableOfContents: false
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
+## OppStatus
+
 The status of an opportunity, such as whether it is accepting applications.
 
-### Data model
-
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property    | Type                                    | Required | Description                                |
 | ----------- | --------------------------------------- | -------- | ------------------------------------------ |
@@ -19,9 +17,33 @@ The status of an opportunity, such as whether it is accepting applications.
 | customValue | [string](/protocol/types/string#string) | No       | The display value for a custom status      |
 | description | [string](/protocol/types/string#string) | No       | A human-readable description of the status |
 
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+// A standard status
+{
+  "value": "open",
+  "description": "Opportunity is actively accepting applications"
+}
+
+// A custom status
+{
+  "value": "custom",
+  "customValue": "review",
+  "description": "Opportunity is in review by the program team"
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -46,44 +68,27 @@ description: The status of an opportunity, such as whether it is accepting appli
 
   <TabItem label="TypeSpec">
 
-    ```tsp
-    /** The status of the opportunity */
-    model OppStatus {
-      /** The status value */
-      value: OppStatusOptions;
+The TypeSpec code for this field is:
 
-      /** A human-readable description of the status */
-      description?: string;
-    }
-    ```
+```tsp
+/** The status of the opportunity */
+model OppStatus {
+  /** The status value */
+  value: OppStatusOptions;
 
-  </TabItem>
-
-  <TabItem label="Example">
-
-```json
-// A standard status
-{
-  "value": "open",
-  "description": "Opportunity is actively accepting applications"
-}
-// A custom status
-{
-  "value": "custom",
-  "customValue": "review",
-  "description": "Opportunity is in review by the program team"
+  /** A human-readable description of the status */
+  description?: string;
 }
 ```
 
   </TabItem>
 </Tabs>
 
-### OppStatusOptions
+## OppStatusOptions
 
 The set of values accepted for opportunity status.
 
-<Tabs>
-  <TabItem label="Options">
+### Table
 
 | Value      | Description                                                    |
 | ---------- | -------------------------------------------------------------- |
@@ -92,9 +97,22 @@ The set of values accepted for opportunity status.
 | closed     | Opportunity is no longer accepting applications                |
 | custom     | Custom opportunity status defined within the record            |
 
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+"open"
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -111,6 +129,8 @@ description: The set of values accepted for opportunity status
   </TabItem>
 
   <TabItem label="TypeSpec">
+
+The TypeSpec code for this field is:
 
 ```tsp
 /** The set of values accepted for opportunity status */

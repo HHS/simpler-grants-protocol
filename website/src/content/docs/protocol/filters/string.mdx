@@ -5,21 +5,45 @@ description: Filters that can be applied to string or enum fields.
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-### StringComparisonFilter
+## StringComparisonFilter
 
 A filter that applies a comparison to a string value.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property | Type                                                      | Required | Description                               |
 | -------- | --------------------------------------------------------- | -------- | ----------------------------------------- |
 | operator | [StringOperators](/protocol/filters/base#stringoperators) | Yes      | The operator to apply to the filter value |
 | value    | [string](/protocol/types/string#string)                   | Yes      | The value to use for the filter operation |
 
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "operator": "eq",
+  "value": "value"
+}
+```
+
+Or with a string operator:
+
+```json
+{
+  "operator": "like",
+  "value": "value"
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -43,6 +67,8 @@ properties:
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```typespec
 /** A filter that applies a comparison to a string value */
 model StringComparisonFilter {
@@ -56,41 +82,38 @@ model StringComparisonFilter {
 ```
 
   </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "operator": "eq",
-  "value": "value"
-}
-```
-
-```json
-{
-  "operator": "like",
-  "value": "value"
-}
-```
-
-  </TabItem>
 </Tabs>
 
-### StringArrayFilter
+## StringArrayFilter
 
 A filter that applies a comparison to an array of string values.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property | Type                                                                            | Required | Description                               |
 | -------- | ------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
 | operator | [StringOperators](/protocol/filters/base#stringoperators)                       | Yes      | The operator to apply to the filter value |
 | value    | [Array](/protocol/types/other#array)\<[string](/protocol/types/string#string)\> | Yes      | The value to use for the filter operation |
 
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "operator": "eq",
+  "value": ["value1", "value2"]
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -118,6 +141,8 @@ description: A filter that applies a filter to an array of strings
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```typespec
 /** A filter that applies a filter to an array of strings */
 model StringArrayFilter {
@@ -127,17 +152,6 @@ model StringArrayFilter {
   /** The value to use for the filter operation */
   @example(["value1", "value2"])
   value: string[];
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "operator": "eq",
-  "value": ["value1", "value2"]
 }
 ```
 

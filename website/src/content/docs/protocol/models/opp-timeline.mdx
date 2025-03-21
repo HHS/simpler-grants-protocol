@@ -1,17 +1,13 @@
 ---
 title: OppTimeline
 description: Key dates in the opportunity's timeline
-tableOfContents: false
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Key dates in the opportunity's timeline, such as when the application opens and closes.
 
-### Data model
-
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property    | Type                                                                      | Required | Description                                                                |
 | ----------- | ------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
@@ -19,9 +15,41 @@ Key dates in the opportunity's timeline, such as when the application opens and 
 | appDeadline | [Event](/protocol/fields/event)                                           | No       | The final deadline for submitting applications                             |
 | otherDates  | [Record](/protocol/types/other#record)\<[Event](/protocol/fields/event)\> | No       | An optional map of other key dates in the opportunity timeline             |
 
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "appOpens": {
+    "name": "Application Opens",
+    "date": "2024-03-01",
+    "description": "Applications begin being accepted"
+  },
+  "appDeadline": {
+    "name": "Application Deadline",
+    "date": "2024-04-30",
+    "time": "17:00:00",
+    "description": "Final deadline for all submissions"
+  },
+  "otherDates": {
+    "anticipatedAward": {
+      "name": "Anticipated award date",
+      "date": "2025-03-15",
+      "description": "When we expect to announce awards for this opportunity."
+    }
+  }
+}
+```
+
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -46,6 +74,8 @@ description: Key dates in the opportunity's timeline
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```tsp
 /** Key dates in the opportunity's timeline */
 model OppTimeline {
@@ -57,33 +87,6 @@ model OppTimeline {
 
   /** An optional map of other key dates in the opportunity timeline */
   otherDates?: Record<Event>;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "appOpens": {
-    "name": "Application Opens",
-    "date": "2024-03-01",
-    "description": "Applications begin being accepted"
-  },
-  "appDeadline": {
-    "name": "Application Deadline",
-    "date": "2024-04-30",
-    "time": "17:00:00",
-    "description": "Final deadline for all submissions"
-  },
-  "otherDates": {
-    "anticipatedAward": {
-      "name": "Anticipated award date",
-      "date": "2025-03-15",
-      "description": "When we expect to announce awards for this opportunity."
-    }
-  }
 }
 ```
 

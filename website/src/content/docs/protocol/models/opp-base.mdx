@@ -1,17 +1,13 @@
 ---
 title: OpportunityBase
 description: The data model for a funding opportunity
-tableOfContents: false
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 A funding opportunity, such as a grant or loan.
 
-### Data model
-
-<Tabs>
-  <TabItem label="Table">
+### Table
 
 | Property       | Type                                                                                   | Required | Description                                                  |
 | -------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
@@ -26,106 +22,12 @@ A funding opportunity, such as a grant or loan.
 | createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created       |
 | lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was last modified |
 
-  </TabItem>
+### Formats
 
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: OpportunityBase.yaml
-type: object
-properties:
-  id:
-    $ref: uuid.yaml
-    description: Globally unique id for the opportunity
-  title:
-    type: string
-    description: Title or name of the funding opportunity
-  status:
-    $ref: OppStatus.yaml
-    description: Status of the opportunity
-  description:
-    type: string
-    description: Description of the opportunity's purpose and scope
-  funding:
-    $ref: OppFunding.yaml
-    description: Details about the funding available
-  keyDates:
-    $ref: OppTimeline.yaml
-    description: Key dates for the opportunity, such as when the application opens and closes
-  source:
-    type: string
-    format: uri
-    description: URL for the original source of the opportunity
-  customFields:
-    $ref: "#/$defs/RecordCustomField"
-    description: Additional custom fields specific to this opportunity
-  createdAt:
-    type: string
-    format: date-time
-    description: The timestamp (in UTC) at which the record was created.
-  lastModifiedAt:
-    type: string
-    format: date-time
-    description: The timestamp (in UTC) at which the record was last modified.
-required:
-  - id
-  - title
-  - status
-  - description
-  - funding
-  - keyDates
-  - createdAt
-  - lastModifiedAt
-description: A funding opportunity
-$defs:
-  RecordCustomField:
-    type: object
-    properties: {}
-    additionalProperties:
-      $ref: CustomField.yaml
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-```tsp
-@doc("A funding opportunity")
-model OpportunityBase {
-  /** Globally unique id for the opportunity */
-  @visibility(Lifecycle.Read)
-  id: uuid;
-
-  /** Title or name of the funding opportunity */
-  title: string;
-
-  /** Status of the opportunity */
-  status: OppStatus;
-
-  /** Description of the opportunity's purpose and scope */
-  description: string;
-
-  /** Details about the funding available */
-  funding: OppFunding;
-
-  /** Key dates for the opportunity, such as when the application opens and closes */
-  keyDates: OppTimeline;
-
-  /** URL for the original source of the opportunity */
-  source?: url;
-
-  /** Additional custom fields specific to this opportunity */
-  customFields?: Record<CustomField>;
-
-  // Spreads the fields from the Metadata model into the Opportunity model
-  ...SystemMetadata;
-}
-```
-
-  </TabItem>
-
+<Tabs>
   <TabItem label="Example">
+
+A JSON example of this field is:
 
 ```json
 {
@@ -189,6 +91,107 @@ model OpportunityBase {
   },
   "createdAt": "2024-02-28T12:00:00Z",
   "lastModifiedAt": "2024-02-28T12:00:00Z"
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OpportunityBase.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: Globally unique id for the opportunity
+  title:
+    type: string
+    description: Title or name of the funding opportunity
+  status:
+    $ref: OppStatus.yaml
+    description: Status of the opportunity
+  description:
+    type: string
+    description: Description of the opportunity's purpose and scope
+  funding:
+    $ref: OppFunding.yaml
+    description: Details about the funding available
+  keyDates:
+    $ref: OppTimeline.yaml
+    description: Key dates for the opportunity, such as when the application opens and closes
+  source:
+    type: string
+    format: uri
+    description: URL for the original source of the opportunity
+  customFields:
+    $ref: "#/$defs/RecordCustomField"
+    description: Additional custom fields specific to this opportunity
+  createdAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was created.
+  lastModifiedAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was last modified.
+required:
+  - id
+  - title
+  - status
+  - description
+  - funding
+  - keyDates
+  - createdAt
+  - lastModifiedAt
+description: A funding opportunity
+$defs:
+  RecordCustomField:
+    type: object
+    properties: {}
+    additionalProperties:
+      $ref: CustomField.yaml
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this field is:
+
+```tsp
+@doc("A funding opportunity")
+model OpportunityBase {
+  /** Globally unique id for the opportunity */
+  @visibility(Lifecycle.Read)
+  id: uuid;
+
+  /** Title or name of the funding opportunity */
+  title: string;
+
+  /** Status of the opportunity */
+  status: OppStatus;
+
+  /** Description of the opportunity's purpose and scope */
+  description: string;
+
+  /** Details about the funding available */
+  funding: OppFunding;
+
+  /** Key dates for the opportunity, such as when the application opens and closes */
+  keyDates: OppTimeline;
+
+  /** URL for the original source of the opportunity */
+  source?: url;
+
+  /** Additional custom fields specific to this opportunity */
+  customFields?: Record<CustomField>;
+
+  // Spreads the fields from the Metadata model into the Opportunity model
+  ...SystemMetadata;
 }
 ```
 

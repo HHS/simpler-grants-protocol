@@ -5,28 +5,48 @@ description: Filters applied to date fields.
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-### DateRangeFilter
+## DateRangeFilter
 
 Filters by comparing a field to a range of date values.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
+
+##### Filter schema
 
 | Property | Type                                                    | Description                               |
 | -------- | ------------------------------------------------------- | ----------------------------------------- |
 | operator | [RangeOperators](/protocol/filters/base#rangeoperators) | The operator to apply to the filter value |
-| value    | Range object (described below)                          | The value to use for the filter operation |
+| value    | [range object](#range-object)                           | The value to use for the filter operation |
 
-Range object:
+##### Range object
 
-| Property | Type                                           | Description                           |
-| -------- | ---------------------------------------------- | ------------------------------------- |
-| min      | `isoDate` or `utcDateTime` or `offsetDateTime` | The minimum date value for this range |
-| max      | `isoDate` or `utcDateTime` or `offsetDateTime` | The maximum date value for this range |
+| Property | Type                                                                                       | Description                           |
+| -------- | ------------------------------------------------------------------------------------------ | ------------------------------------- |
+| min      | [isoDate](/protocol/types/date#isodate) or [utcDateTime](/protocol/types/date#utcdatetime) | The minimum date value for this range |
+| max      | [isoDate](/protocol/types/date#isodate) or [utcDateTime](/protocol/types/date#utcdatetime) | The maximum date value for this range |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "operator": "between",
+  "value": {
+    "min": "2021-01-01",
+    "max": "2021-01-02"
+  }
+}
+```
 
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -42,8 +62,6 @@ properties:
       min:
         anyOf:
           - $ref: isoDate.yaml
-          - type: string
-            format: date-time
           - type: string
             format: date-time
       max:
@@ -68,6 +86,8 @@ description: Filters by comparing a field to a range of date values
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```typespec
 /** Filters by comparing a field to a range of date values */
 model DateRangeFilter {
@@ -80,44 +100,45 @@ model DateRangeFilter {
     max: Types.isoDate.fromISO("2021-01-02"),
   })
   value: {
-    min: Types.isoDate | utcDateTime | offsetDateTime;
-    max: Types.isoDate | utcDateTime | offsetDateTime;
+    min: Types.isoDate | utcDateTime;
+    max: Types.isoDate | utcDateTime;
   };
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "operator": "between",
-  "value": {
-    "min": "2021-01-01",
-    "max": "2021-01-02"
-  }
 }
 ```
 
   </TabItem>
 </Tabs>
 
-### DateComparisonFilter
+## DateComparisonFilter
 
 Filters by comparing a field to a date value.
 
-<Tabs>
-  <TabItem label="Table">
+### Table
 
-| Property | Type                                                              | Description                               |
-| -------- | ----------------------------------------------------------------- | ----------------------------------------- |
-| operator | [ComparisonOperators](/protocol/filters/base#comparisonoperators) | The operator to apply to the filter value |
-| value    | `isoDate` or `utcDateTime` or `offsetDateTime`                    | The value to use for the filter operation |
+| Property | Type                                                                                       | Description                               |
+| -------- | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| operator | [ComparisonOperators](/protocol/filters/base#comparisonoperators)                          | The operator to apply to the filter value |
+| value    | [isoDate](/protocol/types/date#isodate) or [utcDateTime](/protocol/types/date#utcdatetime) | The value to use for the filter operation |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "operator": "eq",
+  "value": "2021-01-01"
+}
+```
 
   </TabItem>
 
   <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -145,6 +166,8 @@ description: Filters by comparing a field to a date value
 
   <TabItem label="TypeSpec">
 
+The TypeSpec code for this field is:
+
 ```typespec
 /** Filters by comparing a field to a date value */
 model DateComparisonFilter {
@@ -154,17 +177,6 @@ model DateComparisonFilter {
   /** The value to use for the filter operation */
   @example(Types.isoDate.fromISO("2021-01-01"))
   value: Types.isoDate | utcDateTime | offsetDateTime;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Example">
-
-```json
-{
-  "operator": "eq",
-  "value": "2021-01-01"
 }
 ```
 
