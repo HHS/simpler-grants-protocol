@@ -7,11 +7,14 @@
   "files": [
     "dist",
     "lib",
-    "!dist/__tests__"
+    "!dist/__tests__",
+    "man/cg.1"
   ],
   "bin": {
     "cg": "./dist/index.js"
   },
+  "man": ["./man/cg.1"],
+
   "publishConfig": {
     "access": "public"
   },
