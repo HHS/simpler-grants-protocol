@@ -1,0 +1,22 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import SwaggerUI from "swagger-ui-react";
+import "swagger-ui-react/swagger-ui.css";
+---
+
+<style>
+  /* Remove excess padding from Starlight containers but keep some spacing */
+  :global(.sl-container) {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Target swagger UI title spacing */
+  :global(.swagger-ui .info) {
+    margin-top: 0 !important;
+  }
+</style>
+
+<StarlightPage frontmatter={{ title: "OpenAPI docs", tableOfContents: false }}>
+  <SwaggerUI url="/openapi.yaml" supportedSubmitMethods={[]} client:load />
+</StarlightPage>
