@@ -164,14 +164,14 @@ The CommonGrants protocol defines the following models that are specific to fund
 The CommonGrants protocol defines the following routes and operations that are specific to funding opportunities.
 
 :::note
-While omitted for brevity in the following table, all protocol-defined routes MUST be prefixed with `/common-grants/`.
+While omitted for brevity in the following table, all protocol-defined routes MUST be prefixed with `/common-grants/`. View the full [OpenAPI docs](/protocol/api-docs) for more details about each route.
 :::
 
-| Route                                                                              | Status   | Description                                                      |
-| ---------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
-| [`GET /opportunities`](/protocol/openapi/operations/opportunities_list/)           | Required | Get a paginated list of opportunities sorted by `lastModifiedAt` |
-| [`GET /opportunities/{id}`](/protocol/openapi/operations/opportunities_read/)      | Required | View details about a specific opportunity                        |
-| [`POST /opportunities/search`](/protocol/openapi/operations/opportunities_search/) | Optional | Search and filter funding opportunities                          |
+| Route                        | Status   | Description                                                      |
+| ---------------------------- | -------- | ---------------------------------------------------------------- |
+| `GET /opportunities`         | Required | Get a paginated list of opportunities sorted by `lastModifiedAt` |
+| `GET /opportunities/{id}`    | Required | View details about a specific opportunity                        |
+| `POST /opportunities/search` | Optional | Search and filter funding opportunities                          |
 
 #### Pagination
 

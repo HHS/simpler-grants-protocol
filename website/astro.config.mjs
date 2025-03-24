@@ -16,7 +16,7 @@ export default defineConfig({
         // Generate the OpenAPI documentation pages.
         starlightLinksValidator({
           errorOnLocalLinks: false,
-          exclude: ["/protocol/openapi/**"],
+          exclude: ["/protocol/api-docs", "/protocol/api-docs/**"],
         }),
       ],
       title: "CommonGrants",
