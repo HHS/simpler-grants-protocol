@@ -8,7 +8,7 @@
     "build": "npm run typespec && astro build",
     "preview": "astro build && astro preview",
     "astro": "astro",
-    "typespec": "tsp compile src/specs/main.tsp --emit '@typespec/openapi3'",
+    "typespec": "tsp compile src/specs/main.tsp && cp tsp-output/@typespec/openapi3/openapi.yaml public/openapi.yaml",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "check:lint": "eslint",
