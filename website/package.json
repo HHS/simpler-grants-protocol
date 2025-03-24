@@ -31,7 +31,6 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.32.5",
-    "starlight-openapi": "^0.10.0",
     "swagger-ui-react": "^5.20.1",
     "typescript": "^5.7.2"
   },

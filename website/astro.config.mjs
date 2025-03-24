@@ -2,7 +2,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightLinksValidator from "starlight-links-validator";
-import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
 import react from "@astrojs/react";
 
@@ -15,13 +14,6 @@ export default defineConfig({
       customCss: ["./src/styles/custom.css"],
       plugins: [
         // Generate the OpenAPI documentation pages.
-        starlightOpenAPI([
-          {
-            base: "protocol/openapi",
-            label: "OpenAPI spec",
-            schema: "./tsp-output/@typespec/openapi3/openapi.yaml",
-          },
-        ]),
         starlightLinksValidator({
           errorOnLocalLinks: false,
           exclude: ["/protocol/openapi/**"],
@@ -48,44 +40,37 @@ export default defineConfig({
           items: [
             { label: "Specification", link: "protocol/specification" },
             {
-              label: "Core library",
-              collapsed: true,
-              items: [
-                {
-                  label: "Overview",
-                  link: "protocol/overview",
-                },
-                {
-                  label: "Types",
-                  collapsed: true,
-                  autogenerate: { directory: "protocol/types" },
-                },
-                {
-                  label: "Fields",
-                  collapsed: true,
-                  autogenerate: { directory: "protocol/fields" },
-                },
-                {
-                  label: "Models",
-                  collapsed: true,
-                  autogenerate: { directory: "protocol/models" },
-                },
-                {
-                  label: "Filters",
-                  collapsed: true,
-                  autogenerate: { directory: "protocol/filters" },
-                },
-                {
-                  label: "Pagination",
-                  link: "protocol/pagination",
-                },
-                {
-                  label: "Sorting",
-                  link: "protocol/sorting",
-                },
-              ],
+              label: "OpenAPI docs",
+              link: "protocol/api-docs",
             },
-            ...openAPISidebarGroups,
+            {
+              label: "Types",
+              collapsed: true,
+              autogenerate: { directory: "protocol/types" },
+            },
+            {
+              label: "Fields",
+              collapsed: true,
+              autogenerate: { directory: "protocol/fields" },
+            },
+            {
+              label: "Models",
+              collapsed: true,
+              autogenerate: { directory: "protocol/models" },
+            },
+            {
+              label: "Filters",
+              collapsed: true,
+              autogenerate: { directory: "protocol/filters" },
+            },
+            {
+              label: "Pagination",
+              link: "protocol/pagination",
+            },
+            {
+              label: "Sorting",
+              link: "protocol/sorting",
+            },
           ],
         },
         {
