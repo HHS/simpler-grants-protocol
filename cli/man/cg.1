@@ -1,0 +1,65 @@
+.TH "Common Grants CLI" "1" "March 24 2025" "" ""
+
+.SH CLI tool for creating spec compliant grant APIs
+
+
+
+Access the CLI tool using cg in the terminal
+
+.B  cg --help
+
+.SH Commands:
+
+  init [options]          Initialize a new CommonGrants project
+  preview <specPath>      Preview an OpenAPI specification
+  check                   Validate APIs and specifications
+  compile <typespecPath>  Compile a TypeSpec file to OpenAPI
+  help [command]          display help for command
+
+
+.SH Inintialize a Project
+
+Create a new CommonGrants project from a template:
+
+    cg init
+    cg init --list
+    cg init --template custom-api
+
+.SH Complie TypeSpect to OpenAPI
+    Compile a TypeSpec file to an OpenAPI specification:
+
+    cg compile spec.tsp
+
+    This is a thin wrapper around the `tsp compile` command and uses your project's `tspconfig.yaml` file to determine the output format.
+
+.SH Preview OpenAPI Specification
+
+    Preview an API specification using Swagger UI:
+
+    cg preview openapi.yaml
+
+    cg preview openapi.json
+
+
+.SH Validate an API Specification
+
+    Validate an API sepcification against the CommonGrants base protocol:
+
+    cg check spec openapi.yaml
+
+    cg check spec openapi.yaml --base <path-to-base-spec>
+
+
+.SH Development status
+    This CLI is currently in alpha stage and only supports the following commands:
+
+    - `cg init` with a limited set of templates
+    - `cg compile`
+    - `cg preview`
+    - `cg check spec`
+
+    Subsequent releases will add:
+
+    - An expanded set of templates
+    - Validating an API implementation against its specification
+    - Generating server and client code

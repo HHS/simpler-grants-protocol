@@ -1,17 +1,21 @@
 {
   "name": "@common-grants/cli",
-  "version": "0.1.0-alpha.8",
+  "version": "0.1.0-alpha.9",
   "license": "CC0-1.0",
   "description": "The CommonGrants protocol CLI tool",
   "main": "dist/index.js",
   "files": [
     "dist",
     "lib",
-    "!dist/__tests__"
+    "!dist/__tests__",
+    "man/cg.1"
   ],
   "bin": {
     "cg": "./dist/index.js"
   },
+  "man": [
+    "./man/cg.1"
+  ],
   "publishConfig": {
     "access": "public"
   },
