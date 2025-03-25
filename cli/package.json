@@ -13,8 +13,9 @@
   "bin": {
     "cg": "./dist/index.js"
   },
-  "man": ["./man/cg.1"],
-
+  "man": [
+    "./man/cg.1"
+  ],
   "publishConfig": {
     "access": "public"
   },
