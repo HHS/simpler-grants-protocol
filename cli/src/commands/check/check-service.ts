@@ -1,13 +1,17 @@
 import SwaggerParser from "@apidevtools/swagger-parser";
-
-import { ValidationService, ValidationOptions, SpecValidationOptions } from "../interfaces";
-import { checkExtraRoutes } from "./check-extra-routes";
-import { checkMatchingRoutes } from "./check-matching-routes";
-import { checkMissingRequiredRoutes } from "./check-missing-routes";
-import { ComplianceError, Document } from "./types";
+import { checkExtraRoutes } from "../../services/validation/check-extra-routes";
+import { checkMatchingRoutes } from "../../services/validation/check-matching-routes";
+import { checkMissingRequiredRoutes } from "../../services/validation/check-missing-routes";
+import { ComplianceError, Document } from "../../services/validation/types";
 import { compileTypeSpec } from "../../utils/typespec";
+import { SpecValidationOptions, ValidationOptions } from "./types";
 
-export class DefaultValidationService implements ValidationService {
+
+
+
+export class DefaultCheckService  {
+
+  
   /** Check that an API implementation matches its spec. */
   async checkApi(apiUrl: string, specPath: string, options: ValidationOptions): Promise<void> {
     console.log("Mock: Checking API", { apiUrl, specPath, options });

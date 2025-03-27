@@ -1,14 +1,14 @@
 import { Command } from "commander";
-import { DefaultValidationService } from "../services/validation/service";
+import { DefaultCheckService } from "./check-service";
 import {
   CheckApiArgsSchema,
   CheckApiCommandSchema,
   CheckSpecArgsSchema,
   CheckSpecCommandSchema,
-} from "../types/command-args";
+} from "./check-args";
 
 export function checkCommand(program: Command) {
-  const validationService = new DefaultValidationService();
+  const validationService = new DefaultCheckService();
 
   const check = program.command("check").description("Validate APIs and specifications");
 
