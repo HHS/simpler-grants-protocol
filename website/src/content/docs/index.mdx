@@ -1,9 +1,9 @@
 ---
-title: CommonGrants protocol
+title: A common language for grant data
 description: Documentation for the CommonGrants protocol
 template: splash
 hero:
-  tagline: An open standard for sharing data about funding opportunities, applications, and awards across the grant ecosystem
+  tagline: CommonGrants is an open standard for managing opportunities, applications, and awards across grant platforms.
   actions:
     - text: Get started
       link: /getting-started/
@@ -18,21 +18,64 @@ banner:
     View our <a href="/governance/rfc">RFC page</a> to share your thoughts.
 ---
 
-import { Card, CardGrid } from "@astrojs/starlight/components";
+import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
 
-## Quick links
+## Why CommonGrants?
+
+CommonGrants is part of the [SimplerGrants](https://simpler.grants.gov/) initiative led by the Department of Health and Human Services (HHS). While SimplerGrants focuses on modernizing the federal grant process, CommonGrants is designed to support a more open and interoperable ecosystem for all types of grants.
+
+#### The problem
+
+The grant ecosystem today is fragmented. A patchwork of portals, formats, and systems creates friction for everyone involved:
+
+- **Funders** must choose between usability and reach.
+- **Grant seekers** juggle multiple platforms, answering the same questions over and over.
+- **Grant platforms** spend time wrangling inconsistent data from disparate sources.
+- **Developers** face steep costs to build tools that only work in one place.
+
+#### The vision
+
+CommonGrants defines a unified API and data model for funding opportunities, applications, and awards — enabling **interoperability by default** and **extensibility by design**.
+
+It lays the groundwork for:
+- A **“common app”** experience for grant seekers and funders: faster discovery, simpler applications, less duplication.
+- A shared interface for platforms and developers to exchange grant data without building custom integrations for every use case.
+
+By making grant data portable, machine-readable, and easy to connect, CommonGrants helps the ecosystem move from fragmentation to federation.
+
+## Who is it for?
+
+While implementing the protocol requires some technical effort, CommonGrants is designed to benefit a wide range of stakeholders:
 
 <CardGrid>
-  <Card title="Get started" icon="rocket">
-    [Get started](/getting-started/) with the CommonGrants protocol.
+  <Card title="Funders">
+    **Make your grants easier to find, wherever they’re posted.**
+
+    Publish once and reach applicants across platforms — no extra lift.
   </Card>
-  <Card title="Explore the spec" icon="document">
-    Review the [technical specification](/protocol/specification/).
+  <Card title="Grant seekers">
+    **Spend less time on forms, more time on your mission.**
+
+    Reuse answers. Apply across portals. Focus on the work that matters.
   </Card>
-  <Card title="Read the guides" icon="open-book">
-    Learn how to [use and implement](/guides/using-python/) the protocol.
+  <Card title="Grant platforms">
+    **Focus on features, not brittle integrations.**
+
+    Standardize data exchange with other systems — without reinventing the wheel.
   </Card>
-  <Card title="Follow our process" icon="setting">
-    Learn about [decision making process](/governance/decisions/).
+  <Card title="Developers">
+    **Build tools once. Connect them anywhere.**
+
+    Work with a consistent interface across platforms — not dozens of custom APIs.
   </Card>
+</CardGrid>
+
+
+## How do I get involved?
+
+<CardGrid>
+  <LinkCard title="Get started" href="/getting-started/" description="Get started with the CommonGrants protocol." />
+  <LinkCard title="View the API docs" href="/protocol/api-docs/" description="Browse the API endpoints supported by the protocol." />
+  <LinkCard title="Explore the spec" href="/protocol/specification/" description="Deep dive into the technical specification." />
+  <LinkCard title="Share your thoughts" href="/governance/rfc/" description="Help us make the protocol easier to use and adopt." />
 </CardGrid>
