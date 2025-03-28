@@ -43,7 +43,6 @@ export interface FieldService {
   addField(name: string, type: string, options: FieldOptions): Promise<void>;
 }
 
-
 /**
  * Service for generating server and client code from API specifications.
  */
@@ -110,5 +109,3 @@ export interface GenerateOptions {
   /** Whether to include API documentation */
   docs?: boolean;
 }
-
-

@@ -6,12 +6,7 @@ import { ComplianceError, Document } from "../../services/validation/types";
 import { compileTypeSpec } from "../../utils/typespec";
 import { SpecValidationOptions, ValidationOptions } from "./types";
 
-
-
-
-export class DefaultCheckService  {
-
-  
+export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
   async checkApi(apiUrl: string, specPath: string, options: ValidationOptions): Promise<void> {
     console.log("Mock: Checking API", { apiUrl, specPath, options });

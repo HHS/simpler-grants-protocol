@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterAll, jest } from "@jest/globals";
 import { Command } from "commander";
-import { DefaultCheckService } from "../../commands/check/check-service";
 import { checkCommand } from "../../commands/check/check";
 
 // Create mock functions outside

@@ -16,7 +16,6 @@ export const PreviewArgsSchema = z.object({
   }),
 });
 
-
 export const GenerateArgsSchema = z.object({
   specPath: z.string().endsWith(".tsp").or(z.string().endsWith(".yaml")),
 });
@@ -39,8 +38,6 @@ export const AddFieldCommandSchema = z.object({
   description: z.string().optional(),
 });
 
-
-
 export const GenerateServerCommandSchema = z.object({
   lang: z.string().optional(),
   only: z
@@ -51,7 +48,6 @@ export const GenerateServerCommandSchema = z.object({
       message: "Only valid components are: controllers, models, routes",
     }),
 });
-
 
 export const GenerateClientCommandSchema = z.object({
   lang: z.string().optional(),
