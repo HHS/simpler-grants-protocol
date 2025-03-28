@@ -8,6 +8,7 @@ sidebar:
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Outlines the default error response schema, and some common error types.
+
 ## Error
 
 Default response schema for 4xx and 5xx HTTP status codes.
@@ -31,9 +32,7 @@ An example error response:
 {
   "status": 400,
   "message": "Bad Request",
-  "errors": [
-    "Invalid request body"
-  ]
+  "errors": ["Invalid request body"]
 }
 ```
 
@@ -69,7 +68,7 @@ required:
 
 The TypeSpec code for this model is:
 
-```typespec
+````typespec
 /** A standard error response schema, used to create custom error responses
  *
  * @example - How to use this model to create custom error response schemas
@@ -93,13 +92,13 @@ model Error {
   /** List of errors */
   errors: Array<unknown>;
 }
-```
+````
 
   </TabItem>
 
   <TabItem label="OpenAPI">
 
-  The OpenAPI specification for this model is:
+The OpenAPI specification for this model is:
 
 ```yaml
 paths:
