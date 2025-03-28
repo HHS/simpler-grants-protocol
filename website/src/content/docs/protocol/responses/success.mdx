@@ -1,0 +1,110 @@
+---
+title: Success
+description: The default response for a successful request.
+sidebar:
+  order: 1
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+A 200 response with data.
+
+### Table
+
+| Parameter | Type                                       | Description           |
+| --------- | ------------------------------------------ | --------------------- |
+| status    | [integer](/protocol/types/numeric#integer) | The HTTP status code  |
+| message   | [string](/protocol/types/text#string)      | The message to return |
+| data      | any                                        | The data to return    |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+An example Ok response:
+
+```json
+{
+  "status": 200,
+  "message": "Success",
+  "data": {
+    "id": "123",
+    "name": "Test"
+  }
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+The JSON schema for this model is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Ok.yaml
+type: object
+properties:
+  status:
+    type: integer
+    minimum: 200
+    default: 200
+    description: The HTTP status code
+  message:
+    type: string
+    default: "Success"
+    description: The message to return
+  data:
+    description: The data to return
+required:
+  - status
+  - message
+  - data
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```typespec
+/** Template for a 200 response with data
+ *
+ * @template T The schema for the value of the `"data"` property in this response
+ */
+@doc("A 200 response with data")
+model Ok<T> extends Success {
+  // Inherit the 200 status code
+  ...Http.OkResponse;
+
+  /** Response data */
+  data: T;
+}
+```
+
+  </TabItem>
+</Tabs>
+
+### Usage
+
+Here's an example of how to use the `Ok` response within a an API operation:
+
+```typespec
+import "@common-grants/core";
+import "@typespec/http";
+
+using TypeSpec.Http;
+using CommonGrants.Responses;
+
+model TestModel {
+  id: string;
+  name: string;
+}
+
+@summary("Get test")
+@doc("Get a test model")
+@get
+op getTest(): Ok<TestModel>;
+```

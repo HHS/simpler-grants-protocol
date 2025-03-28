@@ -1,0 +1,181 @@
+---
+title: Errors
+description: A standard error response schema, used to create custom error responses
+sidebar:
+  order: 5
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Outlines the default error response schema, and some common error types.
+## Error
+
+Default response schema for 4xx and 5xx HTTP status codes.
+
+### Table
+
+| Parameter | Type                                       | Description          |
+| --------- | ------------------------------------------ | -------------------- |
+| status    | [integer](/protocol/types/numeric#integer) | The HTTP status code |
+| message   | [string](/protocol/types/text#string)      | The error message    |
+| errors    | [array](/protocol/types/options#array)     | The errors           |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+An example error response:
+
+```json
+{
+  "status": 400,
+  "message": "Bad Request",
+  "errors": [
+    "Invalid request body"
+  ]
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+The JSON schema for this model is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Error.yaml
+type: object
+properties:
+  status:
+    type: integer
+    description: The HTTP status code
+  message:
+    type: string
+    description: Human-readable error message
+  errors:
+    type: array
+    description: List of errors
+required:
+  - status
+  - message
+  - errors
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```typespec
+/** A standard error response schema, used to create custom error responses
+ *
+ * @example - How to use this model to create custom error response schemas
+ *
+ * ```
+ * import "@typespec/http"
+ *
+ * alias Unauthorized = Error & Http.UnauthorizedResponse
+ * ```
+ */
+@error
+@doc("A non-2xx response schema")
+model Error {
+  @example(400)
+  status: int32;
+
+  /** Human-readable error message */
+  @example("Error")
+  message: string;
+
+  /** List of errors */
+  errors: Array<unknown>;
+}
+```
+
+  </TabItem>
+
+  <TabItem label="OpenAPI">
+
+  The OpenAPI specification for this model is:
+
+```yaml
+paths:
+  /foo:
+    get:
+      responses:
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommonGrants.Responses.Error"
+```
+
+Where the `CommonGrants.Responses.Error` component is defined as:
+
+```yaml
+components:
+  schemas:
+    CommonGrants.Responses.Error:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: The HTTP status code
+        message:
+          type: string
+          description: Human-readable error message
+        errors:
+          type: array
+          description: List of errors
+          items:
+            type: unknown
+      required:
+        - status
+        - message
+        - errors
+```
+
+  </TabItem>
+</Tabs>
+
+### Usage
+
+Here's an example of how to use the `Error` response within an API operation:
+
+```typespec
+import "@common-grants/core";
+import "@typespec/http";
+
+using TypeSpec.Http;
+using CommonGrants.Responses;
+
+@summary("Get test")
+@doc("Get a test model")
+@get
+op getTest(): Ok<TestModel> | Error;
+```
+
+## Common Error Types
+
+The following error types are commonly used:
+
+```typespec
+// 401 Unauthorized
+// User is not authorized to access the resource
+alias Unauthorized = Error & Http.UnauthorizedResponse;
+
+// 404 Not Found
+// The resource was not found
+alias NotFound = Error & Http.NotFoundResponse;
+
+// 400 Bad Request
+// The request was invalid
+alias BadRequest = Error & Http.BadRequestResponse;
+
+// 403 Forbidden
+// The action is forbidden
+alias Forbidden = Error & Http.ForbiddenResponse;
+```
