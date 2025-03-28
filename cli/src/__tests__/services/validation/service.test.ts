@@ -1,5 +1,5 @@
 import { OpenAPIV3 } from "openapi-types";
-import { DefaultValidationService } from "../../../services/validation/service";
+import { DefaultCheckService } from "../../../commands/check/check-service";
 import SwaggerParser from "@apidevtools/swagger-parser";
 import { compileTypeSpec } from "../../../utils/typespec";
 
@@ -13,11 +13,11 @@ jest.mock("../../../utils/typespec", () => ({
 }));
 
 describe("ValidationService", () => {
-  let service: DefaultValidationService;
+  let service: DefaultCheckService;
   const mockConsoleLog = jest.spyOn(console, "log").mockImplementation(() => {});
 
   beforeEach(() => {
-    service = new DefaultValidationService();
+    service = new DefaultCheckService();
     jest.clearAllMocks();
   });
 

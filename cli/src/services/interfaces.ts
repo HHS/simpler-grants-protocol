@@ -44,28 +44,6 @@ export interface FieldService {
 }
 
 /**
- * Service for validating API implementations and specifications
- */
-export interface ValidationService {
-  /**
-   * Check if an API implementation matches its specification.
-   * @param apiUrl - Root URL of the API to validate
-   * @param specPath - Path to the TypeSpec or OpenAPI specification
-   * @param options - API validation configuration options
-   * @throws {Error} If validation fails or API is unreachable
-   */
-  checkApi(apiUrl: string, specPath: string, options: ValidationOptions): Promise<void>;
-
-  /**
-   * Check if a specification complies with the CommonGrants base spec.
-   * @param specPath - Path or URL to the TypeSpec or OpenAPI specification
-   * @param options - Spec validation configuration options
-   * @throws {Error} If validation fails or spec is invalid
-   */
-  checkSpec(specPath: string, options: SpecValidationOptions): Promise<void>;
-}
-
-/**
  * Service for generating server and client code from API specifications.
  */
 export interface CodeGenerationService {
@@ -119,18 +97,6 @@ export interface FieldOptions {
 }
 
 /**
- * Options for API validation
- */
-export interface ValidationOptions {
-  /** HTTP client to use for validation */
-  client?: string;
-  /** Format for validation report output */
-  report?: "json" | "html";
-  /** Authentication token or credentials */
-  auth?: string;
-}
-
-/**
  * Options for code generation
  */
 export interface GenerateOptions {
@@ -142,12 +108,4 @@ export interface GenerateOptions {
   only?: string[];
   /** Whether to include API documentation */
   docs?: boolean;
-}
-
-/**
- * Options for spec validation
- */
-export interface SpecValidationOptions {
-  /** Path to base spec for validation */
-  base?: string;
 }

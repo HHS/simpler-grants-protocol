@@ -16,15 +16,6 @@ export const PreviewArgsSchema = z.object({
   }),
 });
 
-export const CheckApiArgsSchema = z.object({
-  apiUrl: z.string().url(),
-  specPath: z.string().endsWith(".tsp").or(z.string().endsWith(".yaml")),
-});
-
-export const CheckSpecArgsSchema = z.object({
-  specPath: z.string().endsWith(".tsp").or(z.string().endsWith(".yaml")),
-});
-
 export const GenerateArgsSchema = z.object({
   specPath: z.string().endsWith(".tsp").or(z.string().endsWith(".yaml")),
 });
@@ -47,12 +38,6 @@ export const AddFieldCommandSchema = z.object({
   description: z.string().optional(),
 });
 
-export const CheckApiCommandSchema = z.object({
-  client: z.string().optional(),
-  report: z.enum(["json", "html"]).optional(),
-  auth: z.string().optional(),
-});
-
 export const GenerateServerCommandSchema = z.object({
   lang: z.string().optional(),
   only: z
@@ -62,10 +47,6 @@ export const GenerateServerCommandSchema = z.object({
     .refine(val => !val || val.every(c => ["controllers", "models", "routes"].includes(c)), {
       message: "Only valid components are: controllers, models, routes",
     }),
-});
-
-export const CheckSpecCommandSchema = z.object({
-  base: z.string().optional(),
 });
 
 export const GenerateClientCommandSchema = z.object({
@@ -80,8 +61,6 @@ export const GenerateClientCommandSchema = z.object({
 
 export type AddFieldArgs = z.infer<typeof AddFieldArgsSchema>;
 export type PreviewArgs = z.infer<typeof PreviewArgsSchema>;
-export type CheckApiArgs = z.infer<typeof CheckApiArgsSchema>;
-export type CheckSpecArgs = z.infer<typeof CheckSpecArgsSchema>;
 export type GenerateArgs = z.infer<typeof GenerateArgsSchema>;
 export type CompileArgs = z.infer<typeof CompileArgsSchema>;
 
@@ -91,7 +70,5 @@ export type CompileArgs = z.infer<typeof CompileArgsSchema>;
 
 export type InitCommandOptions = z.infer<typeof InitCommandSchema>;
 export type AddFieldCommandOptions = z.infer<typeof AddFieldCommandSchema>;
-export type CheckApiCommandOptions = z.infer<typeof CheckApiCommandSchema>;
 export type GenerateServerCommandOptions = z.infer<typeof GenerateServerCommandSchema>;
-export type CheckSpecCommandOptions = z.infer<typeof CheckSpecCommandSchema>;
 export type GenerateClientCommandOptions = z.infer<typeof GenerateClientCommandSchema>;
