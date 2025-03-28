@@ -1,0 +1,171 @@
+---
+title: Sorted
+description: A paginated list of items with a sort order.
+sidebar:
+  order: 3
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+A 200 response with a paginated list of sorted items.
+
+### Table
+
+| Parameter      | Type                                                  | Description                  |
+| -------------- | ----------------------------------------------------- | ---------------------------- |
+| status         | [integer](/protocol/types/numeric#integer)            | The HTTP status code         |
+| message        | [string](/protocol/types/string#string)               | The message to return        |
+| items          | [Array](/protocol/types/other#array)                  | Items from the current page  |
+| paginationInfo | [PaginationInfo](/protocol/pagination#paginationinfo) | Details about the pagination |
+| sortInfo       | [SortInfo](/protocol/sorting#sortinfo)                | The sort order of the items  |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+An example sorted response:
+
+```json
+{
+  "status": 200,
+  "message": "Success",
+  "items": [
+    {
+      "id": "123",
+      "name": "Test 1"
+    },
+    {
+      "id": "124",
+      "name": "Test 2"
+    }
+  ],
+  "paginationInfo": {
+    "page": 1,
+    "pageSize": 10,
+    "totalItems": 25,
+    "totalPages": 3
+  },
+  "sortInfo": {
+    "field": "name",
+    "direction": "asc"
+  }
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+The JSON schema for this model is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Sorted.yaml
+type: object
+properties:
+  status:
+    type: integer
+    minimum: 200
+    default: 200
+    description: The HTTP status code
+  message:
+    type: string
+    default: "Success"
+    description: The message to return
+  items:
+    type: array
+    description: Items from the current page
+  paginationInfo:
+    $ref: "#/components/schemas/CommonGrants.Pagination.PaginationInfo"
+  sortInfo:
+    $ref: "#/components/schemas/CommonGrants.Sorting.SortInfo"
+required:
+  - status
+  - message
+  - items
+  - paginationInfo
+  - sortInfo
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```typespec
+/** A paginated list of items with a sort order
+ *
+ * @template T The schema for the value of the `"items"` property in this response
+ */
+model Sorted<T> {
+  // Inherit the properties of the Paginated response
+  ...Paginated<T>;
+
+  /** The sort order of the items */
+  sortInfo: Sorting.SortInfo;
+}
+```
+
+  </TabItem>
+
+  <TabItem label="OpenAPI">
+
+The OpenAPI specification for this model is:
+
+```yaml
+components:
+  schemas:
+    CommonGrants.Responses.Sorted:
+      type: object
+      properties:
+        status:
+          type: integer
+          minimum: 200
+          default: 200
+          description: The HTTP status code
+        message:
+          type: string
+          default: "Success"
+          description: The message to return
+        items:
+          type: array
+          description: Items from the current page
+        paginationInfo:
+          $ref: "#/components/schemas/CommonGrants.Pagination.PaginationInfo"
+        sortInfo:
+          $ref: "#/components/schemas/CommonGrants.Sorting.SortInfo"
+      required:
+        - status
+        - message
+        - items
+        - paginationInfo
+        - sortInfo
+```
+
+  </TabItem>
+</Tabs>
+
+### Usage
+
+Here's an example of how to use the `Sorted` response within a an API operation:
+
+```typespec
+import "@common-grants/core";
+import "@typespec/http";
+
+using TypeSpec.Http;
+using CommonGrants.Pagination;
+using CommonGrants.Responses;
+
+model TestModel {
+  id: string;
+  name: string;
+}
+
+@summary("List test models")
+@doc("Get a paginated list of test models")
+@get
+op listTest(...PaginatedQueryParams): Sorted<TestModel>;
+```

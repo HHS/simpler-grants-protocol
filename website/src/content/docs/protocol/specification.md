@@ -3,15 +3,25 @@ title: CommonGrants protocol v0.1.0
 description: A specification for the CommonGrants protocol.
 ---
 
+This document outlines the technical specification for the CommonGrants protocol, which defines:
+
+- The required routes, operations, and schemas for a CommonGrants API;
+- The patterns for implementing custom behavior.
+
+Not interested in the technical details? Check out:
+
+- The [OpenAPI docs](/protocol/api-docs) for a high-level overview of the API endpoints supported by the protocol;
+- The [Models](/protocol/models) page for a detailed breakdown of the data elements defined by the protocol.
+
 :::note
 
 This specification is currently a draft and we welcome your feedback. View our [Request for Comments](/governance/rfc/) page to provide input on the specification and other aspects of the protocol.
 
 :::
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [BCP 14](https://tools.ietf.org/html/bcp14), [RFC2119](https://www.rfc-editor.org/rfc/rfc2119.html), and [RFC8174](https://www.rfc-editor.org/rfc/rfc8174.html) when, and only when, they appear in all capitals, as shown here.
-
 ## Definitions
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [BCP 14](https://tools.ietf.org/html/bcp14), [RFC2119](https://www.rfc-editor.org/rfc/rfc2119.html), and [RFC8174](https://www.rfc-editor.org/rfc/rfc8174.html) when, and only when, they appear in all capitals, as shown here.
 
 #### CommonGrants protocol
 

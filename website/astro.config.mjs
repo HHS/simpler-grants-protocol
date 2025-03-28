@@ -64,6 +64,11 @@ export default defineConfig({
               autogenerate: { directory: "protocol/filters" },
             },
             {
+              label: "Responses",
+              collapsed: true,
+              autogenerate: { directory: "protocol/responses" },
+            },
+            {
               label: "Pagination",
               link: "protocol/pagination",
             },
