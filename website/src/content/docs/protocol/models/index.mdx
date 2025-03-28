@@ -5,6 +5,8 @@ sidebar:
   order: 0
 ---
 
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
 The `CommonGrants.Models` namespace contains a standard models that are used by CommonGrants API routes.
 
 ## Models
@@ -13,12 +15,28 @@ Learn more about the standard models defined by the CommonGrants protocol:
 
 ### Opportunity Models
 
-| Model                                        | Description                                            |
-| -------------------------------------------- | ------------------------------------------------------ |
-| [OpportunityBase](/protocol/models/opp-base) | Base model for a funding opportunity                   |
-| [OppStatus](/protocol/models/opp-status)     | Status of an opportunity                               |
-| [OppTimeline](/protocol/models/opp-timeline) | Key dates in the opportunity's timeline                |
-| [OppFunding](/protocol/models/opp-funding)   | Details about the funding available for an opportunity |
+<CardGrid>
+  <LinkCard
+    title="Opportunity Base"
+    href="/protocol/models/opp-base"
+    description="Base model for a funding opportunity"
+  />
+  <LinkCard
+    title="Opportunity Status"
+    href="/protocol/models/opp-status"
+    description="Status of an opportunity, e.g. 'open'"
+  />
+  <LinkCard
+    title="Opportunity Timeline"
+    href="/protocol/models/opp-timeline"
+    description="Key dates in the opportunity's timeline, e.g. application deadline"
+  />
+  <LinkCard
+    title="Opportunity Funding"
+    href="/protocol/models/opp-funding"
+    description="Details about the funding available for an opportunity"
+  />
+</CardGrid>
 
 ## Usage
 

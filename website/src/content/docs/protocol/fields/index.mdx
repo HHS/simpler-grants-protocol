@@ -5,18 +5,36 @@ sidebar:
   order: 0
 ---
 
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
 The `CommonGrants.Fields` namespace contains a standard set of fields that are used to build more complex models.
 
 ## Fields
 
 Learn more about the standard fields defined by the CommonGrants protocol:
 
-| Field                                        | Description                                       |
-| -------------------------------------------- | ------------------------------------------------- |
-| [Money](/protocol/fields/money)              | A monetary amount with a currency code            |
-| [Event](/protocol/fields/event)              | A description of an event with an associated date |
-| [CustomField](/protocol/fields/custom-field) | A model for defining custom fields on a record    |
-| [SystemMetadata](/protocol/fields/metadata)  | System-managed metadata for records               |
+<CardGrid>
+  <LinkCard
+    title="Money"
+    href="/protocol/fields/money"
+    description="A monetary amount with a currency code"
+  />
+  <LinkCard
+    title="Event"
+    href="/protocol/fields/event"
+    description="A description of an event with an associated date"
+  />
+  <LinkCard
+    title="Custom Field"
+    href="/protocol/fields/custom-field"
+    description="A model for defining custom fields on a record"
+  />
+  <LinkCard
+    title="System Metadata"
+    href="/protocol/fields/metadata"
+    description="System-managed metadata for records"
+  />
+</CardGrid>
 
 ## Usage
 

@@ -1,0 +1,128 @@
+---
+title: Overview
+description: Overview of the `CommonGrants.Types` namespace.
+sidebar:
+  order: 0
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+The `CommonGrants.Types` namespace contains a standard set of types that are used to build more complex models.
+
+## Types
+
+Learn more about the standard types defined by the CommonGrants protocol:
+
+### String
+
+<CardGrid>
+  <LinkCard
+    title="String"
+    href="/protocol/types/string#string"
+    description="A sequence of characters"
+  />
+  <LinkCard
+    title="UUID"
+    href="/protocol/types/string#uuid"
+    description="A universally unique identifier"
+  />
+  <LinkCard
+    title="URL"
+    href="/protocol/types/string#url"
+    description="A Uniform Resource Locator (URL)"
+  />
+</CardGrid>
+
+### Numeric
+
+<CardGrid>
+  <LinkCard
+    title="Numeric"
+    href="/protocol/types/numeric#numeric"
+    description="A number with an arbitrary precision and scale"
+  />
+  <LinkCard
+    title="Integer"
+    href="/protocol/types/numeric#integer"
+    description="A whole number without decimals"
+  />
+  <LinkCard
+    title="Decimal String"
+    href="/protocol/types/numeric#decimalstring"
+    description="A decimal number encoded as a string to preserve scale"
+  />
+</CardGrid>
+
+### Date and time
+
+<CardGrid>
+  <LinkCard
+    title="ISO Time"
+    href="/protocol/types/date#isotime"
+    description="Time without timezone"
+  />
+  <LinkCard
+    title="ISO Date"
+    href="/protocol/types/date#isodate"
+    description="Calendar date"
+  />
+  <LinkCard
+    title="UTC DateTime"
+    href="/protocol/types/date#utcdatetime"
+    description="Datetime with UTC timezone"
+  />
+  <LinkCard
+    title="Offset DateTime"
+    href="/protocol/types/date#offsetdatetime"
+    description="Datetime with local timezone"
+  />
+</CardGrid>
+
+### Other types
+
+<CardGrid>
+  <LinkCard
+    title="Boolean"
+    href="/protocol/types/other#boolean"
+    description="A true or false value"
+  />
+  <LinkCard
+    title="Array"
+    href="/protocol/types/other#array"
+    description="An ordered list of values"
+  />
+  <LinkCard
+    title="Record"
+    href="/protocol/types/other#record"
+    description="A collection of key-value pairs"
+  />
+  <LinkCard
+    title="Null"
+    href="/protocol/types/other#null"
+    description="A null value"
+  />
+  <LinkCard
+    title="Unknown"
+    href="/protocol/types/other#unknown"
+    description="A value of with any type"
+  />
+</CardGrid>
+
+## Usage
+
+You can use the types listed above to define custom models in your TypeSpec project.
+
+```typespec
+import "@common-grants/core"
+
+// Exposes the `Types` namespace so that it can be accessed
+// without a `CommonGrants` prefix
+using CommonGrants;
+
+model MyModel {
+  id: Types.uuid; // CommonGrants-defined type
+  description: string; // Standard TypeSpec type
+  tags: Array<string>; // A templated type
+  createdAt: utcDateTime;
+}
+```
