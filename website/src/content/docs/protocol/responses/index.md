@@ -13,7 +13,7 @@ Learn more about the response models defined by the CommonGrants protocol:
 
 | Response                                   | Description                                 |
 | ------------------------------------------ | ------------------------------------------- |
-| [Ok](/protocol/responses#ok)               | 200 response with data                      |
+| [Ok](/protocol/responses/success)          | 200 response with data                      |
 | [Paginated](/protocol/responses/paginated) | 200 response with a paginated list of items |
 | [Sorted](/protocol/responses/sorted)       | 200 response with a sorted list of items    |
 | [Filtered](/protocol/responses/filtered)   | 200 response with a filtered list of items  |
