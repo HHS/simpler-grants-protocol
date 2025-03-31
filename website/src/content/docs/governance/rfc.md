@@ -7,7 +7,7 @@ This document outlines the Request for Comments (RFC) process and scope for v0.1
 
 :::tip[Join the conversation]
 
-Want to leave a comment on the RFC? Share your thoughts on our [Discourse forum](https://simplergrants.discourse.group/t/request-for-comments-commongrants-protocol-v0-1-0/49/1)!
+Want to leave a comment on the RFC? Share your thoughts on our [Discourse forum](https://simplergrants.discourse.group/t/request-for-comments-commongrants-protocol-v0-1-0/49/1) or fill out our [interest form](https://forms.gle/Zy2ZCkSWDP4GY2md6) to discuss your feedback.
 
 :::
 
