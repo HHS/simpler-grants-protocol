@@ -3,37 +3,94 @@ title: About CommonGrants
 description: Learn about the CommonGrants protocol and its mission.
 ---
 
-**CommonGrants** is an open standard designed to streamline the process of discovering, applying to, and reporting on funding opportunities across the grant ecosystem.
+import { CardGrid, LinkCard, Steps } from "@astrojs/starlight/components";
 
-## Core principles
+**CommonGrants** is an open protocol for sharing information about grant opportunities, applications, and awards across platforms.
 
-The principles that guide the design of the CommonGrants protocol include:
+## What is CommonGrants?
 
-- **Standardization**: Define a consistent format for sharing grant data
-- **Extensibility**: Support customization without breaking integrations
-- **Interoperability**: Enable teams to build tools that work across grant platforms
-- **Portability**: Allow users to own and move their data between systems
+CommonGrants defines a set of API endpoints and data models for common grant lifecycle tasks — from discovering opportunities to submitting applications and reporting on awards. The protocol is designed to support interoperability by default, while enabling customization to meet the needs of different platforms.
 
-## Vision
+To simplify adoption, CommonGrants is implemented in [TypeSpec](https://typespec.io/), a language for defining APIs that compiles to OpenAPI, JSON Schema, and other common formats. This makes it easy to:
 
-The CommonGrants protocol envisions a future in which:
+- Validate compliance across implementations
+- Generate libraries and tools in different languages
+- Extend the protocol without breaking existing tools
 
-- Grant makers can publish to one platform, and be discovered on any platform
-- Grant seekers can find opportunities based on fit, not which portals they've subscribed to
-- Grant applicants can focus on delivering impact, instead of translating it between application formats
-- Grant platforms can compete for users based on feature quality, rather than on data quantity
+We also provide:
 
-## Inspiration
+- [`@common-grants/core`](https://www.npmjs.com/package/@common-grants/core): A TypeSpec library of canonical models and routes
+- [`@common-grants/cli`](https://www.npmjs.com/package/@common-grants/cli): A CLI to scaffold, define, and validate API implementations
 
-The CommonGrants protocol builds on the design and approach of several existing standards and protocols, including:
+## Design principles
 
-- [JSON Schema](https://json-schema.org/) - For defining and validating standardized data formats
-- [OpenAPI](https://swagger.io/docs/specification/about/) - For specifying consistent APIs and interfaces
-- [FHIR](https://www.hl7.org/fhir/) - For establishing shared data standards across an industry
-- [ActivityPub](https://www.w3.org/TR/activitypub/) - For enabling decentralized data exchange between platforms
+CommonGrants is guided by a few key principles:
 
-## Dive deeper
+- **Standardization**: A shared language for describing grants, applications, and awards
+- **Extensibility**: A core schema with support for platform-specific extensions
+- **Interoperability**: Tools and APIs that work across systems, not just within them
+- **Portability**: Grant data that users and organizations can carry with them
 
-- [Read the specification](/protocol/specification/)
-- [Explore the core library](/protocol/overview/)
-- [View the open API docs](/protocol/api-docs/)
+## Roadmap
+
+The CommonGrants protocol is evolving in phases, with a focus on real-world usability and adoption.
+
+<Steps>
+
+1. **Now**: Foundation and feedback
+
+   - Base models and routes for grant opportunity search
+   - CLI tooling and a core TypeSpec library
+   - Open specification and Request for Comments (RFC)
+
+   <br></br>
+
+2. **Next**: Application support and ecosystem tools
+
+   - Additional models and routes for grant applications
+   - SDKs and templates for platform integration
+   - Guides and examples to streamline adoption
+
+   <br></br>
+
+3. **Later**: Award reporting and production adoption
+
+   - Models for award tracking and reporting
+   - Adoption of the protocol within the [SimplerGrants](https://simpler.grants.gov/) API
+   - Public directory of compatible tools and implementations
+
+</Steps>
+
+## Background and inspiration
+
+CommonGrants builds on the design patterns and community principles behind:
+
+- [JSON Schema](https://json-schema.org/): For structured, self-validating data
+- [OpenAPI](https://swagger.io/specification/): For generating consistent APIs
+- [FHIR](https://www.hl7.org/fhir/): For standardizing complex data across a fragmented ecosystem
+- [ActivityPub](https://www.w3.org/TR/activitypub/): For federated interoperability
+
+## Learn more
+
+<CardGrid>
+  <LinkCard
+    title="Get started"
+    href="/getting-started/"
+    description="Learn how to define a CommonGrants API using TypeSpec."
+  />
+  <LinkCard
+    title="View the API docs"
+    href="/protocol/api-docs/"
+    description="Browse the API endpoints supported by the protocol."
+  />
+  <LinkCard
+    title="Explore the spec"
+    href="/protocol/specification/"
+    description="Deep dive into the technical specification."
+  />
+  <LinkCard
+    title="Share your thoughts"
+    href="/governance/rfc/"
+    description="Help us make the protocol easier to use and adopt."
+  />
+</CardGrid>

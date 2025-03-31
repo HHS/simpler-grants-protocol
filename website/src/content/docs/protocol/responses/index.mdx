@@ -1,0 +1,42 @@
+---
+title: Overview
+description: Overview of the `CommonGrants.Responses` namespace.
+sidebar:
+  order: 0
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+The `CommonGrants.Responses` namespace contains foundational response models for all 2xx responses.
+
+## Responses
+
+Learn more about the response models defined by the CommonGrants protocol:
+
+<CardGrid>
+  <LinkCard
+    title="Ok"
+    href="/protocol/responses/success"
+    description="200 response with data"
+  />
+  <LinkCard
+    title="Paginated"
+    href="/protocol/responses/paginated"
+    description="200 response with a paginated list of items"
+  />
+  <LinkCard
+    title="Sorted"
+    href="/protocol/responses/sorted"
+    description="200 response with a sorted list of items"
+  />
+  <LinkCard
+    title="Filtered"
+    href="/protocol/responses/filtered"
+    description="200 response with a filtered list of items"
+  />
+  <LinkCard
+    title="Error"
+    href="/protocol/responses/error"
+    description="4xx or 5xx responses with an error message"
+  />
+</CardGrid>

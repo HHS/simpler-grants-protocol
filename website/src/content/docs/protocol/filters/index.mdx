@@ -1,0 +1,128 @@
+---
+title: Overview
+description: Overview of the `CommonGrants.Filters` namespace.
+sidebar:
+  order: 0
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+The `CommonGrants.Filters` namespace contains a series of basic filters that can be used to define both standard and custom filtering within
+
+## Filters
+
+Learn more about the default filters supported by the CommonGrants protocol:
+
+### Base filter and operators
+
+<CardGrid>
+  <LinkCard
+    title="Equivalence Operators"
+    href="/protocol/filters/base#equivalenceoperators"
+    description="Filter by exact match to a value"
+  />
+  <LinkCard
+    title="Comparison Operators"
+    href="/protocol/filters/base#comparisonoperators"
+    description="Filter by comparison to a value"
+  />
+  <LinkCard
+    title="Array Operators"
+    href="/protocol/filters/base#arrayoperators"
+    description="Filter by by a collection of values"
+  />
+  <LinkCard
+    title="String Operators"
+    href="/protocol/filters/base#stringoperators"
+    description="Filter by string operation (like, not like)"
+  />
+  <LinkCard
+    title="Range Operators"
+    href="/protocol/filters/base#rangeoperators"
+    description="Filter by a range of values"
+  />
+</CardGrid>
+
+### String
+
+<CardGrid>
+  <LinkCard
+    title="String Comparison Filter"
+    href="/protocol/filters/string#stringcomparisonfilter"
+    description="Filter by string comparison"
+  />
+  <LinkCard
+    title="String Array Filter"
+    href="/protocol/filters/string#stringarrayfilter"
+    description="Filter by string array membership"
+  />
+</CardGrid>
+
+### Numeric
+
+<CardGrid>
+  <LinkCard
+    title="Number Comparison Filter"
+    href="/protocol/filters/numeric#numbercomparisonfilter"
+    description="Compare a field to a numeric value"
+  />
+  <LinkCard
+    title="Number Range Filter"
+    href="/protocol/filters/numeric#numberrangefilter"
+    description="Compare a field to a range of numeric values"
+  />
+  <LinkCard
+    title="Number Array Filter"
+    href="/protocol/filters/numeric#numberarrayfilter"
+    description="Compare a field to an array of numeric values"
+  />
+</CardGrid>
+
+### Money
+
+<CardGrid>
+  <LinkCard
+    title="Money Comparison Filter"
+    href="/protocol/filters/money#moneycomparisonfilter"
+    description="Compare a field to a monetary value"
+  />
+  <LinkCard
+    title="Money Range Filter"
+    href="/protocol/filters/money#moneyrangefilter"
+    description="Compare a field to a range of monetary values"
+  />
+</CardGrid>
+
+### Date and time
+
+<CardGrid>
+  <LinkCard
+    title="Date Comparison Filter"
+    href="/protocol/filters/date#datecomparisonfilter"
+    description="Compare a field to a date value"
+  />
+  <LinkCard
+    title="Date Range Filter"
+    href="/protocol/filters/date#daterangefilter"
+    description="Compare a field to a range of date values"
+  />
+</CardGrid>
+
+## Usage
+
+You can use the types listed above to define custom models in your TypeSpec project.
+
+```typespec
+import "@common-grants/core"
+
+// Exposes the `Types` namespace so that it can be accessed
+// without a `CommonGrants` prefix
+using CommonGrants;
+
+model MyModel {
+  id: Types.uuid; // CommonGrants-defined type
+  description: string; // Standard TypeSpec type
+  tags: Array<string>; // A templated type
+  createdAt: utcDateTime;
+}
+```

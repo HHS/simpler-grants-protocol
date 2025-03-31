@@ -37,7 +37,7 @@ description: A date on a calendar in ISO 8601 format YYYY-MM-DD
 ```tsp
 /** A date on a calendar in ISO 8601 format YYYY-MM-DD */
 @example(isoDate.fromISO("2025-01-01"))
-scalar isoDate extends plainTime;
+scalar isoDate extends plainDate;
 ```
 
   </TabItem>
@@ -100,7 +100,7 @@ A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ.
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: isoDateTime.yaml
+$id: utcDateTime.yaml
 type: string
 format: date-time
 description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ
