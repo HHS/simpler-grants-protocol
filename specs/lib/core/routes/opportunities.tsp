@@ -82,6 +82,21 @@ interface Opportunities {
   @post
   @route("/search")
   search<T extends Models.OpportunityBase = Models.OpportunityBase>(
+    /** Keywords to search for across multiple opportunity fields */
+    search?: {
+      /** The keywords to pass to the search query */
+      @example("Pre-school education")
+      query: string;
+
+      /** The type of match to apply to the search query, defaults to `all`
+       *
+       * - `all`: Only return opportunities that match all of the search terms
+       * - `any`: Return opportunities that match any of the search terms
+       */
+      @example("all")
+      matchType?: "all" | "any" = "all";
+    },
+
     /** Filters to apply to the opportunity search
      *
      * Multiple filter conditions will be combined with AND logic, so that

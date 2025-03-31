@@ -5,6 +5,7 @@ import "@typespec/openapi";
 
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
+
 /** The base OpenAPI specification for a CommonGrants API
  *
  * In order for an API to be "compliant" with the CommonGrants protocol,
