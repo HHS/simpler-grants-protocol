@@ -35,7 +35,7 @@ model PaginatedBodyParams {
 }
 
 /** Details about the paginated results */
-model PaginationInfo {
+model PaginatedResultsInfo {
   /** Current page number (indexing starts at 1) */
   @example(1)
   @minValue(1)

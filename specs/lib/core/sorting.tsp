@@ -57,16 +57,19 @@ model SortBodyParams {
 }
 
 /** Information about the sort order of the items returned */
-model SortInfo {
-  /** The field to sort by */
+model SortedResultsInfo {
+  /** The field results are sorted by, or "custom" if an implementation-defined sort key is used */
   @example("lastModifiedAt")
   sortBy: string;
 
-  /** Implementation-defined sort key */
+  /** Implementation-defined sort key used to sort the results, if applicable */
   @example("customField")
   customSortBy?: string;
 
-  /** The order to sort by */
+  /** The order in which the results are sorted, e.g. ascending or descending */
   @example(SortOrder.asc)
-  sortOrder?: SortOrder;
+  sortOrder: SortOrder;
+
+  /** Non-fatal errors that occurred during sorting */
+  errors?: string[];
 }
