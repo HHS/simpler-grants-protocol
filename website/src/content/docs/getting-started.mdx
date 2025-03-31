@@ -10,9 +10,11 @@ import {
   LinkCard,
 } from "@astrojs/starlight/components";
 
-Welcome to the CommonGrants protocol documentation. This guide will help you get started with understanding and implementing the protocol.
+Welcome! This quickstart tutorial will help you define a CommonGrants API using TypeSpec and explore the core routes and models defined by the protocol.
 
 ## Find your way around
+
+Not looking for a quickstart guide? Here are some other resources to help you get started:
 
 <CardGrid>
   <LinkCard
@@ -26,9 +28,9 @@ Welcome to the CommonGrants protocol documentation. This guide will help you get
     description="Browse the API endpoints supported by CommonGrants APIs."
   />
   <LinkCard
-    title="Quickstart"
-    href="#quickstart"
-    description="Start defining a CommonGrants API using our developer tools."
+    title="CommonGrants models"
+    href="/protocol/models/"
+    description="Explore the core models defined by the CommonGrants protocol."
   />
   <LinkCard
     title="Specification"
@@ -36,15 +38,6 @@ Welcome to the CommonGrants protocol documentation. This guide will help you get
     description="Deep dive into the technical details of the CommonGrants protocol."
   />
 </CardGrid>
-
-## What is CommonGrants?
-
-CommonGrants is a protocol designed to standardize how data about funding opportunities, applications, and awards is shared across the grant ecosystem.
-
-The CommonGrants protocol is built on top of [TypeSpec](https://typespec.io/), a language for describing APIs that compiles to OpenAPI, JSON Schema, and other formats. To simplify the process of adopting this protocol, CommonGrants has published both:
-
-- A TypeSpec library [`@common-grants/core`](https://www.npmjs.com/package/@common-grants/core) with a default set of models and routes
-- A CLI tool [`@common-grants/cli`](https://www.npmjs.com/package/@common-grants/cli) to help you define and validate your API implementation
 
 ## Quickstart
 
