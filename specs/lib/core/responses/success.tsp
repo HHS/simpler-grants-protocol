@@ -141,6 +141,6 @@ model Filtered<ItemsT, FilterT> extends Success {
     filters: FilterT;
 
     /** Non-fatal errors that occurred during filtering */
-    errors: string[];
+    errors?: string[];
   };
 }
