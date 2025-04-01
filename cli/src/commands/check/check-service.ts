@@ -4,11 +4,11 @@ import { checkMatchingRoutes } from "./utils/check-matching-routes";
 import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
 import { ComplianceError, Document } from "../../services/validation/types";
 import { compileTypeSpec } from "../../utils/typespec";
-import { SpecValidationOptions, ValidationOptions } from "./types";
+import { CheckApiCommandOptions, CheckSpecCommandOptions } from "./check-args";
 
 export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
-  async checkApi(apiUrl: string, specPath: string, options: ValidationOptions): Promise<void> {
+  async checkApi(apiUrl: string, specPath: string, options: CheckApiCommandOptions): Promise<void> {
     console.log("Mock: Checking API", { apiUrl, specPath, options });
   }
 
@@ -21,7 +21,7 @@ export class DefaultCheckService {
    *   3) Checking for unexpected routes prefixed with /common-grants/
    *   4) Checking that matching routes are compatible
    */
-  async checkSpec(specPath: string, options: SpecValidationOptions): Promise<void> {
+  async checkSpec(specPath: string, options: CheckSpecCommandOptions): Promise<void> {
     // Parse and dereference the spec
     const doc = (await SwaggerParser.dereference(specPath)) as Document;
 
