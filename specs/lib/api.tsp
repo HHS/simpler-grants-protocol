@@ -5,6 +5,7 @@ import "@typespec/openapi";
 
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
+
 /** The base OpenAPI specification for a CommonGrants API
  *
  * In order for an API to be "compliant" with the CommonGrants protocol,
@@ -12,8 +13,8 @@ using TypeSpec.OpenAPI;
  */
 @service(#{ title: "CommonGrants Base API" })
 @tagMetadata(
-  "Opportunities",
-  #{ description: "Endpoints related to funding opportunities" }
+  "optional",
+  #{ description: "Endpoints that MAY be implemented by CommonGrants APIs" }
 )
 @tagMetadata(
   "required",
@@ -22,8 +23,8 @@ using TypeSpec.OpenAPI;
   }
 )
 @tagMetadata(
-  "optional",
-  #{ description: "Endpoints that MAY be implemented by CommonGrants APIs" }
+  "Opportunities",
+  #{ description: "Endpoints related to funding opportunities" }
 )
 namespace CommonGrants.API;
 

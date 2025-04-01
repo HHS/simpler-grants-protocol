@@ -75,7 +75,7 @@ model Paginated<T> extends Success {
   items: T[];
 
   /** Details about the paginated results */
-  paginationInfo: Pagination.PaginationInfo;
+  paginationInfo: Pagination.PaginatedResultsInfo;
 }
 
 // ############################################################################
@@ -103,7 +103,7 @@ model Sorted<T> {
   ...Paginated<T>;
 
   /** The sort order of the items */
-  sortInfo: Sorting.SortInfo;
+  sortInfo: Sorting.SortedResultsInfo;
 }
 
 // ############################################################################
@@ -137,5 +137,10 @@ model Filtered<ItemsT, FilterT> extends Success {
   ...Sorted<ItemsT>;
 
   /** The filters applied to the response items */
-  filterInfo: FilterT;
+  filterInfo: {
+    filters: FilterT;
+
+    /** Non-fatal errors that occurred during filtering */
+    errors?: string[];
+  };
 }

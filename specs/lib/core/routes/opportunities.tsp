@@ -82,6 +82,10 @@ interface Opportunities {
   @post
   @route("/search")
   search<T extends Models.OpportunityBase = Models.OpportunityBase>(
+    /** Opportunity search query */
+    @example("Pre-school education")
+    search?: string,
+
     /** Filters to apply to the opportunity search
      *
      * Multiple filter conditions will be combined with AND logic, so that
