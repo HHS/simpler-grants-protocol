@@ -4,7 +4,7 @@ import { compileCommand } from "../../../commands/compile/compile";
 
 const mockCompile = jest.fn();
 
-jest.mock("../../../commands/compile/compile.service", () => ({
+jest.mock("../../../commands/compile/compile-service", () => ({
   DefaultCompileService: jest.fn(() => ({
     compile: mockCompile,
   })),

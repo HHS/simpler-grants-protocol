@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect, jest } from "@jest/globals";
-import { DefaultCompileService } from "../../../commands/compile/compile.service";
+import { DefaultCompileService } from "../../../commands/compile/compile-service";
 import { spawn } from "child_process";
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";

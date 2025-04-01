@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, jest, expect } from "@jest/globals";
-import { DefaultInitService } from "../../../commands/init/init.service";
+import { DefaultInitService } from "../../../commands/init/init-service";
 import { spawn } from "child_process";
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";

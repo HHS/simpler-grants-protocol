@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { InitService } from "../../services/interfaces";
-import { DefaultInitService } from "./init.service";
+import { DefaultInitService } from "./init-service";
 import { InitCommandSchema } from "../../types/command-args";
 import { handleCommandError } from "../../utils/error";
 

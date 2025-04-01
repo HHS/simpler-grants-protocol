@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { Command } from "commander";
 import { initCommand } from "../../../commands/init/init";
-import { DefaultInitService } from "../../../commands/init/init.service";
+import { DefaultInitService } from "../../../commands/init/init-service";
 
-jest.mock("../../../commands/init/init.service");
+jest.mock("../../../commands/init/init-service");
 
 describe("initCommand", () => {
   let program: Command;
