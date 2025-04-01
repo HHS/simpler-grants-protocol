@@ -9,8 +9,11 @@ info:
   version: 0.0.0
 tags:
   - name: Opportunities
+    description: Endpoints related to funding opportunities
   - name: required
+    description: Endpoints that MUST be implemented by all CommonGrants APIs
   - name: optional
+    description: Endpoints that MAY be implemented by CommonGrants APIs
 paths:
   /common-grants/opportunities:
     get:
@@ -38,17 +41,11 @@ paths:
                     description: Items from the current page
                   paginationInfo:
                     allOf:
-                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginationInfo'
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
                     description: Details about the paginated results
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of items
-        '401':
-          description: Access is unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommonGrants.Responses.Error'
       tags:
         - Opportunities
         - required
@@ -80,7 +77,7 @@ paths:
                     description: Items from the current page
                   paginationInfo:
                     allOf:
-                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginationInfo'
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
                     description: Details about the paginated results
                   status:
                     type: integer
@@ -91,21 +88,24 @@ paths:
                     example: Success
                   sortInfo:
                     allOf:
-                      - $ref: '#/components/schemas/CommonGrants.Sorting.SortInfo'
+                      - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
                     description: The sort order of the items
                   filterInfo:
-                    allOf:
-                      - $ref: '#/components/schemas/CommonGrants.Models.OppFilters'
+                    type: object
+                    properties:
+                      filters:
+                        $ref: '#/components/schemas/CommonGrants.Models.OppFilters'
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                        description: Non-fatal errors that occurred during filtering
+                    required:
+                      - filters
                     description: The filters applied to the response items
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A paginated list of items with a filter
-        '401':
-          description: Access is unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommonGrants.Responses.Error'
       tags:
         - Opportunities
         - optional
@@ -116,6 +116,10 @@ paths:
             schema:
               type: object
               properties:
+                search:
+                  type: string
+                  description: Opportunity search query
+                  example: Pre-school education
                 filters:
                   allOf:
                     - $ref: '#/components/schemas/CommonGrants.Models.OppFilters'
@@ -161,12 +165,6 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with data
-        '401':
-          description: Access is unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
           content:
@@ -224,6 +222,7 @@ components:
         description:
           type: string
           description: Description of the custom field's purpose
+      description: A custom field on a model
       example:
         name: eligibilityType
         type: array
@@ -231,7 +230,6 @@ components:
           - nonprofit
           - academic
         description: Types of eligible organizations
-      description: A custom field on a model
     CommonGrants.Fields.CustomFieldType:
       type: string
       enum:
@@ -261,11 +259,11 @@ components:
         description:
           type: string
           description: Description of what this event represents
+      description: Description of an event that has a date (and possible time) associated with it
       example:
         name: Open Date
-        date: 2024-01-15
+        date: '2024-01-15'
         description: Applications begin being accepted
-      description: Description of an event that has a date (and possible time) associated with it
     CommonGrants.Fields.Money:
       type: object
       required:
@@ -279,10 +277,10 @@ components:
         currency:
           type: string
           description: The ISO 4217 currency code in which the amount is denominated
+      description: A monetary amount and the currency in which its denominated
       example:
         amount: '-50.50'
         currency: USD
-      description: A monetary amount and the currency in which its denominated
     CommonGrants.Filters.AllOperators:
       type: string
       enum:
@@ -342,10 +340,10 @@ components:
           required:
             - min
             - max
-          example:
-            min: 2021-01-01
-            max: 2021-01-02
           description: The value to use for the filter operation
+          example:
+            min: '2021-01-01'
+            max: '2021-01-02'
       description: Filters by comparing a field to a range of date values
     CommonGrants.Filters.DefaultFilter:
       type: object
@@ -391,6 +389,7 @@ components:
           required:
             - min
             - max
+          description: The value to use for the filter operation
           example:
             min:
               amount: '1000'
@@ -398,7 +397,6 @@ components:
             max:
               amount: '10000'
               currency: USD
-          description: The value to use for the filter operation
       description: Filters by comparing a field to a range of monetary values
     CommonGrants.Filters.RangeOperators:
       type: string
@@ -420,10 +418,10 @@ components:
           type: array
           items:
             type: string
+          description: The value to use for the filter operation
           example:
             - value1
             - value2
-          description: The value to use for the filter operation
       description: A filter that applies a filter to an array of strings
     CommonGrants.Filters.StringOperators:
       type: string
@@ -437,41 +435,29 @@ components:
         status:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
           example:
             operator: in
             value:
               - forecasted
               - open
-          description: '`status.value` matches one of the following values'
         closeDateRange:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`keyDates.closeDate` is between the given range'
           example:
             operator: between
             value:
-              min: 2021-01-01
-              max: 2021-01-02
-          description: '`keyDates.closeDate` is between the given range'
+              min: '2021-01-01'
+              max: '2021-01-02'
         totalFundingAvailableRange:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
-          example:
-            operator: between
-            value:
-              min:
-                amount: '1000000'
-                currency: USD
-              max:
-                amount: '2000000'
-                currency: USD
           description: |-
             `funding.totalAmountAvailable` is between the given range
 
             Funding amounts that are denominated in a different currency will
             be excluded from the search.
-        minAwardAmountRange:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
           example:
             operator: between
             value:
@@ -481,14 +467,14 @@ components:
               max:
                 amount: '2000000'
                 currency: USD
+        minAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
           description: |-
             `funding.minAwardAmount` is between the given range
 
             Funding amounts that are denominated in a different currency will
             be excluded from the search.
-        maxAwardAmountRange:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
           example:
             operator: between
             value:
@@ -498,11 +484,23 @@ components:
               max:
                 amount: '2000000'
                 currency: USD
+        maxAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
           description: |-
             `funding.maxAwardAmount` is between the given range.
 
             Funding amounts that are denominated in a different currency will
             be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
       allOf:
         - type: object
           additionalProperties:
@@ -514,41 +512,29 @@ components:
         status:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
           example:
             operator: in
             value:
               - forecasted
               - open
-          description: '`status.value` matches one of the following values'
         closeDateRange:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`keyDates.closeDate` is between the given range'
           example:
             operator: between
             value:
-              min: 2021-01-01
-              max: 2021-01-02
-          description: '`keyDates.closeDate` is between the given range'
+              min: '2021-01-01'
+              max: '2021-01-02'
         totalFundingAvailableRange:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
-          example:
-            operator: between
-            value:
-              min:
-                amount: '1000000'
-                currency: USD
-              max:
-                amount: '2000000'
-                currency: USD
           description: |-
             `funding.totalAmountAvailable` is between the given range
 
             Funding amounts that are denominated in a different currency will
             be excluded from the search.
-        minAwardAmountRange:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
           example:
             operator: between
             value:
@@ -558,14 +544,14 @@ components:
               max:
                 amount: '2000000'
                 currency: USD
+        minAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
           description: |-
             `funding.minAwardAmount` is between the given range
 
             Funding amounts that are denominated in a different currency will
             be excluded from the search.
-        maxAwardAmountRange:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
           example:
             operator: between
             value:
@@ -575,11 +561,23 @@ components:
               max:
                 amount: '2000000'
                 currency: USD
+        maxAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
           description: |-
             `funding.maxAwardAmount` is between the given range.
 
             Funding amounts that are denominated in a different currency will
             be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
         customFilters:
           type: object
           additionalProperties:
@@ -610,6 +608,7 @@ components:
         estimatedAwardCount:
           type: integer
           description: Estimated number of awards that will be granted
+      description: Details about the funding available for this opportunity
       example:
         totalAmountAvailable:
           amount: '1000000.00'
@@ -623,7 +622,6 @@ components:
         minAwardCount: 5
         maxAwardCount: 20
         estimatedAwardCount: 10
-      description: Details about the funding available for this opportunity
     CommonGrants.Models.OppSortBy:
       type: string
       enum:
@@ -645,8 +643,8 @@ components:
         sortBy:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppSortBy'
-          example: lastModifiedAt
           description: The field to sort by
+          example: lastModifiedAt
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Sorting.SortBodyParams'
     CommonGrants.Models.OppStatus:
@@ -664,10 +662,10 @@ components:
         description:
           type: string
           description: A human-readable description of the status
+      description: The status of the opportunity
       example:
         value: open
         description: The opportunity is currently accepting applications
-      description: The status of the opportunity
     CommonGrants.Models.OppStatusOptions:
       type: string
       enum:
@@ -695,22 +693,22 @@ components:
             An optional map of other key dates in the opportunity timeline
 
             Examples might include a deadline for questions, anticipated award date, etc.
+      description: Key dates in the opportunity's timeline, such as when the application opens and closes
       example:
         appOpens:
           name: Open Date
-          date: 2024-01-15
+          date: '2024-01-15'
           description: Applications begin being accepted
         appDeadline:
           name: Application Deadline
-          date: 2024-12-31
-          time: 17:00:00
+          date: '2024-12-31'
+          time: '17:00:00'
           description: Final submission deadline for all grant applications
         otherDates:
           anticipatedAward:
             name: Anticipated award date
-            date: 2025-03-15
+            date: '2025-03-15'
             description: When we expect to announce awards for this opportunity.
-      description: Key dates in the opportunity's timeline, such as when the application opens and closes
     CommonGrants.Models.OpportunityBase:
       type: object
       required:
@@ -782,7 +780,7 @@ components:
           description: The number of items to return per page
           default: 100
       description: Body parameters for paginated routes
-    CommonGrants.Pagination.PaginationInfo:
+    CommonGrants.Pagination.PaginatedResultsInfo:
       type: object
       required:
         - page
@@ -791,22 +789,22 @@ components:
         page:
           type: integer
           format: int32
-          example: 1
           minimum: 1
           description: Current page number (indexing starts at 1)
+          example: 1
         pageSize:
           type: integer
-          example: 20
           minimum: 1
           description: Number of items per page
+          example: 20
         totalItems:
           type: integer
-          example: 100
           description: Total number of items across all pages
+          example: 100
         totalPages:
           type: integer
-          example: 5
           description: Total number of pages
+          example: 5
       description: Details about the paginated results
     CommonGrants.Responses.Error:
       type: object
@@ -821,8 +819,8 @@ components:
           example: 400
         message:
           type: string
-          example: Error
           description: Human-readable error message
+          example: Error
         errors:
           type: array
           items: {}
@@ -847,59 +845,65 @@ components:
         - sortBy
       properties:
         sortBy:
-          example: lastModifiedAt
           description: The field to sort by
+          example: lastModifiedAt
         customSortBy:
           type: string
-          example: customField
           description: Implementation-defined sort key
+          example: customField
         sortOrder:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Sorting.SortOrder'
-          example: asc
           description: The order to sort by
+          example: asc
       description: Sorting parameters included in the request body
-    CommonGrants.Sorting.SortInfo:
-      type: object
-      required:
-        - sortBy
-      properties:
-        sortBy:
-          type: string
-          example: lastModifiedAt
-          description: The field to sort by
-        customSortBy:
-          type: string
-          example: customField
-          description: Implementation-defined sort key
-        sortOrder:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Sorting.SortOrder'
-          example: asc
-          description: The order to sort by
-      description: Information about the sort order of the items returned
     CommonGrants.Sorting.SortOrder:
       type: string
       enum:
         - asc
         - desc
+    CommonGrants.Sorting.SortedResultsInfo:
+      type: object
+      required:
+        - sortBy
+        - sortOrder
+      properties:
+        sortBy:
+          type: string
+          description: The field results are sorted by, or "custom" if an implementation-defined sort key is used
+          example: lastModifiedAt
+        customSortBy:
+          type: string
+          description: Implementation-defined sort key used to sort the results, if applicable
+          example: customField
+        sortOrder:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortOrder'
+          description: The order in which the results are sorted, e.g. ascending or descending
+          example: asc
+        errors:
+          type: array
+          items:
+            type: string
+          description: Non-fatal errors that occurred during sorting
+      description: Information about the sort order of the items returned
     CommonGrants.Types.decimalString:
       type: string
-      example: '-100.5'
       pattern: ^-?[0-9]+\.?[0-9]*$
       description: A decimal number (with variable scale) encoded as a string, to avoid floating point issues
+      example: '-100.5'
     CommonGrants.Types.isoDate:
       type: string
       format: date
-      example: 2025-01-01
       description: A date on a calendar in ISO 8601 format YYYY-MM-DD
+      example: '2025-01-01'
     CommonGrants.Types.isoTime:
       type: string
       format: time
-      example: 17:00:00
       description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
+      example: '17:00:00'
     CommonGrants.Types.uuid:
       type: string
-      example: 30a12e5e-5940-4c08-921c-17a8960fcf4b
       format: uuid
       description: A universally unique identifier
+      example: 30a12e5e-5940-4c08-921c-17a8960fcf4b

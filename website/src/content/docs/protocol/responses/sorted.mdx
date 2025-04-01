@@ -11,13 +11,13 @@ A 200 response with a paginated list of sorted items.
 
 ### Table
 
-| Parameter      | Type                                                  | Description                  |
-| -------------- | ----------------------------------------------------- | ---------------------------- |
-| status         | [integer](/protocol/types/numeric#integer)            | The HTTP status code         |
-| message        | [string](/protocol/types/string#string)               | The message to return        |
-| items          | [Array](/protocol/types/other#array)                  | Items from the current page  |
-| paginationInfo | [PaginationInfo](/protocol/pagination#paginationinfo) | Details about the pagination |
-| sortInfo       | [SortInfo](/protocol/sorting#sortinfo)                | The sort order of the items  |
+| Parameter      | Type                                                        | Description                  |
+| -------------- | ----------------------------------------------------------- | ---------------------------- |
+| status         | [integer](/protocol/types/numeric#integer)                  | The HTTP status code         |
+| message        | [string](/protocol/types/string#string)                     | The message to return        |
+| items          | [Array](/protocol/types/other#array)                        | Items from the current page  |
+| paginationInfo | [PaginationInfo](/protocol/pagination#paginatedresultsinfo) | Details about the pagination |
+| sortInfo       | [SortInfo](/protocol/sorting#sortedresultsinfo)             | The sort order of the items  |
 
 ### Formats
 

@@ -396,14 +396,14 @@ properties:
             value:
                 type: integer
                 examples:
-                - 12345
+                  - 12345
             description:
                 type: string
                 const: An integer ID for the opportunity, needed for compatibility with legacy systems
             required:
-            - name
-            - type
-            - value
+              - name
+              - type
+              - value
     required:
       - legacyId
 required:
@@ -546,15 +546,16 @@ This pattern can also be used to maintain support for existing routes that confl
 
 This allows APIs to incrementally adopt the CommonGrants protocol while supporting existing routes and operations.
 
-## Appendix A: Compliance examples
+## Appendix A: Non-compliant examples
 
-All of the following examples are non-compliant with the CommonGrants protocol.
+This appendix contains examples of changes to a CommonGrants API document that are non-compliant with the protocol.
 
 #### Extra routes
 
-The implementation includes an extra route that is not prefixed with `/custom/`, and is not part of the base protocol.
+The implementation includes an extra route that is prefixed with `/common-grants/`, but is not part of the base protocol.
 
-**Base protocol**
+<details>
+<summary>Base protocol</summary>
 
 ```yaml
 openapi: 3.0.0
@@ -565,7 +566,7 @@ tags:
   - name: Opportunities
   - name: required
 paths:
-  /opportunities:
+  /common-grants/opportunities:
     get:
       # omitted for brevity
       tags:
@@ -573,9 +574,12 @@ paths:
         - name: required
 ```
 
-**Implementation**
+</details>
 
-```yaml
+<details>
+<summary>Implementation with extra route</summary>
+
+```yaml {9-12}
 openapi: 3.0.0
 info:
   title: CommonGrants implementation API
@@ -583,7 +587,7 @@ info:
 tags:
   - name: Opportunities
 paths:
-  /opportunities:
+  /common-grants/opportunities:
     post:
       # omitted for brevity
       tags:
@@ -594,9 +598,14 @@ paths:
         - name: Opportunities
 ```
 
+</details>
+
 #### Missing routes
 
 The implementation does not include a required route.
+
+<details>
+<summary>Base protocol</summary>
 
 ```yaml
 openapi: 3.0.0
@@ -607,13 +616,13 @@ tags:
   - name: Opportunities
   - name: required
 paths:
-  /opportunities:
+  /common-grants/opportunities:
     get:
       # omitted for brevity
       tags:
         - name: Opportunities
         - name: required
-  /opportunities/{id}:
+  /common-grants/opportunities/{id}:
     get:
       # omitted for brevity
       tags:
@@ -621,9 +630,12 @@ paths:
         - name: required
 ```
 
-**Implementation**
+</details>
 
-```yaml
+<details>
+<summary>Implementation with missing route</summary>
+
+```yaml {13}
 openapi: 3.0.0
 info:
   title: CommonGrants implementation API
@@ -631,13 +643,15 @@ info:
 tags:
   - name: Opportunities
 paths:
-  /opportunities:
+  /common-grants/opportunities:
     get:
       # omitted for brevity
       tags:
         - name: Opportunities
   # missing GET /opportunities/{id} route
 ```
+
+</details>
 
 #### Mismatched schemas
 
@@ -648,7 +662,8 @@ The implementation schemas are not valid against the base protocol schemas in on
 - The implementation schema assigns the wrong type to an existing field.
 - The implementation schema adds to the list of enum values for an existing field.
 
-**Base protocol**
+<details>
+<summary>Base protocol</summary>
 
 ```yaml
 openapi: 3.0.0
@@ -659,7 +674,7 @@ tags:
   - name: Opportunities
   - name: required
 paths:
-  /opportunities:
+  /common-grants/opportunities:
     get:
       # omitted for brevity
       tags:
@@ -691,9 +706,12 @@ paths:
                 # other OpportunityBase fields omitted for brevity
 ```
 
-**Implementation**
+</details>
 
-```yaml {26-27, 33, 38}
+<details>
+<summary>Implementation with mismatched schemas</summary>
+
+```yaml {25-27, 33, 38}
 openapi: 3.0.0
 info:
   title: CommonGrants implementation API
@@ -701,7 +719,7 @@ info:
 tags:
   - name: Opportunities
 paths:
-  /opportunities:
+  /common-grants/opportunities:
     get:
       # omitted for brevity
       tags:
@@ -734,3 +752,5 @@ paths:
                       - archived
                   # other OpportunityBase fields omitted for brevity
 ```
+
+</details>
