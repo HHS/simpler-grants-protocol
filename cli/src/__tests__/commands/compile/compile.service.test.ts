@@ -10,7 +10,7 @@ jest.mock("child_process", () => ({
 }));
 
 describe("DefaultCompileService", () => {
-  let service = new DefaultCompileService();
+  const service = new DefaultCompileService();
   let mockSpawn: jest.Mock;
   let mockChildProcess: Partial<ChildProcess> & EventEmitter;
   const mockConsole = jest.spyOn(console, "error").mockImplementation(() => {});
