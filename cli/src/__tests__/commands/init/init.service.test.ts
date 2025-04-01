@@ -1,10 +1,10 @@
 import { beforeEach, describe, it, jest, expect } from "@jest/globals";
-import { DefaultInitService } from "../../services/init.service";
+import { DefaultInitService } from "../../../commands/init/init.service";
 import { spawn } from "child_process";
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
 import { Readable } from "stream";
-import { tspBinPath } from "../../utils/typespec";
+import { tspBinPath } from "../../../utils/typespec";
 
 // Mock child_process.spawn
 jest.mock("child_process", () => ({

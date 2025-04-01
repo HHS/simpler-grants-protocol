@@ -1,8 +1,8 @@
 import { Command } from "commander";
-import { InitService } from "../services/interfaces";
-import { DefaultInitService } from "../services/init.service";
-import { InitCommandSchema } from "../types/command-args";
-import { handleCommandError } from "../utils/error";
+import { InitService } from "../../services/interfaces";
+import { DefaultInitService } from "./init.service";
+import { InitCommandSchema } from "../../types/command-args";
+import { handleCommandError } from "../../utils/error";
 
 export function initCommand(program: Command) {
   const initService: InitService = new DefaultInitService();

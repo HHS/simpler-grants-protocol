@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect } from "@jest/globals";
-import { DefaultPreviewService } from "../../services/preview.service";
+import { DefaultPreviewService } from "../../../commands/preview/preview.service";
 import { join } from "path";
 import request from "supertest";
 import express from "express";
@@ -7,7 +7,6 @@ import express from "express";
 describe("DefaultPreviewService", () => {
   let service: DefaultPreviewService;
   const fixturesPath = join(__dirname, "..", "fixtures");
-
   beforeEach(() => {
     service = new DefaultPreviewService();
   });

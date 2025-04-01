@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll, jest } from "@jest/globals";
 import { Command } from "commander";
-import { compileCommand } from "../../commands/compile";
+import { compileCommand } from "../../../commands/compile/compile";
 
 const mockCompile = jest.fn();
 
-jest.mock("../../services/compile.service", () => ({
+jest.mock("../../../commands/compile/compile.service", () => ({
   DefaultCompileService: jest.fn(() => ({
     compile: mockCompile,
   })),

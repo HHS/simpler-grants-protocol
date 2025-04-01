@@ -1,23 +1,22 @@
 import { beforeEach, describe, it, expect, jest } from "@jest/globals";
-import { DefaultCompileService } from "../../services/compile.service";
+import { DefaultCompileService } from "../../../commands/compile/compile.service";
 import { spawn } from "child_process";
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
-import { tspBinPath } from "../../utils/typespec";
+import { tspBinPath } from "../../../utils/typespec";
 
 jest.mock("child_process", () => ({
   spawn: jest.fn(),
 }));
 
 describe("DefaultCompileService", () => {
-  let service: DefaultCompileService;
+  let service = new DefaultCompileService();
   let mockSpawn: jest.Mock;
   let mockChildProcess: Partial<ChildProcess> & EventEmitter;
   const mockConsole = jest.spyOn(console, "error").mockImplementation(() => {});
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new DefaultCompileService();
     mockSpawn = spawn as jest.Mock;
     mockChildProcess = new EventEmitter() as Partial<ChildProcess> & EventEmitter;
     mockSpawn.mockReturnValue(mockChildProcess);

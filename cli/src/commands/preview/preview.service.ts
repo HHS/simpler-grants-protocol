@@ -1,4 +1,4 @@
-import { PreviewService } from "./interfaces";
+import { PreviewService } from "../../services/interfaces";
 import express, { Express } from "express";
 import swaggerUi from "swagger-ui-express";
 import { readFile } from "fs/promises";

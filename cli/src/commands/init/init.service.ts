@@ -1,11 +1,11 @@
-import { InitService, InitOptions } from "./interfaces";
 import { spawn } from "child_process";
-import { tspBinPath } from "../utils/typespec";
+import { tspBinPath } from "../../utils/typespec";
+import { InitCommandOptions } from "../../types/command-args";
 
 const cgTemplate =
   "https://raw.githubusercontent.com/HHS/simpler-grants-protocol/refs/heads/main/templates/template.json";
 
-export class DefaultInitService implements InitService {
+export class DefaultInitService {
   private templates: string[] = [];
 
   async listTemplates(): Promise<string[]> {
@@ -48,7 +48,7 @@ export class DefaultInitService implements InitService {
    * @returns Promise that resolves when initialization completes successfully
    * @throws Error if the initialization process fails or exits with non-zero code
    */
-  async init(options: InitOptions): Promise<void> {
+  async init(options: InitCommandOptions): Promise<void> {
     return new Promise((resolve, reject) => {
       // Build the argument list for the tsp init command
       const args = [tspBinPath, "init", cgTemplate];

@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { Command } from "commander";
-import { initCommand } from "../../commands/init";
-import { previewCommand } from "../../commands/preview";
+import { initCommand } from "../../commands/init/init";
+import { previewCommand } from "../../commands/preview/preview";
 import { checkCommand } from "../../commands/check/check";
 
 // Mock console.error and process.exit

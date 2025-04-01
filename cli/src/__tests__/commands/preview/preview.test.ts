@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, beforeEach, jest } from "@jest/globals";
 import { Command } from "commander";
-import { previewCommand } from "../../commands/preview";
+import { previewCommand } from "../../../commands/preview/preview";
 
 // Create mock function outside
 const mockPreviewSpec = jest.fn();
 
 // Mock the service with consistent implementation
-jest.mock("../../services/preview.service", () => ({
+jest.mock("../../../commands/preview/preview.service", () => ({
   DefaultPreviewService: jest.fn(() => ({
     previewSpec: mockPreviewSpec,
   })),

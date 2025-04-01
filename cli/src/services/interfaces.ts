@@ -64,18 +64,6 @@ export interface CodeGenerationService {
   generateClient(specPath: string, options: GenerateOptions): Promise<void>;
 }
 
-/**
- * Service for compiling TypeSpec files to OpenAPI specifications.
- */
-export interface CompileService {
-  /**
-   * Compile a TypeSpec file to OpenAPI.
-   * @param typespecPath - Path to the TypeSpec file to compile
-   * @throws {Error} If compilation fails
-   */
-  compile(typespecPath: string): Promise<void>;
-}
-
 // Option Types
 
 /**
