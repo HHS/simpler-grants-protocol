@@ -1,7 +1,7 @@
 import { OpenAPIV3 } from "openapi-types";
-import { ComplianceError } from "./types";
-import { checkSchemaCompatibility } from "./check-schema-compatibility";
-import { deepFlattenAllOf } from "./flatten-schemas";
+import { ComplianceError } from "../../../services/validation/types";
+import { checkSchemaCompatibility } from "../../../services/validation/check-schema-compatibility";
+import { deepFlattenAllOf } from "../../../services/validation/flatten-schemas";
 
 // ############################################################
 // Top-level checks

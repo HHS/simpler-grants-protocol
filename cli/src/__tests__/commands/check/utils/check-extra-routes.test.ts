@@ -1,4 +1,4 @@
-import { checkExtraRoutes } from "../../../services/validation/check-extra-routes";
+import { checkExtraRoutes } from "../../../../commands/check/utils/check-extra-routes";
 import { OpenAPIV3 } from "openapi-types";
 
 describe("checkExtraRoutes", () => {

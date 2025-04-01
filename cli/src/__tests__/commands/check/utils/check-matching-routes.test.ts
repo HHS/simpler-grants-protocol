@@ -1,4 +1,4 @@
-import { checkMatchingRoutes } from "../../../services/validation/check-matching-routes";
+import { checkMatchingRoutes } from "../../../../commands/check/utils/check-matching-routes";
 import { OpenAPIV3 } from "openapi-types";
 
 describe("checkMatchingRoutes", () => {

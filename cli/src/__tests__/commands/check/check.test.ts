@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterAll, jest } from "@jest/globals";
 import { Command } from "commander";
-import { checkCommand } from "../../commands/check/check";
+import { checkCommand } from "../../../commands/check/check";
 
 // Create mock functions outside
 const mockCheckApi = jest.fn();
 const mockCheckSpec = jest.fn();
 
 // Mock the service with consistent implementation
-jest.mock("../../commands/check/check-service.ts", () => ({
+jest.mock("../../../commands/check/check-service.ts", () => ({
   DefaultCheckService: jest.fn(() => ({
     checkApi: mockCheckApi,
     checkSpec: mockCheckSpec,

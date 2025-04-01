@@ -1,7 +1,7 @@
 import SwaggerParser from "@apidevtools/swagger-parser";
-import { checkExtraRoutes } from "../../services/validation/check-extra-routes";
-import { checkMatchingRoutes } from "../../services/validation/check-matching-routes";
-import { checkMissingRequiredRoutes } from "../../services/validation/check-missing-routes";
+import { checkExtraRoutes } from "./utils/check-extra-routes";
+import { checkMatchingRoutes } from "./utils/check-matching-routes";
+import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
 import { ComplianceError, Document } from "../../services/validation/types";
 import { compileTypeSpec } from "../../utils/typespec";
 import { SpecValidationOptions, ValidationOptions } from "./types";

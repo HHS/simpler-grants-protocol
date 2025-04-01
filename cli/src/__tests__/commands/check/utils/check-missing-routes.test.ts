@@ -1,4 +1,4 @@
-import { checkMissingRequiredRoutes } from "../../../services/validation/check-missing-routes";
+import { checkMissingRequiredRoutes } from "../../../../commands/check/utils/check-missing-routes";
 import { OpenAPIV3 } from "openapi-types";
 
 describe("checkMissingRequiredRoutes", () => {
