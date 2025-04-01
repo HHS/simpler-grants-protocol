@@ -1,4 +1,4 @@
-import { deepFlattenAllOf } from "../../../services/validation/flatten-schemas";
+import { deepFlattenAllOf } from "../../../../commands/check/utils/flatten-schemas";
 import { OpenAPIV3 } from "openapi-types";
 
 describe("Schema Flattening", () => {

@@ -1,4 +1,4 @@
-import { ComplianceError } from "../../../services/validation/types";
+import { ComplianceError } from "./types";
 import { OpenAPIV3 } from "openapi-types";
 
 /**

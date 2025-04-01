@@ -1,5 +1,5 @@
 import { OpenAPIV3 } from "openapi-types";
-import { ComplianceError } from "../../../services/validation/types";
+import { ComplianceError } from "./types";
 
 /**
  * Check for routes that have a "required" tag in the base spec

@@ -1,4 +1,4 @@
-import { checkSchemaCompatibility } from "../../../services/validation/check-schema-compatibility";
+import { checkSchemaCompatibility } from "../../../../commands/check/utils/check-schema-compatibility";
 import { OpenAPIV3 } from "openapi-types";
 
 describe("Schema Compatibility Checks", () => {

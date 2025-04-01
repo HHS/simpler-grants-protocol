@@ -2,7 +2,7 @@ import SwaggerParser from "@apidevtools/swagger-parser";
 import { checkExtraRoutes } from "./utils/check-extra-routes";
 import { checkMatchingRoutes } from "./utils/check-matching-routes";
 import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
-import { ComplianceError, Document } from "../../services/validation/types";
+import { ComplianceError, Document } from "./utils/types";
 import { compileTypeSpec } from "../../utils/typespec";
 import { CheckApiCommandOptions, CheckSpecCommandOptions } from "./check-args";
 
