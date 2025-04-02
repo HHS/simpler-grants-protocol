@@ -1,11 +1,10 @@
 import { Command } from "commander";
-import { InitService } from "../../services/interfaces";
 import { DefaultInitService } from "./init-service";
-import { InitCommandSchema } from "../../types/command-args";
+import { InitCommandSchema } from "./init-args";
 import { handleCommandError } from "../../utils/error";
 
 export function initCommand(program: Command) {
-  const initService: InitService = new DefaultInitService();
+  const initService: DefaultInitService = new DefaultInitService();
 
   program
     .command("init")
@@ -17,7 +16,7 @@ export function initCommand(program: Command) {
         if (options.list) {
           const templates = await initService.listTemplates();
           console.log("Available templates:");
-          templates.forEach(template => console.log(`- ${template}`));
+          templates.forEach((template: string) => console.log(`- ${template}`));
           return;
         }
 

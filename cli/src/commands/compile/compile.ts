@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { DefaultCompileService } from "./compile-service";
-import { CompileArgsSchema } from "../../types/command-args";
+import { CompileArgsSchema } from "./compile-args";
 
 export function compileCommand(program: Command) {
   const compileService = new DefaultCompileService();

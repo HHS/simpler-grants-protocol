@@ -6,7 +6,7 @@ import { previewCommand } from "../../../commands/preview/preview";
 const mockPreviewSpec = jest.fn();
 
 // Mock the service with consistent implementation
-jest.mock("../../../commands/preview/preview.service", () => ({
+jest.mock("../../../commands/preview/preview-service", () => ({
   DefaultPreviewService: jest.fn(() => ({
     previewSpec: mockPreviewSpec,
   })),

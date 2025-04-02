@@ -1,10 +1,9 @@
-import { PreviewService } from "../../services/interfaces";
 import express, { Express } from "express";
 import swaggerUi from "swagger-ui-express";
 import { readFile } from "fs/promises";
 import yaml from "js-yaml";
 
-export class DefaultPreviewService implements PreviewService {
+export class DefaultPreviewService {
   async createPreviewApp(specPath: string): Promise<Express> {
     const app: Express = express();
     const openapiSpec = await this.getOpenApiSpec(specPath);

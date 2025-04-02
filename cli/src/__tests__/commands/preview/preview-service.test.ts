@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect } from "@jest/globals";
-import { DefaultPreviewService } from "../../../commands/preview/preview.service";
+import { DefaultPreviewService } from "../../../commands/preview/preview-service";
 import { join } from "path";
 import request from "supertest";
 import express from "express";

@@ -1,6 +1,6 @@
 import { Command } from "commander";
-import { DefaultPreviewService } from "./preview.service";
-import { PreviewArgsSchema } from "../../types/command-args";
+import { DefaultPreviewService } from "./preview-service";
+import { PreviewArgsSchema } from "./preview-args";
 
 export function previewCommand(program: Command) {
   const previewService = new DefaultPreviewService();

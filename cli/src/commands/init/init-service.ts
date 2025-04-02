@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import { tspBinPath } from "../../utils/typespec";
-import { InitCommandOptions } from "../../types/command-args";
+import { InitCommandOptions } from "./init-args";
 
 const cgTemplate =
   "https://raw.githubusercontent.com/HHS/simpler-grants-protocol/refs/heads/main/templates/template.json";
