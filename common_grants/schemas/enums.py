@@ -22,13 +22,4 @@ class AwardStatus(str, Enum):
     ACTIVE = "active"
     COMPLETED = "completed"
     TERMINATED = "terminated"
-    SUSPENDED = "suspended"
-
-class Currency(str, Enum):
-    """Supported currencies for grant amounts."""
-    USD = "USD"
-    EUR = "EUR"
-    GBP = "GBP"
-    CAD = "CAD"
-    AUD = "AUD"
-    JPY = "JPY" 
+    SUSPENDED = "suspended" 
