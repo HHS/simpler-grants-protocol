@@ -20,9 +20,13 @@ export default defineConfig({
         }),
       ],
       title: "CommonGrants",
-      social: {
-        github: "https://github.com/HHS/simpler-grants-protocol",
-      },
+      social: [
+        {
+          icon: "github",
+          label: "GitHub",
+          href: "https://github.com/HHS/simpler-grants-protocol",
+        },
+      ],
       editLink: {
         baseUrl:
           "https://github.com/HHS/simpler-grants-protocol/edit/main/website/",

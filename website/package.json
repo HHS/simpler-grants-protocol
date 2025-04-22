@@ -23,7 +23,7 @@
   "dependencies": {
     "@astrojs/check": "^0.9.4",
     "@astrojs/react": "^4.2.1",
-    "@astrojs/starlight": "^0.32.0",
+    "@astrojs/starlight": "^0.34.0",
     "@common-grants/core": "^0.1.0-alpha.13",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
