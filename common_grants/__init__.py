@@ -4,7 +4,7 @@ CommonGrants Python SDK
 A Python implementation of the CommonGrants protocol for grant data exchange.
 """
 
-from common_grants.schemas import (
+from .schemas.fields import (
     # Field types
     CustomField,
     CustomFieldType,
@@ -16,7 +16,8 @@ from common_grants.schemas import (
     SystemMetadata,
     UTCDateTime,
     Url,
-    
+)
+from .schemas.models import (
     # Models
     ApplicationBase,
     ApplicationStatus,

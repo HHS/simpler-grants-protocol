@@ -1,6 +1,6 @@
 """CommonGrants schemas package."""
 
-from common_grants.schemas.fields import (
+from .fields import (
     CustomField,
     CustomFieldType,
     DecimalString,
@@ -12,7 +12,7 @@ from common_grants.schemas.fields import (
     UTCDateTime,
     Url,
 )
-from common_grants.schemas.models import (
+from .models import (
     ApplicationBase,
     ApplicationStatus,
     ApplicationStatusOptions,
