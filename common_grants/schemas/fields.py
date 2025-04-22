@@ -59,17 +59,6 @@ class CustomFieldType(StrEnum):
     ARRAY = "array"
 
 
-class Currency(StrEnum):
-    """ISO 4217 currency codes."""
-
-    USD = "USD"  # United States Dollar
-    EUR = "EUR"  # Euro
-    GBP = "GBP"  # British Pound Sterling
-    CAD = "CAD"  # Canadian Dollar
-    AUD = "AUD"  # Australian Dollar
-    JPY = "JPY"  # Japanese Yen
-
-
 # Base Models
 class SystemMetadata(CommonGrantsBaseModel):
     """System-managed metadata fields for tracking record creation and modification."""
