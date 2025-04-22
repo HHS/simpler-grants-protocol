@@ -92,9 +92,13 @@ class Money(CommonGrantsBaseModel):
         description="The amount of money",
         examples=["1000000", "500.00", "-100.50"],
     )
-    currency: Currency = Field(
+    currency: str = Field(
         ...,
-        description="The ISO 4217 currency code in which the amount is denominated",
+        description="The ISO 4217 currency code (e.g., 'USD', 'EUR')",
+        pattern=r"^[A-Z]{3}$",
+        min_length=3,
+        max_length=3,
+        examples=["USD", "EUR", "GBP", "JPY"]
     )
 
 

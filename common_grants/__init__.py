@@ -8,7 +8,6 @@ from common_grants.schemas import (
     # Field types
     CustomField,
     CustomFieldType,
-    Currency,
     DecimalString,
     Event,
     ISODate,
@@ -39,7 +38,6 @@ __all__ = [
     # Field types
     "CustomField",
     "CustomFieldType",
-    "Currency",
     "DecimalString",
     "Event",
     "ISODate",
