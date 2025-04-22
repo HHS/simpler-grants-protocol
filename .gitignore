@@ -10,18 +10,3 @@ __pycache__/
 *$py.class
 .pytest_cache/
 
-# Virtual environments
-venv/
-env/
-.env/
-.venv/
-
-# IDE specific files
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS specific files
-.DS_Store
-Thumbs.db 
