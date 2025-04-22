@@ -4,7 +4,7 @@ from enum import StrEnum
 
 from pydantic import Field
 
-from common_grants.schemas.base import CommonGrantsBaseModel
+from ..base import CommonGrantsBaseModel
 
 
 class ApplicationStatusOptions(StrEnum):
