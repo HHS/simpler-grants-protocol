@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict, model_serializer
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Any
 from datetime import datetime
 from uuid import UUID
@@ -10,20 +10,9 @@ class CommonGrantsBaseModel(BaseModel):
         from_attributes=True
     )
     
-    @model_serializer
-    def serialize_model(self) -> dict:
-        """Custom serializer for the model."""
-        data = self.model_dump()
-        for key, value in data.items():
-            if isinstance(value, UUID):
-                data[key] = str(value)
-            elif isinstance(value, datetime):
-                data[key] = value.isoformat()
-        return data
-    
     def dump(self) -> dict:
         """Convert model to dictionary (alias for model_dump for backward compatibility)."""
-        return self.model_dump()
+        return self.model_dump(mode='json')
     
     def dump_json(self) -> str:
         """Convert model to JSON string (alias for model_dump_json for backward compatibility)."""
