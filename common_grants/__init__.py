@@ -5,39 +5,61 @@ A Python implementation of the CommonGrants protocol for grant data exchange.
 """
 
 from common_grants.schemas import (
+    # Field types
     CustomField,
     CustomFieldType,
+    Currency,
     DecimalString,
     Event,
     ISODate,
     ISOTime,
     Money,
+    SystemMetadata,
+    UTCDateTime,
+    Url,
+    
+    # Models
+    ApplicationBase,
+    ApplicationStatus,
+    ApplicationStatusOptions,
+    AwardBase,
+    AwardStatus,
+    AwardStatusOptions,
+    Contact,
     OppFunding,
     OppStatus,
     OppStatusOptions,
     OppTimeline,
     OpportunityBase,
-    SystemMetadata,
-    UTCDateTime,
-    Url,
 )
 
 __version__ = "0.1.0"
 
 __all__ = [
+    # Field types
     "CustomField",
     "CustomFieldType",
+    "Currency",
     "DecimalString",
     "Event",
     "ISODate",
     "ISOTime",
     "Money",
+    "SystemMetadata",
+    "UTCDateTime",
+    "Url",
+    
+    # Models
+    "ApplicationBase",
+    "ApplicationStatus",
+    "ApplicationStatusOptions",
+    "AwardBase",
+    "AwardStatus",
+    "AwardStatusOptions",
+    "Contact",
     "OppFunding",
     "OppStatus",
     "OppStatusOptions",
     "OppTimeline",
     "OpportunityBase",
-    "SystemMetadata",
-    "UTCDateTime",
-    "Url",
 ] 
