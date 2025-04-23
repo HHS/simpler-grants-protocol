@@ -70,7 +70,7 @@ def main():
         status=ApplicationStatus(
             value=ApplicationStatusOptions.SUBMITTED,
             description="Application has been submitted and is under review"
-        ).value,
+        ),
         submitted_at=datetime.now(UTC),
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
@@ -88,7 +88,7 @@ def main():
         status=AwardStatus(
             value=AwardStatusOptions.ACTIVE,
             description="Award is active and funding has been disbursed"
-        ).value,
+        ),
         amount=Money(amount="20000.00", currency="USD"),
         start_date=datetime.now(UTC),
         end_date=datetime(2025, 12, 31, tzinfo=UTC),
