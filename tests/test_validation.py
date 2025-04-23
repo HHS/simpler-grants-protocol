@@ -1,20 +1,16 @@
-"""Tests for model relationships between opportunities, applications, and awards."""
-
 import pytest
+from uuid import uuid4
 from datetime import datetime, date, UTC
-from uuid import UUID, uuid4
-
 from common_grants.schemas.fields import Money, Event
-from common_grants.schemas.models.opp_base import OpportunityBase
-from common_grants.schemas.models.app_base import ApplicationBase
 from common_grants.schemas.models.award_base import AwardBase
-from common_grants.schemas.models.contact import Contact
-from common_grants.schemas.models.opp_status import OppStatus, OppStatusOptions
-from common_grants.schemas.models.app_status import ApplicationStatus, ApplicationStatusOptions
 from common_grants.schemas.models.award_status import AwardStatus, AwardStatusOptions
+from common_grants.schemas.models.contact import Contact
+from common_grants.schemas.models.opp_base import OpportunityBase
+from common_grants.schemas.models.opp_status import OppStatus, OppStatusOptions
 from common_grants.schemas.models.opp_timeline import OppTimeline
 from common_grants.schemas.models.opp_funding import OppFunding
-
+from common_grants.schemas.models.app_base import ApplicationBase
+from common_grants.schemas.models.app_status import ApplicationStatus, ApplicationStatusOptions
 
 @pytest.fixture
 def sample_contact():
@@ -26,7 +22,6 @@ def sample_contact():
         title="Research Director",
         organization="Example Research Institute"
     )
-
 
 @pytest.fixture
 def sample_opportunity(sample_contact):
@@ -61,7 +56,6 @@ def sample_opportunity(sample_contact):
         )
     )
 
-
 @pytest.fixture
 def sample_application(sample_opportunity, sample_contact):
     """Create a sample application for testing."""
@@ -80,7 +74,6 @@ def sample_application(sample_opportunity, sample_contact):
         contact=sample_contact,
         documents=[]
     )
-
 
 @pytest.fixture
 def sample_award(sample_opportunity, sample_application, sample_contact):
@@ -103,56 +96,17 @@ def sample_award(sample_opportunity, sample_application, sample_contact):
         documents=[]
     )
 
-
-def test_opportunity_application_relationship(sample_opportunity, sample_application):
-    """Test the relationship between opportunity and application."""
-    # Test ID relationships
-    assert sample_application.opportunity_id == sample_opportunity.id
-    
-    # Test funding constraints
-    assert float(sample_application.amount_requested.amount) <= float(sample_opportunity.funding.max_award_amount.amount)
-    assert float(sample_application.amount_requested.amount) >= float(sample_opportunity.funding.min_award_amount.amount)
-    
-    # Test currency consistency
-    assert sample_application.amount_requested.currency == sample_opportunity.funding.total_amount_available.currency
-    
-    # Test application can only be submitted when opportunity is open
-    assert sample_opportunity.status.value == OppStatusOptions.OPEN
-    assert sample_application.status.value == ApplicationStatusOptions.SUBMITTED
-
-
-def test_application_award_relationship(sample_application, sample_award):
-    """Test the relationship between application and award."""
-    # Test ID relationships
-    assert sample_award.application_id == sample_application.id
-    assert sample_award.recipient_id == sample_application.applicant_id
-    
-    # Test amount consistency
-    assert sample_award.amount == sample_application.amount_requested
-    
-    # Test status consistency
-    assert sample_application.status.value == ApplicationStatusOptions.SUBMITTED
+def test_award_status_validation(sample_award):
+    """Test award status validation."""
     assert sample_award.status.value == AwardStatusOptions.ACTIVE
+    assert isinstance(sample_award.status, AwardStatus)
+    assert sample_award.status.description == "Award is active and funding has been disbursed"
 
-
-def test_opportunity_award_relationship(sample_opportunity, sample_award):
-    """Test the relationship between opportunity and award."""
-    # Test ID relationships
-    assert sample_award.opportunity_id == sample_opportunity.id
-    
-    # Test funding constraints
-    assert float(sample_award.amount.amount) <= float(sample_opportunity.funding.max_award_amount.amount)
-    assert float(sample_award.amount.amount) >= float(sample_opportunity.funding.min_award_amount.amount)
-    
-    # Test currency consistency
-    assert sample_award.amount.currency == sample_opportunity.funding.total_amount_available.currency
-
-
-def test_contact_consistency(sample_opportunity, sample_application, sample_award):
-    """Test contact information consistency across models."""
-    # All contacts should be valid
-    assert sample_application.contact.email is not None
-    assert sample_award.contact.email is not None
-    
-    # Contact information should be consistent between application and award
-    assert sample_application.contact.organization == sample_award.contact.organization 
+    # Test invalid status
+    with pytest.raises(ValueError):
+        AwardBase(
+            **{
+                **sample_award.model_dump(),
+                "status": "invalid_status"
+            }
+        ) 

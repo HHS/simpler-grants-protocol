@@ -100,8 +100,8 @@ def sample_award(sample_opportunity, sample_application, sample_contact):
         status=AwardStatus(
             value=AwardStatusOptions.ACTIVE,
             description="Award is active and funding has been disbursed"
-        ).value,
-        amount=Money(amount="20000.00", currency="USD"),
+        ),
+        amount=Money(amount="25000.00", currency="USD"),
         start_date=datetime.now(UTC),
         end_date=datetime(2025, 12, 31, tzinfo=UTC),
         created_at=datetime.now(UTC),
@@ -159,18 +159,19 @@ def test_award_serialization(sample_award):
     # Test dictionary serialization
     award_dict = sample_award.dump()
     assert isinstance(award_dict, dict)
-    assert award_dict["status"] == "active"
-    assert award_dict["amount"]["amount"] == "20000.00"
+    assert award_dict["status"]["value"] == "active"
+    assert award_dict["status"]["description"] == "Award is active and funding has been disbursed"
+    assert award_dict["amount"]["amount"] == "25000.00"
     
     # Test JSON serialization
     award_json = sample_award.dump_json()
     assert isinstance(award_json, str)
     award_data = json.loads(award_json)
-    assert award_data["status"] == "active"
+    assert award_data["status"]["value"] == "active"
     
     # Test deserialization
     loaded_award = AwardBase.from_dict(award_dict)
-    assert loaded_award.status == sample_award.status
+    assert loaded_award.status.value == sample_award.status.value
     assert loaded_award.amount.amount == sample_award.amount.amount
 
 
@@ -238,4 +239,11 @@ def test_money_validation():
     with pytest.raises(ValueError):
         Money(amount="invalid", currency="USD")
     with pytest.raises(ValueError):
-        Money(amount="100.00", currency="INVALID") 
+        Money(amount="100.00", currency="INVALID")
+
+
+def test_award_status_compatibility(sample_award):
+    """Test award status compatibility."""
+    assert sample_award.status.value == AwardStatusOptions.ACTIVE
+    assert isinstance(sample_award.status, AwardStatus)
+    assert sample_award.status.description == "Award is active and funding has been disbursed" 

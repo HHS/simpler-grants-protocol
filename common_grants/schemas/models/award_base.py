@@ -9,6 +9,7 @@ from pydantic import Field, HttpUrl, model_validator
 from common_grants.schemas.base import CommonGrantsBaseModel
 from common_grants.schemas.fields import Money
 from common_grants.schemas.models.contact import Contact
+from common_grants.schemas.models.award_status import AwardStatus, AwardStatusOptions
 
 
 class AwardBase(CommonGrantsBaseModel):
@@ -18,7 +19,13 @@ class AwardBase(CommonGrantsBaseModel):
     application_id: UUID = Field(..., description="ID of the associated application")
     opportunity_id: UUID = Field(..., description="ID of the associated opportunity")
     recipient_id: UUID = Field(..., description="ID of the award recipient")
-    status: str = Field(..., description="Status of the award")
+    status: AwardStatus = Field(
+        default=AwardStatus(
+            value=AwardStatusOptions.PENDING,
+            description="Award is pending activation"
+        ),
+        description="Status of the award",
+    )
     amount: Money = Field(..., description="Amount of funding awarded")
     start_date: datetime = Field(..., description="Start date of the award period")
     end_date: Optional[datetime] = Field(

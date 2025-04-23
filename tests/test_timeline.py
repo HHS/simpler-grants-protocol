@@ -94,7 +94,10 @@ def sample_award(sample_opportunity, sample_application, sample_contact):
         application_id=sample_application.id,
         opportunity_id=sample_opportunity.id,
         recipient_id=sample_application.applicant_id,
-        status=AwardStatusOptions.ACTIVE,
+        status=AwardStatus(
+            value=AwardStatusOptions.ACTIVE,
+            description="Award is active and funding has been disbursed"
+        ),
         amount=Money(amount="25000.00", currency="USD"),
         start_date=datetime.now(UTC),
         end_date=datetime(2025, 12, 31, tzinfo=UTC),
