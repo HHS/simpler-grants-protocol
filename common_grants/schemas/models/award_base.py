@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import Field, HttpUrl
+from pydantic import Field, HttpUrl, model_validator
 
 from common_grants.schemas.base import CommonGrantsBaseModel
 from common_grants.schemas.fields import Money
@@ -37,4 +37,11 @@ class AwardBase(CommonGrantsBaseModel):
     documents: List[HttpUrl] = Field(
         default_factory=list,
         description="List of URLs to documents related to the award"
-    ) 
+    )
+
+    @model_validator(mode='after')
+    def validate_award_period(self) -> 'AwardBase':
+        """Validate that the award end date is after the start date."""
+        if self.start_date >= self.end_date:
+            raise ValueError("Award end date must be after the start date")
+        return self 

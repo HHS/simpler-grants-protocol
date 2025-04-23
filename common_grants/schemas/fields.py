@@ -94,7 +94,11 @@ class Money(CommonGrantsBaseModel):
 class Event(CommonGrantsBaseModel):
     """Represents a scheduled event with an optional time and description."""
 
-    name: str = Field(..., description="Human-readable name of the event")
+    name: str = Field(
+        ...,
+        description="Human-readable name of the event",
+        min_length=1,
+    )
     date: ISODate = Field(
         ...,
         description="Date of the event in ISO 8601 format: YYYY-MM-DD",
@@ -112,10 +116,13 @@ class Event(CommonGrantsBaseModel):
 class CustomField(CommonGrantsBaseModel):
     """Represents a custom field with type information and validation schema."""
 
-    name: str = Field(..., description="Name of the custom field")
-    field_type: CustomFieldType = Field(
+    name: str = Field(
         ...,
-        alias="type",
+        description="Name of the custom field",
+        min_length=1,
+    )
+    type: CustomFieldType = Field(
+        ...,
         description="The JSON schema type to use when de-serializing the `value` field",
     )
     schema_url: Optional[Url] = Field(

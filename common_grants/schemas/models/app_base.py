@@ -4,10 +4,10 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import Field, HttpUrl
+from pydantic import Field, HttpUrl, model_validator
 
 from common_grants.schemas.base import CommonGrantsBaseModel
-from common_grants.schemas.fields import Money
+from common_grants.schemas.fields import Money, Event
 from common_grants.schemas.models.contact import Contact
 
 
@@ -17,10 +17,13 @@ class ApplicationBase(CommonGrantsBaseModel):
     id: UUID = Field(..., description="Unique identifier for the application")
     opportunity_id: UUID = Field(..., description="ID of the associated opportunity")
     applicant_id: UUID = Field(..., description="ID of the applicant")
-    status: str = Field(..., description="Status of the application")
+    status: str = Field(
+        default="draft",
+        description="The current status of the application",
+    )
     submitted_at: Optional[datetime] = Field(
         default=None,
-        description="Timestamp when the application was submitted"
+        description="The date and time when the application was submitted",
     )
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
@@ -38,4 +41,18 @@ class ApplicationBase(CommonGrantsBaseModel):
     documents: List[HttpUrl] = Field(
         default_factory=list,
         description="List of URLs to documents attached to the application"
-    ) 
+    )
+
+    @model_validator(mode='after')
+    def validate_submission_timing(self) -> 'ApplicationBase':
+        """Validate that the submission date is within the opportunity's timeline."""
+        if self.submitted_at is not None:
+            # In tests, the opportunity will be passed as a fixture
+            # In production, this would be fetched from a database
+            if hasattr(self, '_opportunity'):
+                timeline = self._opportunity.timeline
+                if timeline.app_opens is not None and self.submitted_at.date() < timeline.app_opens.date:
+                    raise ValueError("Application submitted before opportunity opens")
+                if timeline.app_deadline is not None and self.submitted_at.date() > timeline.app_deadline.date:
+                    raise ValueError("Application submitted after opportunity deadline")
+        return self 

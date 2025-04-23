@@ -28,7 +28,8 @@ class OppStatus(CommonGrantsBaseModel):
         default=None,
         description="A custom status value",
     )
-    description: Optional[str] = Field(
-        default=None,
+    description: str = Field(
+        ...,
         description="A human-readable description of the status",
+        min_length=1,
     ) 
