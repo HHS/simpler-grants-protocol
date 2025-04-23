@@ -9,8 +9,8 @@ from pydantic import BaseModel
 from common_grants.schemas.base import CommonGrantsBaseModel
 
 
-class TestModel(CommonGrantsBaseModel):
-    """Test model for base model testing."""
+class SampleModel(CommonGrantsBaseModel):
+    """Sample model for base model testing."""
     field1: str
     field2: int
     field3: datetime
@@ -19,7 +19,7 @@ class TestModel(CommonGrantsBaseModel):
 def test_common_grants_base_model_serialization():
     """Test base model serialization methods."""
     now = datetime.now(UTC)
-    model = TestModel(
+    model = SampleModel(
         field1="test",
         field2=123,
         field3=now
@@ -41,7 +41,7 @@ def test_common_grants_base_model_serialization():
     assert datetime.fromisoformat(data["field3"].replace("Z", "+00:00")) == now
     
     # Test from_json()
-    loaded = TestModel.from_json(json_str)
+    loaded = SampleModel.from_json(json_str)
     assert loaded.field1 == "test"
     assert loaded.field2 == 123
     assert loaded.field3 == now
@@ -49,7 +49,7 @@ def test_common_grants_base_model_serialization():
     # Test from_dict()
     # Convert datetime string to datetime object before validation
     data["field3"] = datetime.fromisoformat(data["field3"].replace("Z", "+00:00"))
-    loaded = TestModel.from_dict(data)
+    loaded = SampleModel.from_dict(data)
     assert loaded.field1 == "test"
     assert loaded.field2 == 123
     assert loaded.field3 == now
@@ -65,7 +65,7 @@ def test_model_config():
     
     # Test from_attributes config
     attr_instance = AttrClass()
-    model = TestModel.model_validate(attr_instance)
+    model = SampleModel.model_validate(attr_instance)
     assert model.field1 == "test"
     assert model.field2 == 123
     assert isinstance(model.field3, datetime)
@@ -74,7 +74,7 @@ def test_model_config():
 def test_model_validation():
     """Test model validation."""
     # Valid case
-    model = TestModel(
+    model = SampleModel(
         field1="test",
         field2=123,
         field3=datetime.now(UTC)
@@ -84,21 +84,21 @@ def test_model_validation():
     
     # Invalid cases
     with pytest.raises(ValueError):
-        TestModel(
+        SampleModel(
             field1=123,  # Wrong type
             field2=123,
             field3=datetime.now(UTC)
         )
     
     with pytest.raises(ValueError):
-        TestModel(
+        SampleModel(
             field1="test",
             field2="123",  # Wrong type
             field3=datetime.now(UTC)
         )
     
     with pytest.raises(ValueError):
-        TestModel(
+        SampleModel(
             field1="test",
             field2=123,
             field3="2024-01-01"  # Wrong type
