@@ -9,6 +9,7 @@ from pydantic import Field, HttpUrl, model_validator
 from common_grants.schemas.base import CommonGrantsBaseModel
 from common_grants.schemas.fields import Money, Event
 from common_grants.schemas.models.contact import Contact
+from common_grants.schemas.models.app_status import ApplicationStatus, ApplicationStatusOptions
 
 
 class ApplicationBase(CommonGrantsBaseModel):
@@ -17,8 +18,11 @@ class ApplicationBase(CommonGrantsBaseModel):
     id: UUID = Field(..., description="Unique identifier for the application")
     opportunity_id: UUID = Field(..., description="ID of the associated opportunity")
     applicant_id: UUID = Field(..., description="ID of the applicant")
-    status: str = Field(
-        default="draft",
+    status: ApplicationStatus = Field(
+        default=ApplicationStatus(
+            value=ApplicationStatusOptions.DRAFT,
+            description="Application is in draft state"
+        ),
         description="The current status of the application",
     )
     submitted_at: Optional[datetime] = Field(

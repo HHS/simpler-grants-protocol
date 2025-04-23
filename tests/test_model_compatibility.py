@@ -79,7 +79,7 @@ def sample_application(sample_opportunity, sample_contact):
         status=ApplicationStatus(
             value=ApplicationStatusOptions.SUBMITTED,
             description="Application has been submitted and is under review"
-        ).value,
+        ),
         submitted_at=datetime.now(UTC),
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
@@ -139,18 +139,18 @@ def test_application_serialization(sample_application):
     # Test dictionary serialization
     app_dict = sample_application.dump()
     assert isinstance(app_dict, dict)
-    assert app_dict["status"] == "submitted"
+    assert app_dict["status"]["value"] == "submitted"
     assert app_dict["amount_requested"]["amount"] == "25000.00"
     
     # Test JSON serialization
     app_json = sample_application.dump_json()
     assert isinstance(app_json, str)
     app_data = json.loads(app_json)
-    assert app_data["status"] == "submitted"
+    assert app_data["status"]["value"] == "submitted"
     
     # Test deserialization
     loaded_app = ApplicationBase.from_dict(app_dict)
-    assert loaded_app.status == sample_application.status
+    assert loaded_app.status.value == sample_application.status.value
     assert loaded_app.amount_requested.amount == sample_application.amount_requested.amount
 
 

@@ -69,7 +69,10 @@ def sample_application(sample_opportunity, sample_contact):
         id=uuid4(),
         opportunity_id=sample_opportunity.id,
         applicant_id=uuid4(),
-        status=ApplicationStatusOptions.SUBMITTED,
+        status=ApplicationStatus(
+            value=ApplicationStatusOptions.SUBMITTED,
+            description="Application has been submitted"
+        ),
         submitted_at=datetime.now(UTC),
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
@@ -112,7 +115,7 @@ def test_opportunity_application_relationship(sample_opportunity, sample_applica
     
     # Test application can only be submitted when opportunity is open
     assert sample_opportunity.status.value == OppStatusOptions.OPEN
-    assert sample_application.status == ApplicationStatusOptions.SUBMITTED
+    assert sample_application.status.value == ApplicationStatusOptions.SUBMITTED
 
 
 def test_application_award_relationship(sample_application, sample_award):
@@ -125,7 +128,7 @@ def test_application_award_relationship(sample_application, sample_award):
     assert sample_award.amount == sample_application.amount_requested
     
     # Test status consistency
-    assert sample_application.status == ApplicationStatusOptions.SUBMITTED
+    assert sample_application.status.value == ApplicationStatusOptions.SUBMITTED
     assert sample_award.status == AwardStatusOptions.ACTIVE
 
 

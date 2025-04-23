@@ -71,7 +71,10 @@ def sample_application(sample_opportunity, sample_contact):
         id=uuid4(),
         opportunity_id=sample_opportunity.id,
         applicant_id=uuid4(),
-        status=ApplicationStatusOptions.SUBMITTED,
+        status=ApplicationStatus(
+            value=ApplicationStatusOptions.SUBMITTED,
+            description="Application has been submitted"
+        ),
         submitted_at=submission_date,
         created_at=submission_date,
         updated_at=submission_date,
