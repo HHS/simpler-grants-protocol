@@ -14,28 +14,6 @@ from common_grants.schemas.fields import (
 )
 
 
-def test_decimal_string_validation():
-    """Test the DecimalString validation function."""
-    # Valid cases
-    assert validate_decimal_string("123.45") == "123.45"
-    assert validate_decimal_string("-123.45") == "-123.45"
-    assert validate_decimal_string("0") == "0"
-    assert validate_decimal_string(".5") == ".5"
-    assert validate_decimal_string("-0.5") == "-0.5"
-    assert validate_decimal_string("1000000.00") == "1000000.00"
-    
-    # Invalid cases
-    with pytest.raises(ValueError, match="Value must be a string"):
-        validate_decimal_string(123)
-    
-    with pytest.raises(ValueError, match="Value must be a valid decimal number"):
-        validate_decimal_string("abc")
-        validate_decimal_string("12.34.56")
-        validate_decimal_string("1,234.56")  # Commas not allowed
-        validate_decimal_string("12.34.56")
-        validate_decimal_string("12.34.56.78")
-
-
 def test_money_validation():
     """Test Money model validation."""
     # Valid cases
@@ -70,6 +48,28 @@ def test_money_validation():
     
     with pytest.raises(ValueError):
         Money(amount="12.34.56", currency="USD")
+
+
+def test_decimal_string_validation():
+    """Test the DecimalString validation function."""
+    # Valid cases
+    assert validate_decimal_string("123.45") == "123.45"
+    assert validate_decimal_string("-123.45") == "-123.45"
+    assert validate_decimal_string("0") == "0"
+    assert validate_decimal_string(".5") == ".5"
+    assert validate_decimal_string("-0.5") == "-0.5"
+    assert validate_decimal_string("1000000.00") == "1000000.00"
+    
+    # Invalid cases
+    with pytest.raises(ValueError, match="Value must be a string"):
+        validate_decimal_string(123)
+    
+    with pytest.raises(ValueError, match="Value must be a valid decimal number"):
+        validate_decimal_string("abc")
+        validate_decimal_string("12.34.56")
+        validate_decimal_string("1,234.56")  # Commas not allowed
+        validate_decimal_string("12.34.56")
+        validate_decimal_string("12.34.56.78")
 
 
 def test_event_validation():

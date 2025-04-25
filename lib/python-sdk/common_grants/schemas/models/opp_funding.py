@@ -1,4 +1,4 @@
-"""Models for funding details of opportunities."""
+"""Encapsulates details about the funding available for an opportunity."""
 
 from typing import Optional
 
@@ -35,3 +35,4 @@ class OppFunding(CommonGrantsBaseModel):
         default=None,
         description="Estimated number of awards that will be granted",
     ) 
+

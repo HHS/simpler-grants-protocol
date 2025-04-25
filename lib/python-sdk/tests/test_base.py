@@ -103,3 +103,4 @@ def test_model_validation():
             field2=123,
             field3="2024-01-01"  # Wrong type
         ) 
+

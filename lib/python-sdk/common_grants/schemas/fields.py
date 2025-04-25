@@ -1,78 +1,16 @@
 """Base field types and common models for the CommonGrants API."""
 
-# Standard library imports
 from datetime import date, datetime, time
 from enum import StrEnum
 import re
 from typing import Annotated, Any, Optional
 from uuid import UUID
 
-# Third-party imports
 from pydantic import Field, HttpUrl, BeforeValidator
 
-# Local imports
 from common_grants.schemas.base import CommonGrantsBaseModel
 
-# Date and Time Types
-def validate_decimal_string(v: str) -> str:
-    """Validate a string represents a valid decimal number.
-    
-    Args:
-        v: The string to validate
-        
-    Returns:
-        The validated string
-        
-    Raises:
-        ValueError: If the string is not a valid decimal number
-    """
-    if not isinstance(v, str):
-        raise ValueError("Value must be a string")
-    
-    if not re.match(r'^-?\d*\.?\d+$', v):
-        raise ValueError("Value must be a valid decimal number (e.g., '123.45', '-123.45', '123', '-123')")
-    
-    return v
-
-# Numeric Types
-DecimalString = Annotated[
-    str,
-    BeforeValidator(validate_decimal_string),
-]
-
-# Date and Time Types
-ISODate = date
-ISOTime = time
-UTCDateTime = datetime
-
-# URL Types
-Url = HttpUrl
-
-# Enums
-class CustomFieldType(StrEnum):
-    """The type of the custom field."""
-
-    STRING = "string"
-    NUMBER = "number"
-    BOOLEAN = "boolean"
-    OBJECT = "object"
-    ARRAY = "array"
-
-
-# Base Models
-class SystemMetadata(CommonGrantsBaseModel):
-    """System-managed metadata fields for tracking record creation and modification."""
-
-    created_at: UTCDateTime = Field(
-        ...,
-        description="The timestamp (in UTC) at which the record was created.",
-    )
-    last_modified_at: UTCDateTime = Field(
-        ...,
-        description="The timestamp (in UTC) at which the record was last modified.",
-    )
-
-
+# Money
 class Money(CommonGrantsBaseModel):
     """Represents a monetary amount in a specific currency."""
 
@@ -91,6 +29,7 @@ class Money(CommonGrantsBaseModel):
     )
 
 
+# Event
 class Event(CommonGrantsBaseModel):
     """Represents a scheduled event with an optional time and description."""
 
@@ -113,6 +52,7 @@ class Event(CommonGrantsBaseModel):
     )
 
 
+# CustomField
 class CustomField(CommonGrantsBaseModel):
     """Represents a custom field with type information and validation schema."""
 
@@ -125,7 +65,7 @@ class CustomField(CommonGrantsBaseModel):
         ...,
         description="The JSON schema type to use when de-serializing the `value` field",
     )
-    schema_url: Optional[Url] = Field(
+    schema_url: Optional[HttpUrl] = Field(
         None,
         alias="schema",
         description="Link to the full JSON schema for this custom field",
@@ -135,3 +75,61 @@ class CustomField(CommonGrantsBaseModel):
         None,
         description="Description of the custom field's purpose",
     ) 
+
+
+class CustomFieldType(StrEnum):
+    """The type of the custom field."""
+
+    STRING = "string"
+    NUMBER = "number"
+    BOOLEAN = "boolean"
+    OBJECT = "object"
+    ARRAY = "array"
+
+
+# SystemMetadata
+class SystemMetadata(CommonGrantsBaseModel):
+    """System-managed metadata fields for tracking record creation and modification."""
+
+    created_at: UTCDateTime = Field(
+        ...,
+        description="The timestamp (in UTC) at which the record was created.",
+    )
+    last_modified_at: UTCDateTime = Field(
+        ...,
+        description="The timestamp (in UTC) at which the record was last modified.",
+    )
+
+
+# DecimalString
+DecimalString = Annotated[
+    str,
+    BeforeValidator(validate_decimal_string),
+]
+
+def validate_decimal_string(v: str) -> str:
+    """Validate a string represents a valid decimal number.
+    
+    Args:
+        v: The string to validate
+        
+    Returns:
+        The validated string
+        
+    Raises:
+        ValueError: If the string is not a valid decimal number
+    """
+    if not isinstance(v, str):
+        raise ValueError("Value must be a string")
+    
+    if not re.match(r'^-?\d*\.?\d+$', v):
+        raise ValueError("Value must be a valid decimal number (e.g., '123.45', '-123.45', '123', '-123')")
+    
+    return v
+
+
+# Date and Time
+ISODate = date
+ISOTime = time
+UTCDateTime = datetime
+

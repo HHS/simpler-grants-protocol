@@ -1,4 +1,4 @@
-"""Models for opportunity timelines and events."""
+"""Encapsulates key dates in the opportunity timeline."""
 
 from typing import Optional
 from datetime import date

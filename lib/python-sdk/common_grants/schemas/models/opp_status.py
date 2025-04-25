@@ -1,4 +1,4 @@
-"""Models for opportunity statuses."""
+"""Encapsulates opportunity status."""
 
 from enum import StrEnum
 from typing import Optional
@@ -13,8 +13,18 @@ class OppStatusOptions(StrEnum):
 
     FORECASTED = "forecasted"
     OPEN = "open"
-    CLOSED = "closed"
     CUSTOM = "custom"
+    CLOSED = "closed"
+
+    def __lt__(self, other):
+        """Define the order of status transitions."""
+        order = {
+            self.FORECASTED: 0,
+            self.OPEN: 1,
+            self.CUSTOM: 2,
+            self.CLOSED: 3,
+        }
+        return order[self] < order[other]
 
 
 class OppStatus(CommonGrantsBaseModel):
@@ -33,3 +43,4 @@ class OppStatus(CommonGrantsBaseModel):
         description="A human-readable description of the status",
         min_length=1,
     ) 
+

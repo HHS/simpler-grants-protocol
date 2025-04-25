@@ -1,4 +1,4 @@
-"""Base models for funding opportunities."""
+"""Base model for funding opportunities."""
 
 from typing import Optional
 from uuid import UUID
@@ -35,3 +35,4 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
         default=None,
         description="Additional custom fields specific to this opportunity",
     ) 
+
