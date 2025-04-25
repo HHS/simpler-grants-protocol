@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "common-grants-python-sdk"
+version = "0.1.0"
+description = "Python SDK for the CommonGrants protocol"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
