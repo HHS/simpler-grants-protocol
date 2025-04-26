@@ -4,7 +4,6 @@ import json
 from datetime import datetime, UTC
 
 import pytest
-from pydantic import BaseModel
 
 from common_grants.schemas.base import CommonGrantsBaseModel
 

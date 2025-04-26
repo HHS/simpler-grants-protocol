@@ -2,11 +2,9 @@
 
 import pytest
 from datetime import date, time
-from pydantic import HttpUrl
 
 from common_grants.schemas.fields import (
     validate_decimal_string,
-    DecimalString,
     Money,
     Event,
     CustomField,

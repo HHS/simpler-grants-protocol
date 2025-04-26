@@ -1,7 +1,6 @@
 """Encapsulates key dates in the opportunity timeline."""
 
 from typing import Optional
-from datetime import date
 
 from pydantic import Field, model_validator
 
