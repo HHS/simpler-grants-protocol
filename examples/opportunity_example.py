@@ -1,20 +1,18 @@
-"""Example usage of the CommonGrants models."""
+"""Example demonstrating the Opportunity model usage."""
 
 from datetime import date, datetime, UTC
 from uuid import uuid4
+import json
 
-from common_grants.schemas.models import (
-    OppFunding,
-    OppStatus,
-    OppStatusOptions,
-    OppTimeline,
-    OpportunityBase,
-)
-from common_grants.schemas.fields import Event, Money
+from common_grants.schemas.models.opp_base import OpportunityBase
+from common_grants.schemas.models.opp_status import OppStatus, OppStatusOptions
+from common_grants.schemas.models.opp_timeline import OppTimeline
+from common_grants.schemas.models.opp_funding import OppFunding
+from common_grants.schemas.fields import Money, Event
 
 
 def main():
-    """Demonstrate usage of the CommonGrants models."""
+    """Run the opportunity example."""
     # Create an opportunity
     opportunity = OpportunityBase(
         id=uuid4(),
@@ -36,37 +34,42 @@ def main():
             app_opens=Event(
                 name="Application Opens",
                 date=date(2024, 1, 1),
-                description="The date when applications will begin to be accepted"
+                description="Start accepting applications"
             ),
             app_deadline=Event(
                 name="Application Deadline",
                 date=date(2024, 3, 31),
-                description="The final date by which applications must be submitted"
-            )
+                description="Deadline for submitting applications"
+            ),
+            other_dates={
+                "awards_announced": Event(
+                    name="Awards Announced",
+                    date=date(2024, 6, 1),
+                    description="Successful applicants will be notified"
+                )
+            }
         )
     )
 
-    # Convert to dictionary
-    opp_dict = opportunity.dump()
-    print("Opportunity as dictionary:")
-    print(opp_dict)
+    # Serialize to dictionary
+    opp_dict = opportunity.model_dump()
+    print("\nOpportunity as dictionary:")
+    print(json.dumps(opp_dict, indent=2, default=str))
 
-    # Convert to JSON
-    opp_json = opportunity.dump_json()
+    # Serialize to JSON
+    opp_json = opportunity.model_dump_json()
     print("\nOpportunity as JSON:")
     print(opp_json)
 
-    # Create from dictionary
-    loaded_opp = OpportunityBase.from_dict(opp_dict)
-    print("\nLoaded opportunity from dictionary:")
-    print(f"Title: {loaded_opp.title}")
-    print(f"Status: {loaded_opp.status.value}")
+    # Deserialize from dictionary
+    opp_from_dict = OpportunityBase.model_validate(opp_dict)
+    print("\nOpportunity deserialized from dictionary:")
+    print(opp_from_dict)
 
-    # Create from JSON
-    loaded_opp_json = OpportunityBase.from_json(opp_json)
-    print("\nLoaded opportunity from JSON:")
-    print(f"Title: {loaded_opp_json.title}")
-    print(f"Status: {loaded_opp_json.status.value}")
+    # Deserialize from JSON
+    opp_from_json = OpportunityBase.model_validate_json(opp_json)
+    print("\nOpportunity deserialized from JSON:")
+    print(opp_from_json)
 
 
 if __name__ == "__main__":
