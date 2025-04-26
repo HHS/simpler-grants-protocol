@@ -12,7 +12,7 @@ from common_grants.schemas.models.opp_timeline import OppTimeline
 
 
 @pytest.fixture
-def sample_opportunity(sample_contact):
+def sample_opportunity():
     """Create a sample opportunity for testing."""
     return OpportunityBase(
         id=uuid4(),

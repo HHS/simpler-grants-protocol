@@ -4,13 +4,16 @@ version = "0.1.0"
 description = "Python SDK for the CommonGrants protocol"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
+packages = [{include = "common_grants"}]
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.11"
+pydantic = "^2.6.1"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
+pytest-cov = "^4.1.0"
 
 [build-system]
 requires = ["poetry-core"]
