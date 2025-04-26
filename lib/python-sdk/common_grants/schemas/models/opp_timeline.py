@@ -25,10 +25,10 @@ class OppTimeline(CommonGrantsBaseModel):
         description="An optional map of other key dates in the opportunity timeline",
     )
 
-    @model_validator(mode='after')
-    def validate_dates(self) -> 'OppTimeline':
+    @model_validator(mode="after")
+    def validate_dates(self) -> "OppTimeline":
         """Validate that the application deadline is after the opening date."""
         if self.app_opens is not None and self.app_deadline is not None:
             if self.app_opens.date > self.app_deadline.date:
                 raise ValueError("Application deadline must be after the opening date")
-        return self 
+        return self

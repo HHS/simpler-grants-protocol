@@ -42,5 +42,4 @@ class OppStatus(CommonGrantsBaseModel):
         ...,
         description="A human-readable description of the status",
         min_length=1,
-    ) 
-
+    )

@@ -34,5 +34,4 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
     custom_fields: Optional[dict[str, CustomField]] = Field(
         default=None,
         description="Additional custom fields specific to this opportunity",
-    ) 
-
+    )

@@ -34,5 +34,4 @@ class OppFunding(CommonGrantsBaseModel):
     estimated_award_count: Optional[int] = Field(
         default=None,
         description="Estimated number of awards that will be granted",
-    ) 
-
+    )
