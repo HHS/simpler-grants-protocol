@@ -1,0 +1,48 @@
+name: Python SDK CI
+
+on:
+  push:
+    paths:
+      - 'lib/python-sdk/**'
+  pull_request:
+    paths:
+      - 'lib/python-sdk/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lib/python-sdk
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+    
+    - name: Configure Poetry
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+    
+    - name: Install dependencies
+      run: poetry install
+    
+    - name: Run linting
+      run: poetry run ruff check .
+    
+    - name: Run type checking
+      run: poetry run mypy .
+    
+    - name: Run tests
+      run: poetry run pytest
+    
+    - name: Build package
+      run: poetry build 
