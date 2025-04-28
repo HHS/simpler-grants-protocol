@@ -4,9 +4,11 @@ on:
   push:
     paths:
       - 'lib/python-sdk/**'
+      - '.github/workflows/ci-python-sdk.yml'
   pull_request:
     paths:
       - 'lib/python-sdk/**'
+      - '.github/workflows/ci-python-sdk.yml'
 
 jobs:
   build:
