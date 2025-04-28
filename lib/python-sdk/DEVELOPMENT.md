@@ -9,6 +9,18 @@ This document provides instructions for common development tasks in the CommonGr
 
 ## Development Commands
 
+### Setup
+
+The commands described in this guide should be run from the `python-sdk` directory:
+```bash
+cd simpler-grants-protocol/lib/python-sdk
+```
+
+Install dependencies:
+```bash
+poetry install
+```
+
 ### Testing
 
 Run all tests:
