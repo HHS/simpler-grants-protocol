@@ -31,5 +31,7 @@ class CommonGrantsBaseModel(BaseModel):
             return cls.model_validate(data)
         except Exception:
             # If that fails, try converting to JSON and back
-            json_str = json.dumps(data, default=str)  # Use str for non-serializable objects
+            json_str = json.dumps(
+                data, default=str
+            )  # Use str for non-serializable objects
             return cls.model_validate_json(json_str)

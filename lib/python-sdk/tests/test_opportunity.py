@@ -32,7 +32,9 @@ def sample_opportunity():
         ),
         key_dates=OppTimeline(
             app_opens=Event(
-                name="Application Opens", date=date(2024, 1, 1), description="Applications open"
+                name="Application Opens",
+                date=date(2024, 1, 1),
+                description="Applications open",
             ),
             app_deadline=Event(
                 name="Application Deadline",
@@ -47,7 +49,8 @@ def test_opportunity_timeline_validation(sample_opportunity):
     """Test opportunity timeline validation."""
     # Test that app_opens date is before app_deadline
     assert (
-        sample_opportunity.key_dates.app_opens.date < sample_opportunity.key_dates.app_deadline.date
+        sample_opportunity.key_dates.app_opens.date
+        < sample_opportunity.key_dates.app_deadline.date
     )
 
     # Test that dates are valid

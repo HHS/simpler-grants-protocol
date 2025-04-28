@@ -74,7 +74,10 @@ def test_event_validation():
     """Test Event model validation."""
     # Valid cases with all fields
     event = Event(
-        name="Test Event", date=date(2024, 1, 1), time=time(14, 30), description="Test description"
+        name="Test Event",
+        date=date(2024, 1, 1),
+        time=time(14, 30),
+        description="Test description",
     )
     assert event.name == "Test Event"
     assert event.date == date(2024, 1, 1)
@@ -114,7 +117,10 @@ def test_custom_field_validation():
 
     # Valid case with schema URL
     field = CustomField(
-        name="test", type=CustomFieldType.STRING, value="test", schema="https://example.com/schema"
+        name="test",
+        type=CustomFieldType.STRING,
+        value="test",
+        schema="https://example.com/schema",
     )
     assert str(field.schema_url) == "https://example.com/schema"
 
@@ -126,4 +132,6 @@ def test_custom_field_validation():
         CustomField(name="test", type="invalid", value="test")
 
     with pytest.raises(ValueError):
-        CustomField(name="test", type=CustomFieldType.STRING, value="test", schema="not-a-url")
+        CustomField(
+            name="test", type=CustomFieldType.STRING, value="test", schema="not-a-url"
+        )
