@@ -129,7 +129,7 @@ For example, let's say you need to add a `legacyId` field to map opportunities t
 #### Define the custom field
 
 ```python opp_custom_fields.py
-from common_grants.schemas.fields import CustomField, CustomFieldType
+from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -137,7 +137,7 @@ class LegacyId(CustomField):
     """Custom field for a legacy opportunity_id."""
 
     name: str = "legacyId"
-    field_type: CustomFieldType = CustomFieldType.NUMBER
+    type: CustomFieldType = CustomFieldType.NUMBER
     value: Optional[int] = None
     description: Optional[str] = "Maps to the opportunity_id in the legacy system"
 
@@ -163,7 +163,7 @@ The sample code below skips other imports and fields for brevity.
 :::
 
 ```python opp_base.py ins={1, 5-9}
-from common_grants.schemas.models.opp_custom_fields import OppCustomFields
+from common_grants_sdk.schemas.models.opp_custom_fields import OppCustomFields
 
 class OpportunityBase(SystemMetadata):
     # other fields omitted for brevity
@@ -186,17 +186,17 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
 
-from common_grants.schemas.fields import CustomField, CustomFieldType, SystemMetadata
-from common_grants.schemas.models.opp_funding import OppFunding
-from common_grants.schemas.models.opp_status import OppStatus
-from common_grants.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.fields import CustomField, CustomFieldType, SystemMetadata
+from common_grants_sdk.schemas.models.opp_funding import OppFunding
+from common_grants_sdk.schemas.models.opp_status import OppStatus
+from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
 
 
 class LegacyId(CustomField):
     """Custom field for a legacy opportunity_id."""
 
     name: str = "legacyId"
-    field_type: CustomFieldType = CustomFieldType.NUMBER
+    type: CustomFieldType = CustomFieldType.NUMBER
     value: Optional[int] = None
     description: Optional[str] = "Maps to the opportunity_id in the legacy system"
 
