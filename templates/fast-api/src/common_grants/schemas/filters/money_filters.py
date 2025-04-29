@@ -3,9 +3,17 @@
 from typing import Optional
 
 from common_grants_sdk.schemas.fields import Money
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from common_grants.schemas.filters.base import ComparisonOperator, RangeOperator
+
+
+class InvalidMoneyValueError(ValueError):
+    """Raised when a value cannot be converted to a Money object."""
+
+    def __init__(self) -> None:
+        """Initialize the error with a descriptive message."""
+        super().__init__("Value must be either a Money object or a dict")
 
 
 class MoneyRange(BaseModel):
@@ -14,20 +22,17 @@ class MoneyRange(BaseModel):
     min: Optional[Money] = Field(None, description="The minimum amount in the range")
     max: Optional[Money] = Field(None, description="The maximum amount in the range")
 
-    def __init__(self, **data: dict) -> None:
-        """
-        Initialize the MoneyRange with optional conversion of dict to Money objects.
-
-        Args:
-            **data: The range data, which may include min and max values as dicts.
-
-        """
-        # Convert dict to Money objects if needed
-        if "min" in data and isinstance(data["min"], dict):
-            data["min"] = Money(**data["min"])
-        if "max" in data and isinstance(data["max"], dict):
-            data["max"] = Money(**data["max"])
-        super().__init__(**data)
+    @field_validator("min", "max", mode="before")
+    @classmethod
+    def validate_money(cls, v: Optional[dict | Money]) -> Optional[Money]:
+        """Convert dict to Money objects if needed."""
+        if v is None:
+            return None
+        if isinstance(v, Money):
+            return v
+        if isinstance(v, dict):
+            return Money(**v)
+        raise InvalidMoneyValueError
 
 
 class MoneyRangeFilter(BaseModel):
