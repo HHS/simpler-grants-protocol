@@ -1,13 +1,17 @@
-"""Tests for the opportunity base model."""
+"""Tests for the OpportunityBase model."""
 
 from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 
+from common_grants_sdk.schemas.models import (
+    OppFunding,
+    OpportunityBase,
+    OppStatus,
+    OppStatusOptions,
+    OppTimeline,
+)
+
 from common_grants.schemas.fields import Event, Money
-from common_grants.schemas.models.opp_base import OpportunityBase
-from common_grants.schemas.models.opp_funding import OppFunding
-from common_grants.schemas.models.opp_status import OppStatus, OppStatusOptions
-from common_grants.schemas.models.opp_timeline import OppTimeline
 
 
 def test_opportunity_base_model():
@@ -19,7 +23,7 @@ def test_opportunity_base_model():
         status=OppStatus(
             value=OppStatusOptions.OPEN,
             custom_value=None,
-            description=None,
+            description="Opportunity is currently accepting applications",
         ),
         description="Funding for innovative research projects",
         funding=OppFunding(

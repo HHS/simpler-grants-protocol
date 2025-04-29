@@ -1,104 +1,61 @@
 """Base field types and common models for the CommonGrants API."""
 
-from datetime import date, datetime, time
-from enum import StrEnum
-from typing import Annotated, Any, Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field, HttpUrl
-from pydantic.functional_validators import AfterValidator
+from common_grants_sdk.schemas.fields import (
+    CustomField as SDKCustomField,
+)
+from common_grants_sdk.schemas.fields import (
+    CustomFieldType,
+    DecimalString,
+    Event,
+    ISODate,
+    ISOTime,
+    Money,
+    SystemMetadata,
+    UTCDateTime,
+)
+from pydantic import HttpUrl
 
-# Custom Types
-DecimalString = Annotated[
-    str,
-    AfterValidator(
-        lambda v: (
-            v
-            if v.replace(".", "").replace("-", "").isdigit()
-            and (v.startswith("-") or not v.startswith("-"))
-            else None
-        ),
-    ),
+# Re-export the fields
+__all__ = [
+    "CustomField",
+    "CustomFieldType",
+    "DecimalString",
+    "Event",
+    "ISODate",
+    "ISOTime",
+    "Money",
+    "SystemMetadata",
+    "UTCDateTime",
+    "Url",
 ]
-ISODate = date
-ISOTime = time
-UTCDateTime = datetime
+
 Url = HttpUrl
 
 
-# Enums
-class CustomFieldType(StrEnum):
-    """The type of the custom field."""
+class CustomField(SDKCustomField):
+    """Compatibility layer for CustomField to handle field_type vs type attribute."""
 
-    STRING = "string"
-    NUMBER = "number"
-    BOOLEAN = "boolean"
-    OBJECT = "object"
-    ARRAY = "array"
+    def __init__(self, **data: dict[str, Any]) -> None:
+        """
+        Initialize the CustomField with compatibility for field_type attribute.
 
+        Args:
+            **data: The field data, which may include a field_type attribute.
 
-# Base Models
-class SystemMetadata(BaseModel):
-    """System-managed metadata fields for tracking record creation and modification."""
+        """
+        # Handle field_type vs type attribute
+        if "field_type" in data:
+            data["type"] = data.pop("field_type")
+        super().__init__(**data)
 
-    created_at: UTCDateTime = Field(
-        ...,
-        description="The timestamp (in UTC) at which the record was created.",
-    )
-    last_modified_at: UTCDateTime = Field(
-        ...,
-        description="The timestamp (in UTC) at which the record was last modified.",
-    )
+    @property
+    def field_type(self) -> Optional[CustomFieldType]:
+        """Alias for type attribute to maintain compatibility with tests."""
+        return getattr(self, "type", None)
 
-
-class Money(BaseModel):
-    """Represents a monetary amount in a specific currency."""
-
-    amount: str = Field(
-        ...,
-        description="The amount of money",
-        pattern=r"^-?[0-9]+\.?[0-9]*$",
-        examples=["1000000", "500.00", "-100.50"],
-    )
-    currency: str = Field(
-        ...,
-        description="The ISO 4217 currency code in which the amount is denominated",
-    )
-
-
-class Event(BaseModel):
-    """Represents a scheduled event with an optional time and description."""
-
-    name: str = Field(..., description="Human-readable name of the event")
-    date: ISODate = Field(
-        ...,
-        description="Date of the event in ISO 8601 format: YYYY-MM-DD",
-    )
-    time: Optional[ISOTime] = Field(
-        default=None,
-        description="Time of the event in ISO 8601 format: HH:MM:SS",
-    )
-    description: Optional[str] = Field(
-        default=None,
-        description="Description of what this event represents",
-    )
-
-
-class CustomField(BaseModel):
-    """Represents a custom field with type information and validation schema."""
-
-    name: str = Field(..., description="Name of the custom field")
-    field_type: CustomFieldType = Field(
-        ...,
-        alias="type",
-        description="The JSON schema type to use when de-serializing the `value` field",
-    )
-    schema_url: Optional[Url] = Field(
-        None,
-        alias="schema",
-        description="Link to the full JSON schema for this custom field",
-    )
-    value: Any = Field(..., description="Value of the custom field")
-    description: Optional[str] = Field(
-        None,
-        description="Description of the custom field's purpose",
-    )
+    @field_type.setter
+    def field_type(self, value: CustomFieldType) -> None:
+        """Setter for field_type that updates the type attribute."""
+        self.type = value

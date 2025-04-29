@@ -43,13 +43,21 @@ __all__ = [  # noqa: RUF022
     "OppTimeline",
 ]
 
-from .fields import (
+from common_grants_sdk.schemas.fields import (
     CustomField,
     CustomFieldType,
     Event,
     Money,
     SystemMetadata,
 )
+from common_grants_sdk.schemas.models import (
+    OppFunding,
+    OpportunityBase,
+    OppStatus,
+    OppStatusOptions,
+    OppTimeline,
+)
+
 from .filters import (
     ArrayOperator,
     DateRange,
@@ -63,11 +71,6 @@ from .filters import (
 from .models import (
     OppDefaultFilters,
     OppFilters,
-    OppFunding,
-    OpportunityBase,
-    OppStatus,
-    OppStatusOptions,
-    OppTimeline,
 )
 from .pagination import (
     PaginatedItems,

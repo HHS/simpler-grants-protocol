@@ -9,46 +9,39 @@ from common_grants.schemas.filters.base import ComparisonOperator, RangeOperator
 
 
 class MoneyRange(BaseModel):
-    """Represents a range between two monetary amounts."""
+    """Range filter for money values."""
 
     min: Optional[Money] = Field(None, description="The minimum amount in the range")
     max: Optional[Money] = Field(None, description="The maximum amount in the range")
 
+    def __init__(self, **data: dict) -> None:
+        """
+        Initialize the MoneyRange with optional conversion of dict to Money objects.
+
+        Args:
+            **data: The range data, which may include min and max values as dicts.
+
+        """
+        # Convert dict to Money objects if needed
+        if "min" in data and isinstance(data["min"], dict):
+            data["min"] = Money(**data["min"])
+        if "max" in data and isinstance(data["max"], dict):
+            data["max"] = Money(**data["max"])
+        super().__init__(**data)
+
 
 class MoneyRangeFilter(BaseModel):
-    """Filter that matches monetary amounts within a specified range."""
+    """Filter for money ranges using comparison operators."""
 
-    operator: RangeOperator = Field(
-        ...,
-        description="The operator to apply to the filter",
-        examples=[RangeOperator.BETWEEN, RangeOperator.OUTSIDE],
-    )
-    value: MoneyRange = Field(
-        ...,
-        description="The money range to filter by",
-        examples=[
-            MoneyRange(
-                min=Money(amount="1000", currency="USD"),
-                max=Money(amount="2000", currency="USD"),
-            ),
-            MoneyRange(
-                min=Money(amount="1000", currency="USD"),
-                max=None,
-            ),
-        ],
-    )
+    operator: RangeOperator = Field(..., description="The range operator to use")
+    value: MoneyRange = Field(..., description="The money range to compare against")
 
 
 class MoneyComparisonFilter(BaseModel):
-    """Filter that matches monetary amounts against a specific value."""
+    """Filter for money values using comparison operators."""
 
     operator: ComparisonOperator = Field(
         ...,
-        description="The operator to apply to the filter",
-        examples=[ComparisonOperator.GREATER_THAN, ComparisonOperator.LESS_THAN],
+        description="The comparison operator to use",
     )
-    value: Money = Field(
-        ...,
-        description="The monetary amount to filter by",
-        examples=[Money(amount="1000", currency="USD")],
-    )
+    value: Money = Field(..., description="The money value to compare against")

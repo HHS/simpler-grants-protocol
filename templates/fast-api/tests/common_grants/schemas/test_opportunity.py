@@ -76,7 +76,7 @@ def test_custom_field_model():
         description="Primary program area for the grant",
     )
     assert field.name == "program_area"
-    assert field.field_type == CustomFieldType.STRING
+    assert field.type == CustomFieldType.STRING
     assert field.value == "Healthcare"
     assert field.description == "Primary program area for the grant"
 
@@ -88,7 +88,7 @@ def test_custom_field_model():
         value=5,
         description=None,
     )
-    assert field.field_type == CustomFieldType.NUMBER
+    assert field.type == CustomFieldType.NUMBER
     assert field.value == 5
 
 
@@ -98,11 +98,11 @@ def test_opp_status_model():
     status = OppStatus(
         value=OppStatusOptions.OPEN,
         custom_value=None,
-        description=None,
+        description="Opportunity is currently accepting applications",
     )
     assert status.value == OppStatusOptions.OPEN
     assert status.custom_value is None
-    assert status.description is None
+    assert status.description == "Opportunity is currently accepting applications"
 
     # Test custom status
     status = OppStatus(
@@ -177,7 +177,7 @@ def test_opportunity_base_model():
         status=OppStatus(
             value=OppStatusOptions.OPEN,
             custom_value=None,
-            description=None,
+            description="Opportunity is currently accepting applications",
         ),
         description="Funding for innovative research projects",
         funding=OppFunding(
