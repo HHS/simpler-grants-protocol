@@ -5,7 +5,7 @@ from datetime import datetime, UTC
 
 import pytest
 
-from common_grants.schemas.base import CommonGrantsBaseModel
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 
 
 class SampleModel(CommonGrantsBaseModel):

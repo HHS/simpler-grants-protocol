@@ -4,8 +4,8 @@ from typing import Optional
 
 from pydantic import Field
 
-from common_grants.schemas.base import CommonGrantsBaseModel
-from common_grants.schemas.fields import Money
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
+from common_grants_sdk.schemas.fields import Money
 
 
 class OppFunding(CommonGrantsBaseModel):

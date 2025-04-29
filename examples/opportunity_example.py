@@ -4,11 +4,11 @@ from datetime import date, datetime, UTC
 from uuid import uuid4
 import json
 
-from common_grants.schemas.models.opp_base import OpportunityBase
-from common_grants.schemas.models.opp_status import OppStatus, OppStatusOptions
-from common_grants.schemas.models.opp_timeline import OppTimeline
-from common_grants.schemas.models.opp_funding import OppFunding
-from common_grants.schemas.fields import Money, Event
+from common_grants_sdk.schemas.models.opp_base import OpportunityBase
+from common_grants_sdk.schemas.models.opp_status import OppStatus, OppStatusOptions
+from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.models.opp_funding import OppFunding
+from common_grants_sdk.schemas.fields import Money, Event
 
 
 def main():

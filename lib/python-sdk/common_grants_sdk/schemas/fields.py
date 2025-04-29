@@ -7,7 +7,7 @@ from typing import Annotated, Any, Optional
 
 from pydantic import Field, HttpUrl, BeforeValidator
 
-from common_grants.schemas.base import CommonGrantsBaseModel
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 
 # Date and Time
 ISODate = date
