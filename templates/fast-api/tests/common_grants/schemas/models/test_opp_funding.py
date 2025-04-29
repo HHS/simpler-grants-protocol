@@ -1,8 +1,7 @@
 """Tests for the OppFunding model."""
 
+from common_grants_sdk.schemas.fields import Money
 from common_grants_sdk.schemas.models import OppFunding
-
-from common_grants.schemas.fields import Money
 
 
 def test_opp_funding_model():

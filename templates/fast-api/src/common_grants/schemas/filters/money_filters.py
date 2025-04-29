@@ -2,9 +2,9 @@
 
 from typing import Optional
 
+from common_grants_sdk.schemas.fields import Money
 from pydantic import BaseModel, Field
 
-from common_grants.schemas.fields import Money
 from common_grants.schemas.filters.base import ComparisonOperator, RangeOperator
 
 

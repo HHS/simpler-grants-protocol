@@ -2,9 +2,8 @@
 
 from datetime import date, time
 
+from common_grants_sdk.schemas.fields import Event
 from common_grants_sdk.schemas.models import OppTimeline
-
-from common_grants.schemas.fields import Event
 
 
 def test_opp_timeline_model():

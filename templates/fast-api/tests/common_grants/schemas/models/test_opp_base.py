@@ -3,6 +3,7 @@
 from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 
+from common_grants_sdk.schemas.fields import Event, Money
 from common_grants_sdk.schemas.models import (
     OppFunding,
     OpportunityBase,
@@ -10,8 +11,6 @@ from common_grants_sdk.schemas.models import (
     OppStatusOptions,
     OppTimeline,
 )
-
-from common_grants.schemas.fields import Event, Money
 
 
 def test_opportunity_base_model():

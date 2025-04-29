@@ -3,15 +3,14 @@
 from datetime import date, datetime, time, timezone
 
 import pytest
-from pydantic import ValidationError
-
-from common_grants.schemas.fields import (
+from common_grants_sdk.schemas.fields import (
     CustomField,
     CustomFieldType,
     Event,
     Money,
     SystemMetadata,
 )
+from pydantic import ValidationError
 
 
 def test_system_metadata_model():
@@ -70,7 +69,7 @@ def test_custom_field_model():
         description="Primary program area for the grant",
     )
     assert field.name == "program_area"
-    assert field.field_type == CustomFieldType.STRING
+    assert field.type == CustomFieldType.STRING
     assert field.value == "Healthcare"
     assert field.description == "Primary program area for the grant"
 
@@ -82,5 +81,5 @@ def test_custom_field_model():
         value=5,
         description=None,
     )
-    assert field.field_type == CustomFieldType.NUMBER
+    assert field.type == CustomFieldType.NUMBER
     assert field.value == 5
