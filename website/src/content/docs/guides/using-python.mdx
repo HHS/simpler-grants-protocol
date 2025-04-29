@@ -171,7 +171,7 @@ from .opp_custom_fields import OppCustomFields
 
 class OpportunityBase(SDKOpportunityBase):
     """Extended opportunity model with custom fields."""
-    
+
     # Override the custom_fields property to use our custom fields model
     custom_fields: Optional[OppCustomFields] = Field(
         default=None,
@@ -220,7 +220,7 @@ class OppCustomFields(BaseModel):
 
 class OpportunityBase(SDKOpportunityBase):
     """Extended opportunity model with custom fields."""
-    
+
     # Override the custom_fields property to use our custom fields model
     custom_fields: Optional[OppCustomFields] = Field(
         default=None,
