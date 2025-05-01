@@ -1,9 +1,9 @@
-"""Tests for the opportunity timeline model."""
+"""Tests for the OppTimeline model."""
 
 from datetime import date, time
 
-from common_grants.schemas.fields import Event
-from common_grants.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.fields import Event
+from common_grants_sdk.schemas.models import OppTimeline
 
 
 def test_opp_timeline_model():

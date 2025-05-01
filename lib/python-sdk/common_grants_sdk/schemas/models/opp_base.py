@@ -1,17 +1,18 @@
-"""Base models for funding opportunities."""
+"""Base model for funding opportunities."""
 
 from typing import Optional
 from uuid import UUID
 
 from pydantic import Field, HttpUrl
 
-from common_grants.schemas.fields import CustomField, SystemMetadata
-from common_grants.schemas.models.opp_funding import OppFunding
-from common_grants.schemas.models.opp_status import OppStatus
-from common_grants.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
+from common_grants_sdk.schemas.fields import CustomField, SystemMetadata
+from common_grants_sdk.schemas.models.opp_funding import OppFunding
+from common_grants_sdk.schemas.models.opp_status import OppStatus
+from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
 
 
-class OpportunityBase(SystemMetadata):
+class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
     """Base model for a funding opportunity with all core fields."""
 
     id: UUID = Field(..., description="Globally unique id for the opportunity")

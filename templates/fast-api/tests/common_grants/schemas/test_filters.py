@@ -141,7 +141,7 @@ def create_test_opportunity():
         status=OppStatus(
             value=OppStatusOptions.OPEN,
             custom_value=None,
-            description=None,
+            description="This opportunity is currently accepting applications",
         ),
         description="Test grant description",
         funding=OppFunding(

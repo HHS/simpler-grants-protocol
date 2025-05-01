@@ -1,7 +1,7 @@
-"""Tests for the opportunity funding model."""
+"""Tests for the OppFunding model."""
 
-from common_grants.schemas.fields import Money
-from common_grants.schemas.models.opp_funding import OppFunding
+from common_grants_sdk.schemas.fields import Money
+from common_grants_sdk.schemas.models import OppFunding
 
 
 def test_opp_funding_model():

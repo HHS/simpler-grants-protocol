@@ -3,7 +3,7 @@
 import pytest
 from datetime import date, time
 
-from common_grants.schemas.fields import (
+from common_grants_sdk.schemas.fields import (
     validate_decimal_string,
     Money,
     Event,

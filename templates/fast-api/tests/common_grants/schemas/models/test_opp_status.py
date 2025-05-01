@@ -1,6 +1,6 @@
-"""Tests for the opportunity status model."""
+"""Tests for the OppStatus model."""
 
-from common_grants.schemas.models.opp_status import OppStatus, OppStatusOptions
+from common_grants_sdk.schemas.models import OppStatus, OppStatusOptions
 
 
 def test_opp_status_model():
@@ -9,11 +9,11 @@ def test_opp_status_model():
     status = OppStatus(
         value=OppStatusOptions.OPEN,
         custom_value=None,
-        description=None,
+        description="Opportunity is currently accepting applications",
     )
     assert status.value == OppStatusOptions.OPEN
     assert status.custom_value is None
-    assert status.description is None
+    assert status.description == "Opportunity is currently accepting applications"
 
     # Test custom status
     status = OppStatus(

@@ -1,13 +1,14 @@
-"""Models for funding details of opportunities."""
+"""Encapsulates details about the funding available for an opportunity."""
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from common_grants.schemas.fields import Money
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
+from common_grants_sdk.schemas.fields import Money
 
 
-class OppFunding(BaseModel):
+class OppFunding(CommonGrantsBaseModel):
     """Details about the funding available for an opportunity."""
 
     total_amount_available: Optional[Money] = Field(

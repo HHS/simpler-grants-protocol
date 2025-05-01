@@ -129,7 +129,7 @@ For example, let's say you need to add a `legacyId` field to map opportunities t
 #### Define the custom field
 
 ```python opp_custom_fields.py
-from common_grants.schemas.fields import CustomField, CustomFieldType
+from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -137,7 +137,7 @@ class LegacyId(CustomField):
     """Custom field for a legacy opportunity_id."""
 
     name: str = "legacyId"
-    field_type: CustomFieldType = CustomFieldType.NUMBER
+    type: CustomFieldType = CustomFieldType.NUMBER
     value: Optional[int] = None
     description: Optional[str] = "Maps to the opportunity_id in the legacy system"
 
@@ -152,21 +152,27 @@ class OppCustomFields(BaseModel):
     )
 ```
 
-#### Update the `OpportunityBase` model
+#### Extend the SDK's OpportunityBase model
 
-Update the `OpportunityBase` model to include the new custom field in the `custom_fields` property.
+Create a subclass that extends the SDK's `OpportunityBase` model with your custom fields:
 
-:::note
+```python opp_base.py
+from typing import Optional
+from uuid import UUID
 
-The sample code below skips other imports and fields for brevity.
+from pydantic import Field, HttpUrl
 
-:::
+from common_grants_sdk.schemas.models.opp_base import OpportunityBase as SDKOpportunityBase
+from common_grants_sdk.schemas.models.opp_funding import OppFunding
+from common_grants_sdk.schemas.models.opp_status import OppStatus
+from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
+from .opp_custom_fields import OppCustomFields
 
-```python opp_base.py ins={1, 5-9}
-from common_grants.schemas.models.opp_custom_fields import OppCustomFields
 
-class OpportunityBase(SystemMetadata):
-    # other fields omitted for brevity
+class OpportunityBase(SDKOpportunityBase):
+    """Extended opportunity model with custom fields."""
+
+    # Override the custom_fields property to use our custom fields model
     custom_fields: Optional[OppCustomFields] = Field(
         default=None,
         alias="customFields",
@@ -176,27 +182,28 @@ class OpportunityBase(SystemMetadata):
 
 #### Full example
 
-Here's a full example of defining a custom field within the `opp_base.py` file.
+Here's a complete example of defining custom fields and extending the SDK's `OpportunityBase`:
 
 ```python opp_base.py
-"""Base models for funding opportunities."""
+"""Extended models for funding opportunities."""
 
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import Field, HttpUrl
 
-from common_grants.schemas.fields import CustomField, CustomFieldType, SystemMetadata
-from common_grants.schemas.models.opp_funding import OppFunding
-from common_grants.schemas.models.opp_status import OppStatus
-from common_grants.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
+from common_grants_sdk.schemas.models.opp_base import OpportunityBase as SDKOpportunityBase
+from common_grants_sdk.schemas.models.opp_funding import OppFunding
+from common_grants_sdk.schemas.models.opp_status import OppStatus
+from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
 
 
 class LegacyId(CustomField):
     """Custom field for a legacy opportunity_id."""
 
     name: str = "legacyId"
-    field_type: CustomFieldType = CustomFieldType.NUMBER
+    type: CustomFieldType = CustomFieldType.NUMBER
     value: Optional[int] = None
     description: Optional[str] = "Maps to the opportunity_id in the legacy system"
 
@@ -211,30 +218,18 @@ class OppCustomFields(BaseModel):
     )
 
 
-class OpportunityBase(SystemMetadata):
-    """Base model for a funding opportunity with all core fields."""
+class OpportunityBase(SDKOpportunityBase):
+    """Extended opportunity model with custom fields."""
 
-    id: UUID = Field(..., description="Globally unique id for the opportunity")
-    title: str = Field(..., description="Title or name of the funding opportunity")
-    status: OppStatus = Field(..., description="Status of the opportunity")
-    description: str = Field(
-        ...,
-        description="Description of the opportunity's purpose and scope",
-    )
-    funding: OppFunding = Field(..., description="Details about the funding available")
-    key_dates: OppTimeline = Field(
-        ...,
-        description="Key dates for the opportunity, such as when the application opens and closes",
-    )
-    source: Optional[HttpUrl] = Field(
-        default=None,
-        description="URL for the original source of the opportunity",
-    )
+    # Override the custom_fields property to use our custom fields model
     custom_fields: Optional[OppCustomFields] = Field(
         default=None,
+        alias="customFields",
         description="Additional custom fields specific to this opportunity",
     )
 ```
+
+This approach allows you to extend the SDK's models with your custom fields while maintaining compatibility with the CommonGrants protocol. Your API can use this extended model for serialization and deserialization, while still being able to convert to and from the standard SDK models when needed.
 
 ## Additional resources
 

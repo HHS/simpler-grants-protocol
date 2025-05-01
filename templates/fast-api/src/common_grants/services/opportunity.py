@@ -4,15 +4,16 @@ from datetime import date
 from typing import Optional
 from uuid import UUID
 
+from common_grants_sdk.schemas.models import OpportunityBase
+from common_grants_sdk.schemas.models.opp_status import OppStatusOptions
+
 from common_grants.schemas import (
     OppFilters,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
-    OpportunityBase,
     OppSorting,
     PaginationBodyParams,
 )
-from common_grants.schemas.models.opp_status import OppStatusOptions
 from common_grants.services.utils import mock_opportunity, paginate
 
 

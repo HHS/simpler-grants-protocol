@@ -1,6 +1,7 @@
 """Tests for money filter models."""
 
-from common_grants.schemas.fields import Money
+from common_grants_sdk.schemas.fields import Money
+
 from common_grants.schemas.filters.base import RangeOperator
 from common_grants.schemas.filters.money_filters import MoneyRange, MoneyRangeFilter
 

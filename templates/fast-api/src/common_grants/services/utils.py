@@ -3,7 +3,8 @@
 from datetime import date, datetime, timezone
 from uuid import UUID, uuid5
 
-from common_grants.schemas.fields import Event, Money
+from common_grants_sdk.schemas.fields import Event, Money
+
 from common_grants.schemas.models import (
     OppFunding,
     OpportunityBase,
