@@ -11,11 +11,11 @@ The long-term goal for these mappings is to both document the relationship betwe
 
 We recommend adopting a custom **JSON mapping** schema as the official format for publishing mappings between the CommonGrants model and platform-specific data representations.
 
-- **Positive consequences**  
+- **Positive consequences**
   - Easy to read and write for both technical and non-technical users
   - JSON-based format makes it easy to serialize and deserialize between languages
   - Allows CommonGrants.org to display mappings across forms or data schemas in a registry-style UI
-- **Negative consequences**  
+- **Negative consequences**
   - Less expressive than jq for executing complex transformations
   - Requires custom code to apply transformations in each new language or SDK
   - Adding support for new transformations would require updating the mapping format and each SDK
@@ -38,9 +38,7 @@ Let’s assume that the platform currently returns information about opportuniti
     "opportunity_status": "posted",
     "opportunity_title": "Research into conservation techniques",
     "summary": {
-      "applicant_types": [
-        "state_governments"
-      ],
+      "applicant_types": ["state_governments"],
       "archive_date": "2025-05-01",
       "award_ceiling": 100000,
       "award_floor": 10000,
@@ -62,7 +60,7 @@ And we want to translate this data into the following format:
 <summary>CommonGrants format</summary>
 
 ```json
-{ 
+{
   "data": {
     "id": "30a12e5e-5940-4c08-921c-17a8960fcf4b",
     "title": "Research into conservation techniques",
@@ -128,32 +126,32 @@ And we want to translate this data into the following format:
 
 ### Criteria
 
-- **Human-readable:** The mapping format is relatively easy for humans to understand and generate.  
-- **Serializable:** The mapping format can be serialized and parsed into multiple formats (e.g. native data types in each language, JSON, YAML, string)  
-- **Easy to generate:** It’s easy to generate a mapping either by hand, or programmatically given two JSON inputs.  
-- **Easy to validate:** It’s easy to validate that a given mapping matches the expected format, and correctly maps to a given input or output schema.  
-- **Supports transformations:** The mapping format supports common transformations that will be applied to source data during the translation, e.g. concat, toUpperCase, etc.  
+- **Human-readable:** The mapping format is relatively easy for humans to understand and generate.
+- **Serializable:** The mapping format can be serialized and parsed into multiple formats (e.g. native data types in each language, JSON, YAML, string)
+- **Easy to generate:** It’s easy to generate a mapping either by hand, or programmatically given two JSON inputs.
+- **Easy to validate:** It’s easy to validate that a given mapping matches the expected format, and correctly maps to a given input or output schema.
+- **Supports transformations:** The mapping format supports common transformations that will be applied to source data during the translation, e.g. concat, toUpperCase, etc.
 - **Support for multiple runtimes:** The mapping can be defined once but used across multiple languages through existing libraries or SDKs.
 
 ### Options considered
 
-- JSON mapping  
-- Declarative schema overlay (e.g., JSON Schema \+ annotations)  
-- JQ  
+- JSON mapping
+- Declarative schema overlay (e.g., JSON Schema \+ annotations)
+- JQ
 - Custom DSL
 
 ## Evaluation
 
 ### Side by side
 
-| Criteria                      | JSON mapping | Schema overlay |  JQ   | Custom DSL |
-| :---------------------------- | :----------: | :------------: | :---: | :--------: |
-| Human readable                |      ✅       |       🟡        |   ✅   |     🟡      |
-| Serializable                  |      ✅       |       ✅        |   ❌   |     ❌      |
-| Easy to generate              |      ✅       |       ✅        |   ✅   |     🟡      |
-| Easy to validate              |      ✅       |       🟡        |   ❌   |     ❌      |
-| Supports transformations      |      🟡       |       🟡        |   ✅   |     🟡      |
-| Support for multiple runtimes |      🟡       |       🟡        |   ✅   |     ❌      |
+| Criteria                      | JSON mapping | Schema overlay | JQ  | Custom DSL |
+| :---------------------------- | :----------: | :------------: | :-: | :--------: |
+| Human readable                |      ✅      |       🟡       | ✅  |     🟡     |
+| Serializable                  |      ✅      |       ✅       | ❌  |     ❌     |
+| Easy to generate              |      ✅      |       ✅       | ✅  |     🟡     |
+| Easy to validate              |      ✅      |       🟡       | ❌  |     ❌     |
+| Supports transformations      |      🟡      |       🟡       | ✅  |     🟡     |
+| Support for multiple runtimes |      🟡      |       🟡       | ✅  |     ❌     |
 
 ### Option 1: JSON Mapping
 
@@ -163,7 +161,7 @@ Custom mapping format written in JSON (or YAML) with keywords reserved for commo
 
 JSON mapping is best if:
 
-- we want a readable mapping format that is easily generated, validated, and serialized,  
+- we want a readable mapping format that is easily generated, validated, and serialized,
 - but we’re willing to sacrifice the expressiveness and transformation capabilities that jq provides by default.
 
 :::
@@ -213,13 +211,17 @@ JSON mapping is best if:
         "appDeadline": {
           "date": "data.summary.forecasted_close_date",
           "name": { "const": "Application Deadline" },
-          "description": { "const": "Final submission deadline for all grant applications" }
+          "description": {
+            "const": "Final submission deadline for all grant applications"
+          }
         },
         "otherDates": {
           "forecastedAwardDate": {
             "date": "data.summary.forecasted_award_date",
             "name": { "const": "Forecasted award date" },
-            "description": { "const": "When we expect to announce awards for this opportunity." }
+            "description": {
+              "const": "When we expect to announce awards for this opportunity."
+            }
           }
         }
       },
@@ -252,12 +254,12 @@ JSON mapping is best if:
 
 #### Pros and cons
 
-- **Pros**  
-  - Relatively simple structure that is easy to read and diff  
-  - Can be easily validated with a JSON Schema  
+- **Pros**
+  - Relatively simple structure that is easy to read and diff
+  - Can be easily validated with a JSON Schema
   - Serializes to multiple formats (JSON, YAML, string) and deserializes to native data types (e.g. python dict, javascript object, etc.)
-- **Cons**  
-  - Requires a custom runtime to apply transformations in each new language or SDK  
+- **Cons**
+  - Requires a custom runtime to apply transformations in each new language or SDK
   - Less expressive and offers less support for custom transformations than jq
 
 ### Option 2: Schema Overlay
@@ -268,7 +270,7 @@ Overlay the JSON schema for the output data with custom annotations (e.g. `x-map
 
 Schema overlay is best if:
 
-- we want to co-locate mapping logic with output data validation,  
+- we want to co-locate mapping logic with output data validation,
 - but we’re less concerned with readability and validation of the mapping itself
 
 :::
@@ -478,14 +480,14 @@ Schema overlay is best if:
 
 #### Pros and cons
 
-- **Pros**  
-  - Co-locates mapping with the schema for the transformation output  
-  - Potential for integration with TypeSpec and other JSON schema tools  
+- **Pros**
+  - Co-locates mapping with the schema for the transformation output
+  - Potential for integration with TypeSpec and other JSON schema tools
   - Serializes to multiple formats (JSON, YAML, string) and deserializes to native data types (e.g. python dict, javascript object, etc.)
-- **Cons**  
-  - Requires a custom runtime to apply transformations in each new language or SDK  
-  - Less expressive and offers less support for custom transformations than jq  
-  - More verbose and harder to read than a custom JSON mapping format or a DSL  
+- **Cons**
+  - Requires a custom runtime to apply transformations in each new language or SDK
+  - Less expressive and offers less support for custom transformations than jq
+  - More verbose and harder to read than a custom JSON mapping format or a DSL
   - Harder to validate the mapping itself if we’re using custom annotations
 
 ### Option 3: JQ
@@ -496,7 +498,7 @@ Adopt jq as the official mapping format and provide a jq wrapper that injects cu
 
 JQ is best if:
 
-- we want powerful, executable mapping logic with existing support in many languages,  
+- we want powerful, executable mapping logic with existing support in many languages,
 - but we’re willing to compromise on the ability to serialize and validate the mapping itself.
 
 :::
@@ -518,7 +520,7 @@ JQ is best if:
       description: "The opportunity is currently accepting applications"
     },
     funding: {
-      minAwardAmount: { 
+      minAwardAmount: {
         amount: (.data.summary.award_floor | tostring),
         currency: "USD"
       },
@@ -574,13 +576,13 @@ JQ is best if:
 
 #### Pros and cons
 
-- **Pros**  
-  - Very expressive, supports filters, conditionals, transformation logic  
-  - Most languages have existing support for the jq runtime  
-  - More succinct than JSON-based formats  
-- **Cons**  
-  - Doesn’t easily serialize to formats other than string or plain text  
-  - Better suited for executing transformations than documenting field mappings  
+- **Pros**
+  - Very expressive, supports filters, conditionals, transformation logic
+  - Most languages have existing support for the jq runtime
+  - More succinct than JSON-based formats
+- **Cons**
+  - Doesn’t easily serialize to formats other than string or plain text
+  - Better suited for executing transformations than documenting field mappings
   - The flexibility of jq makes it harder to standardize across mappings
 
 ### Option 4: Custom DSL
@@ -614,10 +616,10 @@ map data.customFields.applicantTypes.value from data.summary.applicant_types
 
 #### Pros and cons
 
-- **Pros**  
-  - Tailored to our needs  
-  - Can be designed for domain experts  
-- **Cons**  
-  - High cost to design, build, document, and maintain  
-  - Hard to integrate with existing tools  
+- **Pros**
+  - Tailored to our needs
+  - Can be designed for domain experts
+- **Cons**
+  - High cost to design, build, document, and maintain
+  - Hard to integrate with existing tools
   - Wouldn’t be easy to serialize or validate
