@@ -10,6 +10,16 @@ export default defineConfig({
   site: "https://commongrants.org",
   integrations: [
     starlight({
+      head: [
+        // Adds Cabin analytics to the page.
+        {
+          tag: "script",
+          attrs: {
+            async: true,
+            src: "https://scripts.withcabin.com/hello.js",
+          },
+        },
+      ],
       favicon: "/favicon.ico",
       customCss: ["./src/styles/custom.css"],
       plugins: [
