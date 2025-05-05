@@ -95,7 +95,7 @@ Here's a more complex example of the proposed mapping format. The following exam
 
 #### Platform-specific format
 
-Let’s assume that the platform currently returns information about opportunities in this format:
+Let's assume that the platform currently returns information about opportunities in this format:
 
 <details>
 <summary>Platform-specific format</summary>
@@ -299,8 +299,8 @@ And we want to translate this data into the following format:
 
 - **Human-readable:** The mapping format is relatively easy for humans to understand and generate.
 - **Serializable:** The mapping format can be serialized and parsed into multiple formats (e.g. native data types in each language, JSON, YAML, string)
-- **Easy to generate:** It’s easy to generate a mapping either by hand, or programmatically given two JSON inputs.
-- **Easy to validate:** It’s easy to validate that a given mapping matches the expected format, and correctly maps to a given input or output schema.
+- **Easy to generate:** It's easy to generate a mapping either by hand, or programmatically given two JSON inputs.
+- **Easy to validate:** It's easy to validate that a given mapping matches the expected format, and correctly maps to a given input or output schema.
 - **Supports transformations:** The mapping format supports common transformations that will be applied to source data during the translation, e.g. concat, toUpperCase, etc.
 - **Support for multiple runtimes:** The mapping can be defined once but used across multiple languages through existing libraries or SDKs.
 
@@ -313,7 +313,7 @@ And we want to translate this data into the following format:
 
 ## Evaluation
 
-### Side by side
+### Side-by-side comparison
 
 | Criteria                      | JSON mapping | Schema overlay | JQ  | Custom DSL |
 | :---------------------------- | :----------: | :------------: | :-: | :--------: |
@@ -326,14 +326,14 @@ And we want to translate this data into the following format:
 
 ### Option 1: JSON Mapping
 
-Custom mapping format written in JSON (or YAML) with keywords reserved for common transformation functions, such as “concat”, “match”, “toUppercase”, “toLowerCase”, etc.
+Custom mapping format written in JSON (or YAML) with keywords reserved for common transformation functions, such as "concat", "match", "toUppercase", "toLowerCase", etc.
 
 :::note[Bottom line]
 
 JSON mapping is best if:
 
 - we want a readable mapping format that is easily generated, validated, and serialized,
-- but we’re willing to sacrifice the expressiveness and transformation capabilities that jq provides by default.
+- but we're willing to sacrifice the expressiveness and transformation capabilities that jq provides by default.
 
 :::
 
@@ -446,7 +446,7 @@ Overlay the JSON schema for the output data with custom annotations (e.g. `x-map
 Schema overlay is best if:
 
 - we want to co-locate mapping logic with output data validation,
-- but we’re less concerned with readability and validation of the mapping itself
+- but we're less concerned with readability and validation of the mapping itself
 
 :::
 
@@ -667,7 +667,7 @@ Schema overlay is best if:
   - Requires a custom runtime to apply transformations in each new language or SDK
   - Less expressive and offers less support for custom transformations than jq
   - More verbose and harder to read than a custom JSON mapping format or a DSL
-  - Harder to validate the mapping itself if we’re using custom annotations
+  - Harder to validate the mapping itself if we're using custom annotations
 
 ### Option 3: JQ
 
@@ -678,7 +678,7 @@ Adopt jq as the official mapping format and provide a jq wrapper that injects cu
 JQ is best if:
 
 - we want powerful, executable mapping logic with existing support in many languages,
-- but we’re willing to compromise on the ability to serialize and validate the mapping itself.
+- but we're willing to compromise on the ability to serialize and validate the mapping itself.
 
 :::
 
@@ -760,7 +760,7 @@ JQ is best if:
   - Most languages have existing support for the jq runtime
   - More succinct than JSON-based formats
 - **Cons**
-  - Doesn’t easily serialize to formats other than string or plain text
+  - Doesn't easily serialize to formats other than string or plain text
   - Better suited for executing transformations than documenting field mappings
   - The flexibility of jq makes it harder to standardize across mappings
 
@@ -768,7 +768,7 @@ JQ is best if:
 
 :::note[Bottom line]
 
-A custom DSL is only worth pursuing if existing formats can’t express our needs and we are ready to invest in language design
+A custom DSL is only worth pursuing if existing formats can't express our needs and we are ready to invest in language design
 
 :::
 
@@ -801,4 +801,4 @@ map data.customFields.applicantTypes.value from data.summary.applicant_types
 - **Cons**
   - High cost to design, build, document, and maintain
   - Hard to integrate with existing tools
-  - Wouldn’t be easy to serialize or validate
+  - Wouldn't be easy to serialize or validate
