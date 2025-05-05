@@ -1,5 +1,5 @@
 ---
-title: Mapping format
+title: Schema mapping format
 description: ADR documenting the choice to use a custom JSON mapping format for translating between platform-specific grant data formats and the CommonGrants standard.
 ---
 
@@ -9,18 +9,89 @@ The long-term goal for these mappings is to both document the relationship betwe
 
 ## Decision
 
-We recommend adopting a custom **JSON mapping** schema as the official format for publishing mappings between the CommonGrants model and platform-specific data representations.
+We plan to adopt a custom **JSON mapping** schema as the official format for publishing mappings between the CommonGrants model and platform-specific data representations.
 
-- **Positive consequences**
-  - Easy to read and write for both technical and non-technical users
-  - JSON-based format makes it easy to serialize and deserialize between languages
-  - Allows CommonGrants.org to display mappings across forms or data schemas in a registry-style UI
-- **Negative consequences**
-  - Less expressive than jq for executing complex transformations
-  - Requires custom code to apply transformations in each new language or SDK
-  - Adding support for new transformations would require updating the mapping format and each SDK
+This format will have its own JSON schema to validate the structure of the mapping, and will also support a set of built-in transformations that can be used to translate between the two formats.
+
+The anticipated set of transformations includes:
+
+- Type conversion (e.g. `string` to `number`)
+- Value mapping (e.g. `posted` to `open`)
+- String manipulation (e.g. `concat`, `split`, `replace`)
+- Date and time manipulation (e.g. `format`, `parse`, `add`, `subtract`)
+
+Future transformations we may add include:
+
+- Conditional logic (e.g. `if (data.opportunity_status == "posted") { data.opportunity_title } else { data.opportunity_number }`)
+- Array manipulation (e.g. `map`, `filter`, `reduce`)
+
+For example, the following mapping:
+
+```json
+{
+  "mappings": {
+    "data": {
+      "title": "data.opportunity_title",
+      "funding": {
+        "minAwardAmount": {
+          "amount": {
+            "numberToString": "data.summary.award_floor"
+          },
+          "currency": {
+            "const": "USD"
+          }
+        },
+        "maxAwardAmount": {
+          "amount": {
+            "numberToString": "data.summary.award_ceiling"
+          },
+          "currency": {
+            "const": "USD"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Would transform this platform-specific data:
+
+```json
+{
+  "data": {
+    "opportunity_title": "Research into conservation techniques",
+    "summary": {
+      "award_floor": "10000",
+      "award_ceiling": "100000"
+    }
+  }
+}
+```
+
+Into the following output format:
+
+```json
+{
+  "data": {
+    "title": "Research into conservation techniques",
+    "funding": {
+      "minAwardAmount": {
+        "amount": "10000",
+        "currency": "USD"
+      },
+      "maxAwardAmount": {
+        "amount": "100000",
+        "currency": "USD"
+      }
+    }
+  }
+}
+```
 
 ### Example
+
+Here's a more complex example of the proposed mapping format. The following examples also serve as the input and target output for each option below.
 
 #### Platform-specific format
 
@@ -70,13 +141,13 @@ And we want to translate this data into the following format:
     },
     "funding": {
       "minAwardAmount": {
-        "amount": "10000.00",
+        "amount": "10000",
         "currency": "USD"
       },
       "maxAwardAmount": {
-        "amount": "100000.00",
+        "amount": "100000",
         "currency": "USD"
-      },
+      }
     },
     "keyDates": {
       "appOpens": {
@@ -113,16 +184,116 @@ And we want to translate this data into the following format:
       "applicantTypes": {
         "name": "Applicant types",
         "type": "array",
-        "value": [
-          "state_governments"
-        ],
+        "value": ["state_governments"],
         "description": "Types of applicants eligible to apply"
       }
-   }
+    }
+  }
 }
 ```
 
 </details>
+
+#### Mapping
+
+<details>
+<summary>Proposed mapping</summary>
+
+```json
+{
+  "mappings": {
+    "data": {
+      "title": "data.opportunity_title",
+      "status": {
+        "value": {
+          "match": {
+            "field": "data.opportunity_status",
+            "case": {
+              "forecasted": "forecasted",
+              "posted": "open",
+              "archived": "closed"
+            },
+            "default": "custom"
+          }
+        },
+        "description": {
+          "const": "The opportunity is currently accepting applications"
+        }
+      },
+      "funding": {
+        "minAwardAmount": {
+          "amount": {
+            "numberToString": "data.summary.award_floor"
+          },
+          "currency": { "const": "USD" }
+        },
+        "maxAwardAmount": {
+          "amount": {
+            "numberToString": "data.summary.award_ceiling"
+          },
+          "currency": { "const": "USD" }
+        }
+      },
+      "keyDates": {
+        "appOpens": {
+          "date": "data.summary.forecasted_post_date",
+          "name": { "const": "Open Date" },
+          "description": { "const": "Applications begin being accepted" }
+        },
+        "appDeadline": {
+          "date": "data.summary.forecasted_close_date",
+          "name": { "const": "Application Deadline" },
+          "description": {
+            "const": "Final submission deadline for all grant applications"
+          }
+        },
+        "otherDates": {
+          "forecastedAwardDate": {
+            "date": "data.summary.forecasted_award_date",
+            "name": { "const": "Forecasted award date" },
+            "description": {
+              "const": "When we expect to announce awards for this opportunity."
+            }
+          }
+        }
+      },
+      "customFields": {
+        "legacyId": {
+          "value": "data.opportunity_id",
+          "name": { "const": "Legacy ID" },
+          "type": { "const": "number" },
+          "description": { "const": "Unique identifier in legacy database" }
+        },
+        "agencyName": {
+          "value": "data.agency_name",
+          "name": { "const": "Agency" },
+          "type": { "const": "string" },
+          "description": { "const": "Agency hosting the opportunity" }
+        },
+        "applicantTypes": {
+          "value": "data.summary.applicant_types",
+          "name": { "const": "Applicant types" },
+          "type": { "const": "array" },
+          "description": { "const": "Types of applicants eligible to apply" }
+        }
+      }
+    }
+  }
+}
+```
+
+</details>
+
+### Consequences
+
+- **Positive consequences**
+  - Easy to read and write for both technical and non-technical users
+  - JSON-based format makes it easy to serialize and deserialize between languages
+  - Allows CommonGrants.org to display mappings across forms or data schemas in a registry-style UI
+- **Negative consequences**
+  - Less expressive than jq for executing complex transformations
+  - Requires custom code to apply transformations in each new language or SDK
+  - Adding support for new transformations would require updating the mapping format and each SDK
 
 ### Criteria
 
@@ -194,11 +365,15 @@ JSON mapping is best if:
       },
       "funding": {
         "minAwardAmount": {
-          "amount": "data.summary.award_floor",
+          "amount": {
+            "numberToString": "data.summary.award_floor"
+          },
           "currency": { "const": "USD" }
         },
         "maxAwardAmount": {
-          "amount": "data.summary.award_ceiling",
+          "amount": {
+            "numberToString": "data.summary.award_ceiling"
+          },
           "currency": { "const": "USD" }
         }
       },
@@ -297,9 +472,13 @@ Schema overlay is best if:
             "value": {
               "type": "string",
               "x-map-from": {
-                "valueMap": {
-                  "posted": "open"
-                }
+                "field": "data.opportunity_status",
+                "case": {
+                  "forecasted": "forecasted",
+                  "posted": "open",
+                  "archived": "closed"
+                },
+                "default": "custom"
               }
             },
             "description": {
