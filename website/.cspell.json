@@ -39,7 +39,8 @@
     "isotime",
     "isodate",
     "utcdatetime",
-    "offsetdatetime"
+    "offsetdatetime",
+    "tostring"
   ],
   "import": []
 }
