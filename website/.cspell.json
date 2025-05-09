@@ -16,7 +16,9 @@
     "pyproject",
     "transpiles",
     "tspconfig",
-    "typespec"
+    "typespec",
+    "geospatial",
+    "Anytown"
   ],
   "ignoreWords": [
     "opblock",
