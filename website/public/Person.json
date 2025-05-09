@@ -1,117 +1,109 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "Person.json",
-    "type": "object",
-    "properties": {
-        "name": {
-            "$ref": "Name.json",
-            "description": "The person's full name, including all relevant components (first, middle, last, etc.)."
-        },
-        "phones": {
-            "type": "object",
-            "properties": {
-                "primary": {
-                    "$ref": "Phone.json",
-                    "description": "The person's primary contact number."
-                },
-                "work": {
-                    "$ref": "Phone.json",
-                    "description": "The person's work phone number."
-                },
-                "home": {
-                    "$ref": "Phone.json",
-                    "description": "The person's home phone number."
-                },
-                "otherPhones": {
-                    "$ref": "#/$defs/RecordPhone",
-                    "description": "Additional phone numbers not covered by the standard fields."
-                }
-            },
-            "required": [
-                "primary"
-            ],
-            "description": "Collection of phone numbers associated with the person."
-        },
-        "fax": {
-            "$ref": "Phone.json",
-            "description": "The person's fax number, if applicable."
-        },
-        "emails": {
-            "type": "object",
-            "properties": {
-                "primary": {
-                    "$ref": "email.json",
-                    "description": "The person's primary email address."
-                },
-                "work": {
-                    "$ref": "email.json",
-                    "description": "The person's work email address."
-                },
-                "personal": {
-                    "$ref": "email.json",
-                    "description": "The person's personal email address."
-                },
-                "otherEmails": {
-                    "$ref": "#/$defs/RecordEmail",
-                    "description": "Additional email addresses not covered by the standard fields."
-                }
-            },
-            "required": [
-                "primary"
-            ],
-            "description": "Collection of email addresses associated with the person."
-        },
-        "addresses": {
-            "type": "object",
-            "properties": {
-                "mailing": {
-                    "$ref": "Address.json",
-                    "description": "The person's primary mailing address."
-                },
-                "work": {
-                    "$ref": "Address.json",
-                    "description": "The person's work address."
-                },
-                "home": {
-                    "$ref": "Address.json",
-                    "description": "The person's home address."
-                },
-                "otherAddresses": {
-                    "$ref": "#/$defs/RecordAddress",
-                    "description": "Additional addresses not covered by the standard fields."
-                }
-            },
-            "required": [
-                "mailing"
-            ],
-            "description": "Collection of physical addresses associated with the person."
-        }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Person.json",
+  "type": "object",
+  "properties": {
+    "name": {
+      "$ref": "Name.json",
+      "description": "The person's full name, including all relevant components (first, middle, last, etc.)."
     },
-    "required": [
-        "name"
-    ],
-    "description": "A person affiliated with an organization or grant application.",
-    "$defs": {
-        "RecordPhone": {
-            "type": "object",
-            "properties": {},
-            "unevaluatedProperties": {
-                "$ref": "Phone.json"
-            }
+    "phones": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "$ref": "Phone.json",
+          "description": "The person's primary contact number."
         },
-        "RecordEmail": {
-            "type": "object",
-            "properties": {},
-            "unevaluatedProperties": {
-                "$ref": "email.json"
-            }
+        "work": {
+          "$ref": "Phone.json",
+          "description": "The person's work phone number."
         },
-        "RecordAddress": {
-            "type": "object",
-            "properties": {},
-            "unevaluatedProperties": {
-                "$ref": "Address.json"
-            }
+        "home": {
+          "$ref": "Phone.json",
+          "description": "The person's home phone number."
+        },
+        "otherPhones": {
+          "$ref": "#/$defs/RecordPhone",
+          "description": "Additional phone numbers not covered by the standard fields."
         }
+      },
+      "required": ["primary"],
+      "description": "Collection of phone numbers associated with the person."
+    },
+    "fax": {
+      "$ref": "Phone.json",
+      "description": "The person's fax number, if applicable."
+    },
+    "emails": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "$ref": "email.json",
+          "description": "The person's primary email address."
+        },
+        "work": {
+          "$ref": "email.json",
+          "description": "The person's work email address."
+        },
+        "personal": {
+          "$ref": "email.json",
+          "description": "The person's personal email address."
+        },
+        "otherEmails": {
+          "$ref": "#/$defs/RecordEmail",
+          "description": "Additional email addresses not covered by the standard fields."
+        }
+      },
+      "required": ["primary"],
+      "description": "Collection of email addresses associated with the person."
+    },
+    "addresses": {
+      "type": "object",
+      "properties": {
+        "mailing": {
+          "$ref": "Address.json",
+          "description": "The person's primary mailing address."
+        },
+        "work": {
+          "$ref": "Address.json",
+          "description": "The person's work address."
+        },
+        "home": {
+          "$ref": "Address.json",
+          "description": "The person's home address."
+        },
+        "otherAddresses": {
+          "$ref": "#/$defs/RecordAddress",
+          "description": "Additional addresses not covered by the standard fields."
+        }
+      },
+      "required": ["mailing"],
+      "description": "Collection of physical addresses associated with the person."
     }
+  },
+  "required": ["name"],
+  "description": "A person affiliated with an organization or grant application.",
+  "$defs": {
+    "RecordPhone": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "Phone.json"
+      }
+    },
+    "RecordEmail": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "email.json"
+      }
+    },
+    "RecordAddress": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "Address.json"
+      }
+    }
+  }
 }

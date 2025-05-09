@@ -1,41 +1,38 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "Name.json",
-    "type": "object",
-    "properties": {
-        "prefix": {
-            "type": "string",
-            "description": "Honorific prefix (e.g., Mr., Mrs., Dr., Prof.)."
-        },
-        "firstName": {
-            "type": "string",
-            "description": "The person's first or given name."
-        },
-        "middleName": {
-            "type": "string",
-            "description": "The person's middle name or names."
-        },
-        "lastName": {
-            "type": "string",
-            "description": "The person's last name or family name."
-        },
-        "suffix": {
-            "type": "string",
-            "description": "Name suffix (e.g., Jr., Sr., III, Ph.D.)."
-        }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Name.json",
+  "type": "object",
+  "properties": {
+    "prefix": {
+      "type": "string",
+      "description": "Honorific prefix (e.g., Mr., Mrs., Dr., Prof.)."
     },
-    "required": [
-        "firstName",
-        "lastName"
-    ],
-    "examples": [
-        {
-            "prefix": "Dr.",
-            "firstName": "Jane",
-            "middleName": "Edward",
-            "lastName": "Doe",
-            "suffix": "Jr."
-        }
-    ],
-    "description": "A person's name."
+    "firstName": {
+      "type": "string",
+      "description": "The person's first or given name."
+    },
+    "middleName": {
+      "type": "string",
+      "description": "The person's middle name or names."
+    },
+    "lastName": {
+      "type": "string",
+      "description": "The person's last name or family name."
+    },
+    "suffix": {
+      "type": "string",
+      "description": "Name suffix (e.g., Jr., Sr., III, Ph.D.)."
+    }
+  },
+  "required": ["firstName", "lastName"],
+  "examples": [
+    {
+      "prefix": "Dr.",
+      "firstName": "Jane",
+      "middleName": "Edward",
+      "lastName": "Doe",
+      "suffix": "Jr."
+    }
+  ],
+  "description": "A person's name."
 }

@@ -1,161 +1,152 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "Organization.json",
-    "type": "object",
-    "properties": {
-        "name": {
-            "type": "string",
-            "description": "The organization's legal name as registered with relevant authorities."
-        },
-        "address": {
-            "$ref": "Address.json",
-            "description": "The organization's primary mailing address."
-        },
-        "type": {
-            "type": "string",
-            "description": "The organization's type (e.g., \"Nonprofit\", \"For-Profit\", \"Government\", \"Educational\")."
-        },
-        "ein": {
-            "type": "string",
-            "description": "The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS."
-        },
-        "uei": {
-            "type": "string",
-            "description": "The organization's Unique Entity Identifier (UEI) from SAM.gov, used for federal contracting."
-        },
-        "duns": {
-            "type": "string",
-            "description": "The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses."
-        },
-        "mission": {
-            "type": "string",
-            "description": "The organization's mission statement."
-        },
-        "yearFounded": {
-            "type": "number",
-            "description": "The calendar year the organization was founded."
-        },
-        "fiscalYearStart": {
-            "type": "string",
-            "format": "date",
-            "examples": [
-                "2024-01-01"
-            ],
-            "description": "The start date of the organization's fiscal year, used for financial reporting."
-        },
-        "fiscalYearEnd": {
-            "type": "string",
-            "format": "date",
-            "description": "The end date of the organization's fiscal year, used for financial reporting."
-        },
-        "socials": {
-            "type": "object",
-            "properties": {
-                "website": {
-                    "type": "string",
-                    "description": "The organization's primary website URL."
-                },
-                "facebook": {
-                    "type": "string",
-                    "description": "The organization's Facebook profile URL."
-                },
-                "twitter": {
-                    "type": "string",
-                    "description": "The organization's Twitter/X profile URL."
-                },
-                "instagram": {
-                    "type": "string",
-                    "description": "The organization's Instagram profile URL."
-                },
-                "linkedin": {
-                    "type": "string",
-                    "description": "The organization's LinkedIn profile URL."
-                },
-                "otherSocials": {
-                    "$ref": "#/$defs/RecordString",
-                    "description": "Additional social media profiles not covered by the standard fields."
-                }
-            },
-            "description": "Collection of the organization's social media and web presence links."
-        },
-        "contacts": {
-            "type": "object",
-            "properties": {
-                "pointOfContact": {
-                    "$ref": "Person.json",
-                    "description": "The primary point of contact for the organization."
-                },
-                "otherContacts": {
-                    "$ref": "#/$defs/RecordPerson",
-                    "description": "Additional contacts within the organization, keyed by their role or relationship."
-                }
-            },
-            "required": [
-                "pointOfContact"
-            ],
-            "description": "Contact information for the organization's representatives."
-        }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Organization.json",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The organization's legal name as registered with relevant authorities."
     },
-    "required": [
-        "name",
-        "address",
-        "type",
-        "contacts"
-    ],
-    "examples": [
-        {
-            "name": "Example Organization",
-            "address": {
-                "street1": "123 Main St",
-                "city": "Anytown",
-                "stateOrProvince": "CA",
-                "country": "US",
-                "postalCode": "12345"
-            },
-            "type": "Nonprofit",
-            "ein": "123456789",
-            "uei": "123456789",
-            "duns": "123456789",
-            "mission": "To provide support and resources to the community.",
-            "yearFounded": 2024,
-            "fiscalYearStart": "2024-01-01",
-            "fiscalYearEnd": "2024-12-31",
-            "contacts": {
-                "pointOfContact": {
-                    "name": {
-                        "prefix": "Dr.",
-                        "firstName": "John",
-                        "lastName": "Doe"
-                    },
-                    "emails": {
-                        "primary": "john.doe@example.com"
-                    },
-                    "phones": {
-                        "primary": {
-                            "countryCode": "+1",
-                            "number": "555-123-4567",
-                            "isMobile": true
-                        }
-                    }
-                }
-            }
-        }
-    ],
-    "description": "An organization that can apply for grants.",
-    "$defs": {
-        "RecordString": {
-            "type": "object",
-            "properties": {},
-            "unevaluatedProperties": {
-                "type": "string"
-            }
+    "address": {
+      "$ref": "Address.json",
+      "description": "The organization's primary mailing address."
+    },
+    "type": {
+      "type": "string",
+      "description": "The organization's type (e.g., \"Nonprofit\", \"For-Profit\", \"Government\", \"Educational\")."
+    },
+    "ein": {
+      "type": "string",
+      "description": "The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS."
+    },
+    "uei": {
+      "type": "string",
+      "description": "The organization's Unique Entity Identifier (UEI) from SAM.gov, used for federal contracting."
+    },
+    "duns": {
+      "type": "string",
+      "description": "The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses."
+    },
+    "mission": {
+      "type": "string",
+      "description": "The organization's mission statement."
+    },
+    "yearFounded": {
+      "type": "number",
+      "description": "The calendar year the organization was founded."
+    },
+    "fiscalYearStart": {
+      "type": "string",
+      "format": "date",
+      "examples": ["2024-01-01"],
+      "description": "The start date of the organization's fiscal year, used for financial reporting."
+    },
+    "fiscalYearEnd": {
+      "type": "string",
+      "format": "date",
+      "description": "The end date of the organization's fiscal year, used for financial reporting."
+    },
+    "socials": {
+      "type": "object",
+      "properties": {
+        "website": {
+          "type": "string",
+          "description": "The organization's primary website URL."
         },
-        "RecordPerson": {
-            "type": "object",
-            "properties": {},
-            "unevaluatedProperties": {
-                "$ref": "Person.json"
-            }
+        "facebook": {
+          "type": "string",
+          "description": "The organization's Facebook profile URL."
+        },
+        "twitter": {
+          "type": "string",
+          "description": "The organization's Twitter/X profile URL."
+        },
+        "instagram": {
+          "type": "string",
+          "description": "The organization's Instagram profile URL."
+        },
+        "linkedin": {
+          "type": "string",
+          "description": "The organization's LinkedIn profile URL."
+        },
+        "otherSocials": {
+          "$ref": "#/$defs/RecordString",
+          "description": "Additional social media profiles not covered by the standard fields."
         }
+      },
+      "description": "Collection of the organization's social media and web presence links."
+    },
+    "contacts": {
+      "type": "object",
+      "properties": {
+        "pointOfContact": {
+          "$ref": "Person.json",
+          "description": "The primary point of contact for the organization."
+        },
+        "otherContacts": {
+          "$ref": "#/$defs/RecordPerson",
+          "description": "Additional contacts within the organization, keyed by their role or relationship."
+        }
+      },
+      "required": ["pointOfContact"],
+      "description": "Contact information for the organization's representatives."
     }
+  },
+  "required": ["name", "address", "type", "contacts"],
+  "examples": [
+    {
+      "name": "Example Organization",
+      "address": {
+        "street1": "123 Main St",
+        "city": "Anytown",
+        "stateOrProvince": "CA",
+        "country": "US",
+        "postalCode": "12345"
+      },
+      "type": "Nonprofit",
+      "ein": "123456789",
+      "uei": "123456789",
+      "duns": "123456789",
+      "mission": "To provide support and resources to the community.",
+      "yearFounded": 2024,
+      "fiscalYearStart": "2024-01-01",
+      "fiscalYearEnd": "2024-12-31",
+      "contacts": {
+        "pointOfContact": {
+          "name": {
+            "prefix": "Dr.",
+            "firstName": "John",
+            "lastName": "Doe"
+          },
+          "emails": {
+            "primary": "john.doe@example.com"
+          },
+          "phones": {
+            "primary": {
+              "countryCode": "+1",
+              "number": "555-123-4567",
+              "isMobile": true
+            }
+          }
+        }
+      }
+    }
+  ],
+  "description": "An organization that can apply for grants.",
+  "$defs": {
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    },
+    "RecordPerson": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "Person.json"
+      }
+    }
+  }
 }

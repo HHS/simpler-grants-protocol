@@ -1,77 +1,68 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "Address.json",
-    "type": "object",
-    "properties": {
-        "street1": {
-            "type": "string",
-            "description": "The primary street address line."
-        },
-        "street2": {
-            "type": "string",
-            "description": "Additional street address information (e.g., apartment number, suite, etc.)."
-        },
-        "city": {
-            "type": "string",
-            "description": "The city or municipality name."
-        },
-        "stateOrProvince": {
-            "type": "string",
-            "description": "The state, province, or region name."
-        },
-        "country": {
-            "type": "string",
-            "description": "The country name or ISO country code."
-        },
-        "postalCode": {
-            "type": "string",
-            "description": "The postal or ZIP code for the address."
-        },
-        "latitude": {
-            "type": "number",
-            "description": "The latitude coordinate of the address location."
-        },
-        "longitude": {
-            "type": "number",
-            "description": "The longitude coordinate of the address location."
-        },
-        "geography": {
-            "$ref": "#/$defs/RecordUnknown",
-            "description": "Additional geospatial data in GeoJSON format."
-        }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Address.json",
+  "type": "object",
+  "properties": {
+    "street1": {
+      "type": "string",
+      "description": "The primary street address line."
     },
-    "required": [
-        "street1",
-        "city",
-        "stateOrProvince",
-        "country",
-        "postalCode"
-    ],
-    "examples": [
-        {
-            "street1": "123 Main St",
-            "street2": "Apt 1",
-            "city": "Anytown",
-            "stateOrProvince": "CA",
-            "country": "US",
-            "postalCode": "12345",
-            "latitude": 37.7749,
-            "longitude": -122.4194,
-            "geography": {
-                "type": "Point",
-                "coordinates": [
-                    37.7749,
-                    -122.4194
-                ]
-            }
-        }
-    ],
-    "description": "An mailing address.",
-    "$defs": {
-        "RecordUnknown": {
-            "type": "object",
-            "properties": {},
-            "unevaluatedProperties": {}
-        }
+    "street2": {
+      "type": "string",
+      "description": "Additional street address information (e.g., apartment number, suite, etc.)."
+    },
+    "city": {
+      "type": "string",
+      "description": "The city or municipality name."
+    },
+    "stateOrProvince": {
+      "type": "string",
+      "description": "The state, province, or region name."
+    },
+    "country": {
+      "type": "string",
+      "description": "The country name or ISO country code."
+    },
+    "postalCode": {
+      "type": "string",
+      "description": "The postal or ZIP code for the address."
+    },
+    "latitude": {
+      "type": "number",
+      "description": "The latitude coordinate of the address location."
+    },
+    "longitude": {
+      "type": "number",
+      "description": "The longitude coordinate of the address location."
+    },
+    "geography": {
+      "$ref": "#/$defs/RecordUnknown",
+      "description": "Additional geospatial data in GeoJSON format."
     }
+  },
+  "required": ["street1", "city", "stateOrProvince", "country", "postalCode"],
+  "examples": [
+    {
+      "street1": "123 Main St",
+      "street2": "Apt 1",
+      "city": "Anytown",
+      "stateOrProvince": "CA",
+      "country": "US",
+      "postalCode": "12345",
+      "latitude": 37.7749,
+      "longitude": -122.4194,
+      "geography": {
+        "type": "Point",
+        "coordinates": [37.7749, -122.4194]
+      }
+    }
+  ],
+  "description": "An mailing address.",
+  "$defs": {
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    }
+  }
 }
