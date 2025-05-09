@@ -4,6 +4,37 @@ import "./person.tsp";
 namespace CommonGrants.Models;
 
 /** An organization that can apply for grants. */
+@example(#{
+    name: "Example Organization",
+    address: #{
+        street1: "123 Main St",
+        city: "Anytown",
+        stateOrProvince: "CA",
+        country: "US",
+        postalCode: "12345",
+    },
+    type: "Nonprofit",
+    ein: "123456789",
+    uei: "123456789",
+    duns: "123456789",
+    mission: "To provide support and resources to the community.",
+    yearFounded: 2024,
+    fiscalYearStart: plainDate.fromISO("2024-01-01"),
+    fiscalYearEnd: plainDate.fromISO("2024-12-31"),
+    contacts: #{
+        pointOfContact: #{
+            name: #{ prefix: "Dr.", firstName: "John", lastName: "Doe" },
+            emails: #{ primary: "john.doe@example.com" },
+            phones: #{
+                primary: #{
+                    countryCode: "+1",
+                    number: "555-123-4567",
+                    isMobile: true,
+                },
+            },
+        },
+    },
+})
 model Organization {
     /** The organization's legal name as registered with relevant authorities. */
     name: string;
