@@ -118,9 +118,9 @@ loaded_opportunity = OpportunityBase.from_json(json_data)
 
 ### Transform Data Sources and Models
 
-When extending an existing system to adopt the CommonGrants protocol, a developer might need to transform existing data model implementations or data sources into canonical model instances. Such custom transformations can be easily implementing by leveraging the abstract base class `OpportunityTransformer`. 
+When extending an existing system to adopt the CommonGrants protocol, a developer might need to transform existing data model implementations or data sources into canonical model instances. Such custom transformations can be easily implemented by leveraging the abstract base class `OpportunityTransformer`. 
 
-The `OpportunityTransformer` base class defines a standard interface for transforming raw input data (from third-party feeds, legacy formats, custom JSON, etc.) into structured `OpportunityBase` instances. As an abstract base class, `OpportunityTransformer` itself does not contain any transformation logic; custom transformation logic must be implemented by subclassing the abstract base class (see following example).
+The `OpportunityTransformer` base class defines a standard interface for transforming raw input data (from third-party feeds, legacy formats, custom JSON, etc.) into structured `OpportunityBase` instances. As an abstract base class, `OpportunityTransformer` itself *does not contain any transformation logic*; custom transformation logic must be implemented by subclassing the abstract base class (see following example).
 
 #### Custom Transformer Example
 
@@ -136,13 +136,13 @@ from datetime import date
 class LegacyGrantDataTransformer(OpportunityTransformer):
 
     def transform_opportunity_description(self) -> str:
-        return self.data_source.get("grant_description", "Description")
+        return self.source_data.get("grant_description", "Description")
 
     def transform_opportunity_funding(self) -> OppFunding:
-        total_award = self.data_source.get("total_award", 0)
-        min_award = self.data_source.get("min_award", 0)
-        max_award = self.data_source.get("max_award", 0)
-        currency = self.data_source.get("award_currency", "USD")
+        total_award = self.source_data.get("total_award", 0)
+        min_award = self.source_data.get("min_award", 0)
+        max_award = self.source_data.get("max_award", 0)
+        currency = self.source_data.get("award_currency", "USD")
         return OppFunding(
             total_amount_available=Money(amount=total_award, currency=currency),
             min_award_amount=Money(amount=min_award, currency=currency),
@@ -157,8 +157,8 @@ class LegacyGrantDataTransformer(OpportunityTransformer):
         )
 
     def transform_opportunity_timeline(self) -> OppTimeline:
-        start_date = self.data_source.get("start_date")
-        end_date = self.data_source.get("end_date")
+        start_date = self.source_data.get("start_date")
+        end_date = self.source_data.get("end_date")
         return OppTimeline(
             app_opens=Event(
                 name="Application Open",
@@ -173,7 +173,7 @@ class LegacyGrantDataTransformer(OpportunityTransformer):
         )
 
     def transform_opportunity_title(self) -> str:
-        return self.data_source.get("grant_name", "Title")
+        return self.source_data.get("grant_name", "Title")
 ```
 
 Usage of the custom transformer:
