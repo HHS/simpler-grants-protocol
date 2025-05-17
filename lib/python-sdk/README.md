@@ -19,7 +19,7 @@ pip install common-grants-python-sdk
 poetry add common-grants-python-sdk
 ```
 
-## Quick Start
+## Example Usage
 
 ```python
 from datetime import datetime, date, UTC
@@ -89,4 +89,8 @@ loaded_opportunity = OpportunityBase.from_json(json_data)
 - `OppFunding`: Funding details and constraints
 - `OppStatus`: Opportunity status tracking
 - `OppTimeline`: Key dates and milestones
+
+## Development Guide
+
+For technical details, see the [Developer Guide](./DEVELOPMENT.md).
 
