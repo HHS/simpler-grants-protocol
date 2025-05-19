@@ -5,12 +5,12 @@ The transform_from_mapping function takes a data dictionary and a mapping dictio
 The mapping dictionary describes how to transform the data dictionary into a new dictionary.
 """
 
-from typing import Any, Callable, Union
+from typing import Any, Callable
 
-handle_func = Callable[[dict[str, Any], dict[str, Any]], Any]
+handle_func = Callable[[dict, dict], Any]
 
 
-def get_from_path(data: dict[str, Any], path: str, default: Any = None) -> Any:
+def get_from_path(data: dict, path: str, default: Any = None) -> Any:
     """
     Gets a value from a dictionary using dot notation.
 
@@ -31,7 +31,7 @@ def get_from_path(data: dict[str, Any], path: str, default: Any = None) -> Any:
     return data
 
 
-def handle_field(data: dict[str, Any], spec: dict[str, Any]) -> Any:
+def handle_field(data: dict, spec: dict) -> Any:
     """
     Handles a field transformation by extracting a value from the data using the specified field path.
 
@@ -45,7 +45,7 @@ def handle_field(data: dict[str, Any], spec: dict[str, Any]) -> Any:
     return get_from_path(data, spec["field"])
 
 
-def handle_const(_data: dict[str, Any], spec: dict[str, Any]) -> Any:
+def handle_const(_data: dict, spec: dict) -> Any:
     """
     Handles a constant transformation by returning the specified constant value.
 
@@ -59,7 +59,7 @@ def handle_const(_data: dict[str, Any], spec: dict[str, Any]) -> Any:
     return spec["const"]
 
 
-def handle_match(data: dict[str, Any], spec: dict[str, Any]) -> Any:
+def handle_match(data: dict, spec: dict) -> Any:
     """
     Handles a match transformation by looking up a value in a case dictionary.
 
@@ -87,12 +87,12 @@ DEFAULT_HANDLERS: dict[str, handle_func] = {
 
 
 def transform_from_mapping(
-    data: dict[str, Any],
-    mapping: dict[str, Any],
+    data: dict,
+    mapping: dict,
     depth: int = 0,
     max_depth: int = 500,
     handlers: dict[str, handle_func] = DEFAULT_HANDLERS,
-) -> dict[str, Any]:
+) -> dict:
     """
     Transforms a data dictionary according to a mapping specification.
 
@@ -114,7 +114,7 @@ def transform_from_mapping(
     if depth > max_depth:
         raise ValueError("Maximum transformation depth exceeded.")
 
-    def transform_node(node: Union[dict[str, Any], Any], depth: int) -> Any:
+    def transform_node(node: Any, depth: int) -> Any:
         if depth > max_depth:
             raise ValueError("Maximum transformation depth exceeded.")
         if isinstance(node, dict):
