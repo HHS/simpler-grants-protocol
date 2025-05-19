@@ -27,12 +27,12 @@ class CommonGrantsBaseModel(BaseModel):
         return transform_from_mapping(self.model_dump(mode="json"), mapping)
 
     @classmethod
-    def from_json(cls, json_str: str) -> "CommonGrantsBaseModel":
+    def from_json(cls, json_str: str) -> Self:
         """Create model instance from JSON string (alias for model_validate_json for backward compatibility)."""
         return cls.model_validate_json(json_str)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "CommonGrantsBaseModel":
+    def from_dict(cls, data: dict) -> Self:
         """Create model instance from dictionary (alias for model_validate for backward compatibility)."""
         # If the data already contains datetime objects, use model_validate directly
         try:
