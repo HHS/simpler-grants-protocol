@@ -89,16 +89,9 @@ The Python code for this filter is:
 from dataclasses import dataclass
 from typing import Any, Union
 
-OperatorType = Union[
-    "ComparisonOperators",
-    "ArrayOperators",
-    "StringOperators",
-    "RangeOperators"
-]
-
 @dataclass
 class DefaultFilter:
-    operator: OperatorType
+    operator: Union[ComparisonOperators, ArrayOperators, StringOperators, RangeOperators]
     value: Any
 
 # Example usage:
