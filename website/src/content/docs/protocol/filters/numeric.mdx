@@ -76,7 +76,20 @@ model NumberComparisonFilter {
   <TabItem label="Python">
 
 ```python
-# TO DO: add content
+from enum import Enum
+
+class ComparisonOperators(str, Enum):
+    EQ = "eq"
+    GT = "gt"
+    GTE = "gte"
+    LT = "lt"
+    LTE = "lte"
+
+# Example usage:
+number_comparison_filter = {
+    "operator": ComparisonOperators.EQ,
+    "value": 1000
+}
 ```
 
   </TabItem>
@@ -179,7 +192,20 @@ model NumberRangeFilter {
   <TabItem label="Python">
 
 ```python
-# TO DO: add content
+from enum import Enum
+
+class RangeOperators(str, Enum):
+    WITHIN = "within"
+    OUTSIDE = "outside"
+
+# Example usage:
+number_range_filter = {
+    "operator": RangeOperators.WITHIN,
+    "value": {
+        "min": 1000,
+        "max": 10000
+    }
+}
 ```
 
   </TabItem>
@@ -258,7 +284,17 @@ model NumberArrayFilter {
   <TabItem label="Python">
 
 ```python
-# TO DO: add content
+from enum import Enum
+
+class ArrayOperators(str, Enum):
+    IN = "in"
+    NOT_IN = "not_in"
+
+# Example usage:
+number_array_filter = {
+    "operator": ArrayOperators.IN,
+    "value": [1000, 2000, 3000]
+}
 ```
 
   </TabItem>

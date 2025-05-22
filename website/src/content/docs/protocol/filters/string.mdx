@@ -86,7 +86,23 @@ model StringComparisonFilter {
   <TabItem label="Python">
 
 ```python
-# TO DO: add content
+from enum import Enum
+
+class StringOperators(str, Enum):
+    EQ = "eq"
+    LIKE = "like"
+    NOT_LIKE = "not_like"
+
+# Example usage:
+string_comparison_filter = {
+    "operator": StringOperators.EQ,
+    "value": "value"
+}
+
+string_like_filter = {
+    "operator": StringOperators.LIKE,
+    "value": "value"
+}
 ```
 
   </TabItem>
@@ -168,7 +184,18 @@ model StringArrayFilter {
   <TabItem label="Python">
 
 ```python
-# TO DO: add content
+from enum import Enum
+
+class ArrayOperators(str, Enum):
+    EQ = "eq"
+    IN = "in"
+    NOT_IN = "not_in"
+
+# Example usage:
+string_array_filter = {
+    "operator": ArrayOperators.EQ,
+    "value": ["value1", "value2"]
+}
 ```
 
   </TabItem>
