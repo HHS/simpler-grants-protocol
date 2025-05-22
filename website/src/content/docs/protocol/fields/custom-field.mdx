@@ -100,7 +100,15 @@ model CustomField {
   <TabItem label="Python">
 
 ```python
-# TO DO: add content
+from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
+
+custom_field = CustomField(
+    name="programArea",
+    type=CustomFieldType.STRING,
+    value="Healthcare Innovation",
+    description="Primary focus area of the grant program",
+    schema="https://example.com/program-areas.json"
+)
 ```
 
   </TabItem>

@@ -91,7 +91,15 @@ model Event {
   <TabItem label="Python">
 
 ```python
-# TO DO: add content
+from datetime import date, time
+from common_grants_sdk.schemas.fields import Event
+
+event = Event(
+    name="Application Deadline",
+    date=date(2024, 4, 30),
+    time=time(17, 0, 0),
+    description="Final deadline for all submissions"
+)
 ```
 
   </TabItem>
