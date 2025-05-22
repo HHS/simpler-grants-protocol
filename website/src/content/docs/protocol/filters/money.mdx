@@ -110,22 +110,30 @@ model MoneyRangeFilter {
 
   <TabItem label="Python">
 
+The Python code for this filter is:
+
 ```python
-from enum import Enum
+from dataclasses import dataclass
 from common_grants_sdk.schemas.fields import Money
 
-class RangeOperators(str, Enum):
-    WITHIN = "within"
-    OUTSIDE = "outside"
+@dataclass
+class MoneyRange:
+    min: Money
+    max: Money
+
+@dataclass
+class MoneyRangeFilter:
+    operator: RangeOperators
+    value: MoneyRange
 
 # Example usage:
-money_range_filter = {
-    "operator": RangeOperators.WITHIN,
-    "value": {
-        "min": Money(amount="1000", currency="USD"),
-        "max": Money(amount="10000", currency="USD")
-    }
-}
+money_range_filter = MoneyRangeFilter(
+    operator=RangeOperators.WITHIN,
+    value=MoneyRange(
+        min=Money(amount="1000", currency="USD"),
+        max=Money(amount="10000", currency="USD")
+    )
+)
 ```
 
   </TabItem>
@@ -204,22 +212,22 @@ model MoneyComparisonFilter {
 
   <TabItem label="Python">
 
+The Python code for this filter is:
+
 ```python
-from enum import Enum
+from dataclasses import dataclass
 from common_grants_sdk.schemas.fields import Money
 
-class ComparisonOperators(str, Enum):
-    EQ = "eq"
-    GT = "gt"
-    GTE = "gte"
-    LT = "lt"
-    LTE = "lte"
+@dataclass
+class MoneyComparisonFilter:
+    operator: ComparisonOperators
+    value: Money
 
 # Example usage:
-money_comparison_filter = {
-    "operator": ComparisonOperators.EQ,
-    "value": Money(amount="1000", currency="USD")
-}
+money_comparison_filter = MoneyComparisonFilter(
+    operator=ComparisonOperators.EQ,
+    value=Money(amount="1000", currency="USD")
+)
 ```
 
   </TabItem>

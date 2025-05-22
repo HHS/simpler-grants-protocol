@@ -85,24 +85,27 @@ model StringComparisonFilter {
 
   <TabItem label="Python">
 
-```python
-from enum import Enum
+The Python code for this filter is:
 
-class StringOperators(str, Enum):
-    EQ = "eq"
-    LIKE = "like"
-    NOT_LIKE = "not_like"
+```python
+from dataclasses import dataclass
+from typing import Union
+
+@dataclass
+class StringComparisonFilter:
+    operator: Union[EquivalenceOperators, StringOperators]
+    value: str
 
 # Example usage:
-string_comparison_filter = {
-    "operator": StringOperators.EQ,
-    "value": "value"
-}
+string_comparison_filter = StringComparisonFilter(
+    operator=EquivalenceOperators.EQ,
+    value="value"
+)
 
-string_like_filter = {
-    "operator": StringOperators.LIKE,
-    "value": "value"
-}
+string_like_filter = StringComparisonFilter(
+    operator=StringOperators.LIKE,
+    value="value"
+)
 ```
 
   </TabItem>
@@ -183,19 +186,21 @@ model StringArrayFilter {
 
   <TabItem label="Python">
 
-```python
-from enum import Enum
+The Python code for this filter is:
 
-class ArrayOperators(str, Enum):
-    EQ = "eq"
-    IN = "in"
-    NOT_IN = "not_in"
+```python
+from dataclasses import dataclass
+
+@dataclass
+class StringArrayFilter:
+    operator: ArrayOperators
+    value: list[str]
 
 # Example usage:
-string_array_filter = {
-    "operator": ArrayOperators.EQ,
-    "value": ["value1", "value2"]
-}
+string_array_filter = StringArrayFilter(
+    operator=ArrayOperators.EQ,
+    value=["value1", "value2"]
+)
 ```
 
   </TabItem>

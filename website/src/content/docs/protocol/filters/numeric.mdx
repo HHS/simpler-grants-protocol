@@ -75,21 +75,21 @@ model NumberComparisonFilter {
 
   <TabItem label="Python">
 
-```python
-from enum import Enum
+The Python code for this filter is:
 
-class ComparisonOperators(str, Enum):
-    EQ = "eq"
-    GT = "gt"
-    GTE = "gte"
-    LT = "lt"
-    LTE = "lte"
+```python
+from dataclasses import dataclass
+
+@dataclass
+class NumberComparisonFilter:
+    operator: ComparisonOperators
+    value: float
 
 # Example usage:
-number_comparison_filter = {
-    "operator": ComparisonOperators.EQ,
-    "value": 1000
-}
+number_comparison_filter = NumberComparisonFilter(
+    operator=ComparisonOperators.EQ,
+    value=1000
+)
 ```
 
   </TabItem>
@@ -191,21 +191,29 @@ model NumberRangeFilter {
 
   <TabItem label="Python">
 
-```python
-from enum import Enum
+The Python code for this filter is:
 
-class RangeOperators(str, Enum):
-    WITHIN = "within"
-    OUTSIDE = "outside"
+```python
+from dataclasses import dataclass
+
+@dataclass
+class NumberRange:
+    min: float
+    max: float
+
+@dataclass
+class NumberRangeFilter:
+    operator: RangeOperators
+    value: NumberRange
 
 # Example usage:
-number_range_filter = {
-    "operator": RangeOperators.WITHIN,
-    "value": {
-        "min": 1000,
-        "max": 10000
-    }
-}
+number_range_filter = NumberRangeFilter(
+    operator=RangeOperators.WITHIN,
+    value=NumberRange(
+        min=1000,
+        max=10000
+    )
+)
 ```
 
   </TabItem>
@@ -283,18 +291,21 @@ model NumberArrayFilter {
 
   <TabItem label="Python">
 
-```python
-from enum import Enum
+The Python code for this filter is:
 
-class ArrayOperators(str, Enum):
-    IN = "in"
-    NOT_IN = "not_in"
+```python
+from dataclasses import dataclass
+
+@dataclass
+class NumberArrayFilter:
+    operator: ArrayOperators
+    value: list[float]
 
 # Example usage:
-number_array_filter = {
-    "operator": ArrayOperators.IN,
-    "value": [1000, 2000, 3000]
-}
+number_array_filter = NumberArrayFilter(
+    operator=ArrayOperators.IN,
+    value=[1000, 2000, 3000]
+)
 ```
 
   </TabItem>

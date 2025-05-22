@@ -110,22 +110,30 @@ model DateRangeFilter {
 
   <TabItem label="Python">
 
-```python
-from datetime import date
-from enum import Enum
+The Python code for this filter is:
 
-class RangeOperators(str, Enum):
-    BETWEEN = "between"
-    OUTSIDE = "outside"
+```python
+from dataclasses import dataclass
+from datetime import date
+
+@dataclass
+class DateRange:
+    min: date
+    max: date
+
+@dataclass
+class DateRangeFilter:
+    operator: RangeOperators
+    value: DateRange
 
 # Example usage:
-date_range_filter = {
-    "operator": RangeOperators.BETWEEN,
-    "value": {
-        "min": date(2021, 1, 1),
-        "max": date(2021, 1, 2)
-    }
-}
+date_range_filter = DateRangeFilter(
+    operator=RangeOperators.BETWEEN,
+    value=DateRange(
+        min=date(2021, 1, 1),
+        max=date(2021, 1, 2)
+    )
+)
 ```
 
   </TabItem>
@@ -206,22 +214,22 @@ model DateComparisonFilter {
 
   <TabItem label="Python">
 
-```python
-from datetime import date
-from enum import Enum
+The Python code for this filter is:
 
-class ComparisonOperators(str, Enum):
-    EQ = "eq"
-    GT = "gt"
-    GTE = "gte"
-    LT = "lt"
-    LTE = "lte"
+```python
+from dataclasses import dataclass
+from datetime import date
+
+@dataclass
+class DateComparisonFilter:
+    operator: ComparisonOperators
+    value: date
 
 # Example usage:
-date_comparison_filter = {
-    "operator": ComparisonOperators.EQ,
-    "value": date(2021, 1, 1)
-}
+date_comparison_filter = DateComparisonFilter(
+    operator=ComparisonOperators.EQ,
+    value=date(2021, 1, 1)
+)
 ```
 
   </TabItem>
