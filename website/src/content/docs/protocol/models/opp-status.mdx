@@ -86,7 +86,18 @@ model OppStatus {
   <TabItem label="Python">
 
 ```python
-# TO DO: add content
+from common_grants_sdk.schemas.models.opp_status import OppStatus, OppStatusOptions
+
+status = OppStatus(
+    value=OppStatusOptions.OPEN,
+    description="Opportunity is actively accepting applications"
+)
+
+custom_status = OppStatus(
+    value=OppStatusOptions.CUSTOM,
+    custom_value="review",
+    description="Opportunity is in review by the program team"
+)
 ```
 
   </TabItem>
@@ -148,6 +159,16 @@ enum OppStatusOptions {
   closed,
   custom,
 }
+```
+
+  </TabItem>
+
+  <TabItem label="Python">
+
+```python
+from common_grants_sdk.schemas.models.opp_status import OppStatusOptions
+
+status_value = OppStatusOptions.OPEN
 ```
 
   </TabItem>

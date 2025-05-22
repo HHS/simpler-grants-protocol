@@ -111,7 +111,17 @@ model OppFunding {
   <TabItem label="Python">
 
 ```python
-# TO DO: add content
+from common_grants_sdk.schemas.fields import Money
+from common_grants_sdk.schemas.models.opp_funding import OppFunding
+
+funding = OppFunding(
+    total_amount_available=Money(amount="1000000.00", currency="USD"),
+    min_award_amount=Money(amount="10000.00", currency="USD"),
+    max_award_amount=Money(amount="50000.00", currency="USD"),
+    min_award_count=5,
+    max_award_count=20,
+    estimated_award_count=10
+)
 ```
 
   </TabItem>
