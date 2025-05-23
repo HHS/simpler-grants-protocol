@@ -99,7 +99,7 @@ The Python code for this model is:
 ```python
 from datetime import date, time
 from common_grants_sdk.schemas.fields import Event
-from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.models import OppTimeline
 
 timeline = OppTimeline(
     app_opens=Event(

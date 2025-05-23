@@ -205,10 +205,13 @@ The Python code for this model is:
 from datetime import date, datetime, time
 from uuid import UUID
 from common_grants_sdk.schemas.fields import Event, Money, CustomField, CustomFieldType
-from common_grants_sdk.schemas.models.opp_base import OpportunityBase
-from common_grants_sdk.schemas.models.opp_funding import OppFunding
-from common_grants_sdk.schemas.models.opp_status import OppStatus, OppStatusOptions
-from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.models import (
+    OpportunityBase,
+    OppFunding,
+    OppStatus, 
+    OppStatusOptions,
+    OppTimeline,
+)
 
 opportunity = OpportunityBase(
     id=UUID("049b4b15-f219-4037-901e-cd95ac32fbc8"),
