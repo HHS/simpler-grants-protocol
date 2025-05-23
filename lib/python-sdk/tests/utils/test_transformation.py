@@ -38,7 +38,7 @@ def test_field_and_const(input_data):
     """
     mapping = {
         "title": {"field": "opportunity_title"},
-        "agency": {"const": "Example Agency"},
+        "agency": "Example Agency",
     }
     result = transform_from_mapping(input_data, mapping)
     assert result == {
@@ -86,7 +86,7 @@ def test_nested_object(input_data):
         "funding": {
             "minAwardAmount": {
                 "amount": {"field": "summary.award_floor"},
-                "currency": {"const": "USD"},
+                "currency": "USD",
             }
         }
     }
@@ -144,9 +144,7 @@ def test_nested_and_match(input_data):
                     "default": "custom",
                 }
             },
-            "description": {
-                "const": "The opportunity is currently accepting applications"
-            },
+            "description": "The opportunity is currently accepting applications",
         }
     }
     result = transform_from_mapping(input_data, mapping)
@@ -194,7 +192,7 @@ def test_extend_with_concat(input_data):
             "concat": {
                 "parts": [
                     {"field": "opportunity_number"},
-                    {"const": "-"},
+                    "-",
                     {"field": "opportunity_id"},
                 ]
             }

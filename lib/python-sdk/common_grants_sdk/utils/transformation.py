@@ -45,20 +45,6 @@ def pluck_field_value(data: dict, field_path: str) -> Any:
     return get_from_path(data, field_path)
 
 
-def set_constant_value(_data: dict, constant_value: Any) -> Any:
-    """
-    Handles a constant transformation by returning the specified constant value.
-
-    Args:
-        data: The source data dictionary (unused)
-        constant_value: The constant value to return
-
-    Returns:
-        The constant value specified in the spec
-    """
-    return constant_value
-
-
 def switch_on_value(data: dict, switch_spec: dict) -> Any:
     """
     Handles a match transformation by looking up a value in a case dictionary.
