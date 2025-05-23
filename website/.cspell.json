@@ -35,6 +35,8 @@
     "numberarrayfilter",
     "moneycomparisonfilter",
     "moneyrangefilter",
+    "dataclass",
+    "dataclasses",
     "datecomparisonfilter",
     "daterangefilter",
     "decimalstring",
