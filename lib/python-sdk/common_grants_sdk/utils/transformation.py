@@ -7,7 +7,7 @@ The mapping dictionary describes how to transform the data dictionary into a new
 
 from typing import Any, Callable
 
-handle_func = Callable[[dict, dict], Any]
+handle_func = Callable[[dict, Any], Any]
 
 
 def get_from_path(data: dict, path: str, default: Any = None) -> Any:
@@ -31,41 +31,41 @@ def get_from_path(data: dict, path: str, default: Any = None) -> Any:
     return data
 
 
-def handle_field(data: dict, spec: dict) -> Any:
+def pluck_field_value(data: dict, field_path: str) -> Any:
     """
     Handles a field transformation by extracting a value from the data using the specified field path.
 
     Args:
         data: The source data dictionary
-        spec: A dictionary containing the field specification with a 'field' key
+        field_path: A dot-separated string representing the path to the value
 
     Returns:
         The value from the specified field path in the data
     """
-    return get_from_path(data, spec["field"])
+    return get_from_path(data, field_path)
 
 
-def handle_const(_data: dict, spec: dict) -> Any:
+def set_constant_value(_data: dict, constant_value: Any) -> Any:
     """
     Handles a constant transformation by returning the specified constant value.
 
     Args:
         data: The source data dictionary (unused)
-        spec: A dictionary containing the constant value under the 'const' key
+        constant_value: The constant value to return
 
     Returns:
         The constant value specified in the spec
     """
-    return spec["const"]
+    return constant_value
 
 
-def handle_match(data: dict, spec: dict) -> Any:
+def switch_on_value(data: dict, switch_spec: dict) -> Any:
     """
     Handles a match transformation by looking up a value in a case dictionary.
 
     Args:
         data: The source data dictionary
-        spec: A dictionary containing:
+        switch_spec: A dictionary containing:
             - 'field': The field path to get the value from
             - 'case': A dictionary mapping values to their transformations
             - 'default': (optional) The default value if no match is found
@@ -73,16 +73,16 @@ def handle_match(data: dict, spec: dict) -> Any:
     Returns:
         The transformed value based on the match, or the default value if no match is found
     """
-    match_spec = spec["match"]
-    val = get_from_path(data, match_spec["field"])
-    return match_spec["case"].get(val, match_spec.get("default"))
+    val = get_from_path(data, switch_spec.get("field", ""))
+    lookup = switch_spec.get("case", {})
+    return lookup.get(val, switch_spec.get("default"))
 
 
 # Registry for handlers
 DEFAULT_HANDLERS: dict[str, handle_func] = {
-    "field": handle_field,
-    "const": handle_const,
-    "match": handle_match,
+    "field": pluck_field_value,
+    "const": set_constant_value,
+    "switch": switch_on_value,
 }
 
 
@@ -120,7 +120,7 @@ def transform_from_mapping(
         if isinstance(node, dict):
             for k in node:
                 if k in handlers:
-                    return handlers[k](data, node)
+                    return handlers[k](data, node[k])
             return {k: transform_node(v, depth + 1) for k, v in node.items()}
         else:
             return node

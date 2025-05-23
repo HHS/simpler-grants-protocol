@@ -58,7 +58,7 @@ def test_match_handler(input_data):
     """
     mapping = {
         "status": {
-            "match": {
+            "switch": {
                 "field": "opportunity_status",
                 "case": {
                     "forecasted": "forecasted",
@@ -134,7 +134,7 @@ def test_nested_and_match(input_data):
     mapping = {
         "status": {
             "value": {
-                "match": {
+                "switch": {
                     "field": "opportunity_status",
                     "case": {
                         "forecasted": "forecasted",
@@ -182,9 +182,9 @@ def test_extend_with_concat(input_data):
     """
 
     # Patch in a concat handler for this test
-    def handle_concat(data, spec):
+    def handle_concat(data, concat_spec):
         return "".join(
-            str(transform_from_mapping(data, part)) for part in spec["concat"]["parts"]
+            str(transform_from_mapping(data, part)) for part in concat_spec["parts"]
         )
 
     DEFAULT_HANDLERS["concat"] = handle_concat
@@ -214,9 +214,9 @@ def test_extend_with_type_conversion(input_data):
     - Custom handlers can be passed explicitly to transform_from_mapping
     """
 
-    def handle_type(data, spec):
-        value = transform_from_mapping(data, spec["type"]["value"])
-        typ = spec["type"]["to"]
+    def handle_type(data, type_spec):
+        value = transform_from_mapping(data, type_spec["value"])
+        typ = type_spec["to"]
         if typ == "string":
             return str(value)
         elif typ == "number":
