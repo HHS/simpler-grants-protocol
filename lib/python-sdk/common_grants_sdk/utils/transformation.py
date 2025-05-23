@@ -123,6 +123,9 @@ def transform_from_mapping(
     }
     ```
     """
+    # Check for maximum depth
+    # This is a sanity check to prevent stack overflow from deeply nested mappings
+    # which may be a concern when running this function on third-party mappings
     if depth > max_depth:
         raise ValueError("Maximum transformation depth exceeded.")
 
