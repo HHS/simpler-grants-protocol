@@ -72,6 +72,27 @@ model NumberComparisonFilter {
 ```
 
   </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class NumberComparisonFilter:
+    operator: ComparisonOperators
+    value: float
+
+# Example usage:
+number_comparison_filter = NumberComparisonFilter(
+    operator=ComparisonOperators.EQ,
+    value=1000
+)
+```
+
+  </TabItem>
 </Tabs>
 
 ## NumberRangeFilter
@@ -167,6 +188,35 @@ model NumberRangeFilter {
 ```
 
   </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class NumberRange:
+    min: float
+    max: float
+
+@dataclass
+class NumberRangeFilter:
+    operator: RangeOperators
+    value: NumberRange
+
+# Example usage:
+number_range_filter = NumberRangeFilter(
+    operator=RangeOperators.WITHIN,
+    value=NumberRange(
+        min=1000,
+        max=10000
+    )
+)
+```
+
+  </TabItem>
 </Tabs>
 
 ## NumberArrayFilter
@@ -235,6 +285,27 @@ model NumberArrayFilter {
   @example(#[1000, 2000, 3000])
   value: Array<numeric>;
 }
+```
+
+  </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class NumberArrayFilter:
+    operator: ArrayOperators
+    value: list[float]
+
+# Example usage:
+number_array_filter = NumberArrayFilter(
+    operator=ArrayOperators.IN,
+    value=[1000, 2000, 3000]
+)
 ```
 
   </TabItem>

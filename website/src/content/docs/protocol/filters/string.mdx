@@ -82,6 +82,33 @@ model StringComparisonFilter {
 ```
 
   </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+from typing import Union
+
+@dataclass
+class StringComparisonFilter:
+    operator: Union[EquivalenceOperators, StringOperators]
+    value: str
+
+# Example usage:
+string_comparison_filter = StringComparisonFilter(
+    operator=EquivalenceOperators.EQ,
+    value="value"
+)
+
+string_like_filter = StringComparisonFilter(
+    operator=StringOperators.LIKE,
+    value="value"
+)
+```
+
+  </TabItem>
 </Tabs>
 
 ## StringArrayFilter
@@ -153,6 +180,27 @@ model StringArrayFilter {
   @example(["value1", "value2"])
   value: string[];
 }
+```
+
+  </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class StringArrayFilter:
+    operator: ArrayOperators
+    value: list[str]
+
+# Example usage:
+string_array_filter = StringArrayFilter(
+    operator=ArrayOperators.EQ,
+    value=["value1", "value2"]
+)
 ```
 
   </TabItem>

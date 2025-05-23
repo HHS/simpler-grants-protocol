@@ -81,6 +81,27 @@ description: A base filter model that can be used to create more specific filter
 
   </TabItem>
 
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+from typing import Any, Union
+
+@dataclass
+class DefaultFilter:
+    operator: Union[ComparisonOperators, ArrayOperators, StringOperators, RangeOperators]
+    value: Any
+
+# Example usage:
+default_filter_numeric = DefaultFilter(operator=ComparisonOperators.GT, value=100)
+default_filter_array = DefaultFilter(operator=ArrayOperators.IN, value=[1, 2, 3])
+default_filter_string = DefaultFilter(operator=StringOperators.LIKE, value="example")
+default_filter_range = DefaultFilter(operator=RangeOperators.BETWEEN, value={"min": 1, "max": 10})
+```
+
+  </TabItem>
 </Tabs>
 
 ## EquivalenceOperators
@@ -142,6 +163,23 @@ enum:
   - eq
   - neq
 description: Operators that filter a field based on an exact match to a value
+```
+
+  </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from enum import Enum
+
+class EquivalenceOperators(str, Enum):
+    EQ = "eq"
+    NEQ = "neq"
+
+# Example usage:
+op = EquivalenceOperators.EQ
 ```
 
   </TabItem>
@@ -217,6 +255,25 @@ description: Operators that filter a field based on a comparison to a value
 ```
 
   </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from enum import Enum
+
+class ComparisonOperators(str, Enum):
+    GT = "gt"
+    GTE = "gte"
+    LT = "lt"
+    LTE = "lte"
+
+# Example usage:
+op = ComparisonOperators.GT
+```
+
+  </TabItem>
 </Tabs>
 
 ## StringOperators
@@ -272,6 +329,23 @@ enum StringOperators {
   /** Not like */
   not_like,
 }
+```
+
+  </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from enum import Enum
+
+class StringOperators(str, Enum):
+    LIKE = "like"
+    NOT_LIKE = "not_like"
+
+# Example usage:
+op = StringOperators.LIKE
 ```
 
   </TabItem>
@@ -336,6 +410,23 @@ enum ArrayOperators {
 ```
 
   </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from enum import Enum
+
+class ArrayOperators(str, Enum):
+    IN = "in"
+    NOT_IN = "not_in"
+
+# Example usage:
+op = ArrayOperators.IN
+```
+
+  </TabItem>
 </Tabs>
 
 ## RangeOperators
@@ -395,6 +486,23 @@ enum RangeOperators {
   /** Outside a range of values */
   outside,
 }
+```
+
+  </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from enum import Enum
+
+class RangeOperators(str, Enum):
+    BETWEEN = "between"
+    OUTSIDE = "outside"
+
+# Example usage:
+op = RangeOperators.BETWEEN
 ```
 
   </TabItem>

@@ -107,6 +107,36 @@ model MoneyRangeFilter {
 ```
 
   </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+from common_grants_sdk.schemas.fields import Money
+
+@dataclass
+class MoneyRange:
+    min: Money
+    max: Money
+
+@dataclass
+class MoneyRangeFilter:
+    operator: RangeOperators
+    value: MoneyRange
+
+# Example usage:
+money_range_filter = MoneyRangeFilter(
+    operator=RangeOperators.WITHIN,
+    value=MoneyRange(
+        min=Money(amount="1000", currency="USD"),
+        max=Money(amount="10000", currency="USD")
+    )
+)
+```
+
+  </TabItem>
 </Tabs>
 
 ## MoneyComparisonFilter
@@ -176,6 +206,28 @@ model MoneyComparisonFilter {
   @example(#{ amount: "1000", currency: "USD" })
   value: Fields.Money;
 }
+```
+
+  </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+from common_grants_sdk.schemas.fields import Money
+
+@dataclass
+class MoneyComparisonFilter:
+    operator: ComparisonOperators
+    value: Money
+
+# Example usage:
+money_comparison_filter = MoneyComparisonFilter(
+    operator=ComparisonOperators.EQ,
+    value=Money(amount="1000", currency="USD")
+)
 ```
 
   </TabItem>

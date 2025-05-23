@@ -107,6 +107,36 @@ model DateRangeFilter {
 ```
 
   </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+from datetime import date
+
+@dataclass
+class DateRange:
+    min: date
+    max: date
+
+@dataclass
+class DateRangeFilter:
+    operator: RangeOperators
+    value: DateRange
+
+# Example usage:
+date_range_filter = DateRangeFilter(
+    operator=RangeOperators.BETWEEN,
+    value=DateRange(
+        min=date(2021, 1, 1),
+        max=date(2021, 1, 2)
+    )
+)
+```
+
+  </TabItem>
 </Tabs>
 
 ## DateComparisonFilter
@@ -178,6 +208,28 @@ model DateComparisonFilter {
   @example(Types.isoDate.fromISO("2021-01-01"))
   value: Types.isoDate | utcDateTime | offsetDateTime;
 }
+```
+
+  </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this filter is:
+
+```python
+from dataclasses import dataclass
+from datetime import date
+
+@dataclass
+class DateComparisonFilter:
+    operator: ComparisonOperators
+    value: date
+
+# Example usage:
+date_comparison_filter = DateComparisonFilter(
+    operator=ComparisonOperators.EQ,
+    value=date(2021, 1, 1)
+)
 ```
 
   </TabItem>

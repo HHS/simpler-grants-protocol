@@ -91,4 +91,37 @@ model OppTimeline {
 ```
 
   </TabItem>
+
+  <TabItem label="Python">
+
+The Python code for this model is:
+
+```python
+from datetime import date, time
+from common_grants_sdk.schemas.fields import Event
+from common_grants_sdk.schemas.models import OppTimeline
+
+timeline = OppTimeline(
+    app_opens=Event(
+        name="Application Opens",
+        date=date(2024, 3, 1),
+        description="Applications begin being accepted"
+    ),
+    app_deadline=Event(
+        name="Application Deadline",
+        date=date(2024, 4, 30),
+        time=time(17, 0, 0),
+        description="Final deadline for all submissions"
+    ),
+    other_dates={
+        "anticipatedAward": Event(
+            name="Anticipated award date",
+            date=date(2025, 3, 15),
+            description="When we expect to announce awards for this opportunity."
+        )
+    }
+)
+```
+
+  </TabItem>
 </Tabs>
