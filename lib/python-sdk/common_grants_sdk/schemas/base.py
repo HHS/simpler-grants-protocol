@@ -1,5 +1,9 @@
-from pydantic import BaseModel, ConfigDict
 import json
+from typing import Self
+
+from pydantic import BaseModel, ConfigDict
+
+from common_grants_sdk.utils.transformation import transform_from_mapping
 
 
 class CommonGrantsBaseModel(BaseModel):
@@ -18,13 +22,17 @@ class CommonGrantsBaseModel(BaseModel):
         """Convert model to JSON string (alias for model_dump_json for backward compatibility)."""
         return self.model_dump_json()
 
+    def dump_with_mapping(self, mapping: dict) -> dict:
+        """Convert model to dictionary with mapping."""
+        return transform_from_mapping(self.model_dump(mode="json"), mapping)
+
     @classmethod
-    def from_json(cls, json_str: str) -> "CommonGrantsBaseModel":
+    def from_json(cls, json_str: str) -> Self:
         """Create model instance from JSON string (alias for model_validate_json for backward compatibility)."""
         return cls.model_validate_json(json_str)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "CommonGrantsBaseModel":
+    def from_dict(cls, data: dict) -> Self:
         """Create model instance from dictionary (alias for model_validate for backward compatibility)."""
         # If the data already contains datetime objects, use model_validate directly
         try:
@@ -35,3 +43,9 @@ class CommonGrantsBaseModel(BaseModel):
                 data, default=str
             )  # Use str for non-serializable objects
             return cls.model_validate_json(json_str)
+
+    @classmethod
+    def validate_with_mapping(cls, data: dict, mapping: dict) -> Self:
+        """Validate model with mapping."""
+        new_data = transform_from_mapping(data, mapping)
+        return cls.model_validate(new_data)

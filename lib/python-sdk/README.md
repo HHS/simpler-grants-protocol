@@ -25,11 +25,14 @@ poetry add common-grants-python-sdk
 from datetime import datetime, date, UTC
 from uuid import uuid4
 
-from common_grants.schemas.fields import Money, Event
-from common_grants.schemas.models.opp_base import OpportunityBase
-from common_grants.schemas.models.opp_funding import OppFunding
-from common_grants.schemas.models.opp_status import OppStatus, OppStatusOptions
-from common_grants.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.fields import Money, Event
+from common_grants_sdk.schemas.models import (
+    OpportunityBase,
+    OppFunding,
+    OppStatus,
+    OppStatusOptions,
+    OppTimeline,
+)
 
 # Create a new opportunity
 opportunity = OpportunityBase(
@@ -90,3 +93,76 @@ loaded_opportunity = OpportunityBase.from_json(json_data)
 - `OppStatus`: Opportunity status tracking
 - `OppTimeline`: Key dates and milestones
 
+## Transformation utilities
+
+The SDK includes a utility for transforming data according to a mapping specification.
+
+The mapping supports both literal values and transformations keyed by the following reserved words:
+
+- `field`: Extracts a value from the data using a dot-notation path
+- `switch`: Performs a case-based lookup based on a field value
+
+Here's an example of how to use the transformation utility to reshape arbitrary data:
+
+```python
+from uuid import uuid4
+
+from common_grants_sdk.utils.transformation import transform_from_mapping
+
+source_data = {
+    "opportunity_id": 12345,
+    "opportunity_title": "Research into ABC",
+    "opportunity_status": "posted",
+    "summary": {
+        "award_ceiling": 100000,
+        "award_floor": 10000,
+        "forecasted_close_date": "2025-07-15",
+        "forecasted_post_date": "2025-05-01",
+    },
+}
+
+mapping = {
+    "id": { "field": "opportunity_id" },
+    "title": { "field": "opportunity_title" },
+    "status": { 
+        "switch": {
+            "field": "opportunity_status",
+            "case": {
+                "posted": "open",
+                "closed": "closed",
+            },
+            "default": "custom",
+        }
+    },
+    "funding": {
+        "minAwardAmount": {
+            "amount": { "field": "summary.award_floor" },
+            "currency": "USD",
+        },
+        "maxAwardAmount": {
+            "amount": { "field": "summary.award_ceiling" },
+            "currency": "USD",
+        },
+    },
+    "keyDates": {
+        "appOpens": { "field": "summary.forecasted_post_date" },
+        "appDeadline": { "field": "summary.forecasted_close_date" },
+    },
+}
+
+transformed_data = transform_from_mapping(source_data, mapping)
+
+assert transformed_data == {
+    "id": uuid4(),
+    "title": "Research into ABC",
+    "status": "open",
+    "funding": {
+        "minAwardAmount": { "amount": 10000, "currency": "USD" },
+        "maxAwardAmount": { "amount": 100000, "currency": "USD" },
+    },
+    "keyDates": {
+        "appOpens": "2025-05-01",
+        "appDeadline": "2025-07-15",
+    },
+}
+```
