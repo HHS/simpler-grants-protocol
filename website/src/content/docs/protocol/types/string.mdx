@@ -94,3 +94,40 @@ scalar uuid extends string;
 
   </TabItem>
 </Tabs>
+
+## email
+
+An email address.
+
+<Tabs>
+  <TabItem label="Example">
+
+```json
+"test@example.com"
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: email.yaml
+type: string
+format: email
+description: An email address
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+```tsp
+/** An email address */
+@example("test@example.com")
+@format("email")
+scalar email extends string;
+```
+
+  </TabItem>
+</Tabs>

@@ -7,27 +7,16 @@
       "$ref": "Name.json",
       "description": "The person's full name, including all relevant components (first, middle, last, etc.)."
     },
+    "title": {
+      "type": "string",
+      "description": "The person's title, if applicable."
+    },
+    "addresses": {
+      "$ref": "PersonAddressCollection.json",
+      "description": "Collection of physical addresses associated with the person."
+    },
     "phones": {
-      "type": "object",
-      "properties": {
-        "primary": {
-          "$ref": "Phone.json",
-          "description": "The person's primary contact number."
-        },
-        "work": {
-          "$ref": "Phone.json",
-          "description": "The person's work phone number."
-        },
-        "home": {
-          "$ref": "Phone.json",
-          "description": "The person's home phone number."
-        },
-        "otherPhones": {
-          "$ref": "#/$defs/RecordPhone",
-          "description": "Additional phone numbers not covered by the standard fields."
-        }
-      },
-      "required": ["primary"],
+      "$ref": "PersonPhoneCollection.json",
       "description": "Collection of phone numbers associated with the person."
     },
     "fax": {
@@ -35,75 +24,85 @@
       "description": "The person's fax number, if applicable."
     },
     "emails": {
-      "type": "object",
-      "properties": {
-        "primary": {
-          "$ref": "email.json",
-          "description": "The person's primary email address."
-        },
-        "work": {
-          "$ref": "email.json",
-          "description": "The person's work email address."
-        },
-        "personal": {
-          "$ref": "email.json",
-          "description": "The person's personal email address."
-        },
-        "otherEmails": {
-          "$ref": "#/$defs/RecordEmail",
-          "description": "Additional email addresses not covered by the standard fields."
-        }
-      },
-      "required": ["primary"],
+      "$ref": "PersonEmailCollection.json",
       "description": "Collection of email addresses associated with the person."
-    },
-    "addresses": {
-      "type": "object",
-      "properties": {
-        "mailing": {
-          "$ref": "Address.json",
-          "description": "The person's primary mailing address."
-        },
-        "work": {
-          "$ref": "Address.json",
-          "description": "The person's work address."
-        },
-        "home": {
-          "$ref": "Address.json",
-          "description": "The person's home address."
-        },
-        "otherAddresses": {
-          "$ref": "#/$defs/RecordAddress",
-          "description": "Additional addresses not covered by the standard fields."
-        }
-      },
-      "required": ["mailing"],
-      "description": "Collection of physical addresses associated with the person."
     }
   },
   "required": ["name"],
-  "description": "A person affiliated with an organization or grant application.",
-  "$defs": {
-    "RecordPhone": {
-      "type": "object",
-      "properties": {},
-      "unevaluatedProperties": {
-        "$ref": "Phone.json"
-      }
-    },
-    "RecordEmail": {
-      "type": "object",
-      "properties": {},
-      "unevaluatedProperties": {
-        "$ref": "email.json"
-      }
-    },
-    "RecordAddress": {
-      "type": "object",
-      "properties": {},
-      "unevaluatedProperties": {
-        "$ref": "Address.json"
+  "examples": [
+    {
+      "name": {
+        "prefix": "Dr.",
+        "firstName": "Jane",
+        "middleName": "Edward",
+        "lastName": "Doe",
+        "suffix": "Jr."
+      },
+      "title": "Chief Executive Officer",
+      "addresses": {
+        "mailing": {
+          "street1": "123 Main St",
+          "city": "Anytown",
+          "stateOrProvince": "CA",
+          "country": "US",
+          "postalCode": "12345"
+        },
+        "work": {
+          "street1": "123 Main St",
+          "city": "Anytown",
+          "stateOrProvince": "CA",
+          "country": "US",
+          "postalCode": "12345"
+        },
+        "home": {
+          "street1": "123 Main St",
+          "city": "Anytown",
+          "stateOrProvince": "CA",
+          "country": "US",
+          "postalCode": "12345"
+        }
+      },
+      "phones": {
+        "primary": {
+          "countryCode": "+1",
+          "number": "555-123-4567",
+          "extension": "123",
+          "isMobile": true
+        },
+        "work": {
+          "countryCode": "+1",
+          "number": "555-123-4567",
+          "extension": "123",
+          "isMobile": true
+        },
+        "home": {
+          "countryCode": "+1",
+          "number": "555-123-4567",
+          "extension": "123",
+          "isMobile": true
+        },
+        "otherPhones": {
+          "international": {
+            "countryCode": "+44",
+            "number": "7700 900000"
+          }
+        }
+      },
+      "fax": {
+        "countryCode": "+1",
+        "number": "555-123-4567",
+        "extension": "123",
+        "isMobile": true
+      },
+      "emails": {
+        "primary": "john.doe@example.com",
+        "work": "john.doe@work.com",
+        "personal": "john.doe@gmail.com",
+        "otherEmails": {
+          "school": "john.doe@school.edu"
+        }
       }
     }
-  }
+  ],
+  "description": "A person affiliated with an organization or grant application."
 }

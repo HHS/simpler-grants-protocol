@@ -3,13 +3,7 @@ import "@typespec/json-schema";
 namespace CommonGrants.Fields;
 
 /** A person's name. */
-@example(#{
-    prefix: "Dr.",
-    firstName: "Jane",
-    middleName: "Edward",
-    lastName: "Doe",
-    suffix: "Jr.",
-})
+@example(ExampleName)
 model Name {
     /** Honorific prefix (e.g., Mr., Mrs., Dr., Prof.). */
     prefix?: string;
@@ -26,3 +20,11 @@ model Name {
     /** Name suffix (e.g., Jr., Sr., III, Ph.D.). */
     suffix?: string;
 }
+
+const ExampleName = #{
+    prefix: "Dr.",
+    firstName: "Jane",
+    middleName: "Edward",
+    lastName: "Doe",
+    suffix: "Jr.",
+};

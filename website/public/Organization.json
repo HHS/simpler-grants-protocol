@@ -32,7 +32,7 @@
       "description": "The organization's mission statement."
     },
     "yearFounded": {
-      "type": "number",
+      "type": "integer",
       "description": "The calendar year the organization was founded."
     },
     "fiscalYearStart": {
@@ -75,24 +75,9 @@
         }
       },
       "description": "Collection of the organization's social media and web presence links."
-    },
-    "contacts": {
-      "type": "object",
-      "properties": {
-        "pointOfContact": {
-          "$ref": "Person.json",
-          "description": "The primary point of contact for the organization."
-        },
-        "otherContacts": {
-          "$ref": "#/$defs/RecordPerson",
-          "description": "Additional contacts within the organization, keyed by their role or relationship."
-        }
-      },
-      "required": ["pointOfContact"],
-      "description": "Contact information for the organization's representatives."
     }
   },
-  "required": ["name", "address", "type", "contacts"],
+  "required": ["name", "address", "type"],
   "examples": [
     {
       "name": "Example Organization",
@@ -110,26 +95,7 @@
       "mission": "To provide support and resources to the community.",
       "yearFounded": 2024,
       "fiscalYearStart": "2024-01-01",
-      "fiscalYearEnd": "2024-12-31",
-      "contacts": {
-        "pointOfContact": {
-          "name": {
-            "prefix": "Dr.",
-            "firstName": "John",
-            "lastName": "Doe"
-          },
-          "emails": {
-            "primary": "john.doe@example.com"
-          },
-          "phones": {
-            "primary": {
-              "countryCode": "+1",
-              "number": "555-123-4567",
-              "isMobile": true
-            }
-          }
-        }
-      }
+      "fiscalYearEnd": "2024-12-31"
     }
   ],
   "description": "An organization that can apply for grants.",
@@ -139,13 +105,6 @@
       "properties": {},
       "unevaluatedProperties": {
         "type": "string"
-      }
-    },
-    "RecordPerson": {
-      "type": "object",
-      "properties": {},
-      "unevaluatedProperties": {
-        "$ref": "Person.json"
       }
     }
   }

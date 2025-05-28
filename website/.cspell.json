@@ -18,7 +18,8 @@
     "tspconfig",
     "typespec",
     "geospatial",
-    "Anytown"
+    "Anytown",
+    "tiktok"
   ],
   "ignoreWords": [
     "opblock",
@@ -44,7 +45,11 @@
     "isodate",
     "utcdatetime",
     "offsetdatetime",
-    "tostring"
+    "tostring",
+    "opptimeline",
+    "oppfunding",
+    "oppstatus",
+    "opportunitybase"
   ],
   "import": []
 }

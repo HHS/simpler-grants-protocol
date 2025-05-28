@@ -1,0 +1,134 @@
+---
+title: Address
+description: Data model for an address
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+An address is a physical location.
+
+### Table
+
+| Property  | Type                                      | Required | Description                                                                  |
+| --------- | ----------------------------------------- | -------- | ---------------------------------------------------------------------------- |
+| Street 1  | [string](/protocol/types/string#string)   | Yes      | The primary street address line.                                             |
+| Street 2  | [string](/protocol/types/string#string)   | No       | Additional street address information (e.g., apartment number, suite, etc.). |
+| City      | [string](/protocol/types/string#string)   | Yes      | The city of the location.                                                    |
+| State     | [string](/protocol/types/string#string)   | Yes      | The state of the location.                                                   |
+| Zip       | [string](/protocol/types/string#string)   | Yes      | The postal code of the location.                                             |
+| Latitude  | [number](/protocol/types/numeric#numeric) | Yes      | The latitude coordinate of the address location.                             |
+| Longitude | [number](/protocol/types/numeric#numeric) | Yes      | The longitude coordinate of the address location.                            |
+| Geography | [Record](/protocol/types/other#record)    | No       | Additional geospatial data in GeoJSON format.                                |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "street1": "123 Main St",
+  "street2": "Apt 1",
+  "city": "Anytown",
+  "stateOrProvince": "CA",
+  "country": "US",
+  "postalCode": "12345",
+  "latitude": 37.7749,
+  "longitude": -122.4194,
+  "geography": {
+    "type": "Point",
+    "coordinates": [37.7749, -122.4194]
+  }
+}
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+A JSON Schema example of this field is:
+
+```yaml
+$id: Address.json
+type: object
+properties:
+  street1:
+    type: string
+    description: The primary street address line.
+  street2:
+    type: string
+    description: Additional street address information (e.g., apartment number, suite, etc.).
+  city:
+    type: string
+    description: The city or municipality name.
+  stateOrProvince:
+    type: string
+    description: The state, province, or region name.
+  country:
+    type: string
+    description: The country name or ISO country code.
+  postalCode:
+    type: string
+    description: The postal or ZIP code for the address.
+  latitude:
+    type: number
+    description: The latitude coordinate of the address location.
+  longitude:
+    type: number
+    description: The longitude coordinate of the address location.
+  geography:
+    $ref: "#/$defs/RecordUnknown"
+    description: Additional geospatial data in GeoJSON format.
+required:
+  - street1
+  - city
+  - stateOrProvince
+  - country
+  - postalCode
+description: An mailing address.
+$defs:
+  RecordUnknown:
+    type: object
+    properties: {}
+    unevaluatedProperties: {}
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this field is:
+
+```tsp
+/** An address is a physical location. */
+model Address {
+  /** The primary street address line. */
+  street1: string;
+
+  /** Additional street address information (e.g., apartment number, suite, etc.). */
+  street2?: string;
+
+  /** The city of the location. */
+  city: string;
+
+  /** The state of the location. */
+  state: string;
+
+  /** The postal code of the location. */
+  zip: string;
+
+  /** The latitude coordinate of the address location. */
+  latitude: number;
+
+  /** The longitude coordinate of the address location. */
+  longitude: number;
+
+  /** Additional geospatial data in GeoJSON format. */
+  geography: Record<Unknown>;
+}
+```
+
+  </TabItem>
+</Tabs>

@@ -162,12 +162,12 @@ The CommonGrants protocol defines the following fields that are reused across mo
 
 The CommonGrants protocol defines the following models that are specific to funding opportunities:
 
-| Model                                        | Description                                            |
-| -------------------------------------------- | ------------------------------------------------------ |
-| [OpportunityBase](/protocol/models/opp-base) | The core model for a funding opportunity               |
-| [OppStatus](/protocol/models/opp-status)     | The status of an opportunity                           |
-| [OppFunding](/protocol/models/opp-funding)   | Details about the funding available for an opportunity |
-| [OppTimeline](/protocol/models/opp-timeline) | Key dates in the opportunity's timeline                |
+| Model                                                           | Description                                            |
+| --------------------------------------------------------------- | ------------------------------------------------------ |
+| [OpportunityBase](/protocol/models/opportunity#opportunitybase) | The core model for a funding opportunity               |
+| [OppStatus](/protocol/models/opportunity#oppstatus)             | The status of an opportunity                           |
+| [OppFunding](/protocol/models/opportunity#oppfunding)           | Details about the funding available for an opportunity |
+| [OppTimeline](/protocol/models/opportunity#opptimeline)         | Key dates in the opportunity's timeline                |
 
 ### Routes and operations
 

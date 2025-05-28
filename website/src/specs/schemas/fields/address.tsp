@@ -1,17 +1,7 @@
 namespace CommonGrants.Fields;
 
 /** An mailing address. */
-@example(#{
-    street1: "123 Main St",
-    street2: "Apt 1",
-    city: "Anytown",
-    stateOrProvince: "CA",
-    country: "US",
-    postalCode: "12345",
-    latitude: 37.7749,
-    longitude: -122.4194,
-    geography: #{ type: "Point", coordinates: #[37.7749, -122.4194] },
-})
+@example(ExampleAddress)
 model Address {
     /** The primary street address line. */
     street1: string;
@@ -40,3 +30,11 @@ model Address {
     /** Additional geospatial data in GeoJSON format. */
     geography?: Record<unknown>;
 }
+
+const ExampleAddress = #{
+    street1: "123 Main St",
+    city: "Anytown",
+    stateOrProvince: "CA",
+    country: "US",
+    postalCode: "12345",
+};

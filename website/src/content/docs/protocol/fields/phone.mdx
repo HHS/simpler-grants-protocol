@@ -1,0 +1,85 @@
+---
+title: Phone
+description: A model for representing a phone number
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+A phone number.
+
+### Table
+
+| Property    | Type                                     | Required | Description                                                |
+| ----------- | ---------------------------------------- | -------- | ---------------------------------------------------------- |
+| countryCode | [string](/protocol/types/string#string)  | Yes      | The international country code (e.g., "+1" for US/Canada). |
+| number      | [string](/protocol/types/string#string)  | Yes      | The local phone number without the country code.           |
+| extension   | [string](/protocol/types/string#string)  | No       | Optional extension number for the phone line.              |
+| isMobile    | [boolean](/protocol/types/other#boolean) | No       | Indicates whether this is a mobile/cell phone number.      |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this model is:
+
+```json
+{
+  "countryCode": "+1",
+  "number": "555-123-4567",
+  "extension": "123",
+  "isMobile": true
+}
+```
+
+  </TabItem>
+  <TabItem label="JSON Schema">
+
+The JSON Schema for this model is:
+
+```yaml
+$id: Phone.json
+type: object
+properties:
+  countryCode:
+    type: string
+    description: The international country code (e.g., "+1" for US/Canada).
+  number:
+    type: string
+    description: The local phone number without the country code.
+  extension:
+    type: string
+    description: Optional extension number for the phone line.
+  isMobile:
+    type: boolean
+    default: false
+    description: Indicates whether this is a mobile/cell phone number.
+required:
+  - countryCode
+  - number
+description: A phone number.
+```
+
+  </TabItem>
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```tsp
+model Phone {
+    /** The international country code (e.g., "+1" for US/Canada). */
+    countryCode: string;
+
+    /** The local phone number without the country code. */
+    number: string;
+
+    /** Optional extension number for the phone line. */
+    extension?: string;
+
+    /** Indicates whether this is a mobile/cell phone number. */
+    isMobile?: boolean = false;
+}
+```
+
+  </TabItem>
+</Tabs>
