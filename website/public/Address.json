@@ -44,17 +44,10 @@
   "examples": [
     {
       "street1": "123 Main St",
-      "street2": "Apt 1",
       "city": "Anytown",
       "stateOrProvince": "CA",
       "country": "US",
-      "postalCode": "12345",
-      "latitude": 37.7749,
-      "longitude": -122.4194,
-      "geography": {
-        "type": "Point",
-        "coordinates": [37.7749, -122.4194]
-      }
+      "postalCode": "12345"
     }
   ],
   "description": "An mailing address.",

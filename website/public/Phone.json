@@ -21,7 +21,7 @@
       "description": "Indicates whether this is a mobile/cell phone number."
     }
   },
-  "required": ["countryCode", "number", "isMobile"],
+  "required": ["countryCode", "number"],
   "examples": [
     {
       "countryCode": "+1",

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "PersonAddressCollection.json",
+  "type": "object",
+  "properties": {
+    "mailing": {
+      "$ref": "Address.json",
+      "description": "The person's primary mailing address."
+    },
+    "work": {
+      "$ref": "Address.json",
+      "description": "The person's work address."
+    },
+    "home": {
+      "$ref": "Address.json",
+      "description": "The person's home address."
+    },
+    "otherAddresses": {
+      "$ref": "#/$defs/RecordAddress",
+      "description": "Additional addresses not covered by the standard fields."
+    }
+  },
+  "required": ["mailing"],
+  "examples": [
+    {
+      "mailing": {
+        "street1": "123 Main St",
+        "city": "Anytown",
+        "stateOrProvince": "CA",
+        "country": "US",
+        "postalCode": "12345"
+      },
+      "work": {
+        "street1": "123 Main St",
+        "city": "Anytown",
+        "stateOrProvince": "CA",
+        "country": "US",
+        "postalCode": "12345"
+      },
+      "home": {
+        "street1": "123 Main St",
+        "city": "Anytown",
+        "stateOrProvince": "CA",
+        "country": "US",
+        "postalCode": "12345"
+      }
+    }
+  ],
+  "description": "A collection of addresses for a person.",
+  "$defs": {
+    "RecordAddress": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "Address.json"
+      }
+    }
+  }
+}

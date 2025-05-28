@@ -1,5 +1,4 @@
 import "../fields/index.tsp";
-import "./person.tsp";
 
 namespace CommonGrants.Models;
 
@@ -21,19 +20,6 @@ namespace CommonGrants.Models;
     yearFounded: 2024,
     fiscalYearStart: plainDate.fromISO("2024-01-01"),
     fiscalYearEnd: plainDate.fromISO("2024-12-31"),
-    contacts: #{
-        pointOfContact: #{
-            name: #{ prefix: "Dr.", firstName: "John", lastName: "Doe" },
-            emails: #{ primary: "john.doe@example.com" },
-            phones: #{
-                primary: #{
-                    countryCode: "+1",
-                    number: "555-123-4567",
-                    isMobile: true,
-                },
-            },
-        },
-    },
 })
 model Organization {
     /** The organization's legal name as registered with relevant authorities. */
@@ -58,7 +44,7 @@ model Organization {
     mission?: string;
 
     /** The calendar year the organization was founded. */
-    yearFounded?: numeric;
+    yearFounded?: integer;
 
     /** The start date of the organization's fiscal year, used for financial reporting. */
     @example(plainDate.fromISO("2024-01-01"))
@@ -86,14 +72,5 @@ model Organization {
 
         /** Additional social media profiles not covered by the standard fields. */
         otherSocials?: Record<string>;
-    };
-
-    /** Contact information for the organization's representatives. */
-    contacts: {
-        /** The primary point of contact for the organization. */
-        pointOfContact: Person;
-
-        /** Additional contacts within the organization, keyed by their role or relationship. */
-        otherContacts?: Record<Person>;
     };
 }

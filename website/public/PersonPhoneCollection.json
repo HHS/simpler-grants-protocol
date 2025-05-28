@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "PersonPhoneCollection.json",
+  "type": "object",
+  "properties": {
+    "primary": {
+      "$ref": "Phone.json",
+      "description": "The person's primary phone number."
+    },
+    "work": {
+      "$ref": "Phone.json",
+      "description": "The person's work phone number."
+    },
+    "home": {
+      "$ref": "Phone.json",
+      "description": "The person's home phone number."
+    },
+    "otherPhones": {
+      "$ref": "#/$defs/RecordPhone",
+      "description": "Additional phone numbers not covered by the standard fields."
+    }
+  },
+  "required": ["primary"],
+  "examples": [
+    {
+      "primary": {
+        "countryCode": "+1",
+        "number": "555-123-4567",
+        "extension": "123",
+        "isMobile": true
+      },
+      "work": {
+        "countryCode": "+1",
+        "number": "555-123-4567",
+        "extension": "123",
+        "isMobile": true
+      },
+      "home": {
+        "countryCode": "+1",
+        "number": "555-123-4567",
+        "extension": "123",
+        "isMobile": true
+      },
+      "otherPhones": {
+        "international": {
+          "countryCode": "+44",
+          "number": "7700 900000"
+        }
+      }
+    }
+  ],
+  "description": "A collection of phone numbers for a person.",
+  "$defs": {
+    "RecordPhone": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "Phone.json"
+      }
+    }
+  }
+}
