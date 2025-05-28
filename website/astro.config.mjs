@@ -8,6 +8,13 @@ import react from "@astrojs/react";
 // https://astro.build/config
 export default defineConfig({
   site: "https://commongrants.org",
+  redirects: {
+    // These pages were consolidated into a single page for the opportunity models.
+    "/protocol/models/opp-base": "/protocol/models/opportunity#opportunitybase",
+    "/protocol/models/opp-status": "/protocol/models/opportunity#oppstatus",
+    "/protocol/models/opp-funding": "/protocol/models/opportunity#oppfunding",
+    "/protocol/models/opp-timeline": "/protocol/models/opportunity#opptimeline",
+  },
   integrations: [
     starlight({
       head: [
