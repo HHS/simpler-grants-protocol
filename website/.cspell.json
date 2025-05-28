@@ -18,7 +18,8 @@
     "tspconfig",
     "typespec",
     "geospatial",
-    "Anytown"
+    "Anytown",
+    "tiktok"
   ],
   "ignoreWords": [
     "opblock",
