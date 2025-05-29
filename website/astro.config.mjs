@@ -29,6 +29,9 @@ export default defineConfig({
       ],
       favicon: "/favicon.ico",
       customCss: ["./src/styles/custom.css"],
+      components: {
+        Header: "./src/components/Header.astro",
+      },
       plugins: [
         // Generate the OpenAPI documentation pages.
         starlightLinksValidator({
