@@ -49,7 +49,9 @@
     "opptimeline",
     "oppfunding",
     "oppstatus",
-    "opportunitybase"
+    "opportunitybase",
+    "pagefind",
+    "viewports"
   ],
   "import": []
 }
