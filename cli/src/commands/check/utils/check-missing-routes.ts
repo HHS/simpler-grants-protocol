@@ -1,14 +1,24 @@
 import { OpenAPIV3 } from "openapi-types";
 import { ErrorCollection } from "./error-utils";
 
+// ############################################################
+// File-scoped types
+// ############################################################
+
 type Route = {
   path: string;
   method: string;
 };
 
+// ############################################################
+// Public function
+// ############################################################
+
 /**
- * Check for routes that have a "required" tag in the base spec
- * but are missing in the implementation.
+ * Check for base spec routes that are missing in the implementation.
+ *
+ * Report an error if a required route is missing.
+ * Report a warning if an optional route is missing.
  */
 export function checkMissingRequiredRoutes(
   baseDoc: OpenAPIV3.Document,
@@ -53,6 +63,10 @@ export function checkMissingRequiredRoutes(
 
   return errors;
 }
+
+// ############################################################
+// Helper functions
+// ############################################################
 
 function checkForRoutes(
   routes: Array<Route>,
