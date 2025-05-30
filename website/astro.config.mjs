@@ -53,6 +53,10 @@ export default defineConfig({
       },
       sidebar: [
         {
+          label: "Get in touch with us →",
+          link: "https://forms.gle/XUJuEnNtaZkdc1MQ6",
+        },
+        {
           label: "Welcome",
           items: [
             { label: "Getting started", link: "getting-started" },
