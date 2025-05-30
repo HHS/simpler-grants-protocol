@@ -2,7 +2,7 @@ import { ErrorCollection } from "./error-utils";
 import { OpenAPIV3 } from "openapi-types";
 
 // ############################################################
-// Types
+// File-scoped types
 // ############################################################
 
 type PathItem = OpenAPIV3.PathItemObject;
@@ -13,32 +13,6 @@ interface RouteError {
   level: "ERROR";
   endpoint: string;
   message: string;
-}
-
-// ############################################################
-// Private functions
-// ############################################################
-
-/**
- * Creates an error for an extra route
- */
-function createExtraRouteError(method: HttpMethod, path: string): RouteError {
-  const endpoint = `${method.toUpperCase()} ${path}`;
-  const message = `Extra route found: ${method.toUpperCase()} ${path} that is prefixed with '/common-grants/' but not in base`;
-
-  return {
-    type: "EXTRA_ROUTE",
-    level: "ERROR",
-    endpoint,
-    message,
-  };
-}
-
-/**
- * Gets all HTTP methods from a path item object
- */
-function getPathMethods(pathItem: PathItem): HttpMethod[] {
-  return Object.keys(pathItem) as HttpMethod[];
 }
 
 // ############################################################
@@ -122,4 +96,30 @@ export function checkExtraRoutes(
     }
   }
   return errors;
+}
+
+// ############################################################
+// Helper functions
+// ############################################################
+
+/**
+ * Creates an error for an extra route
+ */
+function createExtraRouteError(method: HttpMethod, path: string): RouteError {
+  const endpoint = `${method.toUpperCase()} ${path}`;
+  const message = `Extra route found: ${method.toUpperCase()} ${path} that is prefixed with '/common-grants/' but not in base`;
+
+  return {
+    type: "EXTRA_ROUTE",
+    level: "ERROR",
+    endpoint,
+    message,
+  };
+}
+
+/**
+ * Gets all HTTP methods from a path item object
+ */
+function getPathMethods(pathItem: PathItem): HttpMethod[] {
+  return Object.keys(pathItem) as HttpMethod[];
 }
