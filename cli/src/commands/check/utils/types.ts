@@ -1,14 +1,5 @@
 import { OpenAPIV3 } from "openapi-types";
 
-/**
- * A structured representation of any compliance issue found.
- */
-export interface ComplianceError {
-  message: string;
-  location?: string; // e.g. path to route or schema property
-  details?: string;
-}
-
 export type SchemaObject = OpenAPIV3.SchemaObject;
 export type Document = OpenAPIV3.Document;
 
@@ -29,10 +20,12 @@ export type ErrorType = "MISSING_ROUTE" | "EXTRA_ROUTE" | "ROUTE_CONFLICT";
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 
 export interface BaseError {
-  type: ErrorType;
-  level: "ERROR" | "WARNING";
-  endpoint: string;
+  type?: ErrorType;
+  level?: "ERROR" | "WARNING";
+  location?: string;
+  endpoint?: string;
   message?: string;
+  details?: string;
 }
 
 export type ErrorSubType =
@@ -58,4 +51,4 @@ export interface SchemaConflictError extends BaseError {
   conflictType: SchemaConflictType;
 }
 
-export type NewComplianceError = SchemaConflictError | BaseError;
+export type ComplianceError = SchemaConflictError | BaseError;
