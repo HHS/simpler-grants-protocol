@@ -4,6 +4,7 @@ import { ErrorCollection } from "./error-utils";
 import { SchemaConflictError } from "./types";
 
 const ERROR_TYPE = "ROUTE_CONFLICT";
+type ErrorSubType = "REQUEST_BODY_CONFLICT" | "RESPONSE_BODY_CONFLICT";
 
 // ############################################################
 // Main function
@@ -24,7 +25,8 @@ const ERROR_TYPE = "ROUTE_CONFLICT";
 export function checkSchemaCompatibility(
   location: string,
   baseSchema: OpenAPIV3.SchemaObject,
-  implSchema: OpenAPIV3.SchemaObject
+  implSchema: OpenAPIV3.SchemaObject,
+  errorSubType: ErrorSubType
 ): ErrorCollection {
   let errors = new ErrorCollection();
 
@@ -34,15 +36,15 @@ export function checkSchemaCompatibility(
   }
 
   // 2) Check type conflict
-  errors = checkTypeConflict(location, baseSchema, implSchema, errors);
+  errors = checkTypeConflict(location, baseSchema, implSchema, errorSubType, errors);
 
   // 3) If the schema is object-typed, compare properties
   if (baseSchema.type === "object") {
-    checkObjectCompatibility(location, baseSchema, implSchema, errors);
+    checkObjectCompatibility(location, baseSchema, implSchema, errorSubType, errors);
   }
 
   // 4) If the schema has an enum, verify that impl doesn't have extra values
-  errors = checkEnumConflict(location, baseSchema, implSchema, errors);
+  errors = checkEnumConflict(location, baseSchema, implSchema, errorSubType, errors);
 
   return errors;
 }
@@ -58,10 +60,11 @@ function checkTypeConflict(
   location: string,
   baseSchema: OpenAPIV3.SchemaObject,
   implSchema: OpenAPIV3.SchemaObject,
+  errorSubType: ErrorSubType,
   errors: ErrorCollection
 ): ErrorCollection {
   if (baseSchema.type && implSchema.type && baseSchema.type !== implSchema.type) {
-    const error = typeConflictError(location, baseSchema.type, implSchema.type);
+    const error = typeConflictError(location, baseSchema.type, implSchema.type, errorSubType);
     errors.addError(error);
   }
   return errors;
@@ -74,12 +77,13 @@ function checkEnumConflict(
   location: string,
   baseSchema: OpenAPIV3.SchemaObject,
   implSchema: OpenAPIV3.SchemaObject,
+  errorSubType: ErrorSubType,
   errors: ErrorCollection
 ): ErrorCollection {
   if (Array.isArray(baseSchema.enum) && Array.isArray(implSchema.enum)) {
     for (const implVal of implSchema.enum) {
       if (!baseSchema.enum.includes(implVal)) {
-        const error = enumConflictError(location, implVal);
+        const error = enumConflictError(location, implVal, errorSubType);
         errors.addError(error);
       }
     }
@@ -101,6 +105,7 @@ function checkObjectCompatibility(
   location: string,
   baseSchema: OpenAPIV3.SchemaObject,
   implSchema: OpenAPIV3.SchemaObject,
+  errorSubType: ErrorSubType,
   errors: ErrorCollection
 ): ErrorCollection {
   // Step 1: Get matching, missing, and extra properties
@@ -113,14 +118,14 @@ function checkObjectCompatibility(
     const baseProp = baseProps[propName] as OpenAPIV3.SchemaObject;
     const implProp = implProps[propName] as OpenAPIV3.SchemaObject;
     const propLoc = `${location}.${propName}`;
-    const propErrors = checkSchemaCompatibility(propLoc, baseProp, implProp);
+    const propErrors = checkSchemaCompatibility(propLoc, baseProp, implProp, errorSubType);
     errors.addErrors(propErrors.getAllErrors());
   }
 
   // Step 3: Handle missing props
   for (const propName of propsByStatus.missing) {
     const propLoc = `${location}.${propName}`;
-    const error = missingFieldError(propLoc, propName);
+    const error = missingFieldError(propLoc, propName, errorSubType);
     errors.addError(error);
   }
 
@@ -140,14 +145,19 @@ function checkObjectCompatibility(
     for (const propName of propsByStatus.extra) {
       const implProp = implProps[propName] as OpenAPIV3.SchemaObject;
       const propLoc = `${location}.${propName}`;
-      const propErrors = checkSchemaCompatibility(propLoc, flattenedExtraPropsSchema, implProp);
+      const propErrors = checkSchemaCompatibility(
+        propLoc,
+        flattenedExtraPropsSchema,
+        implProp,
+        errorSubType
+      );
       errors.addErrors(propErrors.getAllErrors());
     }
   } else {
     // Otherwise, extra props are not allowed, and should be flagged as errors
     for (const propName of propsByStatus.extra) {
       const propLoc = `${location}.${propName}`;
-      const error = extraFieldError(propLoc, propName);
+      const error = extraFieldError(propLoc, propName, errorSubType);
       errors.addError(error);
     }
   }
@@ -212,10 +222,12 @@ function getPropsByStatus(
 function typeConflictError(
   location: string,
   baseType: string,
-  implType: string
+  implType: string,
+  errorSubType: ErrorSubType
 ): SchemaConflictError {
   return {
     type: ERROR_TYPE,
+    subType: errorSubType,
     conflictType: "TYPE_CONFLICT",
     message: `Type mismatch. Base is '${baseType}', impl is '${implType}'`,
     baseType,
@@ -227,9 +239,14 @@ function typeConflictError(
 /**
  * Creates an error when implementation has extra enum values.
  */
-function enumConflictError(location: string, extraValue: string): SchemaConflictError {
+function enumConflictError(
+  location: string,
+  extraValue: string,
+  errorSubType: ErrorSubType
+): SchemaConflictError {
   return {
     type: ERROR_TYPE,
+    subType: errorSubType,
     conflictType: "ENUM_CONFLICT",
     message: `Enum mismatch. Extra value '${extraValue}' in implementation not allowed by base spec`,
     location,
@@ -239,9 +256,14 @@ function enumConflictError(location: string, extraValue: string): SchemaConflict
 /**
  * Creates an error when implementation is missing a required field.
  */
-function missingFieldError(location: string, fieldName: string): SchemaConflictError {
+function missingFieldError(
+  location: string,
+  fieldName: string,
+  errorSubType: ErrorSubType
+): SchemaConflictError {
   return {
     type: ERROR_TYPE,
+    subType: errorSubType,
     conflictType: "MISSING_FIELD",
     message: `Missing required property '${fieldName}'`,
     location,
@@ -251,9 +273,14 @@ function missingFieldError(location: string, fieldName: string): SchemaConflictE
 /**
  * Creates an error when implementation has extra properties.
  */
-function extraFieldError(location: string, fieldName: string): SchemaConflictError {
+function extraFieldError(
+  location: string,
+  fieldName: string,
+  errorSubType: ErrorSubType
+): SchemaConflictError {
   return {
     type: ERROR_TYPE,
+    subType: errorSubType,
     conflictType: "EXTRA_FIELD",
     message: `Implementation schema has extra property '${fieldName}' not defined in base schema (and 'additionalProperties' is not allowed)`,
     location,

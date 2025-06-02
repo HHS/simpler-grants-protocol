@@ -3,6 +3,7 @@ import { OpenAPIV3 } from "openapi-types";
 
 describe("Schema Compatibility Checks", () => {
   const location = "TestLocation";
+  const errorSubType = "RESPONSE_BODY_CONFLICT";
 
   // ############################################################
   // Type checking - ignore any type in base schema
@@ -26,7 +27,7 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, errorSubType);
 
     // Assert
     expect(errors.getErrorCount()).toBe(0);
@@ -54,7 +55,7 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, errorSubType);
 
     // Assert
     expect(errors.getErrorCount()).toBe(1);
@@ -90,7 +91,7 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, errorSubType);
     const error = errors.get(0);
 
     // Assert
@@ -120,7 +121,7 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, errorSubType);
     const error = errors.get(0);
 
     // Assert
@@ -159,7 +160,7 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, errorSubType);
 
     // Assert
     expect(errors.getErrorCount()).toBe(0);
@@ -184,7 +185,7 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, errorSubType);
     const error = errors.get(0);
 
     // Assert
