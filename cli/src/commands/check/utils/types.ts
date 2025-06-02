@@ -44,8 +44,7 @@ export type SchemaConflictType =
 
 export interface SchemaConflictError extends BaseError {
   type: "ROUTE_CONFLICT";
-  subType: ErrorSubType;
-  schemaPath: string;
+  subType?: ErrorSubType;
   baseType?: string;
   implType?: string;
   conflictType: SchemaConflictType;
