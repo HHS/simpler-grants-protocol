@@ -5,7 +5,7 @@ describe("Schema Compatibility Checks", () => {
   const location = "TestLocation";
 
   // ############################################################
-  // Type checking
+  // Type checking - ignore any type in base schema
   // ############################################################
 
   it("should allow impl to have a type if base does not specify type", () => {
@@ -30,6 +30,42 @@ describe("Schema Compatibility Checks", () => {
 
     // Assert
     expect(errors.getErrorCount()).toBe(0);
+  });
+
+  // ############################################################
+  // Type checking - flag mismatched types
+  // ############################################################
+
+  it("should flag mismatched types", () => {
+    // Arrange - "foo" has no "type", so it's effectively "any"
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      description: "Base schema with no type",
+      type: "object",
+      properties: {
+        foo: { type: "integer" },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: "string" },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        conflictType: "TYPE_CONFLICT",
+        location: `${location}.foo`,
+        baseType: "integer",
+        implType: "string",
+      })
+    );
   });
 
   // ############################################################
@@ -61,7 +97,9 @@ describe("Schema Compatibility Checks", () => {
     expect(errors.getErrorCount()).toBe(1);
     expect(error).toEqual(
       expect.objectContaining({
+        type: "ROUTE_CONFLICT",
         location: `${location}.id`,
+        conflictType: "MISSING_FIELD",
       })
     );
   });
@@ -89,8 +127,9 @@ describe("Schema Compatibility Checks", () => {
     expect(errors.getErrorCount()).toBe(1);
     expect(error).toEqual(
       expect.objectContaining({
-        message: expect.stringMatching(/Enum mismatch. Extra value 'C'/),
+        type: "ROUTE_CONFLICT",
         location: location,
+        conflictType: "ENUM_CONFLICT",
       })
     );
   });
@@ -152,8 +191,9 @@ describe("Schema Compatibility Checks", () => {
     expect(errors.getErrorCount()).toBe(1);
     expect(error).toEqual(
       expect.objectContaining({
-        message: expect.stringMatching(/extra property 'extra'/),
+        type: "ROUTE_CONFLICT",
         location: `${location}.extra`,
+        conflictType: "EXTRA_FIELD",
       })
     );
   });
