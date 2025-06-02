@@ -110,7 +110,7 @@ describe("ValidationService", () => {
         .mockResolvedValueOnce(baseDoc); // Second call for TypeSpec-generated base spec
 
       // Act & Assert
-      await expect(service.checkSpec("spec.yaml", {})).rejects.toThrow(/Missing required path/);
+      await expect(service.checkSpec("spec.yaml", {})).rejects.toThrow(/Missing required route/);
       expect(compileTypeSpec).toHaveBeenCalled();
       expect(SwaggerParser.dereference).toHaveBeenCalledWith(typeSpecPath);
     });
@@ -173,7 +173,7 @@ describe("ValidationService", () => {
 
       // Act & Assert
       await expect(service.checkSpec("spec.yaml", { base: "base.yaml" })).rejects.toThrow(
-        /Missing required path/
+        /Missing required route/
       );
     });
 
@@ -235,7 +235,7 @@ describe("ValidationService", () => {
       // Act & Assert
       const error = await service.checkSpec("spec.yaml", { base: "base.yaml" }).catch(e => e);
 
-      expect(error.message).toContain("Missing required path");
+      expect(error.message).toContain("Missing required route");
       expect(error.message).toContain("Extra route found");
     });
 
