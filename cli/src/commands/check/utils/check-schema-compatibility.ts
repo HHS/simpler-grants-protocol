@@ -1,6 +1,6 @@
 import { OpenAPIV3 } from "openapi-types";
-import { ComplianceError } from "./types";
 import { deepFlattenAllOf } from "./flatten-schemas";
+import { ErrorCollection } from "./error-utils";
 
 /**
  * Checks whether `implSchema` is a valid subset of `baseSchema`.
@@ -18,13 +18,13 @@ export function checkSchemaCompatibility(
   location: string,
   baseSchema: OpenAPIV3.SchemaObject,
   implSchema: OpenAPIV3.SchemaObject
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
+): ErrorCollection {
+  const errors = new ErrorCollection();
 
   // 1) Compare `type`: skip if base has no type
   if (baseSchema.type && implSchema.type) {
     if (baseSchema.type !== implSchema.type) {
-      errors.push({
+      errors.addError({
         message: `Type mismatch. Base is '${baseSchema.type}', impl is '${implSchema.type}'`,
         location,
       });
@@ -33,14 +33,15 @@ export function checkSchemaCompatibility(
 
   // 2) If the schema is object-typed (or base type is missing), compare properties
   if (baseSchema.type === "object" || (!baseSchema.type && implSchema.type === "object")) {
-    errors.push(...checkObjectCompatibility(location, baseSchema, implSchema));
+    const objectErrors = checkObjectCompatibility(location, baseSchema, implSchema);
+    errors.addErrors(objectErrors.getAllErrors());
   }
 
   // 3) If the schema has an enum, verify that impl doesn't have extra values
   if (Array.isArray(baseSchema.enum) && Array.isArray(implSchema.enum)) {
     for (const implVal of implSchema.enum) {
       if (!baseSchema.enum.includes(implVal)) {
-        errors.push({
+        errors.addError({
           message: `Enum mismatch. Extra value '${implVal}' in implementation not allowed by base spec`,
           location,
         });
@@ -61,8 +62,8 @@ function checkObjectCompatibility(
   location: string,
   baseSchema: OpenAPIV3.SchemaObject,
   implSchema: OpenAPIV3.SchemaObject
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
+): ErrorCollection {
+  const errors = new ErrorCollection();
   const baseProps = baseSchema.properties || {};
   const implProps = implSchema.properties || {};
 
@@ -70,9 +71,9 @@ function checkObjectCompatibility(
   if (Array.isArray(baseSchema.required)) {
     for (const requiredProp of baseSchema.required) {
       if (!(requiredProp in implProps)) {
-        errors.push({
+        errors.addError({
           message: `Missing required property '${requiredProp}'`,
-          location: `${location}.properties.${requiredProp}`,
+          location: `${location}.${requiredProp}`,
         });
       }
     }
@@ -93,13 +94,12 @@ function checkObjectCompatibility(
     const flattenedImplProp = deepFlattenAllOf(implProp);
 
     // Recurse
-    errors.push(
-      ...checkSchemaCompatibility(
-        `${location}.properties.${propName}`,
-        flattenedBaseProp,
-        flattenedImplProp
-      )
+    const propErrors = checkSchemaCompatibility(
+      `${location}.${propName}`,
+      flattenedBaseProp,
+      flattenedImplProp
     );
+    errors.addErrors(propErrors.getAllErrors());
   }
 
   // 3) Check if impl has extra properties that base does not define
@@ -111,9 +111,9 @@ function checkObjectCompatibility(
         typeof baseSchema.additionalProperties === "undefined" ||
         baseSchema.additionalProperties === false
       ) {
-        errors.push({
+        errors.addError({
           message: `Implementation schema has extra property '${implPropName}' not defined in base schema (and 'additionalProperties' is not allowed)`,
-          location: `${location}.properties.${implPropName}`,
+          location: `${location}.${implPropName}`,
         });
       } else if (typeof baseSchema.additionalProperties === "object") {
         // If additionalProperties is a schema, check subset
@@ -123,13 +123,12 @@ function checkObjectCompatibility(
         );
         const flattenedImplProp = deepFlattenAllOf(extraProp);
 
-        errors.push(
-          ...checkSchemaCompatibility(
-            `${location}.properties.${implPropName}`,
-            flattenedBaseAdditional,
-            flattenedImplProp
-          )
+        const additionalPropErrors = checkSchemaCompatibility(
+          `${location}.${implPropName}`,
+          flattenedBaseAdditional,
+          flattenedImplProp
         );
+        errors.addErrors(additionalPropErrors.getAllErrors());
       }
     }
   }

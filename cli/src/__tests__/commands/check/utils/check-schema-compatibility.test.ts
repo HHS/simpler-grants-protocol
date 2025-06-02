@@ -2,6 +2,8 @@ import { checkSchemaCompatibility } from "../../../../commands/check/utils/check
 import { OpenAPIV3 } from "openapi-types";
 
 describe("Schema Compatibility Checks", () => {
+  const location = "TestLocation";
+
   // ############################################################
   // Type checking
   // ############################################################
@@ -24,10 +26,10 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
 
     // Assert
-    expect(errors).toHaveLength(0);
+    expect(errors.getErrorCount()).toBe(0);
   });
 
   // ############################################################
@@ -52,11 +54,16 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+    const error = errors.get(0);
 
     // Assert
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Missing required property 'id'/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(error).toEqual(
+      expect.objectContaining({
+        location: `${location}.id`,
+      })
+    );
   });
 
   // ############################################################
@@ -75,11 +82,17 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+    const error = errors.get(0);
 
     // Assert
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Enum mismatch. Extra value 'C'/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(error).toEqual(
+      expect.objectContaining({
+        message: expect.stringMatching(/Enum mismatch. Extra value 'C'/),
+        location: location,
+      })
+    );
   });
 
   // ############################################################
@@ -107,10 +120,10 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
 
     // Assert
-    expect(errors).toHaveLength(0);
+    expect(errors.getErrorCount()).toBe(0);
   });
 
   it("should flag extra properties if base has additionalProperties=false", () => {
@@ -132,10 +145,16 @@ describe("Schema Compatibility Checks", () => {
     };
 
     // Act
-    const errors = checkSchemaCompatibility("TestLocation", baseSchema, implSchema);
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema);
+    const error = errors.get(0);
 
     // Assert
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/extra property 'extra'/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(error).toEqual(
+      expect.objectContaining({
+        message: expect.stringMatching(/extra property 'extra'/),
+        location: `${location}.extra`,
+      })
+    );
   });
 });
