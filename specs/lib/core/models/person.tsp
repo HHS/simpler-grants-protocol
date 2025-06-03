@@ -4,15 +4,8 @@ import "../types.tsp";
 namespace CommonGrants.Models;
 
 /** A person affiliated with an organization or grant application. */
-@example(#{
-  name: Fields.Examples.Name.janeDoe,
-  title: "Chief Executive Officer",
-  addresses: Examples.Person.exampleAddresses,
-  phones: Examples.Person.examplePhones,
-  fax: Fields.Examples.Phone.withExtension,
-  emails: Examples.Person.exampleEmails,
-})
-model Person {
+@example(Examples.Person.examplePerson)
+model PersonBase {
   /** The person's full name, including all relevant components (first, middle, last, etc.). */
   name: Fields.Name;
 
@@ -30,6 +23,12 @@ model Person {
 
   /** Collection of email addresses associated with the person. */
   emails?: PersonEmailCollection;
+
+  /** The person's date of birth. */
+  dateOfBirth?: Types.isoDate;
+
+  /** Custom fields for the person. */
+  customFields?: Record<Fields.CustomField>;
 }
 
 // #########################################################
@@ -97,6 +96,15 @@ model PersonEmailCollection {
 // #########################################################
 
 namespace Examples.Person {
+  const examplePerson = #{
+    name: Fields.Examples.Name.janeDoe,
+    title: "Chief Executive Officer",
+    addresses: Examples.Person.exampleAddresses,
+    phones: Examples.Person.examplePhones,
+    fax: Fields.Examples.Phone.withExtension,
+    emails: Examples.Person.exampleEmails,
+  };
+
   const exampleAddresses = #{
     mailing: Fields.Examples.Address.mainStreet,
     work: Fields.Examples.Address.mainStreet,

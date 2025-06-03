@@ -3,18 +3,8 @@ import "../fields/index.tsp";
 namespace CommonGrants.Models;
 
 /** An organization that can apply for grants. */
-@example(#{
-  name: "Example Organization",
-  address: Fields.Examples.Address.mainStreet,
-  type: "Nonprofit",
-  ein: "123456789",
-  uei: "123456789",
-  duns: "123456789",
-  mission: "To provide support and resources to the community.",
-  yearFounded: 2024,
-  fiscalYearStart: "10-01",
-})
-model Organization {
+@example(Examples.Organization.exampleOrg)
+model OrganizationBase {
   /** The organization's legal name as registered with relevant authorities. */
   name: string;
 
@@ -39,29 +29,65 @@ model Organization {
   /** The calendar year the organization was founded. */
   yearFounded?: integer;
 
-  /** The the month and day (MM-DD) on which the organization's fiscal year starts, used for financial reporting. */
-  @example("01-01")
-  @pattern("^[0-9]{2}-[0-9]{2}$", "Must be in the format MM-DD")
-  fiscalYearStart?: string;
-
   /** Collection of the organization's social media and web presence links. */
-  socials?: {
-    /** The organization's primary website URL. */
-    website?: string;
+  socials?: OrgSocialLinks;
 
-    /** The organization's Facebook profile URL. */
-    facebook?: string;
+  /** Custom fields for the organization. */
+  customFields?: Record<Fields.CustomField>;
+}
 
-    /** The organization's Twitter/X profile URL. */
-    twitter?: string;
+// #########################################################
+// OrgSocialLinks
+// #########################################################
 
-    /** The organization's Instagram profile URL. */
-    instagram?: string;
+/** A collection of social media and web presence links for an organization. */
+@example(#{
+  website: "https://www.example.com",
+  facebook: "https://www.facebook.com/example",
+  twitter: "https://x.com/example",
+  instagram: "https://www.instagram.com/example",
+  linkedin: "https://www.linkedin.com/company/example",
+  otherSocials: #{ youtube: "https://www.youtube.com/example" },
+})
+model OrgSocialLinks {
+  /** The organization's primary website URL. */
+  website?: url;
 
-    /** The organization's LinkedIn profile URL. */
-    linkedin?: string;
+  /** The organization's Facebook profile URL. */
+  facebook?: url;
 
-    /** Additional social media profiles not covered by the standard fields. */
-    otherSocials?: Record<string>;
+  /** The organization's Twitter/X profile URL. */
+  twitter?: url;
+
+  /** The organization's Instagram profile URL. */
+  instagram?: url;
+
+  /** The organization's LinkedIn profile URL. */
+  linkedin?: url;
+
+  /** Additional social media profiles not covered by the standard fields. */
+  otherSocials?: Record<url>;
+}
+
+namespace Examples.Organization {
+  const exampleOrg = #{
+    name: "Example Organization",
+    address: Fields.Examples.Address.mainStreet,
+    type: "Nonprofit",
+    ein: "123456789",
+    uei: "123456789",
+    duns: "123456789",
+    mission: "To provide support and resources to the community.",
+    yearFounded: 2024,
+    socials: exampleSocials,
+  };
+
+  const exampleSocials = #{
+    website: "https://www.example.com",
+    facebook: "https://www.facebook.com/example",
+    twitter: "https://x.com/example",
+    instagram: "https://www.instagram.com/example",
+    linkedin: "https://www.linkedin.com/company/example",
+    otherSocials: #{ youtube: "https://www.youtube.com/example" },
   };
 }
