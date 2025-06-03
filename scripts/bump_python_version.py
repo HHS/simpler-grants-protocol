@@ -2,9 +2,11 @@ import os
 import re
 import glob
 import semver
+import json
 
 PACKAGE = "common_grants_sdk"
 PYPROJECT_PATH = "lib/python-sdk/pyproject.toml"
+PACKAGE_JSON_PATH = "lib/python-sdk/package.json"
 CHANGELOG_PATH = "lib/python-sdk/CHANGELOG.md"
 
 def parse_changesets():
@@ -15,7 +17,6 @@ def parse_changesets():
         with open(file, "r") as f:
             contents = f.read()
             if PACKAGE in contents:
-                # Match version type: "common_grants_sdk": patch
                 match = re.search(rf'"{PACKAGE}":\s*(major|minor|patch)', contents)
                 if match:
                     bumps.append(match.group(1))
@@ -47,19 +48,34 @@ def update_pyproject(new_version):
 
     updated = re.sub(
         r'version\s*=\s*"\d+\.\d+\.\d+"',
-        f'version = \"{new_version}\"',
+        f'version = "{new_version}"',
         content
     )
 
     with open(PYPROJECT_PATH, "w") as f:
         f.write(updated)
 
-    print(f"Bumped {PACKAGE} to version {new_version}")
+    print(f"Bumped {PACKAGE} to version {new_version} in pyproject.toml")
+
+def update_package_json(new_version):
+    if not os.path.exists(PACKAGE_JSON_PATH):
+        print("package.json not found, skipping update.")
+        return
+
+    with open(PACKAGE_JSON_PATH, "r") as f:
+        data = json.load(f)
+
+    data["version"] = new_version
+
+    with open(PACKAGE_JSON_PATH, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+
+    print(f"Bumped {PACKAGE} to version {new_version} in package.json")
 
 def update_changelog(new_version, bump_type):
     entry = f"## {new_version}\n\n- {bump_type} release based on changeset\n\n"
 
-    # Prepend entry if file exists, else create new one
     if os.path.exists(CHANGELOG_PATH):
         with open(CHANGELOG_PATH, "r") as f:
             existing = f.read()
@@ -77,14 +93,15 @@ def main():
         print("No changesets found for Python package.")
         return
 
-    # Pick the highest-impact bump
     bump_priority = {"major": 3, "minor": 2, "patch": 1}
     highest = max(bumps, key=lambda b: bump_priority[b])
 
     current = get_current_version()
-    new_version = apply_bump(current, highest)
-    update_pyproject(str(new_version))
-    update_changelog(str(new_version), highest)
+    new_version = str(apply_bump(current, highest))
+
+    update_pyproject(new_version)
+    update_package_json(new_version)
+    update_changelog(new_version, highest)
 
 if __name__ == "__main__":
     main()
