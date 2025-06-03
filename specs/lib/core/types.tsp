@@ -43,3 +43,8 @@ scalar uuid extends string;
 @example("100.5", #{ title: "Scale 1" })
 @example("-100.5", #{ title: "Negative, scale 2" })
 scalar decimalString extends string;
+
+/** An email address */
+@example("test@example.com")
+@format("email")
+scalar email extends string;
