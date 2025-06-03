@@ -23,6 +23,9 @@ model ApplicationBase {
     /** The application's proposal for funding. */
     proposal?: AppProposal;
 
+    /** The opportunity being applied to. */
+    opportunity?: AppOpportunity;
+
     /** The application's custom fields. */
     customFields?: Record<Fields.CustomField>;
 }
@@ -83,6 +86,22 @@ model AppProposal {
 }
 
 // #########################################################
+// AppOpportunity
+// #########################################################
+
+/** The opportunity to which this application is related */
+model AppOpportunity {
+    /** The opportunity's unique identifier. */
+    id?: string;
+
+    /** The opportunity's name. */
+    title?: string;
+
+    /** The opportunity's custom fields. */
+    customFields?: Record<Fields.CustomField>;
+}
+
+// #########################################################
 // Examples
 // #########################################################
 
@@ -93,6 +112,7 @@ namespace Examples.Application {
         organization: Examples.Organization.exampleOrg,
         pointOfContact: Examples.Person.examplePerson,
         proposal: exampleProposal,
+        opportunity: exampleOpportunity,
     };
 
     const submittedStatus = #{
@@ -112,5 +132,10 @@ namespace Examples.Application {
         amountRequested: #{ amount: "100000", currency: "USD" },
         periodStartDate: Types.isoDate.fromISO("2024-01-01"),
         periodEndDate: Types.isoDate.fromISO("2024-12-31"),
+    };
+
+    const exampleOpportunity = #{
+        id: "083b4567-e89d-42c8-a439-6c1234567890",
+        title: "Example Opportunity",
     };
 }
