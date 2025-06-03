@@ -11,14 +11,15 @@ A person affiliated with an organization or grant application.
 
 ### Table
 
-| Property  | Type                                                | Required | Description                  |
-| --------- | --------------------------------------------------- | -------- | ---------------------------- |
-| name      | [Name](/protocol/fields/name)                       | Yes      | The person's full name       |
-| title     | [string](/protocol/types/string#string)             | No       | The person's title           |
-| addresses | [PersonAddressCollection](#personaddresscollection) | No       | The person's addresses       |
-| phones    | [PersonPhoneCollection](#personphonecollection)     | No       | The person's phone numbers   |
-| fax       | [Phone](/protocol/fields/phone)                     | No       | The person's fax number      |
-| emails    | [PersonEmailCollection](#personemailcollection)     | No       | The person's email addresses |
+| Property    | Type                                                | Required | Description                  |
+| ----------- | --------------------------------------------------- | -------- | ---------------------------- |
+| name        | [Name](/protocol/fields/name)                       | Yes      | The person's full name       |
+| title       | [string](/protocol/types/string#string)             | No       | The person's title           |
+| dateOfBirth | [isoDate](/protocol/types/date#isoDate)             | No       | The person's date of birth   |
+| addresses   | [PersonAddressCollection](#personaddresscollection) | No       | The person's addresses       |
+| phones      | [PersonPhoneCollection](#personphonecollection)     | No       | The person's phone numbers   |
+| fax         | [Phone](/protocol/fields/phone)                     | No       | The person's fax number      |
+| emails      | [PersonEmailCollection](#personemailcollection)     | No       | The person's email addresses |
 
 ### Formats
 
@@ -35,6 +36,8 @@ A JSON example of this model is:
     "middle": "E.",
     "last": "Doe"
   },
+  "title": "Chief Executive Officer",
+  "dateOfBirth": "1990-01-01",
   "phones": {
     "primary": {
       "countryCode": "+1",
@@ -102,6 +105,9 @@ properties:
   title:
     type: string
     description: The person's title, if applicable.
+  dateOfBirth:
+    $ref: isoDate.json
+    description: The person's date of birth.
   addresses:
     $ref: PersonAddressCollection.json
     description: Collection of physical addresses associated with the person.
@@ -132,6 +138,9 @@ model Person {
 
   /** The person's title, if applicable. */
   title?: string;
+
+  /** The person's date of birth. */
+  dateOfBirth?: Fields.isoDate;
 
   /** Collection of physical addresses associated with the person. */
   addresses?: PersonAddressCollection;
