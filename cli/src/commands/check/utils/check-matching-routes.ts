@@ -173,10 +173,13 @@ function checkQueryParameters(
     if (baseParam.schema && implParam.schema) {
       errors.addErrors(
         checkSchemaCompatibility(
-          `${endpoint}.parameters.${baseParam.name}`,
+          `${baseParam.name}`,
           baseParam.schema as OpenAPIV3.SchemaObject,
           implParam.schema as OpenAPIV3.SchemaObject,
-          "REQUEST_BODY_CONFLICT"
+          {
+            errorSubType: "QUERY_PARAM_CONFLICT",
+            endpoint,
+          }
         ).getAllErrors()
       );
     }
@@ -230,12 +233,11 @@ function checkContentSchemas(
 
     // Deeper check: see if implSchema is a valid "subset" of baseSchema
     errors.addErrors(
-      checkSchemaCompatibility(
-        `${endpoint}.${mimeType}`,
-        baseSchema,
-        implSchema,
-        errorSubType
-      ).getAllErrors()
+      checkSchemaCompatibility("root", baseSchema, implSchema, {
+        errorSubType,
+        endpoint,
+        mimeType,
+      }).getAllErrors()
     );
   }
 

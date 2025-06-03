@@ -12,6 +12,14 @@ export interface OperationObject extends OpenAPIV3.OperationObject {
 
 export type ResponseObject = OpenAPIV3.ResponseObject;
 
+export interface SchemaContext {
+  endpoint?: string;
+  statusCode?: string;
+  mimeType?: string;
+  errorType?: "ROUTE_CONFLICT";
+  errorSubType?: ErrorSubType;
+}
+
 // #########################################################
 // Error types
 // #########################################################
@@ -22,8 +30,10 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS"
 export interface BaseError {
   type?: ErrorType;
   level?: "ERROR" | "WARNING";
-  location?: string;
   endpoint?: string;
+  statusCode?: string;
+  mimeType?: string;
+  location?: string;
   message?: string;
   details?: string;
 }
