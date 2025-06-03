@@ -15,7 +15,7 @@ An organization that can apply to or host funding opportunities.
 | ----------- | --------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------- |
 | name        | [string](/protocol/types/string#string)                                     | Yes      | The organization's legal name as registered with relevant authorities. |
 | address     | [Address](/protocol/fields/address)                                         | Yes      | The organization's primary mailing address.                            |
-| type        | [string](/protocol/types/string#string)                                     | Yes      | The organization's type (e.g., "Nonprofit", "For-Profit", etc.)        |
+| type        | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                               | Yes      | The organization's type (e.g., "Nonprofit", "For-Profit", etc.)        |
 | ein         | [string](/protocol/types/string#string)                                     | No       | The organization's Employer Identification Number (EIN).               |
 | uei         | [string](/protocol/types/string#string)                                     | No       | The organization's Unique Entity Identifier (UEI).                     |
 | duns        | [string](/protocol/types/string#string)                                     | No       | The organization's Data Universal Numbering System (DUNS) number.      |
@@ -40,7 +40,12 @@ A JSON example of this model is:
     "country": "US",
     "postalCode": "12345"
   },
-  "type": "Nonprofit",
+  "type": {
+    "term": "Nonprofit",
+    "class": "Organization types",
+    "code": "UC000000",
+    "description": "Nonprofit organization"
+  },
   "ein": "123456789",
   "uei": "123456789",
   "duns": "123456789",
@@ -68,8 +73,8 @@ properties:
     $ref: Address.json
     description: The organization's primary mailing address.
   type:
-    type: string
-    description: The organization's type (e.g., "Nonprofit", "For-Profit", "Government", "Educational").
+    $ref: PCSTerm.json
+    description: The organization's type within the Philanthropy Classification System (PCS).
   ein:
     type: string
     description: The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS.
@@ -146,8 +151,8 @@ model Organization {
     /** The organization's primary mailing address. */
     address: Fields.Address;
 
-    /** The organization's type (e.g., "Nonprofit", "For-Profit", "Government", "Educational"). */
-    type: string;
+    /** The organization's type within the Philanthropy Classification System (PCS). */
+    type: Fields.PCSOrgType;
 
     /** The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS. */
     ein?: string;
