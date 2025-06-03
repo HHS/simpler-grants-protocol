@@ -12,7 +12,7 @@ model OrganizationBase {
   address: Fields.Address;
 
   /** The organization's type (e.g., "Nonprofit", "For-Profit", "Government", "Educational"). */
-  type: string;
+  type: Fields.PCSOrgType;
 
   /** The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS. */
   ein?: string;
@@ -69,11 +69,15 @@ model OrgSocialLinks {
   otherSocials?: Record<url>;
 }
 
+// #########################################################
+// Examples
+// #########################################################
+
 namespace Examples.Organization {
   const exampleOrg = #{
     name: "Example Organization",
     address: Fields.Examples.Address.mainStreet,
-    type: "Nonprofit",
+    type: Fields.Examples.PCS.orgTypeTerm,
     ein: "123456789",
     uei: "123456789",
     duns: "123456789",
