@@ -15,6 +15,10 @@ importers:
         specifier: ^2.29.4
         version: 2.29.4
 
+  lib/cli: {}
+
+  lib/core: {}
+
   lib/python-sdk: {}
 
 packages:
