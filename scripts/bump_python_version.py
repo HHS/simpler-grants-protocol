@@ -60,7 +60,7 @@ def update_changelog(new_version, bump_type):
     entry = f"## {new_version}\n\n- {bump_type} release based on changeset\n\n"
 
     # Prepend entry if file exists, else create new one
-    if os.path.exists(changelog_path):
+    if os.path.exists(CHANGELOG_PATH):
         with open(CHANGELOG_PATH, "r") as f:
             existing = f.read()
         with open(CHANGELOG_PATH, "w") as f:
