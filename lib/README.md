@@ -1,4 +1,4 @@
-# simpler-grants-protocol/lib
+# simpler-grants-protocol / lib
 
 This directory contains independently versioned packages for the Simpler Grants Protocol, supporting both Python and Node.js packages.
 
