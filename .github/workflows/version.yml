@@ -1,0 +1,72 @@
+name: Version Packages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install --upgrade semver
+
+      - name: Bump Python package version
+        run: python scripts/bump_python_version.py
+
+      - name: Run Changeset version for Node packages (if any)
+        run: |
+          if pnpm changeset status | grep -q 'NO packages'; then
+            echo "No node packages to version."
+          else
+            pnpm changeset version
+          fi
+
+      - name: Commit version bumps
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit --no-verify -m "chore: version packages [skip ci]" || echo "No changes to commit"
+          git push
+
+      - name: Tag Python package version
+        run: |
+          PKG_NAME=$(grep -m1 'name =' lib/python-sdk/pyproject.toml | sed -E "s/.*name = \"([^\"]+)\".*/\1/")
+          PY_VERSION=$(grep -m1 'version =' lib/python-sdk/pyproject.toml | sed -E "s/.*version = \"([^\"]+)\".*/\1/")
+          git tag ${PKG_NAME}@${PY_VERSION}
+
+      - name: Tag Node packages (if any)
+        run: |
+          if pnpm changeset status | grep -q 'NO packages'; then
+            echo "No node packages to tag."
+          else
+            pnpm changeset tag
+          fi
+
+      - name: Push all tags
+        run: git push --tags
