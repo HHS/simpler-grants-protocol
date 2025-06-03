@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "workspaces": [
-    "lib/python-sdk/**"
+    "lib/**"
   ],
   "description": "",
   "main": "index.js",
