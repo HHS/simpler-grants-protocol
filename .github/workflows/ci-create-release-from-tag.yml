@@ -1,0 +1,26 @@
+name: Create GitHub Release from Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag to create release from'
+        required: true
+        type: string
+
+jobs:
+  create-release-from-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
