@@ -11,7 +11,7 @@ model OrganizationBase {
   /** The organization's primary mailing address. */
   address: Fields.Address;
 
-  /** The organization's type (e.g., "Nonprofit", "For-Profit", "Government", "Educational"). */
+  /** The organization's type within the Philanthropy Classification System (PCS). */
   type: Fields.PCSOrgType;
 
   /** The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS. */

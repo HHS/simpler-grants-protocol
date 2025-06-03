@@ -5,6 +5,7 @@ import "@typespec/json-schema";
 import "./opportunity/index.tsp";
 import "./organization.tsp";
 import "./person.tsp";
+import "./application.tsp";
 
 using TypeSpec.JsonSchema;
 
