@@ -38,8 +38,18 @@ jobs:
       - name: Install Python dependencies
         run: pip install --upgrade semver
 
-      - name: Run Python version bump script (must run before changeset version!)
-        run: python scripts/bump_python_version.py
+      - name: Bump Python version using Poetry (must run before changeset version!)
+        run: |
+          CHANGES=$(cat .changeset/*.md | grep '"common_grants_sdk":')
+          if echo "$CHANGES" | grep -q 'major'; then
+            poetry version major --directory lib/python-sdk
+          elif echo "$CHANGES" | grep -q 'minor'; then
+            poetry version minor --directory lib/python-sdk
+          elif echo "$CHANGES" | grep -q 'patch'; then
+            poetry version patch --directory lib/python-sdk
+          else
+            echo "No bump needed for Python package"
+          fi
 
       - name: Run changeset version for Node packages (including "fake" python packages)
         run: pnpm changeset version
@@ -58,7 +68,7 @@ jobs:
           PY_VERSION=$(grep -m1 'version =' lib/python-sdk/pyproject.toml | sed -E "s/.*version = \"([^\"]+)\".*/\1/")
           git tag ${PKG_NAME}@${PY_VERSION}
 
-      - name: Tag Node packages (if any)
+      - name: Tag Node packages
         run: pnpm changeset tag
 
       - name: Push all tags
