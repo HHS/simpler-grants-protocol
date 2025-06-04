@@ -51,7 +51,11 @@
     "oppstatus",
     "opportunitybase",
     "pagefind",
-    "viewports"
+    "viewports",
+    "calendaryear",
+    "employertaxid",
+    "samuei",
+    "duns"
   ],
   "import": []
 }
