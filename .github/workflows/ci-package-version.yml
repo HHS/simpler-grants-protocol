@@ -27,16 +27,26 @@ jobs:
         with:
           version: 8
 
+      - name: Install Node.js dependencies
+        run: pnpm install
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Node.js dependencies
-        run: pnpm install
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
 
-      - name: Install Python dependencies
-        run: pip install --upgrade semver
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+
+      - name: Install dependencies
+        run: poetry install
+        working-directory: lib/python-sdk
 
       - name: Bump Python version using Poetry (must run before changeset version!)
         run: |
