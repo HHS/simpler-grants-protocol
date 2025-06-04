@@ -13,7 +13,7 @@ Base model for an application to a funding opportunity.
 
 | Property       | Type                                                                                   | Required | Description                                     |
 | -------------- | -------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
-| id             | [string](/protocol/types/string#string)                                                | No       | The application's unique identifier             |
+| id             | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The application's unique identifier             |
 | status         | [AppStatus](#appstatus)                                                                | No       | The application's status                        |
 | dateSubmitted  | [isoDate](/protocol/types/date#isodate)                                                | No       | The application's date of submission            |
 | organization   | [OrganizationBase](/protocol/models/organization)                                      | No       | The organization that is applying for the grant |
@@ -70,7 +70,7 @@ $id: ApplicationBase.yaml
 type: object
 properties:
   id:
-    type: string
+    $ref: uuid.yaml
     description: The application's unique identifier.
   status:
     $ref: AppStatus.yaml
@@ -94,6 +94,8 @@ properties:
     $ref: "#/$defs/RecordCustomField"
     description: The application's custom fields.
 description: The base model for an application.
+required:
+  - id
 $defs:
   RecordCustomField:
     type: object
@@ -111,7 +113,7 @@ The TypeSpec code for this model is:
 /** The base model for an application. */
 model ApplicationBase {
     /** The application's unique identifier. */
-    id?: string;
+    id: Types.uuid;
 
     /** The application's status. */
     status?: AppStatus;
@@ -335,6 +337,8 @@ properties:
     $ref: "#/$defs/RecordCustomField"
     description: The proposal's custom fields.
 description: The proposal for funding an application.
+required:
+  - id
 $defs:
   RecordCustomField:
     type: object
@@ -382,7 +386,7 @@ The opportunity being applied to.
 
 | Property     | Type                                                                                   | Required | Description                          |
 | ------------ | -------------------------------------------------------------------------------------- | -------- | ------------------------------------ |
-| id           | [string](/protocol/types/string#string)                                                | No       | The opportunity's unique identifier. |
+| id           | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The opportunity's unique identifier. |
 | title        | [string](/protocol/types/string#string)                                                | No       | The title of the opportunity.        |
 | customFields | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The opportunity's custom fields.     |
 
@@ -411,7 +415,7 @@ $id: AppOpportunity.yaml
 type: object
 properties:
   id:
-    type: string
+    $ref: uuid.yaml
     description: The opportunity's unique identifier.
   title:
     type: string
@@ -420,6 +424,8 @@ properties:
     $ref: "#/$defs/RecordCustomField"
     description: The opportunity's custom fields.
 description: The opportunity being applied to.
+required:
+  - id
 $defs:
   RecordCustomField:
     type: object
@@ -437,7 +443,7 @@ The TypeSpec code for this model is:
 /** The opportunity being applied to. */
 model AppOpportunity {
     /** The opportunity's unique identifier. */
-    id?: string;
+    id: Types.uuid;
 
     /** The title of the opportunity. */
     title?: string;

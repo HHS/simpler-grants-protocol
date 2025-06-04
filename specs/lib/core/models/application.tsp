@@ -6,7 +6,7 @@ namespace CommonGrants.Models;
 @example(Examples.Application.exampleApplication)
 model ApplicationBase {
     /** The application's unique identifier. */
-    id?: string;
+    id: Types.uuid;
 
     /** The application's status. */
     status?: AppStatus;
@@ -92,7 +92,7 @@ model AppProposal {
 /** The opportunity to which this application is related */
 model AppOpportunity {
     /** The opportunity's unique identifier. */
-    id?: string;
+    id: Types.uuid;
 
     /** The opportunity's name. */
     title?: string;

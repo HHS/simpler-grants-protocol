@@ -13,6 +13,7 @@ An organization that can apply to or host funding opportunities.
 
 | Property    | Type                                                                        | Required | Description                                                            |
 | ----------- | --------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------- |
+| id          | [uuid](/protocol/types/string#uuid)                                         | Yes      | The organization's unique identifier.                                  |
 | name        | [string](/protocol/types/string#string)                                     | Yes      | The organization's legal name as registered with relevant authorities. |
 | address     | [Address](/protocol/fields/address)                                         | Yes      | The organization's primary mailing address.                            |
 | type        | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                               | Yes      | The organization's type (e.g., "Nonprofit", "For-Profit", etc.)        |
@@ -32,6 +33,7 @@ A JSON example of this model is:
 
 ```json
 {
+  "id": "083b4567-e89d-42c8-a439-6c1234567890",
   "name": "Example Organization",
   "address": {
     "street1": "123 Main St",
@@ -66,6 +68,9 @@ $schema: https://json-schema.org/draft/2020-12/schema
 $id: Organization.json
 type: object
 properties:
+  id:
+    $ref: uuid.yaml
+    description: The organization's unique identifier.
   name:
     type: string
     description: The organization's legal name as registered with relevant authorities.
@@ -145,6 +150,9 @@ The TypeSpec code for this model is:
 
 ```typespec
 model Organization {
+    /** The organization's unique identifier. */
+    id: Types.uuid;
+
     /** The organization's legal name as registered with relevant authorities. */
     name: string;
 

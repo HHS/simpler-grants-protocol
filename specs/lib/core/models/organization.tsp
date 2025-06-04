@@ -5,6 +5,9 @@ namespace CommonGrants.Models;
 /** An organization that can apply for grants. */
 @example(Examples.Organization.exampleOrg)
 model OrganizationBase {
+  /** The organization's unique identifier. */
+  id: Types.uuid;
+
   /** The organization's legal name as registered with relevant authorities. */
   name: string;
 
