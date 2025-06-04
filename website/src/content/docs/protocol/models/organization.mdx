@@ -11,18 +11,18 @@ An organization that can apply to or host funding opportunities.
 
 ### Table
 
-| Property    | Type                                                                        | Required | Description                                                            |
-| ----------- | --------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------- |
-| id          | [uuid](/protocol/types/string#uuid)                                         | Yes      | The organization's unique identifier.                                  |
-| name        | [string](/protocol/types/string#string)                                     | Yes      | The organization's legal name as registered with relevant authorities. |
-| address     | [Address](/protocol/fields/address)                                         | No       | The organization's primary mailing address.                            |
-| type        | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                               | No       | The organization's type (e.g., "Nonprofit", "For-Profit", etc.)        |
-| ein         | [employerTaxId](/protocol/types/string#employertaxid)                       | No       | The organization's Employer Identification Number (EIN).               |
-| uei         | [samUEI](/protocol/types/string#samuei)                                     | No       | The organization's Unique Entity Identifier (UEI).                     |
-| duns        | [duns](/protocol/types/string#duns)                                         | No       | The organization's Data Universal Numbering System (DUNS) number.      |
-| mission     | [string](/protocol/types/string#string)                                     | No       | The organization's mission statement.                                  |
-| yearFounded | [calendarYear](/protocol/types/date#calendaryear)                           | No       | The calendar year the organization was founded.                        |
-| socials     | [Record](/protocol/types/other#record)\<[OrgSocialLinks](#orgsociallinks)\> | No       | The organization's social media and web presence links.                |
+| Property    | Type                                                                        | Required | Description                                                                  |
+| ----------- | --------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
+| id          | [uuid](/protocol/types/string#uuid)                                         | Yes      | The organization's unique identifier.                                        |
+| name        | [string](/protocol/types/string#string)                                     | Yes      | The organization's legal name as registered with relevant authorities.       |
+| address     | [Address](/protocol/fields/address)                                         | No       | The organization's primary mailing address.                                  |
+| type        | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                               | No       | The organization's type within the Philanthropy Classification System (PCS). |
+| ein         | [employerTaxId](/protocol/types/string#employertaxid)                       | No       | The organization's Employer Identification Number (EIN).                     |
+| uei         | [samUEI](/protocol/types/string#samuei)                                     | No       | The organization's Unique Entity Identifier (UEI).                           |
+| duns        | [duns](/protocol/types/string#duns)                                         | No       | The organization's Data Universal Numbering System (DUNS) number.            |
+| mission     | [string](/protocol/types/string#string)                                     | No       | The organization's mission statement.                                        |
+| yearFounded | [calendarYear](/protocol/types/date#calendaryear)                           | No       | The calendar year the organization was founded.                              |
+| socials     | [Record](/protocol/types/other#record)\<[OrgSocialLinks](#orgsociallinks)\> | No       | The organization's social media and web presence links.                      |
 
 ### Formats
 
@@ -81,13 +81,13 @@ properties:
     $ref: PCSTerm.yaml
     description: The organization's type within the Philanthropy Classification System (PCS).
   ein:
-    type: string
+    $ref: employerTaxId.yaml
     description: The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS.
   uei:
-    type: string
+    $ref: samUEI.yaml
     description: The organization's Unique Entity Identifier (UEI) from SAM.gov, used for federal contracting.
   duns:
-    type: string
+    $ref: duns.yaml
     description: The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses.
   mission:
     type: string

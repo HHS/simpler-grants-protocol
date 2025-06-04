@@ -18,9 +18,6 @@ model PersonBase {
   /** Collection of phone numbers associated with the person. */
   phones?: PersonPhoneCollection;
 
-  /** The person's fax number, if applicable. */
-  fax?: Fields.Phone;
-
   /** Collection of email addresses associated with the person. */
   emails?: PersonEmailCollection;
 
@@ -39,7 +36,7 @@ model PersonBase {
 @example(Examples.Person.exampleAddresses)
 model PersonAddressCollection {
   /** The person's primary mailing address. */
-  mailing: Fields.Address;
+  primary: Fields.Address;
 
   /** The person's work address. */
   work?: Fields.Address;
@@ -66,6 +63,9 @@ model PersonPhoneCollection {
 
   /** The person's home phone number. */
   home?: Fields.Phone;
+
+  /** The person's fax number, if applicable. */
+  fax?: Fields.Phone;
 
   /** Additional phone numbers not covered by the standard fields. */
   otherPhones?: Record<Fields.Phone>;
@@ -101,12 +101,11 @@ namespace Examples.Person {
     title: "Chief Executive Officer",
     addresses: Examples.Person.exampleAddresses,
     phones: Examples.Person.examplePhones,
-    fax: Fields.Examples.Phone.withExtension,
     emails: Examples.Person.exampleEmails,
   };
 
   const exampleAddresses = #{
-    mailing: Fields.Examples.Address.mainStreet,
+    primary: Fields.Examples.Address.mainStreet,
     work: Fields.Examples.Address.mainStreet,
     home: Fields.Examples.Address.mainStreet,
   };
@@ -115,6 +114,7 @@ namespace Examples.Person {
     primary: Fields.Examples.Phone.mobile,
     work: Fields.Examples.Phone.withExtension,
     home: Fields.Examples.Phone.mobile,
+    fax: Fields.Examples.Phone.withExtension,
     otherPhones: #{
       international: #{ countryCode: "+44", number: "7700 900000" },
     },

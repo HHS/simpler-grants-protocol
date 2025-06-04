@@ -18,7 +18,6 @@ A person affiliated with an organization or grant application.
 | dateOfBirth | [isoDate](/protocol/types/date#isodate)             | No       | The person's date of birth   |
 | addresses   | [PersonAddressCollection](#personaddresscollection) | No       | The person's addresses       |
 | phones      | [PersonPhoneCollection](#personphonecollection)     | No       | The person's phone numbers   |
-| fax         | [Phone](/protocol/fields/phone)                     | No       | The person's fax number      |
 | emails      | [PersonEmailCollection](#personemailcollection)     | No       | The person's email addresses |
 
 ### Formats
@@ -96,29 +95,26 @@ A JSON example of this model is:
 The JSON Schema for this model is:
 
 ```yaml
-$id: Person.json
+$id: Person.yaml
 type: object
 properties:
   name:
-    $ref: Name.json
+    $ref: Name.yaml
     description: The person's full name, including all relevant components (first, middle, last, etc.).
   title:
     type: string
     description: The person's title, if applicable.
   dateOfBirth:
-    $ref: isoDate.json
+    $ref: isoDate.yaml
     description: The person's date of birth.
   addresses:
-    $ref: PersonAddressCollection.json
+    $ref: PersonAddressCollection.yaml
     description: Collection of physical addresses associated with the person.
   phones:
-    $ref: PersonPhoneCollection.json
+    $ref: PersonPhoneCollection.yaml
     description: Collection of phone numbers associated with the person.
-  fax:
-    $ref: Phone.json
-    description: The person's fax number, if applicable.
   emails:
-    $ref: PersonEmailCollection.json
+    $ref: PersonEmailCollection.yaml
     description: Collection of email addresses associated with the person.
 required:
   - name
@@ -148,9 +144,6 @@ model Person {
   /** Collection of phone numbers associated with the person. */
   phones?: PersonPhoneCollection;
 
-  /** The person's fax number, if applicable. */
-  fax?: Fields.Phone;
-
   /** Collection of email addresses associated with the person. */
   emails?: PersonEmailCollection;
 }
@@ -167,7 +160,7 @@ A collection of addresses for a person.
 
 | Property       | Type                                                                          | Required | Description                                              |
 | -------------- | ----------------------------------------------------------------------------- | -------- | -------------------------------------------------------- |
-| mailing        | [Address](/protocol/fields/address)                                           | Yes      | The person's mailing address                             |
+| primary        | [Address](/protocol/fields/address)                                           | Yes      | The person's mailing address                             |
 | work           | [Address](/protocol/fields/address)                                           | No       | The person's work address                                |
 | home           | [Address](/protocol/fields/address)                                           | No       | The person's home address                                |
 | otherAddresses | [Record](/protocol/types/other#record)\<[Address](/protocol/fields/address)\> | No       | Additional addresses not covered by the standard fields. |
@@ -181,7 +174,7 @@ A JSON example of this model is:
 
 ```json
 {
-  "mailing": {
+  "primary": {
     "street1": "123 Main St",
     "city": "Anytown",
     "stateOrProvince": "CA",
@@ -220,26 +213,26 @@ A JSON example of this model is:
 The JSON Schema for this model is:
 
 ```yaml
-$id: PersonAddressCollection.json
+$id: PersonAddressCollection.yaml
 type: object
 properties:
-  mailing:
-    $ref: Address.json
+  primary:
+    $ref: Address.yaml
     description: The person's primary mailing address.
   work:
-    $ref: Address.json
+    $ref: Address.yaml
     description: The person's work address.
   home:
-    $ref: Address.json
+    $ref: Address.yaml
     description: The person's home address.
   otherAddresses:
     type: object
     properties: {}
     unevaluatedProperties:
-      $ref: Address.json
+      $ref: Address.yaml
     description: Additional addresses not covered by the standard fields.
 required:
-  - mailing
+  - primary
 description: Collection of physical addresses associated with the person.
 ```
 
@@ -252,13 +245,16 @@ The TypeSpec code for this model is:
 /** A collection of addresses for a person. */
 model PersonAddressCollection {
   /** The person's primary mailing address. */
-  mailing: Fields.Address;
+  primary: Fields.Address;
 
   /** The person's work address. */
   work?: Fields.Address;
 
   /** The person's home address. */
   home?: Fields.Address;
+
+  /** The person's fax number, if applicable. */
+  fax?: Fields.Phone;
 
   /** Additional addresses not covered by the standard fields. */
   otherAddresses?: Record<Fields.Address>;
@@ -305,23 +301,23 @@ A JSON example of this model is:
 The JSON Schema for this model is:
 
 ```yaml
-$id: PersonEmailCollection.json
+$id: PersonEmailCollection.yaml
 type: object
 properties:
   primary:
-    $ref: Email.json
+    $ref: Email.yaml
     description: The person's primary email address.
   work:
-    $ref: Email.json
+    $ref: Email.yaml
     description: The person's work email address.
   home:
-    $ref: Email.json
+    $ref: Email.yaml
     description: The person's home email address.
   otherEmails:
     type: object
     properties: {}
     unevaluatedProperties:
-      $ref: Email.json
+      $ref: Email.yaml
     description: Additional email addresses not covered by the standard fields.
 required:
   - primary
@@ -364,6 +360,7 @@ A collection of phone numbers for a person.
 | primary     | [Phone](/protocol/fields/phone)                                           | Yes      | The person's primary phone number                            |
 | work        | [Phone](/protocol/fields/phone)                                           | No       | The person's work phone number                               |
 | home        | [Phone](/protocol/fields/phone)                                           | No       | The person's home phone number                               |
+| fax         | [Phone](/protocol/fields/phone)                                           | No       | The person's fax number, if applicable.                      |
 | otherPhones | [Record](/protocol/types/other#record)\<[Phone](/protocol/fields/phone)\> | No       | Additional phone numbers not covered by the standard fields. |
 
 ### Formats
@@ -409,23 +406,26 @@ A JSON example of this model is:
 The JSON Schema for this model is:
 
 ```yaml
-$id: PersonPhoneCollection.json
+$id: PersonPhoneCollection.yaml
 type: object
 properties:
   primary:
-    $ref: Phone.json
+    $ref: Phone.yaml
     description: The person's primary phone number.
   work:
-    $ref: Phone.json
+    $ref: Phone.yaml
     description: The person's work phone number.
   home:
-    $ref: Phone.json
+    $ref: Phone.yaml
     description: The person's home phone number.
+  fax:
+    $ref: Phone.yaml
+    description: The person's fax number, if applicable.
   otherPhones:
     type: object
     properties: {}
     unevaluatedProperties:
-      $ref: Phone.json
+      $ref: Phone.yaml
     description: Additional phone numbers not covered by the standard fields.
 required:
   - primary
@@ -448,6 +448,9 @@ model PersonPhoneCollection {
 
   /** The person's home phone number. */
   home?: Fields.Phone;
+
+  /** The person's fax number, if applicable. */
+  fax?: Fields.Phone;
 
   /** Additional phone numbers not covered by the standard fields. */
   otherPhones?: Record<Fields.Phone>;
