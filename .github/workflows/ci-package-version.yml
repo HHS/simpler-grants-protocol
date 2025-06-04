@@ -32,19 +32,17 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install Node.js dependencies
+        run: pnpm install
+
       - name: Install Python dependencies
         run: pip install --upgrade semver
 
-      - name: Bump Python package version
+      - name: Run Python version bump script (must run before changeset version!)
         run: python scripts/bump_python_version.py
 
-      - name: Run Changeset version for Node packages (if any)
-        run: |
-          if pnpm changeset status | grep -q 'NO packages'; then
-            echo "No node packages to version."
-          else
-            pnpm changeset version
-          fi
+      - name: Run changeset version for Node packages (including "fake" python packages)
+        run: pnpm changeset version
 
       - name: Commit version bumps
         run: |
@@ -61,12 +59,7 @@ jobs:
           git tag ${PKG_NAME}@${PY_VERSION}
 
       - name: Tag Node packages (if any)
-        run: |
-          if pnpm changeset status | grep -q 'NO packages'; then
-            echo "No node packages to tag."
-          else
-            pnpm changeset tag
-          fi
+        run: pnpm changeset tag
 
       - name: Push all tags
         run: git push --tags

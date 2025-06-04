@@ -6,8 +6,6 @@ import json
 
 PACKAGE = "common_grants_sdk"
 PYPROJECT_PATH = "lib/python-sdk/pyproject.toml"
-PACKAGE_JSON_PATH = "lib/python-sdk/package.json"
-CHANGELOG_PATH = "lib/python-sdk/CHANGELOG.md"
 
 def parse_changesets():
     changeset_files = glob.glob(".changeset/*.md")
@@ -57,36 +55,6 @@ def update_pyproject(new_version):
 
     print(f"Bumped {PACKAGE} to version {new_version} in pyproject.toml")
 
-def update_package_json(new_version):
-    if not os.path.exists(PACKAGE_JSON_PATH):
-        print("package.json not found, skipping update.")
-        return
-
-    with open(PACKAGE_JSON_PATH, "r") as f:
-        data = json.load(f)
-
-    data["version"] = new_version
-
-    with open(PACKAGE_JSON_PATH, "w") as f:
-        json.dump(data, f, indent=2)
-        f.write("\n")
-
-    print(f"Bumped {PACKAGE} to version {new_version} in package.json")
-
-def update_changelog(new_version, bump_type):
-    entry = f"## {new_version}\n\n- {bump_type} release based on changeset\n\n"
-
-    if os.path.exists(CHANGELOG_PATH):
-        with open(CHANGELOG_PATH, "r") as f:
-            existing = f.read()
-        with open(CHANGELOG_PATH, "w") as f:
-            f.write(entry + "\n" + existing)
-    else:
-        with open(CHANGELOG_PATH, "w") as f:
-            f.write("# Changelog\n\n" + entry)
-
-    print(f"Updated CHANGELOG.md for version {new_version}")
-
 def main():
     bumps = parse_changesets()
     if not bumps:
@@ -98,10 +66,7 @@ def main():
 
     current = get_current_version()
     new_version = str(apply_bump(current, highest))
-
     update_pyproject(new_version)
-    update_package_json(new_version)
-    update_changelog(new_version, highest)
 
 if __name__ == "__main__":
     main()
