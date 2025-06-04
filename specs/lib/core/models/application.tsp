@@ -107,6 +107,7 @@ model AppOpportunity {
 
 namespace Examples.Application {
     const exampleApplication = #{
+        id: "083b4567-e89d-42c8-a439-6c1234567890",
         status: submittedStatus,
         dateSubmitted: Types.isoDate.fromISO("2024-01-01"),
         organization: Examples.Organization.exampleOrg,

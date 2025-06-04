@@ -48,3 +48,18 @@ scalar decimalString extends string;
 @example("test@example.com")
 @format("email")
 scalar email extends string;
+
+/** An Employer Identification Number (EIN) */
+@example("123456789")
+@pattern("^[0-9]{2}-[0-9]{7}$")
+scalar employerTaxId extends string;
+
+/** A Unique Entity Identifier (UEI) */
+@example("ABC1234567890")
+@pattern("^[A-z0-9]{12}$")
+scalar samUEI extends string;
+
+/** A Data Universal Numbering System (DUNS) number */
+@example("123456789012")
+@pattern("^[0-9]{9}$")
+scalar duns extends string;

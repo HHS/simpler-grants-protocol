@@ -15,11 +15,11 @@ An organization that can apply to or host funding opportunities.
 | ----------- | --------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------- |
 | id          | [uuid](/protocol/types/string#uuid)                                         | Yes      | The organization's unique identifier.                                  |
 | name        | [string](/protocol/types/string#string)                                     | Yes      | The organization's legal name as registered with relevant authorities. |
-| address     | [Address](/protocol/fields/address)                                         | Yes      | The organization's primary mailing address.                            |
-| type        | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                               | Yes      | The organization's type (e.g., "Nonprofit", "For-Profit", etc.)        |
-| ein         | [string](/protocol/types/string#string)                                     | No       | The organization's Employer Identification Number (EIN).               |
-| uei         | [string](/protocol/types/string#string)                                     | No       | The organization's Unique Entity Identifier (UEI).                     |
-| duns        | [string](/protocol/types/string#string)                                     | No       | The organization's Data Universal Numbering System (DUNS) number.      |
+| address     | [Address](/protocol/fields/address)                                         | No       | The organization's primary mailing address.                            |
+| type        | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                               | No       | The organization's type (e.g., "Nonprofit", "For-Profit", etc.)        |
+| ein         | [employerTaxId](/protocol/types/string#employertaxid)                       | No       | The organization's Employer Identification Number (EIN).               |
+| uei         | [samUEI](/protocol/types/string#samuei)                                     | No       | The organization's Unique Entity Identifier (UEI).                     |
+| duns        | [duns](/protocol/types/string#duns)                                         | No       | The organization's Data Universal Numbering System (DUNS) number.      |
 | mission     | [string](/protocol/types/string#string)                                     | No       | The organization's mission statement.                                  |
 | yearFounded | [integer](/protocol/types/numeric#integer)                                  | No       | The calendar year the organization was founded.                        |
 | socials     | [Record](/protocol/types/other#record)\<[OrgSocialLinks](#orgsociallinks)\> | No       | The organization's social media and web presence links.                |
@@ -127,8 +127,8 @@ properties:
         description: Additional social media profiles not covered by the standard fields.
     description: Collection of the organization's social media and web presence links.
 required:
+  - id
   - name
-  - address
 description: An organization that can apply for grants.
 $defs:
   RecordString:
@@ -157,19 +157,19 @@ model Organization {
     name: string;
 
     /** The organization's primary mailing address. */
-    address: Fields.Address;
+    address?: Fields.Address;
 
     /** The organization's type within the Philanthropy Classification System (PCS). */
-    type: Fields.PCSOrgType;
+    type?: Fields.PCSOrgType;
 
     /** The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS. */
-    ein?: string;
+    ein?: Types.employerTaxId;
 
     /** The organization's Unique Entity Identifier (UEI) from SAM.gov, used for federal contracting. */
-    uei?: string;
+    uei?: Types.samUEI;
 
     /** The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses. */
-    duns?: string;
+    duns?: Types.duns;
 
     /** The organization's mission statement. */
     mission?: string;

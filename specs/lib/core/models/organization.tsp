@@ -12,19 +12,19 @@ model OrganizationBase {
   name: string;
 
   /** The organization's primary mailing address. */
-  address: Fields.Address;
+  address?: Fields.Address;
 
   /** The organization's type within the Philanthropy Classification System (PCS). */
-  type: Fields.PCSOrgType;
+  type?: Fields.PCSOrgType;
 
   /** The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS. */
-  ein?: string;
+  ein?: Types.employerTaxId;
 
   /** The organization's Unique Entity Identifier (UEI) from SAM.gov, used for federal contracting. */
-  uei?: string;
+  uei?: Types.samUEI;
 
   /** The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses. */
-  duns?: string;
+  duns?: Types.duns;
 
   /** The organization's mission statement. */
   mission?: string;
@@ -78,12 +78,13 @@ model OrgSocialLinks {
 
 namespace Examples.Organization {
   const exampleOrg = #{
+    id: "083b4567-e89d-42c8-a439-6c1234567890",
     name: "Example Organization",
     address: Fields.Examples.Address.mainStreet,
     type: Fields.Examples.PCS.orgTypeTerm,
-    ein: "123456789",
-    uei: "123456789",
-    duns: "123456789",
+    ein: "12-3456789",
+    uei: "ABC1234567890",
+    duns: "123456789012",
     mission: "To provide support and resources to the community.",
     yearFounded: 2024,
     socials: exampleSocials,
