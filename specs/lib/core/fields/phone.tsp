@@ -5,6 +5,7 @@ namespace CommonGrants.Fields;
 @example(Examples.Phone.withExtension)
 model Phone {
   /** The international country code (e.g., "+1" for US/Canada). */
+  @pattern("^\\+[1-9][0-9]{1,3}$")
   countryCode: string;
 
   /** The local phone number without the country code. */
