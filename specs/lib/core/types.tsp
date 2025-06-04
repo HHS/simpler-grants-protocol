@@ -29,6 +29,11 @@ scalar isoTime extends plainTime;
 @example(isoDate.fromISO("2025-01-01"))
 scalar isoDate extends plainDate;
 
+/** A calendar year */
+@example("2025")
+@pattern("^[0-9]{4}$")
+scalar calendarYear extends string;
+
 /** A universally unique identifier */
 @example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
 @format("uuid")

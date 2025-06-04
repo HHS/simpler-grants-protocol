@@ -21,7 +21,7 @@ An organization that can apply to or host funding opportunities.
 | uei         | [samUEI](/protocol/types/string#samuei)                                     | No       | The organization's Unique Entity Identifier (UEI).                     |
 | duns        | [duns](/protocol/types/string#duns)                                         | No       | The organization's Data Universal Numbering System (DUNS) number.      |
 | mission     | [string](/protocol/types/string#string)                                     | No       | The organization's mission statement.                                  |
-| yearFounded | [integer](/protocol/types/numeric#integer)                                  | No       | The calendar year the organization was founded.                        |
+| yearFounded | [calendarYear](/protocol/types/date#calendaryear)                           | No       | The calendar year the organization was founded.                        |
 | socials     | [Record](/protocol/types/other#record)\<[OrgSocialLinks](#orgsociallinks)\> | No       | The organization's social media and web presence links.                |
 
 ### Formats
@@ -52,7 +52,7 @@ A JSON example of this model is:
   "uei": "123456789",
   "duns": "123456789",
   "mission": "To provide support and resources to the community.",
-  "yearFounded": 2024,
+  "yearFounded": "2024",
   "fiscalYearStart": "2024-01-01",
   "fiscalYearEnd": "2024-12-31"
 }
@@ -65,7 +65,7 @@ The JSON Schema for this model is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: Organization.json
+$id: Organization.yaml
 type: object
 properties:
   id:
@@ -75,10 +75,10 @@ properties:
     type: string
     description: The organization's legal name as registered with relevant authorities.
   address:
-    $ref: Address.json
+    $ref: Address.yaml
     description: The organization's primary mailing address.
   type:
-    $ref: PCSTerm.json
+    $ref: PCSTerm.yaml
     description: The organization's type within the Philanthropy Classification System (PCS).
   ein:
     type: string
@@ -93,54 +93,15 @@ properties:
     type: string
     description: The organization's mission statement.
   yearFounded:
-    type: integer
+    $ref: calendarYear.yaml
     description: The calendar year the organization was founded.
-  fiscalYearStart:
-    type: string
-    format: date
-    examples: ["2024-01-01"]
-    description: The start date of the organization's fiscal year, used for financial reporting.
-  fiscalYearEnd:
-    type: string
-    format: date
-    description: The end date of the organization's fiscal year, used for financial reporting.
   socials:
-    type: object
-    properties:
-      website:
-        type: string
-        description: The organization's primary website URL.
-      facebook:
-        type: string
-        description: The organization's Facebook profile URL.
-      twitter:
-        type: string
-        description: The organization's Twitter/X profile URL.
-      instagram:
-        type: string
-        description: The organization's Instagram profile URL.
-      linkedin:
-        type: string
-        description: The organization's LinkedIn profile URL.
-      otherSocials:
-        $ref: "#/$defs/RecordString"
-        description: Additional social media profiles not covered by the standard fields.
+    $ref: OrgSocialLinks.yaml
     description: Collection of the organization's social media and web presence links.
 required:
   - id
   - name
 description: An organization that can apply for grants.
-$defs:
-  RecordString:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      type: string
-  RecordPerson:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      $ref: Person.json
 ```
 
   </TabItem>
@@ -175,7 +136,7 @@ model Organization {
     mission?: string;
 
     /** The calendar year the organization was founded. */
-    yearFounded?: integer;
+    yearFounded?: Types.calendarYear;
 
     /** The start date of the organization's fiscal year, used for financial reporting. */
     @example(plainDate.fromISO("2024-01-01"))
@@ -185,25 +146,7 @@ model Organization {
     fiscalYearEnd?: plainDate;
 
     /** Collection of the organization's social media and web presence links. */
-    socials?: {
-        /** The organization's primary website URL. */
-        website?: string;
-
-        /** The organization's Facebook profile URL. */
-        facebook?: string;
-
-        /** The organization's Twitter/X profile URL. */
-        twitter?: string;
-
-        /** The organization's Instagram profile URL. */
-        instagram?: string;
-
-        /** The organization's LinkedIn profile URL. */
-        linkedin?: string;
-
-        /** Additional social media profiles not covered by the standard fields. */
-        otherSocials?: Record<string>;
-    };
+    socials?: OrgSocialLinks;
 }
 ```
 
@@ -216,14 +159,15 @@ A record of the organization's social media and web presence links.
 
 ### Table
 
-| Property     | Type                                                                              | Required | Description                                                          |
-| ------------ | --------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------- |
-| website      | [string](/protocol/types/string#string)                                           | No       | The organization's primary website URL.                              |
-| facebook     | [string](/protocol/types/string#string)                                           | No       | The organization's Facebook profile URL.                             |
-| twitter      | [string](/protocol/types/string#string)                                           | No       | The organization's Twitter/X profile URL.                            |
-| instagram    | [string](/protocol/types/string#string)                                           | No       | The organization's Instagram profile URL.                            |
-| linkedin     | [string](/protocol/types/string#string)                                           | No       | The organization's LinkedIn profile URL.                             |
-| otherSocials | [Record](/protocol/types/other#record)\<[string](/protocol/types/string#string)\> | No       | Additional social media profiles not covered by the standard fields. |
+| Property     | Type                                                                        | Required | Description                                                          |
+| ------------ | --------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------- |
+| website      | [url](/protocol/types/string#url)                                           | No       | The organization's primary website URL.                              |
+| facebook     | [url](/protocol/types/string#url)                                           | No       | The organization's Facebook profile URL.                             |
+| twitterOrX   | [url](/protocol/types/string#url)                                           | No       | The organization's Twitter/X profile URL.                            |
+| bluesky      | [url](/protocol/types/string#url)                                           | No       | The organization's Bluesky profile URL.                              |
+| instagram    | [url](/protocol/types/string#url)                                           | No       | The organization's Instagram profile URL.                            |
+| linkedin     | [url](/protocol/types/string#url)                                           | No       | The organization's LinkedIn profile URL.                             |
+| otherSocials | [Record](/protocol/types/other#record)\<[url](/protocol/types/string#url)\> | No       | Additional social media profiles not covered by the standard fields. |
 
 ### Formats
 
@@ -236,7 +180,8 @@ A JSON example of this model is:
 {
   "website": "https://example.com",
   "facebook": "https://facebook.com/example",
-  "twitter": "https://twitter.com/example",
+  "twitterOrX": "https://x.com/example",
+  "bluesky": "https://bsky.app/profile/example",
   "instagram": "https://instagram.com/example",
   "linkedin": "https://linkedin.com/company/example",
   "otherSocials": {
@@ -253,29 +198,32 @@ The JSON Schema for this model is:
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: OrgSocials.json
+$id: OrgSocialLinks.yaml
 type: object
 properties:
   website:
-    type: string
+    $ref: url.yaml
     description: The organization's primary website URL.
   facebook:
-    type: string
+    $ref: url.yaml
     description: The organization's Facebook profile URL.
-  twitter:
-    type: string
+  twitterOrX:
+    $ref: url.yaml
     description: The organization's Twitter/X profile URL.
+  bluesky:
+    $ref: url.yaml
+    description: The organization's Bluesky profile URL.
   instagram:
-    type: string
+    $ref: url.yaml
     description: The organization's Instagram profile URL.
   linkedin:
-    type: string
+    $ref: url.yaml
     description: The organization's LinkedIn profile URL.
   otherSocials:
     type: object
     properties: {}
     unevaluatedProperties:
-      type: string
+      $ref: url.yaml
     description: Additional social media profiles not covered by the standard fields.
 description: Collection of the organization's social media and web presence links.
 ```
@@ -288,22 +236,25 @@ The TypeSpec code for this model is:
 ```tsp
 model OrgSocials {
     /** The organization's primary website URL. */
-    website?: string;
+    website?: url;
 
     /** The organization's Facebook profile URL. */
-    facebook?: string;
+    facebook?: url;
 
     /** The organization's Twitter/X profile URL. */
-    twitter?: string;
+    twitterOrX?: url;
+
+    /** The organization's Bluesky profile URL. */
+    bluesky?: url;
 
     /** The organization's Instagram profile URL. */
-    instagram?: string;
+    instagram?: url;
 
     /** The organization's LinkedIn profile URL. */
-    linkedin?: string;
+    linkedin?: url;
 
     /** Additional social media profiles not covered by the standard fields. */
-    otherSocials?: Record<string>;
+    otherSocials?: Record<url>;
 }
 ```
 

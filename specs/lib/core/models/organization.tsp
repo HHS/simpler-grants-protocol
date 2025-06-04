@@ -30,7 +30,7 @@ model OrganizationBase {
   mission?: string;
 
   /** The calendar year the organization was founded. */
-  yearFounded?: integer;
+  yearFounded?: Types.calendarYear;
 
   /** Collection of the organization's social media and web presence links. */
   socials?: OrgSocialLinks;
@@ -44,14 +44,7 @@ model OrganizationBase {
 // #########################################################
 
 /** A collection of social media and web presence links for an organization. */
-@example(#{
-  website: "https://www.example.com",
-  facebook: "https://www.facebook.com/example",
-  twitter: "https://x.com/example",
-  instagram: "https://www.instagram.com/example",
-  linkedin: "https://www.linkedin.com/company/example",
-  otherSocials: #{ youtube: "https://www.youtube.com/example" },
-})
+@example(Examples.Organization.exampleSocials)
 model OrgSocialLinks {
   /** The organization's primary website URL. */
   website?: url;
@@ -60,7 +53,10 @@ model OrgSocialLinks {
   facebook?: url;
 
   /** The organization's Twitter/X profile URL. */
-  twitter?: url;
+  twitterOrX?: url;
+
+  /** The organization's BlueSky profile URL. */
+  bluesky?: url;
 
   /** The organization's Instagram profile URL. */
   instagram?: url;
@@ -86,14 +82,14 @@ namespace Examples.Organization {
     uei: "ABC1234567890",
     duns: "123456789012",
     mission: "To provide support and resources to the community.",
-    yearFounded: 2024,
+    yearFounded: "2024",
     socials: exampleSocials,
   };
 
   const exampleSocials = #{
     website: "https://www.example.com",
     facebook: "https://www.facebook.com/example",
-    twitter: "https://x.com/example",
+    twitterOrX: "https://x.com/example",
     instagram: "https://www.instagram.com/example",
     linkedin: "https://www.linkedin.com/company/example",
     otherSocials: #{ youtube: "https://www.youtube.com/example" },
