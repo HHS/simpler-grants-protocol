@@ -1,25 +1,24 @@
-
 ## Validation scenarios
 
 ### Check Routes
 
 - **Case 1:** Extra routes
-    - **Case 1.1:** [Impl prefixed with `/common-grants/`](#route-case-11-extra-route-with-prefix) -> Error
-    - **Case 1.2:** [Not prefixed with `/common-grants/`](#route-case-12-extra-route-without-prefix) -> Ignore
+  - **Case 1.1:** [Impl prefixed with `/common-grants/`](#route-case-11-extra-route-with-prefix) -> Error
+  - **Case 1.2:** [Not prefixed with `/common-grants/`](#route-case-12-extra-route-without-prefix) -> Ignore
 - **Case 2:** Missing routes
-    - **Case 2.1:** [Required in base spec](#route-case-21-missing-required-route) -> Error
-    - **Case 2.2:** [Optional in base spec](#route-case-22-missing-optional-route) -> Warning
+  - **Case 2.1:** [Required in base spec](#route-case-21-missing-required-route) -> Error
+  - **Case 2.2:** [Optional in base spec](#route-case-22-missing-optional-route) -> Warning
 - **Case 3:** Matching routes
-    - Check query params -> [Check query params](#check-query-params)
-    - Check request body -> [Check mime types](#check-mime-types)
-    - Check response body -> [Check status codes](#check-status-codes)
+  - Check query params -> [Check query params](#check-query-params)
+  - Check request body -> [Check mime types](#check-mime-types)
+  - Check response body -> [Check status codes](#check-status-codes)
 
 ### Check query params
 
 - **Case 1:** [Extra params](#query-param-case-1-extra-param) -> Warn
 - **Case 2:** Missing params
-    - **Case 2.1:** [Required in base spec](#query-param-case-21-missing-required-param) -> Error
-    - **Case 2.2:** [Optional in base spec](#query-param-case-21-missing-optional-param) -> Warning
+  - **Case 2.1:** [Required in base spec](#query-param-case-21-missing-required-param) -> Error
+  - **Case 2.2:** [Optional in base spec](#query-param-case-21-missing-optional-param) -> Warning
 - **Param case 3:** Matching params -> [Check schemas](#check-schemas)
 
 ### Check status codes
@@ -38,17 +37,17 @@ If the routes match, check whether the status codes are compatible between the b
 
 ### Check schemas
 
-  - **Case 1:** Extra props
-      - **Case 1.1:** [Additional props allowed](#schema-case-11-additional-props-allowed) -> Ignore
-      - **Case 1.2:** [Additional props not allowed](#schema-case-12-additional-props-not-allowed) -> Error
-      - **Case 1.3:** [Additional props follow schema](#schema-case-13-additional-props-conforms-to-schema) -> Check schemas (recursive)
-  - **Case 2:** Missing props
-      - **Case 2.1:** [Required in base spec](#schema-case-21-missing-required-prop) -> Error 
-      - **Case 2.2:** [Optional in base spec](#schema-case-22-missing-optional-prop) -> Warn
-  - **Case 3:** Matching props
-      - Check type -> [Check types](#type-case-1-base-type-not-specified)
-      - Check enum -> [Check enums](#check-enums)
-      - Check required status -> [Check required status](#check-required-status)
+- **Case 1:** Extra props
+  - **Case 1.1:** [Additional props allowed](#schema-case-11-additional-props-allowed) -> Ignore
+  - **Case 1.2:** [Additional props not allowed](#schema-case-12-additional-props-not-allowed) -> Error
+  - **Case 1.3:** [Additional props follow schema](#schema-case-13-additional-props-conforms-to-schema) -> Check schemas (recursive)
+- **Case 2:** Missing props
+  - **Case 2.1:** [Required in base spec](#schema-case-21-missing-required-prop) -> Error
+  - **Case 2.2:** [Optional in base spec](#schema-case-22-missing-optional-prop) -> Warn
+- **Case 3:** Matching props
+  - Check type -> [Check types](#type-case-1-base-type-not-specified)
+  - Check enum -> [Check enums](#check-enums)
+  - Check required status -> [Check required status](#check-required-status)
 
 ### Check types
 
@@ -91,7 +90,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
 ```
 
@@ -109,12 +108,12 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
-  /common-grants/extra:  # extra route prefixed with /common-grants/, will error
+  /common-grants/extra: # extra route prefixed with /common-grants/, will error
     get:
       responses:
-        '200':
+        "200":
           description: OK
 ```
 
@@ -138,7 +137,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
 ```
 
@@ -156,12 +155,12 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
-  /extra:  # extra route not prefixed with /common-grants/, ignored
+  /extra: # extra route not prefixed with /common-grants/, ignored
     get:
       responses:
-        '200':
+        "200":
           description: OK
 ```
 
@@ -186,14 +185,15 @@ paths:
     get:
       tags: ["required"]
       responses:
-        '200':
+        "200":
           description: OK
     post:
       tags: ["optional"]
       responses:
-        '201':
+        "201":
           description: OK
 ```
+
 </details>
 
 <details>
@@ -208,7 +208,7 @@ paths:
   /common-grants/test: # missing required GET /common-grants/test, will error
     post:
       responses:
-        '201':
+        "201":
           description: OK
 ```
 
@@ -233,14 +233,15 @@ paths:
     get:
       tags: ["required"]
       responses:
-        '200':
+        "200":
           description: OK
     post:
       tags: ["optional"]
       responses:
-        '201':
+        "201":
           description: OK
 ```
+
 </details>
 
 <details>
@@ -256,7 +257,7 @@ paths: # missing optional POST /common-grants/test, will warn
     get:
       tags: ["required"]
       responses:
-        '200':
+        "200":
           description: OK
 ```
 
@@ -288,9 +289,10 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
 ```
+
 </details>
 
 <details>
@@ -310,15 +312,16 @@ paths:
           required: true
           schema:
             type: string
-        - name: extra_param  # extra parameter, will warn
+        - name: extra_param # extra parameter, will warn
           in: query
           required: false
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
 ```
+
 </details>
 
 #### Query param case 2.1: Missing required param
@@ -345,9 +348,10 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
 ```
+
 </details>
 
 <details>
@@ -361,11 +365,12 @@ info:
 paths:
   /common-grants/test:
     get:
-      parameters: []  # missing required parameter, will error
+      parameters: [] # missing required parameter, will error
       responses:
-        '200':
+        "200":
           description: OK
 ```
+
 </details>
 
 #### Query param case 2.2: Missing optional param
@@ -392,9 +397,10 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
 ```
+
 </details>
 
 <details>
@@ -408,11 +414,12 @@ info:
 paths:
   /common-grants/test:
     get:
-      parameters: []  # missing optional parameter, will warn
+      parameters: [] # missing optional parameter, will warn
       responses:
-        '200':
+        "200":
           description: OK
 ```
+
 </details>
 
 ### Status code checking cases
@@ -435,11 +442,12 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
-        '400':
+        "400":
           description: Bad Request
 ```
+
 </details>
 
 <details>
@@ -454,15 +462,16 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
-        '400':
+        "400":
           description: Bad Request
-        '401':  # extra status code, will be ignored
+        "401": # extra status code, will be ignored
           description: Unauthorized
-        '403':  # extra status code, will be ignored
+        "403": # extra status code, will be ignored
           description: Forbidden
 ```
+
 </details>
 
 #### Status code case 2: Missing status code
@@ -483,13 +492,14 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
-        '400':
+        "400":
           description: Bad Request
-        '404':
+        "404":
           description: Not Found
 ```
+
 </details>
 
 <details>
@@ -504,12 +514,13 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
-        '400':
+        "400":
           description: Bad Request
         # missing 404 status code, will error
 ```
+
 </details>
 
 ### Mimetype checking cases
@@ -532,13 +543,14 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 type: object
 ```
+
 </details>
 
 <details>
@@ -553,16 +565,17 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 type: object
-            application/xml:  # extra MIME type, will be ignored
+            application/xml: # extra MIME type, will be ignored
               schema:
                 type: object
 ```
+
 </details>
 
 #### Mimetype case 2: Mimetype missing
@@ -583,7 +596,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -593,6 +606,7 @@ paths:
               schema:
                 type: object
 ```
+
 </details>
 
 <details>
@@ -607,7 +621,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -615,6 +629,7 @@ paths:
                 type: object
             # missing application/xml MIME type, will error
 ```
+
 </details>
 
 ### Schema checking cases
@@ -637,7 +652,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -648,6 +663,7 @@ paths:
                     type: string
                 additionalProperties: true
 ```
+
 </details>
 
 <details>
@@ -662,7 +678,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -671,10 +687,11 @@ paths:
                 properties:
                   name:
                     type: string
-                  extra_prop:  # additional property, allowed
+                  extra_prop: # additional property, allowed
                     type: string
                 additionalProperties: true
 ```
+
 </details>
 
 #### Schema case 1.2: Additional props not allowed
@@ -695,7 +712,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -706,6 +723,7 @@ paths:
                     type: string
                 additionalProperties: false
 ```
+
 </details>
 
 <details>
@@ -720,7 +738,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -729,10 +747,11 @@ paths:
                 properties:
                   name:
                     type: string
-                  extra_prop:  # additional property, not allowed
+                  extra_prop: # additional property, not allowed
                     type: string
                 additionalProperties: false
 ```
+
 </details>
 
 #### Schema case 1.3: Additional props conforms to schema
@@ -753,7 +772,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -765,6 +784,7 @@ paths:
                 additionalProperties:
                   type: string
 ```
+
 </details>
 
 <details>
@@ -779,7 +799,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -788,11 +808,12 @@ paths:
                 properties:
                   name:
                     type: string
-                  extra_prop:  # additional property, must be string
+                  extra_prop: # additional property, must be string
                     type: string
                 additionalProperties:
                   type: string
 ```
+
 </details>
 
 #### Schema case 2.1: Missing required prop
@@ -813,7 +834,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -825,6 +846,7 @@ paths:
                   name:
                     type: string
 ```
+
 </details>
 
 <details>
@@ -839,7 +861,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -848,6 +870,7 @@ paths:
                 properties:
                   # missing required 'name' property, will error
 ```
+
 </details>
 
 #### Schema case 2.2: Missing optional prop
@@ -868,7 +891,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -877,9 +900,10 @@ paths:
                 properties:
                   name:
                     type: string
-                  description:  # optional property
+                  description: # optional property
                     type: string
 ```
+
 </details>
 
 <details>
@@ -894,7 +918,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -905,6 +929,7 @@ paths:
                     type: string
                   # missing optional 'description' property, will warn
 ```
+
 </details>
 
 ### Type checking cases
@@ -927,15 +952,16 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  name: {}  # no type specified
+                  name: {} # no type specified
 ```
+
 </details>
 
 <details>
@@ -950,7 +976,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -958,8 +984,9 @@ paths:
                 type: object
                 properties:
                   name:
-                    type: string  # type specified, but base has no type
+                    type: string # type specified, but base has no type
 ```
+
 </details>
 
 #### Type case 2: Type mismatch
@@ -980,7 +1007,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -990,6 +1017,7 @@ paths:
                   count:
                     type: integer
 ```
+
 </details>
 
 <details>
@@ -1004,7 +1032,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1012,8 +1040,9 @@ paths:
                 type: object
                 properties:
                   count:
-                    type: string  # type mismatch, will error
+                    type: string # type mismatch, will error
 ```
+
 </details>
 
 #### Type case 3: Simple type matches
@@ -1034,7 +1063,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1044,6 +1073,7 @@ paths:
                   name:
                     type: string
 ```
+
 </details>
 
 <details>
@@ -1058,7 +1088,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1066,8 +1096,9 @@ paths:
                 type: object
                 properties:
                   name:
-                    type: string  # type matches exactly
+                    type: string # type matches exactly
 ```
+
 </details>
 
 #### Type case 4: Complex type
@@ -1088,7 +1119,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1101,6 +1132,7 @@ paths:
                       name:
                         type: string
 ```
+
 </details>
 
 <details>
@@ -1115,7 +1147,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1123,11 +1155,12 @@ paths:
                 type: object
                 properties:
                   user:
-                    type: object  # complex type, will check recursively
+                    type: object # complex type, will check recursively
                     properties:
                       name:
                         type: string
 ```
+
 </details>
 
 ### Enum checking cases
@@ -1150,7 +1183,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1163,6 +1196,7 @@ paths:
                       - active
                       - inactive
 ```
+
 </details>
 
 <details>
@@ -1177,7 +1211,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1188,8 +1222,9 @@ paths:
                     type: string
                     enum:
                       - active
-                      - inactive  # enum values match exactly
+                      - inactive # enum values match exactly
 ```
+
 </details>
 
 #### Enum case 2: Base type has extra
@@ -1210,7 +1245,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1224,6 +1259,7 @@ paths:
                       - inactive
                       - pending
 ```
+
 </details>
 
 <details>
@@ -1238,7 +1274,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1249,8 +1285,9 @@ paths:
                     type: string
                     enum:
                       - active
-                      - inactive  # subset of base enum values
+                      - inactive # subset of base enum values
 ```
+
 </details>
 
 #### Enum case 3: Implementation has extra
@@ -1271,7 +1308,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1284,6 +1321,7 @@ paths:
                       - active
                       - inactive
 ```
+
 </details>
 
 <details>
@@ -1298,7 +1336,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1310,8 +1348,9 @@ paths:
                     enum:
                       - active
                       - inactive
-                      - pending  # extra enum value, will error
+                      - pending # extra enum value, will error
 ```
+
 </details>
 
 ### Required status checking cases
@@ -1334,7 +1373,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1346,6 +1385,7 @@ paths:
                   name:
                     type: string
 ```
+
 </details>
 
 <details>
@@ -1360,18 +1400,19 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 required:
-                  - name  # required status matches
+                  - name # required status matches
                 properties:
                   name:
                     type: string
 ```
+
 </details>
 
 #### Required status case 2: Made required
@@ -1392,7 +1433,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1402,6 +1443,7 @@ paths:
                   name:
                     type: string
 ```
+
 </details>
 
 <details>
@@ -1416,18 +1458,19 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 required:
-                  - name  # made required, will warn
+                  - name # made required, will warn
                 properties:
                   name:
                     type: string
 ```
+
 </details>
 
 #### Required status case 3: Made optional
@@ -1448,7 +1491,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1460,6 +1503,7 @@ paths:
                   name:
                     type: string
 ```
+
 </details>
 
 <details>
@@ -1474,7 +1518,7 @@ paths:
   /common-grants/test:
     get:
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -1485,4 +1529,5 @@ paths:
                   name:
                     type: string
 ```
+
 </details>
