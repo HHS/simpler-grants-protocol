@@ -19,7 +19,8 @@
     "typespec",
     "geospatial",
     "Anytown",
-    "tiktok"
+    "tiktok",
+    "Principale"
   ],
   "ignoreWords": [
     "opblock",
@@ -51,7 +52,11 @@
     "oppstatus",
     "opportunitybase",
     "pagefind",
-    "viewports"
+    "viewports",
+    "calendaryear",
+    "employertaxid",
+    "samuei",
+    "duns"
   ],
   "import": []
 }

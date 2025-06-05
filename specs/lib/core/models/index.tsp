@@ -3,6 +3,9 @@ import "@typespec/json-schema";
 // Import individual schemas to provide a consistent interface
 // and make them available throughout the namespace
 import "./opportunity/index.tsp";
+import "./organization.tsp";
+import "./person.tsp";
+import "./application.tsp";
 
 using TypeSpec.JsonSchema;
 

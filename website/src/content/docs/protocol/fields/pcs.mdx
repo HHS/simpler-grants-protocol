@@ -1,0 +1,239 @@
+---
+title: PCS term
+description: A Philanthropy Classification System (PCS) term.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+## PCSTerm
+
+A term in the Philanthropy Classification System (PCS).
+
+Visit [taxonomy.candid.org](https://taxonomy.candid.org/) for more information.
+
+### Table
+
+| Property       | Type   | Required | Description                                |
+| -------------- | ------ | -------- | ------------------------------------------ |
+| term           | string | Yes      | The term for the organization type.        |
+| Classification | string | Yes      | The class for the organization type.       |
+| code           | string | Yes      | The code for the organization type.        |
+| description    | string | No       | The description for the organization type. |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+{
+  "term": "Nonprofit",
+  "class": "Organization types",
+  "code": "UC000000",
+  "description": "Nonprofit organization"
+}
+```
+
+  </TabItem>
+  <TabItem label="JSON Schema">
+
+A JSON schema for this field is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PCSTerm.yaml
+type: object
+properties:
+  term:
+    type: string
+    description: The plain language PCS term.
+  class:
+    $ref: PCSClass.yaml
+    description: The class to which the PCS term belongs.
+  code:
+    type: string
+    examples:
+      - UC0
+    pattern: "[A-Z]{2}[0-9]{6}"
+    description: The code for this PCS term.
+  description:
+    type: string
+    description: Description of the PCS term
+required:
+  - term
+  - class
+  - code
+description: |-
+  A Philanthropy Classification System (PCS) term.
+
+  The PCS is a hierarchical classification system for categorizing data related to
+  philanthropic activities. It supports the following classes:
+  - Organization types
+  - Subjects
+  - Population groups
+  - Transaction types
+  - Support strategies
+
+  See https://taxonomy.candid.org/ for more information.
+```
+
+  </TabItem>
+  <TabItem label="TypeSpec">
+
+A TypeSpec schema for this field is:
+
+```typespec
+model PCSTerm {
+    /** The plain language PCS term. */
+    term: string;
+
+    /** The class to which the PCS term belongs. */
+    class: PCSClass;
+
+    /** The code for this PCS term. */
+    @pattern("[A-Z]{2}[0-9]{6}")
+    @example("UC0")
+    code: string;
+
+    /** Description of the PCS term */
+    description?: string;
+}
+```
+
+</TabItem>
+</Tabs>
+
+## PCSClassOptions
+
+The class to which the PCS term belongs.
+
+### Table
+
+| Value             | Description                       |
+| ----------------- | --------------------------------- |
+| orgTypes          | The class for organization types. |
+| subjects          | The class for subjects.           |
+| populationGroups  | The class for population groups.  |
+| transactionTypes  | The class for transaction types.  |
+| supportStrategies | The class for support strategies. |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this field is:
+
+```json
+"Organization types"
+```
+
+  </TabItem>
+
+  <TabItem label="JSON Schema">
+
+The JSON schema for this field is:
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PCSClass.yaml
+type: string
+enum:
+  - Organization types
+  - Subjects
+  - Population groups
+  - Transaction types
+  - Support strategies
+description: The class to which the PCS term belongs.
+```
+
+  </TabItem>
+
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this field is:
+
+```tsp
+/** The class to which the PCS term belongs. */
+enum PCSClass {
+  orgTypes: "Organization types",
+  subjects: "Subjects",
+  populationGroups: "Population groups",
+  transactionTypes: "Transaction types",
+  supportStrategies: "Support strategies",
+}
+```
+
+  </TabItem>
+</Tabs>
+
+## Sub-types
+
+PCS terms are divided into the following sub-types based on the `class` property:
+
+- [PCSOrgType](#pcsorgtype)
+- [PCSSubject](#pcssubject)
+- [PCSPopulationGroup](#pcspopulationgroup)
+- [PCSTransactionType](#pcstransactiontype)
+
+### PCSOrgType
+
+A [PCSTerm](#pcsterm) where the `class` is `"Organization types"`. Categorizes the type of organization receiving philanthropic support.
+
+See [PCS organization types](https://taxonomy.candid.org/organization-type) for more information.
+
+```json
+{
+  "term": "Nonprofit",
+  "class": "Organization types",
+  "code": "UC000000",
+  "description": "Nonprofit organization"
+}
+```
+
+### PCSSubject
+
+A [PCSTerm](#pcsterm) where the `class` is `"Subjects"`. Categorizes the subject or focus of philanthropic activities.
+
+See [PCS subjects](https://taxonomy.candid.org/subject) for more information.
+
+```json
+{
+  "term": "Education",
+  "class": "Subjects",
+  "code": "SB000000",
+  "description": "All formally constituted educational institutions (except art and performing art schools) and projects or activities."
+}
+```
+
+### PCSPopulationGroup
+
+A [PCSTerm](#pcsterm) where the `class` is `"Population groups"`. Categorizes the population being served by philanthropic activities.
+
+See [PCS population groups](https://taxonomy.candid.org/population-group) for more information.
+
+```json
+{
+  "term": "Children and youth",
+  "class": "Population groups",
+  "code": "PA010000",
+  "description": "Young people from birth to 18 years of age."
+}
+```
+
+### PCSTransactionType
+
+A [PCSTerm](#pcsterm) where the `class` is `"Transaction types"`. Categorizes the type of transaction used to support philanthropic activities. For example, "Grant" or "Loan".
+
+See [PCS transaction types](https://taxonomy.candid.org/transaction-type) for more information.
+
+```json
+{
+  "term": "Cash grants",
+  "class": "Transaction types",
+  "code": "TA000000",
+  "description": "Direct monetary contributions of cash or cash equivalents."
+}
+```

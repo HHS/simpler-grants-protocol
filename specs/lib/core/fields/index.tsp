@@ -2,6 +2,11 @@ import "./custom-field.tsp";
 import "./metadata.tsp";
 import "./money.tsp";
 import "./event.tsp";
+import "./address.tsp";
+import "./name.tsp";
+import "./phone.tsp";
+import "./pcs.tsp";
+import "./email.tsp";
 
 using TypeSpec.JsonSchema;
 

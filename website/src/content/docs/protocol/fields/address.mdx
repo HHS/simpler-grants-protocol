@@ -132,3 +132,92 @@ model Address {
 
   </TabItem>
 </Tabs>
+
+## AddressCollection
+
+A collection of addresses for a person or organization.
+
+### Table
+
+| Property       | Type                                                                          | Required | Description                                        |
+| -------------- | ----------------------------------------------------------------------------- | -------- | -------------------------------------------------- |
+| primary        | [Address](/protocol/fields/address)                                           | Yes      | The primary address for a person or organization   |
+| otherAddresses | [Record](/protocol/types/other#record)\<[Address](/protocol/fields/address)\> | No       | Additional addresses keyed by a descriptive label. |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this model is:
+
+```json
+{
+  "primary": {
+    "street1": "123 Main St",
+    "city": "Anytown",
+    "stateOrProvince": "CA",
+    "country": "US",
+    "postalCode": "12345"
+  },
+  "otherAddresses": {
+    "work": {
+      "street1": "456 Main St",
+      "street2": "Suite 100",
+      "city": "Anytown",
+      "stateOrProvince": "CA",
+      "country": "US",
+      "postalCode": "12345"
+    },
+    "international": {
+      "street1": "123 Rue Principale",
+      "city": "Montreal",
+      "stateOrProvince": "QC",
+      "country": "CA",
+      "postalCode": "H2Y 1C6"
+    }
+  }
+}
+```
+
+  </TabItem>
+  <TabItem label="JSON Schema">
+
+The JSON Schema for this model is:
+
+```yaml
+$id: AddressCollection.yaml
+type: object
+properties:
+  primary:
+    $ref: Address.yaml
+    description: The primary address for a person or organization.
+  otherAddresses:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: Address.yaml
+    description: Additional addresses keyed by a descriptive label.
+required:
+  - primary
+description: A collection of addresses for a person or organization.
+```
+
+  </TabItem>
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```tsp
+/** A collection of addresses. */
+model AddressCollection {
+  /** The primary address for a person or organization. */
+  primary: Address;
+
+  /** Additional addresses keyed by a descriptive label (e.g., "work", "home", "international"). */
+  otherAddresses?: Record<Address>;
+}
+```
+
+  </TabItem>
+</Tabs>

@@ -29,6 +29,11 @@ scalar isoTime extends plainTime;
 @example(isoDate.fromISO("2025-01-01"))
 scalar isoDate extends plainDate;
 
+/** A calendar year */
+@example("2025")
+@pattern("^[0-9]{4}$")
+scalar calendarYear extends string;
+
 /** A universally unique identifier */
 @example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
 @format("uuid")
@@ -43,3 +48,23 @@ scalar uuid extends string;
 @example("100.5", #{ title: "Scale 1" })
 @example("-100.5", #{ title: "Negative, scale 2" })
 scalar decimalString extends string;
+
+/** An email address */
+@example("test@example.com")
+@format("email")
+scalar email extends string;
+
+/** An Employer Identification Number (EIN) */
+@example("123456789")
+@pattern("^[0-9]{2}-[0-9]{7}$")
+scalar employerTaxId extends string;
+
+/** A Unique Entity Identifier (UEI) */
+@example("ABC1234567890")
+@pattern("^[A-z0-9]{12}$")
+scalar samUEI extends string;
+
+/** A Data Universal Numbering System (DUNS) number */
+@example("123456789012")
+@pattern("^[0-9]{9}$")
+scalar duns extends string;

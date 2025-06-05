@@ -134,3 +134,38 @@ description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:s
 
   </TabItem>
 </Tabs>
+
+## calendarYear
+
+A calendar year in the format YYYY.
+
+<Tabs>
+  <TabItem label="Example">
+
+```json
+"2025"
+```
+
+  </TabItem>
+  <TabItem label="JSON Schema">
+
+```yaml
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: calendarYear.yaml
+type: string
+pattern: ^[0-9]{4}$
+description: A calendar year in the format YYYY
+```
+
+  </TabItem>
+  <TabItem label="TypeSpec">
+
+```typespec
+/** A calendar year in the format YYYY */
+@example("2025")
+@pattern("^[0-9]{4}$")
+scalar calendarYear extends string;
+```
+
+  </TabItem>
+</Tabs>

@@ -1,0 +1,115 @@
+---
+title: Email
+description: Data model for an email address
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+An email address. Alias for the [email](/protocol/types/string#email) type.
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this model is:
+
+```json
+"john.doe@example.com"
+```
+
+  </TabItem>
+  <TabItem label="JSON Schema">
+
+The JSON Schema for this model is:
+
+```yaml
+$id: email.yaml
+type: string
+format: email
+description: A valid email address.
+```
+
+  </TabItem>
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```tsp
+/** An email address. */
+alias Email = Types.email;
+```
+
+  </TabItem>
+</Tabs>
+
+## EmailCollection
+
+A collection of email addresses for a person or organization.
+
+### Table
+
+| Property    | Type                                                                            | Required | Description                                             |
+| ----------- | ------------------------------------------------------------------------------- | -------- | ------------------------------------------------------- |
+| primary     | [email](/protocol/types/string#email)                                           | Yes      | The primary email address for a person or organization  |
+| otherEmails | [Record](/protocol/types/other#record)\<[email](/protocol/types/string#email)\> | No       | Additional email addresses keyed by a descriptive label |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this model is:
+
+```json
+{
+  "primary": "john.doe@example.com",
+  "otherEmails": {
+    "work": "john.doe@work.com",
+    "personal": "john.doe@gmail.com",
+    "school": "john.doe@school.edu"
+  }
+}
+```
+
+  </TabItem>
+  <TabItem label="JSON Schema">
+
+The JSON Schema for this model is:
+
+```yaml
+$id: EmailCollection.yaml
+type: object
+properties:
+  primary:
+    $ref: email.yaml
+    description: The primary email address for a person or organization.
+  otherEmails:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: email.yaml
+    description: Additional email addresses keyed by a descriptive label.
+required:
+  - primary
+description: A collection of email addresses for a person or organization.
+```
+
+  </TabItem>
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```tsp
+/** A collection of email addresses. */
+model EmailCollection {
+  /** The primary email address for a person or organization. */
+  primary: Types.email;
+
+  /** Additional email addresses keyed by a descriptive label (e.g., "work", "personal", "support"). */
+  otherEmails?: Record<Types.email>;
+}
+```
+
+  </TabItem>
+</Tabs>
