@@ -2,9 +2,10 @@ import SwaggerParser from "@apidevtools/swagger-parser";
 import { checkExtraRoutes } from "./utils/check-extra-routes";
 import { checkMatchingRoutes } from "./utils/check-matching-routes";
 import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
-import { ComplianceError, Document } from "./utils/types";
+import { Document } from "./utils/types";
 import { compileTypeSpec } from "../../utils/typespec";
 import { CheckApiCommandOptions, CheckSpecCommandOptions } from "./check-args";
+import { ErrorCollection } from "./utils/error-utils";
 
 export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
@@ -29,13 +30,14 @@ export class DefaultCheckService {
     const baseSpecPath = options.base || compileTypeSpec();
     const baseDoc = (await SwaggerParser.dereference(baseSpecPath)) as Document;
 
-    const errors: ComplianceError[] = [];
-    errors.push(...checkMissingRequiredRoutes(baseDoc, doc));
-    errors.push(...checkExtraRoutes(baseDoc, doc));
-    errors.push(...checkMatchingRoutes(baseDoc, doc));
+    const errors: ErrorCollection = new ErrorCollection();
+    errors.addErrors(checkMissingRequiredRoutes(baseDoc, doc).getAllErrors());
+    errors.addErrors(checkExtraRoutes(baseDoc, doc).getAllErrors());
+    errors.addErrors(checkMatchingRoutes(baseDoc, doc).getAllErrors());
 
-    if (errors.length > 0) {
-      const message = errors
+    if (errors.getAllErrors().length > 0) {
+      const errorList = errors.getAllErrors();
+      const message = errorList
         .map(e => `${e.message}${e.location ? ` at ${e.location}` : ""}`)
         .join("\n");
       throw new Error(`Spec validation failed:\n${message}`);
