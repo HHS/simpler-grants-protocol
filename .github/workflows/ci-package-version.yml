@@ -47,22 +47,15 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-root
         working-directory: lib/python-sdk
-
-      - name: Install tomlq
-        run: |
-          pip install tomlkit
-          curl -sSL https://raw.githubusercontent.com/sdispater/tomlkit/main/scripts/tomlq.py -o /usr/local/bin/tomlq
-          chmod +x /usr/local/bin/tomlq
-
+      
       - name: Detect if any changesets exist
         id: check_changesets
         run: |
-          set -eo pipefail
-          CHANGESET_FILES=$(find .changeset -type f -name "*.md" ! -name "README.md")
-          if [ -n "$CHANGESET_FILES" ]; then
+          if find .changeset -type f -name "*.md" ! -name "README.md" | grep -q .; then
             echo "Found changeset files"
             echo "found=true" >> $GITHUB_OUTPUT
           else
+            echo "No changeset files found"
             echo "found=false" >> $GITHUB_OUTPUT
           fi
 
@@ -96,8 +89,8 @@ jobs:
       - name: Tag Python package version
         if: steps.check_changesets.outputs.found == 'true'
         run: |
-          PKG_NAME=$(tomlq -r .tool.poetry.name lib/python-sdk/pyproject.toml)
-          PY_VERSION=$(tomlq -r .tool.poetry.version lib/python-sdk/pyproject.toml)
+          PKG_NAME=$(poetry run tomlq -r .tool.poetry.name lib/python-sdk/pyproject.toml)
+          PY_VERSION=$(poetry run tomlq -r .tool.poetry.version lib/python-sdk/pyproject.toml)
           git tag ${PKG_NAME}@${PY_VERSION}
           echo "Added tag: ${PKG_NAME}@${PY_VERSION}"
 
