@@ -45,10 +45,29 @@ jobs:
           poetry config virtualenvs.in-project true
 
       - name: Install dependencies
-        run: poetry install
+        run: poetry install --no-root
         working-directory: lib/python-sdk
 
-      - name: Bump Python version using Poetry (must run before changeset version!)
+      - name: Install tomlq
+        run: |
+          pip install tomlkit
+          curl -sSL https://raw.githubusercontent.com/sdispater/tomlkit/main/scripts/tomlq.py -o /usr/local/bin/tomlq
+          chmod +x /usr/local/bin/tomlq
+
+      - name: Detect if any changesets exist
+        id: check_changesets
+        run: |
+          set -eo pipefail
+          CHANGESET_FILES=$(find .changeset -type f -name "*.md" ! -name "README.md")
+          if [ -n "$CHANGESET_FILES" ]; then
+            echo "Found changeset files"
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump Python version using Poetry
+        if: steps.check_changesets.outputs.found == 'true'
         run: |
           CHANGES=$(cat .changeset/*.md | grep '"common_grants_sdk":')
           if echo "$CHANGES" | grep -q 'major'; then
@@ -62,9 +81,11 @@ jobs:
           fi
 
       - name: Run changeset version for Node packages (including "fake" python packages)
+        if: steps.check_changesets.outputs.found == 'true'
         run: pnpm changeset version
 
       - name: Commit version bumps
+        if: steps.check_changesets.outputs.found == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -73,13 +94,17 @@ jobs:
           git push
 
       - name: Tag Python package version
+        if: steps.check_changesets.outputs.found == 'true'
         run: |
-          PKG_NAME=$(grep -m1 'name =' lib/python-sdk/pyproject.toml | sed -E "s/.*name = \"([^\"]+)\".*/\1/")
-          PY_VERSION=$(grep -m1 'version =' lib/python-sdk/pyproject.toml | sed -E "s/.*version = \"([^\"]+)\".*/\1/")
+          PKG_NAME=$(tomlq -r .tool.poetry.name lib/python-sdk/pyproject.toml)
+          PY_VERSION=$(tomlq -r .tool.poetry.version lib/python-sdk/pyproject.toml)
           git tag ${PKG_NAME}@${PY_VERSION}
+          echo "Added tag: ${PKG_NAME}@${PY_VERSION}"
 
       - name: Tag Node packages
+        if: steps.check_changesets.outputs.found == 'true'
         run: pnpm changeset tag
 
       - name: Push all tags
+        if: steps.check_changesets.outputs.found == 'true'
         run: git push --tags

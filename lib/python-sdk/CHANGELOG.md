@@ -1,5 +1,11 @@
 # common_grants_sdk
 
+## 0.2.2
+
+### Patch Changes
+
+- Replace brittle grep+sed with tomlq
+
 ## 0.2.1
 
 ### Patch Changes
