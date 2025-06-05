@@ -31,6 +31,16 @@ model Address {
   geography?: Record<unknown>;
 }
 
+/** A collection of addresses. */
+@example(Examples.Address.collection)
+model AddressCollection {
+  /** The primary address for a person or organization. */
+  primary: Address;
+
+  /** Additional addresses keyed by a descriptive label (e.g., "work", "home", "international"). */
+  otherAddresses?: Record<Address>;
+}
+
 namespace Examples.Address {
   const mainStreet = #{
     street1: "123 Main St",
@@ -38,5 +48,13 @@ namespace Examples.Address {
     stateOrProvince: "CA",
     country: "US",
     postalCode: "12345",
+  };
+
+  const collection = #{
+    primary: Examples.Address.mainStreet,
+    otherAddresses: #{
+      work: Examples.Address.mainStreet,
+      home: Examples.Address.mainStreet,
+    },
   };
 }

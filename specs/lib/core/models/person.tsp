@@ -13,7 +13,7 @@ model PersonBase {
   title?: string;
 
   /** Collection of physical addresses associated with the person. */
-  addresses?: PersonAddressCollection;
+  addresses?: Fields.AddressCollection;
 
   /** Collection of phone numbers associated with the person. */
   phones?: Fields.PhoneCollection;
@@ -26,26 +26,6 @@ model PersonBase {
 
   /** Custom fields for the person. */
   customFields?: Record<Fields.CustomField>;
-}
-
-// #########################################################
-// Address Collection
-// #########################################################
-
-/** A collection of addresses for a person. */
-@example(Examples.Person.exampleAddresses)
-model PersonAddressCollection {
-  /** The person's primary mailing address. */
-  primary: Fields.Address;
-
-  /** The person's work address. */
-  work?: Fields.Address;
-
-  /** The person's home address. */
-  home?: Fields.Address;
-
-  /** Additional addresses not covered by the standard fields. */
-  otherAddresses?: Record<Fields.Address>;
 }
 
 // #########################################################
@@ -76,15 +56,9 @@ namespace Examples.Person {
   const examplePerson = #{
     name: Fields.Examples.Name.janeDoe,
     title: "Chief Executive Officer",
-    addresses: Examples.Person.exampleAddresses,
+    addresses: Fields.Examples.Address.collection,
     phones: Fields.Examples.Phone.collection,
     emails: Examples.Person.exampleEmails,
-  };
-
-  const exampleAddresses = #{
-    primary: Fields.Examples.Address.mainStreet,
-    work: Fields.Examples.Address.mainStreet,
-    home: Fields.Examples.Address.mainStreet,
   };
 
   const exampleEmails = #{
