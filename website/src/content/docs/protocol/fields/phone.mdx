@@ -85,3 +85,98 @@ model Phone {
 
   </TabItem>
 </Tabs>
+
+## PhoneCollection
+
+A collection of phone numbers for a person or organization.
+
+### Table
+
+| Property    | Type                                                                      | Required | Description                                           |
+| ----------- | ------------------------------------------------------------------------- | -------- | ----------------------------------------------------- |
+| primary     | [Phone](/protocol/fields/phone)                                           | Yes      | The primary phone number for a person or organization |
+| fax         | [Phone](/protocol/fields/phone)                                           | No       | The fax number, if applicable                         |
+| otherPhones | [Record](/protocol/types/other#record)\<[Phone](/protocol/fields/phone)\> | No       | Additional phone numbers keyed by a descriptive label |
+
+### Formats
+
+<Tabs>
+  <TabItem label="Example">
+
+A JSON example of this model is:
+
+```json
+{
+  "primary": {
+    "countryCode": "+1",
+    "number": "444-456-1230",
+    "isMobile": true
+  },
+  "fax": {
+    "countryCode": "+1",
+    "number": "555-123-4567",
+    "extension": "123",
+    "isMobile": false
+  },
+  "otherPhones": {
+    "support": {
+      "countryCode": "+1",
+      "number": "333-456-1230",
+      "isMobile": false
+    },
+    "marketing": {
+      "countryCode": "+1",
+      "number": "444-456-1230",
+      "isMobile": true
+    }
+  }
+}
+```
+
+  </TabItem>
+  <TabItem label="JSON Schema">
+
+The JSON Schema for this model is:
+
+```yaml
+$id: PhoneCollection.yaml
+type: object
+properties:
+  primary:
+    $ref: Phone.yaml
+    description: The primary phone number for a person or organization.
+  fax:
+    $ref: Phone.yaml
+    description: The fax number, if applicable.
+  otherPhones:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: Phone.yaml
+    description: Additional phone numbers keyed by a descriptive label.
+required:
+  - primary
+description: A collection of phone numbers for a person or organization.
+```
+
+  </TabItem>
+  <TabItem label="TypeSpec">
+
+The TypeSpec code for this model is:
+
+```tsp
+/** A collection of phone numbers for a person. */
+model PhoneCollection {
+  /** The person's primary phone number. */
+  primary: Fields.Phone;
+
+  /** The person's fax number, if applicable. */
+  fax?: Fields.Phone;
+
+  /** Additional phone numbers not covered by the standard fields. */
+  otherPhones?: Record<Fields.Phone>;
+}
+```
+
+  </TabItem>
+</Tabs>

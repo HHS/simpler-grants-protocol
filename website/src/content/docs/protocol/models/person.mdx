@@ -5,20 +5,21 @@ description: Data model for a person
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-## Person
+## PersonBase
 
 A person affiliated with an organization or grant application.
 
 ### Table
 
-| Property    | Type                                                | Required | Description                  |
-| ----------- | --------------------------------------------------- | -------- | ---------------------------- |
-| name        | [Name](/protocol/fields/name)                       | Yes      | The person's full name       |
-| title       | [string](/protocol/types/string#string)             | No       | The person's title           |
-| dateOfBirth | [isoDate](/protocol/types/date#isodate)             | No       | The person's date of birth   |
-| addresses   | [PersonAddressCollection](#personaddresscollection) | No       | The person's addresses       |
-| phones      | [PersonPhoneCollection](#personphonecollection)     | No       | The person's phone numbers   |
-| emails      | [PersonEmailCollection](#personemailcollection)     | No       | The person's email addresses |
+| Property     | Type                                                                                   | Required | Description                  |
+| ------------ | -------------------------------------------------------------------------------------- | -------- | ---------------------------- |
+| name         | [Name](/protocol/fields/name)                                                          | Yes      | The person's full name       |
+| title        | [string](/protocol/types/string#string)                                                | No       | The person's title           |
+| dateOfBirth  | [isoDate](/protocol/types/date#isodate)                                                | No       | The person's date of birth   |
+| addresses    | [AddressCollection](/protocol/fields/address#addresscollection)                        | No       | The person's addresses       |
+| phones       | [PhoneCollection](/protocol/fields/phone#phonecollection)                              | No       | The person's phone numbers   |
+| emails       | [EmailCollection](/protocol/fields/email#emailcollection)                              | No       | The person's email addresses |
+| customFields | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Custom fields for the person |
 
 ### Formats
 
@@ -37,53 +38,44 @@ A JSON example of this model is:
   },
   "title": "Chief Executive Officer",
   "dateOfBirth": "1990-01-01",
+  "addresses": {
+    "primary": {
+      "street1": "123 Main St",
+      "city": "Anytown",
+      "stateOrProvince": "CA",
+      "country": "US",
+      "postalCode": "12345"
+    },
+    "otherAddresses": {
+      "work": {
+        "street1": "456 Main St",
+        "street2": "Suite 100",
+        "city": "Anytown",
+        "stateOrProvince": "CA",
+        "country": "US",
+        "postalCode": "12345"
+      }
+    }
+  },
   "phones": {
     "primary": {
       "countryCode": "+1",
-      "number": "123-456-7890"
+      "number": "444-456-1230",
+      "isMobile": true
     },
-    "work": {
-      "countryCode": "+1",
-      "number": "123-456-7890"
-    },
-    "home": {
-      "countryCode": "+1",
-      "number": "123-456-7890"
+    "otherPhones": {
+      "work": {
+        "countryCode": "+1",
+        "number": "333-456-1230",
+        "isMobile": false
+      }
     }
-  },
-  "fax": {
-    "countryCode": "+1",
-    "number": "123-456-7890"
   },
   "emails": {
     "primary": "john.doe@example.com",
-    "work": "john.doe@work.com",
-    "personal": "john.doe@gmail.com",
     "otherEmails": {
-      "school": "john.doe@school.edu"
-    }
-  },
-  "addresses": {
-    "mailing": {
-      "street1": "123 Main St",
-      "city": "Anytown",
-      "stateOrProvince": "CA",
-      "country": "US",
-      "postalCode": "12345"
-    },
-    "work": {
-      "street1": "123 Main St",
-      "city": "Anytown",
-      "stateOrProvince": "CA",
-      "country": "US",
-      "postalCode": "12345"
-    },
-    "home": {
-      "street1": "123 Main St",
-      "city": "Anytown",
-      "stateOrProvince": "CA",
-      "country": "US",
-      "postalCode": "12345"
+      "work": "john.doe@work.com",
+      "personal": "john.doe@gmail.com"
     }
   }
 }
@@ -108,14 +100,20 @@ properties:
     $ref: isoDate.yaml
     description: The person's date of birth.
   addresses:
-    $ref: PersonAddressCollection.yaml
+    $ref: AddressCollection.yaml
     description: Collection of physical addresses associated with the person.
   phones:
-    $ref: PersonPhoneCollection.yaml
+    $ref: PhoneCollection.yaml
     description: Collection of phone numbers associated with the person.
   emails:
-    $ref: PersonEmailCollection.yaml
+    $ref: EmailCollection.yaml
     description: Collection of email addresses associated with the person.
+  customFields:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: CustomField.yaml
+    description: Custom fields for the person.
 required:
   - name
 description: A person affiliated with an organization or grant application.
@@ -128,24 +126,27 @@ The TypeSpec code for this model is:
 
 ```tsp
 /** A person affiliated with an organization or grant application. */
-model Person {
+model PersonBase {
   /** The person's full name, including all relevant components (first, middle, last, etc.). */
   name: Fields.Name;
 
   /** The person's title, if applicable. */
   title?: string;
 
-  /** The person's date of birth. */
-  dateOfBirth?: Fields.isoDate;
-
   /** Collection of physical addresses associated with the person. */
-  addresses?: PersonAddressCollection;
+  addresses?: Fields.AddressCollection;
 
   /** Collection of phone numbers associated with the person. */
-  phones?: PersonPhoneCollection;
+  phones?: Fields.PhoneCollection;
 
   /** Collection of email addresses associated with the person. */
-  emails?: PersonEmailCollection;
+  emails?: Fields.EmailCollection;
+
+  /** The person's date of birth. */
+  dateOfBirth?: Types.isoDate;
+
+  /** Custom fields for the person. */
+  customFields?: Record<Fields.CustomField>;
 }
 ```
 
