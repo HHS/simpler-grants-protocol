@@ -16,7 +16,7 @@ model PersonBase {
   addresses?: PersonAddressCollection;
 
   /** Collection of phone numbers associated with the person. */
-  phones?: PersonPhoneCollection;
+  phones?: Fields.PhoneCollection;
 
   /** Collection of email addresses associated with the person. */
   emails?: PersonEmailCollection;
@@ -49,29 +49,6 @@ model PersonAddressCollection {
 }
 
 // #########################################################
-// Phone Collection
-// #########################################################
-
-/** A collection of phone numbers for a person. */
-@example(Examples.Person.examplePhones)
-model PersonPhoneCollection {
-  /** The person's primary phone number. */
-  primary: Fields.Phone;
-
-  /** The person's work phone number. */
-  work?: Fields.Phone;
-
-  /** The person's home phone number. */
-  home?: Fields.Phone;
-
-  /** The person's fax number, if applicable. */
-  fax?: Fields.Phone;
-
-  /** Additional phone numbers not covered by the standard fields. */
-  otherPhones?: Record<Fields.Phone>;
-}
-
-// #########################################################
 // Email Collection
 // #########################################################
 
@@ -100,7 +77,7 @@ namespace Examples.Person {
     name: Fields.Examples.Name.janeDoe,
     title: "Chief Executive Officer",
     addresses: Examples.Person.exampleAddresses,
-    phones: Examples.Person.examplePhones,
+    phones: Fields.Examples.Phone.collection,
     emails: Examples.Person.exampleEmails,
   };
 
@@ -108,16 +85,6 @@ namespace Examples.Person {
     primary: Fields.Examples.Address.mainStreet,
     work: Fields.Examples.Address.mainStreet,
     home: Fields.Examples.Address.mainStreet,
-  };
-
-  const examplePhones = #{
-    primary: Fields.Examples.Phone.mobile,
-    work: Fields.Examples.Phone.withExtension,
-    home: Fields.Examples.Phone.mobile,
-    fax: Fields.Examples.Phone.withExtension,
-    otherPhones: #{
-      international: #{ countryCode: "+44", number: "7700 900000" },
-    },
   };
 
   const exampleEmails = #{
