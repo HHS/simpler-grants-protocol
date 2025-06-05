@@ -1,0 +1,103 @@
+name: Version Packages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install Node.js dependencies
+        run: pnpm install
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+
+      - name: Install dependencies
+        run: poetry install --no-root
+        working-directory: lib/python-sdk
+      
+      - name: Detect if any changesets exist
+        id: check_changesets
+        run: |
+          if find .changeset -type f -name "*.md" ! -name "README.md" | grep -q .; then
+            echo "Found changeset files"
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changeset files found"
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump Python version using Poetry
+        if: steps.check_changesets.outputs.found == 'true'
+        run: |
+          CHANGES=$(cat .changeset/*.md | grep '"common_grants_sdk":')
+          if echo "$CHANGES" | grep -q 'major'; then
+            poetry version major --directory lib/python-sdk
+          elif echo "$CHANGES" | grep -q 'minor'; then
+            poetry version minor --directory lib/python-sdk
+          elif echo "$CHANGES" | grep -q 'patch'; then
+            poetry version patch --directory lib/python-sdk
+          else
+            echo "No bump needed for Python package"
+          fi
+
+      - name: Run changeset version for Node packages (including "fake" python packages)
+        if: steps.check_changesets.outputs.found == 'true'
+        run: pnpm changeset version
+
+      - name: Commit version bumps
+        if: steps.check_changesets.outputs.found == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit --no-verify -m "chore: version packages [skip ci]" || echo "No changes to commit"
+          git push
+
+      - name: Tag Python package version
+        if: steps.check_changesets.outputs.found == 'true'
+        run: |
+          PKG_NAME=$(poetry run tomlq -r .tool.poetry.name lib/python-sdk/pyproject.toml)
+          PY_VERSION=$(poetry run tomlq -r .tool.poetry.version lib/python-sdk/pyproject.toml)
+          git tag ${PKG_NAME}@${PY_VERSION}
+          echo "Added tag: ${PKG_NAME}@${PY_VERSION}"
+
+      - name: Tag Node packages
+        if: steps.check_changesets.outputs.found == 'true'
+        run: pnpm changeset tag
+
+      - name: Push all tags
+        if: steps.check_changesets.outputs.found == 'true'
+        run: git push --tags

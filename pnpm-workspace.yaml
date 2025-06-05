@@ -1,0 +1,3 @@
+packages:
+  - lib/*
+  - lib/python-sdk
