@@ -1,8 +1,8 @@
 # simpler-grants-protocol / lib
 
-This directory contains independently versioned packages for the Simpler Grants Protocol, supporting both Python and Node.js packages.
+This directory contains independently versioned packages for the Simpler Grants Protocol, supporting both Python and Node.js.
 
-Versioning is managed via [Changesets](https://github.com/changesets/changesets), with native support for Node.js packages via pnpm and a custom script to handle Python package versioning.
+Versioning is managed via [Changesets](https://github.com/changesets/changesets), using native support for Node.js and a Poetry-based workflow for Python packages.
 
 ---
 
@@ -31,7 +31,7 @@ lib/
 └── python-sdk/            # Python package
     ├── package.json       # Required for Changesets detection
     ├── pyproject.toml     # Python project metadata
-    ├── CHANGELOG.md       # Maintained via bump script
+    ├── CHANGELOG.md       # Auto-maintained by Changesets
     └── common_grants_sdk/ # SDK source code
 ```
 
@@ -49,12 +49,13 @@ lib/
 
 ### Python Packages
 
-- Versioning is handled automatically by a custom script that runs after `pnpm changeset version`
+- Versioning is handled by CI using Poetry, based on `.changeset/*.md` content
 - Applies the following changes:
   - Bumps version in `pyproject.toml`
   - Bumps version in `package.json`
   - Updates or creates `CHANGELOG.md`
   - Creates a Git tag (e.g. `common_grants_sdk@0.3.1`)
+
 ---
 
 ## Developer Instructions
@@ -89,26 +90,21 @@ Fix logic bug in base class method
 
 ### Step 3: Commit the Changes
 
-Include both your code changes and the `.changeset/*.md` file in the PR.
+Include code changes and the `.changeset/*.md` file in a PR.
 
 ### Step 4: Merge the PR
 
-Once changes are merged to `main`, the `version.yml` GitHub Action workflow runs and applies versioning updates:
+Once the PR is merged into `main`, the `ci-package-version.yml` GitHub Action will:
 
 - **Python Packages**
-  - Runs `scripts/bump_python_version.py`
-  - Applies the following updates:
-    - Bumps version in `pyproject.toml`
-    - Bumps version in `package.json`
-    - Updates or creates `CHANGELOG.md`
-    - Creates a Git tag (e.g. `common_grants_sdk@0.3.1`)
+  - Determine bump type from `.changeset/*.md`
+  - Use Poetry to bump the version and update files
+  - Create a Git tag (e.g. `common_grants_sdk@0.3.1`)
 
 - **Node Packages**
-  - Runs `pnpm changeset version`
-  - Applies the following updates:
-    - Bumps version in `package.json`
-    - Updates or creates `CHANGELOG.md`
-    - Creates a Git tag (e.g. `core@1.0.0`)
+  - Run `pnpm changeset version`
+  - Apply version and changelog updates
+  - Create Git tags (e.g. `core@1.0.0`)
 
 ### Step 5: (Optional) Trigger GitHub Release from Tag
 
@@ -148,5 +144,3 @@ After a PR is merged and the `version.yml` workflow runs:
 
 - Python packages must include a `package.json` file to satisfy Changesets requirements
 - All version bumps are driven by the existence and content of `.changeset/*.md` files
-- The `bump_python_version.py` script is the authoritative source of truth for Python versioning logic
-
