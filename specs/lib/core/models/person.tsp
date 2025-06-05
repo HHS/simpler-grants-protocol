@@ -36,8 +36,8 @@ namespace Examples.Person {
   const examplePerson = #{
     name: Fields.Examples.Name.janeDoe,
     title: "Chief Executive Officer",
-    addresses: Fields.Examples.Address.collection,
-    phones: Fields.Examples.Phone.collection,
-    emails: Fields.Examples.Email.collection,
+    addresses: Fields.Examples.Address.personalCollection,
+    phones: Fields.Examples.Phone.personalCollection,
+    emails: Fields.Examples.Email.personalCollection,
   };
 }

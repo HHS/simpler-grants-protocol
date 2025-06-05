@@ -11,9 +11,6 @@ model OrganizationBase {
   /** The organization's legal name as registered with relevant authorities. */
   name: string;
 
-  /** The organization's primary mailing address. */
-  address?: Fields.Address;
-
   /** The organization's type within the Philanthropy Classification System (PCS). */
   type?: Fields.PCSOrgType;
 
@@ -25,6 +22,15 @@ model OrganizationBase {
 
   /** The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses. */
   duns?: Types.duns;
+
+  /** Collection of physical addresses associated with the organization. */
+  addresses?: Fields.AddressCollection;
+
+  /** Collection of phone numbers associated with the organization. */
+  phones?: Fields.PhoneCollection;
+
+  /** Collection of email addresses associated with the organization. */
+  emails?: Fields.EmailCollection;
 
   /** The organization's mission statement. */
   mission?: string;
@@ -76,11 +82,13 @@ namespace Examples.Organization {
   const exampleOrg = #{
     id: "083b4567-e89d-42c8-a439-6c1234567890",
     name: "Example Organization",
-    address: Fields.Examples.Address.mainStreet,
     type: Fields.Examples.PCS.orgTypeTerm,
     ein: "12-3456789",
     uei: "ABC1234567890",
     duns: "123456789012",
+    addresses: Fields.Examples.Address.orgCollection,
+    phones: Fields.Examples.Phone.orgCollection,
+    emails: Fields.Examples.Email.orgCollection,
     mission: "To provide support and resources to the community.",
     yearFounded: "2024",
     socials: exampleSocials,

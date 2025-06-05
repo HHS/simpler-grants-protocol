@@ -23,7 +23,8 @@ model Phone {
 // #########################################################
 
 /** A collection of phone numbers for a person. */
-@example(Examples.Phone.collection)
+@example(Examples.Phone.personalCollection)
+@example(Examples.Phone.orgCollection)
 model PhoneCollection {
   /** The person's primary phone number. */
   primary: Fields.Phone;
@@ -51,9 +52,14 @@ namespace Examples.Phone {
     isMobile: false,
   };
 
-  const collection = #{
+  const personalCollection = #{ primary: mobile, otherPhones: #{ home: home } };
+
+  const orgCollection = #{
     primary: mobile,
     fax: withExtension,
-    otherPhones: #{ home: home },
+    otherPhones: #{
+      support: #{ countryCode: "+1", number: "333-456-1230", isMobile: false },
+      marketing: #{ countryCode: "+1", number: "444-456-1230", isMobile: true },
+    },
   };
 }

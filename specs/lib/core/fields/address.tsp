@@ -1,7 +1,7 @@
 namespace CommonGrants.Fields;
 
 /** An mailing address. */
-@example(Examples.Address.mainStreet)
+@example(Examples.Address.apartment)
 model Address {
   /** The primary street address line. */
   street1: string;
@@ -32,7 +32,8 @@ model Address {
 }
 
 /** A collection of addresses. */
-@example(Examples.Address.collection)
+@example(Examples.Address.personalCollection)
+@example(Examples.Address.orgCollection)
 model AddressCollection {
   /** The primary address for a person or organization. */
   primary: Address;
@@ -42,7 +43,7 @@ model AddressCollection {
 }
 
 namespace Examples.Address {
-  const mainStreet = #{
+  const apartment = #{
     street1: "123 Main St",
     city: "Anytown",
     stateOrProvince: "CA",
@@ -50,11 +51,36 @@ namespace Examples.Address {
     postalCode: "12345",
   };
 
-  const collection = #{
-    primary: Examples.Address.mainStreet,
+  const orgAddress = #{
+    street1: "456 Main St",
+    street2: "Suite 100",
+    city: "Anytown",
+    stateOrProvince: "CA",
+    country: "US",
+    postalCode: "12345",
+  };
+
+  const international = #{
+    street1: "123 Rue Principale",
+    city: "Montreal",
+    stateOrProvince: "QC",
+    country: "CA",
+    postalCode: "H2Y 1C6",
+  };
+
+  const personalCollection = #{
+    primary: Examples.Address.apartment,
     otherAddresses: #{
-      work: Examples.Address.mainStreet,
-      home: Examples.Address.mainStreet,
+      work: Examples.Address.apartment,
+      home: Examples.Address.apartment,
+    },
+  };
+
+  const orgCollection = #{
+    primary: Examples.Address.orgAddress,
+    otherAddresses: #{
+      satellite: Examples.Address.orgAddress,
+      international: Examples.Address.international,
     },
   };
 }
