@@ -6,6 +6,7 @@ import "./address.tsp";
 import "./name.tsp";
 import "./phone.tsp";
 import "./pcs.tsp";
+import "./email.tsp";
 
 using TypeSpec.JsonSchema;
 
