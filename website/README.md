@@ -8,7 +8,7 @@ The `website/` sub-directory is organized like this:
 
 ```
 .
-├── public/                 # Stores static assets like favicon
+├── public/                 # Stores static assets like favicon and JSON schemas
 ├── src/
 │   ├── assets/             # Stores assets used at build-time like images
 │   ├── content/
