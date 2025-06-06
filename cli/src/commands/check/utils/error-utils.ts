@@ -107,3 +107,135 @@ export class ErrorCollection {
     return this.errors[Symbol.iterator]();
   }
 }
+
+// #########################################################
+// ErrorFormatter
+// #########################################################
+
+export class ErrorFormatter {
+  private errors: ErrorCollection;
+
+  constructor(errors: ErrorCollection) {
+    this.errors = errors;
+  }
+
+  /** Format all errors in the collection */
+  format(): string {
+    const errorCount = this.errors.getErrorCount();
+    if (errorCount === 0) {
+      return "No errors found";
+    }
+
+    const sections: string[] = [];
+    sections.push(`${errorCount} errors`);
+    sections.push("=================================");
+
+    // Format missing routes
+    const missingRoutes = this.errors.filterByType("MISSING_ROUTE");
+    if (missingRoutes.getErrorCount() > 0) {
+      sections.push("Routes missing");
+      for (const error of missingRoutes) {
+        sections.push(`  ${error.endpoint}`);
+      }
+    }
+
+    // Format extra routes
+    const extraRoutes = this.errors.filterByType("EXTRA_ROUTE");
+    if (extraRoutes.getErrorCount() > 0) {
+      sections.push("Extra routes");
+      for (const error of extraRoutes) {
+        sections.push(`  ${error.endpoint}`);
+      }
+    }
+
+    // Format route conflicts
+    const routeConflicts = this.errors.filterByType("ROUTE_CONFLICT");
+    if (routeConflicts.getErrorCount() > 0) {
+      sections.push("Route conflicts");
+      // Group conflicts by endpoint
+      const conflictsByEndpoint = new Map<string, ComplianceError[]>();
+      for (const error of routeConflicts) {
+        if (error.endpoint) {
+          const conflicts = conflictsByEndpoint.get(error.endpoint) || [];
+          conflicts.push(error);
+          conflictsByEndpoint.set(error.endpoint, conflicts);
+        }
+      }
+
+      // Format each endpoint's conflicts
+      for (const [endpoint, conflicts] of conflictsByEndpoint) {
+        sections.push(`  ${endpoint}`);
+
+        // Group conflicts by subType
+        const conflictsBySubType = new Map<string, ComplianceError[]>();
+        for (const error of conflicts) {
+          if ("subType" in error && error.subType) {
+            const subTypeConflicts = conflictsBySubType.get(error.subType) || [];
+            subTypeConflicts.push(error);
+            conflictsBySubType.set(error.subType, subTypeConflicts);
+          }
+        }
+
+        // Format each subType's conflicts
+        for (const [subType, subTypeConflicts] of conflictsBySubType) {
+          const subTypeTitle = this.formatSubTypeTitle(subType);
+          sections.push(`    ${subTypeTitle}`);
+
+          for (const error of subTypeConflicts) {
+            if (error.statusCode) {
+              sections.push(`      Status code: ${error.statusCode}`);
+            }
+            if (error.mimeType) {
+              sections.push(`      MIME Type: ${error.mimeType}`);
+            }
+            if (error.location) {
+              sections.push(`      Location: ${error.location}`);
+            }
+            if ("conflictType" in error) {
+              sections.push(`      Issue: ${this.formatConflictType(error.conflictType)}`);
+            }
+            if (error.message) {
+              sections.push(`      Message: ${error.message}`);
+            }
+          }
+        }
+      }
+    }
+
+    return sections.join("\n");
+  }
+
+  private formatSubTypeTitle(subType: string): string {
+    switch (subType) {
+      case "RESPONSE_BODY_CONFLICT":
+        return "Response schema conflict";
+      case "REQUEST_BODY_CONFLICT":
+        return "Request schema conflict";
+      case "MISSING_STATUS_CODE":
+        return "Status code missing";
+      case "MISSING_QUERY_PARAM":
+        return "Query parameter missing";
+      case "EXTRA_QUERY_PARAM":
+        return "Extra query parameter";
+      case "QUERY_PARAM_CONFLICT":
+        return "Query parameter conflict";
+      default:
+        return subType;
+    }
+  }
+
+  private formatConflictType(conflictType: string): string {
+    switch (conflictType) {
+      case "TYPE_CONFLICT":
+        return "Mismatched types";
+      case "ENUM_CONFLICT":
+        return "Enum value conflict";
+      case "MISSING_FIELD":
+        return "Field missing";
+      case "EXTRA_FIELD":
+        return "Extra field";
+      default:
+        return conflictType;
+    }
+  }
+}

@@ -5,7 +5,7 @@ import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
 import { Document } from "./utils/types";
 import { compileTypeSpec } from "../../utils/typespec";
 import { CheckApiCommandOptions, CheckSpecCommandOptions } from "./check-args";
-import { ErrorCollection } from "./utils/error-utils";
+import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
 
 export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
@@ -36,10 +36,7 @@ export class DefaultCheckService {
     errors.addErrors(checkMatchingRoutes(baseDoc, doc).getAllErrors());
 
     if (errors.getAllErrors().length > 0) {
-      const errorList = errors.getAllErrors();
-      const message = errorList
-        .map(e => `${e.message}${e.location ? ` at ${e.location}` : ""}`)
-        .join("\n");
+      const message = new ErrorFormatter(errors).format();
       throw new Error(`Spec validation failed:\n${message}`);
     } else {
       console.log("Spec is valid and compliant with base spec");
