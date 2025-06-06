@@ -42,5 +42,5 @@ jobs:
         run: make gen-openapi
 
       - name: Check FastAPI template spec
-        run: poetry run cg check spec openapi.yaml
+        run: cg check spec openapi.yaml
 
