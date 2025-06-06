@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/cli",
-  "version": "0.1.0-alpha.10",
+  "version": "0.1.0-alpha.11",
   "license": "CC0-1.0",
   "description": "The CommonGrants protocol CLI tool",
   "main": "dist/index.js",
@@ -36,7 +36,8 @@
   ],
   "scripts": {
     "prepublishOnly": "bash scripts/prepublish-checks.sh",
-    "build": "tsc",
+    "build": "npm run typespec && tsc",
+    "typespec": "tsp compile lib/main.tsp --emit @typespec/openapi3 && cp tsp-output/@typespec/openapi3/openapi.yaml lib/openapi.yaml",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "prepare": "npm run build",

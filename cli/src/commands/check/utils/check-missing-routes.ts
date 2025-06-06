@@ -1,20 +1,39 @@
 import { OpenAPIV3 } from "openapi-types";
-import { ComplianceError } from "./types";
+import { ErrorCollection } from "./error-utils";
+
+// ############################################################
+// File-scoped types
+// ############################################################
+
+type Route = {
+  path: string;
+  method: string;
+};
+
+// ############################################################
+// Public function
+// ############################################################
 
 /**
- * Check for routes that have a "required" tag in the base spec
- * but are missing in the implementation.
+ * Check for base spec routes that are missing in the implementation.
+ *
+ * Report an error if a required route is missing.
+ * Report a warning if an optional route is missing.
  */
 export function checkMissingRequiredRoutes(
   baseDoc: OpenAPIV3.Document,
   implDoc: OpenAPIV3.Document
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
+): ErrorCollection {
+  let errors = new ErrorCollection();
+
+  // Step 1: Isolate paths from the base and implementation specs
   const basePaths = baseDoc.paths || {};
   const implPaths = implDoc.paths || {};
 
-  // Collect all of the required paths and operations from the base spec
-  const requiredOperations: Array<{ path: string; method: string }> = [];
+  // Step 2: Collect all of the required and optional routes from the base spec
+  const requiredRoutes: Array<Route> = [];
+  const optionalRoutes: Array<Route> = [];
+
   for (const [path, pathItem] of Object.entries(basePaths)) {
     if (!pathItem) continue;
 
@@ -28,30 +47,48 @@ export function checkMissingRequiredRoutes(
       if (!operation?.tags) continue;
 
       if (operation.tags.includes("required")) {
-        requiredOperations.push({ path, method });
+        requiredRoutes.push({ path, method });
+      }
+
+      if (operation.tags.includes("optional")) {
+        optionalRoutes.push({ path, method });
       }
     }
   }
 
-  // Check if the implementation doc contains each required route and operation
-  for (const { path, method } of requiredOperations) {
-    // Flag missing paths
-    const implPathItem = implPaths[path];
-    if (!implPathItem) {
-      errors.push({
-        message: `Missing required path '${path}'`,
-        location: path,
-      });
-      continue;
-    }
+  // Step 3: Check if the implementation doc contains each route
+  const isRequired = true;
+  errors = checkForRoutes(requiredRoutes, implPaths, errors, isRequired);
+  errors = checkForRoutes(optionalRoutes, implPaths, errors, !isRequired);
 
-    // Flag missing operations on matching paths
-    const implPathObj = implPathItem as OpenAPIV3.PathItemObject;
-    const implOperation = implPathObj[method as OpenAPIV3.HttpMethods];
-    if (!implOperation) {
-      errors.push({
-        message: `Missing required operation [${method.toUpperCase()}] on path '${path}'`,
-        location: `${path}.${method}`,
+  return errors;
+}
+
+// ############################################################
+// Helper functions
+// ############################################################
+
+function checkForRoutes(
+  routes: Array<Route>,
+  implPaths: OpenAPIV3.PathsObject,
+  errors: ErrorCollection,
+  isRequired: boolean
+): ErrorCollection {
+  for (const route of routes) {
+    // Isolate path and methods from the route
+    const implPathObj = implPaths[route.path] as OpenAPIV3.PathItemObject;
+    const implMethod = implPathObj?.[route.method as OpenAPIV3.HttpMethods];
+
+    // If either the path or method are missing in the implementation,
+    // add an error (or warning) to the errors collection
+    if (!implPathObj || !implMethod) {
+      errors.addError({
+        type: "MISSING_ROUTE",
+        level: isRequired ? "ERROR" : "WARNING",
+        endpoint: `${route.method.toUpperCase()} ${route.path}`,
+        message: isRequired
+          ? `Missing required route '${route.method.toUpperCase()} ${route.path}'`
+          : `Missing optional route '${route.method.toUpperCase()} ${route.path}'`,
       });
     }
   }

@@ -6,7 +6,7 @@ describe("checkMatchingRoutes", () => {
   // Status code validation
   // ############################################################
 
-  it("should detect mismatched status codes", () => {
+  it("should detect missing status codes", () => {
     // Arrange - Create base spec with 200 and 404 responses
     const baseDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -43,8 +43,15 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find 1 error about missing 404
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Missing response status code \[404\]/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "MISSING_STATUS_CODE",
+        endpoint: "GET /foo",
+        message: expect.stringMatching(/Missing response status code \[404\]/),
+      })
+    );
   });
 
   // ############################################################
@@ -115,8 +122,15 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find error about missing required field
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Missing required property 'name'/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "RESPONSE_BODY_CONFLICT",
+        endpoint: "GET /users",
+        message: expect.stringMatching(/Missing required property 'name'/),
+      })
+    );
   });
 
   // ############################################################
@@ -168,8 +182,15 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find error about missing content
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Implementation missing content/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "RESPONSE_BODY_CONFLICT",
+        endpoint: "GET /data",
+        message: expect.stringMatching(/Implementation missing content/),
+      })
+    );
   });
 
   // ############################################################
@@ -225,8 +246,15 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find error about missing schema
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Implementation missing schema/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "RESPONSE_BODY_CONFLICT",
+        endpoint: "GET /users",
+        message: expect.stringMatching(/Implementation missing schema/),
+      })
+    );
   });
 
   // ############################################################
@@ -296,7 +324,7 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should have no errors
-    expect(errors).toHaveLength(0);
+    expect(errors.getErrorCount()).toBe(0);
   });
 
   // ############################################################
@@ -306,7 +334,7 @@ describe("checkMatchingRoutes", () => {
   it("should ignore experimental routes", () => {
     // Arrange - Create base spec with experimental route
     const baseDoc: OpenAPIV3.Document = {
-      openapi: "3.0.0",
+      openapi: "3.1.0",
       info: { title: "Base", version: "1.0.0" },
       paths: {
         "/foo": {
@@ -340,7 +368,7 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should have no errors because experimental routes are ignored
-    expect(errors).toHaveLength(0);
+    expect(errors.getErrorCount()).toBe(0);
   });
 
   // ############################################################
@@ -391,8 +419,12 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find error about missing parameter
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Missing required query parameter \[q\]/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        message: expect.stringMatching(/Missing required query parameter \[q\]/),
+      })
+    );
   });
 
   // ############################################################
@@ -450,8 +482,14 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find error about required status
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Query parameter \[q\] must be required/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "QUERY_PARAM_CONFLICT",
+        message: expect.stringMatching(/Query parameter \[q\] must be required/),
+      })
+    );
   });
 
   // ############################################################
@@ -509,8 +547,15 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find error about incompatible schema
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Type mismatch/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "QUERY_PARAM_CONFLICT",
+        endpoint: "GET /search",
+        message: expect.stringMatching(/Type mismatch/),
+      })
+    );
   });
 
   // ############################################################
@@ -567,8 +612,15 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find error about missing request body
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Missing required request body/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "REQUEST_BODY_CONFLICT",
+        endpoint: "POST /users",
+        message: expect.stringMatching(/Missing required request body/),
+      })
+    );
   });
 
   // ############################################################
@@ -627,8 +679,15 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find error about missing content type
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Implementation missing schema for expected mime type/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "REQUEST_BODY_CONFLICT",
+        endpoint: "POST /users",
+        message: expect.stringMatching(/Implementation missing schema for expected mime type/),
+      })
+    );
   });
 
   // ############################################################
@@ -697,7 +756,14 @@ describe("checkMatchingRoutes", () => {
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
     // Assert - Should find error about incompatible schema
-    expect(errors).toHaveLength(1);
-    expect(errors[0].message).toMatch(/Type mismatch/);
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "REQUEST_BODY_CONFLICT",
+        endpoint: "POST /users",
+        message: expect.stringMatching(/Type mismatch/),
+      })
+    );
   });
 });

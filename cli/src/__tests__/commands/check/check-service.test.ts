@@ -77,12 +77,11 @@ describe("ValidationService", () => {
 
   describe("checkSpec", () => {
     // ############################################################
-    // Base spec validation - using TypeSpec
+    // Base spec validation - using default spec
     // ############################################################
 
-    it("should use TypeSpec-generated spec when no base spec provided", async () => {
+    it("should use default spec when no base spec provided", async () => {
       // Arrange
-      const typeSpecPath = "/path/to/generated/openapi.yaml";
       const baseDoc: OpenAPIV3.Document = {
         openapi: "3.0.0",
         info: { title: "Base", version: "1.0.0" },
@@ -104,15 +103,12 @@ describe("ValidationService", () => {
         paths: {},
       };
 
-      (compileTypeSpec as jest.Mock).mockReturnValue(typeSpecPath);
       (SwaggerParser.dereference as jest.Mock)
         .mockResolvedValueOnce(implDoc) // First call for impl spec
         .mockResolvedValueOnce(baseDoc); // Second call for TypeSpec-generated base spec
 
       // Act & Assert
-      await expect(service.checkSpec("spec.yaml", {})).rejects.toThrow(/Missing required path/);
-      expect(compileTypeSpec).toHaveBeenCalled();
-      expect(SwaggerParser.dereference).toHaveBeenCalledWith(typeSpecPath);
+      await expect(service.checkSpec("spec.yaml", {})).rejects.toThrow(/Routes missing/);
     });
 
     it("should use provided base spec even when TypeSpec is available", async () => {
@@ -173,7 +169,7 @@ describe("ValidationService", () => {
 
       // Act & Assert
       await expect(service.checkSpec("spec.yaml", { base: "base.yaml" })).rejects.toThrow(
-        /Missing required path/
+        /Routes missing/
       );
     });
 
@@ -187,7 +183,7 @@ describe("ValidationService", () => {
         openapi: "3.0.0",
         info: { title: "Base", version: "1.0.0" },
         paths: {
-          "/opportunities": {
+          "/common-grants/opportunities": {
             get: {
               tags: ["required"],
               responses: {
@@ -205,6 +201,13 @@ describe("ValidationService", () => {
                     },
                   },
                 },
+              },
+            },
+            post: {
+              tags: ["optional"],
+              responses: {
+                "200": { description: "OK" },
+                "400": { description: "Bad Request" },
               },
             },
           },
@@ -225,6 +228,13 @@ describe("ValidationService", () => {
               },
             },
           },
+          "/common-grants/opportunities": {
+            post: {
+              responses: {
+                "200": { description: "OK" },
+              },
+            },
+          },
         },
       };
 
@@ -235,8 +245,10 @@ describe("ValidationService", () => {
       // Act & Assert
       const error = await service.checkSpec("spec.yaml", { base: "base.yaml" }).catch(e => e);
 
-      expect(error.message).toContain("Missing required path");
-      expect(error.message).toContain("Extra route found");
+      expect(error.message).toContain("Routes missing");
+      expect(error.message).toContain("Extra routes");
+      expect(error.message).toContain("Route conflicts");
+      expect(error.message).toContain("Status code missing");
     });
 
     // ############################################################

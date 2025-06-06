@@ -1,7 +1,7 @@
 import { OpenAPIV3 } from "openapi-types";
-import { ComplianceError } from "./types";
 import { checkSchemaCompatibility } from "./check-schema-compatibility";
 import { deepFlattenAllOf } from "./flatten-schemas";
+import { ErrorCollection } from "./error-utils";
 
 // ############################################################
 // Top-level checks
@@ -13,8 +13,8 @@ import { deepFlattenAllOf } from "./flatten-schemas";
 export function checkMatchingRoutes(
   baseDoc: OpenAPIV3.Document,
   implDoc: OpenAPIV3.Document
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
+): ErrorCollection {
+  const errors = new ErrorCollection();
 
   const basePaths = baseDoc.paths || {};
   const implPaths = implDoc.paths || {};
@@ -46,7 +46,7 @@ export function checkMatchingRoutes(
       if (baseOp.tags?.includes("experimental")) continue;
 
       // Both base and impl define this route => deeper checks:
-      errors.push(...checkMatchingRoute(basePathKey, method, baseOp, implOp));
+      errors.addErrors(checkMatchingRoute(basePathKey, method, baseOp, implOp).getAllErrors());
     }
   }
 
@@ -65,12 +65,12 @@ function checkMatchingRoute(
   method: string,
   baseOp: OpenAPIV3.OperationObject,
   implOp: OpenAPIV3.OperationObject
-): ComplianceError[] {
-  const location = `${path}.${method.toUpperCase()}`;
-  let errors: ComplianceError[] = [];
+): ErrorCollection {
+  const errors = new ErrorCollection();
+  const endpoint = `${method.toUpperCase()} ${path}`;
 
   // 1) Check for missing status codes
-  errors = errors.concat(checkStatusCodes(location, baseOp, implOp));
+  errors.addErrors(checkStatusCodes(endpoint, baseOp, implOp).getAllErrors());
 
   // 2) For each matching status code, check that response schemas match
   if (baseOp.responses && implOp.responses) {
@@ -80,15 +80,13 @@ function checkMatchingRoute(
 
       if (!implResp) continue; // Possibly flagged in checkStatusCodes
 
-      errors = errors.concat(
-        checkResponseSchemas(`${location}.responses.${statusCode}`, baseResp, implResp)
-      );
+      errors.addErrors(checkResponseSchemas(endpoint, baseResp, implResp).getAllErrors());
     }
   }
 
   // 3) Check that query parameters and request body match
-  errors = errors.concat(checkQueryParameters(location, baseOp, implOp));
-  errors = errors.concat(checkRequestBody(location, baseOp, implOp));
+  errors.addErrors(checkQueryParameters(endpoint, baseOp, implOp).getAllErrors());
+  errors.addErrors(checkRequestBody(endpoint, baseOp, implOp).getAllErrors());
   return errors;
 }
 
@@ -102,20 +100,22 @@ function checkMatchingRoute(
  * Extra status codes are okay, but missing status codes are not.
  */
 function checkStatusCodes(
-  location: string,
+  endpoint: string,
   baseOp: OpenAPIV3.OperationObject,
   implOp: OpenAPIV3.OperationObject
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
+): ErrorCollection {
+  const errors = new ErrorCollection();
   const baseRespCodes = Object.keys(baseOp.responses || {});
   const implRespCodes = Object.keys(implOp.responses || {});
 
   // Find missing status codes
   for (const code of baseRespCodes) {
     if (!implRespCodes.includes(code)) {
-      errors.push({
+      errors.addError({
+        type: "ROUTE_CONFLICT",
+        subType: "MISSING_STATUS_CODE",
+        endpoint,
         message: `Missing response status code [${code}]`,
-        location: `${location}.responses.${code}`,
       });
     }
   }
@@ -131,11 +131,11 @@ function checkStatusCodes(
  * Compare query parameters between base and implementation operations
  */
 function checkQueryParameters(
-  location: string,
+  endpoint: string,
   baseOp: OpenAPIV3.OperationObject,
   implOp: OpenAPIV3.OperationObject
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
+): ErrorCollection {
+  const errors = new ErrorCollection();
 
   // Get query parameters from both specs
   const baseParams = (baseOp.parameters || []).filter(
@@ -150,29 +150,37 @@ function checkQueryParameters(
     const implParam = implParams.find(p => p.name === baseParam.name);
 
     if (!implParam) {
-      errors.push({
+      errors.addError({
+        type: "ROUTE_CONFLICT",
+        subType: "QUERY_PARAM_CONFLICT",
+        endpoint,
         message: `Missing required query parameter [${baseParam.name}]`,
-        location: `${location}.parameters.${baseParam.name}`,
       });
       continue;
     }
 
     // If parameter exists, check if required status matches
     if (baseParam.required && !implParam.required) {
-      errors.push({
+      errors.addError({
+        type: "ROUTE_CONFLICT",
+        subType: "QUERY_PARAM_CONFLICT",
+        endpoint,
         message: `Query parameter [${baseParam.name}] must be required`,
-        location: `${location}.parameters.${baseParam.name}`,
       });
     }
 
     // Check parameter schema compatibility if schemas exist
     if (baseParam.schema && implParam.schema) {
-      errors.push(
-        ...checkSchemaCompatibility(
-          `${location}.parameters.${baseParam.name}`,
+      errors.addErrors(
+        checkSchemaCompatibility(
+          `${baseParam.name}`,
           baseParam.schema as OpenAPIV3.SchemaObject,
-          implParam.schema as OpenAPIV3.SchemaObject
-        )
+          implParam.schema as OpenAPIV3.SchemaObject,
+          {
+            errorSubType: "QUERY_PARAM_CONFLICT",
+            endpoint,
+          }
+        ).getAllErrors()
       );
     }
   }
@@ -188,18 +196,21 @@ function checkQueryParameters(
  * Compare content schemas between base and implementation content objects
  */
 function checkContentSchemas(
-  location: string,
+  endpoint: string,
   baseContent: { [key: string]: OpenAPIV3.MediaTypeObject } | undefined,
-  implContent: { [key: string]: OpenAPIV3.MediaTypeObject } | undefined
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
+  implContent: { [key: string]: OpenAPIV3.MediaTypeObject } | undefined,
+  errorSubType: "REQUEST_BODY_CONFLICT" | "RESPONSE_BODY_CONFLICT"
+): ErrorCollection {
+  const errors = new ErrorCollection();
 
   if (!baseContent) return errors;
 
   if (!implContent) {
-    errors.push({
-      message: `Implementation missing content for expected mime type(s)`,
-      location,
+    errors.addError({
+      type: "ROUTE_CONFLICT",
+      subType: errorSubType,
+      endpoint,
+      message: "Implementation missing content for expected mime type(s)",
     });
     return errors;
   }
@@ -207,9 +218,11 @@ function checkContentSchemas(
   for (const [mimeType, baseMedia] of Object.entries(baseContent)) {
     const implMedia = implContent[mimeType];
     if (!implMedia?.schema) {
-      errors.push({
+      errors.addError({
+        type: "ROUTE_CONFLICT",
+        subType: errorSubType,
+        endpoint,
         message: `Implementation missing schema for expected mime type [${mimeType}]`,
-        location: `${location}.${mimeType}`,
       });
       continue;
     }
@@ -219,7 +232,13 @@ function checkContentSchemas(
     const implSchema = deepFlattenAllOf(implMedia.schema as OpenAPIV3.SchemaObject);
 
     // Deeper check: see if implSchema is a valid "subset" of baseSchema
-    errors.push(...checkSchemaCompatibility(`${location}.${mimeType}`, baseSchema, implSchema));
+    errors.addErrors(
+      checkSchemaCompatibility("", baseSchema, implSchema, {
+        errorSubType,
+        endpoint,
+        mimeType,
+      }).getAllErrors()
+    );
   }
 
   return errors;
@@ -233,15 +252,22 @@ function checkContentSchemas(
  * Compare the response content schemas for a single status code.
  */
 function checkResponseSchemas(
-  location: string,
+  endpoint: string,
   baseResponse: OpenAPIV3.ResponseObject | undefined,
   implResponse: OpenAPIV3.ResponseObject | undefined
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
+): ErrorCollection {
+  const errors = new ErrorCollection();
   if (!baseResponse || !implResponse) return errors;
 
   if (baseResponse.content) {
-    errors.push(...checkContentSchemas(location, baseResponse.content, implResponse.content));
+    errors.addErrors(
+      checkContentSchemas(
+        endpoint,
+        baseResponse.content,
+        implResponse.content,
+        "RESPONSE_BODY_CONFLICT"
+      ).getAllErrors()
+    );
   }
 
   return errors;
@@ -255,24 +281,31 @@ function checkResponseSchemas(
  * Compare the request body between base and implementation operations
  */
 function checkRequestBody(
-  location: string,
+  endpoint: string,
   baseOp: OpenAPIV3.OperationObject,
   implOp: OpenAPIV3.OperationObject
-): ComplianceError[] {
-  const errors: ComplianceError[] = [];
+): ErrorCollection {
+  const errors = new ErrorCollection();
 
   if (baseOp.requestBody) {
     const baseReq = baseOp.requestBody as OpenAPIV3.RequestBodyObject;
     const implReq = implOp.requestBody as OpenAPIV3.RequestBodyObject | undefined;
 
     if (!implReq) {
-      errors.push({
+      errors.addError({
+        type: "ROUTE_CONFLICT",
+        subType: "REQUEST_BODY_CONFLICT",
+        endpoint,
         message: "Missing required request body",
-        location: `${location}.requestBody`,
       });
     } else if (baseReq.content) {
-      errors.push(
-        ...checkContentSchemas(`${location}.requestBody.content`, baseReq.content, implReq.content)
+      errors.addErrors(
+        checkContentSchemas(
+          endpoint,
+          baseReq.content,
+          implReq.content,
+          "REQUEST_BODY_CONFLICT"
+        ).getAllErrors()
       );
     }
   }

@@ -3,11 +3,19 @@ import { z } from "zod";
 
 export const CheckApiArgsSchema = z.object({
   apiUrl: z.string().url(),
-  specPath: z.string().endsWith(".tsp").or(z.string().endsWith(".yaml")),
+  specPath: z
+    .string()
+    .endsWith(".json")
+    .or(z.string().endsWith(".yaml"))
+    .or(z.string().endsWith(".yml")),
 });
 
 export const CheckSpecArgsSchema = z.object({
-  specPath: z.string().endsWith(".tsp").or(z.string().endsWith(".yaml")),
+  specPath: z
+    .string()
+    .endsWith(".json")
+    .or(z.string().endsWith(".yaml"))
+    .or(z.string().endsWith(".yml")),
 });
 
 export const CheckSpecCommandSchema = z.object({

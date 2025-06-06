@@ -2,9 +2,11 @@ import SwaggerParser from "@apidevtools/swagger-parser";
 import { checkExtraRoutes } from "./utils/check-extra-routes";
 import { checkMatchingRoutes } from "./utils/check-matching-routes";
 import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
-import { ComplianceError, Document } from "./utils/types";
-import { compileTypeSpec } from "../../utils/typespec";
+import { Document } from "./utils/types";
 import { CheckApiCommandOptions, CheckSpecCommandOptions } from "./check-args";
+import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
+import * as path from "path";
+import * as fs from "fs";
 
 export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
@@ -26,21 +28,28 @@ export class DefaultCheckService {
     const doc = (await SwaggerParser.dereference(specPath)) as Document;
 
     // If no base spec provided, compile from TypeSpec
-    const baseSpecPath = options.base || compileTypeSpec();
+    const baseSpecPath = options.base || getBaseSpecPath();
     const baseDoc = (await SwaggerParser.dereference(baseSpecPath)) as Document;
 
-    const errors: ComplianceError[] = [];
-    errors.push(...checkMissingRequiredRoutes(baseDoc, doc));
-    errors.push(...checkExtraRoutes(baseDoc, doc));
-    errors.push(...checkMatchingRoutes(baseDoc, doc));
+    const errors: ErrorCollection = new ErrorCollection();
+    errors.addErrors(checkMissingRequiredRoutes(baseDoc, doc).getAllErrors());
+    errors.addErrors(checkExtraRoutes(baseDoc, doc).getAllErrors());
+    errors.addErrors(checkMatchingRoutes(baseDoc, doc).getAllErrors());
 
-    if (errors.length > 0) {
-      const message = errors
-        .map(e => `${e.message}${e.location ? ` at ${e.location}` : ""}`)
-        .join("\n");
+    if (errors.getAllErrors().length > 0) {
+      const message = new ErrorFormatter(errors).format();
       throw new Error(`Spec validation failed:\n${message}`);
     } else {
       console.log("Spec is valid and compliant with base spec");
     }
   }
+}
+
+function getBaseSpecPath(): string {
+  const baseSpecPath = path.resolve(__dirname, "../../../lib/openapi.yaml");
+  if (fs.existsSync(baseSpecPath)) {
+    return baseSpecPath;
+  }
+  console.log("Not found", baseSpecPath);
+  throw new Error(`Could not find base spec file at ${baseSpecPath}`);
 }
