@@ -2,3 +2,4 @@ dist/
 coverage/
 node_modules/
 *.d.ts 
+lib/openapi.yaml
