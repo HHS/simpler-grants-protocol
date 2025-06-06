@@ -42,7 +42,18 @@ export function checkSchemaCompatibility(
     checkObjectCompatibility(location, baseSchema, implSchema, ctx, errors);
   }
 
-  // 4) If the schema has an enum, verify that impl doesn't have extra values
+  // 4) If the schema is array-typed, compare items
+  if (baseSchema.type === "array") {
+    checkArrayCompatibility(
+      location,
+      baseSchema as OpenAPIV3.ArraySchemaObject,
+      implSchema as OpenAPIV3.ArraySchemaObject,
+      ctx,
+      errors
+    );
+  }
+
+  // 5) If the schema has an enum, verify that impl doesn't have extra values
   errors = checkEnumConflict(location, baseSchema, implSchema, ctx, errors);
 
   return errors;
@@ -124,14 +135,17 @@ function checkObjectCompatibility(
   // Step 3: Handle missing props
   for (const propName of propsByStatus.missing) {
     const propLoc = `${location}.${propName}`;
-    const error = missingFieldError(propLoc, propName, ctx);
+    const error = missingFieldError(propLoc, propName, { ...ctx, baseSchema });
     errors.addError(error);
   }
 
   // Step 4: Handle extra props
-  const extraPropsAllowed =
-    typeof baseSchema.additionalProperties === "undefined" ||
-    baseSchema.additionalProperties === true;
+  //TODO: @widal001 (2025-06-06) - Make this more robust
+  // WHEN additionalProperties or unevaluatedProperties is:
+  // 1. undefined || true => allow any extra props
+  // 2. false || not: {} => disallow any extra props
+  // 3. schema => validate extra props against that schema
+  const extraPropsAllowed = baseSchema.additionalProperties === true;
   const extraPropsSchema = baseSchema.additionalProperties as OpenAPIV3.SchemaObject;
 
   if (extraPropsAllowed) {
@@ -212,6 +226,55 @@ function getPropsByStatus(
 }
 
 // ############################################################
+// Helper functions - Array types
+// ############################################################
+
+/**
+ * Checks whether array items are compatible.
+ *
+ * This function validates that:
+ * 1. The implementation schema has items defined
+ * 2. The items in the implementation schema are compatible with the base schema's items
+ */
+function checkArrayCompatibility(
+  location: string,
+  baseSchema: OpenAPIV3.ArraySchemaObject,
+  implSchema: OpenAPIV3.ArraySchemaObject,
+  ctx: SchemaContext,
+  errors: ErrorCollection
+): ErrorCollection {
+  // If base schema has no items defined, any items are allowed
+  if (!baseSchema.items) {
+    return errors;
+  }
+
+  // If impl schema has no items defined, that's an error
+  if (!implSchema.items) {
+    const error: SchemaConflictError = {
+      type: ERROR_TYPE,
+      level: "ERROR",
+      subType: ctx.errorSubType!,
+      endpoint: ctx.endpoint,
+      statusCode: ctx.statusCode,
+      mimeType: ctx.mimeType,
+      conflictType: "MISSING_FIELD",
+      message: `Array schema must define items`,
+      location,
+    };
+    errors.addError(error);
+    return errors;
+  }
+
+  // Check that the items are compatible
+  const baseItems = baseSchema.items as OpenAPIV3.SchemaObject;
+  const implItems = implSchema.items as OpenAPIV3.SchemaObject;
+  const itemErrors = checkSchemaCompatibility(`${location}[0]`, baseItems, implItems, ctx);
+  errors.addErrors(itemErrors.getAllErrors());
+
+  return errors;
+}
+
+// ############################################################
 // Error creation functions
 // ############################################################
 
@@ -268,6 +331,7 @@ function missingFieldError(
   fieldName: string,
   ctx: SchemaContext
 ): SchemaConflictError {
+  const isRequired = ctx.baseSchema?.required?.includes(fieldName);
   return {
     type: ERROR_TYPE,
     level: "ERROR",
@@ -276,7 +340,7 @@ function missingFieldError(
     statusCode: ctx.statusCode,
     mimeType: ctx.mimeType,
     conflictType: "MISSING_FIELD",
-    message: `Missing required property '${fieldName}'`,
+    message: `Missing ${isRequired ? "required" : "optional"} property '${fieldName}'`,
     location,
   };
 }

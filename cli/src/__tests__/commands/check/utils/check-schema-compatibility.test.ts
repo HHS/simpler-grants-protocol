@@ -205,4 +205,98 @@ describe("Schema Compatibility Checks", () => {
       })
     );
   });
+
+  // ############################################################
+  // Nested checks of complex schemas
+  // ############################################################
+
+  it("should validated nested objects", () => {
+    // Arrange
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        known: { type: "string" },
+        nested: {
+          type: "object",
+          properties: {
+            foo: { type: "string" },
+          },
+        },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        known: { type: "string" },
+        nested: {
+          type: "object",
+          properties: {
+            foo: { type: "integer" },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        location: `${location}.nested.foo`,
+        conflictType: "TYPE_CONFLICT",
+      })
+    );
+  });
+
+  it("should validate nested arrays", () => {
+    // Arrange
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        known: { type: "string" },
+        nested: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              foo: { type: "string" },
+            },
+          },
+        },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        known: { type: "string" },
+        nested: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              foo: { type: "integer" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        location: `${location}.nested[0].foo`,
+        conflictType: "TYPE_CONFLICT",
+      })
+    );
+  });
 });

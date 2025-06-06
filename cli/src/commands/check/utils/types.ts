@@ -18,6 +18,7 @@ export interface SchemaContext {
   mimeType?: string;
   errorType?: "ROUTE_CONFLICT";
   errorSubType?: ErrorSubType;
+  baseSchema?: OpenAPIV3.SchemaObject;
 }
 
 // #########################################################

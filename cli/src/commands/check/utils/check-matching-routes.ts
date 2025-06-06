@@ -233,7 +233,7 @@ function checkContentSchemas(
 
     // Deeper check: see if implSchema is a valid "subset" of baseSchema
     errors.addErrors(
-      checkSchemaCompatibility("root", baseSchema, implSchema, {
+      checkSchemaCompatibility("", baseSchema, implSchema, {
         errorSubType,
         endpoint,
         mimeType,

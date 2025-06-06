@@ -165,38 +165,26 @@ export class ErrorFormatter {
       // Format each endpoint's conflicts
       for (const [endpoint, conflicts] of conflictsByEndpoint) {
         sections.push(`  ${endpoint}`);
+        sections.push(`    ${conflicts.length} issues found:`);
 
-        // Group conflicts by subType
-        const conflictsBySubType = new Map<string, ComplianceError[]>();
         for (const error of conflicts) {
           if ("subType" in error && error.subType) {
-            const subTypeConflicts = conflictsBySubType.get(error.subType) || [];
-            subTypeConflicts.push(error);
-            conflictsBySubType.set(error.subType, subTypeConflicts);
+            sections.push(`    ${this.formatSubTypeTitle(error.subType)}`);
           }
-        }
-
-        // Format each subType's conflicts
-        for (const [subType, subTypeConflicts] of conflictsBySubType) {
-          const subTypeTitle = this.formatSubTypeTitle(subType);
-          sections.push(`    ${subTypeTitle}`);
-
-          for (const error of subTypeConflicts) {
-            if (error.statusCode) {
-              sections.push(`      Status code: ${error.statusCode}`);
-            }
-            if (error.mimeType) {
-              sections.push(`      MIME Type: ${error.mimeType}`);
-            }
-            if (error.location) {
-              sections.push(`      Location: ${error.location}`);
-            }
-            if ("conflictType" in error) {
-              sections.push(`      Issue: ${this.formatConflictType(error.conflictType)}`);
-            }
-            if (error.message) {
-              sections.push(`      Message: ${error.message}`);
-            }
+          if (error.statusCode) {
+            sections.push(`      Status code: ${error.statusCode}`);
+          }
+          if (error.mimeType) {
+            sections.push(`      MIME Type: ${error.mimeType}`);
+          }
+          if (error.location) {
+            sections.push(`      Location: ${error.location}`);
+          }
+          if ("conflictType" in error) {
+            sections.push(`      Issue: ${this.formatConflictType(error.conflictType)}`);
+          }
+          if (error.message) {
+            sections.push(`      Message: ${error.message}`);
           }
         }
       }
