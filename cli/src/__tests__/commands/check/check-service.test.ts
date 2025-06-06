@@ -77,12 +77,11 @@ describe("ValidationService", () => {
 
   describe("checkSpec", () => {
     // ############################################################
-    // Base spec validation - using TypeSpec
+    // Base spec validation - using default spec
     // ############################################################
 
-    it("should use TypeSpec-generated spec when no base spec provided", async () => {
+    it("should use default spec when no base spec provided", async () => {
       // Arrange
-      const typeSpecPath = "/path/to/generated/openapi.yaml";
       const baseDoc: OpenAPIV3.Document = {
         openapi: "3.0.0",
         info: { title: "Base", version: "1.0.0" },
@@ -104,15 +103,12 @@ describe("ValidationService", () => {
         paths: {},
       };
 
-      (compileTypeSpec as jest.Mock).mockReturnValue(typeSpecPath);
       (SwaggerParser.dereference as jest.Mock)
         .mockResolvedValueOnce(implDoc) // First call for impl spec
         .mockResolvedValueOnce(baseDoc); // Second call for TypeSpec-generated base spec
 
       // Act & Assert
       await expect(service.checkSpec("spec.yaml", {})).rejects.toThrow(/Routes missing/);
-      expect(compileTypeSpec).toHaveBeenCalled();
-      expect(SwaggerParser.dereference).toHaveBeenCalledWith(typeSpecPath);
     });
 
     it("should use provided base spec even when TypeSpec is available", async () => {

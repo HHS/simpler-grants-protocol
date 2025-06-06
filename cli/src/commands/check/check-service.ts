@@ -3,9 +3,10 @@ import { checkExtraRoutes } from "./utils/check-extra-routes";
 import { checkMatchingRoutes } from "./utils/check-matching-routes";
 import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
 import { Document } from "./utils/types";
-import { compileTypeSpec } from "../../utils/typespec";
 import { CheckApiCommandOptions, CheckSpecCommandOptions } from "./check-args";
 import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
+import * as path from "path";
+import * as fs from "fs";
 
 export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
@@ -27,7 +28,7 @@ export class DefaultCheckService {
     const doc = (await SwaggerParser.dereference(specPath)) as Document;
 
     // If no base spec provided, compile from TypeSpec
-    const baseSpecPath = options.base || compileTypeSpec();
+    const baseSpecPath = options.base || getBaseSpecPath();
     const baseDoc = (await SwaggerParser.dereference(baseSpecPath)) as Document;
 
     const errors: ErrorCollection = new ErrorCollection();
@@ -42,4 +43,13 @@ export class DefaultCheckService {
       console.log("Spec is valid and compliant with base spec");
     }
   }
+}
+
+function getBaseSpecPath(): string {
+  const baseSpecPath = path.resolve(__dirname, "../../../lib/openapi.yaml");
+  if (fs.existsSync(baseSpecPath)) {
+    return baseSpecPath;
+  }
+  console.log("Not found", baseSpecPath);
+  throw new Error(`Could not find base spec file at ${baseSpecPath}`);
 }
