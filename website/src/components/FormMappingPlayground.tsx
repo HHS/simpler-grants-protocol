@@ -1,22 +1,52 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { schemas, type SchemaOption } from "../lib/schemas";
+import { JsonForms } from "@jsonforms/react";
+import { vanillaRenderers, vanillaCells } from "@jsonforms/vanilla-renderers";
+import { transformWithMapping } from "../lib/transformation";
 
-function mapJson(
-  data: unknown,
-  sourceId: string,
-  targetId: string,
-): Record<string, unknown> {
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+type FormData = Record<string, JsonValue>;
+
+function mapJson(data: FormData, sourceId: string, targetId: string): FormData {
+  // Get the source and target schemas
+  const sourceSchema = schemas.find((s) => s.id === sourceId);
+  const targetSchema = schemas.find((s) => s.id === targetId);
+
+  if (!sourceSchema || !targetSchema) {
+    throw new Error("Source or target schema not found");
+  }
+
+  // Step 1: Transform source data to common format
+  const commonData = transformWithMapping(
+    data,
+    sourceSchema.mappings.mappingToCommon as FormData,
+  );
+
+  // Step 2: Transform common format to target format
+  const targetData = transformWithMapping(
+    commonData,
+    targetSchema.mappings.mappingFromCommon as FormData,
+  );
+
   return {
     timestamp: Date.now(),
     source: sourceId,
     target: targetId,
-    payload: data,
+    commonData: commonData as FormData,
+    targetData: targetData as FormData,
   };
 }
 
 const styles = {
   container: {
-    maxWidth: 480,
+    maxWidth: 1200,
     margin: "2rem auto",
     padding: "2rem",
     borderRadius: "1rem",
@@ -26,6 +56,22 @@ const styles = {
     display: "flex",
     flexDirection: "column" as const,
     gap: "1.5rem",
+  },
+  formContainer: {
+    display: "flex",
+    gap: "2rem",
+  },
+  formSection: {
+    flex: 1,
+    padding: "1rem",
+    borderRadius: "0.5rem",
+    background: "#f8f9fa",
+  },
+  formHeader: {
+    marginBottom: "1rem",
+    fontSize: "1.2rem",
+    fontWeight: 600,
+    color: "#333",
   },
   row: {
     display: "flex",
@@ -80,31 +126,34 @@ export default function FormMappingPlayground() {
 
   const [inputId, setInputId] = useState<string>(schemas[0].id);
   const [targetId, setTargetId] = useState<string>(schemas[1].id);
-  const [formData, setFormData] = useState<any>(
-    getSchemaById(schemas[0].id)!.defaultData,
+  const [formData, setFormData] = useState<FormData>(
+    getSchemaById(schemas[0].id)!.defaultData as FormData,
   );
   const [outputJson, setOutputJson] = useState<string>("");
+  const [targetFormData, setTargetFormData] = useState<FormData>({});
 
-  const { formSchema } = useMemo(() => {
+  const { formSchema, formUI } = useMemo(() => {
     const current = getSchemaById(inputId)!;
-    return { formSchema: current.formSchema };
+    return { formSchema: current.formSchema, formUI: current.formUI };
   }, [inputId, getSchemaById]);
 
-  const handleInputChange = (key: string, value: any) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
+  const { targetFormSchema, targetFormUI } = useMemo(() => {
+    const current = getSchemaById(targetId)!;
+    return {
+      targetFormSchema: current.formSchema,
+      targetFormUI: current.formUI,
+    };
+  }, [targetId, getSchemaById]);
 
   const handleTransform = (e: React.FormEvent) => {
     e.preventDefault();
     const result = mapJson(formData, inputId, targetId);
     setOutputJson(JSON.stringify(result, null, 2));
+    setTargetFormData(result.targetData as FormData);
   };
 
   return (
-    <form style={styles.container} onSubmit={handleTransform}>
+    <div style={styles.container}>
       <div style={styles.row}>
         <div style={{ flex: 1 }}>
           <label style={styles.label}>Input Schema</label>
@@ -114,7 +163,7 @@ export default function FormMappingPlayground() {
             onChange={(e) => {
               const newId = e.target.value;
               setInputId(newId);
-              setFormData(getSchemaById(newId)!.defaultData);
+              setFormData(getSchemaById(newId)!.defaultData as FormData);
             }}
           >
             {schemas.map((opt) => (
@@ -140,39 +189,68 @@ export default function FormMappingPlayground() {
         </div>
       </div>
 
-      {/* Render form fields dynamically */}
-      {Object.entries(formSchema.properties ?? {}).map(([key, prop]: any) => (
-        <div key={key}>
-          <label style={styles.label}>{prop.title || key}</label>
-          <input
-            style={styles.input}
-            type={
-              prop.format === "date"
-                ? "date"
-                : prop.type === "number"
-                  ? "number"
-                  : "text"
-            }
-            value={formData[key] ?? ""}
-            onChange={(e) =>
-              handleInputChange(
-                key,
-                prop.type === "number"
-                  ? Number(e.target.value)
-                  : e.target.value,
-              )
-            }
-            required={formSchema.required?.includes(key)}
+      <div style={styles.formContainer}>
+        <div style={styles.formSection}>
+          <div style={styles.formHeader}>Input Form</div>
+          <JsonForms
+            schema={formSchema}
+            uischema={formUI}
+            data={formData}
+            renderers={vanillaRenderers}
+            cells={vanillaCells}
+            onChange={({ data }) => setFormData(data as FormData)}
           />
         </div>
-      ))}
 
-      <button type="submit" style={styles.button}>
+        <div style={styles.formSection}>
+          <div style={styles.formHeader}>Target Form (Read Only)</div>
+          <JsonForms
+            schema={targetFormSchema}
+            uischema={targetFormUI}
+            data={targetFormData}
+            renderers={vanillaRenderers}
+            cells={vanillaCells}
+            readonly={true}
+          />
+        </div>
+      </div>
+
+      <button type="button" style={styles.button} onClick={handleTransform}>
         Transform
       </button>
 
-      {outputJson && <pre style={styles.code}>{outputJson}</pre>}
-    </form>
+      {outputJson && (
+        <div>
+          <div style={styles.formHeader}>Transformation Steps</div>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
+            <div>
+              <div style={{ ...styles.formHeader, fontSize: "1rem" }}>
+                1. Source Data
+              </div>
+              <pre style={styles.code}>{JSON.stringify(formData, null, 2)}</pre>
+            </div>
+            <div>
+              <div style={{ ...styles.formHeader, fontSize: "1rem" }}>
+                2. Common Format
+              </div>
+              <pre style={styles.code}>
+                {JSON.stringify(JSON.parse(outputJson).commonData, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <div style={{ ...styles.formHeader, fontSize: "1rem" }}>
+                3. Target Format
+              </div>
+              <pre style={styles.code}>
+                {JSON.stringify(JSON.parse(outputJson).targetData, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
