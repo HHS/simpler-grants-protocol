@@ -1,0 +1,97 @@
+/* Form Controls */
+.form-input,
+.form-select,
+.form-textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  width: 100%;
+  font-family: system-ui, sans-serif;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+}
+
+/* Labels */
+.form-label {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+  color: #333;
+}
+
+/* Validation */
+.form-validation {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* Descriptions */
+.form-description {
+  color: #666;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* Array Items */
+.form-array-item {
+  padding: 1rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  background: white;
+}
+
+.form-array-layout {
+  margin-top: 1rem;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+}
+
+.btn-primary {
+  background: #1976d2;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #1565c0;
+}
+
+/* Groups */
+.form-group {
+  padding: 1rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  background: white;
+}
+
+.form-group-label {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+/* Rounded utility class */
+.rounded {
+  border-radius: 6px;
+} 
