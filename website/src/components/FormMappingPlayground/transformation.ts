@@ -1,17 +1,10 @@
+import type { JsonValue } from "./types";
+
 /**
  * This module provides a utility function for transforming data using a mapping.
  * The transformWithMapping function takes a data object and a mapping object.
  * The mapping object describes how to transform the data object into a new object.
  */
-
-type JsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | JsonValue[]
-  | { [key: string]: JsonValue }
-  | unknown;
 
 interface HandlerFunction {
   (data: Record<string, JsonValue>, value: JsonValue): JsonValue;
