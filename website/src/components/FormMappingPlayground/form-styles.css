@@ -6,17 +6,19 @@
   max-width: 100%;
   padding: 0.5rem;
   border-radius: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--sl-color-gray-5);
   font-size: 16px;
   width: 100%;
   font-family: system-ui, sans-serif;
+  background: var(--sl-color-black);
+  color: var(--sl-color-white);
 }
 
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: #1976d2;
+  border-color: var(--sl-color-accent);
   box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
 }
 
@@ -25,7 +27,7 @@
   font-weight: 600;
   margin-bottom: 4px;
   display: block;
-  color: #333;
+  color: var(--sl-color-white);
 }
 
 /* Validation */
@@ -37,7 +39,7 @@
 
 /* Descriptions */
 .form-description {
-  color: #666;
+  color: var(--sl-color-gray-3);
   font-size: 14px;
   margin-top: 4px;
 }
@@ -45,10 +47,11 @@
 /* Array Items */
 .form-array-item {
   padding: 1rem;
-  border: 1px solid #eee;
+  border: 1px solid var(--sl-color-gray-5);
   border-radius: 6px;
   margin-bottom: 1rem;
-  background: white;
+  background: var(--sl-color-gray-5);
+  color: var(--sl-color-white);
 }
 
 .form-array-layout {
@@ -67,27 +70,28 @@
 }
 
 .btn-primary {
-  background: #1976d2;
-  color: #fff;
+  background: var(--sl-color-accent);
+  color: var(--sl-color-white);
 }
 
 .btn-primary:hover {
-  background: #1565c0;
+  background: var(--sl-color-accent-high);
 }
 
 /* Groups */
 .form-group {
   padding: 1rem;
-  border: 1px solid #eee;
+  border: 1px solid var(--sl-color-gray-5);
   border-radius: 6px;
   margin-bottom: 1rem;
-  background: white;
+  background: var(--sl-color-gray-7);
+  color: var(--sl-color-white);
 }
 
 .form-group-label {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #333;
+  color: var(--sl-color-white);
   margin-bottom: 1rem;
 }
 

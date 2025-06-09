@@ -9,6 +9,6 @@ export const TransformButton: React.FC<TransformButtonProps> = ({
   onClick,
 }) => (
   <button type="button" style={styles.button} onClick={onClick}>
-    Prefill
+    Prefill target form
   </button>
 );

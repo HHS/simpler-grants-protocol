@@ -14,17 +14,19 @@ export const SchemaSelector: React.FC<SchemaSelectorProps> = ({
   onChange,
 }) => (
   <div style={{ flex: 1 }}>
-    <label style={styles.label}>{label}</label>
-    <select
-      style={styles.select}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    >
-      {schemas.map((opt) => (
-        <option key={opt.id} value={opt.id}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+    <label style={styles.label}>
+      {label}
+      <select
+        style={styles.select}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {schemas.map((opt) => (
+          <option key={opt.id} value={opt.id}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </label>
   </div>
 );
