@@ -18,7 +18,11 @@ export const TransformationSummary: React.FC<TransformationSummaryProps> = ({
 
   return (
     <div>
-      <div style={styles.formHeader}>Transformation Steps</div>
+      <h2 style={styles.formHeader}>Behind the scenes</h2>
+      <p>
+        Here's a quick summary of what's happening behind the scenes to
+        translate data from the source form to the prefilled form.
+      </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         <TransformationStep
           title="1. Source form data"

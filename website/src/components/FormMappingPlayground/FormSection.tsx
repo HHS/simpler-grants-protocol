@@ -35,7 +35,8 @@ const styleContextValue = {
 };
 
 interface FormSectionProps {
-  title: string;
+  formName: string;
+  type: "source" | "prefilled";
   schema: JsonSchema;
   uischema: VerticalLayout;
   data: FormData;
@@ -44,7 +45,8 @@ interface FormSectionProps {
 }
 
 export const FormSection: React.FC<FormSectionProps> = ({
-  title,
+  formName,
+  type,
   schema,
   uischema,
   data,
@@ -52,7 +54,12 @@ export const FormSection: React.FC<FormSectionProps> = ({
   readonly = false,
 }) => (
   <div style={styles.formSection}>
-    <div style={styles.formHeader}>{title}</div>
+    <h2 style={styles.formHeader}>{`${formName} (${type})`}</h2>
+    <p>
+      {type === "source"
+        ? "Changes here will be reflected in the prefilled form."
+        : "The prefilled answers can be edited freely."}
+    </p>
     <JsonFormsStyleContext.Provider value={styleContextValue}>
       <JsonForms
         schema={schema}
