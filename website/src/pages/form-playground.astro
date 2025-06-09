@@ -1,0 +1,14 @@
+---
+import FormMappingPlayground from "../components/FormMappingPlayground";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+---
+
+<StarlightPage
+  frontmatter={{
+    title: "Form mapping playground",
+    tableOfContents: false,
+    template: "splash",
+  }}
+>
+  <FormMappingPlayground client:load />
+</StarlightPage>
