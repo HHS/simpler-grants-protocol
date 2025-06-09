@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { schemas, type SchemaOption } from "./schemas";
 import type { FormData } from "./types";
 import { styles } from "./styles";
@@ -10,13 +10,13 @@ import { mapJson, type TransformOutput } from "./utils";
 export default function FormMappingPlayground() {
   const getSchemaById = useCallback(
     (id: string): SchemaOption | undefined => schemas.find((s) => s.id === id),
-    []
+    [],
   );
 
   const [inputId, setInputId] = useState<string>(schemas[0].id);
   const [targetId, setTargetId] = useState<string>(schemas[1].id);
   const [formData, setFormData] = useState<FormData>(
-    getSchemaById(schemas[0].id)!.defaultData as FormData
+    getSchemaById(schemas[0].id)!.defaultData as FormData,
   );
   const [output, setOutput] = useState<TransformOutput | null>(null);
   const [targetFormData, setTargetFormData] = useState<FormData>({});
