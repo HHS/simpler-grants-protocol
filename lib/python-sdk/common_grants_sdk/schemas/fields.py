@@ -128,9 +128,11 @@ class SystemMetadata(CommonGrantsBaseModel):
 
     created_at: UTCDateTime = Field(
         ...,
+        alias="createdAt",
         description="The timestamp (in UTC) at which the record was created.",
     )
     last_modified_at: UTCDateTime = Field(
         ...,
+        alias="lastModifiedAt",
         description="The timestamp (in UTC) at which the record was last modified.",
     )

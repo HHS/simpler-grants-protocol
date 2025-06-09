@@ -25,6 +25,7 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
     funding: OppFunding = Field(..., description="Details about the funding available")
     key_dates: OppTimeline = Field(
         ...,
+        alias="keyDates",
         description="Key dates for the opportunity, such as when the application opens and closes",
     )
     source: Optional[HttpUrl] = Field(
@@ -33,5 +34,6 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
     )
     custom_fields: Optional[dict[str, CustomField]] = Field(
         default=None,
+        alias="customFields",
         description="Additional custom fields specific to this opportunity",
     )
