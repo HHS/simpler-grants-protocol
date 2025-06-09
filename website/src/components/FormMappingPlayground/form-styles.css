@@ -81,6 +81,7 @@
 /* Groups */
 .form-group {
   padding: 1rem;
+  padding-top: 0.5rem;
   border: 1px solid var(--sl-color-gray-5);
   border-radius: 6px;
   margin-bottom: 1rem;
@@ -92,7 +93,6 @@
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--sl-color-white);
-  margin-bottom: 1rem;
 }
 
 /* Rounded utility class */
