@@ -5,21 +5,21 @@ import { styles } from "./styles";
 import { SchemaSelector } from "./SchemaSelector";
 import { FormSection } from "./FormSection";
 import { TransformButton } from "./TransformButton";
-import { TransformationSteps } from "./TransformationSteps";
-import { mapJson } from "./utils";
+import { TransformationSummary } from "./TransformationSummary";
+import { mapJson, type TransformOutput } from "./utils";
 
 export default function FormMappingPlayground() {
   const getSchemaById = useCallback(
     (id: string): SchemaOption | undefined => schemas.find((s) => s.id === id),
-    []
+    [],
   );
 
   const [inputId, setInputId] = useState<string>(schemas[0].id);
   const [targetId, setTargetId] = useState<string>(schemas[1].id);
   const [formData, setFormData] = useState<FormData>(
-    getSchemaById(schemas[0].id)!.defaultData as FormData
+    getSchemaById(schemas[0].id)!.defaultData as FormData,
   );
-  const [outputJson, setOutputJson] = useState<string>("");
+  const [output, setOutput] = useState<TransformOutput | null>(null);
   const [targetFormData, setTargetFormData] = useState<FormData>({});
 
   const { formSchema, formUI } = useMemo(() => {
@@ -38,7 +38,7 @@ export default function FormMappingPlayground() {
   const handleTransform = (e: React.FormEvent) => {
     e.preventDefault();
     const result = mapJson(formData, inputId, targetId);
-    setOutputJson(JSON.stringify(result, null, 2));
+    setOutput(result);
     setTargetFormData(result.targetData as FormData);
   };
 
@@ -80,7 +80,11 @@ export default function FormMappingPlayground() {
       </div>
 
       <TransformButton onClick={handleTransform} />
-      <TransformationSteps formData={formData} outputJson={outputJson} />
+      <TransformationSummary
+        sourceData={formData}
+        commonData={output?.commonData ?? {}}
+        targetData={output?.targetData ?? {}}
+      />
     </div>
   );
 }
