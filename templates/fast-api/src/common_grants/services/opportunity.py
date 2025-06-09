@@ -4,6 +4,8 @@ from datetime import date
 from typing import Optional
 from uuid import UUID
 
+from fastapi import status
+
 from common_grants_sdk.schemas.models import OpportunityBase
 from common_grants_sdk.schemas.models.opp_status import OppStatusOptions
 
@@ -55,6 +57,7 @@ class OpportunityService:
             page_size=page_size,
         )
         return OpportunitiesListResponse(
+            status=status.HTTP_200_OK,
             message="Opportunities fetched successfully",
             items=pages.items,
             paginationInfo=pages.pagination_info,
@@ -97,6 +100,7 @@ class OpportunityService:
             pagination.page_size,
         )
         return OpportunitiesSearchResponse(
+            status=status.HTTP_200_OK,
             message="Opportunities fetched successfully",
             items=pages.items,
             paginationInfo=pages.pagination_info,
