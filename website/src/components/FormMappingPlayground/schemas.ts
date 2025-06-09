@@ -90,7 +90,7 @@ export const schemas: SchemaOption[] = [
           lastName: { field: "pointOfContact.lastName" },
         },
         projectTitle: { field: "project.title" },
-        requestedAmount: { field: "project.requestedAmount" },
+        requestedAmount: { field: "project.amountRequested" },
         startDate: { field: "project.startDate" },
       },
       mappingToCommon: {
@@ -113,7 +113,7 @@ export const schemas: SchemaOption[] = [
       $schema: "http://json-schema.org/draft-07/schema#",
       type: "object",
       properties: {
-        projectName: { type: "string", title: "Research Project Name" },
+        project_name: { type: "string", title: "Research Project Name" },
         principal_investigator: {
           type: "object",
           properties: {
@@ -127,12 +127,12 @@ export const schemas: SchemaOption[] = [
         budget: { type: "number", title: "Total Budget (USD)" },
         kickoff: { type: "string", format: "date", title: "Kick-off Date" },
       },
-      required: ["projectName", "principal_investigator"],
+      required: ["project_name", "principal_investigator"],
     },
     formUI: {
       type: "VerticalLayout",
       elements: [
-        { type: "Control", scope: "#/properties/projectName" },
+        { type: "Control", scope: "#/properties/project_name" },
         {
           type: "Group",
           label: "Principal Investigator",
@@ -158,7 +158,7 @@ export const schemas: SchemaOption[] = [
       ],
     } as unknown as VerticalLayout,
     defaultData: {
-      projectName: "Project B",
+      project_name: "Project B",
       principal_investigator: {
         first_name: "Bob",
         middle_name: "B.",
@@ -169,7 +169,7 @@ export const schemas: SchemaOption[] = [
     },
     mappings: {
       mappingFromCommon: {
-        projectName: { field: "project.title" },
+        project_name: { field: "project.title" },
         principal_investigator: {
           first_name: { field: "pointOfContact.firstName" },
           middle_name: { field: "pointOfContact.middleName" },
@@ -185,7 +185,7 @@ export const schemas: SchemaOption[] = [
           lastName: { field: "principal_investigator.last_name" },
         },
         project: {
-          title: { field: "projectName" },
+          title: { field: "project_name" },
           amountRequested: { field: "budget" },
           startDate: { field: "kickoff" },
         },
@@ -241,6 +241,117 @@ export const schemas: SchemaOption[] = [
           title: { field: "projectTitle" },
           amountRequested: { field: "fundingNeeded" },
           startDate: { field: "startPeriod" },
+        },
+      },
+    },
+  },
+  {
+    id: "formD",
+    label: "Form D - Education Grant",
+    formSchema: {
+      $schema: "http://json-schema.org/draft-07/schema#",
+      type: "object",
+      properties: {
+        projectDetails: {
+          type: "object",
+          properties: {
+            title: { type: "string", title: "Project title" },
+            fundingNeeded: { type: "number", title: "Funding needed (USD)" },
+            startDate: {
+              type: "string",
+              format: "date",
+              title: "Anticipated start date",
+            },
+          },
+          required: ["Title", "StartDate"],
+        },
+        contact: {
+          type: "object",
+          properties: {
+            givenName: { type: "string", title: "Given name" },
+            middleName: { type: "string", title: "Middle name" },
+            familyName: { type: "string", title: "Family name" },
+          },
+          required: ["givenName", "familyName"],
+        },
+      },
+      required: ["projectDetails", "contact"],
+    },
+    formUI: {
+      type: "VerticalLayout",
+      elements: [
+        {
+          type: "Group",
+          label: "Project Details",
+          elements: [
+            {
+              type: "Control",
+              scope: "#/properties/projectDetails/properties/title",
+            },
+            {
+              type: "Control",
+              scope: "#/properties/projectDetails/properties/fundingNeeded",
+            },
+            {
+              type: "Control",
+              scope: "#/properties/projectDetails/properties/startDate",
+            },
+          ],
+        },
+        {
+          type: "Group",
+          label: "Application contact",
+          elements: [
+            {
+              type: "Control",
+              scope: "#/properties/contact/properties/givenName",
+            },
+            {
+              type: "Control",
+              scope: "#/properties/contact/properties/middleName",
+            },
+            {
+              type: "Control",
+              scope: "#/properties/contact/properties/familyName",
+            },
+          ],
+        },
+      ],
+    } as unknown as VerticalLayout,
+    defaultData: {
+      projectDetails: {
+        title: "Project D",
+        fundingNeeded: 80000,
+        startDate: "2025-06-01",
+      },
+      contact: {
+        givenName: "Diana",
+        familyName: "Darby",
+      },
+    },
+    mappings: {
+      mappingFromCommon: {
+        projectDetails: {
+          title: { field: "project.title" },
+          fundingNeeded: { field: "project.amountRequested" },
+          startDate: { field: "project.startDate" },
+        },
+        contact: {
+          givenName: { field: "pointOfContact.firstName" },
+          middleName: { field: "pointOfContact.middleName" },
+          familyName: { field: "pointOfContact.lastName" },
+        },
+      },
+      mappingToCommon: {
+        project: {
+          title: { field: "projectDetails.title" },
+          amountRequested: { field: "projectDetails.fundingNeeded" },
+          startDate: { field: "projectDetails.startDate" },
+        },
+        pointOfContact: {
+          firstName: { field: "contact.givenName" },
+          middleName: { field: "contact.middleName" },
+          lastName: { field: "contact.familyName" },
         },
       },
     },
