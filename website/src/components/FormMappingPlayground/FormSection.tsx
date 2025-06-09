@@ -9,6 +9,7 @@ import {
 import { styles } from "./styles";
 import "./form-styles.css";
 import type { FormData } from "./types";
+import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
 
 const styleContextValue = {
   styles: [
@@ -35,8 +36,8 @@ const styleContextValue = {
 
 interface FormSectionProps {
   title: string;
-  schema: any;
-  uischema: any;
+  schema: JsonSchema;
+  uischema: VerticalLayout;
   data: FormData;
   onChange?: (data: FormData) => void;
   readonly?: boolean;

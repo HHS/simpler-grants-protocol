@@ -18,20 +18,42 @@ interface SwitchSpec {
 
 /**
  * Gets a value from an object using dot notation.
+ * @param data - The object to extract the value from
+ * @param path - A dot-separated string representing the path to the value
+ * @param defaultValue - The default value to return if the path doesn't exist
+ * @returns The value at the specified path, or the default value if the path doesn't exist
+ * @example
+ * ```typescript
+ * const data = {
+ *   "person": {
+ *     "name": "John Doe"
+ *   }
+ * };
+ *
+ * const path = "person.name";
+ * const defaultValue = "Unknown";
+ *
+ * const value = getFromPath(data, path, defaultValue);
+ * // value === "John Doe"
+ * ```
  */
 function getFromPath(
   data: Record<string, JsonValue>,
   path: string,
   defaultValue: JsonValue = null,
 ): JsonValue {
-  try {
-    return (
-      path.split(".").reduce((obj: any, key) => obj?.[key], data) ??
-      defaultValue
-    );
-  } catch {
-    return defaultValue;
+  const parts = path.split(".");
+  let current: JsonValue = data;
+
+  for (const part of parts) {
+    if (current !== null && typeof current === "object") {
+      current = (current as Record<string, JsonValue>)[part];
+    } else {
+      return defaultValue;
+    }
   }
+
+  return current;
 }
 
 /**

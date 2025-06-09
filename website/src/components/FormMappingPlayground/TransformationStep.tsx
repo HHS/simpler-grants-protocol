@@ -1,10 +1,11 @@
 import React from "react";
 import { styles } from "./styles";
+import type { FormData } from "./types";
 
 interface TransformationStepProps {
   title: string;
   description?: string;
-  output: any;
+  output: FormData;
 }
 
 export const TransformationStep: React.FC<TransformationStepProps> = ({

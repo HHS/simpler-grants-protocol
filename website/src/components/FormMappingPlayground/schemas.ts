@@ -5,7 +5,7 @@ export interface SchemaOption {
   label: string;
   formSchema: JsonSchema;
   formUI: VerticalLayout;
-  defaultData: any;
+  defaultData: unknown;
   mappings: MappingSet;
 }
 
