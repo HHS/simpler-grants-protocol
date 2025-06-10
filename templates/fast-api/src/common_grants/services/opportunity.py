@@ -4,10 +4,9 @@ from datetime import date
 from typing import Optional
 from uuid import UUID
 
-from fastapi import status
-
 from common_grants_sdk.schemas.models import OpportunityBase
 from common_grants_sdk.schemas.models.opp_status import OppStatusOptions
+from fastapi import status
 
 from common_grants.schemas import (
     OppFilters,

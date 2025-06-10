@@ -1,6 +1,5 @@
 """Routes for the opportunities API."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -81,8 +80,8 @@ async def list_opportunities(
                             },
                             "errors": {"type": "array", "items": {}},
                         },
-                    }
-                }
+                    },
+                },
             },
         },
     },

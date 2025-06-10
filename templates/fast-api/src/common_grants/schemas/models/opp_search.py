@@ -1,14 +1,12 @@
 """Schemas for the CommonGrants API."""
 
-from typing import Optional
-
+from common_grants_sdk.schemas.fields import Money
 from pydantic import BaseModel, Field
 
 from common_grants.schemas.filters.base import DefaultFilter
 from common_grants.schemas.filters.date_filters import DateRange, DateRangeFilter
 from common_grants.schemas.filters.money_filters import MoneyRange, MoneyRangeFilter
 from common_grants.schemas.filters.string_filters import StringArrayFilter
-from common_grants_sdk.schemas.fields import Money
 
 
 class OppDefaultFilters(BaseModel):

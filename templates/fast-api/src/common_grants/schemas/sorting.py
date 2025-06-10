@@ -45,5 +45,6 @@ class OppSorting(BaseModel):
     def validate_custom_sort_by(cls, v: Optional[str], values: dict) -> Optional[str]:
         """Validate that customSortBy is provided when sortBy is 'custom'."""
         if values.get("sort_by") == OppSortBy.CUSTOM and not v:
-            raise ValueError("customSortBy is required when sortBy is 'custom'")
+            e = "customSortBy is required when sortBy is 'custom'"
+            raise ValueError(e)
         return v

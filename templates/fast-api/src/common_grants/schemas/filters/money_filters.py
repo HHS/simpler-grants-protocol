@@ -27,7 +27,8 @@ class MoneyRange(BaseModel):
     def validate_money(cls, v: Optional[dict | Money]) -> Money:
         """Convert dict to Money objects if needed."""
         if v is None:
-            raise ValueError("min and max are required")
+            e = "min and max are required"
+            raise ValueError(e)
         if isinstance(v, Money):
             return v
         if isinstance(v, dict):
@@ -47,9 +48,8 @@ class MoneyRangeFilter(BaseModel):
         """Validate that min and max are provided when using the between operator."""
         if info.data.get("operator") == RangeOperator.BETWEEN:
             if v.min is None or v.max is None:
-                raise ValueError(
-                    "min and max are required when using the between operator"
-                )
+                e = "min and max are required when using the between operator"
+                raise ValueError(e)
         return v
 
 
