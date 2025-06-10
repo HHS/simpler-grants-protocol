@@ -1,21 +1,4 @@
 export const styles = {
-  container: {
-    maxWidth: 1200,
-    margin: "2rem auto",
-    padding: "2rem",
-    borderRadius: "1rem",
-    background: "var(--sl-color-black)",
-    border: "1px solid var(--sl-color-gray-5)",
-    fontFamily: "system-ui, sans-serif",
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "1.5rem",
-    color: "var(--sl-color-white)",
-  },
-  formContainer: {
-    display: "flex",
-    gap: "2rem",
-  },
   formGroup: {
     flex: 1,
     display: "flex",

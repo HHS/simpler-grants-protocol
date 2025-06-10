@@ -59,8 +59,8 @@ export default function FormMappingPlayground() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.formContainer}>
+    <div className="playground-container">
+      <div className="form-container">
         <div style={styles.formGroup}>
           <SchemaSelector
             label="Source form"

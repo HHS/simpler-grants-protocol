@@ -99,3 +99,31 @@
 .rounded {
   border-radius: 6px;
 }
+
+.form-container {
+  display: flex;
+  gap: 2rem;
+}
+
+.playground-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 1rem;
+  background: var(--sl-color-black);
+  border: 1px solid var(--sl-color-gray-5);
+  font-family: system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: var(--sl-color-white);
+}
+
+@media (max-width: 768px) {
+  .form-container {
+    flex-direction: column !important;
+  }
+  .playground-container {
+    padding: 1rem;
+  }
+}
