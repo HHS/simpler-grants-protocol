@@ -47,7 +47,9 @@ class MoneyRangeFilter(BaseModel):
         """Validate that min and max are provided when using the between operator."""
         if info.data.get("operator") == RangeOperator.BETWEEN:
             if v.min is None or v.max is None:
-                raise ValueError("min and max are required when using the between operator")
+                raise ValueError(
+                    "min and max are required when using the between operator"
+                )
         return v
 
 

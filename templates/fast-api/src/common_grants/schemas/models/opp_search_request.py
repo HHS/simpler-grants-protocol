@@ -12,4 +12,4 @@ class OpportunitySearchRequest(BaseModel):
 
     filters: OppFilters = OppFilters()
     sorting: OppSorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
-    pagination: PaginationBodyParams = PaginationBodyParams() 
+    pagination: PaginationBodyParams = PaginationBodyParams()

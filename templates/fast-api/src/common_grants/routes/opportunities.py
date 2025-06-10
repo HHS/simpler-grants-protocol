@@ -70,13 +70,20 @@ async def list_opportunities(
                         "type": "object",
                         "required": ["status", "message", "errors"],
                         "properties": {
-                            "status": {"type": "integer", "format": "int32", "example": 404},
-                            "message": {"type": "string", "example": "Opportunity not found"},
-                            "errors": {"type": "array", "items": {}}
-                        }
+                            "status": {
+                                "type": "integer",
+                                "format": "int32",
+                                "example": 404,
+                            },
+                            "message": {
+                                "type": "string",
+                                "example": "Opportunity not found",
+                            },
+                            "errors": {"type": "array", "items": {}},
+                        },
                     }
                 }
-            }
+            },
         },
     },
 )
