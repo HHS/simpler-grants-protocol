@@ -13,6 +13,11 @@ from common_grants.schemas.sorting import OppSorting
 class DefaultResponse(BaseModel):
     """Response for a default operation."""
 
+    status: int = Field(
+        ...,
+        description="The HTTP status code",
+        examples=[200, 201, 204],
+    )
     message: str = Field(
         ...,
         description="The message",

@@ -1,6 +1,5 @@
 """Routes for the opportunities API."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -14,6 +13,7 @@ from common_grants.schemas import (
     OppSorting,
     PaginationBodyParams,
 )
+from common_grants.schemas.models.opp_search_request import OpportunitySearchRequest
 from common_grants.services.opportunity import OpportunityService
 
 opportunity_router = APIRouter(
@@ -53,7 +53,37 @@ async def list_opportunities(
     summary="View opportunity",
     description="View additional details about an opportunity",
     responses={
-        status.HTTP_404_NOT_FOUND: {"description": "Opportunity not found"},
+        status.HTTP_200_OK: {
+            "description": "The opportunity details",
+            "content": {
+                "application/json": {
+                    "schema": OpportunityResponse.model_json_schema(),
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Opportunity not found",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["status", "message", "errors"],
+                        "properties": {
+                            "status": {
+                                "type": "integer",
+                                "format": "int32",
+                                "example": 404,
+                            },
+                            "message": {
+                                "type": "string",
+                                "example": "Opportunity not found",
+                            },
+                            "errors": {"type": "array", "items": {}},
+                        },
+                    },
+                },
+            },
+        },
     },
 )
 async def get_opportunity(
@@ -70,6 +100,7 @@ async def get_opportunity(
         )
 
     return OpportunityResponse(
+        status=status.HTTP_200_OK,
         message="Success",
         data=opportunity,
     )
@@ -81,24 +112,22 @@ async def get_opportunity(
     description="Search for opportunities based on the provided filters",
 )
 async def search_opportunities(
-    filters: Optional[OppFilters] = None,
-    sorting: Optional[OppSorting] = None,
-    pagination: Optional[PaginationBodyParams] = None,
+    request: OpportunitySearchRequest,
 ) -> OpportunitiesSearchResponse:
     """Search for opportunities based on the provided filters."""
     opportunity_service = OpportunityService()
 
-    if pagination is None:
-        pagination = PaginationBodyParams()
+    if request.pagination is None:
+        request.pagination = PaginationBodyParams()
 
-    if filters is None:
-        filters = OppFilters()
+    if request.filters is None:
+        request.filters = OppFilters()
 
-    if sorting is None:
-        sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
+    if request.sorting is None:
+        request.sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
 
     return await opportunity_service.search_opportunities(
-        filters=filters,
-        sorting=sorting,
-        pagination=pagination,
+        filters=request.filters,
+        sorting=request.sorting,
+        pagination=request.pagination,
     )

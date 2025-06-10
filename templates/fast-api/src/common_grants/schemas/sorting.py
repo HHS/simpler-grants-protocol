@@ -1,8 +1,9 @@
 """Sorting models for the CommonGrants API."""
 
 from enum import StrEnum
+from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class OppSortBy(StrEnum):
@@ -33,3 +34,21 @@ class OppSorting(BaseModel):
         description="The sort order (asc or desc)",
         alias="sortOrder",
     )
+    custom_sort_by: Optional[str] = Field(
+        default=None,
+        description="The custom field to sort by when sortBy is 'custom'",
+        alias="customSortBy",
+    )
+
+    @field_validator("custom_sort_by")
+    @classmethod
+    def validate_custom_sort_by(
+        cls,
+        v: Optional[str],
+        info: ValidationInfo,
+    ) -> Optional[str]:
+        """Validate that customSortBy is provided when sortBy is 'custom'."""
+        if info.data.get("sort_by") == OppSortBy.CUSTOM and not v:
+            e = "customSortBy is required when sortBy is 'custom'"
+            raise ValueError(e)
+        return v

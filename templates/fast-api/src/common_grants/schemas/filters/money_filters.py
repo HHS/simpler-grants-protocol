@@ -3,7 +3,7 @@
 from typing import Optional
 
 from common_grants_sdk.schemas.fields import Money
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from common_grants.schemas.filters.base import ComparisonOperator, RangeOperator
 
@@ -19,15 +19,16 @@ class InvalidMoneyValueError(ValueError):
 class MoneyRange(BaseModel):
     """Range filter for money values."""
 
-    min: Optional[Money] = Field(None, description="The minimum amount in the range")
-    max: Optional[Money] = Field(None, description="The maximum amount in the range")
+    min: Money = Field(..., description="The minimum amount in the range")
+    max: Money = Field(..., description="The maximum amount in the range")
 
     @field_validator("min", "max", mode="before")
     @classmethod
-    def validate_money(cls, v: Optional[dict | Money]) -> Optional[Money]:
+    def validate_money(cls, v: Optional[dict | Money]) -> Money:
         """Convert dict to Money objects if needed."""
         if v is None:
-            return None
+            e = "min and max are required"
+            raise ValueError(e)
         if isinstance(v, Money):
             return v
         if isinstance(v, dict):
@@ -40,6 +41,17 @@ class MoneyRangeFilter(BaseModel):
 
     operator: RangeOperator = Field(..., description="The range operator to use")
     value: MoneyRange = Field(..., description="The money range to compare against")
+
+    @field_validator("value")
+    @classmethod
+    def validate_range(cls, v: MoneyRange, info: ValidationInfo) -> MoneyRange:
+        """Validate that min and max are provided when using the between operator."""
+        if info.data.get("operator") == RangeOperator.BETWEEN and (
+            v.min is None or v.max is None
+        ):
+            e = "min and max are required when using the between operator"
+            raise ValueError(e)
+        return v
 
 
 class MoneyComparisonFilter(BaseModel):

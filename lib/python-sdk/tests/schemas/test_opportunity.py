@@ -14,34 +14,36 @@ from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
 @pytest.fixture
 def sample_opportunity():
     """Create a sample opportunity for testing."""
-    return OpportunityBase(
-        id=uuid4(),
-        title="Research Grant 2024",
-        description="Funding for innovative research projects",
-        status=OppStatus(
-            value=OppStatusOptions.OPEN,
-            description="This opportunity is currently accepting applications",
-        ),
-        created_at=datetime.now(UTC),
-        last_modified_at=datetime.now(UTC),
-        funding=OppFunding(
-            total_amount_available=Money(amount="100000.00", currency="USD"),
-            min_award_amount=Money(amount="10000.00", currency="USD"),
-            max_award_amount=Money(amount="50000.00", currency="USD"),
-            estimated_award_count=5,
-        ),
-        key_dates=OppTimeline(
-            app_opens=Event(
-                name="Application Opens",
-                date=date(2024, 1, 1),
-                description="Applications open",
-            ),
-            app_deadline=Event(
-                name="Application Deadline",
-                date=date(2024, 3, 31),
-                description="Applications close",
-            ),
-        ),
+    return OpportunityBase.model_validate(
+        {
+            "id": uuid4(),
+            "title": "Research Grant 2024",
+            "description": "Funding for innovative research projects",
+            "status": {
+                "value": OppStatusOptions.OPEN,
+                "description": "This opportunity is currently accepting applications",
+            },
+            "createdAt": datetime.now(UTC),
+            "lastModifiedAt": datetime.now(UTC),
+            "funding": {
+                "totalAmountAvailable": {"amount": "100000.00", "currency": "USD"},
+                "minAwardAmount": {"amount": "10000.00", "currency": "USD"},
+                "maxAwardAmount": {"amount": "50000.00", "currency": "USD"},
+                "estimatedAwardCount": 5,
+            },
+            "keyDates": {
+                "appOpens": {
+                    "name": "Application Opens",
+                    "date": date(2024, 1, 1),
+                    "description": "Applications open",
+                },
+                "appDeadline": {
+                    "name": "Application Deadline",
+                    "date": date(2024, 3, 31),
+                    "description": "Applications close",
+                },
+            },
+        }
     )
 
 
