@@ -35,49 +35,35 @@ def convert_to_openapi_v3(schema: dict[str, Any]) -> dict[str, Any]:
     schema["openapi"] = OPENAPI_V3
 
     # Move schemas from components to definitions for OpenAPI 3.0.0 compatibility
-    if "components" in schema and "schemas" in schema["components"]:
-        schema["definitions"] = schema["components"]["schemas"]
-        del schema["components"]["schemas"]
-
-    # Remove any remaining components section if empty
-    if "components" in schema and not schema["components"]:
-        del schema["components"]
-
-    return rewrite_schema_refs(schema)
-
-
-def rewrite_schema_refs(
-    obj: Union[dict[str, Any], list[Any], Any],  # noqa: ANN401
-) -> Union[dict[str, Any], list[Any], Any]:  # noqa: ANN401
-    """
-    Convert all schema references from components to definitions.
-
-    Args:
-        obj: The object to be rewritten
-
-    Returns:
-        obj: The rewritten object
-
-    """
-    if isinstance(obj, dict):
-        new_obj = {}
-        for key, value in obj.items():
-            if key == "$defs":
-                new_obj["definitions"] = value
+    if "components" in schema:
+        if "schemas" in schema["components"]:
+            schema["definitions"] = schema["components"]["schemas"]
+            # Keep the components section but remove schemas
+            if len(schema["components"]) == 1:  # Only had schemas
+                del schema["components"]
             else:
-                new_obj[key] = value
-                if key == "$ref" and isinstance(value, str):
-                    if "#/components/schemas/" in value:
-                        new_obj[key] = value.replace(
-                            "#/components/schemas/",
-                            "#/definitions/",
-                        )
-                    elif "#/$defs/" in value:
-                        new_obj[key] = value.replace("#/$defs/", "#/definitions/")
-        return {k: rewrite_schema_refs(v) for k, v in new_obj.items()}
-    if isinstance(obj, list):
-        return [rewrite_schema_refs(item) for item in obj]
-    return obj
+                del schema["components"]["schemas"]
+
+    # Convert all schema references from components to definitions
+    def convert_refs(obj: Any) -> Any:
+        if isinstance(obj, dict):
+            new_obj = {}
+            for k, v in obj.items():
+                if k == "$ref" and isinstance(v, str):
+                    if "#/components/schemas/" in v:
+                        new_obj[k] = v.replace("#/components/schemas/", "#/definitions/")
+                    elif "#/$defs/" in v:
+                        new_obj[k] = v.replace("#/$defs/", "#/definitions/")
+                    else:
+                        new_obj[k] = v
+                else:
+                    new_obj[k] = convert_refs(v)
+            return new_obj
+        if isinstance(obj, list):
+            return [convert_refs(item) for item in obj]
+        return obj
+
+    return convert_refs(schema)
 
 
 def get_openapi_schema(version: str = DEFAULT_VERSION) -> dict[str, Any]:
@@ -114,7 +100,7 @@ def get_openapi_schema(version: str = DEFAULT_VERSION) -> dict[str, Any]:
         openapi_schema = convert_to_openapi_v3(openapi_schema)
 
     app.openapi_schema = openapi_schema
-    return app.openapi_schema
+    return openapi_schema
 
 
 app = FastAPI(
