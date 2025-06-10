@@ -89,14 +89,14 @@ def test_opp_default_filters():
     """Test the OppDefaultFilters model."""
     filters = OppDefaultFilters(
         status=StringArrayFilter(operator=ArrayOperator.IN, value=["open", "closed"]),
-        close_date_range=DateRangeFilter(
+        closeDateRange=DateRangeFilter(
             operator=RangeOperator.BETWEEN,
             value=DateRange(
                 min=date(2024, 1, 1),
                 max=date(2024, 12, 31),
             ),
         ),
-        total_funding_available_range=MoneyRangeFilter(
+        totalFundingAvailableRange=MoneyRangeFilter(
             operator=RangeOperator.BETWEEN,
             value=MoneyRange(
                 min=Money(amount="1000.00", currency="USD"),
