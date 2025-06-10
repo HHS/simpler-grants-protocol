@@ -30,7 +30,7 @@ check-lint:
 	$(RUNTIME_PREFIX) ruff check $(PYTHON_DIRS) --fix --exit-non-zero-on-fix
 
 check-spec:
-	$(RUNTIME_PREFIX) python -c "from common_grants.api import app; import yaml; print(yaml.dump(app.openapi(), sort_keys=False))" > openapi.yaml && cg check spec openapi.yaml
+	$(RUNTIME_PREFIX) python src/common_grants/scripts/generate_openapi.py --version 3.0.0 > openapi-v3.yaml && cg check spec openapi-v3.yaml
 
 check-types:
 	$(RUNTIME_PREFIX) pyright $(PYTHON_DIRS)
@@ -38,5 +38,8 @@ check-types:
 checks: check-format check-lint check-types
 
 gen-openapi:
-	$(RUNTIME_PREFIX) python -c "from common_grants.api import app; import yaml; print(yaml.dump(app.openapi(), sort_keys=False))" > openapi.yaml
+	$(RUNTIME_PREFIX) python src/common_grants/scripts/generate_openapi.py > openapi.yaml
+
+gen-openapi-v3:
+	$(RUNTIME_PREFIX) python src/common_grants/scripts/generate_openapi.py --version 3.0.0 > openapi-v3.yaml
 
