@@ -32,15 +32,25 @@ def convert_to_openapi_v3(schema):
     # Convert all schema references from components to definitions
     def convert_refs(obj):
         if isinstance(obj, dict):
-            if "$ref" in obj and isinstance(obj["$ref"], str):
-                if "#/components/schemas/" in obj["$ref"]:
-                    obj["$ref"] = obj["$ref"].replace("#/components/schemas/", "#/definitions/")
-            for value in obj.values():
-                convert_refs(value)
+            new_obj = {}
+            for key, value in obj.items():
+                if key == "$defs":
+                    new_obj["definitions"] = value
+                else:
+                    new_obj[key] = value
+                    if key == "$ref" and isinstance(value, str):
+                        if "#/components/schemas/" in value:
+                            new_obj[key] = value.replace("#/components/schemas/", "#/definitions/")
+                        elif "#/$defs/" in value:
+                            new_obj[key] = value.replace("#/$defs/", "#/definitions/")
+            return {k: convert_refs(v) for k, v in new_obj.items()}
         elif isinstance(obj, list):
-            for item in obj:
-                convert_refs(item)
+            return [convert_refs(item) for item in obj]
         return obj
+
+    # Remove any remaining components section if empty
+    if "components" in schema and not schema["components"]:
+        del schema["components"]
 
     return convert_refs(schema)
 
