@@ -37,6 +37,17 @@ export const schemas: SchemaOption[] = [
           required: ["firstName", "lastName"],
         },
         projectTitle: { type: "string", title: "Project Title" },
+        applicantType: {
+          type: "string",
+          title: "Applicant Type",
+          enum: [
+            "Nonprofit",
+            "For-profit",
+            "Government",
+            "Individual",
+            "Other",
+          ],
+        },
         requestedAmount: { type: "number", title: "Requested Amount (USD)" },
         startDate: {
           type: "string",
@@ -69,6 +80,10 @@ export const schemas: SchemaOption[] = [
         },
         {
           type: "Control",
+          scope: "#/properties/applicantType",
+        },
+        {
+          type: "Control",
           scope: "#/properties/requestedAmount",
         },
         {
@@ -80,6 +95,7 @@ export const schemas: SchemaOption[] = [
     defaultData: {
       applicantName: { firstName: "Alice", lastName: "Alvarez" },
       projectTitle: "Project A",
+      applicantType: "Nonprofit",
       requestedAmount: 1000,
       startDate: "2025-07-01",
     },
@@ -90,6 +106,25 @@ export const schemas: SchemaOption[] = [
           lastName: { field: "pointOfContact.lastName" },
         },
         projectTitle: { field: "project.title" },
+        applicantType: {
+          switch: {
+            field: "project.applicantType",
+            case: {
+              "nonprofit-general": "Nonprofit",
+              "nonprofit-religious": "Nonprofit",
+              "nonprofit-educational": "Nonprofit",
+              "business-small": "For-profit",
+              "business-general": "For-profit",
+              "government-tribal": "Government",
+              "government-state": "Government",
+              "government-local": "Government",
+              "government-general": "Government",
+              individual: "Individual",
+              custom: "Other",
+            },
+            default: "custom",
+          },
+        },
         requestedAmount: { field: "project.amountRequested" },
         startDate: { field: "project.startDate" },
       },
@@ -100,6 +135,19 @@ export const schemas: SchemaOption[] = [
         },
         project: {
           title: { field: "projectTitle" },
+          applicantType: {
+            switch: {
+              field: "applicantType",
+              case: {
+                Nonprofit: "nonprofit-general",
+                "For-profit": "business-general",
+                Government: "government-general",
+                Individual: "individual",
+                Other: "custom",
+              },
+              default: "custom",
+            },
+          },
           amountRequested: { field: "requestedAmount" },
           startDate: { field: "startDate" },
         },
@@ -114,6 +162,18 @@ export const schemas: SchemaOption[] = [
       type: "object",
       properties: {
         project_name: { type: "string", title: "Research Project Name" },
+        institution_type: {
+          type: "string",
+          title: "Institution Type",
+          enum: [
+            "University",
+            "Nonprofit",
+            "Government",
+            "Corporation",
+            "Independent Researcher",
+            "Not Listed",
+          ],
+        },
         principal_investigator: {
           type: "object",
           properties: {
@@ -133,6 +193,7 @@ export const schemas: SchemaOption[] = [
       type: "VerticalLayout",
       elements: [
         { type: "Control", scope: "#/properties/project_name" },
+        { type: "Control", scope: "#/properties/institution_type" },
         {
           type: "Group",
           label: "Principal Investigator",
@@ -159,6 +220,7 @@ export const schemas: SchemaOption[] = [
     } as unknown as VerticalLayout,
     defaultData: {
       project_name: "Project B",
+      institution_type: "University",
       principal_investigator: {
         first_name: "Bob",
         middle_name: "B.",
@@ -170,6 +232,24 @@ export const schemas: SchemaOption[] = [
     mappings: {
       mappingFromCommon: {
         project_name: { field: "project.title" },
+        institution_type: {
+          switch: {
+            field: "project.applicantType",
+            case: {
+              "nonprofit-general": "Nonprofit",
+              "nonprofit-religious": "Nonprofit",
+              "nonprofit-educational": "University",
+              "business-small": "Corporation",
+              "business-general": "Corporation",
+              "government-tribal": "Government",
+              "government-state": "Government",
+              "government-local": "Government",
+              "government-general": "Government",
+              individual: "Independent Researcher",
+              custom: "Not Listed",
+            },
+          },
+        },
         principal_investigator: {
           first_name: { field: "pointOfContact.firstName" },
           middle_name: { field: "pointOfContact.middleName" },
@@ -186,6 +266,20 @@ export const schemas: SchemaOption[] = [
         },
         project: {
           title: { field: "project_name" },
+          applicantType: {
+            switch: {
+              field: "institution_type",
+              case: {
+                University: "nonprofit-educational",
+                Nonprofit: "nonprofit-general",
+                Corporation: "business-general",
+                Government: "government-general",
+                "Independent Researcher": "individual",
+                "Not Listed": "custom",
+              },
+              default: "custom",
+            },
+          },
           amountRequested: { field: "budget" },
           startDate: { field: "kickoff" },
         },
@@ -200,6 +294,19 @@ export const schemas: SchemaOption[] = [
       type: "object",
       properties: {
         projectTitle: { type: "string", title: "Project Title" },
+        orgType: {
+          type: "string",
+          title: "Applicant Type",
+          enum: [
+            "Nonprofit",
+            "Church",
+            "Local Government",
+            "Tribal Government",
+            "Small Business",
+            "Individual",
+            "Not Listed",
+          ],
+        },
         contactFirstName: { type: "string", title: "Contact First Name" },
         contactLastName: { type: "string", title: "Contact Last Name" },
         fundingNeeded: { type: "number", title: "Funding Needed (USD)" },
@@ -211,6 +318,7 @@ export const schemas: SchemaOption[] = [
       type: "VerticalLayout",
       elements: [
         { type: "Control", scope: "#/properties/projectTitle" },
+        { type: "Control", scope: "#/properties/orgType" },
         { type: "Control", scope: "#/properties/contactFirstName" },
         { type: "Control", scope: "#/properties/contactLastName" },
         { type: "Control", scope: "#/properties/fundingNeeded" },
@@ -227,6 +335,24 @@ export const schemas: SchemaOption[] = [
     mappings: {
       mappingFromCommon: {
         projectTitle: { field: "project.title" },
+        orgType: {
+          switch: {
+            field: "project.applicantType",
+            case: {
+              "nonprofit-general": "Nonprofit",
+              "nonprofit-educational": "Church",
+              "business-small": "Small Business",
+              "business-general": "Not Listed",
+              "government-tribal": "Tribal Government",
+              "government-state": "Local Government",
+              "government-local": "Local Government",
+              "government-general": "Local Government",
+              individual: "Individual",
+              custom: "Not Listed",
+            },
+            default: "custom",
+          },
+        },
         contactFirstName: { field: "pointOfContact.firstName" },
         contactLastName: { field: "pointOfContact.lastName" },
         fundingNeeded: { field: "project.amountRequested" },
@@ -239,6 +365,21 @@ export const schemas: SchemaOption[] = [
         },
         project: {
           title: { field: "projectTitle" },
+          applicantType: {
+            switch: {
+              field: "orgType",
+              case: {
+                Church: "nonprofit-religious",
+                Nonprofit: "nonprofit-general",
+                "Small Business": "business-small",
+                "Local Government": "government-local",
+                "Tribal Government": "government-tribal",
+                Individual: "individual",
+                "Not Listed": "custom",
+              },
+              default: "custom",
+            },
+          },
           amountRequested: { field: "fundingNeeded" },
           startDate: { field: "startPeriod" },
         },
@@ -256,6 +397,18 @@ export const schemas: SchemaOption[] = [
           type: "object",
           properties: {
             title: { type: "string", title: "Project title" },
+            requestedBy: {
+              type: "string",
+              title: "Project type",
+              enum: [
+                "NGO",
+                "Corporation",
+                "College or University",
+                "Individual",
+                "Government",
+                "Other",
+              ],
+            },
             fundingNeeded: { type: "number", title: "Funding needed (USD)" },
             startDate: {
               type: "string",
@@ -287,6 +440,10 @@ export const schemas: SchemaOption[] = [
             {
               type: "Control",
               scope: "#/properties/projectDetails/properties/title",
+            },
+            {
+              type: "Control",
+              scope: "#/properties/projectDetails/properties/requestedBy",
             },
             {
               type: "Control",
@@ -333,6 +490,25 @@ export const schemas: SchemaOption[] = [
       mappingFromCommon: {
         projectDetails: {
           title: { field: "project.title" },
+          requestedBy: {
+            switch: {
+              field: "project.applicantType",
+              case: {
+                "nonprofit-general": "NGO",
+                "nonprofit-religious": "NGO",
+                "nonprofit-educational": "College or University",
+                "business-small": "Corporation",
+                "business-general": "Corporation",
+                "government-tribal": "Government",
+                "government-state": "Government",
+                "government-local": "Government",
+                "government-general": "Government",
+                individual: "Individual",
+                custom: "Other",
+              },
+              default: "custom",
+            },
+          },
           fundingNeeded: { field: "project.amountRequested" },
           startDate: { field: "project.startDate" },
         },
@@ -345,6 +521,20 @@ export const schemas: SchemaOption[] = [
       mappingToCommon: {
         project: {
           title: { field: "projectDetails.title" },
+          applicantType: {
+            switch: {
+              field: "projectDetails.requestedBy",
+              case: {
+                NGO: "nonprofit-general",
+                Corporation: "business-general",
+                "College or University": "nonprofit-educational",
+                Individual: "individual",
+                Government: "government-general",
+                Other: "custom",
+              },
+              default: "custom",
+            },
+          },
           amountRequested: { field: "projectDetails.fundingNeeded" },
           startDate: { field: "projectDetails.startDate" },
         },
