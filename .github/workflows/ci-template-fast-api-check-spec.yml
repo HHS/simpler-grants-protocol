@@ -38,9 +38,5 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - name: Generate OpenAPI spec
-        run: make gen-openapi
-
-      - name: Check FastAPI template spec
-        run: cg check spec openapi.yaml
-
+      - name: Generate and validate OpenAPI spec
+        run: make check-spec
