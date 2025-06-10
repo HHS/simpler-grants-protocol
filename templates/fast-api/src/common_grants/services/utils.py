@@ -24,10 +24,10 @@ def paginate(items: list, page: int, page_size: int) -> PaginatedItems[Opportuni
     return PaginatedItems(
         items=items[start:end],
         pagination_info=PaginationInfo(
-            totalCount=len(items),
-            totalPages=len(items) // page_size,
+            total_items=len(items),
+            total_pages=len(items) // page_size,
             page=page,
-            pageSize=page_size,
+            page_size=page_size,
         ),
     )
 
