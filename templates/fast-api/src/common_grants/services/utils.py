@@ -57,9 +57,21 @@ def mock_opportunity(  # noqa: PLR0913
         },
         "description": f"Description for {title}",
         "funding": {
-            "totalAmountAvailable": Money(amount="0.00", currency="USD") if total_available is None else Money(amount=str(total_available), currency="USD"),
-            "minAwardAmount": Money(amount="0.00", currency="USD") if min_award_amount is None else Money(amount=str(min_award_amount), currency="USD"),
-            "maxAwardAmount": Money(amount="0.00", currency="USD") if max_award_amount is None else Money(amount=str(max_award_amount), currency="USD"),
+            "totalAmountAvailable": (
+                Money(amount="0.00", currency="USD")
+                if total_available is None
+                else Money(amount=str(total_available), currency="USD")
+            ),
+            "minAwardAmount": (
+                Money(amount="0.00", currency="USD")
+                if min_award_amount is None
+                else Money(amount=str(min_award_amount), currency="USD")
+            ),
+            "maxAwardAmount": (
+                Money(amount="0.00", currency="USD")
+                if max_award_amount is None
+                else Money(amount=str(max_award_amount), currency="USD")
+            ),
             "minAwardCount": min_award_count,
             "maxAwardCount": max_award_count,
         },

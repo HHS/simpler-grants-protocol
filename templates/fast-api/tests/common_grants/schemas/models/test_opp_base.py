@@ -26,18 +26,9 @@ def test_opportunity_base_model():
         },
         "description": "Funding for innovative research projects",
         "funding": {
-            "totalAmountAvailable": {
-                "amount": "1000000.00",
-                "currency": "USD"
-            },
-            "minAwardAmount": {
-                "amount": "50000.00",
-                "currency": "USD"
-            },
-            "maxAwardAmount": {
-                "amount": "100000.00",
-                "currency": "USD"
-            },
+            "totalAmountAvailable": {"amount": "1000000.00", "currency": "USD"},
+            "minAwardAmount": {"amount": "50000.00", "currency": "USD"},
+            "maxAwardAmount": {"amount": "100000.00", "currency": "USD"},
             "minAwardCount": None,
             "maxAwardCount": None,
             "estimatedAwardCount": None,
@@ -63,7 +54,7 @@ def test_opportunity_base_model():
         "lastModifiedAt": now,
     }
     opp = OpportunityBase.model_validate(opp_data, strict=False)
-    
+
     assert isinstance(opp.id, UUID)
     assert opp.title == "Research Grant 2024"
     assert opp.status.value == OppStatusOptions.OPEN

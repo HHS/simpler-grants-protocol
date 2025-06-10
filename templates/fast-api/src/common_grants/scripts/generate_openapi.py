@@ -51,7 +51,9 @@ def convert_to_openapi_v3(schema: dict[str, Any]) -> dict[str, Any]:
             for k, v in obj.items():
                 if k == "$ref" and isinstance(v, str):
                     if "#/components/schemas/" in v:
-                        new_obj[k] = v.replace("#/components/schemas/", "#/definitions/")
+                        new_obj[k] = v.replace(
+                            "#/components/schemas/", "#/definitions/"
+                        )
                     elif "#/$defs/" in v:
                         new_obj[k] = v.replace("#/$defs/", "#/definitions/")
                     else:

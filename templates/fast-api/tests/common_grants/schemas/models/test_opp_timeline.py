@@ -31,7 +31,7 @@ def test_opp_timeline_model():
         },
     }
     timeline = OppTimeline.model_validate(timeline_data, strict=False)
-    
+
     assert timeline.app_opens is not None
     assert timeline.app_opens.date == date(2024, 1, 1)
     assert timeline.app_deadline is not None
