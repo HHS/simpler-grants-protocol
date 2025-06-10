@@ -19,15 +19,15 @@ class InvalidMoneyValueError(ValueError):
 class MoneyRange(BaseModel):
     """Range filter for money values."""
 
-    min: Optional[Money] = Field(None, description="The minimum amount in the range")
-    max: Optional[Money] = Field(None, description="The maximum amount in the range")
+    min: Money = Field(..., description="The minimum amount in the range")
+    max: Money = Field(..., description="The maximum amount in the range")
 
     @field_validator("min", "max", mode="before")
     @classmethod
-    def validate_money(cls, v: Optional[dict | Money]) -> Optional[Money]:
+    def validate_money(cls, v: Optional[dict | Money]) -> Money:
         """Convert dict to Money objects if needed."""
         if v is None:
-            return None
+            raise ValueError("min and max are required")
         if isinstance(v, Money):
             return v
         if isinstance(v, dict):
@@ -40,6 +40,15 @@ class MoneyRangeFilter(BaseModel):
 
     operator: RangeOperator = Field(..., description="The range operator to use")
     value: MoneyRange = Field(..., description="The money range to compare against")
+
+    @field_validator("value")
+    @classmethod
+    def validate_range(cls, v: MoneyRange, info) -> MoneyRange:
+        """Validate that min and max are provided when using the between operator."""
+        if info.data.get("operator") == RangeOperator.BETWEEN:
+            if v.min is None or v.max is None:
+                raise ValueError("min and max are required when using the between operator")
+        return v
 
 
 class MoneyComparisonFilter(BaseModel):

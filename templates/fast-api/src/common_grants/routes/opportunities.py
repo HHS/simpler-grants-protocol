@@ -14,6 +14,7 @@ from common_grants.schemas import (
     OppSorting,
     PaginationBodyParams,
 )
+from common_grants.schemas.models.opp_search_request import OpportunitySearchRequest
 from common_grants.services.opportunity import OpportunityService
 
 opportunity_router = APIRouter(
@@ -81,24 +82,22 @@ async def get_opportunity(
     description="Search for opportunities based on the provided filters",
 )
 async def search_opportunities(
-    filters: Optional[OppFilters] = None,
-    sorting: Optional[OppSorting] = None,
-    pagination: Optional[PaginationBodyParams] = None,
+    request: OpportunitySearchRequest,
 ) -> OpportunitiesSearchResponse:
     """Search for opportunities based on the provided filters."""
     opportunity_service = OpportunityService()
 
-    if pagination is None:
-        pagination = PaginationBodyParams()
+    if request.pagination is None:
+        request.pagination = PaginationBodyParams()
 
-    if filters is None:
-        filters = OppFilters()
+    if request.filters is None:
+        request.filters = OppFilters()
 
-    if sorting is None:
-        sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
+    if request.sorting is None:
+        request.sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
 
     return await opportunity_service.search_opportunities(
-        filters=filters,
-        sorting=sorting,
-        pagination=pagination,
+        filters=request.filters,
+        sorting=request.sorting,
+        pagination=request.pagination,
     )

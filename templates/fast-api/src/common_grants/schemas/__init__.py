@@ -41,6 +41,7 @@ __all__ = [  # noqa: RUF022
     "OppStatus",
     "OppStatusOptions",
     "OppTimeline",
+    "OpportunitySearchRequest",
 ]
 
 from common_grants_sdk.schemas.fields import (
@@ -71,6 +72,7 @@ from .filters import (
 from .models import (
     OppDefaultFilters,
     OppFilters,
+    OpportunitySearchRequest,
 )
 from .pagination import (
     PaginatedItems,

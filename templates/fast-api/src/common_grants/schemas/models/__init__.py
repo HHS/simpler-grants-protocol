@@ -8,6 +8,7 @@ __all__ = [
     "OppStatusOptions",
     "OppTimeline",
     "OpportunityBase",
+    "OpportunitySearchRequest",
 ]
 
 # Import and re-export the models from the Python SDK
@@ -18,3 +19,4 @@ from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
 
 # Import the search models from the local implementation
 from .opp_search import OppDefaultFilters, OppFilters
+from .opp_search_request import OpportunitySearchRequest
