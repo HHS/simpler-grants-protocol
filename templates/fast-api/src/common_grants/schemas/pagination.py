@@ -26,9 +26,9 @@ class PaginationBase(BaseModel):
 class PaginationInfo(PaginationBase):
     """Information about the pagination of a list."""
 
-    total_count: int = Field(
+    total_items: int = Field(
         ...,
-        alias="totalCount",
+        alias="totalItems",
         description="The total number of items",
     )
     total_pages: int = Field(
