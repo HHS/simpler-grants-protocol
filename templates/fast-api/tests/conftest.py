@@ -28,40 +28,43 @@ def test_client():
 def test_opportunity():
     """Create a test opportunity for tests."""
     now = datetime.now(timezone.utc)
-    return OpportunityBase(
-        id=uuid4(),
-        title="Test Grant",
-        status=OppStatus(
-            value=OppStatusOptions.OPEN,
-            custom_value=None,
-            description="Currently accepting applications",
-        ),
-        description="Test grant description",
-        funding=OppFunding(
-            total_amount_available=Money(amount="1000000.00", currency="USD"),
-            min_award_amount=Money(amount="50000.00", currency="USD"),
-            max_award_amount=Money(amount="100000.00", currency="USD"),
-            min_award_count=None,
-            max_award_count=None,
-            estimated_award_count=10,
-        ),
-        key_dates=OppTimeline(
-            app_opens=Event(
-                name="Opens",
-                date=date(2024, 1, 1),
-                time=None,
-                description="Application period begins",
-            ),
-            app_deadline=Event(
-                name="Closes",
-                date=date(2024, 12, 31),
-                time=None,
-                description="Final deadline for submissions",
-            ),
-            other_dates=None,
-        ),
-        source=None,
-        custom_fields=None,
-        created_at=now,
-        last_modified_at=now,
+    status = OppStatus(
+        value=OppStatusOptions.OPEN,
+        description="Currently accepting applications",
     )
+    funding = OppFunding(
+        totalAmountAvailable=Money(amount="1000000.00", currency="USD"),
+        minAwardAmount=Money(amount="50000.00", currency="USD"),
+        maxAwardAmount=Money(amount="100000.00", currency="USD"),
+        minAwardCount=None,
+        maxAwardCount=None,
+        estimatedAwardCount=10,
+    )
+    key_dates = OppTimeline(
+        appOpens=Event(
+            name="Opens",
+            date=date(2024, 1, 1),
+            time=None,
+            description="Application period begins",
+        ),
+        appDeadline=Event(
+            name="Closes",
+            date=date(2024, 12, 31),
+            time=None,
+            description="Final deadline for submissions",
+        ),
+        otherDates=None,
+    )
+    opp_dict = {
+        "id": str(uuid4()),
+        "title": "Test Grant",
+        "status": status.model_dump(by_alias=True),
+        "description": "Test grant description",
+        "funding": funding.model_dump(by_alias=True),
+        "keyDates": key_dates.model_dump(by_alias=True),
+        "source": None,
+        "customFields": None,
+        "createdAt": now,
+        "lastModifiedAt": now,
+    }
+    return OpportunityBase.model_validate(opp_dict)

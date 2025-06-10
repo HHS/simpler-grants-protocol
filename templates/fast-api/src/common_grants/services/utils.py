@@ -1,6 +1,6 @@
 """Utility functions for the common grants service."""
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 from uuid import UUID, uuid5
 
 from common_grants_sdk.schemas.fields import Event, Money
@@ -44,53 +44,38 @@ def mock_opportunity(  # noqa: PLR0913
     app_deadline: date | None = None,
 ) -> OpportunityBase:
     """Return a mock opportunity."""
-    return OpportunityBase(
-        id=uuid5(NAMESPACE, title),
-        title=title,
-        status=OppStatus(
-            value=status,
-            description=f"Status for {title}",
-        ),
-        description=f"Description for {title}",
-        funding=OppFunding(
-            total_amount_available=(
-                Money(amount=str(total_available), currency="USD")
-                if total_available
-                else None
+    now = datetime.now(timezone.utc)
+    default_open = app_opens or date(1970, 1, 1)
+    # If deadline is missing, set to one day after open
+    deadline = app_deadline or (default_open + timedelta(days=1))
+    opp_data = {
+        "id": uuid5(NAMESPACE, title),
+        "title": title,
+        "status": {
+            "value": status,
+            "description": f"Status for {title}",
+        },
+        "description": f"Description for {title}",
+        "funding": {
+            "totalAmountAvailable": Money(amount="0.00", currency="USD") if total_available is None else Money(amount=str(total_available), currency="USD"),
+            "minAwardAmount": Money(amount="0.00", currency="USD") if min_award_amount is None else Money(amount=str(min_award_amount), currency="USD"),
+            "maxAwardAmount": Money(amount="0.00", currency="USD") if max_award_amount is None else Money(amount=str(max_award_amount), currency="USD"),
+            "minAwardCount": min_award_count,
+            "maxAwardCount": max_award_count,
+        },
+        "keyDates": {
+            "appOpens": Event(
+                name="Application Opens",
+                date=default_open,
+                description="Start accepting applications",
             ),
-            min_award_amount=(
-                Money(amount=str(min_award_amount), currency="USD")
-                if min_award_amount
-                else None
+            "appDeadline": Event(
+                name="Application Deadline",
+                date=deadline,
+                description="Final deadline for submissions",
             ),
-            max_award_amount=(
-                Money(amount=str(max_award_amount), currency="USD")
-                if max_award_amount
-                else None
-            ),
-            min_award_count=min_award_count,
-            max_award_count=max_award_count,
-        ),
-        key_dates=OppTimeline(
-            app_opens=(
-                Event(
-                    name="Application Opens",
-                    date=app_opens,
-                    description="Start accepting applications",
-                )
-                if app_opens
-                else None
-            ),
-            app_deadline=(
-                Event(
-                    name="Application Deadline",
-                    date=app_deadline,
-                    description="Final deadline for submissions",
-                )
-                if app_deadline
-                else None
-            ),
-        ),
-        created_at=datetime.now(timezone.utc),
-        last_modified_at=datetime.now(timezone.utc),
-    )
+        },
+        "createdAt": now,
+        "lastModifiedAt": now,
+    }
+    return OpportunityBase.model_validate(opp_data)
