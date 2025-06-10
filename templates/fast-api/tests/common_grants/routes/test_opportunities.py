@@ -18,7 +18,7 @@ class TestListOpportunities:
         assert isinstance(data["items"], list)
         assert data["paginationInfo"]["page"] == 1
         assert data["paginationInfo"]["pageSize"] == 10
-        assert data["paginationInfo"]["totalCount"] == 10
+        assert data["paginationInfo"]["totalItems"] == 10
         assert data["paginationInfo"]["totalPages"] == 1
 
     def test_pagination_specified(self, client: TestClient):
@@ -31,7 +31,7 @@ class TestListOpportunities:
         assert isinstance(data["items"], list)
         assert data["paginationInfo"]["page"] == 2
         assert data["paginationInfo"]["pageSize"] == 1
-        assert data["paginationInfo"]["totalCount"] == 10
+        assert data["paginationInfo"]["totalItems"] == 10
         assert data["paginationInfo"]["totalPages"] == 10
 
 
@@ -52,7 +52,39 @@ class TestSearchOpportunities:
 
     def test_default_search(self, client: TestClient):
         """Test GET /common-grants/opportunities/search endpoint with default search."""
-        response = client.post("/common-grants/opportunities/search")
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json={
+                "filters": {
+                    "status": {"operator": "in", "value": []},
+                    "closeDateRange": {"operator": "between", "value": {}},
+                    "totalFundingAvailableRange": {
+                        "operator": "between",
+                        "value": {
+                            "min": {"amount": "0.00", "currency": "USD"},
+                            "max": {"amount": "0.00", "currency": "USD"},
+                        },
+                    },
+                    "minAwardAmountRange": {
+                        "operator": "between",
+                        "value": {
+                            "min": {"amount": "0.00", "currency": "USD"},
+                            "max": {"amount": "0.00", "currency": "USD"},
+                        },
+                    },
+                    "maxAwardAmountRange": {
+                        "operator": "between",
+                        "value": {
+                            "min": {"amount": "0.00", "currency": "USD"},
+                            "max": {"amount": "0.00", "currency": "USD"},
+                        },
+                    },
+                    "customFilters": {},
+                },
+                "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
+                "pagination": {"page": 1, "pageSize": 10},
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert "items" in data

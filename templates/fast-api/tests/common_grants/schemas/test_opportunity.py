@@ -118,18 +118,18 @@ def test_opp_status_model():
 def test_opp_funding_model():
     """Test the OppFunding model."""
     funding = OppFunding(
-        totalAmountAvailable=Money(amount="100000.00", currency="USD"),
-        minAwardAmount=Money(amount="10000.00", currency="USD"),
-        maxAwardAmount=Money(amount="50000.00", currency="USD"),
-        estimatedAwardCount=5,
+        total_amount_available=Money(amount="100000.00", currency="USD"),
+        min_award_amount=Money(amount="10000.00", currency="USD"),
+        max_award_amount=Money(amount="50000.00", currency="USD"),
+        estimated_award_count=5,
     )
-    assert funding.totalAmountAvailable is not None
-    assert funding.totalAmountAvailable.amount == "100000.00"
-    assert funding.minAwardAmount is not None
-    assert funding.minAwardAmount.amount == "10000.00"
-    assert funding.maxAwardAmount is not None
-    assert funding.maxAwardAmount.amount == "50000.00"
-    assert funding.estimatedAwardCount == 5
+    assert funding.total_amount_available is not None
+    assert funding.total_amount_available.amount == "100000.00"
+    assert funding.min_award_amount is not None
+    assert funding.min_award_amount.amount == "10000.00"
+    assert funding.max_award_amount is not None
+    assert funding.max_award_amount.amount == "50000.00"
+    assert funding.estimated_award_count == 5
 
 
 def test_opp_timeline_model():
@@ -177,10 +177,10 @@ def test_opportunity_base_model():
         ),
         description="Funding for innovative research projects",
         funding=OppFunding(
-            totalAmountAvailable=Money(amount="100000.00", currency="USD"),
-            minAwardAmount=Money(amount="10000.00", currency="USD"),
-            maxAwardAmount=Money(amount="50000.00", currency="USD"),
-            estimatedAwardCount=5,
+            total_amount_available=Money(amount="100000.00", currency="USD"),
+            min_award_amount=Money(amount="10000.00", currency="USD"),
+            max_award_amount=Money(amount="50000.00", currency="USD"),
+            estimated_award_count=5,
         ),
         key_dates=OppTimeline(
             app_opens=Event(
@@ -205,8 +205,8 @@ def test_opportunity_base_model():
     assert isinstance(opp.id, UUID)
     assert opp.title == "Research Grant 2024"
     assert opp.status.value == OppStatusOptions.OPEN
-    assert opp.funding.totalAmountAvailable is not None
-    assert opp.funding.totalAmountAvailable.amount == "100000.00"
+    assert opp.funding.total_amount_available is not None
+    assert opp.funding.total_amount_available.amount == "100000.00"
     assert opp.key_dates.app_opens is not None
     assert opp.key_dates.app_opens.date == date(2024, 1, 1)
     assert opp.created_at == now
