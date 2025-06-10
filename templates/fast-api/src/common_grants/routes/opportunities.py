@@ -54,6 +54,14 @@ async def list_opportunities(
     summary="View opportunity",
     description="View additional details about an opportunity",
     responses={
+        status.HTTP_200_OK: {
+            "description": "The opportunity details",
+            "content": {
+                "application/json": {
+                    "schema": OpportunityResponse.model_json_schema(),
+                },
+            },
+        },
         status.HTTP_404_NOT_FOUND: {"description": "Opportunity not found"},
     },
 )
@@ -71,6 +79,7 @@ async def get_opportunity(
         )
 
     return OpportunityResponse(
+        status=status.HTTP_200_OK,
         message="Success",
         data=opportunity,
     )
