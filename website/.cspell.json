@@ -56,7 +56,8 @@
     "calendaryear",
     "employertaxid",
     "samuei",
-    "duns"
+    "duns",
+    "uischema"
   ],
   "import": []
 }

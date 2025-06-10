@@ -1,0 +1,24 @@
+---
+import FormMappingPlayground from "../components/FormMappingPlayground";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+---
+
+<StarlightPage
+  frontmatter={{
+    title: "Form mapping playground",
+    tableOfContents: false,
+    template: "splash",
+  }}
+>
+  <div class="form-playground-page">
+    <FormMappingPlayground client:load />
+  </div>
+</StarlightPage>
+
+<style is:global>
+  .sl-markdown-content
+    :not(a, strong, em, del, span, input, code, br)
+    + :not(a, strong, em, del, span, input, code, br, :where(.not-content *)) {
+    margin-top: 0 !important;
+  }
+</style>

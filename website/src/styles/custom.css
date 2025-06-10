@@ -11,6 +11,7 @@
   --sl-color-gray-5: #353841;
   --sl-color-gray-6: #24272f;
   --sl-color-black: #17181c;
+  --sl-color-crazy: #00e5ff;
 }
 
 /* Light mode colors. */
@@ -27,4 +28,5 @@
   --sl-color-gray-6: #eceef2;
   --sl-color-gray-7: #f5f6f8;
   --sl-color-black: #ffffff;
+  --sl-color-crazy: #ff0000;
 }
