@@ -60,36 +60,38 @@ export default function FormMappingPlayground() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.row}>
-        <SchemaSelector
-          label="Source form"
-          value={inputId}
-          onChange={handleInputSchemaChange}
-        />
-        <SchemaSelector
-          label="Form to prefill"
-          value={targetId}
-          onChange={handleTargetSchemaChange}
-        />
-      </div>
-
       <div style={styles.formContainer}>
-        <FormSection
-          type="source"
-          formName={formName}
-          schema={formSchema}
-          uischema={formUI}
-          data={formData}
-          onChange={setFormData}
-        />
-        <FormSection
-          type="prefilled"
-          formName={targetFormName}
-          schema={targetFormSchema}
-          uischema={targetFormUI}
-          data={targetFormData}
-          readonly={false}
-        />
+        <div style={styles.formGroup}>
+          <SchemaSelector
+            label="Source form"
+            value={inputId}
+            onChange={handleInputSchemaChange}
+          />
+          <FormSection
+            type="source"
+            formName={formName}
+            schema={formSchema}
+            uischema={formUI}
+            data={formData}
+            onChange={setFormData}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <SchemaSelector
+            label="Form to prefill"
+            value={targetId}
+            onChange={handleTargetSchemaChange}
+          />
+          <FormSection
+            type="prefilled"
+            formName={targetFormName}
+            schema={targetFormSchema}
+            uischema={targetFormUI}
+            data={targetFormData}
+            readonly={false}
+          />
+        </div>
       </div>
 
       <TransformationSummary

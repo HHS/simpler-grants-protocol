@@ -13,8 +13,8 @@ export const SchemaSelector: React.FC<SchemaSelectorProps> = ({
   value,
   onChange,
 }) => (
-  <div style={{ flex: 1 }}>
-    <label style={styles.label}>
+  <div>
+    <label style={styles.selectLabel}>
       {label}
       <select
         style={styles.select}

@@ -19,24 +19,24 @@ export const TransformationSummary: React.FC<TransformationSummaryProps> = ({
   return (
     <div>
       <h2 style={styles.formHeader}>Behind the scenes</h2>
-      <p>
+      <p style={{ marginBottom: "1rem" }}>
         Here's a quick summary of what's happening behind the scenes to
         translate data from the source form to the prefilled form.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         <TransformationStep
           title="1. Source form data"
-          description="Fetch the data from the source form using JSON form schema."
+          description="Fetch the data from the source form using its JSON schema."
           output={sourceData}
         />
         <TransformationStep
           title="2. CommonGrants form data"
-          description="Transform the source data to CommonGrants using the source form mapping."
+          description="Transform the source data to the CommonGrants data format using one mapping (source form to CommonGrants)."
           output={commonData}
         />
         <TransformationStep
-          title="3. Target form data"
-          description="Transform from the CommonGrants data to the target format using its mapping and prefill the target form."
+          title="3. Prefilled form data"
+          description="Use a second mapping (CommonGrants to prefilled form) to convert the CommonGrants data into the prefilled form's data format."
           output={targetData}
         />
       </div>

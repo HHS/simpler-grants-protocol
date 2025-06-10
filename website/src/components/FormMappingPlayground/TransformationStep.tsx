@@ -16,9 +16,7 @@ export const TransformationStep: React.FC<TransformationStepProps> = ({
   return (
     <div>
       <h3 style={{ ...styles.formHeader, fontSize: "1rem" }}>{title}</h3>
-      {description && (
-        <div style={{ marginBottom: "0.5rem" }}>{description}</div>
-      )}
+      {description && <p style={{ marginBottom: "0.5rem" }}>{description}</p>}
       <pre style={styles.code}>{JSON.stringify(output, null, 2)}</pre>
     </div>
   );

@@ -16,6 +16,12 @@ export const styles = {
     display: "flex",
     gap: "2rem",
   },
+  formGroup: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "1rem",
+  },
   formSection: {
     flex: 1,
     padding: "1rem",
@@ -33,7 +39,7 @@ export const styles = {
     display: "flex",
     gap: "1rem",
   },
-  label: {
+  selectLabel: {
     fontWeight: 600,
     marginBottom: 4,
     display: "block",
