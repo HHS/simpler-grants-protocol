@@ -20,18 +20,22 @@ class OppDefaultFilters(BaseModel):
     close_date_range: Optional[DateRangeFilter] = Field(
         default=None,
         description="`keyDates.closeDate` is between the given range",
+        alias="closeDateRange",
     )
     total_funding_available_range: Optional[MoneyRangeFilter] = Field(
         default=None,
         description="`funding.totalAmountAvailable` is between the given range",
+        alias="totalFundingAvailableRange",
     )
     min_award_amount_range: Optional[MoneyRangeFilter] = Field(
         default=None,
         description="`funding.minAwardAmount` is between the given range",
+        alias="minAwardAmountRange",
     )
     max_award_amount_range: Optional[MoneyRangeFilter] = Field(
         default=None,
         description="`funding.maxAwardAmount` is between the given range",
+        alias="maxAwardAmountRange",
     )
 
 
@@ -41,4 +45,5 @@ class OppFilters(OppDefaultFilters):
     custom_filters: Optional[dict[str, DefaultFilter]] = Field(
         default=None,
         description="Additional implementation-defined filters to apply to the search",
+        alias="customFilters",
     )
