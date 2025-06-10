@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator, ValidationInfo
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class OppSortBy(StrEnum):
@@ -43,7 +43,7 @@ class OppSorting(BaseModel):
     @field_validator("custom_sort_by")
     @classmethod
     def validate_custom_sort_by(
-        cls, v: Optional[str], info: ValidationInfo
+        cls, v: Optional[str], info: ValidationInfo,
     ) -> Optional[str]:
         """Validate that customSortBy is provided when sortBy is 'custom'."""
         if info.data.get("sort_by") == OppSortBy.CUSTOM and not v:

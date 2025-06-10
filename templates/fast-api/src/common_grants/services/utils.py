@@ -1,16 +1,13 @@
 """Utility functions for the common grants service."""
 
-from datetime import date, datetime, timezone, timedelta
+from datetime import date, datetime, timedelta, timezone
 from uuid import UUID, uuid5
 
 from common_grants_sdk.schemas.fields import Event, Money
 
 from common_grants.schemas.models import (
-    OppFunding,
     OpportunityBase,
-    OppStatus,
     OppStatusOptions,
-    OppTimeline,
 )
 from common_grants.schemas.pagination import PaginatedItems, PaginationInfo
 

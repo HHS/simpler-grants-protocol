@@ -1,7 +1,7 @@
 """Tests for the opportunity schemas."""
 
 from datetime import date, datetime, time, timezone
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError

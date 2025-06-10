@@ -1,6 +1,5 @@
 """Tests for the OppFunding model."""
 
-from common_grants_sdk.schemas.fields import Money
 from common_grants_sdk.schemas.models import OppFunding
 
 

@@ -2,7 +2,6 @@
 
 from datetime import date, time
 
-from common_grants_sdk.schemas.fields import Event
 from common_grants_sdk.schemas.models import OppTimeline
 
 

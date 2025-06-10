@@ -3,13 +3,9 @@
 from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 
-from common_grants_sdk.schemas.fields import Event, Money
 from common_grants_sdk.schemas.models import (
-    OppFunding,
     OpportunityBase,
-    OppStatus,
     OppStatusOptions,
-    OppTimeline,
 )
 
 
