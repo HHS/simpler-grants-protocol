@@ -29,6 +29,9 @@ check-format:
 check-lint:
 	$(RUNTIME_PREFIX) ruff check $(PYTHON_DIRS) --fix --exit-non-zero-on-fix
 
+check-spec:
+	$(RUNTIME_PREFIX) python -c "from common_grants.api import app; import yaml; print(yaml.dump(app.openapi(), sort_keys=False))" > openapi.yaml && cg check spec openapi.yaml
+
 check-types:
 	$(RUNTIME_PREFIX) pyright $(PYTHON_DIRS)
 
@@ -36,3 +39,4 @@ checks: check-format check-lint check-types
 
 gen-openapi:
 	$(RUNTIME_PREFIX) python -c "from common_grants.api import app; import yaml; print(yaml.dump(app.openapi(), sort_keys=False))" > openapi.yaml
+
