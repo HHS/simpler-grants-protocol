@@ -1,0 +1,72 @@
+import json
+from typing import Any
+
+from common_grants_sdk.utils.transformation import transform_from_mapping
+
+from .mapping import CA_GRANTS_MAPPING
+
+
+class CATransformer:
+    """Transformer for California Grants Portal data to CommonGrants Protocol format."""
+
+    def __init__(self):
+        """Initialize the transformer with the CA Grants mapping."""
+        self.mapping = CA_GRANTS_MAPPING
+
+    def transform_opportunities(
+        self, source_data: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """
+        Transform source data to CommonGrants Protocol format.
+
+        Args:
+            source_data: Dictionary containing the source data with a 'grants' key
+
+        Returns:
+            List of transformed opportunities in CommonGrants Protocol format
+
+        Raises:
+            ValueError: If transformation fails or source data is malformed
+
+        """
+        try:
+            # Get the grants array from the source data
+            grants = source_data.get("grants", [])
+
+            # Transform each grant opportunity
+            transformed_opportunities = []
+            for grant in grants:
+                transformed_data = transform_from_mapping(grant, self.mapping)
+                transformed_opportunities.append(transformed_data)
+
+            return transformed_opportunities
+
+        except Exception as e:
+            raise ValueError(f"Error transforming data: {e!s}")
+
+    @classmethod
+    def from_file(cls, source_file: str) -> list[dict[str, Any]]:
+        """
+        Create a transformer and transform data from a source file.
+
+        Args:
+            source_file: Path to the source JSON file containing CA Grants Portal data
+
+        Returns:
+            List of transformed opportunities in CommonGrants Protocol format
+
+        Raises:
+            ValueError: If file cannot be read or contains invalid JSON
+
+        """
+        try:
+            # Read the source data
+            with open(source_file) as f:
+                source_data = json.load(f)
+
+            # Create transformer and transform data
+            transformer = cls()
+            return transformer.transform_opportunities(source_data)
+
+        except Exception as e:
+            raise ValueError(f"Error processing file {source_file}: {e!s}")

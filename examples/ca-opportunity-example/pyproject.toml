@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "ca-opportunity-example"
+version = "0.1.0"
+description = "Example API demonstrating CommonGrants Protocol with California Grants data"
+authors = ["Your Name <your.email@example.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = {extras = ["standard"], version = "^0.115.11"}
+common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+pyright = "^1.1.396"
+pytest = "^8.3.5"
+pytest-cov = "^6.0.0"
+ruff = "^0.9.10"
+mypy = "^1.15.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+extend-safe-fixes = [
+  "D400", # docstrings should end with a period
+  "D415", # docstrings should end with a period, question mark, or exclamation point
+  "D200", # one line docstrings should fit on one line
+  "UP", # all pyupgrade checks
+]
+ignore = [
+  "ARG002", # argument unused
+  "ANN204", # missing type annotation for special method
+  "D203", # no blank line before class
+  "D212", # multi-line summary first line
+  "FA", # flake8-future-annotations ruleset
+  "FAST002", # missing type annotation for dependency
+]
+select = ["ALL"]
