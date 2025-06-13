@@ -13,7 +13,7 @@ from typing import Any, Union, cast
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
-from routers import grants
+from routers import opportunities
 
 # OpenAPI version constants
 OPENAPI_V3 = "3.0.0"
@@ -142,7 +142,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-app.include_router(grants.router)
+app.include_router(opportunities.router)
 
 if __name__ == "__main__":
     import yaml

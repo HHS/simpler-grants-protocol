@@ -12,14 +12,18 @@ from fastapi import APIRouter, HTTPException
 
 from transform.transformer import CATransformer
 
-router = APIRouter(prefix="/api/v1", tags=["grants"])
+router = APIRouter(prefix="/common-grants/opportunities", tags=["Opportunities"])
 
 # Get the absolute path for our data file
 BASE_DIR = Path(__file__).parent.parent
 DATA_FILE = BASE_DIR / "data" / "ca_grants_sample.json"
 
 
-@router.get("/grants")
+@router.get(
+    "",
+    summary="List opportunities",
+    description="Get a list of opportunities.",
+)
 async def get_grants() -> list[dict[str, Any]]:
     """
     Get all grant opportunities.

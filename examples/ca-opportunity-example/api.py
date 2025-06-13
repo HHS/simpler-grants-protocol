@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 
-from routers import grants
+from routers import opportunities
 
 app = FastAPI(
     title="CA Grant Opportunity API - Example",
@@ -10,7 +10,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-app.include_router(grants.router)
+app.include_router(opportunities.router)
 
 if __name__ == "__main__":
     import uvicorn
