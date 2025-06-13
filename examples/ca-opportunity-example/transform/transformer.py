@@ -47,12 +47,11 @@ class CATransformer:
             for grant in grants:
                 transformed_data = transform_from_mapping(grant, self.mapping)
                 transformed_opportunities.append(transformed_data)
-
-            return transformed_opportunities
-
         except Exception as e:
             error_msg = f"Error transforming data: {e!s}"
             raise ValueError(error_msg) from e
+        else:
+            return transformed_opportunities
 
     @classmethod
     def from_file(cls, source_file: str | Path) -> list[dict[str, Any]]:

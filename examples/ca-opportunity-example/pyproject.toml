@@ -39,5 +39,6 @@ ignore = [
   "D212", # multi-line summary first line
   "FA", # flake8-future-annotations ruleset
   "FAST002", # missing type annotation for dependency
+  "S101", # use of assert detected
 ]
 select = ["ALL"]

@@ -19,10 +19,10 @@ BASE_DIR = Path(__file__).parent.parent
 DATA_FILE = BASE_DIR / "data" / "ca_grants_sample.json"
 
 
-@router.get("/grants", response_model=list[dict[str, Any]])
+@router.get("/grants")
 async def get_grants() -> list[dict[str, Any]]:
     """
-    Get all grant opportunity data.
+    Get all grant opportunities.
 
     Transforms grant opportunity data from CA Grant Portal format to
     CommonGrants Protocol format.
