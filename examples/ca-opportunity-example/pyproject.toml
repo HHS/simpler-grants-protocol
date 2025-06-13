@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "ca-opportunity-example"
-version = "0.1.0"
-description = "Example API demonstrating CommonGrants Protocol with California Grants data"
 authors = ["Your Name <your.email@example.com>"]
+description = "Example API demonstrating CommonGrants Protocol with California Grants data"
+name = "ca-opportunity-example"
 package-mode = false
+version = "0.1.0"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-fastapi = {extras = ["standard"], version = "^0.115.11"}
 common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
+fastapi = {extras = ["standard"], version = "^0.115.11"}
+python = "^3.11"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"

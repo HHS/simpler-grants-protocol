@@ -10,21 +10,22 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
+#from services import OpportunityService
 from transform.transformer import CATransformer
 
-router = APIRouter(prefix="/common-grants/opportunities", tags=["Opportunities"])
 
-# Get the absolute path for our data file
+# Define path to data file
 BASE_DIR = Path(__file__).parent.parent
 DATA_FILE = BASE_DIR / "data" / "ca_grants_sample.json"
 
+router = APIRouter(prefix="/common-grants/opportunities", tags=["Opportunities"])
 
 @router.get(
     "",
     summary="List opportunities",
     description="Get a list of opportunities.",
 )
-async def get_grants() -> list[dict[str, Any]]:
+async def list_opportunities() -> list[dict[str, Any]]:
     """
     Get all grant opportunities.
 
