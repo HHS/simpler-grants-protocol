@@ -1,6 +1,5 @@
 """Mapping specification for transforming CA Grants Portal data to CommonGrants Protocol format."""
 
-
 # Mapping spec for transforming CA Grants Portal data to CommonGrants Protocol format
 CA_GRANTS_MAPPING = {
     "id": {"field": "PortalID"},  # Using PortalID as the unique identifier
@@ -37,7 +36,7 @@ CA_GRANTS_MAPPING = {
         "agencyDept": {
             "name": "agencyDept",
             "type": "string",
-            "value": {"field": "agencyDept"},
+            "value": {"field": "AgencyDept"},
             "description": "Agency department",
         },
         "categories": {

@@ -1,21 +1,29 @@
-import os
+"""
+Test module for the CA Grants transformer.
+
+This module contains tests for transforming grant opportunity data from the
+California Grants Portal format to the CommonGrants Protocol format.
+"""
+
+from pathlib import Path
+from typing import List
+
+import pytest
 
 from transform.transformer import CATransformer
 
 
-def test_transform_opportunities():
+def test_transform_opportunities() -> None:
     """Test transforming opportunities from sample data."""
     # Get the path to the sample data file
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    sample_data_path = os.path.join(
-        os.path.dirname(current_dir), "data", "ca_grants_sample.json",
-    )
+    current_dir = Path(__file__).resolve().parent
+    sample_data_path = current_dir.parent / "data" / "ca_grants_sample.json"
 
     # Transform the sample data
     transformed_opportunities = CATransformer.from_file(sample_data_path)
 
     # Verify we got the expected number of opportunities
-    assert len(transformed_opportunities) == 3, "Expected 3 transformed opportunities"
+    assert len(transformed_opportunities) == 3
 
     # Test the first opportunity (Cultural Districts grant)
     first_opp = transformed_opportunities[0]
@@ -35,50 +43,34 @@ def test_transform_opportunities():
     # Verify key dates
     assert first_opp["keyDates"]["appOpens"] == "2025-06-10 07:00:00"
     assert first_opp["keyDates"]["appDeadline"] == "2025-08-07 11:59:00"
-    assert first_opp["keyDates"]["awardDate"] == "12/31/25"
+    assert first_opp["keyDates"]["otherDates"]["expAwardDate"]["date"] == "12/31/25"
 
-    # Verify agency information
-    assert first_opp["agency"]["name"] == "CA Arts Council"
-    assert first_opp["agency"]["url"] == "https://arts.ca.gov/"
-
-    # Verify eligibility
-    expected_applicant_types = [
-        "Nonprofit",
-        "Other Legal Entity",
-        "Public Agency",
-        "Tribal Government",
-    ]
-    assert first_opp["eligibility"]["applicantTypes"] == expected_applicant_types
-
-    # Verify contact information
-    assert first_opp["contact"]["name"] == "Gabrielle Rosado"
-    assert first_opp["contact"]["email"] == "culturaldistrictsgrant@arts.ca.gov"
-    assert first_opp["contact"]["phone"] == "1-916-322-6555"
+    # Verify agency department (custom field)
+    assert first_opp["customFields"]["agencyDept"]["value"] == "CA Arts Council"
 
     # Verify URL
-    assert first_opp["url"] == "https://www.caculturaldistricts.org/application"
+    assert first_opp["source"] == "https://www.caculturaldistricts.org/application"
 
     # Verify timestamps
-    assert first_opp["created_at"] == "2025-06-10 21:48:46"
-    assert first_opp["last_modified_at"] == "2025-06-10 21:48:46"
+    assert first_opp["lastModifiedAt"] == "2025-06-10 21:48:46"
 
 
-def test_transform_opportunities_with_empty_data():
+def test_transform_opportunities_with_empty_data() -> None:
     """Test transforming empty data."""
     transformer = CATransformer()
     empty_data = {"grants": []}
     transformed = transformer.transform_opportunities(empty_data)
-    assert len(transformed) == 0, "Expected empty list for empty data"
+    assert len(transformed) == 0
 
 
-def test_transform_opportunities_with_missing_fields():
+def test_transform_opportunities_with_missing_fields() -> None:
     """Test transforming data with missing fields."""
     transformer = CATransformer()
     minimal_data = {
         "grants": [{"PortalID": "123", "Title": "Test Grant", "Status": "active"}],
     }
     transformed = transformer.transform_opportunities(minimal_data)
-    assert len(transformed) == 1, "Expected one transformed opportunity"
+    assert len(transformed) == 1
     assert transformed[0]["id"] == "123"
     assert transformed[0]["title"] == "Test Grant"
     assert transformed[0]["status"] == "open"

@@ -1,4 +1,11 @@
-import os
+"""
+Router module for handling grant-related endpoints.
+
+This module provides endpoints for accessing and transforming grant opportunity data
+from the California Grant Portal format to the CommonGrants Protocol format.
+"""
+
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -8,19 +15,28 @@ from transform.transformer import CATransformer
 router = APIRouter(prefix="/api/v1", tags=["grants"])
 
 # Get the absolute path for our data file
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_FILE = os.path.join(BASE_DIR, "data", "ca_grants_sample.json")
+BASE_DIR = Path(__file__).parent.parent
+DATA_FILE = BASE_DIR / "data" / "ca_grants_sample.json"
 
 
 @router.get("/grants", response_model=list[dict[str, Any]])
-async def get_grants():
+async def get_grants() -> list[dict[str, Any]]:
     """
-    Get all grant opportunity data transformed from CA Grant Portoal format to
+    Get all grant opportunity data.
+
+    Transforms grant opportunity data from CA Grant Portal format to
     CommonGrants Protocol format.
+
+    Returns:
+        List[dict[str, Any]]: List of transformed grant opportunities.
+
+    Raises:
+        HTTPException: If there is an error transforming the data.
+
     """
     try:
-        # Transform the data
-        opportunities = CATransformer.from_file(DATA_FILE)
-        return opportunities
+        return CATransformer.from_file(DATA_FILE)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e

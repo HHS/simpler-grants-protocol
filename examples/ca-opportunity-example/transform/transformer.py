@@ -1,4 +1,12 @@
+"""
+Transformer module for converting CA Grants Portal data to CommonGrants Protocol format.
+
+This module provides functionality to transform grant opportunity data from the
+California Grants Portal format to the CommonGrants Protocol format.
+"""
+
 import json
+from pathlib import Path
 from typing import Any
 
 from common_grants_sdk.utils.transformation import transform_from_mapping
@@ -14,7 +22,8 @@ class CATransformer:
         self.mapping = CA_GRANTS_MAPPING
 
     def transform_opportunities(
-        self, source_data: dict[str, Any],
+        self,
+        source_data: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """
         Transform source data to CommonGrants Protocol format.
@@ -42,10 +51,11 @@ class CATransformer:
             return transformed_opportunities
 
         except Exception as e:
-            raise ValueError(f"Error transforming data: {e!s}")
+            error_msg = f"Error transforming data: {e!s}"
+            raise ValueError(error_msg) from e
 
     @classmethod
-    def from_file(cls, source_file: str) -> list[dict[str, Any]]:
+    def from_file(cls, source_file: str | Path) -> list[dict[str, Any]]:
         """
         Create a transformer and transform data from a source file.
 
@@ -61,12 +71,16 @@ class CATransformer:
         """
         try:
             # Read the source data
-            with open(source_file) as f:
-                source_data = json.load(f)
+            source_path = Path(source_file)
+            source_data = json.loads(source_path.read_text())
 
             # Create transformer and transform data
             transformer = cls()
             return transformer.transform_opportunities(source_data)
 
+        except json.JSONDecodeError as e:
+            error_msg = f"Invalid JSON in file {source_file}: {e!s}"
+            raise ValueError(error_msg) from e
         except Exception as e:
-            raise ValueError(f"Error processing file {source_file}: {e!s}")
+            error_msg = f"Error processing file {source_file}: {e!s}"
+            raise ValueError(error_msg) from e
