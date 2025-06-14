@@ -8,6 +8,7 @@ California Grants Portal format to the CommonGrants Protocol format.
 import json
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from common_grants_sdk.utils.transformation import transform_from_mapping
 
@@ -20,6 +21,14 @@ class CATransformer:
     def __init__(self):
         """Initialize the transformer with the CA Grants mapping."""
         self.mapping = CA_GRANTS_MAPPING
+
+    def post_process_opportunity(
+        self,
+        source_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Post-process transformed opportunity data."""
+        source_data["id"] = uuid4()
+        return source_data
 
     def transform_opportunities(
         self,
@@ -43,15 +52,18 @@ class CATransformer:
             grants = source_data.get("grants", [])
 
             # Transform each grant opportunity
-            transformed_opportunities = []
+            result = []
             for grant in grants:
                 transformed_data = transform_from_mapping(grant, self.mapping)
-                transformed_opportunities.append(transformed_data)
+                processed_data = self.post_process_opportunity(transformed_data)
+                result.append(processed_data)
+
         except Exception as e:
             error_msg = f"Error transforming data: {e!s}"
             raise ValueError(error_msg) from e
+
         else:
-            return transformed_opportunities
+            return result
 
     @classmethod
     def from_file(cls, source_file: str | Path) -> list[dict[str, Any]]:

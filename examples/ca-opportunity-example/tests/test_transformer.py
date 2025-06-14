@@ -19,7 +19,13 @@ class TestTransformOpportunities:
         """Test transforming opportunities from sample data."""
         # Get the path to the sample data file
         current_dir = Path(__file__).resolve().parent
-        sample_data_path = current_dir.parent / "data" / "ca_grants_sample.json"
+        sample_data_path = (
+            current_dir.parent
+            / "src"
+            / "ca_common_grants"
+            / "data"
+            / "ca_grants_sample.json"
+        )
 
         # Transform the sample data
         transformed_opportunities = CATransformer.from_file(sample_data_path)
@@ -31,7 +37,6 @@ class TestTransformOpportunities:
         first_opp = transformed_opportunities[0]
 
         # Verify basic fields
-        assert first_opp["id"] == "118170"
         assert first_opp["title"] == "Cultural Districts"
         assert first_opp["status"] == "open"  # 'active' should map to 'open'
         assert "Cultural Districts program" in first_opp["description"]
@@ -47,7 +52,8 @@ class TestTransformOpportunities:
         assert first_opp["keyDates"]["appDeadline"] == "2025-08-07 11:59:00"
         assert first_opp["keyDates"]["otherDates"]["expAwardDate"]["date"] == "12/31/25"
 
-        # Verify agency department (custom field)
+        # Verify custom fields
+        assert first_opp["customFields"]["portalID"]["value"] == "118170"
         assert first_opp["customFields"]["agencyDept"]["value"] == "CA Arts Council"
 
         # Verify URL
@@ -71,6 +77,6 @@ class TestTransformOpportunities:
         }
         transformed = transformer.transform_opportunities(minimal_data)
         assert len(transformed) == 1
-        assert transformed[0]["id"] == "123"
+        assert transformed[0]["customFields"]["portalID"]["value"] == "123"
         assert transformed[0]["title"] == "Test Grant"
         assert transformed[0]["status"] == "open"

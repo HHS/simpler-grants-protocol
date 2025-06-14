@@ -1,8 +1,8 @@
 """Mapping specification for transforming CA Grants Portal data to CommonGrants Protocol format."""
 
-# Mapping spec for transforming CA Grants Portal data to CommonGrants Protocol format
+from common_grants_sdk.schemas.fields import CustomFieldType
+
 CA_GRANTS_MAPPING = {
-    "id": {"field": "PortalID"},  # Using PortalID as the unique identifier
     "title": {"field": "Title"},
     "status": {
         "switch": {
@@ -33,54 +33,61 @@ CA_GRANTS_MAPPING = {
     },
     "source": {"field": "GrantURL"},
     "customFields": {
+        "portalID": {
+            "name": "portalID",
+            "type": CustomFieldType.STRING,
+            "value": {"field": "PortalID"},
+            "description": "CA Portal ID",
+        },
         "agencyDept": {
             "name": "agencyDept",
-            "type": "string",
+            "type": CustomFieldType.STRING,
             "value": {"field": "AgencyDept"},
             "description": "Agency department",
         },
         "categories": {
             "name": "categories",
-            "type": "string",
+            "type": CustomFieldType.STRING,
             "value": {"field": "Categories"},
             "description": "Categories",
         },
         "categorySuggestion": {
             "name": "categorySuggestion",
-            "type": "string",
+            "type": CustomFieldType.STRING,
             "value": {"field": "CategorySuggestion"},
             "description": "Category suggestion",
         },
         "purpose": {
             "name": "purpose",
-            "type": "string",
+            "type": CustomFieldType.STRING,
             "value": {"field": "Purpose"},
             "description": "purpose",
         },
         "agencyURL": {
             "name": "agencyURL",
-            "type": "string",
+            "type": CustomFieldType.STRING,
             "value": {"field": "AgencyURL"},
             "description": "agencyURL",
         },
         "applicantType": {
             "name": "applicantType",
-            "type": "string",
+            "type": CustomFieldType.STRING,
             "value": {"field": "ApplicantType"},
             "description": "applicantType",
         },
         "applicantTypeNotes": {
             "name": "applicantTypeNotes",
-            "type": "string",
+            "type": CustomFieldType.STRING,
             "value": {"field": "ApplicantTypeNotes"},
             "description": "applicantTypeNotes",
         },
         "geography": {
             "name": "geography",
-            "type": "string",
+            "type": CustomFieldType.STRING,
             "value": {"field": "Geography"},
             "description": "geography",
         },
     },
     "lastModifiedAt": {"field": "LastUpdated"},
+    "createdAt": {"field": "LastUpdated"},
 }
