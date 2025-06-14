@@ -7,6 +7,7 @@ version = "0.1.0"
 
 [tool.poetry.dependencies]
 common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
+common-grants = {path = "../../templates/fast-api", develop = true}
 fastapi = {extras = ["standard"], version = "^0.115.11"}
 python = "^3.11"
 

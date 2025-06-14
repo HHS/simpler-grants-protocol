@@ -1,12 +1,8 @@
 """Service for handling opportunity data operations."""
 
-from datetime import date
-from typing import Optional
+from pathlib import Path
+from typing import Any, Optional
 from uuid import UUID
-
-from common_grants_sdk.schemas.models import (
-    OpportunityBase,
-)
 
 from common_grants.schemas import (
     OppFilters,
@@ -16,20 +12,23 @@ from common_grants.schemas import (
     PaginationBodyParams,
     PaginationInfo,
 )
-
+from common_grants_sdk.schemas.models import (
+    OpportunityBase,
+)
 from fastapi import status
 
 from transform.transformer import CATransformer
+
+DATA_FILE = Path(__file__).parent.parent / "data" / "ca_grants_sample.json"
 
 
 class OpportunityService:
     """
     Service for handling opportunity data operations.
+
     In a real world implementation, this class would likely interact with a database,
     whereas this example uses a flat file on disk.
     """
-
-    DATA_FILE = Path(__file__).parent.parent / "data" / "ca_grants_sample.json"
 
     def __init__(self) -> None:
         """Initialize the opportunity service."""
@@ -43,9 +42,7 @@ class OpportunityService:
         transformed: list[dict[str, Any]] = CATransformer.from_file(DATA_FILE)
 
         """Build result set."""
-        result: list[OpportunityBase] = [] 
-        for opp_data in transformed:
-            result.append(OpportunityBase.model_validate(opp_data))
+        return [OpportunityBase.model_validate(opp_data) for opp_data in transformed]
 
     async def list_opportunities(
         self,
@@ -71,8 +68,8 @@ class OpportunityService:
                 page=1,
                 pageSize=len(self.opportunity_list),
                 totalItems=len(self.opportunity_list),
-                totalPages=1
-            )
+                totalPages=1,
+            ),
         )
 
     async def get_opportunity(self, opportunity_id: UUID) -> Optional[OpportunityBase]:
@@ -114,9 +111,8 @@ class OpportunityService:
                 page=1,
                 pageSize=len(self.opportunity_list),
                 totalItems=len(self.opportunity_list),
-                totalPages=1
+                totalPages=1,
             ),
             sortInfo=sorting,
             filterInfo=filters,
         )
-
