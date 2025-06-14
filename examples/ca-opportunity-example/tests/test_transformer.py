@@ -7,7 +7,7 @@ California Grants Portal format to the CommonGrants Protocol format.
 
 from pathlib import Path
 
-from transform.transformer import CATransformer
+from ca_common_grants.transform.transformer import CATransformer
 
 
 class TestTransformOpportunities:

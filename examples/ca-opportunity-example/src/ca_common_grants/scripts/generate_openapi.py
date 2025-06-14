@@ -13,7 +13,7 @@ from typing import Any, Union, cast
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
-from routers import opportunities
+from ca_common_grants.routers import opportunities
 
 # OpenAPI version constants
 OPENAPI_V3 = "3.0.0"

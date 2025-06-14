@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 
-from routers import opportunities
+from ca_common_grants.routers import opportunities
 
 app = FastAPI(
     title="CA Grant Opportunity API - Example",

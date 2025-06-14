@@ -19,7 +19,7 @@ from common_grants.schemas import (
 from common_grants.schemas.models.opp_search_request import OpportunitySearchRequest
 from fastapi import APIRouter, HTTPException, Query, status
 
-from services.opportunity import OpportunityService
+from ca_common_grants.services.opportunity import OpportunityService
 
 router = APIRouter(prefix="/common-grants/opportunities", tags=["Opportunities"])
 

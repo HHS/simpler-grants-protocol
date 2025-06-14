@@ -17,7 +17,7 @@ from common_grants_sdk.schemas.models import (
 )
 from fastapi import status
 
-from transform.transformer import CATransformer
+from ca_common_grants.transform.transformer import CATransformer
 
 DATA_FILE = Path(__file__).parent.parent / "data" / "ca_grants_sample.json"
 

@@ -1,9 +1,10 @@
 [tool.poetry]
 authors = ["Your Name <your.email@example.com>"]
 description = "Example API demonstrating CommonGrants Protocol with California Grants data"
-name = "ca-opportunity-example"
-package-mode = false
+name = "ca-common-grants"
+package-mode = true
 version = "0.1.0"
+packages = [{include = "ca_common_grants", from = "src"}]
 
 [tool.poetry.dependencies]
 common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
@@ -18,6 +19,7 @@ pytest = "^8.3.5"
 pytest-cov = "^6.0.0"
 ruff = "^0.9.10"
 mypy = "^1.15.0"
+common-grants-cli = {path = "../../lib/cli", develop = true}
 
 [build-system]
 requires = ["poetry-core"]
