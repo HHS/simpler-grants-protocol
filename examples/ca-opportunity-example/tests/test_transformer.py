@@ -7,7 +7,7 @@ California Grants Portal format to the CommonGrants Protocol format.
 
 from pathlib import Path
 
-from ca_common_grants.transform.transformer import CATransformer
+from ca_common_grants.utils.opp_map_transform import OpportunityMapTransformer
 
 
 class TestTransformOpportunities:
@@ -28,13 +28,15 @@ class TestTransformOpportunities:
         )
 
         # Transform the sample data
-        transformed_opportunities = CATransformer.from_file(sample_data_path)
+        opportunities = OpportunityMapTransformer.transform_opportunities_file(
+            sample_data_path,
+        )
 
         # Verify we got the expected number of opportunities
-        assert len(transformed_opportunities) == self.EXPECTED_OPPORTUNITY_COUNT
+        assert len(opportunities) == self.EXPECTED_OPPORTUNITY_COUNT
 
         # Test the first opportunity (Cultural Districts grant)
-        first_opp = transformed_opportunities[0]
+        first_opp = opportunities[0]
 
         # Verify basic fields
         assert first_opp["title"] == "Cultural Districts"
@@ -64,14 +66,14 @@ class TestTransformOpportunities:
 
     def test_transform_opportunities_with_empty_data(self) -> None:
         """Test transforming empty data."""
-        transformer = CATransformer()
+        transformer = OpportunityMapTransformer()
         empty_data = {"grants": []}
         transformed = transformer.transform_opportunities(empty_data)
         assert len(transformed) == 0
 
     def test_transform_opportunities_with_missing_fields(self) -> None:
         """Test transforming data with missing fields."""
-        transformer = CATransformer()
+        transformer = OpportunityMapTransformer()
         minimal_data = {
             "grants": [{"PortalID": "123", "Title": "Test Grant", "Status": "active"}],
         }
