@@ -17,7 +17,7 @@ from common_grants_sdk.schemas.models import (
 )
 from fastapi import status
 
-from ca_common_grants.utils.opp_map_transform import OpportunityMapTransformer
+from ca_common_grants.utils.opp_transform import OpportunityTransformer
 
 DATA_FILE = Path(__file__).parent.parent / "data" / "ca_grants_sample.json"
 
@@ -40,7 +40,7 @@ class OpportunityService:
     def _get_opportunity_list(self) -> list[OpportunityBase]:
         """Transform CA opportunity data to CGP format."""
         transformed: list[dict[str, Any]] = (
-            OpportunityMapTransformer.transform_opportunities_file(
+            OpportunityTransformer.transform_opportunities_file(
                 DATA_FILE,
             )
         )

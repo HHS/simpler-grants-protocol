@@ -63,10 +63,10 @@ class OpportunityMapTransformer:
 
             # Transform each grant opportunity
             result = []
-            for grant in grants:
-                transformed_data = transform_from_mapping(grant, self.mapping)
-                processed_data = self.post_process_opportunity(transformed_data)
-                result.append(processed_data)
+            for opportunity in grants:
+                transformed = transform_from_mapping(opportunity, self.mapping)
+                processed = self.post_process_opportunity(transformed)
+                result.append(processed)
 
         except Exception as e:
             error_msg = f"Error transforming data: {e!s}"
