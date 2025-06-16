@@ -5,240 +5,140 @@ sidebar:
   order: 1
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 ## string
 
 A sequence of characters.
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-"Hello, world!"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: string.yaml
-type: string
-description: A sequence of characters
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    code: `
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: string.yaml
+  type: string
+  description: A sequence of characters
+  `,
+  }}
+  example={{
+    code: `"Hello, world!"`,
+  }}
+/>
 
 ## url
 
 A Uniform Resource Locator (URL).
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-"https://example.com/path"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: url.yaml
-type: string
-format: uri
-description: A Uniform Resource Locator (URL)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    code: `
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: url.yaml
+  type: string
+  description: A Uniform Resource Locator (URL)
+  `,
+  }}
+  example={{
+    code: `"https://example.com/path"`,
+  }}
+/>
 
 ## uuid
 
 A universally unique identifier.
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-"30a12e5e-5940-4c08-921c-17a8960fcf4b"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: uuid.yaml
-type: string
-format: uuid
-description: A universally unique identifier
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-```tsp
-/** A universally unique identifier */
-@example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
-@format("uuid")
-scalar uuid extends string;
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/uuid.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/types.tsp",
+      startLine: 37,
+      endLine: 40,
+    },
+  }}
+  example={{
+    code: `"30a12e5e-5940-4c08-921c-17a8960fcf4b"`,
+  }}
+/>
 
 ## email
 
 An email address.
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-"test@example.com"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: email.yaml
-type: string
-format: email
-description: An email address
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-```tsp
-/** An email address */
-@example("test@example.com")
-@format("email")
-scalar email extends string;
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/email.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/types.tsp",
+      startLine: 52,
+      endLine: 55,
+    },
+  }}
+  example={{
+    code: `"test@example.com"`,
+  }}
+/>
 
 ## employerTaxId
 
 An Employer Identification Number (EIN).
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-"12-3456789"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: employerTaxId.yaml
-type: string
-pattern: "^[0-9]{2}-[0-9]{7}$"
-description: An Employer Identification Number (EIN)
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-```tsp
-/** An Employer Identification Number (EIN) */
-@example("123456789")
-@pattern("^[0-9]{2}-[0-9]{7}$")
-scalar employerTaxId extends string;
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/employerTaxId.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/types.tsp",
+      startLine: 57,
+      endLine: 60,
+    },
+  }}
+  example={{
+    code: `"12-3456789"`,
+  }}
+/>
 
 ## samUEI
 
 A Unique Entity Identifier (UEI).
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-"ABC1234567890"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: samUEI.yaml
-type: string
-pattern: "^[A-z0-9]{12}$"
-description: A Unique Entity Identifier (UEI)
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-```tsp
-/** A Unique Entity Identifier (UEI) */
-@example("ABC1234567890")
-@pattern("^[A-z0-9]{12}$")
-scalar samUEI extends string;
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/samUEI.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/types.tsp",
+      startLine: 62,
+      endLine: 65,
+    },
+  }}
+  example={{
+    code: `"ABC1234567890"`,
+  }}
+/>
 
 ## duns
 
 A Data Universal Numbering System (DUNS) number.
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-"123456789012"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: duns.yaml
-type: string
-pattern: "^[0-9]{9}$"
-description: A Data Universal Numbering System (DUNS) number
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-```tsp
-/** A Data Universal Numbering System (DUNS) number */
-@example("123456789012")
-@pattern("^[0-9]{9}$")
-scalar duns extends string;
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/duns.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/types.tsp",
+      startLine: 67,
+      endLine: 70,
+    },
+  }}
+  example={{
+    code: `"123456789012"`,
+  }}
+/>

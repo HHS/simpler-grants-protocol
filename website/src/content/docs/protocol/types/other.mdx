@@ -3,35 +3,25 @@ title: Other core types
 description: Other core types that are used throughout the protocol
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 ### boolean
 
 A value that is either `true` or `false`, equivalent to `boolean` in JSON Schema.
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-true
-```
-
-```json
-false
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: boolean.yaml
-type: boolean
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    code: `
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: boolean.yaml
+  type: boolean
+  description: A value that is either true or false
+  `,
+  }}
+  example={{
+    code: `true`,
+  }}
+/>
 
 ### Array
 
@@ -39,25 +29,19 @@ An ordered list of values, equivalent to `array` in JSON Schema.
 
 #### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-[1, 2, 3]
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: array.yaml
-type: array
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    code: `
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: array.yaml
+  type: array
+  description: An ordered list of values
+  `,
+  }}
+  example={{
+    code: `[1, 2, 3]`,
+  }}
+/>
 
 #### Usage
 
@@ -83,28 +67,23 @@ A collection of key-value pairs, equivalent to `object` in JSON Schema.
 
 #### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-{
-  "foo": 1,
-  "bar": 2
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: record.yaml
-type: object
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    code: `
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: record.yaml
+  type: object
+  description: A collection of key-value pairs
+  `,
+  }}
+  example={{
+    code: `
+  {
+    "foo": 1,
+    "bar": 2
+  }`,
+  }}
+/>
 
 #### Usage
 
@@ -130,58 +109,41 @@ If you want to define specific keys in a record, you can do so with a [`model`](
 
 The `null` type, equivalent to `null` in JSON Schema.
 
-<Tabs>
-  <TabItem label="Example">
-
-```json
-null
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: null.yaml
-type: null
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    code: `
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: null.yaml
+  type: null
+  description: A value that is null
+  `,
+  }}
+  example={{
+    code: `null`,
+  }}
+/>
 
 ### unknown
 
 The `unknown` type accepts any value. It is equivalent to an empty JSON Schema.
 
-<Tabs>
-  <TabItem label="Example">
+<SchemaFormatTabs
+  jsonSchema={{
+    code: `
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: unknown.yaml
+  description: A value with any type
+  `,
+  }}
+  example={{
+    code: `
+  // String
+  "foo"
 
-All of the following are valid values for the `unknown` type:
-
-```json
-// String
-"foo"
-```
-
-```json
 // Integer
 123
-```
 
-```json
 // Boolean
-true
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: unknown.yaml
-```
-
-  </TabItem>
-</Tabs>
+true`,
+}}
+/>
