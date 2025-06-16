@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "email.json",
-  "type": "string",
-  "examples": ["jane.doe@example.com"],
-  "format": "email",
-  "description": "An email address."
-}

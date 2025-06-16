@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StringComparisonFilter.yaml
+type: object
+properties:
+  operator:
+    anyOf:
+      - $ref: EquivalenceOperators.yaml
+      - $ref: StringOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: string
+    examples:
+      - value
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: A filter that applies a comparison to a string value

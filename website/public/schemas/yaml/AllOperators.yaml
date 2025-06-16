@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AllOperators.yaml
+type: string
+enum:
+  - eq
+  - neq
+  - gt
+  - gte
+  - lt
+  - lte
+  - in
+  - not_in
+  - between
+  - outside
+  - like
+  - not_like

@@ -1,0 +1,9 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OppStatusOptions.yaml
+type: string
+enum:
+  - forecasted
+  - open
+  - closed
+  - custom
+description: The set of values accepted for opportunity status

@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PCSClass.yaml
+type: string
+enum:
+  - Organization types
+  - Subjects
+  - Population groups
+  - Transaction types
+  - Support strategies
+description: The class to which the PCS term belongs.

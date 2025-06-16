@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Money.yaml
+type: object
+properties:
+  amount:
+    $ref: decimalString.yaml
+    description: The amount of money
+  currency:
+    type: string
+    description: The ISO 4217 currency code in which the amount is denominated
+required:
+  - amount
+  - currency
+examples:
+  - amount: "-50.50"
+    currency: USD
+  - amount: "5000"
+    currency: EUR
+  - amount: "10000.50"
+    currency: USD
+description: A monetary amount and the currency in which its denominated

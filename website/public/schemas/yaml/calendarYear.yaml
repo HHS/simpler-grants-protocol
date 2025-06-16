@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: calendarYear.yaml
+type: string
+examples:
+  - "2025"
+pattern: ^[0-9]{4}$
+description: A calendar year

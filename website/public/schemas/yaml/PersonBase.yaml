@@ -1,0 +1,78 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PersonBase.yaml
+type: object
+properties:
+  name:
+    $ref: Name.yaml
+    description: The person's full name, including all relevant components (first, middle, last, etc.).
+  title:
+    type: string
+    description: The person's title, if applicable.
+  addresses:
+    $ref: AddressCollection.yaml
+    description: Collection of physical addresses associated with the person.
+  phones:
+    $ref: PhoneCollection.yaml
+    description: Collection of phone numbers associated with the person.
+  emails:
+    $ref: EmailCollection.yaml
+    description: Collection of email addresses associated with the person.
+  dateOfBirth:
+    $ref: isoDate.yaml
+    description: The person's date of birth.
+  customFields:
+    $ref: "#/$defs/RecordCustomField"
+    description: Custom fields for the person.
+required:
+  - name
+examples:
+  - name:
+      prefix: Dr.
+      firstName: Jane
+      middleName: Edward
+      lastName: Doe
+      suffix: Jr.
+    title: Chief Executive Officer
+    addresses:
+      primary:
+        street1: 123 Main St
+        city: Anytown
+        stateOrProvince: CA
+        country: US
+        postalCode: "12345"
+      otherAddresses:
+        work:
+          street1: 123 Main St
+          city: Anytown
+          stateOrProvince: CA
+          country: US
+          postalCode: "12345"
+        home:
+          street1: 123 Main St
+          city: Anytown
+          stateOrProvince: CA
+          country: US
+          postalCode: "12345"
+    phones:
+      primary:
+        countryCode: "+1"
+        number: 444-456-1230
+        isMobile: true
+      otherPhones:
+        home:
+          countryCode: "+1"
+          number: 333-456-1230
+          isMobile: false
+    emails:
+      primary: john.doe@example.com
+      otherEmails:
+        work: john.doe@work.com
+        personal: john.doe@gmail.com
+        school: john.doe@school.edu
+description: A person affiliated with an organization or grant application.
+$defs:
+  RecordCustomField:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: CustomField.yaml

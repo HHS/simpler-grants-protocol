@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: NumberComparisonFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: ComparisonOperators.yaml
+    description: The comparison operator to apply to the filter value
+  value:
+    type: number
+    examples:
+      - 1000
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a numeric value

@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OppTimeline.yaml
+type: object
+properties:
+  appOpens:
+    $ref: Event.yaml
+    description: The date (and time) at which the opportunity begins accepting applications
+  appDeadline:
+    $ref: Event.yaml
+    description: The final deadline for submitting applications
+  otherDates:
+    $ref: "#/$defs/RecordEvent"
+    description: |-
+      An optional map of other key dates in the opportunity timeline
+
+      Examples might include a deadline for questions, anticipated award date, etc.
+examples:
+  - appOpens:
+      name: Open Date
+      date: 2024-01-15
+      description: Applications begin being accepted
+    appDeadline:
+      name: Application Deadline
+      date: 2024-12-31
+      time: 17:00:00
+      description: Final submission deadline for all grant applications
+    otherDates:
+      anticipatedAward:
+        name: Anticipated award date
+        date: 2025-03-15
+        description: When we expect to announce awards for this opportunity.
+description: Key dates in the opportunity's timeline, such as when the application opens and closes
+$defs:
+  RecordEvent:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: Event.yaml

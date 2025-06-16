@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ArrayOperators.yaml
+type: string
+enum:
+  - in
+  - not_in
+description: Operators that filter a field based on an array of values

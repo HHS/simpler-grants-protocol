@@ -1,0 +1,40 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AppProposal.yaml
+type: object
+properties:
+  title:
+    type: string
+    description: The title of the proposal and/or the project requesting funding.
+  description:
+    type: string
+    description: The description of the proposal and/or the project requesting funding.
+  amountRequested:
+    $ref: Money.yaml
+    description: The amount of money requested.
+  periodStartDate:
+    $ref: isoDate.yaml
+    description: The start date of the period for which the funding is requested.
+  periodEndDate:
+    $ref: isoDate.yaml
+    description: The end date of the period for which the funding is requested.
+  customFields:
+    $ref: "#/$defs/RecordCustomField"
+    description: The project's custom fields.
+required:
+  - title
+  - description
+examples:
+  - title: Example Project
+    description: Example project to serve community needs.
+    amountRequested:
+      amount: "100000"
+      currency: USD
+    periodStartDate: 2024-01-01
+    periodEndDate: 2024-12-31
+description: The project for which funding is requested.
+$defs:
+  RecordCustomField:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: CustomField.yaml

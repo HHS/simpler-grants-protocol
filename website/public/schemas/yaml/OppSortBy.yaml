@@ -1,0 +1,14 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OppSortBy.yaml
+type: string
+enum:
+  - lastModifiedAt
+  - createdAt
+  - title
+  - status.value
+  - keyDates.closeDate
+  - funding.maxAwardAmount
+  - funding.minAwardAmount
+  - funding.totalAmountAvailable
+  - funding.estimatedAwardCount
+  - custom

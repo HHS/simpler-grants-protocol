@@ -1,0 +1,48 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OppFunding.yaml
+type: object
+properties:
+  totalAmountAvailable:
+    $ref: Money.yaml
+    description: Total amount of funding available for this opportunity
+  minAwardAmount:
+    $ref: Money.yaml
+    description: Minimum amount of funding granted per award
+  maxAwardAmount:
+    $ref: Money.yaml
+    description: Maximum amount of funding granted per award
+  minAwardCount:
+    type: integer
+    description: Minimum number of awards granted
+  maxAwardCount:
+    type: integer
+    description: Maximum number of awards granted
+  estimatedAwardCount:
+    type: integer
+    description: Estimated number of awards that will be granted
+examples:
+  - totalAmountAvailable:
+      amount: "1000000.00"
+      currency: USD
+    minAwardAmount:
+      amount: "10000.00"
+      currency: USD
+    maxAwardAmount:
+      amount: "50000.00"
+      currency: USD
+    minAwardCount: 5
+    maxAwardCount: 20
+    estimatedAwardCount: 10
+  - totalAmountAvailable:
+      amount: "1000000.00"
+      currency: USD
+    estimatedAwardCount: 10
+  - minAwardAmount:
+      amount: "10000.00"
+      currency: USD
+    maxAwardAmount:
+      amount: "50000.00"
+      currency: USD
+    minAwardCount: 5
+    maxAwardCount: 20
+description: Details about the funding available for this opportunity

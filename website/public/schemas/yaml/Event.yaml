@@ -1,0 +1,28 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Event.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: Human-readable name of the event (e.g., 'Application posted', 'Question deadline')
+  date:
+    $ref: isoDate.yaml
+    description: "Date of the event in in ISO 8601 format: YYYY-MM-DD"
+  time:
+    $ref: isoTime.yaml
+    description: "Time of the event in ISO 8601 format: HH:MM:SS"
+  description:
+    type: string
+    description: Description of what this event represents
+required:
+  - name
+  - date
+examples:
+  - name: Open Date
+    date: 2024-01-15
+    description: Applications begin being accepted
+  - name: Application Deadline
+    date: 2024-12-31
+    time: 17:00:00
+    description: Final submission deadline for all grant applications
+description: Description of an event that has a date (and possible time) associated with it

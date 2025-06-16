@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MoneyComparisonFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: ComparisonOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    $ref: Money.yaml
+    examples:
+      - amount: "1000"
+        currency: USD
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a monetary value

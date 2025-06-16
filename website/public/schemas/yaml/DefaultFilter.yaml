@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: DefaultFilter.yaml
+type: object
+properties:
+  operator:
+    anyOf:
+      - $ref: EquivalenceOperators.yaml
+      - $ref: ComparisonOperators.yaml
+      - $ref: ArrayOperators.yaml
+      - $ref: StringOperators.yaml
+      - $ref: RangeOperators.yaml
+      - $ref: AllOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: A base filter model that can be used to create more specific filter models

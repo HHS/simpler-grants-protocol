@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OppSorting.yaml
+type: object
+properties:
+  sortBy:
+    $ref: OppSortBy.yaml
+    examples:
+      - lastModifiedAt
+    description: The field to sort by
+required:
+  - sortBy
+allOf:
+  - $ref: SortBodyParams.yaml

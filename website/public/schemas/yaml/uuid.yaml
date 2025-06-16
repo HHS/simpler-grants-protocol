@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: uuid.yaml
+type: string
+examples:
+  - 30a12e5e-5940-4c08-921c-17a8960fcf4b
+format: uuid
+description: A universally unique identifier

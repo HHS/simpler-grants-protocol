@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SortBodyParams.yaml
+type: object
+properties:
+  sortBy:
+    examples:
+      - lastModifiedAt
+    description: The field to sort by
+  customSortBy:
+    type: string
+    examples:
+      - customField
+    description: Implementation-defined sort key
+  sortOrder:
+    $ref: SortOrder.yaml
+    examples:
+      - asc
+    description: The order to sort by
+required:
+  - sortBy
+description: Sorting parameters included in the request body

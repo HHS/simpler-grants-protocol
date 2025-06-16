@@ -1,0 +1,60 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AddressCollection.yaml
+type: object
+properties:
+  primary:
+    $ref: Address.yaml
+    description: The primary address for a person or organization.
+  otherAddresses:
+    $ref: "#/$defs/RecordAddress"
+    description: Additional addresses keyed by a descriptive label (e.g., "work", "home", "international").
+required:
+  - primary
+examples:
+  - primary:
+      street1: 456 Main St
+      street2: Suite 100
+      city: Anytown
+      stateOrProvince: CA
+      country: US
+      postalCode: "12345"
+    otherAddresses:
+      satellite:
+        street1: 456 Main St
+        street2: Suite 100
+        city: Anytown
+        stateOrProvince: CA
+        country: US
+        postalCode: "12345"
+      international:
+        street1: 123 Rue Principale
+        city: Montreal
+        stateOrProvince: QC
+        country: CA
+        postalCode: H2Y 1C6
+  - primary:
+      street1: 123 Main St
+      city: Anytown
+      stateOrProvince: CA
+      country: US
+      postalCode: "12345"
+    otherAddresses:
+      work:
+        street1: 123 Main St
+        city: Anytown
+        stateOrProvince: CA
+        country: US
+        postalCode: "12345"
+      home:
+        street1: 123 Main St
+        city: Anytown
+        stateOrProvince: CA
+        country: US
+        postalCode: "12345"
+description: A collection of addresses.
+$defs:
+  RecordAddress:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: Address.yaml

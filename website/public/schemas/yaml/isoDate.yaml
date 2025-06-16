@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: isoDate.yaml
+type: string
+format: date
+examples:
+  - 2025-01-01
+description: A date on a calendar in ISO 8601 format YYYY-MM-DD

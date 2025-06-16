@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OppStatus.yaml
+type: object
+properties:
+  value:
+    $ref: OppStatusOptions.yaml
+    description: The status value, from a predefined set of options
+  customValue:
+    type: string
+    description: A custom status value
+  description:
+    type: string
+    description: A human-readable description of the status
+required:
+  - value
+examples:
+  - value: open
+    description: The opportunity is currently accepting applications
+  - value: custom
+    customValue: archived
+    description: The opportunity is archived and shouldn't appear in search results
+description: The status of the opportunity

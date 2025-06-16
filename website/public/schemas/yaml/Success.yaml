@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Success.yaml
+type: object
+properties:
+  status:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    examples:
+      - 200
+  message:
+    type: string
+    examples:
+      - Success
+required:
+  - status
+  - message

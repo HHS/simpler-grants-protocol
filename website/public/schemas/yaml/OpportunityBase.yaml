@@ -1,0 +1,53 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OpportunityBase.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: Globally unique id for the opportunity
+  title:
+    type: string
+    description: Title or name of the funding opportunity
+  status:
+    $ref: OppStatus.yaml
+    description: Status of the opportunity
+  description:
+    type: string
+    description: Description of the opportunity's purpose and scope
+  funding:
+    $ref: OppFunding.yaml
+    description: Details about the funding available
+  keyDates:
+    $ref: OppTimeline.yaml
+    description: Key dates for the opportunity, such as when the application opens and closes
+  source:
+    type: string
+    format: uri
+    description: URL for the original source of the opportunity
+  customFields:
+    $ref: "#/$defs/RecordCustomField"
+    description: Additional custom fields specific to this opportunity
+  createdAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was created.
+  lastModifiedAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was last modified.
+required:
+  - id
+  - title
+  - status
+  - description
+  - funding
+  - keyDates
+  - createdAt
+  - lastModifiedAt
+description: A funding opportunity
+$defs:
+  RecordCustomField:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: CustomField.yaml
