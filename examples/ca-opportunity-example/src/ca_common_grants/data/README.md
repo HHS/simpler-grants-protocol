@@ -24,4 +24,5 @@ The source data from data.ca.gov is in JSON format with the following structure:
 
 - `records`: An array of opportunity records, where each record contains values corresponding to the fields defined above.
 
-Each record represents a single grant opportunity and its associated metadata. 
+Each record represents a single grant opportunity and its associated metadata.
+
