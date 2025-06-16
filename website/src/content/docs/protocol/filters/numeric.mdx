@@ -3,7 +3,7 @@ title: Numeric filters
 description: Filters that can be applied to numeric fields.
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 ## NumberComparisonFilter
 
@@ -18,82 +18,26 @@ Filters by comparing a field to a numeric value.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "operator": "eq",
-  "value": 1000
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: NumberComparisonFilter.yaml
-type: object
-properties:
-  operator:
-    $ref: ComparisonOperators.yaml
-    description: The comparison operator to apply to the filter value
-  value:
-    type: number
-    description: The value to use for the filter operation
-required:
-  - operator
-  - value
-description: Filters by comparing a field to a numeric value
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Filters by comparing a field to a numeric value */
-model NumberComparisonFilter {
-  /** The comparison operator to apply to the filter value */
-  operator: ComparisonOperators;
-
-  /** The value to use for the filter operation */
-  @example(1000)
-  value: numeric;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from dataclasses import dataclass
-
-@dataclass
-class NumberComparisonFilter:
-    operator: ComparisonOperators
-    value: float
-
-# Example usage:
-number_comparison_filter = NumberComparisonFilter(
-    operator=ComparisonOperators.EQ,
-    value=1000
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/NumberComparisonFilter.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/filters/numeric.tsp",
+      startLine: 11,
+      endLine: 19,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "operator": "eq",
+    "value": 1000
+  }
+  `,
+  }}
+/>
 
 ## NumberRangeFilter
 
@@ -117,107 +61,29 @@ Filters by comparing a field to a range of numeric values.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "operator": "within",
-  "value": {
-    "min": 1000,
-    "max": 10000
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/NumberRangeFilter.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/filters/numeric.tsp",
+      startLine: 25,
+      endLine: 39,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "operator": "within",
+    "value": {
+      "min": 1000,
+      "max": 10000
+    }
   }
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: NumberRangeFilter.yaml
-type: object
-properties:
-  operator:
-    $ref: RangeOperators.yaml
-    description: The operator to apply to the filter value
-  value:
-    type: object
-    properties:
-      min:
-        type: number
-      max:
-        type: number
-    required:
-      - min
-      - max
-    examples:
-      - min: 1000
-        max: 10000
-    description: The value to use for the filter operation
-required:
-  - operator
-  - value
-description: Filters by comparing a field to a numeric range
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Filters by comparing a field to a numeric range */
-model NumberRangeFilter {
-  /** The operator to apply to the filter value */
-  operator: RangeOperators;
-
-  /** The value to use for the filter operation */
-  @example(#{ min: 1000, max: 10000 })
-  value: {
-    min: numeric;
-    max: numeric;
-  };
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from dataclasses import dataclass
-
-@dataclass
-class NumberRange:
-    min: float
-    max: float
-
-@dataclass
-class NumberRangeFilter:
-    operator: RangeOperators
-    value: NumberRange
-
-# Example usage:
-number_range_filter = NumberRangeFilter(
-    operator=RangeOperators.WITHIN,
-    value=NumberRange(
-        min=1000,
-        max=10000
-    )
-)
-```
-
-  </TabItem>
-</Tabs>
+  `,
+  }}
+/>
 
 ## NumberArrayFilter
 
@@ -232,81 +98,23 @@ Filters by comparing a field to an array of numeric values.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "operator": "in",
-  "value": [1000, 2000, 3000]
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: NumberArrayFilter.yaml
-type: object
-properties:
-  operator:
-    $ref: ArrayOperators.yaml
-    description: The operator to apply to the filter value
-  value:
-    type: array
-    items:
-      type: number
-    description: The value to use for the filter operation
-required:
-  - operator
-  - value
-description: Filters by comparing a field to an array of numeric values
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Filters by comparing a field to an array of numeric values */
-model NumberArrayFilter {
-  /** The operator to apply to the filter value */
-  operator: ArrayOperators;
-
-  /** The value to use for the filter operation */
-  @example(#[1000, 2000, 3000])
-  value: Array<numeric>;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from dataclasses import dataclass
-
-@dataclass
-class NumberArrayFilter:
-    operator: ArrayOperators
-    value: list[float]
-
-# Example usage:
-number_array_filter = NumberArrayFilter(
-    operator=ArrayOperators.IN,
-    value=[1000, 2000, 3000]
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/NumberArrayFilter.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/filters/numeric.tsp",
+      startLine: 42,
+      endLine: 50,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "operator": "in",
+    "value": [1000, 2000, 3000]
+  }
+  `,
+  }}
+/>

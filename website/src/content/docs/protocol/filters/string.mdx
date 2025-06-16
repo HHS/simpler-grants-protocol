@@ -3,7 +3,7 @@ title: String filters
 description: Filters that can be applied to string or enum fields.
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 ## StringComparisonFilter
 
@@ -18,98 +18,26 @@ A filter that applies a comparison to a string value.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "operator": "eq",
-  "value": "value"
-}
-```
-
-Or with a string operator:
-
-```json
-{
-  "operator": "like",
-  "value": "value"
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: StringComparisonFilter.yaml
-type: object
-properties:
-  operator:
-    type: string
-    description: The operator to apply to the filter value
-    enum:
-      - eq
-      - ne
-      - like
-      - not_like
-    value:
-      type: string
-      description: The value to use for the filter operation
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** A filter that applies a comparison to a string value */
-model StringComparisonFilter {
-  /** The operator to apply to the filter value */
-  operator: EquivalenceOperators | StringOperators;
-
-  /** The value to use for the filter operation */
-  @example("value")
-  value: string;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from dataclasses import dataclass
-from typing import Union
-
-@dataclass
-class StringComparisonFilter:
-    operator: Union[EquivalenceOperators, StringOperators]
-    value: str
-
-# Example usage:
-string_comparison_filter = StringComparisonFilter(
-    operator=EquivalenceOperators.EQ,
-    value="value"
-)
-
-string_like_filter = StringComparisonFilter(
-    operator=StringOperators.LIKE,
-    value="value"
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/StringComparisonFilter.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/filters/string.tsp",
+      startLine: 9,
+      endLine: 17,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "operator": "eq",
+    "value": "value"
+  }
+  `,
+  }}
+/>
 
 ## StringArrayFilter
 
@@ -124,84 +52,23 @@ A filter that applies a comparison to an array of string values.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "operator": "eq",
-  "value": ["value1", "value2"]
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: StringArrayFilter.yaml
-type: object
-properties:
-  operator:
-    $ref: ArrayOperators.yaml
-    description: The operator to apply to the filter value
-  value:
-    type: array
-    items:
-      type: string
-    examples:
-      - value1
-      - value2
-    description: The value to use for the filter operation
-required:
-  - operator
-  - value
-description: A filter that applies a filter to an array of strings
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** A filter that applies a filter to an array of strings */
-model StringArrayFilter {
-  /** The operator to apply to the filter value */
-  operator: ArrayOperators;
-
-  /** The value to use for the filter operation */
-  @example(["value1", "value2"])
-  value: string[];
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from dataclasses import dataclass
-
-@dataclass
-class StringArrayFilter:
-    operator: ArrayOperators
-    value: list[str]
-
-# Example usage:
-string_array_filter = StringArrayFilter(
-    operator=ArrayOperators.EQ,
-    value=["value1", "value2"]
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/StringArrayFilter.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/filters/string.tsp",
+      startLine: 23,
+      endLine: 31,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "operator": "eq",
+    "value": ["value1", "value2"]
+  }
+  `,
+  }}
+/>
