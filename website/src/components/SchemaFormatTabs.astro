@@ -1,6 +1,8 @@
 ---
 import { Code } from "@astrojs/starlight/components";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
 
 type CodeProps = {
   code?: string;
@@ -30,7 +32,23 @@ function extractCode(props: CodeProps) {
     return props.code;
   }
   if (props.file) {
-    return props.file.path;
+    try {
+      const websiteRoot = process.cwd();
+      const repoRoot = dirname(websiteRoot);
+      const filePath = join(repoRoot, props.file.path);
+      const content = readFileSync(filePath, "utf-8");
+
+      if (props.file.startLine || props.file.endLine) {
+        const lines = content.split("\n");
+        const start = props.file.startLine ? props.file.startLine - 1 : 0;
+        const end = props.file.endLine ? props.file.endLine : lines.length;
+        return lines.slice(start, end).join("\n");
+      }
+
+      return content;
+    } catch (error) {
+      throw new Error(`Error reading file ${props.file.path}: ${error}`);
+    }
   }
   return null;
 }
