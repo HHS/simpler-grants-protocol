@@ -1,7 +1,7 @@
 """Service for handling opportunity data operations."""
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 from uuid import UUID
 
 from common_grants.schemas import (
@@ -17,6 +17,7 @@ from common_grants_sdk.schemas.models import (
 )
 from fastapi import status
 
+from ca_common_grants.utils.opp_extract import OpportunityExtractor
 from ca_common_grants.utils.opp_transform import OpportunityTransformer
 
 DATA_FILE = Path(__file__).parent.parent / "data" / "ca_grants_sample.json"
@@ -39,13 +40,13 @@ class OpportunityService:
 
     def _get_opportunity_list(self) -> list[OpportunityBase]:
         """Transform CA opportunity data to CGP format."""
-        transformed: list[dict[str, Any]] = (
-            OpportunityTransformer.transform_opportunities_file(
-                DATA_FILE,
-            )
-        )
+        # Get normalized data from source
+        normalized_data = OpportunityExtractor.extract_opportunities()
 
-        """Build result set."""
+        # Transform normalized data into CommonGrants format
+        transformed = OpportunityTransformer().transform_opportunities(normalized_data)
+
+        # Build result set
         return [OpportunityBase.model_validate(opp_data) for opp_data in transformed]
 
     async def list_opportunities(

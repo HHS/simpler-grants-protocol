@@ -5,11 +5,9 @@ This module provides functionality to transform grant opportunity data from the
 California Grants Portal format to the CommonGrants Protocol format.
 """
 
-import json
 import re
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -20,8 +18,8 @@ from common_grants_sdk.schemas.models import OppStatusOptions
 class DateFormat(Enum):
     """Enum for date format types."""
 
-    FULL_DATETIME = "9999-12-31 23:59:59"
-    DATE = "12/31/99"
+    LONG = "9999-12-31 23:59:59"
+    SHORT = "12/31/99"
 
 
 class OpportunityTransformer:
@@ -30,49 +28,15 @@ class OpportunityTransformer:
     def __init__(self):
         """Initialize the transformer with the CA Grants mapping."""
 
-    @classmethod
-    def transform_opportunities_file(
-        cls,
-        source_file: str | Path,
-    ) -> list[dict[str, Any]]:
-        """
-        Create a transformer and transform data from a source file.
-
-        Args:
-            source_file: Path to the source JSON file containing CA Grants Portal data
-
-        Returns:
-            List of transformed opportunities in CommonGrants Protocol format
-
-        Raises:
-            ValueError: If file cannot be read or contains invalid JSON
-
-        """
-        try:
-            # Read the source data
-            source_path = Path(source_file)
-            source_data = json.loads(source_path.read_text())
-
-            # Create transformer and transform data
-            transformer = cls()
-            return transformer.transform_opportunities(source_data)
-
-        except json.JSONDecodeError as e:
-            error_msg = f"Invalid JSON in file {source_file}: {e!s}"
-            raise ValueError(error_msg) from e
-        except Exception as e:
-            error_msg = f"Error processing file {source_file}: {e!s}"
-            raise ValueError(error_msg) from e
-
     def transform_opportunities(
         self,
-        source_data: dict[str, Any],
+        source_data: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         """
         Transform list of CA opportunities to CommonGrants format.
 
         Args:
-            source_data: CA Grants Portal opportunity data
+            source_data: List of CA Grants Portal opportunity data dictionaries
 
         Returns:
             List of opportunities in CommonGrants format
@@ -83,8 +47,7 @@ class OpportunityTransformer:
         """
         try:
             # Transform each grant opportunity
-            grants = source_data.get("grants", [])
-            result = [self.transform_opportunity(o) for o in grants]
+            result = [self.transform_opportunity(o) for o in source_data]
 
         except Exception as e:
             error_msg = f"Error transforming data: {e!s}"
@@ -125,7 +88,7 @@ class OpportunityTransformer:
                     "name": "Application Opens",
                     "date": self.transform_date(
                         str(source.get("OpenDate")),
-                        DateFormat.DATE,
+                        DateFormat.SHORT,
                     ).date(),
                     "description": "Applications accepted beginning this date",
                 },
@@ -133,7 +96,7 @@ class OpportunityTransformer:
                     "name": "Application Deadline",
                     "date": self.transform_date(
                         str(source.get("ApplicationDeadline")),
-                        DateFormat.DATE,
+                        DateFormat.SHORT,
                     ).date(),
                     "description": "Final deadline for all submissions",
                 },
@@ -142,7 +105,7 @@ class OpportunityTransformer:
                         "name": "Expected Award Date",
                         "date": self.transform_date(
                             str(source.get("ExpAwardDate")),
-                            DateFormat.DATE,
+                            DateFormat.SHORT,
                         ).date(),
                         "description": "Expected date of award announcement.",
                     },
@@ -207,11 +170,11 @@ class OpportunityTransformer:
             },
             "createdAt": self.transform_date(
                 str(source.get("LastUpdated")),
-                DateFormat.FULL_DATETIME,
+                DateFormat.LONG,
             ),
             "lastModifiedAt": self.transform_date(
                 str(source.get("LastUpdated")),
-                DateFormat.FULL_DATETIME,
+                DateFormat.LONG,
             ),
         }
 
@@ -234,18 +197,27 @@ class OpportunityTransformer:
             e = "Unrecognized date format: None"
             raise ValueError(e)
 
-        if value == "Ongoing":
-            # For Ongoing case, use far future date and format according to enum
+        # Transform unknown dates
+        unknown_dates = [
+            "TBD",
+            "TBA",
+            "ONGOING",
+            "PENDING",
+            "TO BE ANNOUNCED",
+            "TO BE DETERMINED",
+        ]
+        if value.upper() in unknown_dates:
+            # For unknown date cases use far future date
             future_date = "12/31/2099"
-            if output_format == DateFormat.FULL_DATETIME:
+            if output_format == DateFormat.LONG:
                 future_dt = future_date + " 23:59:59"
                 return datetime.strptime(future_dt, "%m/%d/%Y %H:%M:%S")  # noqa: DTZ007
             return datetime.strptime(future_date, "%m/%d/%Y")  # noqa: DTZ007
 
-        # Try ISO format first (2025-06-10 07:00:00)
+        # Transform from ISO format (2025-06-10 07:00:00)
         try:
             dt = datetime.fromisoformat(value)
-            if output_format == DateFormat.DATE:
+            if output_format == DateFormat.SHORT:
                 return datetime.strptime(  # noqa: DTZ007
                     dt.strftime("%m/%d/%Y"),
                     "%m/%d/%Y",
@@ -254,10 +226,10 @@ class OpportunityTransformer:
         except ValueError:
             pass
 
-        # Try MM/DD/YY format (12/31/25)
+        # Transform from MM/DD/YY format (12/31/25)
         try:
             dt = datetime.strptime(value, "%m/%d/%y")  # noqa: DTZ007
-            if output_format == DateFormat.FULL_DATETIME:
+            if output_format == DateFormat.LONG:
                 return datetime.strptime(  # noqa: DTZ007
                     dt.strftime("%m/%d/%Y") + " 23:59:59",
                     "%m/%d/%Y %H:%M:%S",

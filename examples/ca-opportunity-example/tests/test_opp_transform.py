@@ -28,7 +28,7 @@ class TestDateTransformation:
         transformer: OpportunityTransformer,
     ) -> None:
         """Test Ongoing case with FULL_DATETIME format."""
-        result = transformer.transform_date("Ongoing", DateFormat.FULL_DATETIME)
+        result = transformer.transform_date("Ongoing", DateFormat.LONG)
         expected = datetime(
             2099,
             12,
@@ -45,7 +45,7 @@ class TestDateTransformation:
         transformer: OpportunityTransformer,
     ) -> None:
         """Test Ongoing case with DATE format."""
-        result = transformer.transform_date("Ongoing", DateFormat.DATE)
+        result = transformer.transform_date("Ongoing", DateFormat.SHORT)
         expected = datetime(2099, 12, 31, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
@@ -56,7 +56,7 @@ class TestDateTransformation:
         """Test ISO format input with FULL_DATETIME output."""
         result = transformer.transform_date(
             "2025-06-10 07:00:00",
-            DateFormat.FULL_DATETIME,
+            DateFormat.LONG,
         )
         expected = datetime(2025, 6, 10, 7, 0, 0, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
@@ -68,7 +68,7 @@ class TestDateTransformation:
         """Test ISO format input with DATE output."""
         result = transformer.transform_date(
             "2025-06-10 07:00:00",
-            DateFormat.DATE,
+            DateFormat.SHORT,
         )
         expected = datetime(2025, 6, 10, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
@@ -80,7 +80,7 @@ class TestDateTransformation:
         """Test MM/DD/YY format input with FULL_DATETIME output."""
         result = transformer.transform_date(
             "12/31/25",
-            DateFormat.FULL_DATETIME,
+            DateFormat.LONG,
         )
         expected = datetime(
             2025,
@@ -98,7 +98,7 @@ class TestDateTransformation:
         transformer: OpportunityTransformer,
     ) -> None:
         """Test MM/DD/YY format input with DATE output."""
-        result = transformer.transform_date("12/31/25", DateFormat.DATE)
+        result = transformer.transform_date("12/31/25", DateFormat.SHORT)
         expected = datetime(2025, 12, 31, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
@@ -108,7 +108,7 @@ class TestDateTransformation:
     ) -> None:
         """Test invalid date format."""
         with pytest.raises(ValueError, match="Unrecognized date format"):
-            transformer.transform_date("invalid-date", DateFormat.DATE)
+            transformer.transform_date("invalid-date", DateFormat.SHORT)
 
     def test_empty_string(
         self,
@@ -116,7 +116,7 @@ class TestDateTransformation:
     ) -> None:
         """Test empty string input."""
         with pytest.raises(ValueError, match="Unrecognized date format"):
-            transformer.transform_date("", DateFormat.DATE)
+            transformer.transform_date("", DateFormat.SHORT)
 
     def test_none_input(
         self,
@@ -124,7 +124,7 @@ class TestDateTransformation:
     ) -> None:
         """Test None input."""
         with pytest.raises(ValueError, match="Unrecognized date format"):
-            transformer.transform_date("None", DateFormat.DATE)
+            transformer.transform_date("None", DateFormat.SHORT)
 
 
 class TestMoneyTransformation:
@@ -311,30 +311,14 @@ class TestOpportunityTransformation:
         )
 
 
-class TestFileTransformation:
-    """Test file transformation functionality."""
-
-    def test_transform_opportunities_file(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
-        """Test transforming opportunities from a file."""
-        with pytest.raises(ValueError, match="Error processing file"):
-            transformer.transform_opportunities_file("nonexistent_file.json")
+class TestEmptyDataTransformation:
+    """Test empty data transformation functionality."""
 
     def test_transform_opportunities_with_empty_data(
         self,
         transformer: OpportunityTransformer,
     ) -> None:
         """Test transforming empty data."""
-        empty_data = {"grants": []}
+        empty_data = []
         result = transformer.transform_opportunities(empty_data)
         assert len(result) == 0
-
-    def test_transform_opportunities_with_invalid_json(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
-        """Test transforming invalid JSON data."""
-        with pytest.raises(ValueError, match="Error processing file"):
-            transformer.transform_opportunities_file("invalid.json")
