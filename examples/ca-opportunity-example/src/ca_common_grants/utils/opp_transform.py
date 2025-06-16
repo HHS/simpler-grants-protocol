@@ -34,7 +34,7 @@ class OpportunityTransformer:
     def transform_opportunities_file(
         cls,
         source_file: str | Path,
-    ) -> list[dict[str, str]]:
+    ) -> list[dict[str, Any]]:
         """
         Create a transformer and transform data from a source file.
 
@@ -66,7 +66,7 @@ class OpportunityTransformer:
 
     def transform_opportunities(
         self,
-        source_data: dict[str, str],
+        source_data: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """
         Transform list of CA opportunities to CommonGrants format.
