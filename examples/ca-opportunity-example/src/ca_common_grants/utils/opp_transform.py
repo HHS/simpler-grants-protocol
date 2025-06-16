@@ -211,20 +211,6 @@ class OpportunityTransformer:
             ),
         }
 
-    def transform_status(self, value: str) -> OppStatusOptions:
-        """Transform CA opportunity status value to CommonGrants format."""
-        match value:
-            case "active":
-                return OppStatusOptions.OPEN
-            case "forecasted":
-                return OppStatusOptions.FORECASTED
-            case "closed":
-                return OppStatusOptions.CLOSED
-        return OppStatusOptions.CUSTOM
-
-    def transform_money(self, value: str) -> str:
-        return re.sub(r"[^\d]", "", value)
-
     def transform_date(self, value: str, output_format: DateFormat) -> datetime:
         """
         Transform a date string into a specified datetime format.
@@ -272,3 +258,20 @@ class OpportunityTransformer:
             pass
 
         raise ValueError(f"Unrecognized date format: {value}")
+
+    def transform_money(self, value: str) -> str:
+        # Strip non-digit characters and convert to float
+        new_value = re.sub(r'[^\d]', '', value) or '0'
+        return new_value
+
+    def transform_status(self, value: str) -> OppStatusOptions:
+        """Transform CA opportunity status value to CommonGrants format."""
+        match value:
+            case "active":
+                return OppStatusOptions.OPEN
+            case "forecasted":
+                return OppStatusOptions.FORECASTED
+            case "closed":
+                return OppStatusOptions.CLOSED
+        return OppStatusOptions.CUSTOM
+
