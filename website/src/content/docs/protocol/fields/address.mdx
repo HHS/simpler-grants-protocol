@@ -3,7 +3,7 @@ title: Address
 description: Data model for an address
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 An address is a physical location.
 
@@ -22,116 +22,36 @@ An address is a physical location.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "street1": "123 Main St",
-  "street2": "Apt 1",
-  "city": "Anytown",
-  "stateOrProvince": "CA",
-  "country": "US",
-  "postalCode": "12345",
-  "latitude": 37.7749,
-  "longitude": -122.4194,
-  "geography": {
-    "type": "Point",
-    "coordinates": [37.7749, -122.4194]
+<SchemaFormatTabs
+  example={{
+    code: `
+  {
+    "street1": "123 Main St",
+    "street2": "Apt 1",
+    "city": "Anytown",
+    "stateOrProvince": "CA",
+    "country": "US",
+    "postalCode": "12345",
+    "latitude": 37.7749,
+    "longitude": -122.4194,
+    "geography": {
+      "type": "Point",
+      "coordinates": [37.7749, -122.4194]
+    }
   }
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-A JSON Schema example of this field is:
-
-```yaml
-$id: Address.json
-type: object
-properties:
-  street1:
-    type: string
-    description: The primary street address line.
-  street2:
-    type: string
-    description: Additional street address information (e.g., apartment number, suite, etc.).
-  city:
-    type: string
-    description: The city or municipality name.
-  stateOrProvince:
-    type: string
-    description: The state, province, or region name.
-  country:
-    type: string
-    description: The country name or ISO country code.
-  postalCode:
-    type: string
-    description: The postal or ZIP code for the address.
-  latitude:
-    type: number
-    description: The latitude coordinate of the address location.
-  longitude:
-    type: number
-    description: The longitude coordinate of the address location.
-  geography:
-    $ref: "#/$defs/RecordUnknown"
-    description: Additional geospatial data in GeoJSON format.
-required:
-  - street1
-  - city
-  - stateOrProvince
-  - country
-  - postalCode
-description: An mailing address.
-$defs:
-  RecordUnknown:
-    type: object
-    properties: {}
-    unevaluatedProperties: {}
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-/** An address is a physical location. */
-model Address {
-  /** The primary street address line. */
-  street1: string;
-
-  /** Additional street address information (e.g., apartment number, suite, etc.). */
-  street2?: string;
-
-  /** The city of the location. */
-  city: string;
-
-  /** The state of the location. */
-  state: string;
-
-  /** The postal code of the location. */
-  zip: string;
-
-  /** The latitude coordinate of the address location. */
-  latitude: number;
-
-  /** The longitude coordinate of the address location. */
-  longitude: number;
-
-  /** Additional geospatial data in GeoJSON format. */
-  geography: Record<Unknown>;
-}
-```
-
-  </TabItem>
-</Tabs>
+  `,
+  }}
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/Address.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/fields/address.tsp",
+      startLine: 1,
+      endLine: 33,
+    },
+  }}
+/>
 
 ## AddressCollection
 
@@ -146,78 +66,48 @@ A collection of addresses for a person or organization.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "primary": {
-    "street1": "123 Main St",
-    "city": "Anytown",
-    "stateOrProvince": "CA",
-    "country": "US",
-    "postalCode": "12345"
-  },
-  "otherAddresses": {
-    "work": {
-      "street1": "456 Main St",
-      "street2": "Suite 100",
+<SchemaFormatTabs
+  foo="bar"
+  example={{
+    code: `
+  {
+    "primary": {
+      "street1": "123 Main St",
       "city": "Anytown",
       "stateOrProvince": "CA",
       "country": "US",
       "postalCode": "12345"
     },
-    "international": {
-      "street1": "123 Rue Principale",
-      "city": "Montreal",
-      "stateOrProvince": "QC",
-      "country": "CA",
-      "postalCode": "H2Y 1C6"
+    "otherAddresses": {
+      "work": {
+        "street1": "456 Main St",
+        "street2": "Suite 100", 
+        "city": "Anytown",
+        "stateOrProvince": "CA",
+        "country": "US",
+        "postalCode": "12345"
+      },
+      "international": {    
+        "street1": "123 Rue Principale",
+        "city": "Montreal",
+        "stateOrProvince": "QC",
+        "country": "CA",
+        "postalCode": "H2Y 1C6"
+      }
     }
   }
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON Schema for this model is:
-
-```yaml
-$id: AddressCollection.yaml
-type: object
-properties:
-  primary:
-    $ref: Address.yaml
-    description: The primary address for a person or organization.
-  otherAddresses:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      $ref: Address.yaml
-    description: Additional addresses keyed by a descriptive label.
-required:
-  - primary
-description: A collection of addresses for a person or organization.
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```tsp
-/** A collection of addresses. */
-model AddressCollection {
-  /** The primary address for a person or organization. */
-  primary: Address;
-
-  /** Additional addresses keyed by a descriptive label (e.g., "work", "home", "international"). */
-  otherAddresses?: Record<Address>;
-}
-```
-
-  </TabItem>
-</Tabs>
+  `,
+  }}
+  jsonSchema={{
+    file: {
+      path: "website/public/schemas/yaml/AddressCollection.yaml",
+    },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/fields/address.tsp",
+      startLine: 34,
+      endLine: 43,
+    },
+  }}
+/>

@@ -3,7 +3,7 @@ title: Money
 description: A model for representing monetary values
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 A monetary amount and the currency in which it is denominated.
 
@@ -16,66 +16,28 @@ A monetary amount and the currency in which it is denominated.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/Money.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/fields/money.tsp",
+      startLine: 21,
+      endLine: 28,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "amount": "1000000.00",
+    "currency": "USD"
+  }`,
+  }}
+  python={{
+    code: `
+  from common_grants_sdk.schemas.fields import Money
 
-A JSON example of this field is:
-
-```json
-{
-  "amount": "1000000.00",
-  "currency": "USD"
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: Money.yaml
-type: object
-properties:
-  amount:
-    $ref: decimalString.yaml
-    description: The amount of money
-  currency:
-    type: string
-    description: The ISO 4217 currency code (e.g., "USD", "EUR")
-required:
-  - amount
-  - currency
-description: A monetary amount and the currency in which its denominated
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-/** A monetary amount and the currency in which its denominated */
-model Money {
-  /** The amount of money */
-  amount: decimalString;
-
-  /** The ISO 4217 currency code in which the amount is denominated */
-  currency: string;
-}
-```
-
-  </TabItem>
-  <TabItem label="Python">
-
-The Python code for this field is:
-
-```python
-from common_grants_sdk.schemas.fields import Money
-
-money = Money(amount="1000000.00", currency="USD")
-```
-
-  </TabItem>
-</Tabs>
+  money = Money(amount="1000000.00", currency="USD")`,
+  }}
+/>

@@ -3,7 +3,7 @@ title: Name
 description: Data model for a person's name
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 A person's name.
 
@@ -19,74 +19,25 @@ A person's name.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "prefix": "Dr.",
-  "firstName": "Jane",
-  "middleName": "Edward",
-  "lastName": "Doe",
-  "suffix": "Jr."
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON Schema for this model is:
-
-```yaml
-$id: Name.json
-type: object
-properties:
-  prefix:
-    type: string
-    description: Honorific prefix (e.g., Mr., Mrs., Dr., Prof.).
-  firstName:
-    type: string
-    description: The person's first or given name.
-  middleName:
-    type: string
-    description: The person's middle name or names.
-  lastName:
-    type: string
-    description: The person's last name or family name.
-  suffix:
-    type: string
-    description: Name suffix (e.g., Jr., Sr., III, Ph.D.).
-required:
-  - firstName
-  - lastName
-description: A person's name.
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```tsp
-model Name {
-    /** Honorific prefix (e.g., Mr., Mrs., Dr., Prof.). */
-    prefix?: string;
-
-    /** The person's first or given name. */
-    firstName: string;
-
-    /** The person's middle name or names. */
-    middleName?: string;
-
-    /** The person's last name or family name. */
-    lastName: string;
-
-    /** Name suffix (e.g., Jr., Sr., III, Ph.D.). */
-    suffix?: string;
-}
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/Name.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "website/src/specs/schemas/fields/name.tsp",
+      startLine: 5,
+      endLine: 20,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "prefix": "Dr.",
+    "firstName": "Jane",
+    "middleName": "Edward",
+    "lastName": "Doe",
+    "suffix": "Jr."
+  }`,
+  }}
+/>

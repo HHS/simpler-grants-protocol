@@ -3,7 +3,7 @@ title: CustomField
 description: A model for defining custom fields that are specific to a given implementation
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 A model for defining custom fields on a record.
 
@@ -21,100 +21,41 @@ A model for defining custom fields on a record.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
+<SchemaFormatTabs
+  example={{
+    code: `
+  {
+    "name": "programArea",
+    "type": "string",
+    "value": "Healthcare Innovation",
+    "description": "Primary focus area of the grant program",
+    "schema": "https://example.com/program-areas.json"
+  }
+  `,
+  }}
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/CustomField.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/fields/custom-field.tsp",
+      startLine: 45,
+      endLine: 61,
+    },
+  }}
+  python={{
+    code: `
+  from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
 
-A JSON example of this field is:
-
-```json
-{
-  "name": "programArea",
-  "type": "string",
-  "value": "Healthcare Innovation",
-  "description": "Primary focus area of the grant program",
-  "schema": "https://example.com/program-areas.json"
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: CustomField.yaml
-type: object
-properties:
-  name:
-    type: string
-    description: Name of the custom field
-  type:
-    $ref: CustomFieldType.yaml
-    description: The JSON schema type to use when de-serializing the value
-  schema:
-    type: string
-    format: uri
-    description: Link to the full JSON schema for this custom field
-  value:
-    description: Value of the custom field
-  description:
-    type: string
-    description: Description of the custom field's purpose
-required:
-  - name
-  - type
-  - value
-description: A custom field on a model
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-@doc("A custom field on a model")
-model CustomField {
-  /** Name of the custom field */
-  name: string;
-
-  /** The JSON schema type to use when de-serializing the `value` field */
-  type: CustomFieldType;
-
-  /** Link to the full JSON schema for this custom field */
-  schema?: url;
-
-  /** Value of the custom field */
-  value: unknown;
-
-  /** Description of the custom field's purpose */
-  description?: string;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this field is:
-
-```python
-from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
-
-custom_field = CustomField(
-    name="programArea",
-    type=CustomFieldType.STRING,
-    value="Healthcare Innovation",
-    description="Primary focus area of the grant program",
-    schema="https://example.com/program-areas.json"
-)
-```
-
-  </TabItem>
-</Tabs>
+  custom_field = CustomField(
+      name="programArea",
+      type=CustomFieldType.STRING,
+      value="Healthcare Innovation",
+      description="Primary focus area of the grant program",
+      schema="https://example.com/program-areas.json"
+  )`,
+  }}
+/>
 
 ## CustomFieldType
 
@@ -132,40 +73,18 @@ The set of JSON schema types supported by a custom field.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="JSON Schema">
-
-The JSON schema for this enum is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: CustomFieldType.yaml
-type: string
-enum:
-  - string
-  - number
-  - boolean
-  - object
-  - array
-description: The set of JSON schema types supported by a custom field
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this enum is:
-
-```tsp
-/** The set of JSON schema types supported by a custom field */
-enum CustomFieldType {
-  string,
-  number,
-  boolean,
-  object,
-  array,
-}
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={{
+    code: "string",
+  }}
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/CustomFieldType.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/fields/custom-field.tsp",
+      startLine: 7,
+      endLine: 14,
+    },
+  }}
+/>
