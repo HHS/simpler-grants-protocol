@@ -2,46 +2,70 @@
 import { Code } from "@astrojs/starlight/components";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
+type CodeProps = {
+  code?: string;
+  file?: {
+    path: string;
+    startLine?: number;
+    endLine?: number;
+  };
+};
+
 interface Props {
-  example?: string;
-  jsonSchema?: string;
-  typeSpec?: string;
-  python?: string;
+  example?: CodeProps;
+  jsonSchema?: CodeProps;
+  typeSpec?: CodeProps;
+  python?: CodeProps;
 }
 
 const { example, jsonSchema, typeSpec, python } = Astro.props;
+
+const exampleCode = example ? extractCode(example) : null;
+const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
+const typeSpecCode = typeSpec ? extractCode(typeSpec) : null;
+const pythonCode = python ? extractCode(python) : null;
+
+function extractCode(props: CodeProps) {
+  if (props.code) {
+    return props.code;
+  }
+  if (props.file) {
+    return props.file.path;
+  }
+  return null;
+}
 ---
 
 <Tabs>
   {
-    example && (
+    exampleCode && (
       <TabItem label="Example">
         <p>A JSON example of this model.</p>
-        <Code code={example} lang="json" />
+        <Code code={exampleCode} lang="json" />
       </TabItem>
     )
   }
   {
-    jsonSchema && (
+    jsonSchemaCode && (
       <TabItem label="JSON Schema">
         <p>The JSON Schema for this model.</p>
-        <Code code={jsonSchema} lang="yaml" />
+        <Code code={jsonSchemaCode} lang="yaml" />
       </TabItem>
     )
   }
   {
-    typeSpec && (
+    typeSpecCode && (
       <TabItem label="TypeSpec">
         <p>The TypeSpec code for this model.</p>
-        <Code code={typeSpec} lang="typespec" />
+        <Code code={typeSpecCode} lang="typespec" />
       </TabItem>
     )
   }
   {
-    python && (
+    pythonCode && (
       <TabItem label="Python">
         <p>The Python code for this model.</p>
-        <Code code={python} lang="python" />
+        <Code code={pythonCode} lang="python" />
       </TabItem>
     )
   }
