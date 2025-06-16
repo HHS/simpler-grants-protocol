@@ -9,3 +9,6 @@ __pycache__/
 .venv/
 venv/
 
+# OpenAPI validation
+openapi.yaml
+openapi-v3.yaml

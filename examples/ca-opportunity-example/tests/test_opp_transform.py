@@ -29,7 +29,15 @@ class TestDateTransformation:
     ) -> None:
         """Test Ongoing case with FULL_DATETIME format."""
         result = transformer.transform_date("Ongoing", DateFormat.FULL_DATETIME)
-        expected = datetime(2099, 12, 31, 23, 59, 59)  # noqa: DTZ001
+        expected = datetime(
+            2099,
+            12,
+            31,
+            23,
+            59,
+            59,
+            tzinfo=timezone.utc,
+        )
         assert result.replace(tzinfo=timezone.utc) == expected
 
     def test_ongoing_with_date(
@@ -38,7 +46,7 @@ class TestDateTransformation:
     ) -> None:
         """Test Ongoing case with DATE format."""
         result = transformer.transform_date("Ongoing", DateFormat.DATE)
-        expected = datetime(2099, 12, 31)  # noqa: DTZ001
+        expected = datetime(2099, 12, 31, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
     def test_iso_format_with_full_datetime(
@@ -50,7 +58,7 @@ class TestDateTransformation:
             "2025-06-10 07:00:00",
             DateFormat.FULL_DATETIME,
         )
-        expected = datetime(2025, 6, 10, 7, 0, 0)  # noqa: DTZ001
+        expected = datetime(2025, 6, 10, 7, 0, 0, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
     def test_iso_format_with_date(
@@ -62,7 +70,7 @@ class TestDateTransformation:
             "2025-06-10 07:00:00",
             DateFormat.DATE,
         )
-        expected = datetime(2025, 6, 10)  # noqa: DTZ001
+        expected = datetime(2025, 6, 10, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
     def test_mmddyy_format_with_full_datetime(
@@ -74,7 +82,15 @@ class TestDateTransformation:
             "12/31/25",
             DateFormat.FULL_DATETIME,
         )
-        expected = datetime(2025, 12, 31, 23, 59, 59)  # noqa: DTZ001
+        expected = datetime(
+            2025,
+            12,
+            31,
+            23,
+            59,
+            59,
+            tzinfo=timezone.utc,
+        )
         assert result.replace(tzinfo=timezone.utc) == expected
 
     def test_mmddyy_format_with_date(
@@ -83,7 +99,7 @@ class TestDateTransformation:
     ) -> None:
         """Test MM/DD/YY format input with DATE output."""
         result = transformer.transform_date("12/31/25", DateFormat.DATE)
-        expected = datetime(2025, 12, 31)  # noqa: DTZ001
+        expected = datetime(2025, 12, 31, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
     def test_invalid_format(
