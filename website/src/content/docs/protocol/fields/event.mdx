@@ -1,6 +1,16 @@
 ---
 title: Event
 description: A model for representing events with dates and descriptions
+event:
+  python: |
+    from common_grants_sdk.schemas.fields import Event
+
+    event = Event(
+        name="Application Deadline",
+        date="2024-04-30",
+        time="17:00:00",
+        description="Final deadline for all submissions"
+    )
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -38,15 +48,5 @@ A description of an event with an associated date (and possible time).
     "description": "Final deadline for all submissions"
   }`,
   }}
-  python={{
-    code: `
-  from common_grants_sdk.schemas.fields import Event
-
-  event = Event(
-      name="Application Deadline",
-      date=date(2024, 4, 30),
-      time=time(17, 0, 0),
-      description="Final deadline for all submissions"
-  )`,
-  }}
+  python={{ code: frontmatter.event.python }}
 />

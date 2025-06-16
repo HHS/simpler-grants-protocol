@@ -1,6 +1,46 @@
 ---
 title: CustomField
 description: A model for defining custom fields that are specific to a given implementation
+customField:
+  example:
+    code: |
+      {
+        "name": "programArea",
+        "type": "string",
+        "value": "Healthcare Innovation",
+        "description": "Primary focus area of the grant program",
+        "schema": "https://example.com/program-areas.json"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/CustomField.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/custom-field.tsp"
+      startLine: 45
+      endLine: 61
+  python:
+    code: |
+      from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
+
+      custom_field = CustomField(
+          name="programArea",
+          type=CustomFieldType.STRING,
+          value="Healthcare Innovation",
+          description="Primary focus area of the grant program",
+          schema="https://example.com/program-areas.json"
+      )
+customFieldType:
+  example:
+    code: "string"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/CustomFieldType.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/custom-field.tsp"
+      startLine: 7
+      endLine: 14
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -22,39 +62,10 @@ A model for defining custom fields on a record.
 ### Formats
 
 <SchemaFormatTabs
-  example={{
-    code: `
-  {
-    "name": "programArea",
-    "type": "string",
-    "value": "Healthcare Innovation",
-    "description": "Primary focus area of the grant program",
-    "schema": "https://example.com/program-areas.json"
-  }
-  `,
-  }}
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/CustomField.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/custom-field.tsp",
-      startLine: 45,
-      endLine: 61,
-    },
-  }}
-  python={{
-    code: `
-  from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
-
-  custom_field = CustomField(
-      name="programArea",
-      type=CustomFieldType.STRING,
-      value="Healthcare Innovation",
-      description="Primary focus area of the grant program",
-      schema="https://example.com/program-areas.json"
-  )`,
-  }}
+  example={frontmatter.customField.example}
+  jsonSchema={frontmatter.customField.jsonSchema}
+  typeSpec={frontmatter.customField.typeSpec}
+  python={frontmatter.customField.python}
 />
 
 ## CustomFieldType
@@ -74,17 +85,7 @@ The set of JSON schema types supported by a custom field.
 ### Formats
 
 <SchemaFormatTabs
-  example={{
-    code: "string",
-  }}
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/CustomFieldType.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/custom-field.tsp",
-      startLine: 7,
-      endLine: 14,
-    },
-  }}
+  example={frontmatter.customFieldType.example}
+  jsonSchema={frontmatter.customFieldType.jsonSchema}
+  typeSpec={frontmatter.customFieldType.typeSpec}
 />
