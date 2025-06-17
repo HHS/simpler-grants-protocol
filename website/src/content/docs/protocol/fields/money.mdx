@@ -1,6 +1,11 @@
 ---
 title: Money
 description: A model for representing monetary values
+Money:
+  python: |
+    from common_grants_sdk.schemas.fields import Money
+
+    money = Money(amount="1000000.00", currency="USD")
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -34,10 +39,5 @@ A monetary amount and the currency in which it is denominated.
     "currency": "USD"
   }`,
   }}
-  python={{
-    code: `
-  from common_grants_sdk.schemas.fields import Money
-
-  money = Money(amount="1000000.00", currency="USD")`,
-  }}
+  python={{ code: frontmatter.Money.python }}
 />
