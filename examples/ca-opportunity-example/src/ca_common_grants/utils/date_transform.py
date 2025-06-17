@@ -57,8 +57,7 @@ def transform_date(date_str: str, output_format: DateFormat) -> datetime:
     except ValueError:
         pass
 
-    msg = f"Unrecognized date format: {date_str}"
-    raise ValueError(msg)
+    return transform_unknown("TBD", output_format)
 
 
 def transform_datetime(date_str: str, output_format: DateFormat) -> datetime:
