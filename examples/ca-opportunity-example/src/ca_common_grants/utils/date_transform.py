@@ -6,7 +6,7 @@ standardized datetime objects.
 """
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 
@@ -41,18 +41,21 @@ def transform_date(date_str: str, output_format: DateFormat) -> datetime:
     if match := re.match(range_pattern, date_str.lower()):
         date_str = match.group(1).strip()
 
-    # List of transformers to try, in order of preference
-    transformers = [
-        transform_datetime,
-        transform_seasonal,
-        transform_unknown,
-    ]
+    # Apply transformers
+    try:
+        return transform_datetime(date_str, output_format)
+    except ValueError:
+        pass
 
-    for transformer in transformers:
-        try:
-            return transformer(date_str, output_format)
-        except ValueError:
-            continue
+    try:
+        return transform_seasonal(date_str, output_format)
+    except ValueError:
+        pass
+
+    try:
+        return transform_unknown(date_str, output_format)
+    except ValueError:
+        pass
 
     msg = f"Unrecognized date format: {date_str}"
     raise ValueError(msg)
@@ -86,9 +89,9 @@ def transform_datetime(date_str: str, output_format: DateFormat) -> datetime:
         "%b %Y",  # Abbreviated Month YYYY
     ]
 
-    for fmt in formats:
+    def try_format(fmt: str) -> datetime | None:
         try:
-            dt = datetime.strptime(date_str, fmt)
+            dt = datetime.strptime(date_str, fmt).replace(tzinfo=timezone.utc)
             if output_format == DateFormat.SHORT:
                 # For SHORT format, return date only at midnight
                 return dt.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -99,7 +102,11 @@ def transform_datetime(date_str: str, output_format: DateFormat) -> datetime:
                 return dt
             return dt.replace(hour=23, minute=59, second=59, microsecond=0)
         except ValueError:
-            continue
+            return None
+
+    for fmt in formats:
+        if dt := try_format(fmt):
+            return dt
 
     msg = f"Unrecognized date format: {date_str}"
     raise ValueError(msg)
@@ -145,6 +152,8 @@ def transform_unknown(value: str, output_format: DateFormat) -> datetime:
 
 def transform_seasonal(value: str, output_format: DateFormat) -> datetime:
     """
+    Transform seasonal date values.
+
     Transform seasonal date values (e.g. "Fall '24", "Late Spring 2026")
     into specific dates.
 

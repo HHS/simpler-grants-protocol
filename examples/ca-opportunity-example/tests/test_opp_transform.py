@@ -241,7 +241,7 @@ class TestOpportunityTransformation:
         assert result["source"] == "https://example.com"
 
         # Verify timestamps
-        d = datetime(2025, 1, 1, 12, 0, 0)  # noqa: DTZ001
+        d = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         assert result["createdAt"] == d
         assert result["lastModifiedAt"] == d
 
