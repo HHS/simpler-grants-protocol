@@ -1,12 +1,12 @@
-"""Extractor module for loading and normalizing CA Grants Portal data."""
+"""Mock data source snapshot of CA Grants Portal data."""
 
 import json
 from pathlib import Path
 from typing import Any
 
 
-class OpportunityExtractor:
-    """Extractor for loading and normalizing CA Grants Portal data."""
+class OpportunityDataSource:
+    """Mock data source of CA Grants Portal data."""
 
     # Path to the data file relative to this module
     DATA_FILE = (
@@ -16,9 +16,9 @@ class OpportunityExtractor:
     )
 
     @classmethod
-    def extract_opportunities(cls) -> list[dict[str, Any]]:
+    def get_opportunities(cls) -> list[dict[str, Any]]:
         """
-        Extract and normalize opportunities from a flatfile.
+        Fetch and normalize data from local json file.
 
         Returns:
             List of normalized opportunity dictionaries
@@ -37,7 +37,7 @@ class OpportunityExtractor:
             fields = source_data.get("fields", [])
             field_names = [field["id"] for field in fields]
 
-            # Get the records, limited to specified number
+            # Get the records
             records = source_data.get("records", [])
 
             # Convert records to dictionaries using field names as keys

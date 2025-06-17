@@ -17,7 +17,7 @@ from common_grants_sdk.schemas.models import (
 )
 from fastapi import status
 
-from ca_common_grants.utils.opp_extract import OpportunityExtractor
+from ca_common_grants.utils.opp_data_source import OpportunityDataSource
 from ca_common_grants.utils.opp_transform import OpportunityTransformer
 
 DATA_FILE = Path(__file__).parent.parent / "data" / "ca_grants_sample.json"
@@ -41,7 +41,7 @@ class OpportunityService:
     def _get_opportunity_list(self) -> list[OpportunityBase]:
         """Transform CA opportunity data to CGP format."""
         # Get normalized data from source
-        normalized_data = OpportunityExtractor.extract_opportunities()
+        normalized_data = OpportunityDataSource.get_opportunities()
 
         # Transform normalized data into CommonGrants format
         transformed = OpportunityTransformer().transform_opportunities(normalized_data)
