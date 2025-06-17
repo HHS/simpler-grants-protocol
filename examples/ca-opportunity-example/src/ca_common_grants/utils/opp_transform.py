@@ -6,20 +6,13 @@ California Grants Portal format to the CommonGrants Protocol format.
 """
 
 import re
-from datetime import datetime
-from enum import Enum
 from typing import Any
 from uuid import uuid4
 
 from common_grants_sdk.schemas.fields import CustomFieldType
 from common_grants_sdk.schemas.models import OppStatusOptions
 
-
-class DateFormat(Enum):
-    """Enum for date format types."""
-
-    LONG = "9999-12-31 23:59:59"
-    SHORT = "12/31/99"
+from .date_transform import DateFormat, transform_date
 
 
 class OpportunityTransformer:
@@ -66,36 +59,38 @@ class OpportunityTransformer:
             "title": source.get("Title"),
             "description": source.get("Description"),
             "status": {
-                "value": self.transform_status(str(source.get("Status"))),
+                "value": self.transform_status(str(source.get("Status", ""))),
                 "description": "Opportunity is actively accepting applications",
             },
             "funding": {
                 "totalAmountAvailable": {
-                    "amount": self.transform_money(str(source.get("EstAvailFunds"))),
+                    "amount": self.transform_money(
+                        str(source.get("EstAvailFunds", "0")),
+                    ),
                     "currency": "USD",
                 },
                 "minAwardAmount": {
-                    "amount": self.transform_money(str(source.get("EstAmounts"))),
+                    "amount": self.transform_money(str(source.get("EstAmounts", "0"))),
                     "currency": "USD",
                 },
                 "maxAwardAmount": {
-                    "amount": self.transform_money(str(source.get("EstAmounts"))),
+                    "amount": self.transform_money(str(source.get("EstAmounts", "0"))),
                     "currency": "USD",
                 },
             },
             "keyDates": {
                 "appOpens": {
                     "name": "Application Opens",
-                    "date": self.transform_date(
-                        str(source.get("OpenDate")),
+                    "date": transform_date(
+                        source.get("OpenDate", "TBD"),
                         DateFormat.SHORT,
                     ).date(),
                     "description": "Applications accepted beginning this date",
                 },
                 "appDeadline": {
                     "name": "Application Deadline",
-                    "date": self.transform_date(
-                        str(source.get("ApplicationDeadline")),
+                    "date": transform_date(
+                        source.get("ApplicationDeadline", "TBD"),
                         DateFormat.SHORT,
                     ).date(),
                     "description": "Final deadline for all submissions",
@@ -103,8 +98,8 @@ class OpportunityTransformer:
                 "otherDates": {
                     "expAwardDate": {
                         "name": "Expected Award Date",
-                        "date": self.transform_date(
-                            str(source.get("ExpAwardDate")),
+                        "date": transform_date(
+                            source.get("ExpAwardDate", "TBD"),
                             DateFormat.SHORT,
                         ).date(),
                         "description": "Expected date of award announcement.",
@@ -168,78 +163,15 @@ class OpportunityTransformer:
                     "description": "Geography",
                 },
             },
-            "createdAt": self.transform_date(
-                str(source.get("LastUpdated")),
+            "createdAt": transform_date(
+                source.get("LastUpdated", "TBD"),
                 DateFormat.LONG,
             ),
-            "lastModifiedAt": self.transform_date(
-                str(source.get("LastUpdated")),
+            "lastModifiedAt": transform_date(
+                source.get("LastUpdated", "TBD"),
                 DateFormat.LONG,
             ),
         }
-
-    def transform_date(self, value: str, output_format: DateFormat) -> datetime:
-        """
-        Transform a date string into a specified datetime format.
-
-        Args:
-            value: Input date string in various formats
-            output_format: Desired output format from DateFormat enum
-
-        Returns:
-            datetime object in the specified format
-
-        Raises:
-            ValueError: If input format is not recognized
-
-        """
-        if value is None:
-            e = "Unrecognized date format: None"
-            raise ValueError(e)
-
-        # Transform unknown dates
-        unknown_dates = [
-            "TBD",
-            "TBA",
-            "ONGOING",
-            "PENDING",
-            "TO BE ANNOUNCED",
-            "TO BE DETERMINED",
-        ]
-        if value.upper() in unknown_dates:
-            # For unknown date cases use far future date
-            future_date = "12/31/2099"
-            if output_format == DateFormat.LONG:
-                future_dt = future_date + " 23:59:59"
-                return datetime.strptime(future_dt, "%m/%d/%Y %H:%M:%S")  # noqa: DTZ007
-            return datetime.strptime(future_date, "%m/%d/%Y")  # noqa: DTZ007
-
-        # Transform from ISO format (2025-06-10 07:00:00)
-        try:
-            dt = datetime.fromisoformat(value)
-            if output_format == DateFormat.SHORT:
-                return datetime.strptime(  # noqa: DTZ007
-                    dt.strftime("%m/%d/%Y"),
-                    "%m/%d/%Y",
-                )
-            return dt  # noqa: TRY300
-        except ValueError:
-            pass
-
-        # Transform from MM/DD/YY format (12/31/25)
-        try:
-            dt = datetime.strptime(value, "%m/%d/%y")  # noqa: DTZ007
-            if output_format == DateFormat.LONG:
-                return datetime.strptime(  # noqa: DTZ007
-                    dt.strftime("%m/%d/%Y") + " 23:59:59",
-                    "%m/%d/%Y %H:%M:%S",
-                )
-            return dt  # noqa: TRY300
-        except ValueError:
-            pass
-
-        e = f"Unrecognized date format: {value}"
-        raise ValueError(e)
 
     def transform_money(self, value: str) -> str:
         """Strip non-digit characters from monetary strings."""

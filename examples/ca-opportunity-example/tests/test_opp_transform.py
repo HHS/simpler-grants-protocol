@@ -11,7 +11,8 @@ from uuid import UUID
 import pytest
 from common_grants_sdk.schemas.models import OppStatusOptions
 
-from ca_common_grants.utils.opp_transform import DateFormat, OpportunityTransformer
+from ca_common_grants.utils.date_transform import DateFormat, transform_date
+from ca_common_grants.utils.opp_transform import OpportunityTransformer
 
 
 @pytest.fixture
@@ -23,12 +24,9 @@ def transformer() -> OpportunityTransformer:
 class TestDateTransformation:
     """Test date transformation functionality."""
 
-    def test_ongoing_with_full_datetime(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
+    def test_ongoing_with_full_datetime(self) -> None:
         """Test Ongoing case with FULL_DATETIME format."""
-        result = transformer.transform_date("Ongoing", DateFormat.LONG)
+        result = transform_date("Ongoing", DateFormat.LONG)
         expected = datetime(
             2099,
             12,
@@ -40,45 +38,33 @@ class TestDateTransformation:
         )
         assert result.replace(tzinfo=timezone.utc) == expected
 
-    def test_ongoing_with_date(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
+    def test_ongoing_with_date(self) -> None:
         """Test Ongoing case with DATE format."""
-        result = transformer.transform_date("Ongoing", DateFormat.SHORT)
+        result = transform_date("Ongoing", DateFormat.SHORT)
         expected = datetime(2099, 12, 31, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
-    def test_iso_format_with_full_datetime(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
+    def test_iso_format_with_full_datetime(self) -> None:
         """Test ISO format input with FULL_DATETIME output."""
-        result = transformer.transform_date(
+        result = transform_date(
             "2025-06-10 07:00:00",
             DateFormat.LONG,
         )
         expected = datetime(2025, 6, 10, 7, 0, 0, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
-    def test_iso_format_with_date(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
+    def test_iso_format_with_date(self) -> None:
         """Test ISO format input with DATE output."""
-        result = transformer.transform_date(
+        result = transform_date(
             "2025-06-10 07:00:00",
             DateFormat.SHORT,
         )
         expected = datetime(2025, 6, 10, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
-    def test_mmddyy_format_with_full_datetime(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
+    def test_mmddyy_format_with_full_datetime(self) -> None:
         """Test MM/DD/YY format input with FULL_DATETIME output."""
-        result = transformer.transform_date(
+        result = transform_date(
             "12/31/25",
             DateFormat.LONG,
         )
@@ -93,38 +79,27 @@ class TestDateTransformation:
         )
         assert result.replace(tzinfo=timezone.utc) == expected
 
-    def test_mmddyy_format_with_date(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
+    def test_mmddyy_format_with_date(self) -> None:
         """Test MM/DD/YY format input with DATE output."""
-        result = transformer.transform_date("12/31/25", DateFormat.SHORT)
+        result = transform_date("12/31/25", DateFormat.SHORT)
         expected = datetime(2025, 12, 31, tzinfo=timezone.utc)
         assert result.replace(tzinfo=timezone.utc) == expected
 
-    def test_invalid_format(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
+    def test_invalid_format(self) -> None:
         """Test invalid date format."""
         with pytest.raises(ValueError, match="Unrecognized date format"):
-            transformer.transform_date("invalid-date", DateFormat.SHORT)
+            transform_date("invalid-date", DateFormat.SHORT)
 
-    def test_empty_string(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
+    def test_empty_string(self) -> None:
         """Test empty string input."""
-        with pytest.raises(ValueError, match="Unrecognized date format"):
-            transformer.transform_date("", DateFormat.SHORT)
+        result = transform_date("", DateFormat.SHORT)
+        expected = datetime(2099, 12, 31, tzinfo=timezone.utc)
+        assert result.replace(tzinfo=timezone.utc) == expected
 
-    def test_none_input(
-        self,
-        transformer: OpportunityTransformer,
-    ) -> None:
+    def test_none_input(self) -> None:
         """Test None input."""
         with pytest.raises(ValueError, match="Unrecognized date format"):
-            transformer.transform_date("None", DateFormat.SHORT)
+            transform_date("None", DateFormat.SHORT)
 
 
 class TestMoneyTransformation:
