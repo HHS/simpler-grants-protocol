@@ -1,6 +1,5 @@
 """Tests for opportunity data extraction utilities."""
 
-import json
 import tempfile
 from pathlib import Path
 
