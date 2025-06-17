@@ -6,8 +6,8 @@ California Grants Portal format to the CommonGrants Protocol format.
 """
 
 import re
+import uuid
 from typing import Any
-from uuid import uuid4
 
 from common_grants_sdk.schemas.fields import CustomFieldType
 from common_grants_sdk.schemas.models import OppStatusOptions
@@ -55,7 +55,7 @@ class OpportunityTransformer:
     ) -> dict[str, Any]:
         """Transform CA opportunity data to CommonGrants format."""
         return {
-            "id": uuid4(),
+            "id": uuid.uuid5(uuid.NAMESPACE_DNS, "data.ca.gov"),
             "title": source.get("Title"),
             "description": source.get("Description"),
             "status": {
