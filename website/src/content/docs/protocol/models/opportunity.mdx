@@ -1,9 +1,134 @@
 ---
 title: Opportunity
 description: The data models for a funding opportunity
+OpportunityBase:
+  python: |
+    from datetime import date, datetime, time
+    from uuid import UUID
+    from common_grants_sdk.schemas.fields import Event, Money, CustomField, CustomFieldType
+    from common_grants_sdk.schemas.models import (
+        OpportunityBase,
+        OppFunding,
+        OppStatus,
+        OppStatusOptions,
+        OppTimeline,
+    )
+
+    opportunity = OpportunityBase(
+        id=UUID("049b4b15-f219-4037-901e-cd95ac32fbc8"),
+        title="Healthcare Innovation Research Grant",
+        description="Funding for innovative healthcare delivery solutions",
+        status=OppStatus(
+            value=OppStatusOptions.OPEN,
+            description="Opportunity is actively accepting applications"
+        ),
+        funding=OppFunding(
+            total_amount_available=Money(amount="1000000.00", currency="USD"),
+            min_award_amount=Money(amount="10000.00", currency="USD"),
+            max_award_amount=Money(amount="50000.00", currency="USD"),
+            min_award_count=5,
+            max_award_count=20,
+            estimated_award_count=10
+        ),
+        key_dates=OppTimeline(
+            app_opens=Event(
+                name="Application Opens",
+                date=date(2024, 3, 1),
+                description="Applications begin being accepted"
+            ),
+            app_deadline=Event(
+                name="Application Deadline",
+                date=date(2024, 4, 30),
+                time=time(17, 0, 0),
+                description="Final deadline for all submissions"
+            ),
+            other_dates={
+                "anticipatedAward": Event(
+                    name="Anticipated award date",
+                    date=date(2025, 3, 15),
+                    description="When we expect to announce awards for this opportunity."
+                )
+            }
+        ),
+        source="https://grants.gov/opportunity/123",
+        custom_fields={
+            "programArea": CustomField(
+                name="programArea",
+                type=CustomFieldType.STRING,
+                value="Healthcare Technology",
+                description="The primary focus area for this grant"
+            ),
+            "eligibilityType": CustomField(
+                name="eligibilityType",
+                type=CustomFieldType.STRING,
+                value="Non-profit organizations",
+                description="The type of organizations eligible to apply"
+            )
+        },
+        created_at=datetime(2024, 2, 28, 12, 0, 0),
+        last_modified_at=datetime(2024, 2, 28, 12, 0, 0)
+    )
+OppStatus:
+  python: |
+    from common_grants_sdk.schemas.models import OppStatus, OppStatusOptions
+
+    status = OppStatus(
+        value=OppStatusOptions.OPEN,
+        description="Opportunity is actively accepting applications"
+    )
+
+    custom_status = OppStatus(
+        value=OppStatusOptions.CUSTOM,
+        custom_value="review",
+        description="Opportunity is in review by the program team"
+    )
+OppStatusOptions:
+  python: |
+    from common_grants_sdk.schemas.models import OppStatusOptions
+
+    status_value = OppStatusOptions.OPEN
+OppFunding:
+  python: |
+    from common_grants_sdk.schemas.fields import Money
+    from common_grants_sdk.schemas.models import OppFunding
+
+    funding = OppFunding(
+        total_amount_available=Money(amount="1000000.00", currency="USD"),
+        min_award_amount=Money(amount="10000.00", currency="USD"),
+        max_award_amount=Money(amount="50000.00", currency="USD"),
+        min_award_count=5,
+        max_award_count=20,
+        estimated_award_count=10
+    )
+OppTimeline:
+  python: |
+    from datetime import date, time
+    from common_grants_sdk.schemas.fields import Event
+    from common_grants_sdk.schemas.models import OppTimeline
+
+    timeline = OppTimeline(
+        app_opens=Event(
+            name="Application Opens",
+            date=date(2024, 3, 1),
+            description="Applications begin being accepted"
+        ),
+        app_deadline=Event(
+            name="Application Deadline",
+            date=date(2024, 4, 30),
+            time=time(17, 0, 0),
+            description="Final deadline for all submissions"
+        ),
+        other_dates={
+            "anticipatedAward": Event(
+                name="Anticipated award date",
+                date=date(2025, 3, 15),
+                description="When we expect to announce awards for this opportunity."
+            )
+        }
+    )
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 ## OpportunityBase
 
@@ -26,253 +151,85 @@ A funding opportunity, such as a grant or loan.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "id": "049b4b15-f219-4037-901e-cd95ac32fbc8",
-  "title": "Healthcare Innovation Research Grant",
-  "description": "Funding for innovative healthcare delivery solutions",
-  "status": {
-    "value": "open",
-    "description": "Opportunity is actively accepting applications"
-  },
-  "funding": {
-    "totalAmountAvailable": {
-      "amount": "1000000.00",
-      "currency": "USD"
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/OpportunityBase.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/opportunity/base.tsp",
+      startLine: 43,
+      endLine: 72,
     },
-    "minAwardAmount": {
-      "amount": "10000.00",
-      "currency": "USD"
+  }}
+  python={{ code: frontmatter.OpportunityBase.python }}
+  example={{
+    code: `
+  {
+    "id": "049b4b15-f219-4037-901e-cd95ac32fbc8",
+    "title": "Healthcare Innovation Research Grant",
+    "description": "Funding for innovative healthcare delivery solutions",
+    "status": {
+      "value": "open",
+      "description": "Opportunity is actively accepting applications"
     },
-    "maxAwardAmount": {
-      "amount": "50000.00",
-      "currency": "USD"
+    "funding": {
+      "totalAmountAvailable": {
+        "amount": "1000000.00",
+        "currency": "USD"
+      },
+      "minAwardAmount": {
+        "amount": "10000.00",
+        "currency": "USD"
+      },
+      "maxAwardAmount": {
+        "amount": "50000.00",
+        "currency": "USD"
+      },
+      "minAwardCount": 5,
+      "maxAwardCount": 20,
+      "estimatedAwardCount": 10
     },
-    "minAwardCount": 5,
-    "maxAwardCount": 20,
-    "estimatedAwardCount": 10
-  },
-  "keyDates": {
-    "appOpens": {
-      "name": "Application Opens",
-      "date": "2024-03-01",
-      "description": "Applications begin being accepted"
-    },
-    "appDeadline": {
-      "name": "Application Deadline",
-      "date": "2024-04-30",
-      "description": "Final deadline for all submissions"
-    },
-    "otherDates": {
-      "anticipatedAward": {
-        "name": "Anticipated award date",
-        "date": "2025-03-15",
-        "description": "When we expect to announce awards for this opportunity."
-      }
-    }
-  },
-  "source": "https://grants.gov/opportunity/123",
-  "customFields": {
-    "programArea": {
-      "name": "programArea",
-      "type": "string",
-      "value": "Healthcare Technology",
-      "description": "The primary focus area for this grant"
-    },
-    "eligibilityType": {
-      "name": "eligibilityType",
-      "type": "string",
-      "value": "Non-profit organizations",
-      "description": "The type of organizations eligible to apply"
-    }
-  },
-  "createdAt": "2024-02-28T12:00:00Z",
-  "lastModifiedAt": "2024-02-28T12:00:00Z"
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: OpportunityBase.yaml
-type: object
-properties:
-  id:
-    $ref: uuid.yaml
-    description: Globally unique id for the opportunity
-  title:
-    type: string
-    description: Title or name of the funding opportunity
-  status:
-    $ref: OppStatus.yaml
-    description: Status of the opportunity
-  description:
-    type: string
-    description: Description of the opportunity's purpose and scope
-  funding:
-    $ref: OppFunding.yaml
-    description: Details about the funding available
-  keyDates:
-    $ref: OppTimeline.yaml
-    description: Key dates for the opportunity, such as when the application opens and closes
-  source:
-    type: string
-    format: uri
-    description: URL for the original source of the opportunity
-  customFields:
-    $ref: "#/$defs/RecordCustomField"
-    description: Additional custom fields specific to this opportunity
-  createdAt:
-    type: string
-    format: date-time
-    description: The timestamp (in UTC) at which the record was created.
-  lastModifiedAt:
-    type: string
-    format: date-time
-    description: The timestamp (in UTC) at which the record was last modified.
-required:
-  - id
-  - title
-  - status
-  - description
-  - funding
-  - keyDates
-  - createdAt
-  - lastModifiedAt
-description: A funding opportunity
-$defs:
-  RecordCustomField:
-    type: object
-    properties: {}
-    additionalProperties:
-      $ref: CustomField.yaml
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-@doc("A funding opportunity")
-model OpportunityBase {
-  /** Globally unique id for the opportunity */
-  @visibility(Lifecycle.Read)
-  id: uuid;
-
-  /** Title or name of the funding opportunity */
-  title: string;
-
-  /** Status of the opportunity */
-  status: OppStatus;
-
-  /** Description of the opportunity's purpose and scope */
-  description: string;
-
-  /** Details about the funding available */
-  funding: OppFunding;
-
-  /** Key dates for the opportunity, such as when the application opens and closes */
-  keyDates: OppTimeline;
-
-  /** URL for the original source of the opportunity */
-  source?: url;
-
-  /** Additional custom fields specific to this opportunity */
-  customFields?: Record<CustomField>;
-
-  // Spreads the fields from the Metadata model into the Opportunity model
-  ...SystemMetadata;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this model is:
-
-```python
-from datetime import date, datetime, time
-from uuid import UUID
-from common_grants_sdk.schemas.fields import Event, Money, CustomField, CustomFieldType
-from common_grants_sdk.schemas.models import (
-    OpportunityBase,
-    OppFunding,
-    OppStatus,
-    OppStatusOptions,
-    OppTimeline,
-)
-
-opportunity = OpportunityBase(
-    id=UUID("049b4b15-f219-4037-901e-cd95ac32fbc8"),
-    title="Healthcare Innovation Research Grant",
-    description="Funding for innovative healthcare delivery solutions",
-    status=OppStatus(
-        value=OppStatusOptions.OPEN,
-        description="Opportunity is actively accepting applications"
-    ),
-    funding=OppFunding(
-        total_amount_available=Money(amount="1000000.00", currency="USD"),
-        min_award_amount=Money(amount="10000.00", currency="USD"),
-        max_award_amount=Money(amount="50000.00", currency="USD"),
-        min_award_count=5,
-        max_award_count=20,
-        estimated_award_count=10
-    ),
-    key_dates=OppTimeline(
-        app_opens=Event(
-            name="Application Opens",
-            date=date(2024, 3, 1),
-            description="Applications begin being accepted"
-        ),
-        app_deadline=Event(
-            name="Application Deadline",
-            date=date(2024, 4, 30),
-            time=time(17, 0, 0),
-            description="Final deadline for all submissions"
-        ),
-        other_dates={
-            "anticipatedAward": Event(
-                name="Anticipated award date",
-                date=date(2025, 3, 15),
-                description="When we expect to announce awards for this opportunity."
-            )
+    "keyDates": {
+      "appOpens": {
+        "name": "Application Opens",
+        "date": "2024-03-01",
+        "description": "Applications begin being accepted"
+      },
+      "appDeadline": {
+        "name": "Application Deadline",
+        "date": "2024-04-30",
+        "description": "Final deadline for all submissions"
+      },
+      "otherDates": {
+        "anticipatedAward": {
+          "name": "Anticipated award date",
+          "date": "2025-03-15",
+          "description": "When we expect to announce awards for this opportunity."
         }
-    ),
-    source="https://grants.gov/opportunity/123",
-    custom_fields={
-        "programArea": CustomField(
-            name="programArea",
-            type=CustomFieldType.STRING,
-            value="Healthcare Technology",
-            description="The primary focus area for this grant"
-        ),
-        "eligibilityType": CustomField(
-            name="eligibilityType",
-            type=CustomFieldType.STRING,
-            value="Non-profit organizations",
-            description="The type of organizations eligible to apply"
-        )
+      }
     },
-    created_at=datetime(2024, 2, 28, 12, 0, 0),
-    last_modified_at=datetime(2024, 2, 28, 12, 0, 0)
-)
-```
-
-  </TabItem>
-</Tabs>
+    "source": "https://grants.gov/opportunity/123",
+    "customFields": {
+      "programArea": {
+        "name": "programArea",
+        "type": "string",
+        "value": "Healthcare Technology",
+        "description": "The primary focus area for this grant"
+      },
+      "eligibilityType": {
+        "name": "eligibilityType",
+        "type": "string",
+        "value": "Non-profit organizations",
+        "description": "The type of organizations eligible to apply"
+      }
+    },
+    "createdAt": "2024-02-28T12:00:00Z",
+    "lastModifiedAt": "2024-02-28T12:00:00Z"
+  }
+  `,
+  }}
+/>
 
 ## OppStatus
 
@@ -288,91 +245,27 @@ The status of an opportunity, such as whether it is accepting applications.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-// A standard status
-{
-  "value": "open",
-  "description": "Opportunity is actively accepting applications"
-}
-
-// A custom status
-{
-  "value": "custom",
-  "customValue": "review",
-  "description": "Opportunity is in review by the program team"
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: OppStatus.yaml
-type: object
-properties:
-  value:
-    $ref: OppStatusOptions.yaml
-    description: The status value
-  customValue:
-    type: string
-    description: The display value for a custom status
-  description:
-    type: string
-    description: A human-readable description of the status
-required:
-  - value
-description: The status of an opportunity, such as whether it is accepting applications
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-/** The status of the opportunity */
-model OppStatus {
-  /** The status value */
-  value: OppStatusOptions;
-
-  /** A human-readable description of the status */
-  description?: string;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this model is:
-
-```python
-from common_grants_sdk.schemas.models import OppStatus, OppStatusOptions
-
-status = OppStatus(
-    value=OppStatusOptions.OPEN,
-    description="Opportunity is actively accepting applications"
-)
-
-custom_status = OppStatus(
-    value=OppStatusOptions.CUSTOM,
-    custom_value="review",
-    description="Opportunity is in review by the program team"
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/OppStatus.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/opportunity/status.tsp",
+      startLine: 22,
+      endLine: 34,
+    },
+  }}
+  python={{ code: frontmatter.OppStatus.python }}
+  example={{
+    code: `
+  {
+    "value": "open",
+    "description": "Opportunity is actively accepting applications"
+  }
+  `,
+  }}
+/>
 
 ## OppStatusOptions
 
@@ -389,63 +282,22 @@ The set of values accepted for opportunity status.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-"open"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: OppStatusOptions.yaml
-type: string
-enum:
-  - forecasted
-  - open
-  - closed
-  - custom
-description: The set of values accepted for opportunity status
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-/** The set of values accepted for opportunity status */
-enum OppStatusOptions {
-  forecasted,
-  open,
-  closed,
-  custom,
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this model is:
-
-```python
-from common_grants_sdk.schemas.models import OppStatusOptions
-
-status_value = OppStatusOptions.OPEN
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/OppStatusOptions.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/opportunity/status.tsp",
+      startLine: 10,
+      endLine: 16,
+    },
+  }}
+  python={{ code: frontmatter.OppStatusOptions.python }}
+  example={{
+    code: `"open"`,
+  }}
+/>
 
 ## OppFunding
 
@@ -464,114 +316,40 @@ Details about the funding available for an opportunity.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "totalAmountAvailable": {
-    "amount": "1000000.00",
-    "currency": "USD"
-  },
-  "minAwardAmount": {
-    "amount": "10000.00",
-    "currency": "USD"
-  },
-  "maxAwardAmount": {
-    "amount": "50000.00",
-    "currency": "USD"
-  },
-  "minAwardCount": 5,
-  "maxAwardCount": 20,
-  "estimatedAwardCount": 10
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: OppFunding.yaml
-type: object
-properties:
-  totalAmountAvailable:
-    $ref: Money.yaml
-    description: Total amount of funding available for this opportunity
-  minAwardAmount:
-    $ref: Money.yaml
-    description: Minimum amount of funding granted per award
-  maxAwardAmount:
-    $ref: Money.yaml
-    description: Maximum amount of funding granted per award
-  minAwardCount:
-    type: integer
-    description: Minimum number of awards granted
-  maxAwardCount:
-    type: integer
-    description: Maximum number of awards granted
-  estimatedAwardCount:
-    type: integer
-    description: Estimated number of awards that will be granted
-description: Details about the funding available for this opportunity
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-/** Details about the funding available for this opportunity */
-model OppFunding {
-  /** Total amount of funding available for this opportunity */
-  totalAmountAvailable?: Money;
-
-  /** Minimum amount of funding granted per award */
-  minAwardAmount?: Money;
-
-  /** Maximum amount of funding granted per award */
-  maxAwardAmount?: Money;
-
-  /** Minimum number of awards granted */
-  minAwardCount?: integer;
-
-  /** Maximum number of awards granted */
-  maxAwardCount?: integer;
-
-  /** Estimated number of awards that will be granted */
-  estimatedAwardCount?: integer;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this model is:
-
-```python
-from common_grants_sdk.schemas.fields import Money
-from common_grants_sdk.schemas.models import OppFunding
-
-funding = OppFunding(
-    total_amount_available=Money(amount="1000000.00", currency="USD"),
-    min_award_amount=Money(amount="10000.00", currency="USD"),
-    max_award_amount=Money(amount="50000.00", currency="USD"),
-    min_award_count=5,
-    max_award_count=20,
-    estimated_award_count=10
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/OppFunding.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/opportunity/funding.tsp",
+      startLine: 12,
+      endLine: 40,
+    },
+  }}
+  python={{ code: frontmatter.OppFunding.python }}
+  example={{
+    code: `
+  {
+    "totalAmountAvailable": {
+      "amount": "1000000.00",
+      "currency": "USD"
+    },
+    "minAwardAmount": {
+      "amount": "10000.00",
+      "currency": "USD"
+    },
+    "maxAwardAmount": {
+      "amount": "50000.00",
+      "currency": "USD"
+    },
+    "minAwardCount": 5,
+    "maxAwardCount": 20,
+    "estimatedAwardCount": 10
+  }
+  `,
+  }}
+/>
 
 ## OppTimeline
 
@@ -587,111 +365,40 @@ Key dates in the opportunity's timeline, such as when the application opens and 
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "appOpens": {
-    "name": "Application Opens",
-    "date": "2024-03-01",
-    "description": "Applications begin being accepted"
-  },
-  "appDeadline": {
-    "name": "Application Deadline",
-    "date": "2024-04-30",
-    "time": "17:00:00",
-    "description": "Final deadline for all submissions"
-  },
-  "otherDates": {
-    "anticipatedAward": {
-      "name": "Anticipated award date",
-      "date": "2025-03-15",
-      "description": "When we expect to announce awards for this opportunity."
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/OppTimeline.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/opportunity/timeline.tsp",
+      startLine: 13,
+      endLine: 27,
+    },
+  }}
+  python={{ code: frontmatter.OppTimeline.python }}
+  example={{
+    code: `
+  {
+    "appOpens": {
+      "name": "Application Opens",
+      "date": "2024-03-01",
+      "description": "Applications begin being accepted"
+    },
+    "appDeadline": {
+      "name": "Application Deadline",
+      "date": "2024-04-30",
+      "time": "17:00:00",
+      "description": "Final deadline for all submissions"
+    },
+    "otherDates": {
+      "anticipatedAward": {
+        "name": "Anticipated award date",
+        "date": "2025-03-15",
+        "description": "When we expect to announce awards for this opportunity."
+      }
     }
   }
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: OppTimeline.yaml
-type: object
-properties:
-  appOpens:
-    $ref: Event.yaml
-    description: The date (and time) at which the opportunity begins accepting applications
-  appDeadline:
-    $ref: Event.yaml
-    description: The final deadline for submitting applications
-  otherDates:
-    type: object
-    additionalProperties:
-      $ref: Event.yaml
-    description: An optional map of other key dates in the opportunity timeline
-description: Key dates in the opportunity's timeline
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-/** Key dates in the opportunity's timeline */
-model OppTimeline {
-  /** The date (and time) at which the opportunity begins accepting applications */
-  appOpens?: Event;
-
-  /** The final deadline for submitting applications */
-  appDeadline?: Event;
-
-  /** An optional map of other key dates in the opportunity timeline */
-  otherDates?: Record<Event>;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this model is:
-
-```python
-from datetime import date, time
-from common_grants_sdk.schemas.fields import Event
-from common_grants_sdk.schemas.models import OppTimeline
-
-timeline = OppTimeline(
-    app_opens=Event(
-        name="Application Opens",
-        date=date(2024, 3, 1),
-        description="Applications begin being accepted"
-    ),
-    app_deadline=Event(
-        name="Application Deadline",
-        date=date(2024, 4, 30),
-        time=time(17, 0, 0),
-        description="Final deadline for all submissions"
-    ),
-    other_dates={
-        "anticipatedAward": Event(
-            name="Anticipated award date",
-            date=date(2025, 3, 15),
-            description="When we expect to announce awards for this opportunity."
-        )
-    }
-)
-```
-
-  </TabItem>
-</Tabs>
+  `,
+  }}
+/>

@@ -3,7 +3,7 @@ title: Application
 description: Data model for an application to a funding opportunity
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 ## ApplicationBase
 
@@ -24,122 +24,49 @@ Base model for an application to a funding opportunity.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "status": {
-    "value": "submitted",
-    "description": "Application has been submitted."
-  },
-  "dateSubmitted": "2024-01-01",
-  "organization": {
-    // Organization details would be here
-  },
-  "pointOfContact": {
-    // Person details would be here
-  },
-  "proposal": {
-    "title": "Example Project",
-    "description": "Example project to serve community needs.",
-    "amountRequested": {
-      "amount": "100000",
-      "currency": "USD"
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/ApplicationBase.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/application.tsp",
+      startLine: 5,
+      endLine: 31,
     },
-    "periodStartDate": "2024-01-01",
-    "periodEndDate": "2024-12-31"
-  },
-  "opportunity": {
-    "id": "083b4567-e89d-42c8-a439-6c1234567890",
-    "title": "Example Opportunity"
+  }}
+  example={{
+    code: `
+  {
+    "status": {
+      "value": "submitted",
+      "description": "Application has been submitted."
+    },
+    "dateSubmitted": "2024-01-01",
+    "organization": {
+      // Organization details would be here
+    },
+    "pointOfContact": {
+      // Person details would be here
+    },
+    "proposal": {
+      "title": "Example Project",
+      "description": "Example project to serve community needs.",
+      "amountRequested": {
+        "amount": "100000",
+        "currency": "USD"
+      },
+      "periodStartDate": "2024-01-01",
+      "periodEndDate": "2024-12-31"
+    },
+    "opportunity": {
+      "id": "083b4567-e89d-42c8-a439-6c1234567890",
+      "title": "Example Opportunity"
+    }
   }
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON schema for this model is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: ApplicationBase.yaml
-type: object
-properties:
-  id:
-    $ref: uuid.yaml
-    description: The application's unique identifier.
-  status:
-    $ref: AppStatus.yaml
-    description: The application's status.
-  dateSubmitted:
-    $ref: isoDate.yaml
-    description: The application's date of submission.
-  organization:
-    $ref: OrganizationBase.yaml
-    description: The organization that is applying for the grant.
-  pointOfContact:
-    $ref: PersonBase.yaml
-    description: The person who is applying for the grant.
-  proposal:
-    $ref: AppProposal.yaml
-    description: The application's proposal for funding.
-  opportunity:
-    $ref: AppOpportunity.yaml
-    description: The opportunity being applied to.
-  customFields:
-    $ref: "#/$defs/RecordCustomField"
-    description: The application's custom fields.
-description: The base model for an application.
-required:
-  - id
-$defs:
-  RecordCustomField:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      $ref: CustomField.yaml
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```typespec
-/** The base model for an application. */
-model ApplicationBase {
-    /** The application's unique identifier. */
-    id: Types.uuid;
-
-    /** The application's status. */
-    status?: AppStatus;
-
-    /** The application's date of submission. */
-    dateSubmitted?: Types.isoDate;
-
-    /** The organization that is applying for the grant. */
-    organization?: OrganizationBase;
-
-    /** The person who is applying for the grant. */
-    pointOfContact?: PersonBase;
-
-    /** The application's proposal for funding. */
-    proposal?: AppProposal;
-
-    /** The opportunity being applied to. */
-    opportunity?: AppOpportunity;
-
-    /** The application's custom fields. */
-    customFields?: Record<Fields.CustomField>;
-}
-```
-
-  </TabItem>
-</Tabs>
+  `,
+  }}
+/>
 
 ## AppStatus
 
@@ -155,58 +82,26 @@ The status of an application.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "value": "submitted",
-  "description": "Application has been submitted."
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON schema for this model is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: AppStatus.yaml
-type: object
-properties:
-  value:
-    type: string
-    enum:
-      - submitted
-      - approved
-      - rejected
-      - custom
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```typespec
-/** The status of an application. */
-model AppStatus {
-    /** The status of the application. */
-    value: AppStatusOptions;
-
-    /** A custom value for the status. */
-    customValue?: string;
-
-    /** A description of the status. */
-    description?: string;
-}
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/AppStatus.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/application.tsp",
+      startLine: 37,
+      endLine: 48,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "value": "submitted",
+    "description": "Application has been submitted."
+  }
+  `,
+  }}
+/>
 
 ## AppStatusOptions
 
@@ -223,57 +118,23 @@ The set of values accepted for application status.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/AppStatusOptions.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/application.tsp",
+      startLine: 54,
+      endLine: 60,
+    },
+  }}
+  example={{
+    code: `"submitted"`,
+  }}
+/>
 
-A JSON example of this model is:
-
-```json
-"submitted"
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON schema for this model is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: AppStatusOptions.yaml
-type: string
-enum:
-  - submitted
-  - approved
-  - rejected
-  - custom
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```typespec
-/** The set of values accepted for application status. */
-enum AppStatusOptions {
-    /** The application has been submitted. */
-    submitted;
-
-    /** The application has been approved. */
-    approved;
-
-    /** The application has been rejected. */
-    rejected;
-
-    /** A custom status value is provided. */
-    custom;
-}
-```
-
-  </TabItem>
-</Tabs>
-
-### AppProposal
+## AppProposal
 
 The proposal for funding an application.
 
@@ -281,8 +142,8 @@ The proposal for funding an application.
 
 | Property        | Type                                                                                   | Required | Description                           |
 | --------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------- |
-| title           | [string](/protocol/types/string#string)                                                | No       | The title of the proposal.            |
-| description     | [string](/protocol/types/string#string)                                                | No       | The description of the proposal.      |
+| title           | [string](/protocol/types/string#string)                                                | Yes      | The title of the proposal.            |
+| description     | [string](/protocol/types/string#string)                                                | Yes      | The description of the proposal.      |
 | amountRequested | [Money](/protocol/fields/money)                                                        | No       | The amount of money requested.        |
 | periodStartDate | [isoDate](/protocol/types/date#isodate)                                                | No       | The start date of the funding period. |
 | periodEndDate   | [isoDate](/protocol/types/date#isodate)                                                | No       | The end date of the funding period.   |
@@ -290,93 +151,32 @@ The proposal for funding an application.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "title": "Example Project",
-  "description": "Example project to serve community needs.",
-  "amountRequested": {
-    "amount": "100000",
-    "currency": "USD"
-  },
-  "periodStartDate": "2024-01-01",
-  "periodEndDate": "2024-12-31"
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON schema for this model is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: AppProposal.yaml
-type: object
-properties:
-    title:
-    type: string
-    description: The title of the proposal.
-  description:
-    type: string
-    description: The description of the proposal.
-  amountRequested:
-    $ref: Money.yaml
-    description: The amount of money requested.
-  periodStartDate:
-    $ref: isoDate.yaml
-    description: The start date of the funding period.
-  periodEndDate:
-    $ref: isoDate.yaml
-    description: The end date of the funding period.
-  customFields:
-    $ref: "#/$defs/RecordCustomField"
-    description: The proposal's custom fields.
-description: The proposal for funding an application.
-required:
-  - id
-$defs:
-  RecordCustomField:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      $ref: CustomField.yaml
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```typespec
-/** The proposal for funding an application. */
-model AppProposal {
-    /** The title of the proposal. */
-    title?: string;
-
-    /** The description of the proposal. */
-    description?: string;
-
-    /** The amount of money requested. */
-    amountRequested?: Money;
-
-    /** The start date of the funding period. */
-    periodStartDate?: Types.isoDate;
-
-    /** The end date of the funding period. */
-    periodEndDate?: Types.isoDate;
-
-    /** The proposal's custom fields. */
-    customFields?: Record<Fields.CustomField>;
-}
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/AppProposal.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/application.tsp",
+      startLine: 66,
+      endLine: 86,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "title": "Example Project",
+    "description": "Example project to serve community needs.",
+    "amountRequested": {
+      "amount": "100000",
+      "currency": "USD"
+    },
+    "periodStartDate": "2024-01-01",
+    "periodEndDate": "2024-12-31"
+  }
+  `,
+  }}
+/>
 
 ## AppOpportunity
 
@@ -392,66 +192,23 @@ The opportunity being applied to.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "id": "083b4567-e89d-42c8-a439-6c1234567890",
-  "title": "Example Opportunity"
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON schema for this model is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: AppOpportunity.yaml
-type: object
-properties:
-  id:
-    $ref: uuid.yaml
-    description: The opportunity's unique identifier.
-  title:
-    type: string
-    description: The title of the opportunity.
-  customFields:
-    $ref: "#/$defs/RecordCustomField"
-    description: The opportunity's custom fields.
-description: The opportunity being applied to.
-required:
-  - id
-$defs:
-  RecordCustomField:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      $ref: CustomField.yaml
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```typespec
-/** The opportunity being applied to. */
-model AppOpportunity {
-    /** The opportunity's unique identifier. */
-    id: Types.uuid;
-
-    /** The title of the opportunity. */
-    title?: string;
-
-    /** The opportunity's custom fields. */
-    customFields?: Record<Fields.CustomField>;
-}
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  jsonSchema={{
+    file: { path: "website/public/schemas/yaml/AppOpportunity.yaml" },
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/models/application.tsp",
+      startLine: 92,
+      endLine: 102,
+    },
+  }}
+  example={{
+    code: `
+  {
+    "id": "083b4567-e89d-42c8-a439-6c1234567890",
+    "title": "Example Opportunity"
+  }
+  `,
+  }}
+/>
