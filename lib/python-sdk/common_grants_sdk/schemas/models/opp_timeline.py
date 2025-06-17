@@ -1,5 +1,7 @@
 """Encapsulates key dates in the opportunity timeline."""
 
+import warnings
+
 from typing import Optional
 
 from pydantic import Field, model_validator
@@ -31,5 +33,7 @@ class OppTimeline(CommonGrantsBaseModel):
     def validate_dates(self) -> "OppTimeline":
         """Validate that the application deadline is after the opening date."""
         if self.app_opens.date > self.app_deadline.date:
-            raise ValueError("Application deadline must be after the opening date")
+            e = f"Application deadline ({self.app_deadline.date}) "
+            e = e + f"preceeds opening date ({self.app_opens.date})"
+            warnings.warn(e, RuntimeWarning)
         return self
