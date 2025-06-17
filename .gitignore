@@ -4,3 +4,6 @@ node_modules/
 # pnpm 
 .pnpm-store/
 .pnpm-debug.log
+
+# AI
+.cursor

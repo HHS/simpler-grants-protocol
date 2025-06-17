@@ -1,0 +1,15 @@
+# Python cache files
+__pycache__/
+
+# Test cache
+.pytest_cache/
+.coverage
+
+# Environment
+.env
+.venv/
+venv/
+
+# OpenAPI validation
+openapi.yaml
+openapi-v3.yaml
