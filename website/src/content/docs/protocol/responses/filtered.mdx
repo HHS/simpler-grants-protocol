@@ -5,189 +5,97 @@ sidebar:
   order: 4
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 A 200 response with a paginated list of filtered items.
 
 ### Table
 
-| Parameter      | Type                                                        | Description                               |
-| -------------- | ----------------------------------------------------------- | ----------------------------------------- |
-| status         | [integer](/protocol/types/numeric#integer)                  | The HTTP status code                      |
-| message        | [string](/protocol/types/string#string)                     | The message to return                     |
-| items          | [Array](/protocol/types/other#array)                        | Items from the current page               |
-| paginationInfo | [PaginationInfo](/protocol/pagination#paginatedresultsinfo) | Details about the pagination              |
-| sortInfo       | [SortInfo](/protocol/sorting#sortedresultsinfo)             | The sort order of the items               |
-| filterInfo     | object                                                      | The filters applied to the response items |
+| Parameter      | Type                                                              | Description                               |
+| -------------- | ----------------------------------------------------------------- | ----------------------------------------- |
+| status         | [integer](/protocol/types/numeric#integer)                        | The HTTP status code                      |
+| message        | [string](/protocol/types/string#string)                           | The message to return                     |
+| items          | [Array](/protocol/types/other#array)                              | Items from the current page               |
+| paginationInfo | [PaginatedResultsInfo](/protocol/pagination#paginatedresultsinfo) | Details about the pagination              |
+| sortInfo       | [SortedResultsInfo](/protocol/sorting#sortedresultsinfo)          | The sort order of the items               |
+| filterInfo     | object                                                            | The filters applied to the response items |
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-An example filtered response:
-
-```json
-{
-  "status": 200,
-  "message": "Success",
-  "items": [
-    {
-      "id": "123",
-      "name": "Test 1"
+<SchemaFormatTabs
+  jsonSchema={{
+    code: `
+  $schema: https://json-schema.org/draft/2020-12/schema
+  $id: Filtered.yaml
+  type: object
+  properties:
+    status:
+      type: integer
+      minimum: 200
+      default: 200
+      description: The HTTP status code
+    message:
+      type: string
+      default: "Success"
+      description: The message to return
+    items:
+      type: array
+      description: Items from the current page
+    paginationInfo:
+      $ref: PaginatedResultsInfo.yaml
+    sortInfo:
+      $ref: SortedResultsInfo.yaml
+    filterInfo:
+      type: object
+      description: The filters applied to the response items
+  required:
+    - status
+    - message
+    - items
+    - paginationInfo
+    - sortInfo
+    - filterInfo
+    `,
+  }}
+  typeSpec={{
+    file: {
+      path: "specs/lib/core/responses/success.tsp",
+      startLine: 135,
+      endLine: 146,
     },
-    {
-      "id": "124",
-      "name": "Test 2"
-    }
-  ],
-  "paginationInfo": {
-    "page": 1,
-    "pageSize": 10,
-    "totalItems": 25,
-    "totalPages": 3
-  },
-  "sortInfo": {
-    "field": "name",
-    "direction": "asc"
-  },
-  "filterInfo": {
-    "lastModifiedAt": {
-      "operator": "gte",
-      "value": "2024-01-01T00:00:00Z"
+  }}
+  example={{
+    code: `
+  {
+    "status": 200,
+    "message": "Success",
+    "items": [
+      {
+        "id": "123",
+        "name": "Test 1"
+      },
+      {
+        "id": "124",
+        "name": "Test 2"
+      }
+    ],
+    "paginationInfo": {
+      "page": 1,
+      "pageSize": 10,
+      "totalItems": 25,
+      "totalPages": 3
+    },
+    "sortInfo": {
+      "field": "name",
+      "direction": "asc"
+    },
+    "filterInfo": {
+      "lastModifiedAt": {
+        "operator": "gte",
+        "value": "2024-01-01T00:00:00Z"
+      }
     }
   }
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this model is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: Filtered.yaml
-type: object
-properties:
-  status:
-    type: integer
-    minimum: 200
-    default: 200
-    description: The HTTP status code
-  message:
-    type: string
-    default: "Success"
-    description: The message to return
-  items:
-    type: array
-    description: Items from the current page
-  paginationInfo:
-    $ref: "#/components/schemas/CommonGrants.Pagination.PaginationInfo"
-  sortInfo:
-    $ref: "#/components/schemas/CommonGrants.Sorting.SortInfo"
-  filterInfo:
-    type: object
-    description: The filters applied to the response items
-required:
-  - status
-  - message
-  - items
-  - paginationInfo
-  - sortInfo
-  - filterInfo
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```typespec
-/** A paginated list of items with a filter
- *
- * @template ItemsT The schema for the value of the `"items"` property in this response
- * @template FilterT The schema for the value of the `"filter"` property in this response
- */
-model Filtered<ItemsT, FilterT> extends Success {
-  // Inherit the properties of the Sorted response
-  ...Sorted<ItemsT>;
-
-  /** The filters applied to the response items */
-  filterInfo: FilterT;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="OpenAPI">
-
-The OpenAPI specification for this model is:
-
-```yaml
-components:
-  schemas:
-    CommonGrants.Responses.Filtered:
-      type: object
-      properties:
-        status:
-          type: integer
-          minimum: 200
-          default: 200
-          description: The HTTP status code
-        message:
-          type: string
-          default: "Success"
-          description: The message to return
-        items:
-          type: array
-          description: Items from the current page
-        paginationInfo:
-          $ref: "#/components/schemas/CommonGrants.Pagination.PaginationInfo"
-        sortInfo:
-          $ref: "#/components/schemas/CommonGrants.Sorting.SortInfo"
-        filterInfo:
-          type: object
-          description: The filters applied to the response items
-      required:
-        - status
-        - message
-        - items
-        - paginationInfo
-        - sortInfo
-        - filterInfo
-```
-
-  </TabItem>
-</Tabs>
-
-### Usage
-
-```typespec
-import "@common-grants/core";
-import "@typespec/http";
-
-using TypeSpec.Http;
-using CommonGrants.Pagination;
-using CommonGrants.Responses;
-using CommonGrants.Filters;
-
-model TestModel {
-  id: string;
-  name: string;
-}
-
-model TestFilter {
-  title: StringComparisonFilter;
-}
-
-@summary("Get test")
-@doc("Get a test model")
-@get
-op getTest(
-    filters: TestFilter,
-    pagination: PaginatedBodyParams,
-): Filtered<TestModel, TestFilter>;
-```
+  `,
+  }}
+/>
