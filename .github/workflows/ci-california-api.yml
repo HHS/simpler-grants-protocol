@@ -1,0 +1,32 @@
+name: CI - FastAPI Template
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - examples/ca-opportunity-example/**
+      - .github/workflows/ci-california-api.yml
+
+defaults:
+  run:
+    working-directory: ./examples/ca-opportunity-example
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+        # install poetry
+      - uses: Gr1N/setup-poetry@v8
+
+      - name: Install analytics package using poetry
+        run: make install
+
+      - name: Run linting, formatting, and type checking
+        run: make checks
+
+      - name: Run tests
+        run: make test-coverage
