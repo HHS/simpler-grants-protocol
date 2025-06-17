@@ -1,6 +1,7 @@
 """California Grant Opportunity API - Example."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, status
+from fastapi.responses import RedirectResponse
 
 from ca_common_grants.routers import opportunities
 
@@ -11,6 +12,16 @@ app = FastAPI(
 )
 
 app.include_router(opportunities.router)
+
+
+@app.get("/", tags=["docs"], name="Redirect to docs")
+async def root() -> RedirectResponse:
+    """Redirects the user to the API docs."""
+    return RedirectResponse(
+        "/docs",
+        status_code=status.HTTP_301_MOVED_PERMANENTLY,
+    )
+
 
 if __name__ == "__main__":
     import uvicorn
