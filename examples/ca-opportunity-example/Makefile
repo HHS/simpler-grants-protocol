@@ -9,7 +9,7 @@ install:
 	poetry install
 
 dev:
-	$(RUNTIME_PREFIX) uvicorn ca_common_grants.api:app --reload
+	$(RUNTIME_PREFIX) fastapi dev src/ca_common_grants/api.py
 
 format:
 	$(RUNTIME_PREFIX) black $(PYTHON_DIRS)
