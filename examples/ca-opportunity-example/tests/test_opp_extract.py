@@ -29,7 +29,7 @@ def test_extract_opportunities_invalid_file() -> None:
     original_path = OpportunityExtractor.DATA_FILE
     OpportunityExtractor.DATA_FILE = Path("non_existent_file.json")
     try:
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(ValueError, match="Error processing file"):
             OpportunityExtractor.extract_opportunities()
     finally:
         OpportunityExtractor.DATA_FILE = original_path
@@ -44,7 +44,7 @@ def test_extract_opportunities_invalid_json() -> None:
     original_path = OpportunityExtractor.DATA_FILE
     OpportunityExtractor.DATA_FILE = Path(tmp_path)
     try:
-        with pytest.raises(json.JSONDecodeError):
+        with pytest.raises(ValueError, match="Invalid JSON"):
             OpportunityExtractor.extract_opportunities()
     finally:
         OpportunityExtractor.DATA_FILE = original_path
