@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Git tag to create release from'
+        description: "Git tag to create release from"
         required: true
         type: string
 

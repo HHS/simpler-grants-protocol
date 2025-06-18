@@ -1,15 +1,15 @@
-name: CI - Specifications
+name: CI - Check @common-grants/core library
 
 on:
   workflow_call:
   pull_request:
     paths:
-      - specs/**
-      - .github/workflows/ci-specs.yml
+      - lib/core/**
+      - .github/workflows/ci-lib-core.yml
 
 defaults:
   run:
-    working-directory: ./specs
+    working-directory: ./lib/core
 
 jobs:
   build:
