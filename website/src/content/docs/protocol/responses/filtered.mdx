@@ -3,6 +3,76 @@ title: Filtered
 description: A paginated list of items with a filter.
 sidebar:
   order: 4
+filtered:
+  example:
+    code: |
+      {
+        "status": 200,
+        "message": "Success",
+        "items": [
+          {
+            "id": "123",
+            "name": "Test 1"
+          },
+          {
+            "id": "124",
+            "name": "Test 2"
+          }
+        ],
+        "paginationInfo": {
+          "page": 1,
+          "pageSize": 10,
+          "totalItems": 25,
+          "totalPages": 3
+        },
+        "sortInfo": {
+          "field": "name",
+          "direction": "asc"
+        },
+        "filterInfo": {
+          "lastModifiedAt": {
+            "operator": "gte",
+            "value": "2024-01-01T00:00:00Z"
+          }
+        }
+      }
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: Filtered.yaml
+      type: object
+      properties:
+        status:
+          type: integer
+          minimum: 200
+          default: 200
+          description: The HTTP status code
+        message:
+          type: string
+          default: "Success"
+          description: The message to return
+        items:
+          type: array
+          description: Items from the current page
+        paginationInfo:
+          $ref: PaginatedResultsInfo.yaml
+        sortInfo:
+          $ref: SortedResultsInfo.yaml
+        filterInfo:
+          type: object
+          description: The filters applied to the response items
+      required:
+        - status
+        - message
+        - items
+        - paginationInfo
+        - sortInfo
+        - filterInfo
+  typeSpec:
+    file:
+      path: "specs/lib/core/responses/success.tsp"
+      startLine: 135
+      endLine: 146
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -23,79 +93,7 @@ A 200 response with a paginated list of filtered items.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: Filtered.yaml
-  type: object
-  properties:
-    status:
-      type: integer
-      minimum: 200
-      default: 200
-      description: The HTTP status code
-    message:
-      type: string
-      default: "Success"
-      description: The message to return
-    items:
-      type: array
-      description: Items from the current page
-    paginationInfo:
-      $ref: PaginatedResultsInfo.yaml
-    sortInfo:
-      $ref: SortedResultsInfo.yaml
-    filterInfo:
-      type: object
-      description: The filters applied to the response items
-  required:
-    - status
-    - message
-    - items
-    - paginationInfo
-    - sortInfo
-    - filterInfo
-    `,
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/responses/success.tsp",
-      startLine: 135,
-      endLine: 146,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "status": 200,
-    "message": "Success",
-    "items": [
-      {
-        "id": "123",
-        "name": "Test 1"
-      },
-      {
-        "id": "124",
-        "name": "Test 2"
-      }
-    ],
-    "paginationInfo": {
-      "page": 1,
-      "pageSize": 10,
-      "totalItems": 25,
-      "totalPages": 3
-    },
-    "sortInfo": {
-      "field": "name",
-      "direction": "asc"
-    },
-    "filterInfo": {
-      "lastModifiedAt": {
-        "operator": "gte",
-        "value": "2024-01-01T00:00:00Z"
-      }
-    }
-  }
-  `,
-  }}
+  example={frontmatter.filtered.example}
+  jsonSchema={frontmatter.filtered.jsonSchema}
+  typeSpec={frontmatter.filtered.typeSpec}
 />

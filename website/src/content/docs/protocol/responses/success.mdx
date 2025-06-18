@@ -3,6 +3,25 @@ title: Success
 description: The default response for a successful request.
 sidebar:
   order: 1
+success:
+  example:
+    code: |
+      {
+        "status": 200,
+        "message": "Success",
+        "data": {
+          "id": "123",
+          "name": "Test 1"
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/Success.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/responses/success.tsp"
+      startLine: 11
+      endLine: 17
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -20,28 +39,9 @@ A 200 response with data.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/Success.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/responses/success.tsp",
-      startLine: 11,
-      endLine: 17,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "status": 200,
-    "message": "Success",
-    "data": {
-      "id": "123",
-      "name": "Test 1"
-    }
-  }
-  `,
-  }}
+  example={frontmatter.success.example}
+  jsonSchema={frontmatter.success.jsonSchema}
+  typeSpec={frontmatter.success.typeSpec}
 />
 
 ### Usage

@@ -3,6 +3,59 @@ title: Paginated
 description: A paginated response from CommonGrants APIs.
 sidebar:
   order: 2
+paginated:
+  example:
+    code: |
+      {
+        "status": 200,
+        "message": "Success",
+        "items": [
+          {
+            "id": "123",
+            "name": "Test 1"
+          },
+          {
+            "id": "124",
+            "name": "Test 2"
+          }
+        ],
+        "paginationInfo": {
+          "page": 1,
+          "pageSize": 10,
+          "totalItems": 25,
+          "totalPages": 3
+        }
+      }
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: Paginated.yaml
+      type: object
+      properties:
+        status:
+          type: integer
+          minimum: 200
+          default: 200
+          description: The HTTP status code
+        message:
+          type: string
+          default: "Success"
+          description: The message to return
+        items:
+          type: array
+          description: Items from the current page
+        paginationInfo:
+          $ref: "#/components/schemas/CommonGrants.Pagination.PaginationInfo"
+      required:
+        - status
+        - message
+        - items
+        - paginationInfo
+  typeSpec:
+    file:
+      path: "specs/lib/core/responses/success.tsp"
+      startLine: 68
+      endLine: 79
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -21,64 +74,9 @@ A 200 response with a paginated list of items.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: Paginated.yaml
-  type: object
-  properties:
-    status:
-      type: integer
-      minimum: 200
-      default: 200
-      description: The HTTP status code
-    message:
-      type: string
-      default: "Success"
-      description: The message to return
-    items:
-      type: array
-      description: Items from the current page
-    paginationInfo:
-      $ref: "#/components/schemas/CommonGrants.Pagination.PaginationInfo"
-  required:
-    - status
-    - message
-    - items
-    - paginationInfo
-  `,
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/responses/success.tsp",
-      startLine: 68,
-      endLine: 79,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "status": 200,
-    "message": "Success",
-    "items": [
-      {
-        "id": "123",
-        "name": "Test 1"
-      },
-      {
-        "id": "124",
-        "name": "Test 2"
-      }
-    ],
-    "paginationInfo": {
-      "page": 1,
-      "pageSize": 10,
-      "totalItems": 25,
-      "totalPages": 3
-    }
-  }
-  `,
-  }}
+  example={frontmatter.paginated.example}
+  jsonSchema={frontmatter.paginated.jsonSchema}
+  typeSpec={frontmatter.paginated.typeSpec}
 />
 
 ### Usage

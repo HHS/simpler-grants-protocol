@@ -3,6 +3,24 @@ title: Errors
 description: A standard error response schema, used to create custom error responses
 sidebar:
   order: 5
+error:
+  example:
+    code: |
+      {
+        "status": 404,
+        "message": "Not Found",
+        "errors": [
+          "Resource not found"
+        ]
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/Error.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/responses/error.tsp"
+      startLine: 15
+      endLine: 27
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -24,27 +42,9 @@ Default response schema for 4xx and 5xx HTTP status codes.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/Error.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/responses/error.tsp",
-      startLine: 15,
-      endLine: 27,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "status": 404,
-    "message": "Not Found",
-    "errors": [
-      "Resource not found"
-    ]
-  }
-  `,
-  }}
+  example={frontmatter.error.example}
+  jsonSchema={frontmatter.error.jsonSchema}
+  typeSpec={frontmatter.error.typeSpec}
 />
 
 ### Usage
