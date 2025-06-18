@@ -1,6 +1,124 @@
 ---
 title: Organization
 description: Data model for an organization
+organizationBase:
+  example:
+    code: |
+      {
+        "id": "083b4567-e89d-42c8-a439-6c1234567890",
+        "name": "Example Organization",
+        "type": {
+          "term": "Nonprofit",
+          "class": "Organization types",
+          "code": "UC000000",
+          "description": "Nonprofit organization"
+        },
+        "ein": "19-1234567",
+        "uei": "ABCD123456789",
+        "duns": "123456789",
+        "addresses": {
+          "primary": {
+            "street1": "456 Main St",
+            "street2": "Suite 100",
+            "city": "Anytown",
+            "stateOrProvince": "CA",
+            "country": "US",
+            "postalCode": "12345"
+          },
+          "otherAddresses": {
+            "satellite": {
+              "street1": "456 Main St",
+              "street2": "Suite 100",
+              "city": "Anytown",
+              "stateOrProvince": "CA",
+              "country": "US",
+              "postalCode": "12345"
+            },
+            "international": {
+              "street1": "123 Rue Principale",
+              "city": "Montreal",
+              "stateOrProvince": "QC",
+              "country": "CA",
+              "postalCode": "H2Y 1C6"
+            }
+          }
+        },
+        "phones": {
+          "primary": {
+            "countryCode": "+1",
+            "number": "444-456-1230",
+            "isMobile": true
+          },
+          "fax": {
+            "countryCode": "+1",
+            "number": "555-123-4567",
+            "extension": "123",
+            "isMobile": false
+          },
+          "otherPhones": {
+            "support": {
+              "countryCode": "+1",
+              "number": "333-456-1230",
+              "isMobile": false
+            },
+            "marketing": {
+              "countryCode": "+1",
+              "number": "444-456-1230",
+              "isMobile": true
+            }
+          }
+        },
+        "emails": {
+          "primary": "info@example.com",
+          "otherEmails": {
+            "support": "support@example.com",
+            "marketing": "marketing@example.com"
+          }
+        },
+        "mission": "To provide support and resources to the community.",
+        "yearFounded": "2024",
+        "socials": {
+          "website": "https://www.example.com",
+          "facebook": "https://www.facebook.com/example",
+          "twitterOrX": "https://x.com/example",
+          "instagram": "https://www.instagram.com/example",
+          "linkedin": "https://www.linkedin.com/company/example",
+          "otherSocials": {
+            "youtube": "https://www.youtube.com/example"
+          }
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/OrganizationBase.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/organization.tsp"
+      startLine: 5
+      endLine: 46
+orgSocialLinks:
+  example:
+    code: |
+      {
+        "website": "https://www.example.com",
+        "facebook": "https://www.facebook.com/example",
+        "twitterOrX": "https://x.com/example",
+        "bluesky": "https://bsky.app/profile/example",
+        "instagram": "https://www.instagram.com/example",
+        "linkedin": "https://www.linkedin.com/company/example",
+        "otherSocials": {
+          "youtube": "https://www.youtube.com/example",
+          "tiktok": "https://tiktok.com/example"
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/OrgSocialLinks.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/organization.tsp"
+      startLine: 52
+      endLine: 75
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -30,104 +148,9 @@ An organization that can apply to or host funding opportunities.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/OrganizationBase.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/organization.tsp",
-      startLine: 5,
-      endLine: 46,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "id": "083b4567-e89d-42c8-a439-6c1234567890",
-    "name": "Example Organization",
-    "type": {
-      "term": "Nonprofit",
-      "class": "Organization types",
-      "code": "UC000000",
-      "description": "Nonprofit organization"
-    },
-    "ein": "19-1234567",
-    "uei": "ABCD123456789",
-    "duns": "123456789",
-    "addresses": {
-      "primary": {
-        "street1": "456 Main St",
-        "street2": "Suite 100",
-        "city": "Anytown",
-        "stateOrProvince": "CA",
-        "country": "US",
-        "postalCode": "12345"
-      },
-      "otherAddresses": {
-        "satellite": {
-          "street1": "456 Main St",
-          "street2": "Suite 100",
-          "city": "Anytown",
-          "stateOrProvince": "CA",
-          "country": "US",
-          "postalCode": "12345"
-        },
-        "international": {
-          "street1": "123 Rue Principale",
-          "city": "Montreal",
-          "stateOrProvince": "QC",
-          "country": "CA",
-          "postalCode": "H2Y 1C6"
-        }
-      }
-    },
-    "phones": {
-      "primary": {
-        "countryCode": "+1",
-        "number": "444-456-1230",
-        "isMobile": true
-      },
-      "fax": {
-        "countryCode": "+1",
-        "number": "555-123-4567",
-        "extension": "123",
-        "isMobile": false
-      },
-      "otherPhones": {
-        "support": {
-          "countryCode": "+1",
-          "number": "333-456-1230",
-          "isMobile": false
-        },
-        "marketing": {
-          "countryCode": "+1",
-          "number": "444-456-1230",
-          "isMobile": true
-        }
-      }
-    },
-    "emails": {
-      "primary": "info@example.com",
-      "otherEmails": {
-        "support": "support@example.com",
-        "marketing": "marketing@example.com"
-      }
-    },
-    "mission": "To provide support and resources to the community.",
-    "yearFounded": "2024",
-    "socials": {
-      "website": "https://www.example.com",
-      "facebook": "https://www.facebook.com/example",
-      "twitterOrX": "https://x.com/example",
-      "instagram": "https://www.instagram.com/example",
-      "linkedin": "https://www.linkedin.com/company/example",
-      "otherSocials": {
-        "youtube": "https://www.youtube.com/example"
-      }
-    }
-  }
-  `,
-  }}
+  example={frontmatter.organizationBase.example}
+  jsonSchema={frontmatter.organizationBase.jsonSchema}
+  typeSpec={frontmatter.organizationBase.typeSpec}
 />
 
 ## OrgSocialLinks
@@ -149,30 +172,7 @@ A collection of social media and web presence links for an organization.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/OrgSocialLinks.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/organization.tsp",
-      startLine: 52,
-      endLine: 75,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "website": "https://www.example.com",
-    "facebook": "https://www.facebook.com/example",
-    "twitterOrX": "https://x.com/example",
-    "bluesky": "https://bsky.app/profile/example",
-    "instagram": "https://www.instagram.com/example",
-    "linkedin": "https://www.linkedin.com/company/example",
-    "otherSocials": {
-      "youtube": "https://www.youtube.com/example",
-      "tiktok": "https://tiktok.com/example"
-    }
-  }
-  `,
-  }}
+  example={frontmatter.orgSocialLinks.example}
+  jsonSchema={frontmatter.orgSocialLinks.jsonSchema}
+  typeSpec={frontmatter.orgSocialLinks.typeSpec}
 />

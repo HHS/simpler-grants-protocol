@@ -1,6 +1,106 @@
 ---
 title: Application
 description: Data model for an application to a funding opportunity
+applicationBase:
+  example:
+    code: |
+      {
+        "status": {
+          "value": "submitted",
+          "description": "Application has been submitted."
+        },
+        "dateSubmitted": "2024-01-01",
+        "organization": {
+          // Organization details would be here
+        },
+        "pointOfContact": {
+          // Person details would be here
+        },
+        "proposal": {
+          "title": "Example Project",
+          "description": "Example project to serve community needs.",
+          "amountRequested": {
+            "amount": "100000",
+            "currency": "USD"
+          },
+          "periodStartDate": "2024-01-01",
+          "periodEndDate": "2024-12-31"
+        },
+        "opportunity": {
+          "id": "083b4567-e89d-42c8-a439-6c1234567890",
+          "title": "Example Opportunity"
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/ApplicationBase.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/application.tsp"
+      startLine: 5
+      endLine: 31
+appStatus:
+  example:
+    code: |
+      {
+        "value": "submitted",
+        "description": "Application has been submitted."
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/AppStatus.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/application.tsp"
+      startLine: 37
+      endLine: 48
+appStatusOptions:
+  example:
+    code: '"submitted"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/AppStatusOptions.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/application.tsp"
+      startLine: 54
+      endLine: 60
+appProposal:
+  example:
+    code: |
+      {
+        "title": "Example Project",
+        "description": "Example project to serve community needs.",
+        "amountRequested": {
+          "amount": "100000",
+          "currency": "USD"
+        },
+        "periodStartDate": "2024-01-01",
+        "periodEndDate": "2024-12-31"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/AppProposal.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/application.tsp"
+      startLine: 66
+      endLine: 86
+appOpportunity:
+  example:
+    code: |
+      {
+        "id": "083b4567-e89d-42c8-a439-6c1234567890",
+        "title": "Example Opportunity"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/AppOpportunity.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/application.tsp"
+      startLine: 92
+      endLine: 102
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -25,47 +125,9 @@ Base model for an application to a funding opportunity.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/ApplicationBase.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/application.tsp",
-      startLine: 5,
-      endLine: 31,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "status": {
-      "value": "submitted",
-      "description": "Application has been submitted."
-    },
-    "dateSubmitted": "2024-01-01",
-    "organization": {
-      // Organization details would be here
-    },
-    "pointOfContact": {
-      // Person details would be here
-    },
-    "proposal": {
-      "title": "Example Project",
-      "description": "Example project to serve community needs.",
-      "amountRequested": {
-        "amount": "100000",
-        "currency": "USD"
-      },
-      "periodStartDate": "2024-01-01",
-      "periodEndDate": "2024-12-31"
-    },
-    "opportunity": {
-      "id": "083b4567-e89d-42c8-a439-6c1234567890",
-      "title": "Example Opportunity"
-    }
-  }
-  `,
-  }}
+  example={frontmatter.applicationBase.example}
+  jsonSchema={frontmatter.applicationBase.jsonSchema}
+  typeSpec={frontmatter.applicationBase.typeSpec}
 />
 
 ## AppStatus
@@ -83,24 +145,9 @@ The status of an application.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/AppStatus.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/application.tsp",
-      startLine: 37,
-      endLine: 48,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "value": "submitted",
-    "description": "Application has been submitted."
-  }
-  `,
-  }}
+  example={frontmatter.appStatus.example}
+  jsonSchema={frontmatter.appStatus.jsonSchema}
+  typeSpec={frontmatter.appStatus.typeSpec}
 />
 
 ## AppStatusOptions
@@ -119,19 +166,9 @@ The set of values accepted for application status.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/AppStatusOptions.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/application.tsp",
-      startLine: 54,
-      endLine: 60,
-    },
-  }}
-  example={{
-    code: `"submitted"`,
-  }}
+  example={frontmatter.appStatusOptions.example}
+  jsonSchema={frontmatter.appStatusOptions.jsonSchema}
+  typeSpec={frontmatter.appStatusOptions.typeSpec}
 />
 
 ## AppProposal
@@ -152,30 +189,9 @@ The proposal for funding an application.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/AppProposal.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/application.tsp",
-      startLine: 66,
-      endLine: 86,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "title": "Example Project",
-    "description": "Example project to serve community needs.",
-    "amountRequested": {
-      "amount": "100000",
-      "currency": "USD"
-    },
-    "periodStartDate": "2024-01-01",
-    "periodEndDate": "2024-12-31"
-  }
-  `,
-  }}
+  example={frontmatter.appProposal.example}
+  jsonSchema={frontmatter.appProposal.jsonSchema}
+  typeSpec={frontmatter.appProposal.typeSpec}
 />
 
 ## AppOpportunity
@@ -193,22 +209,7 @@ The opportunity being applied to.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/AppOpportunity.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/application.tsp",
-      startLine: 92,
-      endLine: 102,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "id": "083b4567-e89d-42c8-a439-6c1234567890",
-    "title": "Example Opportunity"
-  }
-  `,
-  }}
+  example={frontmatter.appOpportunity.example}
+  jsonSchema={frontmatter.appOpportunity.jsonSchema}
+  typeSpec={frontmatter.appOpportunity.typeSpec}
 />

@@ -1,7 +1,79 @@
 ---
 title: Opportunity
 description: The data models for a funding opportunity
-OpportunityBase:
+opportunityBase:
+  example:
+    code: |
+      {
+        "id": "049b4b15-f219-4037-901e-cd95ac32fbc8",
+        "title": "Healthcare Innovation Research Grant",
+        "description": "Funding for innovative healthcare delivery solutions",
+        "status": {
+          "value": "open",
+          "description": "Opportunity is actively accepting applications"
+        },
+        "funding": {
+          "totalAmountAvailable": {
+            "amount": "1000000.00",
+            "currency": "USD"
+          },
+          "minAwardAmount": {
+            "amount": "10000.00",
+            "currency": "USD"
+          },
+          "maxAwardAmount": {
+            "amount": "50000.00",
+            "currency": "USD"
+          },
+          "minAwardCount": 5,
+          "maxAwardCount": 20,
+          "estimatedAwardCount": 10
+        },
+        "keyDates": {
+          "appOpens": {
+            "name": "Application Opens",
+            "date": "2024-03-01",
+            "description": "Applications begin being accepted"
+          },
+          "appDeadline": {
+            "name": "Application Deadline",
+            "date": "2024-04-30",
+            "description": "Final deadline for all submissions"
+          },
+          "otherDates": {
+            "anticipatedAward": {
+              "name": "Anticipated award date",
+              "date": "2025-03-15",
+              "description": "When we expect to announce awards for this opportunity."
+            }
+          }
+        },
+        "source": "https://grants.gov/opportunity/123",
+        "customFields": {
+          "programArea": {
+            "name": "programArea",
+            "type": "string",
+            "value": "Healthcare Technology",
+            "description": "The primary focus area for this grant"
+          },
+          "eligibilityType": {
+            "name": "eligibilityType",
+            "type": "string",
+            "value": "Non-profit organizations",
+            "description": "The type of organizations eligible to apply"
+          }
+        },
+        "createdAt": "2024-02-28T12:00:00Z",
+        "lastModifiedAt": "2024-02-28T12:00:00Z"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/OpportunityBase.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/opportunity/base.tsp"
+      startLine: 43
+      endLine: 72
   python: |
     from datetime import date, datetime, time
     from uuid import UUID
@@ -68,7 +140,21 @@ OpportunityBase:
         created_at=datetime(2024, 2, 28, 12, 0, 0),
         last_modified_at=datetime(2024, 2, 28, 12, 0, 0)
     )
-OppStatus:
+oppStatus:
+  example:
+    code: |
+      {
+        "value": "open",
+        "description": "Opportunity is actively accepting applications"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/OppStatus.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/opportunity/status.tsp"
+      startLine: 22
+      endLine: 34
   python: |
     from common_grants_sdk.schemas.models import OppStatus, OppStatusOptions
 
@@ -82,12 +168,49 @@ OppStatus:
         custom_value="review",
         description="Opportunity is in review by the program team"
     )
-OppStatusOptions:
+oppStatusOptions:
+  example:
+    code: '"open"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/OppStatusOptions.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/opportunity/status.tsp"
+      startLine: 10
+      endLine: 16
   python: |
     from common_grants_sdk.schemas.models import OppStatusOptions
 
     status_value = OppStatusOptions.OPEN
-OppFunding:
+oppFunding:
+  example:
+    code: |
+      {
+        "totalAmountAvailable": {
+          "amount": "1000000.00",
+          "currency": "USD"
+        },
+        "minAwardAmount": {
+          "amount": "10000.00",
+          "currency": "USD"
+        },
+        "maxAwardAmount": {
+          "amount": "50000.00",
+          "currency": "USD"
+        },
+        "minAwardCount": 5,
+        "maxAwardCount": 20,
+        "estimatedAwardCount": 10
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/OppFunding.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/opportunity/funding.tsp"
+      startLine: 12
+      endLine: 40
   python: |
     from common_grants_sdk.schemas.fields import Money
     from common_grants_sdk.schemas.models import OppFunding
@@ -100,7 +223,37 @@ OppFunding:
         max_award_count=20,
         estimated_award_count=10
     )
-OppTimeline:
+oppTimeline:
+  example:
+    code: |
+      {
+        "appOpens": {
+          "name": "Application Opens",
+          "date": "2024-03-01",
+          "description": "Applications begin being accepted"
+        },
+        "appDeadline": {
+          "name": "Application Deadline",
+          "date": "2024-04-30",
+          "time": "17:00:00",
+          "description": "Final deadline for all submissions"
+        },
+        "otherDates": {
+          "anticipatedAward": {
+            "name": "Anticipated award date",
+            "date": "2025-03-15",
+            "description": "When we expect to announce awards for this opportunity."
+          }
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/OppTimeline.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/opportunity/timeline.tsp"
+      startLine: 13
+      endLine: 27
   python: |
     from datetime import date, time
     from common_grants_sdk.schemas.fields import Event
@@ -152,83 +305,10 @@ A funding opportunity, such as a grant or loan.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/OpportunityBase.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/opportunity/base.tsp",
-      startLine: 43,
-      endLine: 72,
-    },
-  }}
-  python={{ code: frontmatter.OpportunityBase.python }}
-  example={{
-    code: `
-  {
-    "id": "049b4b15-f219-4037-901e-cd95ac32fbc8",
-    "title": "Healthcare Innovation Research Grant",
-    "description": "Funding for innovative healthcare delivery solutions",
-    "status": {
-      "value": "open",
-      "description": "Opportunity is actively accepting applications"
-    },
-    "funding": {
-      "totalAmountAvailable": {
-        "amount": "1000000.00",
-        "currency": "USD"
-      },
-      "minAwardAmount": {
-        "amount": "10000.00",
-        "currency": "USD"
-      },
-      "maxAwardAmount": {
-        "amount": "50000.00",
-        "currency": "USD"
-      },
-      "minAwardCount": 5,
-      "maxAwardCount": 20,
-      "estimatedAwardCount": 10
-    },
-    "keyDates": {
-      "appOpens": {
-        "name": "Application Opens",
-        "date": "2024-03-01",
-        "description": "Applications begin being accepted"
-      },
-      "appDeadline": {
-        "name": "Application Deadline",
-        "date": "2024-04-30",
-        "description": "Final deadline for all submissions"
-      },
-      "otherDates": {
-        "anticipatedAward": {
-          "name": "Anticipated award date",
-          "date": "2025-03-15",
-          "description": "When we expect to announce awards for this opportunity."
-        }
-      }
-    },
-    "source": "https://grants.gov/opportunity/123",
-    "customFields": {
-      "programArea": {
-        "name": "programArea",
-        "type": "string",
-        "value": "Healthcare Technology",
-        "description": "The primary focus area for this grant"
-      },
-      "eligibilityType": {
-        "name": "eligibilityType",
-        "type": "string",
-        "value": "Non-profit organizations",
-        "description": "The type of organizations eligible to apply"
-      }
-    },
-    "createdAt": "2024-02-28T12:00:00Z",
-    "lastModifiedAt": "2024-02-28T12:00:00Z"
-  }
-  `,
-  }}
+  example={frontmatter.opportunityBase.example}
+  jsonSchema={frontmatter.opportunityBase.jsonSchema}
+  typeSpec={frontmatter.opportunityBase.typeSpec}
+  python={{ code: frontmatter.opportunityBase.python }}
 />
 
 ## OppStatus
@@ -246,25 +326,10 @@ The status of an opportunity, such as whether it is accepting applications.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/OppStatus.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/opportunity/status.tsp",
-      startLine: 22,
-      endLine: 34,
-    },
-  }}
-  python={{ code: frontmatter.OppStatus.python }}
-  example={{
-    code: `
-  {
-    "value": "open",
-    "description": "Opportunity is actively accepting applications"
-  }
-  `,
-  }}
+  example={frontmatter.oppStatus.example}
+  jsonSchema={frontmatter.oppStatus.jsonSchema}
+  typeSpec={frontmatter.oppStatus.typeSpec}
+  python={{ code: frontmatter.oppStatus.python }}
 />
 
 ## OppStatusOptions
@@ -283,20 +348,10 @@ The set of values accepted for opportunity status.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/OppStatusOptions.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/opportunity/status.tsp",
-      startLine: 10,
-      endLine: 16,
-    },
-  }}
-  python={{ code: frontmatter.OppStatusOptions.python }}
-  example={{
-    code: `"open"`,
-  }}
+  example={frontmatter.oppStatusOptions.example}
+  jsonSchema={frontmatter.oppStatusOptions.jsonSchema}
+  typeSpec={frontmatter.oppStatusOptions.typeSpec}
+  python={{ code: frontmatter.oppStatusOptions.python }}
 />
 
 ## OppFunding
@@ -317,38 +372,10 @@ Details about the funding available for an opportunity.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/OppFunding.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/opportunity/funding.tsp",
-      startLine: 12,
-      endLine: 40,
-    },
-  }}
-  python={{ code: frontmatter.OppFunding.python }}
-  example={{
-    code: `
-  {
-    "totalAmountAvailable": {
-      "amount": "1000000.00",
-      "currency": "USD"
-    },
-    "minAwardAmount": {
-      "amount": "10000.00",
-      "currency": "USD"
-    },
-    "maxAwardAmount": {
-      "amount": "50000.00",
-      "currency": "USD"
-    },
-    "minAwardCount": 5,
-    "maxAwardCount": 20,
-    "estimatedAwardCount": 10
-  }
-  `,
-  }}
+  example={frontmatter.oppFunding.example}
+  jsonSchema={frontmatter.oppFunding.jsonSchema}
+  typeSpec={frontmatter.oppFunding.typeSpec}
+  python={{ code: frontmatter.oppFunding.python }}
 />
 
 ## OppTimeline
@@ -366,39 +393,8 @@ Key dates in the opportunity's timeline, such as when the application opens and 
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/OppTimeline.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/opportunity/timeline.tsp",
-      startLine: 13,
-      endLine: 27,
-    },
-  }}
-  python={{ code: frontmatter.OppTimeline.python }}
-  example={{
-    code: `
-  {
-    "appOpens": {
-      "name": "Application Opens",
-      "date": "2024-03-01",
-      "description": "Applications begin being accepted"
-    },
-    "appDeadline": {
-      "name": "Application Deadline",
-      "date": "2024-04-30",
-      "time": "17:00:00",
-      "description": "Final deadline for all submissions"
-    },
-    "otherDates": {
-      "anticipatedAward": {
-        "name": "Anticipated award date",
-        "date": "2025-03-15",
-        "description": "When we expect to announce awards for this opportunity."
-      }
-    }
-  }
-  `,
-  }}
+  example={frontmatter.oppTimeline.example}
+  jsonSchema={frontmatter.oppTimeline.jsonSchema}
+  typeSpec={frontmatter.oppTimeline.typeSpec}
+  python={{ code: frontmatter.oppTimeline.python }}
 />

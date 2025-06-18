@@ -1,6 +1,67 @@
 ---
 title: Person
 description: Data model for a person
+personBase:
+  example:
+    code: |
+      {
+        "name": {
+          "prefix": "Dr.",
+          "first": "Jane",
+          "middle": "E.",
+          "last": "Doe"
+        },
+        "title": "Chief Executive Officer",
+        "dateOfBirth": "1990-01-01",
+        "addresses": {
+          "primary": {
+            "street1": "123 Main St",
+            "city": "Anytown",
+            "stateOrProvince": "CA",
+            "country": "US",
+            "postalCode": "12345"
+          },
+          "otherAddresses": {
+            "work": {
+              "street1": "456 Main St",
+              "street2": "Suite 100",
+              "city": "Anytown",
+              "stateOrProvince": "CA",
+              "country": "US",
+              "postalCode": "12345"
+            }
+          }
+        },
+        "phones": {
+          "primary": {
+            "countryCode": "+1",
+            "number": "444-456-1230",
+            "isMobile": true
+          },
+          "otherPhones": {
+            "work": {
+              "countryCode": "+1",
+              "number": "333-456-1230",
+              "isMobile": false
+            }
+          }
+        },
+        "emails": {
+          "primary": "john.doe@example.com",
+          "otherEmails": {
+            "work": "john.doe@work.com",
+            "personal": "john.doe@gmail.com"
+          }
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PersonBase.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/person.tsp"
+      startLine: 1
+      endLine: 31
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -24,68 +85,7 @@ A person affiliated with an organization or grant application.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PersonBase.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/models/person.tsp",
-      startLine: 1,
-      endLine: 31,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "name": {
-      "prefix": "Dr.",
-      "first": "Jane",
-      "middle": "E.",
-      "last": "Doe"
-    },
-    "title": "Chief Executive Officer",
-    "dateOfBirth": "1990-01-01",
-    "addresses": {
-      "primary": {
-        "street1": "123 Main St",
-        "city": "Anytown",
-        "stateOrProvince": "CA",
-        "country": "US",
-        "postalCode": "12345"
-      },
-      "otherAddresses": {
-        "work": {
-          "street1": "456 Main St",
-          "street2": "Suite 100",
-          "city": "Anytown",
-          "stateOrProvince": "CA",
-          "country": "US",
-          "postalCode": "12345"
-        }
-      }
-    },
-    "phones": {
-      "primary": {
-        "countryCode": "+1",
-        "number": "444-456-1230",
-        "isMobile": true
-      },
-      "otherPhones": {
-        "work": {
-          "countryCode": "+1",
-          "number": "333-456-1230",
-          "isMobile": false
-        }
-      }
-    },
-    "emails": {
-      "primary": "john.doe@example.com",
-      "otherEmails": {
-        "work": "john.doe@work.com",
-        "personal": "john.doe@gmail.com"
-      }
-    }
-  }
-  `,
-  }}
+  example={frontmatter.personBase.example}
+  jsonSchema={frontmatter.personBase.jsonSchema}
+  typeSpec={frontmatter.personBase.typeSpec}
 />
