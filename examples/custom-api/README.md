@@ -1,6 +1,6 @@
 # Custom API example
 
-Example codebase that demonstrates how to import and use the [simpler grant protocol TypeSpec library](../../specs/)
+Example codebase that demonstrates how to import and use the [simpler grant protocol TypeSpec library](../../lib/core/)
 
 ## 🚀 Project Structure
 
