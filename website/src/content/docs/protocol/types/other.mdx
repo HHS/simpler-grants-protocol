@@ -1,6 +1,62 @@
 ---
 title: Other core types
 description: Other core types that are used throughout the protocol
+boolean:
+  example:
+    code: 'true'
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: boolean.yaml
+      type: boolean
+      description: A value that is either true or false
+array:
+  example:
+    code: '[1, 2, 3]'
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: array.yaml
+      type: array
+      description: An ordered list of values
+record:
+  example:
+    code: |
+      {
+        "foo": 1,
+        "bar": 2
+      }
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: record.yaml
+      type: object
+      description: A collection of key-value pairs
+null:
+  example:
+    code: 'null'
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: null.yaml
+      type: null
+      description: A value that is null
+unknown:
+  example:
+    code: |
+      // String
+      "foo"
+
+      // Integer
+      123
+
+      // Boolean
+      true
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: unknown.yaml
+      description: A value with any type
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -10,40 +66,22 @@ import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 A value that is either `true` or `false`, equivalent to `boolean` in JSON Schema.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: boolean.yaml
-  type: boolean
-  description: A value that is either true or false
-  `,
-  }}
-  example={{
-    code: `true`,
-  }}
+  example={frontmatter.boolean.example}
+  jsonSchema={frontmatter.boolean.jsonSchema}
 />
 
-### Array
+## Array
 
 An ordered list of values, equivalent to `array` in JSON Schema.
 
-#### Formats
+### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: array.yaml
-  type: array
-  description: An ordered list of values
-  `,
-  }}
-  example={{
-    code: `[1, 2, 3]`,
-  }}
+  example={frontmatter.array.example}
+  jsonSchema={frontmatter.array.jsonSchema}
 />
 
-#### Usage
+### Usage
 
 In TypeSpec, you can specify the type of the values in the array with [templating](https://typespec.io/docs/language-basics/templates/):
 
@@ -61,31 +99,18 @@ items:
   type: integer
 ```
 
-### Record
+## Record
 
 A collection of key-value pairs, equivalent to `object` in JSON Schema.
 
-#### Formats
+### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: record.yaml
-  type: object
-  description: A collection of key-value pairs
-  `,
-  }}
-  example={{
-    code: `
-  {
-    "foo": 1,
-    "bar": 2
-  }`,
-  }}
+  example={frontmatter.record.example}
+  jsonSchema={frontmatter.record.jsonSchema}
 />
 
-#### Usage
+### Usage
 
 In TypeSpec, you can specify the type of the values in the record with [templating](https://typespec.io/docs/language-basics/templates/):
 
@@ -105,45 +130,20 @@ additionalProperties:
 
 If you want to define specific keys in a record, you can do so with a [`model`](https://typespec.io/docs/language-basics/models/).
 
-### null
+## null
 
 The `null` type, equivalent to `null` in JSON Schema.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: null.yaml
-  type: null
-  description: A value that is null
-  `,
-  }}
-  example={{
-    code: `null`,
-  }}
+  example={frontmatter.null.example}
+  jsonSchema={frontmatter.null.jsonSchema}
 />
 
-### unknown
+## unknown
 
 The `unknown` type accepts any value. It is equivalent to an empty JSON Schema.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: unknown.yaml
-  description: A value with any type
-  `,
-  }}
-  example={{
-    code: `
-  // String
-  "foo"
-
-// Integer
-123
-
-// Boolean
-true`,
-}}
+  example={frontmatter.unknown.example}
+  jsonSchema={frontmatter.unknown.jsonSchema}
 />

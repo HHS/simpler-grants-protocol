@@ -3,6 +3,80 @@ title: String types
 description: String types used throughout the protocol.
 sidebar:
   order: 1
+string:
+  example:
+    code: '"Hello, world!"'
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: string.yaml
+      type: string
+      description: A sequence of characters
+url:
+  example:
+    code: '"https://example.com/path"'
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: url.yaml
+      type: string
+      format: uri
+      description: A Uniform Resource Locator (URL)
+uuid:
+  example:
+    code: '"30a12e5e-5940-4c08-921c-17a8960fcf4b"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/uuid.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/types.tsp"
+      startLine: 37
+      endLine: 40
+email:
+  example:
+    code: '"test@example.com"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/email.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/types.tsp"
+      startLine: 52
+      endLine: 55
+employerTaxId:
+  example:
+    code: '"12-3456789"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/employerTaxId.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/types.tsp"
+      startLine: 57
+      endLine: 60
+samUEI:
+  example:
+    code: '"ABC1234567890"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/samUEI.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/types.tsp"
+      startLine: 62
+      endLine: 65
+duns:
+  example:
+    code: '"123456789012"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/duns.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/types.tsp"
+      startLine: 67
+      endLine: 70
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -12,17 +86,8 @@ import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 A sequence of characters.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: string.yaml
-  type: string
-  description: A sequence of characters
-  `,
-  }}
-  example={{
-    code: `"Hello, world!"`,
-  }}
+  example={frontmatter.string.example}
+  jsonSchema={frontmatter.string.jsonSchema}
 />
 
 ## url
@@ -30,18 +95,8 @@ A sequence of characters.
 A Uniform Resource Locator (URL).
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: url.yaml
-  type: string
-  format: uri
-  description: A Uniform Resource Locator (URL)
-  `,
-  }}
-  example={{
-    code: `"https://example.com/path"`,
-  }}
+  example={frontmatter.url.example}
+  jsonSchema={frontmatter.url.jsonSchema}
 />
 
 ## uuid
@@ -49,19 +104,9 @@ A Uniform Resource Locator (URL).
 A universally unique identifier.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/uuid.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/types.tsp",
-      startLine: 37,
-      endLine: 40,
-    },
-  }}
-  example={{
-    code: `"30a12e5e-5940-4c08-921c-17a8960fcf4b"`,
-  }}
+  example={frontmatter.uuid.example}
+  jsonSchema={frontmatter.uuid.jsonSchema}
+  typeSpec={frontmatter.uuid.typeSpec}
 />
 
 ## email
@@ -69,19 +114,9 @@ A universally unique identifier.
 An email address.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/email.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/types.tsp",
-      startLine: 52,
-      endLine: 55,
-    },
-  }}
-  example={{
-    code: `"test@example.com"`,
-  }}
+  example={frontmatter.email.example}
+  jsonSchema={frontmatter.email.jsonSchema}
+  typeSpec={frontmatter.email.typeSpec}
 />
 
 ## employerTaxId
@@ -89,19 +124,9 @@ An email address.
 An Employer Identification Number (EIN).
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/employerTaxId.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/types.tsp",
-      startLine: 57,
-      endLine: 60,
-    },
-  }}
-  example={{
-    code: `"12-3456789"`,
-  }}
+  example={frontmatter.employerTaxId.example}
+  jsonSchema={frontmatter.employerTaxId.jsonSchema}
+  typeSpec={frontmatter.employerTaxId.typeSpec}
 />
 
 ## samUEI
@@ -109,19 +134,9 @@ An Employer Identification Number (EIN).
 A Unique Entity Identifier (UEI).
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/samUEI.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/types.tsp",
-      startLine: 62,
-      endLine: 65,
-    },
-  }}
-  example={{
-    code: `"ABC1234567890"`,
-  }}
+  example={frontmatter.samUEI.example}
+  jsonSchema={frontmatter.samUEI.jsonSchema}
+  typeSpec={frontmatter.samUEI.typeSpec}
 />
 
 ## duns
@@ -129,17 +144,7 @@ A Unique Entity Identifier (UEI).
 A Data Universal Numbering System (DUNS) number.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/duns.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/types.tsp",
-      startLine: 67,
-      endLine: 70,
-    },
-  }}
-  example={{
-    code: `"123456789012"`,
-  }}
+  example={frontmatter.duns.example}
+  jsonSchema={frontmatter.duns.jsonSchema}
+  typeSpec={frontmatter.duns.typeSpec}
 />

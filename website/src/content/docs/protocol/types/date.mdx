@@ -3,31 +3,74 @@ title: Date and time types
 description: Date and time types used throughout the protocol.
 sidebar:
   order: 3
+isoDate:
+  example:
+    code: '"2025-01-01"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/isoDate.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/types.tsp"
+      startLine: 28
+      endLine: 30
+isoTime:
+  example:
+    code: '"17:00:00"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/isoTime.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/types.tsp"
+      startLine: 24
+      endLine: 27
+utcDateTime:
+  example:
+    code: '"2024-02-28T17:00:00Z"'
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: utcDateTime.yaml
+      type: string
+      format: date-time
+      description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ
+offsetDateTime:
+  example:
+    code: '"2024-02-28T17:00:00+01:00"'
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: offsetDateTime.yaml
+      type: string
+      format: date-time
+      description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm
+calendarYear:
+  example:
+    code: '"2025"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/calendarYear.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/types.tsp"
+      startLine: 32
+      endLine: 35
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
-### isoDate
+## isoDate
 
 A date on a calendar in ISO 8601 format YYYY-MM-DD.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/isoDate.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/types.tsp",
-      startLine: 28,
-      endLine: 30,
-    },
-  }}
-  example={{
-    code: `"2025-01-01"`,
-  }}
+  example={frontmatter.isoDate.example}
+  jsonSchema={frontmatter.isoDate.jsonSchema}
+  typeSpec={frontmatter.isoDate.typeSpec}
 />
 
-### isoTime
+## isoTime
 
 A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss.
 
@@ -36,75 +79,35 @@ The `isoTime` type does not include timezone information. When representing a ti
 :::
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/isoTime.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/types.tsp",
-      startLine: 24,
-      endLine: 27,
-    },
-  }}
-  example={{
-    code: `"17:00:00"`,
-  }}
+  example={frontmatter.isoTime.example}
+  jsonSchema={frontmatter.isoTime.jsonSchema}
+  typeSpec={frontmatter.isoTime.typeSpec}
 />
 
-### utcDateTime
+## utcDateTime
 
 A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: utcDateTime.yaml
-  type: string
-  format: date-time
-  description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ
-  `,
-  }}
-  example={{
-    code: `"2024-02-28T17:00:00Z"`,
-  }}
+  example={frontmatter.utcDateTime.example}
+  jsonSchema={frontmatter.utcDateTime.jsonSchema}
 />
 
-### offsetDateTime
+## offsetDateTime
 
 A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    code: `
-  $schema: https://json-schema.org/draft/2020-12/schema
-  $id: offsetDateTime.yaml
-  type: string
-  format: date-time
-  description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm
-  `,
-  }}
-  example={{
-    code: `"2024-02-28T17:00:00+01:00"`,
-  }}
+  example={frontmatter.offsetDateTime.example}
+  jsonSchema={frontmatter.offsetDateTime.jsonSchema}
 />
 
-### calendarYear
+## calendarYear
 
 A calendar year in the format YYYY.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/calendarYear.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/types.tsp",
-      startLine: 32,
-      endLine: 35,
-    },
-  }}
-  example={{
-    code: `"2025"`,
-  }}
+  example={frontmatter.calendarYear.example}
+  jsonSchema={frontmatter.calendarYear.jsonSchema}
+  typeSpec={frontmatter.calendarYear.typeSpec}
 />
