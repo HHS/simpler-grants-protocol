@@ -1,16 +1,16 @@
-name: CI - Publish @common-grants/core (dry run)
+name: CI - Publish @common-grants/core library (dry run)
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - "specs/**" # Trigger only if files in the `specs/` directory are changed
-      - ".github/workflows/ci-specs-npm.yml"
+      - "lib/core/**" # Trigger only if files in the `lib/core/` directory are changed
+      - ".github/workflows/ci-lib-core-publish.yml"
 
 defaults:
   run:
-    working-directory: ./specs
+    working-directory: ./lib/core
 
 jobs:
   publish:
