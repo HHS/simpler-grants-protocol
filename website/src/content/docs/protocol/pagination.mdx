@@ -1,6 +1,49 @@
 ---
 title: Pagination
 description: Defines a set of parameters and patterns for paginated routes
+paginatedQueryParams:
+  example:
+    code: "/common-grants/opportunities?page=1&pageSize=100"
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PaginatedQueryParams.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/pagination.tsp"
+      startLine: 9
+      endLine: 22
+paginatedBodyParams:
+  example:
+    code: |
+      {
+        "page": 1,
+        "pageSize": 100
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PaginatedBodyParams.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/pagination.tsp"
+      startLine: 24
+      endLine: 35
+paginatedResultsInfo:
+  example:
+    code: |
+      {
+        "page": 1,
+        "pageSize": 10,
+        "totalItems": 100,
+        "totalPages": 10
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PaginatedResultsInfo.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/pagination.tsp"
+      startLine: 37
+      endLine: 56
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -19,19 +62,9 @@ Query parameters for paginated routes. These parameters should be used on GET ro
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PaginatedQueryParams.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/pagination.tsp",
-      startLine: 9,
-      endLine: 22,
-    },
-  }}
-  example={{
-    code: "/common-grants/opportunities?page=1&pageSize=100",
-  }}
+  example={frontmatter.paginatedQueryParams.example}
+  jsonSchema={frontmatter.paginatedQueryParams.jsonSchema}
+  typeSpec={frontmatter.paginatedQueryParams.typeSpec}
 />
 
 ## PaginatedBodyParams
@@ -48,24 +81,9 @@ Body parameters for paginated routes. These parameters should be used on POST an
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PaginatedBodyParams.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/pagination.tsp",
-      startLine: 24,
-      endLine: 35,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "page": 1,
-    "pageSize": 100
-  }
-  `,
-  }}
+  example={frontmatter.paginatedBodyParams.example}
+  jsonSchema={frontmatter.paginatedBodyParams.jsonSchema}
+  typeSpec={frontmatter.paginatedBodyParams.typeSpec}
 />
 
 ## PaginatedResultsInfo
@@ -84,24 +102,7 @@ Details about the paginated results. This model should included in the response 
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PaginatedResultsInfo.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/pagination.tsp",
-      startLine: 37,
-      endLine: 56,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "page": 1,
-    "pageSize": 10,
-    "totalItems": 100,
-    "totalPages": 10
-  }
-  `,
-  }}
+  example={frontmatter.paginatedResultsInfo.example}
+  jsonSchema={frontmatter.paginatedResultsInfo.jsonSchema}
+  typeSpec={frontmatter.paginatedResultsInfo.typeSpec}
 />

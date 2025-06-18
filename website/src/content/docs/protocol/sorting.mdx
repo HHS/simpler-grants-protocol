@@ -1,6 +1,59 @@
 ---
 title: Sorting
 description: Defines a set of parameters and patterns for sorting routes
+sortOrder:
+  example:
+    code: '"asc"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/SortOrder.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/sorting.tsp"
+      startLine: 21
+      endLine: 24
+sortQueryParams:
+  example:
+    code: "/common-grants/opportunities?sortBy=lastModifiedAt&sortOrder=asc"
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/SortQueryParams.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/sorting.tsp"
+      startLine: 26
+      endLine: 42
+sortBodyParams:
+  example:
+    code: |
+      {
+        "sortBy": "lastModifiedAt",
+        "sortOrder": "asc"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/SortBodyParams.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/sorting.tsp"
+      startLine: 44
+      endLine: 57
+sortedResultsInfo:
+  example:
+    code: |
+      {
+        "sortBy": "lastModifiedAt",
+        "customSortBy": "customField",
+        "sortOrder": "asc"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/SortedResultsInfo.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/sorting.tsp"
+      startLine: 59
+      endLine: 75
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -11,27 +64,17 @@ The order or direction to sort results by.
 
 ### Table
 
-| Value | Description      |
-| ----- | ---------------- |
-| asc   | Ascending order  |
-| desc  | Descending order |
+| Value | Description                                    |
+| ----- | ---------------------------------------------- |
+| asc   | Ascending order (e.g., low to high or A to Z)  |
+| desc  | Descending order (e.g., high to low or Z to A) |
 
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/SortOrder.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/sorting.tsp",
-      startLine: 21,
-      endLine: 24,
-    },
-  }}
-  example={{
-    code: `"asc"`,
-  }}
+  example={frontmatter.sortOrder.example}
+  jsonSchema={frontmatter.sortOrder.jsonSchema}
+  typeSpec={frontmatter.sortOrder.typeSpec}
 />
 
 ## SortQueryParams
@@ -49,19 +92,9 @@ Query parameters for sorting. These parameters should be used on GET routes that
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/SortQueryParams.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/sorting.tsp",
-      startLine: 26,
-      endLine: 42,
-    },
-  }}
-  example={{
-    code: "/common-grants/opportunities?sortBy=lastModifiedAt&sortOrder=asc",
-  }}
+  example={frontmatter.sortQueryParams.example}
+  jsonSchema={frontmatter.sortQueryParams.jsonSchema}
+  typeSpec={frontmatter.sortQueryParams.typeSpec}
 />
 
 ## SortBodyParams
@@ -79,24 +112,9 @@ Body parameters for sorting. These parameters should be used on POST and PUT rou
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/SortBodyParams.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/sorting.tsp",
-      startLine: 44,
-      endLine: 57,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "sortBy": "lastModifiedAt",
-    "sortOrder": "asc"
-  }
-  `,
-  }}
+  example={frontmatter.sortBodyParams.example}
+  jsonSchema={frontmatter.sortBodyParams.jsonSchema}
+  typeSpec={frontmatter.sortBodyParams.typeSpec}
 />
 
 ## SortedResultsInfo
@@ -115,23 +133,7 @@ Information about the sort order of the items returned. This model should be inc
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/SortedResultsInfo.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/sorting.tsp",
-      startLine: 59,
-      endLine: 75,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "sortBy": "lastModifiedAt",
-    "customSortBy": "customField",
-    "sortOrder": "asc"
-  }
-  `,
-  }}
+  example={frontmatter.sortedResultsInfo.example}
+  jsonSchema={frontmatter.sortedResultsInfo.jsonSchema}
+  typeSpec={frontmatter.sortedResultsInfo.typeSpec}
 />
