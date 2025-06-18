@@ -1,6 +1,68 @@
 ---
 title: Address
 description: Data model for an address
+address:
+  example:
+    code: |
+      {
+        "street1": "123 Main St",
+        "street2": "Apt 1",
+        "city": "Anytown",
+        "stateOrProvince": "CA",
+        "country": "US",
+        "postalCode": "12345",
+        "latitude": 37.7749,
+        "longitude": -122.4194,
+        "geography": {
+          "type": "Point",
+          "coordinates": [37.7749, -122.4194]
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/Address.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/address.tsp"
+      startLine: 1
+      endLine: 33
+addressCollection:
+  example:
+    code: |
+      {
+        "primary": {
+          "street1": "123 Main St",
+          "city": "Anytown",
+          "stateOrProvince": "CA",
+          "country": "US",
+          "postalCode": "12345"
+        },
+        "otherAddresses": {
+          "work": {
+            "street1": "456 Main St",
+            "street2": "Suite 100", 
+            "city": "Anytown",
+            "stateOrProvince": "CA",
+            "country": "US",
+            "postalCode": "12345"
+          },
+          "international": {    
+            "street1": "123 Rue Principale",
+            "city": "Montreal",
+            "stateOrProvince": "QC",
+            "country": "CA",
+            "postalCode": "H2Y 1C6"
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/AddressCollection.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/address.tsp"
+      startLine: 34
+      endLine: 43
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -23,34 +85,9 @@ An address is a physical location.
 ### Formats
 
 <SchemaFormatTabs
-  example={{
-    code: `
-  {
-    "street1": "123 Main St",
-    "street2": "Apt 1",
-    "city": "Anytown",
-    "stateOrProvince": "CA",
-    "country": "US",
-    "postalCode": "12345",
-    "latitude": 37.7749,
-    "longitude": -122.4194,
-    "geography": {
-      "type": "Point",
-      "coordinates": [37.7749, -122.4194]
-    }
-  }
-  `,
-  }}
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/Address.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/address.tsp",
-      startLine: 1,
-      endLine: 33,
-    },
-  }}
+  example={frontmatter.address.example}
+  jsonSchema={frontmatter.address.jsonSchema}
+  typeSpec={frontmatter.address.typeSpec}
 />
 
 ## AddressCollection
@@ -67,47 +104,7 @@ A collection of addresses for a person or organization.
 ### Formats
 
 <SchemaFormatTabs
-  foo="bar"
-  example={{
-    code: `
-  {
-    "primary": {
-      "street1": "123 Main St",
-      "city": "Anytown",
-      "stateOrProvince": "CA",
-      "country": "US",
-      "postalCode": "12345"
-    },
-    "otherAddresses": {
-      "work": {
-        "street1": "456 Main St",
-        "street2": "Suite 100", 
-        "city": "Anytown",
-        "stateOrProvince": "CA",
-        "country": "US",
-        "postalCode": "12345"
-      },
-      "international": {    
-        "street1": "123 Rue Principale",
-        "city": "Montreal",
-        "stateOrProvince": "QC",
-        "country": "CA",
-        "postalCode": "H2Y 1C6"
-      }
-    }
-  }
-  `,
-  }}
-  jsonSchema={{
-    file: {
-      path: "website/public/schemas/yaml/AddressCollection.yaml",
-    },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/address.tsp",
-      startLine: 34,
-      endLine: 43,
-    },
-  }}
+  example={frontmatter.addressCollection.example}
+  jsonSchema={frontmatter.addressCollection.jsonSchema}
+  typeSpec={frontmatter.addressCollection.typeSpec}
 />

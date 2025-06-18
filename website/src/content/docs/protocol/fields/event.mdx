@@ -2,6 +2,22 @@
 title: Event
 description: A model for representing events with dates and descriptions
 event:
+  example:
+    code: |
+      {
+        "name": "Application Deadline",
+        "date": "2024-04-30",
+        "time": "17:00:00",
+        "description": "Final deadline for all submissions"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/Event.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/event.tsp"
+      startLine: 12
+      endLine: 26
   python: |
     from common_grants_sdk.schemas.fields import Event
 
@@ -29,24 +45,8 @@ A description of an event with an associated date (and possible time).
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/Event.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/event.tsp",
-      startLine: 12,
-      endLine: 26,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "name": "Application Deadline",
-    "date": "2024-04-30",
-    "time": "17:00:00",
-    "description": "Final deadline for all submissions"
-  }`,
-  }}
+  example={frontmatter.event.example}
+  jsonSchema={frontmatter.event.jsonSchema}
+  typeSpec={frontmatter.event.typeSpec}
   python={{ code: frontmatter.event.python }}
 />

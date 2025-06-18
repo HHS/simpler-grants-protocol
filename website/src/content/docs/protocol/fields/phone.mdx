@@ -1,6 +1,59 @@
 ---
 title: Phone
 description: A model for representing a phone number
+phone:
+  example:
+    code: |
+      {
+        "countryCode": "+1",
+        "number": "555-123-4567",
+        "extension": "123",
+        "isMobile": true
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/Phone.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/phone.tsp"
+      startLine: 3
+      endLine: 19
+phoneCollection:
+  example:
+    code: |
+      {
+        "primary": {
+          "countryCode": "+1",
+          "number": "444-456-1230",
+          "isMobile": true
+        },
+        "fax": {
+          "countryCode": "+1",
+          "number": "555-123-4567",
+          "extension": "123",
+          "isMobile": false
+        },
+        "otherPhones": {
+          "support": {
+            "countryCode": "+1",
+            "number": "333-456-1230",
+            "isMobile": false
+          },
+          "marketing": {
+            "countryCode": "+1",
+            "number": "444-456-1230",
+            "isMobile": true
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/PhoneCollection.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/phone.tsp"
+      startLine: 25
+      endLine: 37
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -19,25 +72,9 @@ A phone number.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/Phone.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/phone.tsp",
-      startLine: 3,
-      endLine: 19,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "countryCode": "+1",
-    "number": "555-123-4567",
-    "extension": "123",
-    "isMobile": true
-  }`,
-  }}
+  example={frontmatter.phone.example}
+  jsonSchema={frontmatter.phone.jsonSchema}
+  typeSpec={frontmatter.phone.typeSpec}
 />
 
 ## PhoneCollection
@@ -55,42 +92,7 @@ A collection of phone numbers for a person or organization.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PhoneCollection.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/phone.tsp",
-      startLine: 25,
-      endLine: 37,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "primary": {
-      "countryCode": "+1",
-      "number": "444-456-1230",
-      "isMobile": true
-    },
-    "fax": {
-      "countryCode": "+1",
-      "number": "555-123-4567",
-      "extension": "123",
-      "isMobile": false
-    },
-    "otherPhones": {
-      "support": {
-        "countryCode": "+1",
-        "number": "333-456-1230",
-        "isMobile": false
-      },
-      "marketing": {
-        "countryCode": "+1",
-        "number": "444-456-1230",
-        "isMobile": true
-      }
-    }
-  }`,
-  }}
+  example={frontmatter.phoneCollection.example}
+  jsonSchema={frontmatter.phoneCollection.jsonSchema}
+  typeSpec={frontmatter.phoneCollection.typeSpec}
 />

@@ -1,6 +1,119 @@
 ---
 title: PCS term
 description: A Philanthropy Classification System (PCS) term.
+pcsTerm:
+  example:
+    code: |
+      {
+        "term": "Nonprofit",
+        "class": "Organization types",
+        "code": "UC000000",
+        "description": "Nonprofit organization"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PCSTerm.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/pcs.tsp"
+      startLine: 15
+      endLine: 30
+pcsClass:
+  example:
+    code: '"Organization types"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PCSClass.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/pcs.tsp"
+      startLine: 36
+      endLine: 43
+pcsOrgType:
+  example:
+    code: |
+      {
+        "term": "Nonprofit",
+        "class": "Organization types",
+        "code": "UC000000",
+        "description": "Nonprofit organization"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PCSOrgType.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/pcs.tsp"
+      startLine: 49
+      endLine: 56
+pcsSubject:
+  example:
+    code: |
+      {
+        "term": "Education",
+        "class": "Subjects",
+        "code": "SB000000",
+        "description": "All formally constituted educational institutions (except art and performing art schools) and projects or activities."
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PCSSubject.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/pcs.tsp"
+      startLine: 58
+      endLine: 65
+pcsPopulation:
+  example:
+    code: |
+      {
+        "term": "Children and youth",
+        "class": "Population groups",
+        "code": "PA010000",
+        "description": "Young people from birth to 18 years of age."
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PCSPopulation.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/pcs.tsp"
+      startLine: 67
+      endLine: 74
+pcsSupportStrategy:
+  example:
+    code: |
+      {
+        "term": "Cash grants",
+        "class": "Support strategies",
+        "code": "TA000000",
+        "description": "Direct monetary contributions of cash or cash equivalents."
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PCSSupportStrategy.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/pcs.tsp"
+      startLine: 76
+      endLine: 83
+pcsTransactionType:
+  example:
+    code: |
+      {
+        "term": "Cash grants",
+        "class": "Transaction types",
+        "code": "TA000000",
+        "description": "Direct monetary contributions of cash or cash equivalents."
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/PCSTransactionType.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/pcs.tsp"
+      startLine: 85
+      endLine: 92
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -23,25 +136,9 @@ Visit [taxonomy.candid.org](https://taxonomy.candid.org/) for more information.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PCSTerm.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/pcs.tsp",
-      startLine: 15,
-      endLine: 30,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "term": "Nonprofit",
-    "class": "Organization types",
-    "code": "UC000000",
-    "description": "Nonprofit organization"
-  }`,
-  }}
+  example={frontmatter.pcsTerm.example}
+  jsonSchema={frontmatter.pcsTerm.jsonSchema}
+  typeSpec={frontmatter.pcsTerm.typeSpec}
 />
 
 ## PCSClass
@@ -61,19 +158,9 @@ The class to which the PCS term belongs.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PCSClass.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/pcs.tsp",
-      startLine: 36,
-      endLine: 43,
-    },
-  }}
-  example={{
-    code: `"Organization types"`,
-  }}
+  example={frontmatter.pcsClass.example}
+  jsonSchema={frontmatter.pcsClass.jsonSchema}
+  typeSpec={frontmatter.pcsClass.typeSpec}
 />
 
 ## Sub-types
@@ -93,25 +180,9 @@ A [PCSTerm](#pcsterm) where the `class` is `"Organization types"`. Categorizes t
 See [PCS organization types](https://taxonomy.candid.org/organization-type) for more information.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PCSOrgType.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/pcs.tsp",
-      startLine: 49,
-      endLine: 56,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "term": "Nonprofit",
-    "class": "Organization types",
-    "code": "UC000000",
-    "description": "Nonprofit organization"
-  }`,
-  }}
+  example={frontmatter.pcsOrgType.example}
+  jsonSchema={frontmatter.pcsOrgType.jsonSchema}
+  typeSpec={frontmatter.pcsOrgType.typeSpec}
 />
 
 ### PCSSubject
@@ -121,25 +192,9 @@ A [PCSTerm](#pcsterm) where the `class` is `"Subjects"`. Categorizes the subject
 See [PCS subjects](https://taxonomy.candid.org/subject) for more information.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PCSSubject.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/pcs.tsp",
-      startLine: 58,
-      endLine: 65,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "term": "Education",
-    "class": "Subjects",
-    "code": "SB000000",
-    "description": "All formally constituted educational institutions (except art and performing art schools) and projects or activities."
-  }`,
-  }}
+  example={frontmatter.pcsSubject.example}
+  jsonSchema={frontmatter.pcsSubject.jsonSchema}
+  typeSpec={frontmatter.pcsSubject.typeSpec}
 />
 
 ### PCSPopulation
@@ -149,25 +204,9 @@ A [PCSTerm](#pcsterm) where the `class` is `"Population groups"`. Categorizes th
 See [PCS population groups](https://taxonomy.candid.org/population-group) for more information.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PCSPopulation.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/pcs.tsp",
-      startLine: 67,
-      endLine: 74,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "term": "Children and youth",
-    "class": "Population groups",
-    "code": "PA010000",
-    "description": "Young people from birth to 18 years of age."
-  }`,
-  }}
+  example={frontmatter.pcsPopulation.example}
+  jsonSchema={frontmatter.pcsPopulation.jsonSchema}
+  typeSpec={frontmatter.pcsPopulation.typeSpec}
 />
 
 ### PCSSupportStrategy
@@ -177,25 +216,9 @@ A [PCSTerm](#pcsterm) where the `class` is `"Support strategies"`. Categorizes t
 See [PCS support strategies](https://taxonomy.candid.org/support-strategy) for more information.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PCSSupportStrategy.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/pcs.tsp",
-      startLine: 76,
-      endLine: 83,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "term": "Cash grants",
-    "class": "Support strategies",
-    "code": "TA000000",
-    "description": "Direct monetary contributions of cash or cash equivalents."
-  }`,
-  }}
+  example={frontmatter.pcsSupportStrategy.example}
+  jsonSchema={frontmatter.pcsSupportStrategy.jsonSchema}
+  typeSpec={frontmatter.pcsSupportStrategy.typeSpec}
 />
 
 ### PCSTransactionType
@@ -205,23 +228,7 @@ A [PCSTerm](#pcsterm) where the `class` is `"Transaction types"`. Categorizes th
 See [PCS transaction types](https://taxonomy.candid.org/transaction-type) for more information.
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/PCSTransactionType.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/pcs.tsp",
-      startLine: 85,
-      endLine: 92,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "term": "Cash grants",
-    "class": "Transaction types",
-    "code": "TA000000",
-    "description": "Direct monetary contributions of cash or cash equivalents."
-  }`,
-  }}
+  example={frontmatter.pcsTransactionType.example}
+  jsonSchema={frontmatter.pcsTransactionType.jsonSchema}
+  typeSpec={frontmatter.pcsTransactionType.typeSpec}
 />

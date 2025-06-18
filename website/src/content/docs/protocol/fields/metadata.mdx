@@ -1,6 +1,21 @@
 ---
 title: SystemMetadata
 description: System-managed metadata for records
+systemMetadata:
+  example:
+    code: |
+      {
+        "createdAt": "2024-02-28T12:00:00Z",
+        "lastModifiedAt": "2024-02-28T12:00:00Z"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/SystemMetadata.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/metadata.tsp"
+      startLine: 21
+      endLine: 30
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -17,21 +32,7 @@ System-managed metadata that is automatically added to records.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/SystemMetadata.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/metadata.tsp",
-      startLine: 21,
-      endLine: 30,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "createdAt": "2024-02-28T12:00:00Z",
-    "lastModifiedAt": "2024-02-28T12:00:00Z"
-  }`,
-  }}
+  example={frontmatter.systemMetadata.example}
+  jsonSchema={frontmatter.systemMetadata.jsonSchema}
+  typeSpec={frontmatter.systemMetadata.typeSpec}
 />

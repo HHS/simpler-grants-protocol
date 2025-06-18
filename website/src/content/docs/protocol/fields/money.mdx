@@ -1,7 +1,21 @@
 ---
 title: Money
 description: A model for representing monetary values
-Money:
+money:
+  example:
+    code: |
+      {
+        "amount": "1000000.00",
+        "currency": "USD"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/Money.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/money.tsp"
+      startLine: 21
+      endLine: 28
   python: |
     from common_grants_sdk.schemas.fields import Money
 
@@ -22,22 +36,8 @@ A monetary amount and the currency in which it is denominated.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/Money.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/fields/money.tsp",
-      startLine: 21,
-      endLine: 28,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "amount": "1000000.00",
-    "currency": "USD"
-  }`,
-  }}
-  python={{ code: frontmatter.Money.python }}
+  example={frontmatter.money.example}
+  jsonSchema={frontmatter.money.jsonSchema}
+  typeSpec={frontmatter.money.typeSpec}
+  python={{ code: frontmatter.money.python }}
 />
