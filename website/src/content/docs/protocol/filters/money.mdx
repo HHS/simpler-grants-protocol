@@ -1,6 +1,48 @@
 ---
 title: Money filters
 description: Filters applied to monetary values.
+moneyRangeFilter:
+  example:
+    code: |
+      {
+        "operator": "within",
+        "value": {
+          "min": {
+            "amount": "1000",
+            "currency": "USD"
+          },
+          "max": {
+            "amount": "10000",
+            "currency": "USD"
+          }
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/MoneyRangeFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/money.tsp"
+      startLine: 24
+      endLine: 39
+moneyComparisonFilter:
+  example:
+    code: |
+      {
+        "operator": "eq",
+        "value": {
+          "amount": "1000",
+          "currency": "USD"
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/MoneyComparisonFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/money.tsp"
+      startLine: 10
+      endLine: 18
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -28,33 +70,9 @@ Filters by comparing a field to a range of monetary values.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/MoneyRangeFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/money.tsp",
-      startLine: 24,
-      endLine: 39,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "operator": "within",
-    "value": {
-      "min": {
-        "amount": "1000",
-        "currency": "USD"
-      },
-      "max": {
-        "amount": "10000",
-        "currency": "USD"
-      }
-    }
-  }
-  `,
-  }}
+  example={frontmatter.moneyRangeFilter.example}
+  jsonSchema={frontmatter.moneyRangeFilter.jsonSchema}
+  typeSpec={frontmatter.moneyRangeFilter.typeSpec}
 />
 
 ## MoneyComparisonFilter
@@ -71,25 +89,7 @@ Filters by comparing a field to a monetary value.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/MoneyComparisonFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/money.tsp",
-      startLine: 10,
-      endLine: 18,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "operator": "eq",
-    "value": {
-      "amount": "1000",
-      "currency": "USD"
-    }
-  }
-  `,
-  }}
+  example={frontmatter.moneyComparisonFilter.example}
+  jsonSchema={frontmatter.moneyComparisonFilter.jsonSchema}
+  typeSpec={frontmatter.moneyComparisonFilter.typeSpec}
 />

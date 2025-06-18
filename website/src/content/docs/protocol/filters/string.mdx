@@ -1,6 +1,36 @@
 ---
 title: String filters
 description: Filters that can be applied to string or enum fields.
+stringComparisonFilter:
+  example:
+    code: |
+      {
+        "operator": "eq",
+        "value": "value"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/StringComparisonFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/string.tsp"
+      startLine: 9
+      endLine: 17
+stringArrayFilter:
+  example:
+    code: |
+      {
+        "operator": "eq",
+        "value": ["value1", "value2"]
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/StringArrayFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/string.tsp"
+      startLine: 23
+      endLine: 31
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -19,24 +49,9 @@ A filter that applies a comparison to a string value.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/StringComparisonFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/string.tsp",
-      startLine: 9,
-      endLine: 17,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "operator": "eq",
-    "value": "value"
-  }
-  `,
-  }}
+  example={frontmatter.stringComparisonFilter.example}
+  jsonSchema={frontmatter.stringComparisonFilter.jsonSchema}
+  typeSpec={frontmatter.stringComparisonFilter.typeSpec}
 />
 
 ## StringArrayFilter
@@ -53,22 +68,7 @@ A filter that applies a comparison to an array of string values.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/StringArrayFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/string.tsp",
-      startLine: 23,
-      endLine: 31,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "operator": "eq",
-    "value": ["value1", "value2"]
-  }
-  `,
-  }}
+  example={frontmatter.stringArrayFilter.example}
+  jsonSchema={frontmatter.stringArrayFilter.jsonSchema}
+  typeSpec={frontmatter.stringArrayFilter.typeSpec}
 />

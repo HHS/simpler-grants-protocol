@@ -1,7 +1,21 @@
 ---
 title: Base filters
 description: Base models used to build field-specific filters.
-DefaultFilter:
+defaultFilter:
+  example:
+    code: |
+      {
+        "operator": "eq",
+        "value": "example"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/DefaultFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 70
+      endLine: 83
   python: |
     from dataclasses import dataclass
     from typing import Any, Union
@@ -16,7 +30,17 @@ DefaultFilter:
     default_filter_array = DefaultFilter(operator=ArrayOperators.IN, value=[1, 2, 3])
     default_filter_string = DefaultFilter(operator=StringOperators.LIKE, value="example")
     default_filter_range = DefaultFilter(operator=RangeOperators.BETWEEN, value={"min": 1, "max": 10})
-EquivalenceOperators:
+equivalenceOperators:
+  example:
+    code: '"eq"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/EquivalenceOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 7
+      endLine: 14
   python: |
     from enum import Enum
 
@@ -26,7 +50,17 @@ EquivalenceOperators:
 
     # Example usage:
     op = EquivalenceOperators.EQ
-ComparisonOperators:
+comparisonOperators:
+  example:
+    code: '"gt"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/ComparisonOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 16
+      endLine: 29
   python: |
     from enum import Enum
 
@@ -38,7 +72,17 @@ ComparisonOperators:
 
     # Example usage:
     op = ComparisonOperators.GT
-StringOperators:
+stringOperators:
+  example:
+    code: '"like"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/StringOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 31
+      endLine: 38
   python: |
     from enum import Enum
 
@@ -48,7 +92,17 @@ StringOperators:
 
     # Example usage:
     op = StringOperators.LIKE
-ArrayOperators:
+arrayOperators:
+  example:
+    code: '"in"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/ArrayOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 31
+      endLine: 38
   python: |
     from enum import Enum
 
@@ -58,7 +112,17 @@ ArrayOperators:
 
     # Example usage:
     op = ArrayOperators.IN
-RangeOperators:
+rangeOperators:
+  example:
+    code: '"between"'
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/RangeOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 49
+      endLine: 56
   python: |
     from enum import Enum
 
@@ -87,25 +151,10 @@ The default filter model is a base model that can be used to create more specifi
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/DefaultFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/base.tsp",
-      startLine: 70,
-      endLine: 83,
-    },
-  }}
-  python={{ code: frontmatter.DefaultFilter.python }}
-  example={{
-    code: `
-  {
-    "operator": "eq",
-    "value": "example"
-  }
-  `,
-  }}
+  example={frontmatter.defaultFilter.example}
+  jsonSchema={frontmatter.defaultFilter.jsonSchema}
+  typeSpec={frontmatter.defaultFilter.typeSpec}
+  python={{ code: frontmatter.defaultFilter.python }}
 />
 
 ## EquivalenceOperators
@@ -128,20 +177,10 @@ Operators that filter a field based on an exact match to a value. Supported valu
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/EquivalenceOperators.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/base.tsp",
-      startLine: 7,
-      endLine: 14,
-    },
-  }}
-  python={{ code: frontmatter.EquivalenceOperators.python }}
-  example={{
-    code: `"eq"`,
-  }}
+  example={frontmatter.equivalenceOperators.example}
+  jsonSchema={frontmatter.equivalenceOperators.jsonSchema}
+  typeSpec={frontmatter.equivalenceOperators.typeSpec}
+  python={{ code: frontmatter.equivalenceOperators.python }}
 />
 
 ## ComparisonOperators
@@ -164,20 +203,10 @@ Operators that filter a field based on a comparison to a value. Supported value 
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/ComparisonOperators.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/base.tsp",
-      startLine: 20,
-      endLine: 27,
-    },
-  }}
-  python={{ code: frontmatter.ComparisonOperators.python }}
-  example={{
-    code: `"gt"`,
-  }}
+  example={frontmatter.comparisonOperators.example}
+  jsonSchema={frontmatter.comparisonOperators.jsonSchema}
+  typeSpec={frontmatter.comparisonOperators.typeSpec}
+  python={{ code: frontmatter.comparisonOperators.python }}
 />
 
 ## StringOperators
@@ -272,20 +301,10 @@ Operators that filter a field based on an array of values. Supported value types
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/ArrayOperators.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/base.tsp",
-      startLine: 31,
-      endLine: 38,
-    },
-  }}
-  python={{ code: frontmatter.ArrayOperators.python }}
-  example={{
-    code: `"in"`,
-  }}
+  example={frontmatter.arrayOperators.example}
+  jsonSchema={frontmatter.arrayOperators.jsonSchema}
+  typeSpec={frontmatter.arrayOperators.typeSpec}
+  python={{ code: frontmatter.arrayOperators.python }}
 />
 
 ## RangeOperators
@@ -306,18 +325,8 @@ Operators that filter a field based on a range of values. Supported value types 
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/RangeOperators.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/base.tsp",
-      startLine: 49,
-      endLine: 56,
-    },
-  }}
-  python={{ code: frontmatter.RangeOperators.python }}
-  example={{
-    code: `"between"`,
-  }}
+  example={frontmatter.rangeOperators.example}
+  jsonSchema={frontmatter.rangeOperators.jsonSchema}
+  typeSpec={frontmatter.rangeOperators.typeSpec}
+  python={{ code: frontmatter.rangeOperators.python }}
 />

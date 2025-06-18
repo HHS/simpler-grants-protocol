@@ -1,6 +1,54 @@
 ---
 title: Numeric filters
 description: Filters that can be applied to numeric fields.
+numberComparisonFilter:
+  example:
+    code: |
+      {
+        "operator": "eq",
+        "value": 1000
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/NumberComparisonFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/numeric.tsp"
+      startLine: 11
+      endLine: 19
+numberRangeFilter:
+  example:
+    code: |
+      {
+        "operator": "within",
+        "value": {
+          "min": 1000,
+          "max": 10000
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/NumberRangeFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/numeric.tsp"
+      startLine: 25
+      endLine: 36
+numberArrayFilter:
+  example:
+    code: |
+      {
+        "operator": "in",
+        "value": [1000, 2000, 3000]
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/NumberArrayFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/numeric.tsp"
+      startLine: 42
+      endLine: 50
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -19,24 +67,9 @@ Filters by comparing a field to a numeric value.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/NumberComparisonFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/numeric.tsp",
-      startLine: 11,
-      endLine: 19,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "operator": "eq",
-    "value": 1000
-  }
-  `,
-  }}
+  example={frontmatter.numberComparisonFilter.example}
+  jsonSchema={frontmatter.numberComparisonFilter.jsonSchema}
+  typeSpec={frontmatter.numberComparisonFilter.typeSpec}
 />
 
 ## NumberRangeFilter
@@ -62,27 +95,9 @@ Filters by comparing a field to a range of numeric values.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/NumberRangeFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/numeric.tsp",
-      startLine: 25,
-      endLine: 39,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "operator": "within",
-    "value": {
-      "min": 1000,
-      "max": 10000
-    }
-  }
-  `,
-  }}
+  example={frontmatter.numberRangeFilter.example}
+  jsonSchema={frontmatter.numberRangeFilter.jsonSchema}
+  typeSpec={frontmatter.numberRangeFilter.typeSpec}
 />
 
 ## NumberArrayFilter
@@ -99,22 +114,7 @@ Filters by comparing a field to an array of numeric values.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/NumberArrayFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/numeric.tsp",
-      startLine: 42,
-      endLine: 50,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "operator": "in",
-    "value": [1000, 2000, 3000]
-  }
-  `,
-  }}
+  example={frontmatter.numberArrayFilter.example}
+  jsonSchema={frontmatter.numberArrayFilter.jsonSchema}
+  typeSpec={frontmatter.numberArrayFilter.typeSpec}
 />

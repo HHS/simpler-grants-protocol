@@ -1,6 +1,39 @@
 ---
 title: Date filters
 description: Filters applied to date fields.
+dateRangeFilter:
+  example:
+    code: |
+      {
+        "operator": "between",
+        "value": {
+          "min": "2021-01-01",
+          "max": "2021-01-02"
+        }
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/DateRangeFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/date.tsp"
+      startLine: 24
+      endLine: 38
+dateComparisonFilter:
+  example:
+    code: |
+      {
+        "operator": "eq",
+        "value": "2021-01-01"
+      }
+  jsonSchema:
+    file: 
+      path: "website/public/schemas/yaml/DateComparisonFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/date.tsp"
+      startLine: 10
+      endLine: 18
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -28,27 +61,9 @@ Filters by comparing a field to a range of date values.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/DateRangeFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/date.tsp",
-      startLine: 24,
-      endLine: 38,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "operator": "between",
-    "value": {
-      "min": "2021-01-01",
-      "max": "2021-01-02"
-    }
-  }
-  `,
-  }}
+  example={frontmatter.dateRangeFilter.example}
+  jsonSchema={frontmatter.dateRangeFilter.jsonSchema}
+  typeSpec={frontmatter.dateRangeFilter.typeSpec}
 />
 
 ## DateComparisonFilter
@@ -65,22 +80,7 @@ Filters by comparing a field to a date value.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/DateComparisonFilter.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "specs/lib/core/filters/date.tsp",
-      startLine: 10,
-      endLine: 18,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "operator": "eq",
-    "value": "2021-01-01"
-  }
-  `,
-  }}
+  example={frontmatter.dateComparisonFilter.example}
+  jsonSchema={frontmatter.dateComparisonFilter.jsonSchema}
+  typeSpec={frontmatter.dateComparisonFilter.typeSpec}
 />
