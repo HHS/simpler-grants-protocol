@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Error.yaml
+type: object
+properties:
+  status:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    examples:
+      - 400
+  message:
+    type: string
+    examples:
+      - Error
+    description: Human-readable error message
+  errors:
+    type: array
+    items: {}
+    description: List of errors
+required:
+  - status
+  - message
+  - errors
+description: A non-2xx response schema

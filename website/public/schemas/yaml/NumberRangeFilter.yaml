@@ -1,0 +1,25 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: NumberRangeFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: RangeOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: object
+    properties:
+      min:
+        type: number
+      max:
+        type: number
+    required:
+      - min
+      - max
+    examples:
+      - min: 1000
+        max: 10000
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a numeric range

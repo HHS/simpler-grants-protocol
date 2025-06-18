@@ -1,0 +1,120 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrganizationBase.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: The organization's unique identifier.
+  name:
+    type: string
+    description: The organization's legal name as registered with relevant authorities.
+  type:
+    $ref: PCSOrgType.yaml
+    description: The organization's type within the Philanthropy Classification System (PCS).
+  ein:
+    $ref: employerTaxId.yaml
+    description: The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS.
+  uei:
+    $ref: samUEI.yaml
+    description: The organization's Unique Entity Identifier (UEI) from SAM.gov, used for federal contracting.
+  duns:
+    $ref: duns.yaml
+    description: The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses.
+  addresses:
+    $ref: AddressCollection.yaml
+    description: Collection of physical addresses associated with the organization.
+  phones:
+    $ref: PhoneCollection.yaml
+    description: Collection of phone numbers associated with the organization.
+  emails:
+    $ref: EmailCollection.yaml
+    description: Collection of email addresses associated with the organization.
+  mission:
+    type: string
+    description: The organization's mission statement.
+  yearFounded:
+    $ref: calendarYear.yaml
+    description: The calendar year the organization was founded.
+  socials:
+    $ref: OrgSocialLinks.yaml
+    description: Collection of the organization's social media and web presence links.
+  customFields:
+    $ref: "#/$defs/RecordCustomField"
+    description: Custom fields for the organization.
+required:
+  - id
+  - name
+examples:
+  - id: 083b4567-e89d-42c8-a439-6c1234567890
+    name: Example Organization
+    type:
+      term: Hospital
+      class: Organization types
+      description: Institutions with the primary purpose of providing in-patient physical and mental health services...
+      code: EO000000
+    ein: 12-3456789
+    uei: ABC1234567890
+    duns: "123456789012"
+    addresses:
+      primary:
+        street1: 456 Main St
+        street2: Suite 100
+        city: Anytown
+        stateOrProvince: CA
+        country: US
+        postalCode: "12345"
+      otherAddresses:
+        satellite:
+          street1: 456 Main St
+          street2: Suite 100
+          city: Anytown
+          stateOrProvince: CA
+          country: US
+          postalCode: "12345"
+        international:
+          street1: 123 Rue Principale
+          city: Montreal
+          stateOrProvince: QC
+          country: CA
+          postalCode: H2Y 1C6
+    phones:
+      primary:
+        countryCode: "+1"
+        number: 444-456-1230
+        isMobile: true
+      fax:
+        countryCode: "+1"
+        number: 555-123-4567
+        extension: "123"
+        isMobile: false
+      otherPhones:
+        support:
+          countryCode: "+1"
+          number: 333-456-1230
+          isMobile: false
+        marketing:
+          countryCode: "+1"
+          number: 444-456-1230
+          isMobile: true
+    emails:
+      primary: info@example.com
+      otherEmails:
+        support: support@example.com
+        marketing: marketing@example.com
+    mission: To provide support and resources to the community.
+    yearFounded: "2024"
+    socials:
+      website: https://www.example.com
+      facebook: https://www.facebook.com/example
+      twitterOrX: https://x.com/example
+      instagram: https://www.instagram.com/example
+      linkedin: https://www.linkedin.com/company/example
+      otherSocials:
+        youtube: https://www.youtube.com/example
+description: An organization that can apply for grants.
+$defs:
+  RecordCustomField:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: CustomField.yaml

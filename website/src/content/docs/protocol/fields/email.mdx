@@ -1,47 +1,49 @@
 ---
 title: Email
 description: Data model for an email address
+email:
+  example:
+    code: '"john.doe@example.com"'
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/email.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/email.tsp"
+      startLine: 5
+      endLine: 6
+emailCollection:
+  example:
+    code: |
+      {
+        "primary": "john.doe@example.com",
+        "otherEmails": {
+          "work": "john.doe@work.com",
+          "personal": "john.doe@gmail.com",
+          "school": "john.doe@school.edu"
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/EmailCollection.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/email.tsp"
+      startLine: 8
+      endLine: 16
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 An email address. Alias for the [email](/protocol/types/string#email) type.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-"john.doe@example.com"
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON Schema for this model is:
-
-```yaml
-$id: email.yaml
-type: string
-format: email
-description: A valid email address.
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```tsp
-/** An email address. */
-alias Email = Types.email;
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.email.example}
+  jsonSchema={frontmatter.email.jsonSchema}
+  typeSpec={frontmatter.email.typeSpec}
+/>
 
 ## EmailCollection
 
@@ -56,60 +58,8 @@ A collection of email addresses for a person or organization.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "primary": "john.doe@example.com",
-  "otherEmails": {
-    "work": "john.doe@work.com",
-    "personal": "john.doe@gmail.com",
-    "school": "john.doe@school.edu"
-  }
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON Schema for this model is:
-
-```yaml
-$id: EmailCollection.yaml
-type: object
-properties:
-  primary:
-    $ref: email.yaml
-    description: The primary email address for a person or organization.
-  otherEmails:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      $ref: email.yaml
-    description: Additional email addresses keyed by a descriptive label.
-required:
-  - primary
-description: A collection of email addresses for a person or organization.
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```tsp
-/** A collection of email addresses. */
-model EmailCollection {
-  /** The primary email address for a person or organization. */
-  primary: Types.email;
-
-  /** Additional email addresses keyed by a descriptive label (e.g., "work", "personal", "support"). */
-  otherEmails?: Record<Types.email>;
-}
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.emailCollection.example}
+  jsonSchema={frontmatter.emailCollection.jsonSchema}
+  typeSpec={frontmatter.emailCollection.typeSpec}
+/>

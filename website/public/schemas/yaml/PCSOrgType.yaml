@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PCSOrgType.yaml
+type: object
+properties:
+  class:
+    type: string
+    const: Organization types
+    description: The PCS term for the organization type.
+required:
+  - class
+allOf:
+  - $ref: PCSTerm.yaml
+description: |-
+  A Philanthropy Classification System (PCS) term for organization types.
+
+  See https://taxonomy.candid.org/organization-type for more information.

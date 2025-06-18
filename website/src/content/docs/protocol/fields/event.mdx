@@ -1,9 +1,35 @@
 ---
 title: Event
 description: A model for representing events with dates and descriptions
+event:
+  example:
+    code: |
+      {
+        "name": "Application Deadline",
+        "date": "2024-04-30",
+        "time": "17:00:00",
+        "description": "Final deadline for all submissions"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Event.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/event.tsp"
+      startLine: 12
+      endLine: 26
+  python: |
+    from common_grants_sdk.schemas.fields import Event
+
+    event = Event(
+        name="Application Deadline",
+        date="2024-04-30",
+        time="17:00:00",
+        description="Final deadline for all submissions"
+    )
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 A description of an event with an associated date (and possible time).
 
@@ -18,89 +44,9 @@ A description of an event with an associated date (and possible time).
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "name": "Application Deadline",
-  "date": "2024-04-30",
-  "time": "17:00:00",
-  "description": "Final deadline for all submissions"
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: Event.yaml
-type: object
-properties:
-  name:
-    type: string
-    description: Human-readable name of the event (e.g., 'Application posted', 'Question deadline')
-  date:
-    $ref: isoDate.yaml
-    description: "Date of the event in in ISO 8601 format: YYYY-MM-DD"
-  time:
-    $ref: isoTime.yaml
-    description: "Time of the event in in ISO 8601 format: HH:MM:SS"
-  description:
-    type: string
-    description: Description of what this event represents
-required:
-  - name
-  - date
-description: Description of an event with an associated date (and possible time)
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-/** Description of an event with an associated date (and possible time) */
-model Event {
-  /** Human-readable name of the event (e.g., 'Application posted', 'Question deadline') */
-  name: string;
-
-  /** Date of the event in in ISO 8601 format: YYYY-MM-DD */
-  date: isoDate;
-
-  /** Time of the event in ISO 8601 format: HH:MM:SS */
-  time?: isoTime;
-
-  /** Description of what this event represents */
-  description?: string;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this field is:
-
-```python
-from datetime import date, time
-from common_grants_sdk.schemas.fields import Event
-
-event = Event(
-    name="Application Deadline",
-    date=date(2024, 4, 30),
-    time=time(17, 0, 0),
-    description="Final deadline for all submissions"
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.event.example}
+  jsonSchema={frontmatter.event.jsonSchema}
+  typeSpec={frontmatter.event.typeSpec}
+  python={{ code: frontmatter.event.python }}
+/>

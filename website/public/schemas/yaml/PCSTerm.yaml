@@ -1,0 +1,40 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PCSTerm.yaml
+type: object
+properties:
+  term:
+    type: string
+    description: The plain language PCS term.
+  class:
+    $ref: PCSClass.yaml
+    description: The class to which the PCS term belongs.
+  code:
+    type: string
+    examples:
+      - UC0
+    pattern: "[A-Z]{2}[0-9]{6}"
+    description: The code for this PCS term.
+  description:
+    type: string
+    description: Description of the PCS term
+required:
+  - term
+  - class
+  - code
+examples:
+  - term: Hospital
+    class: Organization types
+    description: Institutions with the primary purpose of providing in-patient physical and mental health services...
+    code: EO000000
+description: |-
+  A Philanthropy Classification System (PCS) term.
+
+  The PCS is a hierarchical classification system for categorizing data related to
+  philanthropic activities. It supports the following classes:
+  - Organization types
+  - Subjects
+  - Population groups
+  - Transaction types
+  - Support strategies
+
+  See https://taxonomy.candid.org/ for more information.

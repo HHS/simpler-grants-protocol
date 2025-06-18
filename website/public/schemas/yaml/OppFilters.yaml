@@ -1,0 +1,78 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OppFilters.yaml
+type: object
+properties:
+  status:
+    $ref: StringArrayFilter.yaml
+    examples:
+      - operator: in
+        value:
+          - forecasted
+          - open
+    description: "`status.value` matches one of the following values"
+  closeDateRange:
+    $ref: DateRangeFilter.yaml
+    examples:
+      - operator: between
+        value:
+          min: 2021-01-01
+          max: 2021-01-02
+    description: "`keyDates.closeDate` is between the given range"
+  totalFundingAvailableRange:
+    $ref: MoneyRangeFilter.yaml
+    examples:
+      - operator: between
+        value:
+          min:
+            amount: "1000000"
+            currency: USD
+          max:
+            amount: "2000000"
+            currency: USD
+    description: |-
+      `funding.totalAmountAvailable` is between the given range
+
+      Funding amounts that are denominated in a different currency will
+      be excluded from the search.
+  minAwardAmountRange:
+    $ref: MoneyRangeFilter.yaml
+    examples:
+      - operator: between
+        value:
+          min:
+            amount: "1000000"
+            currency: USD
+          max:
+            amount: "2000000"
+            currency: USD
+    description: |-
+      `funding.minAwardAmount` is between the given range
+
+      Funding amounts that are denominated in a different currency will
+      be excluded from the search.
+  maxAwardAmountRange:
+    $ref: MoneyRangeFilter.yaml
+    examples:
+      - operator: between
+        value:
+          min:
+            amount: "1000000"
+            currency: USD
+          max:
+            amount: "2000000"
+            currency: USD
+    description: |-
+      `funding.maxAwardAmount` is between the given range.
+
+      Funding amounts that are denominated in a different currency will
+      be excluded from the search.
+  customFilters:
+    $ref: "#/$defs/RecordDefaultFilter"
+    description: Additional implementation-defined filters to apply to the search
+description: Filters to apply when searching for opportunities
+$defs:
+  RecordDefaultFilter:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: DefaultFilter.yaml

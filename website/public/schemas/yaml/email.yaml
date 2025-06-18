@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: email.yaml
+type: string
+examples:
+  - test@example.com
+format: email
+description: An email address

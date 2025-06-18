@@ -1,8 +1,140 @@
 ---
 title: Base filters
 description: Base models used to build field-specific filters.
+defaultFilter:
+  example:
+    code: |
+      {
+        "operator": "eq",
+        "value": "example"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/DefaultFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 70
+      endLine: 83
+  python: |
+    from dataclasses import dataclass
+    from typing import Any, Union
+
+    @dataclass
+    class DefaultFilter:
+        operator: Union[ComparisonOperators, ArrayOperators, StringOperators, RangeOperators]
+        value: Any
+
+    # Example usage:
+    default_filter_numeric = DefaultFilter(operator=ComparisonOperators.GT, value=100)
+    default_filter_array = DefaultFilter(operator=ArrayOperators.IN, value=[1, 2, 3])
+    default_filter_string = DefaultFilter(operator=StringOperators.LIKE, value="example")
+    default_filter_range = DefaultFilter(operator=RangeOperators.BETWEEN, value={"min": 1, "max": 10})
+equivalenceOperators:
+  example:
+    code: '"eq"'
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/EquivalenceOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 7
+      endLine: 14
+  python: |
+    from enum import Enum
+
+    class EquivalenceOperators(str, Enum):
+        EQ = "eq"
+        NEQ = "neq"
+
+    # Example usage:
+    op = EquivalenceOperators.EQ
+comparisonOperators:
+  example:
+    code: '"gt"'
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ComparisonOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 16
+      endLine: 29
+  python: |
+    from enum import Enum
+
+    class ComparisonOperators(str, Enum):
+        GT = "gt"
+        GTE = "gte"
+        LT = "lt"
+        LTE = "lte"
+
+    # Example usage:
+    op = ComparisonOperators.GT
+stringOperators:
+  example:
+    code: '"like"'
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/StringOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 31
+      endLine: 38
+  python: |
+    from enum import Enum
+
+    class StringOperators(str, Enum):
+        LIKE = "like"
+        NOT_LIKE = "not_like"
+
+    # Example usage:
+    op = StringOperators.LIKE
+arrayOperators:
+  example:
+    code: '"in"'
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ArrayOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 31
+      endLine: 38
+  python: |
+    from enum import Enum
+
+    class ArrayOperators(str, Enum):
+        IN = "in"
+        NOT_IN = "not_in"
+
+    # Example usage:
+    op = ArrayOperators.IN
+rangeOperators:
+  example:
+    code: '"between"'
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/RangeOperators.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/base.tsp"
+      startLine: 49
+      endLine: 56
+  python: |
+    from enum import Enum
+
+    class RangeOperators(str, Enum):
+        BETWEEN = "between"
+        OUTSIDE = "outside"
+
+    # Example usage:
+    op = RangeOperators.BETWEEN
 ---
 
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ## DefaultFilter
@@ -18,91 +150,12 @@ The default filter model is a base model that can be used to create more specifi
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "operator": "eq",
-  "value": "example"
-}
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** A base filter model that can be used to create more specific filter models */
-model DefaultFilter {
-  /** The operator to apply to the filter value */
-  operator:
-      | ComparisonOperators
-      | ArrayOperators
-      | StringOperators
-      | RangeOperators
-      | AllOperators;
-
-  /** The value to use for the filter operation */
-  value: unknown;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: DefaultFilter.yaml
-type: object
-properties:
-  operator:
-    anyOf:
-      - $ref: ComparisonOperators.yaml
-      - $ref: ArrayOperators.yaml
-      - $ref: StringOperators.yaml
-      - $ref: RangeOperators.yaml
-      - $ref: AllOperators.yaml
-    description: The operator to apply to the filter value
-  value:
-    description: The value to use for the filter operation
-required:
-  - operator
-  - value
-description: A base filter model that can be used to create more specific filter models
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from dataclasses import dataclass
-from typing import Any, Union
-
-@dataclass
-class DefaultFilter:
-    operator: Union[ComparisonOperators, ArrayOperators, StringOperators, RangeOperators]
-    value: Any
-
-# Example usage:
-default_filter_numeric = DefaultFilter(operator=ComparisonOperators.GT, value=100)
-default_filter_array = DefaultFilter(operator=ArrayOperators.IN, value=[1, 2, 3])
-default_filter_string = DefaultFilter(operator=StringOperators.LIKE, value="example")
-default_filter_range = DefaultFilter(operator=RangeOperators.BETWEEN, value={"min": 1, "max": 10})
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.defaultFilter.example}
+  jsonSchema={frontmatter.defaultFilter.jsonSchema}
+  typeSpec={frontmatter.defaultFilter.typeSpec}
+  python={{ code: frontmatter.defaultFilter.python }}
+/>
 
 ## EquivalenceOperators
 
@@ -123,67 +176,12 @@ Operators that filter a field based on an exact match to a value. Supported valu
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-"eq"
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Operators that filter a field based on an exact match to a value */
-enum EquivalenceOperators {
-  /** Equal to a value */
-  eq,
-
-  /** Not equal to a value */
-  neq,
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: EquivalenceOperators.yaml
-type: string
-enum:
-  - eq
-  - neq
-description: Operators that filter a field based on an exact match to a value
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from enum import Enum
-
-class EquivalenceOperators(str, Enum):
-    EQ = "eq"
-    NEQ = "neq"
-
-# Example usage:
-op = EquivalenceOperators.EQ
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.equivalenceOperators.example}
+  jsonSchema={frontmatter.equivalenceOperators.jsonSchema}
+  typeSpec={frontmatter.equivalenceOperators.typeSpec}
+  python={{ code: frontmatter.equivalenceOperators.python }}
+/>
 
 ## ComparisonOperators
 
@@ -204,77 +202,12 @@ Operators that filter a field based on a comparison to a value. Supported value 
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-"gt"
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Operators that filter a field based on a comparison to a value */
-enum ComparisonOperators {
-  /** Greater than a value */
-  gt,
-
-  /** Greater than or equal to a value */
-  gte,
-
-  /** Less than a value */
-  lt,
-
-  /** Less than or equal to a value */
-  lte,
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: ComparisonOperators.yaml
-type: string
-enum:
-  - gt
-  - gte
-  - lt
-  - lte
-description: Operators that filter a field based on a comparison to a value
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from enum import Enum
-
-class ComparisonOperators(str, Enum):
-    GT = "gt"
-    GTE = "gte"
-    LT = "lt"
-    LTE = "lte"
-
-# Example usage:
-op = ComparisonOperators.GT
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.comparisonOperators.example}
+  jsonSchema={frontmatter.comparisonOperators.jsonSchema}
+  typeSpec={frontmatter.comparisonOperators.typeSpec}
+  python={{ code: frontmatter.comparisonOperators.python }}
+/>
 
 ## StringOperators
 
@@ -367,67 +300,12 @@ Operators that filter a field based on an array of values. Supported value types
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-"in"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: ArrayOperators.yaml
-type: string
-enum:
-  - in
-  - not_in
-description: Operators that filter a field based on an array of values
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Operators that filter a field based on an array of values */
-enum ArrayOperators {
-  /** In an array of values */
-  in,
-
-  /** Not in an array of values */
-  not_in,
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from enum import Enum
-
-class ArrayOperators(str, Enum):
-    IN = "in"
-    NOT_IN = "not_in"
-
-# Example usage:
-op = ArrayOperators.IN
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.arrayOperators.example}
+  jsonSchema={frontmatter.arrayOperators.jsonSchema}
+  typeSpec={frontmatter.arrayOperators.typeSpec}
+  python={{ code: frontmatter.arrayOperators.python }}
+/>
 
 ## RangeOperators
 
@@ -446,64 +324,9 @@ Operators that filter a field based on a range of values. Supported value types 
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-"between"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: RangeOperators.yaml
-type: string
-enum:
-  - between
-  - outside
-description: Operators that filter a field based on a range of values
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Operators that filter a field based on a range of values */
-enum RangeOperators {
-  /** Between a range of values */
-  between,
-
-  /** Outside a range of values */
-  outside,
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from enum import Enum
-
-class RangeOperators(str, Enum):
-    BETWEEN = "between"
-    OUTSIDE = "outside"
-
-# Example usage:
-op = RangeOperators.BETWEEN
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.rangeOperators.example}
+  jsonSchema={frontmatter.rangeOperators.jsonSchema}
+  typeSpec={frontmatter.rangeOperators.typeSpec}
+  python={{ code: frontmatter.rangeOperators.python }}
+/>

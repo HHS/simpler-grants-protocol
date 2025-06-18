@@ -1,0 +1,28 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SortedResultsInfo.yaml
+type: object
+properties:
+  sortBy:
+    type: string
+    examples:
+      - lastModifiedAt
+    description: The field results are sorted by, or "custom" if an implementation-defined sort key is used
+  customSortBy:
+    type: string
+    examples:
+      - customField
+    description: Implementation-defined sort key used to sort the results, if applicable
+  sortOrder:
+    $ref: SortOrder.yaml
+    examples:
+      - asc
+    description: The order in which the results are sorted, e.g. ascending or descending
+  errors:
+    type: array
+    items:
+      type: string
+    description: Non-fatal errors that occurred during sorting
+required:
+  - sortBy
+  - sortOrder
+description: Information about the sort order of the items returned

@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AppStatus.yaml
+type: object
+properties:
+  value:
+    $ref: AppStatusOptions.yaml
+    description: The status of the application.
+  customValue:
+    type: string
+    description: A custom value for the status.
+  description:
+    type: string
+    description: A description of the status.
+required:
+  - value
+examples:
+  - value: submitted
+    description: Application has been submitted.
+description: The status of the application.

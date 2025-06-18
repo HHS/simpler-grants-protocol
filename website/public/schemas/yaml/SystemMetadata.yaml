@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SystemMetadata.yaml
+type: object
+properties:
+  createdAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was created.
+  lastModifiedAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was last modified.
+required:
+  - createdAt
+  - lastModifiedAt
+examples:
+  - createdAt: 2025-01-01T17:01:01
+    lastModifiedAt: 2025-01-02T17:30:00
+description: Standard system-level metadata about a given record.

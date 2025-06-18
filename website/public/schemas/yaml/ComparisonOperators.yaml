@@ -1,0 +1,9 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ComparisonOperators.yaml
+type: string
+enum:
+  - gt
+  - gte
+  - lt
+  - lte
+description: Operators that filter a field based on a comparison to a value

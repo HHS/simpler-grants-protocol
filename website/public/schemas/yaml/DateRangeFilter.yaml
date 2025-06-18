@@ -1,0 +1,35 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: DateRangeFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: RangeOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: object
+    properties:
+      min:
+        anyOf:
+          - $ref: isoDate.yaml
+          - type: string
+            format: date-time
+          - type: string
+            format: date-time
+      max:
+        anyOf:
+          - $ref: isoDate.yaml
+          - type: string
+            format: date-time
+          - type: string
+            format: date-time
+    required:
+      - min
+      - max
+    examples:
+      - min: 2021-01-01
+        max: 2021-01-02
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a range of date values

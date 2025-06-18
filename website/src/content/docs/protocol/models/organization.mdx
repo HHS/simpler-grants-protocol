@@ -1,9 +1,127 @@
 ---
 title: Organization
 description: Data model for an organization
+organizationBase:
+  example:
+    code: |
+      {
+        "id": "083b4567-e89d-42c8-a439-6c1234567890",
+        "name": "Example Organization",
+        "type": {
+          "term": "Nonprofit",
+          "class": "Organization types",
+          "code": "UC000000",
+          "description": "Nonprofit organization"
+        },
+        "ein": "19-1234567",
+        "uei": "ABCD123456789",
+        "duns": "123456789",
+        "addresses": {
+          "primary": {
+            "street1": "456 Main St",
+            "street2": "Suite 100",
+            "city": "Anytown",
+            "stateOrProvince": "CA",
+            "country": "US",
+            "postalCode": "12345"
+          },
+          "otherAddresses": {
+            "satellite": {
+              "street1": "456 Main St",
+              "street2": "Suite 100",
+              "city": "Anytown",
+              "stateOrProvince": "CA",
+              "country": "US",
+              "postalCode": "12345"
+            },
+            "international": {
+              "street1": "123 Rue Principale",
+              "city": "Montreal",
+              "stateOrProvince": "QC",
+              "country": "CA",
+              "postalCode": "H2Y 1C6"
+            }
+          }
+        },
+        "phones": {
+          "primary": {
+            "countryCode": "+1",
+            "number": "444-456-1230",
+            "isMobile": true
+          },
+          "fax": {
+            "countryCode": "+1",
+            "number": "555-123-4567",
+            "extension": "123",
+            "isMobile": false
+          },
+          "otherPhones": {
+            "support": {
+              "countryCode": "+1",
+              "number": "333-456-1230",
+              "isMobile": false
+            },
+            "marketing": {
+              "countryCode": "+1",
+              "number": "444-456-1230",
+              "isMobile": true
+            }
+          }
+        },
+        "emails": {
+          "primary": "info@example.com",
+          "otherEmails": {
+            "support": "support@example.com",
+            "marketing": "marketing@example.com"
+          }
+        },
+        "mission": "To provide support and resources to the community.",
+        "yearFounded": "2024",
+        "socials": {
+          "website": "https://www.example.com",
+          "facebook": "https://www.facebook.com/example",
+          "twitterOrX": "https://x.com/example",
+          "instagram": "https://www.instagram.com/example",
+          "linkedin": "https://www.linkedin.com/company/example",
+          "otherSocials": {
+            "youtube": "https://www.youtube.com/example"
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrganizationBase.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/organization.tsp"
+      startLine: 5
+      endLine: 46
+orgSocialLinks:
+  example:
+    code: |
+      {
+        "website": "https://www.example.com",
+        "facebook": "https://www.facebook.com/example",
+        "twitterOrX": "https://x.com/example",
+        "bluesky": "https://bsky.app/profile/example",
+        "instagram": "https://www.instagram.com/example",
+        "linkedin": "https://www.linkedin.com/company/example",
+        "otherSocials": {
+          "youtube": "https://www.youtube.com/example",
+          "tiktok": "https://tiktok.com/example"
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgSocialLinks.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/organization.tsp"
+      startLine: 52
+      endLine: 75
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 ## OrganizationBase
 
@@ -29,207 +147,11 @@ An organization that can apply to or host funding opportunities.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "id": "083b4567-e89d-42c8-a439-6c1234567890",
-  "name": "Example Organization",
-  "type": {
-    "term": "Nonprofit",
-    "class": "Organization types",
-    "code": "UC000000",
-    "description": "Nonprofit organization"
-  },
-  "ein": "123456789",
-  "uei": "123456789",
-  "duns": "123456789",
-  "addresses": {
-    "primary": {
-      "street1": "456 Main St",
-      "street2": "Suite 100",
-      "city": "Anytown",
-      "stateOrProvince": "CA",
-      "country": "US",
-      "postalCode": "12345"
-    },
-    "otherAddresses": {
-      "satellite": {
-        "street1": "456 Main St",
-        "street2": "Suite 100",
-        "city": "Anytown",
-        "stateOrProvince": "CA",
-        "country": "US",
-        "postalCode": "12345"
-      },
-      "international": {
-        "street1": "123 Rue Principale",
-        "city": "Montreal",
-        "stateOrProvince": "QC",
-        "country": "CA",
-        "postalCode": "H2Y 1C6"
-      }
-    }
-  },
-  "phones": {
-    "primary": {
-      "countryCode": "+1",
-      "number": "444-456-1230",
-      "isMobile": true
-    },
-    "fax": {
-      "countryCode": "+1",
-      "number": "555-123-4567",
-      "extension": "123",
-      "isMobile": false
-    },
-    "otherPhones": {
-      "support": {
-        "countryCode": "+1",
-        "number": "333-456-1230",
-        "isMobile": false
-      },
-      "marketing": {
-        "countryCode": "+1",
-        "number": "444-456-1230",
-        "isMobile": true
-      }
-    }
-  },
-  "emails": {
-    "primary": "info@example.com",
-    "otherEmails": {
-      "support": "support@example.com",
-      "marketing": "marketing@example.com"
-    }
-  },
-  "mission": "To provide support and resources to the community.",
-  "yearFounded": "2024",
-  "socials": {
-    "website": "https://www.example.com",
-    "facebook": "https://www.facebook.com/example",
-    "twitterOrX": "https://x.com/example",
-    "instagram": "https://www.instagram.com/example",
-    "linkedin": "https://www.linkedin.com/company/example",
-    "otherSocials": {
-      "youtube": "https://www.youtube.com/example"
-    }
-  }
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON Schema for this model is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: Organization.yaml
-type: object
-properties:
-  id:
-    $ref: uuid.yaml
-    description: The organization's unique identifier.
-  name:
-    type: string
-    description: The organization's legal name as registered with relevant authorities.
-  type:
-    $ref: PCSTerm.yaml
-    description: The organization's type within the Philanthropy Classification System (PCS).
-  ein:
-    $ref: employerTaxId.yaml
-    description: The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS.
-  uei:
-    $ref: samUEI.yaml
-    description: The organization's Unique Entity Identifier (UEI) from SAM.gov, used for federal contracting.
-  duns:
-    $ref: duns.yaml
-    description: The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses.
-  addresses:
-    $ref: AddressCollection.yaml
-    description: Collection of physical addresses associated with the organization.
-  phones:
-    $ref: PhoneCollection.yaml
-    description: Collection of phone numbers associated with the organization.
-  emails:
-    $ref: EmailCollection.yaml
-    description: Collection of email addresses associated with the organization.
-  mission:
-    type: string
-    description: The organization's mission statement.
-  yearFounded:
-    $ref: calendarYear.yaml
-    description: The calendar year the organization was founded.
-  socials:
-    $ref: OrgSocialLinks.yaml
-    description: Collection of the organization's social media and web presence links.
-  customFields:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      $ref: CustomField.yaml
-    description: Custom fields for the organization.
-required:
-  - id
-  - name
-description: An organization that can apply for grants.
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```tsp
-/** An organization that can apply for grants. */
-model OrganizationBase {
-  /** The organization's unique identifier. */
-  id: Types.uuid;
-
-  /** The organization's legal name as registered with relevant authorities. */
-  name: string;
-
-  /** The organization's type within the Philanthropy Classification System (PCS). */
-  type?: Fields.PCSOrgType;
-
-  /** The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS. */
-  ein?: Types.employerTaxId;
-
-  /** The organization's Unique Entity Identifier (UEI) from SAM.gov, used for federal contracting. */
-  uei?: Types.samUEI;
-
-  /** The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses. */
-  duns?: Types.duns;
-
-  /** Collection of physical addresses associated with the organization. */
-  addresses?: Fields.AddressCollection;
-
-  /** Collection of phone numbers associated with the organization. */
-  phones?: Fields.PhoneCollection;
-
-  /** Collection of email addresses associated with the organization. */
-  emails?: Fields.EmailCollection;
-
-  /** The organization's mission statement. */
-  mission?: string;
-
-  /** The calendar year the organization was founded. */
-  yearFounded?: Types.calendarYear;
-
-  /** Collection of the organization's social media and web presence links. */
-  socials?: OrgSocialLinks;
-
-  /** Custom fields for the organization. */
-  customFields?: Record<Fields.CustomField>;
-}
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.organizationBase.example}
+  jsonSchema={frontmatter.organizationBase.jsonSchema}
+  typeSpec={frontmatter.organizationBase.typeSpec}
+/>
 
 ## OrgSocialLinks
 
@@ -249,92 +171,8 @@ A collection of social media and web presence links for an organization.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "website": "https://www.example.com",
-  "facebook": "https://www.facebook.com/example",
-  "twitterOrX": "https://x.com/example",
-  "bluesky": "https://bsky.app/profile/example",
-  "instagram": "https://www.instagram.com/example",
-  "linkedin": "https://www.linkedin.com/company/example",
-  "otherSocials": {
-    "youtube": "https://www.youtube.com/example",
-    "tiktok": "https://tiktok.com/example"
-  }
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON Schema for this model is:
-
-```yaml
-$id: OrgSocialLinks.yaml
-type: object
-properties:
-  website:
-    $ref: url.yaml
-    description: The organization's primary website URL.
-  facebook:
-    $ref: url.yaml
-    description: The organization's Facebook profile URL.
-  twitterOrX:
-    $ref: url.yaml
-    description: The organization's Twitter/X profile URL.
-  bluesky:
-    $ref: url.yaml
-    description: The organization's Bluesky profile URL.
-  instagram:
-    $ref: url.yaml
-    description: The organization's Instagram profile URL.
-  linkedin:
-    $ref: url.yaml
-    description: The organization's LinkedIn profile URL.
-  otherSocials:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      $ref: url.yaml
-    description: Additional social media profiles not covered by the standard fields.
-description: Collection of the organization's social media and web presence links.
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```tsp
-/** A collection of social media and web presence links for an organization. */
-model OrgSocialLinks {
-  /** The organization's primary website URL. */
-  website?: url;
-
-  /** The organization's Facebook profile URL. */
-  facebook?: url;
-
-  /** The organization's Twitter/X profile URL. */
-  twitterOrX?: url;
-
-  /** The organization's BlueSky profile URL. */
-  bluesky?: url;
-
-  /** The organization's Instagram profile URL. */
-  instagram?: url;
-
-  /** The organization's LinkedIn profile URL. */
-  linkedin?: url;
-
-  /** Additional social media profiles not covered by the standard fields. */
-  otherSocials?: Record<url>;
-}
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.orgSocialLinks.example}
+  jsonSchema={frontmatter.orgSocialLinks.jsonSchema}
+  typeSpec={frontmatter.orgSocialLinks.typeSpec}
+/>

@@ -1,0 +1,47 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgSocialLinks.yaml
+type: object
+properties:
+  website:
+    type: string
+    format: uri
+    description: The organization's primary website URL.
+  facebook:
+    type: string
+    format: uri
+    description: The organization's Facebook profile URL.
+  twitterOrX:
+    type: string
+    format: uri
+    description: The organization's Twitter/X profile URL.
+  bluesky:
+    type: string
+    format: uri
+    description: The organization's BlueSky profile URL.
+  instagram:
+    type: string
+    format: uri
+    description: The organization's Instagram profile URL.
+  linkedin:
+    type: string
+    format: uri
+    description: The organization's LinkedIn profile URL.
+  otherSocials:
+    $ref: "#/$defs/RecordUrl"
+    description: Additional social media profiles not covered by the standard fields.
+examples:
+  - website: https://www.example.com
+    facebook: https://www.facebook.com/example
+    twitterOrX: https://x.com/example
+    instagram: https://www.instagram.com/example
+    linkedin: https://www.linkedin.com/company/example
+    otherSocials:
+      youtube: https://www.youtube.com/example
+description: A collection of social media and web presence links for an organization.
+$defs:
+  RecordUrl:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      type: string
+      format: uri

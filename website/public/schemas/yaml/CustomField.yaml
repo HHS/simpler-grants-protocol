@@ -1,0 +1,36 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomField.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: Name of the custom field
+  type:
+    $ref: CustomFieldType.yaml
+    description: The JSON schema type to use when de-serializing the `value` field
+  schema:
+    type: string
+    format: uri
+    description: Link to the full JSON schema for this custom field
+  value:
+    description: Value of the custom field
+  description:
+    type: string
+    description: Description of the custom field's purpose
+required:
+  - name
+  - type
+  - value
+examples:
+  - name: eligibilityType
+    type: array
+    value:
+      - nonprofit
+      - academic
+    description: Types of eligible organizations
+  - name: programArea
+    type: string
+    value: Healthcare Innovation
+    description: Primary focus area of the grant program
+    schema: https://example.com/program-areas.json
+description: A custom field on a model

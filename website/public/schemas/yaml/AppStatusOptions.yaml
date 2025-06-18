@@ -1,0 +1,9 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AppStatusOptions.yaml
+type: string
+enum:
+  - submitted
+  - approved
+  - rejected
+  - custom
+description: The default set of values accepted for application status.

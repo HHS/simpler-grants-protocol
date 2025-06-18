@@ -1,9 +1,24 @@
 ---
 title: SystemMetadata
 description: System-managed metadata for records
+systemMetadata:
+  example:
+    code: |
+      {
+        "createdAt": "2024-02-28T12:00:00Z",
+        "lastModifiedAt": "2024-02-28T12:00:00Z"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/SystemMetadata.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/fields/metadata.tsp"
+      startLine: 21
+      endLine: 30
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 System-managed metadata that is automatically added to records.
 
@@ -16,77 +31,8 @@ System-managed metadata that is automatically added to records.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "createdAt": "2024-02-28T12:00:00Z",
-  "lastModifiedAt": "2024-02-28T12:00:00Z"
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: SystemMetadata.yaml
-type: object
-properties:
-  createdAt:
-    type: string
-    format: date-time
-    description: The timestamp (in UTC) at which the record was created.
-  lastModifiedAt:
-    type: string
-    format: date-time
-    description: The timestamp (in UTC) at which the record was last modified.
-required:
-  - createdAt
-  - lastModifiedAt
-description: System-managed metadata for records
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```tsp
-/** System-managed metadata for records */
-model SystemMetadata {
-  /** The timestamp (in UTC) at which the record was created */
-  @visibility(Lifecycle.Read)
-  createdAt: isoDatetime;
-
-  /** The timestamp (in UTC) at which the record was last modified */
-  @visibility(Lifecycle.Read)
-  lastModifiedAt: isoDatetime;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this field is:
-
-```python
-from datetime import datetime, timezone
-from common_grants_sdk.schemas.fields import SystemMetadata
-
-metadata = SystemMetadata(
-    created_at=datetime(2024, 2, 28, 12, 0, 0, tzinfo=timezone.utc),
-    last_modified_at=datetime(2024, 2, 28, 12, 0, 0, tzinfo=timezone.utc)
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.systemMetadata.example}
+  jsonSchema={frontmatter.systemMetadata.jsonSchema}
+  typeSpec={frontmatter.systemMetadata.typeSpec}
+/>

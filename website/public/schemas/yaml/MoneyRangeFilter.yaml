@@ -1,0 +1,29 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MoneyRangeFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: RangeOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: object
+    properties:
+      min:
+        $ref: Money.yaml
+      max:
+        $ref: Money.yaml
+    required:
+      - min
+      - max
+    examples:
+      - min:
+          amount: "1000"
+          currency: USD
+        max:
+          amount: "10000"
+          currency: USD
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to a range of monetary values

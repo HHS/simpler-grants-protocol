@@ -1,0 +1,31 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PaginatedResultsInfo.yaml
+type: object
+properties:
+  page:
+    type: integer
+    minimum: 1
+    maximum: 2147483647
+    examples:
+      - 1
+    description: Current page number (indexing starts at 1)
+  pageSize:
+    type: integer
+    examples:
+      - 20
+    minimum: 1
+    description: Number of items per page
+  totalItems:
+    type: integer
+    examples:
+      - 100
+    description: Total number of items across all pages
+  totalPages:
+    type: integer
+    examples:
+      - 5
+    description: Total number of pages
+required:
+  - page
+  - pageSize
+description: Details about the paginated results

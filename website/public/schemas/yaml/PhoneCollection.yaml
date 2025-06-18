@@ -1,0 +1,50 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PhoneCollection.yaml
+type: object
+properties:
+  primary:
+    $ref: Phone.yaml
+    description: The person's primary phone number.
+  fax:
+    $ref: Phone.yaml
+    description: The person's fax number, if applicable.
+  otherPhones:
+    $ref: "#/$defs/RecordPhone"
+    description: Additional phone numbers not covered by the standard fields.
+required:
+  - primary
+examples:
+  - primary:
+      countryCode: "+1"
+      number: 444-456-1230
+      isMobile: true
+    fax:
+      countryCode: "+1"
+      number: 555-123-4567
+      extension: "123"
+      isMobile: false
+    otherPhones:
+      support:
+        countryCode: "+1"
+        number: 333-456-1230
+        isMobile: false
+      marketing:
+        countryCode: "+1"
+        number: 444-456-1230
+        isMobile: true
+  - primary:
+      countryCode: "+1"
+      number: 444-456-1230
+      isMobile: true
+    otherPhones:
+      home:
+        countryCode: "+1"
+        number: 333-456-1230
+        isMobile: false
+description: A collection of phone numbers for a person.
+$defs:
+  RecordPhone:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: Phone.yaml

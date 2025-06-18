@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: isoTime.yaml
+type: string
+format: time
+examples:
+  - 17:00:00
+description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss

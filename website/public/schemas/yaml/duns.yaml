@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: duns.yaml
+type: string
+examples:
+  - "123456789012"
+pattern: ^[0-9]{9}$
+description: A Data Universal Numbering System (DUNS) number

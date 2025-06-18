@@ -1,9 +1,42 @@
 ---
 title: Date filters
 description: Filters applied to date fields.
+dateRangeFilter:
+  example:
+    code: |
+      {
+        "operator": "between",
+        "value": {
+          "min": "2021-01-01",
+          "max": "2021-01-02"
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/DateRangeFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/date.tsp"
+      startLine: 24
+      endLine: 38
+dateComparisonFilter:
+  example:
+    code: |
+      {
+        "operator": "eq",
+        "value": "2021-01-01"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/DateComparisonFilter.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/filters/date.tsp"
+      startLine: 10
+      endLine: 18
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 ## DateRangeFilter
 
@@ -27,117 +60,11 @@ Filters by comparing a field to a range of date values.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "operator": "between",
-  "value": {
-    "min": "2021-01-01",
-    "max": "2021-01-02"
-  }
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: DateRangeFilter.yaml
-type: object
-properties:
-  operator:
-    $ref: RangeOperators.yaml
-    description: The operator to apply to the filter value
-  value:
-    type: object
-    properties:
-      min:
-        anyOf:
-          - $ref: isoDate.yaml
-          - type: string
-            format: date-time
-      max:
-        anyOf:
-          - $ref: isoDate.yaml
-          - type: string
-            format: date-time
-    required:
-      - min
-      - max
-    examples:
-      - min: 2021-01-01
-        max: 2021-01-02
-    description: The value to use for the filter operation
-required:
-  - operator
-  - value
-description: Filters by comparing a field to a range of date values
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Filters by comparing a field to a range of date values */
-model DateRangeFilter {
-  /** The operator to apply to the filter value */
-  operator: RangeOperators;
-
-  /** The value to use for the filter operation */
-  @example(#{
-    min: Types.isoDate.fromISO("2021-01-01"),
-    max: Types.isoDate.fromISO("2021-01-02"),
-  })
-  value: {
-    min: Types.isoDate | utcDateTime;
-    max: Types.isoDate | utcDateTime;
-  };
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from dataclasses import dataclass
-from datetime import date
-
-@dataclass
-class DateRange:
-    min: date
-    max: date
-
-@dataclass
-class DateRangeFilter:
-    operator: RangeOperators
-    value: DateRange
-
-# Example usage:
-date_range_filter = DateRangeFilter(
-    operator=RangeOperators.BETWEEN,
-    value=DateRange(
-        min=date(2021, 1, 1),
-        max=date(2021, 1, 2)
-    )
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.dateRangeFilter.example}
+  jsonSchema={frontmatter.dateRangeFilter.jsonSchema}
+  typeSpec={frontmatter.dateRangeFilter.typeSpec}
+/>
 
 ## DateComparisonFilter
 
@@ -152,85 +79,8 @@ Filters by comparing a field to a date value.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-{
-  "operator": "eq",
-  "value": "2021-01-01"
-}
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: DateComparisonFilter.yaml
-type: object
-properties:
-  operator:
-    $ref: ComparisonOperators.yaml
-    description: The operator to apply to the filter value
-  value:
-    anyOf:
-      - $ref: isoDate.yaml
-      - type: string
-        format: date-time
-      - type: string
-        format: date-time
-    description: The value to use for the filter operation
-required:
-  - operator
-  - value
-description: Filters by comparing a field to a date value
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Filters by comparing a field to a date value */
-model DateComparisonFilter {
-  /** The operator to apply to the filter value */
-  operator: ComparisonOperators;
-
-  /** The value to use for the filter operation */
-  @example(Types.isoDate.fromISO("2021-01-01"))
-  value: Types.isoDate | utcDateTime | offsetDateTime;
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from dataclasses import dataclass
-from datetime import date
-
-@dataclass
-class DateComparisonFilter:
-    operator: ComparisonOperators
-    value: date
-
-# Example usage:
-date_comparison_filter = DateComparisonFilter(
-    operator=ComparisonOperators.EQ,
-    value=date(2021, 1, 1)
-)
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.dateComparisonFilter.example}
+  jsonSchema={frontmatter.dateComparisonFilter.jsonSchema}
+  typeSpec={frontmatter.dateComparisonFilter.typeSpec}
+/>

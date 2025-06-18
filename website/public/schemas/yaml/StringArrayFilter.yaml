@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StringArrayFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: ArrayOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: array
+    items:
+      type: string
+    examples:
+      - - value1
+        - value2
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: A filter that applies a filter to an array of strings

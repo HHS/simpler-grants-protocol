@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: NumberArrayFilter.yaml
+type: object
+properties:
+  operator:
+    $ref: ArrayOperators.yaml
+    description: The operator to apply to the filter value
+  value:
+    type: array
+    items:
+      type: number
+    examples:
+      - - 1000
+        - 2000
+        - 3000
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+description: Filters by comparing a field to an array of numeric values

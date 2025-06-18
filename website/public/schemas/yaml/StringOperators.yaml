@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StringOperators.yaml
+type: string
+enum:
+  - like
+  - not_like
+description: Operators that filter a field based on a string value

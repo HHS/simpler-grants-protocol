@@ -1,9 +1,70 @@
 ---
 title: Person
 description: Data model for a person
+personBase:
+  example:
+    code: |
+      {
+        "name": {
+          "prefix": "Dr.",
+          "first": "Jane",
+          "middle": "E.",
+          "last": "Doe"
+        },
+        "title": "Chief Executive Officer",
+        "dateOfBirth": "1990-01-01",
+        "addresses": {
+          "primary": {
+            "street1": "123 Main St",
+            "city": "Anytown",
+            "stateOrProvince": "CA",
+            "country": "US",
+            "postalCode": "12345"
+          },
+          "otherAddresses": {
+            "work": {
+              "street1": "456 Main St",
+              "street2": "Suite 100",
+              "city": "Anytown",
+              "stateOrProvince": "CA",
+              "country": "US",
+              "postalCode": "12345"
+            }
+          }
+        },
+        "phones": {
+          "primary": {
+            "countryCode": "+1",
+            "number": "444-456-1230",
+            "isMobile": true
+          },
+          "otherPhones": {
+            "work": {
+              "countryCode": "+1",
+              "number": "333-456-1230",
+              "isMobile": false
+            }
+          }
+        },
+        "emails": {
+          "primary": "john.doe@example.com",
+          "otherEmails": {
+            "work": "john.doe@work.com",
+            "personal": "john.doe@gmail.com"
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/PersonBase.yaml"
+  typeSpec:
+    file:
+      path: "specs/lib/core/models/person.tsp"
+      startLine: 1
+      endLine: 31
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 ## PersonBase
 
@@ -23,132 +84,8 @@ A person affiliated with an organization or grant application.
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this model is:
-
-```json
-{
-  "name": {
-    "prefix": "Dr.",
-    "first": "Jane",
-    "middle": "E.",
-    "last": "Doe"
-  },
-  "title": "Chief Executive Officer",
-  "dateOfBirth": "1990-01-01",
-  "addresses": {
-    "primary": {
-      "street1": "123 Main St",
-      "city": "Anytown",
-      "stateOrProvince": "CA",
-      "country": "US",
-      "postalCode": "12345"
-    },
-    "otherAddresses": {
-      "work": {
-        "street1": "456 Main St",
-        "street2": "Suite 100",
-        "city": "Anytown",
-        "stateOrProvince": "CA",
-        "country": "US",
-        "postalCode": "12345"
-      }
-    }
-  },
-  "phones": {
-    "primary": {
-      "countryCode": "+1",
-      "number": "444-456-1230",
-      "isMobile": true
-    },
-    "otherPhones": {
-      "work": {
-        "countryCode": "+1",
-        "number": "333-456-1230",
-        "isMobile": false
-      }
-    }
-  },
-  "emails": {
-    "primary": "john.doe@example.com",
-    "otherEmails": {
-      "work": "john.doe@work.com",
-      "personal": "john.doe@gmail.com"
-    }
-  }
-}
-```
-
-  </TabItem>
-  <TabItem label="JSON Schema">
-
-The JSON Schema for this model is:
-
-```yaml
-$id: Person.yaml
-type: object
-properties:
-  name:
-    $ref: Name.yaml
-    description: The person's full name, including all relevant components (first, middle, last, etc.).
-  title:
-    type: string
-    description: The person's title, if applicable.
-  dateOfBirth:
-    $ref: isoDate.yaml
-    description: The person's date of birth.
-  addresses:
-    $ref: AddressCollection.yaml
-    description: Collection of physical addresses associated with the person.
-  phones:
-    $ref: PhoneCollection.yaml
-    description: Collection of phone numbers associated with the person.
-  emails:
-    $ref: EmailCollection.yaml
-    description: Collection of email addresses associated with the person.
-  customFields:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      $ref: CustomField.yaml
-    description: Custom fields for the person.
-required:
-  - name
-description: A person affiliated with an organization or grant application.
-```
-
-  </TabItem>
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this model is:
-
-```tsp
-/** A person affiliated with an organization or grant application. */
-model PersonBase {
-  /** The person's full name, including all relevant components (first, middle, last, etc.). */
-  name: Fields.Name;
-
-  /** The person's title, if applicable. */
-  title?: string;
-
-  /** Collection of physical addresses associated with the person. */
-  addresses?: Fields.AddressCollection;
-
-  /** Collection of phone numbers associated with the person. */
-  phones?: Fields.PhoneCollection;
-
-  /** Collection of email addresses associated with the person. */
-  emails?: Fields.EmailCollection;
-
-  /** The person's date of birth. */
-  dateOfBirth?: Types.isoDate;
-
-  /** Custom fields for the person. */
-  customFields?: Record<Fields.CustomField>;
-}
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.personBase.example}
+  jsonSchema={frontmatter.personBase.jsonSchema}
+  typeSpec={frontmatter.personBase.typeSpec}
+/>
