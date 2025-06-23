@@ -34,7 +34,7 @@ enum ArrayOperators {
   in,
 
   /** Not in an array of values */
-  not_in,
+  notIn,
 }
 
 /** Operators that filter a field based on a string value */
@@ -43,7 +43,7 @@ enum StringOperators {
   like,
 
   /** Not like */
-  not_like,
+  notLike,
 }
 
 /** Operators that filter a field based on a range of values */
