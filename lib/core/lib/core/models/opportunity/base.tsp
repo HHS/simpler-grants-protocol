@@ -25,7 +25,7 @@ using CommonGrants.Types;
  * using CommonGrants.Models;
  *
  * model Agency extends CustomField {
- *   type: CustomFieldType.string;
+ *   fieldType: CustomFieldType.string;
  *
  *   @example("Department of Transportation")
  *   value: string;
