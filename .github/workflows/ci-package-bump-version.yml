@@ -1,4 +1,4 @@
-name: CI - Bump Package Version
+name: CI - Bump Version of Package
 
 on:
   push:

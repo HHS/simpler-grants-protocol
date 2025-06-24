@@ -1,4 +1,4 @@
-name: CI - Publish Released Packages
+name: CD - Publish Release of Package
 
 on:
   release:
