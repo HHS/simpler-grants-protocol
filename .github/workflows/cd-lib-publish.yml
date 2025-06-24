@@ -1,4 +1,4 @@
-name: CD - Publish Release of Package
+name: CD - Detect Package Release and Trigger Publish
 
 on:
   release:

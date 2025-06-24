@@ -1,4 +1,4 @@
-name: CD - Publish PySDK Package
+name: CD - Publish common-grants-sdk
 
 on:
   workflow_dispatch:
