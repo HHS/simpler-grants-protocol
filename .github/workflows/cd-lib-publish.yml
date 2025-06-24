@@ -1,0 +1,91 @@
+name: CD - Detect Package Release and Trigger Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+  actions: write
+
+jobs:
+  detect-package-type:
+    runs-on: ubuntu-latest
+
+    outputs:
+      is-pysdk-release: ${{ steps.check.outputs.is-pysdk-release }}
+      is-core-release: ${{ steps.check.outputs.is-core-release }}
+
+    steps:
+      - name: Check package type from release tag
+        id: check
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          if [[ "$TAG_NAME" =~ ^common-grants-sdk@ ]]; then
+            echo "is-pysdk-release=true" >> $GITHUB_OUTPUT
+            echo "is-core-release=false" >> $GITHUB_OUTPUT
+            echo "Detected PySDK package release: $TAG_NAME"
+          elif [[ "$TAG_NAME" =~ ^@common-grants/core@ ]]; then
+            echo "is-pysdk-release=false" >> $GITHUB_OUTPUT
+            echo "is-core-release=true" >> $GITHUB_OUTPUT
+            echo "Detected Core package release: $TAG_NAME"
+          else
+            echo "is-pysdk-release=false" >> $GITHUB_OUTPUT
+            echo "is-core-release=false" >> $GITHUB_OUTPUT
+            echo "Unknown package type: $TAG_NAME"
+          fi
+
+  trigger-pysdk-publish:
+    needs: detect-package-type
+    if: needs.detect-package-type.outputs.is-pysdk-release == 'true'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger PySDK publish workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'cd-lib-pysdk-publish.yml',
+              ref: '${{ github.event.release.tag_name }}',
+              inputs: {
+                tag_name: '${{ github.event.release.tag_name }}'
+              }
+            });
+
+      - name: Notify PySDK workflow triggered
+        run: |
+          echo "PySDK publish workflow triggered"
+          echo "Release: ${{ github.event.release.name }}"
+          echo "Tag: ${{ github.event.release.tag_name }}"
+
+  trigger-core-publish:
+    needs: detect-package-type
+    if: needs.detect-package-type.outputs.is-core-release == 'true'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Core publish workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'cd-lib-core-publish.yml',
+              ref: '${{ github.event.release.tag_name }}',
+              inputs: {
+                tag_name: '${{ github.event.release.tag_name }}'
+              }
+            });
+
+      - name: Notify Core workflow triggered
+        run: |
+          echo "Core publish workflow triggered"
+          echo "Release: ${{ github.event.release.name }}"
+          echo "Tag: ${{ github.event.release.tag_name }}"

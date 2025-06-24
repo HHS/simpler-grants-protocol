@@ -94,7 +94,7 @@ Include code changes and the `.changeset/*.md` file in a PR.
 
 ### Step 4: Merge the PR
 
-Once the PR is merged into `main`, the `ci-package-version.yml` GitHub Action will:
+Once the PR is merged into `main`, the `ci-package-bump-version.yml` GitHub Action will:
 
 - **Python Packages**
   - Determine bump type from `.changeset/*.md`
@@ -136,7 +136,7 @@ After a PR is merged and the `version.yml` workflow runs:
    - Verify that a tag was created for each updated package (e.g. `common_grants_sdk@0.3.1`, `core@1.0.0`)
 
 4. **Confirm version commit**
-   - Check the commit history for a message like `chore: version packages [skip ci]` from `github-actions[bot]`
+   - Check the commit history for a message like `chore: bump version [skip ci]` from `github-actions[bot]`
 
 ---
 
