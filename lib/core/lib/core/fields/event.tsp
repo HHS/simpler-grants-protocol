@@ -90,13 +90,13 @@ model DateRangeEvent extends EventBase {
   /** Start date of the event in ISO 8601 format: YYYY-MM-DD */
   startDate: isoDate;
 
-  /** Time of the event in ISO 8601 format: HH:MM:SS */
+  /** Start time of the event in ISO 8601 format: HH:MM:SS */
   startTime?: isoTime;
 
   /** End date of the event in ISO 8601 format: YYYY-MM-DD */
   endDate: isoDate;
 
-  /** Time of the event in ISO 8601 format: HH:MM:SS */
+  /** End time of the event in ISO 8601 format: HH:MM:SS */
   endTime?: isoTime;
 }
 
