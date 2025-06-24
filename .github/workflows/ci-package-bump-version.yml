@@ -36,16 +36,10 @@ jobs:
           python-version: "3.11"
 
       - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Configure Poetry
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
+        uses: Gr1N/setup-poetry@v8
 
       - name: Install dependencies
-        run: poetry install --no-root
+        run: poetry install
         working-directory: lib/python-sdk
       
       - name: Detect if any changesets exist
@@ -62,7 +56,7 @@ jobs:
       - name: Bump Python version using Poetry
         if: steps.check_changesets.outputs.found == 'true'
         run: |
-          CHANGES=$(cat .changeset/*.md | grep '"common_grants_sdk":')
+          CHANGES=$(cat .changeset/*.md | grep '"common-grants-sdk":')
           if echo "$CHANGES" | grep -q 'major'; then
             poetry version major --directory lib/python-sdk
           elif echo "$CHANGES" | grep -q 'minor'; then
