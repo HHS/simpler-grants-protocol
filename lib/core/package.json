@@ -31,7 +31,6 @@
   },
   "homepage": "https://github.com/HHS/simpler-grants-protocol/tree/main/lib/core/#readme",
   "scripts": {
-    "prepublishOnly": "bash scripts/prepublish-checks.sh",
     "clean": "rimraf dist tsp-output",
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
