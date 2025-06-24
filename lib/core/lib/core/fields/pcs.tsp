@@ -21,8 +21,8 @@ model PCSTerm {
   class: PCSClass;
 
   /** The code for this PCS term. */
-  @pattern("[A-Z]{2}[0-9]{6}")
-  @example("UC0")
+  @pattern("^[A-Z]{2}[0-9]{6}$")
+  @example("UC000000")
   code: string;
 
   /** Description of the PCS term */
