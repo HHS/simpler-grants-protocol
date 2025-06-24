@@ -1,4 +1,4 @@
-name: Create GitHub Release from Tag
+name: CI - Create Release From Tag
 
 on:
   workflow_dispatch:
