@@ -1,10 +1,10 @@
-name: Create GitHub Release from Tag
+name: CI - Create Release for Package
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Git tag to create release from"
+        description: "Git tag from which to create release"
         required: true
         type: string
 

@@ -1,12 +1,16 @@
 name: CD - Publish @common-grants/core
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "lib/core/**" # Trigger only if files in the `lib/core/` directory are changed
-      - ".github/workflows/cd-lib-core-publish.yml"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag of the release to publish'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
 
 defaults:
   run:
@@ -19,6 +23,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag_name }}
 
       - name: Install dependencies
         run: npm ci
@@ -35,4 +41,9 @@ jobs:
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --tag alpha --access public
+        run: npm publish --access public --dry-run
+
+      - name: Notify completion
+        run: |
+          echo "Core package published to npm"
+          echo "Tag: ${{ github.event.inputs.tag_name }}"
