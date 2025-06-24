@@ -23,11 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Checks that the version is not already published and
-      # that there are no uncommitted changes
-      - name: Run prepublish checks
-        run: npm run prepublishOnly
-
       # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v4
         with:

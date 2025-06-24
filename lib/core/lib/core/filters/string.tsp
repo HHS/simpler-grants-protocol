@@ -20,7 +20,7 @@ model StringComparisonFilter {
 // String array filter
 // ############################################################################
 
-/** A filter that applies a filter to an array of strings */
+/** Filters by comparing a field to an array of string values */
 model StringArrayFilter {
   /** The operator to apply to the filter value */
   operator: ArrayOperators;

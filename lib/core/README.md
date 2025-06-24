@@ -45,7 +45,7 @@ namespace CustomAPI.CustomModels;
 // Define a custom field
 model Agency extends CustomField {
   name: "Agency";
-  type: CustomFieldType.string;
+  fieldType: CustomFieldType.string;
 
   @example("Department of Transportation")
   value: string;

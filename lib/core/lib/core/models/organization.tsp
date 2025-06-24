@@ -12,7 +12,7 @@ model OrganizationBase {
   name: string;
 
   /** The organization's type within the Philanthropy Classification System (PCS). */
-  type?: Fields.PCSOrgType;
+  orgType?: Fields.PCSOrgType;
 
   /** The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS. */
   ein?: Types.employerTaxId;
@@ -82,7 +82,7 @@ namespace Examples.Organization {
   const exampleOrg = #{
     id: "083b4567-e89d-42c8-a439-6c1234567890",
     name: "Example Organization",
-    type: Fields.Examples.PCS.orgTypeTerm,
+    orgType: Fields.Examples.PCS.orgTypeTerm,
     ein: "12-3456789",
     uei: "ABC1234567890",
     duns: "123456789012",

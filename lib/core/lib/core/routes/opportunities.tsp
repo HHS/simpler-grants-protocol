@@ -19,7 +19,7 @@ using TypeSpec.Http;
  * For more information, see
  * [TypeSpec docs](https://typespec.io/docs/language-basics/interfaces/#templating-interface-operations)
  *
- * @example Using the the default type for the list operation and
+ * @example Using the default type for the list operation and
  * a custom model for the read operation:
  * ```typespec
  * using TypeSpec.Http;

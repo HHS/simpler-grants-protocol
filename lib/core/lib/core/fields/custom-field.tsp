@@ -8,6 +8,7 @@ namespace CommonGrants.Fields;
 enum CustomFieldType {
   string,
   number,
+  integer,
   boolean,
   object,
   array,
@@ -25,7 +26,7 @@ enum CustomFieldType {
  * model Agency extends CustomField {
  *   name: "agency";
  *
- *   type: CustomFieldType.string;
+ *   fieldType: CustomFieldType.string;
  *
  *   @example("Department of Transportation")
  *   value: string;
@@ -42,13 +43,13 @@ enum CustomFieldType {
   Examples.CustomField.eligibilityTypes,
   #{ title: "Array field for eligibility types" }
 )
-@doc("A custom field on a model") // Overrides internal docstrings when emitting OpenAPI
+@doc("A custom field on a model")
 model CustomField {
   /** Name of the custom field */
   name: string;
 
   /** The JSON schema type to use when de-serializing the `value` field */
-  type: CustomFieldType;
+  fieldType: CustomFieldType;
 
   /** Link to the full JSON schema for this custom field */
   schema?: url;
@@ -69,7 +70,7 @@ namespace Examples.CustomField {
   /** An example of a string custom field */
   const programArea = #{
     name: "programArea",
-    type: CustomFieldType.string,
+    fieldType: CustomFieldType.string,
     value: "Healthcare Innovation",
     description: "Primary focus area of the grant program",
     schema: "https://example.com/program-areas.json",
@@ -78,7 +79,7 @@ namespace Examples.CustomField {
   /** An example of an array custom field */
   const eligibilityTypes = #{
     name: "eligibilityType",
-    type: CustomFieldType.array,
+    fieldType: CustomFieldType.array,
     value: #["nonprofit", "academic"],
     description: "Types of eligible organizations",
   };

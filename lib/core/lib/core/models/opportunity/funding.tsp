@@ -20,6 +20,9 @@ using CommonGrants.Fields;
 )
 @example(Examples.Funding.allFields, #{ title: "All fields defined" })
 model OppFunding {
+  /** Details about the funding available for this opportunity that don't fit other fields */
+  details?: string;
+
   /** Total amount of funding available for this opportunity */
   totalAmountAvailable?: Money;
 
@@ -45,7 +48,7 @@ model OppFunding {
 
 /** Examples of the OppFunding model */
 namespace Examples.Funding {
-  /** A FundingDetails example in which all of the fields are defined */
+  /** An OppFunding example in which all of the fields are defined */
   const allFields = #{
     totalAmountAvailable: #{ amount: "1000000.00", currency: "USD" },
     minAwardAmount: #{ amount: "10000.00", currency: "USD" },
@@ -55,16 +58,18 @@ namespace Examples.Funding {
     estimatedAwardCount: 10,
   };
 
-  /** A FundingDetails example that has an award range but no total limit */
+  /** An OppFunding example that has an award range but no total limit */
   const awardRange = #{
+    details: "We'll be awarding between $10,000 and $50,000 per recipient",
     minAwardAmount: #{ amount: "10000.00", currency: "USD" },
     maxAwardAmount: #{ amount: "50000.00", currency: "USD" },
     minAwardCount: 5,
     maxAwardCount: 20,
   };
 
-  /** A FundingDetails example that has a total limit but no award range */
+  /** An OppFunding example that has a total limit but no award range */
   const onlyLimit = #{
+    details: "This opportunity has a total funding limit of $1,000,000 but no specific award range",
     totalAmountAvailable: #{ amount: "1000000.00", currency: "USD" },
     estimatedAwardCount: 10,
   };

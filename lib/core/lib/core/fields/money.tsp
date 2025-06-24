@@ -8,7 +8,7 @@ using CommonGrants.Types;
 // Model definition
 // ########################################
 
-/** A monetary amount and the currency in which its denominated */
+/** A monetary amount and the currency in which it's denominated */
 @example(Examples.Money.usdWithCents, #{ title: "US dollars and cents" })
 @example(
   Examples.Money.euroWithoutCents,
