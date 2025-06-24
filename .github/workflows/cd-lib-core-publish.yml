@@ -1,12 +1,8 @@
 name: CD - Publish @common-grants/core
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "lib/core/**" # Trigger only if files in the `lib/core/` directory are changed
-      - ".github/workflows/cd-lib-core-publish.yml"
+  workflow_dispatch:
+  workflow_call:
 
 defaults:
   run:
@@ -35,4 +31,4 @@ jobs:
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --tag alpha --access public
+        run: npm publish --access public
