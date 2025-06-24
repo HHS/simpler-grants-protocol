@@ -39,19 +39,21 @@ using CommonGrants.Types;
  * }
  * ```
  */
-@doc("A funding opportunity") // Overrides internal docstrings when emitting OpenAPI
+@doc("A funding opportunity")
 model OpportunityBase {
   /** Globally unique id for the opportunity */
   @visibility(Lifecycle.Read)
   id: uuid;
 
   /** Title or name of the funding opportunity */
+  @example("Small business grant program")
   title: string;
 
   /** Status of the opportunity */
   status: OppStatus;
 
   /** Description of the opportunity's purpose and scope */
+  @example("This program provides funding to small businesses to help them grow and create jobs")
   description: string;
 
   /** Details about the funding available */
