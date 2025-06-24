@@ -26,7 +26,7 @@ enum CustomFieldType {
  * model Agency extends CustomField {
  *   name: "agency";
  *
- *   customFieldType: CustomFieldType.string;
+ *   fieldType: CustomFieldType.string;
  *
  *   @example("Department of Transportation")
  *   value: string;
@@ -43,7 +43,7 @@ enum CustomFieldType {
   Examples.CustomField.eligibilityTypes,
   #{ title: "Array field for eligibility types" }
 )
-@doc("A custom field on a model") // Overrides internal docstrings when emitting OpenAPI
+@doc("A custom field on a model")
 model CustomField {
   /** Name of the custom field */
   name: string;
