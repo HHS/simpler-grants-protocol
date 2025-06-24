@@ -80,7 +80,9 @@ jobs:
 
       - name: Run changeset version for Node packages (including "fake" python packages)
         if: steps.check_changesets.outputs.found == 'true'
-        run: pnpm changeset version
+        run: |
+          pnpm changeset version
+          git status
 
       - name: Commit version bumps
         if: steps.check_changesets.outputs.found == 'true' && github.event_name != 'pull_request'
