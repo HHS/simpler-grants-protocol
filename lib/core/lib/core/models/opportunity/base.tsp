@@ -4,7 +4,6 @@ import "./timeline.tsp";
 import "../../fields/index.tsp";
 import "../../types.tsp";
 
-/** Namespace for Core that are specific to funding opportunities */
 namespace CommonGrants.Models;
 
 using CommonGrants.Fields;

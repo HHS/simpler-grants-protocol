@@ -1,6 +1,6 @@
 namespace CommonGrants.Fields;
 
-/** An mailing address. */
+/** A mailing address. */
 @example(Examples.Address.apartment)
 model Address {
   /** The primary street address line. */
