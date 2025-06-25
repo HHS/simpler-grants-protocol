@@ -30,21 +30,31 @@ opportunityBase:
           "estimatedAwardCount": 10
         },
         "keyDates": {
-          "appOpens": {
-            "name": "Application Opens",
+          "postDate": {
+            "name": "Opportunity posted",
+            "eventType": "singleDate",
             "date": "2024-03-01",
-            "description": "Applications begin being accepted"
+            "description": "Opportunity is posted publicly"
           },
-          "appDeadline": {
-            "name": "Application Deadline",
+          "closeDate": {
+            "name": "Opportunity closed",
+            "eventType": "singleDate",
             "date": "2024-04-30",
-            "description": "Final deadline for all submissions"
+            "description": "Opportunity is closed to all applications"
           },
           "otherDates": {
             "anticipatedAward": {
               "name": "Anticipated award date",
+              "eventType": "singleDate",
               "date": "2025-03-15",
               "description": "When we expect to announce awards for this opportunity."
+            },
+            "applicationPeriod": {
+              "name": "Application period",
+              "eventType": "dateRange",
+              "startDate": "2024-03-01",
+              "endDate": "2024-04-30",
+              "description": "Applications are accepted during this period"
             }
           }
         },
@@ -227,20 +237,36 @@ oppTimeline:
   example:
     code: |
       {
-        "appOpens": {
-          "name": "Application Opens",
+        "postDate": {
+          "name": "Opportunity posted",
+          "eventType": "singleDate",
           "date": "2024-03-01",
           "description": "Applications begin being accepted"
         },
-        "appDeadline": {
-          "name": "Application Deadline",
+        "closeDate": {
+          "name": "Opportunity closed",
+          "eventType": "singleDate",
           "date": "2024-04-30",
           "time": "17:00:00",
           "description": "Final deadline for all submissions"
         },
         "otherDates": {
+          "applicationPeriod": {
+            "name": "Application period",
+            "eventType": "dateRange",
+            "startDate": "2024-03-01",
+            "endDate": "2024-04-30",
+            "description": "Applications are accepted during this period"
+          },
+          "infoSessions": {
+            "name": "Information session",
+            "eventType": "other",
+            "details": "Every Tuesday at 10:00 AM in March",
+            "description": "Information session about the opportunity"
+          },
           "anticipatedAward": {
             "name": "Anticipated award date",
+            "eventType": "singleDate",
             "date": "2025-03-15",
             "description": "When we expect to announce awards for this opportunity."
           }
@@ -295,8 +321,8 @@ A funding opportunity, such as a grant or loan.
 | title          | [string](/protocol/types/string#string)                                                | Yes      | Title or name of the funding opportunity                     |
 | status         | [OppStatus](#oppstatus)                                                                | Yes      | Status of the opportunity                                    |
 | description    | [string](/protocol/types/string#string)                                                | Yes      | Description of the opportunity's purpose and scope           |
-| funding        | [OppFunding](#oppfunding)                                                              | Yes      | Details about the funding available                          |
-| keyDates       | [OppTimeline](#opptimeline)                                                            | Yes      | Key dates for the opportunity                                |
+| funding        | [OppFunding](#oppfunding)                                                              | No       | Details about the funding available                          |
+| keyDates       | [OppTimeline](#opptimeline)                                                            | No       | Key dates for the opportunity                                |
 | source         | [url](/protocol/types/string#url)                                                      | No       | URL for the original source of the opportunity               |
 | customFields   | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Additional custom fields specific to this opportunity        |
 | createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created       |
@@ -384,11 +410,11 @@ Key dates in the opportunity's timeline, such as when the application opens and 
 
 ### Table
 
-| Property    | Type                                                                      | Required | Description                                                                |
-| ----------- | ------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
-| appOpens    | [Event](/protocol/fields/event)                                           | No       | The date (and time) at which the opportunity begins accepting applications |
-| appDeadline | [Event](/protocol/fields/event)                                           | No       | The final deadline for submitting applications                             |
-| otherDates  | [Record](/protocol/types/other#record)\<[Event](/protocol/fields/event)\> | No       | An optional map of other key dates in the opportunity timeline             |
+| Property   | Type                                                                            | Required | Description                                                    |
+| ---------- | ------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------- |
+| postDate   | [Event](/protocol/fields/event#event)                                           | No       | The date (and time) at which the opportunity is posted         |
+| closeDate  | [Event](/protocol/fields/event#event)                                           | No       | The date (and time) at which the opportunity closes            |
+| otherDates | [Record](/protocol/types/other#record)\<[Event](/protocol/fields/event#event)\> | No       | An optional map of other key dates in the opportunity timeline |
 
 ### Formats
 

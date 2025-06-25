@@ -7,7 +7,7 @@ organizationBase:
       {
         "id": "083b4567-e89d-42c8-a439-6c1234567890",
         "name": "Example Organization",
-        "type": {
+        "orgType": {
           "term": "Nonprofit",
           "class": "Organization types",
           "code": "UC000000",
@@ -133,7 +133,7 @@ An organization that can apply to or host funding opportunities.
 | ------------ | -------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
 | id           | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The organization's unique identifier.                                        |
 | name         | [string](/protocol/types/string#string)                                                | Yes      | The organization's legal name as registered with relevant authorities.       |
-| type         | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                                          | No       | The organization's type within the Philanthropy Classification System (PCS). |
+| orgType      | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                                          | No       | The organization's type within the Philanthropy Classification System (PCS). |
 | ein          | [employerTaxId](/protocol/types/string#employertaxid)                                  | No       | The organization's Employer Identification Number (EIN).                     |
 | uei          | [samUEI](/protocol/types/string#samuei)                                                | No       | The organization's Unique Entity Identifier (UEI).                           |
 | duns         | [duns](/protocol/types/string#duns)                                                    | No       | The organization's Data Universal Numbering System (DUNS) number.            |
