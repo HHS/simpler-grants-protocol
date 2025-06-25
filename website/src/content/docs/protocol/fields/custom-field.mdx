@@ -17,8 +17,8 @@ customField:
   typeSpec:
     file:
       path: "lib/core/lib/core/fields/custom-field.tsp"
-      startLine: 45
-      endLine: 61
+      startLine: 46
+      endLine: 62
   python:
     code: |
       from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
@@ -40,7 +40,7 @@ customFieldType:
     file:
       path: "lib/core/lib/core/fields/custom-field.tsp"
       startLine: 7
-      endLine: 14
+      endLine: 15
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -54,7 +54,7 @@ A model for defining custom fields on a record.
 | Property    | Type                                    | Required | Description                                               |
 | ----------- | --------------------------------------- | -------- | --------------------------------------------------------- |
 | name        | [string](/protocol/types/string#string) | Yes      | Name of the custom field                                  |
-| type        | [CustomFieldType](#customfieldtype)     | Yes      | The JSON schema type to use when de-serializing the value |
+| fieldType   | [CustomFieldType](#customfieldtype)     | Yes      | The JSON schema type to use when de-serializing the value |
 | schema      | [url](/protocol/types/string#url)       | No       | Link to the full JSON schema for this custom field        |
 | value       | any                                     | Yes      | Value of the custom field                                 |
 | description | [string](/protocol/types/string#string) | No       | Description of the custom field's purpose                 |
@@ -77,6 +77,7 @@ The set of JSON schema types supported by a custom field.
 | Value   | Description             |
 | ------- | ----------------------- |
 | string  | Text values             |
+| integer | Whole numbers           |
 | number  | Numeric values          |
 | boolean | True/false values       |
 | object  | Structured data objects |

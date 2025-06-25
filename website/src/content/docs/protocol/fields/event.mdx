@@ -1,11 +1,23 @@
 ---
 title: Event
-description: A model for representing events with dates and descriptions
+description: A comprehensive model for representing various types of events with dates, date ranges, and custom event types
+eventType:
+  example:
+    code: "singleDate"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/EventType.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/event.tsp"
+      startLine: 11
+      endLine: 26
 event:
   example:
     code: |
       {
         "name": "Application Deadline",
+        "eventType": "singleDate",
         "date": "2024-04-30",
         "time": "17:00:00",
         "description": "Final deadline for all submissions"
@@ -16,31 +28,115 @@ event:
   typeSpec:
     file:
       path: "lib/core/lib/core/fields/event.tsp"
-      startLine: 12
-      endLine: 26
-  python: |
-    from common_grants_sdk.schemas.fields import Event
-
-    event = Event(
-        name="Application Deadline",
-        date="2024-04-30",
-        time="17:00:00",
-        description="Final deadline for all submissions"
-    )
+      startLine: 32
+      endLine: 42
+eventBase:
+  example:
+    code: |
+      {
+        "name": "Application Deadline",
+        "eventType": "singleDate",
+        "description": "Final deadline for all submissions"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/EventBase.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/event.tsp"
+      startLine: 48
+      endLine: 59
+singleDateEvent:
+  example:
+    code: |
+      {
+        "name": "Application Deadline",
+        "eventType": "singleDate",
+        "date": "2024-04-30",
+        "time": "17:00:00",
+        "description": "Final deadline for all submissions"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/SingleDateEvent.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/event.tsp"
+      startLine: 65
+      endLine: 77
+dateRangeEvent:
+  example:
+    code: |
+      {
+        "name": "Application Period",
+        "eventType": "dateRange",
+        "startDate": "2024-01-01",
+        "endDate": "2024-01-31",
+        "endTime": "17:00:00",
+        "description": "Primary application period for the grant opportunity"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/DateRangeEvent.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/event.tsp"
+      startLine: 83
+      endLine: 101
+otherEvent:
+  example:
+    code: |
+      {
+        "name": "Info Sessions",
+        "eventType": "other",
+        "details": "Every other Tuesday at 10:00 AM during the application period",
+        "description": "Info sessions for the opportunity"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OtherEvent.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/event.tsp"
+      startLine: 107
+      endLine: 119
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
-A description of an event with an associated date (and possible time).
+A comprehensive system for representing various types of events including single dates, date ranges, and custom events.
 
-### Table
+## EventType
 
-| Property    | Type                                    | Required | Description                                         |
-| ----------- | --------------------------------------- | -------- | --------------------------------------------------- |
-| name        | [string](/protocol/types/string#string) | Yes      | Human-readable name of the event                    |
-| date        | [isoDate](/protocol/types/date#isodate) | Yes      | Date of the event in in ISO 8601 format: YYYY-MM-DD |
-| time        | [isoTime](/protocol/types/date#isotime) | No       | Time of the event in in ISO 8601 format: HH:MM:SS   |
-| description | [string](/protocol/types/string#string) | No       | A description of the event                          |
+Defines the different types of events that can be represented
+
+### Options
+
+| Value      | Description                                |
+| ---------- | ------------------------------------------ |
+| singleDate | A single date (and possible time)          |
+| dateRange  | A period of time with a start and end date |
+| other      | Other event type (e.g., a recurring event) |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.eventType.example}
+  jsonSchema={frontmatter.eventType.jsonSchema}
+  typeSpec={frontmatter.eventType.typeSpec}
+/>
+
+## Event
+
+The `Event` union represents all possible event types.
+
+### Sub-types
+
+| Sub-type                            | Description                                |
+| ----------------------------------- | ------------------------------------------ |
+| [SingleDateEvent](#singledateevent) | A single date (and possible time)          |
+| [DateRangeEvent](#daterangeevent)   | A period of time with a start and end date |
+| [OtherEvent](#otherevent)           | Other event type (e.g., a recurring event) |
 
 ### Formats
 
@@ -48,5 +144,91 @@ A description of an event with an associated date (and possible time).
   example={frontmatter.event.example}
   jsonSchema={frontmatter.event.jsonSchema}
   typeSpec={frontmatter.event.typeSpec}
-  python={{ code: frontmatter.event.python }}
+/>
+
+## EventBase
+
+Base model for all events with common properties
+
+### Table
+
+| Property    | Type                                    | Required | Description                                     |
+| ----------- | --------------------------------------- | -------- | ----------------------------------------------- |
+| name        | [string](/protocol/types/string#string) | Yes      | Human-readable name of the event                |
+| eventType   | [EventType](#eventtype-enum)            | Yes      | Type of event (singleDate, dateRange, or other) |
+| description | [string](/protocol/types/string#string) | No       | Description of what this event represents       |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.eventBase.example}
+  jsonSchema={frontmatter.eventBase.jsonSchema}
+  typeSpec={frontmatter.eventBase.typeSpec}
+/>
+
+## SingleDateEvent
+
+Represents an event that has a specific date (and optional time) associated with it.
+
+### Table
+
+| Property    | Type                                    | Required | Description                                      |
+| ----------- | --------------------------------------- | -------- | ------------------------------------------------ |
+| name        | [string](/protocol/types/string#string) | Yes      | Human-readable name of the event                 |
+| eventType   | EventType.singleDate                    | Yes      | Must be "singleDate"                             |
+| date        | [isoDate](/protocol/types/date#isodate) | Yes      | Date of the event in ISO 8601 format: YYYY-MM-DD |
+| time        | [isoTime](/protocol/types/date#isotime) | No       | Time of the event in ISO 8601 format: HH:MM:SS   |
+| description | [string](/protocol/types/string#string) | No       | Description of what this event represents        |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.singleDateEvent.example}
+  jsonSchema={frontmatter.singleDateEvent.jsonSchema}
+  typeSpec={frontmatter.singleDateEvent.typeSpec}
+/>
+
+## DateRangeEvent
+
+Represents an event that spans a period of time with start and end dates (and optional times).
+
+### Table
+
+| Property    | Type                                    | Required | Description                               |
+| ----------- | --------------------------------------- | -------- | ----------------------------------------- |
+| name        | [string](/protocol/types/string#string) | Yes      | Human-readable name of the event          |
+| eventType   | EventType.dateRange                     | Yes      | Must be "dateRange"                       |
+| startDate   | [isoDate](/protocol/types/date#isodate) | Yes      | Start date in ISO 8601 format: YYYY-MM-DD |
+| startTime   | [isoTime](/protocol/types/date#isotime) | No       | Start time in ISO 8601 format: HH:MM:SS   |
+| endDate     | [isoDate](/protocol/types/date#isodate) | Yes      | End date in ISO 8601 format: YYYY-MM-DD   |
+| endTime     | [isoTime](/protocol/types/date#isotime) | No       | End time in ISO 8601 format: HH:MM:SS     |
+| description | [string](/protocol/types/string#string) | No       | Description of what this event represents |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.dateRangeEvent.example}
+  jsonSchema={frontmatter.dateRangeEvent.jsonSchema}
+  typeSpec={frontmatter.dateRangeEvent.typeSpec}
+/>
+
+## OtherEvent
+
+Represents custom events that don't fit the single date or date range patterns.
+
+### Table
+
+| Property    | Type                                    | Required | Description                               |
+| ----------- | --------------------------------------- | -------- | ----------------------------------------- |
+| name        | [string](/protocol/types/string#string) | Yes      | Human-readable name of the event          |
+| eventType   | EventType.other                         | Yes      | Must be "other"                           |
+| details     | [string](/protocol/types/string#string) | No       | Details of the event's timeline           |
+| description | [string](/protocol/types/string#string) | No       | Description of what this event represents |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.otherEvent.example}
+  jsonSchema={frontmatter.otherEvent.jsonSchema}
+  typeSpec={frontmatter.otherEvent.typeSpec}
 />
