@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag of the release to publish'
+        description: "Tag of the release to publish"
         required: true
         type: string
 
@@ -41,7 +41,7 @@ jobs:
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public --dry-run
+        run: npm publish --access public
 
       - name: Notify completion
         run: |
