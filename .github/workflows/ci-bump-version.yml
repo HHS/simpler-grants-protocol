@@ -1,4 +1,4 @@
-name: CI - Bump Version of Package
+name: "CI - Bump Version & Create Tag"
 
 on:
   push:
@@ -43,50 +43,54 @@ jobs:
         run: poetry install
         working-directory: lib/python-sdk
 
-      - name: Detect if any changesets exist
+      - name: Detect changesets
         id: check_changesets
         run: |
+          # Find changeset files
           CHANGESET_FILES=$(find .changeset -type f -name "*.md" ! -name "README.md")
           if [ -z "$CHANGESET_FILES" ]; then
             echo "No changeset files found"
             echo "found=false" >> $GITHUB_OUTPUT
-          else
-            echo "Found changeset files: $CHANGESET_FILES"
-            echo "found=true" >> $GITHUB_OUTPUT
-            echo "changeset_files=$CHANGESET_FILES" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Bump Python version using Poetry
-        id: bump_python_version
-        if: steps.check_changesets.outputs.found == 'true'
-        run: |
-          CHANGESET_FILES="${{ steps.check_changesets.outputs.changeset_files }}"
-          CHANGES=$(grep '"common-grants-sdk":' $CHANGESET_FILES || true)
-          if [ -z "$CHANGES" ]; then
-            echo "No bump needed for Python package"
-            echo "found=false" >> $GITHUB_OUTPUT
             exit 0
-          elif echo "$CHANGES" | grep -q 'major'; then
-            echo "Major bump needed for Python package"
-            poetry version major --directory lib/python-sdk
-            echo "found=true" >> $GITHUB_OUTPUT
-          elif echo "$CHANGES" | grep -q 'minor'; then
-            echo "Minor bump needed for Python package"
-            poetry version minor --directory lib/python-sdk
-            echo "found=true" >> $GITHUB_OUTPUT
-          elif echo "$CHANGES" | grep -q 'patch'; then
-            echo "Patch bump needed for Python package"
-            poetry version patch --directory lib/python-sdk
-            echo "found=true" >> $GITHUB_OUTPUT
+          fi
+          # Inspect changeset files
+          echo "Found changeset files: $CHANGESET_FILES"
+          echo "found=true" >> $GITHUB_OUTPUT
+          PY_CHANGELOG=$(grep '"common-grants-sdk":' $CHANGESET_FILES || true)
+          if [ -z "$PY_CHANGELOG" ]; then
+            echo "found_py=false" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "found_py=true" >> $GITHUB_OUTPUT
+            echo "py_changelog=$PY_CHANGELOG" >> $GITHUB_OUTPUT
           fi
 
-      - name: Run changeset version for Node packages (including "fake" python packages)
+      - name: Bump version for Python package
+        working-directory: lib/python-sdk
+        if: steps.check_changesets.outputs.found_py == 'true'
+        run: |
+          CHANGELOG="${{ steps.check_changesets.outputs.py_changelog }}"
+          if [ -z "$CHANGELOG" ]; then
+            echo "No bump needed for Python package"
+            exit 0
+          elif echo "$CHANGELOG" | grep -q 'major'; then
+            echo "Major bump needed for Python package"
+            poetry version major
+          elif echo "$CHANGELOG" | grep -q 'minor'; then
+            echo "Minor bump needed for Python package"
+            poetry version minor
+          elif echo "$CHANGELOG" | grep -q 'patch'; then
+            echo "Patch bump needed for Python package"
+            poetry version patch
+          fi
+
+      - name: Bump version for Node package
         if: steps.check_changesets.outputs.found == 'true'
         run: |
           pnpm changeset version
           git status
 
-      - name: Commit version bumps
+      - name: Commit bumped version
         if: steps.check_changesets.outputs.found == 'true' && github.event_name != 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
@@ -95,8 +99,8 @@ jobs:
           git commit --no-verify -m "chore: bump version [skip ci]" || echo "No changes to commit"
           git push
 
-      - name: Tag Python package version
-        if: steps.check_changesets.outputs.found == 'true' && steps.bump_python_version.outputs.found == 'true'
+      - name: Create tag for Python package
+        if: steps.check_changesets.outputs.found_py == 'true'
         working-directory: lib/python-sdk
         run: |
           PKG_NAME=$(poetry run tomlq -r .tool.poetry.name pyproject.toml)
@@ -104,10 +108,10 @@ jobs:
           git tag ${PKG_NAME}@${PY_VERSION}
           echo "Added tag: ${PKG_NAME}@${PY_VERSION}"
 
-      - name: Tag Node packages
+      - name: Create tag for Node package
         if: steps.check_changesets.outputs.found == 'true'
         run: pnpm changeset tag
 
-      - name: Push all tags
+      - name: Push tags
         if: steps.check_changesets.outputs.found == 'true' && github.event_name != 'pull_request'
         run: git push --tags

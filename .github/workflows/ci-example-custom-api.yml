@@ -1,11 +1,11 @@
-name: CI - Custom API example
+name: "CI - Example: Custom API Run Checks"
 
 on:
   workflow_call:
   pull_request:
     paths:
       - examples/custom-api/**
-      - .github/workflows/ci-examples-custom-api.yml
+      - .github/workflows/ci-example-custom-api.yml
 
 defaults:
   run:

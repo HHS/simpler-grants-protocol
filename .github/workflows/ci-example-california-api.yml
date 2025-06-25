@@ -1,23 +1,34 @@
-name: CI - California API Spec Check
+name: "CI - Example: California API Run Checks"
 
 on:
-  workflow_call:
+  workflow_dispatch:
   pull_request:
     paths:
       - examples/ca-opportunity-example/**
-      - .github/workflows/ci-california-api-check-spec.yml
+      - .github/workflows/ci-example-california-api.yml
 
 defaults:
   run:
-    working-directory: ./examples/ca-opportunity-example/
+    working-directory: ./examples/ca-opportunity-example
 
 jobs:
-  check-spec:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Poetry
+      - uses: Gr1N/setup-poetry@v8
+
+      - name: Install package
+        run: make install
+
+      - name: Run linting, formatting, and type checking
+        run: make checks
+
+      - name: Run tests
+        run: make test-coverage
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -31,12 +42,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Set up Poetry
-        uses: Gr1N/setup-poetry@v8
-
-      - name: Install dependencies
-        run: make install
 
       - name: Generate and validate OpenAPI spec
         run: make check-spec

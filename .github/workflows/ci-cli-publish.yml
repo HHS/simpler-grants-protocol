@@ -1,4 +1,4 @@
-name: CI - Publish @common-grants/cli (dry run)
+name: "CI - CLI: Publish to npm (dry run)"
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "cli/**" # Trigger only if files in the `cli/` directory are changed
-      - ".github/workflows/ci-cli-npm.yml"
+      - ".github/workflows/ci-cli-publish.yml"
 
 defaults:
   run:
