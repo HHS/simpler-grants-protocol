@@ -1,4 +1,4 @@
-name: CI - CLI Package Run Checks
+name: CI - CLI Run Checks
 
 on:
   workflow_call:

@@ -1,4 +1,4 @@
-name: CI - Python Package Run Checks
+name: CI - Python Run Checks
 
 on:
   pull_request:
