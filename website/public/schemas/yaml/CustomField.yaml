@@ -5,7 +5,7 @@ properties:
   name:
     type: string
     description: Name of the custom field
-  type:
+  fieldType:
     $ref: CustomFieldType.yaml
     description: The JSON schema type to use when de-serializing the `value` field
   schema:
@@ -19,17 +19,17 @@ properties:
     description: Description of the custom field's purpose
 required:
   - name
-  - type
+  - fieldType
   - value
 examples:
   - name: eligibilityType
-    type: array
+    fieldType: array
     value:
       - nonprofit
       - academic
     description: Types of eligible organizations
   - name: programArea
-    type: string
+    fieldType: string
     value: Healthcare Innovation
     description: Primary focus area of the grant program
     schema: https://example.com/program-areas.json

@@ -203,13 +203,13 @@ components:
       type: object
       required:
         - name
-        - type
+        - fieldType
         - value
       properties:
         name:
           type: string
           description: Name of the custom field
-        type:
+        fieldType:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Fields.CustomFieldType'
           description: The JSON schema type to use when de-serializing the `value` field
@@ -225,7 +225,7 @@ components:
       description: A custom field on a model
       example:
         name: eligibilityType
-        type: array
+        fieldType: array
         value:
           - nonprofit
           - academic
@@ -235,35 +235,89 @@ components:
       enum:
         - string
         - number
+        - integer
         - boolean
         - object
         - array
       description: The set of JSON schema types supported by a custom field
+    CommonGrants.Fields.DateRangeEvent:
+      type: object
+      required:
+        - eventType
+        - startDate
+        - endDate
+      properties:
+        eventType:
+          type: string
+          enum:
+            - dateRange
+          description: Type of event
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'Start date of the event in ISO 8601 format: YYYY-MM-DD'
+        startTime:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
+          description: 'Start time of the event in ISO 8601 format: HH:MM:SS'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'End date of the event in ISO 8601 format: YYYY-MM-DD'
+        endTime:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
+          description: 'End time of the event in ISO 8601 format: HH:MM:SS'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.EventBase'
+      description: Description of an event that has a start and end date (and possible time) associated with it
+      example:
+        name: Application period
+        eventType: dateRange
+        startDate: '2024-01-01'
+        endDate: '2024-01-31'
+        endTime: '17:00:00'
+        description: Primary application period for the grant opportunity
     CommonGrants.Fields.Event:
+      anyOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.SingleDateEvent'
+        - $ref: '#/components/schemas/CommonGrants.Fields.DateRangeEvent'
+        - $ref: '#/components/schemas/CommonGrants.Fields.OtherEvent'
+      description: Union of all event types
+    CommonGrants.Fields.EventBase:
       type: object
       required:
         - name
-        - date
+        - eventType
       properties:
         name:
           type: string
           description: Human-readable name of the event (e.g., 'Application posted', 'Question deadline')
-        date:
+        eventType:
           allOf:
-            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
-          description: 'Date of the event in in ISO 8601 format: YYYY-MM-DD'
-        time:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
-          description: 'Time of the event in ISO 8601 format: HH:MM:SS'
+            - $ref: '#/components/schemas/CommonGrants.Fields.EventType'
+          description: Type of event
         description:
           type: string
           description: Description of what this event represents
-      description: Description of an event that has a date (and possible time) associated with it
-      example:
-        name: Open Date
-        date: '2024-01-15'
-        description: Applications begin being accepted
+      discriminator:
+        propertyName: eventType
+        mapping:
+          dateRange: '#/components/schemas/CommonGrants.Fields.DateRangeEvent'
+          other: '#/components/schemas/CommonGrants.Fields.OtherEvent'
+      description: Base model for all events
+    CommonGrants.Fields.EventType:
+      type: string
+      enum:
+        - singleDate
+        - dateRange
+        - other
+      description: |-
+        Type of event (e.g., a single date, a date range, or a custom event)
+
+        - singleDate: A single date (and possible time)
+        - dateRange: A period of time with a start and end date
+        - other: Other event type (e.g., a recurring event)
     CommonGrants.Fields.Money:
       type: object
       required:
@@ -277,10 +331,63 @@ components:
         currency:
           type: string
           description: The ISO 4217 currency code in which the amount is denominated
-      description: A monetary amount and the currency in which its denominated
+      description: A monetary amount and the currency in which it's denominated
       example:
         amount: '-50.50'
         currency: USD
+    CommonGrants.Fields.OtherEvent:
+      type: object
+      required:
+        - eventType
+      properties:
+        eventType:
+          type: string
+          enum:
+            - other
+          description: Type of event
+        details:
+          type: string
+          description: Details of the event's timeline (e.g. "Every other Tuesday")
+        description:
+          type: string
+          description: Description of the event
+          example: Applications begin being accepted
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.EventBase'
+      description: Description of an event that is not a single date or date range
+      example:
+        name: Info sessions
+        eventType: other
+        details: Every other Tuesday at 10:00 AM during the application period
+        description: Info sessions for the opportunity
+    CommonGrants.Fields.SingleDateEvent:
+      type: object
+      required:
+        - eventType
+        - date
+      properties:
+        eventType:
+          type: string
+          enum:
+            - singleDate
+          description: Type of event
+        date:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'Date of the event in in ISO 8601 format: YYYY-MM-DD'
+        time:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
+          description: 'Time of the event in ISO 8601 format: HH:MM:SS'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.EventBase'
+      description: Description of an event that has a date (and possible time) associated with it
+      example:
+        name: Opportunity close date
+        eventType: singleDate
+        date: '2024-12-31'
+        time: '17:00:00'
+        description: Opportunity closes for all applications
     CommonGrants.Filters.AllOperators:
       type: string
       enum:
@@ -291,16 +398,16 @@ components:
         - lt
         - lte
         - in
-        - not_in
+        - notIn
         - between
         - outside
         - like
-        - not_like
+        - notLike
     CommonGrants.Filters.ArrayOperators:
       type: string
       enum:
         - in
-        - not_in
+        - notIn
       description: Operators that filter a field based on an array of values
     CommonGrants.Filters.ComparisonOperators:
       type: string
@@ -422,12 +529,12 @@ components:
           example:
             - value1
             - value2
-      description: A filter that applies a filter to an array of strings
+      description: Filters by comparing a field to an array of string values
     CommonGrants.Filters.StringOperators:
       type: string
       enum:
         - like
-        - not_like
+        - notLike
       description: Operators that filter a field based on a string value
     CommonGrants.Models.OppDefaultFilters:
       type: object
@@ -587,6 +694,9 @@ components:
     CommonGrants.Models.OppFunding:
       type: object
       properties:
+        details:
+          type: string
+          description: Details about the funding available for this opportunity that don't fit other fields
         totalAmountAvailable:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Fields.Money'
@@ -677,38 +787,59 @@ components:
     CommonGrants.Models.OppTimeline:
       type: object
       properties:
-        appOpens:
+        postDate:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Fields.Event'
-          description: The date (and time) at which the opportunity begins accepting applications
-        appDeadline:
+          description: The date (and time) at which the opportunity is posted
+        closeDate:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Fields.Event'
-          description: The final deadline for submitting applications
+          description: The date (and time) at which the opportunity closes
         otherDates:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/CommonGrants.Fields.Event'
           description: |-
-            An optional map of other key dates in the opportunity timeline
+            An optional map of other key dates or events in the opportunity timeline
 
             Examples might include a deadline for questions, anticipated award date, etc.
-      description: Key dates in the opportunity's timeline, such as when the application opens and closes
+      description: Key dates and events in the opportunity's timeline, such as when the opportunity is posted and closes
       example:
-        appOpens:
-          name: Open Date
+        postDate:
+          name: Application posted date
+          eventType: singleDate
           date: '2024-01-15'
-          description: Applications begin being accepted
-        appDeadline:
-          name: Application Deadline
+          description: Opportunity is posted publicly
+        closeDate:
+          name: Opportunity close date
+          eventType: singleDate
           date: '2024-12-31'
           time: '17:00:00'
-          description: Final submission deadline for all grant applications
+          description: Opportunity closes for all applications
         otherDates:
           anticipatedAward:
             name: Anticipated award date
+            eventType: singleDate
             date: '2025-03-15'
             description: When we expect to announce awards for this opportunity.
+          applicationPeriod:
+            name: Application period
+            eventType: dateRange
+            startDate: '2024-01-01'
+            endDate: '2024-01-31'
+            endTime: '17:00:00'
+            description: Primary application period for the grant opportunity
+          performancePeriod:
+            name: Period of Performance
+            eventType: dateRange
+            startDate: '2024-01-01'
+            endDate: '2024-12-31'
+            description: Period of performance for the grant
+          infoSessions:
+            name: Info sessions
+            eventType: other
+            details: Every other Tuesday
+            description: Info sessions for the opportunity
     CommonGrants.Models.OpportunityBase:
       type: object
       required:
@@ -716,8 +847,6 @@ components:
         - title
         - status
         - description
-        - funding
-        - keyDates
         - createdAt
         - lastModifiedAt
       properties:
@@ -729,6 +858,7 @@ components:
         title:
           type: string
           description: Title or name of the funding opportunity
+          example: Small business grant program
         status:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppStatus'
@@ -736,6 +866,7 @@ components:
         description:
           type: string
           description: Description of the opportunity's purpose and scope
+          example: This program provides funding to small businesses to help them grow and create jobs
         funding:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppFunding'

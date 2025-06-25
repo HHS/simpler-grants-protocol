@@ -11,8 +11,8 @@ properties:
   code:
     type: string
     examples:
-      - UC0
-    pattern: "[A-Z]{2}[0-9]{6}"
+      - UC000000
+    pattern: ^[A-Z]{2}[0-9]{6}$
     description: The code for this PCS term.
   description:
     type: string

@@ -3,5 +3,5 @@ $id: StringOperators.yaml
 type: string
 enum:
   - like
-  - not_like
+  - notLike
 description: Operators that filter a field based on a string value

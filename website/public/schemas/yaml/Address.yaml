@@ -41,7 +41,7 @@ examples:
     stateOrProvince: CA
     country: US
     postalCode: "12345"
-description: An mailing address.
+description: A mailing address.
 $defs:
   RecordUnknown:
     type: object

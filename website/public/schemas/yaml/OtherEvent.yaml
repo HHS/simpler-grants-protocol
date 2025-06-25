@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OtherEvent.yaml
+type: object
+properties:
+  eventType:
+    type: string
+    const: other
+    description: Type of event
+  details:
+    type: string
+    description: Details of the event's timeline (e.g. "Every other Tuesday")
+  description:
+    type: string
+    examples:
+      - Applications begin being accepted
+    description: Description of the event
+required:
+  - eventType
+allOf:
+  - $ref: EventBase.yaml
+examples:
+  - name: Info sessions
+    eventType: other
+    details: Every other Tuesday at 10:00 AM during the application period
+    description: Info sessions for the opportunity
+description: Description of an event that is not a single date or date range

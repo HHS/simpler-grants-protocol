@@ -4,6 +4,7 @@ type: string
 enum:
   - string
   - number
+  - integer
   - boolean
   - object
   - array

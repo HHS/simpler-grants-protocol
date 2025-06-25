@@ -2,6 +2,9 @@ $schema: https://json-schema.org/draft/2020-12/schema
 $id: OppFunding.yaml
 type: object
 properties:
+  details:
+    type: string
+    description: Details about the funding available for this opportunity that don't fit other fields
   totalAmountAvailable:
     $ref: Money.yaml
     description: Total amount of funding available for this opportunity
@@ -33,11 +36,13 @@ examples:
     minAwardCount: 5
     maxAwardCount: 20
     estimatedAwardCount: 10
-  - totalAmountAvailable:
+  - details: This opportunity has a total funding limit of $1,000,000 but no specific award range
+    totalAmountAvailable:
       amount: "1000000.00"
       currency: USD
     estimatedAwardCount: 10
-  - minAwardAmount:
+  - details: We'll be awarding between $10,000 and $50,000 per recipient
+    minAwardAmount:
       amount: "10000.00"
       currency: USD
     maxAwardAmount:

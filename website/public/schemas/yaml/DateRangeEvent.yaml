@@ -1,0 +1,39 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: DateRangeEvent.yaml
+type: object
+properties:
+  eventType:
+    type: string
+    const: dateRange
+    description: Type of event
+  startDate:
+    $ref: isoDate.yaml
+    description: "Start date of the event in ISO 8601 format: YYYY-MM-DD"
+  startTime:
+    $ref: isoTime.yaml
+    description: "Start time of the event in ISO 8601 format: HH:MM:SS"
+  endDate:
+    $ref: isoDate.yaml
+    description: "End date of the event in ISO 8601 format: YYYY-MM-DD"
+  endTime:
+    $ref: isoTime.yaml
+    description: "End time of the event in ISO 8601 format: HH:MM:SS"
+required:
+  - eventType
+  - startDate
+  - endDate
+allOf:
+  - $ref: EventBase.yaml
+examples:
+  - name: Application period
+    eventType: dateRange
+    startDate: 2024-01-01
+    endDate: 2024-01-31
+    endTime: 17:00:00
+    description: Primary application period for the grant opportunity
+  - name: Period of Performance
+    eventType: dateRange
+    startDate: 2024-01-01
+    endDate: 2024-12-31
+    description: Period of performance for the grant
+description: Description of an event that has a start and end date (and possible time) associated with it
