@@ -3,5 +3,5 @@ $id: ArrayOperators.yaml
 type: string
 enum:
   - in
-  - not_in
+  - notIn
 description: Operators that filter a field based on an array of values

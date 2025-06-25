@@ -2,34 +2,55 @@ $schema: https://json-schema.org/draft/2020-12/schema
 $id: OppTimeline.yaml
 type: object
 properties:
-  appOpens:
+  postDate:
     $ref: Event.yaml
-    description: The date (and time) at which the opportunity begins accepting applications
-  appDeadline:
+    description: The date (and time) at which the opportunity is posted
+  closeDate:
     $ref: Event.yaml
-    description: The final deadline for submitting applications
+    description: The date (and time) at which the opportunity closes
   otherDates:
     $ref: "#/$defs/RecordEvent"
     description: |-
-      An optional map of other key dates in the opportunity timeline
+      An optional map of other key dates or events in the opportunity timeline
 
       Examples might include a deadline for questions, anticipated award date, etc.
 examples:
-  - appOpens:
-      name: Open Date
+  - postDate:
+      name: Application posted date
+      eventType: singleDate
       date: 2024-01-15
-      description: Applications begin being accepted
-    appDeadline:
-      name: Application Deadline
+      description: Opportunity is posted publicly
+    closeDate:
+      name: Opportunity close date
+      eventType: singleDate
       date: 2024-12-31
       time: 17:00:00
-      description: Final submission deadline for all grant applications
+      description: Opportunity closes for all applications
     otherDates:
       anticipatedAward:
         name: Anticipated award date
+        eventType: singleDate
         date: 2025-03-15
         description: When we expect to announce awards for this opportunity.
-description: Key dates in the opportunity's timeline, such as when the application opens and closes
+      applicationPeriod:
+        name: Application period
+        eventType: dateRange
+        startDate: 2024-01-01
+        endDate: 2024-01-31
+        endTime: 17:00:00
+        description: Primary application period for the grant opportunity
+      performancePeriod:
+        name: Period of Performance
+        eventType: dateRange
+        startDate: 2024-01-01
+        endDate: 2024-12-31
+        description: Period of performance for the grant
+      infoSessions:
+        name: Info sessions
+        eventType: other
+        details: Every other Tuesday
+        description: Info sessions for the opportunity
+description: Key dates and events in the opportunity's timeline, such as when the opportunity is posted and closes
 $defs:
   RecordEvent:
     type: object

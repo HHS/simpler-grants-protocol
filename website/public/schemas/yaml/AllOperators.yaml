@@ -9,8 +9,8 @@ enum:
   - lt
   - lte
   - in
-  - not_in
+  - notIn
   - between
   - outside
   - like
-  - not_like
+  - notLike

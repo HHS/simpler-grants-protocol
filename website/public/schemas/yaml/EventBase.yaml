@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EventBase.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: Human-readable name of the event (e.g., 'Application posted', 'Question deadline')
+  eventType:
+    $ref: EventType.yaml
+    description: Type of event
+  description:
+    type: string
+    description: Description of what this event represents
+required:
+  - name
+  - eventType
+description: Base model for all events

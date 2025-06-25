@@ -37,7 +37,7 @@ examples:
     organization:
       id: 083b4567-e89d-42c8-a439-6c1234567890
       name: Example Organization
-      type:
+      orgType:
         term: Hospital
         class: Organization types
         description: Institutions with the primary purpose of providing in-patient physical and mental health services...

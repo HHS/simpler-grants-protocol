@@ -2,6 +2,6 @@ $schema: https://json-schema.org/draft/2020-12/schema
 $id: samUEI.yaml
 type: string
 examples:
-  - ABC1234567890
+  - 12ABC34DEF56
 pattern: ^[A-z0-9]{12}$
-description: A Unique Entity Identifier (UEI)
+description: A Unique Entity Identifier (UEI) issued by SAM.gov

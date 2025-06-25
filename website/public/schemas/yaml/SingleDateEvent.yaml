@@ -1,0 +1,30 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SingleDateEvent.yaml
+type: object
+properties:
+  eventType:
+    type: string
+    const: singleDate
+    description: Type of event
+  date:
+    $ref: isoDate.yaml
+    description: "Date of the event in in ISO 8601 format: YYYY-MM-DD"
+  time:
+    $ref: isoTime.yaml
+    description: "Time of the event in ISO 8601 format: HH:MM:SS"
+required:
+  - eventType
+  - date
+allOf:
+  - $ref: EventBase.yaml
+examples:
+  - name: Opportunity close date
+    eventType: singleDate
+    date: 2024-12-31
+    time: 17:00:00
+    description: Opportunity closes for all applications
+  - name: Application posted date
+    eventType: singleDate
+    date: 2024-01-15
+    description: Opportunity is posted publicly
+description: Description of an event that has a date (and possible time) associated with it

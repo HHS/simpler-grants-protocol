@@ -16,4 +16,4 @@ properties:
 required:
   - operator
   - value
-description: A filter that applies a filter to an array of strings
+description: Filters by comparing a field to an array of string values

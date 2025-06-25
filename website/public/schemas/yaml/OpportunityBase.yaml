@@ -7,12 +7,16 @@ properties:
     description: Globally unique id for the opportunity
   title:
     type: string
+    examples:
+      - Small business grant program
     description: Title or name of the funding opportunity
   status:
     $ref: OppStatus.yaml
     description: Status of the opportunity
   description:
     type: string
+    examples:
+      - This program provides funding to small businesses to help them grow and create jobs
     description: Description of the opportunity's purpose and scope
   funding:
     $ref: OppFunding.yaml
@@ -40,8 +44,6 @@ required:
   - title
   - status
   - description
-  - funding
-  - keyDates
   - createdAt
   - lastModifiedAt
 description: A funding opportunity

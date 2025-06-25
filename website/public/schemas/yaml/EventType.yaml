@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EventType.yaml
+type: string
+enum:
+  - singleDate
+  - dateRange
+  - other
+description: |-
+  Type of event (e.g., a single date, a date range, or a custom event)
+
+  - singleDate: A single date (and possible time)
+  - dateRange: A period of time with a start and end date
+  - other: Other event type (e.g., a recurring event)

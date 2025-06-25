@@ -18,4 +18,4 @@ examples:
     currency: EUR
   - amount: "10000.50"
     currency: USD
-description: A monetary amount and the currency in which its denominated
+description: A monetary amount and the currency in which it's denominated
