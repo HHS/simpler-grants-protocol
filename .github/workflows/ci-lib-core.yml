@@ -1,11 +1,11 @@
-name: CI - Core Run Checks
+name: CI - Core: Run Checks
 
 on:
   workflow_call:
   pull_request:
     paths:
       - lib/core/**
-      - .github/workflows/ci-lib-core-checks.yml
+      - .github/workflows/ci-lib-core.yml
 
 defaults:
   run:

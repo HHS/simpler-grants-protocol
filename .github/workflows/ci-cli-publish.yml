@@ -1,13 +1,12 @@
-name: CD - Publish CLI Package (alpha)
+name: CI - CLI: Publish to npm (dry run)
 
 on:
-  workflow_dispatch:
-  push:
+  pull_request:
     branches:
       - main
     paths:
       - "cli/**" # Trigger only if files in the `cli/` directory are changed
-      - ".github/workflows/cd-cli-npm.yml"
+      - ".github/workflows/ci-cli-publish.yml"
 
 defaults:
   run:
@@ -24,16 +23,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Checks that the version is not already published and
+      # that there are no uncommitted changes
+      - name: Run prepublish checks
+        run: npm run prepublishOnly
+
+      - name: Run checks
+        run: npm run checks
+
       # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Run checks
-        run: npm run checks
-
-      - name: Publish to npm
+      - name: Dry run publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --tag alpha --access public
+        run: npm publish --tag alpha --access public --dry-run

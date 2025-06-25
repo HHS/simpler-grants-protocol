@@ -1,10 +1,10 @@
-name: CI - Python Run Checks
+name: CI - Python SDK: Run Checks
 
 on:
   pull_request:
     paths:
       - "lib/python-sdk/**"
-      - ".github/workflows/ci-python-sdk.yml"
+      - ".github/workflows/ci-lib-pysdk.yml"
 
 jobs:
   build:
