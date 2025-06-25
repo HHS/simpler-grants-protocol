@@ -27,7 +27,7 @@
     "@astrojs/check": "^0.9.4",
     "@astrojs/react": "^4.2.1",
     "@astrojs/starlight": "^0.34.0",
-    "@common-grants/core": "^0.1.0-alpha.14",
+    "@common-grants/core": "^0.1.0",
     "@jsonforms/core": "^3.5.1",
     "@jsonforms/react": "^3.5.1",
     "@jsonforms/vanilla-renderers": "^3.5.1",
