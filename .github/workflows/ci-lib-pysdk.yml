@@ -6,17 +6,17 @@ on:
       - "lib/python-sdk/**"
       - ".github/workflows/ci-lib-pysdk.yml"
 
+defaults:
+  run:
+    working-directory: ./lib/python-sdk
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: lib/python-sdk
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Install Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"

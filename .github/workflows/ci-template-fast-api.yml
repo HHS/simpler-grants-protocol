@@ -19,8 +19,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install poetry
-      - uses: Gr1N/setup-poetry@v8
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: Gr1N/setup-poetry@v8
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install CommonGrants CLI
+        run: npm install -g @common-grants/cli
 
       - name: Install package
         run: make install
@@ -30,19 +43,6 @@ jobs:
 
       - name: Run tests
         run: make test-coverage
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-
-      - name: Install CommonGrants CLI
-        run: npm install -g @common-grants/cli
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
 
       - name: Generate and validate OpenAPI spec
         run: make check-spec
