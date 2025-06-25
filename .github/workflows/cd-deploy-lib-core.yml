@@ -1,4 +1,4 @@
-name: CD - Deploy Core Package to npm
+name: "CD - Deploy Core Package to npm"
 
 on:
   workflow_dispatch:

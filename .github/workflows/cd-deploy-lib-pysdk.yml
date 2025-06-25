@@ -1,4 +1,4 @@
-name: CD - Deploy Python Package to PyPI
+name: "CD - Deploy Python Package to PyPI"
 
 on:
   workflow_dispatch:

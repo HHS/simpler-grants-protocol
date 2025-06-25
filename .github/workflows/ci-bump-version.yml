@@ -1,4 +1,4 @@
-name: CI - Bump Version & Create Tag
+name: "CI - Bump Version & Create Tag"
 
 on:
   push:

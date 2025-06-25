@@ -1,4 +1,4 @@
-name: CI - Example: Custom API Run Checks
+name: "CI - Example: Custom API Run Checks"
 
 on:
   workflow_call:

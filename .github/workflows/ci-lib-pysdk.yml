@@ -1,4 +1,4 @@
-name: CI - Python SDK: Run Checks
+name: "CI - Python SDK: Run Checks"
 
 on:
   pull_request:

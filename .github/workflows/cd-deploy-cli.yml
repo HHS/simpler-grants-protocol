@@ -1,4 +1,4 @@
-name: CD - Deploy CLI Package to npm (alpha)
+name: "CD - Deploy CLI Package to npm (alpha)"
 
 on:
   workflow_dispatch:

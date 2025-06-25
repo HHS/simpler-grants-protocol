@@ -1,4 +1,4 @@
-name: CI - Template: Express.js Run Checks
+name: "CI - Template: Express.js Run Checks"
 
 on:
   workflow_call:

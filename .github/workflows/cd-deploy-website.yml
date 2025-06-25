@@ -1,4 +1,4 @@
-name: CD - Deploy Website to GH Pages
+name: "CD - Deploy Website to GH Pages"
 
 on:
   # Trigger the workflow every time we push to the `main` branch

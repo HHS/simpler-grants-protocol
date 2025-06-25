@@ -1,4 +1,4 @@
-name: CI - Example: California API Run Checks
+name: "CI - Example: California API Run Checks"
 
 on:
   workflow_dispatch:

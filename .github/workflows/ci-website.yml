@@ -1,4 +1,4 @@
-name: CI - Website: Run Checks
+name: "CI - Website: Run Checks"
 
 on:
   workflow_call:
