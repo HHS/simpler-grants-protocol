@@ -18,12 +18,12 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20.x"
 
-      - name: Set up pnpm
+      - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8
@@ -31,7 +31,7 @@ jobs:
       - name: Install Node.js dependencies
         run: pnpm install
 
-      - name: Set up Python
+      - name: Install Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -41,7 +41,7 @@ jobs:
 
       - name: Install dependencies
         run: poetry install
-        working-directory: lib/python-sdk
+        working-directory: ./lib/python-sdk
 
       - name: Detect changesets
         id: check_changesets
@@ -66,7 +66,7 @@ jobs:
           fi
 
       - name: Bump version for Python package
-        working-directory: lib/python-sdk
+        working-directory: ./lib/python-sdk
         if: steps.check_changesets.outputs.found_py == 'true'
         run: |
           CHANGELOG="${{ steps.check_changesets.outputs.py_changelog }}"
@@ -101,7 +101,7 @@ jobs:
 
       - name: Create tag for Python package
         if: steps.check_changesets.outputs.found_py == 'true'
-        working-directory: lib/python-sdk
+        working-directory: ./lib/python-sdk
         run: |
           PKG_NAME=$(poetry run tomlq -r .tool.poetry.name pyproject.toml)
           PY_VERSION=$(poetry run tomlq -r .tool.poetry.version pyproject.toml)

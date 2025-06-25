@@ -27,10 +27,12 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    working-directory: ./lib/core
     permissions:
       contents: read
       id-token: write
+    defaults:
+      run:
+        working-directory: ./lib/core
 
     steps:
       - name: Checkout code
