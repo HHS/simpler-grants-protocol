@@ -81,14 +81,14 @@ stringOperators:
   typeSpec:
     file:
       path: "lib/core/lib/core/filters/base.tsp"
-      startLine: 31
-      endLine: 38
+      startLine: 40
+      endLine: 47
   python: |
     from enum import Enum
 
     class StringOperators(str, Enum):
         LIKE = "like"
-        NOT_LIKE = "not_like"
+        NOT_LIKE = "notLike"
 
     # Example usage:
     op = StringOperators.LIKE
@@ -108,7 +108,7 @@ arrayOperators:
 
     class ArrayOperators(str, Enum):
         IN = "in"
-        NOT_IN = "not_in"
+        NOT_IN = "notIn"
 
     # Example usage:
     op = ArrayOperators.IN
@@ -218,71 +218,16 @@ Operators that filter a field based on a string value.
 | Operator | Description | Property  | True value | False value |
 | -------- | ----------- | --------- | ---------- | ----------- |
 | like     | Like        | `"hello"` | `"hell"`   | `"world"`   |
-| not_like | Not like    | `"hello"` | `"world"`  | `"hell"`    |
+| notLike  | Not like    | `"hello"` | `"world"`  | `"hell"`    |
 
 ### Formats
 
-<Tabs>
-  <TabItem label="Example">
-
-A JSON example of this field is:
-
-```json
-"like"
-```
-
-  </TabItem>
-
-  <TabItem label="JSON Schema">
-
-The JSON schema for this field is:
-
-```yaml
-$schema: https://json-schema.org/draft/2020-12/schema
-$id: StringOperators.yaml
-type: string
-enum:
-  - like
-  - not_like
-description: Operators that filter a field based on a string value
-```
-
-  </TabItem>
-
-  <TabItem label="TypeSpec">
-
-The TypeSpec code for this field is:
-
-```typespec
-/** Operators that filter a field based on a string value */
-enum StringOperators {
-  /** Like */
-  like,
-
-  /** Not like */
-  not_like,
-}
-```
-
-  </TabItem>
-
-  <TabItem label="Python">
-
-The Python code for this filter is:
-
-```python
-from enum import Enum
-
-class StringOperators(str, Enum):
-    LIKE = "like"
-    NOT_LIKE = "not_like"
-
-# Example usage:
-op = StringOperators.LIKE
-```
-
-  </TabItem>
-</Tabs>
+<SchemaFormatTabs
+  example={frontmatter.stringOperators.example}
+  jsonSchema={frontmatter.stringOperators.jsonSchema}
+  typeSpec={frontmatter.stringOperators.typeSpec}
+  python={{ code: frontmatter.stringOperators.python }}
+/>
 
 ## ArrayOperators
 
@@ -296,7 +241,7 @@ Operators that filter a field based on an array of values. Supported value types
 | Operator | Description               | Property | True value   | False value  |
 | -------- | ------------------------- | -------- | ------------ | ------------ |
 | in       | In an array of values     | `"A"`    | `["A", "B"]` | `["B", "C"]` |
-| not_in   | Not in an array of values | `"A"`    | `["B", "C"]` | `["A", "B"]` |
+| notIn    | Not in an array of values | `"A"`    | `["B", "C"]` | `["A", "B"]` |
 
 ### Formats
 
