@@ -1,4 +1,4 @@
-name: CI - FastAPI Template
+name: CI - California API Run Checks
 
 on:
   workflow_call:

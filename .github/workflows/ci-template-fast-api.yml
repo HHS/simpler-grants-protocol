@@ -1,4 +1,4 @@
-name: CI - FastAPI Template
+name: CI - FastAPI Template Run Checks
 
 on:
   workflow_call:

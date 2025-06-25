@@ -1,4 +1,4 @@
-name: CI - Publish @common-grants/cli (dry run)
+name: CI - Publish CLI Package (dry run)
 
 on:
   pull_request:

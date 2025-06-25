@@ -1,4 +1,4 @@
-name: Python SDK CI
+name: CI - Python Package Run Checks
 
 on:
   pull_request:

@@ -1,4 +1,4 @@
-name: CD - Publish @common-grants/cli
+name: CD - Publish CLI Package (alpha)
 
 on:
   workflow_dispatch:

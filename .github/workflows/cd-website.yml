@@ -1,4 +1,4 @@
-name: CD - Website (main)
+name: CD - Deploy Website (main)
 
 on:
   # Trigger the workflow every time we push to the `main` branch

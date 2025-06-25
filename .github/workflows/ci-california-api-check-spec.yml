@@ -1,4 +1,4 @@
-name: CI - California API Spec Check
+name: CI - California API Check Spec
 
 on:
   workflow_call:

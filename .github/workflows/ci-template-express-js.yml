@@ -1,4 +1,4 @@
-name: CI - Express.js Template
+name: CI - Express.js Template Run Checks
 
 on:
   workflow_call:

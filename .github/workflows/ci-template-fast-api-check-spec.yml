@@ -1,4 +1,4 @@
-name: CI - FastAPI Spec Check
+name: CI - FastAPI Template Check Spec
 
 on:
   workflow_call:
