@@ -4,12 +4,12 @@ on:
   workflow_call:
   pull_request:
     paths:
-      - cli/**
+      - lib/cli/**
       - .github/workflows/ci-cli.yml
 
 defaults:
   run:
-    working-directory: ./cli
+    working-directory: ./lib/cli
 
 jobs:
   build:
