@@ -13,7 +13,7 @@ tsp init https://raw.githubusercontent.com/HHS/simpler-grants-protocol/refs/head
 This will walk you through a series of prompts to initialize the your project.
 
 > [!NOTE]
-> We're working to simplify the init process using the [CommonGrants CLI](../cli).
+> We're working to simplify the init process using the [CommonGrants CLI](../lib/cli).
 
 ## Templates
 
