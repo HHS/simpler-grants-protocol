@@ -5,7 +5,7 @@ import type { FormData, TransformOutput } from "./types";
 export function mapJson(
   data: FormData,
   sourceId: string,
-  targetId: string
+  targetId: string,
 ): TransformOutput {
   const sourceSchema = schemas[sourceId];
   const targetSchema = schemas[targetId];
@@ -16,12 +16,12 @@ export function mapJson(
 
   const commonData = transformWithMapping(
     data,
-    sourceSchema.mappingToCommon as FormData
+    sourceSchema.mappingToCommon as FormData,
   );
 
   const targetData = transformWithMapping(
     commonData,
-    targetSchema.mappingFromCommon as FormData
+    targetSchema.mappingFromCommon as FormData,
   );
 
   return {

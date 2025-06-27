@@ -24,7 +24,7 @@ export default function FormMappingPlayground() {
   const [sourceId, setSourceId] = useState<string>(sourceSchema.id);
   const [targetId, setTargetId] = useState<string>(targetSchema.id);
   const [sourceFormData, setSourceFormData] = useState<FormData>(
-    sourceSchema.defaultData
+    sourceSchema.defaultData,
   );
 
   // Step 3: Create the state for the transformation output

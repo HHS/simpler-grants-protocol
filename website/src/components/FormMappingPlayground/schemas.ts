@@ -6,7 +6,7 @@ import formsIndex from "@/content/forms/index.json";
  */
 async function loadFormData(
   formId: string,
-  formLabel: string
+  formLabel: string,
 ): Promise<FormSchema> {
   // Generate paths to the form data files
   const formDir = `../../content/forms/${formId}`;
@@ -25,7 +25,7 @@ async function loadFormData(
         import(/* @vite-ignore */ mappingToPath),
         import(/* @vite-ignore */ mappingFromPath),
         import(/* @vite-ignore */ defaultDataPath),
-      ]
+      ],
     );
 
     return {
