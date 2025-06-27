@@ -1,0 +1,23 @@
+{
+  "pointOfContact": {
+    "firstName": { "field": "FirstName" },
+    "middleName": { "field": "MiddleName" },
+    "lastName": { "field": "LastName" },
+    "email": { "field": "AuthorizedRepresentativeEmail" },
+    "phone": { "field": "AuthorizedRepresentativePhoneNumber" },
+    "address": {
+      "street1": { "field": "Street1" },
+      "street2": { "field": "Street2" },
+      "city": { "field": "City" },
+      "state": { "field": "State" },
+      "zip": { "field": "ZipPostalCode" },
+      "country": { "field": "Country" }
+    }
+  },
+  "project": {
+    "title": { "field": "ProjectTitle" },
+    "description": { "field": "ProjectDescription" },
+    "startDate": { "field": "FundingPeriodStartDate" },
+    "endDate": { "field": "FundingPeriodEndDate" }
+  }
+}

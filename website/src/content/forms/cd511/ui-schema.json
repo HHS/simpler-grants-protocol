@@ -1,0 +1,49 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/OrganizationName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AwardNumber"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ProjectName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/PrefixName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/FirstName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/MiddleName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/LastName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/SuffixName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Title"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Signature"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/SubmittedDate"
+    }
+  ]
+}

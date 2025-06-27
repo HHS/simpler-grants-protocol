@@ -1,0 +1,55 @@
+{
+  "pointOfContact": {
+    "firstName": { "field": "FirstName" },
+    "middleName": { "field": "MiddleName" },
+    "lastName": { "field": "LastName" },
+    "email": { "field": "Email" },
+    "phone": { "field": "PhoneNumber" },
+    "title": { "field": "Title" },
+    "address": {
+      "street1": { "field": "Street1" },
+      "street2": { "field": "Street2" },
+      "city": { "field": "City" },
+      "state": { "field": "State" },
+      "zip": { "field": "ZipCode" },
+      "country": { "field": "Country" }
+    }
+  },
+  "organization": {
+    "name": { "field": "OrganizationName" },
+    "ein": { "field": "EmployerTaxpayerIdentificationNumber" },
+    "uei": { "field": "SAMUEI" },
+    "department": { "field": "DepartmentName" },
+    "division": { "field": "DivisionName" }
+  },
+  "project": {
+    "title": { "field": "ProjectTitle" },
+    "startDate": { "field": "ProjectStartDate" },
+    "endDate": { "field": "ProjectEndDate" },
+    "amountRequested": { "field": "FederalEstimatedFunding" },
+    "totalBudget": { "field": "TotalEstimatedFunding" },
+    "applicantType": {
+      "switch": {
+        "field": "ApplicantTypeCode1",
+        "case": {
+          "Nonprofit": "nonprofit-general",
+          "Educational": "nonprofit-educational",
+          "Government": "government-general",
+          "Small Business": "business-small",
+          "For-Profit": "business-general",
+          "Individual": "individual",
+          "Other": "custom"
+        },
+        "default": "nonprofit-general"
+      }
+    }
+  },
+  "funding": {
+    "federal": { "field": "FederalEstimatedFunding" },
+    "applicant": { "field": "ApplicantEstimatedFunding" },
+    "state": { "field": "StateEstimatedFunding" },
+    "local": { "field": "LocalEstimatedFunding" },
+    "other": { "field": "OtherEstimatedFunding" },
+    "programIncome": { "field": "ProgramIncomeEstimatedFunding" }
+  }
+}
