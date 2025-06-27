@@ -21,17 +21,17 @@ const formUIs = import.meta.glob("@/content/forms/*/ui-schema.json", {
 
 const formMappingsTo = import.meta.glob(
   "@/content/forms/*/mapping-to-cg.json",
-  { eager: true }
+  { eager: true },
 ) as Record<string, { default: FormSchema }>;
 
 const formMappingsFrom = import.meta.glob(
   "@/content/forms/*/mapping-from-cg.json",
-  { eager: true }
+  { eager: true },
 ) as Record<string, { default: FormSchema }>;
 
 const formDefaultData = import.meta.glob(
   "@/content/forms/*/default-data.json",
-  { eager: true }
+  { eager: true },
 ) as Record<string, { default: FormData }>;
 
 /**
