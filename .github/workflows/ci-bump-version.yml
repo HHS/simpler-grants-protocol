@@ -28,7 +28,12 @@ jobs:
         with:
           version: 8
 
-      - name: Install Node.js dependencies
+      - name: Build core library
+        working-directory: ./lib/core
+        run: npm ci && npm run build
+
+
+      - name: Install dependencies
         run: pnpm install
 
       - name: Install Python
