@@ -1,0 +1,26 @@
+{
+  "pointOfContact": {
+    "firstName": { "field": "contactFirstName" },
+    "lastName": { "field": "contactLastName" }
+  },
+  "project": {
+    "title": { "field": "projectTitle" },
+    "applicantType": {
+      "switch": {
+        "field": "orgType",
+        "case": {
+          "Church": "nonprofit-religious",
+          "Nonprofit": "nonprofit-general",
+          "Small Business": "business-small",
+          "Local Government": "government-local",
+          "Tribal Government": "government-tribal",
+          "Individual": "individual",
+          "Not Listed": "custom"
+        },
+        "default": "custom"
+      }
+    },
+    "amountRequested": { "field": "fundingNeeded" },
+    "startDate": { "field": "startPeriod" }
+  }
+}

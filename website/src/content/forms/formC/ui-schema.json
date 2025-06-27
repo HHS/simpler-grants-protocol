@@ -1,0 +1,11 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    { "type": "Control", "scope": "#/properties/projectTitle" },
+    { "type": "Control", "scope": "#/properties/orgType" },
+    { "type": "Control", "scope": "#/properties/contactFirstName" },
+    { "type": "Control", "scope": "#/properties/contactLastName" },
+    { "type": "Control", "scope": "#/properties/fundingNeeded" },
+    { "type": "Control", "scope": "#/properties/startPeriod" }
+  ]
+}

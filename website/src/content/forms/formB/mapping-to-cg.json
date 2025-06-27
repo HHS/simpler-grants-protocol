@@ -1,0 +1,26 @@
+{
+  "pointOfContact": {
+    "firstName": { "field": "principal_investigator.first_name" },
+    "middleName": { "field": "principal_investigator.middle_name" },
+    "lastName": { "field": "principal_investigator.last_name" }
+  },
+  "project": {
+    "title": { "field": "project_name" },
+    "applicantType": {
+      "switch": {
+        "field": "institution_type",
+        "case": {
+          "University": "nonprofit-educational",
+          "Nonprofit": "nonprofit-general",
+          "Corporation": "business-general",
+          "Government": "government-general",
+          "Independent Researcher": "individual",
+          "Not Listed": "custom"
+        },
+        "default": "custom"
+      }
+    },
+    "amountRequested": { "field": "budget" },
+    "startDate": { "field": "kickoff" }
+  }
+}
