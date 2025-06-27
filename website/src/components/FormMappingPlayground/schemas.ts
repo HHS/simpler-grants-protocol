@@ -1,57 +1,84 @@
-import type { FormSchemaMap, FormSchema } from "./types";
+import type { VerticalLayout } from "@jsonforms/core";
+import type { FormSchemaMap, FormSchema, FormData } from "./types";
 import formsIndex from "@/content/forms/index.json";
 
+// Import all form files using Vite's glob pattern
+// Implementation Notes:
+// Vite DOESN'T allow the following patterns to make this more dynamic
+// - Loading data from the filesystem with a dynamically constructed filepath
+// - Using dynamic imports
+// - Passing a templated string to the glob() command
+// Summary:
+// The glob pattern seems to be the most efficient way to load all form files
+// without having to explicitly list each each file we're importing
+const formSchemas = import.meta.glob("@/content/forms/*/json-schema.json", {
+  eager: true,
+}) as Record<string, { default: FormSchema }>;
+
+const formUIs = import.meta.glob("@/content/forms/*/ui-schema.json", {
+  eager: true,
+}) as Record<string, { default: VerticalLayout }>;
+
+const formMappingsTo = import.meta.glob(
+  "@/content/forms/*/mapping-to-cg.json",
+  { eager: true }
+) as Record<string, { default: FormSchema }>;
+
+const formMappingsFrom = import.meta.glob(
+  "@/content/forms/*/mapping-from-cg.json",
+  { eager: true }
+) as Record<string, { default: FormSchema }>;
+
+const formDefaultData = import.meta.glob(
+  "@/content/forms/*/default-data.json",
+  { eager: true }
+) as Record<string, { default: FormData }>;
+
 /**
- * Dynamically loads form data for a given form ID
+ * Loads form data using Vite's glob imports - very efficient for 100+ forms
  */
-async function loadFormData(
-  formId: string,
-  formLabel: string,
-): Promise<FormSchema> {
-  // Generate paths to the form data files
-  const formDir = `../../content/forms/${formId}`;
+function loadFormDataWithGlob(formId: string, formLabel: string): FormSchema {
+  // Use the actual path format that glob imports generate (with /src/ instead of @/)
+  const formDir = `/src/content/forms/${formId}`;
+  // Find the files in the glob imports using the expected path format
   const schemaPath = `${formDir}/json-schema.json`;
   const uiPath = `${formDir}/ui-schema.json`;
   const mappingToPath = `${formDir}/mapping-to-cg.json`;
   const mappingFromPath = `${formDir}/mapping-from-cg.json`;
   const defaultDataPath = `${formDir}/default-data.json`;
 
-  // Load the form data files
-  try {
-    const [schema, ui, mappingTo, mappingFrom, defaultData] = await Promise.all(
-      [
-        import(/* @vite-ignore */ schemaPath),
-        import(/* @vite-ignore */ uiPath),
-        import(/* @vite-ignore */ mappingToPath),
-        import(/* @vite-ignore */ mappingFromPath),
-        import(/* @vite-ignore */ defaultDataPath),
-      ],
-    );
+  const schema = formSchemas[schemaPath] as { default: FormSchema };
+  const ui = formUIs[uiPath] as { default: VerticalLayout };
+  const mappingTo = formMappingsTo[mappingToPath] as { default: FormSchema };
+  const mappingFrom = formMappingsFrom[mappingFromPath] as {
+    default: FormSchema;
+  };
+  const defaultData = formDefaultData[defaultDataPath] as { default: FormData };
 
-    return {
-      id: formId,
-      label: formLabel,
-      formSchema: schema.default,
-      formUI: ui.default,
-      mappingToCommon: mappingTo.default,
-      mappingFromCommon: mappingFrom.default,
-      defaultData: defaultData.default,
-    };
-  } catch (error) {
-    throw new Error(`Error loading form data: ${error}`);
+  if (!schema || !ui || !mappingTo || !mappingFrom || !defaultData) {
+    throw new Error(`Missing required files for form ${formId}`);
   }
+
+  return {
+    id: formId,
+    label: formLabel,
+    formSchema: schema.default,
+    formUI: ui.default,
+    mappingToCommon: mappingTo.default,
+    mappingFromCommon: mappingFrom.default,
+    defaultData: defaultData.default,
+  };
 }
 
 /**
- * Dynamically generated schemas from the forms directory.
- * Each form is loaded from its corresponding subdirectory using the index.json as the source of truth.
+ * Load all schemas using glob imports - very fast for 100+ forms
  */
-export async function loadSchemas(): Promise<FormSchemaMap> {
+export function loadSchemasWithGlob(): FormSchemaMap {
   const schemas: FormSchemaMap = {};
 
   for (const form of formsIndex) {
     try {
-      const formData = await loadFormData(form.id, form.title);
+      const formData = loadFormDataWithGlob(form.id, form.title);
       schemas[form.id] = formData;
     } catch (error) {
       console.error(`Failed to load schema for form ${form.id}:`, error);
@@ -62,4 +89,4 @@ export async function loadSchemas(): Promise<FormSchemaMap> {
   return schemas;
 }
 
-export const schemas = await loadSchemas();
+export const schemas = loadSchemasWithGlob();
