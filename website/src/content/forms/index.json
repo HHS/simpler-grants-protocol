@@ -1,24 +1,5 @@
 [
   {
-    "id": "sf424",
-    "title": "Application for Federal Assistance (SF-424)",
-    "description": "SF424",
-    "owner": "Grants.gov",
-    "url": "https://www.grants.gov/forms/form-items-description/fid/713"
-  },
-  {
-    "id": "sf424-individual",
-    "title": "Application for Federal Domestic Assistance - Individual",
-    "owner": "Grants.gov",
-    "url": "https://www.grants.gov/forms/form-items-description/fid/668"
-  },
-  {
-    "id": "cd511",
-    "title": "CD511 Form",
-    "owner": "Department of Commerce (DOC)",
-    "url": "https://www.grants.gov/forms/form-items-description/fid/276"
-  },
-  {
     "id": "formA",
     "title": "Form A - Basic Grant",
     "description": "Basic grant application form",
@@ -45,5 +26,24 @@
     "description": "Education grant application form",
     "owner": "Internal",
     "url": ""
+  },
+  {
+    "id": "sf424",
+    "title": "SF424",
+    "description": "SF424",
+    "owner": "Grants.gov",
+    "url": "https://www.grants.gov/forms/form-items-description/fid/713"
+  },
+  {
+    "id": "sf424-individual",
+    "title": "SF424 - Individual",
+    "owner": "Grants.gov",
+    "url": "https://www.grants.gov/forms/form-items-description/fid/668"
+  },
+  {
+    "id": "cd511",
+    "title": "CD511 Form",
+    "owner": "Department of Commerce (DOC)",
+    "url": "https://www.grants.gov/forms/form-items-description/fid/276"
   }
 ]
