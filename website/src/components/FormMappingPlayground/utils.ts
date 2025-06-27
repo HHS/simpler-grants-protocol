@@ -1,22 +1,14 @@
 import { schemas } from "./schemas";
 import { transformWithMapping } from "./transformation";
-import type { FormData } from "./types";
-
-export type TransformOutput = {
-  timestamp: number;
-  source: string;
-  target: string;
-  commonData: FormData;
-  targetData: FormData;
-};
+import type { FormData, TransformOutput } from "./types";
 
 export function mapJson(
   data: FormData,
   sourceId: string,
-  targetId: string,
+  targetId: string
 ): TransformOutput {
-  const sourceSchema = schemas.find((s) => s.id === sourceId);
-  const targetSchema = schemas.find((s) => s.id === targetId);
+  const sourceSchema = schemas[sourceId];
+  const targetSchema = schemas[targetId];
 
   if (!sourceSchema || !targetSchema) {
     throw new Error("Source or target schema not found");
@@ -24,12 +16,12 @@ export function mapJson(
 
   const commonData = transformWithMapping(
     data,
-    sourceSchema.mappings.mappingToCommon as FormData,
+    sourceSchema.mappingToCommon as FormData
   );
 
   const targetData = transformWithMapping(
     commonData,
-    targetSchema.mappings.mappingFromCommon as FormData,
+    targetSchema.mappingFromCommon as FormData
   );
 
   return {

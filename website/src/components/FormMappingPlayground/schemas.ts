@@ -1,19 +1,5 @@
-import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
-import formsIndex from "../../content/forms/index.json";
-
-export interface SchemaOption {
-  id: string;
-  label: string;
-  formSchema: JsonSchema;
-  formUI: VerticalLayout;
-  defaultData: unknown;
-  mappings: MappingSet;
-}
-
-interface MappingSet {
-  mappingToCommon: Record<string, unknown>;
-  mappingFromCommon: Record<string, unknown>;
-}
+import type { FormSchemaMap, FormSchema } from "./types";
+import formsIndex from "@/content/forms/index.json";
 
 /**
  * Dynamically loads form data for a given form ID
@@ -21,7 +7,7 @@ interface MappingSet {
 async function loadFormData(
   formId: string,
   formLabel: string
-): Promise<SchemaOption> {
+): Promise<FormSchema> {
   // Generate paths to the form data files
   const formDir = `../../content/forms/${formId}`;
   const schemaPath = `${formDir}/json-schema.json`;
@@ -47,10 +33,8 @@ async function loadFormData(
       label: formLabel,
       formSchema: schema.default,
       formUI: ui.default,
-      mappings: {
-        mappingToCommon: mappingTo.default,
-        mappingFromCommon: mappingFrom.default,
-      },
+      mappingToCommon: mappingTo.default,
+      mappingFromCommon: mappingFrom.default,
       defaultData: defaultData.default,
     };
   } catch (error) {
@@ -62,13 +46,13 @@ async function loadFormData(
  * Dynamically generated schemas from the forms directory.
  * Each form is loaded from its corresponding subdirectory using the index.json as the source of truth.
  */
-export async function loadSchemas(): Promise<SchemaOption[]> {
-  const schemas: SchemaOption[] = [];
+export async function loadSchemas(): Promise<FormSchemaMap> {
+  const schemas: FormSchemaMap = {};
 
   for (const form of formsIndex) {
     try {
       const formData = await loadFormData(form.id, form.title);
-      schemas.push(formData);
+      schemas[form.id] = formData;
     } catch (error) {
       console.error(`Failed to load schema for form ${form.id}:`, error);
       throw error;
