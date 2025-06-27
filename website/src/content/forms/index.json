@@ -51,5 +51,11 @@
     "title": "Key Contact",
     "owner": "Grants.gov",
     "url": "https://www.grants.gov/forms/form-items-description/fid/683"
+  },
+  {
+    "id": "sf424-mandatory",
+    "title": "SF424 - Mandatory",
+    "owner": "Grants.gov",
+    "url": "https://www.grants.gov/forms/form-items-description/fid/668"
   }
 ]

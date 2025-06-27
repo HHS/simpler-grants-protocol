@@ -1,0 +1,84 @@
+{
+  "typeOfSubmission": "Application",
+  "otherSubmissionTypeExplanation": "",
+  "frequency": "Application",
+  "otherFrequencyExplanation": "",
+  "consolidatedRequest": "No",
+  "consolidatedRequestExplanation": "",
+  "version": "1",
+  "dateReceived": "",
+  "applicantIdentifier": "GRANT-2024-001",
+  "federalEntityId": "",
+  "federalAwardId": "",
+  "dateReceivedState": "",
+  "stateApplicationId": "",
+  "organization": {
+    "legalName": "Community Health Initiative",
+    "einTin": "12-3456789",
+    "samUei": "ABCD12345678",
+    "address": {
+      "street1": "123 Main Street",
+      "street2": "Suite 200",
+      "city": "Springfield",
+      "countyParish": "Greene County",
+      "state": "MO",
+      "province": "",
+      "country": "US",
+      "zipPostalCode": "65804"
+    },
+    "departmentName": "Program Development",
+    "divisionName": "Health Services",
+    "contactPerson": {
+      "prefix": "Dr.",
+      "firstName": "Sarah",
+      "middleName": "Marie",
+      "lastName": "Johnson",
+      "suffix": "",
+      "title": "Program Director",
+      "organizationalAffiliation": "Community Health Initiative",
+      "telephoneNumber": "(417) 555-0123",
+      "faxNumber": "(417) 555-0124",
+      "email": "sarah.johnson@communityhealth.org"
+    }
+  },
+  "typeOfApplicant": "M",
+  "otherApplicantTypeExplanation": "",
+  "additionalDescription": "",
+  "nameOfFederalAgency": "Department of Health and Human Services",
+  "assistanceListingNumber": "93.123",
+  "assistanceListingTitle": "Community Health Centers Program",
+  "descriptiveTitleOfApplicantProject": "Rural Health Access Initiative: Expanding Primary Care Services in Underserved Communities",
+  "areasAffectedByFunding": "Rural communities in Southwest Missouri",
+  "congressionalDistricts": {
+    "applicant": "MO-007",
+    "project": "MO-007"
+  },
+  "fundingPeriod": {
+    "startDate": "2024-10-01",
+    "endDate": "2025-09-30"
+  },
+  "estimatedFunding": {
+    "federal": 500000,
+    "match": 125000
+  },
+  "submissionSubjectToReview": "c. Program is not covered by E.O. 12372",
+  "stateReviewDate": "",
+  "applicantDelinquentFederalDebt": "No",
+  "delinquentFederalDebtExplanation": "",
+  "authorizedRepresentative": {
+    "iAgree": true,
+    "prefix": "Mr.",
+    "firstName": "Michael",
+    "middleName": "",
+    "lastName": "Thompson",
+    "suffix": "",
+    "title": "Executive Director",
+    "organizationalAffiliation": "Community Health Initiative",
+    "telephoneNumber": "(417) 555-0100",
+    "faxNumber": "(417) 555-0101",
+    "email": "michael.thompson@communityhealth.org",
+    "signature": "",
+    "signatureDate": ""
+  },
+  "attachSupportingDocuments": ""
+}

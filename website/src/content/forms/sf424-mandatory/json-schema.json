@@ -1,0 +1,680 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SF424 Mandatory Form",
+  "description": "Standard Form 424 - Application for Federal Assistance (Mandatory Fields)",
+  "type": "object",
+  "properties": {
+    "typeOfSubmission": {
+      "type": "string",
+      "title": "1.a. Type of Submission",
+      "description": "Select one type of submission in accordance with agency instructions. This field is required.",
+      "enum": [
+        "Application",
+        "Preapplication",
+        "Changed/Corrected Application",
+        "Changed/Corrected Preapplication",
+        "Other"
+      ]
+    },
+    "otherSubmissionTypeExplanation": {
+      "type": "string",
+      "title": "Other (specify)",
+      "description": "Specify the type of submission in the text box.",
+      "maxLength": 50,
+      "minLength": 0
+    },
+    "frequency": {
+      "type": "string",
+      "title": "1.b. Frequency",
+      "description": "Select the applicable frequency for the type of submission. This field is required.",
+      "enum": [
+        "Application",
+        "Preapplication",
+        "Changed/Corrected Application",
+        "Changed/Corrected Preapplication",
+        "Other"
+      ]
+    },
+    "otherFrequencyExplanation": {
+      "type": "string",
+      "title": "Other (specify)",
+      "description": "Specify the frequency of the submission.",
+      "maxLength": 50,
+      "minLength": 0
+    },
+    "consolidatedRequest": {
+      "type": "string",
+      "title": "1.c. Consolidated Application/Plan/Funding Request?",
+      "description": "Indicate if the submission is a consolidated application/plan/funding request.",
+      "enum": ["Yes", "No"]
+    },
+    "consolidatedRequestExplanation": {
+      "type": "string",
+      "title": "Consolidated Application/Plan/Funding Request Explanation",
+      "description": "If this is a Consolidated Application/Plan/Funding Request, please identify the programs covered by the consolidated submission as required in agency instructions.",
+      "maxLength": 4000,
+      "minLength": 0
+    },
+    "version": {
+      "type": "string",
+      "title": "1.d. Version",
+      "description": "Select the applicable version for the type of submission. This field is required.",
+      "enum": ["1", "2", "3", "4", "5"]
+    },
+    "dateReceived": {
+      "type": "string",
+      "title": "2. Date Received",
+      "description": "Completed by Grants.gov upon submission.",
+      "format": "date"
+    },
+    "applicantIdentifier": {
+      "type": "string",
+      "title": "3. Applicant Identifier",
+      "description": "If you wish to use a unique identification number for your own purposes, enter it here.",
+      "maxLength": 30,
+      "minLength": 0
+    },
+    "federalEntityId": {
+      "type": "string",
+      "title": "4a. Federal Entity Identifier",
+      "description": "Enter the number assigned to your organization by the Federal agency.",
+      "maxLength": 30,
+      "minLength": 0
+    },
+    "federalAwardId": {
+      "type": "string",
+      "title": "4b. Federal Award Identifier",
+      "description": "Enter the award number previously assigned by the Federal agency, if any.",
+      "maxLength": 25,
+      "minLength": 0
+    },
+    "dateReceivedState": {
+      "type": "string",
+      "title": "5. Date Received by State",
+      "description": "Enter the date received by the State, if applicable. Enter in the format mm/dd/yyyy.",
+      "format": "date"
+    },
+    "stateApplicationId": {
+      "type": "string",
+      "title": "6. State Application Identifier",
+      "description": "Enter the identifier assigned by the State, if applicable.",
+      "maxLength": 30,
+      "minLength": 0
+    },
+    "organization": {
+      "type": "object",
+      "title": "7. Applicant",
+      "properties": {
+        "legalName": {
+          "type": "string",
+          "title": "a. Legal Name",
+          "description": "Enter the legal name of the applicant that will undertake the assistance activity. This field is required.",
+          "maxLength": 60,
+          "minLength": 1
+        },
+        "einTin": {
+          "type": "string",
+          "title": "b. Employer/Taxpayer Identification Number (EIN/TIN)",
+          "description": "Enter either TIN or EIN as assigned by the Internal Revenue Service. If your organization is not in the US, enter 44-4444444. This field is required.",
+          "minLength": 9,
+          "maxLength": 30
+        },
+        "samUei": {
+          "type": "string",
+          "title": "c. UEI",
+          "description": "UEI of the applicant organization. This field is pre-populated from the Application cover sheet.",
+          "minLength": 12,
+          "maxLength": 12
+        },
+        "address": {
+          "type": "object",
+          "title": "d. Address",
+          "properties": {
+            "street1": {
+              "type": "string",
+              "title": "Street1",
+              "description": "Enter the first line of the Street Address. This field is required.",
+              "maxLength": 55,
+              "minLength": 1
+            },
+            "street2": {
+              "type": "string",
+              "title": "Street2",
+              "description": "Enter the second line of the Street Address.",
+              "maxLength": 55,
+              "minLength": 0
+            },
+            "city": {
+              "type": "string",
+              "title": "City",
+              "description": "Enter the City. This field is required.",
+              "maxLength": 35,
+              "minLength": 1
+            },
+            "countyParish": {
+              "type": "string",
+              "title": "County / Parish",
+              "description": "Enter the County / Parish.",
+              "maxLength": 30,
+              "minLength": 0
+            },
+            "state": {
+              "type": "string",
+              "title": "State",
+              "description": "Select the state, US possession or military code from the provided list. This field is required if Country is the United States.",
+              "maxLength": 55,
+              "minLength": 0
+            },
+            "province": {
+              "type": "string",
+              "title": "Province",
+              "description": "Enter the Province.",
+              "maxLength": 30,
+              "minLength": 0
+            },
+            "country": {
+              "type": "string",
+              "title": "Country",
+              "description": "Select the Country from the provided list. This field is required.",
+              "maxLength": 49,
+              "minLength": 1
+            },
+            "zipPostalCode": {
+              "type": "string",
+              "title": "Zip / Postal Code",
+              "description": "Enter the nine-digit Postal Code (e.g., ZIP code). This field is required if the country is the United States.",
+              "maxLength": 30,
+              "minLength": 0
+            }
+          },
+          "required": ["street1", "city", "country"]
+        },
+        "departmentName": {
+          "type": "string",
+          "title": "Department Name",
+          "description": "Enter the name of primary organizational department, service, laboratory, or equivalent level within the organization which will undertake the assistance activity.",
+          "maxLength": 30,
+          "minLength": 0
+        },
+        "divisionName": {
+          "type": "string",
+          "title": "Division Name",
+          "description": "Enter the name of primary organizational division, office, or major subdivision which will undertake the assistance activity.",
+          "maxLength": 30,
+          "minLength": 0
+        },
+        "contactPerson": {
+          "type": "object",
+          "title": "f. Name and contact information of person to be contacted on matters involving this submission",
+          "properties": {
+            "prefix": {
+              "type": "string",
+              "title": "Prefix",
+              "description": "Select the Prefix from the provided list or enter a new Prefix not provided on the list.",
+              "enum": ["Mr.", "Mrs.", "Miss", "Ms.", "Dr.", "Rev.", "Prof."],
+              "maxLength": 10,
+              "minLength": 0
+            },
+            "firstName": {
+              "type": "string",
+              "title": "First Name",
+              "description": "Enter the First Name. This field is required.",
+              "maxLength": 35,
+              "minLength": 1
+            },
+            "middleName": {
+              "type": "string",
+              "title": "Middle Name",
+              "description": "Enter the Middle Name.",
+              "maxLength": 25,
+              "minLength": 0
+            },
+            "lastName": {
+              "type": "string",
+              "title": "Last Name",
+              "description": "Enter the Last Name. This field is required.",
+              "maxLength": 60,
+              "minLength": 1
+            },
+            "suffix": {
+              "type": "string",
+              "title": "Suffix",
+              "description": "Select the Suffix from the provided list or enter a new Suffix not provided on the list.",
+              "enum": ["Jr.", "Sr.", "MD", "PhD"],
+              "maxLength": 10,
+              "minLength": 0
+            },
+            "title": {
+              "type": "string",
+              "title": "Title",
+              "description": "Enter the position title.",
+              "maxLength": 45,
+              "minLength": 0
+            },
+            "organizationalAffiliation": {
+              "type": "string",
+              "title": "Organizational Affiliation",
+              "description": "Enter the Organizational Affiliation of the person to contact on matters related to this application.",
+              "maxLength": 60,
+              "minLength": 0
+            },
+            "telephoneNumber": {
+              "type": "string",
+              "title": "Telephone Number",
+              "description": "Enter the daytime Telephone Number. This field is required.",
+              "maxLength": 25,
+              "minLength": 1
+            },
+            "faxNumber": {
+              "type": "string",
+              "title": "Fax Number",
+              "description": "Enter the Fax Number.",
+              "maxLength": 25,
+              "minLength": 0
+            },
+            "email": {
+              "type": "string",
+              "title": "Email",
+              "description": "Enter a valid Email Address. This field is required.",
+              "format": "email",
+              "maxLength": 60,
+              "minLength": 1
+            }
+          },
+          "required": ["firstName", "lastName", "telephoneNumber", "email"]
+        }
+      },
+      "required": ["legalName", "einTin", "samUei", "address", "contactPerson"]
+    },
+    "typeOfApplicant": {
+      "type": "string",
+      "title": "8a. TYPE OF APPLICANT",
+      "description": "Select the appropriate applicant type code. This field is required.",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X"
+      ]
+    },
+    "otherApplicantTypeExplanation": {
+      "type": "string",
+      "title": "Other (specify)",
+      "description": "If you selected \"Other\" in 8a, specify your applicant type here.",
+      "maxLength": 50,
+      "minLength": 0
+    },
+    "additionalDescription": {
+      "type": "string",
+      "title": "b. Additional Description",
+      "description": "Enter a secondary description of applicant type, if required by the agency.",
+      "maxLength": 50,
+      "minLength": 0
+    },
+    "nameOfFederalAgency": {
+      "type": "string",
+      "title": "9. Name of Federal Agency",
+      "description": "Pre-populated from the Application cover sheet.",
+      "maxLength": 60,
+      "minLength": 1
+    },
+    "assistanceListingNumber": {
+      "type": "string",
+      "title": "10. Assistance Listing Number",
+      "description": "Pre-populated from the Application cover sheet.",
+      "maxLength": 15,
+      "minLength": 0
+    },
+    "assistanceListingTitle": {
+      "type": "string",
+      "title": "Assistance Listing Title",
+      "description": "Pre-populated from the Application cover sheet.",
+      "maxLength": 120,
+      "minLength": 0
+    },
+    "descriptiveTitleOfApplicantProject": {
+      "type": "string",
+      "title": "11. Descriptive Title of Applicant's Project",
+      "description": "Enter a descriptive title of the project. This field is required.",
+      "maxLength": 250,
+      "minLength": 1
+    },
+    "areasAffectedByFunding": {
+      "type": "string",
+      "title": "12. Areas Affected by Funding",
+      "description": "Enter areas or entities affected using categories specified in the agency instructions.",
+      "maxLength": 250,
+      "minLength": 0
+    },
+    "congressionalDistricts": {
+      "type": "object",
+      "title": "13. Congressional Districts",
+      "properties": {
+        "applicant": {
+          "type": "string",
+          "title": "a. Applicant",
+          "description": "Enter the Congressional District in the format: 2 character State Abbreviation - 3 character District Number. Examples: CA-005 for California's 5th district, CA-012 for California's 12th district. If outside the US, enter 00-000. This field is required.",
+          "pattern": "^[A-Z]{2}-[0-9]{3}$|^00-000$",
+          "maxLength": 6,
+          "minLength": 1
+        },
+        "project": {
+          "type": "string",
+          "title": "b. Program/Project",
+          "description": "Enter the Congressional District in the format: 2 character State Abbreviation - 3 character District Number. Examples: CA-005 for California's 5th district, CA-012 for California's 12th district. If all districts in a state are affected, enter \"all\" for the district number. Example: MD-all for all congressional districts in Maryland. If nationwide (all districts in all states), enter US-all. If the program/project is outside the US, enter 00-000.",
+          "pattern": "^[A-Z]{2}-[0-9]{3}$|^[A-Z]{2}-all$|^US-all$|^00-000$",
+          "maxLength": 6,
+          "minLength": 0
+        }
+      },
+      "required": ["applicant"]
+    },
+    "fundingPeriod": {
+      "type": "object",
+      "title": "14. Funding Period",
+      "properties": {
+        "startDate": {
+          "type": "string",
+          "title": "a. Start Date",
+          "description": "Enter the start date of the funding period for this submission. Enter in the format mm/dd/yyyy. This field is required.",
+          "format": "date"
+        },
+        "endDate": {
+          "type": "string",
+          "title": "b. End Date",
+          "description": "Enter the end date of the funding period for this submission. Enter in the format mm/dd/yyyy. This field is required.",
+          "format": "date"
+        }
+      },
+      "required": ["startDate", "endDate"]
+    },
+    "estimatedFunding": {
+      "type": "object",
+      "title": "15. Estimated Funding",
+      "properties": {
+        "federal": {
+          "type": "number",
+          "title": "a. Federal ($)",
+          "description": "Enter the dollar amount. This field is required.",
+          "minimum": 0,
+          "maximum": 999999999999.99
+        },
+        "match": {
+          "type": "number",
+          "title": "b. Match ($)",
+          "description": "Enter the dollar amount.",
+          "minimum": 0,
+          "maximum": 999999999999.99
+        }
+      },
+      "required": ["federal"]
+    },
+    "submissionSubjectToReview": {
+      "type": "string",
+      "title": "16. IS SUBMISSION SUBJECT TO REVIEW BY STATE UNDER EXECUTIVE ORDER 12372 PROCESS?",
+      "description": "Applicants should contact the State Single Point of Contact (SPOC) for Federal Executive Order 12372 to determine whether the application is subject to the State intergovernmental review process. This field is required.",
+      "enum": [
+        "a. This application was made available to the State under the Executive Order 12372 Process for review on",
+        "b. Program is subject to E.O. 12372 but has not been selected by the State for review",
+        "c. Program is not covered by E.O. 12372"
+      ]
+    },
+    "stateReviewDate": {
+      "type": "string",
+      "title": "State Review Date",
+      "description": "Enter the date the submission was provided to the State for review. Enter in the format mm/dd/yyyy.",
+      "format": "date"
+    },
+    "applicantDelinquentFederalDebt": {
+      "type": "string",
+      "title": "17. Is The Applicant Delinquent On Any Federal Debt?",
+      "description": "This question applies to the applicant organization, not the person who signs as the authorized representative. This field is required.",
+      "enum": ["Yes", "No"]
+    },
+    "delinquentFederalDebtExplanation": {
+      "type": "string",
+      "title": "Applicant Federal Debt Delinquency Explanation",
+      "description": "Provide an explanation of Delinquent Federal Debt in the text box.",
+      "maxLength": 4000,
+      "minLength": 0
+    },
+    "authorizedRepresentative": {
+      "type": "object",
+      "title": "18. Authorized Representative",
+      "properties": {
+        "iAgree": {
+          "type": "boolean",
+          "title": "I Agree",
+          "description": "Check to select. This field is required."
+        },
+        "prefix": {
+          "type": "string",
+          "title": "Prefix",
+          "description": "Select the Prefix from the provided list or enter a new Prefix not provided on the list.",
+          "enum": ["Mr.", "Mrs.", "Miss", "Ms.", "Dr.", "Rev.", "Prof."],
+          "maxLength": 10,
+          "minLength": 0
+        },
+        "firstName": {
+          "type": "string",
+          "title": "First Name",
+          "description": "Enter the First Name. This field is required.",
+          "maxLength": 35,
+          "minLength": 1
+        },
+        "middleName": {
+          "type": "string",
+          "title": "Middle Name",
+          "description": "Enter the Middle Name.",
+          "maxLength": 25,
+          "minLength": 0
+        },
+        "lastName": {
+          "type": "string",
+          "title": "Last Name",
+          "description": "Enter the Last Name. This field is required.",
+          "maxLength": 60,
+          "minLength": 1
+        },
+        "suffix": {
+          "type": "string",
+          "title": "Suffix",
+          "description": "Select the Suffix from the provided list or enter a new Suffix not provided on the list.",
+          "enum": ["Jr.", "Sr.", "MD", "PhD"],
+          "maxLength": 10,
+          "minLength": 0
+        },
+        "title": {
+          "type": "string",
+          "title": "Title",
+          "description": "Enter the position title. This field is required.",
+          "maxLength": 45,
+          "minLength": 1
+        },
+        "organizationalAffiliation": {
+          "type": "string",
+          "title": "Organizational Affiliation",
+          "description": "Enter the Organizational Affiliation of the person to contact on matters related to this application.",
+          "maxLength": 60,
+          "minLength": 0
+        },
+        "telephoneNumber": {
+          "type": "string",
+          "title": "Telephone Number",
+          "description": "Enter the daytime Telephone Number. This field is required.",
+          "maxLength": 25,
+          "minLength": 1
+        },
+        "faxNumber": {
+          "type": "string",
+          "title": "Fax Number",
+          "description": "Enter the Fax Number.",
+          "maxLength": 25,
+          "minLength": 0
+        },
+        "email": {
+          "type": "string",
+          "title": "Email",
+          "description": "Enter a valid Email Address. This field is required.",
+          "format": "email",
+          "maxLength": 60,
+          "minLength": 1
+        },
+        "signature": {
+          "type": "string",
+          "title": "Signature of Authorized Representative",
+          "description": "Completed by Grants.gov upon submission.",
+          "maxLength": 144,
+          "minLength": 1
+        },
+        "signatureDate": {
+          "type": "string",
+          "title": "Date Signed",
+          "description": "Completed by Grants.gov upon submission.",
+          "format": "date"
+        }
+      },
+      "required": [
+        "iAgree",
+        "firstName",
+        "lastName",
+        "title",
+        "telephoneNumber",
+        "email",
+        "signature",
+        "signatureDate"
+      ]
+    },
+    "attachSupportingDocuments": {
+      "type": "string",
+      "title": "Attach Supporting Documents",
+      "description": "Attach supporting documents as specified in agency instructions."
+    }
+  },
+  "required": [
+    "typeOfSubmission",
+    "frequency",
+    "version",
+    "dateReceived",
+    "organization",
+    "typeOfApplicant",
+    "nameOfFederalAgency",
+    "descriptiveTitleOfApplicantProject",
+    "congressionalDistricts",
+    "fundingPeriod",
+    "estimatedFunding",
+    "submissionSubjectToReview",
+    "applicantDelinquentFederalDebt",
+    "authorizedRepresentative"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "typeOfSubmission": { "const": "Other" }
+        }
+      },
+      "then": {
+        "required": ["otherSubmissionTypeExplanation"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "frequency": { "const": "Other" }
+        }
+      },
+      "then": {
+        "required": ["otherFrequencyExplanation"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "consolidatedRequest": { "const": "Yes" }
+        }
+      },
+      "then": {
+        "required": ["consolidatedRequestExplanation"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "typeOfApplicant": { "const": "X" }
+        }
+      },
+      "then": {
+        "required": ["otherApplicantTypeExplanation"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "submissionSubjectToReview": {
+            "const": "a. This application was made available to the State under the Executive Order 12372 Process for review on"
+          }
+        }
+      },
+      "then": {
+        "required": ["stateReviewDate"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "applicantDelinquentFederalDebt": { "const": "Yes" }
+        }
+      },
+      "then": {
+        "required": ["delinquentFederalDebtExplanation"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "organization": {
+            "properties": {
+              "address": {
+                "properties": {
+                  "country": { "const": "US" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "organization": {
+            "properties": {
+              "address": {
+                "required": ["state", "zipPostalCode"]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
