@@ -22,7 +22,7 @@ CommonGrants is an open standard for sharing data about funding opportunities, a
 - Repository sections:
   - [Website](website): The code for our public website and docs.
   - [Specification](specs): The code for `@common-grants/core` TypeSpec library.
-  - [CLI](cli): The code for `@common-grants/cli` command-line tool.
+  - [CLI](lib/cli): The code for `@common-grants/cli` command-line tool.
   - [Templates](templates): Templates with boilerplate code for implementing the CommonGrants specification.
 - Community docs:
   - [Code of conduct](CODE_OF_CONDUCT.md): Our community guidelines.
