@@ -1,0 +1,239 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Key Contact Form (FID 683)",
+  "description": "JSON schema for Grants.gov Key Contact form fields",
+  "required": ["OrganizationName", "contacts"],
+  "properties": {
+    "OrganizationName": {
+      "type": "string",
+      "title": "Applicant Organization Name",
+      "description": "Enter the legal name of the applicant that will undertake the assistance activity. This field is required.",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "contacts": {
+      "type": "object",
+      "title": "Key Contact",
+      "description": "Primary contact information for the project.",
+      "required": [
+        "ProjectRole",
+        "FirstName",
+        "LastName",
+        "Street1",
+        "City",
+        "Country",
+        "PhoneNumber",
+        "Email"
+      ],
+      "properties": {
+        "ProjectRole": {
+          "type": "string",
+          "title": "Project Role",
+          "description": "Enter the project role of the contact person (e.g., project manager, fiscal contact).",
+          "minLength": 1,
+          "maxLength": 45
+        },
+        "Prefix": {
+          "type": "string",
+          "title": "Prefix",
+          "description": "Select the Prefix from the provided list or enter a new Prefix not provided on the list.",
+          "minLength": 0,
+          "maxLength": 10,
+          "enum": ["Mr.", "Mrs.", "Miss", "Ms.", "Dr.", "Rev."]
+        },
+        "FirstName": {
+          "type": "string",
+          "title": "First Name",
+          "description": "Enter the First Name. This field is required.",
+          "minLength": 1,
+          "maxLength": 35
+        },
+        "MiddleName": {
+          "type": "string",
+          "title": "Middle Name",
+          "description": "Enter the Middle Name.",
+          "minLength": 0,
+          "maxLength": 25
+        },
+        "LastName": {
+          "type": "string",
+          "title": "Last Name",
+          "description": "Enter the Last Name. This field is required.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "Suffix": {
+          "type": "string",
+          "title": "Suffix",
+          "description": "Select the Suffix from the provided list or enter a new Suffix not provided on the list.",
+          "minLength": 0,
+          "maxLength": 10,
+          "enum": ["Jr.", "Sr.", "M.D.", "Ph.D."]
+        },
+        "Title": {
+          "type": "string",
+          "title": "Title",
+          "description": "Enter the position title.",
+          "minLength": 0,
+          "maxLength": 45
+        },
+        "OrganizationAffiliation": {
+          "type": "string",
+          "title": "Organizational Affiliation",
+          "description": "Enter the Organizational Affiliation of the person to contact on matters related to this application.",
+          "minLength": 0,
+          "maxLength": 60
+        },
+        "Street1": {
+          "type": "string",
+          "title": "Street Address Line 1",
+          "description": "Enter the first line of the Street Address. This field is required.",
+          "minLength": 1,
+          "maxLength": 55
+        },
+        "Street2": {
+          "type": "string",
+          "title": "Street Address Line 2",
+          "description": "Enter the second line of the Street Address.",
+          "minLength": 0,
+          "maxLength": 55
+        },
+        "City": {
+          "type": "string",
+          "title": "City",
+          "description": "Enter the City. This field is required.",
+          "minLength": 1,
+          "maxLength": 35
+        },
+        "County": {
+          "type": "string",
+          "title": "County",
+          "description": "Enter the County.",
+          "minLength": 0,
+          "maxLength": 30
+        },
+        "State": {
+          "type": "string",
+          "title": "State",
+          "description": "Select the state, US possession or military code from the provided list. This field is required if Country is the United States.",
+          "minLength": 0,
+          "maxLength": 55,
+          "enum": [
+            "AL",
+            "AK",
+            "AZ",
+            "AR",
+            "CA",
+            "CO",
+            "CT",
+            "DE",
+            "FL",
+            "GA",
+            "HI",
+            "ID",
+            "IL",
+            "IN",
+            "IA",
+            "KS",
+            "KY",
+            "LA",
+            "ME",
+            "MD",
+            "MA",
+            "MI",
+            "MN",
+            "MS",
+            "MO",
+            "MT",
+            "NE",
+            "NV",
+            "NH",
+            "NJ",
+            "NM",
+            "NY",
+            "NC",
+            "ND",
+            "OH",
+            "OK",
+            "OR",
+            "PA",
+            "RI",
+            "SC",
+            "SD",
+            "TN",
+            "TX",
+            "UT",
+            "VT",
+            "VA",
+            "WA",
+            "WV",
+            "WI",
+            "WY",
+            "DC",
+            "AS",
+            "GU",
+            "MP",
+            "PR",
+            "VI",
+            "AA",
+            "AE",
+            "AP"
+          ]
+        },
+        "Province": {
+          "type": "string",
+          "title": "Province",
+          "description": "Enter the Province.",
+          "minLength": 0,
+          "maxLength": 30
+        },
+        "Country": {
+          "type": "string",
+          "title": "Country",
+          "description": "Select the Country from the provided list. This field is required.",
+          "minLength": 1,
+          "maxLength": 49
+        },
+        "ZipPostalCode": {
+          "type": "string",
+          "title": "Zip / Postal Code",
+          "description": "Enter the Postal Code (e.g., ZIP code). This field is required if Country is the United States.",
+          "minLength": 0,
+          "maxLength": 30
+        },
+        "PhoneNumber": {
+          "type": "string",
+          "title": "Telephone Number",
+          "description": "Enter the daytime Telephone Number. This field is required.",
+          "minLength": 1,
+          "maxLength": 25
+        },
+        "Fax": {
+          "type": "string",
+          "title": "Fax Number",
+          "description": "Enter the Fax Number.",
+          "minLength": 0,
+          "maxLength": 25
+        },
+        "Email": {
+          "type": "string",
+          "title": "Email",
+          "description": "Enter a valid Email Address. This field is required.",
+          "minLength": 1,
+          "maxLength": 60,
+          "format": "email"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CountryCode": {
+      "type": "string",
+      "title": "Country Code",
+      "description": "GENC Standard Ed3.0 Update 11 country codes",
+      "minLength": 1,
+      "maxLength": 49
+    }
+  }
+}

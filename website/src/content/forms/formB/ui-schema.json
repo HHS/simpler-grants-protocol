@@ -1,0 +1,27 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    { "type": "Control", "scope": "#/properties/project_name" },
+    { "type": "Control", "scope": "#/properties/institution_type" },
+    {
+      "type": "Group",
+      "label": "Principal Investigator",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/principal_investigator/properties/first_name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/principal_investigator/properties/middle_name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/principal_investigator/properties/last_name"
+        }
+      ]
+    },
+    { "type": "Control", "scope": "#/properties/budget" },
+    { "type": "Control", "scope": "#/properties/kickoff" }
+  ]
+}

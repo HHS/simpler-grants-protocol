@@ -1,0 +1,11 @@
+{
+  "project_name": "Project B",
+  "institution_type": "University",
+  "principal_investigator": {
+    "first_name": "Bob",
+    "middle_name": "B.",
+    "last_name": "Barker"
+  },
+  "budget": 25000,
+  "kickoff": "2025-06-01"
+}

@@ -1,0 +1,13 @@
+{
+  "OrganizationName": "Test Organization",
+  "contacts": {
+    "ProjectRole": "Project Manager",
+    "FirstName": "John",
+    "LastName": "Doe",
+    "Street1": "123 Main St",
+    "City": "Anytown",
+    "Country": "USA",
+    "PhoneNumber": "123-456-7890",
+    "Email": "john.doe@example.com"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "applicantName": {
+    "firstName": { "field": "pointOfContact.firstName" },
+    "lastName": { "field": "pointOfContact.lastName" }
+  },
+  "projectTitle": { "field": "project.title" },
+  "applicantType": {
+    "switch": {
+      "field": "project.applicantType",
+      "case": {
+        "nonprofit-general": "Nonprofit",
+        "nonprofit-religious": "Nonprofit",
+        "nonprofit-educational": "Nonprofit",
+        "business-small": "For-profit",
+        "business-general": "For-profit",
+        "government-tribal": "Government",
+        "government-state": "Government",
+        "government-local": "Government",
+        "government-general": "Government",
+        "individual": "Individual",
+        "custom": "Other"
+      },
+      "default": "custom"
+    }
+  },
+  "requestedAmount": { "field": "project.amountRequested" },
+  "startDate": { "field": "project.startDate" }
+}

@@ -1,0 +1,12 @@
+{
+  "OrganizationName": { "field": "organization.name" },
+  "contacts": {
+    "FirstName": { "field": "pointOfContact.firstName" },
+    "LastName": { "field": "pointOfContact.lastName" },
+    "Street1": { "field": "pointOfContact.address.street1" },
+    "City": { "field": "pointOfContact.address.city" },
+    "Country": { "field": "pointOfContact.address.country" },
+    "PhoneNumber": { "field": "pointOfContact.phoneNumber" },
+    "Email": { "field": "pointOfContact.email" }
+  }
+}

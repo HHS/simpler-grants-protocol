@@ -1,0 +1,48 @@
+{
+  "FirstName": { "field": "pointOfContact.firstName" },
+  "MiddleName": { "field": "pointOfContact.middleName" },
+  "LastName": { "field": "pointOfContact.lastName" },
+  "Email": { "field": "pointOfContact.email" },
+  "PhoneNumber": { "field": "pointOfContact.phone" },
+  "Title": { "field": "pointOfContact.title" },
+  "Street1": { "field": "pointOfContact.address.street1" },
+  "Street2": { "field": "pointOfContact.address.street2" },
+  "City": { "field": "pointOfContact.address.city" },
+  "State": { "field": "pointOfContact.address.state" },
+  "ZipCode": { "field": "pointOfContact.address.zip" },
+  "Country": { "field": "pointOfContact.address.country" },
+  "OrganizationName": { "field": "organization.name" },
+  "EmployerTaxpayerIdentificationNumber": { "field": "organization.ein" },
+  "SAMUEI": { "field": "organization.uei" },
+  "DepartmentName": { "field": "organization.department" },
+  "DivisionName": { "field": "organization.division" },
+  "ProjectTitle": { "field": "project.title" },
+  "ProjectStartDate": { "field": "project.startDate" },
+  "ProjectEndDate": { "field": "project.endDate" },
+  "FederalEstimatedFunding": { "field": "project.amountRequested" },
+  "TotalEstimatedFunding": { "field": "project.totalBudget" },
+  "ApplicantTypeCode1": {
+    "switch": {
+      "field": "project.applicantType",
+      "case": {
+        "nonprofit-general": "Nonprofit",
+        "nonprofit-educational": "Educational",
+        "nonprofit-religious": "Nonprofit",
+        "business-small": "Small Business",
+        "business-general": "For-Profit",
+        "government-tribal": "Government",
+        "government-state": "Government",
+        "government-local": "Government",
+        "government-general": "Government",
+        "individual": "Individual",
+        "custom": "Other"
+      },
+      "default": "Nonprofit"
+    }
+  },
+  "ApplicantEstimatedFunding": { "field": "funding.applicant" },
+  "StateEstimatedFunding": { "field": "funding.state" },
+  "LocalEstimatedFunding": { "field": "funding.local" },
+  "OtherEstimatedFunding": { "field": "funding.other" },
+  "ProgramIncomeEstimatedFunding": { "field": "funding.programIncome" }
+}

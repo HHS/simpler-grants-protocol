@@ -1,0 +1,45 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Project Details",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/projectDetails/properties/title"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/projectDetails/properties/requestedBy"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/projectDetails/properties/fundingNeeded"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/projectDetails/properties/startDate"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Application contact",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/contact/properties/givenName"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contact/properties/middleName"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contact/properties/familyName"
+        }
+      ]
+    }
+  ]
+}

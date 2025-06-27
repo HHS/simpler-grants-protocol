@@ -1,0 +1,28 @@
+{
+  "project_name": { "field": "project.title" },
+  "institution_type": {
+    "switch": {
+      "field": "project.applicantType",
+      "case": {
+        "nonprofit-general": "Nonprofit",
+        "nonprofit-religious": "Nonprofit",
+        "nonprofit-educational": "University",
+        "business-small": "Corporation",
+        "business-general": "Corporation",
+        "government-tribal": "Government",
+        "government-state": "Government",
+        "government-local": "Government",
+        "government-general": "Government",
+        "individual": "Independent Researcher",
+        "custom": "Not Listed"
+      }
+    }
+  },
+  "principal_investigator": {
+    "first_name": { "field": "pointOfContact.firstName" },
+    "middle_name": { "field": "pointOfContact.middleName" },
+    "last_name": { "field": "pointOfContact.lastName" }
+  },
+  "budget": { "field": "project.amountRequested" },
+  "kickoff": { "field": "project.startDate" }
+}

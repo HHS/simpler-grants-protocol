@@ -1,0 +1,7 @@
+{
+  "applicantName": { "firstName": "Alice", "lastName": "Alvarez" },
+  "projectTitle": "Project A",
+  "applicantType": "Nonprofit",
+  "requestedAmount": 1000,
+  "startDate": "2025-07-01"
+}

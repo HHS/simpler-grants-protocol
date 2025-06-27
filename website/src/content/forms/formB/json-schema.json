@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "project_name": { "type": "string", "title": "Research Project Name" },
+    "institution_type": {
+      "type": "string",
+      "title": "Institution Type",
+      "enum": [
+        "University",
+        "Nonprofit",
+        "Government",
+        "Corporation",
+        "Independent Researcher",
+        "Not Listed"
+      ]
+    },
+    "principal_investigator": {
+      "type": "object",
+      "properties": {
+        "first_name": { "type": "string", "title": "PI First Name" },
+        "middle_name": { "type": "string", "title": "PI Middle Name" },
+        "last_name": { "type": "string", "title": "PI Last Name" }
+      },
+      "title": "Principal Investigator",
+      "required": ["first_name", "last_name"]
+    },
+    "budget": { "type": "number", "title": "Total Budget (USD)" },
+    "kickoff": { "type": "string", "format": "date", "title": "Kick-off Date" }
+  },
+  "required": ["project_name", "principal_investigator"]
+}

@@ -1,0 +1,16 @@
+{
+  "pointOfContact": {
+    "prefix": { "field": "PrefixName" },
+    "firstName": { "field": "FirstName" },
+    "middleName": { "field": "MiddleName" },
+    "lastName": { "field": "LastName" },
+    "suffix": { "field": "SuffixName" },
+    "title": { "field": "Title" }
+  },
+  "organization": {
+    "name": { "field": "OrganizationName" }
+  },
+  "project": {
+    "name": { "field": "ProjectName" }
+  }
+}

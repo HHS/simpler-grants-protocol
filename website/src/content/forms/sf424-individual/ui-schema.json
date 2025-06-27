@@ -1,0 +1,157 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "1. Name of Federal Agency",
+      "name": "NameFederalAgency",
+      "elements": [{ "type": "Control", "scope": "#/properties/FederalAgency" }]
+    },
+    {
+      "type": "Group",
+      "label": "2. Assistance Listing Number",
+      "name": "AssistanceListingNumber",
+      "elements": [
+        { "type": "Control", "scope": "#/properties/CFDANumber" },
+        { "type": "Control", "scope": "#/properties/CFDATitle" }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "3. Date Received",
+      "name": "DateReived",
+      "elements": [
+        {
+          "type": "Control",
+          "schema": {
+            "title": "Date received",
+            "type": "null",
+            "description": "Completed by Grants.gov upon submission."
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "4. Funding Opportunity Number",
+      "name": "FundingOpportunityNumber",
+      "elements": [
+        { "type": "Control", "scope": "#/properties/OpportunityID" },
+        { "type": "Control", "scope": "#/properties/OpportunityTitle" }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "5. Applicant Information",
+      "name": "ApplicantInformationHeader",
+      "elements": [
+        {
+          "type": "Group",
+          "label": "5a. Name and Contact Information",
+          "name": "NameandContactInformationHeader",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/PrefixName" },
+            { "type": "Control", "scope": "#/properties/FirstName" },
+            { "type": "Control", "scope": "#/properties/MiddleName" },
+            { "type": "Control", "scope": "#/properties/LastName" },
+            { "type": "Control", "scope": "#/properties/Suffix" },
+            {
+              "type": "Control",
+              "scope": "#/properties/AuthorizedRepresentativePhoneNumber"
+            },
+            { "type": "Control", "scope": "#/properties/EveningPhone" },
+            {
+              "type": "Control",
+              "scope": "#/properties/AuthorizedRepresentativeFax"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/AuthorizedRepresentativeEmail"
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "5b. Address",
+          "name": "AddressHeader",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/Street1" },
+            { "type": "Control", "scope": "#/properties/Street2" },
+            { "type": "Control", "scope": "#/properties/City" },
+            { "type": "Control", "scope": "#/properties/County" },
+            { "type": "Control", "scope": "#/properties/State" },
+            { "type": "Control", "scope": "#/properties/Province" },
+            { "type": "Control", "scope": "#/properties/Country" },
+            { "type": "Control", "scope": "#/properties/ZipPostalCode" }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "5c. Citizenship Status",
+          "name": "CitizenshipStatusHeader",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/citizenship" },
+            {
+              "type": "Control",
+              "scope": "#/properties/AlienRegistrationNumber"
+            },
+            { "type": "Control", "scope": "#/properties/CountryofOrigin" },
+            { "type": "Control", "scope": "#/properties/VisitDate" }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "5d. Congressional District of Applicant",
+          "name": "CongressionalDistrictApplicant",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/CongressionalDistrictApplicant"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "6. Project Information",
+      "name": "ProjectInformationHeader",
+      "elements": [
+        {
+          "type": "Group",
+          "label": "6a. Project Title",
+          "name": "ProjectTitle",
+          "elements": [
+            { "type": "Control", "scope": "#/properties/ProjectTitle" }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "6b. Project Description",
+          "name": "ProjectDescription",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/ProjectDescription"
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "6c. Proposed Project",
+          "name": "ProposedProjectHeader",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/FundingPeriodStartDate"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/FundingPeriodEndDate"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "pointOfContact": {
+    "firstName": { "field": "applicantName.firstName" },
+    "lastName": { "field": "applicantName.lastName" }
+  },
+  "project": {
+    "title": { "field": "projectTitle" },
+    "applicantType": {
+      "switch": {
+        "field": "applicantType",
+        "case": {
+          "Nonprofit": "nonprofit-general",
+          "For-profit": "business-general",
+          "Government": "government-general",
+          "Individual": "individual",
+          "Other": "custom"
+        },
+        "default": "custom"
+      }
+    },
+    "amountRequested": { "field": "requestedAmount" },
+    "startDate": { "field": "startDate" }
+  }
+}

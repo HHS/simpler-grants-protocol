@@ -1,0 +1,473 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "1. Type of Submission",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/typeOfSubmission",
+          "label": "1.a. Type of Submission"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/otherSubmissionTypeExplanation",
+          "label": "Other (specify)",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/typeOfSubmission",
+              "schema": { "const": "Other" }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/frequency",
+          "label": "1.b. Frequency"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/otherFrequencyExplanation",
+          "label": "Other (specify)",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/frequency",
+              "schema": { "const": "Other" }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/consolidatedRequest",
+          "label": "1.c. Consolidated Application/Plan/Funding Request?"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/consolidatedRequestExplanation",
+          "label": "Consolidated Application/Plan/Funding Request Explanation",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/consolidatedRequest",
+              "schema": { "const": "Yes" }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/version",
+          "label": "1.d. Version"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "2-6. Application Information",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/dateReceived",
+          "label": "2. Date Received"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/applicantIdentifier",
+          "label": "3. Applicant Identifier"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/federalEntityId",
+          "label": "4a. Federal Entity Identifier"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/federalAwardId",
+          "label": "4b. Federal Award Identifier"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/dateReceivedState",
+          "label": "5. Date Received by State"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/stateApplicationId",
+          "label": "6. State Application Identifier"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "7. Applicant",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/organization/properties/legalName",
+          "label": "a. Legal Name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/organization/properties/einTin",
+          "label": "b. Employer/Taxpayer Identification Number (EIN/TIN)"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/organization/properties/samUei",
+          "label": "c. UEI"
+        },
+        {
+          "type": "Group",
+          "label": "d. Address",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/address/properties/street1",
+              "label": "Street1"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/address/properties/street2",
+              "label": "Street2"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/address/properties/city",
+              "label": "City"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/address/properties/countyParish",
+              "label": "County / Parish"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/address/properties/state",
+              "label": "State"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/address/properties/province",
+              "label": "Province"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/address/properties/country",
+              "label": "Country"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/address/properties/zipPostalCode",
+              "label": "Zip / Postal Code"
+            }
+          ]
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/organization/properties/departmentName",
+          "label": "Department Name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/organization/properties/divisionName",
+          "label": "Division Name"
+        },
+        {
+          "type": "Group",
+          "label": "f. Name and contact information of person to be contacted on matters involving this submission",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/prefix",
+              "label": "Prefix"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/firstName",
+              "label": "First Name"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/middleName",
+              "label": "Middle Name"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/lastName",
+              "label": "Last Name"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/suffix",
+              "label": "Suffix"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/title",
+              "label": "Title"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/organizationalAffiliation",
+              "label": "Organizational Affiliation"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/telephoneNumber",
+              "label": "Telephone Number"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/faxNumber",
+              "label": "Fax Number"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/organization/properties/contactPerson/properties/email",
+              "label": "Email"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "8. Type of Applicant",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/typeOfApplicant",
+          "label": "8a. TYPE OF APPLICANT"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/otherApplicantTypeExplanation",
+          "label": "Other (specify)",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/typeOfApplicant",
+              "schema": { "const": "X" }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/additionalDescription",
+          "label": "b. Additional Description"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "9-12. Project Information",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/nameOfFederalAgency",
+          "label": "9. Name of Federal Agency"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/assistanceListingNumber",
+          "label": "10. Assistance Listing Number"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/assistanceListingTitle",
+          "label": "Assistance Listing Title"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/descriptiveTitleOfApplicantProject",
+          "label": "11. Descriptive Title of Applicant's Project"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/areasAffectedByFunding",
+          "label": "12. Areas Affected by Funding"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "13. Congressional Districts",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/congressionalDistricts/properties/applicant",
+          "label": "a. Applicant"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/congressionalDistricts/properties/project",
+          "label": "b. Program/Project"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "14. Funding Period",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/fundingPeriod/properties/startDate",
+          "label": "a. Start Date"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/fundingPeriod/properties/endDate",
+          "label": "b. End Date"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "15. Estimated Funding",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/estimatedFunding/properties/federal",
+          "label": "a. Federal ($)"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/estimatedFunding/properties/match",
+          "label": "b. Match ($)"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "16. State Review",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/submissionSubjectToReview",
+          "label": "IS SUBMISSION SUBJECT TO REVIEW BY STATE UNDER EXECUTIVE ORDER 12372 PROCESS?"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/stateReviewDate",
+          "label": "State Review Date",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/submissionSubjectToReview",
+              "schema": {
+                "const": "a. This application was made available to the State under the Executive Order 12372 Process for review on"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "17. Federal Debt",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/applicantDelinquentFederalDebt",
+          "label": "Is The Applicant Delinquent On Any Federal Debt?"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/delinquentFederalDebtExplanation",
+          "label": "Applicant Federal Debt Delinquency Explanation",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/applicantDelinquentFederalDebt",
+              "schema": { "const": "Yes" }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "18. Authorized Representative",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/iAgree",
+          "label": "I Agree"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/prefix",
+          "label": "Prefix"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/firstName",
+          "label": "First Name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/middleName",
+          "label": "Middle Name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/lastName",
+          "label": "Last Name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/suffix",
+          "label": "Suffix"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/title",
+          "label": "Title"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/organizationalAffiliation",
+          "label": "Organizational Affiliation"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/telephoneNumber",
+          "label": "Telephone Number"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/faxNumber",
+          "label": "Fax Number"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/email",
+          "label": "Email"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/signature",
+          "label": "Signature of Authorized Representative"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/authorizedRepresentative/properties/signatureDate",
+          "label": "Date Signed"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Supporting Documents",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/attachSupportingDocuments",
+          "label": "Attach Supporting Documents"
+        }
+      ]
+    }
+  ]
+}

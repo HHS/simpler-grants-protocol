@@ -1,0 +1,31 @@
+{
+  "projectDetails": {
+    "title": { "field": "project.title" },
+    "requestedBy": {
+      "switch": {
+        "field": "project.applicantType",
+        "case": {
+          "nonprofit-general": "NGO",
+          "nonprofit-religious": "NGO",
+          "nonprofit-educational": "College or University",
+          "business-small": "Corporation",
+          "business-general": "Corporation",
+          "government-tribal": "Government",
+          "government-state": "Government",
+          "government-local": "Government",
+          "government-general": "Government",
+          "individual": "Individual",
+          "custom": "Other"
+        },
+        "default": "custom"
+      }
+    },
+    "fundingNeeded": { "field": "project.amountRequested" },
+    "startDate": { "field": "project.startDate" }
+  },
+  "contact": {
+    "givenName": { "field": "pointOfContact.firstName" },
+    "middleName": { "field": "pointOfContact.middleName" },
+    "familyName": { "field": "pointOfContact.lastName" }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "projectDetails": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "title": "Project title" },
+        "requestedBy": {
+          "type": "string",
+          "title": "Project type",
+          "enum": [
+            "NGO",
+            "Corporation",
+            "College or University",
+            "Individual",
+            "Government",
+            "Other"
+          ]
+        },
+        "fundingNeeded": { "type": "number", "title": "Funding needed (USD)" },
+        "startDate": {
+          "type": "string",
+          "format": "date",
+          "title": "Anticipated start date"
+        }
+      },
+      "required": ["title", "startDate"]
+    },
+    "contact": {
+      "type": "object",
+      "properties": {
+        "givenName": { "type": "string", "title": "Given name" },
+        "middleName": { "type": "string", "title": "Middle name" },
+        "familyName": { "type": "string", "title": "Family name" }
+      },
+      "required": ["givenName", "familyName"]
+    }
+  },
+  "required": ["projectDetails", "contact"]
+}

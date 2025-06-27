@@ -1,0 +1,55 @@
+{
+  "organization": {
+    "contactPerson": {
+      "firstName": { "field": "pointOfContact.firstName" },
+      "lastName": { "field": "pointOfContact.lastName" },
+      "email": { "field": "pointOfContact.email" },
+      "telephoneNumber": { "field": "pointOfContact.phone" },
+      "title": { "field": "pointOfContact.title" },
+      "organizationalAffiliation": { "field": "pointOfContact.organization" }
+    },
+    "legalName": { "field": "organization.name" },
+    "einTin": { "field": "organization.ein" },
+    "samUei": { "field": "organization.uei" },
+    "address": {
+      "street1": { "field": "organization.address.street1" },
+      "street2": { "field": "organization.address.street2" },
+      "city": { "field": "organization.address.city" },
+      "state": { "field": "organization.address.state" },
+      "zipPostalCode": { "field": "organization.address.zip" },
+      "country": { "field": "organization.address.country" }
+    }
+  },
+  "descriptiveTitleOfApplicantProject": { "field": "project.title" },
+  "typeOfApplicant": {
+    "switch": {
+      "field": "project.applicantType",
+      "case": {
+        "government-state": "A",
+        "government-local": "B",
+        "government-general": "E",
+        "government-tribal": "I",
+        "nonprofit-educational": "H",
+        "nonprofit-general": "M",
+        "individual": "P",
+        "business-small": "R",
+        "business-general": "Q",
+        "custom": "X"
+      },
+      "default": "X"
+    }
+  },
+  "estimatedFunding": {
+    "federal": { "field": "project.amountRequested" }
+  },
+  "fundingPeriod": {
+    "startDate": { "field": "project.startDate" },
+    "endDate": { "field": "project.endDate" }
+  },
+  "nameOfFederalAgency": { "field": "project.federalAgency" },
+  "assistanceListingNumber": { "field": "project.assistanceListingNumber" },
+  "typeOfSubmission": { "field": "submission.type" },
+  "frequency": { "field": "submission.frequency" },
+  "version": { "field": "submission.version" },
+  "consolidatedRequest": { "field": "submission.consolidated" }
+}
