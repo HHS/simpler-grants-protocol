@@ -5,7 +5,7 @@ on:
   pull_request:
     paths:
       - lib/cli/**
-      - .github/workflows/ci-cli.yml
+      - .github/workflows/ci-lib-cli.yml
 
 defaults:
   run:

@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "lib/cli/**" # Trigger only if files in the `lib/cli/` directory are changed
-      - ".github/workflows/ci-cli-publish.yml"
+      - ".github/workflows/ci-lib-cli-publish.yml"
 
 defaults:
   run:
