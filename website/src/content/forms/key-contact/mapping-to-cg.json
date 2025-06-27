@@ -1,0 +1,28 @@
+{
+  "organization": {
+    "name": "OrganizationName"
+  },
+  "pointOfContact": {
+    "prefix": { "field": "contacts.Prefix" },
+    "title": { "field": "contacts.Title" },
+    "middleName": { "field": "contacts.MiddleName" },
+    "suffix": { "field": "contacts.Suffix" },
+    "organizationAffiliation": { "field": "contacts.OrganizationAffiliation" },
+    "firstName": { "field": "contacts.FirstName" },
+    "lastName": { "field": "contacts.LastName" },
+    "address": {
+      "street1": { "field": "contacts.Street1" },
+      "street2": { "field": "contacts.Street2" },
+      "city": { "field": "contacts.City" },
+      "county": { "field": "contacts.County" },
+      "state": { "field": "contacts.State" },
+      "province": { "field": "contacts.Province" },
+      "country": { "field": "contacts.Country" },
+      "zipPostalCode": { "field": "contacts.ZipPostalCode" }
+    },
+    "phoneNumber": { "field": "contacts.PhoneNumber" },
+    "fax": { "field": "contacts.Fax" },
+    "email": { "field": "contacts.Email" },
+    "projectRole": { "field": "contacts.ProjectRole" }
+  }
+}

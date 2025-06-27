@@ -1,0 +1,92 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/OrganizationName"
+    },
+    {
+      "type": "Group",
+      "label": "Key Contact Information",
+      "name": "contacts",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/ProjectRole"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/Prefix"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/FirstName"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/MiddleName"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/LastName"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/Suffix"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/Title"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/OrganizationAffiliation"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/Street1"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/Street2"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/City"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/County"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/State"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/Province"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/Country"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/ZipPostalCode"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/PhoneNumber"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/Fax"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/contacts/properties/Email"
+        }
+      ]
+    }
+  ]
+}
