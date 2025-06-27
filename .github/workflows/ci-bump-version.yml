@@ -36,14 +36,6 @@ jobs:
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v8
 
-      - name: Build core library
-        working-directory: ./lib/core
-        run: npm ci && npm run build
-
-      - name: Build cli library
-        working-directory: ./lib/cli
-        run: npm ci && npm run build
-
       - name: Install python-sdk dependencies
         working-directory: ./lib/python-sdk
         run: poetry install
