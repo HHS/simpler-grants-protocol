@@ -14,6 +14,7 @@ export default defineConfig({
     "/protocol/models/opp-status": "/protocol/models/opportunity#oppstatus",
     "/protocol/models/opp-funding": "/protocol/models/opportunity#oppfunding",
     "/protocol/models/opp-timeline": "/protocol/models/opportunity#opptimeline",
+    "/form-playground": "/forms/playground",
   },
   integrations: [
     starlight({
@@ -103,6 +104,19 @@ export default defineConfig({
             {
               label: "Sorting",
               link: "protocol/sorting",
+            },
+          ],
+        },
+        {
+          label: "Forms",
+          items: [
+            {
+              label: "Form library",
+              link: "forms/library",
+            },
+            {
+              label: "Pre-fill playground",
+              link: "forms/playground",
             },
           ],
         },
