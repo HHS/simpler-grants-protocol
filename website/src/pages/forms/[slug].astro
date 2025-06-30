@@ -1,0 +1,51 @@
+---
+import { FormSection } from "@/components/FormMappingPlayground/FormSection";
+import { schemas } from "@/components/FormMappingPlayground/schemas";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import type { GetStaticPaths } from "astro";
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const paths = Object.keys(schemas).map((formId) => ({
+    params: { slug: formId },
+    props: { formId },
+  }));
+  return paths;
+};
+
+interface Props {
+  formId: string;
+}
+
+const { formId } = Astro.props;
+const formData = schemas[formId];
+
+if (!formData) {
+  throw new Error(`Form ${formId} not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: formData.label,
+    tableOfContents: false,
+  }}
+>
+  <div class="form-playground-page">
+    <FormSection
+      client:load
+      formName={formData.label}
+      type="source"
+      schema={formData.formSchema}
+      uischema={formData.formUI}
+      data={formData.defaultData}
+    />
+  </div>
+</StarlightPage>
+
+<style is:global>
+  .sl-markdown-content
+    :not(a, strong, em, del, span, input, code, br)
+    + :not(a, strong, em, del, span, input, code, br, :where(.not-content *)) {
+    margin-top: 0 !important;
+  }
+</style>

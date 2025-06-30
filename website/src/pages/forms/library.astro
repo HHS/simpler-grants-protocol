@@ -1,0 +1,43 @@
+---
+import { schemas } from "@/components/FormMappingPlayground/schemas";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+const formList = Object.values(schemas).map((form) => ({
+  id: form.id,
+  title: form.label,
+  description: form.formSchema.description || "No description available",
+}));
+---
+
+<StarlightPage
+  frontmatter={{
+    title: "Form Library",
+    tableOfContents: false,
+    prev: false,
+    next: false,
+  }}
+>
+  <div class="form-library-page">
+    <h2>Available forms</h2>
+    <p>Select a form to view its fields and mapping</p>
+    <CardGrid>
+      {
+        formList.map((form) => (
+          <LinkCard
+            href={`/forms/${form.id}`}
+            title={form.title}
+            description={form.description}
+          />
+        ))
+      }
+    </CardGrid>
+  </div>
+</StarlightPage>
+
+<style>
+  .form-library-page {
+    max-width: 1200px;
+    margin: auto;
+  }
+</style>

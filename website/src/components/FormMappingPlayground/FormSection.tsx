@@ -34,7 +34,7 @@ const styleContextValue = {
   ],
 };
 
-interface FormSectionProps {
+export interface FormSectionProps {
   formName: string;
   type: "source" | "prefilled";
   schema: JsonSchema;
