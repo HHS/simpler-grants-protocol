@@ -1,0 +1,71 @@
+{
+  "pointOfContact": {
+    "firstName": { "field": "organization.contactPerson.firstName" },
+    "lastName": { "field": "organization.contactPerson.lastName" },
+    "email": { "field": "organization.contactPerson.email" },
+    "phone": { "field": "organization.contactPerson.telephoneNumber" },
+    "title": { "field": "organization.contactPerson.title" },
+    "organization": {
+      "field": "organization.contactPerson.organizationalAffiliation"
+    }
+  },
+  "organization": {
+    "name": { "field": "organization.legalName" },
+    "ein": { "field": "organization.einTin" },
+    "uei": { "field": "organization.samUei" },
+    "address": {
+      "street1": { "field": "organization.address.street1" },
+      "street2": { "field": "organization.address.street2" },
+      "city": { "field": "organization.address.city" },
+      "state": { "field": "organization.address.state" },
+      "zip": { "field": "organization.address.zipPostalCode" },
+      "country": { "field": "organization.address.country" }
+    }
+  },
+  "project": {
+    "title": { "field": "descriptiveTitleOfApplicantProject" },
+    "applicantType": {
+      "switch": {
+        "field": "typeOfApplicant",
+        "case": {
+          "A": "government-state",
+          "B": "government-local",
+          "C": "government-local",
+          "D": "government-local",
+          "E": "government-general",
+          "F": "government-general",
+          "G": "government-local",
+          "H": "nonprofit-educational",
+          "I": "government-tribal",
+          "J": "government-tribal",
+          "K": "nonprofit-general",
+          "L": "government-general",
+          "M": "nonprofit-general",
+          "N": "nonprofit-general",
+          "O": "nonprofit-educational",
+          "P": "individual",
+          "Q": "business-general",
+          "R": "business-small",
+          "S": "nonprofit-educational",
+          "T": "nonprofit-educational",
+          "U": "nonprofit-educational",
+          "V": "nonprofit-educational",
+          "W": "custom",
+          "X": "custom"
+        },
+        "default": "custom"
+      }
+    },
+    "amountRequested": { "field": "estimatedFunding.federal" },
+    "startDate": { "field": "fundingPeriod.startDate" },
+    "endDate": { "field": "fundingPeriod.endDate" },
+    "federalAgency": { "field": "nameOfFederalAgency" },
+    "assistanceListingNumber": { "field": "assistanceListingNumber" }
+  },
+  "submission": {
+    "type": { "field": "typeOfSubmission" },
+    "frequency": { "field": "frequency" },
+    "version": { "field": "version" },
+    "consolidated": { "field": "consolidatedRequest" }
+  }
+}

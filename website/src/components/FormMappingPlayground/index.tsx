@@ -1,79 +1,104 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { schemas, type SchemaOption } from "./schemas";
-import type { FormData } from "./types";
+
+// Internal utilities
+import type { FormData, TransformOutput } from "./types";
+import { mapJson } from "./utils";
+import { schemas } from "./schemas";
+
+// Components
 import { styles } from "./styles";
 import { SchemaSelector } from "./SchemaSelector";
 import { FormSection } from "./FormSection";
 import { TransformationSummary } from "./TransformationSummary";
-import { mapJson, type TransformOutput } from "./utils";
 
 export default function FormMappingPlayground() {
-  const getSchemaById = useCallback(
-    (id: string): SchemaOption | undefined => schemas.find((s) => s.id === id),
-    [],
+  // #########################################################
+  // Set up state management
+  // #########################################################
+
+  // Step 1: Get initial source and target form schemas on page load
+  const sourceSchema = Object.values(schemas)[0];
+  const targetSchema = Object.values(schemas)[1];
+
+  // Step 2: Create the state for the source and target forms
+  const [sourceId, setSourceId] = useState<string>(sourceSchema.id);
+  const [targetId, setTargetId] = useState<string>(targetSchema.id);
+  const [sourceFormData, setSourceFormData] = useState<FormData>(
+    sourceSchema.defaultData,
   );
 
-  const [inputId, setInputId] = useState<string>(schemas[0].id);
-  const [targetId, setTargetId] = useState<string>(schemas[1].id);
-  const [formData, setFormData] = useState<FormData>(
-    getSchemaById(schemas[0].id)!.defaultData as FormData,
-  );
+  // Step 3: Create the state for the transformation output
   const [output, setOutput] = useState<TransformOutput | null>(null);
   const [targetFormData, setTargetFormData] = useState<FormData>({});
 
-  const { formSchema, formUI, formName } = useMemo(() => {
-    const current = getSchemaById(inputId)!;
+  // #########################################################
+  // Get the source form details
+  // #########################################################
+  const { sourceFormSchema, sourceFormUI, sourceFormName } = useMemo(() => {
+    const current = schemas[sourceId];
     return {
-      formSchema: current.formSchema,
-      formUI: current.formUI,
-      formName: current.label,
+      sourceFormSchema: current.formSchema,
+      sourceFormUI: current.formUI,
+      sourceFormName: current.label,
     };
-  }, [inputId, getSchemaById]);
+  }, [sourceId]);
 
+  // #########################################################
+  // Get the target form details
+  // #########################################################
   const { targetFormSchema, targetFormUI, targetFormName } = useMemo(() => {
-    const current = getSchemaById(targetId)!;
+    const current = schemas[targetId];
     return {
       targetFormSchema: current.formSchema,
       targetFormUI: current.formUI,
       targetFormName: current.label,
     };
-  }, [targetId, getSchemaById]);
+  }, [targetId]);
 
+  // #########################################################
+  // Transform the data
+  // #########################################################
   const transformData = useCallback(() => {
-    const result = mapJson(formData, inputId, targetId);
+    const result = mapJson(sourceFormData, sourceId, targetId);
     setOutput(result);
     setTargetFormData(result.targetData as FormData);
-  }, [formData, inputId, targetId]);
+  }, [sourceFormData, sourceId, targetId]);
 
   useEffect(() => {
     transformData();
   }, [transformData]);
 
-  const handleInputSchemaChange = (newId: string) => {
-    setInputId(newId);
-    setFormData(getSchemaById(newId)!.defaultData as FormData);
+  // #########################################################
+  // Handle schema changes
+  // #########################################################
+  const handleSourceSchemaChange = (newId: string) => {
+    setSourceId(newId);
+    setSourceFormData(schemas[newId].defaultData);
   };
 
   const handleTargetSchemaChange = (newId: string) => {
     setTargetId(newId);
   };
 
+  // #########################################################
+  // Render the form playground
+  // #########################################################
   return (
     <div className="playground-container">
       <div className="form-container">
         <div style={styles.formGroup}>
           <SchemaSelector
             label="Source form"
-            value={inputId}
-            onChange={handleInputSchemaChange}
+            value={sourceId}
+            onChange={handleSourceSchemaChange}
           />
           <FormSection
             type="source"
-            formName={formName}
-            schema={formSchema}
-            uischema={formUI}
-            data={formData}
-            onChange={setFormData}
+            formName={sourceFormName}
+            schema={sourceFormSchema}
+            uischema={sourceFormUI}
+            data={sourceFormData}
+            onChange={setSourceFormData}
           />
         </div>
 
@@ -95,7 +120,7 @@ export default function FormMappingPlayground() {
       </div>
 
       <TransformationSummary
-        sourceData={formData}
+        sourceData={sourceFormData}
         commonData={output?.commonData ?? {}}
         targetData={output?.targetData ?? {}}
       />

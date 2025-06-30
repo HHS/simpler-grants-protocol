@@ -1,0 +1,11 @@
+{
+  "OrganizationName": { "field": "organization.name" },
+  "AwardNumber": { "field": "project.awardNumber" },
+  "ProjectName": { "field": "project.name" },
+  "PrefixName": { "field": "pointOfContact.prefix" },
+  "FirstName": { "field": "pointOfContact.firstName" },
+  "MiddleName": { "field": "pointOfContact.middleName" },
+  "LastName": { "field": "pointOfContact.lastName" },
+  "SuffixName": { "field": "pointOfContact.suffix" },
+  "Title": { "field": "pointOfContact.title" }
+}

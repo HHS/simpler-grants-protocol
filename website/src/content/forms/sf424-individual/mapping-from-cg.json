@@ -1,0 +1,18 @@
+{
+  "FirstName": { "field": "pointOfContact.firstName" },
+  "MiddleName": { "field": "pointOfContact.middleName" },
+  "LastName": { "field": "pointOfContact.lastName" },
+  "AuthorizedRepresentativeEmail": { "field": "pointOfContact.email" },
+  "AuthorizedRepresentativePhoneNumber": { "field": "pointOfContact.phone" },
+  "Street1": { "field": "pointOfContact.address.street1" },
+  "Street2": { "field": "pointOfContact.address.street2" },
+  "City": { "field": "pointOfContact.address.city" },
+  "State": { "field": "pointOfContact.address.state" },
+  "ZipPostalCode": { "field": "pointOfContact.address.zip" },
+  "Country": { "field": "pointOfContact.address.country" },
+  "ProjectTitle": { "field": "project.title" },
+  "ProjectDescription": { "field": "project.description" },
+  "CFDANumber": { "field": "project.amountRequested" },
+  "FundingPeriodStartDate": { "field": "project.startDate" },
+  "FundingPeriodEndDate": { "field": "project.endDate" }
+}

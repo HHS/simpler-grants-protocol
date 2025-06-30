@@ -1,0 +1,297 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/SubmissionType"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ApplicationType"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/RevisionType"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/RevisionOtherSpecify"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/DateReceived"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ApplicantID"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/FederalEntityIdentifier"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/FederalAwardIdentifier"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/StateReceiveDate"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/StateApplicationID"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/OrganizationName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/EmployerTaxpayerIdentificationNumber"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/SAMUEI"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Applicant "
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Street1"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Street2"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/City"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/County"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/State"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Province"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Country"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ZipCode"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/DepartmentName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/DivisionName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ContactPerson"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Prefix"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/FirstName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/MiddleName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/LastName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Suffix"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Title"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/OrganizationAffiliation"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/PhoneNumber"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Fax"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/Email"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ApplicantTypeCode1"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ApplicantTypeCode2"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ApplicantTypeCode3"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ApplicantTypeOtherSpecify"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AgencyName"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/CFDANumber"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/CFDAProgramTitle"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/FundingOpportunityNumber"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/FundingOpportunityTitle"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/CompetitionIdentificationNumber"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/CompetitionIdentificationTitle"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AreasAffected"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ProjectTitle"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AdditionalProjectTitle"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/CongressionalDistrictApplicant"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/CongressionalDistrictProgramProject"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AdditionalCongressionalDistricts"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ProjectStartDate"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ProjectEndDate"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/FederalEstimatedFunding"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ApplicantEstimatedFunding"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/StateEstimatedFunding"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/LocalEstimatedFunding"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/OtherEstimatedFunding"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ProgramIncomeEstimatedFunding"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/TotalEstimatedFunding"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/StateReview"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/StateReviewAvailableDate"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/DelinquentFederalDebt"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/DebtExplanation"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/CertificationAgree"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AuthorizedRepresentative"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AuthorizedRepresentativeTitle"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AuthorizedRepresentativePhoneNumber"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AuthorizedRepresentativeEmail"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AuthorizedRepresentativeFax"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/AORSignature"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/DateSigned"
+    }
+  ]
+}

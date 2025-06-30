@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "applicantName": {
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string", "title": "First Name" },
+        "lastName": { "type": "string", "title": "Last Name" }
+      },
+      "title": "Applicant Name",
+      "required": ["firstName", "lastName"]
+    },
+    "projectTitle": { "type": "string", "title": "Project Title" },
+    "applicantType": {
+      "type": "string",
+      "title": "Applicant Type",
+      "enum": ["Nonprofit", "For-profit", "Government", "Individual", "Other"]
+    },
+    "requestedAmount": { "type": "number", "title": "Requested Amount (USD)" },
+    "startDate": {
+      "type": "string",
+      "format": "date",
+      "title": "Proposed Start Date"
+    }
+  },
+  "required": ["applicantName", "projectTitle"]
+}

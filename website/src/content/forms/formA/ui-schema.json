@@ -1,0 +1,35 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Applicant Name",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/applicantName/properties/firstName"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/applicantName/properties/lastName"
+        }
+      ]
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/projectTitle"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/applicantType"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/requestedAmount"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/startDate"
+    }
+  ]
+}

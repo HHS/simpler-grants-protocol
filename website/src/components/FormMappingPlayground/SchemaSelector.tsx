@@ -21,7 +21,7 @@ export const SchemaSelector: React.FC<SchemaSelectorProps> = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
-        {schemas.map((opt) => (
+        {Object.values(schemas).map((opt) => (
           <option key={opt.id} value={opt.id}>
             {opt.label}
           </option>
