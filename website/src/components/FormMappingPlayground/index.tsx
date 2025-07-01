@@ -11,6 +11,37 @@ import { SchemaSelector } from "./SchemaSelector";
 import { FormSection } from "./FormSection";
 import { TransformationSummary } from "./TransformationSummary";
 
+// #########################################################
+// URL parameter utilities
+// #########################################################
+
+const getUrlParams = () => {
+  if (typeof window === "undefined") return {};
+  const urlParams = new URLSearchParams(window.location.search);
+  return {
+    src: urlParams.get("src"),
+    tgt: urlParams.get("tgt"),
+  };
+};
+
+const updateUrlParams = (sourceId: string, targetId: string) => {
+  if (typeof window === "undefined") return;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("src", sourceId);
+  url.searchParams.set("tgt", targetId);
+
+  // Update URL without causing a page reload
+  window.history.replaceState({}, "", url.toString());
+};
+
+const getValidSchemaId = (id: string | null, fallbackId: string): string => {
+  if (!id || !schemas[id]) {
+    return fallbackId;
+  }
+  return id;
+};
+
 export default function FormMappingPlayground() {
   // #########################################################
   // Set up state management
@@ -20,14 +51,25 @@ export default function FormMappingPlayground() {
   const sourceSchema = Object.values(schemas)[0];
   const targetSchema = Object.values(schemas)[1];
 
-  // Step 2: Create the state for the source and target forms
-  const [sourceId, setSourceId] = useState<string>(sourceSchema.id);
-  const [targetId, setTargetId] = useState<string>(targetSchema.id);
-  const [sourceFormData, setSourceFormData] = useState<FormData>(
-    sourceSchema.defaultData,
+  // Step 2: Read URL parameters on initial load
+  const urlParams = useMemo(() => getUrlParams(), []);
+  const initialSourceId = getValidSchemaId(
+    urlParams.src || null,
+    sourceSchema.id
+  );
+  const initialTargetId = getValidSchemaId(
+    urlParams.tgt || null,
+    targetSchema.id
   );
 
-  // Step 3: Create the state for the transformation output
+  // Step 3: Create the state for the source and target forms
+  const [sourceId, setSourceId] = useState<string>(initialSourceId);
+  const [targetId, setTargetId] = useState<string>(initialTargetId);
+  const [sourceFormData, setSourceFormData] = useState<FormData>(
+    schemas[initialSourceId].defaultData
+  );
+
+  // Step 4: Create the state for the transformation output
   const [output, setOutput] = useState<TransformOutput | null>(null);
   const [targetFormData, setTargetFormData] = useState<FormData>({});
 
@@ -74,10 +116,12 @@ export default function FormMappingPlayground() {
   const handleSourceSchemaChange = (newId: string) => {
     setSourceId(newId);
     setSourceFormData(schemas[newId].defaultData);
+    updateUrlParams(newId, targetId);
   };
 
   const handleTargetSchemaChange = (newId: string) => {
     setTargetId(newId);
+    updateUrlParams(sourceId, newId);
   };
 
   // #########################################################
