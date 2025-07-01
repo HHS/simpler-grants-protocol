@@ -2,7 +2,7 @@
 import type { FormSchema } from "@/components/FormMappingPlayground/types";
 import { Code } from "@astrojs/starlight/components";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
-import { FormSection } from "@/components/FormMappingPlayground/FormSection";
+import { JsonFormRenderer } from "@/components/FormMappingPlayground/JsonFormRenderer";
 import type { JsonSchema } from "@jsonforms/core";
 
 interface Props {
@@ -20,10 +20,8 @@ const toJson = (data: Record<string, unknown> | JsonSchema) =>
 <Tabs>
   <TabItem label="Form">
     <p>Sample version of the rendered form.</p>
-    <FormSection
+    <JsonFormRenderer
       client:load
-      formName={form.label}
-      type="source"
       schema={form.formSchema}
       uischema={form.formUI}
       data={form.defaultData}
