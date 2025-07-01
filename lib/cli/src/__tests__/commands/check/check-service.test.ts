@@ -2,6 +2,8 @@ import { OpenAPIV3 } from "openapi-types";
 import { DefaultCheckService } from "../../../commands/check/check-service";
 import SwaggerParser from "@apidevtools/swagger-parser";
 import { compileTypeSpec } from "../../../utils/typespec";
+import * as fs from "fs";
+import * as yaml from "js-yaml";
 
 // Mock dependencies
 jest.mock("@apidevtools/swagger-parser", () => ({
@@ -12,6 +14,15 @@ jest.mock("../../../utils/typespec", () => ({
   compileTypeSpec: jest.fn(),
 }));
 
+jest.mock("fs", () => ({
+  readFileSync: jest.fn(),
+  existsSync: jest.fn(),
+}));
+
+jest.mock("js-yaml", () => ({
+  load: jest.fn(),
+}));
+
 describe("ValidationService", () => {
   let service: DefaultCheckService;
   const mockConsoleLog = jest.spyOn(console, "log").mockImplementation(() => {});
@@ -19,6 +30,9 @@ describe("ValidationService", () => {
   beforeEach(() => {
     service = new DefaultCheckService();
     jest.clearAllMocks();
+    
+    // Mock fs.existsSync to return true for base spec path
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
   });
 
   afterAll(() => {
@@ -103,6 +117,10 @@ describe("ValidationService", () => {
         paths: {},
       };
 
+      // Mock file system operations
+      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
+      (yaml.load as jest.Mock).mockReturnValue(implDoc);
+
       (SwaggerParser.dereference as jest.Mock)
         .mockResolvedValueOnce(implDoc) // First call for impl spec
         .mockResolvedValueOnce(baseDoc); // Second call for TypeSpec-generated base spec
@@ -121,6 +139,10 @@ describe("ValidationService", () => {
       };
 
       const implDoc = { ...baseDoc, info: { title: "Impl", version: "1.0.0" } };
+
+      // Mock file system operations
+      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
+      (yaml.load as jest.Mock).mockReturnValue(implDoc);
 
       (SwaggerParser.dereference as jest.Mock)
         .mockResolvedValueOnce(implDoc)
@@ -162,6 +184,10 @@ describe("ValidationService", () => {
         info: { title: "Implementation", version: "1.0.0" },
         paths: {},
       };
+
+      // Mock file system operations
+      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
+      (yaml.load as jest.Mock).mockReturnValue(implDoc);
 
       (SwaggerParser.dereference as jest.Mock)
         .mockResolvedValueOnce(implDoc) // First call for impl spec
@@ -238,6 +264,10 @@ describe("ValidationService", () => {
         },
       };
 
+      // Mock file system operations
+      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
+      (yaml.load as jest.Mock).mockReturnValue(implDoc);
+
       (SwaggerParser.dereference as jest.Mock)
         .mockResolvedValueOnce(implDoc)
         .mockResolvedValueOnce(baseDoc);
@@ -272,6 +302,10 @@ describe("ValidationService", () => {
       };
 
       const implDoc = { ...baseDoc, info: { title: "Impl", version: "1.0.0" } };
+
+      // Mock file system operations
+      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
+      (yaml.load as jest.Mock).mockReturnValue(implDoc);
 
       (SwaggerParser.dereference as jest.Mock)
         .mockResolvedValueOnce(implDoc)
