@@ -13,6 +13,7 @@ from fastapi.openapi.utils import get_openapi
 
 from common_grants.routes import opportunity_router
 
+
 def get_openapi_schema() -> dict[str, Any]:
     """
     Generate OpenAPI schema.
