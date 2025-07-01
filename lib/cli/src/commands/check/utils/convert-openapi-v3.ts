@@ -11,7 +11,7 @@ import { OpenAPIV3 } from "openapi-types";
 const OPENAPI_V3 = "3.0.0";
 
 export type OpenAPISchema = OpenAPIV3.Document & {
-  definitions?: Record<string, any>;
+  definitions?: Record<string, unknown>;
 };
 
 /**
@@ -63,23 +63,23 @@ function moveSchemasToDefinitions(schema: OpenAPISchema): void {
  *
  * @param obj - The object to process
  */
-function moveDefsToDefinitions(obj: any): void {
+function moveDefsToDefinitions(obj: unknown): void {
   if (typeof obj === "object" && obj !== null) {
     if (Array.isArray(obj)) {
       obj.forEach(item => moveDefsToDefinitions(item));
     } else {
       // Check if this object has $defs
-      if (obj.$defs && typeof obj.$defs === "object") {
+      const o = obj as Record<string, unknown>;
+      if (o.$defs && typeof o.$defs === "object") {
         // Move $defs to the root definitions
-        if (!obj.definitions) {
-          obj.definitions = {};
+        if (!o.definitions) {
+          o.definitions = {};
         }
-        obj.definitions = { ...obj.definitions, ...obj.$defs };
-        delete obj.$defs;
+        o.definitions = { ...(o.definitions as object), ...(o.$defs as object) };
+        delete o.$defs;
       }
-
       // Recursively process all properties
-      for (const value of Object.values(obj)) {
+      for (const value of Object.values(o)) {
         moveDefsToDefinitions(value);
       }
     }
@@ -108,12 +108,12 @@ function convertRef(ref: string): string {
  * @param obj - The object to convert references in
  * @returns The object with converted references
  */
-function convertRefs(obj: any): any {
+function convertRefs(obj: unknown): unknown {
   if (typeof obj === "object" && obj !== null) {
     if (Array.isArray(obj)) {
       return obj.map(item => convertRefs(item));
     } else {
-      const result: Record<string, any> = {};
+      const result: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(obj)) {
         if (k === "$ref") {
           result[k] = convertRef(v as string);
