@@ -5,10 +5,11 @@ import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
 import { Document } from "./utils/types";
 import { CheckApiCommandOptions, CheckSpecCommandOptions } from "./check-args";
 import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
-import { convertOpenApiToV3 } from "./utils/convert-openapi-v3";
+import { convertOpenApiToV3, OpenAPISchema } from "./utils/convert-openapi-v3";
 import * as path from "path";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
+import { OpenAPIV3 } from "openapi-types";
 
 export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
@@ -28,10 +29,10 @@ export class DefaultCheckService {
   async checkSpec(specPath: string, options: CheckSpecCommandOptions): Promise<void> {
     // Read the spec file as raw YAML/JSON first
     const specContent = fs.readFileSync(specPath, "utf8");
-    const rawSpec = yaml.load(specContent) as any;
+    const rawSpec = yaml.load(specContent) as OpenAPISchema;
 
     // Convert OpenAPI v3.1 to v3.0 if needed
-    const convertedSpec = convertOpenApiToV3(rawSpec);
+    const convertedSpec = convertOpenApiToV3(rawSpec) as OpenAPIV3.Document;
 
     // Now parse and dereference the converted spec
     const doc = (await SwaggerParser.dereference(convertedSpec)) as Document;
