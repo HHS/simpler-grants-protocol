@@ -4,6 +4,7 @@
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [
+    "Anytown",
     "astrojs",
     "CDFI",
     "Diátaxis",
@@ -11,16 +12,15 @@
     "FHIR",
     "frontmatter",
     "funders",
+    "geospatial",
     "namespacing",
+    "Principale",
     "pydantic",
     "pyproject",
+    "tiktok",
     "transpiles",
     "tspconfig",
-    "typespec",
-    "geospatial",
-    "Anytown",
-    "tiktok",
-    "Principale"
+    "typespec"
   ],
   "ignoreWords": [
     "opblock",
@@ -57,7 +57,8 @@
     "employertaxid",
     "samuei",
     "duns",
-    "uischema"
+    "uischema",
+    "jsonforms"
   ],
   "import": []
 }
