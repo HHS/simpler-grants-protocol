@@ -27,7 +27,7 @@ export class DefaultCheckService {
    */
   async checkSpec(specPath: string, options: CheckSpecCommandOptions): Promise<void> {
     // Read the spec file as raw YAML/JSON first
-    const specContent = fs.readFileSync(specPath, 'utf8');
+    const specContent = fs.readFileSync(specPath, "utf8");
     const rawSpec = yaml.load(specContent) as any;
 
     // Convert OpenAPI v3.1 to v3.0 if needed

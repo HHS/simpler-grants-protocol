@@ -2,7 +2,7 @@ import { OpenAPIV3 } from "openapi-types";
 
 /**
  * Script to transform OpenAPI specifications.
- * 
+ *
  * This module provides functionality to transform OpenAPI specifications from one
  * version to another, e.g. v3.1 to v3.0
  */
@@ -16,7 +16,7 @@ export type OpenAPISchema = OpenAPIV3.Document & {
 
 /**
  * Convert OpenAPI schema v3.1 to 3.0.
- * 
+ *
  * @param schema - The base OpenAPI schema from FastAPI
  * @returns The schema converted to OpenAPI 3.0 format
  */
@@ -33,7 +33,7 @@ export function convertOpenApiToV3(schema: OpenAPISchema): OpenAPISchema {
 
 /**
  * Move schemas from components to definitions for OpenAPI 3.0.0 compatibility.
- * 
+ *
  * @param schema - The OpenAPI schema to modify
  */
 function moveSchemasToDefinitions(schema: OpenAPISchema): void {
@@ -46,7 +46,8 @@ function moveSchemasToDefinitions(schema: OpenAPISchema): void {
   if (schema.components && schema.components.schemas) {
     schema.definitions = { ...schema.definitions, ...schema.components.schemas };
     // Keep the components section but remove schemas
-    if (Object.keys(schema.components).length === 1) { // Only had schemas
+    if (Object.keys(schema.components).length === 1) {
+      // Only had schemas
       delete schema.components;
     } else {
       delete schema.components.schemas;
@@ -59,7 +60,7 @@ function moveSchemasToDefinitions(schema: OpenAPISchema): void {
 
 /**
  * Move $defs sections to definitions for OpenAPI 3.0.0 compatibility.
- * 
+ *
  * @param obj - The object to process
  */
 function moveDefsToDefinitions(obj: any): void {
@@ -76,7 +77,7 @@ function moveDefsToDefinitions(obj: any): void {
         obj.definitions = { ...obj.definitions, ...obj.$defs };
         delete obj.$defs;
       }
-      
+
       // Recursively process all properties
       for (const value of Object.values(obj)) {
         moveDefsToDefinitions(value);
@@ -87,7 +88,7 @@ function moveDefsToDefinitions(obj: any): void {
 
 /**
  * Convert a schema reference to OpenAPI 3.0.0 format.
- * 
+ *
  * @param ref - The reference string to convert
  * @returns The converted reference
  */
@@ -103,13 +104,11 @@ function convertRef(ref: string): string {
 
 /**
  * Convert all schema references from components to definitions.
- * 
+ *
  * @param obj - The object to convert references in
  * @returns The object with converted references
  */
-function convertRefs(
-  obj: any
-): any {
+function convertRefs(obj: any): any {
   if (typeof obj === "object" && obj !== null) {
     if (Array.isArray(obj)) {
       return obj.map(item => convertRefs(item));
@@ -126,4 +125,4 @@ function convertRefs(
     }
   }
   return obj;
-} 
+}

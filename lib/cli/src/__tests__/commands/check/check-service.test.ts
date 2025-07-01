@@ -30,7 +30,7 @@ describe("ValidationService", () => {
   beforeEach(() => {
     service = new DefaultCheckService();
     jest.clearAllMocks();
-    
+
     // Mock fs.existsSync to return true for base spec path
     (fs.existsSync as jest.Mock).mockReturnValue(true);
   });
