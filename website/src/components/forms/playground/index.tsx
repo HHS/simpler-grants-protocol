@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 
 // Internal utilities
-import type { FormData, TransformOutput } from "./types";
-import { mapJson } from "./utils";
-import { schemas } from "./schemas";
+import type { FormData, TransformOutput } from "@/lib/types";
+import { mapJson } from "@/lib/utils";
+import { schemas } from "@/lib/schemas";
 
 // Components
 import { styles } from "./styles";

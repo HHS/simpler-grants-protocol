@@ -1,5 +1,5 @@
 import React from "react";
-import { schemas } from "./schemas";
+import { schemas } from "@/lib/schemas";
 import { styles } from "./styles";
 
 interface SchemaSelectorProps {

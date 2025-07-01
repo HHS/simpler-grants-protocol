@@ -7,8 +7,8 @@ import {
   vanillaStyles,
 } from "@jsonforms/vanilla-renderers";
 import { styles } from "./styles";
-import "./form-styles.css";
-import type { FormData } from "./types";
+import "../form-styles.css";
+import type { FormData } from "@/lib/types";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
 
 const styleContextValue = {
