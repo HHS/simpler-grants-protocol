@@ -42,6 +42,8 @@ export interface FormSectionProps {
   data: FormData;
   onChange?: (data: FormData) => void;
   readonly?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse: () => void;
 }
 
 export const FormSection: React.FC<FormSectionProps> = ({
@@ -52,26 +54,57 @@ export const FormSection: React.FC<FormSectionProps> = ({
   data,
   onChange,
   readonly = false,
-}) => (
-  <div style={styles.formSection}>
-    <h2 style={styles.formHeader}>{`${formName} (${type})`}</h2>
-    <p>
-      {type === "source"
-        ? "Changes here will be reflected in the prefilled form."
-        : "The prefilled answers can be edited freely."}
-    </p>
-    <JsonFormsStyleContext.Provider value={styleContextValue}>
-      <JsonForms
-        schema={schema}
-        uischema={uischema}
-        data={data}
-        renderers={vanillaRenderers}
-        cells={vanillaCells}
-        onChange={
-          onChange ? ({ data }) => onChange(data as FormData) : undefined
-        }
-        readonly={readonly}
-      />
-    </JsonFormsStyleContext.Provider>
-  </div>
-);
+  isCollapsed = false,
+  onToggleCollapse,
+}) => {
+  const getFormDescription = () => {
+    switch (type) {
+      case "source":
+        return "Expand this source form to make changes that will be reflected in the prefilled form below.";
+      case "prefilled":
+        return "This form shows the prefilled data from the source form. You can edit these values freely.";
+      default:
+        return "";
+    }
+  };
+
+  return (
+    <details style={styles.formSection} open={!isCollapsed}>
+      <summary
+        style={styles.formHeader}
+        onClick={(e) => {
+          e.preventDefault();
+          onToggleCollapse();
+        }}
+      >
+        <div>
+          <h2
+            style={{ fontSize: "1rem", margin: 0 }}
+          >{`${formName} (${type})`}</h2>
+          <p
+            style={{
+              fontSize: "0.875rem",
+              margin: "0.25rem 0 0 0",
+              opacity: 0.8,
+            }}
+          >
+            {getFormDescription()}
+          </p>
+        </div>
+      </summary>
+      <JsonFormsStyleContext.Provider value={styleContextValue}>
+        <JsonForms
+          schema={schema}
+          uischema={uischema}
+          data={data}
+          renderers={vanillaRenderers}
+          cells={vanillaCells}
+          onChange={
+            onChange ? ({ data }) => onChange(data as FormData) : undefined
+          }
+          readonly={readonly}
+        />
+      </JsonFormsStyleContext.Provider>
+    </details>
+  );
+};

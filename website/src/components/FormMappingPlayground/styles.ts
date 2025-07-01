@@ -5,6 +5,11 @@ export const styles = {
     flexDirection: "column" as const,
     gap: "1rem",
   },
+  verticalContainer: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "2rem",
+  },
   formSection: {
     flex: 1,
     padding: "1rem",
@@ -14,9 +19,11 @@ export const styles = {
   },
   formHeader: {
     marginBottom: "1rem",
-    fontSize: "1.2rem",
+    fontSize: "1rem",
     fontWeight: 600,
     color: "var(--sl-color-white)",
+    display: "flex",
+    alignItems: "center",
   },
   row: {
     display: "flex",

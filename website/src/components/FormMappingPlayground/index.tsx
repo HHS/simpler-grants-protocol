@@ -73,6 +73,10 @@ export default function FormMappingPlayground() {
   const [output, setOutput] = useState<TransformOutput | null>(null);
   const [targetFormData, setTargetFormData] = useState<FormData>({});
 
+  // Step 5: Add collapsible state
+  const [isSourceCollapsed, setIsSourceCollapsed] = useState<boolean>(true);
+  const [isTargetCollapsed, setIsTargetCollapsed] = useState<boolean>(false);
+
   // #########################################################
   // Get the source form details
   // #########################################################
@@ -129,7 +133,7 @@ export default function FormMappingPlayground() {
   // #########################################################
   return (
     <div className="playground-container">
-      <div className="form-container">
+      <div className="form-container" style={styles.verticalContainer}>
         <div style={styles.formGroup}>
           <SchemaSelector
             label="Source form"
@@ -143,6 +147,8 @@ export default function FormMappingPlayground() {
             uischema={sourceFormUI}
             data={sourceFormData}
             onChange={setSourceFormData}
+            isCollapsed={isSourceCollapsed}
+            onToggleCollapse={() => setIsSourceCollapsed(!isSourceCollapsed)}
           />
         </div>
 
@@ -159,6 +165,8 @@ export default function FormMappingPlayground() {
             uischema={targetFormUI}
             data={targetFormData}
             readonly={false}
+            isCollapsed={isTargetCollapsed}
+            onToggleCollapse={() => setIsTargetCollapsed(!isTargetCollapsed)}
           />
         </div>
       </div>
