@@ -1,60 +1,42 @@
 ---
 import type { FormSchema } from "@/lib/types";
+import { LinkButton } from "@astrojs/starlight/components";
 
 interface Props {
   form: FormSchema;
 }
 
 const { form } = Astro.props;
-
-// Extract the data from the schema
-const { label, statistics } = form;
-const { totalQuestions, mappedQuestions, mappingPercentage } = statistics;
 ---
 
 {
   form ? (
-    <div class="summary-container">
-      <h3 class="summary-title">{label}</h3>
-
-      <div class="summary-grid">
-        <div class="summary-item">
-          <label class="summary-label">Description:</label>
-          <span class="summary-value">{form.description}</span>
+    <section class="summary-section">
+      <div class="summary-content">
+        <h2 class="summary-title">Summary</h2>
+        <div class="summary-description">
+          <p>
+            {`${form.statistics.totalQuestions} total questions |
+          ${form.statistics.mappingPercentage}%
+            mapped to the CommonGrants schema`}
+          </p>
+          <p>{form.description}</p>
         </div>
 
-        <div class="summary-item">
-          <label class="summary-label">Owner:</label>
-          <span class="summary-value">{form.owner}</span>
-        </div>
+        <div class="summary-actions">
+          <LinkButton
+            href={`/forms/playground?src=${form.id}`}
+            variant="primary"
+          >
+            Explore in playground
+          </LinkButton>
 
-        <div class="summary-item">
-          <label class="summary-label">Total Questions:</label>
-          <span class="summary-value">{totalQuestions}</span>
-        </div>
-
-        <div class="summary-item">
-          <label class="summary-label">Mapped Questions:</label>
-          <span class="summary-value">
-            {mappedQuestions} ({mappingPercentage}%)
-          </span>
+          <LinkButton href="/forms/library" variant="secondary">
+            Return to form library
+          </LinkButton>
         </div>
       </div>
-
-      {form.url && (
-        <div class="summary-item">
-          <label class="summary-label">Source:</label>
-          <a
-            href={form.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="summary-link"
-          >
-            View Original Form
-          </a>
-        </div>
-      )}
-    </div>
+    </section>
   ) : (
     <div class="error">
       <p>Form schema not provided</p>
@@ -63,53 +45,31 @@ const { totalQuestions, mappedQuestions, mappingPercentage } = statistics;
 }
 
 <style>
-  .summary-container {
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background: var(--sl-color-gray-6);
-    color: var(--sl-color-white);
-    border: 1px solid var(--sl-color-gray-4);
+  .summary-section {
+    margin: 0;
+    padding: 0;
   }
 
   .summary-title {
-    margin: 0 0 1rem 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--sl-color-white);
+    font-size: 1.75rem !important;
+    margin-bottom: 0.5rem;
   }
 
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1rem;
+  .summary-content {
+    margin: 0;
+    padding: 0;
   }
 
-  .summary-item {
+  .summary-description {
+    margin: 0 0 1.5rem 0;
+  }
+
+  .summary-actions {
     display: flex;
-    flex-direction: column;
     gap: 0.25rem;
-  }
-
-  .summary-label {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: var(--sl-color-gray-3);
-  }
-
-  .summary-value {
-    font-size: 1rem;
-    color: var(--sl-color-white);
-  }
-
-  .summary-link {
-    color: var(--sl-color-text-accent);
-    text-decoration: none;
-    font-size: 0.875rem;
-  }
-
-  .summary-link:hover {
-    text-decoration: underline;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
   }
 
   .error {
@@ -118,5 +78,12 @@ const { totalQuestions, mappedQuestions, mappingPercentage } = statistics;
     background: var(--sl-color-red-6);
     color: var(--sl-color-white);
     border: 1px solid var(--sl-color-red-4);
+  }
+
+  @media (max-width: 768px) {
+    .summary-actions {
+      flex-direction: column;
+      align-items: center;
+    }
   }
 </style>

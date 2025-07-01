@@ -15,7 +15,7 @@ const toJson = (data: Record<string, unknown> | JsonSchema) =>
   JSON.stringify(data, null, 2) as string;
 ---
 
-<h2>Details</h2>
+<h2 class="details-title">Details</h2>
 
 <Tabs>
   <TabItem label="Form">
@@ -43,6 +43,7 @@ const toJson = (data: Record<string, unknown> | JsonSchema) =>
     </details>
   </TabItem>
   <TabItem label="Mappings">
+    <p>Mappings between the form and the CommonGrants schema.</p>
     <details>
       <summary>Mapping to CommonGrants</summary>
       <Code lang="json" code={toJson(form.mappingToCommon)} />
@@ -53,3 +54,11 @@ const toJson = (data: Record<string, unknown> | JsonSchema) =>
     </details>
   </TabItem>
 </Tabs>
+
+<style>
+  .details-title {
+    font-size: 1.75rem !important;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+</style>
