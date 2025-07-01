@@ -1,0 +1,202 @@
+---
+import type { FormSchema } from "@/components/FormMappingPlayground/types";
+import type { JsonSchema } from "@jsonforms/core";
+import formsIndex from "@/content/forms/index.json";
+
+interface Props {
+  formId: string;
+  formSchema: FormSchema;
+}
+
+const { formId, formSchema } = Astro.props;
+
+interface FormMetadata {
+  title: string;
+  description: string;
+  owner: string;
+  url?: string;
+}
+
+/**
+ * Recursively count all properties in a JSON schema
+ */
+function countSchemaProperties(schema: JsonSchema): number {
+  if (!schema || typeof schema !== "object") {
+    return 0;
+  }
+
+  let count = 0;
+
+  // If it has properties, count them
+  if (schema.properties && typeof schema.properties === "object") {
+    for (const [, propSchema] of Object.entries(schema.properties)) {
+      if (typeof propSchema === "object" && propSchema !== null) {
+        count += countSchemaProperties(propSchema);
+      } else {
+        count++;
+      }
+    }
+  }
+
+  return count;
+}
+
+/**
+ * Count mapped fields in the mapping-to-cg object
+ */
+function countMappedFields(mappingToCommon: Record<string, unknown>): number {
+  let count = 0;
+
+  function countInObject(obj: unknown): void {
+    if (obj && typeof obj === "object") {
+      for (const value of Object.values(obj)) {
+        if (value && typeof value === "object") {
+          // If it has a "field" property, it's a mapped field
+          if ("field" in value) {
+            count++;
+          } else {
+            // Recursively check nested objects
+            countInObject(value);
+          }
+        }
+      }
+    }
+  }
+
+  countInObject(mappingToCommon);
+  return count;
+}
+
+/**
+ * Get form metadata from the index
+ */
+function getFormMetadata(formId: string): FormMetadata | null {
+  const formInfo = formsIndex.find((form) => form.id === formId);
+  if (!formInfo) {
+    return null;
+  }
+
+  return {
+    title: formInfo.title,
+    description: formInfo.description || "",
+    owner: formInfo.owner,
+    url: formInfo.url && formInfo.url.length > 0 ? formInfo.url : undefined,
+  };
+}
+
+// Calculate the summary data
+const metadata = getFormMetadata(formId);
+const totalQuestions = countSchemaProperties(formSchema.formSchema);
+const mappedQuestions = countMappedFields(formSchema.mappingToCommon);
+const mappingPercentage =
+  totalQuestions > 0 ? Math.round((mappedQuestions / totalQuestions) * 100) : 0;
+---
+
+{
+  metadata ? (
+    <div class="summary-container">
+      <h3 class="summary-title">{metadata.title}</h3>
+
+      <div class="summary-grid">
+        <div class="summary-item">
+          <label class="summary-label">Description:</label>
+          <span class="summary-value">{metadata.description}</span>
+        </div>
+
+        <div class="summary-item">
+          <label class="summary-label">Owner:</label>
+          <span class="summary-value">{metadata.owner}</span>
+        </div>
+
+        <div class="summary-item">
+          <label class="summary-label">Total Questions:</label>
+          <span class="summary-value">{totalQuestions}</span>
+        </div>
+
+        <div class="summary-item">
+          <label class="summary-label">Mapped Questions:</label>
+          <span class="summary-value">
+            {mappedQuestions} ({mappingPercentage}%)
+          </span>
+        </div>
+      </div>
+
+      {metadata.url && (
+        <div class="summary-item">
+          <label class="summary-label">Source:</label>
+          <a
+            href={metadata.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="summary-link"
+          >
+            View Original Form
+          </a>
+        </div>
+      )}
+    </div>
+  ) : (
+    <div class="error">
+      <p>Form metadata not found for {formId}</p>
+    </div>
+  )
+}
+
+<style>
+  .summary-container {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-white);
+    border: 1px solid var(--sl-color-gray-4);
+  }
+
+  .summary-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .summary-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--sl-color-gray-3);
+  }
+
+  .summary-value {
+    font-size: 1rem;
+    color: var(--sl-color-white);
+  }
+
+  .summary-link {
+    color: var(--sl-color-text-accent);
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+
+  .summary-link:hover {
+    text-decoration: underline;
+  }
+
+  .error {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: var(--sl-color-red-6);
+    color: var(--sl-color-white);
+    border: 1px solid var(--sl-color-red-4);
+  }
+</style>
