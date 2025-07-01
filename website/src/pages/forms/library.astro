@@ -2,12 +2,6 @@
 import { schemas } from "@/lib/schemas";
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import { CardGrid, LinkCard } from "@astrojs/starlight/components";
-
-const formList = Object.values(schemas).map((form) => ({
-  id: form.id,
-  title: form.label,
-  description: form.formSchema.description || "No description available",
-}));
 ---
 
 <StarlightPage
@@ -23,11 +17,14 @@ const formList = Object.values(schemas).map((form) => ({
     <p>Select a form to view its fields and mapping</p>
     <CardGrid>
       {
-        formList.map((form) => (
+        Object.values(schemas).map((form) => (
           <LinkCard
             href={`/forms/${form.id}`}
-            title={form.title}
-            description={form.description}
+            title={form.label}
+            description={`
+              ${form.statistics.totalQuestions} total questions |
+              ${form.statistics.mappingPercentage}% mapped
+            `}
           />
         ))
       }

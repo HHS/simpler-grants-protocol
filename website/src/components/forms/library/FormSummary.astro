@@ -1,111 +1,31 @@
 ---
 import type { FormSchema } from "@/lib/types";
-import type { JsonSchema } from "@jsonforms/core";
-import formsIndex from "@/content/forms/index.json";
 
 interface Props {
-  formId: string;
-  formSchema: FormSchema;
+  form: FormSchema;
 }
 
-const { formId, formSchema } = Astro.props;
+const { form } = Astro.props;
 
-interface FormMetadata {
-  title: string;
-  description: string;
-  owner: string;
-  url?: string;
-}
-
-/**
- * Recursively count all properties in a JSON schema
- */
-function countSchemaProperties(schema: JsonSchema): number {
-  if (!schema || typeof schema !== "object") {
-    return 0;
-  }
-
-  let count = 0;
-
-  // If it has properties, count them
-  if (schema.properties && typeof schema.properties === "object") {
-    for (const [, propSchema] of Object.entries(schema.properties)) {
-      if (typeof propSchema === "object" && propSchema !== null) {
-        count += countSchemaProperties(propSchema);
-      } else {
-        count++;
-      }
-    }
-  }
-
-  return count;
-}
-
-/**
- * Count mapped fields in the mapping-to-cg object
- */
-function countMappedFields(mappingToCommon: Record<string, unknown>): number {
-  let count = 0;
-
-  function countInObject(obj: unknown): void {
-    if (obj && typeof obj === "object") {
-      for (const value of Object.values(obj)) {
-        if (value && typeof value === "object") {
-          // If it has a "field" property, it's a mapped field
-          if ("field" in value) {
-            count++;
-          } else {
-            // Recursively check nested objects
-            countInObject(value);
-          }
-        }
-      }
-    }
-  }
-
-  countInObject(mappingToCommon);
-  return count;
-}
-
-/**
- * Get form metadata from the index
- */
-function getFormMetadata(formId: string): FormMetadata | null {
-  const formInfo = formsIndex.find((form) => form.id === formId);
-  if (!formInfo) {
-    return null;
-  }
-
-  return {
-    title: formInfo.title,
-    description: formInfo.description || "",
-    owner: formInfo.owner,
-    url: formInfo.url && formInfo.url.length > 0 ? formInfo.url : undefined,
-  };
-}
-
-// Calculate the summary data
-const metadata = getFormMetadata(formId);
-const totalQuestions = countSchemaProperties(formSchema.formSchema);
-const mappedQuestions = countMappedFields(formSchema.mappingToCommon);
-const mappingPercentage =
-  totalQuestions > 0 ? Math.round((mappedQuestions / totalQuestions) * 100) : 0;
+// Extract the data from the schema
+const { label, statistics } = form;
+const { totalQuestions, mappedQuestions, mappingPercentage } = statistics;
 ---
 
 {
-  metadata ? (
+  form ? (
     <div class="summary-container">
-      <h3 class="summary-title">{metadata.title}</h3>
+      <h3 class="summary-title">{label}</h3>
 
       <div class="summary-grid">
         <div class="summary-item">
           <label class="summary-label">Description:</label>
-          <span class="summary-value">{metadata.description}</span>
+          <span class="summary-value">{form.description}</span>
         </div>
 
         <div class="summary-item">
           <label class="summary-label">Owner:</label>
-          <span class="summary-value">{metadata.owner}</span>
+          <span class="summary-value">{form.owner}</span>
         </div>
 
         <div class="summary-item">
@@ -121,11 +41,11 @@ const mappingPercentage =
         </div>
       </div>
 
-      {metadata.url && (
+      {form.url && (
         <div class="summary-item">
           <label class="summary-label">Source:</label>
           <a
-            href={metadata.url}
+            href={form.url}
             target="_blank"
             rel="noopener noreferrer"
             class="summary-link"
@@ -137,7 +57,7 @@ const mappingPercentage =
     </div>
   ) : (
     <div class="error">
-      <p>Form metadata not found for {formId}</p>
+      <p>Form schema not provided</p>
     </div>
   )
 }

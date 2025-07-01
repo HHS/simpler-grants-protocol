@@ -1,4 +1,4 @@
-import type { VerticalLayout } from "@jsonforms/core";
+import type { VerticalLayout, JsonSchema } from "@jsonforms/core";
 import type { FormSchemaMap, FormSchema, FormData } from "./types";
 import formsIndex from "@/content/forms/index.json";
 
@@ -35,6 +35,71 @@ const formDefaultData = import.meta.glob(
 ) as Record<string, { default: FormData }>;
 
 /**
+ * Recursively count all properties in a JSON schema
+ */
+function countSchemaProperties(schema: JsonSchema): number {
+  if (!schema || typeof schema !== "object") {
+    return 0;
+  }
+
+  let count = 0;
+
+  // If it has properties, count them
+  if (schema.properties) {
+    for (const [, propSchema] of Object.entries(schema.properties)) {
+      // Count non-object properties (leaves) like strings, numbers, booleans, etc.
+      if (typeof propSchema !== "object" || propSchema === null) {
+        count += 1;
+        continue;
+      }
+
+      // For object properties, only count if they don't have nested properties
+      if (!propSchema.properties) {
+        count += 1;
+        continue;
+      }
+
+      // Finally, recursively count nested properties
+      count += countSchemaProperties(propSchema);
+    }
+  }
+
+  return count;
+}
+
+/**
+ * Count mapped fields in the mapping-from-cg object
+ */
+function countMappedFields(mappingFromCommon: Record<string, unknown>): number {
+  let count = 0;
+
+  function countInObject(obj: unknown): void {
+    if (!obj || typeof obj !== "object") {
+      return;
+    }
+
+    for (const value of Object.values(obj)) {
+      // Skip non-object values
+      if (typeof value !== "object" || value === null) {
+        continue;
+      }
+
+      // If it has a "field" property, it's a mapped field
+      if ("field" in value) {
+        count++;
+        continue;
+      }
+
+      // Recursively check nested objects
+      countInObject(value);
+    }
+  }
+
+  countInObject(mappingFromCommon);
+  return count;
+}
+
+/**
  * Loads form data using Vite's glob imports - very efficient for 100+ forms
  */
 function loadFormDataWithGlob(formId: string, formLabel: string): FormSchema {
@@ -59,14 +124,36 @@ function loadFormDataWithGlob(formId: string, formLabel: string): FormSchema {
     throw new Error(`Missing required files for form ${formId}`);
   }
 
+  // Get metadata from forms index
+  const formInfo = formsIndex.find((form) => form.id === formId);
+  if (!formInfo) {
+    throw new Error(`Form metadata not found for ${formId}`);
+  }
+
+  // Calculate statistics
+  const totalQuestions = countSchemaProperties(schema.default);
+  const mappedQuestions = countMappedFields(mappingFrom.default);
+  const mappingPercentage =
+    totalQuestions > 0
+      ? Math.round((mappedQuestions / totalQuestions) * 100)
+      : 0;
+
   return {
     id: formId,
     label: formLabel,
+    description: formInfo.description || "",
+    owner: formInfo.owner || "Unknown",
+    url: formInfo.url && formInfo.url.length > 0 ? formInfo.url : undefined,
     formSchema: schema.default,
     formUI: ui.default,
     mappingToCommon: mappingTo.default,
     mappingFromCommon: mappingFrom.default,
     defaultData: defaultData.default,
+    statistics: {
+      totalQuestions,
+      mappedQuestions,
+      mappingPercentage,
+    },
   };
 }
 

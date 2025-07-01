@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 
 // Internal utilities
 import type { FormData, TransformOutput } from "@/lib/types";
-import { mapJson } from "@/lib/utils";
+import { mapJson } from "@/lib/transformation";
 import { schemas } from "@/lib/schemas";
 
 // Components
@@ -55,18 +55,18 @@ export default function FormMappingPlayground() {
   const urlParams = useMemo(() => getUrlParams(), []);
   const initialSourceId = getValidSchemaId(
     urlParams.src || null,
-    sourceSchema.id
+    sourceSchema.id,
   );
   const initialTargetId = getValidSchemaId(
     urlParams.tgt || null,
-    targetSchema.id
+    targetSchema.id,
   );
 
   // Step 3: Create the state for the source and target forms
   const [sourceId, setSourceId] = useState<string>(initialSourceId);
   const [targetId, setTargetId] = useState<string>(initialTargetId);
   const [sourceFormData, setSourceFormData] = useState<FormData>(
-    schemas[initialSourceId].defaultData
+    schemas[initialSourceId].defaultData,
   );
 
   // Step 4: Create the state for the transformation output
