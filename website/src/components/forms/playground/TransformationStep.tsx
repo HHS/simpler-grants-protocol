@@ -1,6 +1,6 @@
 import React from "react";
 import { styles } from "./styles";
-import type { FormData } from "./types";
+import type { FormData } from "@/lib/types";
 
 interface TransformationStepProps {
   title: string;

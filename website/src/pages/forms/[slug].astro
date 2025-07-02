@@ -1,0 +1,36 @@
+---
+import { schemas } from "@/lib/schemas";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import type { GetStaticPaths } from "astro";
+import FormDetails from "@/components/forms/library/FormDetails.astro";
+import FormSummary from "@/components/forms/library/FormSummary.astro";
+
+export interface Props {
+  formId: string;
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const paths = Object.keys(schemas).map((formId) => ({
+    params: { slug: formId },
+    props: { formId },
+  }));
+  return paths;
+};
+
+const { formId } = Astro.props;
+const form = schemas[formId];
+
+if (!form) {
+  throw new Error(`Form ${formId} not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: form.label,
+    tableOfContents: false,
+  }}
+>
+  <FormSummary form={form} />
+  <FormDetails form={form} />
+</StarlightPage>

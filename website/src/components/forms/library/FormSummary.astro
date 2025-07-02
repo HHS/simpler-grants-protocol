@@ -1,0 +1,89 @@
+---
+import type { FormSchema } from "@/lib/types";
+import { LinkButton } from "@astrojs/starlight/components";
+
+interface Props {
+  form: FormSchema;
+}
+
+const { form } = Astro.props;
+---
+
+{
+  form ? (
+    <section class="summary-section">
+      <div class="summary-content">
+        <h2 class="summary-title">Summary</h2>
+        <div class="summary-description">
+          <p>
+            {`${form.statistics.totalQuestions} total questions |
+          ${form.statistics.mappingPercentage}%
+            mapped to the CommonGrants schema`}
+          </p>
+          <p>{form.description}</p>
+        </div>
+
+        <div class="summary-actions">
+          <LinkButton
+            href={`/forms/playground?src=${form.id}`}
+            variant="primary"
+          >
+            Explore in playground
+          </LinkButton>
+
+          <LinkButton href="/forms/library" variant="secondary">
+            Return to form library
+          </LinkButton>
+        </div>
+      </div>
+    </section>
+  ) : (
+    <div class="error">
+      <p>Form schema not provided</p>
+    </div>
+  )
+}
+
+<style>
+  .summary-section {
+    margin: 0;
+    padding: 0;
+  }
+
+  .summary-title {
+    font-size: 1.75rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .summary-content {
+    margin: 0;
+    padding: 0;
+  }
+
+  .summary-description {
+    margin: 0 0 1.5rem 0;
+  }
+
+  .summary-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .error {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: var(--sl-color-red-6);
+    color: var(--sl-color-white);
+    border: 1px solid var(--sl-color-red-4);
+  }
+
+  @media (max-width: 768px) {
+    .summary-actions {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+</style>

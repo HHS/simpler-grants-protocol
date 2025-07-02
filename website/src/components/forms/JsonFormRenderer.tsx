@@ -6,9 +6,8 @@ import {
   vanillaCells,
   vanillaStyles,
 } from "@jsonforms/vanilla-renderers";
-import { styles } from "./styles";
 import "./form-styles.css";
-import type { FormData } from "./types";
+import type { FormData } from "@/lib/types";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
 
 const styleContextValue = {
@@ -34,9 +33,7 @@ const styleContextValue = {
   ],
 };
 
-interface FormSectionProps {
-  formName: string;
-  type: "source" | "prefilled";
+export interface JsonFormRendererProps {
   schema: JsonSchema;
   uischema: VerticalLayout;
   data: FormData;
@@ -44,22 +41,14 @@ interface FormSectionProps {
   readonly?: boolean;
 }
 
-export const FormSection: React.FC<FormSectionProps> = ({
-  formName,
-  type,
+export const JsonFormRenderer: React.FC<JsonFormRendererProps> = ({
   schema,
   uischema,
   data,
   onChange,
   readonly = false,
-}) => (
-  <div style={styles.formSection}>
-    <h2 style={styles.formHeader}>{`${formName} (${type})`}</h2>
-    <p>
-      {type === "source"
-        ? "Changes here will be reflected in the prefilled form."
-        : "The prefilled answers can be edited freely."}
-    </p>
+}) => {
+  return (
     <JsonFormsStyleContext.Provider value={styleContextValue}>
       <JsonForms
         schema={schema}
@@ -73,5 +62,5 @@ export const FormSection: React.FC<FormSectionProps> = ({
         readonly={readonly}
       />
     </JsonFormsStyleContext.Provider>
-  </div>
-);
+  );
+};

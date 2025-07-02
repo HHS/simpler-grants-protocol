@@ -1,0 +1,64 @@
+---
+import type { FormSchema } from "@/lib/types";
+import { Code } from "@astrojs/starlight/components";
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { JsonFormRenderer } from "@/components/forms/JsonFormRenderer";
+import type { JsonSchema } from "@jsonforms/core";
+
+interface Props {
+  form: FormSchema;
+}
+
+const { form } = Astro.props;
+
+const toJson = (data: Record<string, unknown> | JsonSchema) =>
+  JSON.stringify(data, null, 2) as string;
+---
+
+<h2 class="details-title">Details</h2>
+
+<Tabs>
+  <TabItem label="Form">
+    <p>Sample version of the rendered form.</p>
+    <JsonFormRenderer
+      client:load
+      schema={form.formSchema}
+      uischema={form.formUI}
+      data={form.defaultData}
+    />
+  </TabItem>
+  <TabItem label="Data">
+    <p>What the form data looks like when it is submitted.</p>
+    <Code lang="json" code={toJson(form.defaultData)} />
+  </TabItem>
+  <TabItem label="Schemas">
+    <p>UI and JSON schemas used to render and validate the form.</p>
+    <details>
+      <summary>JSON schema</summary>
+      <Code lang="json" code={toJson(form.formSchema)} />
+    </details>
+    <details>
+      <summary>UI Schema</summary>
+      <Code lang="json" code={toJson(form.formUI)} />
+    </details>
+  </TabItem>
+  <TabItem label="Mappings">
+    <p>Mappings between the form and the CommonGrants schema.</p>
+    <details>
+      <summary>Mapping to CommonGrants</summary>
+      <Code lang="json" code={toJson(form.mappingToCommon)} />
+    </details>
+    <details>
+      <summary>Mapping from CommonGrants</summary>
+      <Code lang="json" code={toJson(form.mappingFromCommon)} />
+    </details>
+  </TabItem>
+</Tabs>
+
+<style>
+  .details-title {
+    font-size: 1.75rem !important;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+</style>

@@ -1,5 +1,5 @@
 ---
-import FormMappingPlayground from "@/components/FormMappingPlayground";
+import FormMappingPlayground from "@/components/forms/playground";
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 ---
 
@@ -7,11 +7,12 @@ import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
   frontmatter={{
     title: "Form mapping playground",
     tableOfContents: false,
-    template: "splash",
+    prev: false,
+    next: false,
   }}
 >
   <div class="form-playground-page">
-    <FormMappingPlayground client:load />
+    <FormMappingPlayground client:only="react" />
   </div>
 </StarlightPage>
 

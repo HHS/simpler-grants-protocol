@@ -100,6 +100,17 @@
   border-radius: 6px;
 }
 
+/* Details and Summary styling */
+details {
+  border: none;
+  outline: none;
+}
+
+details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
 .form-container {
   display: flex;
   gap: 2rem;
@@ -107,11 +118,11 @@
 
 .playground-container {
   max-width: 1200px;
-  margin: 2rem auto;
-  padding: 2rem;
-  border-radius: 1rem;
+  margin: 1rem auto;
+  padding: 0.5rem;
+  border-radius: 0;
   background: var(--sl-color-black);
-  border: 1px solid var(--sl-color-gray-5);
+  border: none;
   font-family: system-ui, sans-serif;
   display: flex;
   flex-direction: column;
@@ -124,6 +135,6 @@
     flex-direction: column !important;
   }
   .playground-container {
-    padding: 1rem;
+    padding: 0.25rem;
   }
 }

@@ -16,11 +16,19 @@ export type FormSchemaMap = Record<string, FormSchema>;
 export type FormSchema = {
   id: string;
   label: string;
+  description: string;
+  owner: string;
+  url?: string;
   formSchema: JsonSchema;
   formUI: VerticalLayout;
   defaultData: FormData;
   mappingToCommon: Record<string, unknown>;
   mappingFromCommon: Record<string, unknown>;
+  statistics: {
+    totalQuestions: number;
+    mappedQuestions: number;
+    mappingPercentage: number;
+  };
 };
 
 export type TransformOutput = {

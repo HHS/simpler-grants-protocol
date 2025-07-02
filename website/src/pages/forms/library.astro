@@ -1,0 +1,40 @@
+---
+import { schemas } from "@/lib/schemas";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+---
+
+<StarlightPage
+  frontmatter={{
+    title: "Form Library",
+    tableOfContents: false,
+    prev: false,
+    next: false,
+  }}
+>
+  <div class="form-library-page">
+    <h2>Available forms</h2>
+    <p>Select a form to view its fields and mapping</p>
+    <CardGrid>
+      {
+        Object.values(schemas).map((form) => (
+          <LinkCard
+            href={`/forms/${form.id}`}
+            title={form.label}
+            description={`
+              ${form.statistics.totalQuestions} total questions |
+              ${form.statistics.mappingPercentage}% mapped
+            `}
+          />
+        ))
+      }
+    </CardGrid>
+  </div>
+</StarlightPage>
+
+<style>
+  .form-library-page {
+    max-width: 1200px;
+    margin: auto;
+  }
+</style>
