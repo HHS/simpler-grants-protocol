@@ -1,34 +1,55 @@
-name: "CD - Deploy CLI Package to npm (alpha)"
+name: "CD - Deploy CLI Package to npm"
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "lib/cli/**" # Trigger only if files in the `lib/cli/` directory are changed
-      - ".github/workflows/cd-deploy-cli.yml"
-
-defaults:
-  run:
-    working-directory: ./lib/cli
+    inputs:
+      tag:
+        description: "Tag to deploy"
+        required: true
+        type: string
 
 jobs:
-  publish:
+  create-release-from-tag:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: create-release-from-tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: ./lib/cli
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag }}
 
       # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run checks
         run: npm run checks
@@ -36,4 +57,10 @@ jobs:
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --tag alpha --access public
+        run: npm publish --access public
+
+      - name: Notify completion
+        run: |
+          echo "CLI package deployed to npm"
+          echo "Tag: ${{ github.event.inputs.tag }}"
+
