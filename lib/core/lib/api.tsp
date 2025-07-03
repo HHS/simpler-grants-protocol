@@ -33,12 +33,12 @@ namespace CommonGrants.API;
 namespace Opportunities {
   alias Router = Routes.Opportunities;
 
-  @tag("required")
-  op list is Router.list;
+  // @tag("required")
+  // op list is Router.list;
 
-  @tag("required")
-  op read is Router.read;
+  // @tag("required")
+  // op read is Router.read;
 
-  @tag("optional")
-  op search is Router.search;
+  // @tag("optional")
+  // op search is Router.search;
 }

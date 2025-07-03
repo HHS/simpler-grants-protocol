@@ -1,3 +1,5 @@
+import "@typespec/json-schema";
+
 using TypeSpec.JsonSchema;
 
 /** A collection of base data types used throughout the CommonGrants API
@@ -18,7 +20,6 @@ using TypeSpec.JsonSchema;
  * }
  * ```
  */
-@jsonSchema
 namespace CommonGrants.Types;
 
 // ########################################

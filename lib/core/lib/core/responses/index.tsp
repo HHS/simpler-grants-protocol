@@ -1,4 +1,5 @@
 import "@typespec/http";
+import "@typespec/json-schema";
 
 import "./error.tsp";
 import "./success.tsp";

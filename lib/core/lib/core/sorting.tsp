@@ -1,4 +1,5 @@
 import "@typespec/http";
+import "@typespec/json-schema";
 
 using TypeSpec.Http;
 using TypeSpec.JsonSchema;
@@ -15,7 +16,6 @@ using TypeSpec.JsonSchema;
  * op list(sorting: Sorting.SortQueryParams): Responses.Sorted<MyModel>;
  * ```
  */
-@jsonSchema
 namespace CommonGrants.Sorting;
 
 enum SortOrder {
