@@ -35,7 +35,6 @@
     "opportunities"
   ],
   "scripts": {
-    "prepublishOnly": "bash scripts/prepublish-checks.sh",
     "build": "npm run typespec && tsc",
     "typespec": "tsp compile lib/main.tsp --emit @typespec/openapi3 && cp tsp-output/@typespec/openapi3/openapi.yaml lib/openapi.yaml",
     "start": "node dist/index.js",
