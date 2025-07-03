@@ -13,6 +13,12 @@ using TypeSpec.OpenAPI;
  */
 @service(#{ title: "CommonGrants Base API" })
 @tagMetadata(
+  "experimental",
+  #{
+    description: "Endpoints that MAY be implemented by CommonGrants APIs, but are not guaranteed to be stable",
+  }
+)
+@tagMetadata(
   "optional",
   #{ description: "Endpoints that MAY be implemented by CommonGrants APIs" }
 )
@@ -23,10 +29,18 @@ using TypeSpec.OpenAPI;
   }
 )
 @tagMetadata(
+  "Applications",
+  #{ description: "Endpoints related to applications" }
+)
+@tagMetadata(
   "Opportunities",
   #{ description: "Endpoints related to funding opportunities" }
 )
 namespace CommonGrants.API;
+
+// #########################################################
+// Opportunities
+// #########################################################
 
 @tag("Opportunities")
 @route("/common-grants/opportunities")
@@ -41,4 +55,49 @@ namespace Opportunities {
 
   @tag("optional")
   op search is Router.search;
+}
+
+// #########################################################
+// Applications
+// #########################################################
+
+@tag("Applications")
+@tag("experimental")
+@route("/common-grants/")
+namespace Apply {
+  // #########################################################
+  // Multi-step workflow
+  // #########################################################
+
+  @route("/applications")
+  namespace MultiStepWorkflow {
+    alias ApplicationRouter = Routes.Applications;
+    alias FormResponseRouter = Routes.FormResponses;
+
+    // Start an application workflow
+    op startApplication is ApplicationRouter.startApplication;
+    op getApplication is ApplicationRouter.getApplication;
+
+    // Update form responses
+    op setFormResponse is FormResponseRouter.setFormResponse;
+    op getFormResponse is FormResponseRouter.getFormResponse;
+
+    // Submit an application after completing all forms
+    op submitApplication is ApplicationRouter.submitApplication;
+  }
+
+  // #########################################################
+  // Direct apply workflow
+  // #########################################################
+  @tag("experimental")
+  @route("/competitions")
+  namespace DirectApplyWorkflow {
+    alias Router = Routes.Competitions;
+
+    // View competition details
+    op competitionDetails is Router.read;
+
+    // Apply to a competition
+    op apply is Router.apply;
+  }
 }
