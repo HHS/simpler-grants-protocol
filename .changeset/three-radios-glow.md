@@ -1,6 +1,5 @@
 ---
 "@common-grants/core": patch
-"@common-grants/cli": patch
 ---
 
 Updates TypeSpec package versions in dependencies
