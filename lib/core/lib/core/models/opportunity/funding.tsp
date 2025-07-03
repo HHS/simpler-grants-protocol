@@ -3,7 +3,7 @@ import "../../fields/index.tsp";
 
 namespace CommonGrants.Models;
 
-using CommonGrants.Fields;
+using Fields;
 
 // ########################################
 // Model definition

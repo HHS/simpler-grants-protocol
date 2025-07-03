@@ -1,6 +1,3 @@
-import "@typespec/json-schema";
-import "@typespec/openapi3";
-
 namespace CommonGrants.Models;
 
 // ########################################

@@ -6,8 +6,8 @@ import "../../types.tsp";
 
 namespace CommonGrants.Models;
 
-using CommonGrants.Fields;
-using CommonGrants.Types;
+using Fields;
+using Types;
 
 // ########################################
 // Model definition
