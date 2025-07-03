@@ -20,6 +20,7 @@ using TypeSpec.JsonSchema;
  * }
  * ```
  */
+@jsonSchema
 namespace CommonGrants.Types;
 
 // ########################################

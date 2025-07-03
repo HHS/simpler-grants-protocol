@@ -1,5 +1,3 @@
-import "@typespec/json-schema";
-
 import "./base.tsp";
 import "./date.tsp";
 import "./numeric.tsp";

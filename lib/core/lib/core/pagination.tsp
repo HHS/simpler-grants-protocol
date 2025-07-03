@@ -1,9 +1,10 @@
 import "@typespec/http";
-import "@typespec/json-schema";
 
 using TypeSpec.Http;
+using TypeSpec.JsonSchema;
 
 /** Models and utilities for pagination */
+@jsonSchema
 namespace CommonGrants.Pagination;
 
 /** Query parameters for paginated routes */

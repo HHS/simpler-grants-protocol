@@ -21,4 +21,5 @@ using TypeSpec.JsonSchema;
  * model MyModel extends Models.OpportunityBase {}
  * ```
  */
+@jsonSchema
 namespace CommonGrants.Models;

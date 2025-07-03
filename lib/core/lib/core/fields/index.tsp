@@ -1,5 +1,3 @@
-import "@typespec/json-schema";
-
 import "./custom-field.tsp";
 import "./metadata.tsp";
 import "./money.tsp";
