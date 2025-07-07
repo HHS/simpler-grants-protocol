@@ -2,9 +2,11 @@
 import "./core/index.tsp";
 import "@typespec/http";
 import "@typespec/openapi";
+import "@typespec/versioning";
 
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
+using Versioning;
 
 /** The base OpenAPI specification for a CommonGrants API
  *
@@ -66,6 +68,21 @@ namespace Opportunities {
 @route("/common-grants/")
 namespace Apply {
   // #########################################################
+  // Direct apply workflow
+  // #########################################################
+  @tag("experimental")
+  @route("/competitions")
+  namespace DirectApplyWorkflow {
+    alias Router = Routes.Competitions;
+
+    @added(Versions.v0_2)
+    op competitionDetails is Router.read;
+
+    @added(Versions.v0_2)
+    op apply is Router.apply;
+  }
+
+  // #########################################################
   // Multi-step workflow
   // #########################################################
 
@@ -74,30 +91,31 @@ namespace Apply {
     alias ApplicationRouter = Routes.Applications;
     alias FormResponseRouter = Routes.FormResponses;
 
+    // ################################
     // Start an application workflow
+    // ################################
+
+    @added(Versions.v0_2)
     op startApplication is ApplicationRouter.startApplication;
+
+    @added(Versions.v0_2)
     op getApplication is ApplicationRouter.getApplication;
 
+    // ################################
     // Update form responses
+    // ################################
+
+    @added(Versions.v0_2)
     op setFormResponse is FormResponseRouter.setFormResponse;
+
+    @added(Versions.v0_2)
     op getFormResponse is FormResponseRouter.getFormResponse;
 
+    // ################################
     // Submit an application after completing all forms
+    // ################################
+
+    @added(Versions.v0_2)
     op submitApplication is ApplicationRouter.submitApplication;
-  }
-
-  // #########################################################
-  // Direct apply workflow
-  // #########################################################
-  @tag("experimental")
-  @route("/competitions")
-  namespace DirectApplyWorkflow {
-    alias Router = Routes.Competitions;
-
-    // View competition details
-    op competitionDetails is Router.read;
-
-    // Apply to a competition
-    op apply is Router.apply;
   }
 }

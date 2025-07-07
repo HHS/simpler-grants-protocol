@@ -30,12 +30,12 @@ interface Applications {
   // ###############################
 
   @summary("Get an application")
-  @doc("Get an application for a given competition with all the required information")
+  @doc("Get an application for a given competition with draft form responses")
   @get
-  @route("/{appId}")
+  @route("/{id}")
   getApplication(
     /** The ID of the application to get */
-    @path appId: Types.uuid,
+    @path id: Types.uuid,
   ): Responses.Ok<unknown>;
 
   // ###############################
@@ -45,9 +45,9 @@ interface Applications {
   @summary("Submit an application")
   @doc("Submit an application for a given competition")
   @post
-  @route("/{appId}/submit")
+  @route("/{id}/submit")
   submitApplication(
     /** The ID of the application to submit */
-    @path appId: Types.uuid,
+    @path id: Types.uuid,
   ): Responses.Ok<unknown>;
 }
