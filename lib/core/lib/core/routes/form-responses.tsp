@@ -32,7 +32,7 @@ interface FormResponses {
 
     /** The response to the form */
     @body response: Record<unknown>,
-  ): Responses.Ok<unknown>;
+  ): Responses.Ok<Models.AppFormResponse>;
 
   // ###############################
   // Get form response
@@ -48,5 +48,5 @@ interface FormResponses {
 
     /** The ID of the form to get */
     @path formId: Types.uuid,
-  ): Responses.Ok<unknown>;
+  ): Responses.Ok<Models.AppFormResponse>;
 }

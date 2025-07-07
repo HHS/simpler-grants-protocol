@@ -26,7 +26,7 @@ interface Competitions {
   read(
     /** The ID of the competition to get */
     @path id: Types.uuid,
-  ): Responses.Ok<string>;
+  ): Responses.Ok<Models.CompetitionBase> | Responses.NotFound;
 
   // ###############################
   // Apply to a competition
@@ -39,5 +39,8 @@ interface Competitions {
   apply(
     /** The ID of the competition to apply to */
     @path id: Types.uuid,
-  ): Responses.Ok<unknown>;
+
+    /** The application to apply to the competition */
+    @body application: Models.ApplicationBase,
+  ): Responses.Created<Models.ApplicationBase> | Responses.NotFound | Responses.Unauthorized;
 }

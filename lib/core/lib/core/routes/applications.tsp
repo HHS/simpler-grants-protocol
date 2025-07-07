@@ -23,20 +23,29 @@ interface Applications {
   @doc("Start a draft application for a given competition")
   @post
   @route("/start")
-  startApplication(): Responses.Ok<unknown>;
+  startApplication(
+    /** The ID of the competition to start an application for */
+    @body competitionId: Types.uuid,
+
+    /** The ID of the organization to start an application for, if applying on behalf of an organization */
+    @body organizationId?: Types.uuid,
+
+    /** The name of the application */
+    @body name: string,
+  ): Responses.Created<Models.ApplicationBase> | Responses.Unauthorized;
 
   // ###############################
   // Get an application
   // ###############################
 
-  @summary("Get an application")
-  @doc("Get an application for a given competition with draft form responses")
+  @summary("View an application")
+  @doc("View an application for a given competition with draft form responses")
   @get
   @route("/{id}")
   getApplication(
     /** The ID of the application to get */
     @path id: Types.uuid,
-  ): Responses.Ok<unknown>;
+  ): Responses.Ok<Models.ApplicationBase> | Responses.NotFound | Responses.Unauthorized;
 
   // ###############################
   // Submit an application
@@ -49,5 +58,5 @@ interface Applications {
   submitApplication(
     /** The ID of the application to submit */
     @path id: Types.uuid,
-  ): Responses.Ok<unknown>;
+  ): Http.NoContentResponse | Responses.NotFound | Responses.Unauthorized;
 }
