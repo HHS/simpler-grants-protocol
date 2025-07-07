@@ -26,7 +26,7 @@ model CompetitionBase {
   status: CompetitionStatus;
 
   /** The key dates in the competition timeline */
-  timeline: CompetitionTimeline;
+  keyDates: CompetitionTimeline;
 
   /** The forms for the competition */
   forms: CompetitionForms;

@@ -20,7 +20,7 @@ interface Competitions {
   // ###############################
 
   @summary("View competition details")
-  @doc("View additional details about a competition for a given opportunity")
+  @doc("View additional details about a competition for a given opportunity. A competition is an application process for a funding opportunity, often with a distinct set of forms and key dates.")
   @get
   @route("/competitions/{id}")
   read(

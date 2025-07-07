@@ -32,7 +32,9 @@ using Versioning;
 )
 @tagMetadata(
   "Applications",
-  #{ description: "Endpoints related to applications" }
+  #{
+    description: "Endpoints related to applications for funding opportunities",
+  }
 )
 @tagMetadata(
   "Opportunities",
