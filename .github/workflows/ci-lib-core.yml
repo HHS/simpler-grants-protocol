@@ -32,5 +32,8 @@ jobs:
       - name: Build library
         run: npm run build
 
+      - name: Emit TypeSpec outputs
+        run: npm run typespec
+
       - name: Audit dependencies
         run: npm audit --production
