@@ -144,3 +144,19 @@ model Filtered<ItemsT, FilterT> extends Success {
     errors?: string[];
   };
 }
+
+// ############################################################################
+// 201 response
+// ############################################################################
+
+/** A 201 response with data
+ *
+ * @template T The schema for the value of the `"data"` property in this response
+ */
+model Created<T> extends Success {
+  // Inherit the 201 status code
+  ...Http.CreatedResponse;
+
+  /** Response data */
+  data: T;
+}
