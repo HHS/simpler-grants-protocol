@@ -2,7 +2,7 @@ import "../types.tsp";
 
 namespace CommonGrants.Fields;
 
-using CommonGrants.Types;
+using Types;
 
 // ########################################
 // Model definition
