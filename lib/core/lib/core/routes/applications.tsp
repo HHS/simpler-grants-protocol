@@ -25,13 +25,13 @@ interface Applications {
   @route("/start")
   startApplication(
     /** The ID of the competition to start an application for */
-    @body competitionId: Types.uuid,
+    competitionId: Types.uuid,
 
     /** The ID of the organization to start an application for, if applying on behalf of an organization */
-    @body organizationId?: Types.uuid,
+    organizationId?: Types.uuid,
 
     /** The name of the application */
-    @body name: string,
+    name: string,
   ): Responses.Created<Models.ApplicationBase> | Responses.Unauthorized;
 
   // ###############################
