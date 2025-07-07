@@ -6,6 +6,8 @@ import "./opportunity/index.tsp";
 import "./organization.tsp";
 import "./person.tsp";
 import "./application.tsp";
+import "./form.tsp";
+import "./competition.tsp";
 
 using TypeSpec.JsonSchema;
 

@@ -10,10 +10,10 @@ model Form {
     name: string;
 
     /** The form's description. */
-    description: string;
+    description?: string;
 
     /** The form's instructions. */
-    instructions?: string;
+    instructions?: string | Fields.File;
 
     /** The form's JSON schema used to render the form and validate responses. */
     jsonSchema: Record<unknown>;
