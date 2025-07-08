@@ -10,6 +10,7 @@ import "./application.tsp";
 import "./competition.tsp";
 import "./form.tsp";
 import "./form-response.tsp";
+import "./mapping.tsp";
 
 using TypeSpec.JsonSchema;
 
