@@ -22,7 +22,7 @@ interface FormResponses {
   @summary("Respond to a form")
   @doc("Update the response to a given form on an application")
   @put
-  @route("/{appId}/forms/<formId>")
+  @route("/{appId}/forms/{formId}")
   setFormResponse(
     /** The ID of the application to get */
     @path appId: Types.uuid,
@@ -41,7 +41,7 @@ interface FormResponses {
   @summary("Get a form response")
   @doc("Get the response to a given form on an application")
   @get
-  @route("/{appId}/forms/<formId>")
+  @route("/{appId}/forms/{formId}")
   getFormResponse(
     /** The ID of the application to get */
     @path appId: Types.uuid,
