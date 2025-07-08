@@ -5,8 +5,8 @@ model FormResponseBase {
   /** The unique identifier for the form response */
   id: Types.uuid;
 
-  /** The unique identifier for the form */
-  formId: Types.uuid;
+  /** The form being responded to */
+  form: Form;
 
   /** The response to the form */
   response: Record<unknown>;

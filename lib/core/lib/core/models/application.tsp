@@ -11,7 +11,7 @@ model ApplicationBase {
   competitionId: Types.uuid;
 
   /** The form responses for the application */
-  formResponses: Array<AppFormResponse>;
+  formResponses: Record<AppFormResponse>;
 
   /** The status of the application */
   status: AppStatus;
