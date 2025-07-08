@@ -76,6 +76,13 @@ namespace Examples.CustomField {
     schema: "https://example.com/program-areas.json",
   };
 
+  const agency = #{
+    name: "agency",
+    fieldType: CustomFieldType.string,
+    value: "Department of Transportation",
+    description: "The agency responsible for managing this opportunity",
+  };
+
   /** An example of an array custom field */
   const eligibilityTypes = #{
     name: "eligibilityType",

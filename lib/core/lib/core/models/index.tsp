@@ -5,7 +5,12 @@ import "@typespec/json-schema";
 import "./opportunity/index.tsp";
 import "./organization.tsp";
 import "./person.tsp";
+import "./proposal.tsp";
 import "./application.tsp";
+import "./competition.tsp";
+import "./form.tsp";
+import "./form-response.tsp";
+import "./mapping.tsp";
 
 using TypeSpec.JsonSchema;
 
