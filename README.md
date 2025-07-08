@@ -21,9 +21,12 @@ CommonGrants is an open standard for sharing data about funding opportunities, a
   - [@common-grants/cli](https://www.npmjs.com/package/@common-grants/cli): Command-line tool for working with the CommonGrants specification.  
 - Repository sections:
   - [Website](website): The code for our public website and docs.
-  - [Specification](specs): The code for `@common-grants/core` TypeSpec library.
-  - [CLI](lib/cli): The code for `@common-grants/cli` command-line tool.
-  - [Templates](templates): Templates with boilerplate code for implementing the CommonGrants specification.
+  - [Libraries](lib): The code for the CommonGrants public packages and libraries:
+    - [@common-grants/core](lib/core): The TypeSpec library with the CommonGrants specification.
+    - [@common-grants/cli](lib/cli): The command-line tool for working with the CommonGrants protocol.
+    - [python-sdk](lib/python-sdk): The Python SDK to streamline adoption of CommonGrants in Python applications.
+  - [Templates](templates): Templates with boilerplate code for implementing the CommonGrants protocol.
+  - [Examples](examples): Examples implementations of the CommonGrants protocol.
 - Community docs:
   - [Code of conduct](CODE_OF_CONDUCT.md): Our community guidelines.
   - [Contributing](CONTRIBUTING.md): How to contribute to the CommonGrants project.
