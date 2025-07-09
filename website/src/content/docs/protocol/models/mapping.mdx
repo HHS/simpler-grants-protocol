@@ -1,0 +1,188 @@
+---
+title: Mapping
+description: A model for mapping data from one schema to another.
+mappingSchema:
+  example:
+    code: |
+      {
+        "id": {"const": "123"},
+        "name": {
+          "firstName": {"field": "first_name"},
+          "lastName": {"field": "last_name"},
+        },
+        "opportunity": {
+          "status": {
+            "switch": {
+              "field": "opportunity_status",
+              "case": {
+                "active": "open",
+                "inactive": "closed",
+              }
+            }
+          },
+          "amount": {"field": "opportunity_amount"},
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/MappingSchema.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/mapping.tsp"
+      startLine: 51
+      endLine: 54
+mappingFunction:
+  example:
+    code: |
+      {
+        "id": {"const": "123"},
+        "name": {
+          "firstName": {"field": "first_name"},
+          "lastName": {"field": "last_name"},
+        },
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/MappingFunction.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/mapping.tsp"
+      startLine: 60
+      endLine: 65
+mappingConstantFunction:
+  example:
+    code: |
+      {
+        "const": "123",
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/MappingConstantFunction.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/mapping.tsp"
+      startLine: 71
+      endLine: 74
+mappingFieldFunction:
+  example:
+    code: |
+      {
+        "field": "opportunity_status",
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/MappingFieldFunction.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/mapping.tsp"
+      startLine: 80
+      endLine: 83
+mappingSwitchFunction:
+  example:
+    code: |
+      {
+        "field": "opportunity_status",
+        "case": {
+          "active": "open",
+          "inactive": "closed",
+        },
+        "default": "custom",
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/MappingSwitchFunction.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/mapping.tsp"
+      startLine: 89
+      endLine: 99
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+
+## MappingSchema
+
+A schema for mapping data from one schema to another.
+
+<SchemaFormatTabs
+  example={frontmatter.mappingSchema.example}
+  jsonSchema={frontmatter.mappingSchema.jsonSchema}
+  typeSpec={frontmatter.mappingSchema.typeSpec}
+/>
+
+## MappingFunction
+
+A function for mapping data from one schema to another.
+
+### Sub-types
+
+| Sub-type                                            | Description                                                                                      |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [MappingConstantFunction](#mappingconstantfunction) | Returns a constant value.                                                                        |
+| [MappingFieldFunction](#mappingfieldfunction)       | Returns the value of a field in the source data.                                                 |
+| [MappingSwitchFunction](#mappingswitchfunction)     | Returns a new value based on the value of a field in the source data using a switch-case lookup. |
+|                                                     |                                                                                                  |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.mappingFunction.example}
+  jsonSchema={frontmatter.mappingFunction.jsonSchema}
+  typeSpec={frontmatter.mappingFunction.typeSpec}
+/>
+
+## MappingConstantFunction
+
+Returns a constant value.
+
+### Table
+
+| Property | Type                                     | Description                             |
+| -------- | ---------------------------------------- | --------------------------------------- |
+| const    | [string](/protocol/fields/string#string) | A constant value to add to the mapping. |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.mappingConstantFunction.example}
+  jsonSchema={frontmatter.mappingConstantFunction.jsonSchema}
+  typeSpec={frontmatter.mappingConstantFunction.typeSpec}
+/>
+
+## MappingFieldFunction
+
+Returns the value of a field in the source data.
+
+### Table
+
+| Property | Type                                     | Description                                                                                    |
+| -------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| field    | [string](/protocol/fields/string#string) | A dot-separated path to a field in the source schema whose value will be added to the mapping. |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.mappingFieldFunction.example}
+  jsonSchema={frontmatter.mappingFieldFunction.jsonSchema}
+  typeSpec={frontmatter.mappingFieldFunction.typeSpec}
+/>
+
+## MappingSwitchFunction
+
+Returns a new value based on the value of a field in the source data using a switch-case lookup.
+
+### Table
+
+| Property | Type                                                                                  | Description                                                                                    |
+| -------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| field    | [string](/protocol/fields/string#string)                                              | A dot-separated path to a field in the source schema whose value will be added to the mapping. |
+| case     | [Record](/protocol/fields/record#record)\<[unknown](/protocol/fields/other#unknown)\> | A mapping of source field values to desired output values.                                     |
+| default  | [unknown](/protocol/fields/other#unknown)                                             | The default value to output if no case matches the source field value.                         |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.mappingSwitchFunction.example}
+  jsonSchema={frontmatter.mappingSwitchFunction.jsonSchema}
+  typeSpec={frontmatter.mappingSwitchFunction.typeSpec}
+/>

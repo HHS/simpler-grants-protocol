@@ -1,0 +1,9 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MappingFieldFunction.yaml
+type: object
+properties:
+  field:
+    type: string
+required:
+  - field
+description: Returns the value of a field in the source data.
