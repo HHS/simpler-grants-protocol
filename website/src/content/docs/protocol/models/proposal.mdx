@@ -1,0 +1,352 @@
+---
+title: Proposal
+description: Data model for a proposal to a funding opportunity
+proposalBase:
+  example:
+    code: |
+      {
+        "title": "Example Project",
+        "description": "Example project to serve community needs.",
+        "amountRequested": {
+          "amount": "100000",
+          "currency": "USD"
+        },
+        "opportunity": {
+          "id": "083b4567-e89d-42c8-a439-6c1234567890",
+          "title": "Example Opportunity",
+          "customFields": {
+            "agency": {
+              "name": "Agency",
+              "fieldType": "string",
+              "value": "Department of Energy",
+              "description": "The agency managing the funding opportunity."
+            }
+          }
+        },
+        "projectTimeline": {
+          "startDate": {
+            "name": "Project Start Date",
+            "eventType": "singleDate",
+            "date": "2025-01-01"
+          },
+          "endDate": {
+            "name": "Project End Date",
+            "eventType": "singleDate",
+            "date": "2025-12-31"
+          },
+          "otherDates": {
+            "evaluationPeriod": {
+              "name": "Evaluation Period",
+              "eventType": "dateRange",
+              "startDate": "2025-07-01",
+              "endDate": "2025-08-31",
+              "description": "The period during which the evaluation will be conducted."
+            }
+          }
+        },
+        "contacts": {
+          "primary": {
+            "name": {
+              "prefix": "Dr.",
+              "firstName": "Jane",
+              "lastName": "Smith"
+            },
+            "emails": {
+              "primary": "jane.smith@example.com"
+            }
+          },
+          "otherContacts": {
+            "principalInvestigator": {
+              "name": {
+                "prefix": "Dr.",
+                "firstName": "Alicia",
+                "lastName": "Williams"
+              },
+              "emails": {
+                "primary": "alicia.williams@example.com"
+              }
+            },
+            "authorizedRepresentative": {
+              "name": {
+                "firstName": "John",
+                "lastName": "Doe"
+              },
+              "emails": {
+                "primary": "john.doe@example.com"
+              }
+            }
+          }
+        },
+        "organizations": {
+          "primary": {
+            "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+            "name": "Example Organization",
+            "mission": "To serve the community through innovative programs."
+          },
+          "otherOrgs": {
+            "fiscalSponsor": {
+              "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b",
+              "name": "Fiscal Sponsor Organization",
+              "mission": "To provide fiscal sponsorship services."
+            },
+            "partner": {
+              "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6c",
+              "name": "Partner Organization",
+              "mission": "To collaborate on community projects."
+            }
+          }
+        },
+        "customFields": {
+          "projectType": {
+            "name": "Project Type",
+            "fieldType": "string",
+            "value": "research",
+            "description": "The type of project being proposed"
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ProposalBase.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/proposal.tsp"
+      startLine: 7
+      endLine: 33
+proposalOpportunity:
+  example:
+    code: |
+      {
+        "id": "083b4567-e89d-42c8-a439-6c1234567890",
+        "title": "Example Opportunity",
+        "customFields": {
+          "agency": {
+            "name": "Agency",
+            "fieldType": "string",
+            "value": "Department of Energy",
+            "description": "The agency managing the funding opportunity."
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ProposalOpportunity.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/proposal.tsp"
+      startLine: 39
+      endLine: 49
+projectTimeline:
+  example:
+    code: |
+      {
+        "startDate": {
+          "name": "Project Start Date",
+          "eventType": "singleDate",
+          "date": "2025-01-01"
+        },
+        "endDate": {
+          "name": "Project End Date",
+          "eventType": "singleDate",
+          "date": "2025-12-31"
+        },
+        "otherDates": {
+          "evaluationPeriod": {
+            "name": "Evaluation Period",
+            "eventType": "dateRange",
+            "startDate": "2025-07-01",
+            "endDate": "2025-08-31",
+            "description": "The period during which the evaluation will be conducted."
+          }
+        },
+        "timelineDetails": "The project will be conducted over 12 months with quarterly milestones."
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ProjectTimeline.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/proposal.tsp"
+      startLine: 55
+      endLine: 67
+proposalContacts:
+  example:
+    code: |
+      {
+        "primary": {
+          "name": {
+            "prefix": "Dr.",
+            "firstName": "Jane",
+            "lastName": "Smith"
+          },
+          "emails": {
+            "primary": "jane.smith@example.com"
+          }
+        },
+        "otherContacts": {
+          "principalInvestigator": {
+            "name": {
+              "prefix": "Dr.",
+              "firstName": "Alicia",
+              "lastName": "Williams"
+            },
+            "emails": {
+              "primary": "alicia.williams@example.com"
+            }
+          },
+          "authorizedRepresentative": {
+            "name": {
+              "firstName": "John",
+              "lastName": "Doe"
+            },
+            "emails": {
+              "primary": "john.doe@example.com"
+            }
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ProposalContacts.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/proposal.tsp"
+      startLine: 73
+      endLine: 79
+proposalOrgs:
+  example:
+    code: |
+      {
+        "primary": {
+          "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+          "name": "Example Organization",
+          "mission": "To serve the community through innovative programs."
+        },
+        "otherOrgs": {
+          "fiscalSponsor": {
+            "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b",
+            "name": "Fiscal Sponsor Organization",
+            "mission": "To provide fiscal sponsorship services."
+          },
+          "partner": {
+            "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6c",
+            "name": "Partner Organization",
+            "mission": "To collaborate on community projects."
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ProposalOrgs.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/proposal.tsp"
+      startLine: 85
+      endLine: 91
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+
+## ProposalBase
+
+A proposal for funding.
+
+### Table
+
+| Property        | Type                                                                                   | Required | Description                                                           |
+| --------------- | -------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------- |
+| title           | [string](/protocol/types/string#string)                                                | No       | The title of the proposal and/or the project requesting funding       |
+| description     | [string](/protocol/types/string#string)                                                | No       | The description of the proposal and/or the project requesting funding |
+| amountRequested | [Money](/protocol/fields/money)                                                        | No       | The amount of money requested                                         |
+| projectTimeline | [ProjectTimeline](#projecttimeline)                                                    | No       | The key dates for the project                                         |
+| opportunity     | [ProposalOpportunity](#proposalopportunity)                                            | No       | The opportunity to which this proposal is related                     |
+| organizations   | [ProposalOrgs](#proposalorgs)                                                          | No       | The organization that is requesting funding                           |
+| contacts        | [ProposalContacts](#proposalcontacts)                                                  | No       | The point of contact for the project                                  |
+| customFields    | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The project's custom fields                                           |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.proposalBase.example}
+  jsonSchema={frontmatter.proposalBase.jsonSchema}
+  typeSpec={frontmatter.proposalBase.typeSpec}
+/>
+
+## ProposalOpportunity
+
+The opportunity to which this proposal is related.
+
+### Table
+
+| Property     | Type                                                                                   | Required | Description                    |
+| ------------ | -------------------------------------------------------------------------------------- | -------- | ------------------------------ |
+| id           | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The opportunity's unique identifier |
+| title        | [string](/protocol/types/string#string)                                                | No       | The opportunity's name          |
+| customFields | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The opportunity's custom fields |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.proposalOpportunity.example}
+  jsonSchema={frontmatter.proposalOpportunity.jsonSchema}
+  typeSpec={frontmatter.proposalOpportunity.typeSpec}
+/>
+
+## ProjectTimeline
+
+The key dates for the project.
+
+### Table
+
+| Property        | Type                                                                                   | Required | Description                                                                 |
+| --------------- | -------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| startDate       | [Event](/protocol/fields/event)                                                        | No       | The start date of the period for which the funding is requested            |
+| endDate         | [Event](/protocol/fields/event)                                                        | No       | The end date of the period for which the funding is requested              |
+| otherDates      | [Record](/protocol/types/other#record)\<[Event](/protocol/fields/event)\>              | No       | The key dates for the project                                               |
+| timelineDetails | [string](/protocol/types/string#string)                                                | No       | Details about the timeline that don't fit into the other fields            |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.projectTimeline.example}
+  jsonSchema={frontmatter.projectTimeline.jsonSchema}
+  typeSpec={frontmatter.projectTimeline.typeSpec}
+/>
+
+## ProposalContacts
+
+The point of contact for the project.
+
+### Table
+
+| Property      | Type                                                                                   | Required | Description                                                                 |
+| ------------- | -------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| primary       | [PersonBase](/protocol/models/person)                                                  | Yes      | The primary point of contact for the proposal                              |
+| otherContacts | [Record](/protocol/types/other#record)\<[PersonBase](/protocol/models/person)\>        | No       | Other points of contact for the proposal (key personnel, representatives)  |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.proposalContacts.example}
+  jsonSchema={frontmatter.proposalContacts.jsonSchema}
+  typeSpec={frontmatter.proposalContacts.typeSpec}
+/>
+
+## ProposalOrgs
+
+The organization that is requesting funding.
+
+### Table
+
+| Property    | Type                                                                                   | Required | Description                                                                 |
+| ----------- | -------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| primary     | [OrganizationBase](/protocol/models/organization)                                      | Yes      | The primary organization that is requesting funding                        |
+| otherOrgs   | [Record](/protocol/types/other#record)\<[OrganizationBase](/protocol/models/organization)\> | No       | Other organizations supporting the proposal (fiscal sponsor, partners, etc.) |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.proposalOrgs.example}
+  jsonSchema={frontmatter.proposalOrgs.jsonSchema}
+  typeSpec={frontmatter.proposalOrgs.typeSpec}
+/>

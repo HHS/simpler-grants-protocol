@@ -1,0 +1,328 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ProposalBase.yaml
+type: object
+properties:
+  title:
+    type: string
+    description: The title of the proposal and/or the project requesting funding.
+  description:
+    type: string
+    description: The description of the proposal and/or the project requesting funding.
+  amountRequested:
+    $ref: Money.yaml
+    description: The amount of money requested.
+  projectTimeline:
+    $ref: ProjectTimeline.yaml
+    description: The key dates for the project.
+  opportunity:
+    $ref: ProposalOpportunity.yaml
+    description: The opportunity to which this proposal is related
+  organizations:
+    $ref: ProposalOrgs.yaml
+    description: The organization that is requesting funding.
+  contacts:
+    $ref: ProposalContacts.yaml
+    description: The point of contact for the project.
+  customFields:
+    $ref: "#/$defs/RecordCustomField"
+    description: The project's custom fields.
+examples:
+  - title: Example Project
+    description: Example project to serve community needs.
+    amountRequested:
+      amount: "100000"
+      currency: USD
+    opportunity:
+      id: 083b4567-e89d-42c8-a439-6c1234567890
+      title: Example Opportunity
+      customFields:
+        agency:
+          name: agency
+          fieldType: string
+          value: Department of Transportation
+          description: The agency responsible for managing this opportunity
+    projectTimeline:
+      startDate:
+        name: Project Start Date
+        eventType: singleDate
+        date: 2025-01-01
+      endDate:
+        name: Project End Date
+        eventType: singleDate
+        date: 2025-12-31
+      otherDates:
+        evaluationPeriod:
+          name: Evaluation Period
+          eventType: dateRange
+          startDate: 2025-07-01
+          endDate: 2025-08-31
+          description: The period during which the evaluation will be conducted.
+    contacts:
+      primary:
+        name:
+          prefix: Dr.
+          firstName: Jane
+          middleName: Edward
+          lastName: Doe
+          suffix: Jr.
+        title: Chief Executive Officer
+        addresses:
+          primary:
+            street1: 123 Main St
+            city: Anytown
+            stateOrProvince: CA
+            country: US
+            postalCode: "12345"
+          otherAddresses:
+            work:
+              street1: 123 Main St
+              city: Anytown
+              stateOrProvince: CA
+              country: US
+              postalCode: "12345"
+            home:
+              street1: 123 Main St
+              city: Anytown
+              stateOrProvince: CA
+              country: US
+              postalCode: "12345"
+        phones:
+          primary:
+            countryCode: "+1"
+            number: 444-456-1230
+            isMobile: true
+          otherPhones:
+            home:
+              countryCode: "+1"
+              number: 333-456-1230
+              isMobile: false
+        emails:
+          primary: john.doe@example.com
+          otherEmails:
+            work: john.doe@work.com
+            personal: john.doe@gmail.com
+            school: john.doe@school.edu
+      otherContacts:
+        principalInvestigator:
+          name:
+            prefix: Dr.
+            firstName: Alicia
+            lastName: Williams
+          emails:
+            primary: alicia.williams@example.com
+        authorizedRepresentative:
+          name:
+            firstName: John
+            lastName: Doe
+          emails:
+            primary: john.doe@example.com
+    organizations:
+      primary:
+        id: 083b4567-e89d-42c8-a439-6c1234567890
+        name: Example Organization
+        orgType:
+          term: Hospital
+          class: Organization types
+          description: Institutions with the primary purpose of providing in-patient physical and mental health services...
+          code: EO000000
+        ein: 12-3456789
+        uei: ABC1234567890
+        duns: "123456789012"
+        addresses:
+          primary:
+            street1: 456 Main St
+            street2: Suite 100
+            city: Anytown
+            stateOrProvince: CA
+            country: US
+            postalCode: "12345"
+          otherAddresses:
+            satellite:
+              street1: 456 Main St
+              street2: Suite 100
+              city: Anytown
+              stateOrProvince: CA
+              country: US
+              postalCode: "12345"
+            international:
+              street1: 123 Rue Principale
+              city: Montreal
+              stateOrProvince: QC
+              country: CA
+              postalCode: H2Y 1C6
+        phones:
+          primary:
+            countryCode: "+1"
+            number: 444-456-1230
+            isMobile: true
+          fax:
+            countryCode: "+1"
+            number: 555-123-4567
+            extension: "123"
+            isMobile: false
+          otherPhones:
+            support:
+              countryCode: "+1"
+              number: 333-456-1230
+              isMobile: false
+            marketing:
+              countryCode: "+1"
+              number: 444-456-1230
+              isMobile: true
+        emails:
+          primary: info@example.com
+          otherEmails:
+            support: support@example.com
+            marketing: marketing@example.com
+        mission: To provide support and resources to the community.
+        yearFounded: "2024"
+        socials:
+          website: https://www.example.com
+          facebook: https://www.facebook.com/example
+          twitterOrX: https://x.com/example
+          instagram: https://www.instagram.com/example
+          linkedin: https://www.linkedin.com/company/example
+          otherSocials:
+            youtube: https://www.youtube.com/example
+      otherOrgs:
+        fiscalSponsor:
+          id: 083b4567-e89d-42c8-a439-6c1234567890
+          name: Example Organization
+          orgType:
+            term: Hospital
+            class: Organization types
+            description: Institutions with the primary purpose of providing in-patient physical and mental health services...
+            code: EO000000
+          ein: 12-3456789
+          uei: ABC1234567890
+          duns: "123456789012"
+          addresses:
+            primary:
+              street1: 456 Main St
+              street2: Suite 100
+              city: Anytown
+              stateOrProvince: CA
+              country: US
+              postalCode: "12345"
+            otherAddresses:
+              satellite:
+                street1: 456 Main St
+                street2: Suite 100
+                city: Anytown
+                stateOrProvince: CA
+                country: US
+                postalCode: "12345"
+              international:
+                street1: 123 Rue Principale
+                city: Montreal
+                stateOrProvince: QC
+                country: CA
+                postalCode: H2Y 1C6
+          phones:
+            primary:
+              countryCode: "+1"
+              number: 444-456-1230
+              isMobile: true
+            fax:
+              countryCode: "+1"
+              number: 555-123-4567
+              extension: "123"
+              isMobile: false
+            otherPhones:
+              support:
+                countryCode: "+1"
+                number: 333-456-1230
+                isMobile: false
+              marketing:
+                countryCode: "+1"
+                number: 444-456-1230
+                isMobile: true
+          emails:
+            primary: info@example.com
+            otherEmails:
+              support: support@example.com
+              marketing: marketing@example.com
+          mission: To provide support and resources to the community.
+          yearFounded: "2024"
+          socials:
+            website: https://www.example.com
+            facebook: https://www.facebook.com/example
+            twitterOrX: https://x.com/example
+            instagram: https://www.instagram.com/example
+            linkedin: https://www.linkedin.com/company/example
+            otherSocials:
+              youtube: https://www.youtube.com/example
+        partner:
+          id: 083b4567-e89d-42c8-a439-6c1234567890
+          name: Example Organization
+          orgType:
+            term: Hospital
+            class: Organization types
+            description: Institutions with the primary purpose of providing in-patient physical and mental health services...
+            code: EO000000
+          ein: 12-3456789
+          uei: ABC1234567890
+          duns: "123456789012"
+          addresses:
+            primary:
+              street1: 456 Main St
+              street2: Suite 100
+              city: Anytown
+              stateOrProvince: CA
+              country: US
+              postalCode: "12345"
+            otherAddresses:
+              satellite:
+                street1: 456 Main St
+                street2: Suite 100
+                city: Anytown
+                stateOrProvince: CA
+                country: US
+                postalCode: "12345"
+              international:
+                street1: 123 Rue Principale
+                city: Montreal
+                stateOrProvince: QC
+                country: CA
+                postalCode: H2Y 1C6
+          phones:
+            primary:
+              countryCode: "+1"
+              number: 444-456-1230
+              isMobile: true
+            fax:
+              countryCode: "+1"
+              number: 555-123-4567
+              extension: "123"
+              isMobile: false
+            otherPhones:
+              support:
+                countryCode: "+1"
+                number: 333-456-1230
+                isMobile: false
+              marketing:
+                countryCode: "+1"
+                number: 444-456-1230
+                isMobile: true
+          emails:
+            primary: info@example.com
+            otherEmails:
+              support: support@example.com
+              marketing: marketing@example.com
+          mission: To provide support and resources to the community.
+          yearFounded: "2024"
+          socials:
+            website: https://www.example.com
+            facebook: https://www.facebook.com/example
+            twitterOrX: https://x.com/example
+            instagram: https://www.instagram.com/example
+            linkedin: https://www.linkedin.com/company/example
+            otherSocials:
+              youtube: https://www.youtube.com/example
+description: A proposal for funding.
+$defs:
+  RecordCustomField:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: CustomField.yaml
