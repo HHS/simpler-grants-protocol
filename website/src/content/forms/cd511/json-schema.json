@@ -27,7 +27,8 @@
     "PrefixName": {
       "type": "string",
       "title": "Prefix",
-      "description": "Select the Prefix from the provided list or enter a new Prefix not provided on the list."
+      "description": "Select the Prefix from the provided list or enter a new Prefix not provided on the list.",
+      "enum": ["Mr.", "Mrs.", "Miss", "Ms.", "Dr.", "Rev.", "Prof."]
     },
     "FirstName": {
       "type": "string",
@@ -47,7 +48,8 @@
     "SuffixName": {
       "type": "string",
       "title": "Suffix",
-      "description": "Select the Suffix from the provided list or enter a new Suffix not provided on the list."
+      "description": "Select the Suffix from the provided list or enter a new Suffix not provided on the list.",
+      "enum": ["Jr.", "Sr.", "M.D.", "Ph.D"]
     },
     "Title": {
       "type": "string",
