@@ -20,10 +20,10 @@ interface OpenApiDocsProps {
 // #########################################################
 
 const getUrlParams = () => {
-  if (typeof window === "undefined") return { version: null };
+  if (typeof window === "undefined") return { version: "" };
   const urlParams = new URLSearchParams(window.location.search);
   return {
-    version: urlParams.get("version"),
+    version: urlParams.get("version") || "",
   };
 };
 
@@ -31,21 +31,13 @@ const updateUrlParams = (version: string) => {
   if (typeof window === "undefined") return;
 
   const url = new URL(window.location.href);
-
-  if (version === defaultVersion) {
-    url.searchParams.delete("version");
-  } else {
-    url.searchParams.set("version", version);
-  }
+  url.searchParams.set("version", version);
 
   // Update URL without causing a page reload
   window.history.replaceState({}, "", url.toString());
 };
 
-const getValidVersion = (
-  version: string | null,
-  fallbackVersion: string
-): string => {
+const getValidVersion = (version: string, fallbackVersion: string): string => {
   if (!version || !availableVersions.some((v) => v.version === version)) {
     return fallbackVersion;
   }
@@ -57,6 +49,9 @@ const getValidVersion = (
 // #########################################################
 
 const styles = {
+  versionSelector: {
+    maxWidth: "480px",
+  },
   selectLabel: {
     display: "flex",
     flexDirection: "column" as const,
@@ -100,7 +95,7 @@ export default function OpenApiDocs({ className }: OpenApiDocsProps) {
 
   return (
     <div className={className}>
-      <div className="version-selector">
+      <div style={styles.versionSelector}>
         <label style={styles.selectLabel}>
           API Version
           <select
