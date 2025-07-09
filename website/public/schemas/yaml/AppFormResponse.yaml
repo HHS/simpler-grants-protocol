@@ -1,0 +1,11 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AppFormResponse.yaml
+type: object
+properties:
+  applicationId:
+    $ref: uuid.yaml
+    description: The unique identifier for the application
+required:
+  - applicationId
+allOf:
+  - $ref: FormResponseBase.yaml

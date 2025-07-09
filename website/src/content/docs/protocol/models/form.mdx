@@ -1,0 +1,169 @@
+---
+title: Form
+description: A form for collecting data from a user
+form:
+  example:
+    code: |
+      {
+        "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+        "name": "Form A",
+        "description": "Form A description",
+        "instructions": "Form A instructions",
+        "jsonSchema": {
+          "$id": "formA.json",
+          "type": "object",
+          "properties": {
+            "name": {
+              "first": { "type": "string" },
+              "last": { "type": "string" }
+            },
+            "email": { "type": "string" },
+            "phone": { "type": "string" }
+          }
+        },
+        "uiSchema": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Group",
+              "label": "Name",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/name/first" },
+                { "type": "Control", "scope": "#/properties/name/last" }
+              ]
+            },
+            { "type": "Control", "scope": "#/properties/email" },
+            { "type": "Control", "scope": "#/properties/phone" }
+          ]
+        },
+        "mappingToCommonGrants": {
+          "name": {
+            "firstName": { "field": "name.first" },
+            "lastName": { "field": "name.last" }
+          },
+          "emails": { "primary": { "field": "email" } },
+          "phones": { "primary": { "field": "phone" } }
+        },
+        "mappingFromCommonGrants": {
+          "name": {
+            "first": { "field": "name.firstName" },
+            "last": { "field": "name.lastName" }
+          },
+          "email": { "field": "emails.primary" },
+          "phone": { "field": "phones.primary" }
+        },
+        "customFields": {
+          "formType": {
+            "name": "Form Type",
+            "fieldType": "string",
+            "value": "application",
+            "description": "The type of form"
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Form.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/form.tsp"
+      startLine: 9
+      endLine: 38
+formJsonSchema:
+  example:
+    code: |
+      {
+        "$id": "formA.json",
+        "type": "object",
+        "properties": {
+          "name": {
+            "first": { "type": "string" },
+            "last": { "type": "string" }
+          },
+          "email": { "type": "string" },
+          "phone": { "type": "string" }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/FormJsonSchema.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/form.tsp"
+      startLine: 44
+      endLine: 48
+formUISchema:
+  example:
+    code: |
+      {
+        "type": "VerticalLayout",
+        "elements": [
+          {
+            "type": "Group",
+            "label": "Name",
+            "elements": [
+              { "type": "Control", "scope": "#/properties/name/first" },
+              { "type": "Control", "scope": "#/properties/name/last" }
+            ]
+          },
+          { "type": "Control", "scope": "#/properties/email" },
+          { "type": "Control", "scope": "#/properties/phone" }
+        ]
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/FormUISchema.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/form.tsp"
+      startLine: 54
+      endLine: 58
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+
+## Form
+
+A form for collecting data from a user.
+
+### Table
+
+| Property                | Type                                                                                   | Required | Description                                                                |
+| ----------------------- | -------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
+| id                      | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The form's unique identifier                                               |
+| name                    | [string](/protocol/types/string#string)                                                | Yes      | The form's name                                                            |
+| description             | [string](/protocol/types/string#string)                                                | No       | The form's description                                                     |
+| instructions            | [string](/protocol/types/string#string) \| [File](/protocol/fields/file)               | No       | The form's instructions                                                    |
+| jsonSchema              | [FormJsonSchema](#formjsonschema)                                                      | No       | The form's JSON schema used to render the form and validate responses      |
+| uiSchema                | [FormUISchema](#formuischema)                                                          | No       | The form's UI schema used to render the form in the browser                |
+| mappingToCommonGrants   | [MappingSchema](/protocol/models/mapping)                                              | No       | A mapping from form schema to CommonGrants schema                          |
+| mappingFromCommonGrants | [MappingSchema](/protocol/models/mapping)                                              | No       | A mapping from CommonGrants schema to form schema                          |
+| customFields            | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Custom attributes about the form itself, not custom fields within the form |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.form.example}
+  jsonSchema={frontmatter.form.jsonSchema}
+  typeSpec={frontmatter.form.typeSpec}
+/>
+
+## FormJsonSchema
+
+A JSON schema used to validate form responses.
+
+<SchemaFormatTabs
+  example={frontmatter.formJsonSchema.example}
+  jsonSchema={frontmatter.formJsonSchema.jsonSchema}
+  typeSpec={frontmatter.formJsonSchema.typeSpec}
+/>
+
+## FormUISchema
+
+A UI schema used to render the form in the browser.
+
+<SchemaFormatTabs
+  example={frontmatter.formUISchema.example}
+  jsonSchema={frontmatter.formUISchema.jsonSchema}
+  typeSpec={frontmatter.formUISchema.typeSpec}
+/>

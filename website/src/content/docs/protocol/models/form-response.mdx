@@ -1,0 +1,131 @@
+---
+title: Form Response
+description: The form response model is used to represent a response to a form.
+formResponse:
+  example:
+    code: |
+      {
+        "id": "083b4567-e89d-42c8-a439-6c1234567890",
+        "form": {
+          "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+          "name": "Form A",
+          "description": "Form A description"
+        },
+        "response": {
+          "name": {
+            "first": "John",
+            "last": "Doe"
+          },
+          "email": "john.doe@example.com",
+          "phone": "555-123-4567"
+        },
+        "status": {
+          "value": "complete",
+          "description": "The form response is complete"
+        },
+        "validationErrors": [],
+        "createdAt": "2024-01-01T00:00:00Z",
+        "lastModifiedAt": "2024-01-01T00:00:00Z"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/FormResponseBase.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/form-response.tsp"
+      startLine: 3
+      endLine: 22
+formResponseStatus:
+  example:
+    code: |
+      {
+        "value": "complete",
+        "description": "The form response is complete"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/FormResponseStatus.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/form-response.tsp"
+      startLine: 28
+      endLine: 39
+formResponseStatusOptions:
+  example:
+    code: '"inProgress"'
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/FormResponseStatusOptions.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/form-response.tsp"
+      startLine: 45
+      endLine: 55
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+
+## FormResponseBase
+
+Base model for a form response.
+
+### Table
+
+| Property         | Type                                              | Required | Description                                  |
+| ---------------- | ------------------------------------------------- | -------- | -------------------------------------------- |
+| id               | [uuid](/protocol/types/string#uuid)               | Yes      | The form's unique identifier.                |
+| form             | [Form](/protocol/models/form)                     | Yes      | The form being responded to.                 |
+| response         | [Record](/protocol/types/other#record)\<unknown\> | Yes      | The response to the form.                    |
+| status           | [FormResponseStatus](#formresponsestatus)         | Yes      | The status of the form response.             |
+| validationErrors | [Array](/protocol/types/other#array)\<unknown\>   | Yes      | The validation errors for the form response. |
+| createdAt        | [utcDateTime](/protocol/types/date#utcdatetime)   | Yes      | The form's creation date.                    |
+| lastModifiedAt   | [utcDateTime](/protocol/types/date#utcdatetime)   | Yes      | The form's last modified date.               |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.formResponse.example}
+  jsonSchema={frontmatter.formResponse.jsonSchema}
+  typeSpec={frontmatter.formResponse.typeSpec}
+/>
+
+## FormResponseStatus
+
+The status of a form response.
+
+### Table
+
+| Property    | Type                                                    | Required | Description                    |
+| ----------- | ------------------------------------------------------- | -------- | ------------------------------ |
+| value       | [FormResponseStatusOptions](#formresponsestatusoptions) | Yes      | The form's status.             |
+| customValue | [string](/protocol/types/string#string)                 | No       | A custom value for the status. |
+| description | [string](/protocol/types/string#string)                 | No       | A description of the status.   |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.formResponseStatus.example}
+  jsonSchema={frontmatter.formResponseStatus.jsonSchema}
+  typeSpec={frontmatter.formResponseStatus.typeSpec}
+/>
+
+## FormResponseStatusOptions
+
+The options for the status of a form response.
+
+### Options
+
+| Value      | Description                            |
+| ---------- | -------------------------------------- |
+| notStarted | The form response has not been started |
+| inProgress | The form response is in progress       |
+| complete   | The form response is complete          |
+| custom     | A custom status                        |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.formResponseStatusOptions.example}
+  jsonSchema={frontmatter.formResponseStatusOptions.jsonSchema}
+  typeSpec={frontmatter.formResponseStatusOptions.typeSpec}
+/>

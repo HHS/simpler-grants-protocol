@@ -1,5 +1,5 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: AppOpportunity.yaml
+$id: ProposalOpportunity.yaml
 type: object
 properties:
   id:
@@ -13,7 +13,7 @@ properties:
     description: The opportunity's custom fields.
 required:
   - id
-description: The opportunity to which this application is related
+description: The opportunity to which this proposal is related
 $defs:
   RecordCustomField:
     type: object

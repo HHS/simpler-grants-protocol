@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ProposalOrgs.yaml
+type: object
+properties:
+  primary:
+    $ref: OrganizationBase.yaml
+    description: The primary organization that is requesting funding.
+  otherOrgs:
+    $ref: "#/$defs/RecordOrganizationBase"
+    description: Other organizations that are supporting the proposal. For example, a fiscal sponsor, partners, etc.
+required:
+  - primary
+$defs:
+  RecordOrganizationBase:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: OrganizationBase.yaml

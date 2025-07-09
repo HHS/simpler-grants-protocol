@@ -38,9 +38,7 @@
           "type": "string",
           "title": "Prefix",
           "description": "Select the Prefix from the provided list or enter a new Prefix not provided on the list.",
-          "minLength": 0,
-          "maxLength": 10,
-          "enum": ["Mr.", "Mrs.", "Miss", "Ms.", "Dr.", "Rev."]
+          "enum": ["Mr.", "Mrs.", "Miss", "Ms.", "Dr.", "Rev.", "Prof."]
         },
         "FirstName": {
           "type": "string",
@@ -67,9 +65,7 @@
           "type": "string",
           "title": "Suffix",
           "description": "Select the Suffix from the provided list or enter a new Suffix not provided on the list.",
-          "minLength": 0,
-          "maxLength": 10,
-          "enum": ["Jr.", "Sr.", "M.D.", "Ph.D."]
+          "enum": ["Jr.", "Sr.", "M.D.", "Ph.D"]
         },
         "Title": {
           "type": "string",

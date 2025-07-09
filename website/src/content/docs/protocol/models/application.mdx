@@ -5,30 +5,24 @@ applicationBase:
   example:
     code: |
       {
+        "id": "083b4567-e89d-42c8-a439-6c1234567890",
+        "name": "Example Application",
+        "competitionId": "083b4567-e89d-42c8-a439-6c1234567890",
+        "formResponses": {
+          // Form responses would be here
+        },
         "status": {
           "value": "submitted",
           "description": "Application has been submitted."
         },
-        "dateSubmitted": "2024-01-01",
-        "organization": {
-          // Organization details would be here
-        },
-        "pointOfContact": {
-          // Person details would be here
-        },
-        "proposal": {
-          "title": "Example Project",
-          "description": "Example project to serve community needs.",
-          "amountRequested": {
-            "amount": "100000",
-            "currency": "USD"
-          },
-          "periodStartDate": "2024-01-01",
-          "periodEndDate": "2024-12-31"
-        },
-        "opportunity": {
-          "id": "083b4567-e89d-42c8-a439-6c1234567890",
-          "title": "Example Opportunity"
+        "submittedAt": "2024-01-01T00:00:00Z",
+        "customFields": {
+          "pctComplete": {
+            "name": "Percentage Complete",
+            "fieldType": "string",
+            "value": "50%",
+            "description": "Percentage of the application that has been completed"
+          }
         }
       }
   jsonSchema:
@@ -37,8 +31,8 @@ applicationBase:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 5
-      endLine: 31
+      startLine: 3
+      endLine: 27
 appStatus:
   example:
     code: |
@@ -52,8 +46,8 @@ appStatus:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 37
-      endLine: 48
+      startLine: 33
+      endLine: 44
 appStatusOptions:
   example:
     code: '"submitted"'
@@ -63,44 +57,43 @@ appStatusOptions:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 54
-      endLine: 60
-appProposal:
-  example:
-    code: |
-      {
-        "title": "Example Project",
-        "description": "Example project to serve community needs.",
-        "amountRequested": {
-          "amount": "100000",
-          "currency": "USD"
-        },
-        "periodStartDate": "2024-01-01",
-        "periodEndDate": "2024-12-31"
-      }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AppProposal.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/application.tsp"
-      startLine: 66
-      endLine: 86
-appOpportunity:
+      startLine: 50
+      endLine: 66
+appFormResponse:
   example:
     code: |
       {
         "id": "083b4567-e89d-42c8-a439-6c1234567890",
-        "title": "Example Opportunity"
+        "form": {
+          "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+          "name": "Form A",
+          "description": "Form A description"
+        },
+        "response": {
+          "name": {
+            "first": "John",
+            "last": "Doe"
+          },
+          "email": "john.doe@example.com",
+          "phone": "555-123-4567"
+        },
+        "status": {
+          "value": "complete",
+          "description": "The form response is complete"
+        },
+        "validationErrors": [],
+        "applicationId": "083b4567-e89d-42c8-a439-6c1234567890",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "lastModifiedAt": "2024-01-01T00:00:00Z"
       }
   jsonSchema:
     file:
-      path: "website/public/schemas/yaml/AppOpportunity.yaml"
+      path: "website/public/schemas/yaml/AppFormResponse.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 92
-      endLine: 102
+      startLine: 72
+      endLine: 75
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -111,16 +104,15 @@ Base model for an application to a funding opportunity.
 
 ### Table
 
-| Property       | Type                                                                                   | Required | Description                                     |
-| -------------- | -------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
-| id             | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The application's unique identifier             |
-| status         | [AppStatus](#appstatus)                                                                | No       | The application's status                        |
-| dateSubmitted  | [isoDate](/protocol/types/date#isodate)                                                | No       | The application's date of submission            |
-| organization   | [OrganizationBase](/protocol/models/organization)                                      | No       | The organization that is applying for the grant |
-| pointOfContact | [PersonBase](/protocol/models/person)                                                  | No       | The person who is applying for the grant        |
-| proposal       | [AppProposal](#appproposal)                                                            | No       | The application's proposal for funding          |
-| opportunity    | [AppOpportunity](#appopportunity)                                                      | No       | The opportunity being applied to                |
-| customFields   | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The application's custom fields                 |
+| Property      | Type                                                                                   | Required | Description                                     |
+| ------------- | -------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
+| id            | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the application       |
+| name          | [string](/protocol/types/string#string)                                                | Yes      | The name of the application                     |
+| competitionId | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the competition       |
+| formResponses | [Record](/protocol/types/other#record)\<[AppFormResponse](#appformresponse)\>          | Yes      | The form responses for the application          |
+| status        | [AppStatus](#appstatus)                                                                | Yes      | The status of the application                   |
+| submittedAt   | [utcDateTime](/protocol/types/date#utcdatetime)                                        | No       | The date and time the application was submitted |
+| customFields  | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields about the application         |
 
 ### Formats
 
@@ -152,16 +144,17 @@ The status of an application.
 
 ## AppStatusOptions
 
-The set of values accepted for application status.
+The default set of values accepted for application status.
 
 ### Table
 
 | Value     | Description                         |
 | --------- | ----------------------------------- |
+| draft     | The application is a draft          |
 | submitted | The application has been submitted. |
-| approved  | The application has been approved.  |
+| accepted  | The application has been accepted.  |
 | rejected  | The application has been rejected.  |
-| custom    | A custom status value is provided.  |
+| custom    | The application has a custom status |
 
 ### Formats
 
@@ -171,45 +164,27 @@ The set of values accepted for application status.
   typeSpec={frontmatter.appStatusOptions.typeSpec}
 />
 
-## AppProposal
+## AppFormResponse
 
-The proposal for funding an application.
+A form response associated with an application.
 
 ### Table
 
-| Property        | Type                                                                                   | Required | Description                           |
-| --------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------- |
-| title           | [string](/protocol/types/string#string)                                                | Yes      | The title of the proposal.            |
-| description     | [string](/protocol/types/string#string)                                                | Yes      | The description of the proposal.      |
-| amountRequested | [Money](/protocol/fields/money)                                                        | No       | The amount of money requested.        |
-| periodStartDate | [isoDate](/protocol/types/date#isodate)                                                | No       | The start date of the funding period. |
-| periodEndDate   | [isoDate](/protocol/types/date#isodate)                                                | No       | The end date of the funding period.   |
-| customFields    | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The proposal's custom fields.         |
+| Property         | Type                                                                    | Required | Description                                                  |
+| ---------------- | ----------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
+| id               | [uuid](/protocol/types/string#uuid)                                     | Yes      | The unique identifier for the form response                  |
+| form             | [Form](/protocol/models/form)                                           | Yes      | The form being responded to                                  |
+| response         | [Record](/protocol/types/other#record)\<unknown\>                       | Yes      | The response to the form                                     |
+| status           | [FormResponseStatus](/protocol/models/form-response#formresponsestatus) | Yes      | The status of the form response                              |
+| validationErrors | [Array](/protocol/types/other#array)\<unknown\>                         | Yes      | The validation errors for the form response                  |
+| applicationId    | [uuid](/protocol/types/string#uuid)                                     | Yes      | The unique identifier for the application                    |
+| createdAt        | [utcDateTime](/protocol/types/date#utcdatetime)                         | Yes      | The timestamp (in UTC) at which the record was created       |
+| lastModifiedAt   | [utcDateTime](/protocol/types/date#utcdatetime)                         | Yes      | The timestamp (in UTC) at which the record was last modified |
 
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.appProposal.example}
-  jsonSchema={frontmatter.appProposal.jsonSchema}
-  typeSpec={frontmatter.appProposal.typeSpec}
-/>
-
-## AppOpportunity
-
-The opportunity being applied to.
-
-### Table
-
-| Property     | Type                                                                                   | Required | Description                          |
-| ------------ | -------------------------------------------------------------------------------------- | -------- | ------------------------------------ |
-| id           | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The opportunity's unique identifier. |
-| title        | [string](/protocol/types/string#string)                                                | No       | The title of the opportunity.        |
-| customFields | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The opportunity's custom fields.     |
-
-### Formats
-
-<SchemaFormatTabs
-  example={frontmatter.appOpportunity.example}
-  jsonSchema={frontmatter.appOpportunity.jsonSchema}
-  typeSpec={frontmatter.appOpportunity.typeSpec}
+  example={frontmatter.appFormResponse.example}
+  jsonSchema={frontmatter.appFormResponse.jsonSchema}
+  typeSpec={frontmatter.appFormResponse.typeSpec}
 />

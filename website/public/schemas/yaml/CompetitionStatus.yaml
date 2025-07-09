@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CompetitionStatus.yaml
+type: object
+properties:
+  value:
+    $ref: CompetitionStatusOptions.yaml
+  customValue:
+    type: string
+  description:
+    type: string
+required:
+  - value
+examples:
+  - value: open
+    customValue: custom
+    description: Competition is open for applications
+description: The status of the competition

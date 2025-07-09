@@ -2,4 +2,4 @@
 dist/
 .astro/
 node_modules/ 
-public/*openapi*.yaml
+public/openapi/*openapi*.yaml

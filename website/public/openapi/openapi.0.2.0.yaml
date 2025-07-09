@@ -1,0 +1,2103 @@
+openapi: 3.0.0
+info:
+  title: CommonGrants Base API
+  description: |-
+    The base OpenAPI specification for a CommonGrants API
+
+    In order for an API to be "compliant" with the CommonGrants protocol,
+    it must implement all of the routes with the "required" tag in this specification.
+  version: 0.2.0
+tags:
+  - name: Opportunities
+    description: Endpoints related to funding opportunities
+  - name: Applications
+    description: Endpoints related to applications for funding opportunities
+  - name: required
+    description: Endpoints that MUST be implemented by all CommonGrants APIs
+  - name: optional
+    description: Endpoints that MAY be implemented by CommonGrants APIs
+  - name: experimental
+    description: Endpoints that MAY be implemented by CommonGrants APIs, but are not guaranteed to be stable
+paths:
+  /common-grants/applications/start:
+    post:
+      operationId: MultiStepWorkflow_startApplication
+      summary: Start an application
+      description: Start a draft application for a given competition
+      parameters: []
+      responses:
+        '201':
+          description: A 201 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.ApplicationBase'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 201 response with data
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Applications
+        - experimental
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                competitionId:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  description: The ID of the competition to start an application for
+                organizationId:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  description: The ID of the organization to start an application for, if applying on behalf of an organization
+                name:
+                  type: string
+                  description: The name of the application
+              required:
+                - competitionId
+                - name
+  /common-grants/applications/{appId}/forms/{formId}:
+    put:
+      operationId: MultiStepWorkflow_setFormResponse
+      summary: Respond to a form
+      description: Update the response to a given form on an application
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          description: The ID of the application to get
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - name: formId
+          in: path
+          required: true
+          description: The ID of the form to update
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.AppFormResponse'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+      tags:
+        - Applications
+        - experimental
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+        description: The response to the form
+    get:
+      operationId: MultiStepWorkflow_getFormResponse
+      summary: Get a form response
+      description: Get the response to a given form on an application
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          description: The ID of the application to get
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - name: formId
+          in: path
+          required: true
+          description: The ID of the form to get
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.AppFormResponse'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+      tags:
+        - Applications
+        - experimental
+  /common-grants/applications/{id}:
+    get:
+      operationId: MultiStepWorkflow_getApplication
+      summary: View an application
+      description: View an application for a given competition with draft form responses
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the application to get
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.ApplicationBase'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Applications
+        - experimental
+  /common-grants/applications/{id}/submit:
+    post:
+      operationId: MultiStepWorkflow_submitApplication
+      summary: Submit an application
+      description: Submit an application for a given competition
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the application to submit
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '204':
+          description: There is no content to send for this request, but the headers may be useful.
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Applications
+        - experimental
+  /common-grants/competitions/competitions/{id}:
+    get:
+      operationId: DirectApplyWorkflow_competitionDetails
+      summary: View competition details
+      description: View additional details about a competition for a given opportunity. A competition is an application process for a funding opportunity, often with a distinct set of forms and key dates.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the competition to get
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.CompetitionBase'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Applications
+        - experimental
+  /common-grants/competitions/competitions/{id}/apply:
+    post:
+      operationId: DirectApplyWorkflow_apply
+      summary: Apply to a competition
+      description: Apply to a given competition with all of the required information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the competition to apply to
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '201':
+          description: A 201 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.ApplicationBase'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 201 response with data
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Applications
+        - experimental
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommonGrants.Models.ApplicationBase'
+        description: The application to apply to the competition
+  /common-grants/opportunities:
+    get:
+      operationId: Opportunities_list
+      summary: List opportunities
+      description: Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.
+      parameters:
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
+      responses:
+        '200':
+          description: A 200 response with a paginated list of items
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - paginationInfo
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.OpportunityBase'
+                    description: Items from the current page
+                  paginationInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+                    description: Details about the paginated results
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with a paginated list of items
+      tags:
+        - Opportunities
+        - required
+  /common-grants/opportunities/search:
+    post:
+      operationId: Opportunities_search
+      summary: Search opportunities
+      description: Search for opportunities based on the provided filters
+      parameters: []
+      responses:
+        '200':
+          description: A paginated list of items with a filter
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - paginationInfo
+                  - status
+                  - message
+                  - sortInfo
+                  - filterInfo
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.OpportunityBase'
+                    description: Items from the current page
+                  paginationInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+                    description: Details about the paginated results
+                  status:
+                    type: integer
+                    format: int32
+                    example: 200
+                  message:
+                    type: string
+                    example: Success
+                  sortInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
+                    description: The sort order of the items
+                  filterInfo:
+                    type: object
+                    properties:
+                      filters:
+                        $ref: '#/components/schemas/CommonGrants.Models.OppFilters'
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                        description: Non-fatal errors that occurred during filtering
+                    required:
+                      - filters
+                    description: The filters applied to the response items
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A paginated list of items with a filter
+      tags:
+        - Opportunities
+        - optional
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: string
+                  description: Opportunity search query
+                  example: Pre-school education
+                filters:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Models.OppFilters'
+                  description: |-
+                    Filters to apply to the opportunity search
+
+                    Multiple filter conditions will be combined with AND logic, so that
+                    results only include opportunities that match all of the provided filters.
+                sorting:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Models.OppSorting'
+                  description: The sort order to apply to the results
+                pagination:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedBodyParams'
+                  description: Pagination instructions for the results
+  /common-grants/opportunities/{id}:
+    get:
+      operationId: Opportunities_read
+      summary: View opportunity
+      description: View additional details about an opportunity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the opportunity to view
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.OpportunityBase'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Opportunities
+        - required
+components:
+  parameters:
+    CommonGrants.Pagination.PaginatedQueryParams.page:
+      name: page
+      in: query
+      required: false
+      description: The page to return
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+      explode: false
+    CommonGrants.Pagination.PaginatedQueryParams.pageSize:
+      name: pageSize
+      in: query
+      required: false
+      description: The number of items to return per page
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 100
+      explode: false
+  schemas:
+    CommonGrants.Fields.CustomField:
+      type: object
+      required:
+        - name
+        - fieldType
+        - value
+      properties:
+        name:
+          type: string
+          description: Name of the custom field
+        fieldType:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.CustomFieldType'
+          description: The JSON schema type to use when de-serializing the `value` field
+        schema:
+          type: string
+          format: uri
+          description: Link to the full JSON schema for this custom field
+        value:
+          description: Value of the custom field
+        description:
+          type: string
+          description: Description of the custom field's purpose
+      description: A custom field on a model
+      example:
+        name: eligibilityType
+        fieldType: array
+        value:
+          - nonprofit
+          - academic
+        description: Types of eligible organizations
+    CommonGrants.Fields.CustomFieldType:
+      type: string
+      enum:
+        - string
+        - number
+        - integer
+        - boolean
+        - object
+        - array
+      description: The set of JSON schema types supported by a custom field
+    CommonGrants.Fields.DateRangeEvent:
+      type: object
+      required:
+        - eventType
+        - startDate
+        - endDate
+      properties:
+        eventType:
+          type: string
+          enum:
+            - dateRange
+          description: Type of event
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'Start date of the event in ISO 8601 format: YYYY-MM-DD'
+        startTime:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
+          description: 'Start time of the event in ISO 8601 format: HH:MM:SS'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'End date of the event in ISO 8601 format: YYYY-MM-DD'
+        endTime:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
+          description: 'End time of the event in ISO 8601 format: HH:MM:SS'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.EventBase'
+      description: Description of an event that has a start and end date (and possible time) associated with it
+      example:
+        name: Application period
+        eventType: dateRange
+        startDate: '2024-01-01'
+        endDate: '2024-01-31'
+        endTime: '17:00:00'
+        description: Primary application period for the grant opportunity
+    CommonGrants.Fields.Event:
+      anyOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.SingleDateEvent'
+        - $ref: '#/components/schemas/CommonGrants.Fields.DateRangeEvent'
+        - $ref: '#/components/schemas/CommonGrants.Fields.OtherEvent'
+      description: Union of all event types
+    CommonGrants.Fields.EventBase:
+      type: object
+      required:
+        - name
+        - eventType
+      properties:
+        name:
+          type: string
+          description: Human-readable name of the event (e.g., 'Application posted', 'Question deadline')
+        eventType:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.EventType'
+          description: Type of event
+        description:
+          type: string
+          description: Description of what this event represents
+      discriminator:
+        propertyName: eventType
+        mapping:
+          dateRange: '#/components/schemas/CommonGrants.Fields.DateRangeEvent'
+          other: '#/components/schemas/CommonGrants.Fields.OtherEvent'
+      description: Base model for all events
+    CommonGrants.Fields.EventType:
+      type: string
+      enum:
+        - singleDate
+        - dateRange
+        - other
+      description: |-
+        Type of event (e.g., a single date, a date range, or a custom event)
+
+        - singleDate: A single date (and possible time)
+        - dateRange: A period of time with a start and end date
+        - other: Other event type (e.g., a recurring event)
+    CommonGrants.Fields.File:
+      type: object
+      required:
+        - downloadUrl
+        - name
+        - createdAt
+        - lastModifiedAt
+      properties:
+        downloadUrl:
+          type: string
+          format: uri
+          description: The file's download URL.
+        name:
+          type: string
+          description: The file's name.
+        description:
+          type: string
+          description: The file's description.
+        sizeInBytes:
+          type: number
+          description: The file's size in bytes.
+        mimeType:
+          type: string
+          description: The file's MIME type.
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was created.
+          readOnly: true
+        lastModifiedAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was last modified.
+          readOnly: true
+      description: A field representing a downloadable file.
+      example:
+        downloadUrl: https://example.com/file.pdf
+        name: example.pdf
+        description: A PDF file with instructions
+        sizeInBytes: 1000
+        mimeType: application/pdf
+        createdAt: '2025-01-01T17:01:01'
+        lastModifiedAt: '2025-01-02T17:30:00'
+    CommonGrants.Fields.Money:
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.decimalString'
+          description: The amount of money
+        currency:
+          type: string
+          description: The ISO 4217 currency code in which the amount is denominated
+      description: A monetary amount and the currency in which it's denominated
+      example:
+        amount: '-50.50'
+        currency: USD
+    CommonGrants.Fields.OtherEvent:
+      type: object
+      required:
+        - eventType
+      properties:
+        eventType:
+          type: string
+          enum:
+            - other
+          description: Type of event
+        details:
+          type: string
+          description: Details of the event's timeline (e.g. "Every other Tuesday")
+        description:
+          type: string
+          description: Description of the event
+          example: Applications begin being accepted
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.EventBase'
+      description: Description of an event that is not a single date or date range
+      example:
+        name: Info sessions
+        eventType: other
+        details: Every other Tuesday at 10:00 AM during the application period
+        description: Info sessions for the opportunity
+    CommonGrants.Fields.SingleDateEvent:
+      type: object
+      required:
+        - eventType
+        - date
+      properties:
+        eventType:
+          type: string
+          enum:
+            - singleDate
+          description: Type of event
+        date:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'Date of the event in in ISO 8601 format: YYYY-MM-DD'
+        time:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
+          description: 'Time of the event in ISO 8601 format: HH:MM:SS'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.EventBase'
+      description: Description of an event that has a date (and possible time) associated with it
+      example:
+        name: Opportunity close date
+        eventType: singleDate
+        date: '2024-12-31'
+        time: '17:00:00'
+        description: Opportunity closes for all applications
+    CommonGrants.Filters.AllOperators:
+      type: string
+      enum:
+        - eq
+        - neq
+        - gt
+        - gte
+        - lt
+        - lte
+        - in
+        - notIn
+        - between
+        - outside
+        - like
+        - notLike
+    CommonGrants.Filters.ArrayOperators:
+      type: string
+      enum:
+        - in
+        - notIn
+      description: Operators that filter a field based on an array of values
+    CommonGrants.Filters.ComparisonOperators:
+      type: string
+      enum:
+        - gt
+        - gte
+        - lt
+        - lte
+      description: Operators that filter a field based on a comparison to a value
+    CommonGrants.Filters.DateRangeFilter:
+      type: object
+      required:
+        - operator
+        - value
+      properties:
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.RangeOperators'
+          description: The operator to apply to the filter value
+        value:
+          type: object
+          properties:
+            min:
+              anyOf:
+                - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+                - type: string
+                  format: date-time
+                - type: string
+                  format: date-time
+            max:
+              anyOf:
+                - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+                - type: string
+                  format: date-time
+                - type: string
+                  format: date-time
+          required:
+            - min
+            - max
+          description: The value to use for the filter operation
+          example:
+            min: '2021-01-01'
+            max: '2021-01-02'
+      description: Filters by comparing a field to a range of date values
+    CommonGrants.Filters.DefaultFilter:
+      type: object
+      required:
+        - operator
+        - value
+      properties:
+        operator:
+          anyOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.EquivalenceOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.ComparisonOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.ArrayOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.RangeOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.AllOperators'
+          description: The operator to apply to the filter value
+        value:
+          description: The value to use for the filter operation
+      description: A base filter model that can be used to create more specific filter models
+    CommonGrants.Filters.EquivalenceOperators:
+      type: string
+      enum:
+        - eq
+        - neq
+      description: Operators that filter a field based on an exact match to a value
+    CommonGrants.Filters.MoneyRangeFilter:
+      type: object
+      required:
+        - operator
+        - value
+      properties:
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.RangeOperators'
+          description: The operator to apply to the filter value
+        value:
+          type: object
+          properties:
+            min:
+              $ref: '#/components/schemas/CommonGrants.Fields.Money'
+            max:
+              $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          required:
+            - min
+            - max
+          description: The value to use for the filter operation
+          example:
+            min:
+              amount: '1000'
+              currency: USD
+            max:
+              amount: '10000'
+              currency: USD
+      description: Filters by comparing a field to a range of monetary values
+    CommonGrants.Filters.RangeOperators:
+      type: string
+      enum:
+        - between
+        - outside
+      description: Operators that filter a field based on a range of values
+    CommonGrants.Filters.StringArrayFilter:
+      type: object
+      required:
+        - operator
+        - value
+      properties:
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.ArrayOperators'
+          description: The operator to apply to the filter value
+        value:
+          type: array
+          items:
+            type: string
+          description: The value to use for the filter operation
+          example:
+            - value1
+            - value2
+      description: Filters by comparing a field to an array of string values
+    CommonGrants.Filters.StringOperators:
+      type: string
+      enum:
+        - like
+        - notLike
+      description: Operators that filter a field based on a string value
+    CommonGrants.Models.AppFormResponse:
+      type: object
+      required:
+        - applicationId
+      properties:
+        applicationId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The unique identifier for the application
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Models.FormResponseBase'
+    CommonGrants.Models.AppStatus:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AppStatusOptions'
+          description: The status of the application.
+        customValue:
+          type: string
+          description: A custom value for the status.
+        description:
+          type: string
+          description: A description of the status.
+      description: The status of the application.
+      example:
+        value: submitted
+        description: The application has been submitted.
+    CommonGrants.Models.AppStatusOptions:
+      type: string
+      enum:
+        - draft
+        - submitted
+        - accepted
+        - rejected
+        - custom
+      description: The default set of values accepted for application status.
+    CommonGrants.Models.ApplicationBase:
+      type: object
+      required:
+        - id
+        - name
+        - competitionId
+        - formResponses
+        - status
+        - createdAt
+        - lastModifiedAt
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The unique identifier for the application
+        name:
+          type: string
+          description: The name of the application
+        competitionId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The unique identifier for the competition
+        formResponses:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Models.AppFormResponse'
+          description: The form responses for the application
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AppStatus'
+          description: The status of the application
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: The date and time the application was submitted
+        customFields:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.CustomField'
+          description: The custom fields about the application
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was created.
+          readOnly: true
+        lastModifiedAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was last modified.
+          readOnly: true
+    CommonGrants.Models.CompetitionBase:
+      type: object
+      required:
+        - id
+        - opportunityId
+        - title
+        - status
+        - keyDates
+        - forms
+        - createdAt
+        - lastModifiedAt
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: Globally unique id for the competition
+        opportunityId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The opportunity id for the competition
+        title:
+          type: string
+          description: The title of the competition
+        description:
+          type: string
+          description: The description of the competition
+        instructions:
+          anyOf:
+            - type: string
+            - $ref: '#/components/schemas/CommonGrants.Fields.File'
+          description: The instructions for the competition
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.CompetitionStatus'
+          description: The status of the competition
+        keyDates:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.CompetitionTimeline'
+          description: The key dates in the competition timeline
+        forms:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.CompetitionForms'
+          description: The forms for the competition
+        customFields:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.CustomField'
+          description: The custom fields for the competition
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was created.
+          readOnly: true
+        lastModifiedAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was last modified.
+          readOnly: true
+      description: |-
+        The base model for a competition.
+
+        A competition is an application process for a funding opportunity. It often has a
+        distinct application period and set of application forms.
+      example:
+        id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
+        opportunityId: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b
+        title: Competition 1
+        description: Competition 1 description
+        instructions: Competition 1 instructions
+        status:
+          value: open
+          customValue: custom
+          description: Competition is open for applications
+        keyDates:
+          openDate: {}
+          closeDate: {}
+          otherDates:
+            reviewPeriod: {}
+        forms:
+          forms:
+            formA:
+              id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
+              name: Form A
+              description: Form A description
+              instructions: Form A instructions
+              jsonSchema:
+                $id: formA.json
+                type: object
+                properties:
+                  name:
+                    first:
+                      type: string
+                    last:
+                      type: string
+                  email:
+                    type: string
+                  phone:
+                    type: string
+              uiSchema:
+                type: VerticalLayout
+                elements:
+                  - type: Group
+                    label: Name
+                    elements:
+                      - type: Control
+                        scope: '#/properties/name/first'
+                      - type: Control
+                        scope: '#/properties/name/last'
+                  - type: Control
+                    scope: '#/properties/email'
+                  - type: Control
+                    scope: '#/properties/phone'
+              mappingToCommonGrants:
+                name:
+                  firstName:
+                    field: name.first
+                  lastName:
+                    field: name.last
+                emails:
+                  primary:
+                    field: email
+                phones:
+                  primary:
+                    field: phone
+              mappingFromCommonGrants:
+                name:
+                  first:
+                    field: name.firstName
+                  last:
+                    field: name.lastName
+                email: {}
+                phone: {}
+            formB:
+              id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
+              name: Form A
+              description: Form A description
+              instructions: Form A instructions
+              jsonSchema:
+                $id: formA.json
+                type: object
+                properties:
+                  name:
+                    first:
+                      type: string
+                    last:
+                      type: string
+                  email:
+                    type: string
+                  phone:
+                    type: string
+              uiSchema:
+                type: VerticalLayout
+                elements:
+                  - type: Group
+                    label: Name
+                    elements:
+                      - type: Control
+                        scope: '#/properties/name/first'
+                      - type: Control
+                        scope: '#/properties/name/last'
+                  - type: Control
+                    scope: '#/properties/email'
+                  - type: Control
+                    scope: '#/properties/phone'
+              mappingToCommonGrants:
+                name:
+                  firstName:
+                    field: name.first
+                  lastName:
+                    field: name.last
+                emails:
+                  primary:
+                    field: email
+                phones:
+                  primary:
+                    field: phone
+              mappingFromCommonGrants:
+                name:
+                  first:
+                    field: name.firstName
+                  last:
+                    field: name.lastName
+                email: {}
+                phone: {}
+          validation:
+            required:
+              - formA
+              - formB
+        createdAt: '2025-01-01T00:00:00Z'
+        lastModifiedAt: '2025-01-01T00:00:00Z'
+    CommonGrants.Models.CompetitionForms:
+      type: object
+      required:
+        - forms
+        - validation
+      properties:
+        forms:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Models.Form'
+          description: The forms for the competition
+        validation:
+          type: object
+          additionalProperties: {}
+          description: The validation rules for the competition forms
+      description: Set of forms that need to be completed to apply to the competition.
+      example:
+        forms:
+          formA:
+            id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
+            name: Form A
+            description: Form A description
+            instructions: Form A instructions
+            jsonSchema:
+              $id: formA.json
+              type: object
+              properties:
+                name:
+                  first:
+                    type: string
+                  last:
+                    type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+            uiSchema:
+              type: VerticalLayout
+              elements:
+                - type: Group
+                  label: Name
+                  elements:
+                    - type: Control
+                      scope: '#/properties/name/first'
+                    - type: Control
+                      scope: '#/properties/name/last'
+                - type: Control
+                  scope: '#/properties/email'
+                - type: Control
+                  scope: '#/properties/phone'
+            mappingToCommonGrants:
+              name:
+                firstName:
+                  field: name.first
+                lastName:
+                  field: name.last
+              emails:
+                primary:
+                  field: email
+              phones:
+                primary:
+                  field: phone
+            mappingFromCommonGrants:
+              name:
+                first:
+                  field: name.firstName
+                last:
+                  field: name.lastName
+              email: {}
+              phone: {}
+          formB:
+            id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
+            name: Form A
+            description: Form A description
+            instructions: Form A instructions
+            jsonSchema:
+              $id: formA.json
+              type: object
+              properties:
+                name:
+                  first:
+                    type: string
+                  last:
+                    type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+            uiSchema:
+              type: VerticalLayout
+              elements:
+                - type: Group
+                  label: Name
+                  elements:
+                    - type: Control
+                      scope: '#/properties/name/first'
+                    - type: Control
+                      scope: '#/properties/name/last'
+                - type: Control
+                  scope: '#/properties/email'
+                - type: Control
+                  scope: '#/properties/phone'
+            mappingToCommonGrants:
+              name:
+                firstName:
+                  field: name.first
+                lastName:
+                  field: name.last
+              emails:
+                primary:
+                  field: email
+              phones:
+                primary:
+                  field: phone
+            mappingFromCommonGrants:
+              name:
+                first:
+                  field: name.firstName
+                last:
+                  field: name.lastName
+              email: {}
+              phone: {}
+        validation:
+          required:
+            - formA
+            - formB
+    CommonGrants.Models.CompetitionStatus:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          $ref: '#/components/schemas/CommonGrants.Models.CompetitionStatusOptions'
+        customValue:
+          type: string
+        description:
+          type: string
+      description: The status of the competition
+      example:
+        value: open
+        customValue: custom
+        description: Competition is open for applications
+    CommonGrants.Models.CompetitionStatusOptions:
+      type: string
+      enum:
+        - open
+        - closed
+        - custom
+    CommonGrants.Models.CompetitionTimeline:
+      type: object
+      required:
+        - openDate
+        - closeDate
+      properties:
+        openDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: The start date of the competition
+        closeDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: The end date of the competition
+        otherDates:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: The date the competition was created
+      example:
+        openDate: {}
+        closeDate: {}
+        otherDates:
+          reviewPeriod: {}
+    CommonGrants.Models.Form:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The form's unique identifier.
+        name:
+          type: string
+          description: The form's name.
+        description:
+          type: string
+          description: The form's description.
+        instructions:
+          anyOf:
+            - type: string
+            - $ref: '#/components/schemas/CommonGrants.Fields.File'
+          description: The form's instructions.
+        jsonSchema:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.FormJsonSchema'
+          description: The form's JSON schema used to render the form and validate responses.
+        uiSchema:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.FormUISchema'
+          description: The form's UI schema used to render the form in the browser.
+        mappingToCommonGrants:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.MappingSchema'
+          description: A mapping from form schema to CommonGrants schema.
+        mappingFromCommonGrants:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.MappingSchema'
+          description: A mapping from CommonGrants schema to form schema.
+        customFields:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.CustomField'
+          description: Custom attributes about the form itself, not custom fields within the form.
+      description: A form for collecting data from a user.
+      example:
+        id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
+        name: Form A
+        description: Form A description
+        instructions: Form A instructions
+        jsonSchema:
+          $id: formA.json
+          type: object
+          properties:
+            name:
+              first:
+                type: string
+              last:
+                type: string
+            email:
+              type: string
+            phone:
+              type: string
+        uiSchema:
+          type: VerticalLayout
+          elements:
+            - type: Group
+              label: Name
+              elements:
+                - type: Control
+                  scope: '#/properties/name/first'
+                - type: Control
+                  scope: '#/properties/name/last'
+            - type: Control
+              scope: '#/properties/email'
+            - type: Control
+              scope: '#/properties/phone'
+        mappingToCommonGrants:
+          name:
+            firstName:
+              field: name.first
+            lastName:
+              field: name.last
+          emails:
+            primary:
+              field: email
+          phones:
+            primary:
+              field: phone
+        mappingFromCommonGrants:
+          name:
+            first:
+              field: name.firstName
+            last:
+              field: name.lastName
+          email: {}
+          phone: {}
+    CommonGrants.Models.FormJsonSchema:
+      type: object
+      additionalProperties: {}
+      description: A JSON schema used to validate form responses.
+      example:
+        $id: formA.json
+        type: object
+        properties:
+          name:
+            first:
+              type: string
+            last:
+              type: string
+          email:
+            type: string
+          phone:
+            type: string
+    CommonGrants.Models.FormResponseBase:
+      type: object
+      required:
+        - id
+        - form
+        - response
+        - status
+        - validationErrors
+        - createdAt
+        - lastModifiedAt
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The unique identifier for the form response
+        form:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.Form'
+          description: The form being responded to
+        response:
+          type: object
+          additionalProperties: {}
+          description: The response to the form
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.FormResponseStatus'
+          description: The status of the form response
+        validationErrors:
+          type: array
+          items: {}
+          description: The validation errors for the form response
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was created.
+          readOnly: true
+        lastModifiedAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was last modified.
+          readOnly: true
+      description: The base model for a form response
+    CommonGrants.Models.FormResponseStatus:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.FormResponseStatusOptions'
+          description: The status of the form response
+        customValue:
+          type: string
+          description: A custom value for the status
+        description:
+          type: string
+          description: A description of the status
+      description: The status of the form response
+      example:
+        value: inProgress
+        description: The form response is in progress
+    CommonGrants.Models.FormResponseStatusOptions:
+      type: string
+      enum:
+        - notStarted
+        - inProgress
+        - complete
+      description: The options for the status of the form response
+    CommonGrants.Models.FormUISchema:
+      type: object
+      additionalProperties: {}
+      description: A UI schema used to render the form in the browser.
+      example:
+        type: VerticalLayout
+        elements:
+          - type: Group
+            label: Name
+            elements:
+              - type: Control
+                scope: '#/properties/name/first'
+              - type: Control
+                scope: '#/properties/name/last'
+          - type: Control
+            scope: '#/properties/email'
+          - type: Control
+            scope: '#/properties/phone'
+    CommonGrants.Models.MappingConstantFunction:
+      type: object
+      required:
+        - const
+      properties:
+        const: {}
+      description: Returns a constant value.
+    CommonGrants.Models.MappingFieldFunction:
+      type: object
+      required:
+        - field
+      properties:
+        field:
+          type: string
+      description: Returns the value of a field in the source data.
+    CommonGrants.Models.MappingFunction:
+      anyOf:
+        - $ref: '#/components/schemas/CommonGrants.Models.MappingConstantFunction'
+        - $ref: '#/components/schemas/CommonGrants.Models.MappingFieldFunction'
+        - $ref: '#/components/schemas/CommonGrants.Models.MappingSwitchFunction'
+      description: The set of supported mapping functions.
+    CommonGrants.Models.MappingSchema:
+      type: object
+      additionalProperties:
+        anyOf:
+          - $ref: '#/components/schemas/CommonGrants.Models.MappingFunction'
+          - {}
+      description: |-
+        A mapping schema for translating data from one schema to another.
+
+        Example:
+
+        The following mapping:
+
+        ```json
+        {
+          "id": { "const": "123" },
+          "opportunity": {
+            "status": {
+              "switch": {
+                "field": "opportunity_status",
+                "case": { "active": "open", "inactive": "closed" },
+                "default": "custom",
+              },
+            },
+            "amount": { "field": "opportunity_amount" },
+          }
+        }
+        ```
+
+        Will translate the following data:
+
+        ```json
+        {
+          "id": "123",
+          "opportunity_status": "active",
+          "opportunity_amount": 100,
+        }
+        ```
+
+        To the following data:
+
+        ```json
+        {
+          "id": "123",
+          "opportunity": { "status": "open", "amount": 100 },
+        }
+      example:
+        id: {}
+        opportunity:
+          status:
+            switch:
+              field: opportunity_status
+              case:
+                active: open
+                inactive: closed
+              default: custom
+          amount:
+            field: opportunity_amount
+    CommonGrants.Models.MappingSwitchFunction:
+      type: object
+      required:
+        - field
+        - case
+      properties:
+        field:
+          type: string
+          description: The field in the source data to switch on.
+        case:
+          type: object
+          additionalProperties: {}
+          description: An object mapping source field values to desired output values.
+        default:
+          description: The default value to output if no case matches the source field value.
+      description: Returns a new value based on the value of a field in the source data using a switch statement.
+    CommonGrants.Models.OppDefaultFilters:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - forecasted
+              - open
+        closeDateRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`keyDates.closeDate` is between the given range'
+          example:
+            operator: between
+            value:
+              min: '2021-01-01'
+              max: '2021-01-02'
+        totalFundingAvailableRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.totalAmountAvailable` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        minAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.minAwardAmount` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        maxAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.maxAwardAmount` is between the given range.
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+      allOf:
+        - type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Filters.DefaultFilter'
+      description: The standard set of filters supported for opportunity searches
+    CommonGrants.Models.OppFilters:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - forecasted
+              - open
+        closeDateRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`keyDates.closeDate` is between the given range'
+          example:
+            operator: between
+            value:
+              min: '2021-01-01'
+              max: '2021-01-02'
+        totalFundingAvailableRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.totalAmountAvailable` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        minAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.minAwardAmount` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        maxAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.maxAwardAmount` is between the given range.
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        customFilters:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Filters.DefaultFilter'
+          description: Additional implementation-defined filters to apply to the search
+      description: Filters to apply when searching for opportunities
+    CommonGrants.Models.OppFunding:
+      type: object
+      properties:
+        details:
+          type: string
+          description: Details about the funding available for this opportunity that don't fit other fields
+        totalAmountAvailable:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          description: Total amount of funding available for this opportunity
+        minAwardAmount:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          description: Minimum amount of funding granted per award
+        maxAwardAmount:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          description: Maximum amount of funding granted per award
+        minAwardCount:
+          type: integer
+          description: Minimum number of awards granted
+        maxAwardCount:
+          type: integer
+          description: Maximum number of awards granted
+        estimatedAwardCount:
+          type: integer
+          description: Estimated number of awards that will be granted
+      description: Details about the funding available for this opportunity
+      example:
+        totalAmountAvailable:
+          amount: '1000000.00'
+          currency: USD
+        minAwardAmount:
+          amount: '10000.00'
+          currency: USD
+        maxAwardAmount:
+          amount: '50000.00'
+          currency: USD
+        minAwardCount: 5
+        maxAwardCount: 20
+        estimatedAwardCount: 10
+    CommonGrants.Models.OppSortBy:
+      type: string
+      enum:
+        - lastModifiedAt
+        - createdAt
+        - title
+        - status.value
+        - keyDates.closeDate
+        - funding.maxAwardAmount
+        - funding.minAwardAmount
+        - funding.totalAmountAvailable
+        - funding.estimatedAwardCount
+        - custom
+    CommonGrants.Models.OppSorting:
+      type: object
+      required:
+        - sortBy
+      properties:
+        sortBy:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppSortBy'
+          description: The field to sort by
+          example: lastModifiedAt
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Sorting.SortBodyParams'
+    CommonGrants.Models.OppStatus:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppStatusOptions'
+          description: The status value, from a predefined set of options
+        customValue:
+          type: string
+          description: A custom status value
+        description:
+          type: string
+          description: A human-readable description of the status
+      description: The status of the opportunity
+      example:
+        value: open
+        description: The opportunity is currently accepting applications
+    CommonGrants.Models.OppStatusOptions:
+      type: string
+      enum:
+        - forecasted
+        - open
+        - closed
+        - custom
+      description: The set of values accepted for opportunity status
+    CommonGrants.Models.OppTimeline:
+      type: object
+      properties:
+        postDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: The date (and time) at which the opportunity is posted
+        closeDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: The date (and time) at which the opportunity closes
+        otherDates:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: |-
+            An optional map of other key dates or events in the opportunity timeline
+
+            Examples might include a deadline for questions, anticipated award date, etc.
+      description: Key dates and events in the opportunity's timeline, such as when the opportunity is posted and closes
+      example:
+        postDate: {}
+        closeDate: {}
+        otherDates:
+          anticipatedAward: {}
+          applicationPeriod: {}
+          performancePeriod: {}
+          infoSessions: {}
+    CommonGrants.Models.OpportunityBase:
+      type: object
+      required:
+        - id
+        - title
+        - status
+        - description
+        - createdAt
+        - lastModifiedAt
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: Globally unique id for the opportunity
+          readOnly: true
+        title:
+          type: string
+          description: Title or name of the funding opportunity
+          example: Small business grant program
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppStatus'
+          description: Status of the opportunity
+        description:
+          type: string
+          description: Description of the opportunity's purpose and scope
+          example: This program provides funding to small businesses to help them grow and create jobs
+        funding:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppFunding'
+          description: Details about the funding available
+        keyDates:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppTimeline'
+          description: Key dates for the opportunity, such as when the application opens and closes
+        source:
+          type: string
+          format: uri
+          description: URL for the original source of the opportunity
+        customFields:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.CustomField'
+          description: Additional custom fields specific to this opportunity
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was created.
+          readOnly: true
+        lastModifiedAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was last modified.
+          readOnly: true
+      description: A funding opportunity
+    CommonGrants.Pagination.PaginatedBodyParams:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The page to return
+          default: 1
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The number of items to return per page
+          default: 100
+      description: Body parameters for paginated routes
+    CommonGrants.Pagination.PaginatedResultsInfo:
+      type: object
+      required:
+        - page
+        - pageSize
+      properties:
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Current page number (indexing starts at 1)
+          example: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          description: Number of items per page
+          example: 20
+        totalItems:
+          type: integer
+          description: Total number of items across all pages
+          example: 100
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 5
+      description: Details about the paginated results
+    CommonGrants.Responses.Error:
+      type: object
+      required:
+        - status
+        - message
+        - errors
+      properties:
+        status:
+          type: integer
+          format: int32
+          example: 400
+        message:
+          type: string
+          description: Human-readable error message
+          example: Error
+        errors:
+          type: array
+          items: {}
+          description: List of errors
+      description: A non-2xx response schema
+    CommonGrants.Responses.Success:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          format: int32
+          example: 200
+        message:
+          type: string
+          example: Success
+    CommonGrants.Sorting.SortBodyParams:
+      type: object
+      required:
+        - sortBy
+      properties:
+        sortBy:
+          description: The field to sort by
+          example: lastModifiedAt
+        customSortBy:
+          type: string
+          description: Implementation-defined sort key
+          example: customField
+        sortOrder:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortOrder'
+          description: The order to sort by
+          example: asc
+      description: Sorting parameters included in the request body
+    CommonGrants.Sorting.SortOrder:
+      type: string
+      enum:
+        - asc
+        - desc
+    CommonGrants.Sorting.SortedResultsInfo:
+      type: object
+      required:
+        - sortBy
+        - sortOrder
+      properties:
+        sortBy:
+          type: string
+          description: The field results are sorted by, or "custom" if an implementation-defined sort key is used
+          example: lastModifiedAt
+        customSortBy:
+          type: string
+          description: Implementation-defined sort key used to sort the results, if applicable
+          example: customField
+        sortOrder:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortOrder'
+          description: The order in which the results are sorted, e.g. ascending or descending
+          example: asc
+        errors:
+          type: array
+          items:
+            type: string
+          description: Non-fatal errors that occurred during sorting
+      description: Information about the sort order of the items returned
+    CommonGrants.Types.decimalString:
+      type: string
+      pattern: ^-?[0-9]+\.?[0-9]*$
+      description: A decimal number (with variable scale) encoded as a string, to avoid floating point issues
+      example: '-100.5'
+    CommonGrants.Types.isoDate:
+      type: string
+      format: date
+      description: A date on a calendar in ISO 8601 format YYYY-MM-DD
+      example: '2025-01-01'
+    CommonGrants.Types.isoTime:
+      type: string
+      format: time
+      description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
+      example: '17:00:00'
+    CommonGrants.Types.uuid:
+      type: string
+      format: uuid
+      description: A universally unique identifier
+      example: 30a12e5e-5940-4c08-921c-17a8960fcf4b

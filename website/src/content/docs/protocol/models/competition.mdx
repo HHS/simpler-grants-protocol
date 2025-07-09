@@ -1,0 +1,247 @@
+---
+title: Competition
+description: The competition model is used to represent a funding opportunity.
+competition:
+  example:
+    code: |
+      {
+        "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+        "opportunityId": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b",
+        "title": "Competition 1",
+        "description": "Competition 1 description",
+        "instructions": "Competition 1 instructions",
+        "status": {
+          "value": "open",
+          "customValue": "custom",
+          "description": "Competition is open for applications"
+        },
+        "keyDates": {
+          "openDate": {
+            "name": "Open Date",
+            "eventType": "singleDate",
+            "date": "2025-01-01"
+          },
+          "closeDate": {
+            "name": "Close Date",
+            "eventType": "singleDate",
+            "date": "2025-01-30"
+          },
+          "otherDates": {
+            "reviewPeriod": {
+              "name": "Application Review Period",
+              "eventType": "dateRange",
+              "startDate": "2025-02-01",
+              "endDate": "2025-02-28"
+            }
+          }
+        },
+        "forms": {
+          "forms": {
+            "formA": {},
+            "formB": {}
+          },
+          "validation": {
+            "required": ["formA"]
+          }
+        },
+        "createdAt": "2025-01-01T00:00:00Z",
+        "lastModifiedAt": "2025-01-01T00:00:00Z"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/CompetitionBase.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/competition.tsp"
+      startLine: 3
+      endLine: 40
+competitionStatus:
+  example:
+    code: |
+      {
+        "value": "custom",
+        "customValue": "canceled",
+        "description": "Competition has been canceled"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/CompetitionStatus.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/competition.tsp"
+      startLine: 46
+      endLine: 52
+competitionStatusOptions:
+  example:
+    code: '"open"'
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/CompetitionStatusOptions.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/competition.tsp"
+      startLine: 58
+      endLine: 67
+competitionForms:
+  example:
+    code: |
+      {
+        "forms": {
+          "formA": {},
+          "formB": {}
+        },
+        "validation": {
+          "required": ["formA"]
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/CompetitionForms.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/competition.tsp"
+      startLine: 73
+      endLine: 81
+competitionTimeline:
+  example:
+    code: |
+      {
+        "openDate": {
+          "name": "Open Date",
+          "eventType": "singleDate",
+          "date": "2025-01-01"
+        },
+        "closeDate": {
+          "name": "Close Date",
+          "eventType": "singleDate",
+          "date": "2025-01-30"
+        },
+        "otherDates": {
+          "reviewPeriod": {
+            "name": "Application Review Period",
+            "eventType": "dateRange",
+            "startDate": "2025-02-01",
+            "endDate": "2025-02-28"
+          }
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/CompetitionTimeline.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/competition.tsp"
+      startLine: 87
+      endLine: 97
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+
+## CompetitionBase
+
+Base model for a competition.
+
+A competition is an application process for a funding opportunity. It often has a distinct application period and set of application forms.
+
+### Table
+
+| Property       | Type                                                                                   | Required | Description                                |
+| -------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
+| id             | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The competition's unique identifier.       |
+| opportunityId  | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The opportunity id for the competition.    |
+| title          | [string](/protocol/types/string#string)                                                | Yes      | The title of the competition.              |
+| description    | [string](/protocol/types/string#string)                                                | No       | The description of the competition.        |
+| instructions   | [string](/protocol/types/string#string)                                                | No       | The instructions for the competition.      |
+| status         | [CompetitionStatus](#competitionstatus)                                                | Yes      | The status of the competition.             |
+| keyDates       | [CompetitionTimeline](#competitiontimeline)                                            | Yes      | The key dates in the competition timeline. |
+| forms          | [CompetitionForms](#competitionforms)                                                  | Yes      | The forms for the competition.             |
+| customFields   | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields for the competition.     |
+| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The competition's creation date.           |
+| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The competition's last modified date.      |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.competition.example}
+  jsonSchema={frontmatter.competition.jsonSchema}
+  typeSpec={frontmatter.competition.typeSpec}
+/>
+
+## CompetitionStatus
+
+The status of the competition.
+
+### Table
+
+| Property    | Type                                                  | Required | Description                                 |
+| ----------- | ----------------------------------------------------- | -------- | ------------------------------------------- |
+| value       | [CompetitionStatusOptions](#competitionstatusoptions) | Yes      | The status value.                           |
+| customValue | [string](/protocol/types/string#string)               | No       | Custom status value when value is "custom". |
+| description | [string](/protocol/types/string#string)               | No       | Description of the status.                  |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.competitionStatus.example}
+  jsonSchema={frontmatter.competitionStatus.jsonSchema}
+  typeSpec={frontmatter.competitionStatus.typeSpec}
+/>
+
+## CompetitionStatusOptions
+
+Enumeration of possible competition status values.
+
+### Values
+
+| Value  | Description                                |
+| ------ | ------------------------------------------ |
+| open   | The competition is open for applications   |
+| closed | The competition is closed for applications |
+| custom | The competition is in a custom status      |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.competitionStatusOptions.example}
+  jsonSchema={frontmatter.competitionStatusOptions.jsonSchema}
+  typeSpec={frontmatter.competitionStatusOptions.typeSpec}
+/>
+
+## CompetitionForms
+
+Set of forms that need to be completed to apply to the competition.
+
+### Table
+
+| Property   | Type                                                                    | Required | Description                                     |
+| ---------- | ----------------------------------------------------------------------- | -------- | ----------------------------------------------- |
+| forms      | [Record](/protocol/types/other#record)\<[Form](/protocol/models/form)\> | Yes      | The forms for the competition.                  |
+| validation | [Record](/protocol/types/other#record)\<unknown\>                       | Yes      | The validation rules for the competition forms. |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.competitionForms.example}
+  jsonSchema={frontmatter.competitionForms.jsonSchema}
+  typeSpec={frontmatter.competitionForms.typeSpec}
+/>
+
+## CompetitionTimeline
+
+The key dates in the competition timeline.
+
+### Table
+
+| Property   | Type                                                                      | Required | Description                                   |
+| ---------- | ------------------------------------------------------------------------- | -------- | --------------------------------------------- |
+| openDate   | [Event](/protocol/fields/event)                                           | Yes      | The start date of the competition.            |
+| closeDate  | [Event](/protocol/fields/event)                                           | Yes      | The end date of the competition.              |
+| otherDates | [Record](/protocol/types/other#record)\<[Event](/protocol/fields/event)\> | No       | Additional dates in the competition timeline. |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.competitionTimeline.example}
+  jsonSchema={frontmatter.competitionTimeline.jsonSchema}
+  typeSpec={frontmatter.competitionTimeline.typeSpec}
+/>

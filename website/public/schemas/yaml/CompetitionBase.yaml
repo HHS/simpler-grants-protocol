@@ -1,0 +1,198 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CompetitionBase.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: Globally unique id for the competition
+  opportunityId:
+    $ref: uuid.yaml
+    description: The opportunity id for the competition
+  title:
+    type: string
+    description: The title of the competition
+  description:
+    type: string
+    description: The description of the competition
+  instructions:
+    anyOf:
+      - type: string
+      - $ref: File.yaml
+    description: The instructions for the competition
+  status:
+    $ref: CompetitionStatus.yaml
+    description: The status of the competition
+  keyDates:
+    $ref: CompetitionTimeline.yaml
+    description: The key dates in the competition timeline
+  forms:
+    $ref: CompetitionForms.yaml
+    description: The forms for the competition
+  customFields:
+    $ref: "#/$defs/RecordCustomField"
+    description: The custom fields for the competition
+  createdAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was created.
+  lastModifiedAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was last modified.
+required:
+  - id
+  - opportunityId
+  - title
+  - status
+  - keyDates
+  - forms
+  - createdAt
+  - lastModifiedAt
+examples:
+  - id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
+    opportunityId: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b
+    title: Competition 1
+    description: Competition 1 description
+    instructions: Competition 1 instructions
+    status:
+      value: open
+      customValue: custom
+      description: Competition is open for applications
+    keyDates:
+      openDate:
+        name: Open Date
+        eventType: singleDate
+        date: 2025-01-01
+      closeDate:
+        name: Close Date
+        eventType: singleDate
+        date: 2025-01-30
+      otherDates:
+        reviewPeriod:
+          name: Application Review Period
+          eventType: dateRange
+          startDate: 2025-02-01
+          endDate: 2025-02-28
+    forms:
+      forms:
+        formA:
+          id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
+          name: Form A
+          description: Form A description
+          instructions: Form A instructions
+          jsonSchema:
+            $id: formA.json
+            type: object
+            properties:
+              name:
+                first:
+                  type: string
+                last:
+                  type: string
+              email:
+                type: string
+              phone:
+                type: string
+          uiSchema:
+            type: VerticalLayout
+            elements:
+              - type: Group
+                label: Name
+                elements:
+                  - type: Control
+                    scope: "#/properties/name/first"
+                  - type: Control
+                    scope: "#/properties/name/last"
+              - type: Control
+                scope: "#/properties/email"
+              - type: Control
+                scope: "#/properties/phone"
+          mappingToCommonGrants:
+            name:
+              firstName:
+                field: name.first
+              lastName:
+                field: name.last
+            emails:
+              primary:
+                field: email
+            phones:
+              primary:
+                field: phone
+          mappingFromCommonGrants:
+            name:
+              first:
+                field: name.firstName
+              last:
+                field: name.lastName
+            email: {}
+            phone: {}
+        formB:
+          id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
+          name: Form A
+          description: Form A description
+          instructions: Form A instructions
+          jsonSchema:
+            $id: formA.json
+            type: object
+            properties:
+              name:
+                first:
+                  type: string
+                last:
+                  type: string
+              email:
+                type: string
+              phone:
+                type: string
+          uiSchema:
+            type: VerticalLayout
+            elements:
+              - type: Group
+                label: Name
+                elements:
+                  - type: Control
+                    scope: "#/properties/name/first"
+                  - type: Control
+                    scope: "#/properties/name/last"
+              - type: Control
+                scope: "#/properties/email"
+              - type: Control
+                scope: "#/properties/phone"
+          mappingToCommonGrants:
+            name:
+              firstName:
+                field: name.first
+              lastName:
+                field: name.last
+            emails:
+              primary:
+                field: email
+            phones:
+              primary:
+                field: phone
+          mappingFromCommonGrants:
+            name:
+              first:
+                field: name.firstName
+              last:
+                field: name.lastName
+            email: {}
+            phone: {}
+      validation:
+        required:
+          - formA
+          - formB
+    createdAt: 2025-01-01T00:00:00Z
+    lastModifiedAt: 2025-01-01T00:00:00Z
+description: |-
+  The base model for a competition.
+
+  A competition is an application process for a funding opportunity. It often has a
+  distinct application period and set of application forms.
+$defs:
+  RecordCustomField:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: CustomField.yaml

@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FormUISchema.yaml
+type: object
+properties: {}
+unevaluatedProperties: {}
+examples:
+  - type: VerticalLayout
+    elements:
+      - type: Group
+        label: Name
+        elements:
+          - type: Control
+            scope: "#/properties/name/first"
+          - type: Control
+            scope: "#/properties/name/last"
+      - type: Control
+        scope: "#/properties/email"
+      - type: Control
+        scope: "#/properties/phone"
+description: A UI schema used to render the form in the browser.

@@ -1,0 +1,42 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FormResponseBase.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: The unique identifier for the form response
+  form:
+    $ref: Form.yaml
+    description: The form being responded to
+  response:
+    $ref: "#/$defs/RecordUnknown"
+    description: The response to the form
+  status:
+    $ref: FormResponseStatus.yaml
+    description: The status of the form response
+  validationErrors:
+    type: array
+    items: {}
+    description: The validation errors for the form response
+  createdAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was created.
+  lastModifiedAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was last modified.
+required:
+  - id
+  - form
+  - response
+  - status
+  - validationErrors
+  - createdAt
+  - lastModifiedAt
+description: The base model for a form response
+$defs:
+  RecordUnknown:
+    type: object
+    properties: {}
+    unevaluatedProperties: {}

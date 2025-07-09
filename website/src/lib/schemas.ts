@@ -142,7 +142,7 @@ function loadFormDataWithGlob(formId: string, formLabel: string): FormSchema {
     id: formId,
     label: formLabel,
     description: formInfo.description || "",
-    owner: formInfo.owner || "Unknown",
+    owner: formInfo.owner || "",
     url: formInfo.url && formInfo.url.length > 0 ? formInfo.url : undefined,
     formSchema: schema.default,
     formUI: ui.default,

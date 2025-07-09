@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FormResponseStatus.yaml
+type: object
+properties:
+  value:
+    $ref: FormResponseStatusOptions.yaml
+    description: The status of the form response
+  customValue:
+    type: string
+    description: A custom value for the status
+  description:
+    type: string
+    description: A description of the status
+required:
+  - value
+examples:
+  - value: inProgress
+    description: The form response is in progress
+description: The status of the form response

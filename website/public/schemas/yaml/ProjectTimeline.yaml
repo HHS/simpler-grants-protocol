@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ProjectTimeline.yaml
+type: object
+properties:
+  startDate:
+    $ref: Event.yaml
+    description: The start date of the period for which the funding is requested.
+  endDate:
+    $ref: Event.yaml
+    description: The end date of the period for which the funding is requested.
+  otherDates:
+    $ref: "#/$defs/RecordEvent"
+    description: The key dates for the project.
+  timelineDetails:
+    type: string
+    description: Details about the timeline that don't fit into the other fields.
+$defs:
+  RecordEvent:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: Event.yaml

@@ -1,0 +1,86 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MappingSchema.yaml
+type: object
+properties: {}
+unevaluatedProperties:
+  anyOf:
+    - $ref: MappingFunction.yaml
+    - {}
+examples:
+  - id: {}
+    opportunity:
+      status:
+        switch:
+          field: opportunity_status
+          case:
+            active: open
+            inactive: closed
+          default: custom
+      amount:
+        field: opportunity_amount
+  - opportunity:
+      status:
+        switch:
+          field: opportunity_status
+          case:
+            active: open
+            inactive: closed
+          default: custom
+        amount:
+          field: opportunity_amount
+  - opportunityAmount: {}
+    opportunityStatus:
+      switch:
+        field: opportunity_status
+        case:
+          active: open
+          inactive: closed
+        default: custom
+  - id: {}
+    opportunity:
+      status:
+        field: opportunity_status
+      amount:
+        field: opportunity_amount
+  - opportunityStatus: {}
+    opportunityAmount: {}
+description: |-
+  A mapping schema for translating data from one schema to another.
+
+  Example:
+
+  The following mapping:
+
+  ```json
+  {
+    "id": { "const": "123" },
+    "opportunity": {
+      "status": {
+        "switch": {
+          "field": "opportunity_status",
+          "case": { "active": "open", "inactive": "closed" },
+          "default": "custom",
+        },
+      },
+      "amount": { "field": "opportunity_amount" },
+    }
+  }
+  ```
+
+  Will translate the following data:
+
+  ```json
+  {
+    "id": "123",
+    "opportunity_status": "active",
+    "opportunity_amount": 100,
+  }
+  ```
+
+  To the following data:
+
+  ```json
+  {
+    "id": "123",
+    "opportunity": { "status": "open", "amount": 100 },
+  }

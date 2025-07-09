@@ -20,7 +20,17 @@ const { form } = Astro.props;
           ${form.statistics.mappingPercentage}%
             mapped to the CommonGrants schema`}
           </p>
-          <p>{form.description}</p>
+          {form.owner && form.description && (
+            <p>{`${form.description}, managed by ${form.owner}`}</p>
+          )}
+          {!form.owner && form.description && <p>{`${form.description}`}</p>}
+          {form.url && (
+            <p>
+              <a href={form.url} target="_blank">
+                View source form details
+              </a>
+            </p>
+          )}
         </div>
 
         <div class="summary-actions">

@@ -15,5 +15,5 @@ required:
   - value
 examples:
   - value: submitted
-    description: Application has been submitted.
+    description: The application has been submitted.
 description: The status of the application.

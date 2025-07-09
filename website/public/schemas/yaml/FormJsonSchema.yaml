@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FormJsonSchema.yaml
+type: object
+properties: {}
+unevaluatedProperties: {}
+examples:
+  - $id: formA.json
+    type: object
+    properties:
+      name:
+        first:
+          type: string
+        last:
+          type: string
+      email:
+        type: string
+      phone:
+        type: string
+description: A JSON schema used to validate form responses.

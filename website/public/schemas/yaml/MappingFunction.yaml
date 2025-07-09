@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MappingFunction.yaml
+anyOf:
+  - $ref: MappingConstantFunction.yaml
+  - $ref: MappingFieldFunction.yaml
+  - $ref: MappingSwitchFunction.yaml
+description: The set of supported mapping functions.
