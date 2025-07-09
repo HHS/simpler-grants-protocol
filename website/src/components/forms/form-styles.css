@@ -12,6 +12,7 @@
   font-family: system-ui, sans-serif;
   background: var(--sl-color-black);
   color: var(--sl-color-white);
+  margin-top: 0 !important;
 }
 
 .form-input:focus,
@@ -25,23 +26,22 @@
 /* Labels */
 .form-label {
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
   display: block;
   color: var(--sl-color-white);
 }
 
 /* Validation */
 .form-validation {
-  color: #dc3545;
   font-size: 14px;
   margin-top: 4px;
 }
 
 /* Descriptions */
 .form-description {
-  color: var(--sl-color-gray-3);
+  color: var(--sl-color-gray-3) !important;
   font-size: 14px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 /* Array Items */
