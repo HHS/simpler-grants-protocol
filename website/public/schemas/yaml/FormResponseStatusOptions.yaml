@@ -1,0 +1,8 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FormResponseStatusOptions.yaml
+type: string
+enum:
+  - notStarted
+  - inProgress
+  - complete
+description: The options for the status of the form response
