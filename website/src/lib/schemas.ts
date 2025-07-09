@@ -21,17 +21,17 @@ const formUIs = import.meta.glob("@/content/forms/*/ui-schema.json", {
 
 const formMappingsTo = import.meta.glob(
   "@/content/forms/*/mapping-to-cg.json",
-  { eager: true },
+  { eager: true }
 ) as Record<string, { default: FormSchema }>;
 
 const formMappingsFrom = import.meta.glob(
   "@/content/forms/*/mapping-from-cg.json",
-  { eager: true },
+  { eager: true }
 ) as Record<string, { default: FormSchema }>;
 
 const formDefaultData = import.meta.glob(
   "@/content/forms/*/default-data.json",
-  { eager: true },
+  { eager: true }
 ) as Record<string, { default: FormData }>;
 
 /**
@@ -142,7 +142,7 @@ function loadFormDataWithGlob(formId: string, formLabel: string): FormSchema {
     id: formId,
     label: formLabel,
     description: formInfo.description || "",
-    owner: formInfo.owner || "Unknown",
+    owner: formInfo.owner || "",
     url: formInfo.url && formInfo.url.length > 0 ? formInfo.url : undefined,
     formSchema: schema.default,
     formUI: ui.default,
