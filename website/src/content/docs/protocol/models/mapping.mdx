@@ -137,9 +137,9 @@ Returns a constant value.
 
 ### Table
 
-| Property | Type                                     | Description                             |
-| -------- | ---------------------------------------- | --------------------------------------- |
-| const    | [string](/protocol/fields/string#string) | A constant value to add to the mapping. |
+| Property | Type                                    | Description                             |
+| -------- | --------------------------------------- | --------------------------------------- |
+| const    | [string](/protocol/types/string#string) | A constant value to add to the mapping. |
 
 ### Formats
 
@@ -155,9 +155,9 @@ Returns the value of a field in the source data.
 
 ### Table
 
-| Property | Type                                     | Description                                                                                    |
-| -------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| field    | [string](/protocol/fields/string#string) | A dot-separated path to a field in the source schema whose value will be added to the mapping. |
+| Property | Type                                    | Description                                                                                    |
+| -------- | --------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| field    | [string](/protocol/types/string#string) | A dot-separated path to a field in the source schema whose value will be added to the mapping. |
 
 ### Formats
 
@@ -173,11 +173,11 @@ Returns a new value based on the value of a field in the source data using a swi
 
 ### Table
 
-| Property | Type                                                                                  | Description                                                                                    |
-| -------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| field    | [string](/protocol/fields/string#string)                                              | A dot-separated path to a field in the source schema whose value will be added to the mapping. |
-| case     | [Record](/protocol/fields/record#record)\<[unknown](/protocol/fields/other#unknown)\> | A mapping of source field values to desired output values.                                     |
-| default  | [unknown](/protocol/fields/other#unknown)                                             | The default value to output if no case matches the source field value.                         |
+| Property | Type                                                                               | Description                                                                                    |
+| -------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| field    | [string](/protocol/types/string#string)                                            | A dot-separated path to a field in the source schema whose value will be added to the mapping. |
+| case     | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\> | A mapping of source field values to desired output values.                                     |
+| default  | [unknown](/protocol/types/other#unknown)                                           | The default value to output if no case matches the source field value.                         |
 
 ### Formats
 

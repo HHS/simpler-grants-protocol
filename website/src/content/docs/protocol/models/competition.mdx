@@ -145,19 +145,19 @@ A competition is an application process for a funding opportunity. It often has 
 
 ### Table
 
-| Property       | Type                                                                                    | Required | Description                                |
-| -------------- | --------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
-| id             | [uuid](/protocol/types/string#uuid)                                                     | Yes      | The competition's unique identifier.       |
-| opportunityId  | [uuid](/protocol/types/string#uuid)                                                     | Yes      | The opportunity id for the competition.    |
-| title          | [string](/protocol/types/string#string)                                                 | Yes      | The title of the competition.              |
-| description    | [string](/protocol/types/string#string)                                                 | No       | The description of the competition.        |
-| instructions   | [string](/protocol/types/string#string)                                                 | No       | The instructions for the competition.      |
-| status         | [CompetitionStatus](#competitionstatus)                                                 | Yes      | The status of the competition.             |
-| keyDates       | [CompetitionTimeline](#competitiontimeline)                                             | Yes      | The key dates in the competition timeline. |
-| forms          | [CompetitionForms](#competitionforms)                                                   | Yes      | The forms for the competition.             |
-| customFields   | [Record](/protocol/types/object#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields for the competition.     |
-| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                         | Yes      | The competition's creation date.           |
-| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime)                                         | Yes      | The competition's last modified date.      |
+| Property       | Type                                                                                   | Required | Description                                |
+| -------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
+| id             | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The competition's unique identifier.       |
+| opportunityId  | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The opportunity id for the competition.    |
+| title          | [string](/protocol/types/string#string)                                                | Yes      | The title of the competition.              |
+| description    | [string](/protocol/types/string#string)                                                | No       | The description of the competition.        |
+| instructions   | [string](/protocol/types/string#string)                                                | No       | The instructions for the competition.      |
+| status         | [CompetitionStatus](#competitionstatus)                                                | Yes      | The status of the competition.             |
+| keyDates       | [CompetitionTimeline](#competitiontimeline)                                            | Yes      | The key dates in the competition timeline. |
+| forms          | [CompetitionForms](#competitionforms)                                                  | Yes      | The forms for the competition.             |
+| customFields   | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields for the competition.     |
+| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The competition's creation date.           |
+| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The competition's last modified date.      |
 
 ### Formats
 
@@ -193,11 +193,11 @@ Enumeration of possible competition status values.
 
 ### Values
 
-| Value   | Description                                    |
-| ------- | ---------------------------------------------- |
-| open    | The competition is open for applications       |
-| closed  | The competition is closed for applications     |
-| custom  | The competition is in a custom status          |
+| Value  | Description                                |
+| ------ | ------------------------------------------ |
+| open   | The competition is open for applications   |
+| closed | The competition is closed for applications |
+| custom | The competition is in a custom status      |
 
 ### Formats
 
@@ -213,10 +213,10 @@ Set of forms that need to be completed to apply to the competition.
 
 ### Table
 
-| Property  | Type                                                                       | Required | Description                                    |
-| --------- | -------------------------------------------------------------------------- | -------- | ---------------------------------------------- |
-| forms     | [Record](/protocol/types/object#record)\<[Form](/protocol/models/form)\>   | Yes      | The forms for the competition.                 |
-| validation| [Record](/protocol/types/object#record)\<unknown\>                         | Yes      | The validation rules for the competition forms. |
+| Property   | Type                                                                    | Required | Description                                     |
+| ---------- | ----------------------------------------------------------------------- | -------- | ----------------------------------------------- |
+| forms      | [Record](/protocol/types/other#record)\<[Form](/protocol/models/form)\> | Yes      | The forms for the competition.                  |
+| validation | [Record](/protocol/types/other#record)\<unknown\>                       | Yes      | The validation rules for the competition forms. |
 
 ### Formats
 
@@ -232,11 +232,11 @@ The key dates in the competition timeline.
 
 ### Table
 
-| Property   | Type                                                                       | Required | Description                                   |
-| ---------- | -------------------------------------------------------------------------- | -------- | --------------------------------------------- |
-| openDate   | [Event](/protocol/fields/event)                                            | Yes      | The start date of the competition.            |
-| closeDate  | [Event](/protocol/fields/event)                                            | Yes      | The end date of the competition.              |
-| otherDates | [Record](/protocol/types/object#record)\<[Event](/protocol/fields/event)\> | No       | Additional dates in the competition timeline. |
+| Property   | Type                                                                      | Required | Description                                   |
+| ---------- | ------------------------------------------------------------------------- | -------- | --------------------------------------------- |
+| openDate   | [Event](/protocol/fields/event)                                           | Yes      | The start date of the competition.            |
+| closeDate  | [Event](/protocol/fields/event)                                           | Yes      | The end date of the competition.              |
+| otherDates | [Record](/protocol/types/other#record)\<[Event](/protocol/fields/event)\> | No       | Additional dates in the competition timeline. |
 
 ### Formats
 
