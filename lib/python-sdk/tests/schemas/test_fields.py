@@ -6,7 +6,10 @@ from datetime import date, time
 from common_grants_sdk.schemas.fields import (
     validate_decimal_string,
     Money,
-    Event,
+    EventType,
+    SingleDateEvent,
+    DateRangeEvent,
+    OtherEvent,
     CustomField,
     CustomFieldType,
 )
@@ -26,19 +29,6 @@ def test_money_validation():
     money = Money(amount="0.00", currency="GBP")
     assert money.amount == "0.00"
     assert money.currency == "GBP"
-
-    # Invalid currency codes
-    with pytest.raises(ValueError):
-        Money(amount="100.00", currency="USDD")  # Too long
-
-    with pytest.raises(ValueError):
-        Money(amount="100.00", currency="usd")  # Lowercase
-
-    with pytest.raises(ValueError):
-        Money(amount="100.00", currency="12")  # Numbers
-
-    with pytest.raises(ValueError):
-        Money(amount="100.00", currency="")  # Empty
 
     # Invalid amounts
     with pytest.raises(ValueError):
@@ -70,55 +60,158 @@ def test_decimal_string_validation():
         validate_decimal_string("12.34.56.78")
 
 
-def test_event_validation():
-    """Test Event model validation."""
+def test_single_date_event_validation():
+    """Test SingleDateEvent model validation."""
     # Valid cases with all fields
-    event = Event(
+    event = SingleDateEvent(
         name="Test Event",
+        event_type=EventType.SINGLE_DATE,
         date=date(2024, 1, 1),
         time=time(14, 30),
         description="Test description",
     )
     assert event.name == "Test Event"
+    assert event.event_type == EventType.SINGLE_DATE
     assert event.date == date(2024, 1, 1)
     assert event.time == time(14, 30)
     assert event.description == "Test description"
 
     # Valid cases with optional fields
-    event = Event(name="Test Event", date=date(2024, 1, 1))
+    event = SingleDateEvent(
+        name="Test Event", event_type=EventType.SINGLE_DATE, date=date(2024, 1, 1)
+    )
     assert event.name == "Test Event"
+    assert event.event_type == EventType.SINGLE_DATE
     assert event.date == date(2024, 1, 1)
     assert event.time is None
     assert event.description is None
 
     # Invalid cases
     with pytest.raises(ValueError):
-        Event(name="", date=date(2024, 1, 1))  # Empty name
+        SingleDateEvent(
+            name="", event_type=EventType.SINGLE_DATE, date=date(2024, 1, 1)
+        )  # Empty name
 
     with pytest.raises(ValueError):
-        Event(name="Test Event", date="2024-01-01")  # String instead of date object
+        SingleDateEvent(
+            name="Test Event", event_type=EventType.SINGLE_DATE, date="2024-01-01"
+        )  # String instead of date object
+
+
+def test_date_range_event_validation():
+    """Test DateRangeEvent model validation."""
+    # Valid cases with all fields
+    event = DateRangeEvent(
+        name="Test Range Event",
+        event_type=EventType.DATE_RANGE,
+        startDate=date(2024, 1, 1),
+        startTime=time(9, 0),
+        endDate=date(2024, 1, 31),
+        endTime=time(17, 0),
+        description="Test range description",
+    )
+    assert event.name == "Test Range Event"
+    assert event.event_type == EventType.DATE_RANGE
+    assert event.start_date == date(2024, 1, 1)
+    assert event.start_time == time(9, 0)
+    assert event.end_date == date(2024, 1, 31)
+    assert event.end_time == time(17, 0)
+    assert event.description == "Test range description"
+
+    # Valid cases with optional fields
+    event = DateRangeEvent(
+        name="Test Range Event",
+        event_type=EventType.DATE_RANGE,
+        startDate=date(2024, 1, 1),
+        endDate=date(2024, 1, 31),
+    )
+    assert event.name == "Test Range Event"
+    assert event.event_type == EventType.DATE_RANGE
+    assert event.start_date == date(2024, 1, 1)
+    assert event.start_time is None
+    assert event.end_date == date(2024, 1, 31)
+    assert event.end_time is None
+    assert event.description is None
+
+
+def test_other_event_validation():
+    """Test OtherEvent model validation."""
+    # Valid cases with all fields
+    event = OtherEvent(
+        name="Info Sessions",
+        event_type=EventType.OTHER,
+        details="Every other Tuesday at 10:00 AM",
+        description="Info sessions for the opportunity",
+    )
+    assert event.name == "Info Sessions"
+    assert event.event_type == EventType.OTHER
+    assert event.details == "Every other Tuesday at 10:00 AM"
+    assert event.description == "Info sessions for the opportunity"
+
+    # Valid cases with optional fields
+    event = OtherEvent(name="Info Sessions", event_type=EventType.OTHER)
+    assert event.name == "Info Sessions"
+    assert event.event_type == EventType.OTHER
+    assert event.details is None
+    assert event.description is None
+
+
+def test_event_union_validation():
+    """Test Event union type validation."""
+    # Test SingleDateEvent
+    single_event = SingleDateEvent(
+        name="Test Event", event_type=EventType.SINGLE_DATE, date=date(2024, 1, 1)
+    )
+    assert isinstance(single_event, SingleDateEvent)
+
+    # Test DateRangeEvent
+    range_event = DateRangeEvent(
+        name="Test Range",
+        event_type=EventType.DATE_RANGE,
+        startDate=date(2024, 1, 1),
+        endDate=date(2024, 1, 31),
+    )
+    assert isinstance(range_event, DateRangeEvent)
+
+    # Test OtherEvent
+    other_event = OtherEvent(
+        name="Test Other", event_type=EventType.OTHER, details="Test details"
+    )
+    assert isinstance(other_event, OtherEvent)
 
 
 def test_custom_field_validation():
     """Test CustomField model validation."""
     # Valid cases for each type
-    field = CustomField(name="string_field", type=CustomFieldType.STRING, value="test")
+    field = CustomField(
+        name="string_field", fieldType=CustomFieldType.STRING, value="test"
+    )
     assert field.name == "string_field"
-    assert field.type == CustomFieldType.STRING
+    assert field.field_type == CustomFieldType.STRING
     assert field.value == "test"
 
-    field = CustomField(name="number_field", type=CustomFieldType.NUMBER, value=123)
-    assert field.type == CustomFieldType.NUMBER
+    field = CustomField(
+        name="number_field", fieldType=CustomFieldType.NUMBER, value=123
+    )
+    assert field.field_type == CustomFieldType.NUMBER
     assert field.value == 123
 
-    field = CustomField(name="boolean_field", type=CustomFieldType.BOOLEAN, value=True)
-    assert field.type == CustomFieldType.BOOLEAN
+    field = CustomField(
+        name="integer_field", fieldType=CustomFieldType.INTEGER, value=456
+    )
+    assert field.field_type == CustomFieldType.INTEGER
+    assert field.value == 456
+
+    field = CustomField(
+        name="boolean_field", fieldType=CustomFieldType.BOOLEAN, value=True
+    )
+    assert field.field_type == CustomFieldType.BOOLEAN
     assert field.value is True
 
     # Valid case with schema URL
     field = CustomField(
         name="test",
-        type=CustomFieldType.STRING,
+        fieldType=CustomFieldType.STRING,
         value="test",
         schema="https://example.com/schema",
     )
@@ -126,12 +219,17 @@ def test_custom_field_validation():
 
     # Invalid cases
     with pytest.raises(ValueError):
-        CustomField(name="", type=CustomFieldType.STRING, value="test")  # Empty name
+        CustomField(
+            name="", fieldType=CustomFieldType.STRING, value="test"
+        )  # Empty name
 
     with pytest.raises(ValueError):
-        CustomField(name="test", type="invalid", value="test")
+        CustomField(name="test", fieldType="invalid", value="test")
 
     with pytest.raises(ValueError):
         CustomField(
-            name="test", type=CustomFieldType.STRING, value="test", schema="not-a-url"
+            name="test",
+            fieldType=CustomFieldType.STRING,
+            value="test",
+            schema="not-a-url",
         )

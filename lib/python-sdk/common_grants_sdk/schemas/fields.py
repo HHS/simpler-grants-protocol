@@ -3,7 +3,7 @@
 from datetime import date, datetime, time
 from enum import StrEnum
 import re
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Literal, Optional, Union
 
 from pydantic import Field, HttpUrl, BeforeValidator
 
@@ -57,21 +57,46 @@ class Money(CommonGrantsBaseModel):
     currency: str = Field(
         ...,
         description="The ISO 4217 currency code (e.g., 'USD', 'EUR')",
-        pattern=r"^[A-Z]{3}$",
-        min_length=3,
-        max_length=3,
         examples=["USD", "EUR", "GBP", "JPY"],
     )
 
 
-# Event
-class Event(CommonGrantsBaseModel):
-    """Represents a scheduled event with an optional time and description."""
+# Event Types
+class EventType(StrEnum):
+    """Type of event (e.g., a single date, a date range, or a custom event)."""
+
+    SINGLE_DATE = "singleDate"
+    DATE_RANGE = "dateRange"
+    OTHER = "other"
+
+
+# Event Base
+class EventBase(CommonGrantsBaseModel):
+    """Base model for all events."""
 
     name: str = Field(
         ...,
-        description="Human-readable name of the event",
+        description="Human-readable name of the event (e.g., 'Application posted', 'Question deadline')",
         min_length=1,
+    )
+    event_type: EventType = Field(
+        ...,
+        alias="eventType",
+        description="Type of event",
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description="Description of what this event represents",
+    )
+
+
+# Single Date Event
+class SingleDateEvent(EventBase):
+    """Description of an event that has a date (and possible time) associated with it."""
+
+    event_type: Literal[EventType.SINGLE_DATE] = Field(
+        EventType.SINGLE_DATE,
+        alias="eventType",
     )
     date: ISODate = Field(
         ...,
@@ -81,10 +106,54 @@ class Event(CommonGrantsBaseModel):
         default=None,
         description="Time of the event in ISO 8601 format: HH:MM:SS",
     )
-    description: Optional[str] = Field(
-        default=None,
-        description="Description of what this event represents",
+
+
+# Date Range Event
+class DateRangeEvent(EventBase):
+    """Description of an event that has a start and end date (and possible time) associated with it."""
+
+    event_type: Literal[EventType.DATE_RANGE] = Field(
+        EventType.DATE_RANGE,
+        alias="eventType",
     )
+    start_date: ISODate = Field(
+        ...,
+        alias="startDate",
+        description="Start date of the event in ISO 8601 format: YYYY-MM-DD",
+    )
+    start_time: Optional[ISOTime] = Field(
+        default=None,
+        alias="startTime",
+        description="Start time of the event in ISO 8601 format: HH:MM:SS",
+    )
+    end_date: ISODate = Field(
+        ...,
+        alias="endDate",
+        description="End date of the event in ISO 8601 format: YYYY-MM-DD",
+    )
+    end_time: Optional[ISOTime] = Field(
+        default=None,
+        alias="endTime",
+        description="End time of the event in ISO 8601 format: HH:MM:SS",
+    )
+
+
+# Other Event
+class OtherEvent(EventBase):
+    """Description of an event that is not a single date or date range."""
+
+    event_type: Literal[EventType.OTHER] = Field(
+        EventType.OTHER,
+        alias="eventType",
+    )
+    details: Optional[str] = Field(
+        default=None,
+        description="Details of the event's timeline (e.g. 'Every other Tuesday')",
+    )
+
+
+# Event Union
+Event = Union[SingleDateEvent, DateRangeEvent, OtherEvent]
 
 
 # CustomField
@@ -93,6 +162,7 @@ class CustomFieldType(StrEnum):
 
     STRING = "string"
     NUMBER = "number"
+    INTEGER = "integer"
     BOOLEAN = "boolean"
     OBJECT = "object"
     ARRAY = "array"
@@ -106,8 +176,9 @@ class CustomField(CommonGrantsBaseModel):
         description="Name of the custom field",
         min_length=1,
     )
-    type: CustomFieldType = Field(
+    field_type: CustomFieldType = Field(
         ...,
+        alias="fieldType",
         description="The JSON schema type to use when de-serializing the `value` field",
     )
     schema_url: Optional[HttpUrl] = Field(
@@ -136,3 +207,21 @@ class SystemMetadata(CommonGrantsBaseModel):
         alias="lastModifiedAt",
         description="The timestamp (in UTC) at which the record was last modified.",
     )
+
+
+__all__ = [
+    "ISODate",
+    "ISOTime",
+    "UTCDateTime",
+    "DecimalString",
+    "Money",
+    "EventType",
+    "EventBase",
+    "SingleDateEvent",
+    "DateRangeEvent",
+    "OtherEvent",
+    "Event",
+    "CustomFieldType",
+    "CustomField",
+    "SystemMetadata",
+]

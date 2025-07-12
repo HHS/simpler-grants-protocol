@@ -22,9 +22,12 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
         ...,
         description="Description of the opportunity's purpose and scope",
     )
-    funding: OppFunding = Field(..., description="Details about the funding available")
-    key_dates: OppTimeline = Field(
-        ...,
+    funding: Optional[OppFunding] = Field(
+        default=None,
+        description="Details about the funding available",
+    )
+    key_dates: Optional[OppTimeline] = Field(
+        default=None,
         alias="keyDates",
         description="Key dates for the opportunity, such as when the application opens and closes",
     )
