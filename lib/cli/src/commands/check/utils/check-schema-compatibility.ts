@@ -132,11 +132,15 @@ function checkObjectCompatibility(
     errors.addErrors(propErrors.getAllErrors());
   }
 
-  // Step 3: Handle missing props
+  // Step 3: Handle missing props - only flag as errors if they are required
+  const requiredProps = baseSchema.required || [];
   for (const propName of propsByStatus.missing) {
-    const propLoc = `${location}.${propName}`;
-    const error = missingFieldError(propLoc, propName, { ...ctx, baseSchema });
-    errors.addError(error);
+    // Only flag as missing if the property is actually required
+    if (requiredProps.includes(propName)) {
+      const propLoc = `${location}.${propName}`;
+      const error = missingFieldError(propLoc, propName, { ...ctx, baseSchema });
+      errors.addError(error);
+    }
   }
 
   // Step 4: Handle extra props
