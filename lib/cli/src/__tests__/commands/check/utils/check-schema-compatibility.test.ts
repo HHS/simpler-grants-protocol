@@ -113,6 +113,36 @@ describe("Schema Compatibility Checks", () => {
   });
 
   // ############################################################
+  // Optional properties
+  // ############################################################
+
+  it("should ignore missing properties if they are optional in base schema", () => {
+    // Arrange
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string" },
+        name: { type: "string" },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        // missing 'name'
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(0);
+  });
+
+  // ############################################################
   // Enum validation
   // ############################################################
 
