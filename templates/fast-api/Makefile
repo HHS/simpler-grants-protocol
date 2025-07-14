@@ -32,6 +32,9 @@ check-lint:
 check-spec:
 	$(RUNTIME_PREFIX) python src/common_grants/scripts/generate_openapi.py > openapi.yaml && cg check spec openapi.yaml
 
+check-spec-devmode:
+	$(RUNTIME_PREFIX) python src/common_grants/scripts/generate_openapi.py > openapi.yaml && node ../../lib/cli/dist/index.js check spec openapi.yaml
+
 check-types:
 	$(RUNTIME_PREFIX) pyright $(PYTHON_DIRS)
 
