@@ -1,5 +1,11 @@
 # @common-grants/cli
 
+## 0.1.2
+
+### Patch Changes
+
+- 57c75e7: Update checkSpec command to not throw error when optional props are missing
+
 ## 0.1.1
 
 ### Patch Changes
