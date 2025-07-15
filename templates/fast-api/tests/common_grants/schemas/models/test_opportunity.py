@@ -82,7 +82,7 @@ def test_custom_field_model():
     # Test string field
     field_data = {
         "name": "program_area",
-        "type": CustomFieldType.STRING,
+        "fieldType": CustomFieldType.STRING,
         "schema": None,
         "value": "Healthcare",
         "description": "Primary program area for the grant",
@@ -96,7 +96,7 @@ def test_custom_field_model():
     # Test number field
     field_data = {
         "name": "years_of_operation",
-        "type": CustomFieldType.NUMBER,
+        "fieldType": CustomFieldType.NUMBER,
         "schema": None,
         "value": 5,
         "description": None,

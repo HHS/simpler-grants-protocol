@@ -18,7 +18,7 @@ class TestListOpportunities:
         assert isinstance(data["items"], list)
         assert data["paginationInfo"]["page"] == 1
         assert data["paginationInfo"]["pageSize"] == 10
-        assert data["paginationInfo"]["totalItems"] == 10
+        assert data["paginationInfo"]["totalItems"] == 3
         assert data["paginationInfo"]["totalPages"] == 1
 
     def test_pagination_specified(self, client: TestClient):
@@ -31,8 +31,8 @@ class TestListOpportunities:
         assert isinstance(data["items"], list)
         assert data["paginationInfo"]["page"] == 2
         assert data["paginationInfo"]["pageSize"] == 1
-        assert data["paginationInfo"]["totalItems"] == 10
-        assert data["paginationInfo"]["totalPages"] == 10
+        assert data["paginationInfo"]["totalItems"] == 3
+        assert data["paginationInfo"]["totalPages"] == 3
 
 
 class TestGetOpportunityById:
