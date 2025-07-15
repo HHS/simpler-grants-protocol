@@ -6,8 +6,9 @@ import pytest
 from common_grants_sdk.schemas.fields import (
     CustomField,
     CustomFieldType,
-    Event,
+    EventType,
     Money,
+    SingleDateEvent,
     SystemMetadata,
 )
 from pydantic import ValidationError
@@ -46,11 +47,12 @@ def test_event_model():
     # Test required fields only
     event_data = {
         "name": "Application Deadline",
+        "eventType": EventType.SINGLE_DATE,
         "date": date(2024, 12, 31),
         "time": None,
         "description": None,
     }
-    event = Event.model_validate(event_data)
+    event = SingleDateEvent.model_validate(event_data)
     assert event.name == "Application Deadline"
     assert event.date == date(2024, 12, 31)
     assert event.time is None
@@ -59,11 +61,12 @@ def test_event_model():
     # Test all fields
     event_data = {
         "name": "Application Deadline",
+        "eventType": EventType.SINGLE_DATE,
         "date": date(2024, 12, 31),
         "time": time(23, 59, 59),
         "description": "Final deadline for all applications",
     }
-    event = Event.model_validate(event_data)
+    event = SingleDateEvent.model_validate(event_data)
     assert event.time == time(23, 59, 59)
     assert event.description == "Final deadline for all applications"
 
@@ -73,25 +76,25 @@ def test_custom_field_model():
     # Test string field
     field_data = {
         "name": "program_area",
-        "type": CustomFieldType.STRING,
+        "fieldType": CustomFieldType.STRING,
         "schema": None,
         "value": "Healthcare",
         "description": "Primary program area for the grant",
     }
     field = CustomField.model_validate(field_data)
     assert field.name == "program_area"
-    assert field.type == CustomFieldType.STRING
+    assert field.field_type == CustomFieldType.STRING
     assert field.value == "Healthcare"
     assert field.description == "Primary program area for the grant"
 
     # Test number field
     field_data = {
         "name": "years_of_operation",
-        "type": CustomFieldType.NUMBER,
+        "fieldType": CustomFieldType.NUMBER,
         "schema": None,
         "value": 5,
         "description": None,
     }
     field = CustomField.model_validate(field_data)
-    assert field.type == CustomFieldType.NUMBER
+    assert field.field_type == CustomFieldType.NUMBER
     assert field.value == 5
