@@ -6,7 +6,8 @@ from common_grants_sdk.schemas.fields import ISODate
 from pydantic import BaseModel, Field
 
 from common_grants.schemas.filters.base import (
-    DefaultFilter,
+    ComparisonOperator,
+    RangeOperator,
 )
 
 # ############################################################
@@ -21,11 +22,21 @@ class DateRange(BaseModel):
     max: Optional[ISODate] = Field(None, description="The maximum date in the range")
 
 
-class DateRangeFilter(DefaultFilter):
+class DateRangeFilter(BaseModel):
     """Filter that matches dates within a specified range."""
-    
+
+    operator: RangeOperator = Field(
+        ...,
+        description="The operator to apply to the filter value",
+    )
     value: DateRange = Field(..., description="The date range value")
 
 
-class DateComparisonFilter(DefaultFilter):
+class DateComparisonFilter(BaseModel):
     """Filter that matches dates against a specific value."""
+
+    operator: ComparisonOperator = Field(
+        ...,
+        description="The operator to apply to the filter value",
+    )
+    value: ISODate = Field(..., description="The date value to compare against")
