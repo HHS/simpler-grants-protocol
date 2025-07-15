@@ -42,6 +42,8 @@ class MoneyRange(BaseModel):
 class MoneyRangeFilter(DefaultFilter):
     """Filter for money ranges using comparison operators."""
 
+    value: MoneyRange = Field(..., description="The money range value")
+
     @field_validator("value")
     @classmethod
     def validate_range(cls, v: MoneyRange, info: ValidationInfo) -> MoneyRange:

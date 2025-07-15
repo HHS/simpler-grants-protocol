@@ -23,6 +23,8 @@ class DateRange(BaseModel):
 
 class DateRangeFilter(DefaultFilter):
     """Filter that matches dates within a specified range."""
+    
+    value: DateRange = Field(..., description="The date range value")
 
 
 class DateComparisonFilter(DefaultFilter):
