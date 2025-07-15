@@ -1,13 +1,13 @@
 """Schemas for the CommonGrants API responses."""
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from common_grants.schemas.models import (
-    OppFilters,
     OpportunityBase,
 )
 from common_grants.schemas.pagination import PaginationInfo
-from common_grants.schemas.sorting import OppSorting
 
 
 class DefaultResponse(BaseModel):
@@ -22,6 +22,42 @@ class DefaultResponse(BaseModel):
         ...,
         description="The message",
         examples=["Success"],
+    )
+
+
+class SortInfo(BaseModel):
+    """Sorting information for search results."""
+
+    sort_by: str = Field(
+        ...,
+        alias="sortBy",
+        description="The field results are sorted by",
+    )
+    custom_sort_by: Optional[str] = Field(
+        default=None,
+        alias="customSortBy",
+        description="Implementation-defined sort key used to sort the results, if applicable",
+    )
+    sort_order: str = Field(
+        ...,
+        alias="sortOrder",
+        description="The order in which the results are sorted",
+    )
+    errors: Optional[list[str]] = Field(
+        default_factory=list,
+        description="Non-fatal errors that occurred during sorting",
+        json_schema_extra={"items": {"type": "string"}},
+    )
+
+
+class FilterInfo(BaseModel):
+    """Filter information for search results."""
+
+    filters: dict = Field(..., description="The filters applied to the response items")
+    errors: Optional[list[str]] = Field(
+        default_factory=list,
+        description="Non-fatal errors that occurred during filtering",
+        json_schema_extra={"items": {"type": "string"}},
     )
 
 
@@ -45,12 +81,12 @@ class OpportunitiesSearchResponse(DefaultResponse):
         description="The pagination details",
         alias="paginationInfo",
     )
-    sort_info: OppSorting = Field(
+    sort_info: SortInfo = Field(
         ...,
         description="The sorting details",
         alias="sortInfo",
     )
-    filter_info: OppFilters = Field(
+    filter_info: FilterInfo = Field(
         ...,
         description="The filter details",
         alias="filterInfo",

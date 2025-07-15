@@ -5,7 +5,9 @@ from typing import Optional
 from common_grants_sdk.schemas.fields import ISODate
 from pydantic import BaseModel, Field
 
-from common_grants.schemas.filters.base import ComparisonOperator, RangeOperator
+from common_grants.schemas.filters.base import (
+    DefaultFilter,
+)
 
 # ############################################################
 # Models
@@ -19,29 +21,9 @@ class DateRange(BaseModel):
     max: Optional[ISODate] = Field(None, description="The maximum date in the range")
 
 
-class DateRangeFilter(BaseModel):
+class DateRangeFilter(DefaultFilter):
     """Filter that matches dates within a specified range."""
 
-    operator: RangeOperator = Field(
-        ...,
-        description="The operator to apply to the filter",
-        examples=[RangeOperator.BETWEEN, RangeOperator.OUTSIDE],
-    )
-    value: DateRange = Field(..., description="The date range to filter by")
 
-
-class DateComparisonFilter(BaseModel):
+class DateComparisonFilter(DefaultFilter):
     """Filter that matches dates against a specific value."""
-
-    operator: ComparisonOperator = Field(
-        ...,
-        description="The operator to apply to the filter",
-        examples=[ComparisonOperator.GREATER_THAN, ComparisonOperator.LESS_THAN],
-    )
-
-
-value: ISODate = Field(..., description="The date to filter by")
-
-
-class DefaultFilter(BaseModel):
-    """Base class for all filters."""

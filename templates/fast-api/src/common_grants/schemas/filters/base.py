@@ -1,8 +1,9 @@
 """Filter models for the CommonGrants API."""
 
 from enum import StrEnum
+from typing import Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # ############################################################
 # Enums
@@ -52,4 +53,16 @@ class RangeOperator(StrEnum):
 
 
 class DefaultFilter(BaseModel):
-    """Base class for all filters."""
+    """Base class for all filters that matches Core v0.1.0 DefaultFilter structure."""
+
+    operator: Union[
+        EquivalenceOperator,
+        ComparisonOperator,
+        ArrayOperator,
+        StringOperator,
+        RangeOperator,
+    ] = Field(..., description="The operator to apply to the filter value")
+    value: Union[str, int, float, list, dict] = Field(
+        ...,
+        description="The value to use for the filter operation",
+    )

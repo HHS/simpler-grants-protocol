@@ -5,7 +5,10 @@ from typing import Optional
 from common_grants_sdk.schemas.fields import Money
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
-from common_grants.schemas.filters.base import ComparisonOperator, RangeOperator
+from common_grants.schemas.filters.base import (
+    DefaultFilter,
+    RangeOperator,
+)
 
 
 class InvalidMoneyValueError(ValueError):
@@ -36,11 +39,8 @@ class MoneyRange(BaseModel):
         raise InvalidMoneyValueError
 
 
-class MoneyRangeFilter(BaseModel):
+class MoneyRangeFilter(DefaultFilter):
     """Filter for money ranges using comparison operators."""
-
-    operator: RangeOperator = Field(..., description="The range operator to use")
-    value: MoneyRange = Field(..., description="The money range to compare against")
 
     @field_validator("value")
     @classmethod
@@ -54,11 +54,5 @@ class MoneyRangeFilter(BaseModel):
         return v
 
 
-class MoneyComparisonFilter(BaseModel):
+class MoneyComparisonFilter(DefaultFilter):
     """Filter for money values using comparison operators."""
-
-    operator: ComparisonOperator = Field(
-        ...,
-        description="The comparison operator to use",
-    )
-    value: Money = Field(..., description="The money value to compare against")

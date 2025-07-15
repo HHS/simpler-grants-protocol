@@ -5,13 +5,9 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query, status
 
 from common_grants.schemas import (
-    OppFilters,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
-    OppSortBy,
-    OppSorting,
-    PaginationBodyParams,
 )
 from common_grants.schemas.models.opp_search_request import OpportunitySearchRequest
 from common_grants.services.opportunity import OpportunityService
@@ -91,7 +87,7 @@ async def get_opportunity(
 ) -> OpportunityResponse:
     """Get a specific opportunity by ID."""
     opportunity_service = OpportunityService()
-    opportunity = await opportunity_service.get_opportunity(id)
+    opportunity = await opportunity_service.get_opportunity(str(id))
 
     if not opportunity:
         raise HTTPException(
@@ -116,15 +112,6 @@ async def search_opportunities(
 ) -> OpportunitiesSearchResponse:
     """Search for opportunities based on the provided filters."""
     opportunity_service = OpportunityService()
-
-    if request.pagination is None:
-        request.pagination = PaginationBodyParams()
-
-    if request.filters is None:
-        request.filters = OppFilters()
-
-    if request.sorting is None:
-        request.sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
 
     return await opportunity_service.search_opportunities(
         filters=request.filters,
