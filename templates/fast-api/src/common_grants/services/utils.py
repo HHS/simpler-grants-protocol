@@ -9,6 +9,7 @@ from common_grants_sdk.schemas.fields import EventType, Money, SingleDateEvent
 from common_grants.schemas.models import (
     OppFilters,
     OpportunityBase,
+    OppStatusOptions,
 )
 from common_grants.schemas.pagination import PaginatedItems, PaginationInfo
 
@@ -113,7 +114,7 @@ def mock_opportunity(  # noqa: PLR0913
         "id": uuid5(NAMESPACE, title),
         "title": title,
         "status": {
-            "value": "open",
+            "value": OppStatusOptions.OPEN,
             "description": f"Status for {title}",
         },
         "description": description or f"Description for {title}",
