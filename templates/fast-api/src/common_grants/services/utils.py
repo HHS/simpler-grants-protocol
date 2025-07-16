@@ -13,7 +13,7 @@ from common_grants.schemas.models import (
 )
 from common_grants.schemas.pagination import PaginatedItems, PaginationInfo
 
-NAMESPACE = UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+NAMESPACE = UUID("58315de5-1411-4c17-a394-561f1a47376f")
 
 
 def paginate(items: list, page: int, page_size: int) -> PaginatedItems[OpportunityBase]:
