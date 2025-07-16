@@ -1,11 +1,13 @@
-"""Utility functions for the common grants service."""
+"""Utility functions for the CommonGrants API."""
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
+from typing import Any
 from uuid import UUID, uuid5
 
-from common_grants_sdk.schemas.fields import Event, Money
+from common_grants_sdk.schemas.fields import EventType, Money, SingleDateEvent
 
 from common_grants.schemas.models import (
+    OppFilters,
     OpportunityBase,
     OppStatusOptions,
 )
@@ -29,62 +31,100 @@ def paginate(items: list, page: int, page_size: int) -> PaginatedItems[Opportuni
     )
 
 
+def build_applied_filters(filters: OppFilters) -> dict[str, Any]:
+    """
+    Build a dictionary of only the filters that were actually provided.
+
+    This creates a response that matches the Core v0.1.0 specification
+    by only including filters that have values (not None).
+    """
+    applied_filters = {}
+
+    if filters.status is not None:
+        applied_filters["status"] = filters.status.model_dump()
+    if filters.close_date_range is not None:
+        applied_filters["closeDateRange"] = filters.close_date_range.model_dump()
+    if filters.total_funding_available_range is not None:
+        applied_filters["totalFundingAvailableRange"] = (
+            filters.total_funding_available_range.model_dump()
+        )
+    if filters.min_award_amount_range is not None:
+        applied_filters["minAwardAmountRange"] = (
+            filters.min_award_amount_range.model_dump()
+        )
+    if filters.max_award_amount_range is not None:
+        applied_filters["maxAwardAmountRange"] = (
+            filters.max_award_amount_range.model_dump()
+        )
+    if filters.custom_filters is not None:
+        applied_filters["customFilters"] = filters.custom_filters
+
+    return applied_filters
+
+
 def mock_opportunity(  # noqa: PLR0913
     title: str,
-    status: OppStatusOptions,
-    total_available: int | None = None,
-    min_award_amount: int | None = None,
-    max_award_amount: int | None = None,
+    description: str | None = None,
+    total_available: float | None = None,
+    min_award_amount: float | None = None,
+    max_award_amount: float | None = None,
     min_award_count: int | None = None,
     max_award_count: int | None = None,
     app_opens: date | None = None,
     app_deadline: date | None = None,
 ) -> OpportunityBase:
-    """Return a mock opportunity."""
+    """Create a mock opportunity for testing purposes."""
     now = datetime.now(timezone.utc)
-    default_open = app_opens or date(1970, 1, 1)
-    # If deadline is missing, set to one day after open
-    deadline = app_deadline or (default_open + timedelta(days=1))
+
+    # Create funding object
+    funding = {}
+    if total_available is not None:
+        funding["totalAmountAvailable"] = Money(
+            amount=str(total_available),
+            currency="USD",
+        )
+    if min_award_amount is not None:
+        funding["minAwardAmount"] = Money(amount=str(min_award_amount), currency="USD")
+    if max_award_amount is not None:
+        funding["maxAwardAmount"] = Money(amount=str(max_award_amount), currency="USD")
+    if min_award_count is not None:
+        funding["minAwardCount"] = min_award_count
+    if max_award_count is not None:
+        funding["maxAwardCount"] = max_award_count
+
+    # Create keyDates object
+    key_dates = {}
+    if app_opens is not None:
+        key_dates["postDate"] = SingleDateEvent(
+            name="Application Posted",
+            eventType=EventType.SINGLE_DATE,
+            date=app_opens,
+            description="Applications posted",
+        )
+    if app_deadline is not None:
+        key_dates["closeDate"] = SingleDateEvent(
+            name="Application Deadline",
+            eventType=EventType.SINGLE_DATE,
+            date=app_deadline,
+            description="Applications close",
+        )
+
     opp_data = {
         "id": uuid5(NAMESPACE, title),
         "title": title,
         "status": {
-            "value": status,
+            "value": OppStatusOptions.OPEN,
             "description": f"Status for {title}",
         },
-        "description": f"Description for {title}",
-        "funding": {
-            "totalAmountAvailable": (
-                Money(amount="0.00", currency="USD")
-                if total_available is None
-                else Money(amount=str(total_available), currency="USD")
-            ),
-            "minAwardAmount": (
-                Money(amount="0.00", currency="USD")
-                if min_award_amount is None
-                else Money(amount=str(min_award_amount), currency="USD")
-            ),
-            "maxAwardAmount": (
-                Money(amount="0.00", currency="USD")
-                if max_award_amount is None
-                else Money(amount=str(max_award_amount), currency="USD")
-            ),
-            "minAwardCount": min_award_count,
-            "maxAwardCount": max_award_count,
-        },
-        "keyDates": {
-            "appOpens": Event(
-                name="Application Opens",
-                date=default_open,
-                description="Start accepting applications",
-            ),
-            "appDeadline": Event(
-                name="Application Deadline",
-                date=deadline,
-                description="Final deadline for submissions",
-            ),
-        },
+        "description": description or f"Description for {title}",
         "createdAt": now,
         "lastModifiedAt": now,
     }
+
+    # Conditionally add funding and keyDates
+    if funding:
+        opp_data["funding"] = funding
+    if key_dates:
+        opp_data["keyDates"] = key_dates
+
     return OpportunityBase.model_validate(opp_data)

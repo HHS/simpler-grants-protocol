@@ -1,195 +1,160 @@
-"""Service for handling opportunity data operations."""
+"""Service layer for opportunity-related operations."""
 
 from datetime import date
-from typing import Optional
+from typing import Any
 from uuid import UUID
 
-from common_grants_sdk.schemas.models import OpportunityBase
-from common_grants_sdk.schemas.models.opp_status import OppStatusOptions
 from fastapi import status
 
 from common_grants.schemas import (
-    OppFilters,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
-    OppSorting,
-    PaginationBodyParams,
 )
-from common_grants.services.utils import mock_opportunity, paginate
+from common_grants.schemas.models import OppFilters, OpportunityBase
+from common_grants.schemas.pagination import PaginationBodyParams, PaginationInfo
+from common_grants.schemas.response import FilterInfo, SortInfo
+from common_grants.schemas.sorting import OppSortBy, OppSorting
+from common_grants.services.utils import build_applied_filters, mock_opportunity
 
 
 class OpportunityService:
-    """
-    Service for handling opportunity data operations.
-
-    In a real implementation, this would interact with a database.
-    For this example, we're using an in-memory store.
-    """
+    """Service for managing opportunities."""
 
     def __init__(self) -> None:
         """Initialize the opportunity service."""
-        # In-memory store for opportunities
         self.opportunity_list: list[OpportunityBase] = self._get_mock_opportunities()
         self.opportunity_map: dict[UUID, OpportunityBase] = {
             opp.id: opp for opp in self.opportunity_list
         }
 
+    async def get_opportunity(self, opportunity_id: str) -> OpportunityBase | None:
+        """Get a specific opportunity by ID."""
+        try:
+            opportunity_uuid = UUID(opportunity_id)
+            return self.opportunity_map.get(opportunity_uuid)
+        except ValueError:
+            return None
+
     async def list_opportunities(
         self,
-        page: int,
-        page_size: int,
+        page: int = 1,
+        page_size: int = 10,
     ) -> OpportunitiesListResponse:
-        """
-        Get a paginated list of opportunities.
+        """Get a paginated list of opportunities."""
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        items = self.opportunity_list[start_idx:end_idx]
 
-        Args:
-            page: The page number to retrieve
-            page_size: The number of items per page
-
-        Returns:
-            A tuple containing the list of opportunities and the total count
-
-        """
-        pages = paginate(
-            items=self.opportunity_list,
+        pagination_info = PaginationInfo(
             page=page,
-            page_size=page_size,
+            pageSize=page_size,
+            totalItems=len(self.opportunity_list),
+            totalPages=(len(self.opportunity_list) + page_size - 1) // page_size,
         )
+
         return OpportunitiesListResponse(
             status=status.HTTP_200_OK,
             message="Opportunities fetched successfully",
-            items=pages.items,
-            paginationInfo=pages.pagination_info,
+            items=items,
+            paginationInfo=pagination_info,
         )
-
-    async def get_opportunity(self, opportunity_id: UUID) -> Optional[OpportunityBase]:
-        """
-        Get a specific opportunity by ID.
-
-        Args:
-            opportunity_id: The ID of the opportunity to retrieve
-
-        Returns:
-            The opportunity if found, None otherwise
-
-        """
-        return self.opportunity_map.get(opportunity_id)
 
     async def search_opportunities(
         self,
-        filters: OppFilters,
-        sorting: OppSorting,
-        pagination: PaginationBodyParams,
+        filters: OppFilters | None = None,
+        sorting: OppSorting | None = None,
+        pagination: PaginationBodyParams | None = None,
+        search: str | None = None,
     ) -> OpportunitiesSearchResponse:
-        """
-        Search for opportunities based on the provided filters.
+        """Search for opportunities based on the provided filters."""
+        # Use default values if not provided
+        if filters is None:
+            filters = OppFilters()
+        if sorting is None:
+            sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
+        if pagination is None:
+            pagination = PaginationBodyParams()
 
-        Args:
-            filters: Filters to apply to the search
-            sorting: Sorting parameters
-            pagination: Pagination parameters
+        # Apply search filter
+        filtered_opportunities = self.opportunity_list
+        if search:
+            search_lower = search.lower()
+            filtered_opportunities = [
+                opp
+                for opp in filtered_opportunities
+                if search_lower in opp.title.lower()
+                or (opp.description and search_lower in opp.description.lower())
+            ]
 
-        Returns:
-            A tuple containing the list of filtered opportunities and the total count
-
-        """
-        pages = paginate(
-            self.opportunity_list,
-            pagination.page,
-            pagination.page_size,
+        # Create PaginationInfo object
+        start_idx = (pagination.page - 1) * pagination.page_size
+        end_idx = start_idx + pagination.page_size
+        items = filtered_opportunities[start_idx:end_idx]
+        pagination_info = PaginationInfo(
+            page=pagination.page,
+            pageSize=pagination.page_size,
+            totalItems=len(filtered_opportunities),
+            totalPages=(len(filtered_opportunities) + pagination.page_size - 1)
+            // pagination.page_size,
         )
+
+        # Create SortInfo object
+        sort_info = SortInfo(
+            sortBy=sorting.sort_by,
+            sortOrder=sorting.sort_order,
+            customSortBy=sorting.custom_sort_by,
+            errors=[],  # Provide empty list as default
+        )
+
+        # Create FilterInfo object
+        filter_info = FilterInfo(
+            filters=build_applied_filters(filters),
+            errors=[],
+        )
+
         return OpportunitiesSearchResponse(
             status=status.HTTP_200_OK,
             message="Opportunities fetched successfully",
-            items=pages.items,
-            paginationInfo=pages.pagination_info,
-            sortInfo=sorting,
-            filterInfo=filters,
+            items=items,
+            paginationInfo=pagination_info,
+            sortInfo=sort_info,
+            filterInfo=filter_info,
         )
 
-    def _get_mock_opportunities(self) -> list[OpportunityBase]:
+    def _get_mock_opportunities(self) -> list[Any]:
         """Get a list of mock opportunities for testing."""
         return [
             mock_opportunity(
-                title="Opportunity 1",
-                status=OppStatusOptions.CLOSED,
-                total_available=5_000_000,
-                min_award_amount=100_000,
-                app_opens=date(2025, 1, 1),
-                app_deadline=date(2025, 1, 31),
-            ),
-            mock_opportunity(
-                title="Opportunity 2",
-                status=OppStatusOptions.CLOSED,
-                total_available=5_000_000,
-                min_award_amount=100_000,
-                max_award_amount=500_000,
-                app_opens=date(2025, 1, 1),
-                app_deadline=date(2025, 1, 31),
-            ),
-            mock_opportunity(
-                title="Opportunity 3",
-                status=OppStatusOptions.OPEN,
-                total_available=750_000,
-                min_award_amount=10_000,
-                app_opens=date(2025, 1, 2),
-                app_deadline=date(2025, 2, 28),
-            ),
-            mock_opportunity(
-                title="Opportunity 4",
-                status=OppStatusOptions.OPEN,
-                total_available=500_000,
-                min_award_amount=1_000,
-                app_opens=date(2025, 2, 1),
-                app_deadline=date(2025, 3, 31),
-            ),
-            mock_opportunity(
-                title="Opportunity 5",
-                status=OppStatusOptions.OPEN,
-                min_award_amount=1_000,
-                max_award_amount=5_000,
-                app_opens=date(2025, 3, 1),
-                app_deadline=date(2025, 3, 30),
-            ),
-            mock_opportunity(
-                title="Opportunity 6",
-                status=OppStatusOptions.OPEN,
-                min_award_amount=15_000,
-                max_award_amount=25_000,
-                max_award_count=10,
-                app_opens=date(2025, 3, 1),
-                app_deadline=date(2025, 3, 30),
-            ),
-            mock_opportunity(
-                title="Opportunity 7",
-                status=OppStatusOptions.OPEN,
-                min_award_amount=5_000,
-                max_award_amount=25_000,
-                app_opens=date(2025, 3, 15),
-                app_deadline=date(2025, 4, 15),
-            ),
-            mock_opportunity(
-                title="Opportunity 8",
-                status=OppStatusOptions.OPEN,
-                min_award_amount=30_000,
-                max_award_amount=50_000,
+                title="Early Childhood Education Grant",
+                description="Supporting early childhood education programs",
+                total_available=500000.00,
+                min_award_amount=25000.00,
+                max_award_amount=100000.00,
                 min_award_count=5,
+                max_award_count=20,
+                app_opens=date(2024, 1, 15),
+                app_deadline=date(2024, 3, 15),
+            ),
+            mock_opportunity(
+                title="STEM Research Initiative",
+                description="Funding for STEM research projects",
+                total_available=1000000.00,
+                min_award_amount=50000.00,
+                max_award_amount=200000.00,
+                min_award_count=3,
                 max_award_count=10,
-                app_opens=date(2025, 4, 1),
-                app_deadline=date(2025, 4, 30),
+                app_opens=date(2024, 2, 1),
+                app_deadline=date(2024, 4, 30),
             ),
             mock_opportunity(
-                title="Opportunity 9",
-                status=OppStatusOptions.FORECASTED,
-                total_available=2_500_000,
-                min_award_amount=50_000,
-                app_opens=date(2025, 5, 1),
-            ),
-            mock_opportunity(
-                title="Opportunity 10",
-                status=OppStatusOptions.FORECASTED,
-                total_available=500_000,
-                max_award_amount=10_000,
-                app_opens=date(2025, 5, 1),
+                title="Community Health Program",
+                description="Improving community health outcomes",
+                total_available=750000.00,
+                min_award_amount=30000.00,
+                max_award_amount=150000.00,
+                min_award_count=4,
+                max_award_count=15,
+                app_opens=date(2024, 1, 1),
+                app_deadline=date(2024, 5, 31),
             ),
         ]

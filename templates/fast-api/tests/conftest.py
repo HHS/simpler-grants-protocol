@@ -4,11 +4,11 @@ from datetime import date, datetime, timezone
 from uuid import uuid4
 
 import pytest
+from common_grants_sdk.schemas.fields import EventType, SingleDateEvent
 from fastapi.testclient import TestClient
 
 from common_grants.api import app
 from common_grants.schemas import (
-    Event,
     Money,
     OppFunding,
     OpportunityBase,
@@ -41,14 +41,16 @@ def test_opportunity():
         estimatedAwardCount=10,
     )
     key_dates = OppTimeline(
-        appOpens=Event(
+        postDate=SingleDateEvent(
             name="Opens",
+            eventType=EventType.SINGLE_DATE,
             date=date(2024, 1, 1),
             time=None,
             description="Application period begins",
         ),
-        appDeadline=Event(
+        closeDate=SingleDateEvent(
             name="Closes",
+            eventType=EventType.SINGLE_DATE,
             date=date(2024, 12, 31),
             time=None,
             description="Final deadline for submissions",

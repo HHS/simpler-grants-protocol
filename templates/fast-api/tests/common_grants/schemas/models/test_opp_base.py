@@ -3,6 +3,7 @@
 from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 
+from common_grants_sdk.schemas.fields import EventType
 from common_grants_sdk.schemas.models import (
     OpportunityBase,
     OppStatusOptions,
@@ -30,14 +31,16 @@ def test_opportunity_base_model():
             "estimatedAwardCount": None,
         },
         "keyDates": {
-            "appOpens": {
+            "postDate": {
                 "name": "Application Opens",
+                "eventType": EventType.SINGLE_DATE,
                 "date": date(2024, 1, 1),
                 "time": None,
                 "description": None,
             },
-            "appDeadline": {
+            "closeDate": {
                 "name": "Application Deadline",
+                "eventType": EventType.SINGLE_DATE,
                 "date": date(2024, 12, 31),
                 "time": None,
                 "description": None,
@@ -54,9 +57,15 @@ def test_opportunity_base_model():
     assert isinstance(opp.id, UUID)
     assert opp.title == "Research Grant 2024"
     assert opp.status.value == OppStatusOptions.OPEN
+    assert opp.funding is not None
     assert opp.funding.total_amount_available is not None
     assert opp.funding.total_amount_available.amount == "1000000.00"
-    assert opp.key_dates.app_opens is not None
-    assert opp.key_dates.app_opens.date == date(2024, 1, 1)
+    assert opp.key_dates is not None
+    assert opp.key_dates.post_date is not None
+    # Cast to SingleDateEvent to access date attribute
+    from common_grants_sdk.schemas.fields import SingleDateEvent
+
+    assert isinstance(opp.key_dates.post_date, SingleDateEvent)
+    assert opp.key_dates.post_date.date == date(2024, 1, 1)
     assert opp.created_at == now
     assert opp.last_modified_at == now

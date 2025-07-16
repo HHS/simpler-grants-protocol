@@ -32,5 +32,7 @@ def test_filter_operators():
 
 def test_default_filter():
     """Test the DefaultFilter model."""
-    filter_obj = DefaultFilter()
+    from common_grants.schemas.filters.base import EquivalenceOperator
+
+    filter_obj = DefaultFilter(operator=EquivalenceOperator.EQUAL, value="test")
     assert isinstance(filter_obj, DefaultFilter)

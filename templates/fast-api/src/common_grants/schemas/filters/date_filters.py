@@ -5,7 +5,10 @@ from typing import Optional
 from common_grants_sdk.schemas.fields import ISODate
 from pydantic import BaseModel, Field
 
-from common_grants.schemas.filters.base import ComparisonOperator, RangeOperator
+from common_grants.schemas.filters.base import (
+    ComparisonOperator,
+    RangeOperator,
+)
 
 # ############################################################
 # Models
@@ -24,10 +27,9 @@ class DateRangeFilter(BaseModel):
 
     operator: RangeOperator = Field(
         ...,
-        description="The operator to apply to the filter",
-        examples=[RangeOperator.BETWEEN, RangeOperator.OUTSIDE],
+        description="The operator to apply to the filter value",
     )
-    value: DateRange = Field(..., description="The date range to filter by")
+    value: DateRange = Field(..., description="The date range value")
 
 
 class DateComparisonFilter(BaseModel):
@@ -35,13 +37,6 @@ class DateComparisonFilter(BaseModel):
 
     operator: ComparisonOperator = Field(
         ...,
-        description="The operator to apply to the filter",
-        examples=[ComparisonOperator.GREATER_THAN, ComparisonOperator.LESS_THAN],
+        description="The operator to apply to the filter value",
     )
-
-
-value: ISODate = Field(..., description="The date to filter by")
-
-
-class DefaultFilter(BaseModel):
-    """Base class for all filters."""
+    value: ISODate = Field(..., description="The date value to compare against")

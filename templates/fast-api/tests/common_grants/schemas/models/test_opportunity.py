@@ -4,12 +4,12 @@ from datetime import date, datetime, time, timezone
 from uuid import uuid4
 
 import pytest
+from common_grants_sdk.schemas.fields import EventType, SingleDateEvent
 from pydantic import ValidationError
 
 from common_grants.schemas import (
     CustomField,
     CustomFieldType,
-    Event,
     Money,
     OppFunding,
     OpportunityBase,
@@ -53,11 +53,12 @@ def test_event_model():
     # Test required fields only
     event_data = {
         "name": "Application Deadline",
+        "eventType": EventType.SINGLE_DATE,
         "date": date(2024, 12, 31),
         "time": None,
         "description": None,
     }
-    event = Event.model_validate(event_data)
+    event = SingleDateEvent.model_validate(event_data)
     assert event.name == "Application Deadline"
     assert event.date == date(2024, 12, 31)
     assert event.time is None
@@ -66,11 +67,12 @@ def test_event_model():
     # Test all fields
     event_data = {
         "name": "Application Deadline",
+        "eventType": EventType.SINGLE_DATE,
         "date": date(2024, 12, 31),
         "time": time(23, 59, 59),
         "description": "Final deadline for all applications",
     }
-    event = Event.model_validate(event_data)
+    event = SingleDateEvent.model_validate(event_data)
     assert event.time == time(23, 59, 59)
     assert event.description == "Final deadline for all applications"
 
@@ -80,27 +82,27 @@ def test_custom_field_model():
     # Test string field
     field_data = {
         "name": "program_area",
-        "type": CustomFieldType.STRING,
+        "fieldType": CustomFieldType.STRING,
         "schema": None,
         "value": "Healthcare",
         "description": "Primary program area for the grant",
     }
     field = CustomField.model_validate(field_data)
     assert field.name == "program_area"
-    assert field.type == CustomFieldType.STRING
+    assert field.field_type == CustomFieldType.STRING
     assert field.value == "Healthcare"
     assert field.description == "Primary program area for the grant"
 
     # Test number field
     field_data = {
         "name": "years_of_operation",
-        "type": CustomFieldType.NUMBER,
+        "fieldType": CustomFieldType.NUMBER,
         "schema": None,
         "value": 5,
         "description": None,
     }
     field = CustomField.model_validate(field_data)
-    assert field.type == CustomFieldType.NUMBER
+    assert field.field_type == CustomFieldType.NUMBER
     assert field.value == 5
 
 
@@ -159,14 +161,16 @@ def test_opp_funding_model():
 def test_opp_timeline_model():
     """Test the OppTimeline model."""
     timeline_data = {
-        "appOpens": {
+        "postDate": {
             "name": "Application Opens",
+            "eventType": EventType.SINGLE_DATE,
             "date": date(2024, 1, 1),
             "time": None,
             "description": "Start accepting applications",
         },
-        "appDeadline": {
+        "closeDate": {
             "name": "Application Deadline",
+            "eventType": EventType.SINGLE_DATE,
             "date": date(2024, 12, 31),
             "time": time(23, 59, 59),
             "description": "Final deadline for submissions",
@@ -174,6 +178,7 @@ def test_opp_timeline_model():
         "otherDates": {
             "review_start": {
                 "name": "Review Start",
+                "eventType": EventType.SINGLE_DATE,
                 "date": date(2025, 1, 1),
                 "time": None,
                 "description": "Start of application review process",
@@ -181,10 +186,13 @@ def test_opp_timeline_model():
         },
     }
     timeline = OppTimeline.model_validate(timeline_data)
-    assert timeline.app_opens is not None
-    assert timeline.app_opens.date == date(2024, 1, 1)
-    assert timeline.app_deadline is not None
-    assert timeline.app_deadline.time == time(23, 59, 59)
+    assert timeline.post_date is not None
+    # Cast to SingleDateEvent to access date attribute
+    assert isinstance(timeline.post_date, SingleDateEvent)
+    assert timeline.post_date.date == date(2024, 1, 1)
+    assert timeline.close_date is not None
+    assert isinstance(timeline.close_date, SingleDateEvent)
+    assert timeline.close_date.time == time(23, 59, 59)
     assert timeline.other_dates is not None
     assert "review_start" in timeline.other_dates
 
@@ -206,14 +214,16 @@ def test_opportunity_base_model():
         estimatedAwardCount=5,
     )
     key_dates = OppTimeline(
-        appOpens=Event(
+        postDate=SingleDateEvent(
             name="Application Opens",
+            eventType=EventType.SINGLE_DATE,
             date=date(2024, 1, 1),
             time=None,
             description="Start accepting applications",
         ),
-        appDeadline=Event(
+        closeDate=SingleDateEvent(
             name="Application Deadline",
+            eventType=EventType.SINGLE_DATE,
             date=date(2024, 12, 31),
             time=time(23, 59, 59),
             description="Final deadline for submissions",
@@ -235,6 +245,14 @@ def test_opportunity_base_model():
     opp = OpportunityBase.model_validate(opp_dict)
     assert opp.title == "Research Grant 2024"
     assert opp.status.value == OppStatusOptions.OPEN
+    assert opp.funding is not None
+    assert opp.funding.total_amount_available is not None
     assert opp.funding.total_amount_available.amount == "100000.00"
-    assert opp.key_dates.app_opens.date == date(2024, 1, 1)
-    assert opp.key_dates.app_deadline.time == time(23, 59, 59)
+    assert opp.key_dates is not None
+    assert opp.key_dates.post_date is not None
+    # Cast to SingleDateEvent to access date attribute
+    assert isinstance(opp.key_dates.post_date, SingleDateEvent)
+    assert opp.key_dates.post_date.date == date(2024, 1, 1)
+    assert opp.key_dates.close_date is not None
+    assert isinstance(opp.key_dates.close_date, SingleDateEvent)
+    assert opp.key_dates.close_date.time == time(23, 59, 59)
