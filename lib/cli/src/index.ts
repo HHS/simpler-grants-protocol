@@ -6,7 +6,8 @@ import { previewCommand } from "./commands/preview/preview";
 import { checkCommand } from "./commands/check/check";
 import { compileCommand } from "./commands/compile/compile";
 
-program.name("cg").description("CommonGrants CLI tools").version("0.1.0");
+const packageJson = require("../package.json");
+program.name("cg").description("CommonGrants CLI tools").version(packageJson.version);
 
 // Register commands
 initCommand(program);
