@@ -12,7 +12,8 @@ from common_grants.schemas import (
 )
 from common_grants.schemas.models import OppFilters, OpportunityBase
 from common_grants.schemas.pagination import PaginationBodyParams, PaginationInfo
-from common_grants.schemas.sorting import OppSorting
+from common_grants.schemas.response import FilterInfo, SortInfo
+from common_grants.schemas.sorting import OppSortBy, OppSorting
 from common_grants.services.utils import build_applied_filters, mock_opportunity
 
 
@@ -21,7 +22,6 @@ class OpportunityService:
 
     def __init__(self) -> None:
         """Initialize the opportunity service."""
-        # In-memory store for opportunities
         self.opportunity_list: list[OpportunityBase] = self._get_mock_opportunities()
         self.opportunity_map: dict[UUID, OpportunityBase] = {
             opp.id: opp for opp in self.opportunity_list
@@ -71,13 +71,11 @@ class OpportunityService:
         if filters is None:
             filters = OppFilters()
         if sorting is None:
-            from common_grants.schemas.sorting import OppSortBy, OppSorting
-
             sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
         if pagination is None:
             pagination = PaginationBodyParams()
 
-        # Apply search filter if provided
+        # Apply search filter
         filtered_opportunities = self.opportunity_list
         if search:
             search_lower = search.lower()
@@ -88,27 +86,19 @@ class OpportunityService:
                 or (opp.description and search_lower in opp.description.lower())
             ]
 
-        # Apply sorting
-        # Note: This is a simplified implementation
-        # In a real application, you would apply the actual sorting logic
-        sorted_opportunities = filtered_opportunities
-
-        # Apply pagination
+        # Create PaginationInfo object
         start_idx = (pagination.page - 1) * pagination.page_size
         end_idx = start_idx + pagination.page_size
-        items = sorted_opportunities[start_idx:end_idx]
-
+        items = filtered_opportunities[start_idx:end_idx]
         pagination_info = PaginationInfo(
             page=pagination.page,
             pageSize=pagination.page_size,
-            totalItems=len(sorted_opportunities),
-            totalPages=(len(sorted_opportunities) + pagination.page_size - 1)
+            totalItems=len(filtered_opportunities),
+            totalPages=(len(filtered_opportunities) + pagination.page_size - 1)
             // pagination.page_size,
         )
 
-        # Create SortInfo and FilterInfo objects with proper defaults
-        from common_grants.schemas.response import FilterInfo, SortInfo
-
+        # Create SortInfo object
         sort_info = SortInfo(
             sortBy=sorting.sort_by,
             sortOrder=sorting.sort_order,
@@ -116,12 +106,10 @@ class OpportunityService:
             errors=[],  # Provide empty list as default
         )
 
-        # Use the utility function to build applied filters
-        applied_filters = build_applied_filters(filters)
-
+        # Create FilterInfo object
         filter_info = FilterInfo(
-            filters=applied_filters,
-            errors=[],  # Provide empty list as default
+            filters=build_applied_filters(filters),
+            errors=[],
         )
 
         return OpportunitiesSearchResponse(

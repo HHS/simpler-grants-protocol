@@ -13,7 +13,7 @@ from common_grants.schemas.models import (
 )
 from common_grants.schemas.pagination import PaginatedItems, PaginationInfo
 
-NAMESPACE = UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+NAMESPACE = UUID("58315de5-1411-4c17-a394-561f1a47376f")
 
 
 def paginate(items: list, page: int, page_size: int) -> PaginatedItems[OpportunityBase]:
@@ -40,7 +40,6 @@ def build_applied_filters(filters: OppFilters) -> dict[str, Any]:
     """
     applied_filters = {}
 
-    # Only include filters that were actually provided (not None)
     if filters.status is not None:
         applied_filters["status"] = filters.status.model_dump()
     if filters.close_date_range is not None:
@@ -77,7 +76,7 @@ def mock_opportunity(  # noqa: PLR0913
     """Create a mock opportunity for testing purposes."""
     now = datetime.now(timezone.utc)
 
-    # Create funding object with all optional fields
+    # Create funding object
     funding = {}
     if total_available is not None:
         funding["totalAmountAvailable"] = Money(
@@ -93,7 +92,7 @@ def mock_opportunity(  # noqa: PLR0913
     if max_award_count is not None:
         funding["maxAwardCount"] = max_award_count
 
-    # Create keyDates object with all optional fields
+    # Create keyDates object
     key_dates = {}
     if app_opens is not None:
         key_dates["postDate"] = SingleDateEvent(
@@ -122,7 +121,7 @@ def mock_opportunity(  # noqa: PLR0913
         "lastModifiedAt": now,
     }
 
-    # Only add funding and keyDates if they have content
+    # Conditionally add funding and keyDates
     if funding:
         opp_data["funding"] = funding
     if key_dates:
