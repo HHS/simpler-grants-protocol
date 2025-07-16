@@ -1,19 +1,17 @@
 """Utility functions for the CommonGrants API."""
 
 from datetime import date, datetime, timezone
-from typing import Any
 from uuid import UUID, uuid5
 
 from common_grants_sdk.schemas.fields import EventType, Money, SingleDateEvent
 
 from common_grants.schemas.models import (
-    OppFilters,
     OpportunityBase,
     OppStatusOptions,
 )
 from common_grants.schemas.pagination import PaginatedItems, PaginationInfo
 
-NAMESPACE = UUID("58315de5-1411-4c17-a394-561f1a47376f")
+NAMESPACE = UUID("58315de5-1411-4c17-a394-561f1a47376f")  # DO NOT CHANGE
 
 
 def paginate(items: list, page: int, page_size: int) -> PaginatedItems[OpportunityBase]:
@@ -31,38 +29,6 @@ def paginate(items: list, page: int, page_size: int) -> PaginatedItems[Opportuni
     )
 
 
-def build_applied_filters(filters: OppFilters) -> dict[str, Any]:
-    """
-    Build a dictionary of only the filters that were actually provided.
-
-    This creates a response that matches the Core v0.1.0 specification
-    by only including filters that have values (not None).
-    """
-    applied_filters = {}
-
-    # Only include filters that were actually provided (not None)
-    if filters.status is not None:
-        applied_filters["status"] = filters.status.model_dump()
-    if filters.close_date_range is not None:
-        applied_filters["closeDateRange"] = filters.close_date_range.model_dump()
-    if filters.total_funding_available_range is not None:
-        applied_filters["totalFundingAvailableRange"] = (
-            filters.total_funding_available_range.model_dump()
-        )
-    if filters.min_award_amount_range is not None:
-        applied_filters["minAwardAmountRange"] = (
-            filters.min_award_amount_range.model_dump()
-        )
-    if filters.max_award_amount_range is not None:
-        applied_filters["maxAwardAmountRange"] = (
-            filters.max_award_amount_range.model_dump()
-        )
-    if filters.custom_filters is not None:
-        applied_filters["customFilters"] = filters.custom_filters
-
-    return applied_filters
-
-
 def mock_opportunity(  # noqa: PLR0913
     title: str,
     description: str | None = None,
@@ -77,7 +43,7 @@ def mock_opportunity(  # noqa: PLR0913
     """Create a mock opportunity for testing purposes."""
     now = datetime.now(timezone.utc)
 
-    # Create funding object with all optional fields
+    # Create funding object
     funding = {}
     if total_available is not None:
         funding["totalAmountAvailable"] = Money(
@@ -93,7 +59,7 @@ def mock_opportunity(  # noqa: PLR0913
     if max_award_count is not None:
         funding["maxAwardCount"] = max_award_count
 
-    # Create keyDates object with all optional fields
+    # Create keyDates object
     key_dates = {}
     if app_opens is not None:
         key_dates["postDate"] = SingleDateEvent(
@@ -122,7 +88,7 @@ def mock_opportunity(  # noqa: PLR0913
         "lastModifiedAt": now,
     }
 
-    # Only add funding and keyDates if they have content
+    # Conditionally add funding and keyDates
     if funding:
         opp_data["funding"] = funding
     if key_dates:
