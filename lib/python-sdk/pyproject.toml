@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "common-grants-sdk"
-version = "0.0.0"
+version = "0.1.0"
 description = "Python SDK for the CommonGrants protocol"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
