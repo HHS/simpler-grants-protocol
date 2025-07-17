@@ -1,5 +1,11 @@
 # @common-grants/cli
 
+## 0.1.3
+
+### Patch Changes
+
+- 4ccacfc: Fix bug in version command
+
 ## 0.1.2
 
 ### Patch Changes
