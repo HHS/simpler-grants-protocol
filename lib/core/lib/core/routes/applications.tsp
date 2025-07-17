@@ -41,10 +41,10 @@ interface Applications {
   @summary("View an application")
   @doc("View an application for a given competition with draft form responses")
   @get
-  @route("/{id}")
+  @route("/{appId}")
   getApplication(
     /** The ID of the application to get */
-    @path id: Types.uuid,
+    @path appId: Types.uuid,
   ): Responses.Ok<Models.ApplicationBase> | Responses.NotFound | Responses.Unauthorized;
 
   // ###############################
@@ -54,9 +54,9 @@ interface Applications {
   @summary("Submit an application")
   @doc("Submit an application for a given competition")
   @post
-  @route("/{id}/submit")
+  @route("/{appId}/submit")
   submitApplication(
     /** The ID of the application to submit */
-    @path id: Types.uuid,
+    @path appId: Types.uuid,
   ): Http.NoContentResponse | Responses.NotFound | Responses.Unauthorized;
 }

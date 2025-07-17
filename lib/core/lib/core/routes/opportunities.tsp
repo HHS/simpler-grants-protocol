@@ -8,6 +8,7 @@ namespace CommonGrants.Routes;
 // Expose the contents of the Http and Rest namespaces
 // these include the decorators @route, @get, etc.
 using TypeSpec.Http;
+using TypeSpec.Versioning;
 
 /** A re-usable interface for an Opportunities router
  *
@@ -52,7 +53,7 @@ interface Opportunities {
   ): Responses.Paginated<T>;
 
   // ##############################
-  // View an opportunity
+  // View an opportunity (v0.1.0)
   // ##############################
 
   /** `GET /opportunities/<id>` View opportunity details
@@ -60,12 +61,19 @@ interface Opportunities {
    * @template T Type of the response model.
    * Must be an extension of Schemas.OpportunityBase. Default is Schemas.OpportunityBase.
    */
-  @summary("View opportunity")
+  @summary("View opportunity details")
   @doc("View additional details about an opportunity")
   @get
   read<T extends Models.OpportunityBase = Models.OpportunityBase>(
     /** The ID of the opportunity to view */
-    @path id: Types.uuid,
+    @path
+    @removed(Versions.v0_2)
+    id: Types.uuid,
+
+    /** The ID of the opportunity to view */
+    @path
+    @added(Versions.v0_2)
+    oppId: Types.uuid,
   ): Responses.Ok<T> | Responses.NotFound;
 
   // ###############################
