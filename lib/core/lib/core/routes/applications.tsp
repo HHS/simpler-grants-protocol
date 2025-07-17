@@ -53,10 +53,14 @@ interface Applications {
 
   @summary("Submit an application")
   @doc("Submit an application for a given competition")
-  @post
+  @put
   @route("/{appId}/submit")
   submitApplication(
     /** The ID of the application to submit */
     @path appId: Types.uuid,
-  ): Http.NoContentResponse | Responses.NotFound | Responses.Unauthorized;
+  ):
+    | Responses.Ok<unknown>
+    | Responses.ApplicationSubmissionError
+    | Responses.NotFound
+    | Responses.Unauthorized;
 }

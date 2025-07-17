@@ -28,3 +28,14 @@ model Error {
 
 alias Unauthorized = Error & Http.UnauthorizedResponse;
 alias NotFound = Error & Http.NotFoundResponse;
+
+@example(#{
+  status: 400,
+  message: "Application submission failed due to validation errors",
+  errors: #[#{ field: "formA.name", message: "Name is required" }],
+})
+@doc("A failure to submit an application due to validation errors")
+model ApplicationSubmissionError extends Error {
+  @example(400)
+  status: 400;
+}
