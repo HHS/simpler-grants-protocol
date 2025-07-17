@@ -70,18 +70,15 @@ namespace Opportunities {
 @route("/common-grants/")
 namespace Apply {
   // #########################################################
-  // Direct apply workflow
+  // Competitions routes
   // #########################################################
-  @tag("experimental")
+
   @route("/competitions")
-  namespace DirectApplyWorkflow {
+  namespace Competitions {
     alias Router = Routes.Competitions;
 
     @added(Versions.v0_2)
-    op competitionDetails is Router.read;
-
-    @added(Versions.v0_2)
-    op apply is Router.apply;
+    op read is Router.read;
   }
 
   // #########################################################
