@@ -113,13 +113,15 @@ opportunityBase:
             estimated_award_count=10
         ),
         key_dates=OppTimeline(
-            app_opens=Event(
+            post_date=Event(
                 name="Application Opens",
+                event_type="singleDate",
                 date=date(2024, 3, 1),
                 description="Applications begin being accepted"
             ),
-            app_deadline=Event(
+            close_date=Event(
                 name="Application Deadline",
+                event_type="singleDate",
                 date=date(2024, 4, 30),
                 time=time(17, 0, 0),
                 description="Final deadline for all submissions"
@@ -127,6 +129,7 @@ opportunityBase:
             other_dates={
                 "anticipatedAward": Event(
                     name="Anticipated award date",
+                    event_type="singleDate",
                     date=date(2025, 3, 15),
                     description="When we expect to announce awards for this opportunity."
                 )
@@ -136,13 +139,13 @@ opportunityBase:
         custom_fields={
             "programArea": CustomField(
                 name="programArea",
-                type=CustomFieldType.STRING,
+                field_type=CustomFieldType.STRING,
                 value="Healthcare Technology",
                 description="The primary focus area for this grant"
             ),
             "eligibilityType": CustomField(
                 name="eligibilityType",
-                type=CustomFieldType.STRING,
+                field_type=CustomFieldType.STRING,
                 value="Non-profit organizations",
                 description="The type of organizations eligible to apply"
             )
@@ -286,13 +289,15 @@ oppTimeline:
     from common_grants_sdk.schemas.models import OppTimeline
 
     timeline = OppTimeline(
-        app_opens=Event(
+        post_date=Event(
             name="Application Opens",
+            event_type="singleDate",
             date=date(2024, 3, 1),
             description="Applications begin being accepted"
         ),
-        app_deadline=Event(
+        close_date=Event(
             name="Application Deadline",
+            event_type="singleDate",
             date=date(2024, 4, 30),
             time=time(17, 0, 0),
             description="Final deadline for all submissions"
@@ -300,6 +305,7 @@ oppTimeline:
         other_dates={
             "anticipatedAward": Event(
                 name="Anticipated award date",
+                event_type="singleDate",
                 date=date(2025, 3, 15),
                 description="When we expect to announce awards for this opportunity."
             )
