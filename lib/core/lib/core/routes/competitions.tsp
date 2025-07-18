@@ -19,8 +19,12 @@ interface Competitions {
   // View competition details
   // ###############################
 
+  /** View details about a competition for a given funding opportunity.
+   *
+   * Each competition may have a distinct set of forms, be limited to a
+   * certain types of applicants, or have a different application period.
+   */
   @summary("View competition details")
-  @doc("View additional details about a competition for a given opportunity. A competition is an application process for a funding opportunity, often with a distinct set of forms and key dates.")
   @get
   @route("/{compId}")
   read(
