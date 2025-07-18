@@ -64,7 +64,7 @@ interface Opportunities {
   @summary("View opportunity details")
   @doc("View additional details about an opportunity")
   @get
-  read<T extends Models.OpportunityBase = Models.OpportunityBase>(
+  read<T extends Models.OpportunityBase = Models.OpportunityDetails>(
     /** The ID of the opportunity to view */
     @path
     @removed(Versions.v0_2)
