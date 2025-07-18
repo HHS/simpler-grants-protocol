@@ -19,7 +19,7 @@ model Form {
   description?: string;
 
   /** The form's instructions. */
-  instructions?: string | Fields.File;
+  instructions?: string | Fields.File[];
 
   /** The form's JSON schema used to render the form and validate responses. */
   jsonSchema?: FormJsonSchema;

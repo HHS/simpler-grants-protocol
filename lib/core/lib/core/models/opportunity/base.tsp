@@ -62,6 +62,9 @@ model OpportunityBase {
   /** Key dates for the opportunity, such as when the application opens and closes */
   keyDates?: OppTimeline;
 
+  /** The type of applicant for the opportunity */
+  acceptedApplicantTypes?: ApplicantType[];
+
   /** URL for the original source of the opportunity */
   source?: url;
 
@@ -70,4 +73,14 @@ model OpportunityBase {
 
   // Spreads the fields from the Metadata model into the Opportunity model
   ...SystemMetadata;
+}
+
+// ########################################
+// Opportunity details
+// ########################################
+
+/** A funding opportunity with additional details, like available competitions. */
+model OpportunityDetails extends OpportunityBase {
+  /** The competitions associated with the opportunity */
+  competitions?: CompetitionBase[];
 }

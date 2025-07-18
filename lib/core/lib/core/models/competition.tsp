@@ -21,16 +21,19 @@ model CompetitionBase {
   description?: string;
 
   /** The instructions for the competition */
-  instructions?: string | Fields.File;
+  instructions?: string | Fields.File[];
 
   /** The status of the competition */
   status: CompetitionStatus;
 
   /** The key dates in the competition timeline */
-  keyDates: CompetitionTimeline;
+  keyDates?: CompetitionTimeline;
 
   /** The forms for the competition */
   forms: CompetitionForms;
+
+  /** Accepted applicant types for the competition */
+  acceptedApplicantTypes?: ApplicantType[];
 
   /** The custom fields for the competition */
   customFields?: Record<Fields.CustomField>;
@@ -55,6 +58,7 @@ model CompetitionStatus {
 // CompetitionStatusOptions
 // #########################################################
 
+/** The set of possible statuses for a competition */
 enum CompetitionStatusOptions {
   /** The competition is open for applications */
   open,
@@ -77,7 +81,7 @@ model CompetitionForms {
   forms: Record<Models.Form>;
 
   /** The validation rules for the competition forms */
-  validation: Record<unknown>;
+  validation?: Record<unknown>;
 }
 
 // #########################################################
@@ -87,10 +91,10 @@ model CompetitionForms {
 @example(Examples.Competition.keyDates)
 model CompetitionTimeline {
   /** The start date of the competition */
-  openDate: Fields.Event;
+  openDate?: Fields.Event;
 
   /** The end date of the competition */
-  closeDate: Fields.Event;
+  closeDate?: Fields.Event;
 
   /** The date the competition was created */
   otherDates?: Record<Fields.Event>;
