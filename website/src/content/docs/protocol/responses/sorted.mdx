@@ -63,6 +63,11 @@ sorted:
       path: "lib/core/lib/core/responses/success.tsp"
       startLine: 101
       endLine: 107
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/response.py"
+      startLine: 28
+      endLine: 50
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -85,6 +90,7 @@ A 200 response with a paginated list of sorted items.
   example={frontmatter.sorted.example}
   jsonSchema={frontmatter.sorted.jsonSchema}
   typeSpec={frontmatter.sorted.typeSpec}
+  python={{ code: frontmatter.sorted.python }}
 />
 
 ### Usage

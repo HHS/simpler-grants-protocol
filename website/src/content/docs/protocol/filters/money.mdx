@@ -25,6 +25,11 @@ moneyRangeFilter:
       path: "lib/core/lib/core/filters/money.tsp"
       startLine: 24
       endLine: 39
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/money_filters.py"
+      startLine: 42
+      endLine: 60
 moneyComparisonFilter:
   example:
     code: |
@@ -43,6 +48,11 @@ moneyComparisonFilter:
       path: "lib/core/lib/core/filters/money.tsp"
       startLine: 10
       endLine: 18
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/money_filters.py"
+      startLine: 63
+      endLine: 70
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -73,6 +83,7 @@ Filters by comparing a field to a range of monetary values.
   example={frontmatter.moneyRangeFilter.example}
   jsonSchema={frontmatter.moneyRangeFilter.jsonSchema}
   typeSpec={frontmatter.moneyRangeFilter.typeSpec}
+  python={{ code: frontmatter.moneyRangeFilter.python }}
 />
 
 ## MoneyComparisonFilter
@@ -92,4 +103,5 @@ Filters by comparing a field to a monetary value.
   example={frontmatter.moneyComparisonFilter.example}
   jsonSchema={frontmatter.moneyComparisonFilter.jsonSchema}
   typeSpec={frontmatter.moneyComparisonFilter.typeSpec}
+  python={{ code: frontmatter.moneyComparisonFilter.python }}
 />
