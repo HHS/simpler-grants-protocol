@@ -11,6 +11,7 @@ import "./competition.tsp";
 import "./form.tsp";
 import "./form-response.tsp";
 import "./mapping.tsp";
+import "./applicant-type.tsp";
 
 using TypeSpec.JsonSchema;
 
