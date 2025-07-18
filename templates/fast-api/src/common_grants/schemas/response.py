@@ -25,7 +25,7 @@ class DefaultResponse(BaseModel):
     )
 
 
-class SortInfo(BaseModel):
+class SortedResultsInfo(BaseModel):
     """Sorting information for search results."""
 
     sort_by: str = Field(
@@ -81,7 +81,7 @@ class OpportunitiesSearchResponse(DefaultResponse):
         description="The pagination details",
         alias="paginationInfo",
     )
-    sort_info: SortInfo = Field(
+    sort_info: SortedResultsInfo = Field(
         ...,
         description="The sorting details",
         alias="sortInfo",

@@ -12,6 +12,11 @@ eventType:
       path: "lib/core/lib/core/fields/event.tsp"
       startLine: 11
       endLine: 26
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/fields.py"
+      startLine: 65
+      endLine: 70
 event:
   example:
     code: |
@@ -30,6 +35,11 @@ event:
       path: "lib/core/lib/core/fields/event.tsp"
       startLine: 32
       endLine: 42
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/fields.py"
+      startLine: 156
+      endLine: 156
 eventBase:
   example:
     code: |
@@ -46,6 +56,11 @@ eventBase:
       path: "lib/core/lib/core/fields/event.tsp"
       startLine: 48
       endLine: 59
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/fields.py"
+      startLine: 74
+      endLine: 92
 singleDateEvent:
   example:
     code: |
@@ -64,6 +79,11 @@ singleDateEvent:
       path: "lib/core/lib/core/fields/event.tsp"
       startLine: 65
       endLine: 77
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/fields.py"
+      startLine: 94
+      endLine: 110
 dateRangeEvent:
   example:
     code: |
@@ -83,6 +103,11 @@ dateRangeEvent:
       path: "lib/core/lib/core/fields/event.tsp"
       startLine: 83
       endLine: 101
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/fields.py"
+      startLine: 112
+      endLine: 140
 otherEvent:
   example:
     code: |
@@ -100,6 +125,11 @@ otherEvent:
       path: "lib/core/lib/core/fields/event.tsp"
       startLine: 107
       endLine: 119
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/fields.py"
+      startLine: 142
+      endLine: 154
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -124,6 +154,7 @@ Defines the different types of events that can be represented
   example={frontmatter.eventType.example}
   jsonSchema={frontmatter.eventType.jsonSchema}
   typeSpec={frontmatter.eventType.typeSpec}
+  python={frontmatter.eventType.python}
 />
 
 ## Event
@@ -144,6 +175,7 @@ The `Event` union represents all possible event types.
   example={frontmatter.event.example}
   jsonSchema={frontmatter.event.jsonSchema}
   typeSpec={frontmatter.event.typeSpec}
+  python={frontmatter.event.python}
 />
 
 ## EventBase
@@ -164,6 +196,7 @@ Base model for all events with common properties
   example={frontmatter.eventBase.example}
   jsonSchema={frontmatter.eventBase.jsonSchema}
   typeSpec={frontmatter.eventBase.typeSpec}
+  python={frontmatter.eventBase.python}
 />
 
 ## SingleDateEvent
@@ -186,6 +219,7 @@ Represents an event that has a specific date (and optional time) associated with
   example={frontmatter.singleDateEvent.example}
   jsonSchema={frontmatter.singleDateEvent.jsonSchema}
   typeSpec={frontmatter.singleDateEvent.typeSpec}
+  python={frontmatter.singleDateEvent.python}
 />
 
 ## DateRangeEvent
@@ -210,6 +244,7 @@ Represents an event that spans a period of time with start and end dates (and op
   example={frontmatter.dateRangeEvent.example}
   jsonSchema={frontmatter.dateRangeEvent.jsonSchema}
   typeSpec={frontmatter.dateRangeEvent.typeSpec}
+  python={frontmatter.dateRangeEvent.python}
 />
 
 ## OtherEvent
@@ -231,4 +266,5 @@ Represents custom events that don't fit the single date or date range patterns.
   example={frontmatter.otherEvent.example}
   jsonSchema={frontmatter.otherEvent.jsonSchema}
   typeSpec={frontmatter.otherEvent.typeSpec}
+  python={frontmatter.otherEvent.python}
 />

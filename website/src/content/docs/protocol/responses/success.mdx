@@ -22,6 +22,11 @@ success:
       path: "lib/core/lib/core/responses/success.tsp"
       startLine: 11
       endLine: 17
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/response.py"
+      startLine: 13
+      endLine: 25
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -42,6 +47,7 @@ A 200 response with data.
   example={frontmatter.success.example}
   jsonSchema={frontmatter.success.jsonSchema}
   typeSpec={frontmatter.success.typeSpec}
+  python={frontmatter.success.python}
 />
 
 ### Usage
