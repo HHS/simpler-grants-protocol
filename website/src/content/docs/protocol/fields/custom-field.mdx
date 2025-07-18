@@ -41,6 +41,11 @@ customFieldType:
       path: "lib/core/lib/core/fields/custom-field.tsp"
       startLine: 7
       endLine: 15
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/fields.py"
+      startLine: 160
+      endLine: 168
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -89,4 +94,5 @@ The set of JSON schema types supported by a custom field.
   example={frontmatter.customFieldType.example}
   jsonSchema={frontmatter.customFieldType.jsonSchema}
   typeSpec={frontmatter.customFieldType.typeSpec}
+  python={frontmatter.customFieldType.python}
 />
