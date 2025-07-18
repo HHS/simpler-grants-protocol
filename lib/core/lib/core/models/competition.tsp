@@ -21,7 +21,7 @@ model CompetitionBase {
   description?: string;
 
   /** The instructions for the competition */
-  instructions?: string | Fields.File;
+  instructions?: string | Fields.File[];
 
   /** The status of the competition */
   status: CompetitionStatus;
@@ -55,6 +55,7 @@ model CompetitionStatus {
 // CompetitionStatusOptions
 // #########################################################
 
+/** The set of possible statuses for a competition */
 enum CompetitionStatusOptions {
   /** The competition is open for applications */
   open,
