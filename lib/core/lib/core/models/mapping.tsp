@@ -4,7 +4,7 @@ namespace CommonGrants.Models;
 // Mapping
 // #########################################################
 
-/** A mapping schema for translating data from one schema to another.
+/** A mapping format for translating data from one schema to another.
  *
  * Example:
  *
@@ -16,12 +16,12 @@ namespace CommonGrants.Models;
  *   "opportunity": {
  *     "status": {
  *       "switch": {
- *         "field": "opportunity_status",
+ *         "field": "summary.opportunity_status",
  *         "case": { "active": "open", "inactive": "closed" },
  *         "default": "custom",
  *       },
  *     },
- *     "amount": { "field": "opportunity_amount" },
+ *     "amount": { "field": "summary.opportunity_amount" },
  *   }
  * }
  * ```
@@ -31,8 +31,10 @@ namespace CommonGrants.Models;
  * ```json
  * {
  *   "id": "123",
- *   "opportunity_status": "active",
- *   "opportunity_amount": 100,
+ *   "summary": {
+ *     "opportunity_status": "active",
+ *     "opportunity_amount": 100,
+ *   },
  * }
  * ```
  *
@@ -43,6 +45,7 @@ namespace CommonGrants.Models;
  *   "id": "123",
  *   "opportunity": { "status": "open", "amount": 100 },
  * }
+ * ```
  */
 @example(Examples.Mapping.flatRenaming)
 @example(Examples.Mapping.nestedRenaming)
@@ -50,7 +53,7 @@ namespace CommonGrants.Models;
 @example(Examples.Mapping.nestedSwitch)
 @example(Examples.Mapping.withLiteralValues)
 model MappingSchema {
-  ...Record<MappingFunction | unknown>;
+  ...Record<MappingFunction | MappingSchema>;
 }
 
 // #########################################################
@@ -58,6 +61,9 @@ model MappingSchema {
 // #########################################################
 
 /** The set of supported mapping functions. */
+@example(Examples.Mapping.constId)
+@example(Examples.Mapping.amountField)
+@example(Examples.Mapping.statusSwitch)
 union MappingFunction {
   `const`: MappingConstantFunction,
   field: MappingFieldFunction,
@@ -65,10 +71,11 @@ union MappingFunction {
 }
 
 // #########################################################
-// MappingLiteralFunction
+// MappingConstantFunction
 // #########################################################
 
 /** Returns a constant value. */
+@example(Examples.Mapping.constId)
 model MappingConstantFunction {
   `const`: unknown;
 }
@@ -78,6 +85,7 @@ model MappingConstantFunction {
 // #########################################################
 
 /** Returns the value of a field in the source data. */
+@example(Examples.Mapping.amountField)
 model MappingFieldFunction {
   field: string;
 }
@@ -87,15 +95,18 @@ model MappingFieldFunction {
 // #########################################################
 
 /** Returns a new value based on the value of a field in the source data using a switch statement. */
+@example(Examples.Mapping.statusSwitch)
 model MappingSwitchFunction {
-  /** The field in the source data to switch on. */
-  field: string;
+  switch: {
+    /** The field in the source data to switch on. */
+    field: string;
 
-  /** An object mapping source field values to desired output values. */
-  case: Record<unknown>;
+    /** An object mapping source field values to desired output values. */
+    case: Record<unknown>;
 
-  /** The default value to output if no case matches the source field value. */
-  default?: unknown;
+    /** The default value to output if no case matches the source field value. */
+    default?: unknown;
+  };
 }
 
 // #########################################################
@@ -103,60 +114,39 @@ model MappingSwitchFunction {
 // #########################################################
 
 namespace Examples.Mapping {
+  const constId = #{ `const`: "123" };
+  const amountField = #{ field: "summary.opportunity_amount" };
+  const statusField = #{ field: "summary.opportunity_status" };
+  const statusSwitch = #{
+    switch: #{
+      field: "summary.opportunity_status",
+      case: #{ active: "open", inactive: "closed" },
+      default: "custom",
+    },
+  };
+
   const flatRenaming = #{
-    opportunityStatus: #{ field: "opportunity_status" },
-    opportunityAmount: #{ field: "opportunity_amount" },
+    id: constId,
+    opportunityStatus: statusField,
+    opportunityAmount: amountField,
   };
 
   const nestedRenaming = #{
-    id: #{ field: "opportunity_id" },
-    opportunity: #{
-      status: #{ field: "opportunity_status" },
-      amount: #{ field: "opportunity_amount" },
-    },
+    id: constId,
+    opportunity: #{ status: statusField, amount: amountField },
   };
 
   const simpleSwitch = #{
-    opportunityAmount: #{ field: "opportunity_amount" },
-    opportunityStatus: #{
-      switch: #{
-        field: "opportunity_status",
-        case: #{ active: "open", inactive: "closed" },
-        default: "custom",
-      },
-    },
+    opportunityAmount: amountField,
+    opportunityStatus: statusSwitch,
   };
 
   const nestedSwitch = #{
-    opportunity: #{
-      status: #{
-        switch: #{
-          field: "opportunity_status",
-          case: #{ active: "open", inactive: "closed" },
-          default: "custom",
-        },
-        amount: #{ field: "opportunity_amount" },
-      },
-    },
+    opportunity: #{ status: statusSwitch, amount: amountField },
   };
 
   const withLiteralValues = #{
-    id: #{ `const`: "123" },
-    opportunity: #{
-      status: #{
-        switch: #{
-          field: "opportunity_status",
-          case: #{ active: "open", inactive: "closed" },
-          default: "custom",
-        },
-      },
-      amount: #{ field: "opportunity_amount" },
-    },
-  };
-
-  const formToCommonGrants = #{
-    name: #{ field: "name" },
-    email: #{ field: "email" },
-    phone: #{ field: "phone" },
+    id: constId,
+    opportunity: #{ status: statusSwitch, amount: amountField },
   };
 }
