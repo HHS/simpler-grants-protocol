@@ -1,6 +1,12 @@
 namespace CommonGrants.Models;
 
+// #########################################################
+// ApplicantType
+// #########################################################
+
 /** The type of applicant eligible to apply for funding */
+@example(Examples.ApplicantType.organization)
+@example(Examples.ApplicantType.individual)
 model ApplicantType {
   /** The type of applicant */
   value: ApplicantTypeOptions;
@@ -11,6 +17,10 @@ model ApplicantType {
   /** The description of the applicant type */
   description?: string;
 }
+
+// #########################################################
+// ApplicantTypeOptions
+// #########################################################
 
 /** The set of possible applicant types */
 enum ApplicantTypeOptions {
@@ -64,4 +74,23 @@ enum ApplicantTypeOptions {
 
   /** Custom applicant type */
   custom,
+}
+
+// #########################################################
+// ApplicantTypeExamples
+// #########################################################
+
+/** Examples of applicant types */
+namespace Examples.ApplicantType {
+  /** The applicant is an individual */
+  const individual = #{
+    value: ApplicantTypeOptions.individual,
+    description: "An individual applicant",
+  };
+
+  /** Any type of organization */
+  const organization = #{
+    value: ApplicantTypeOptions.organization,
+    description: "Any type of organization",
+  };
 }

@@ -27,10 +27,13 @@ model CompetitionBase {
   status: CompetitionStatus;
 
   /** The key dates in the competition timeline */
-  keyDates: CompetitionTimeline;
+  keyDates?: CompetitionTimeline;
 
   /** The forms for the competition */
   forms: CompetitionForms;
+
+  /** Accepted applicant types for the competition */
+  acceptedApplicantTypes?: ApplicantType[];
 
   /** The custom fields for the competition */
   customFields?: Record<Fields.CustomField>;
@@ -78,7 +81,7 @@ model CompetitionForms {
   forms: Record<Models.Form>;
 
   /** The validation rules for the competition forms */
-  validation: Record<unknown>;
+  validation?: Record<unknown>;
 }
 
 // #########################################################
@@ -88,10 +91,10 @@ model CompetitionForms {
 @example(Examples.Competition.keyDates)
 model CompetitionTimeline {
   /** The start date of the competition */
-  openDate: Fields.Event;
+  openDate?: Fields.Event;
 
   /** The end date of the competition */
-  closeDate: Fields.Event;
+  closeDate?: Fields.Event;
 
   /** The date the competition was created */
   otherDates?: Record<Fields.Event>;
