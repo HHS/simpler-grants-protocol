@@ -16,20 +16,21 @@ defaultFilter:
       path: "lib/core/lib/core/filters/base.tsp"
       startLine: 70
       endLine: 83
-  python: |
-    from dataclasses import dataclass
-    from typing import Any, Union
+  python:
+    code: |
+      from dataclasses import dataclass
+      from typing import Any, Union
 
-    @dataclass
-    class DefaultFilter:
-        operator: Union[ComparisonOperators, ArrayOperators, StringOperators, RangeOperators]
-        value: Any
+      @dataclass
+      class DefaultFilter:
+          operator: Union[ComparisonOperators, ArrayOperators, StringOperators, RangeOperators]
+          value: Any
 
-    # Example usage:
-    default_filter_numeric = DefaultFilter(operator=ComparisonOperators.GT, value=100)
-    default_filter_array = DefaultFilter(operator=ArrayOperators.IN, value=[1, 2, 3])
-    default_filter_string = DefaultFilter(operator=StringOperators.LIKE, value="example")
-    default_filter_range = DefaultFilter(operator=RangeOperators.BETWEEN, value={"min": 1, "max": 10})
+      # Example usage:
+      default_filter_numeric = DefaultFilter(operator=ComparisonOperators.GT, value=100)
+      default_filter_array = DefaultFilter(operator=ArrayOperators.IN, value=[1, 2, 3])
+      default_filter_string = DefaultFilter(operator=StringOperators.LIKE, value="example")
+      default_filter_range = DefaultFilter(operator=RangeOperators.BETWEEN, value={"min": 1, "max": 10})
 equivalenceOperators:
   example:
     code: '"eq"'
@@ -41,15 +42,16 @@ equivalenceOperators:
       path: "lib/core/lib/core/filters/base.tsp"
       startLine: 7
       endLine: 14
-  python: |
-    from enum import Enum
+  python:
+    code: |
+      from enum import Enum
 
-    class EquivalenceOperators(str, Enum):
-        EQ = "eq"
-        NEQ = "neq"
+      class EquivalenceOperators(str, Enum):
+          EQ = "eq"
+          NEQ = "neq"
 
-    # Example usage:
-    op = EquivalenceOperators.EQ
+      # Example usage:
+      op = EquivalenceOperators.EQ
 comparisonOperators:
   example:
     code: '"gt"'
@@ -61,17 +63,18 @@ comparisonOperators:
       path: "lib/core/lib/core/filters/base.tsp"
       startLine: 16
       endLine: 29
-  python: |
-    from enum import Enum
+  python:
+    code: |
+      from enum import Enum
 
-    class ComparisonOperators(str, Enum):
-        GT = "gt"
-        GTE = "gte"
-        LT = "lt"
-        LTE = "lte"
+      class ComparisonOperators(str, Enum):
+          GT = "gt"
+          GTE = "gte"
+          LT = "lt"
+          LTE = "lte"
 
-    # Example usage:
-    op = ComparisonOperators.GT
+      # Example usage:
+      op = ComparisonOperators.GT
 stringOperators:
   example:
     code: '"like"'
@@ -83,15 +86,16 @@ stringOperators:
       path: "lib/core/lib/core/filters/base.tsp"
       startLine: 40
       endLine: 47
-  python: |
-    from enum import Enum
+  python:
+    code: |
+      from enum import Enum
 
-    class StringOperators(str, Enum):
-        LIKE = "like"
-        NOT_LIKE = "notLike"
+      class StringOperators(str, Enum):
+          LIKE = "like"
+          NOT_LIKE = "notLike"
 
-    # Example usage:
-    op = StringOperators.LIKE
+      # Example usage:
+      op = StringOperators.LIKE
 arrayOperators:
   example:
     code: '"in"'
@@ -103,15 +107,16 @@ arrayOperators:
       path: "lib/core/lib/core/filters/base.tsp"
       startLine: 31
       endLine: 38
-  python: |
-    from enum import Enum
+  python:
+    code: |
+      from enum import Enum
 
-    class ArrayOperators(str, Enum):
-        IN = "in"
-        NOT_IN = "notIn"
+      class ArrayOperators(str, Enum):
+          IN = "in"
+          NOT_IN = "notIn"
 
-    # Example usage:
-    op = ArrayOperators.IN
+      # Example usage:
+      op = ArrayOperators.IN
 rangeOperators:
   example:
     code: '"between"'
@@ -123,15 +128,16 @@ rangeOperators:
       path: "lib/core/lib/core/filters/base.tsp"
       startLine: 49
       endLine: 56
-  python: |
-    from enum import Enum
+  python:
+    code: |
+      from enum import Enum
 
-    class RangeOperators(str, Enum):
-        BETWEEN = "between"
-        OUTSIDE = "outside"
+      class RangeOperators(str, Enum):
+          BETWEEN = "between"
+          OUTSIDE = "outside"
 
-    # Example usage:
-    op = RangeOperators.BETWEEN
+      # Example usage:
+      op = RangeOperators.BETWEEN
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -154,7 +160,7 @@ The default filter model is a base model that can be used to create more specifi
   example={frontmatter.defaultFilter.example}
   jsonSchema={frontmatter.defaultFilter.jsonSchema}
   typeSpec={frontmatter.defaultFilter.typeSpec}
-  python={{ code: frontmatter.defaultFilter.python }}
+  python={frontmatter.defaultFilter.python}
 />
 
 ## EquivalenceOperators
@@ -180,7 +186,7 @@ Operators that filter a field based on an exact match to a value. Supported valu
   example={frontmatter.equivalenceOperators.example}
   jsonSchema={frontmatter.equivalenceOperators.jsonSchema}
   typeSpec={frontmatter.equivalenceOperators.typeSpec}
-  python={{ code: frontmatter.equivalenceOperators.python }}
+  python={frontmatter.equivalenceOperators.python}
 />
 
 ## ComparisonOperators
@@ -206,7 +212,7 @@ Operators that filter a field based on a comparison to a value. Supported value 
   example={frontmatter.comparisonOperators.example}
   jsonSchema={frontmatter.comparisonOperators.jsonSchema}
   typeSpec={frontmatter.comparisonOperators.typeSpec}
-  python={{ code: frontmatter.comparisonOperators.python }}
+  python={frontmatter.comparisonOperators.python}
 />
 
 ## StringOperators
@@ -226,7 +232,7 @@ Operators that filter a field based on a string value.
   example={frontmatter.stringOperators.example}
   jsonSchema={frontmatter.stringOperators.jsonSchema}
   typeSpec={frontmatter.stringOperators.typeSpec}
-  python={{ code: frontmatter.stringOperators.python }}
+  python={frontmatter.stringOperators.python}
 />
 
 ## ArrayOperators
@@ -249,7 +255,7 @@ Operators that filter a field based on an array of values. Supported value types
   example={frontmatter.arrayOperators.example}
   jsonSchema={frontmatter.arrayOperators.jsonSchema}
   typeSpec={frontmatter.arrayOperators.typeSpec}
-  python={{ code: frontmatter.arrayOperators.python }}
+  python={frontmatter.arrayOperators.python}
 />
 
 ## RangeOperators
@@ -273,5 +279,5 @@ Operators that filter a field based on a range of values. Supported value types 
   example={frontmatter.rangeOperators.example}
   jsonSchema={frontmatter.rangeOperators.jsonSchema}
   typeSpec={frontmatter.rangeOperators.typeSpec}
-  python={{ code: frontmatter.rangeOperators.python }}
+  python={frontmatter.rangeOperators.python}
 />
