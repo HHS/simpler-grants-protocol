@@ -17,20 +17,10 @@ defaultFilter:
       startLine: 70
       endLine: 83
   python:
-    code: |
-      from dataclasses import dataclass
-      from typing import Any, Union
-
-      @dataclass
-      class DefaultFilter:
-          operator: Union[ComparisonOperators, ArrayOperators, StringOperators, RangeOperators]
-          value: Any
-
-      # Example usage:
-      default_filter_numeric = DefaultFilter(operator=ComparisonOperators.GT, value=100)
-      default_filter_array = DefaultFilter(operator=ArrayOperators.IN, value=[1, 2, 3])
-      default_filter_string = DefaultFilter(operator=StringOperators.LIKE, value="example")
-      default_filter_range = DefaultFilter(operator=RangeOperators.BETWEEN, value={"min": 1, "max": 10})
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/base.py"
+      startLine: 55
+      endLine: 68
 equivalenceOperators:
   example:
     code: '"eq"'
@@ -43,15 +33,10 @@ equivalenceOperators:
       startLine: 7
       endLine: 14
   python:
-    code: |
-      from enum import Enum
-
-      class EquivalenceOperators(str, Enum):
-          EQ = "eq"
-          NEQ = "neq"
-
-      # Example usage:
-      op = EquivalenceOperators.EQ
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/base.py"
+      startLine: 13
+      endLine: 17
 comparisonOperators:
   example:
     code: '"gt"'
@@ -64,17 +49,10 @@ comparisonOperators:
       startLine: 16
       endLine: 29
   python:
-    code: |
-      from enum import Enum
-
-      class ComparisonOperators(str, Enum):
-          GT = "gt"
-          GTE = "gte"
-          LT = "lt"
-          LTE = "lte"
-
-      # Example usage:
-      op = ComparisonOperators.GT
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/base.py"
+      startLine: 20
+      endLine: 26
 stringOperators:
   example:
     code: '"like"'
@@ -87,15 +65,10 @@ stringOperators:
       startLine: 40
       endLine: 47
   python:
-    code: |
-      from enum import Enum
-
-      class StringOperators(str, Enum):
-          LIKE = "like"
-          NOT_LIKE = "notLike"
-
-      # Example usage:
-      op = StringOperators.LIKE
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/base.py"
+      startLine: 36
+      endLine: 40
 arrayOperators:
   example:
     code: '"in"'
@@ -108,15 +81,10 @@ arrayOperators:
       startLine: 31
       endLine: 38
   python:
-    code: |
-      from enum import Enum
-
-      class ArrayOperators(str, Enum):
-          IN = "in"
-          NOT_IN = "notIn"
-
-      # Example usage:
-      op = ArrayOperators.IN
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/base.py"
+      startLine: 29
+      endLine: 33
 rangeOperators:
   example:
     code: '"between"'
@@ -129,15 +97,10 @@ rangeOperators:
       startLine: 49
       endLine: 56
   python:
-    code: |
-      from enum import Enum
-
-      class RangeOperators(str, Enum):
-          BETWEEN = "between"
-          OUTSIDE = "outside"
-
-      # Example usage:
-      op = RangeOperators.BETWEEN
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/base.py"
+      startLine: 43
+      endLine: 47
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";

@@ -32,6 +32,11 @@ paginatedBodyParams:
       path: "lib/core/lib/core/pagination.tsp"
       startLine: 24
       endLine: 35
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/pagination.py"
+      startLine: 10
+      endLine: 23
 paginatedResultsInfo:
   example:
     code: |
@@ -52,7 +57,7 @@ paginatedResultsInfo:
   python:
     file:
       path: "templates/fast-api/src/common_grants/schemas/pagination.py"
-      startLine: 26
+      startLine: 10
       endLine: 38
 ---
 
@@ -95,6 +100,7 @@ Body parameters for paginated routes. These parameters should be used on POST an
   example={frontmatter.paginatedBodyParams.example}
   jsonSchema={frontmatter.paginatedBodyParams.jsonSchema}
   typeSpec={frontmatter.paginatedBodyParams.typeSpec}
+  python={frontmatter.paginatedBodyParams.python}
 />
 
 ## PaginatedResultsInfo

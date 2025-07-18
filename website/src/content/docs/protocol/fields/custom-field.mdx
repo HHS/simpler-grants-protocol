@@ -20,16 +20,10 @@ customField:
       startLine: 46
       endLine: 62
   python:
-    code: |
-      from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
-
-      custom_field = CustomField(
-          name="programArea",
-          field_type=CustomFieldType.STRING,
-          value="Healthcare Innovation",
-          description="Primary focus area of the grant program",
-          schema="https://example.com/program-areas.json"
-      )
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/fields.py"
+      startLine: 171
+      endLine: 193
 customFieldType:
   example:
     code: "string"

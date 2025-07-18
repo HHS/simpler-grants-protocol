@@ -85,75 +85,10 @@ opportunityBase:
       startLine: 43
       endLine: 72
   python:
-    code: |
-      from datetime import date, datetime, time
-      from uuid import UUID
-      from common_grants_sdk.schemas.fields import Event, Money, CustomField, CustomFieldType
-      from common_grants_sdk.schemas.models import (
-          OpportunityBase,
-          OppFunding,
-          OppStatus,
-          OppStatusOptions,
-          OppTimeline,
-      )
-
-      opportunity = OpportunityBase(
-          id=UUID("049b4b15-f219-4037-901e-cd95ac32fbc8"),
-          title="Healthcare Innovation Research Grant",
-          description="Funding for innovative healthcare delivery solutions",
-          status=OppStatus(
-              value=OppStatusOptions.OPEN,
-              description="Opportunity is actively accepting applications"
-          ),
-          funding=OppFunding(
-              total_amount_available=Money(amount="1000000.00", currency="USD"),
-              min_award_amount=Money(amount="10000.00", currency="USD"),
-              max_award_amount=Money(amount="50000.00", currency="USD"),
-              min_award_count=5,
-              max_award_count=20,
-              estimated_award_count=10
-          ),
-          key_dates=OppTimeline(
-              post_date=Event(
-                  name="Application Opens",
-                  event_type="singleDate",
-                  date=date(2024, 3, 1),
-                  description="Applications begin being accepted"
-              ),
-              close_date=Event(
-                  name="Application Deadline",
-                  event_type="singleDate",
-                  date=date(2024, 4, 30),
-                  time=time(17, 0, 0),
-                  description="Final deadline for all submissions"
-              ),
-              other_dates={
-                  "anticipatedAward": Event(
-                      name="Anticipated award date",
-                      event_type="singleDate",
-                      date=date(2025, 3, 15),
-                      description="When we expect to announce awards for this opportunity."
-                  )
-              }
-          ),
-          source="https://grants.gov/opportunity/123",
-          custom_fields={
-              "programArea": CustomField(
-                  name="programArea",
-                  field_type=CustomFieldType.STRING,
-                  value="Healthcare Technology",
-                  description="The primary focus area for this grant"
-              ),
-              "eligibilityType": CustomField(
-                  name="eligibilityType",
-                  field_type=CustomFieldType.STRING,
-                  value="Non-profit organizations",
-                  description="The type of organizations eligible to apply"
-              )
-          },
-          created_at=datetime(2024, 2, 28, 12, 0, 0),
-          last_modified_at=datetime(2024, 2, 28, 12, 0, 0)
-      )
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/models/opp_base.py"
+      startLine: 15
+      endLine: 42
 oppStatus:
   example:
     code: |
@@ -170,19 +105,10 @@ oppStatus:
       startLine: 22
       endLine: 34
   python:
-    code: |
-      from common_grants_sdk.schemas.models import OppStatus, OppStatusOptions
-
-      status = OppStatus(
-          value=OppStatusOptions.OPEN,
-          description="Opportunity is actively accepting applications"
-      )
-
-      custom_status = OppStatus(
-          value=OppStatusOptions.CUSTOM,
-          custom_value="review",
-          description="Opportunity is in review by the program team"
-      )
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/models/opp_status.py"
+      startLine: 30
+      endLine: 45
 oppStatusOptions:
   example:
     code: '"open"'
@@ -195,10 +121,10 @@ oppStatusOptions:
       startLine: 10
       endLine: 16
   python:
-    code: |
-      from common_grants_sdk.schemas.models import OppStatusOptions
-
-      status_value = OppStatusOptions.OPEN
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/models/opp_status.py"
+      startLine: 11
+      endLine: 27
 oppFunding:
   example:
     code: |
@@ -228,18 +154,10 @@ oppFunding:
       startLine: 12
       endLine: 40
   python:
-    code: |
-      from common_grants_sdk.schemas.fields import Money
-      from common_grants_sdk.schemas.models import OppFunding
-
-      funding = OppFunding(
-          total_amount_available=Money(amount="1000000.00", currency="USD"),
-          min_award_amount=Money(amount="10000.00", currency="USD"),
-          max_award_amount=Money(amount="50000.00", currency="USD"),
-          min_award_count=5,
-          max_award_count=20,
-          estimated_award_count=10
-      )
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/models/opp_funding.py"
+      startLine: 11
+      endLine: 47
 oppTimeline:
   example:
     code: |
@@ -288,34 +206,10 @@ oppTimeline:
       startLine: 13
       endLine: 27
   python:
-    code: |
-      from datetime import date, time
-      from common_grants_sdk.schemas.fields import Event
-      from common_grants_sdk.schemas.models import OppTimeline
-
-      timeline = OppTimeline(
-          post_date=Event(
-              name="Application Opens",
-              event_type="singleDate",
-              date=date(2024, 3, 1),
-              description="Applications begin being accepted"
-          ),
-          close_date=Event(
-              name="Application Deadline",
-              event_type="singleDate",
-              date=date(2024, 4, 30),
-              time=time(17, 0, 0),
-              description="Final deadline for all submissions"
-          ),
-          other_dates={
-              "anticipatedAward": Event(
-                  name="Anticipated award date",
-                  event_type="singleDate",
-                  date=date(2025, 3, 15),
-                  description="When we expect to announce awards for this opportunity."
-              )
-          }
-      )
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/models/opp_timeline.py"
+      startLine: 11
+      endLine: 28
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
