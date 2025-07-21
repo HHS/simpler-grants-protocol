@@ -16,7 +16,7 @@ model FormResponseBase {
   status: FormResponseStatus;
 
   /** The validation errors for the form response */
-  validationErrors: Array<unknown>;
+  validationErrors?: Array<unknown>;
 
   /** Custom attributes about the form response */
   customFields?: Record<Fields.CustomField>;
