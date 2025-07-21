@@ -29,13 +29,13 @@ model FormResponseBase {
 /** The status of the form response */
 @example(Examples.FormResponse.inProgressStatus)
 model FormResponseStatus {
-  /** The status of the form response */
+  /** The status of the form response, from a predefined set of options */
   value: FormResponseStatusOptions;
 
   /** A custom value for the status */
   customValue?: string;
 
-  /** A description of the status */
+  /** A human-readable description of the status */
   description?: string;
 }
 
@@ -43,15 +43,15 @@ model FormResponseStatus {
 // FormResponseStatusOptions
 // #########################################################
 
-/** The options for the status of the form response */
+/** The set of values accepted for form response status:
+ * - `notStarted`: The form response has not been started
+ * - `inProgress`: The form response is in progress
+ * - `complete`: The form response is complete, meaning all required fields have been filled out and there are no validation errors
+ * - `custom`: A custom status
+ */
 enum FormResponseStatusOptions {
-  /** The form response has not been started */
   notStarted,
-
-  /** The form response is in progress */
   inProgress,
-
-  /** The form response is submitted */
   complete,
 }
 

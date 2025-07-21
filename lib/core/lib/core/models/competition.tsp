@@ -49,8 +49,13 @@ model CompetitionBase {
 /** The status of the competition */
 @example(Examples.Competition.status)
 model CompetitionStatus {
+  /** The status of the competition, from a predefined set of options */
   value: CompetitionStatusOptions;
+
+  /** A custom value for the status */
   customValue?: string;
+
+  /** A human-readable description of the status */
   description?: string;
 }
 
@@ -58,15 +63,14 @@ model CompetitionStatus {
 // CompetitionStatusOptions
 // #########################################################
 
-/** The set of possible statuses for a competition */
+/** The set of values accepted for competition status
+ * - `open`: The competition is open for applications
+ * - `closed`: The competition is no longer accepting applications
+ * - `custom`: A custom status
+ */
 enum CompetitionStatusOptions {
-  /** The competition is open for applications */
   open,
-
-  /** The competition is closed for applications */
   closed,
-
-  /** The competition is in a custom status */
   custom,
 }
 

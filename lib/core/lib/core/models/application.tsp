@@ -35,16 +35,16 @@ model ApplicationBase {
 // AppStatus
 // #########################################################
 
-/** The status of the application. */
+/** The status of the application */
 @example(Examples.Application.submittedStatus)
 model AppStatus {
-  /** The status of the application. */
+  /** The status of the application, from a predefined set of options */
   value: AppStatusOptions;
 
-  /** A custom value for the status. */
+  /** A custom value for the status */
   customValue?: string;
 
-  /** A description of the status. */
+  /** A human-readable description of the status */
   description?: string;
 }
 
@@ -52,21 +52,18 @@ model AppStatus {
 // AppStatusOptions
 // #########################################################
 
-/** The default set of values accepted for application status. */
+/** The default set of values accepted for application status:
+ * - `inProgress`: The application is in progress
+ * - `submitted`: The application has been submitted and is being reviewed
+ * - `accepted`: The application has been accepted
+ * - `rejected`: The application has been rejected
+ * - `custom`: A custom status
+ */
 enum AppStatusOptions {
-  /** The application is a draft */
   inProgress,
-
-  /** The application has been submitted */
   submitted,
-
-  /** The application has been accepted */
   accepted,
-
-  /** The application has been rejected */
   rejected,
-
-  /** The application has a custom status */
   custom,
 }
 
