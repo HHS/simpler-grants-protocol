@@ -20,7 +20,7 @@ interface Forms {
   // ###############################
 
   @summary("List forms")
-  @doc("Get a paginated list of forms")
+  @doc("Get a paginated list of forms, sorted by `lastModifiedAt` with most recent first.")
   @get
   list(...Pagination.PaginatedQueryParams): Responses.Paginated<Models.Form>;
 
@@ -29,7 +29,7 @@ interface Forms {
   // ###############################
 
   @summary("View form details")
-  @doc("View details about a form by its ID")
+  @doc("View details about a given form.")
   @get
   read(
     /** The ID of the form to view */

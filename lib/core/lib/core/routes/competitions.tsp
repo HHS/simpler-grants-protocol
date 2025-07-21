@@ -37,7 +37,7 @@ interface Competitions {
   // ###############################
 
   @summary("Apply to a competition")
-  @doc("Apply to a given competition with all of the required information")
+  @doc("Apply to a given competition with all of the required information.")
   @post
   @route("/{compId}/apply")
   apply(

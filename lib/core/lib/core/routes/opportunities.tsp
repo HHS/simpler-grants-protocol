@@ -62,7 +62,7 @@ interface Opportunities {
    * Must be an extension of Schemas.OpportunityBase. Default is Schemas.OpportunityBase.
    */
   @summary("View opportunity details")
-  @doc("View additional details about an opportunity")
+  @doc("View details about an opportunity.")
   @get
   read<T extends Models.OpportunityBase = Models.OpportunityDetails>(
     /** The ID of the opportunity to view */
@@ -86,7 +86,7 @@ interface Opportunities {
    * Must be an extension of Schemas.OpportunityBase. Default is Schemas.OpportunityBase.
    */
   @summary("Search opportunities")
-  @doc("Search for opportunities based on the provided filters")
+  @doc("Search for opportunities based on the provided filters.")
   @post
   @route("/search")
   search<T extends Models.OpportunityBase = Models.OpportunityBase>(

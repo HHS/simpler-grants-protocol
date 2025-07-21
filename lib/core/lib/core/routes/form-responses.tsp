@@ -20,7 +20,7 @@ interface FormResponses {
   // ###############################
 
   @summary("Respond to a form")
-  @doc("Update the response to a given form on an application")
+  @doc("Set or update the response to a given form in an application.")
   @put
   @route("/{appId}/forms/{formId}")
   setFormResponse(
@@ -39,7 +39,7 @@ interface FormResponses {
   // ###############################
 
   @summary("Get a form response")
-  @doc("Get the response to a given form on an application")
+  @doc("Get the response to a given form in an application.")
   @get
   @route("/{appId}/forms/{formId}")
   getFormResponse(

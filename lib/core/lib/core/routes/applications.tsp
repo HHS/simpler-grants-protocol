@@ -20,7 +20,7 @@ interface Applications {
   // ##############################
 
   @summary("Start an application")
-  @doc("Start a draft application for a given competition")
+  @doc("Start a new application for a given competition.")
   @post
   @route("/start")
   startApplication(
@@ -39,7 +39,7 @@ interface Applications {
   // ###############################
 
   @summary("View an application")
-  @doc("View an application for a given competition with draft form responses")
+  @doc("View an application for a given competition, along with its form responses and validation errors.")
   @get
   @route("/{appId}")
   getApplication(
@@ -52,7 +52,7 @@ interface Applications {
   // ###############################
 
   @summary("Submit an application")
-  @doc("Submit an application for a given competition")
+  @doc("Submit an application to a competition. Applications that have validation errors will be blocked from submitting until the errors are fixed.")
   @put
   @route("/{appId}/submit")
   submitApplication(
