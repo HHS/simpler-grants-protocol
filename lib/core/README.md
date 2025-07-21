@@ -124,7 +124,7 @@ emit:
   - "@typespec/openapi3"
 ```
 
-And run the following command: 
+And run the following command:
 
 ```bash
 npx tsp compile main.tsp
