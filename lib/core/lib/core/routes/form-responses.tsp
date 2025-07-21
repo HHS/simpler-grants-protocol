@@ -24,10 +24,10 @@ interface FormResponses {
   @put
   @route("/{appId}/forms/{formId}")
   setFormResponse(
-    /** The ID of the application to get */
+    /** The ID of the application to whose form response is being updated */
     @path appId: Types.uuid,
 
-    /** The ID of the form to update */
+    /** The ID of the form whose response is being updated */
     @path formId: Types.uuid,
 
     /** The response to the form */
@@ -43,10 +43,10 @@ interface FormResponses {
   @get
   @route("/{appId}/forms/{formId}")
   getFormResponse(
-    /** The ID of the application to get */
+    /** The ID of the application to whose form response is being retrieved */
     @path appId: Types.uuid,
 
-    /** The ID of the form to get */
+    /** The ID of the form whose response is being retrieved */
     @path formId: Types.uuid,
   ): Responses.Ok<Models.AppFormResponse>;
 }

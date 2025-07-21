@@ -28,7 +28,7 @@ interface Competitions {
   @get
   @route("/{compId}")
   read(
-    /** The ID of the competition to get */
+    /** The ID of the competition to view */
     @path compId: Types.uuid,
   ): Responses.Ok<Models.CompetitionBase> | Responses.NotFound;
 
