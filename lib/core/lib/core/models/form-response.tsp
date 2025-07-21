@@ -18,6 +18,9 @@ model FormResponseBase {
   /** The validation errors for the form response */
   validationErrors: Array<unknown>;
 
+  /** Custom attributes about the form response */
+  customFields?: Record<Fields.CustomField>;
+
   /** The system metadata for the form response */
   ...Fields.SystemMetadata;
 }
