@@ -16,6 +16,11 @@ systemMetadata:
       path: "lib/core/lib/core/fields/metadata.tsp"
       startLine: 21
       endLine: 30
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/fields.py"
+      startLine: 197
+      endLine: 210
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -35,4 +40,5 @@ System-managed metadata that is automatically added to records.
   example={frontmatter.systemMetadata.example}
   jsonSchema={frontmatter.systemMetadata.jsonSchema}
   typeSpec={frontmatter.systemMetadata.typeSpec}
+  python={frontmatter.systemMetadata.python}
 />
