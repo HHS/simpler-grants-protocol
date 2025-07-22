@@ -21,16 +21,19 @@ model CompetitionBase {
   description?: string;
 
   /** The instructions for the competition */
-  instructions?: string | Fields.File;
+  instructions?: string | Fields.File[];
 
   /** The status of the competition */
   status: CompetitionStatus;
 
   /** The key dates in the competition timeline */
-  keyDates: CompetitionTimeline;
+  keyDates?: CompetitionTimeline;
 
   /** The forms for the competition */
   forms: CompetitionForms;
+
+  /** Accepted applicant types for the competition */
+  acceptedApplicantTypes?: ApplicantType[];
 
   /** The custom fields for the competition */
   customFields?: Record<Fields.CustomField>;
@@ -46,8 +49,13 @@ model CompetitionBase {
 /** The status of the competition */
 @example(Examples.Competition.status)
 model CompetitionStatus {
+  /** The status of the competition, from a predefined set of options */
   value: CompetitionStatusOptions;
+
+  /** A custom value for the status */
   customValue?: string;
+
+  /** A human-readable description of the status */
   description?: string;
 }
 
@@ -55,14 +63,14 @@ model CompetitionStatus {
 // CompetitionStatusOptions
 // #########################################################
 
+/** The set of values accepted for competition status
+ * - `open`: The competition is open for applications
+ * - `closed`: The competition is no longer accepting applications
+ * - `custom`: A custom status
+ */
 enum CompetitionStatusOptions {
-  /** The competition is open for applications */
   open,
-
-  /** The competition is closed for applications */
   closed,
-
-  /** The competition is in a custom status */
   custom,
 }
 
@@ -77,7 +85,7 @@ model CompetitionForms {
   forms: Record<Models.Form>;
 
   /** The validation rules for the competition forms */
-  validation: Record<unknown>;
+  validation?: Record<unknown>;
 }
 
 // #########################################################
@@ -87,10 +95,10 @@ model CompetitionForms {
 @example(Examples.Competition.keyDates)
 model CompetitionTimeline {
   /** The start date of the competition */
-  openDate: Fields.Event;
+  openDate?: Fields.Event;
 
   /** The end date of the competition */
-  closeDate: Fields.Event;
+  closeDate?: Fields.Event;
 
   /** The date the competition was created */
   otherDates?: Record<Fields.Event>;

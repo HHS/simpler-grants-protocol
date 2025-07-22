@@ -30,16 +30,22 @@ using Versioning;
     description: "Endpoints that MUST be implemented by all CommonGrants APIs",
   }
 )
+@tagMetadata("Forms", #{ description: "Endpoints related to forms" })
 @tagMetadata(
   "Applications",
+  #{ description: "Endpoints related to applications for a given competition" }
+)
+@tagMetadata(
+  "Competitions",
   #{
-    description: "Endpoints related to applications for funding opportunities",
+    description: "Endpoints related to competitions, which are distinct application processes for the same funding opportunity",
   }
 )
 @tagMetadata(
   "Opportunities",
   #{ description: "Endpoints related to funding opportunities" }
 )
+@route("/common-grants") // Prefixes all routes with `/common-grants/`
 namespace CommonGrants.API;
 
 // #########################################################
@@ -47,7 +53,7 @@ namespace CommonGrants.API;
 // #########################################################
 
 @tag("Opportunities")
-@route("/common-grants/opportunities")
+@route("/opportunities")
 namespace Opportunities {
   alias Router = Routes.Opportunities;
 
@@ -62,62 +68,69 @@ namespace Opportunities {
 }
 
 // #########################################################
+// Competitions
+// #########################################################
+
+@tag("Competitions")
+@tag("experimental")
+@route("/competitions")
+namespace Competitions {
+  alias Router = Routes.Competitions;
+
+  op read is Router.read;
+}
+
+// #########################################################
 // Applications
 // #########################################################
 
 @tag("Applications")
 @tag("experimental")
-@route("/common-grants/")
-namespace Apply {
-  // #########################################################
-  // Direct apply workflow
-  // #########################################################
-  @tag("experimental")
-  @route("/competitions")
-  namespace DirectApplyWorkflow {
-    alias Router = Routes.Competitions;
+@route("/applications")
+namespace Applications {
+  alias ApplicationRouter = Routes.Applications;
+  alias FormResponseRouter = Routes.FormResponses;
 
-    @added(Versions.v0_2)
-    op competitionDetails is Router.read;
+  // ################################
+  // Start an application workflow
+  // ################################
 
-    @added(Versions.v0_2)
-    op apply is Router.apply;
-  }
+  @added(Versions.v0_2)
+  op startApplication is ApplicationRouter.startApplication;
 
-  // #########################################################
-  // Multi-step workflow
-  // #########################################################
+  @added(Versions.v0_2)
+  op getApplication is ApplicationRouter.getApplication;
 
-  @route("/applications")
-  namespace MultiStepWorkflow {
-    alias ApplicationRouter = Routes.Applications;
-    alias FormResponseRouter = Routes.FormResponses;
+  // ################################
+  // Update form responses
+  // ################################
 
-    // ################################
-    // Start an application workflow
-    // ################################
+  @added(Versions.v0_2)
+  op setFormResponse is FormResponseRouter.setFormResponse;
 
-    @added(Versions.v0_2)
-    op startApplication is ApplicationRouter.startApplication;
+  @added(Versions.v0_2)
+  op getFormResponse is FormResponseRouter.getFormResponse;
 
-    @added(Versions.v0_2)
-    op getApplication is ApplicationRouter.getApplication;
+  // ################################
+  // Submit an application after completing all forms
+  // ################################
 
-    // ################################
-    // Update form responses
-    // ################################
+  @added(Versions.v0_2)
+  op submitApplication is ApplicationRouter.submitApplication;
+}
 
-    @added(Versions.v0_2)
-    op setFormResponse is FormResponseRouter.setFormResponse;
+// #########################################################
+// Forms
+// #########################################################
 
-    @added(Versions.v0_2)
-    op getFormResponse is FormResponseRouter.getFormResponse;
+@tag("Forms")
+@route("/forms")
+namespace Forms {
+  alias Router = Routes.Forms;
 
-    // ################################
-    // Submit an application after completing all forms
-    // ################################
+  @tag("optional")
+  op list is Router.list;
 
-    @added(Versions.v0_2)
-    op submitApplication is ApplicationRouter.submitApplication;
-  }
+  @tag("optional")
+  op read is Router.read;
 }

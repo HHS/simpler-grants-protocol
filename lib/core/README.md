@@ -34,12 +34,14 @@ The Opportunity model is templated to support custom fields. First define your c
 // models.tsp
 
 import "@common-grants/core"; // Import the base specification library
+import "@typespec/versioning";
 
 // Allows us to use models and fields defined in the core library without
 // prefixing each item with `CommonGrants.Models` or `CommonGrants.Fields`
 using CommonGrants.Models;
 using CommonGrants.Fields;
 
+@Versioning.useDependency(CommonGrants.Versions.v0_2) // Specify the version of the core library to use
 namespace CustomAPI.CustomModels;
 
 // Define a custom field
@@ -77,6 +79,7 @@ using TypeSpec.Http;
 
 @tag("Search")
 @route("/common-grants/opportunities")
+@Versioning.useDependency(CommonGrants.Versions.v0_2)
 namespace CustomAPI.CustomRoutes {
   alias OpportunitiesRouter = Opportunities;
 
@@ -117,8 +120,14 @@ Or specify the emitter in `tspconfig.yaml`:
 
 ```yaml
 # tspconfig.yaml
-emitters:
+emit:
   - "@typespec/openapi3"
+```
+
+And run the following command:
+
+```bash
+npx tsp compile main.tsp
 ```
 
 Both strategies will generate an OpenAPI specification in the `tsp-output/` directory.

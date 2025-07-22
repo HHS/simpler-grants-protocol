@@ -19,13 +19,17 @@ interface Competitions {
   // View competition details
   // ###############################
 
+  /** View details about a competition for a given funding opportunity.
+   *
+   * Each competition may have a distinct set of forms, be limited to a
+   * certain types of applicants, or have a different application period.
+   */
   @summary("View competition details")
-  @doc("View additional details about a competition for a given opportunity. A competition is an application process for a funding opportunity, often with a distinct set of forms and key dates.")
   @get
-  @route("/competitions/{id}")
+  @route("/{compId}")
   read(
-    /** The ID of the competition to get */
-    @path id: Types.uuid,
+    /** The ID of the competition to view */
+    @path compId: Types.uuid,
   ): Responses.Ok<Models.CompetitionBase> | Responses.NotFound;
 
   // ###############################
@@ -33,12 +37,12 @@ interface Competitions {
   // ###############################
 
   @summary("Apply to a competition")
-  @doc("Apply to a given competition with all of the required information")
+  @doc("Apply to a given competition with all of the required information.")
   @post
-  @route("/competitions/{id}/apply")
+  @route("/{compId}/apply")
   apply(
     /** The ID of the competition to apply to */
-    @path id: Types.uuid,
+    @path compId: Types.uuid,
 
     /** The application to apply to the competition */
     @body application: Models.ApplicationBase,

@@ -1,12 +1,13 @@
 namespace CommonGrants.Models;
 
 /** The base model for a form response */
+@example(Examples.FormResponse.formResponse)
 model FormResponseBase {
   /** The unique identifier for the form response */
   id: Types.uuid;
 
   /** The form being responded to */
-  form: Form;
+  formId: Types.uuid;
 
   /** The response to the form */
   response: Record<unknown>;
@@ -15,7 +16,10 @@ model FormResponseBase {
   status: FormResponseStatus;
 
   /** The validation errors for the form response */
-  validationErrors: Array<unknown>;
+  validationErrors?: Array<unknown>;
+
+  /** Custom attributes about the form response */
+  customFields?: Record<Fields.CustomField>;
 
   /** The system metadata for the form response */
   ...Fields.SystemMetadata;
@@ -28,13 +32,13 @@ model FormResponseBase {
 /** The status of the form response */
 @example(Examples.FormResponse.inProgressStatus)
 model FormResponseStatus {
-  /** The status of the form response */
+  /** The status of the form response, from a predefined set of options */
   value: FormResponseStatusOptions;
 
   /** A custom value for the status */
   customValue?: string;
 
-  /** A description of the status */
+  /** A human-readable description of the status */
   description?: string;
 }
 
@@ -42,15 +46,15 @@ model FormResponseStatus {
 // FormResponseStatusOptions
 // #########################################################
 
-/** The options for the status of the form response */
+/** The set of values accepted for form response status:
+ * - `notStarted`: The form response has not been started
+ * - `inProgress`: The form response is in progress
+ * - `complete`: The form response is complete, meaning all required fields have been filled out and there are no validation errors
+ * - `custom`: A custom status
+ */
 enum FormResponseStatusOptions {
-  /** The form response has not been started */
   notStarted,
-
-  /** The form response is in progress */
   inProgress,
-
-  /** The form response is submitted */
   complete,
 }
 
@@ -67,5 +71,29 @@ namespace Examples.FormResponse {
   const completeStatus = #{
     value: FormResponseStatusOptions.complete,
     description: "The form response is complete",
+  };
+
+  const formResponse = #{
+    id: "123e4567-e89b-12d3-a456-426614174000",
+    formId: "123e4567-e89b-12d3-a456-426614174000",
+    response: #{
+      firstName: "John",
+      lastName: "Doe",
+      email: "john.doe@example.com",
+      phone: "123-456-7890",
+      address: #{
+        street: "123 Main St",
+        city: "Anytown",
+        state: "CA",
+        zip: "12345",
+        country: null,
+      },
+    },
+    status: inProgressStatus,
+    validationErrors: #[
+      #{ field: "address.country", message: "Country is required" }
+    ],
+    createdAt: utcDateTime.fromISO("2021-01-01T00:00:00Z"),
+    lastModifiedAt: utcDateTime.fromISO("2021-01-01T00:00:00Z"),
   };
 }
