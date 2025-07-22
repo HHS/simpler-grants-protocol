@@ -1,6 +1,6 @@
 # CommonGrants Python SDK
 
-A Python SDK for interacting with the CommonGrants protocol, providing a type-safe interface for managing grant opportunities and related data models.
+A Python SDK for interacting with the CommonGrants protocol, providing a type-safe interface for managing grant opportunities.
 
 ## Features
 
@@ -26,10 +26,13 @@ from datetime import datetime, date, UTC
 from uuid import uuid4
 
 from common_grants_sdk.schemas.fields import Money, Event
-from common_grants_sdk.schemas.models.opp_base import OpportunityBase
-from common_grants_sdk.schemas.models.opp_funding import OppFunding
-from common_grants_sdk.schemas.models.opp_status import OppStatus, OppStatusOptions
-from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.models import (
+    OpportunityBase,
+    OppFunding,
+    OppStatus,
+    OppStatusOptions,
+    OppTimeline,
+)
 
 # Create a new opportunity
 opportunity = OpportunityBase(
@@ -151,6 +154,20 @@ mapping = {
 }
 
 transformed_data = transform_from_mapping(source_data, mapping)
+
+assert transformed_data == {
+    "id": uuid4(),
+    "title": "Research into ABC",
+    "status": "open",
+    "funding": {
+        "minAwardAmount": { "amount": 10000, "currency": "USD" },
+        "maxAwardAmount": { "amount": 100000, "currency": "USD" },
+    },
+    "keyDates": {
+        "appOpens": "2025-05-01",
+        "appDeadline": "2025-07-15",
+    },
+}
 ```
 
 ## License
