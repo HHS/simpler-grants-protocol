@@ -13,10 +13,10 @@ A Python SDK for interacting with the CommonGrants protocol, providing a type-sa
 
 ```bash
 # Using pip
-pip install common-grants-python-sdk
+pip install common-grants-sdk
 
 # Using Poetry
-poetry add common-grants-python-sdk
+poetry add common-grants-sdk
 ```
 
 ## Quick Start
@@ -74,39 +74,42 @@ loaded_opportunity = OpportunityBase.from_json(json_data)
 
 ## Core Components
 
-### Base Models
+### Base Model
 
-- `CommonGrantsBaseModel`: Base class for all models with common serialization methods
-- `SystemMetadata`: Tracks creation and modification timestamps
-
-### Field Types
-
-- `Money`: Represents monetary amounts with currency
-- `Event`: Represents scheduled events with date, time, and description
-- `CustomField`: Flexible field type for custom data
-- `DecimalString`: Validated decimal number strings
+- `CommonGrantsBaseModel`: Base class for all models, provides common serialization and validation methods
+- `SystemMetadata`: Tracks creation and modification timestamps for records
 
 ### Opportunity Models
 
 - `OpportunityBase`: Core opportunity model
 - `OppFunding`: Funding details and constraints
-- `OppStatus`: Opportunity status tracking
+- `OppStatus` & `OppStatusOptions`: Opportunity status tracking
 - `OppTimeline`: Key dates and milestones
 
-## Transformation utilities
+### Field Types
 
-The SDK includes a utility for transforming data according to a mapping specification.
+- `Money`: Represents monetary amounts with currency
+- `DecimalString`: Validated string representing a decimal number
+- `Event`: Union of event types
+- `EventType`: Enum for event type discrimination
+- `SingleDateEvent`: Event with a single date
+- `DateRangeEvent`: Event with a start and end date
+- `OtherEvent`: Event with a custom description or recurrence
+- `CustomField`: Flexible field type for custom data
+- `CustomFieldType`: Enum for custom field value types
+- `ISODate`: Alias for `datetime.date` (ISO 8601 date)
+- `ISOTime`: Alias for `datetime.time` (ISO 8601 time)
+- `UTCDateTime`: Alias for `datetime.datetime` (UTC timestamp)
 
-The mapping supports both literal values and transformations keyed by the following reserved words:
+### Transformation Utilities
 
-- `field`: Extracts a value from the data using a dot-notation path
-- `switch`: Performs a case-based lookup based on a field value
+The SDK includes a utility for transforming data according to a mapping specification:
 
-Here's an example of how to use the transformation utility to reshape arbitrary data:
+- `transform_from_mapping()` supports extracting fields, switching on values, and reshaping data dictionaries
+
+## Example: Data Transformation
 
 ```python
-from uuid import uuid4
-
 from common_grants_sdk.utils.transformation import transform_from_mapping
 
 source_data = {
@@ -166,3 +169,7 @@ assert transformed_data == {
     },
 }
 ```
+
+## License
+
+See [LICENSE](../../LICENSE) for details. 

@@ -19,6 +19,11 @@ dateRangeFilter:
       path: "lib/core/lib/core/filters/date.tsp"
       startLine: 24
       endLine: 38
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/date_filters.py"
+      startLine: 18
+      endLine: 32
 dateComparisonFilter:
   example:
     code: |
@@ -34,6 +39,11 @@ dateComparisonFilter:
       path: "lib/core/lib/core/filters/date.tsp"
       startLine: 10
       endLine: 18
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/filters/date_filters.py"
+      startLine: 35
+      endLine: 42
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -64,6 +74,7 @@ Filters by comparing a field to a range of date values.
   example={frontmatter.dateRangeFilter.example}
   jsonSchema={frontmatter.dateRangeFilter.jsonSchema}
   typeSpec={frontmatter.dateRangeFilter.typeSpec}
+  python={frontmatter.dateRangeFilter.python}
 />
 
 ## DateComparisonFilter
@@ -83,4 +94,5 @@ Filters by comparing a field to a date value.
   example={frontmatter.dateComparisonFilter.example}
   jsonSchema={frontmatter.dateComparisonFilter.jsonSchema}
   typeSpec={frontmatter.dateComparisonFilter.typeSpec}
+  python={frontmatter.dateComparisonFilter.python}
 />

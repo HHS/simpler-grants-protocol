@@ -56,6 +56,11 @@ paginated:
       path: "lib/core/lib/core/responses/success.tsp"
       startLine: 68
       endLine: 79
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/pagination.py"
+      startLine: 45
+      endLine: 52
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -77,6 +82,7 @@ A 200 response with a paginated list of items.
   example={frontmatter.paginated.example}
   jsonSchema={frontmatter.paginated.jsonSchema}
   typeSpec={frontmatter.paginated.typeSpec}
+  python={frontmatter.paginated.python}
 />
 
 ### Usage

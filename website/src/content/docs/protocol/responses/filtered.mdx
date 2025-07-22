@@ -73,6 +73,11 @@ filtered:
       path: "lib/core/lib/core/responses/success.tsp"
       startLine: 135
       endLine: 146
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/response.py"
+      startLine: 75
+      endLine: 93
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -96,4 +101,5 @@ A 200 response with a paginated list of filtered items.
   example={frontmatter.filtered.example}
   jsonSchema={frontmatter.filtered.jsonSchema}
   typeSpec={frontmatter.filtered.typeSpec}
+  python={frontmatter.filtered.python}
 />

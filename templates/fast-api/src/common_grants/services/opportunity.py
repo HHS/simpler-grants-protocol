@@ -12,7 +12,7 @@ from common_grants.schemas import (
 )
 from common_grants.schemas.models import OppFilters, OpportunityBase
 from common_grants.schemas.pagination import PaginationBodyParams, PaginationInfo
-from common_grants.schemas.response import FilterInfo, SortInfo
+from common_grants.schemas.response import FilterInfo, SortedResultsInfo
 from common_grants.schemas.sorting import OppSortBy, OppSorting
 from common_grants.services.utils import build_applied_filters, mock_opportunity
 
@@ -98,8 +98,8 @@ class OpportunityService:
             // pagination.page_size,
         )
 
-        # Create SortInfo object
-        sort_info = SortInfo(
+        # Create SortedResultsInfo object
+        sort_info = SortedResultsInfo(
             sortBy=sorting.sort_by,
             sortOrder=sorting.sort_order,
             customSortBy=sorting.custom_sort_by,

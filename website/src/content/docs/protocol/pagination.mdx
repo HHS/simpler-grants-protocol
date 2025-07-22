@@ -12,6 +12,11 @@ paginatedQueryParams:
       path: "lib/core/lib/core/pagination.tsp"
       startLine: 9
       endLine: 22
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/pagination.py"
+      startLine: 10
+      endLine: 23
 paginatedBodyParams:
   example:
     code: |
@@ -27,6 +32,11 @@ paginatedBodyParams:
       path: "lib/core/lib/core/pagination.tsp"
       startLine: 24
       endLine: 35
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/pagination.py"
+      startLine: 10
+      endLine: 23
 paginatedResultsInfo:
   example:
     code: |
@@ -44,6 +54,11 @@ paginatedResultsInfo:
       path: "lib/core/lib/core/pagination.tsp"
       startLine: 37
       endLine: 56
+  python:
+    file:
+      path: "templates/fast-api/src/common_grants/schemas/pagination.py"
+      startLine: 10
+      endLine: 38
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -65,6 +80,7 @@ Query parameters for paginated routes. These parameters should be used on GET ro
   example={frontmatter.paginatedQueryParams.example}
   jsonSchema={frontmatter.paginatedQueryParams.jsonSchema}
   typeSpec={frontmatter.paginatedQueryParams.typeSpec}
+  python={frontmatter.paginatedQueryParams.python}
 />
 
 ## PaginatedBodyParams
@@ -84,6 +100,7 @@ Body parameters for paginated routes. These parameters should be used on POST an
   example={frontmatter.paginatedBodyParams.example}
   jsonSchema={frontmatter.paginatedBodyParams.jsonSchema}
   typeSpec={frontmatter.paginatedBodyParams.typeSpec}
+  python={frontmatter.paginatedBodyParams.python}
 />
 
 ## PaginatedResultsInfo
@@ -105,4 +122,5 @@ Details about the paginated results. This model should included in the response 
   example={frontmatter.paginatedResultsInfo.example}
   jsonSchema={frontmatter.paginatedResultsInfo.jsonSchema}
   typeSpec={frontmatter.paginatedResultsInfo.typeSpec}
+  python={frontmatter.paginatedResultsInfo.python}
 />
