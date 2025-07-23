@@ -8,6 +8,7 @@ namespace CommonGrants.Models;
 
 using Fields;
 using Types;
+using Versioning;
 
 // ########################################
 // Model definition
@@ -63,6 +64,7 @@ model OpportunityBase {
   keyDates?: OppTimeline;
 
   /** The type of applicant for the opportunity */
+  @added(CommonGrants.Versions.v0_2)
   acceptedApplicantTypes?: ApplicantType[];
 
   /** URL for the original source of the opportunity */
@@ -82,5 +84,6 @@ model OpportunityBase {
 /** A funding opportunity with additional details, like available competitions. */
 model OpportunityDetails extends OpportunityBase {
   /** The competitions associated with the opportunity */
+  @added(CommonGrants.Versions.v0_2)
   competitions?: CompetitionBase[];
 }
