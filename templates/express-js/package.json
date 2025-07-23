@@ -1,8 +1,8 @@
 {
-  "name": "@agile-six/california-grants-api",
+  "name": "common-grants-express-js-template",
   "version": "0.1.0",
   "private": true,
-  "description": "California Grants API implementation using OpportunityStream TypeSpec",
+  "description": "CommonGrants Express.js template",
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc -p .",
@@ -13,9 +13,9 @@
     "test": "jest",
     "prepare": "npm run typespec && npm run build",
     "lint": "eslint . --ext .ts --fix",
-    "format": "prettier --write .",
+    "format": "prettier --write . && tsp format src/typespec",
     "check:lint": "eslint . --ext .ts",
-    "check:format": "prettier --check .",
+    "check:format": "prettier --check . && tsp format src/typespec --check",
     "checks": "npm run check:lint && npm run check:format"
   },
   "keywords": [
@@ -27,7 +27,7 @@
   "author": "Agile Six",
   "license": "MIT",
   "dependencies": {
-    "@common-grants/core": "^0.1.0-alpha.12",
+    "@common-grants/core": "^0.2.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",

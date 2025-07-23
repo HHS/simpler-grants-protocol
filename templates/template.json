@@ -2,8 +2,8 @@
   "quickstart": {
     "title": "Quickstart example",
     "description": "Example from the quickstart guide",
-    "compilerVersion": "0.63.0",
-    "libraries": ["@common-grants/core"],
+    "compilerVersion": "1.1.0",
+    "libraries": ["@common-grants/core@^0.2.0"],
     "config": {},
     "files": [
       {
@@ -17,8 +17,8 @@
   "fast-api": {
     "title": "FastAPI boilerplate",
     "description": "Boilerplate for a CommonGrants API implemented with FastAPI",
-    "compilerVersion": "0.63.0",
-    "libraries": ["@common-grants/core"],
+    "compilerVersion": "1.1.0",
+    "libraries": ["@common-grants/core@^0.2.0"],
     "config": {},
     "files": [
       {
@@ -226,7 +226,8 @@
   "express-js": {
     "title": "Express.js boilerplate",
     "description": "Boilerplate for a CommonGrants API implemented with Express.js",
-    "compilerVersion": "0.63.0",
+    "compilerVersion": "1.1.0",
+    "libraries": ["@common-grants/core@^0.2.0"],
     "files": [
       {
         "path": "./express-js/.eslintrc.js",

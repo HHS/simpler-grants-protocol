@@ -1,4 +1,5 @@
 import "@typespec/http";
+import "@typespec/versioning";
 import "@common-grants/core";
 
 using TypeSpec.Http;
@@ -8,6 +9,7 @@ namespace Custom;
 
 @tag("Opportunities")
 @route("/common-grants/opportunities")
+@Versioning.useDependency(CommonGrants.Versions.v0_2)
 namespace Routes {
   alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
 
