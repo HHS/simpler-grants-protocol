@@ -1,0 +1,15 @@
+{
+  "name": "common-grants-quickstart",
+  "version": "0.2.0",
+  "private": true,
+  "description": "CommonGrants Quickstart template",
+  "scripts": {
+    "typespec": "tsp compile main.tsp",
+    "format": "tsp format .",
+    "check:format": "tsp format . --check",
+    "checks": "npm run check:format"
+  },
+  "dependencies": {
+    "@common-grants/core": "^0.2.0"
+  }
+}
