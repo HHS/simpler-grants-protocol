@@ -13,6 +13,7 @@ namespace CommonGrants.Fields;
  * See https://taxonomy.candid.org/ for more information.
  */
 @example(Examples.PCS.orgTypeTerm)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model PCSTerm {
   /** The plain language PCS term. */
   term: string;
@@ -34,6 +35,7 @@ model PCSTerm {
 // #########################################################
 
 /** The class to which the PCS term belongs. */
+@Versioning.added(CommonGrants.Versions.v0_2)
 enum PCSClass {
   orgTypes: "Organization types",
   subjects: "Subjects",
@@ -50,6 +52,7 @@ enum PCSClass {
  *
  * See https://taxonomy.candid.org/organization-type for more information.
  */
+@Versioning.added(CommonGrants.Versions.v0_2)
 model PCSOrgType extends PCSTerm {
   /** The PCS term for the organization type. */
   class: PCSClass.orgTypes;
@@ -59,6 +62,7 @@ model PCSOrgType extends PCSTerm {
  *
  * See https://taxonomy.candid.org/subjects for more information.
  */
+@Versioning.added(CommonGrants.Versions.v0_2)
 model PCSSubject extends PCSTerm {
   /** The PCS term for the subject. */
   class: PCSClass.subjects;
@@ -68,6 +72,7 @@ model PCSSubject extends PCSTerm {
  *
  * See https://taxonomy.candid.org/populations for more information.
  */
+@Versioning.added(CommonGrants.Versions.v0_2)
 model PCSPopulation extends PCSTerm {
   /** The PCS term for the population. */
   class: PCSClass.populationGroups;
@@ -77,6 +82,7 @@ model PCSPopulation extends PCSTerm {
  *
  * See https://taxonomy.candid.org/support-strategies for more information.
  */
+@Versioning.added(CommonGrants.Versions.v0_2)
 model PCSSupportStrategy extends PCSTerm {
   /** The PCS term for the support strategy. */
   class: PCSClass.supportStrategies;
@@ -86,6 +92,7 @@ model PCSSupportStrategy extends PCSTerm {
  *
  * See https://taxonomy.candid.org/transaction-types for more information.
  */
+@Versioning.added(CommonGrants.Versions.v0_2)
 model PCSTransactionType extends PCSTerm {
   /** The PCS term for the transaction type. */
   class: PCSClass.transactionTypes;

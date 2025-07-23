@@ -3,6 +3,7 @@ namespace CommonGrants.Fields;
 /** A field representing a downloadable file. */
 @example(Examples.File.imageFile, #{ title: "An image file" })
 @example(Examples.File.pdfFile, #{ title: "A PDF file" })
+@Versioning.added(CommonGrants.Versions.v0_2)
 model File {
   /** The file's download URL. */
   downloadUrl: url;

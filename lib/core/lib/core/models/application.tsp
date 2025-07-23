@@ -2,6 +2,7 @@ namespace CommonGrants.Models;
 
 /** The base model for an application to a competition for a funding opportunity */
 @example(Examples.Application.applicationBase)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model ApplicationBase {
   /** The unique identifier for the application */
   id: Types.uuid;
@@ -37,6 +38,7 @@ model ApplicationBase {
 
 /** The status of the application */
 @example(Examples.Application.submittedStatus)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model AppStatus {
   /** The status of the application, from a predefined set of options */
   value: AppStatusOptions;
@@ -73,6 +75,7 @@ enum AppStatusOptions {
 
 /** The model for a form response included in an application */
 @example(Examples.Application.formResponse)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model AppFormResponse {
   /** The unique identifier for the application */
   applicationId: Types.uuid;

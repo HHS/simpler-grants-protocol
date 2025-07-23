@@ -7,6 +7,7 @@ namespace CommonGrants.Models;
 /** The type of applicant eligible to apply for funding */
 @example(Examples.ApplicantType.organization)
 @example(Examples.ApplicantType.individual)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model ApplicantType {
   /** The type of applicant */
   value: ApplicantTypeOptions;
@@ -23,6 +24,7 @@ model ApplicantType {
 // #########################################################
 
 /** The set of possible applicant types */
+@Versioning.added(CommonGrants.Versions.v0_2)
 enum ApplicantTypeOptions {
   /** The applicant is an individual */
   individual,

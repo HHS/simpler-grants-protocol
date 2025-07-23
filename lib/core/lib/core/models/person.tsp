@@ -5,6 +5,7 @@ namespace CommonGrants.Models;
 
 /** A person affiliated with an organization or grant application. */
 @example(Examples.Person.examplePerson)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model PersonBase {
   /** The person's full name, including all relevant components (first, middle, last, etc.). */
   name: Fields.Name;

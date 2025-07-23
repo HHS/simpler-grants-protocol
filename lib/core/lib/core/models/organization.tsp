@@ -4,6 +4,7 @@ namespace CommonGrants.Models;
 
 /** An organization that can apply for grants. */
 @example(Examples.Organization.exampleOrg)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model OrganizationBase {
   /** The organization's unique identifier. */
   id: Types.uuid;
@@ -51,6 +52,7 @@ model OrganizationBase {
 
 /** A collection of social media and web presence links for an organization. */
 @example(Examples.Organization.exampleSocials)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model OrgSocialLinks {
   /** The organization's primary website URL. */
   website?: url;

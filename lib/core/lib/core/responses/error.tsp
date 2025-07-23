@@ -1,5 +1,7 @@
 import "@typespec/http";
 
+using Versioning;
+
 namespace CommonGrants.Responses;
 
 /** A standard error response schema, used to create custom error responses
@@ -34,6 +36,7 @@ alias NotFound = Error & Http.NotFoundResponse;
   message: "Application submission failed due to validation errors",
   errors: #[#{ field: "formA.name", message: "Name is required" }],
 })
+@added(CommonGrants.Versions.v0_2)
 @doc("A failure to submit an application due to validation errors")
 model ApplicationSubmissionError extends Error {
   @example(400)

@@ -7,6 +7,7 @@ alias Email = Types.email; // Exposes Email from CommonGrants.Fields
 
 /** A collection of email addresses. */
 @example(Examples.Email.personalCollection)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model EmailCollection {
   /** The primary email address for a person or organization. */
   primary: Types.email;
