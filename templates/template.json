@@ -3,7 +3,6 @@
     "title": "Quickstart example",
     "description": "Example from the quickstart guide",
     "compilerVersion": "1.1.0",
-    "libraries": ["@common-grants/core@^0.2.0"],
     "config": {},
     "files": [
       {
@@ -11,14 +10,14 @@
         "destination": "tspconfig.yaml"
       },
       { "path": "./quickstart/main.tsp", "destination": "main.tsp" },
-      { "path": "./quickstart/routes.tsp", "destination": "routes.tsp" }
+      { "path": "./quickstart/routes.tsp", "destination": "routes.tsp" },
+      { "path": "./quickstart/package.json", "destination": "package.json" }
     ]
   },
   "fast-api": {
     "title": "FastAPI boilerplate",
     "description": "Boilerplate for a CommonGrants API implemented with FastAPI",
     "compilerVersion": "1.1.0",
-    "libraries": ["@common-grants/core@^0.2.0"],
     "config": {},
     "files": [
       {
@@ -227,7 +226,6 @@
     "title": "Express.js boilerplate",
     "description": "Boilerplate for a CommonGrants API implemented with Express.js",
     "compilerVersion": "1.1.0",
-    "libraries": ["@common-grants/core@^0.2.0"],
     "files": [
       {
         "path": "./express-js/.eslintrc.js",
