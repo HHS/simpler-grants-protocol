@@ -1,8 +1,10 @@
 import "@typespec/http";
-import "./routes.tsp";
+import "@typespec/versioning";
+import "@common-grants/core";
 
-using TypeSpec.Http;
+import "./routes.tsp";
 
 /** API description here */
 @service(#{ title: "Quickstart API" })
+@Versioning.useDependency(CommonGrants.Versions.v0_2)
 namespace Quickstart;

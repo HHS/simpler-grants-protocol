@@ -2,8 +2,7 @@
   "quickstart": {
     "title": "Quickstart example",
     "description": "Example from the quickstart guide",
-    "compilerVersion": "0.63.0",
-    "libraries": ["@common-grants/core"],
+    "compilerVersion": "1.1.0",
     "config": {},
     "files": [
       {
@@ -11,80 +10,14 @@
         "destination": "tspconfig.yaml"
       },
       { "path": "./quickstart/main.tsp", "destination": "main.tsp" },
-      { "path": "./quickstart/routes.tsp", "destination": "routes.tsp" }
+      { "path": "./quickstart/routes.tsp", "destination": "routes.tsp" },
+      { "path": "./quickstart/package.json", "destination": "package.json" }
     ]
-  },
-  "default-api": {
-    "title": "Default CommonGrants API",
-    "description": "Define an API spec with default routes from the CommonGrants library",
-    "compilerVersion": "0.63.0",
-    "libraries": ["@common-grants/core"],
-    "config": {},
-    "files": [
-      {
-        "path": "./default-api/tspconfig.yaml",
-        "destination": "tspconfig.yaml"
-      },
-      { "path": "./default-api/main.tsp", "destination": "main.tsp" }
-    ],
-    "inputs": {
-      "apiName": {
-        "type": "text",
-        "description": "Name of the API"
-      }
-    }
-  },
-  "custom-api": {
-    "title": "Custom CommonGrants API",
-    "description": "Extend the default CommonGrants API spec with custom fields and routes",
-    "compilerVersion": "0.63.0",
-    "config": {},
-    "files": [
-      {
-        "path": "./custom-api/tspconfig.yaml",
-        "destination": "tspconfig.yaml"
-      },
-      {
-        "path": "./custom-api/main.tsp",
-        "destination": "main.tsp"
-      },
-      {
-        "path": "./custom-api/routes.tsp",
-        "destination": "routes.tsp"
-      },
-      {
-        "path": "./custom-api/models.tsp",
-        "destination": "models.tsp"
-      }
-    ],
-    "inputs": {
-      "apiName": {
-        "type": "text",
-        "description": "Name of the API"
-      },
-      "fieldName": {
-        "type": "text",
-        "description": "Human readable display name for the custom field"
-      },
-      "fieldTypeJSON": {
-        "type": "text",
-        "description": "Type of the custom field in JSON (e.g. string, number, boolean, object, array)"
-      },
-      "fieldTypeTSP": {
-        "type": "text",
-        "description": "Type of the custom field in TypeSpec"
-      },
-      "fieldDescription": {
-        "type": "text",
-        "description": "Description of the custom field"
-      }
-    }
   },
   "fast-api": {
     "title": "FastAPI boilerplate",
     "description": "Boilerplate for a CommonGrants API implemented with FastAPI",
-    "compilerVersion": "0.63.0",
-    "libraries": ["@common-grants/core"],
+    "compilerVersion": "1.1.0",
     "config": {},
     "files": [
       {
@@ -292,7 +225,7 @@
   "express-js": {
     "title": "Express.js boilerplate",
     "description": "Boilerplate for a CommonGrants API implemented with Express.js",
-    "compilerVersion": "0.63.0",
+    "compilerVersion": "1.1.0",
     "files": [
       {
         "path": "./express-js/.eslintrc.js",
