@@ -34,6 +34,7 @@ alias NotFound = Error & Http.NotFoundResponse;
   message: "Application submission failed due to validation errors",
   errors: #[#{ field: "formA.name", message: "Name is required" }],
 })
+@Versioning.added(CommonGrants.Versions.v0_2)
 @doc("A failure to submit an application due to validation errors")
 model ApplicationSubmissionError extends Error {
   @example(400)

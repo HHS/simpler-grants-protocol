@@ -8,6 +8,7 @@ namespace CommonGrants.Models;
 
 /** A form for collecting data from a user. */
 @example(Examples.Form.form)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model Form {
   /** The form's unique identifier. */
   id: Types.uuid;
@@ -43,6 +44,7 @@ model Form {
 
 /** A JSON schema used to validate form responses. */
 @example(Examples.Form.formSchema)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model FormJsonSchema {
   ...Record<unknown>;
 }
@@ -53,6 +55,7 @@ model FormJsonSchema {
 
 /** A UI schema used to render the form in the browser. */
 @example(Examples.Form.uiSchema)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model FormUISchema {
   ...Record<unknown>;
 }

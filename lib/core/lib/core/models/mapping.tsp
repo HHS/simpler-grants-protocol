@@ -52,6 +52,7 @@ namespace CommonGrants.Models;
 @example(Examples.Mapping.simpleSwitch)
 @example(Examples.Mapping.nestedSwitch)
 @example(Examples.Mapping.withLiteralValues)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model MappingSchema {
   ...Record<MappingFunction | MappingSchema>;
 }
@@ -64,6 +65,7 @@ model MappingSchema {
 @example(Examples.Mapping.constId)
 @example(Examples.Mapping.amountField)
 @example(Examples.Mapping.statusSwitch)
+@Versioning.added(CommonGrants.Versions.v0_2)
 union MappingFunction {
   `const`: MappingConstantFunction,
   field: MappingFieldFunction,
@@ -76,6 +78,7 @@ union MappingFunction {
 
 /** Returns a constant value. */
 @example(Examples.Mapping.constId)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model MappingConstantFunction {
   `const`: unknown;
 }
@@ -86,6 +89,7 @@ model MappingConstantFunction {
 
 /** Returns the value of a field in the source data. */
 @example(Examples.Mapping.amountField)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model MappingFieldFunction {
   field: string;
 }
@@ -96,6 +100,7 @@ model MappingFieldFunction {
 
 /** Returns a new value based on the value of a field in the source data using a switch statement. */
 @example(Examples.Mapping.statusSwitch)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model MappingSwitchFunction {
   switch: {
     /** The field in the source data to switch on. */

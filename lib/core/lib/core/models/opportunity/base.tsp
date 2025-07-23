@@ -63,6 +63,7 @@ model OpportunityBase {
   keyDates?: OppTimeline;
 
   /** The type of applicant for the opportunity */
+  @Versioning.added(CommonGrants.Versions.v0_2)
   acceptedApplicantTypes?: ApplicantType[];
 
   /** URL for the original source of the opportunity */
@@ -80,6 +81,7 @@ model OpportunityBase {
 // ########################################
 
 /** A funding opportunity with additional details, like available competitions. */
+@Versioning.added(CommonGrants.Versions.v0_2)
 model OpportunityDetails extends OpportunityBase {
   /** The competitions associated with the opportunity */
   competitions?: CompetitionBase[];

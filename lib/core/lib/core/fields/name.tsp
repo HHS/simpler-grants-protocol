@@ -2,6 +2,7 @@ namespace CommonGrants.Fields;
 
 /** A person's name. */
 @example(Examples.Name.janeDoe)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model Name {
   /** Honorific prefix (e.g., Mr., Mrs., Dr., Prof.). */
   prefix?: string;

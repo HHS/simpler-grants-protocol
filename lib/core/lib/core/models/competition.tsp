@@ -7,6 +7,7 @@ namespace CommonGrants.Models;
  * distinct application period and set of application forms.
  */
 @example(Examples.Competition.competition)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model CompetitionBase {
   /** Globally unique id for the competition */
   id: Types.uuid;

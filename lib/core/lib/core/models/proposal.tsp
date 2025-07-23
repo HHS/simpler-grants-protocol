@@ -6,6 +6,7 @@ namespace CommonGrants.Models;
 
 /** A proposal for funding. */
 @example(Examples.Proposal.exampleProposal)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model ProposalBase {
   /** The title of the proposal and/or the project requesting funding. */
   title?: string;
@@ -37,6 +38,7 @@ model ProposalBase {
 // #########################################################
 
 /** The opportunity to which this proposal is related */
+@Versioning.added(CommonGrants.Versions.v0_2)
 model ProposalOpportunity {
   /** The opportunity's unique identifier. */
   id: Types.uuid;
@@ -52,6 +54,7 @@ model ProposalOpportunity {
 // ProjectTimeline
 // #########################################################
 
+@Versioning.added(CommonGrants.Versions.v0_2)
 model ProjectTimeline {
   /** The start date of the period for which the funding is requested. */
   startDate?: Fields.Event;
@@ -70,6 +73,7 @@ model ProjectTimeline {
 // ProjectContacts
 // #########################################################
 
+@Versioning.added(CommonGrants.Versions.v0_2)
 model ProposalContacts {
   /** The primary point of contact for the proposal. */
   primary: PersonBase;
@@ -82,6 +86,7 @@ model ProposalContacts {
 // ProposalOrgs
 // #########################################################
 
+@Versioning.added(CommonGrants.Versions.v0_2)
 model ProposalOrgs {
   /** The primary organization that is requesting funding. */
   primary: OrganizationBase;

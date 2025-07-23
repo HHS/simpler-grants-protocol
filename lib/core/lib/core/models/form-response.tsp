@@ -2,6 +2,7 @@ namespace CommonGrants.Models;
 
 /** The base model for a form response */
 @example(Examples.FormResponse.formResponse)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model FormResponseBase {
   /** The unique identifier for the form response */
   id: Types.uuid;
@@ -31,6 +32,7 @@ model FormResponseBase {
 
 /** The status of the form response */
 @example(Examples.FormResponse.inProgressStatus)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model FormResponseStatus {
   /** The status of the form response, from a predefined set of options */
   value: FormResponseStatusOptions;
@@ -52,6 +54,7 @@ model FormResponseStatus {
  * - `complete`: The form response is complete, meaning all required fields have been filled out and there are no validation errors
  * - `custom`: A custom status
  */
+@Versioning.added(CommonGrants.Versions.v0_2)
 enum FormResponseStatusOptions {
   notStarted,
   inProgress,

@@ -33,22 +33,26 @@ scalar uuid extends string;
 /** An email address */
 @example("test@example.com")
 @format("email")
+@Versioning.added(CommonGrants.Versions.v0_2)
 scalar email extends string;
 
 /** An Employer Identification Number (EIN) issued by the IRS */
 @example("12-3456789")
 @pattern("^[0-9]{2}-[0-9]{7}$")
+@Versioning.added(CommonGrants.Versions.v0_2)
 scalar employerTaxId extends string;
 
 /** A Unique Entity Identifier (UEI) issued by SAM.gov */
 @example("12ABC34DEF56")
 @pattern("^[A-z0-9]{12}$")
+@Versioning.added(CommonGrants.Versions.v0_2)
 scalar samUEI extends string;
 
 /** A Data Universal Numbering System (DUNS) number */
 @example("123456789")
 @example("12-345-6789")
 @example("123456789-1234")
+@Versioning.added(CommonGrants.Versions.v0_2)
 scalar duns extends string;
 
 // ########################################
@@ -80,4 +84,5 @@ scalar isoDate extends plainDate;
 /** A calendar year */
 @example("2025")
 @pattern("^[0-9]{4}$")
+@Versioning.added(CommonGrants.Versions.v0_2)
 scalar calendarYear extends string;
