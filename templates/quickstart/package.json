@@ -1,8 +1,8 @@
 {
-  "name": "common-grants-quickstart",
+  "name": "quickstart",
   "version": "0.2.0",
   "private": true,
-  "description": "CommonGrants Quickstart template",
+  "description": "CommonGrants quickstart template",
   "scripts": {
     "typespec": "tsp compile main.tsp",
     "format": "tsp format .",
