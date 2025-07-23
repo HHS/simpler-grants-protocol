@@ -77,6 +77,7 @@ namespace Opportunities {
 namespace Competitions {
   alias Router = Routes.Competitions;
 
+  @added(Versions.v0_2)
   op read is Router.read;
 }
 
@@ -124,13 +125,14 @@ namespace Applications {
 // #########################################################
 
 @tag("Forms")
+@tag("experimental")
 @route("/forms")
 namespace Forms {
   alias Router = Routes.Forms;
 
-  @tag("optional")
+  @added(Versions.v0_2)
   op list is Router.list;
 
-  @tag("optional")
+  @added(Versions.v0_2)
   op read is Router.read;
 }
