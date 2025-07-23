@@ -33,6 +33,7 @@ scalar uuid extends string;
 /** An email address */
 @example("test@example.com")
 @format("email")
+@Versioning.added(CommonGrants.Versions.v0_2)
 scalar email extends string;
 
 /** An Employer Identification Number (EIN) issued by the IRS */
