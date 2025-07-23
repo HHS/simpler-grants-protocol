@@ -61,6 +61,10 @@ namespace Opportunities {
   op list is Router.list;
 
   @tag("required")
+  @returnTypeChangedFrom(
+    CommonGrants.Versions.v0_2,
+    Responses.Ok<Models.OpportunityBase> | Responses.NotFound
+  )
   op read is Router.read;
 
   @tag("optional")
