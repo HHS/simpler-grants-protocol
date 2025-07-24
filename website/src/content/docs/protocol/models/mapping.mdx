@@ -1,26 +1,22 @@
 ---
 title: Mapping
 description: A model for mapping data from one schema to another.
+sidebar:
+  order: 7
 mappingSchema:
   example:
     code: |
       {
-        "id": {"const": "123"},
-        "name": {
-          "firstName": {"field": "first_name"},
-          "lastName": {"field": "last_name"},
-        },
+        "id": { "const": "123" },
         "opportunity": {
           "status": {
             "switch": {
-              "field": "opportunity_status",
-              "case": {
-                "active": "open",
-                "inactive": "closed",
-              }
+              "field": "summary.opportunity_status",
+              "case": { "active": "open", "inactive": "closed" },
+              "default": "custom"
             }
           },
-          "amount": {"field": "opportunity_amount"},
+          "amount": { "field": "summary.opportunity_amount" }
         }
       }
   jsonSchema:
@@ -29,8 +25,8 @@ mappingSchema:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 51
-      endLine: 54
+      startLine: 54
+      endLine: 58
 mappingFunction:
   example:
     code: |
@@ -47,8 +43,8 @@ mappingFunction:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 60
-      endLine: 65
+      startLine: 64
+      endLine: 73
 mappingConstantFunction:
   example:
     code: |
@@ -61,8 +57,8 @@ mappingConstantFunction:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 71
-      endLine: 74
+      startLine: 79
+      endLine: 84
 mappingFieldFunction:
   example:
     code: |
@@ -75,18 +71,20 @@ mappingFieldFunction:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 80
-      endLine: 83
+      startLine: 90
+      endLine: 95
 mappingSwitchFunction:
   example:
     code: |
       {
-        "field": "opportunity_status",
-        "case": {
-          "active": "open",
-          "inactive": "closed",
-        },
-        "default": "custom",
+        "switch": {
+          "field": "opportunity_status",
+          "case": {
+            "active": "open",
+            "inactive": "closed"
+          },
+          "default": "custom"
+        }
       }
   jsonSchema:
     file:
@@ -94,15 +92,72 @@ mappingSwitchFunction:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 89
-      endLine: 99
+      startLine: 101
+      endLine: 115
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ## MappingSchema
 
 A schema for mapping data from one schema to another.
+
+### Example
+
+<Tabs>
+  <TabItem label="Mapping">
+The following mapping:
+
+```json
+{
+  "id": { "const": "123" },
+  "opportunity": {
+    "status": {
+      "switch": {
+        "field": "summary.opportunity_status",
+        "case": { "active": "open", "inactive": "closed" },
+        "default": "custom",
+      },
+    },
+    "amount": { "field": "summary.opportunity_amount" },
+  }
+}
+```
+  </TabItem>
+
+  <TabItem label="Input">
+
+Will translate the following input:
+
+```json
+{
+  "id": "123",
+  "summary": {
+    "opportunity_status": "active",
+    "opportunity_amount": 100,
+  },
+}
+```
+  </TabItem>
+
+  <TabItem label="Output">
+
+To the following output:
+
+```json
+{
+  "id": "123",
+  "opportunity": {
+    "status": "open",
+    "amount": 100,
+  },
+}
+```
+  </TabItem>
+</Tabs>
+
+### Formats
 
 <SchemaFormatTabs
   example={frontmatter.mappingSchema.example}
@@ -121,7 +176,6 @@ A function for mapping data from one schema to another.
 | [MappingConstantFunction](#mappingconstantfunction) | Returns a constant value.                                                                        |
 | [MappingFieldFunction](#mappingfieldfunction)       | Returns the value of a field in the source data.                                                 |
 | [MappingSwitchFunction](#mappingswitchfunction)     | Returns a new value based on the value of a field in the source data using a switch-case lookup. |
-|                                                     |                                                                                                  |
 
 ### Formats
 
@@ -173,11 +227,17 @@ Returns a new value based on the value of a field in the source data using a swi
 
 ### Table
 
-| Property | Type                                                                               | Description                                                                                    |
-| -------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| field    | [string](/protocol/types/string#string)                                            | A dot-separated path to a field in the source schema whose value will be added to the mapping. |
-| case     | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\> | A mapping of source field values to desired output values.                                     |
-| default  | [unknown](/protocol/types/other#unknown)                                           | The default value to output if no case matches the source field value.                         |
+| Property | Type   | Required | Description                                                                   |
+| -------- | ------ | -------- | ----------------------------------------------------------------------------- |
+| switch   | object | Yes      | The switch configuration object containing field, case, and optional default. |
+
+Where the `switch` configuration object has the following properties:
+
+| Property | Type                                                                               | Required | Description                                                                                    |
+| -------- | ---------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| field    | [string](/protocol/types/string#string)                                            | Yes      | A dot-separated path to a field in the source schema whose value will be used for switching.  |
+| case     | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\> | Yes      | A mapping of source field values to desired output values.                                     |
+| default  | [unknown](/protocol/types/other#unknown)                                           | No       | The default value to output if no case matches the source field value.                         |
 
 ### Formats
 

@@ -1,6 +1,8 @@
 ---
 title: Form Response
 description: The form response model is used to represent a response to a form.
+sidebar:
+  order: 6
 formResponse:
   example:
     code: |
@@ -34,7 +36,7 @@ formResponse:
     file:
       path: "lib/core/lib/core/models/form-response.tsp"
       startLine: 3
-      endLine: 22
+      endLine: 27
 formResponseStatus:
   example:
     code: |
@@ -48,8 +50,8 @@ formResponseStatus:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/form-response.tsp"
-      startLine: 28
-      endLine: 39
+      startLine: 33
+      endLine: 45
 formResponseStatusOptions:
   example:
     code: '"inProgress"'
@@ -59,8 +61,8 @@ formResponseStatusOptions:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/form-response.tsp"
-      startLine: 45
-      endLine: 55
+      startLine: 51
+      endLine: 62
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -71,15 +73,16 @@ Base model for a form response.
 
 ### Table
 
-| Property         | Type                                              | Required | Description                                  |
-| ---------------- | ------------------------------------------------- | -------- | -------------------------------------------- |
-| id               | [uuid](/protocol/types/string#uuid)               | Yes      | The form's unique identifier.                |
-| form             | [Form](/protocol/models/form)                     | Yes      | The form being responded to.                 |
-| response         | [Record](/protocol/types/other#record)\<unknown\> | Yes      | The response to the form.                    |
-| status           | [FormResponseStatus](#formresponsestatus)         | Yes      | The status of the form response.             |
-| validationErrors | [Array](/protocol/types/other#array)\<unknown\>   | Yes      | The validation errors for the form response. |
-| createdAt        | [utcDateTime](/protocol/types/date#utcdatetime)   | Yes      | The form's creation date.                    |
-| lastModifiedAt   | [utcDateTime](/protocol/types/date#utcdatetime)   | Yes      | The form's last modified date.               |
+| Property         | Type                                                                                   | Required | Description                                  |
+| ---------------- | -------------------------------------------------------------------------------------- | -------- | -------------------------------------------- |
+| id               | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The form's unique identifier.                |
+| form             | [Form](/protocol/models/form)                                                          | Yes      | The form being responded to.                 |
+| response         | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\>     | Yes      | The response to the form.                    |
+| status           | [FormResponseStatus](#formresponsestatus)                                              | Yes      | The status of the form response.             |
+| validationErrors | [Array](/protocol/types/other#array)\<[unknown](/protocol/types/other#unknown)\>       | No       | The validation errors for the form response. |
+| customFields     | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields about the form response.   |
+| createdAt        | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The form's creation date.                    |
+| lastModifiedAt   | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The form's last modified date.               |
 
 ### Formats
 
