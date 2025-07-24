@@ -117,13 +117,14 @@ The following mapping:
       "switch": {
         "field": "summary.opportunity_status",
         "case": { "active": "open", "inactive": "closed" },
-        "default": "custom",
-      },
+        "default": "custom"
+      }
     },
-    "amount": { "field": "summary.opportunity_amount" },
+    "amount": { "field": "summary.opportunity_amount" }
   }
 }
 ```
+
   </TabItem>
 
   <TabItem label="Input">
@@ -135,10 +136,11 @@ Will translate the following input:
   "id": "123",
   "summary": {
     "opportunity_status": "active",
-    "opportunity_amount": 100,
-  },
+    "opportunity_amount": 100
+  }
 }
 ```
+
   </TabItem>
 
   <TabItem label="Output">
@@ -150,10 +152,11 @@ To the following output:
   "id": "123",
   "opportunity": {
     "status": "open",
-    "amount": 100,
-  },
+    "amount": 100
+  }
 }
 ```
+
   </TabItem>
 </Tabs>
 
@@ -233,11 +236,11 @@ Returns a new value based on the value of a field in the source data using a swi
 
 Where the `switch` configuration object has the following properties:
 
-| Property | Type                                                                               | Required | Description                                                                                    |
-| -------- | ---------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
-| field    | [string](/protocol/types/string#string)                                            | Yes      | A dot-separated path to a field in the source schema whose value will be used for switching.  |
-| case     | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\> | Yes      | A mapping of source field values to desired output values.                                     |
-| default  | [unknown](/protocol/types/other#unknown)                                           | No       | The default value to output if no case matches the source field value.                         |
+| Property | Type                                                                               | Required | Description                                                                                  |
+| -------- | ---------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| field    | [string](/protocol/types/string#string)                                            | Yes      | A dot-separated path to a field in the source schema whose value will be used for switching. |
+| case     | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\> | Yes      | A mapping of source field values to desired output values.                                   |
+| default  | [unknown](/protocol/types/other#unknown)                                           | No       | The default value to output if no case matches the source field value.                       |
 
 ### Formats
 
