@@ -24,7 +24,7 @@ address:
   typeSpec:
     file:
       path: "lib/core/lib/core/fields/address.tsp"
-      startLine: 1
+      startLine: 3
       endLine: 33
 addressCollection:
   example:
@@ -61,8 +61,8 @@ addressCollection:
   typeSpec:
     file:
       path: "lib/core/lib/core/fields/address.tsp"
-      startLine: 34
-      endLine: 43
+      startLine: 35
+      endLine: 45
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -71,16 +71,16 @@ An address is a physical location.
 
 ### Table
 
-| Property  | Type                                      | Required | Description                                                                  |
-| --------- | ----------------------------------------- | -------- | ---------------------------------------------------------------------------- |
-| Street 1  | [string](/protocol/types/string#string)   | Yes      | The primary street address line.                                             |
-| Street 2  | [string](/protocol/types/string#string)   | No       | Additional street address information (e.g., apartment number, suite, etc.). |
-| City      | [string](/protocol/types/string#string)   | Yes      | The city of the location.                                                    |
-| State     | [string](/protocol/types/string#string)   | Yes      | The state of the location.                                                   |
-| Zip       | [string](/protocol/types/string#string)   | Yes      | The postal code of the location.                                             |
-| Latitude  | [number](/protocol/types/numeric#numeric) | Yes      | The latitude coordinate of the address location.                             |
-| Longitude | [number](/protocol/types/numeric#numeric) | Yes      | The longitude coordinate of the address location.                            |
-| Geography | [Record](/protocol/types/other#record)    | No       | Additional geospatial data in GeoJSON format.                                |
+| Property        | Type                                      | Required | Description                                                                  |
+| --------------- | ----------------------------------------- | -------- | ---------------------------------------------------------------------------- |
+| street1         | [string](/protocol/types/string#string)   | Yes      | The primary street address line.                                             |
+| street2         | [string](/protocol/types/string#string)   | No       | Additional street address information (e.g., apartment number, suite, etc.). |
+| city            | [string](/protocol/types/string#string)   | Yes      | The city of the location.                                                    |
+| stateOrProvince | [string](/protocol/types/string#string)   | Yes      | The state of the location.                                                   |
+| postalCode      | [string](/protocol/types/string#string)   | Yes      | The postal code of the location.                                             |
+| latitude        | [number](/protocol/types/numeric#numeric) | Yes      | The latitude coordinate of the address location.                             |
+| longitude       | [number](/protocol/types/numeric#numeric) | Yes      | The longitude coordinate of the address location.                            |
+| geography       | [Record](/protocol/types/other#record)    | No       | Additional geospatial data in GeoJSON format.                                |
 
 ### Formats
 
