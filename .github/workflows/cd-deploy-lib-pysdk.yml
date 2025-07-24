@@ -27,6 +27,9 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    environment: 
+      name: pypi
+      url: https://pypi.org/p/common-grants-sdk
     permissions:
       contents: read
       id-token: write
@@ -56,7 +59,7 @@ jobs:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
         run: |
           poetry build
-          poetry publish --dry-run
+          poetry publish
 
       - name: Notify completion
         run: |
