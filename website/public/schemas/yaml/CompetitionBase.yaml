@@ -17,7 +17,9 @@ properties:
   instructions:
     anyOf:
       - type: string
-      - $ref: File.yaml
+      - type: array
+        items:
+          $ref: File.yaml
     description: The instructions for the competition
   status:
     $ref: CompetitionStatus.yaml
@@ -28,6 +30,11 @@ properties:
   forms:
     $ref: CompetitionForms.yaml
     description: The forms for the competition
+  acceptedApplicantTypes:
+    type: array
+    items:
+      $ref: ApplicantType.yaml
+    description: Accepted applicant types for the competition
   customFields:
     $ref: "#/$defs/RecordCustomField"
     description: The custom fields for the competition
@@ -44,7 +51,6 @@ required:
   - opportunityId
   - title
   - status
-  - keyDates
   - forms
   - createdAt
   - lastModifiedAt
@@ -109,22 +115,16 @@ examples:
                 scope: "#/properties/phone"
           mappingToCommonGrants:
             name:
-              firstName:
-                field: name.first
-              lastName:
-                field: name.last
+              firstName: {}
+              lastName: {}
             emails:
-              primary:
-                field: email
+              primary: {}
             phones:
-              primary:
-                field: phone
+              primary: {}
           mappingFromCommonGrants:
             name:
-              first:
-                field: name.firstName
-              last:
-                field: name.lastName
+              first: {}
+              last: {}
             email: {}
             phone: {}
         formB:
@@ -161,22 +161,16 @@ examples:
                 scope: "#/properties/phone"
           mappingToCommonGrants:
             name:
-              firstName:
-                field: name.first
-              lastName:
-                field: name.last
+              firstName: {}
+              lastName: {}
             emails:
-              primary:
-                field: email
+              primary: {}
             phones:
-              primary:
-                field: phone
+              primary: {}
           mappingFromCommonGrants:
             name:
-              first:
-                field: name.firstName
-              last:
-                field: name.lastName
+              first: {}
+              last: {}
             email: {}
             phone: {}
       validation:

@@ -4,13 +4,13 @@ type: object
 properties:
   value:
     $ref: FormResponseStatusOptions.yaml
-    description: The status of the form response
+    description: The status of the form response, from a predefined set of options
   customValue:
     type: string
     description: A custom value for the status
   description:
     type: string
-    description: A description of the status
+    description: A human-readable description of the status
 required:
   - value
 examples:

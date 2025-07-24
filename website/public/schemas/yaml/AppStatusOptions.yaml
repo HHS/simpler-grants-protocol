@@ -2,9 +2,15 @@ $schema: https://json-schema.org/draft/2020-12/schema
 $id: AppStatusOptions.yaml
 type: string
 enum:
-  - draft
+  - inProgress
   - submitted
   - accepted
   - rejected
   - custom
-description: The default set of values accepted for application status.
+description: |-
+  The default set of values accepted for application status:
+  - `inProgress`: The application is in progress
+  - `submitted`: The application has been submitted and is being reviewed
+  - `accepted`: The application has been accepted
+  - `rejected`: The application has been rejected
+  - `custom`: A custom status

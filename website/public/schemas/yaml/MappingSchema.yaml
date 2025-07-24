@@ -5,47 +5,26 @@ properties: {}
 unevaluatedProperties:
   anyOf:
     - $ref: MappingFunction.yaml
-    - {}
+    - $ref: MappingSchema.yaml
 examples:
   - id: {}
     opportunity:
-      status:
-        switch:
-          field: opportunity_status
-          case:
-            active: open
-            inactive: closed
-          default: custom
-      amount:
-        field: opportunity_amount
+      status: {}
+      amount: {}
   - opportunity:
-      status:
-        switch:
-          field: opportunity_status
-          case:
-            active: open
-            inactive: closed
-          default: custom
-        amount:
-          field: opportunity_amount
+      status: {}
+      amount: {}
   - opportunityAmount: {}
-    opportunityStatus:
-      switch:
-        field: opportunity_status
-        case:
-          active: open
-          inactive: closed
-        default: custom
+    opportunityStatus: {}
   - id: {}
     opportunity:
-      status:
-        field: opportunity_status
-      amount:
-        field: opportunity_amount
-  - opportunityStatus: {}
+      status: {}
+      amount: {}
+  - id: {}
+    opportunityStatus: {}
     opportunityAmount: {}
 description: |-
-  A mapping schema for translating data from one schema to another.
+  A mapping format for translating data from one schema to another.
 
   Example:
 
@@ -57,12 +36,12 @@ description: |-
     "opportunity": {
       "status": {
         "switch": {
-          "field": "opportunity_status",
+          "field": "summary.opportunity_status",
           "case": { "active": "open", "inactive": "closed" },
           "default": "custom",
         },
       },
-      "amount": { "field": "opportunity_amount" },
+      "amount": { "field": "summary.opportunity_amount" },
     }
   }
   ```
@@ -72,8 +51,10 @@ description: |-
   ```json
   {
     "id": "123",
-    "opportunity_status": "active",
-    "opportunity_amount": 100,
+    "summary": {
+      "opportunity_status": "active",
+      "opportunity_amount": 100,
+    },
   }
   ```
 
@@ -84,3 +65,4 @@ description: |-
     "id": "123",
     "opportunity": { "status": "open", "amount": 100 },
   }
+  ```

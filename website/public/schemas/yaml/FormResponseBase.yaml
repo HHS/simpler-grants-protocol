@@ -5,8 +5,8 @@ properties:
   id:
     $ref: uuid.yaml
     description: The unique identifier for the form response
-  form:
-    $ref: Form.yaml
+  formId:
+    $ref: uuid.yaml
     description: The form being responded to
   response:
     $ref: "#/$defs/RecordUnknown"
@@ -18,6 +18,9 @@ properties:
     type: array
     items: {}
     description: The validation errors for the form response
+  customFields:
+    $ref: "#/$defs/RecordCustomField"
+    description: Custom attributes about the form response
   createdAt:
     type: string
     format: date-time
@@ -28,15 +31,41 @@ properties:
     description: The timestamp (in UTC) at which the record was last modified.
 required:
   - id
-  - form
+  - formId
   - response
   - status
-  - validationErrors
   - createdAt
   - lastModifiedAt
+examples:
+  - id: 123e4567-e89b-12d3-a456-426614174000
+    formId: 123e4567-e89b-12d3-a456-426614174000
+    response:
+      firstName: John
+      lastName: Doe
+      email: john.doe@example.com
+      phone: 123-456-7890
+      address:
+        street: 123 Main St
+        city: Anytown
+        state: CA
+        zip: "12345"
+        country: null
+    status:
+      value: inProgress
+      description: The form response is in progress
+    validationErrors:
+      - field: address.country
+        message: Country is required
+    createdAt: 2021-01-01T00:00:00Z
+    lastModifiedAt: 2021-01-01T00:00:00Z
 description: The base model for a form response
 $defs:
   RecordUnknown:
     type: object
     properties: {}
     unevaluatedProperties: {}
+  RecordCustomField:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: CustomField.yaml

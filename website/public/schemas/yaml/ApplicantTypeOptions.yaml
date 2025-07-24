@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ApplicantTypeOptions.yaml
+type: string
+enum:
+  - individual
+  - organization
+  - government_state
+  - government_county
+  - government_municipal
+  - government_special_district
+  - government_tribal
+  - organization_tribal_other
+  - school_district_independent
+  - higher_education_public
+  - higher_education_private
+  - non_profit_with_501c3
+  - nonprofit_without_501c3
+  - for_profit_small_business
+  - for_profit_not_small_business
+  - unrestricted
+  - custom
+description: The set of possible applicant types

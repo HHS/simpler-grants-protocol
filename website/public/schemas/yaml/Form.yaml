@@ -14,7 +14,9 @@ properties:
   instructions:
     anyOf:
       - type: string
-      - $ref: File.yaml
+      - type: array
+        items:
+          $ref: File.yaml
     description: The form's instructions.
   jsonSchema:
     $ref: FormJsonSchema.yaml
@@ -68,22 +70,16 @@ examples:
           scope: "#/properties/phone"
     mappingToCommonGrants:
       name:
-        firstName:
-          field: name.first
-        lastName:
-          field: name.last
+        firstName: {}
+        lastName: {}
       emails:
-        primary:
-          field: email
+        primary: {}
       phones:
-        primary:
-          field: phone
+        primary: {}
     mappingFromCommonGrants:
       name:
-        first:
-          field: name.firstName
-        last:
-          field: name.lastName
+        first: {}
+        last: {}
       email: {}
       phone: {}
 description: A form for collecting data from a user.

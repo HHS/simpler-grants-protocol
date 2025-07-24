@@ -1,0 +1,12 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OpportunityDetails.yaml
+type: object
+properties:
+  competitions:
+    type: array
+    items:
+      $ref: CompetitionBase.yaml
+    description: The competitions associated with the opportunity
+allOf:
+  - $ref: OpportunityBase.yaml
+description: A funding opportunity with additional details, like available competitions.
