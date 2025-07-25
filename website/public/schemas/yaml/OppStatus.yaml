@@ -4,10 +4,10 @@ type: object
 properties:
   value:
     $ref: OppStatusOptions.yaml
-    description: The status value, from a predefined set of options
+    description: The status of the opportunity, from a predefined set of options
   customValue:
     type: string
-    description: A custom status value
+    description: A custom value for the status
   description:
     type: string
     description: A human-readable description of the status

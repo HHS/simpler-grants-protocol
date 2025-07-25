@@ -10,8 +10,12 @@ info:
 tags:
   - name: Opportunities
     description: Endpoints related to funding opportunities
+  - name: Competitions
+    description: Endpoints related to competitions, which are distinct application processes for the same funding opportunity
   - name: Applications
-    description: Endpoints related to applications for funding opportunities
+    description: Endpoints related to applications for a given competition
+  - name: Forms
+    description: Endpoints related to forms
   - name: required
     description: Endpoints that MUST be implemented by all CommonGrants APIs
   - name: optional
@@ -57,7 +61,7 @@ paths:
     post:
       operationId: Opportunities_search
       summary: Search opportunities
-      description: Search for opportunities based on the provided filters
+      description: Search for opportunities based on the provided filters.
       parameters: []
       responses:
         '200':
@@ -143,8 +147,8 @@ paths:
   /common-grants/opportunities/{id}:
     get:
       operationId: Opportunities_read
-      summary: View opportunity
-      description: View additional details about an opportunity
+      summary: View opportunity details
+      description: View details about an opportunity.
       parameters:
         - name: id
           in: path
@@ -769,10 +773,10 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppStatusOptions'
-          description: The status value, from a predefined set of options
+          description: The status of the opportunity, from a predefined set of options
         customValue:
           type: string
-          description: A custom status value
+          description: A custom value for the status
         description:
           type: string
           description: A human-readable description of the status
@@ -787,7 +791,12 @@ components:
         - open
         - closed
         - custom
-      description: The set of values accepted for opportunity status
+      description: |-
+        The set of values accepted for opportunity status:
+        - `forecasted`: The opportunity is forecasted and not yet open for applications
+        - `open`: The opportunity is open for applications
+        - `closed`: The opportunity is no longer accepting applications
+        - `custom`: A custom status
     CommonGrants.Models.OppTimeline:
       type: object
       properties:

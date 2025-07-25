@@ -10,7 +10,6 @@ properties:
     description: The validation rules for the competition forms
 required:
   - forms
-  - validation
 examples:
   - forms:
       formA:
@@ -47,22 +46,16 @@ examples:
               scope: "#/properties/phone"
         mappingToCommonGrants:
           name:
-            firstName:
-              field: name.first
-            lastName:
-              field: name.last
+            firstName: {}
+            lastName: {}
           emails:
-            primary:
-              field: email
+            primary: {}
           phones:
-            primary:
-              field: phone
+            primary: {}
         mappingFromCommonGrants:
           name:
-            first:
-              field: name.firstName
-            last:
-              field: name.lastName
+            first: {}
+            last: {}
           email: {}
           phone: {}
       formB:
@@ -99,22 +92,16 @@ examples:
               scope: "#/properties/phone"
         mappingToCommonGrants:
           name:
-            firstName:
-              field: name.first
-            lastName:
-              field: name.last
+            firstName: {}
+            lastName: {}
           emails:
-            primary:
-              field: email
+            primary: {}
           phones:
-            primary:
-              field: phone
+            primary: {}
         mappingFromCommonGrants:
           name:
-            first:
-              field: name.firstName
-            last:
-              field: name.lastName
+            first: {}
+            last: {}
           email: {}
           phone: {}
     validation:

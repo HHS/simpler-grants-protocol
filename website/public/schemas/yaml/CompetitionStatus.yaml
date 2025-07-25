@@ -4,10 +4,13 @@ type: object
 properties:
   value:
     $ref: CompetitionStatusOptions.yaml
+    description: The status of the competition, from a predefined set of options
   customValue:
     type: string
+    description: A custom value for the status
   description:
     type: string
+    description: A human-readable description of the status
 required:
   - value
 examples:

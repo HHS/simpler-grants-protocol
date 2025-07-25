@@ -23,6 +23,10 @@ properties:
         format: date-time
       - type: "null"
     description: The date and time the application was submitted
+  validationErrors:
+    type: array
+    items: {}
+    description: The validation errors for the application and form responses
   customFields:
     $ref: "#/$defs/RecordCustomField"
     description: The custom fields about the application
@@ -42,6 +46,41 @@ required:
   - status
   - createdAt
   - lastModifiedAt
+examples:
+  - id: 123e4567-e89b-12d3-a456-426614174000
+    name: My Application
+    competitionId: 123e4567-e89b-12d3-a456-426614174000
+    formResponses:
+      formA:
+        applicationId: 123e4567-e89b-12d3-a456-426614174000
+        id: 123e4567-e89b-12d3-a456-426614174000
+        formId: 123e4567-e89b-12d3-a456-426614174000
+        response:
+          firstName: John
+          lastName: Doe
+          email: john.doe@example.com
+          phone: 123-456-7890
+          address:
+            street: 123 Main St
+            city: Anytown
+            state: CA
+            zip: "12345"
+            country: null
+        status:
+          value: inProgress
+          description: The form response is in progress
+        validationErrors:
+          - field: address.country
+            message: Country is required
+        createdAt: 2021-01-01T00:00:00Z
+        lastModifiedAt: 2021-01-01T00:00:00Z
+    status:
+      value: inProgress
+      description: The application is in progress.
+    submittedAt: null
+    createdAt: 2021-01-01T00:00:00Z
+    lastModifiedAt: 2021-01-01T00:00:00Z
+description: The base model for an application to a competition for a funding opportunity
 $defs:
   RecordAppFormResponse:
     type: object

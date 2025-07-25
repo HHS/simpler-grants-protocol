@@ -5,3 +5,8 @@ enum:
   - open
   - closed
   - custom
+description: |-
+  The set of values accepted for competition status
+  - `open`: The competition is open for applications
+  - `closed`: The competition is no longer accepting applications
+  - `custom`: A custom status

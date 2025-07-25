@@ -6,4 +6,9 @@ enum:
   - open
   - closed
   - custom
-description: The set of values accepted for opportunity status
+description: |-
+  The set of values accepted for opportunity status:
+  - `forecasted`: The opportunity is forecasted and not yet open for applications
+  - `open`: The opportunity is open for applications
+  - `closed`: The opportunity is no longer accepting applications
+  - `custom`: A custom status

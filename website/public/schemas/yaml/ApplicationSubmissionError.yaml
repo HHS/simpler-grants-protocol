@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ApplicationSubmissionError.yaml
+type: object
+properties:
+  status:
+    type: number
+    const: 400
+    examples:
+      - 400
+required:
+  - status
+allOf:
+  - $ref: Error.yaml
+examples:
+  - status: 400
+    message: Application submission failed due to validation errors
+    errors:
+      - field: formA.name
+        message: Name is required
+description: A failure to submit an application due to validation errors

@@ -1,6 +1,8 @@
 ---
 title: Opportunity
 description: The data models for a funding opportunity
+sidebar:
+  order: 1
 opportunityBase:
   example:
     code: |
@@ -59,6 +61,7 @@ opportunityBase:
           }
         },
         "source": "https://grants.gov/opportunity/123",
+        "acceptedApplicantTypes": ["individual", "organization"],
         "customFields": {
           "programArea": {
             "name": "programArea",
@@ -89,6 +92,64 @@ opportunityBase:
       path: "lib/python-sdk/common_grants_sdk/schemas/models/opp_base.py"
       startLine: 15
       endLine: 42
+opportunityDetails:
+  example:
+    code: |
+      {
+        "id": "049b4b15-f219-4037-901e-cd95ac32fbc8",
+        "title": "Healthcare Innovation Research Grant",
+        "description": "Funding for innovative healthcare delivery solutions",
+        "status": {
+          "value": "open",
+          "description": "Opportunity is actively accepting applications"
+        },
+        "funding": {
+          "totalAmountAvailable": {
+            "amount": "1000000.00", 
+            "currency": "USD"
+          },
+          "minAwardAmount": {
+            "amount": "10000.00",
+            "currency": "USD"
+          },
+          "maxAwardAmount": {
+            "amount": "50000.00",
+            "currency": "USD"
+          },
+          "minAwardCount": 5,
+          "maxAwardCount": 20,
+          "estimatedAwardCount": 10
+        },
+        "keyDates": {
+          "postDate": {
+            "name": "Opportunity posted",
+            "eventType": "singleDate",
+            "date": "2024-03-01",
+            "description": "Opportunity is posted publicly"
+          },
+          "closeDate": {
+            "name": "Opportunity closed",
+            "eventType": "singleDate",
+            "date": "2024-04-30",
+            "description": "Opportunity is closed to all applications"
+          },
+        },
+        "acceptedApplicantTypes": ["individual", "organization"],
+        "competitions": [
+          {
+            "id": "123",
+            "title": "Healthcare Innovation Competition"
+          }
+        ]
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OpportunityDetails.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/opportunity/base.tsp"
+      startLine: 83
+      endLine: 88
 oppStatus:
   example:
     code: |
@@ -240,6 +301,36 @@ A funding opportunity, such as a grant or loan.
   jsonSchema={frontmatter.opportunityBase.jsonSchema}
   typeSpec={frontmatter.opportunityBase.typeSpec}
   python={frontmatter.opportunityBase.python}
+/>
+
+## OpportunityDetails
+
+A funding opportunity with additional details, like available competitions.
+
+### Table
+
+| Property               | Type                                                                                   | Required | Description                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------- |
+| id                     | [uuid](/protocol/types/string#uuid)                                                    | Yes      | Globally unique id for the opportunity                         |
+| title                  | [string](/protocol/types/string#string)                                                | Yes      | Title or name of the funding opportunity                       |
+| status                 | [OppStatus](#oppstatus)                                                                | Yes      | Status of the opportunity                                      |
+| description            | [string](/protocol/types/string#string)                                                | Yes      | Description of the opportunity's purpose and scope             |
+| funding                | [OppFunding](#oppfunding)                                                              | No       | Details about the funding available                            |
+| keyDates               | [OppTimeline](#opptimeline)                                                            | No       | Key dates for the opportunity                                  |
+| source                 | [url](/protocol/types/string#url)                                                      | No       | URL for the original source of the opportunity                 |
+| acceptedApplicantTypes | [ApplicantType](/protocol/models/applicant-type#applicanttype)                         | No       | The types of applicants that are accepted for this opportunity |
+| competitions           | [CompetitionBase](/protocol/models/competition#competitionbase)                        | No       | The competitions associated with the opportunity               |
+| customFields           | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Additional custom fields specific to this opportunity          |
+| createdAt              | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created         |
+| lastModifiedAt         | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was last modified   |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.opportunityDetails.example}
+  jsonSchema={frontmatter.opportunityDetails.jsonSchema}
+  typeSpec={frontmatter.opportunityDetails.typeSpec}
+  python={frontmatter.opportunityDetails.python}
 />
 
 ## OppStatus

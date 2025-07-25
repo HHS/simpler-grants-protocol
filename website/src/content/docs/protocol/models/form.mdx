@@ -1,6 +1,8 @@
 ---
 title: Form
 description: A form for collecting data from a user
+sidebar:
+  order: 5
 form:
   example:
     code: |
@@ -68,7 +70,7 @@ form:
     file:
       path: "lib/core/lib/core/models/form.tsp"
       startLine: 9
-      endLine: 38
+      endLine: 39
 formJsonSchema:
   example:
     code: |
@@ -90,8 +92,8 @@ formJsonSchema:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/form.tsp"
-      startLine: 44
-      endLine: 48
+      startLine: 45
+      endLine: 50
 formUISchema:
   example:
     code: |
@@ -116,8 +118,8 @@ formUISchema:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/form.tsp"
-      startLine: 54
-      endLine: 58
+      startLine: 56
+      endLine: 61
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -128,17 +130,17 @@ A form for collecting data from a user.
 
 ### Table
 
-| Property                | Type                                                                                   | Required | Description                                                                |
-| ----------------------- | -------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
-| id                      | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The form's unique identifier                                               |
-| name                    | [string](/protocol/types/string#string)                                                | Yes      | The form's name                                                            |
-| description             | [string](/protocol/types/string#string)                                                | No       | The form's description                                                     |
-| instructions            | [string](/protocol/types/string#string) \| [File](/protocol/fields/file)               | No       | The form's instructions                                                    |
-| jsonSchema              | [FormJsonSchema](#formjsonschema)                                                      | No       | The form's JSON schema used to render the form and validate responses      |
-| uiSchema                | [FormUISchema](#formuischema)                                                          | No       | The form's UI schema used to render the form in the browser                |
-| mappingToCommonGrants   | [MappingSchema](/protocol/models/mapping)                                              | No       | A mapping from form schema to CommonGrants schema                          |
-| mappingFromCommonGrants | [MappingSchema](/protocol/models/mapping)                                              | No       | A mapping from CommonGrants schema to form schema                          |
-| customFields            | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Custom attributes about the form itself, not custom fields within the form |
+| Property                | Type                                                                                                             | Required | Description                                                                |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
+| id                      | [uuid](/protocol/types/string#uuid)                                                                              | Yes      | The form's unique identifier                                               |
+| name                    | [string](/protocol/types/string#string)                                                                          | Yes      | The form's name                                                            |
+| description             | [string](/protocol/types/string#string)                                                                          | No       | The form's description                                                     |
+| instructions            | [string](/protocol/types/string#string) or [Array](/protocol/types/other#array)\<[File](/protocol/fields/file)\> | No       | The form's instructions                                                    |
+| jsonSchema              | [FormJsonSchema](#formjsonschema)                                                                                | No       | The form's JSON schema used to render the form and validate responses      |
+| uiSchema                | [FormUISchema](#formuischema)                                                                                    | No       | The form's UI schema used to render the form in the browser                |
+| mappingToCommonGrants   | [MappingSchema](/protocol/models/mapping)                                                                        | No       | A mapping from form schema to CommonGrants schema                          |
+| mappingFromCommonGrants | [MappingSchema](/protocol/models/mapping)                                                                        | No       | A mapping from CommonGrants schema to form schema                          |
+| customFields            | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\>                           | No       | Custom attributes about the form itself, not custom fields within the form |
 
 ### Formats
 

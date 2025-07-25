@@ -1,6 +1,8 @@
 ---
 title: Application
 description: Data model for an application to a funding opportunity
+sidebar:
+  order: 3
 applicationBase:
   example:
     code: |
@@ -12,10 +14,11 @@ applicationBase:
           // Form responses would be here
         },
         "status": {
-          "value": "submitted",
-          "description": "Application has been submitted."
+          "value": "inProgress",
+          "description": "Application is in progress."
         },
-        "submittedAt": "2024-01-01T00:00:00Z",
+        "validationErrors": [],
+        "submittedAt": null,
         "customFields": {
           "pctComplete": {
             "name": "Percentage Complete",
@@ -32,7 +35,7 @@ applicationBase:
     file:
       path: "lib/core/lib/core/models/application.tsp"
       startLine: 3
-      endLine: 27
+      endLine: 33
 appStatus:
   example:
     code: |
@@ -46,8 +49,8 @@ appStatus:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 33
-      endLine: 44
+      startLine: 39
+      endLine: 51
 appStatusOptions:
   example:
     code: '"submitted"'
@@ -57,8 +60,8 @@ appStatusOptions:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 50
-      endLine: 66
+      startLine: 57
+      endLine: 70
 appFormResponse:
   example:
     code: |
@@ -92,8 +95,8 @@ appFormResponse:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 72
-      endLine: 75
+      startLine: 76
+      endLine: 85
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -104,15 +107,17 @@ Base model for an application to a funding opportunity.
 
 ### Table
 
-| Property      | Type                                                                                   | Required | Description                                     |
-| ------------- | -------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
-| id            | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the application       |
-| name          | [string](/protocol/types/string#string)                                                | Yes      | The name of the application                     |
-| competitionId | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the competition       |
-| formResponses | [Record](/protocol/types/other#record)\<[AppFormResponse](#appformresponse)\>          | Yes      | The form responses for the application          |
-| status        | [AppStatus](#appstatus)                                                                | Yes      | The status of the application                   |
-| submittedAt   | [utcDateTime](/protocol/types/date#utcdatetime)                                        | No       | The date and time the application was submitted |
-| customFields  | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields about the application         |
+| Property       | Type                                                                                   | Required | Description                                                  |
+| -------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
+| id             | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the application                    |
+| name           | [string](/protocol/types/string#string)                                                | Yes      | The name of the application                                  |
+| competitionId  | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the competition                    |
+| formResponses  | [Record](/protocol/types/other#record)\<[AppFormResponse](#appformresponse)\>          | Yes      | The form responses for the application                       |
+| status         | [AppStatus](#appstatus)                                                                | Yes      | The status of the application                                |
+| submittedAt    | [utcDateTime](/protocol/types/date#utcdatetime)                                        | No       | The date and time the application was submitted              |
+| customFields   | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields about the application                      |
+| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created       |
+| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was last modified |
 
 ### Formats
 
@@ -128,11 +133,11 @@ The status of an application.
 
 ### Table
 
-| Property    | Type                                  | Required | Description                    |
-| ----------- | ------------------------------------- | -------- | ------------------------------ |
-| value       | [AppStatusOptions](#appstatusoptions) | Yes      | The status of the application. |
-| customValue | string                                | No       | A custom value for the status. |
-| description | string                                | No       | A description of the status.   |
+| Property    | Type                                    | Required | Description                    |
+| ----------- | --------------------------------------- | -------- | ------------------------------ |
+| value       | [AppStatusOptions](#appstatusoptions)   | Yes      | The status of the application. |
+| customValue | [string](/protocol/types/string#string) | No       | A custom value for the status. |
+| description | [string](/protocol/types/string#string) | No       | A description of the status.   |
 
 ### Formats
 
@@ -148,13 +153,13 @@ The default set of values accepted for application status.
 
 ### Table
 
-| Value     | Description                         |
-| --------- | ----------------------------------- |
-| draft     | The application is a draft          |
-| submitted | The application has been submitted. |
-| accepted  | The application has been accepted.  |
-| rejected  | The application has been rejected.  |
-| custom    | The application has a custom status |
+| Value      | Description                         |
+| ---------- | ----------------------------------- |
+| inProgress | The application is in progress      |
+| submitted  | The application has been submitted. |
+| accepted   | The application has been accepted.  |
+| rejected   | The application has been rejected.  |
+| custom     | A custom status                     |
 
 ### Formats
 
@@ -170,16 +175,17 @@ A form response associated with an application.
 
 ### Table
 
-| Property         | Type                                                                    | Required | Description                                                  |
-| ---------------- | ----------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
-| id               | [uuid](/protocol/types/string#uuid)                                     | Yes      | The unique identifier for the form response                  |
-| form             | [Form](/protocol/models/form)                                           | Yes      | The form being responded to                                  |
-| response         | [Record](/protocol/types/other#record)\<unknown\>                       | Yes      | The response to the form                                     |
-| status           | [FormResponseStatus](/protocol/models/form-response#formresponsestatus) | Yes      | The status of the form response                              |
-| validationErrors | [Array](/protocol/types/other#array)\<unknown\>                         | Yes      | The validation errors for the form response                  |
-| applicationId    | [uuid](/protocol/types/string#uuid)                                     | Yes      | The unique identifier for the application                    |
-| createdAt        | [utcDateTime](/protocol/types/date#utcdatetime)                         | Yes      | The timestamp (in UTC) at which the record was created       |
-| lastModifiedAt   | [utcDateTime](/protocol/types/date#utcdatetime)                         | Yes      | The timestamp (in UTC) at which the record was last modified |
+| Property         | Type                                                                                   | Required | Description                                                  |
+| ---------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
+| id               | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the form response                  |
+| form             | [Form](/protocol/models/form)                                                          | Yes      | The form being responded to                                  |
+| response         | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\>     | Yes      | The response to the form                                     |
+| status           | [FormResponseStatus](/protocol/models/form-response#formresponsestatus)                | Yes      | The status of the form response                              |
+| validationErrors | [Array](/protocol/types/other#array)\<[unknown](/protocol/types/other#unknown)\>       | No       | The validation errors for the form response                  |
+| customFields     | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields about the form response                    |
+| applicationId    | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the application                    |
+| createdAt        | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created       |
+| lastModifiedAt   | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was last modified |
 
 ### Formats
 

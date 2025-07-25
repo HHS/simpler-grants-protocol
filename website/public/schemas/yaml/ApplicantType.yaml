@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ApplicantType.yaml
+type: object
+properties:
+  value:
+    $ref: ApplicantTypeOptions.yaml
+    description: The type of applicant
+  customValue:
+    type: string
+    description: The custom value for the applicant type
+  description:
+    type: string
+    description: The description of the applicant type
+required:
+  - value
+examples:
+  - value: individual
+    description: An individual applicant
+  - value: organization
+    description: Any type of organization
+description: The type of applicant eligible to apply for funding

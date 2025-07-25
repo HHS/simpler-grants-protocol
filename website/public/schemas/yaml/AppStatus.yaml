@@ -4,16 +4,16 @@ type: object
 properties:
   value:
     $ref: AppStatusOptions.yaml
-    description: The status of the application.
+    description: The status of the application, from a predefined set of options
   customValue:
     type: string
-    description: A custom value for the status.
+    description: A custom value for the status
   description:
     type: string
-    description: A description of the status.
+    description: A human-readable description of the status
 required:
   - value
 examples:
   - value: submitted
     description: The application has been submitted.
-description: The status of the application.
+description: The status of the application

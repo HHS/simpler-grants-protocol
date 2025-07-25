@@ -21,6 +21,27 @@ error:
       path: "lib/core/lib/core/responses/error.tsp"
       startLine: 15
       endLine: 27
+applicationSubmissionError:
+  example:
+    code: |
+      {
+        "status": 400,
+        "message": "Application submission failed due to validation errors",
+        "errors": [
+          {
+            "field": "formA.name",
+            "message": "Name is required"
+          }
+        ]
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ApplicationSubmissionError.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/responses/error.tsp"
+      startLine: 32
+      endLine: 42
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -63,6 +84,26 @@ using CommonGrants.Responses;
 @get
 op getTest(): Ok<TestModel> | Error;
 ```
+
+## ApplicationSubmissionError
+
+A failure to submit an application due to validation errors.
+
+### Table
+
+| Property | Type                                                                             | Required | Description          |
+| -------- | -------------------------------------------------------------------------------- | -------- | -------------------- |
+| status   | [integer](/protocol/types/numeric#integer)                                       | Yes      | The HTTP status code |
+| message  | [string](/protocol/types/string#string)                                          | Yes      | The error message    |
+| errors   | [Array](/protocol/types/other#array)\<[unknown](/protocol/types/other#unknown)\> | Yes      | The errors           |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.applicationSubmissionError.example}
+  jsonSchema={frontmatter.applicationSubmissionError.jsonSchema}
+  typeSpec={frontmatter.applicationSubmissionError.typeSpec}
+/>
 
 ## Common Error Types
 

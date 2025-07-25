@@ -2,17 +2,29 @@ $schema: https://json-schema.org/draft/2020-12/schema
 $id: MappingSwitchFunction.yaml
 type: object
 properties:
-  field:
-    type: string
-    description: The field in the source data to switch on.
-  case:
-    $ref: "#/$defs/RecordUnknown"
-    description: An object mapping source field values to desired output values.
-  default:
-    description: The default value to output if no case matches the source field value.
+  switch:
+    type: object
+    properties:
+      field:
+        type: string
+        description: The field in the source data to switch on.
+      case:
+        $ref: "#/$defs/RecordUnknown"
+        description: An object mapping source field values to desired output values.
+      default:
+        description: The default value to output if no case matches the source field value.
+    required:
+      - field
+      - case
 required:
-  - field
-  - case
+  - switch
+examples:
+  - switch:
+      field: summary.opportunity_status
+      case:
+        active: open
+        inactive: closed
+      default: custom
 description: Returns a new value based on the value of a field in the source data using a switch statement.
 $defs:
   RecordUnknown:

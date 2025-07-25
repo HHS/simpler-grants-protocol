@@ -1,6 +1,24 @@
 ---
 title: Name
 description: Data model for a person's name
+name:
+  example:
+    code: |
+      {
+        "prefix": "Dr.",
+        "firstName": "Jane",
+        "middleName": "Edward",
+        "lastName": "Doe",
+        "suffix": "Jr."
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Name.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/name.tsp"
+      startLine: 3
+      endLine: 21
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -20,24 +38,7 @@ A person's name.
 ### Formats
 
 <SchemaFormatTabs
-  jsonSchema={{
-    file: { path: "website/public/schemas/yaml/Name.yaml" },
-  }}
-  typeSpec={{
-    file: {
-      path: "lib/core/lib/core/fields/name.tsp",
-      startLine: 3,
-      endLine: 20,
-    },
-  }}
-  example={{
-    code: `
-  {
-    "prefix": "Dr.",
-    "firstName": "Jane",
-    "middleName": "Edward",
-    "lastName": "Doe",
-    "suffix": "Jr."
-  }`,
-  }}
+  example={frontmatter.name.example}
+  jsonSchema={frontmatter.name.jsonSchema}
+  typeSpec={frontmatter.name.typeSpec}
 />

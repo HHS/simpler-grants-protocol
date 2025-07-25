@@ -11,9 +11,6 @@ properties:
   otherDates:
     $ref: "#/$defs/RecordEvent"
     description: The date the competition was created
-required:
-  - openDate
-  - closeDate
 examples:
   - openDate:
       name: Open Date

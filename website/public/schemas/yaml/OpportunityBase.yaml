@@ -24,6 +24,11 @@ properties:
   keyDates:
     $ref: OppTimeline.yaml
     description: Key dates for the opportunity, such as when the application opens and closes
+  acceptedApplicantTypes:
+    type: array
+    items:
+      $ref: ApplicantType.yaml
+    description: The type of applicant for the opportunity
   source:
     type: string
     format: uri

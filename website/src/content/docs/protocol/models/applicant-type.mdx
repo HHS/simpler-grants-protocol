@@ -1,0 +1,78 @@
+---
+title: Applicant Type
+description: The type of applicant eligible to apply for a funding opportunity.
+sidebar:
+  order: 4
+applicantType:
+  example:
+    code: |
+      {
+        "value": "individual",
+        "description": "An individual applicant"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ApplicantType.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/applicant-type.tsp"
+      startLine: 7
+      endLine: 20
+applicantTypeOptions:
+  example:
+    code: '"individual"'
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ApplicantTypeOptions.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/applicant-type.tsp"
+      startLine: 26
+      endLine: 79
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+
+## ApplicantType
+
+The type of applicant for a funding opportunity.
+
+### Table
+
+| Property    | Type                                          | Required | Description                            |
+| ----------- | --------------------------------------------- | -------- | -------------------------------------- |
+| value       | [ApplicantTypeOptions](#applicanttypeoptions) | Yes      | The type of applicant                  |
+| customValue | [string](/protocol/types/string#string)       | No       | The custom value of the applicant type |
+| description | [string](/protocol/types/string#string)       | No       | The description of the applicant type  |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.applicantType.example}
+  jsonSchema={frontmatter.applicantType.jsonSchema}
+  typeSpec={frontmatter.applicantType.typeSpec}
+/>
+
+## ApplicantTypeOptions
+
+### Options
+
+| Option                        | Description                                                          |
+| ----------------------------- | -------------------------------------------------------------------- |
+| individual                    | The applicant is an individual                                       |
+| organization                  | Any type of organization                                             |
+| government_state              | State government                                                     |
+| government_county             | County government                                                    |
+| government_municipal          | City or township government                                          |
+| government_special_district   | Special district government                                          |
+| government_tribal             | Federally recognized Native American tribal government               |
+| organization_tribal_other     | Native American tribal organization that is not federally recognized |
+| school_district_independent   | Independent school district                                          |
+| higher_education_public       | Public or state institution of higher education                      |
+| higher_education_private      | Private institution of higher education                              |
+| non_profit_with_501c3         | Non-profit organization with 501(c)(3) status                        |
+| nonprofit_without_501c3       | Non-profit organization without 501(c)(3) status                     |
+| for_profit_small_business     | For-profit small business                                            |
+| for_profit_not_small_business | For-profit organization that is not a small business                 |
+| unrestricted                  | Anyone can apply (unrestricted)                                      |
+| custom                        | Custom applicant type                                                |
