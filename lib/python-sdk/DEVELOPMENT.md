@@ -55,3 +55,5 @@ Verify types with MyPy:
 ```bash
 poetry run mypy .
 ```
+
+## Release runbook
