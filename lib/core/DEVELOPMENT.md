@@ -1,8 +1,26 @@
 # CommonGrants core library development guide
 
+This document provides instructions for common development tasks in the CommonGrants core library.
+
 ## Overview
 
 The CommonGrants core library is a TypeSpec library that defines the core models and routes for the CommonGrants protocol. It is designed to be imported and extended by individual implementations of the CommonGrants protocol.
+
+## Development commands
+
+| Command                | Description                                                               |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `npm install`          | Installs dependencies                                                     |
+| `npm run clean`        | Removes dist and tsp-output directories                                   |
+| `npm run build`        | Compiles TypeScript code to JavaScript                                    |
+| `npm run typespec`     | Runs the TypeSpec compiler to generate the OpenAPI specs and JSON schemas |
+| `npm run prepare`      | Run build (pre-install hook)                                              |
+| `npm run lint`         | Run ESLint with automatic fixes                                           |
+| `npm run format`       | Run automatic formatting and fix issues                                   |
+| `npm run check:lint`   | Check linting, fail if issues are found                                   |
+| `npm run check:format` | Check formatting, fail if issues are found                                |
+| `npm run checks`       | Run all CI checks listed above                                            |
+| `npm pack`             | Creates a tarball of the library to simulate installing it from npm       |
 
 ## Release runbook
 
