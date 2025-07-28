@@ -3,7 +3,7 @@ import { checkExtraRoutes } from "./utils/check-extra-routes";
 import { checkMatchingRoutes } from "./utils/check-matching-routes";
 import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
 import { Document } from "./utils/types";
-import { CheckApiCommandOptions, CheckSpecCommandOptions } from "./check-args";
+import { CheckApiOptions, CheckSpecOptions } from "./check-args";
 import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
 import { convertOpenApiToV3, OpenAPISchema } from "./utils/convert-openapi-v3";
 import * as path from "path";
@@ -13,7 +13,7 @@ import { OpenAPIV3 } from "openapi-types";
 
 export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
-  async checkApi(apiUrl: string, specPath: string, options: CheckApiCommandOptions): Promise<void> {
+  async checkApi(apiUrl: string, specPath: string, options: CheckApiOptions): Promise<void> {
     console.log("Mock: Checking API", { apiUrl, specPath, options });
   }
 
@@ -26,7 +26,7 @@ export class DefaultCheckService {
    *   3) Checking for unexpected routes prefixed with /common-grants/
    *   4) Checking that matching routes are compatible
    */
-  async checkSpec(specPath: string, options: CheckSpecCommandOptions): Promise<void> {
+  async checkSpec(specPath: string, options: CheckSpecOptions): Promise<void> {
     // Get the base spec and implementation spec
     const baseSpecPath = options.base || getBaseSpecPath();
     const baseDoc = await loadAndParseSpec(baseSpecPath);

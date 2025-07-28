@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
 
+/**
+ * Positional arguments that must be passed to the `check api` command.
+ */
 export const CheckApiArgsSchema = z.object({
   apiUrl: z.string().url(),
   specPath: z
@@ -10,6 +13,9 @@ export const CheckApiArgsSchema = z.object({
     .or(z.string().endsWith(".yml")),
 });
 
+/**
+ * Positional arguments that must be passed to the `check spec` command.
+ */
 export const CheckSpecArgsSchema = z.object({
   specPath: z
     .string()
@@ -18,11 +24,18 @@ export const CheckSpecArgsSchema = z.object({
     .or(z.string().endsWith(".yml")),
 });
 
-export const CheckSpecCommandSchema = z.object({
+/**
+ * Optional arguments that can be passed to the `check spec` command using flags (e.g. `--base` or `--version`)
+ */
+export const CheckSpecOptionsSchema = z.object({
   base: z.string().optional(),
+  baseVersion: z.enum(["0.1.0", "0.2.0"]).optional(),
 });
 
-export const CheckApiCommandSchema = z.object({
+/**
+ * Optional arguments that can be passed to the `check api` command using flags (e.g. `--client` or `--report`)
+ */
+export const CheckApiOptionsSchema = z.object({
   client: z.string().optional(),
   report: z.enum(["json", "html"]).optional(),
   auth: z.string().optional(),
@@ -31,5 +44,5 @@ export const CheckApiCommandSchema = z.object({
 export type CheckApiArgs = z.infer<typeof CheckApiArgsSchema>;
 export type CheckSpecArgs = z.infer<typeof CheckSpecArgsSchema>;
 
-export type CheckApiCommandOptions = z.infer<typeof CheckApiCommandSchema>;
-export type CheckSpecCommandOptions = z.infer<typeof CheckSpecCommandSchema>;
+export type CheckApiOptions = z.infer<typeof CheckApiOptionsSchema>;
+export type CheckSpecOptions = z.infer<typeof CheckSpecOptionsSchema>;

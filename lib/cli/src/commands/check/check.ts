@@ -2,9 +2,9 @@ import { Command } from "commander";
 import { DefaultCheckService } from "./check-service";
 import {
   CheckApiArgsSchema,
-  CheckApiCommandSchema,
+  CheckApiOptionsSchema,
   CheckSpecArgsSchema,
-  CheckSpecCommandSchema,
+  CheckSpecOptionsSchema,
 } from "./check-args";
 
 export function checkCommand(program: Command) {
@@ -23,7 +23,7 @@ export function checkCommand(program: Command) {
     .action(async (apiUrl, specPath, options) => {
       try {
         const validatedArgs = CheckApiArgsSchema.parse({ apiUrl, specPath });
-        const validatedOptions = CheckApiCommandSchema.parse(options);
+        const validatedOptions = CheckApiOptionsSchema.parse(options);
         await validationService.checkApi(
           validatedArgs.apiUrl,
           validatedArgs.specPath,
@@ -44,10 +44,24 @@ export function checkCommand(program: Command) {
     .description("Validate a specification against the CommonGrants base spec")
     .argument("<specPath>", "Path or URL to TypeSpec or OpenAPI spec")
     .option("--base <path>", "Path to base spec for validation")
+    .option(
+      "--base-version <version>",
+      "Version of the CommonGrants OpenAPI spec to validate against. Note: Only major and minor versions are supported."
+    )
     .action(async (specPath, options) => {
       try {
         const validatedArgs = CheckSpecArgsSchema.parse({ specPath });
-        const validatedOptions = CheckSpecCommandSchema.parse(options);
+        const validatedOptions = CheckSpecOptionsSchema.parse(options);
+
+        // Handle conflict between --base and --base-version
+        if (validatedOptions.base && validatedOptions.baseVersion) {
+          console.warn(
+            "Warning: Both --base and --base-version are specified. Using --base and ignoring --base-version."
+          );
+          // Remove baseVersion from options to prioritize base
+          delete validatedOptions.baseVersion;
+        }
+
         await validationService.checkSpec(validatedArgs.specPath, validatedOptions);
       } catch (error) {
         if (error instanceof Error) {
