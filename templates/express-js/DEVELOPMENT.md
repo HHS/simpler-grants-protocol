@@ -20,12 +20,12 @@
 
 ## Release runbook
 
-Steps to update this template after a new version of the [core library](../../lib/core/README.md) has been released.
+Steps to follow after a new version of the [core library](../../lib/core/README.md) has been released.
 
-- [ ] I've updated [`package.json`](package.json) to use the latest version of the `@common-grants/core` library
-- [ ] I've updated the [`schemas/`](src/api/schemas/) sections to match the latest CommonGrants schemas
-- [ ] I've added all required and optional routes to [`controllers/`](src/api/controllers/)
-- [ ] All CI checks are passing
-- [ ] I've updated the `quickstart` section of [template.json](../template.json) to include all relevant paths
-- [ ] I've initialized a new project from the feature branch version of this template using `tsp init <path-to-raw-template.json> --template express-js`
-- [ ] I've successfully completed the steps in the [TypeScript user guide](../../website/src/content/docs/guides/using-typescript.mdx) after initializing a project with the feature branch template
+- [ ] [`package.json`](package.json) has been updated to use the latest version of the `@common-grants/core` library
+- [ ] The [`schemas/`](src/api/schemas/) sections have been updated to match the latest CommonGrants schemas
+- [ ] All required and optional routes have been added to [`controllers/`](src/api/controllers/)
+- [ ] All CI checks are passing (e.g. `npm run checks`, `npm run build`, and `npm audit`)
+- [ ] The `express-js` section of [template.json](../template.json) includes paths for all files that should be copied when initializing a new project. **Note:** This should be most, if not all, files in the template (e.g. TypeScript and TypeSpec files, `tspconfig.yaml`, `package.json`, etc.) but not `package-lock.json`
+- [ ] A new project has been initialized from the feature branch version of this template using `tsp init <path-to-raw-template.json> --template express-js`
+- [ ] The steps in the [TypeScript user guide](../../website/src/content/docs/guides/using-typescript.mdx) have been successfully completed after initializing a project with the feature branch template
