@@ -19,6 +19,6 @@ Steps to follow when a new version of the [core library](../../lib/core/README.m
 - [ ] [`package.json`](package.json) has been updated to use the latest version of the `@common-grants/core` library
 - [ ] All required and optional routes defined by the core library have been added to [`routes.tsp`](routes.tsp)
 - [ ] All CI checks are passing (e.g. `npm run checks`, `npm run typespec`)
-- [ ] The `quickstart` section of [`template.json`](../template.json) includes paths for all files that should be copied when initializing a new project. **Note:** This should be most, if not all, files in the template (e.g. TypeSpec files, `tspconfig.yaml`, `package.json`, etc.) but not `package-lock.json`
+- [ ] The `quickstart` section of [`template.json`](../template.json) includes paths for all files that should be copied when initializing a new project. **Note:** This should be most, if not all, files in the template (e.g. TypeSpec files, `tspconfig.yaml`, `package.json`, etc.) but not `package-lock.json`. For more information see the [TypeSpec scaffolding docs](https://typespec.io/docs/extending-typespec/writing-scaffolding-template/#adding-new-files).
 - [ ] A new project has been initialized from the feature branch version of this template using `tsp init <path-to-raw-template.json> --template quickstart`
 - [ ] The steps in the [Quickstart guide](../../website/src/content/docs/getting-started.mdx#quickstart) have been successfully completed after initializing a project with the feature branch template

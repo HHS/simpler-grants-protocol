@@ -27,7 +27,7 @@ Steps to follow when a new version of the [Python SDK](../../lib/python-sdk/READ
 - [ ] [`pyproject.toml`](pyproject.toml) has been updated to use the latest version of the Python SDK
 - [ ] Support has been added for all required or optional routes defined by the core library
 - [ ] All CI checks are passing (e.g. `make checks` and `make check-spec`)
-- [ ] The `fast-api` section of [`template.json`](../template.json) includes paths for all files that should be copied when initializing a new project. **Note:** This should be most, if not all, files in the template (e.g. python files, `pyproject.toml`, `Makefile`, etc.) but not `poetry.lock`
+- [ ] The `fast-api` section of [`template.json`](../template.json) includes paths for all files that should be copied when initializing a new project. **Note:** This should be most, if not all, files in the template (e.g. python files, `pyproject.toml`, `Makefile`, etc.) but not `poetry.lock`. For more information see the [TypeSpec scaffolding docs](https://typespec.io/docs/extending-typespec/writing-scaffolding-template/#adding-new-files).
 - [ ] A new project has been initialized from the feature branch version of this template using `tsp init <path-to-raw-template.json> --template fast-api`
 
 ### Development checklist - Website documentation
