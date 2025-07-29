@@ -20,19 +20,19 @@ This document provides instructions for common development tasks in the FastAPI 
 
 ## Release runbook
 
-Steps to update this template after a new version of the [Python SDK](../../lib/python-sdk/README.md) has been released.
+Steps to follow when a new version of the [Python SDK](../../lib/python-sdk/README.md) or [core library](../../lib/core/README.md) has been released.
 
-### Template updates checklist
+### Development checklist - FastAPI template
 
-- [ ] I've updated [`pyproject.toml`](pyproject.toml) to use the latest version of the Python SDK
-- [ ] I've added support for all new required or optional routes
-- [ ] All code quality checks, including the CommonGrants CLI `cg check spec` command are passing
-- [ ] I've updated the `fast-api` section of [`template.json`](../template.json) to include all relevant paths
-- [ ] I've initialized a new project from the feature branch version of this template using `tsp init <path-to-raw-template.json> --template fast-api`
+- [ ] [`pyproject.toml`](pyproject.toml) has been updated to use the latest version of the Python SDK
+- [ ] Support has been added for all required or optional routes defined by the core library
+- [ ] All CI checks are passing (e.g. `make checks` and `make check-spec`)
+- [ ] The `fast-api` section of [`template.json`](../template.json) includes paths for all files that should be copied when initializing a new project. **Note:** This should be most, if not all, files in the template (e.g. python files, `pyproject.toml`, `Makefile`, etc.) but not `poetry.lock`
+- [ ] A new project has been initialized from the feature branch version of this template using `tsp init <path-to-raw-template.json> --template fast-api`
 
-### Website updates checklist
+### Development checklist - Website documentation
 
-- [ ] I've reviewed and updated the Python tab for the following sections of the protocol docs, if they reference the FastAPI template:
+- [ ] The Python tab has been reviewed and updated for the following sections of the protocol docs, if they reference the FastAPI template:
   - [ ] [Types](../../website/src/content/docs/protocol/types/)
   - [ ] [Fields](../../website/src/content/docs/protocol/fields/)
   - [ ] [Models](../../website/src/content/docs/protocol/models/)
@@ -40,4 +40,4 @@ Steps to update this template after a new version of the [Python SDK](../../lib/
   - [ ] [Responses](../../website/src/content/docs/protocol/responses/)
   - [ ] [Pagination](../../website/src/content/docs/protocol/pagination.mdx)
   - [ ] [Sorting](../../website/src/content/docs/protocol/sorting.mdx)
-- [ ] I've successfully completed the steps in the [Python user guide](../../website/src/content/docs/guides/using-python.mdx) afer initializing a project with the feature branch template
+- [ ] The steps in the [Python user guide](../../website/src/content/docs/guides/using-python.mdx) have been successfully completed after initializing a project with the feature branch template
