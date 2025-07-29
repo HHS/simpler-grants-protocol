@@ -39,12 +39,12 @@ Steps to follow when preparing a new release of the CommonGrants core library.
 ### Pre-release checklist
 
 - [ ] Before merging:
-  - [ ] (Optional) A pre-release of the new version with an `alpha`, `beta`, or `rc` tag has been manually published to test the changes
+  - [ ] (Optional) A pre-release of the new version with an `alpha`, `beta`, or `rc` tag has been manually published to test the installation from npm
   - [ ] A [changeset](../README.md#step-2-generate-a-changeset) has been created with the correct revision type (MAJOR, MINOR, PATCH) and a meaningful summary of the changes made in this version
 - [ ] After merging:
   - [ ] The [CI - Bump Version & Create Tag](https://github.com/HHS/simpler-grants-protocol/actions/workflows/ci-bump-version.yml) GitHub action ran successfully
-  - [ ] A new `@common-grants/core` tag was created for this new version
-  - [ ] A new `@common-grants/cli` tag was created with a patch update
+  - [ ] A new `@common-grants/core` [tag](https://github.com/HHS/simpler-grants-protocol/tags) was created for this new version
+  - [ ] A new `@common-grants/cli` [tag](https://github.com/HHS/simpler-grants-protocol/tags) was created with a patch update
 
 ### Release checklist
 
