@@ -32,21 +32,31 @@ Steps to follow when preparing a new release of the CommonGrants core library.
 ### Pre-release checklist
 
 - [ ] Before merging:
-  - [ ] I've run `npm pack`, installed the package in a new directory outside this repo, and completed the quickstart guide in the [README](README.md)
-  - [ ] (Optional) I've manually published a pre-release of the new version with an `alpha`, `beta`, or `rc` tag to test the installation from npm
-  - [ ] I've [created a changeset](../README.md#step-2-generate-a-changeset) with the correct revision type (MAJOR, MINOR, PATCH) and a meaningful summary of the changes made in this version
+  - [ ] If commands were added or changed
+    - [ ] The [`README.md` usage section](README.md#usage) has been updated to include them
+    - [ ] The [man page](./man/cg.1) has been updated to include them
+  - [ ] `npm pack` has been run, the package has been installed in a new directory outside this repo, and all the commands listed in the [README](README.md#usage) have been tested
+  - [ ] (Optional) A pre-release of the new version with an `alpha`, `beta`, or `rc` tag has been manually published to test the installation from npm
+  - [ ] A [changeset](../README.md#step-2-generate-a-changeset) has been created with the correct revision type (MAJOR, MINOR, PATCH) and a meaningful summary of the changes made in this version
 - [ ] After merging:
   - [ ] The [CI - Bump Version & Create Tag](https://github.com/HHS/simpler-grants-protocol/actions/workflows/ci-bump-version.yml) GitHub action ran successfully
-  - [ ] A new `@common-grants/cli` tag was created with a patch update
+  - [ ] A new `@common-grants/cli` [tag](https://github.com/HHS/simpler-grants-protocol/tags) was created
 
 ### Release checklist
 
-- [ ] I've manually triggered the [CD - Deploy CLI Package to npm](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-deploy-lib-cli.yml) with the new `@common-grants/cli` tag
+- [ ] [CD - Deploy CLI Package to npm](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-deploy-lib-cli.yml) has been manually triggered with the new `@common-grants/cli` tag
 - [ ] A new [GitHub release](https://github.com/HHS/simpler-grants-protocol/releases) has been created, and the auto-generated release notes are accurate
 - [ ] The new version appears on [npm](https://www.npmjs.com/package/@common-grants/cli)
 
 ### Post-release checklist
 
-- [ ] I've updated the [**Quickstart template**](../../templates/quickstart/DEVELOPMENT.md) and guide
-- [ ] I've updated the [templates README.md](../../templates/README.md) if the `init` command was updated
-- [ ] I've updated the [FastAPI template](../../templates/fast-api/DEVELOPMENT.md) if the `check spec` command was updated
+- [ ] If the `init` command was updated, references to that command in the following locations have been updated:
+  - [ ] [`templates/README.md`](../../templates/README.md)
+  - [ ] [Fast API template README](../../templates/fast-api/README.md)
+  - [ ] [Express.js template README](../../templates/express-js/README.md)
+  - [ ] [Quickstart guide](../../website/src/content/docs/getting-started.mdx)
+  - [ ] [Using Python](../../website/src/content/docs/guides/using-python.mdx)
+  - [ ] [Using TypeScript](../../website/src/content/docs/guides/using-typescript.mdx)
+- [ ] If the `check spec` command was updated, references to that command in the following locations have been updated:
+  - [ ] [FastAPI template Makefile](../../templates/fast-api/Makefile)
+  - [ ] [California API example Makefile](../../examples/ca-opportunity-example/Makefile)
