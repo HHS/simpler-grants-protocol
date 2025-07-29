@@ -14,11 +14,11 @@ This document provides instructions for common development tasks in the Quicksta
 
 ## Release runbook
 
-Steps to update this template after a new version of the [core library](../../lib/core/README.md) has been released.
+Steps to follow when a new version of the [core library](../../lib/core/README.md) has been released.
 
-- [ ] I've updated [`package.json`](package.json) to use the latest version of the `@common-grants/core` library
-- [ ] I've added all required and optional routes to [`routes.tsp`](routes.tsp)
-- [ ] All CI checks are passing
-- [ ] I've updated the `quickstart` section of [`template.json`](../template.json) to include all relevant paths
-- [ ] I've initialized a new project from the feature branch version of this template using `tsp init <path-to-raw-template.json> --template quickstart`
-- [ ] I've successfully completed the steps in the [Quickstart guide](../../website/src/content/docs/getting-started.mdx#quickstart) after initializing a project with the feature branch template
+- [ ] [`package.json`](package.json) has been updated to use the latest version of the `@common-grants/core` library
+- [ ] All required and optional routes defined by the core library have been added to [`routes.tsp`](routes.tsp)
+- [ ] All CI checks are passing (e.g. `npm run checks`, `npm run typespec`)
+- [ ] The `quickstart` section of [`template.json`](../template.json) includes paths for all files that should be copied when initializing a new project. **Note:** This should be most, if not all, files in the template (e.g. TypeSpec files, `tspconfig.yaml`, `package.json`, etc.) but not `package-lock.json`
+- [ ] A new project has been initialized from the feature branch version of this template using `tsp init <path-to-raw-template.json> --template quickstart`
+- [ ] The steps in the [Quickstart guide](../../website/src/content/docs/getting-started.mdx#quickstart) have been successfully completed after initializing a project with the feature branch template
