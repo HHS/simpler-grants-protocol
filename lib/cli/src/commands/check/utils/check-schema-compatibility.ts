@@ -179,6 +179,26 @@ function checkObjectCompatibility(
     }
   }
 
+  // Step 5: Check the compatibility of additionalProperties schemas
+  // 1. Both are objects => validate impl schema against base schema
+  // 2. Base is object, impl is boolean => validate impl allows same or more
+  // 3. Base is boolean, impl is object => validate base allows same or more
+  const baseAdditionalProps = baseSchema.additionalProperties as OpenAPIV3.SchemaObject;
+  const implAdditionalProps = implSchema.additionalProperties as OpenAPIV3.SchemaObject;
+
+  if (baseAdditionalProps && implAdditionalProps) {
+    // Both are schema objects - validate compatibility
+    const flattenedBaseAdditionalProps = deepFlattenAllOf(baseAdditionalProps);
+    const flattenedImplAdditionalProps = deepFlattenAllOf(implAdditionalProps);
+    const additionalPropsErrors = checkSchemaCompatibility(
+      `${location}[prop]`,
+      flattenedBaseAdditionalProps,
+      flattenedImplAdditionalProps,
+      ctx
+    );
+    errors.addErrors(additionalPropsErrors.getAllErrors());
+  }
+
   return errors;
 }
 
