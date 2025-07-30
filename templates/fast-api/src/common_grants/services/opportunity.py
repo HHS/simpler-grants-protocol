@@ -4,6 +4,11 @@ from datetime import date
 from typing import Any
 from uuid import UUID
 
+from common_grants_sdk.schemas import (
+    PaginatedBodyParams,
+    PaginatedInfo,
+    SortedResultsInfo,
+)
 from fastapi import status
 
 from common_grants.schemas import (
@@ -11,8 +16,7 @@ from common_grants.schemas import (
     OpportunitiesSearchResponse,
 )
 from common_grants.schemas.models import OppFilters, OpportunityBase
-from common_grants.schemas.pagination import PaginationBodyParams, PaginationInfo
-from common_grants.schemas.response import FilterInfo, SortedResultsInfo
+from common_grants.schemas.response import FilterInfo
 from common_grants.schemas.sorting import OppSortBy, OppSorting
 from common_grants.services.utils import build_applied_filters, mock_opportunity
 
@@ -45,7 +49,7 @@ class OpportunityService:
         end_idx = start_idx + page_size
         items = self.opportunity_list[start_idx:end_idx]
 
-        pagination_info = PaginationInfo(
+        pagination_info = PaginatedInfo(
             page=page,
             pageSize=page_size,
             totalItems=len(self.opportunity_list),
@@ -63,7 +67,7 @@ class OpportunityService:
         self,
         filters: OppFilters | None = None,
         sorting: OppSorting | None = None,
-        pagination: PaginationBodyParams | None = None,
+        pagination: PaginatedBodyParams | None = None,
         search: str | None = None,
     ) -> OpportunitiesSearchResponse:
         """Search for opportunities based on the provided filters."""
@@ -73,7 +77,7 @@ class OpportunityService:
         if sorting is None:
             sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
         if pagination is None:
-            pagination = PaginationBodyParams()
+            pagination = PaginatedBodyParams()
 
         # Apply search filter
         filtered_opportunities = self.opportunity_list
@@ -86,11 +90,11 @@ class OpportunityService:
                 or (opp.description and search_lower in opp.description.lower())
             ]
 
-        # Create PaginationInfo object
+        # Create PaginatedInfo object
         start_idx = (pagination.page - 1) * pagination.page_size
         end_idx = start_idx + pagination.page_size
         items = filtered_opportunities[start_idx:end_idx]
-        pagination_info = PaginationInfo(
+        pagination_info = PaginatedInfo(
             page=pagination.page,
             pageSize=pagination.page_size,
             totalItems=len(filtered_opportunities),

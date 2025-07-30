@@ -35,6 +35,13 @@ from .models import (
     OppStatus,
     OppTimeline,
 )
+from .pagination import (
+    PaginatedBase,
+    PaginatedBodyParams,
+    PaginatedInfo,
+    PaginatedItems,
+)
+from .sorting import SortedResultsInfo
 from .types import (
     DecimalString,
     ISODate,
@@ -75,4 +82,11 @@ __all__ = [
     "OppFunding",
     "OppStatus",
     "OppTimeline",
+    # Paginated
+    "PaginatedBase",
+    "PaginatedBodyParams",
+    "PaginatedInfo",
+    "PaginatedItems",
+    # Sorting
+    "SortedResultsInfo",
 ]

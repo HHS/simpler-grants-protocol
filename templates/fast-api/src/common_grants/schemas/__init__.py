@@ -20,11 +20,6 @@ __all__ = [  # noqa: RUF022
     "StringArrayFilter",
     "ArrayOperator",
     "RangeOperator",
-    # Pagination
-    "PaginationBodyParams",
-    "PaginationBase",
-    "PaginationInfo",
-    "PaginatedItems",
     # Response
     "DefaultResponse",
     "OpportunityResponse",
@@ -73,12 +68,6 @@ from .models import (
     OppDefaultFilters,
     OppFilters,
     OpportunitySearchRequest,
-)
-from .pagination import (
-    PaginatedItems,
-    PaginationBase,
-    PaginationBodyParams,
-    PaginationInfo,
 )
 from .response import (
     DefaultResponse,
