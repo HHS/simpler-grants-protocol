@@ -1,23 +1,62 @@
 """Schemas for the CommonGrants API sorted responses."""
 
-from typing import Optional
+from enum import Enum
+from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 
 
-class SortedResultsInfo(BaseModel):
-    """Sorting information for search results."""
+class SortOrder(str, Enum):
+    """Sort order enumeration."""
 
-    sort_by: str = Field(
+    ASC = "asc"
+    DESC = "desc"
+
+
+class SortBase(BaseModel):
+    """Base class for sorting-related models."""
+
+    sort_by: Union[str, None] = Field(
         ...,
         alias="sortBy",
-        description="The field results are sorted by",
+        description="The field to sort by",
+        examples=["lastModifiedAt"],
     )
     custom_sort_by: Optional[str] = Field(
         default=None,
         alias="customSortBy",
-        description="Implementation-defined sort key used to sort the results, if applicable",
+        description="Implementation-defined sort key",
+        examples=["customField"],
     )
+
+    model_config = {"populate_by_name": True}
+
+
+class SortQueryParams(SortBase):
+    """Query parameters for sorting."""
+
+    sort_order: Optional[SortOrder] = Field(
+        default=None,
+        alias="sortOrder",
+        description="The order to sort by",
+        examples=[SortOrder.ASC],
+    )
+
+
+class SortBodyParams(SortBase):
+    """Sorting parameters included in the request body."""
+
+    sort_order: Optional[SortOrder] = Field(
+        default=None,
+        alias="sortOrder",
+        description="The order to sort by",
+        examples=[SortOrder.ASC],
+    )
+
+
+class SortedResultsInfo(SortBase):
+    """Sorting information for search results."""
+
     sort_order: str = Field(
         ...,
         alias="sortOrder",
@@ -28,5 +67,3 @@ class SortedResultsInfo(BaseModel):
         description="Non-fatal errors that occurred during sorting",
         json_schema_extra={"items": {"type": "string"}},
     )
-
-    model_config = {"populate_by_name": True}
