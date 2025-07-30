@@ -18,6 +18,11 @@ __all__ = [  # noqa: RUF022
     "MoneyRange",
     "MoneyRangeFilter",
     "InvalidMoneyValueError",
+    # Numeric Filters
+    "NumberArrayFilter",
+    "NumberComparisonFilter",
+    "NumberRange",
+    "NumberRangeFilter",
     # String Filters
     "StringArrayFilter",
     "StringComparisonFilter",
@@ -41,6 +46,12 @@ from .money import (
     MoneyRange,
     MoneyRangeFilter,
     InvalidMoneyValueError,
+)
+from .numeric import (
+    NumberArrayFilter,
+    NumberComparisonFilter,
+    NumberRange,
+    NumberRangeFilter,
 )
 from .string import (
     StringArrayFilter,
