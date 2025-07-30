@@ -1,6 +1,26 @@
 import { OpenAPIV3 } from "openapi-types";
 import mergeAllOf from "json-schema-merge-allof";
 
+// Simple cache to avoid redundant flattening of the same schemas
+let flattenCache = new WeakMap<OpenAPIV3.SchemaObject, OpenAPIV3.SchemaObject>();
+
+/**
+ * Clear the flatten cache. Useful for testing or when processing different documents.
+ */
+export function clearFlattenCache(): void {
+  // Create a new cache instance to clear all entries
+  flattenCache = new WeakMap<OpenAPIV3.SchemaObject, OpenAPIV3.SchemaObject>();
+}
+
+/**
+ * Get the current cache size (for debugging/testing)
+ */
+export function getFlattenCacheSize(): number {
+  // WeakMap doesn't have a size property, but we can estimate
+  // This is a placeholder for debugging purposes
+  return 0;
+}
+
 /**
  * Deeply flatten `allOf` and `anyOf` in a schema by:
  *   1) Resolving anyOf by selecting the first compatible option
@@ -9,6 +29,11 @@ import mergeAllOf from "json-schema-merge-allof";
  *   4) Repeating if new allOfs or anyOfs appear after processing
  */
 export function deepFlattenAllOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
+  // Check cache first
+  if (flattenCache.has(schema)) {
+    return flattenCache.get(schema)!;
+  }
+
   // Keep processing until no more allOf or anyOf structures remain
   let processedSchema = schema;
   let hasStructures = true;
@@ -27,6 +52,8 @@ export function deepFlattenAllOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.Sche
     hasStructures = hasAllOfOrAnyOfStructures(processedSchema);
   }
 
+  // Cache the result
+  flattenCache.set(schema, processedSchema);
   return processedSchema;
 }
 

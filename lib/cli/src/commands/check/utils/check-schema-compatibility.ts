@@ -1,5 +1,4 @@
 import { OpenAPIV3 } from "openapi-types";
-import { deepFlattenAllOf } from "./flatten-schemas";
 import { ErrorCollection } from "./error-utils";
 import { SchemaConflictError, SchemaContext } from "./types";
 
@@ -14,8 +13,8 @@ const ERROR_TYPE = "ROUTE_CONFLICT";
  *
  * We treat `baseSchema` as more "generic". That means:
  *  1) If baseSchema.type is undefined, that is "any" => allow impl any type
- *  2) If baseSchema has `additionalProperties` as a schema, any extra fields in impl
- *     must conform to that schema
+ *  2) If baseSchema defines a schema for `additionalProperties`, any extra fields
+ *     in impl must conform to that schema
  *  3) Required fields in baseSchema must be present in impl
  *  4) If baseSchema has a typed property (e.g. 'string', 'object'), then
  *     impl must match that type (unless base has no type).
@@ -108,8 +107,12 @@ function checkEnumConflict(
 /**
  * Checks whether object properties are compatible.
  *
- * This is a new implementation of the checkObjectCompatibility function.
- * It is more efficient and easier to understand.
+ * 1. Get matching, missing, and extra properties
+ * 2. Check that matching props are compatible
+ * 3. Handle missing props - only flag as errors if they are required in the base schema
+ * 4. Handle extra props - assume they aren't allowed by the base schema, unless the
+ *    base schema defines `additionalProperties` as true or provides a schema
+ * 5. Check the compatibility of `additionalProperties` schemas between base and impl
  */
 function checkObjectCompatibility(
   location: string,
@@ -157,17 +160,11 @@ function checkObjectCompatibility(
     return errors;
   } else if (extraPropsSchema) {
     // If additionalProperties need to match a schema,
-    // validate extra props against that schema
-    const flattenedExtraPropsSchema = deepFlattenAllOf(extraPropsSchema);
+    // validate extra props against that schema (already flattened)
     for (const propName of propsByStatus.extra) {
       const implProp = implProps[propName] as OpenAPIV3.SchemaObject;
       const propLoc = `${location}.${propName}`;
-      const propErrors = checkSchemaCompatibility(
-        propLoc,
-        flattenedExtraPropsSchema,
-        implProp,
-        ctx
-      );
+      const propErrors = checkSchemaCompatibility(propLoc, extraPropsSchema, implProp, ctx);
       errors.addErrors(propErrors.getAllErrors());
     }
   } else {
@@ -180,20 +177,15 @@ function checkObjectCompatibility(
   }
 
   // Step 5: Check the compatibility of additionalProperties schemas
-  // 1. Both are objects => validate impl schema against base schema
-  // 2. Base is object, impl is boolean => validate impl allows same or more
-  // 3. Base is boolean, impl is object => validate base allows same or more
   const baseAdditionalProps = baseSchema.additionalProperties as OpenAPIV3.SchemaObject;
   const implAdditionalProps = implSchema.additionalProperties as OpenAPIV3.SchemaObject;
 
   if (baseAdditionalProps && implAdditionalProps) {
-    // Both are schema objects - validate compatibility
-    const flattenedBaseAdditionalProps = deepFlattenAllOf(baseAdditionalProps);
-    const flattenedImplAdditionalProps = deepFlattenAllOf(implAdditionalProps);
+    // Both are schema objects - validate compatibility (already flattened)
     const additionalPropsErrors = checkSchemaCompatibility(
       `${location}[prop]`,
-      flattenedBaseAdditionalProps,
-      flattenedImplAdditionalProps,
+      baseAdditionalProps,
+      implAdditionalProps,
       ctx
     );
     errors.addErrors(additionalPropsErrors.getAllErrors());
