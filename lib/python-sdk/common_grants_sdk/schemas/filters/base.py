@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Union
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 

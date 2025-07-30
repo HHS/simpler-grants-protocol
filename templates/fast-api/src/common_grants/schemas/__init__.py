@@ -51,15 +51,7 @@ from common_grants_sdk.schemas.fields import (
     Money,
     SystemMetadata,
 )
-from common_grants_sdk.schemas.models import (
-    OppFunding,
-    OpportunityBase,
-    OppStatus,
-    OppStatusOptions,
-    OppTimeline,
-)
-
-from .filters import (
+from common_grants_sdk.schemas.filters import (
     ArrayOperator,
     DateRange,
     DateRangeFilter,
@@ -69,6 +61,14 @@ from .filters import (
     RangeOperator,
     StringArrayFilter,
 )
+from common_grants_sdk.schemas.models import (
+    OppFunding,
+    OpportunityBase,
+    OppStatus,
+    OppStatusOptions,
+    OppTimeline,
+)
+
 from .models import (
     OppDefaultFilters,
     OppFilters,

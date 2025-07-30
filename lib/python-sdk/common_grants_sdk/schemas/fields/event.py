@@ -8,6 +8,7 @@ from pydantic import Field
 from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 from common_grants_sdk.schemas.types import ISODate, ISOTime
 
+
 # Event Types
 class EventType(StrEnum):
     """Type of event (e.g., a single date, a date range, or a custom event)."""

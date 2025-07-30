@@ -8,8 +8,12 @@ __all__ = [  # noqa: RUF022
     # Fields
     "CustomField",
     "CustomFieldType",
+    "DateRangeEvent",
     "Event",
+    "EventType",
     "Money",
+    "OtherEvent",
+    "SingleDateEvent",
     "SystemMetadata",
 ]
 
@@ -19,7 +23,11 @@ from .custom import (
 )
 
 from .event import (
+    DateRangeEvent,
     Event,
+    EventType,
+    OtherEvent,
+    SingleDateEvent,
 )
 
 from .metadata import (

@@ -7,6 +7,7 @@ from pydantic import Field, HttpUrl
 
 from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 
+
 # CustomField
 class CustomFieldType(StrEnum):
     """The type of the custom field."""

@@ -2,12 +2,13 @@
 
 from typing import Optional
 
+from common_grants_sdk.schemas.filters import (
+    DateRangeFilter,
+    DefaultFilter,
+    MoneyRangeFilter,
+    StringArrayFilter,
+)
 from pydantic import BaseModel, Field
-
-from common_grants.schemas.filters.base import DefaultFilter
-from common_grants.schemas.filters.date_filters import DateRangeFilter
-from common_grants.schemas.filters.money_filters import MoneyRangeFilter
-from common_grants.schemas.filters.string_filters import StringArrayFilter
 
 
 class OppDefaultFilters(BaseModel):

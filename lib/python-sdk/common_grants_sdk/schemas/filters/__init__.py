@@ -45,4 +45,4 @@ from .money_filters import (
 from .string_filters import (
     StringArrayFilter,
     StringComparisonFilter,
-) 
+)

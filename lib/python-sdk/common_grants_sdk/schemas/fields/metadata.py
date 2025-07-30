@@ -5,6 +5,7 @@ from pydantic import Field
 from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 from common_grants_sdk.schemas.types import UTCDateTime
 
+
 # SystemMetadata
 class SystemMetadata(CommonGrantsBaseModel):
     """System-managed metadata fields for tracking record creation and modification."""
