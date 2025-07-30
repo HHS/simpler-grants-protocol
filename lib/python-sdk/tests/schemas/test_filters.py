@@ -11,16 +11,16 @@ from common_grants_sdk.schemas.filters.base import (
     RangeOperator,
     StringOperator,
 )
-from common_grants_sdk.schemas.filters.string_filters import (
+from common_grants_sdk.schemas.filters.string import (
     StringArrayFilter,
     StringComparisonFilter,
 )
-from common_grants_sdk.schemas.filters.date_filters import (
+from common_grants_sdk.schemas.filters.date import (
     DateRange,
     DateRangeFilter,
     DateComparisonFilter,
 )
-from common_grants_sdk.schemas.filters.money_filters import (
+from common_grants_sdk.schemas.filters.money import (
     MoneyRange,
     MoneyRangeFilter,
     MoneyComparisonFilter,

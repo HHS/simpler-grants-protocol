@@ -31,18 +31,18 @@ from .base import (
     RangeOperator,
     StringOperator,
 )
-from .date_filters import (
+from .date import (
     DateComparisonFilter,
     DateRange,
     DateRangeFilter,
 )
-from .money_filters import (
+from .money import (
     MoneyComparisonFilter,
     MoneyRange,
     MoneyRangeFilter,
     InvalidMoneyValueError,
 )
-from .string_filters import (
+from .string import (
     StringArrayFilter,
     StringComparisonFilter,
 )
