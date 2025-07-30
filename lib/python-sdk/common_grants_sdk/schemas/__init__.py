@@ -38,7 +38,7 @@ from .models import (
 from .pagination import (
     PaginatedBase,
     PaginatedBodyParams,
-    PaginatedInfo,
+    PaginatedResultsInfo,
     PaginatedItems,
 )
 from .sorting import SortedResultsInfo
@@ -85,7 +85,7 @@ __all__ = [
     # Paginated
     "PaginatedBase",
     "PaginatedBodyParams",
-    "PaginatedInfo",
+    "PaginatedResultsInfo",
     "PaginatedItems",
     # Sorting
     "SortedResultsInfo",

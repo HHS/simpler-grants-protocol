@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from typing import Any
 from uuid import UUID, uuid5
 
-from common_grants_sdk.schemas import PaginatedInfo, PaginatedItems
+from common_grants_sdk.schemas import PaginatedItems, PaginatedResultsInfo
 from common_grants_sdk.schemas.fields import EventType, Money, SingleDateEvent
 
 from common_grants.schemas.models import (
@@ -22,7 +22,7 @@ def paginate(items: list, page: int, page_size: int) -> PaginatedItems[Opportuni
     end = start + page_size
     return PaginatedItems(
         items=items[start:end],
-        paginatedInfo=PaginatedInfo(
+        paginatedInfo=PaginatedResultsInfo(
             page=page,
             pageSize=page_size,
             totalItems=len(items),

@@ -25,7 +25,15 @@ class PaginatedBase(BaseModel):
     model_config = {"populate_by_name": True}
 
 
-class PaginatedInfo(PaginatedBase):
+class PaginatedBodyParams(PaginatedBase):
+    """Parameters for pagination in the body of a request."""
+
+
+class PaginatedQueryParams(PaginatedBase):
+    """Parameters for pagination in a request query."""
+
+
+class PaginatedResultsInfo(PaginatedBase):
     """Information about the pagination of a list."""
 
     total_items: int = Field(
@@ -42,15 +50,11 @@ class PaginatedInfo(PaginatedBase):
     model_config = {"populate_by_name": True}
 
 
-class PaginatedBodyParams(PaginatedBase):
-    """Parameters for pagination in the body of a request."""
-
-
 class PaginatedItems(BaseModel, Generic[T]):
     """A paginated list of items."""
 
     items: list[T] = Field(..., description="The list of items")
-    paginated_info: PaginatedInfo = Field(
+    paginated_info: PaginatedResultsInfo = Field(
         ...,
         alias="paginatedInfo",
         description="Information about the pagination",

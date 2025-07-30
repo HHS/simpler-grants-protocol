@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from common_grants_sdk.schemas import PaginatedInfo, SortedResultsInfo
+from common_grants_sdk.schemas import PaginatedResultsInfo, SortedResultsInfo
 from pydantic import BaseModel, Field
 
 from common_grants.schemas.models import (
@@ -40,7 +40,7 @@ class OpportunitiesListResponse(DefaultResponse):
     """A paginated list of opportunities."""
 
     items: list[OpportunityBase] = Field(..., description="The list of opportunities")
-    pagination_info: PaginatedInfo = Field(
+    pagination_info: PaginatedResultsInfo = Field(
         ...,
         description="The pagination details",
         alias="paginationInfo",
@@ -51,7 +51,7 @@ class OpportunitiesSearchResponse(DefaultResponse):
     """A paginated list of results from an opportunity search."""
 
     items: list[OpportunityBase] = Field(..., description="The list of opportunities")
-    pagination_info: PaginatedInfo = Field(
+    pagination_info: PaginatedResultsInfo = Field(
         ...,
         description="The pagination details",
         alias="paginationInfo",

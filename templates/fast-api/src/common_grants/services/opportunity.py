@@ -6,7 +6,7 @@ from uuid import UUID
 
 from common_grants_sdk.schemas import (
     PaginatedBodyParams,
-    PaginatedInfo,
+    PaginatedResultsInfo,
     SortedResultsInfo,
 )
 from fastapi import status
@@ -49,7 +49,7 @@ class OpportunityService:
         end_idx = start_idx + page_size
         items = self.opportunity_list[start_idx:end_idx]
 
-        pagination_info = PaginatedInfo(
+        pagination_info = PaginatedResultsInfo(
             page=page,
             pageSize=page_size,
             totalItems=len(self.opportunity_list),
@@ -90,11 +90,11 @@ class OpportunityService:
                 or (opp.description and search_lower in opp.description.lower())
             ]
 
-        # Create PaginatedInfo object
+        # Create PaginatedResultsInfo object
         start_idx = (pagination.page - 1) * pagination.page_size
         end_idx = start_idx + pagination.page_size
         items = filtered_opportunities[start_idx:end_idx]
-        pagination_info = PaginatedInfo(
+        pagination_info = PaginatedResultsInfo(
             page=pagination.page,
             pageSize=pagination.page_size,
             totalItems=len(filtered_opportunities),

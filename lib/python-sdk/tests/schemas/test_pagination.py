@@ -7,7 +7,7 @@ from common_grants_sdk.schemas import (
     PaginatedBodyParams,
     PaginatedItems,
     PaginatedBase,
-    PaginatedInfo,
+    PaginatedResultsInfo,
 )
 
 
@@ -44,12 +44,12 @@ class TestPaginatedBase:
         assert data["pageSize"] == 15
 
 
-class TestPaginatedInfo:
-    """Test PaginatedInfo class."""
+class TestPaginatedResultsInfo:
+    """Test PaginatedResultsInfo class."""
 
     def test_required_fields(self):
-        """Test PaginatedInfo with required fields."""
-        pagination = PaginatedInfo(
+        """Test PaginatedResultsInfo with required fields."""
+        pagination = PaginatedResultsInfo(
             page=1,
             page_size=10,
             total_items=100,
@@ -62,7 +62,7 @@ class TestPaginatedInfo:
 
     def test_json_serialization(self):
         """Test JSON serialization with aliases."""
-        pagination = PaginatedInfo(
+        pagination = PaginatedResultsInfo(
             page=2,
             page_size=15,
             total_items=150,
@@ -92,7 +92,7 @@ class TestPaginatedItems:
     def test_with_string_items(self):
         """Test PaginatedItems with string items."""
         items = ["item1", "item2", "item3"]
-        paginated_info = PaginatedInfo(
+        paginated_info = PaginatedResultsInfo(
             page=1,
             page_size=10,
             total_items=3,
@@ -105,7 +105,7 @@ class TestPaginatedItems:
     def test_with_dict_items(self):
         """Test PaginatedItems with dictionary items."""
         items = [{"id": 1, "name": "test"}, {"id": 2, "name": "test2"}]
-        paginated_info = PaginatedInfo(
+        paginated_info = PaginatedResultsInfo(
             page=1,
             page_size=10,
             total_items=2,
@@ -118,7 +118,7 @@ class TestPaginatedItems:
     def test_json_serialization(self):
         """Test JSON serialization."""
         items = ["item1", "item2"]
-        paginated_info = PaginatedInfo(
+        paginated_info = PaginatedResultsInfo(
             page=1,
             page_size=10,
             total_items=2,
@@ -135,7 +135,7 @@ class TestPaginatedItems:
     def test_empty_items(self):
         """Test PaginatedItems with empty items list."""
         items = []
-        paginated_info = PaginatedInfo(
+        paginated_info = PaginatedResultsInfo(
             page=1,
             page_size=10,
             total_items=0,
