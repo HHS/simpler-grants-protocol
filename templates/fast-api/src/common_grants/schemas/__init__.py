@@ -63,6 +63,7 @@ from common_grants_sdk.schemas.models import (
     OppStatusOptions,
     OppTimeline,
 )
+from common_grants_sdk.schemas.responses import DefaultResponse
 
 from .models import (
     OppDefaultFilters,
@@ -70,7 +71,6 @@ from .models import (
     OpportunitySearchRequest,
 )
 from .response import (
-    DefaultResponse,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
