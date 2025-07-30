@@ -2,25 +2,103 @@ import { OpenAPIV3 } from "openapi-types";
 import mergeAllOf from "json-schema-merge-allof";
 
 /**
- * Deeply flatten `allOf` in a schema by:
- *   1) Merging top-level allOf into a single schema
- *   2) Recursively descending into properties, items, additionalProperties, etc.
- *   3) Repeating if new allOfs appear after merging
+ * Deeply flatten `allOf` and `anyOf` in a schema by:
+ *   1) Resolving anyOf by selecting the first compatible option
+ *   2) Merging top-level allOf into a single schema
+ *   3) Recursively descending into properties, items, additionalProperties, etc.
+ *   4) Repeating if new allOfs or anyOfs appear after processing
  */
 export function deepFlattenAllOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
-  // 1) Merge top-level allOf (if any)
-  let mergedSchema = mergeOneLevelAllOf(schema);
+  // Keep processing until no more allOf or anyOf structures remain
+  let processedSchema = schema;
+  let hasStructures = true;
 
-  // 2) Recursively flatten sub-schemas
-  mergedSchema = recursivelyFlattenSubSchemas(mergedSchema);
+  while (hasStructures) {
+    // 1) Resolve anyOf (if any)
+    processedSchema = resolveAnyOf(processedSchema);
 
-  // 3) It's possible the recursion introduced new top-level allOfs
-  //    (in rare cases if merging merges references in a certain way).
-  //    So we can repeat until stable if desired:
-  //    But usually one pass is sufficient for top-level.
-  mergedSchema = mergeOneLevelAllOf(mergedSchema);
+    // 2) Merge top-level allOf (if any)
+    processedSchema = mergeOneLevelAllOf(processedSchema);
 
-  return mergedSchema;
+    // 3) Recursively flatten sub-schemas
+    processedSchema = recursivelyFlattenSubSchemas(processedSchema);
+
+    // 4) Check if there are still any allOf or anyOf structures
+    hasStructures = hasAllOfOrAnyOfStructures(processedSchema);
+  }
+
+  return processedSchema;
+}
+
+/**
+ * Resolve anyOf by selecting the first option that's not a reference.
+ * This is a simplified approach that avoids complex union type resolution.
+ */
+function resolveAnyOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
+  if (!schema.anyOf || schema.anyOf.length === 0) {
+    return schema;
+  }
+
+  // For now, select the first option that's not a reference
+  for (let i = 0; i < schema.anyOf.length; i++) {
+    const option = schema.anyOf[i];
+    if (typeof option === "object" && option !== null && !("$ref" in option)) {
+      // Recursively process the selected option
+      const processedOption = deepFlattenAllOf(option as OpenAPIV3.SchemaObject);
+
+      // Merge the selected option with the base schema
+      const baseSchema = { ...schema };
+      delete baseSchema.anyOf;
+      return { ...baseSchema, ...processedOption };
+    }
+  }
+
+  // If no suitable anyOf option found, keep original schema
+  return schema;
+}
+
+/**
+ * Check if a schema or any of its nested properties contain allOf or anyOf structures
+ */
+function hasAllOfOrAnyOfStructures(schema: OpenAPIV3.SchemaObject): boolean {
+  // Check top-level allOf
+  if (schema.allOf && schema.allOf.length > 0) {
+    return true;
+  }
+
+  // Check top-level anyOf
+  if (schema.anyOf && schema.anyOf.length > 0) {
+    return true;
+  }
+
+  // Check properties
+  if (schema.properties && typeof schema.properties === "object") {
+    for (const propSchema of Object.values(schema.properties)) {
+      if (
+        propSchema &&
+        typeof propSchema === "object" &&
+        hasAllOfOrAnyOfStructures(propSchema as OpenAPIV3.SchemaObject)
+      ) {
+        return true;
+      }
+    }
+  }
+
+  // Check items
+  if (schema.type === "array" && schema.items && typeof schema.items === "object") {
+    if (hasAllOfOrAnyOfStructures(schema.items as OpenAPIV3.SchemaObject)) {
+      return true;
+    }
+  }
+
+  // Check additionalProperties
+  if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+    if (hasAllOfOrAnyOfStructures(schema.additionalProperties as OpenAPIV3.SchemaObject)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
