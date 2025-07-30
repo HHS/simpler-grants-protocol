@@ -1,5 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
+import * as fs from "fs";
+import * as path from "path";
+
+/**
+ * Dynamically get available base spec versions from the openapi directory
+ * Returns versions sorted in reverse order (latest first)
+ */
+function getAvailableBaseVersions(): string[] {
+  const openapiDir = path.resolve(__dirname, "../../../lib/openapi");
+  if (!fs.existsSync(openapiDir)) {
+    return [];
+  }
+
+  const files = fs.readdirSync(openapiDir);
+  const versions: string[] = [];
+
+  for (const file of files) {
+    const match = file.match(/^openapi\.(.+)\.yaml$/);
+    if (match) {
+      versions.push(match[1]);
+    }
+  }
+
+  // Sort in reverse order so latest version comes first
+  return versions.sort().reverse();
+}
+
+export const availableVersions = getAvailableBaseVersions();
 
 /**
  * Positional arguments that must be passed to the `check api` command.
@@ -29,7 +57,10 @@ export const CheckSpecArgsSchema = z.object({
  */
 export const CheckSpecOptionsSchema = z.object({
   base: z.string().optional(),
-  baseVersion: z.enum(["0.1.0", "0.2.0"]).optional(),
+  baseVersion:
+    availableVersions.length > 0
+      ? z.enum(availableVersions as [string, ...string[]]).optional()
+      : z.string().optional(),
 });
 
 /**
