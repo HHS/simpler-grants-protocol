@@ -2,24 +2,7 @@ import { OpenAPIV3 } from "openapi-types";
 import mergeAllOf from "json-schema-merge-allof";
 
 // Simple cache to avoid redundant flattening of the same schemas
-let flattenCache = new WeakMap<OpenAPIV3.SchemaObject, OpenAPIV3.SchemaObject>();
-
-/**
- * Clear the flatten cache. Useful for testing or when processing different documents.
- */
-export function clearFlattenCache(): void {
-  // Create a new cache instance to clear all entries
-  flattenCache = new WeakMap<OpenAPIV3.SchemaObject, OpenAPIV3.SchemaObject>();
-}
-
-/**
- * Get the current cache size (for debugging/testing)
- */
-export function getFlattenCacheSize(): number {
-  // WeakMap doesn't have a size property, but we can estimate
-  // This is a placeholder for debugging purposes
-  return 0;
-}
+const flattenCache = new WeakMap<OpenAPIV3.SchemaObject, OpenAPIV3.SchemaObject>();
 
 /**
  * Deeply flatten `allOf` and `anyOf` in a schema by:
@@ -42,14 +25,24 @@ export function deepFlattenAllOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.Sche
     // 1) Resolve anyOf (if any)
     processedSchema = resolveAnyOf(processedSchema);
 
-    // 2) Merge top-level allOf (if any)
-    processedSchema = mergeOneLevelAllOf(processedSchema);
+    // 2) Merge allOf (if any)
+    if (processedSchema.allOf && Array.isArray(processedSchema.allOf)) {
+      try {
+        processedSchema = mergeAllOf(processedSchema) as OpenAPIV3.SchemaObject;
+      } catch (error) {
+        console.warn("Failed to merge allOf, keeping original schema:", error);
+        // Remove allOf but keep the rest of the schema
+        delete processedSchema.allOf;
+      }
+    }
 
     // 3) Recursively flatten sub-schemas
     processedSchema = recursivelyFlattenSubSchemas(processedSchema);
 
-    // 4) Check if there are still any allOf or anyOf structures
-    hasStructures = hasAllOfOrAnyOfStructures(processedSchema);
+    // 4) Check if we still have structures to process
+    hasStructures =
+      !!(processedSchema.allOf && Array.isArray(processedSchema.allOf)) ||
+      !!(processedSchema.anyOf && Array.isArray(processedSchema.anyOf));
   }
 
   // Cache the result
@@ -81,63 +74,6 @@ function resolveAnyOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
   }
 
   // If no suitable anyOf option found, keep original schema
-  return schema;
-}
-
-/**
- * Check if a schema or any of its nested properties contain allOf or anyOf structures
- */
-function hasAllOfOrAnyOfStructures(schema: OpenAPIV3.SchemaObject): boolean {
-  // Check top-level allOf
-  if (schema.allOf && schema.allOf.length > 0) {
-    return true;
-  }
-
-  // Check top-level anyOf
-  if (schema.anyOf && schema.anyOf.length > 0) {
-    return true;
-  }
-
-  // Check properties
-  if (schema.properties && typeof schema.properties === "object") {
-    for (const propSchema of Object.values(schema.properties)) {
-      if (
-        propSchema &&
-        typeof propSchema === "object" &&
-        hasAllOfOrAnyOfStructures(propSchema as OpenAPIV3.SchemaObject)
-      ) {
-        return true;
-      }
-    }
-  }
-
-  // Check items
-  if (schema.type === "array" && schema.items && typeof schema.items === "object") {
-    if (hasAllOfOrAnyOfStructures(schema.items as OpenAPIV3.SchemaObject)) {
-      return true;
-    }
-  }
-
-  // Check additionalProperties
-  if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
-    if (hasAllOfOrAnyOfStructures(schema.additionalProperties as OpenAPIV3.SchemaObject)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/**
- * Merge top-level allOf (only) if present on a schema using `json-schema-merge-allof`.
- * Returns a new schema with top-level `allOf` removed.
- */
-function mergeOneLevelAllOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
-  if (schema.allOf && schema.allOf.length > 0) {
-    // The library merges top-level `allOf` into a new schema
-    const merged = mergeAllOf(schema, { ignoreAdditionalProperties: false });
-    return merged as OpenAPIV3.SchemaObject;
-  }
   return schema;
 }
 
