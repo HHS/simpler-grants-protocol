@@ -1,8 +1,4 @@
-"""
-Pydantic schemas for the CommonGrants API.
-
-These schemas are based on the TypeSpec models defined in the CommonGrants specification.
-"""
+"""Field schemas for the CommonGrants API."""
 
 __all__ = [  # noqa: RUF022
     # Fields

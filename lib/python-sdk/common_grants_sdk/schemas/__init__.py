@@ -58,7 +58,11 @@ from .responses import (
     Sorted,
     Success,
 )
-from .sorting import OppSortBy, OppSorting, SortedResultsInfo
+from .sorting import (
+    OppSortBy,
+    OppSorting,
+    SortedResultsInfo,
+)
 from .types import (
     DecimalString,
     ISODate,
@@ -79,34 +83,34 @@ __all__ = [
     "Money",
     "SystemMetadata",
     # Filters
-    "DefaultFilter",
     "ArrayOperator",
     "ComparisonOperator",
-    "EquivalenceOperator",
-    "RangeOperator",
-    "StringOperator",
+    "DefaultFilter",
     "DateComparisonFilter",
     "DateRange",
     "DateRangeFilter",
+    "EquivalenceOperator",
+    "InvalidMoneyValueError",
     "MoneyComparisonFilter",
     "MoneyRange",
     "MoneyRangeFilter",
     "OppDefaultFilters",
     "OppFilters",
-    "InvalidMoneyValueError",
+    "RangeOperator",
     "StringArrayFilter",
     "StringComparisonFilter",
+    "StringOperator",
     # Models
-    "OpportunityBase",
     "OppFunding",
+    "OpportunityBase",
     "OppStatus",
     "OppStatusOptions",
     "OppTimeline",
     # Paginated
     "PaginatedBase",
     "PaginatedBodyParams",
-    "PaginatedResultsInfo",
     "PaginatedItems",
+    "PaginatedResultsInfo",
     # Requests
     "OpportunitySearchRequest",
     # Responses

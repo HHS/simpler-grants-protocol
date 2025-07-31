@@ -1,4 +1,4 @@
-"""Filter schemas."""
+"""Filter schemas for the CommonGrants API."""
 
 __all__ = [  # noqa: RUF022
     # Base Filter
@@ -14,10 +14,10 @@ __all__ = [  # noqa: RUF022
     "DateRange",
     "DateRangeFilter",
     # Money Filters
+    "InvalidMoneyValueError",
     "MoneyComparisonFilter",
     "MoneyRange",
     "MoneyRangeFilter",
-    "InvalidMoneyValueError",
     # Numeric Filters
     "NumberArrayFilter",
     "NumberComparisonFilter",
