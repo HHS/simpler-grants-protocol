@@ -1,5 +1,6 @@
 """CommonGrants schemas package."""
 
+from .base import CommonGrantsBaseModel
 from .fields import (
     CustomField,
     CustomFieldType,
@@ -71,6 +72,8 @@ from .types import (
 )
 
 __all__ = [
+    # Base
+    "CommonGrantsBaseModel",
     # Types
     "DecimalString",
     "ISODate",
