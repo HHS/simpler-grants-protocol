@@ -1,19 +1,9 @@
 import { OpenAPIV3 } from "openapi-types";
 import { DefaultCheckService } from "../../../commands/check/check-service";
-import SwaggerParser from "@apidevtools/swagger-parser";
-import { compileTypeSpec } from "../../../utils/typespec";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 
 // Mock dependencies
-jest.mock("@apidevtools/swagger-parser", () => ({
-  dereference: jest.fn(),
-}));
-
-jest.mock("../../../utils/typespec", () => ({
-  compileTypeSpec: jest.fn(),
-}));
-
 jest.mock("fs", () => ({
   readFileSync: jest.fn(),
   existsSync: jest.fn(),
@@ -23,27 +13,24 @@ jest.mock("js-yaml", () => ({
   load: jest.fn(),
 }));
 
-describe("ValidationService", () => {
+describe("DefaultCheckService", () => {
   let service: DefaultCheckService;
   const mockConsoleLog = jest.spyOn(console, "log").mockImplementation(() => {});
 
   beforeEach(() => {
     service = new DefaultCheckService();
     jest.clearAllMocks();
-
-    // Mock fs.existsSync to return true for base spec path
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
   });
 
   afterAll(() => {
     mockConsoleLog.mockRestore();
   });
 
-  describe("checkApi", () => {
-    // ############################################################
-    // API validation
-    // ############################################################
+  // ############################################################
+  // Test 1: API validation
+  // ############################################################
 
+  describe("checkApi", () => {
     it("should validate API implementation with options", async () => {
       // Arrange
       const apiUrl = "http://api.example.com";
@@ -80,131 +67,122 @@ describe("ValidationService", () => {
         options: {},
       });
     });
-
-    // Note: More tests will be needed once the actual implementation is added:
-    // - Test API reachability
-    // - Test spec parsing
-    // - Test route validation
-    // - Test response validation
-    // - Test error handling
   });
+
+  // ######################################################################
+  // Check Spec
+  // ######################################################################
 
   describe("checkSpec", () => {
     // ############################################################
-    // Base spec validation - using default spec
+    // Default base spec
     // ############################################################
 
-    it("should use default spec when no base spec provided", async () => {
+    it("should use default base spec when no base spec provided", async () => {
       // Arrange
       const baseDoc: OpenAPIV3.Document = {
         openapi: "3.0.0",
-        info: { title: "Base", version: "1.0.0" },
+        info: { title: "Default Base", version: "1.0.0" },
         paths: {
-          "/opportunities": {
+          "/common-grants/opportunities": {
             get: {
               tags: ["required"],
-              responses: {
-                "200": { description: "OK" },
-              },
+              responses: { "200": { description: "OK" } },
             },
           },
         },
       };
 
-      const implDoc: OpenAPIV3.Document = {
-        openapi: "3.0.0",
-        info: { title: "Implementation", version: "1.0.0" },
-        paths: {},
-      };
+      const implDoc = { ...baseDoc, info: { title: "Impl", version: "1.0.0" } };
 
       // Mock file system operations
-      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
-      (yaml.load as jest.Mock).mockReturnValue(implDoc);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.readFileSync as jest.Mock).mockImplementation((path: string) => {
+        if (path === "spec.yaml") {
+          return "impl yaml content";
+        } else {
+          return "base yaml content";
+        }
+      });
+      (yaml.load as jest.Mock).mockImplementation((content: string) => {
+        if (content === "impl yaml content") {
+          return implDoc;
+        } else {
+          return baseDoc;
+        }
+      });
 
-      (SwaggerParser.dereference as jest.Mock)
-        .mockResolvedValueOnce(implDoc) // First call for impl spec
-        .mockResolvedValueOnce(baseDoc); // Second call for TypeSpec-generated base spec
+      // Act
+      await service.checkSpec("spec.yaml", {});
 
-      // Act & Assert
-      await expect(service.checkSpec("spec.yaml", {})).rejects.toThrow(/Routes missing/);
+      // Assert that the default base spec path was used
+      expect(fs.existsSync).toHaveBeenCalled();
+      expect(fs.readFileSync).toHaveBeenCalled();
     });
 
-    it("should use provided base spec even when TypeSpec is available", async () => {
+    // ############################################################
+    // Missing base spec file
+    // ############################################################
+
+    it("should throw error when default base spec file not found", async () => {
       // Arrange
-      const providedBasePath = "base.yaml";
+
+      // Mock file system operations
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+      // Act & Assert
+      await expect(service.checkSpec("spec.yaml", {})).rejects.toThrow(
+        /Could not find base spec file at/
+      );
+    });
+
+    // ############################################################
+    // Base spec explicitly provided
+    // ############################################################
+
+    it("should handle provided base spec path correctly", async () => {
+      // Arrange
+      const providedBasePath = "custom-base.yaml";
       const baseDoc: OpenAPIV3.Document = {
         openapi: "3.0.0",
-        info: { title: "Base", version: "1.0.0" },
+        info: { title: "Custom Base", version: "1.0.0" },
         paths: {},
       };
 
       const implDoc = { ...baseDoc, info: { title: "Impl", version: "1.0.0" } };
 
       // Mock file system operations
-      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
-      (yaml.load as jest.Mock).mockReturnValue(implDoc);
-
-      (SwaggerParser.dereference as jest.Mock)
-        .mockResolvedValueOnce(implDoc)
-        .mockResolvedValueOnce(baseDoc);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.readFileSync as jest.Mock).mockImplementation((path: string) => {
+        if (path === "spec.yaml") {
+          return "impl yaml content";
+        } else if (path === providedBasePath) {
+          return "base yaml content";
+        }
+        return "default content";
+      });
+      (yaml.load as jest.Mock).mockImplementation((content: string) => {
+        if (content === "impl yaml content") {
+          return implDoc;
+        } else {
+          return baseDoc;
+        }
+      });
 
       // Act
       await service.checkSpec("spec.yaml", { base: providedBasePath });
 
-      // Assert - Don't compile TypeSpec if base spec provided
-      expect(compileTypeSpec).not.toHaveBeenCalled();
-      expect(SwaggerParser.dereference).toHaveBeenCalledWith(providedBasePath);
+      // Assert
+      expect(fs.readFileSync).toHaveBeenCalledWith(providedBasePath, "utf8");
       expect(mockConsoleLog).toHaveBeenCalledWith("Spec is valid and compliant with base spec");
     });
 
     // ############################################################
-    // Validation failures
+    // Non-compliant spec
     // ############################################################
 
-    it("should throw error when validation fails", async () => {
-      // Arrange - Create base spec with required route
-      const baseDoc: OpenAPIV3.Document = {
-        openapi: "3.0.0",
-        info: { title: "Base", version: "1.0.0" },
-        paths: {
-          "/required": {
-            get: {
-              tags: ["required"],
-              responses: {
-                "200": { description: "OK" },
-              },
-            },
-          },
-        },
-      };
-
-      // Arrange - Create impl spec missing the required route
-      const implDoc: OpenAPIV3.Document = {
-        openapi: "3.0.0",
-        info: { title: "Implementation", version: "1.0.0" },
-        paths: {},
-      };
-
-      // Mock file system operations
-      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
-      (yaml.load as jest.Mock).mockReturnValue(implDoc);
-
-      (SwaggerParser.dereference as jest.Mock)
-        .mockResolvedValueOnce(implDoc) // First call for impl spec
-        .mockResolvedValueOnce(baseDoc); // Second call for base spec
-
-      // Act & Assert
-      await expect(service.checkSpec("spec.yaml", { base: "base.yaml" })).rejects.toThrow(
-        /Routes missing/
-      );
-    });
-
-    // ############################################################
-    // Multiple validation errors
-    // ############################################################
-
-    it("should collect all validation errors", async () => {
-      // Arrange - Create base spec with required route and schema
+    it("should collect all validation errors from validateSpecs()", async () => {
+      // Arrange - Create base spec with multiple validation scenarios
       const baseDoc: OpenAPIV3.Document = {
         openapi: "3.0.0",
         info: { title: "Base", version: "1.0.0" },
@@ -212,90 +190,79 @@ describe("ValidationService", () => {
           "/common-grants/opportunities": {
             get: {
               tags: ["required"],
-              responses: {
-                "200": {
-                  description: "OK",
-                  content: {
-                    "application/json": {
-                      schema: {
-                        type: "object",
-                        required: ["id"],
-                        properties: {
-                          id: { type: "string" },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
+              responses: { "200": { description: "OK" } },
             },
             post: {
-              tags: ["optional"],
-              responses: {
-                "200": { description: "OK" },
-                "400": { description: "Bad Request" },
-              },
+              tags: ["required"],
+              responses: { "201": { description: "Created" } },
             },
           },
         },
       };
 
-      // Arrange - Create impl spec with multiple issues:
-      //   - Missing /opportunities => should flag as missing route
-      //   - /custom/extra => should flag as extra route
+      // Arrange - Create impl spec with multiple validation issues:
+      //   - Missing POST /common-grants/opportunities (required)
+      //   - Extra route GET /common-grants/extra
       const implDoc: OpenAPIV3.Document = {
         openapi: "3.0.0",
         info: { title: "Impl", version: "1.0.0" },
         paths: {
-          "/common-grants/extra": {
-            get: {
-              responses: {
-                "200": { description: "OK" },
-              },
-            },
-          },
           "/common-grants/opportunities": {
-            post: {
-              responses: {
-                "200": { description: "OK" },
-              },
-            },
+            get: { responses: { "200": { description: "OK" } } },
+          },
+          "/common-grants/extra": {
+            get: { responses: { "200": { description: "OK" } } },
           },
         },
       };
 
       // Mock file system operations
-      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
-      (yaml.load as jest.Mock).mockReturnValue(implDoc);
-
-      (SwaggerParser.dereference as jest.Mock)
-        .mockResolvedValueOnce(implDoc)
-        .mockResolvedValueOnce(baseDoc);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.readFileSync as jest.Mock).mockImplementation((path: string) => {
+        if (path === "spec.yaml") {
+          return "impl yaml content";
+        } else {
+          return "base yaml content";
+        }
+      });
+      (yaml.load as jest.Mock).mockImplementation((content: string) => {
+        if (content === "impl yaml content") {
+          return implDoc;
+        } else {
+          return baseDoc;
+        }
+      });
 
       // Act & Assert
       const error = await service.checkSpec("spec.yaml", { base: "base.yaml" }).catch(e => e);
 
+      // Verify all error types are collected
+      expect(error.message).toContain("Spec validation failed:");
+      expect(error.message).toContain("2 errors"); // 1 missing routes + 1 extra route
       expect(error.message).toContain("Routes missing");
       expect(error.message).toContain("Extra routes");
-      expect(error.message).toContain("Route conflicts");
-      expect(error.message).toContain("Status code missing");
+
+      // Verify specific missing routes are reported
+      expect(error.message).toContain("POST /common-grants/opportunities");
+
+      // Verify extra routes are reported
+      expect(error.message).toContain("GET /common-grants/extra");
     });
 
     // ############################################################
-    // Successful validation
+    // Compliant spec
     // ############################################################
 
-    it("should pass when spec is valid and compliant", async () => {
+    it("should pass validation when specs are compliant", async () => {
       // Arrange - Create matching base and impl specs
       const baseDoc: OpenAPIV3.Document = {
         openapi: "3.0.0",
         info: { title: "Base", version: "1.0.0" },
         paths: {
-          "/test": {
+          "/common-grants/opportunities": {
             get: {
-              responses: {
-                "200": { description: "OK" },
-              },
+              tags: ["required"],
+              responses: { "200": { description: "OK" } },
             },
           },
         },
@@ -303,13 +270,22 @@ describe("ValidationService", () => {
 
       const implDoc = { ...baseDoc, info: { title: "Impl", version: "1.0.0" } };
 
-      // Mock file system operations
-      (fs.readFileSync as jest.Mock).mockReturnValue("mock yaml content");
-      (yaml.load as jest.Mock).mockReturnValue(implDoc);
-
-      (SwaggerParser.dereference as jest.Mock)
-        .mockResolvedValueOnce(implDoc)
-        .mockResolvedValueOnce(baseDoc);
+      // Arrange - Mock file system operations
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.readFileSync as jest.Mock).mockImplementation((path: string) => {
+        if (path === "spec.yaml") {
+          return "impl yaml content";
+        } else {
+          return "base yaml content";
+        }
+      });
+      (yaml.load as jest.Mock).mockImplementation((content: string) => {
+        if (content === "impl yaml content") {
+          return implDoc;
+        } else {
+          return baseDoc;
+        }
+      });
 
       // Act
       await service.checkSpec("spec.yaml", { base: "base.yaml" });
