@@ -67,7 +67,7 @@ function validateSpecs(baseDoc: Document, implDoc: Document): ErrorCollection {
  * This involves:
  *   1) Reading the spec file from the file system
  *   2) Converting the spec to OpenAPI v3.0 if needed
- *   3) Resolve all references, ignoring circular references
+ *   3) Resolve all references, ignoring circular references to prevent stack overflows
  *   4) Returning the dereferenced spec
  */
 async function loadAndParseSpec(specPath: string): Promise<Document> {
