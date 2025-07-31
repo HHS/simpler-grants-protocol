@@ -236,6 +236,32 @@ describe("Schema Compatibility Checks", () => {
     );
   });
 
+  it("should check the compatibility of additionalProperties schemas", () => {
+    // Arrange
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      additionalProperties: { type: "string" },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      additionalProperties: { type: "number" },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        location: `${location}[prop]`,
+        conflictType: "TYPE_CONFLICT",
+      })
+    );
+  });
+
   // ############################################################
   // Nested checks of complex schemas
   // ############################################################

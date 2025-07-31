@@ -1,38 +1,79 @@
 import { OpenAPIV3 } from "openapi-types";
 import mergeAllOf from "json-schema-merge-allof";
 
+// Simple cache to avoid redundant flattening of the same schemas
+const flattenCache = new WeakMap<OpenAPIV3.SchemaObject, OpenAPIV3.SchemaObject>();
+
 /**
- * Deeply flatten `allOf` in a schema by:
- *   1) Merging top-level allOf into a single schema
- *   2) Recursively descending into properties, items, additionalProperties, etc.
- *   3) Repeating if new allOfs appear after merging
+ * Deeply flatten `allOf` and `anyOf` in a schema by:
+ *   1) Resolving anyOf by selecting the first compatible option
+ *   2) Merging top-level allOf into a single schema
+ *   3) Recursively descending into properties, items, additionalProperties, etc.
+ *   4) Repeating if new allOfs or anyOfs appear after processing
  */
 export function deepFlattenAllOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
-  // 1) Merge top-level allOf (if any)
-  let mergedSchema = mergeOneLevelAllOf(schema);
+  // Check cache first
+  if (flattenCache.has(schema)) {
+    return flattenCache.get(schema)!;
+  }
 
-  // 2) Recursively flatten sub-schemas
-  mergedSchema = recursivelyFlattenSubSchemas(mergedSchema);
+  // Keep processing until no more allOf or anyOf structures remain
+  let processedSchema = schema;
+  let hasStructures = true;
 
-  // 3) It's possible the recursion introduced new top-level allOfs
-  //    (in rare cases if merging merges references in a certain way).
-  //    So we can repeat until stable if desired:
-  //    But usually one pass is sufficient for top-level.
-  mergedSchema = mergeOneLevelAllOf(mergedSchema);
+  while (hasStructures) {
+    // 1) Resolve anyOf (if any)
+    processedSchema = resolveAnyOf(processedSchema);
 
-  return mergedSchema;
+    // 2) Merge allOf (if any)
+    if (processedSchema.allOf && Array.isArray(processedSchema.allOf)) {
+      try {
+        processedSchema = mergeAllOf(processedSchema) as OpenAPIV3.SchemaObject;
+      } catch (error) {
+        console.warn("Failed to merge allOf, keeping original schema:", error);
+        // Remove allOf but keep the rest of the schema
+        delete processedSchema.allOf;
+      }
+    }
+
+    // 3) Recursively flatten sub-schemas
+    processedSchema = recursivelyFlattenSubSchemas(processedSchema);
+
+    // 4) Check if we still have structures to process
+    hasStructures =
+      !!(processedSchema.allOf && Array.isArray(processedSchema.allOf)) ||
+      !!(processedSchema.anyOf && Array.isArray(processedSchema.anyOf));
+  }
+
+  // Cache the result
+  flattenCache.set(schema, processedSchema);
+  return processedSchema;
 }
 
 /**
- * Merge top-level allOf (only) if present on a schema using `json-schema-merge-allof`.
- * Returns a new schema with top-level `allOf` removed.
+ * Resolve anyOf by selecting the first option that's not a reference.
+ * This is a simplified approach that avoids complex union type resolution.
  */
-function mergeOneLevelAllOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
-  if (schema.allOf && schema.allOf.length > 0) {
-    // The library merges top-level `allOf` into a new schema
-    const merged = mergeAllOf(schema, { ignoreAdditionalProperties: false });
-    return merged as OpenAPIV3.SchemaObject;
+function resolveAnyOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
+  if (!schema.anyOf || schema.anyOf.length === 0) {
+    return schema;
   }
+
+  // For now, select the first option that's not a reference
+  for (let i = 0; i < schema.anyOf.length; i++) {
+    const option = schema.anyOf[i];
+    if (typeof option === "object" && option !== null && !("$ref" in option)) {
+      // Recursively process the selected option
+      const processedOption = deepFlattenAllOf(option as OpenAPIV3.SchemaObject);
+
+      // Merge the selected option with the base schema
+      const baseSchema = { ...schema };
+      delete baseSchema.anyOf;
+      return { ...baseSchema, ...processedOption };
+    }
+  }
+
+  // If no suitable anyOf option found, keep original schema
   return schema;
 }
 

@@ -171,16 +171,15 @@ function checkQueryParameters(
 
     // Check parameter schema compatibility if schemas exist
     if (baseParam.schema && implParam.schema) {
+      // Flatten schemas before compatibility check
+      const flattenedBaseSchema = deepFlattenAllOf(baseParam.schema as OpenAPIV3.SchemaObject);
+      const flattenedImplSchema = deepFlattenAllOf(implParam.schema as OpenAPIV3.SchemaObject);
+
       errors.addErrors(
-        checkSchemaCompatibility(
-          `${baseParam.name}`,
-          baseParam.schema as OpenAPIV3.SchemaObject,
-          implParam.schema as OpenAPIV3.SchemaObject,
-          {
-            errorSubType: "QUERY_PARAM_CONFLICT",
-            endpoint,
-          }
-        ).getAllErrors()
+        checkSchemaCompatibility(`${baseParam.name}`, flattenedBaseSchema, flattenedImplSchema, {
+          errorSubType: "QUERY_PARAM_CONFLICT",
+          endpoint,
+        }).getAllErrors()
       );
     }
   }
@@ -227,7 +226,7 @@ function checkContentSchemas(
       continue;
     }
 
-    // Flatten recursively
+    // Flatten schemas once and cache the results
     const baseSchema = deepFlattenAllOf(baseMedia.schema as OpenAPIV3.SchemaObject);
     const implSchema = deepFlattenAllOf(implMedia.schema as OpenAPIV3.SchemaObject);
 
