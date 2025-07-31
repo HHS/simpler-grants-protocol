@@ -66,14 +66,34 @@ function validateSpecs(baseDoc: Document, implDoc: Document): ErrorCollection {
  *
  * This involves:
  *   1) Reading the spec file from the file system
- *   2) Converting the spec to OpenAPI v3.0 if needed
- *   3) Resolve all references, ignoring circular references to prevent stack overflows
- *   4) Returning the dereferenced spec
+ *   2) Parsing the spec content using the appropriate parser
+ *   3) Converting the spec to OpenAPI v3.0 if needed
+ *   4) Dereferencing the spec, ignoring circular references
  */
 async function loadAndParseSpec(specPath: string): Promise<Document> {
   const specContent = fs.readFileSync(specPath, "utf8");
-  const rawSpec = yaml.load(specContent) as OpenAPISchema;
+
+  // Detect format based on file extension
+  const fileExtension = path.extname(specPath).toLowerCase();
+  let rawSpec: OpenAPISchema;
+
+  // Parse the spec content using the appropriate parser
+  switch (fileExtension) {
+    case ".json":
+      rawSpec = JSON.parse(specContent) as OpenAPISchema;
+      break;
+    case ".yaml":
+    case ".yml":
+      rawSpec = yaml.load(specContent) as OpenAPISchema;
+      break;
+    default:
+      throw new Error(`Unsupported file extension: ${fileExtension}`);
+  }
+
+  // Convert the spec to OpenAPI v3.0 if needed
   const convertedSpec = convertOpenApiToV3(rawSpec) as OpenAPIV3.Document;
+
+  // Dereference the spec, ignoring circular references to prevent stack overflows
   return (await SwaggerParser.dereference(convertedSpec, {
     dereference: { circular: "ignore" },
   })) as Document;
