@@ -32,14 +32,14 @@ class ArrayOperator(StrEnum):
     """Operators that filter a field based on an array of values."""
 
     IN = "in"
-    NOT_IN = "not_in"
+    NOT_IN = "notIn"
 
 
 class StringOperator(StrEnum):
     """Operators that filter a field based on a string value."""
 
     LIKE = "like"
-    NOT_LIKE = "not_like"
+    NOT_LIKE = "notLike"
 
 
 class RangeOperator(StrEnum):

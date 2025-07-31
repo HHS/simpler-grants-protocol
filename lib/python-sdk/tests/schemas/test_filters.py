@@ -39,7 +39,7 @@ def test_filter_operators():
     """Test the filter operator enums."""
     # Test array operators
     assert ArrayOperator.IN == "in"
-    assert ArrayOperator.NOT_IN == "not_in"
+    assert ArrayOperator.NOT_IN == "notIn"
 
     # Test comparison operators
     assert ComparisonOperator.GREATER_THAN == "gt"
@@ -49,7 +49,7 @@ def test_filter_operators():
 
     # Test string operators
     assert StringOperator.LIKE == "like"
-    assert StringOperator.NOT_LIKE == "not_like"
+    assert StringOperator.NOT_LIKE == "notLike"
 
     # Test range operators
     assert RangeOperator.BETWEEN == "between"

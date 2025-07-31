@@ -83,11 +83,11 @@ async def list_opportunities(
     },
 )
 async def get_opportunity(
-    oppId: UUID,  # noqa: A002
+    oppId: UUID,  # noqa: N803
 ) -> OpportunityResponse:
     """Get a specific opportunity by ID."""
     opportunity_service = OpportunityService()
-    opportunity = await opportunity_service.get_opportunity(str(id))
+    opportunity = await opportunity_service.get_opportunity(str(oppId))
 
     if not opportunity:
         raise HTTPException(
