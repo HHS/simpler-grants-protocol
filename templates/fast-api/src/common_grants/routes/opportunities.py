@@ -45,7 +45,7 @@ async def list_opportunities(
 
 
 @opportunity_router.get(
-    "/{id}",
+    "/{oppId}",
     summary="View opportunity",
     description="View additional details about an opportunity",
     responses={
