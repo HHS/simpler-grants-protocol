@@ -23,6 +23,9 @@ __all__ = [  # noqa: RUF022
     "NumberComparisonFilter",
     "NumberRange",
     "NumberRangeFilter",
+    # Opportunity Filters
+    "OppDefaultFilters",
+    "OppFilters",
     # String Filters
     "StringArrayFilter",
     "StringComparisonFilter",
@@ -52,6 +55,10 @@ from .numeric import (
     NumberComparisonFilter,
     NumberRange,
     NumberRangeFilter,
+)
+from .opportunity import (
+    OppDefaultFilters,
+    OppFilters,
 )
 from .string import (
     StringArrayFilter,

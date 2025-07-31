@@ -2,14 +2,14 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
-
-from common_grants.schemas import (
+from common_grants_sdk.schemas import (
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
 )
-from common_grants.schemas.models.opp_search_request import OpportunitySearchRequest
+from common_grants_sdk.schemas.requests.opportunity import OpportunitySearchRequest
+from fastapi import APIRouter, HTTPException, Query, status
+
 from common_grants.services.opportunity import OpportunityService
 
 opportunity_router = APIRouter(

@@ -2,6 +2,12 @@
 
 from .base import DefaultResponse
 from .error import Error
+from .opportunity import (
+    FilterInfo,
+    OpportunitiesListResponse,
+    OpportunitiesSearchResponse,
+    OpportunityResponse,
+)
 from .success import (
     Filtered,
     Paginated,
@@ -13,6 +19,10 @@ __all__ = [
     "DefaultResponse",
     "Error",
     "Filtered",
+    "FilterInfo",
+    "OpportunitiesListResponse",
+    "OpportunitiesSearchResponse",
+    "OpportunityResponse",
     "Paginated",
     "Sorted",
     "Success",

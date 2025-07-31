@@ -7,7 +7,7 @@ from uuid import UUID, uuid5
 from common_grants_sdk.schemas import PaginatedItems, PaginatedResultsInfo
 from common_grants_sdk.schemas.fields import EventType, Money, SingleDateEvent
 
-from common_grants.schemas.models import (
+from common_grants.schemas import (
     OppFilters,
     OpportunityBase,
     OppStatusOptions,

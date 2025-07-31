@@ -2,11 +2,11 @@
 
 from typing import Optional
 
-from common_grants_sdk.schemas import PaginatedBodyParams
 from pydantic import BaseModel, Field
 
-from common_grants.schemas.models import OppFilters
-from common_grants.schemas.sorting import OppSortBy, OppSorting
+from ..filters.opportunity import OppFilters
+from ..pagination import PaginatedBodyParams
+from ..sorting import OppSortBy, OppSorting
 
 
 class OpportunitySearchRequest(BaseModel):

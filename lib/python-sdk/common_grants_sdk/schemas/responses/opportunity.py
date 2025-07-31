@@ -1,25 +1,22 @@
-"""Schemas for the CommonGrants API responses."""
+"""Opportunity-specific response schemas for the CommonGrants API."""
 
 from typing import Optional
 
-from common_grants_sdk.schemas import (
-    DefaultResponse,
-    PaginatedResultsInfo,
-    SortedResultsInfo,
-)
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from common_grants.schemas.models import (
-    OpportunityBase,
-)
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
+from common_grants_sdk.schemas.models import OpportunityBase
+from common_grants_sdk.schemas.pagination import PaginatedResultsInfo
+from common_grants_sdk.schemas.sorting import SortedResultsInfo
+from .base import DefaultResponse
 
 
-class FilterInfo(BaseModel):
+class FilterInfo(CommonGrantsBaseModel):
     """Filter information for search results."""
 
     filters: dict = Field(..., description="The filters applied to the response items")
     errors: Optional[list[str]] = Field(
-        default_factory=list,
+        default_factory=lambda: [],
         description="Non-fatal errors that occurred during filtering",
         json_schema_extra={"items": {"type": "string"}},
     )
@@ -34,6 +31,8 @@ class OpportunitiesListResponse(DefaultResponse):
         description="The pagination details",
         alias="paginationInfo",
     )
+
+    model_config = {"populate_by_name": True}
 
 
 class OpportunitiesSearchResponse(DefaultResponse):
@@ -55,6 +54,8 @@ class OpportunitiesSearchResponse(DefaultResponse):
         description="The filter details",
         alias="filterInfo",
     )
+
+    model_config = {"populate_by_name": True}
 
 
 class OpportunityResponse(DefaultResponse):

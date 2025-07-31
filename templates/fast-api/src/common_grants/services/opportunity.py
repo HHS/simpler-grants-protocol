@@ -5,19 +5,17 @@ from typing import Any
 from uuid import UUID
 
 from common_grants_sdk.schemas import (
+    FilterInfo,
+    OpportunitiesListResponse,
+    OpportunitiesSearchResponse,
     PaginatedBodyParams,
     PaginatedResultsInfo,
     SortedResultsInfo,
 )
+from common_grants_sdk.schemas.sorting import OppSortBy, OppSorting
 from fastapi import status
 
-from common_grants.schemas import (
-    OpportunitiesListResponse,
-    OpportunitiesSearchResponse,
-)
-from common_grants.schemas.models import OppFilters, OpportunityBase
-from common_grants.schemas.response import FilterInfo
-from common_grants.schemas.sorting import OppSortBy, OppSorting
+from common_grants.schemas import OppFilters, OpportunityBase
 from common_grants.services.utils import build_applied_filters, mock_opportunity
 
 

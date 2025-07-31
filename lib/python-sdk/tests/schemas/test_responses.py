@@ -79,7 +79,7 @@ class TestPaginated:
         assert response.items == items
         assert response.pagination_info == pagination_info
 
-    def test_paginated_with_models(self):
+    def test_paginated_with_models(self) -> None:
         """Test Paginated response with models."""
 
         # Create a simple test model
@@ -93,14 +93,14 @@ class TestPaginated:
         ]
         pagination_info = PaginatedResultsInfo(
             page=1,
-            page_size=10,
-            total_items=20,
-            total_pages=2,
+            pageSize=10,
+            totalItems=20,
+            totalPages=2,
         )
 
         response = Paginated[TestModel](
             items=items,
-            pagination_info=pagination_info,
+            paginationInfo=pagination_info,
         )
 
         assert len(response.items) == 2
@@ -111,24 +111,24 @@ class TestPaginated:
 class TestSorted:
     """Test Sorted class."""
 
-    def test_sorted_response(self):
+    def test_sorted_response(self) -> None:
         """Test Sorted response."""
         items = [{"id": "1"}, {"id": "2"}]
         pagination_info = PaginatedResultsInfo(
             page=1,
-            page_size=10,
-            total_items=20,
-            total_pages=2,
+            pageSize=10,
+            totalItems=20,
+            totalPages=2,
         )
         sort_info = SortedResultsInfo(
-            sort_by="id",
-            sort_order="asc",
+            sortBy="id",
+            sortOrder="asc",
         )
 
         response = Sorted[dict](
             items=items,
-            pagination_info=pagination_info,
-            sort_info=sort_info,
+            paginationInfo=pagination_info,
+            sortInfo=sort_info,
         )
 
         assert response.status == 200
