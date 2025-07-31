@@ -1,5 +1,11 @@
 # @common-grants/cli
 
+## 0.1.6
+
+### Patch Changes
+
+- 6edb983: Fix circular reference bug in `cg check spec`
+
 ## 0.1.5
 
 ### Patch Changes
