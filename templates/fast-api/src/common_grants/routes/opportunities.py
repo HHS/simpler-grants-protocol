@@ -83,7 +83,7 @@ async def list_opportunities(
     },
 )
 async def get_opportunity(
-    id: UUID,  # noqa: A002
+    oppId: UUID,  # noqa: A002
 ) -> OpportunityResponse:
     """Get a specific opportunity by ID."""
     opportunity_service = OpportunityService()
