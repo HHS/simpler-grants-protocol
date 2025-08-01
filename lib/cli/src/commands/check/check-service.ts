@@ -3,7 +3,7 @@ import { checkExtraRoutes } from "./utils/check-extra-routes";
 import { checkMatchingRoutes } from "./utils/check-matching-routes";
 import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
 import { Document } from "./utils/types";
-import { CheckApiCommandOptions, CheckSpecCommandOptions } from "./check-args";
+import { CheckApiOptions, CheckSpecOptions, availableVersions } from "./check-args";
 import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
 import { convertOpenApiToV3, OpenAPISchema } from "./utils/convert-openapi-v3";
 import * as path from "path";
@@ -13,7 +13,7 @@ import { OpenAPIV3 } from "openapi-types";
 
 export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
-  async checkApi(apiUrl: string, specPath: string, options: CheckApiCommandOptions): Promise<void> {
+  async checkApi(apiUrl: string, specPath: string, options: CheckApiOptions): Promise<void> {
     console.log("Mock: Checking API", { apiUrl, specPath, options });
   }
 
@@ -26,9 +26,9 @@ export class DefaultCheckService {
    *   3) Checking for unexpected routes prefixed with /common-grants/
    *   4) Checking that matching routes are compatible
    */
-  async checkSpec(specPath: string, options: CheckSpecCommandOptions): Promise<void> {
+  async checkSpec(specPath: string, options: CheckSpecOptions): Promise<void> {
     // Get the base spec and implementation spec
-    const baseSpecPath = options.base || getBaseSpecPath();
+    const baseSpecPath = options.base || getBaseSpecPath(options.protocolVersion);
     const baseDoc = await loadAndParseSpec(baseSpecPath);
     const implDoc = await loadAndParseSpec(specPath);
 
@@ -102,11 +102,24 @@ async function loadAndParseSpec(specPath: string): Promise<Document> {
 /**
  * Get the path to the default base spec file packaged with the CLI.
  */
-function getBaseSpecPath(): string {
-  const baseSpecPath = path.resolve(__dirname, "../../../lib/openapi.yaml");
-  if (fs.existsSync(baseSpecPath)) {
-    return baseSpecPath;
+function getBaseSpecPath(version?: string): string {
+  const openapiDir = path.resolve(__dirname, "../../../lib/openapi");
+
+  // Check that OpenAPI directory exists and contains at least one version
+  if (!fs.existsSync(openapiDir)) {
+    throw new Error(`OpenAPI directory not found at ${openapiDir}`);
   }
-  console.log("Not found", baseSpecPath);
-  throw new Error(`Could not find base spec file at ${baseSpecPath}`);
+  if (availableVersions.length === 0) {
+    throw new Error(`No OpenAPI spec files found in ${openapiDir}`);
+  }
+
+  // Use the provided version number, or default to latest version
+  const selectedVersion = version || availableVersions[0];
+  const specPath = path.join(openapiDir, `openapi.${selectedVersion}.yaml`);
+
+  if (!fs.existsSync(specPath)) {
+    throw new Error(`Base spec file not found at ${specPath}`);
+  }
+
+  return specPath;
 }

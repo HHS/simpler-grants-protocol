@@ -1,0 +1,1025 @@
+openapi: 3.0.0
+info:
+  title: CommonGrants Base API
+  description: |-
+    The base OpenAPI specification for a CommonGrants API
+
+    In order for an API to be "compliant" with the CommonGrants protocol,
+    it must implement all of the routes with the "required" tag in this specification.
+  version: 0.1.0
+tags:
+  - name: Opportunities
+    description: Endpoints related to funding opportunities
+  - name: Competitions
+    description: Endpoints related to competitions, which are distinct application processes for the same funding opportunity
+  - name: Applications
+    description: Endpoints related to applications for a given competition
+  - name: Forms
+    description: Endpoints related to forms
+  - name: required
+    description: Endpoints that MUST be implemented by all CommonGrants APIs
+  - name: optional
+    description: Endpoints that MAY be implemented by CommonGrants APIs
+  - name: experimental
+    description: Endpoints that MAY be implemented by CommonGrants APIs, but are not guaranteed to be stable
+paths:
+  /common-grants/opportunities:
+    get:
+      operationId: Opportunities_list
+      summary: List opportunities
+      description: Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.
+      parameters:
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
+      responses:
+        '200':
+          description: A 200 response with a paginated list of items
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - paginationInfo
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.OpportunityBase'
+                    description: Items from the current page
+                  paginationInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+                    description: Details about the paginated results
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with a paginated list of items
+      tags:
+        - Opportunities
+        - required
+  /common-grants/opportunities/search:
+    post:
+      operationId: Opportunities_search
+      summary: Search opportunities
+      description: Search for opportunities based on the provided filters.
+      parameters: []
+      responses:
+        '200':
+          description: A paginated list of items with a filter
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - paginationInfo
+                  - status
+                  - message
+                  - sortInfo
+                  - filterInfo
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.OpportunityBase'
+                    description: Items from the current page
+                  paginationInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+                    description: Details about the paginated results
+                  status:
+                    type: integer
+                    format: int32
+                    example: 200
+                  message:
+                    type: string
+                    example: Success
+                  sortInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
+                    description: The sort order of the items
+                  filterInfo:
+                    type: object
+                    properties:
+                      filters:
+                        $ref: '#/components/schemas/CommonGrants.Models.OppFilters'
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                        description: Non-fatal errors that occurred during filtering
+                    required:
+                      - filters
+                    description: The filters applied to the response items
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A paginated list of items with a filter
+      tags:
+        - Opportunities
+        - optional
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: string
+                  description: Opportunity search query
+                  example: Pre-school education
+                filters:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Models.OppFilters'
+                  description: |-
+                    Filters to apply to the opportunity search
+
+                    Multiple filter conditions will be combined with AND logic, so that
+                    results only include opportunities that match all of the provided filters.
+                sorting:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Models.OppSorting'
+                  description: The sort order to apply to the results
+                pagination:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedBodyParams'
+                  description: Pagination instructions for the results
+  /common-grants/opportunities/{id}:
+    get:
+      operationId: Opportunities_read
+      summary: View opportunity details
+      description: View details about an opportunity.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the opportunity to view
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.OpportunityBase'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Opportunities
+        - required
+components:
+  parameters:
+    CommonGrants.Pagination.PaginatedQueryParams.page:
+      name: page
+      in: query
+      required: false
+      description: The page to return
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+      explode: false
+    CommonGrants.Pagination.PaginatedQueryParams.pageSize:
+      name: pageSize
+      in: query
+      required: false
+      description: The number of items to return per page
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 100
+      explode: false
+  schemas:
+    CommonGrants.Fields.CustomField:
+      type: object
+      required:
+        - name
+        - fieldType
+        - value
+      properties:
+        name:
+          type: string
+          description: Name of the custom field
+        fieldType:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.CustomFieldType'
+          description: The JSON schema type to use when de-serializing the `value` field
+        schema:
+          type: string
+          format: uri
+          description: Link to the full JSON schema for this custom field
+        value:
+          description: Value of the custom field
+        description:
+          type: string
+          description: Description of the custom field's purpose
+      description: A custom field on a model
+      example:
+        name: eligibilityType
+        fieldType: array
+        value:
+          - nonprofit
+          - academic
+        description: Types of eligible organizations
+    CommonGrants.Fields.CustomFieldType:
+      type: string
+      enum:
+        - string
+        - number
+        - integer
+        - boolean
+        - object
+        - array
+      description: The set of JSON schema types supported by a custom field
+    CommonGrants.Fields.DateRangeEvent:
+      type: object
+      required:
+        - eventType
+        - startDate
+        - endDate
+      properties:
+        eventType:
+          type: string
+          enum:
+            - dateRange
+          description: Type of event
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'Start date of the event in ISO 8601 format: YYYY-MM-DD'
+        startTime:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
+          description: 'Start time of the event in ISO 8601 format: HH:MM:SS'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'End date of the event in ISO 8601 format: YYYY-MM-DD'
+        endTime:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
+          description: 'End time of the event in ISO 8601 format: HH:MM:SS'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.EventBase'
+      description: Description of an event that has a start and end date (and possible time) associated with it
+      example:
+        name: Application period
+        eventType: dateRange
+        startDate: '2024-01-01'
+        endDate: '2024-01-31'
+        endTime: '17:00:00'
+        description: Primary application period for the grant opportunity
+    CommonGrants.Fields.Event:
+      anyOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.SingleDateEvent'
+        - $ref: '#/components/schemas/CommonGrants.Fields.DateRangeEvent'
+        - $ref: '#/components/schemas/CommonGrants.Fields.OtherEvent'
+      description: Union of all event types
+    CommonGrants.Fields.EventBase:
+      type: object
+      required:
+        - name
+        - eventType
+      properties:
+        name:
+          type: string
+          description: Human-readable name of the event (e.g., 'Application posted', 'Question deadline')
+        eventType:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.EventType'
+          description: Type of event
+        description:
+          type: string
+          description: Description of what this event represents
+      discriminator:
+        propertyName: eventType
+        mapping:
+          dateRange: '#/components/schemas/CommonGrants.Fields.DateRangeEvent'
+          other: '#/components/schemas/CommonGrants.Fields.OtherEvent'
+      description: Base model for all events
+    CommonGrants.Fields.EventType:
+      type: string
+      enum:
+        - singleDate
+        - dateRange
+        - other
+      description: |-
+        Type of event (e.g., a single date, a date range, or a custom event)
+
+        - singleDate: A single date (and possible time)
+        - dateRange: A period of time with a start and end date
+        - other: Other event type (e.g., a recurring event)
+    CommonGrants.Fields.Money:
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.decimalString'
+          description: The amount of money
+        currency:
+          type: string
+          description: The ISO 4217 currency code in which the amount is denominated
+      description: A monetary amount and the currency in which it's denominated
+      example:
+        amount: '-50.50'
+        currency: USD
+    CommonGrants.Fields.OtherEvent:
+      type: object
+      required:
+        - eventType
+      properties:
+        eventType:
+          type: string
+          enum:
+            - other
+          description: Type of event
+        details:
+          type: string
+          description: Details of the event's timeline (e.g. "Every other Tuesday")
+        description:
+          type: string
+          description: Description of the event
+          example: Applications begin being accepted
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.EventBase'
+      description: Description of an event that is not a single date or date range
+      example:
+        name: Info sessions
+        eventType: other
+        details: Every other Tuesday at 10:00 AM during the application period
+        description: Info sessions for the opportunity
+    CommonGrants.Fields.SingleDateEvent:
+      type: object
+      required:
+        - eventType
+        - date
+      properties:
+        eventType:
+          type: string
+          enum:
+            - singleDate
+          description: Type of event
+        date:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'Date of the event in in ISO 8601 format: YYYY-MM-DD'
+        time:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoTime'
+          description: 'Time of the event in ISO 8601 format: HH:MM:SS'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.EventBase'
+      description: Description of an event that has a date (and possible time) associated with it
+      example:
+        name: Opportunity close date
+        eventType: singleDate
+        date: '2024-12-31'
+        time: '17:00:00'
+        description: Opportunity closes for all applications
+    CommonGrants.Filters.AllOperators:
+      type: string
+      enum:
+        - eq
+        - neq
+        - gt
+        - gte
+        - lt
+        - lte
+        - in
+        - notIn
+        - between
+        - outside
+        - like
+        - notLike
+    CommonGrants.Filters.ArrayOperators:
+      type: string
+      enum:
+        - in
+        - notIn
+      description: Operators that filter a field based on an array of values
+    CommonGrants.Filters.ComparisonOperators:
+      type: string
+      enum:
+        - gt
+        - gte
+        - lt
+        - lte
+      description: Operators that filter a field based on a comparison to a value
+    CommonGrants.Filters.DateRangeFilter:
+      type: object
+      required:
+        - operator
+        - value
+      properties:
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.RangeOperators'
+          description: The operator to apply to the filter value
+        value:
+          type: object
+          properties:
+            min:
+              anyOf:
+                - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+                - type: string
+                  format: date-time
+                - type: string
+                  format: date-time
+            max:
+              anyOf:
+                - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+                - type: string
+                  format: date-time
+                - type: string
+                  format: date-time
+          required:
+            - min
+            - max
+          description: The value to use for the filter operation
+          example:
+            min: '2021-01-01'
+            max: '2021-01-02'
+      description: Filters by comparing a field to a range of date values
+    CommonGrants.Filters.DefaultFilter:
+      type: object
+      required:
+        - operator
+        - value
+      properties:
+        operator:
+          anyOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.EquivalenceOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.ComparisonOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.ArrayOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.RangeOperators'
+            - $ref: '#/components/schemas/CommonGrants.Filters.AllOperators'
+          description: The operator to apply to the filter value
+        value:
+          description: The value to use for the filter operation
+      description: A base filter model that can be used to create more specific filter models
+    CommonGrants.Filters.EquivalenceOperators:
+      type: string
+      enum:
+        - eq
+        - neq
+      description: Operators that filter a field based on an exact match to a value
+    CommonGrants.Filters.MoneyRangeFilter:
+      type: object
+      required:
+        - operator
+        - value
+      properties:
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.RangeOperators'
+          description: The operator to apply to the filter value
+        value:
+          type: object
+          properties:
+            min:
+              $ref: '#/components/schemas/CommonGrants.Fields.Money'
+            max:
+              $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          required:
+            - min
+            - max
+          description: The value to use for the filter operation
+          example:
+            min:
+              amount: '1000'
+              currency: USD
+            max:
+              amount: '10000'
+              currency: USD
+      description: Filters by comparing a field to a range of monetary values
+    CommonGrants.Filters.RangeOperators:
+      type: string
+      enum:
+        - between
+        - outside
+      description: Operators that filter a field based on a range of values
+    CommonGrants.Filters.StringArrayFilter:
+      type: object
+      required:
+        - operator
+        - value
+      properties:
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.ArrayOperators'
+          description: The operator to apply to the filter value
+        value:
+          type: array
+          items:
+            type: string
+          description: The value to use for the filter operation
+          example:
+            - value1
+            - value2
+      description: Filters by comparing a field to an array of string values
+    CommonGrants.Filters.StringOperators:
+      type: string
+      enum:
+        - like
+        - notLike
+      description: Operators that filter a field based on a string value
+    CommonGrants.Models.OppDefaultFilters:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - forecasted
+              - open
+        closeDateRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`keyDates.closeDate` is between the given range'
+          example:
+            operator: between
+            value:
+              min: '2021-01-01'
+              max: '2021-01-02'
+        totalFundingAvailableRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.totalAmountAvailable` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        minAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.minAwardAmount` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        maxAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.maxAwardAmount` is between the given range.
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+      allOf:
+        - type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Filters.DefaultFilter'
+      description: The standard set of filters supported for opportunity searches
+    CommonGrants.Models.OppFilters:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - forecasted
+              - open
+        closeDateRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`keyDates.closeDate` is between the given range'
+          example:
+            operator: between
+            value:
+              min: '2021-01-01'
+              max: '2021-01-02'
+        totalFundingAvailableRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.totalAmountAvailable` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        minAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.minAwardAmount` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        maxAwardAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.maxAwardAmount` is between the given range.
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '1000000'
+                currency: USD
+              max:
+                amount: '2000000'
+                currency: USD
+        customFilters:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Filters.DefaultFilter'
+          description: Additional implementation-defined filters to apply to the search
+      description: Filters to apply when searching for opportunities
+    CommonGrants.Models.OppFunding:
+      type: object
+      properties:
+        details:
+          type: string
+          description: Details about the funding available for this opportunity that don't fit other fields
+        totalAmountAvailable:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          description: Total amount of funding available for this opportunity
+        minAwardAmount:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          description: Minimum amount of funding granted per award
+        maxAwardAmount:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          description: Maximum amount of funding granted per award
+        minAwardCount:
+          type: integer
+          description: Minimum number of awards granted
+        maxAwardCount:
+          type: integer
+          description: Maximum number of awards granted
+        estimatedAwardCount:
+          type: integer
+          description: Estimated number of awards that will be granted
+      description: Details about the funding available for this opportunity
+      example:
+        totalAmountAvailable:
+          amount: '1000000.00'
+          currency: USD
+        minAwardAmount:
+          amount: '10000.00'
+          currency: USD
+        maxAwardAmount:
+          amount: '50000.00'
+          currency: USD
+        minAwardCount: 5
+        maxAwardCount: 20
+        estimatedAwardCount: 10
+    CommonGrants.Models.OppSortBy:
+      type: string
+      enum:
+        - lastModifiedAt
+        - createdAt
+        - title
+        - status.value
+        - keyDates.closeDate
+        - funding.maxAwardAmount
+        - funding.minAwardAmount
+        - funding.totalAmountAvailable
+        - funding.estimatedAwardCount
+        - custom
+    CommonGrants.Models.OppSorting:
+      type: object
+      required:
+        - sortBy
+      properties:
+        sortBy:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppSortBy'
+          description: The field to sort by
+          example: lastModifiedAt
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Sorting.SortBodyParams'
+    CommonGrants.Models.OppStatus:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppStatusOptions'
+          description: The status of the opportunity, from a predefined set of options
+        customValue:
+          type: string
+          description: A custom value for the status
+        description:
+          type: string
+          description: A human-readable description of the status
+      description: The status of the opportunity
+      example:
+        value: open
+        description: The opportunity is currently accepting applications
+    CommonGrants.Models.OppStatusOptions:
+      type: string
+      enum:
+        - forecasted
+        - open
+        - closed
+        - custom
+      description: |-
+        The set of values accepted for opportunity status:
+        - `forecasted`: The opportunity is forecasted and not yet open for applications
+        - `open`: The opportunity is open for applications
+        - `closed`: The opportunity is no longer accepting applications
+        - `custom`: A custom status
+    CommonGrants.Models.OppTimeline:
+      type: object
+      properties:
+        postDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: The date (and time) at which the opportunity is posted
+        closeDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: The date (and time) at which the opportunity closes
+        otherDates:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: |-
+            An optional map of other key dates or events in the opportunity timeline
+
+            Examples might include a deadline for questions, anticipated award date, etc.
+      description: Key dates and events in the opportunity's timeline, such as when the opportunity is posted and closes
+      example:
+        postDate: {}
+        closeDate: {}
+        otherDates:
+          anticipatedAward: {}
+          applicationPeriod: {}
+          performancePeriod: {}
+          infoSessions: {}
+    CommonGrants.Models.OpportunityBase:
+      type: object
+      required:
+        - id
+        - title
+        - status
+        - description
+        - createdAt
+        - lastModifiedAt
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: Globally unique id for the opportunity
+          readOnly: true
+        title:
+          type: string
+          description: Title or name of the funding opportunity
+          example: Small business grant program
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppStatus'
+          description: Status of the opportunity
+        description:
+          type: string
+          description: Description of the opportunity's purpose and scope
+          example: This program provides funding to small businesses to help them grow and create jobs
+        funding:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppFunding'
+          description: Details about the funding available
+        keyDates:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppTimeline'
+          description: Key dates for the opportunity, such as when the application opens and closes
+        source:
+          type: string
+          format: uri
+          description: URL for the original source of the opportunity
+        customFields:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.CustomField'
+          description: Additional custom fields specific to this opportunity
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was created.
+          readOnly: true
+        lastModifiedAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was last modified.
+          readOnly: true
+      description: A funding opportunity
+    CommonGrants.Pagination.PaginatedBodyParams:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The page to return
+          default: 1
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The number of items to return per page
+          default: 100
+      description: Body parameters for paginated routes
+    CommonGrants.Pagination.PaginatedResultsInfo:
+      type: object
+      required:
+        - page
+        - pageSize
+      properties:
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Current page number (indexing starts at 1)
+          example: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          description: Number of items per page
+          example: 20
+        totalItems:
+          type: integer
+          description: Total number of items across all pages
+          example: 100
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 5
+      description: Details about the paginated results
+    CommonGrants.Responses.Error:
+      type: object
+      required:
+        - status
+        - message
+        - errors
+      properties:
+        status:
+          type: integer
+          format: int32
+          example: 400
+        message:
+          type: string
+          description: Human-readable error message
+          example: Error
+        errors:
+          type: array
+          items: {}
+          description: List of errors
+      description: A non-2xx response schema
+    CommonGrants.Responses.Success:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          format: int32
+          example: 200
+        message:
+          type: string
+          example: Success
+    CommonGrants.Sorting.SortBodyParams:
+      type: object
+      required:
+        - sortBy
+      properties:
+        sortBy:
+          description: The field to sort by
+          example: lastModifiedAt
+        customSortBy:
+          type: string
+          description: Implementation-defined sort key
+          example: customField
+        sortOrder:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortOrder'
+          description: The order to sort by
+          example: asc
+      description: Sorting parameters included in the request body
+    CommonGrants.Sorting.SortOrder:
+      type: string
+      enum:
+        - asc
+        - desc
+    CommonGrants.Sorting.SortedResultsInfo:
+      type: object
+      required:
+        - sortBy
+        - sortOrder
+      properties:
+        sortBy:
+          type: string
+          description: The field results are sorted by, or "custom" if an implementation-defined sort key is used
+          example: lastModifiedAt
+        customSortBy:
+          type: string
+          description: Implementation-defined sort key used to sort the results, if applicable
+          example: customField
+        sortOrder:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortOrder'
+          description: The order in which the results are sorted, e.g. ascending or descending
+          example: asc
+        errors:
+          type: array
+          items:
+            type: string
+          description: Non-fatal errors that occurred during sorting
+      description: Information about the sort order of the items returned
+    CommonGrants.Types.decimalString:
+      type: string
+      pattern: ^-?[0-9]+\.?[0-9]*$
+      description: A decimal number (with variable scale) encoded as a string, to avoid floating point issues
+      example: '-100.5'
+    CommonGrants.Types.isoDate:
+      type: string
+      format: date
+      description: A date on a calendar in ISO 8601 format YYYY-MM-DD
+      example: '2025-01-01'
+    CommonGrants.Types.isoTime:
+      type: string
+      format: time
+      description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
+      example: '17:00:00'
+    CommonGrants.Types.uuid:
+      type: string
+      format: uuid
+      description: A universally unique identifier
+      example: 30a12e5e-5940-4c08-921c-17a8960fcf4b

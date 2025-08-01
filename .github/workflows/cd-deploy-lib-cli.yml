@@ -28,6 +28,9 @@ jobs:
   deploy:
     needs: create-release-from-tag
     runs-on: ubuntu-latest
+    environment:
+      name: npm-cli
+      url: https://www.npmjs.com/package/@common-grants/cli
     permissions:
       contents: read
       id-token: write
@@ -63,4 +66,3 @@ jobs:
         run: |
           echo "CLI package deployed to npm"
           echo "Tag: ${{ github.event.inputs.tag }}"
-

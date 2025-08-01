@@ -2,9 +2,9 @@ import { Command } from "commander";
 import { DefaultCheckService } from "./check-service";
 import {
   CheckApiArgsSchema,
-  CheckApiCommandSchema,
+  CheckApiOptionsSchema,
   CheckSpecArgsSchema,
-  CheckSpecCommandSchema,
+  CheckSpecOptionsSchema,
 } from "./check-args";
 
 export function checkCommand(program: Command) {
@@ -23,7 +23,7 @@ export function checkCommand(program: Command) {
     .action(async (apiUrl, specPath, options) => {
       try {
         const validatedArgs = CheckApiArgsSchema.parse({ apiUrl, specPath });
-        const validatedOptions = CheckApiCommandSchema.parse(options);
+        const validatedOptions = CheckApiOptionsSchema.parse(options);
         await validationService.checkApi(
           validatedArgs.apiUrl,
           validatedArgs.specPath,
@@ -41,13 +41,27 @@ export function checkCommand(program: Command) {
 
   check
     .command("spec")
-    .description("Validate a specification against the CommonGrants base spec")
-    .argument("<specPath>", "Path or URL to TypeSpec or OpenAPI spec")
-    .option("--base <path>", "Path to base spec for validation")
+    .description("Validate an OpenAPI spec against the CommonGrants base protocol")
+    .argument("<specPath>", "Path to the OpenAPI spec you want to validate")
+    .option("--base <path>", "Path to the base OpenAPI spec you want to use for validation")
+    .option(
+      "--protocol-version <version>",
+      "Version of the CommonGrants protocol OpenAPI spec to validate against. Note: Only major and minor versions are supported."
+    )
     .action(async (specPath, options) => {
       try {
         const validatedArgs = CheckSpecArgsSchema.parse({ specPath });
-        const validatedOptions = CheckSpecCommandSchema.parse(options);
+        const validatedOptions = CheckSpecOptionsSchema.parse(options);
+
+        // Handle conflict between --base and --protocol-version
+        if (validatedOptions.base && validatedOptions.protocolVersion) {
+          console.warn(
+            "Warning: Both --base and --protocol-version are specified. Using --base and ignoring --protocol-version."
+          );
+          // Remove protocolVersion from options to prioritize base
+          delete validatedOptions.protocolVersion;
+        }
+
         await validationService.checkSpec(validatedArgs.specPath, validatedOptions);
       } catch (error) {
         if (error instanceof Error) {

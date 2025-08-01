@@ -6,6 +6,7 @@ dist/
 build/
 .generated/
 tsp-output/
+*.tgz
 
 # Coverage reports
 coverage/
