@@ -53,11 +53,11 @@ export const CheckSpecArgsSchema = z.object({
 });
 
 /**
- * Optional arguments that can be passed to the `check spec` command using flags (e.g. `--base` or `--version`)
+ * Optional arguments that can be passed to the `check spec` command using flags (e.g. `--base` or `--protocol-version`)
  */
 export const CheckSpecOptionsSchema = z.object({
   base: z.string().optional(),
-  baseVersion:
+  protocolVersion:
     availableVersions.length > 0
       ? z.enum(availableVersions as [string, ...string[]]).optional()
       : z.string().optional(),

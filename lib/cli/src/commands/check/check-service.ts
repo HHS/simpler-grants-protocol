@@ -28,7 +28,7 @@ export class DefaultCheckService {
    */
   async checkSpec(specPath: string, options: CheckSpecOptions): Promise<void> {
     // Get the base spec and implementation spec
-    const baseSpecPath = options.base || getBaseSpecPath(options.baseVersion);
+    const baseSpecPath = options.base || getBaseSpecPath(options.protocolVersion);
     const baseDoc = await loadAndParseSpec(baseSpecPath);
     const implDoc = await loadAndParseSpec(specPath);
 

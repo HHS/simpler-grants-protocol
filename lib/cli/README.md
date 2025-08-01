@@ -81,14 +81,14 @@ cg preview openapi.json
 Validate an API specification against the CommonGrants base protocol. You can optionally specify a specific protocol version to check against, or provide a path to your own base spec. By default, `check spec` uses the latest version of the base protocol bundled with the CLI.
 
 ```bash
-# Using the base protocol spec installed by @common-grants/cli
+# Using the base protocol spec bundled with @common-grants/cli, uses the latest version by default
 cg check spec openapi.yaml
+
+# Using a specific protocol version
+cg check spec openapi.yaml --protocol-version 0.1.0
 
 # Using the path to a locally compiled base spec
 cg check spec openapi.yaml --base <path-to-base-spec>
-
-# Using a specific protocol version
-cg check spec openapi.yaml --base-version 0.1.0
 ```
 
 ## Development status

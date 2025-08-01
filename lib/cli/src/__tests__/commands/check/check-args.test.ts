@@ -90,31 +90,31 @@ describe("Check Args Validation", () => {
   // #########################################################
 
   describe("CheckSpecOptionsSchema", () => {
-    it("should accept valid baseVersion 0.1.0", () => {
+    it("should accept valid protocolVersion 0.1.0", () => {
       const result = CheckSpecOptionsSchema.safeParse({
-        baseVersion: "0.1.0",
+        protocolVersion: "0.1.0",
       });
       expect(result.success).toBe(true);
     });
 
-    it("should accept valid baseVersion 0.2.0", () => {
+    it("should accept valid protocolVersion 0.2.0", () => {
       const result = CheckSpecOptionsSchema.safeParse({
-        baseVersion: "0.2.0",
+        protocolVersion: "0.2.0",
       });
       expect(result.success).toBe(true);
     });
 
-    it("should reject invalid baseVersion", () => {
+    it("should reject invalid protocolVersion", () => {
       const result = CheckSpecOptionsSchema.safeParse({
-        baseVersion: "1.0.0",
+        protocolVersion: "1.0.0",
       });
       expect(result.success).toBe(false);
     });
 
-    it("should accept baseVersion with base option", () => {
+    it("should accept protocolVersion with base option", () => {
       const result = CheckSpecOptionsSchema.safeParse({
         base: "base.yaml",
-        baseVersion: "0.1.0",
+        protocolVersion: "0.1.0",
       });
       expect(result.success).toBe(true);
     });
