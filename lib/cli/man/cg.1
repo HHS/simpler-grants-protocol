@@ -47,19 +47,15 @@ Create a new CommonGrants project from a template:
 
     cg check spec openapi.yaml
 
+    cg check spec openapi.yaml --protocol-version 0.2.0
+
     cg check spec openapi.yaml --base <path-to-base-spec>
 
 
 .SH Development status
-    This CLI is currently in alpha stage and only supports the following commands:
+    This CLI is currently under active development and only supports the following commands:
 
     - `cg init` with a limited set of templates
     - `cg compile`
     - `cg preview`
     - `cg check spec`
-
-    Subsequent releases will add:
-
-    - An expanded set of templates
-    - Validating an API implementation against its specification
-    - Generating server and client code
