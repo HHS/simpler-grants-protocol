@@ -3,7 +3,9 @@
 from enum import StrEnum
 from typing import Union
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 
 # ############################################################
 # Enums
@@ -30,14 +32,14 @@ class ArrayOperator(StrEnum):
     """Operators that filter a field based on an array of values."""
 
     IN = "in"
-    NOT_IN = "not_in"
+    NOT_IN = "notIn"
 
 
 class StringOperator(StrEnum):
     """Operators that filter a field based on a string value."""
 
     LIKE = "like"
-    NOT_LIKE = "not_like"
+    NOT_LIKE = "notLike"
 
 
 class RangeOperator(StrEnum):
@@ -52,7 +54,7 @@ class RangeOperator(StrEnum):
 # ############################################################
 
 
-class DefaultFilter(BaseModel):
+class DefaultFilter(CommonGrantsBaseModel):
     """Base class for all filters that matches Core v0.1.0 DefaultFilter structure."""
 
     operator: Union[

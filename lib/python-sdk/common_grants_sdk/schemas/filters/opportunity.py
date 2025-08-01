@@ -2,21 +2,15 @@
 
 from typing import Optional
 
+from .base import DefaultFilter
+from .date import DateRangeFilter
+from .money import MoneyRangeFilter
+from .string import StringArrayFilter
 from pydantic import BaseModel, Field
-
-from common_grants.schemas.filters.base import DefaultFilter
-from common_grants.schemas.filters.date_filters import DateRangeFilter
-from common_grants.schemas.filters.money_filters import MoneyRangeFilter
-from common_grants.schemas.filters.string_filters import StringArrayFilter
 
 
 class OppDefaultFilters(BaseModel):
-    """
-    Standard filters available for searching opportunities.
-
-    This extends Record<DefaultFilter> as defined in Core v0.1.0.
-    Each field should have operator and value properties like DefaultFilter.
-    """
+    """Standard filters available for searching opportunities."""
 
     status: Optional[StringArrayFilter] = Field(
         default=None,
@@ -49,6 +43,6 @@ class OppFilters(OppDefaultFilters):
 
     custom_filters: Optional[dict[str, DefaultFilter]] = Field(
         default=None,
-        description="Additional implementation-defined filters to apply to the search",
+        description="Additional custom filters to apply to the search",
         alias="customFilters",
     )

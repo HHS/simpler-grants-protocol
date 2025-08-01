@@ -6,29 +6,13 @@ from uuid import UUID, uuid5
 
 from common_grants_sdk.schemas.fields import EventType, Money, SingleDateEvent
 
-from common_grants.schemas.models import (
+from common_grants.schemas import (
     OppFilters,
     OpportunityBase,
     OppStatusOptions,
 )
-from common_grants.schemas.pagination import PaginatedItems, PaginationInfo
 
 NAMESPACE = UUID("58315de5-1411-4c17-a394-561f1a47376f")
-
-
-def paginate(items: list, page: int, page_size: int) -> PaginatedItems[OpportunityBase]:
-    """Paginate a list of items."""
-    start = (page - 1) * page_size
-    end = start + page_size
-    return PaginatedItems(
-        items=items[start:end],
-        pagination_info=PaginationInfo(
-            page=page,
-            pageSize=page_size,
-            totalItems=len(items),
-            totalPages=(len(items) + page_size - 1) // page_size,
-        ),
-    )
 
 
 def build_applied_filters(filters: OppFilters) -> dict[str, Any]:

@@ -1,10 +1,9 @@
 """Tests for field validation in the CommonGrants schema."""
 
 import pytest
-from datetime import date, time
+from datetime import date, time, datetime, timezone
 
 from common_grants_sdk.schemas.fields import (
-    validate_decimal_string,
     Money,
     EventType,
     SingleDateEvent,
@@ -12,7 +11,9 @@ from common_grants_sdk.schemas.fields import (
     OtherEvent,
     CustomField,
     CustomFieldType,
+    SystemMetadata,
 )
+from common_grants_sdk.schemas.types import validate_decimal_string
 
 
 def test_money_validation():
@@ -233,3 +234,31 @@ def test_custom_field_validation():
             value="test",
             schema="not-a-url",
         )
+
+
+def test_system_metadata_validation():
+    """Test SystemMetadata model validation."""
+    # Valid case - using aliases
+    now = datetime.now(timezone.utc)
+    metadata = SystemMetadata(
+        createdAt=now,
+        lastModifiedAt=now,
+    )
+    assert metadata.created_at == now
+    assert metadata.last_modified_at == now
+
+    # Test with model_validate
+    metadata_data = {
+        "createdAt": now,
+        "lastModifiedAt": now,
+    }
+    metadata = SystemMetadata.model_validate(metadata_data)
+    assert metadata.created_at == now
+    assert metadata.last_modified_at == now
+
+    # Test serialization with aliases
+    data = metadata.model_dump(by_alias=True)
+    assert "createdAt" in data
+    assert "lastModifiedAt" in data
+    assert data["createdAt"] == now
+    assert data["lastModifiedAt"] == now

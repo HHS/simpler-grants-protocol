@@ -2,10 +2,11 @@
 
 from typing import Optional
 
-from common_grants_sdk.schemas.fields import Money
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import Field, ValidationInfo, field_validator
 
-from common_grants.schemas.filters.base import (
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
+from common_grants_sdk.schemas.fields import Money
+from .base import (
     ComparisonOperator,
     RangeOperator,
 )
@@ -19,7 +20,7 @@ class InvalidMoneyValueError(ValueError):
         super().__init__("Value must be either a Money object or a dict")
 
 
-class MoneyRange(BaseModel):
+class MoneyRange(CommonGrantsBaseModel):
     """Range filter for money values."""
 
     min: Money = Field(..., description="The minimum amount in the range")
@@ -39,7 +40,7 @@ class MoneyRange(BaseModel):
         raise InvalidMoneyValueError
 
 
-class MoneyRangeFilter(BaseModel):
+class MoneyRangeFilter(CommonGrantsBaseModel):
     """Filter for money ranges using comparison operators."""
 
     operator: RangeOperator = Field(
@@ -60,7 +61,7 @@ class MoneyRangeFilter(BaseModel):
         return v
 
 
-class MoneyComparisonFilter(BaseModel):
+class MoneyComparisonFilter(CommonGrantsBaseModel):
     """Filter for money values using comparison operators."""
 
     operator: ComparisonOperator = Field(

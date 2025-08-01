@@ -4,9 +4,9 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from common_grants.schemas.models import OppFilters
-from common_grants.schemas.pagination import PaginationBodyParams
-from common_grants.schemas.sorting import OppSortBy, OppSorting
+from ..filters.opportunity import OppFilters
+from ..pagination import PaginatedBodyParams
+from ..sorting import OppSortBy, OppSorting
 
 
 class OpportunitySearchRequest(BaseModel):
@@ -22,4 +22,4 @@ class OpportunitySearchRequest(BaseModel):
         description="Filters to apply to the opportunity search",
     )
     sorting: OppSorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
-    pagination: PaginationBodyParams = PaginationBodyParams()
+    pagination: PaginatedBodyParams = PaginatedBodyParams()

@@ -1,15 +1,16 @@
 """String filter schemas."""
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from common_grants.schemas.filters.base import (
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
+from .base import (
     ArrayOperator,
     EquivalenceOperator,
     StringOperator,
 )
 
 
-class StringArrayFilter(BaseModel):
+class StringArrayFilter(CommonGrantsBaseModel):
     """Filter that matches against an array of string values."""
 
     operator: ArrayOperator = Field(
@@ -19,7 +20,7 @@ class StringArrayFilter(BaseModel):
     value: list[str] = Field(..., description="The array of string values")
 
 
-class StringComparisonFilter(BaseModel):
+class StringComparisonFilter(CommonGrantsBaseModel):
     """Filter that applies a comparison to a string value."""
 
     operator: EquivalenceOperator | StringOperator = Field(
