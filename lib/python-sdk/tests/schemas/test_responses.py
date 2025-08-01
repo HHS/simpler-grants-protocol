@@ -21,18 +21,22 @@ from common_grants_sdk.schemas.responses import FilterInfo
 class TestDefaultResponse:
     """Test DefaultResponse class."""
 
-    def test_default_response_creation(self):
+    def test_default_response_creation(self) -> None:
         """Test creating a DefaultResponse."""
         response = DefaultResponse(status=200, message="Success")
         assert response.status == 200
         assert response.message == "Success"
 
-    def test_default_response_validation(self):
+    def test_default_response_validation(self) -> None:
         """Test DefaultResponse validation."""
         with pytest.raises(ValidationError):
-            DefaultResponse()  # Missing required fields
+            DefaultResponse()  # type: ignore[call-arg] # Missing required fields
+        with pytest.raises(ValidationError):
+            DefaultResponse(status=200)  # type: ignore[call-arg] # Missing message
+        with pytest.raises(ValidationError):
+            DefaultResponse(message="Test")  # type: ignore[call-arg] # Missing status
 
-    def test_default_response_examples(self):
+    def test_default_response_examples(self) -> None:
         """Test DefaultResponse with example values."""
         response = DefaultResponse(
             status=201,
@@ -45,13 +49,13 @@ class TestDefaultResponse:
 class TestSuccess:
     """Test Success class."""
 
-    def test_success_default_values(self):
+    def test_success_default_values(self) -> None:
         """Test Success with default values."""
         response = Success()
         assert response.status == 200
         assert response.message == "Success"
 
-    def test_success_custom_values(self):
+    def test_success_custom_values(self) -> None:
         """Test Success with custom values."""
         response = Success(status=201, message="Created")
         assert response.status == 201
@@ -61,19 +65,19 @@ class TestSuccess:
 class TestPaginated:
     """Test Paginated class."""
 
-    def test_paginated_response(self):
+    def test_paginated_response(self) -> None:
         """Test Paginated response."""
         items = [{"id": "1"}, {"id": "2"}]
         pagination_info = PaginatedResultsInfo(
             page=1,
-            page_size=10,
-            total_items=20,
-            total_pages=2,
+            pageSize=10,
+            totalItems=20,
+            totalPages=2,
         )
 
         response = Paginated[dict](
             items=items,
-            pagination_info=pagination_info,
+            paginationInfo=pagination_info,
         )
 
         assert response.status == 200
@@ -142,18 +146,18 @@ class TestSorted:
 class TestFiltered:
     """Test Filtered class."""
 
-    def test_filtered_response(self):
+    def test_filtered_response(self) -> None:
         """Test Filtered response."""
         items = [{"id": "1"}, {"id": "2"}]
         pagination_info = PaginatedResultsInfo(
             page=1,
-            page_size=10,
-            total_items=20,
-            total_pages=2,
+            pageSize=10,
+            totalItems=20,
+            totalPages=2,
         )
         sort_info = SortedResultsInfo(
-            sort_by="id",
-            sort_order="asc",
+            sortBy="id",
+            sortOrder="asc",
         )
         filter_info = FilterInfo[dict](
             filters={"status": "active"},
@@ -162,9 +166,9 @@ class TestFiltered:
 
         response = Filtered[dict, dict](
             items=items,
-            pagination_info=pagination_info,
-            sort_info=sort_info,
-            filter_info=filter_info,
+            paginationInfo=pagination_info,
+            sortInfo=sort_info,
+            filterInfo=filter_info,
         )
 
         assert response.status == 200
@@ -173,13 +177,13 @@ class TestFiltered:
         assert response.sort_info == sort_info
         assert response.filter_info == filter_info
 
-    def test_filtered_response_type_safety(self):
+    def test_filtered_response_type_safety(self) -> None:
         """Test that FilterT type parameter provides type safety."""
         items = [{"id": "1"}]
         pagination_info = PaginatedResultsInfo(
-            page=1, page_size=10, total_items=1, total_pages=1
+            page=1, pageSize=10, totalItems=1, totalPages=1
         )
-        sort_info = SortedResultsInfo(sort_by="id", sort_order="asc")
+        sort_info = SortedResultsInfo(sortBy="id", sortOrder="asc")
 
         # Test with a specific filter type
         class StatusFilter(CommonGrantsBaseModel):
@@ -193,9 +197,9 @@ class TestFiltered:
 
         response = Filtered[dict, StatusFilter](
             items=items,
-            pagination_info=pagination_info,
-            sort_info=sort_info,
-            filter_info=filter_info,
+            paginationInfo=pagination_info,
+            sortInfo=sort_info,
+            filterInfo=filter_info,
         )
 
         # Verify that the filter_info has the correct type
@@ -207,14 +211,14 @@ class TestFiltered:
 class TestError:
     """Test Error class."""
 
-    def test_error_default_values(self):
+    def test_error_default_values(self) -> None:
         """Test Error with default values."""
         response = Error(errors=[])
         assert response.status == 400
         assert response.message == "Error"
         assert response.errors == []
 
-    def test_error_custom_values(self):
+    def test_error_custom_values(self) -> None:
         """Test Error with custom values."""
         errors = [{"field": "name", "message": "Required"}]
         response = Error(
@@ -226,30 +230,32 @@ class TestError:
         assert response.message == "Validation failed"
         assert response.errors == errors
 
-    def test_error_validation(self):
+    def test_error_validation(self) -> None:
         """Test Error validation."""
         with pytest.raises(ValidationError):
-            Error()  # Missing required errors field
+            Error()  # type: ignore[call-arg] # Missing required errors field
+        with pytest.raises(ValidationError):
+            Error(status=400, message="Test")  # type: ignore[call-arg] # Missing errors
 
 
 class TestResponseSerialization:
     """Test response serialization."""
 
-    def test_default_response_serialization(self):
+    def test_default_response_serialization(self) -> None:
         """Test DefaultResponse serialization."""
         response = DefaultResponse(status=200, message="Success")
         data = response.model_dump()
         assert data["status"] == 200
         assert data["message"] == "Success"
 
-    def test_success_response_serialization(self):
+    def test_success_response_serialization(self) -> None:
         """Test Success response serialization."""
         response = Success()
         data = response.model_dump()
         assert data["status"] == 200
         assert data["message"] == "Success"
 
-    def test_error_response_serialization(self):
+    def test_error_response_serialization(self) -> None:
         """Test Error response serialization."""
         response = Error(errors=[{"detail": "Test error"}])
         data = response.model_dump()
@@ -257,16 +263,16 @@ class TestResponseSerialization:
         assert data["message"] == "Error"
         assert data["errors"] == [{"detail": "Test error"}]
 
-    def test_paginated_response_serialization(self):
+    def test_paginated_response_serialization(self) -> None:
         """Test Paginated response serialization."""
         items = [{"id": "1"}]
         pagination_info = PaginatedResultsInfo(
-            page=1, page_size=10, total_items=1, total_pages=1
+            page=1, pageSize=10, totalItems=1, totalPages=1
         )
 
         response = Paginated[dict](
             items=items,
-            pagination_info=pagination_info,
+            paginationInfo=pagination_info,
         )
         data = response.model_dump()
 
@@ -280,21 +286,21 @@ class TestResponseSerialization:
 class TestResponseDeserialization:
     """Test response deserialization."""
 
-    def test_default_response_deserialization(self):
+    def test_default_response_deserialization(self) -> None:
         """Test DefaultResponse deserialization."""
         data = {"status": 200, "message": "Success"}
         response = DefaultResponse.model_validate(data)
         assert response.status == 200
         assert response.message == "Success"
 
-    def test_success_response_deserialization(self):
+    def test_success_response_deserialization(self) -> None:
         """Test Success response deserialization."""
         data = {"status": 200, "message": "Success"}
         response = Success.model_validate(data)
         assert response.status == 200
         assert response.message == "Success"
 
-    def test_error_response_deserialization(self):
+    def test_error_response_deserialization(self) -> None:
         """Test Error response deserialization."""
         data = {
             "status": 400,
