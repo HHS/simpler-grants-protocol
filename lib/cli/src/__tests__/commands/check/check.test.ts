@@ -42,6 +42,10 @@ describe("checkCommand", () => {
     mockConsoleError.mockRestore();
   });
 
+  // #########################################################
+  // # Check API
+  // #########################################################
+
   describe("check api", () => {
     it("should register check api command", () => {
       const apiCmd = checkCmd.commands.find(cmd => cmd.name() === "api");
@@ -81,17 +85,19 @@ describe("checkCommand", () => {
     });
   });
 
+  // #########################################################
+  // # Check Spec
+  // #########################################################
+
   describe("check spec", () => {
     it("should register check spec command", () => {
       const specCmd = checkCmd.commands.find(cmd => cmd.name() === "spec");
       expect(specCmd).toBeDefined();
       expect(specCmd?.description()).toBe(
-        "Validate a specification against the CommonGrants base spec"
+        "Validate an OpenAPI spec against the CommonGrants base protocol"
       );
     });
-  });
 
-  describe("base spec path", () => {
     it("should handle spec validation with base spec path", async () => {
       await checkCmd.parseAsync(["node", "test", "spec", "spec.yaml", "--base", "base.yaml"]);
 
@@ -104,6 +110,46 @@ describe("checkCommand", () => {
       await checkCmd.parseAsync(["node", "test", "spec", "foo.yaml"]);
 
       expect(mockCheckSpec).toHaveBeenCalledWith("foo.yaml", {});
+    });
+
+    it("should handle spec validation with protocolVersion", async () => {
+      await checkCmd.parseAsync([
+        "node",
+        "test",
+        "spec",
+        "spec.yaml",
+        "--protocol-version",
+        "0.1.0",
+      ]);
+
+      expect(mockCheckSpec).toHaveBeenCalledWith("spec.yaml", {
+        protocolVersion: "0.1.0",
+      });
+    });
+
+    it("should handle spec validation with both base and protocolVersion", async () => {
+      // Mock console.warn to capture the warning message
+      const mockWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+      await checkCmd.parseAsync([
+        "node",
+        "test",
+        "spec",
+        "spec.yaml",
+        "--base",
+        "base.yaml",
+        "--protocol-version",
+        "0.2.0",
+      ]);
+
+      expect(mockWarn).toHaveBeenCalledWith(
+        "Warning: Both --base and --protocol-version are specified. Using --base and ignoring --protocol-version."
+      );
+      expect(mockCheckSpec).toHaveBeenCalledWith("spec.yaml", {
+        base: "base.yaml",
+      });
+
+      mockWarn.mockRestore();
     });
   });
 });

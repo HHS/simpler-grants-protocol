@@ -2,5 +2,4 @@ emit:
   - "@typespec/openapi3"
 options:
   "@typespec/openapi3":
-    "output-file": "openapi.yaml"
     "omit-unreachable-types": false
