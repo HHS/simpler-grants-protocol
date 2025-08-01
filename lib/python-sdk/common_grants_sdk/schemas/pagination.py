@@ -1,10 +1,6 @@
 """Paginated models for the CommonGrants API."""
 
-from typing import Generic, TypeVar
-
 from pydantic import BaseModel, Field
-
-T = TypeVar("T")
 
 
 class PaginatedBase(BaseModel):
@@ -45,19 +41,6 @@ class PaginatedResultsInfo(PaginatedBase):
         ...,
         alias="totalPages",
         description="The total number of pages",
-    )
-
-    model_config = {"populate_by_name": True}
-
-
-class PaginatedItems(BaseModel, Generic[T]):
-    """A paginated list of items."""
-
-    items: list[T] = Field(..., description="The list of items")
-    paginated_info: PaginatedResultsInfo = Field(
-        ...,
-        alias="paginatedInfo",
-        description="Information about the pagination",
     )
 
     model_config = {"populate_by_name": True}

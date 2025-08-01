@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from common_grants_sdk.schemas import (
     PaginatedBodyParams,
-    PaginatedItems,
+    Paginated,
     PaginatedBase,
     PaginatedResultsInfo,
 )
@@ -86,11 +86,11 @@ class TestPaginatedBodyParams:
         assert params.page_size == 25
 
 
-class TestPaginatedItems:
-    """Test PaginatedItems class."""
+class TestPaginated:
+    """Test Paginated class."""
 
     def test_with_string_items(self):
-        """Test PaginatedItems with string items."""
+        """Test Paginated with string items."""
         items = ["item1", "item2", "item3"]
         paginated_info = PaginatedResultsInfo(
             page=1,
@@ -98,12 +98,12 @@ class TestPaginatedItems:
             total_items=3,
             total_pages=1,
         )
-        paginated = PaginatedItems(items=items, paginated_info=paginated_info)
+        paginated = Paginated(items=items, pagination_info=paginated_info)
         assert paginated.items == items
-        assert paginated.paginated_info == paginated_info
+        assert paginated.pagination_info == paginated_info
 
     def test_with_dict_items(self):
-        """Test PaginatedItems with dictionary items."""
+        """Test Paginated with dictionary items."""
         items = [{"id": 1, "name": "test"}, {"id": 2, "name": "test2"}]
         paginated_info = PaginatedResultsInfo(
             page=1,
@@ -111,9 +111,9 @@ class TestPaginatedItems:
             total_items=2,
             total_pages=1,
         )
-        paginated = PaginatedItems(items=items, paginated_info=paginated_info)
+        paginated = Paginated(items=items, pagination_info=paginated_info)
         assert paginated.items == items
-        assert paginated.paginated_info == paginated_info
+        assert paginated.pagination_info == paginated_info
 
     def test_json_serialization(self):
         """Test JSON serialization."""
@@ -124,16 +124,16 @@ class TestPaginatedItems:
             total_items=2,
             total_pages=1,
         )
-        paginated = PaginatedItems(items=items, paginated_info=paginated_info)
+        paginated = Paginated(items=items, pagination_info=paginated_info)
         data = paginated.model_dump(by_alias=True)
         assert data["items"] == items
-        assert data["paginatedInfo"]["page"] == 1
-        assert data["paginatedInfo"]["pageSize"] == 10
-        assert data["paginatedInfo"]["totalItems"] == 2
-        assert data["paginatedInfo"]["totalPages"] == 1
+        assert data["paginationInfo"]["page"] == 1
+        assert data["paginationInfo"]["pageSize"] == 10
+        assert data["paginationInfo"]["totalItems"] == 2
+        assert data["paginationInfo"]["totalPages"] == 1
 
     def test_empty_items(self):
-        """Test PaginatedItems with empty items list."""
+        """Test Paginated with empty items list."""
         items = []
         paginated_info = PaginatedResultsInfo(
             page=1,
@@ -141,7 +141,7 @@ class TestPaginatedItems:
             total_items=0,
             total_pages=0,
         )
-        paginated = PaginatedItems(items=items, paginated_info=paginated_info)
+        paginated = Paginated(items=items, pagination_info=paginated_info)
         assert paginated.items == []
-        assert paginated.paginated_info.total_items == 0
-        assert paginated.paginated_info.total_pages == 0
+        assert paginated.pagination_info.total_items == 0
+        assert paginated.pagination_info.total_pages == 0

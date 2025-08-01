@@ -52,7 +52,6 @@ from common_grants_sdk.schemas import (
     # Paginated
     PaginatedBase,
     PaginatedBodyParams,
-    PaginatedItems,
     PaginatedResultsInfo,
     RangeOperator,
     Sorted,
@@ -104,7 +103,6 @@ __all__ = [
     "Paginated",
     "PaginatedBase",
     "PaginatedBodyParams",
-    "PaginatedItems",
     "PaginatedResultsInfo",
     "RangeOperator",
     "Sorted",

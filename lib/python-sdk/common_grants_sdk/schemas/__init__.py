@@ -44,7 +44,6 @@ from .pagination import (
     PaginatedBase,
     PaginatedBodyParams,
     PaginatedResultsInfo,
-    PaginatedItems,
 )
 from .requests import OpportunitySearchRequest
 from .responses import (
@@ -112,7 +111,6 @@ __all__ = [
     # Paginated
     "PaginatedBase",
     "PaginatedBodyParams",
-    "PaginatedItems",
     "PaginatedResultsInfo",
     # Requests
     "OpportunitySearchRequest",
