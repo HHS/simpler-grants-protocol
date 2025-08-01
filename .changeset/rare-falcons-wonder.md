@@ -7,5 +7,5 @@ Adds support for checking against multiple protocol versions
 Enables users to specify which protocol version they want to check their API against.
 
 ```bash
-cg check spec --base-version 0.1.0
+cg check spec --protocol-version 0.1.0
 ```
