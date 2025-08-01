@@ -2,6 +2,7 @@
 
 import pytest
 from pydantic import ValidationError
+from typing import Optional
 
 from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 from common_grants_sdk.schemas.pagination import PaginatedResultsInfo
@@ -14,6 +15,7 @@ from common_grants_sdk.schemas.responses import (
     Success,
 )
 from common_grants_sdk.schemas.sorting import SortedResultsInfo
+from common_grants_sdk.schemas.responses import FilterInfo
 
 
 class TestDefaultResponse:
@@ -153,10 +155,10 @@ class TestFiltered:
             sort_by="id",
             sort_order="asc",
         )
-        filter_info = {
-            "filters": {"status": "active"},
-            "errors": [],
-        }
+        filter_info = FilterInfo[dict](
+            filters={"status": "active"},
+            errors=[],
+        )
 
         response = Filtered[dict, dict](
             items=items,
@@ -170,6 +172,36 @@ class TestFiltered:
         assert response.pagination_info == pagination_info
         assert response.sort_info == sort_info
         assert response.filter_info == filter_info
+
+    def test_filtered_response_type_safety(self):
+        """Test that FilterT type parameter provides type safety."""
+        items = [{"id": "1"}]
+        pagination_info = PaginatedResultsInfo(
+            page=1, page_size=10, total_items=1, total_pages=1
+        )
+        sort_info = SortedResultsInfo(sort_by="id", sort_order="asc")
+
+        # Test with a specific filter type
+        class StatusFilter(CommonGrantsBaseModel):
+            status: str
+            category: Optional[str] = None
+
+        filter_info = FilterInfo[StatusFilter](
+            filters=StatusFilter(status="active", category="grant"),
+            errors=[],
+        )
+
+        response = Filtered[dict, StatusFilter](
+            items=items,
+            pagination_info=pagination_info,
+            sort_info=sort_info,
+            filter_info=filter_info,
+        )
+
+        # Verify that the filter_info has the correct type
+        assert isinstance(response.filter_info.filters, StatusFilter)
+        assert response.filter_info.filters.status == "active"
+        assert response.filter_info.filters.category == "grant"
 
 
 class TestError:

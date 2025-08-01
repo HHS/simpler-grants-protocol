@@ -3,13 +3,13 @@
 from .base import DefaultResponse
 from .error import Error
 from .opportunity import (
-    FilterInfo,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
 )
 from .success import (
     Filtered,
+    FilterInfo,
     Paginated,
     Sorted,
     Success,

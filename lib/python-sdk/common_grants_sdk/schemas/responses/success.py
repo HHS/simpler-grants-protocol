@@ -1,9 +1,10 @@
 """Success response schemas for the CommonGrants API."""
 
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Optional
 
 from pydantic import Field
 
+from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 from common_grants_sdk.schemas.pagination import PaginatedResultsInfo
 from common_grants_sdk.schemas.sorting import SortedResultsInfo
 from .base import DefaultResponse
@@ -53,10 +54,22 @@ class Sorted(Paginated[ItemsT], Generic[ItemsT]):
     model_config = {"populate_by_name": True}
 
 
+class FilterInfo(CommonGrantsBaseModel, Generic[FilterT]):
+    """Filter information for search results."""
+
+    filters: FilterT = Field(
+        ..., description="The filters applied to the response items"
+    )
+    errors: Optional[list[str]] = Field(
+        default_factory=lambda: [],
+        description="Non-fatal errors that occurred during filtering",
+    )
+
+
 class Filtered(Sorted[ItemsT], Generic[ItemsT, FilterT]):
     """A paginated list of items with a filter."""
 
-    filter_info: dict = Field(
+    filter_info: FilterInfo[FilterT] = Field(
         ...,
         description="The filters applied to the response items",
         alias="filterInfo",
