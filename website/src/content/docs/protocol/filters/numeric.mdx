@@ -16,6 +16,11 @@ numberComparisonFilter:
       path: "lib/core/lib/core/filters/numeric.tsp"
       startLine: 11
       endLine: 19
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/filters/numeric.py"
+      startLine: 26
+      endLine: 35
 numberRangeFilter:
   example:
     code: |
@@ -34,6 +39,11 @@ numberRangeFilter:
       path: "lib/core/lib/core/filters/numeric.tsp"
       startLine: 25
       endLine: 36
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/filters/numeric.py"
+      startLine: 38
+      endLine: 45
 numberArrayFilter:
   example:
     code: |
@@ -49,6 +59,11 @@ numberArrayFilter:
       path: "lib/core/lib/core/filters/numeric.tsp"
       startLine: 42
       endLine: 50
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/filters/numeric.py"
+      startLine: 48
+      endLine: 57
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -70,6 +85,7 @@ Filters by comparing a field to a numeric value.
   example={frontmatter.numberComparisonFilter.example}
   jsonSchema={frontmatter.numberComparisonFilter.jsonSchema}
   typeSpec={frontmatter.numberComparisonFilter.typeSpec}
+  python={frontmatter.numberComparisonFilter.python}
 />
 
 ## NumberRangeFilter
@@ -98,6 +114,7 @@ Filters by comparing a field to a range of numeric values.
   example={frontmatter.numberRangeFilter.example}
   jsonSchema={frontmatter.numberRangeFilter.jsonSchema}
   typeSpec={frontmatter.numberRangeFilter.typeSpec}
+  python={frontmatter.numberRangeFilter.python}
 />
 
 ## NumberArrayFilter
@@ -117,4 +134,5 @@ Filters by comparing a field to an array of numeric values.
   example={frontmatter.numberArrayFilter.example}
   jsonSchema={frontmatter.numberArrayFilter.jsonSchema}
   typeSpec={frontmatter.numberArrayFilter.typeSpec}
+  python={frontmatter.numberArrayFilter.python}
 />
