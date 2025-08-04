@@ -26,11 +26,10 @@ jobs:
 
       - name: Publish to unique PR worker
         run: |
-          npx wrangler deploy \
-            --name cg-pr-${{ github.event.pull_request.number }} \
-            --compatibility-date=2024-08-01
+          npx wrangler deploy --name cg-pr-${{ github.event.pull_request.number }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
   delete-preview:
     if: github.event.action == 'closed'
@@ -42,3 +41,4 @@ jobs:
           npx wrangler delete --name cg-pr-${{ github.event.pull_request.number }} --yes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

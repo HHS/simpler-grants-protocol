@@ -2,6 +2,6 @@
   "name": "common-grants-preview",
   "compatibility_date": "2025-08-01",
   "assets": {
-    "directory": "./dist"
-  }
+    "directory": "./dist",
+  },
 }
