@@ -1,0 +1,39 @@
+name: "CI - Deploy Website Preview to Cloudflare"
+
+on:
+  pull_request:
+    paths:
+      - "website/**"
+
+jobs:
+  deploy-preview:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    name: Deploy PR preview
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Astro site
+        run: npm run build
+
+      - name: Publish to unique PR worker
+        run: |
+          npx wrangler deploy \
+            --name cg-pr-${{ github.event.pull_request.number }} \
+            --compatibility-date=2024-08-01
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  delete-preview:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Delete PR preview
+    steps:
+      - name: Delete Worker for PR
+        run: |
+          npx wrangler delete --name cg-pr-${{ github.event.pull_request.number }} --yes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
