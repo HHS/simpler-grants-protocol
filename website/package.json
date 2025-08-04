@@ -7,6 +7,7 @@
     "start": "npm run typespec && astro dev",
     "build": "npm run typespec && astro build",
     "preview": "astro build && astro preview",
+    "preview:wrangler": "npm run build && wrangler dev",
     "astro": "astro",
     "typespec": "npm run typespec:clear-output && npm run typespec:openapi && npm run typespec:json-schema",
     "typespec:openapi": "tsp compile src/specs/main.tsp && cp tsp-output/@typespec/openapi3/** public/openapi",
