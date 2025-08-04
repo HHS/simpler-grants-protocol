@@ -3,7 +3,12 @@ name: "CI - Deploy Website Preview to Cloudflare"
 on:
   pull_request:
     paths:
-      - "website/**"
+      - website/**
+      - .github/workflows/ci-website.yml
+
+defaults:
+  run:
+    working-directory: ./website
 
 jobs:
   deploy-preview:
