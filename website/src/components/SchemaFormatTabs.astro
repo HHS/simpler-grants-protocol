@@ -75,11 +75,7 @@ function extractCode(props: CodeBlockConfig): string {
 
       return content;
     } catch (error) {
-      // TODO: @widal001 (2025-08-04) Switch back to throwing an error
-      // This is a temporary fix to allow the website to build without errors
-      // while we update the schema docs to use the latest SDK.
-      console.error(`Error reading file ${props.file.path}: ${error}`);
-      return "";
+      throw new Error(`Error reading file ${props.file.path}: ${error}`);
     }
   }
   throw new Error("Either code or file must be provided");
