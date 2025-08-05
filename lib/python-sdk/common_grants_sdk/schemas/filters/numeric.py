@@ -2,7 +2,7 @@
 
 from typing import Union
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 from .base import (
@@ -34,6 +34,14 @@ class NumberComparisonFilter(CommonGrantsBaseModel):
         ..., description="The numeric value to compare against"
     )
 
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            return ComparisonOperator(v)
+        return v
+
 
 class NumberRangeFilter(CommonGrantsBaseModel):
     """Filter that matches numbers within a specified range."""
@@ -43,6 +51,14 @@ class NumberRangeFilter(CommonGrantsBaseModel):
         description="The operator to apply to the filter value",
     )
     value: NumberRange = Field(..., description="The numeric range value")
+
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            return RangeOperator(v)
+        return v
 
 
 class NumberArrayFilter(CommonGrantsBaseModel):
@@ -55,3 +71,11 @@ class NumberArrayFilter(CommonGrantsBaseModel):
     value: list[Union[int, float]] = Field(
         ..., description="The array of numeric values"
     )
+
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            return ArrayOperator(v)
+        return v
