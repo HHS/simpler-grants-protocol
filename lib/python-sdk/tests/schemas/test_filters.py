@@ -103,6 +103,34 @@ def test_default_filter_edge_cases():
     assert filter_obj.value == "true"
 
 
+def test_default_filter_string_operators():
+    """Test DefaultFilter with string operators."""
+    # Test with string equivalence operator
+    filter_obj = DefaultFilter(operator="eq", value="test")
+    assert filter_obj.operator == EquivalenceOperator.EQUAL
+    assert filter_obj.value == "test"
+
+    # Test with string comparison operator
+    filter_obj = DefaultFilter(operator="gt", value=100)
+    assert filter_obj.operator == ComparisonOperator.GREATER_THAN
+    assert filter_obj.value == 100
+
+    # Test with string array operator
+    filter_obj = DefaultFilter(operator="in", value=["a", "b", "c"])
+    assert filter_obj.operator == ArrayOperator.IN
+    assert filter_obj.value == ["a", "b", "c"]
+
+    # Test with string range operator
+    filter_obj = DefaultFilter(operator="between", value={"min": 1, "max": 10})
+    assert filter_obj.operator == RangeOperator.BETWEEN
+    assert filter_obj.value == {"min": 1, "max": 10}
+
+    # Test with string string operator
+    filter_obj = DefaultFilter(operator="like", value="pattern")
+    assert filter_obj.operator == StringOperator.LIKE
+    assert filter_obj.value == "pattern"
+
+
 def test_string_array_filter():
     """Test the StringArrayFilter model."""
     # Test IN operator
@@ -181,6 +209,27 @@ def test_date_range():
 
     # Test with only max
     date_range = DateRange(max=date(2024, 12, 31))
+    assert date_range.min is None
+    assert date_range.max == date(2024, 12, 31)
+
+
+def test_date_range_string_dates():
+    """Test the DateRange model with string dates."""
+    # Test with string dates
+    date_range = DateRange(
+        min="2024-01-01",
+        max="2024-12-31",
+    )
+    assert date_range.min == date(2024, 1, 1)
+    assert date_range.max == date(2024, 12, 31)
+
+    # Test with only string min
+    date_range = DateRange(min="2024-01-01")
+    assert date_range.min == date(2024, 1, 1)
+    assert date_range.max is None
+
+    # Test with only string max
+    date_range = DateRange(max="2024-12-31")
     assert date_range.min is None
     assert date_range.max == date(2024, 12, 31)
 

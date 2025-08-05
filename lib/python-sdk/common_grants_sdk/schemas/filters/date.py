@@ -1,5 +1,6 @@
 """Date filter schemas."""
 
+from datetime import date
 from typing import Optional
 
 from pydantic import Field, field_validator
@@ -21,6 +22,16 @@ class DateRange(CommonGrantsBaseModel):
 
     min: Optional[ISODate] = Field(None, description="The minimum date in the range")
     max: Optional[ISODate] = Field(None, description="The maximum date in the range")
+
+    @field_validator("min", "max", mode="before")
+    @classmethod
+    def validate_date(cls, v):
+        """Convert string to date if needed."""
+        if v is None:
+            return v
+        if isinstance(v, str):
+            return date.fromisoformat(v)
+        return v
 
 
 class DateRangeFilter(CommonGrantsBaseModel):
@@ -56,4 +67,12 @@ class DateComparisonFilter(CommonGrantsBaseModel):
         """Convert string to enum if needed."""
         if isinstance(v, str):
             return ComparisonOperator(v)
+        return v
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def validate_date(cls, v):
+        """Convert string to date if needed."""
+        if isinstance(v, str):
+            return date.fromisoformat(v)
         return v
