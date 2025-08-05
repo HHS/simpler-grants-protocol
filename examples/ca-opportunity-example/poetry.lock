@@ -122,17 +122,15 @@ name = "common-grants-sdk"
 version = "0.2.0"
 description = "Python SDK for the CommonGrants protocol"
 optional = false
-python-versions = "^3.11"
+python-versions = "<4.0,>=3.11"
 groups = ["main"]
-files = []
-develop = true
+files = [
+    {file = "common_grants_sdk-0.2.0-py3-none-any.whl", hash = "sha256:06245e62eac3284e28a56b534d9315431030d23c862d83f74acdea0ad7fe3710"},
+    {file = "common_grants_sdk-0.2.0.tar.gz", hash = "sha256:d1e9cbac4fc73d8f0345fc4868bb992ab6ea8f62f1e873f3191d33f9f9ca36f0"},
+]
 
 [package.dependencies]
-pydantic = "^2.11.0"
-
-[package.source]
-type = "directory"
-url = "../../lib/python-sdk"
+pydantic = ">=2.0.3,<3.0.0"
 
 [[package]]
 name = "coverage"
@@ -1696,4 +1694,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "f9a149929d5c5ee687d29f472f502a7f14c6560fe2fe3862c5f2b8a2b680aaf3"
+content-hash = "e74adc3d892ec5358a200a7694366a6d1ca18c23171fb0447f30a08789ce7c6f"
