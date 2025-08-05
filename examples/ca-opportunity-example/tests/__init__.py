@@ -1,1 +1,1 @@
-"""Test modules for the CA Opportunity API."""
+"""Test suite for the CommonGrants API."""

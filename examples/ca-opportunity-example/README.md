@@ -1,101 +1,93 @@
-# California Grants Example API
+# CommonGrants FastAPI Implementation
 
-This API demonstrates how to use the CommonGrants Protocol with California Grants Portal data. The API:
+A template for implementing a CommonGrants API using Python and FastAPI.
 
-1. Exposes endpoints for getting CA opportunity data in CommonGrants format
-2. Transforms grant opportunity data from the California Grants Portal format to the CommonGrants Protocol format
-3. Leverages the CommonGrants Python SDK and FastAPI Template for data transformations and service scaffold
+## Pre-requisites
 
-## Requirements
+1. The TypeSpec compiler and CommonGrants API are installed globally: `npm install -g @common-grants/core @typespec/compiler`
+2. Python 3.11 or greater is installed globally: `python --version`
+3. Poetry is installed globally: `poetry --version`
 
-- Python 3.11 or higher
-- [Poetry](https://python-poetry.org/) for dependency management
+## Quickstart
 
-## Getting Started
+1. Create a new directory for your project: `mkdir fast-api && cd fast-api`
+2. Set up the project using this template and follow the instructions: `cg init --template fast-api`
+3. Install the python project dependencies: `make install`
+4. Run the tests: `make test`
+5. Run the local development server: `make dev`
 
-1. Install dependencies:
-   ```bash
-   make install
-   ```
+## Commands
 
-2. Run the API:
-   ```bash
-   make dev
-   ```
+The Makefile exposes the following commands:
 
-3. Access the API:
-   - Opportunities endpoint: http://localhost:8000/common-grants/opportunities
-   - Individual opportunity endpoint: http://localhost:8000/common-grants/opportunities/{id}
-   - Interactive API documentation: http://localhost:8000/docs
-   - ReDoc documentation: http://localhost:8000/redoc
-
-## Endpoints
-
-### GET /common-grants/opportunities
-
-Returns a paginated list of grant opportunities in CommonGrants Protocol format.
-
-Query Parameters:
-- `page` (optional): Page number to retrieve (default: 1)
-- `pageSize` (optional): Number of items per page (default: 10)
-
-Example response:
-```json
-{
-  "items": [
-    {
-      "id": "ca-2024-001",
-      "title": "California Climate Action Seed Grants",
-      "status": {
-        "value": "open",
-        "description": "Currently accepting applications"
-      },
-      "funding": {
-        "totalAmountAvailable": {
-          "amount": "1000000",
-          "currency": "USD"
-        }
-      }
-    }
-  ],
-  "total": 100,
-  "page": 1,
-  "pageSize": 10
-}
-```
-
-### GET /common-grants/opportunities/{id}
-
-Returns detailed information about a specific grant opportunity.
-
-Path Parameters:
-- `id`: UUID of the opportunity
+| Command               | Description                                 |
+| --------------------- | ------------------------------------------- |
+| `make install`        | Installs the python dependencies and API    |
+| `make test`           | Runs the unit test suite and test coverage  |
+| `make format`         | Runs formatting with black                  |
+| `make lint`           | Runs linting with ruff                      |
+| `make check-spec`     | Validates the OpenAPI specification         |
+| `make check-types`    | Runs type checking with pyright             |
+| `make checks`         | Runs linting, formatting, and type checking |
+| `make dev`            | Runs the development server                 |
+| `make gen-openapi`    | Generates the OpenAPI specification         |
 
 ## Project Structure
 
 ```
-ca-opportunity-example/
-├── Makefile                  # Development commands
-├── pyproject.toml            # Project dependencies
-├── poetry.lock               # Locked dependencies
+├── pyproject.toml          # Python project configuration and dependencies
+├── poetry.lock             # Locked versions of dependencies
+├── Makefile                # Development workflow commands
+├── README.md               # Project documentation
+├── openapi.yaml            # Generated OpenAPI specification
+│
 ├── src/
-│   └── ca_common_grants/     # Main package
-│       ├── api.py            # FastAPI application
-│       ├── data/             # Source data
-│       ├── routers/          # API route handlers
-│       ├── services/         # Business logic
-│       ├── utils/            # Utility functions
-│       └── scripts/          # Utility scripts
-└── tests/                    # Test suite
+│   └── common_grants/              # Main package directory
+│       ├── api.py                  # FastAPI application setup and config
+│       ├── routes/                 # API route handlers and endpoints
+│       │   ├── opportunities.py    # Opportunity-related endpoints
+│       │   └── ...                 # Other route modules
+│       │
+│       ├── schemas/                    # Data models and schema definitions
+│       │   ├── filters/                # Query filter models
+│       │   │   ├── base.py             # Base filter types and operators
+│       │   │   ├── date_filters.py     # Date-specific filters
+│       │   │   ├── money_filters.py    # Money-specific filters
+│       │   │   └── string_filters.py   # String-specific filters
+│       │   ├── models/                 # Core domain models
+│       │   │   ├── opp_search.py       # Search request models
+│       │   │   ├── opp_search_request.py # Search request handling
+│       │   │   └── ...                 # Other models
+│       │   ├── pagination.py           # Pagination models and parameters
+│       │   ├── response.py             # API response wrappers
+│       │   ├── sorting.py              # Sorting models and parameters
+│       │   └── __init__.py             # Schema exports (imports from Python SDK)
+│       │
+│       ├── services/               # Business logic and data operations
+│       │   ├── opportunity.py      # Opportunity-related operations
+│       │   └── utils.py            # Shared utility functions
+│       │
+│       └── scripts/                # Utility scripts
+│           └── generate_openapi.py # OpenAPI specification generator
+│
+└── tests/                  # Test suite
+    └── common_grants/      # Tests matching package structure
+        ├── schemas/        # Schema-related tests
+        │   ├── fields/     # Field type tests (tests SDK imports)
+        │   ├── filters/    # Filter model tests
+        │   └── models/     # Domain model tests
+        └── routes/         # Route handler tests
 ```
 
-## Testing
+## Dependencies
 
-Run tests with:
-```bash
-make test
-```
+This template depends on the CommonGrants Python SDK (`common-grants-sdk`) for core field types and models:
 
-## License
+- **Field Types**: `Money`, `Event`, `CustomField`, `SystemMetadata`, etc.
+- **Core Models**: `OpportunityBase`, `OppFunding`, `OppStatus`, `OppTimeline`
 
-This project is licensed under the same terms as the CommonGrants Protocol. 
+The template extends these with FastAPI-specific schemas for:
+- API responses and error handling
+- Query filters and pagination
+- Request/response models
+- Search functionality
