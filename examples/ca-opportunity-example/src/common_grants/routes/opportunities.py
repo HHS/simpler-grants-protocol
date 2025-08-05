@@ -48,39 +48,6 @@ async def list_opportunities(
     "/{oppId}",
     summary="View opportunity",
     description="View additional details about an opportunity",
-    responses={
-        status.HTTP_200_OK: {
-            "description": "The opportunity details",
-            "content": {
-                "application/json": {
-                    "schema": OpportunityResponse.model_json_schema(),
-                },
-            },
-        },
-        status.HTTP_404_NOT_FOUND: {
-            "description": "Opportunity not found",
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "type": "object",
-                        "required": ["status", "message", "errors"],
-                        "properties": {
-                            "status": {
-                                "type": "integer",
-                                "format": "int32",
-                                "example": 404,
-                            },
-                            "message": {
-                                "type": "string",
-                                "example": "Opportunity not found",
-                            },
-                            "errors": {"type": "array", "items": {}},
-                        },
-                    },
-                },
-            },
-        },
-    },
 )
 async def get_opportunity(
     oppId: UUID,  # noqa: N803
