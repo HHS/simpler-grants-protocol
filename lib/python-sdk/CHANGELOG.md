@@ -1,5 +1,12 @@
 # common-grants-sdk
 
+## 0.2.1
+
+### Patch Changes
+
+- 537d150: - Added field validators to filter classes to convert string values to enum instances
+  - Updated pydantic dependency to enable stricter enum validations
+
 ## 0.2.0
 
 ### Minor Changes
