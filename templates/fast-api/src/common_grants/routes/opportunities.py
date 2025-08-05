@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from common_grants_sdk.schemas import (
+    Error,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
@@ -48,6 +49,10 @@ async def list_opportunities(
     "/{oppId}",
     summary="View opportunity",
     description="View additional details about an opportunity",
+    responses={
+        200: {"model": OpportunityResponse, "description": "Success"},
+        404: {"model": Error, "description": "Opportunity not found"},
+    },
 )
 async def get_opportunity(
     oppId: UUID,  # noqa: N803
