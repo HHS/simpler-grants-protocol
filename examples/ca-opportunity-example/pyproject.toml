@@ -1,16 +1,17 @@
 [tool.poetry]
 authors = ["Your Name <your.email@example.com>"]
-description = "Example API demonstrating CommonGrants Protocol with California Grants data"
+description = "An implementation of the CommonGrants API specification"
 name = "ca-common-grants"
-package-mode = true
+packages = [{include = "common_grants", from = "src"}]
+readme = "README.md"
 version = "0.1.0"
-packages = [{include = "ca_common_grants", from = "src"}]
 
 [tool.poetry.dependencies]
-common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
-common-grants = {path = "../../templates/fast-api", develop = true}
+common-grants-sdk = "^0.2.0"
+#common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
 fastapi = {extras = ["standard"], version = "^0.115.11"}
 python = "^3.11"
+pyyaml = "^6.0.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
@@ -21,8 +22,8 @@ ruff = "^0.9.10"
 mypy = "^1.15.0"
 
 [build-system]
-requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
 
 [tool.ruff]
 line-length = 100
@@ -41,6 +42,5 @@ ignore = [
   "D212", # multi-line summary first line
   "FA", # flake8-future-annotations ruleset
   "FAST002", # missing type annotation for dependency
-  "S101", # use of assert detected
 ]
 select = ["ALL"]

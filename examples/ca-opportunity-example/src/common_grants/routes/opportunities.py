@@ -1,33 +1,27 @@
-"""
-Router module for handling grant-related endpoints.
-
-This module provides endpoints for accessing and transforming grant opportunity data
-from the California Grant Portal format to the CommonGrants Protocol format.
-"""
+"""Routes for the opportunities API."""
 
 from uuid import UUID
 
-from common_grants.schemas import (
-    OppFilters,
+from common_grants_sdk.schemas import (
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
-    OppSortBy,
-    OppSorting,
-    PaginationBodyParams,
 )
-from common_grants.schemas.models.opp_search_request import OpportunitySearchRequest
+from common_grants_sdk.schemas.requests.opportunity import OpportunitySearchRequest
 from fastapi import APIRouter, HTTPException, Query, status
 
-from ca_common_grants.services.opportunity import OpportunityService
+from common_grants.services.opportunity import OpportunityService
 
-router = APIRouter(prefix="/common-grants/opportunities", tags=["Opportunities"])
+opportunity_router = APIRouter(
+    prefix="/common-grants/opportunities",
+    tags=["Opportunities"],
+)
 
 
-@router.get(
+@opportunity_router.get(
     "",
     summary="List opportunities",
-    description="Get a list of opportunities.",
+    description="Get a paginated list of opportunities, sorted by `lastModifiedAt` with most recent first.",  # noqa: E501
 )
 async def list_opportunities(
     page: int = Query(
@@ -50,8 +44,8 @@ async def list_opportunities(
     )
 
 
-@router.get(
-    "/{id}",
+@opportunity_router.get(
+    "/{oppId}",
     summary="View opportunity",
     description="View additional details about an opportunity",
     responses={
@@ -89,11 +83,11 @@ async def list_opportunities(
     },
 )
 async def get_opportunity(
-    id: UUID,  # noqa: A002
+    oppId: UUID,  # noqa: N803
 ) -> OpportunityResponse:
     """Get a specific opportunity by ID."""
     opportunity_service = OpportunityService()
-    opportunity = await opportunity_service.get_opportunity(id)
+    opportunity = await opportunity_service.get_opportunity(str(oppId))
 
     if not opportunity:
         raise HTTPException(
@@ -108,7 +102,7 @@ async def get_opportunity(
     )
 
 
-@router.post(
+@opportunity_router.post(
     "/search",
     summary="Search opportunities",
     description="Search for opportunities based on the provided filters",
@@ -118,15 +112,6 @@ async def search_opportunities(
 ) -> OpportunitiesSearchResponse:
     """Search for opportunities based on the provided filters."""
     opportunity_service = OpportunityService()
-
-    if request.pagination is None:
-        request.pagination = PaginationBodyParams()
-
-    if request.filters is None:
-        request.filters = OppFilters()
-
-    if request.sorting is None:
-        request.sorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
 
     return await opportunity_service.search_opportunities(
         filters=request.filters,
