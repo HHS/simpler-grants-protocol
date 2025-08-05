@@ -7,8 +7,8 @@ readme = "README.md"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
-#common-grants-sdk = "^0.2.0"
-common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
+common-grants-sdk = "^0.2.0"
+#common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
 fastapi = {extras = ["standard"], version = "^0.115.11"}
 python = "^3.11"
 pyyaml = "^6.0.2"
