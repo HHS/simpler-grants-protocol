@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 
 class TestListOpportunities:
-    """Test GET /common-grants/opportunities endpoint."""
+    """Test /common-grants/opportunities endpoint."""
 
     def test_default_pagination(self, client: TestClient):
         """Test GET /common-grants/opportunities endpoint with default pagination."""
@@ -36,7 +36,7 @@ class TestListOpportunities:
 
 
 class TestGetOpportunityById:
-    """Test GET /common-grants/opportunities/{id} endpoint."""
+    """Test /common-grants/opportunities/{id} endpoint."""
 
     def test_opportunity_not_found(self, client: TestClient):
         """Test GET /common-grants/opportunities/{id} endpoint when opportunity is not found."""
@@ -48,10 +48,10 @@ class TestGetOpportunityById:
 
 
 class TestSearchOpportunities:
-    """Test GET /common-grants/opportunities/search endpoint."""
+    """Test /common-grants/opportunities/search endpoint."""
 
     def test_default_search(self, client: TestClient):
-        """Test GET /common-grants/opportunities/search endpoint with default search."""
+        """Test POST /common-grants/opportunities/search endpoint with default search."""
         response = client.post(
             "/common-grants/opportunities/search",
             json={

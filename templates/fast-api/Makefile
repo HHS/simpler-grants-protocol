@@ -6,7 +6,7 @@ MIN_TEST_COVERAGE := 80
 .PHONY: dev format lint check-format check-lint check-types checks
 
 install:
-	poetry install
+	poetry install && chmod +x src/common_grants/scripts/generate_openapi.py
 
 dev:
 	$(RUNTIME_PREFIX) fastapi dev src/common_grants/api.py

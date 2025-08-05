@@ -1,6 +1,6 @@
 """String filter schemas."""
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 from .base import (
@@ -19,6 +19,14 @@ class StringArrayFilter(CommonGrantsBaseModel):
     )
     value: list[str] = Field(..., description="The array of string values")
 
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            return ArrayOperator(v)
+        return v
+
 
 class StringComparisonFilter(CommonGrantsBaseModel):
     """Filter that applies a comparison to a string value."""
@@ -28,3 +36,14 @@ class StringComparisonFilter(CommonGrantsBaseModel):
         description="The operator to apply to the filter value",
     )
     value: str = Field(..., description="The string value to compare against")
+
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            if v in [op.value for op in EquivalenceOperator]:
+                return EquivalenceOperator(v)
+            elif v in [op.value for op in StringOperator]:
+                return StringOperator(v)
+        return v
