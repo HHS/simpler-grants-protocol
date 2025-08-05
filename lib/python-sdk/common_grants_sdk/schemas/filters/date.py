@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 from common_grants_sdk.schemas.filters.base import (
@@ -32,6 +32,14 @@ class DateRangeFilter(CommonGrantsBaseModel):
     )
     value: DateRange = Field(..., description="The date range value")
 
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            return RangeOperator(v)
+        return v
+
 
 class DateComparisonFilter(CommonGrantsBaseModel):
     """Filter that matches dates against a specific value."""
@@ -41,3 +49,11 @@ class DateComparisonFilter(CommonGrantsBaseModel):
         description="The operator to apply to the filter value",
     )
     value: ISODate = Field(..., description="The date value to compare against")
+
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            return ComparisonOperator(v)
+        return v

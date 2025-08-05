@@ -49,6 +49,14 @@ class MoneyRangeFilter(CommonGrantsBaseModel):
     )
     value: MoneyRange = Field(..., description="The money range value")
 
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            return RangeOperator(v)
+        return v
+
     @field_validator("value")
     @classmethod
     def validate_range(cls, v: MoneyRange, info: ValidationInfo) -> MoneyRange:
@@ -69,3 +77,11 @@ class MoneyComparisonFilter(CommonGrantsBaseModel):
         description="The operator to apply to the filter value",
     )
     value: Money = Field(..., description="The money value to compare against")
+
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            return ComparisonOperator(v)
+        return v

@@ -75,20 +75,19 @@ The boilerplate template includes the following files and directories:
 
 <FileTree>
 
-- pyproject.toml # Python project configuration
-- poetry.lock # Locked versions of dependencies
 - Makefile
 - README.md
+- poetry.lock # Locked versions of dependencies
+- pyproject.toml # Python project configuration
 - src/
   - common_grants/
     - api.py # FastAPI application setup and config
-    - routes/ # API route handlers and endpoints
-    - schemas/ # Schemas for (de)serialization
+    - routes/ # API route handlers
+    - schemas/ # Schemas for common objects
+    - scripts/ # Helpful scripts
     - services/ # Business logic and data operations
 - tests/
   - common_grants/
-    - schemas/ # Schema-related tests
-    - services/ # Service-related tests
     - routes/ # Route-related tests
 
 </FileTree>
@@ -112,7 +111,7 @@ The services layer is responsible for implementing the business logic and data o
 In particular, you should focus on updating the `opportunity.py` file. This file contains the implementation of the `OpportunityService` class, which is responsible for fetching and processing opportunities for the following CommonGrants API endpoints:
 
 - `GET /common-grants/opportunities`
-- `GET /common-grants/opportunities/{id}`
+- `GET /common-grants/opportunities/{oppId}`
 - `POST /common-grants/opportunities/search`
 
 Some specific changes you should make to this file are:
