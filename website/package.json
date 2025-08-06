@@ -22,7 +22,8 @@
     "checks": "npm run check:lint && npm run check:format && npm run check:astro && npm run check:spelling",
     "audit:moderate": "npm audit --audit-level=moderate",
     "audit:high": "npm audit --audit-level=high",
-    "audit:critical": "npm audit --audit-level=critical"
+    "audit:critical": "npm audit --audit-level=critical",
+    "validate:schemas": "tsx src/scripts/validate-schemas.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
