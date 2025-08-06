@@ -1,5 +1,11 @@
 # common-grants-sdk
 
+## 0.2.2
+
+### Patch Changes
+
+- af513e2: Add field validators to base and date filters
+
 ## 0.2.1
 
 ### Patch Changes
