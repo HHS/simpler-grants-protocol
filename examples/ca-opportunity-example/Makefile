@@ -6,10 +6,10 @@ MIN_TEST_COVERAGE := 80
 .PHONY: dev format lint check-format check-lint check-types checks
 
 install:
-	poetry install
+	poetry install && chmod +x src/common_grants/scripts/generate_openapi.py
 
 dev:
-	$(RUNTIME_PREFIX) fastapi dev src/ca_common_grants/api.py
+	$(RUNTIME_PREFIX) fastapi dev src/common_grants/api.py
 
 format:
 	$(RUNTIME_PREFIX) black $(PYTHON_DIRS)
@@ -30,7 +30,10 @@ check-lint:
 	$(RUNTIME_PREFIX) ruff check $(PYTHON_DIRS) --fix --exit-non-zero-on-fix
 
 check-spec:
-	$(RUNTIME_PREFIX) python src/ca_common_grants/scripts/generate_openapi.py --version 3.0.0 > openapi-v3.yaml && cg check spec openapi-v3.yaml
+	$(RUNTIME_PREFIX) python src/common_grants/scripts/generate_openapi.py > openapi.yaml && cg check spec openapi.yaml
+
+check-spec-devmode:
+	$(RUNTIME_PREFIX) python src/common_grants/scripts/generate_openapi.py > openapi.yaml && node ../../lib/cli/dist/index.js check spec openapi.yaml
 
 check-types:
 	$(RUNTIME_PREFIX) pyright $(PYTHON_DIRS)
@@ -38,8 +41,4 @@ check-types:
 checks: check-format check-lint check-types
 
 gen-openapi:
-	$(RUNTIME_PREFIX) python src/ca_common_grants/scripts/generate_openapi.py > openapi.yaml
-
-gen-openapi-v3:
-	$(RUNTIME_PREFIX) python src/ca_common_grants/scripts/generate_openapi.py --version 3.0.0 > openapi-v3.yaml
-
+	$(RUNTIME_PREFIX) python src/common_grants/scripts/generate_openapi.py > openapi.yaml

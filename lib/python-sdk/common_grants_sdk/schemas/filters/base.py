@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Union
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from common_grants_sdk.schemas.base import CommonGrantsBaseModel
 
@@ -68,3 +68,24 @@ class DefaultFilter(CommonGrantsBaseModel):
         ...,
         description="The value to use for the filter operation",
     )
+
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            # Try to match against each operator type
+            for operator_class in [
+                EquivalenceOperator,
+                ComparisonOperator,
+                ArrayOperator,
+                StringOperator,
+                RangeOperator,
+            ]:
+                try:
+                    return operator_class(v)
+                except ValueError:
+                    continue
+            # If no match found, raise ValueError
+            raise ValueError(f"Invalid operator: {v}")
+        return v
