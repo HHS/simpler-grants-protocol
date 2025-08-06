@@ -40,7 +40,7 @@ const ajv = new Ajv({
  */
 function validateAgainstSchema(
   data: unknown,
-  schema: JsonSchema
+  schema: JsonSchema,
 ): ValidationResult {
   try {
     const validate = ajv.compile(schema);
@@ -91,12 +91,12 @@ function validateAgainstSchema(
  *
  */
 export function validateCommonGrantsMappings(
-  props: CommonGrantsValidationProps
+  props: CommonGrantsValidationProps,
 ) {
   // 1. Transform the form data to CommonGrants
   const commonData = transformWithMapping(
     props.defaultData,
-    props.mappingToCommon
+    props.mappingToCommon,
   );
 
   // 2. Validate the CommonGrants data against the CommonGrants schema
@@ -104,25 +104,25 @@ export function validateCommonGrantsMappings(
   if (!mappingToCommon.isValid) {
     console.warn(
       `${props.formId}: Failed mapping to CommonGrants`,
-      mappingToCommon.errors
+      mappingToCommon.errors,
     );
   }
 
   // 3. Transform the CommonGrants data back to the form data
   const transformedData = transformWithMapping(
     commonData,
-    props.mappingFromCommon as Record<string, JsonValue>
+    props.mappingFromCommon as Record<string, JsonValue>,
   );
 
   // 4. Validate the final transformation output against the form schema
   const mappingFromCommon = validateAgainstSchema(
     transformedData,
-    props.formSchema
+    props.formSchema,
   );
   if (!mappingFromCommon.isValid) {
     console.warn(
       `${props.formId}: Failed mapping from CommonGrants`,
-      mappingFromCommon.errors
+      mappingFromCommon.errors,
     );
   }
 }

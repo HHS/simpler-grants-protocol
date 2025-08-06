@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 
 // Internal utilities
 import type { FormData, TransformOutput } from "@/lib/types";
-import { mapJson } from "@/lib/transformation";
+import { transformWithMapping } from "@/lib/transformation";
 import { schemas } from "@/lib/schemas";
 
 // Components
@@ -41,6 +41,45 @@ const getValidSchemaId = (id: string | null, fallbackId: string): string => {
   }
   return id;
 };
+
+/**
+ * Maps JSON data from one form schema to another using the common data format as an intermediary.
+ *
+ * @param data - The source form data
+ * @param sourceId - The ID of the source form schema
+ * @param targetId - The ID of the target form schema
+ * @returns A TransformOutput object containing the transformation results
+ */
+function mapJson(
+  data: FormData,
+  sourceId: string,
+  targetId: string,
+): TransformOutput {
+  const sourceSchema = schemas[sourceId];
+  const targetSchema = schemas[targetId];
+
+  if (!sourceSchema || !targetSchema) {
+    throw new Error("Source or target schema not found");
+  }
+
+  const commonData = transformWithMapping(
+    data,
+    sourceSchema.mappingToCommon as FormData,
+  );
+
+  const targetData = transformWithMapping(
+    commonData,
+    targetSchema.mappingFromCommon as FormData,
+  );
+
+  return {
+    timestamp: Date.now(),
+    source: sourceId,
+    target: targetId,
+    commonData,
+    targetData,
+  };
+}
 
 export default function FormMappingPlayground() {
   // #########################################################
