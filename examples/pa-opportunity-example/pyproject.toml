@@ -1,7 +1,7 @@
 [tool.poetry]
 authors = ["Your Name <your.email@example.com>"]
 description = "An implementation of the CommonGrants API specification"
-name = "common-grants"
+name = "pa-common-grants"
 packages = [{include = "common_grants", from = "src"}]
 readme = "README.md"
 version = "0.1.0"
