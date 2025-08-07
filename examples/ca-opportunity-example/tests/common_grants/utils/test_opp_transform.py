@@ -79,7 +79,7 @@ class TestOpportunityTransformer:
         transformer: OpportunityTransformer,
     ) -> None:
         """Test handling of transformation errors."""
-        malformed_data = [{"invalid": "data"}]
+        malformed_data = [{"invalid": "data", "PortalID": "MALFORMED123"}]
 
         result = transformer.transform_opportunities(malformed_data)
         assert isinstance(result, list)
@@ -187,7 +187,11 @@ class TestOpportunityTransformer:
         transformer: OpportunityTransformer,
     ) -> None:
         """Test transformation with missing optional fields."""
-        minimal_data = {"Title": "Minimal Grant", "Status": "active"}
+        minimal_data = {
+            "Title": "Minimal Grant",
+            "Status": "active",
+            "PortalID": "MINIMAL123",
+        }
 
         result = transformer.transform_opportunity(minimal_data)
 
@@ -209,7 +213,11 @@ class TestOpportunityTransformer:
         ]
 
         for status_value, expected_status in test_cases:
-            data = {"Title": f"Test {status_value}", "Status": status_value}
+            data = {
+                "Title": f"Test {status_value}",
+                "Status": status_value,
+                "PortalID": f"TEST-{status_value.upper()}",
+            }
             result = transformer.transform_opportunity(data)
             assert result["status"]["value"] == expected_status
 
@@ -283,6 +291,7 @@ class TestOpportunityTransformer:
         data_with_tbd = {
             "Title": "TBD Grant",
             "Status": "active",
+            "PortalID": "TBD123",
             "OpenDate": "TBD",
             "ApplicationDeadline": "TBD",
             "ExpAwardDate": "TBD",

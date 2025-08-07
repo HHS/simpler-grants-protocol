@@ -89,7 +89,7 @@ class TestOpportunityTransformer:
         transformer: OpportunityTransformer,
     ) -> None:
         """Test handling of transformation errors."""
-        malformed_data = [{"invalid": "data"}]
+        malformed_data = [{"invalid": "data", "slug": "malformed-data"}]
 
         result = transformer.transform_opportunities(malformed_data)
         assert isinstance(result, list)
@@ -237,7 +237,11 @@ class TestOpportunityTransformer:
         transformer: OpportunityTransformer,
     ) -> None:
         """Test transformation with missing optional fields."""
-        minimal_data = {"title": "Minimal Grant", "status": "Accepting applications"}
+        minimal_data = {
+            "title": "Minimal Grant",
+            "status": "Accepting applications",
+            "slug": "minimal-grant",
+        }
 
         result = transformer.transform_opportunity(minimal_data)
 
@@ -248,7 +252,7 @@ class TestOpportunityTransformer:
 
         # Check that missing custom fields are handled gracefully
         custom_fields = result["customFields"]
-        assert custom_fields["slug"]["value"] is None
+        assert custom_fields["slug"]["value"] == "minimal-grant"
         assert custom_fields["category"]["value"] is None
         assert custom_fields["issuingAgency"]["value"] is None
 
@@ -270,7 +274,11 @@ class TestOpportunityTransformer:
         ]
 
         for status_value, expected_status in test_cases:
-            data = {"title": f"Test {status_value}", "status": status_value}
+            data = {
+                "title": f"Test {status_value}",
+                "status": status_value,
+                "slug": f"test-{status_value.lower().replace(' ', '-')}",
+            }
             result = transformer.transform_opportunity(data)
             assert result["status"]["value"] == expected_status
 
@@ -430,6 +438,7 @@ class TestOpportunityTransformer:
         data_without_dates = {
             "title": "No Date Grant",
             "status": "Accepting applications",
+            "slug": "no-date-grant",
             # No date fields provided
         }
 
@@ -455,6 +464,7 @@ class TestOpportunityTransformer:
         data_with_zero_funding = {
             "title": "Zero Funding Grant",
             "status": "Accepting applications",
+            "slug": "zero-funding-grant",
             "totalFundsToBeAwarded": "0",
             "minimumAward": "0",
             "maximumAward": "0",
@@ -475,6 +485,7 @@ class TestOpportunityTransformer:
         data_without_funding = {
             "title": "No Funding Grant",
             "status": "Accepting applications",
+            "slug": "no-funding-grant",
             # No funding fields provided
         }
 
@@ -493,7 +504,7 @@ class TestOpportunityTransformer:
         data_with_none_custom_fields = {
             "title": "None Custom Fields Grant",
             "status": "Accepting applications",
-            "slug": None,
+            "slug": "none-custom-fields-grant",
             "category": None,
             "issuingAgency": None,
             "issuingAgencyGrantNumber": None,
@@ -502,7 +513,7 @@ class TestOpportunityTransformer:
         result = transformer.transform_opportunity(data_with_none_custom_fields)
 
         custom_fields = result["customFields"]
-        assert custom_fields["slug"]["value"] is None
+        assert custom_fields["slug"]["value"] == "none-custom-fields-grant"
         assert custom_fields["category"]["value"] is None
         assert custom_fields["issuingAgency"]["value"] is None
         assert (
@@ -515,7 +526,7 @@ class TestOpportunityTransformer:
     ) -> None:
         """Test error handling during transformation."""
         # Test with completely invalid data
-        invalid_data = {"invalid": "data", "status": None}
+        invalid_data = {"invalid": "data", "status": None, "slug": "invalid-data"}
 
         result = transformer.transform_opportunity(invalid_data)
 
@@ -570,6 +581,7 @@ class TestOpportunityTransformer:
         data_with_valid_url = {
             "title": "Test Grant",
             "status": "Accepting applications",
+            "slug": "test-grant",
             "linkToApply": "https://grants.pa.gov/Login.aspx",
         }
         result = transformer.transform_opportunity(data_with_valid_url)
@@ -579,6 +591,7 @@ class TestOpportunityTransformer:
         data_with_encoded_url = {
             "title": "Test Grant",
             "status": "Accepting applications",
+            "slug": "test-grant-encoded",
             "linkToApply": "https://example.com/path with spaces",
         }
         result = transformer.transform_opportunity(data_with_encoded_url)
@@ -589,6 +602,7 @@ class TestOpportunityTransformer:
         data_with_invalid_url = {
             "title": "Test Grant",
             "status": "Accepting applications",
+            "slug": "test-grant-invalid-url",
             "linkToApply": "not-a-url",
         }
         result = transformer.transform_opportunity(data_with_invalid_url)
@@ -598,6 +612,7 @@ class TestOpportunityTransformer:
         data_without_url = {
             "title": "Test Grant",
             "status": "Accepting applications",
+            "slug": "test-grant-no-url",
             # No linkToApply field
         }
         result = transformer.transform_opportunity(data_without_url)

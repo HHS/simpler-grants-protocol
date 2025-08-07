@@ -6,13 +6,15 @@ Pennsylvania Grants API format to the CommonGrants Protocol format.
 """
 
 import re
-import uuid
 from datetime import datetime, timezone
 from typing import Any
+from uuid import uuid5
 
 from common_grants_sdk.schemas.fields import CustomFieldType
 from common_grants_sdk.schemas.models import OppStatusOptions
 from pydantic import AnyUrl, ValidationError
+
+from common_grants.constants import PA_OPPORTUNITY_NAMESPACE
 
 
 class OpportunityTransformer:
@@ -54,8 +56,14 @@ class OpportunityTransformer:
         source: dict[str, Any],
     ) -> dict[str, Any]:
         """Transform PA opportunity data to CommonGrants format."""
+        # Generate unique ID using the slug for uniqueness
+        slug = source.get("slug", "")
+        if not slug:
+            error_msg = "Opportunity must have a slug for ID generation"
+            raise ValueError(error_msg)
+
         return {
-            "id": uuid.uuid5(uuid.NAMESPACE_DNS, "egrants-apibeta.azurewebsites.net"),
+            "id": uuid5(PA_OPPORTUNITY_NAMESPACE, slug),
             "title": source.get("title"),
             "description": source.get("overview"),
             "status": {

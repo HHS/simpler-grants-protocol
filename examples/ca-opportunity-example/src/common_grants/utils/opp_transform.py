@@ -6,11 +6,13 @@ California Grants Portal format to the CommonGrants Protocol format.
 """
 
 import re
-import uuid
 from typing import Any
+from uuid import uuid5
 
 from common_grants_sdk.schemas.fields import CustomFieldType
 from common_grants_sdk.schemas.models import OppStatusOptions
+
+from common_grants.constants import CA_OPPORTUNITY_NAMESPACE
 
 from .date_transform import DateFormat, transform_date
 
@@ -54,8 +56,14 @@ class OpportunityTransformer:
         source: dict[str, Any],
     ) -> dict[str, Any]:
         """Transform CA opportunity data to CommonGrants format."""
+        # Generate unique ID using the PortalID for uniqueness
+        portal_id = source.get("PortalID", "")
+        if not portal_id:
+            error_msg = "Opportunity must have a PortalID for ID generation"
+            raise ValueError(error_msg)
+
         return {
-            "id": uuid.uuid5(uuid.NAMESPACE_DNS, "data.ca.gov"),
+            "id": uuid5(CA_OPPORTUNITY_NAMESPACE, portal_id),
             "title": source.get("Title"),
             "description": source.get("Description"),
             "status": {
