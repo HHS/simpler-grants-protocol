@@ -1,7 +1,6 @@
 import type { VerticalLayout, JsonSchema } from "@jsonforms/core";
 import type { FormSchemaMap, FormSchema, FormData, JsonValue } from "./types";
 import formsIndex from "@/content/forms/index.json";
-import { validateCommonGrantsMappings } from "./validation";
 
 // Import all form files using Vite's glob pattern
 // Implementation Notes:
@@ -126,15 +125,6 @@ function loadFormDataWithGlob(formId: string, formLabel: string): FormSchema {
   if (!schema || !ui || !mappingTo || !mappingFrom || !defaultData) {
     throw new Error(`Missing required files for form ${formId}`);
   }
-
-  // Validate the mappings between the form and the CommonGrants data model
-  validateCommonGrantsMappings({
-    formId,
-    formSchema: schema.default,
-    mappingToCommon: mappingTo.default,
-    mappingFromCommon: mappingFrom.default,
-    defaultData: defaultData.default,
-  });
 
   // Get metadata from forms index
   const formInfo = formsIndex.find((form) => form.id === formId);
