@@ -1,7 +1,5 @@
 """Service layer for opportunity-related operations."""
 
-from datetime import date
-from typing import Any
 from uuid import UUID
 
 from common_grants_sdk.schemas import (
@@ -16,7 +14,7 @@ from common_grants_sdk.schemas.sorting import OppSortBy, OppSorting
 from fastapi import status
 
 from common_grants.schemas import OppFilters, OpportunityBase
-from common_grants.services.utils import build_applied_filters, mock_opportunity
+from common_grants.services.utils import build_applied_filters
 from common_grants.utils.opp_data_source import OpportunityDataSource
 from common_grants.utils.opp_transform import OpportunityTransformer
 
@@ -135,41 +133,3 @@ class OpportunityService:
             sortInfo=sort_info,
             filterInfo=filter_info,
         )
-
-    def _get_mock_opportunities(self) -> list[Any]:
-        """Get a list of mock opportunities for testing."""
-        return [
-            mock_opportunity(
-                title="Early Childhood Education Grant",
-                description="Supporting early childhood education programs",
-                total_available=500000.00,
-                min_award_amount=25000.00,
-                max_award_amount=100000.00,
-                min_award_count=5,
-                max_award_count=20,
-                app_opens=date(2024, 1, 15),
-                app_deadline=date(2024, 3, 15),
-            ),
-            mock_opportunity(
-                title="STEM Research Initiative",
-                description="Funding for STEM research projects",
-                total_available=1000000.00,
-                min_award_amount=50000.00,
-                max_award_amount=200000.00,
-                min_award_count=3,
-                max_award_count=10,
-                app_opens=date(2024, 2, 1),
-                app_deadline=date(2024, 4, 30),
-            ),
-            mock_opportunity(
-                title="Community Health Program",
-                description="Improving community health outcomes",
-                total_available=750000.00,
-                min_award_amount=30000.00,
-                max_award_amount=150000.00,
-                min_award_count=4,
-                max_award_count=15,
-                app_opens=date(2024, 1, 1),
-                app_deadline=date(2024, 5, 31),
-            ),
-        ]
