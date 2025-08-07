@@ -1,24 +1,25 @@
-"""Mock data source snapshot of CA Grants Portal data."""
+"""Mock data source snapshot of PA Grants data."""
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 
 class OpportunityDataSource:
-    """Mock data source of CA Grants Portal data."""
+    """Mock data source of PA Grants data."""
 
     # Path to the data file relative to this module
     DATA_FILE = (
         Path(__file__).parent.parent
         / "data"
-        / "111c8c88-21f6-453c-ae2c-b4785a0624f5.json"
+        / "PA-grant-data.sample.txt"
     )
 
     @classmethod
     def get_opportunities(cls) -> list[dict[str, Any]]:
         """
-        Fetch and normalize data from local json file.
+        Fetch and normalize data from local data file.
 
         Returns:
             List of normalized opportunity dictionaries
@@ -31,19 +32,18 @@ class OpportunityDataSource:
 
         try:
             # Read source data
-            source_data = json.loads(cls.DATA_FILE.read_text())
+            file_content = cls.DATA_FILE.read_text()
 
-            # Get column definitions
-            fields = source_data.get("fields", [])
-            field_names = [field["id"] for field in fields]
+            # Extract JSON data from the file content
+            json_match = re.search(r"data:\s*(\{.*\})", file_content, re.DOTALL)
+            if not json_match:
+                error_msg = f"Could not find JSON data in file {cls.DATA_FILE}"
+                raise ValueError(error_msg)
 
-            # Get the records
-            records = source_data.get("records", [])
-
-            # Convert records to dictionaries using field names as keys
-            for record in records:
-                opportunity_dict = dict(zip(field_names, record))
-                opportunities.append(opportunity_dict)
+            # Get the grants array from the data
+            json_str = json_match.group(1)
+            source_data = json.loads(json_str)
+            opportunities = source_data.get("grants", [])
 
         except json.JSONDecodeError as e:
             error_msg = f"Invalid JSON in file {cls.DATA_FILE}: {e!s}"
