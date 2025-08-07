@@ -80,7 +80,7 @@ function loadFormData(formId: string, formLabel: string) {
 function loadAllForms() {
   const formsIndexPath = join(__dirname, "../content/forms/index.json");
   const formsIndex: FormInfo[] = JSON.parse(
-    readFileSync(formsIndexPath, "utf-8")
+    readFileSync(formsIndexPath, "utf-8"),
   );
 
   const schemas: Record<string, ReturnType<typeof loadFormData>> = {};

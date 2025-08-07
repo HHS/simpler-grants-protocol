@@ -1,7 +1,22 @@
 import type { JsonValue } from "./types";
 import type { JsonSchema } from "@jsonforms/core";
 import { transformWithMapping } from "./transformation";
-import Ajv from "ajv";
+import * as fs from "fs";
+import * as path from "path";
+import * as yaml from "js-yaml";
+import Ajv2020 from "ajv/dist/2020";
+
+// #########################################################
+// CommonGrants schema and validator
+// #########################################################
+
+const ajv = createAjvWithSchemas();
+const commonGrantsSchema = ajv.getSchema("ProposalBase.yaml")
+  ?.schema as JsonSchema;
+
+// #########################################################
+// Validation types
+// #########################################################
 
 /**
  * Validation error details
@@ -28,12 +43,55 @@ interface CommonGrantsValidationProps {
   defaultData: Record<string, JsonValue>;
 }
 
-// Create an Ajv instance with common options
-const ajv = new Ajv({
-  allErrors: true, // Return all errors, not just the first one
-  verbose: true, // Include more detailed error information
-  strict: false, // Allow additional properties not in schema
-});
+// #########################################################
+// Validator
+// #########################################################
+
+/**
+ * Loads all YAML schema files and creates an Ajv instance ready for validation
+ * This is the main function to use for schema validation
+ */
+function createAjvWithSchemas(): Ajv2020 {
+  const ajv = new Ajv2020({
+    allErrors: true,
+    verbose: true,
+    strict: false,
+    formats: {
+      // Define any custom formats you want to support
+      date: true, // Allow any string for date format
+      time: true, // Allow any string for time format
+      uuid: true, // Allow any string for uuid format
+      email: true, // Allow any string for email format
+      uri: true, // Allow any string for uri format
+    },
+  });
+
+  // Load all YAML schema files from the yaml directory
+  const yamlDir = path.resolve(process.cwd(), "public/schemas/yaml");
+  const files = fs
+    .readdirSync(yamlDir)
+    .filter((file) => file.endsWith(".yaml"));
+
+  for (const file of files) {
+    const filePath = path.join(yamlDir, file);
+    const schemaContent = fs.readFileSync(filePath, "utf-8");
+    const schema = yaml.load(schemaContent) as JsonSchema & { $id?: string };
+
+    // Ensure the schema has an $id that matches the filename
+    if (!schema.$id) {
+      schema.$id = file;
+    }
+
+    // Register the schema with Ajv using the $id as the schema ID
+    ajv.addSchema(schema, schema.$id);
+  }
+
+  return ajv;
+}
+
+// #########################################################
+// Validation functions
+// #########################################################
 
 /**
  * Validates data against a JSON schema using Ajv
@@ -80,27 +138,17 @@ function validateAgainstSchema(
 
 /**
  * Validates the mappings between a form and the CommonGrants data model
- *
- * It does this by:
- * 1. Transforming the form data to CommonGrants using the form's `mappingToCommon` attribute
- * 2. Validating the CommonGrants data against the CommonGrants schema
- * 3. Transforming the CommonGrants data back using the form's `mappingFromCommon` attribute
- * 4. Validating the final transformation output against the form schema
- *
- * It logs any validation warnings to the console.
- *
  */
-export function validateCommonGrantsMappings(
+export async function validateCommonGrantsMappings(
   props: CommonGrantsValidationProps,
-) {
-  // 1. Transform the form data to CommonGrants
+): Promise<void> {
+  // Transform the form data to CommonGrants using the form's `mappingToCommon` attribute
+  // Then validate the CommonGrants data against the CommonGrants schema
   const commonData = transformWithMapping(
     props.defaultData,
     props.mappingToCommon,
   );
-
-  // 2. Validate the CommonGrants data against the CommonGrants schema
-  const mappingToCommon = validateAgainstSchema(commonData, {});
+  const mappingToCommon = validateAgainstSchema(commonData, commonGrantsSchema);
   if (!mappingToCommon.isValid) {
     console.warn(
       `${props.formId}: Failed mapping to CommonGrants`,
@@ -108,13 +156,12 @@ export function validateCommonGrantsMappings(
     );
   }
 
-  // 3. Transform the CommonGrants data back to the form data
+  // Transform the CommonGrants data back to the form data using the form's `mappingFromCommon` attribute
+  // Then validate the transformed data against the form schema
   const transformedData = transformWithMapping(
     commonData,
     props.mappingFromCommon as Record<string, JsonValue>,
   );
-
-  // 4. Validate the final transformation output against the form schema
   const mappingFromCommon = validateAgainstSchema(
     transformedData,
     props.formSchema,
