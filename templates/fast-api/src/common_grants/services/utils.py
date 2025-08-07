@@ -12,8 +12,8 @@ from common_grants.schemas import (
     OppStatusOptions,
 )
 
-# note: derivative implementations should set NAMESPACE to a non-nil UUID 
-NAMESPACE = UUID("00000000-0000-0000-0000-000000000000") 
+# note: derivative implementations should set NAMESPACE to a non-nil UUID
+NAMESPACE = UUID("00000000-0000-0000-0000-000000000000")
 
 
 def build_applied_filters(filters: OppFilters) -> dict[str, Any]:
