@@ -54,7 +54,10 @@ class TestOpportunityTransformer:
             "last_modified": "2025-01-01T10:00:00-00:00",
         }
 
-    def test_transformer_initialization(self, transformer: OpportunityTransformer) -> None:
+    def test_transformer_initialization(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
         """Test that the transformer initializes correctly."""
         assert transformer is not None
 
@@ -72,14 +75,18 @@ class TestOpportunityTransformer:
         assert result[0]["title"] == "Test Grant Opportunity"
         assert result[0]["description"] == "A test grant for educational purposes"
 
-    def test_transform_opportunities_empty_list(self, transformer: OpportunityTransformer) -> None:
+    def test_transform_opportunities_empty_list(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
         """Test transformation of empty opportunities list."""
         result = transformer.transform_opportunities([])
         assert isinstance(result, list)
         assert len(result) == 0
 
     def test_transform_opportunities_transformation_error(
-        self, transformer: OpportunityTransformer,
+        self,
+        transformer: OpportunityTransformer,
     ) -> None:
         """Test handling of transformation errors."""
         malformed_data = [{"invalid": "data"}]
@@ -99,7 +106,10 @@ class TestOpportunityTransformer:
         assert result["title"] == "Test Grant Opportunity"
         assert result["description"] == "A test grant for educational purposes"
         assert result["status"]["value"] == OppStatusOptions.OPEN
-        assert result["status"]["description"] == "Opportunity status from Pennsylvania Grants API"
+        assert (
+            result["status"]["description"]
+            == "Opportunity status from Pennsylvania Grants API"
+        )
         assert result["source"] == "https://example.com/grant"
 
     def test_transform_opportunity_funding(
@@ -132,11 +142,17 @@ class TestOpportunityTransformer:
 
         assert key_dates["appOpens"]["name"] == "Application Opens"
         assert key_dates["appOpens"]["date"] == date(2025, 1, 15)
-        assert key_dates["appOpens"]["description"] == "Applications accepted beginning this date"
+        assert (
+            key_dates["appOpens"]["description"]
+            == "Applications accepted beginning this date"
+        )
 
         assert key_dates["appDeadline"]["name"] == "Application Deadline"
         assert key_dates["appDeadline"]["date"] == date(2025, 3, 15)
-        assert key_dates["appDeadline"]["description"] == "Final deadline for all submissions"
+        assert (
+            key_dates["appDeadline"]["description"]
+            == "Final deadline for all submissions"
+        )
 
         assert "otherDates" in key_dates
         assert "decisionDate" in key_dates["otherDates"]
@@ -152,7 +168,11 @@ class TestOpportunityTransformer:
             key_dates["otherDates"]["anticipatedFundingDate"]["name"]
             == "Anticipated Funding Date"
         )
-        assert key_dates["otherDates"]["anticipatedFundingDate"]["date"] == date(2025, 7, 15)
+        assert key_dates["otherDates"]["anticipatedFundingDate"]["date"] == date(
+            2025,
+            7,
+            15,
+        )
         assert (
             key_dates["otherDates"]["anticipatedFundingDate"]["description"]
             == "Expected date of funding disbursement."
@@ -180,7 +200,10 @@ class TestOpportunityTransformer:
         assert custom_fields["category"]["value"] == "Education"
 
         assert custom_fields["issuingAgency"]["name"] == "Issuing Agency"
-        assert custom_fields["issuingAgency"]["value"] == "Pennsylvania Department of Education"
+        assert (
+            custom_fields["issuingAgency"]["value"]
+            == "Pennsylvania Department of Education"
+        )
 
         assert custom_fields["shortIssuingAgency"]["name"] == "Short Issuing Agency"
         assert custom_fields["shortIssuingAgency"]["value"] == "PDE"
@@ -197,14 +220,21 @@ class TestOpportunityTransformer:
         assert custom_fields["issuingAgencyUrl"]["name"] == "Issuing Agency URL"
         assert custom_fields["issuingAgencyUrl"]["value"] == "https://education.pa.gov"
 
-        assert custom_fields["issuingAgencyGrantNumber"]["name"] == "Issuing Agency Grant Number"
+        assert (
+            custom_fields["issuingAgencyGrantNumber"]["name"]
+            == "Issuing Agency Grant Number"
+        )
         assert custom_fields["issuingAgencyGrantNumber"]["value"] == "PDE-2025-001"
 
         assert custom_fields["shortDescription"]["name"] == "Short Description"
-        assert custom_fields["shortDescription"]["value"] == "Support for educational initiatives"
+        assert (
+            custom_fields["shortDescription"]["value"]
+            == "Support for educational initiatives"
+        )
 
     def test_transform_opportunity_missing_fields(
-        self, transformer: OpportunityTransformer,
+        self,
+        transformer: OpportunityTransformer,
     ) -> None:
         """Test transformation with missing optional fields."""
         minimal_data = {"title": "Minimal Grant", "status": "Accepting applications"}
@@ -223,7 +253,8 @@ class TestOpportunityTransformer:
         assert custom_fields["issuingAgency"]["value"] is None
 
     def test_transform_opportunity_different_statuses(
-        self, transformer: OpportunityTransformer,
+        self,
+        transformer: OpportunityTransformer,
     ) -> None:
         """Test transformation of different status values."""
         test_cases = [
@@ -243,7 +274,10 @@ class TestOpportunityTransformer:
             result = transformer.transform_opportunity(data)
             assert result["status"]["value"] == expected_status
 
-    def test_transform_money_strip_non_digits(self, transformer: OpportunityTransformer) -> None:
+    def test_transform_money_strip_non_digits(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
         """Test the transform_money method."""
         test_cases = [
             ("$1,000,000", "1000000"),
@@ -261,7 +295,10 @@ class TestOpportunityTransformer:
             result = transformer.transform_money(input_value)
             assert result == expected_output
 
-    def test_transform_status_all_values(self, transformer: OpportunityTransformer) -> None:
+    def test_transform_status_all_values(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
         """Test the transform_status method with all possible values."""
         test_cases = [
             ("Accepting applications", OppStatusOptions.OPEN),
@@ -315,7 +352,10 @@ class TestOpportunityTransformer:
         assert result.hour == 12
         assert result.tzinfo is not None
 
-    def test_parse_date_with_z_format(self, transformer: OpportunityTransformer) -> None:
+    def test_parse_date_with_z_format(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
         """Test date parsing for ISO format with Z timezone."""
         result = transformer.parse_date("2025-01-01T12:00:00Z")
         assert result.year == 2025
@@ -324,7 +364,10 @@ class TestOpportunityTransformer:
         assert result.hour == 12
         assert result.tzinfo is not None
 
-    def test_parse_date_with_timezone_offset(self, transformer: OpportunityTransformer) -> None:
+    def test_parse_date_with_timezone_offset(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
         """Test date parsing for ISO format with timezone offset."""
         result = transformer.parse_date("2025-01-01T12:00:00+05:00")
         assert result.year == 2025
@@ -349,7 +392,10 @@ class TestOpportunityTransformer:
         assert result.day == 31
         assert result.tzinfo is not None
 
-    def test_parse_date_whitespace_string(self, transformer: OpportunityTransformer) -> None:
+    def test_parse_date_whitespace_string(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
         """Test date parsing for whitespace-only string returns future date."""
         result = transformer.parse_date("   ")
         assert result.year == 2099
@@ -358,13 +404,17 @@ class TestOpportunityTransformer:
         assert result.tzinfo is not None
 
     def test_parse_date_invalid_format_raises_error(
-        self, transformer: OpportunityTransformer,
+        self,
+        transformer: OpportunityTransformer,
     ) -> None:
         """Test date parsing for invalid format raises ValueError."""
         with pytest.raises(ValueError, match="Invalid ISO date format"):
             transformer.parse_date("invalid-date")
 
-    def test_parse_date_with_tbd_values(self, transformer: OpportunityTransformer) -> None:
+    def test_parse_date_with_tbd_values(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
         """Test date parsing with TBD-like values returns future date."""
         test_cases = ["TBD", "TBA", "ongoing", "pending", "to be determined"]
 
@@ -373,7 +423,8 @@ class TestOpportunityTransformer:
                 transformer.parse_date(tbd_value)
 
     def test_transform_opportunity_with_missing_dates(
-        self, transformer: OpportunityTransformer,
+        self,
+        transformer: OpportunityTransformer,
     ) -> None:
         """Test transformation with missing date fields."""
         data_without_dates = {
@@ -387,14 +438,18 @@ class TestOpportunityTransformer:
         # All dates should default to far future date
         assert result["keyDates"]["appOpens"]["date"] == date(2099, 12, 31)
         assert result["keyDates"]["appDeadline"]["date"] == date(2099, 12, 31)
-        assert result["keyDates"]["otherDates"]["decisionDate"]["date"] == date(2099, 12, 31)
-        assert (
-            result["keyDates"]["otherDates"]["anticipatedFundingDate"]["date"]
-            == date(2099, 12, 31)
+        assert result["keyDates"]["otherDates"]["decisionDate"]["date"] == date(
+            2099,
+            12,
+            31,
         )
+        assert result["keyDates"]["otherDates"]["anticipatedFundingDate"][
+            "date"
+        ] == date(2099, 12, 31)
 
     def test_transform_opportunity_with_zero_funding(
-        self, transformer: OpportunityTransformer,
+        self,
+        transformer: OpportunityTransformer,
     ) -> None:
         """Test transformation with zero funding amounts."""
         data_with_zero_funding = {
@@ -413,7 +468,8 @@ class TestOpportunityTransformer:
         assert funding["maxAwardAmount"]["amount"] == "0"
 
     def test_transform_opportunity_with_missing_funding(
-        self, transformer: OpportunityTransformer,
+        self,
+        transformer: OpportunityTransformer,
     ) -> None:
         """Test transformation with missing funding fields."""
         data_without_funding = {
@@ -430,7 +486,8 @@ class TestOpportunityTransformer:
         assert funding["maxAwardAmount"]["amount"] == "0"
 
     def test_transform_opportunity_custom_fields_with_none_values(
-        self, transformer: OpportunityTransformer,
+        self,
+        transformer: OpportunityTransformer,
     ) -> None:
         """Test custom fields handle None values gracefully."""
         data_with_none_custom_fields = {
@@ -448,10 +505,13 @@ class TestOpportunityTransformer:
         assert custom_fields["slug"]["value"] is None
         assert custom_fields["category"]["value"] is None
         assert custom_fields["issuingAgency"]["value"] is None
-        assert custom_fields["issuingAgencyGrantNumber"]["value"] == "None"  # str(None) = "None"
+        assert (
+            custom_fields["issuingAgencyGrantNumber"]["value"] == "None"
+        )  # str(None) = "None"
 
     def test_transform_opportunity_error_handling(
-        self, transformer: OpportunityTransformer,
+        self,
+        transformer: OpportunityTransformer,
     ) -> None:
         """Test error handling during transformation."""
         # Test with completely invalid data

@@ -69,11 +69,15 @@ class OpportunityTransformer:
                     "currency": "USD",
                 },
                 "minAwardAmount": {
-                    "amount": self.transform_money(str(source.get("minimumAward", "0"))),
+                    "amount": self.transform_money(
+                        str(source.get("minimumAward", "0")),
+                    ),
                     "currency": "USD",
                 },
                 "maxAwardAmount": {
-                    "amount": self.transform_money(str(source.get("maximumAward", "0"))),
+                    "amount": self.transform_money(
+                        str(source.get("maximumAward", "0")),
+                    ),
                     "currency": "USD",
                 },
             },
@@ -96,7 +100,9 @@ class OpportunityTransformer:
                     },
                     "anticipatedFundingDate": {
                         "name": "Anticipated Funding Date",
-                        "date": self.parse_date(source.get("anticipatedFundingDate")).date(),
+                        "date": self.parse_date(
+                            source.get("anticipatedFundingDate"),
+                        ).date(),
                         "description": "Expected date of funding disbursement.",
                     },
                 },

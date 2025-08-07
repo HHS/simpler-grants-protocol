@@ -1,1 +1,1 @@
-"""Tests for common_grants utils module.""" 
+"""Tests for common_grants utils module."""
