@@ -12,6 +12,7 @@ from typing import Any
 
 from common_grants_sdk.schemas.fields import CustomFieldType
 from common_grants_sdk.schemas.models import OppStatusOptions
+from pydantic import AnyUrl, ValidationError
 
 
 class OpportunityTransformer:
@@ -107,7 +108,7 @@ class OpportunityTransformer:
                     },
                 },
             },
-            "source": source.get("linkToApply"),
+            "source": self.parse_url(source.get("linkToApply")),
             "customFields": {
                 "slug": {
                     "name": "Slug",
@@ -174,6 +175,26 @@ class OpportunityTransformer:
             "lastModifiedAt": self.parse_date(source.get("last_modified")),
         }
 
+    def parse_url(self, link_to_apply: str | None) -> str | None:
+        """
+        Get a valid source URL or None if not available.
+
+        Args:
+            link_to_apply: The linkToApply value from the source data
+
+        Returns:
+            A valid URL string or None
+
+        """
+        if not link_to_apply or not link_to_apply.startswith(("http://", "https://")):
+            return None
+
+        try:
+            validated_url = AnyUrl(link_to_apply)
+            return str(validated_url)
+        except ValidationError:
+            return None
+
     def parse_date(self, date_str: str | None) -> datetime:
         """
         Parse a date string to a datetime object.
@@ -192,9 +213,9 @@ class OpportunityTransformer:
             # Return a far future date for None values or empty strings
             return datetime(2099, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
 
-        # Try to parse ISO format dates
+        # Parse ISO format dates
         try:
-            # Handle ISO format with timezone offset
+            # Handle timezone offset
             if date_str.endswith("-00:00"):
                 date_str = date_str.replace("-00:00", "Z")
             return datetime.fromisoformat(date_str.replace("Z", "+00:00"))

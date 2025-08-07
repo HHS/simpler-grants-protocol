@@ -18,8 +18,8 @@ class TestListOpportunities:
         assert isinstance(data["items"], list)
         assert data["paginationInfo"]["page"] == 1
         assert data["paginationInfo"]["pageSize"] == 10
-        assert data["paginationInfo"]["totalItems"] == 3
-        assert data["paginationInfo"]["totalPages"] == 1
+        assert data["paginationInfo"]["totalItems"] == 322
+        assert data["paginationInfo"]["totalPages"] == 33
 
     def test_pagination_specified(self, client: TestClient):
         """Test GET /common-grants/opportunities endpoint with custom pagination."""
@@ -31,8 +31,8 @@ class TestListOpportunities:
         assert isinstance(data["items"], list)
         assert data["paginationInfo"]["page"] == 2
         assert data["paginationInfo"]["pageSize"] == 1
-        assert data["paginationInfo"]["totalItems"] == 3
-        assert data["paginationInfo"]["totalPages"] == 3
+        assert data["paginationInfo"]["totalItems"] == 322
+        assert data["paginationInfo"]["totalPages"] == 322
 
 
 class TestGetOpportunityById:

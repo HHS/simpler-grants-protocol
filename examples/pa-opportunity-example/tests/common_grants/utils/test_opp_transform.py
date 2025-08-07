@@ -526,3 +526,79 @@ class TestOpportunityTransformer:
         assert "funding" in result
         assert "keyDates" in result
         assert "customFields" in result
+
+    def test_parse_url_valid_urls(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
+        """Test URL validation with valid URLs."""
+        valid_urls = [
+            "https://example.com",
+            "https://grants.pa.gov/Login.aspx",
+            "http://localhost:8000",
+        ]
+
+        for url in valid_urls:
+            result = transformer.parse_url(url)
+            assert result is not None, f"Expected {url} to be valid, got None"
+            assert result.startswith(
+                ("http://", "https://"),
+            ), f"Expected {url} to be a valid URL, got {result}"
+
+    def test_parse_url_invalid_urls(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
+        """Test URL validation with invalid URLs."""
+        invalid_urls = [
+            "not-a-url",
+            "ftp://example.com",
+            "",
+            None,
+        ]
+
+        for url in invalid_urls:
+            result = transformer.parse_url(url)
+            assert result is None, f"Expected {url} to be invalid, got {result}"
+
+    def test_parse_url_integration(
+        self,
+        transformer: OpportunityTransformer,
+    ) -> None:
+        """Test URL validation integration with opportunity transformation."""
+        # Test with valid URL
+        data_with_valid_url = {
+            "title": "Test Grant",
+            "status": "Accepting applications",
+            "linkToApply": "https://grants.pa.gov/Login.aspx",
+        }
+        result = transformer.transform_opportunity(data_with_valid_url)
+        assert result["source"] == "https://grants.pa.gov/Login.aspx"
+
+        # Test with URL that gets URL-encoded (Pydantic accepts and encodes it)
+        data_with_encoded_url = {
+            "title": "Test Grant",
+            "status": "Accepting applications",
+            "linkToApply": "https://example.com/path with spaces",
+        }
+        result = transformer.transform_opportunity(data_with_encoded_url)
+        assert result["source"] is not None
+        assert result["source"].startswith("https://")
+
+        # Test with truly invalid URL
+        data_with_invalid_url = {
+            "title": "Test Grant",
+            "status": "Accepting applications",
+            "linkToApply": "not-a-url",
+        }
+        result = transformer.transform_opportunity(data_with_invalid_url)
+        assert result["source"] is None
+
+        # Test with missing URL
+        data_without_url = {
+            "title": "Test Grant",
+            "status": "Accepting applications",
+            # No linkToApply field
+        }
+        result = transformer.transform_opportunity(data_without_url)
+        assert result["source"] is None
