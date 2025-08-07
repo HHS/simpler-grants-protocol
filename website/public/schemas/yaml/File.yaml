@@ -31,6 +31,8 @@ required:
   - name
   - createdAt
   - lastModifiedAt
+unevaluatedProperties:
+  not: {}
 examples:
   - downloadUrl: https://example.com/file.pdf
     name: example.pdf

@@ -16,8 +16,12 @@ properties:
     required:
       - field
       - case
+    unevaluatedProperties:
+      not: {}
 required:
   - switch
+unevaluatedProperties:
+  not: {}
 examples:
   - switch:
       field: summary.opportunity_status

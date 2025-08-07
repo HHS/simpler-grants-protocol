@@ -18,6 +18,8 @@ required:
   - eventType
 allOf:
   - $ref: EventBase.yaml
+unevaluatedProperties:
+  not: {}
 examples:
   - name: Info sessions
     eventType: other

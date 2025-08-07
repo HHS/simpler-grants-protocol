@@ -14,4 +14,6 @@ properties:
 required:
   - operator
   - value
+unevaluatedProperties:
+  not: {}
 description: Filters by comparing a field to a monetary value

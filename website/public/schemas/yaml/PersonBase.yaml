@@ -25,6 +25,8 @@ properties:
     description: Custom fields for the person.
 required:
   - name
+unevaluatedProperties:
+  not: {}
 examples:
   - name:
       prefix: Dr.

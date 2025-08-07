@@ -15,3 +15,5 @@ properties:
 required:
   - status
   - message
+unevaluatedProperties:
+  not: {}

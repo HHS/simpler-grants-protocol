@@ -13,6 +13,8 @@ properties:
     description: Additional phone numbers not covered by the standard fields.
 required:
   - primary
+unevaluatedProperties:
+  not: {}
 examples:
   - primary:
       countryCode: "+1"

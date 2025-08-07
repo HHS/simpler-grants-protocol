@@ -25,4 +25,6 @@ properties:
 required:
   - sortBy
   - sortOrder
+unevaluatedProperties:
+  not: {}
 description: Information about the sort order of the items returned

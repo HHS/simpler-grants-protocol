@@ -10,6 +10,8 @@ properties:
     description: Other points of contact for the proposal. For example, key personnel, authorized representatives, etc.
 required:
   - primary
+unevaluatedProperties:
+  not: {}
 $defs:
   RecordPersonBase:
     type: object

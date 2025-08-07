@@ -16,4 +16,6 @@ properties:
 required:
   - operator
   - value
+unevaluatedProperties:
+  not: {}
 description: A base filter model that can be used to create more specific filter models

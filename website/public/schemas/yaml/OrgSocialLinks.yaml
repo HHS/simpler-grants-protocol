@@ -29,6 +29,8 @@ properties:
   otherSocials:
     $ref: "#/$defs/RecordUrl"
     description: Additional social media profiles not covered by the standard fields.
+unevaluatedProperties:
+  not: {}
 examples:
   - website: https://www.example.com
     facebook: https://www.facebook.com/example

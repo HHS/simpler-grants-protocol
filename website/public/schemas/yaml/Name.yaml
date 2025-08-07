@@ -20,6 +20,8 @@ properties:
 required:
   - firstName
   - lastName
+unevaluatedProperties:
+  not: {}
 examples:
   - prefix: Dr.
     firstName: Jane

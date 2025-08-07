@@ -17,4 +17,6 @@ properties:
 required:
   - operator
   - value
+unevaluatedProperties:
+  not: {}
 description: Filters by comparing a field to an array of numeric values

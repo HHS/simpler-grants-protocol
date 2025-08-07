@@ -68,6 +68,8 @@ properties:
       be excluded from the search.
 allOf:
   - $ref: "#/$defs/RecordDefaultFilter"
+unevaluatedProperties:
+  not: {}
 description: The standard set of filters supported for opportunity searches
 $defs:
   RecordDefaultFilter:

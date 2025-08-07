@@ -44,6 +44,8 @@ properties:
 required:
   - id
   - name
+unevaluatedProperties:
+  not: {}
 examples:
   - id: 083b4567-e89d-42c8-a439-6c1234567890
     name: Example Organization

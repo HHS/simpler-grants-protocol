@@ -11,6 +11,8 @@ required:
   - status
 allOf:
   - $ref: Error.yaml
+unevaluatedProperties:
+  not: {}
 examples:
   - status: 400
     message: Application submission failed due to validation errors

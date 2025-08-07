@@ -10,6 +10,8 @@ properties:
     description: Additional email addresses keyed by a descriptive label (e.g., "work", "personal", "support").
 required:
   - primary
+unevaluatedProperties:
+  not: {}
 examples:
   - primary: john.doe@example.com
     otherEmails:
