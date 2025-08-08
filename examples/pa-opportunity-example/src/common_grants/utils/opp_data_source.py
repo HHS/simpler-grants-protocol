@@ -1,4 +1,4 @@
-"""Mock data source snapshot of PA Grants data."""
+"""Static data snapshot from PA Grants API."""
 
 import json
 from pathlib import Path
@@ -6,7 +6,7 @@ from typing import Any
 
 
 class OpportunityDataSource:
-    """Mock data source of PA Grants data."""
+    """Static data snapshot from PA Grants API."""
 
     # Path to the data file relative to this module
     DATA_FILE = Path(__file__).parent.parent / "data" / "PA-grant-data.sample.json"
@@ -26,7 +26,7 @@ class OpportunityDataSource:
         opportunities = []
 
         try:
-            # Read and parse JSON data directly
+            # Read and parse JSON data
             with cls.DATA_FILE.open() as file:
                 source_data = json.load(file)
 
