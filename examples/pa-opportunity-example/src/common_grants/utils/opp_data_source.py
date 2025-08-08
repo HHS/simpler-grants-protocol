@@ -12,12 +12,6 @@ class OpportunityDataSource:
     DATA_FILE = Path(__file__).parent.parent / "data" / "PA-grant-data.sample.json"
 
     @classmethod
-    def _raise_no_json_data_error(cls) -> None:
-        """Raise error for missing JSON data."""
-        error_msg = f"Could not find JSON data in file {cls.DATA_FILE}"
-        raise ValueError(error_msg)
-
-    @classmethod
     def get_opportunities(cls) -> list[dict[str, Any]]:
         """
         Fetch and normalize data from local JSON data file.
