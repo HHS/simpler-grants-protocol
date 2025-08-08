@@ -39,6 +39,7 @@ The Makefile exposes the following commands:
 | `make test`           | Runs the unit test suite and test coverage  |
 | `make format`         | Runs formatting with black                  |
 | `make lint`           | Runs linting with ruff                      |
+| `make check-domain`   | Runs domain config validation
 | `make check-spec`     | Validates the OpenAPI specification         |
 | `make check-types`    | Runs type checking with pyright             |
 | `make checks`         | Runs linting, formatting, and type checking |

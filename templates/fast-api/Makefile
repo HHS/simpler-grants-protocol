@@ -23,6 +23,9 @@ test:
 test-coverage: test
 	$(RUNTIME_PREFIX) coverage report --show-missing --fail-under=$(MIN_TEST_COVERAGE)
 
+check-domain:
+	@./src/common_grants/scripts/check_domain.sh
+
 check-format:
 	$(RUNTIME_PREFIX) black $(PYTHON_DIRS) --check
 
@@ -38,7 +41,7 @@ check-spec-devmode:
 check-types:
 	$(RUNTIME_PREFIX) pyright $(PYTHON_DIRS)
 
-checks: check-format check-lint check-types
+checks: check-format check-lint check-types check-domain
 
 gen-openapi:
 	$(RUNTIME_PREFIX) python src/common_grants/scripts/generate_openapi.py > openapi.yaml
