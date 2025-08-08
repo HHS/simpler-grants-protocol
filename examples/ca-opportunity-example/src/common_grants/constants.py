@@ -3,8 +3,8 @@
 import uuid
 
 # California Grants Portal domain
-CA_GRANTS_DOMAIN = "data.ca.gov"
+ORGANIZATION_DOMAIN = "data.ca.gov"
 
 # Generate namespace UUID from the CA Grants Portal domain
 # This ensures consistent ID generation across the application
-CA_OPPORTUNITY_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_DNS, CA_GRANTS_DOMAIN)
+CA_OPPORTUNITY_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_DNS, ORGANIZATION_DOMAIN)
