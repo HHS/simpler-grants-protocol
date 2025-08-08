@@ -59,19 +59,20 @@ const pythonUrl = python ? extractGithubUrl(python) : null;
  * @returns The schema URL for the file, or null if no file is specified
  */
 function extractSchemaUrl(props: CodeBlockConfig): string | null {
-  if (props.file) {
-    const baseUrl = "https://commongrants.org/";
-    const pathPrefix = "website/public/";
-    let filePath = props.file.path;
-    
-    // Trim public directory prefix if present
-    if (filePath.startsWith(pathPrefix)) {
-      filePath = filePath.substring(pathPrefix.length);
-    }
-    
-    return `${baseUrl}${filePath}`;
+  if (!props.file) {
+    return null;
   }
-  return null;
+
+  const baseUrl = "https://commongrants.org/";
+  const pathPrefix = "website/public/";
+  let filePath = props.file.path;
+  
+  // Trim public directory prefix if present
+  if (filePath.startsWith(pathPrefix)) {
+    filePath = filePath.substring(pathPrefix.length);
+  }
+  
+  return `${baseUrl}${filePath}`;
 }
 
 /**
@@ -80,22 +81,23 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
  * @returns The GitHub URL for the file, or null if no file is specified
  */
 function extractGithubUrl(props: CodeBlockConfig): string | null {
-  if (props.file) {
-    const baseUrl = "https://github.com/HHS/simpler-grants-protocol/tree/main/";
-    let url = `${baseUrl}/${props.file.path}`;
-    
-    if (props.file.startLine || props.file.endLine) {
-      const start = props.file.startLine || 1;
-      const end = props.file.endLine || start;
-      url += `#L${start}`;
-      if (end > start) {
-        url += `-L${end}`;
-      }
-    }
-    
-    return url;
+  if (!props.file) {
+    return null;
   }
-  return null;
+
+  const baseUrl = "https://github.com/HHS/simpler-grants-protocol/tree/main/";
+  let url = `${baseUrl}/${props.file.path}`;
+  
+  if (props.file.startLine || props.file.endLine) {
+    const start = props.file.startLine || 1;
+    const end = props.file.endLine || start;
+    url += `#L${start}`;
+    if (end > start) {
+      url += `-L${end}`;
+    }
+  }
+  
+  return url;
 }
 
 /**
