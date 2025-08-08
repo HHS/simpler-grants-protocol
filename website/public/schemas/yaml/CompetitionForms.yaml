@@ -10,6 +10,8 @@ properties:
     description: The validation rules for the competition forms
 required:
   - forms
+unevaluatedProperties:
+  not: {}
 examples:
   - forms:
       formA:

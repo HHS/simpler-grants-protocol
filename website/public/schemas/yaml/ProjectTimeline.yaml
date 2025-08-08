@@ -14,6 +14,8 @@ properties:
   timelineDetails:
     type: string
     description: Details about the timeline that don't fit into the other fields.
+unevaluatedProperties:
+  not: {}
 $defs:
   RecordEvent:
     type: object

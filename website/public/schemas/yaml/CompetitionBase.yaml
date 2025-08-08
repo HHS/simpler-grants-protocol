@@ -54,6 +54,8 @@ required:
   - forms
   - createdAt
   - lastModifiedAt
+unevaluatedProperties:
+  not: {}
 examples:
   - id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
     opportunityId: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b

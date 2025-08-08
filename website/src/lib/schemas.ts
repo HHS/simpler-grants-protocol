@@ -1,5 +1,5 @@
 import type { VerticalLayout, JsonSchema } from "@jsonforms/core";
-import type { FormSchemaMap, FormSchema, FormData } from "./types";
+import type { FormSchemaMap, FormSchema, FormData, JsonValue } from "./types";
 import formsIndex from "@/content/forms/index.json";
 
 // Import all form files using Vite's glob pattern
@@ -22,12 +22,12 @@ const formUIs = import.meta.glob("@/content/forms/*/ui-schema.json", {
 const formMappingsTo = import.meta.glob(
   "@/content/forms/*/mapping-to-cg.json",
   { eager: true },
-) as Record<string, { default: FormSchema }>;
+) as Record<string, { default: Record<string, JsonValue> }>;
 
 const formMappingsFrom = import.meta.glob(
   "@/content/forms/*/mapping-from-cg.json",
   { eager: true },
-) as Record<string, { default: FormSchema }>;
+) as Record<string, { default: Record<string, JsonValue> }>;
 
 const formDefaultData = import.meta.glob(
   "@/content/forms/*/default-data.json",
@@ -114,9 +114,11 @@ function loadFormDataWithGlob(formId: string, formLabel: string): FormSchema {
 
   const schema = formSchemas[schemaPath] as { default: FormSchema };
   const ui = formUIs[uiPath] as { default: VerticalLayout };
-  const mappingTo = formMappingsTo[mappingToPath] as { default: FormSchema };
+  const mappingTo = formMappingsTo[mappingToPath] as {
+    default: Record<string, JsonValue>;
+  };
   const mappingFrom = formMappingsFrom[mappingFromPath] as {
-    default: FormSchema;
+    default: Record<string, JsonValue>;
   };
   const defaultData = formDefaultData[defaultDataPath] as { default: FormData };
 

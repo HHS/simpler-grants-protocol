@@ -23,6 +23,8 @@ properties:
   estimatedAwardCount:
     type: integer
     description: Estimated number of awards that will be granted
+unevaluatedProperties:
+  not: {}
 examples:
   - totalAmountAvailable:
       amount: "1000000.00"

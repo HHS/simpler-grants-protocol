@@ -1,5 +1,4 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "SF424 Mandatory Form",
   "description": "Standard Form 424 - Application for Federal Assistance (Mandatory Fields)",
   "type": "object",

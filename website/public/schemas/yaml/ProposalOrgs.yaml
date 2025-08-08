@@ -10,6 +10,8 @@ properties:
     description: Other organizations that are supporting the proposal. For example, a fiscal sponsor, partners, etc.
 required:
   - primary
+unevaluatedProperties:
+  not: {}
 $defs:
   RecordOrganizationBase:
     type: object

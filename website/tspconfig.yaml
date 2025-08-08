@@ -4,3 +4,5 @@ emit:
 options:
   "@typespec/openapi3":
     "omit-unreachable-types": false
+  "@typespec/json-schema":
+    "seal-object-schemas": true

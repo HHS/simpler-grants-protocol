@@ -21,6 +21,8 @@ required:
   - name
   - fieldType
   - value
+unevaluatedProperties:
+  not: {}
 examples:
   - name: eligibilityType
     fieldType: array

@@ -24,6 +24,8 @@ required:
   - endDate
 allOf:
   - $ref: EventBase.yaml
+unevaluatedProperties:
+  not: {}
 examples:
   - name: Application period
     eventType: dateRange

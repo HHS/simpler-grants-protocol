@@ -6,6 +6,8 @@ properties:
     type: string
 required:
   - field
+unevaluatedProperties:
+  not: {}
 examples:
   - field: summary.opportunity_amount
 description: Returns the value of a field in the source data.

@@ -69,6 +69,8 @@ properties:
   customFilters:
     $ref: "#/$defs/RecordDefaultFilter"
     description: Additional implementation-defined filters to apply to the search
+unevaluatedProperties:
+  not: {}
 description: Filters to apply when searching for opportunities
 $defs:
   RecordDefaultFilter:

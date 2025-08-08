@@ -11,6 +11,8 @@ properties:
 required:
   - amount
   - currency
+unevaluatedProperties:
+  not: {}
 examples:
   - amount: "-50.50"
     currency: USD

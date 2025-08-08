@@ -15,6 +15,8 @@ properties:
     required:
       - min
       - max
+    unevaluatedProperties:
+      not: {}
     examples:
       - min:
           amount: "1000"
@@ -26,4 +28,6 @@ properties:
 required:
   - operator
   - value
+unevaluatedProperties:
+  not: {}
 description: Filters by comparing a field to a range of monetary values

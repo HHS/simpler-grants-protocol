@@ -11,3 +11,5 @@ required:
   - sortBy
 allOf:
   - $ref: SortBodyParams.yaml
+unevaluatedProperties:
+  not: {}

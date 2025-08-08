@@ -13,6 +13,8 @@ properties:
     description: The opportunity's custom fields.
 required:
   - id
+unevaluatedProperties:
+  not: {}
 description: The opportunity to which this proposal is related
 $defs:
   RecordCustomField:

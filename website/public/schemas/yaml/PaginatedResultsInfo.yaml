@@ -28,4 +28,6 @@ properties:
 required:
   - page
   - pageSize
+unevaluatedProperties:
+  not: {}
 description: Details about the paginated results

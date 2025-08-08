@@ -10,6 +10,8 @@ properties:
     description: Additional addresses keyed by a descriptive label (e.g., "work", "home", "international").
 required:
   - primary
+unevaluatedProperties:
+  not: {}
 examples:
   - primary:
       street1: 456 Main St

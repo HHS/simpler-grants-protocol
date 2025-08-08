@@ -14,6 +14,8 @@ properties:
       An optional map of other key dates or events in the opportunity timeline
 
       Examples might include a deadline for questions, anticipated award date, etc.
+unevaluatedProperties:
+  not: {}
 examples:
   - postDate:
       name: Application posted date

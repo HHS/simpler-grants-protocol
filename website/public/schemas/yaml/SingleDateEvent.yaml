@@ -17,6 +17,8 @@ required:
   - date
 allOf:
   - $ref: EventBase.yaml
+unevaluatedProperties:
+  not: {}
 examples:
   - name: Opportunity close date
     eventType: singleDate

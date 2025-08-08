@@ -15,4 +15,6 @@ properties:
 required:
   - operator
   - value
+unevaluatedProperties:
+  not: {}
 description: A filter that applies a comparison to a string value

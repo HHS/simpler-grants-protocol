@@ -18,4 +18,6 @@ properties:
     description: The order to sort by
 required:
   - sortBy
+unevaluatedProperties:
+  not: {}
 description: Query parameters for sorting

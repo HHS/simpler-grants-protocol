@@ -35,6 +35,8 @@ required:
   - stateOrProvince
   - country
   - postalCode
+unevaluatedProperties:
+  not: {}
 examples:
   - street1: 123 Main St
     city: Anytown

@@ -26,6 +26,8 @@ properties:
   customFields:
     $ref: "#/$defs/RecordCustomField"
     description: The project's custom fields.
+unevaluatedProperties:
+  not: {}
 examples:
   - title: Example Project
     description: Example project to serve community needs.

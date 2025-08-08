@@ -13,6 +13,8 @@ properties:
     description: A human-readable description of the status
 required:
   - value
+unevaluatedProperties:
+  not: {}
 examples:
   - value: open
     customValue: custom

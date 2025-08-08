@@ -9,4 +9,6 @@ properties:
     description: The competitions associated with the opportunity
 allOf:
   - $ref: OpportunityBase.yaml
+unevaluatedProperties:
+  not: {}
 description: A funding opportunity with additional details, like available competitions.

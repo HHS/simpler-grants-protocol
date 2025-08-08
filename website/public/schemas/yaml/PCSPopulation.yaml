@@ -10,6 +10,8 @@ required:
   - class
 allOf:
   - $ref: PCSTerm.yaml
+unevaluatedProperties:
+  not: {}
 description: |-
   A Philanthropy Classification System (PCS) term for populations served.
 
