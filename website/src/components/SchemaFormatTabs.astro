@@ -49,6 +49,55 @@ const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
 const typeSpecCode = typeSpec ? extractCode(typeSpec) : null;
 const pythonCode = python ? extractCode(python) : null;
 
+const jsonSchemaUrl = jsonSchema ? extractSchemaUrl(jsonSchema) : null;
+const typeSpecUrl = typeSpec ? extractGithubUrl(typeSpec) : null;
+const pythonUrl = python ? extractGithubUrl(python) : null;
+
+/**
+ * Constructs a schema URL from file path.
+ * @param props - The code block configuration
+ * @returns The schema URL for the file, or null if no file is specified
+ */
+function extractSchemaUrl(props: CodeBlockConfig): string | null {
+  if (props.file) {
+    const baseUrl = "https://commongrants.org/";
+    const pathPrefix = "website/public/";
+    let filePath = props.file.path;
+    
+    // Trim public directory prefix if present
+    if (filePath.startsWith(pathPrefix)) {
+      filePath = filePath.substring(pathPrefix.length);
+    }
+    
+    return `${baseUrl}${filePath}`;
+  }
+  return null;
+}
+
+/**
+ * Extracts a GitHub URL from file configuration.
+ * @param props - The code block configuration
+ * @returns The GitHub URL for the file, or null if no file is specified
+ */
+function extractGithubUrl(props: CodeBlockConfig): string | null {
+  if (props.file) {
+    const baseUrl = "https://github.com/HHS/simpler-grants-protocol/tree/main/";
+    let url = `${baseUrl}/${props.file.path}`;
+    
+    if (props.file.startLine || props.file.endLine) {
+      const start = props.file.startLine || 1;
+      const end = props.file.endLine || start;
+      url += `#L${start}`;
+      if (end > start) {
+        url += `-L${end}`;
+      }
+    }
+    
+    return url;
+  }
+  return null;
+}
+
 /**
  * Extracts code from either a literal string or a file.
  * @param props - The code block configuration
@@ -94,7 +143,7 @@ function extractCode(props: CodeBlockConfig): string {
   {
     jsonSchemaCode && (
       <TabItem label="JSON Schema">
-        <p>The JSON Schema for this model.</p>
+        <p>The {jsonSchemaUrl && <a href={jsonSchemaUrl} target="_blank" rel="noopener noreferrer">JSON Schema</a>} for this model.</p>
         <Code code={jsonSchemaCode} lang="yaml" />
       </TabItem>
     )
@@ -102,7 +151,7 @@ function extractCode(props: CodeBlockConfig): string {
   {
     typeSpecCode && (
       <TabItem label="TypeSpec">
-        <p>The TypeSpec code for this model.</p>
+        <p>The {typeSpecUrl ? <a href={typeSpecUrl} target="_blank" rel="noopener noreferrer">TypeSpec code</a> : "TypeSpec code"} for this model.</p>
         <Code code={typeSpecCode} lang="typespec" />
       </TabItem>
     )
@@ -110,7 +159,7 @@ function extractCode(props: CodeBlockConfig): string {
   {
     pythonCode && (
       <TabItem label="Python">
-        <p>The Python code for this model.</p>
+        <p>The {pythonUrl ? <a href={pythonUrl} target="_blank" rel="noopener noreferrer">Python code</a> : "Python code"} for this model.</p>
         <Code code={pythonCode} lang="python" />
       </TabItem>
     )
