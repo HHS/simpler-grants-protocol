@@ -2,17 +2,16 @@
 
 from datetime import date, datetime, timezone
 from typing import Any
-from uuid import UUID, uuid5
+from uuid import uuid5
 
 from common_grants_sdk.schemas.fields import EventType, Money, SingleDateEvent
 
+from common_grants.constants import CA_OPPORTUNITY_NAMESPACE
 from common_grants.schemas import (
     OppFilters,
     OpportunityBase,
     OppStatusOptions,
 )
-
-NAMESPACE = UUID("58315de5-1411-4c17-a394-561f1a47376f")
 
 
 def build_applied_filters(filters: OppFilters) -> dict[str, Any]:
@@ -94,7 +93,9 @@ def mock_opportunity(  # noqa: PLR0913
         )
 
     opp_data = {
-        "id": uuid5(NAMESPACE, title),
+        # For mock opportunities, use title as the unique identifier
+        # In real data, we would use the PortalID from the CA Grants Portal
+        "id": uuid5(CA_OPPORTUNITY_NAMESPACE, title),
         "title": title,
         "status": {
             "value": OppStatusOptions.OPEN,

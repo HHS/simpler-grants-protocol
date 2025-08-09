@@ -6,7 +6,7 @@ from uuid import uuid5
 
 from common_grants_sdk.schemas.fields import EventType, Money, SingleDateEvent
 
-from common_grants.constants import OPPORTUNITY_NAMESPACE
+from common_grants.constants import PA_OPPORTUNITY_NAMESPACE
 from common_grants.schemas import (
     OppFilters,
     OpportunityBase,
@@ -94,9 +94,8 @@ def mock_opportunity(  # noqa: PLR0913
 
     opp_data = {
         # For mock opportunities, use title as the unique identifier
-        # In real implementations, you would use a unique identifier from your data source
-        # such as a slug, ID, or other unique field
-        "id": uuid5(OPPORTUNITY_NAMESPACE, title),
+        # In real data, we would use the slug from the PA Grants API
+        "id": uuid5(PA_OPPORTUNITY_NAMESPACE, title),
         "title": title,
         "status": {
             "value": OppStatusOptions.OPEN,

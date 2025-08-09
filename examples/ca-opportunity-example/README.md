@@ -1,20 +1,33 @@
-# CommonGrants FastAPI Implementation
+# California Grants Example API
 
-A template for implementing a CommonGrants API using Python and FastAPI.
+This API demonstrates how to use the CommonGrants Protocol with California Grants Portal data. The API:
 
-## Pre-requisites
+1. Exposes endpoints for getting CA opportunity data in CommonGrants format
+2. Transforms grant opportunity data from the California Grants Portal format to the CommonGrants Protocol format
+3. Leverages the CommonGrants Python SDK and FastAPI Template for data transformations and service scaffold
 
-1. The TypeSpec compiler and CommonGrants API are installed globally: `npm install -g @common-grants/core @typespec/compiler`
-2. Python 3.11 or greater is installed globally: `python --version`
-3. Poetry is installed globally: `poetry --version`
+## Requirements
 
-## Quickstart
+- Python 3.11 or higher
+- [Poetry](https://python-poetry.org/) for dependency management
 
-1. Create a new directory for your project: `mkdir fast-api && cd fast-api`
-2. Set up the project using this template and follow the instructions: `cg init --template fast-api`
-3. Install the python project dependencies: `make install`
-4. Run the tests: `make test`
-5. Run the local development server: `make dev`
+## Getting Started
+
+1. Install dependencies:
+   ```bash
+   make install
+   ```
+
+2. Run the API:
+   ```bash
+   make dev
+   ```
+
+3. Access the API:
+   - Opportunities endpoint: http://localhost:8000/common-grants/opportunities
+   - Individual opportunity endpoint: http://localhost:8000/common-grants/opportunities/{id}
+   - Interactive API documentation: http://localhost:8000/docs
+   - ReDoc documentation: http://localhost:8000/redoc
 
 ## Commands
 
@@ -26,6 +39,7 @@ The Makefile exposes the following commands:
 | `make test`           | Runs the unit test suite and test coverage  |
 | `make format`         | Runs formatting with black                  |
 | `make lint`           | Runs linting with ruff                      |
+| `make check-domain`   | Runs domain config validation
 | `make check-spec`     | Validates the OpenAPI specification         |
 | `make check-types`    | Runs type checking with pyright             |
 | `make checks`         | Runs linting, formatting, and type checking |

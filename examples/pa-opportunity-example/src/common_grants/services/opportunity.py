@@ -30,7 +30,7 @@ class OpportunityService:
         }
 
     def _get_opportunity_list(self) -> list[OpportunityBase]:
-        """Transform CA opportunity data to CGP format."""
+        """Transform PA opportunity data to CGP format."""
         # Get normalized data from source
         normalized_data = OpportunityDataSource.get_opportunities()
 

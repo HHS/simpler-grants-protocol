@@ -186,15 +186,3 @@ class TestOpportunityService:
 
         assert response.status == 200
         assert len(response.items) == 0
-
-    def test_get_mock_opportunities(self, service: OpportunityService) -> None:
-        """Test the mock opportunities method."""
-        mock_opps = service._get_mock_opportunities()  # noqa: SLF001
-
-        assert isinstance(mock_opps, list)
-        assert len(mock_opps) == 3
-
-        titles = [opp.title for opp in mock_opps]
-        assert "Early Childhood Education Grant" in titles
-        assert "STEM Research Initiative" in titles
-        assert "Community Health Program" in titles

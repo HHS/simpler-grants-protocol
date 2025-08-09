@@ -1,0 +1,46 @@
+[tool.poetry]
+authors = ["Your Name <your.email@example.com>"]
+description = "An implementation of the CommonGrants API specification"
+name = "pa-common-grants"
+packages = [{include = "common_grants", from = "src"}]
+readme = "README.md"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+common-grants-sdk = "^0.2.0"
+#common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
+fastapi = {extras = ["standard"], version = "^0.115.11"}
+python = "^3.11"
+pyyaml = "^6.0.2"
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+pyright = "^1.1.396"
+pytest = "^8.3.5"
+pytest-cov = "^6.0.0"
+ruff = "^0.9.10"
+mypy = "^1.15.0"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+extend-safe-fixes = [
+  "D400", # docstrings should end with a period
+  "D415", # docstrings should end with a period, question mark, or exclamation point
+  "D200", # one line docstrings should fit on one line
+  "UP", # all pyupgrade checks
+]
+ignore = [
+  "ARG002", # argument unused
+  "ANN204", # missing type annotation for special method
+  "D203", # no blank line before class
+  "D212", # multi-line summary first line
+  "FA", # flake8-future-annotations ruleset
+  "FAST002", # missing type annotation for dependency
+]
+select = ["ALL"]
