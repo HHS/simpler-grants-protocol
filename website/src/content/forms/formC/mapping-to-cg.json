@@ -1,26 +1,50 @@
 {
-  "pointOfContact": {
-    "firstName": { "field": "contactFirstName" },
-    "lastName": { "field": "contactLastName" }
+  "title": { "field": "community_project_name" },
+  "description": { "field": "community_project_description" },
+  "amountRequested": {
+    "amount": { "field": "funding_requested" },
+    "currency": "USD"
   },
-  "project": {
-    "title": { "field": "projectTitle" },
-    "applicantType": {
-      "switch": {
-        "field": "orgType",
-        "case": {
-          "Church": "nonprofit-religious",
-          "Nonprofit": "nonprofit-general",
-          "Small Business": "business-small",
-          "Local Government": "government-local",
-          "Tribal Government": "government-tribal",
-          "Individual": "individual",
-          "Not Listed": "custom"
-        },
-        "default": "custom"
-      }
+  "projectTimeline": {
+    "startDate": {
+      "name": "Project Start Date",
+      "eventType": "singleDate",
+      "date": { "field": "project_start" }
     },
-    "amountRequested": { "field": "fundingNeeded" },
-    "startDate": { "field": "startPeriod" }
+    "endDate": {
+      "name": "Project End Date",
+      "eventType": "singleDate",
+      "date": { "field": "project_end" }
+    }
+  },
+  "contacts": {
+    "primary": {
+      "name": {
+        "firstName": { "field": "community_leader.first_name" },
+        "lastName": { "field": "community_leader.last_name" }
+      },
+      "title": { "field": "community_leader.title" },
+      "emails": {
+        "primary": { "field": "community_leader.email" }
+      },
+      "phones": {
+        "primary": {
+          "countryCode": "+1",
+          "number": { "field": "community_leader.phone" },
+          "isMobile": false
+        }
+      }
+    }
+  },
+  "organizations": {
+    "primary": {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": { "field": "community_organization" },
+      "orgType": {
+        "term": "Community Organization",
+        "class": "Organization types",
+        "code": "UC000000"
+      }
+    }
   }
 }

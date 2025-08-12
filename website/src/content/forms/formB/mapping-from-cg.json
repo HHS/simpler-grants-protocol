@@ -1,28 +1,17 @@
 {
-  "project_name": { "field": "project.title" },
-  "institution_type": {
-    "switch": {
-      "field": "project.applicantType",
-      "case": {
-        "nonprofit-general": "Nonprofit",
-        "nonprofit-religious": "Nonprofit",
-        "nonprofit-educational": "University",
-        "business-small": "Corporation",
-        "business-general": "Corporation",
-        "government-tribal": "Government",
-        "government-state": "Government",
-        "government-local": "Government",
-        "government-general": "Government",
-        "individual": "Independent Researcher",
-        "custom": "Not Listed"
-      }
-    }
-  },
+  "project_name": { "field": "title" },
+  "project_description": { "field": "description" },
+  "institution_type": { "field": "organizations.primary.orgType.term" },
+  "institution_name": { "field": "organizations.primary.name" },
   "principal_investigator": {
-    "first_name": { "field": "pointOfContact.firstName" },
-    "middle_name": { "field": "pointOfContact.middleName" },
-    "last_name": { "field": "pointOfContact.lastName" }
+    "first_name": { "field": "contacts.primary.name.firstName" },
+    "middle_name": { "field": "contacts.primary.name.middleName" },
+    "last_name": { "field": "contacts.primary.name.lastName" },
+    "title": { "field": "contacts.primary.title" },
+    "email": { "field": "contacts.primary.emails.primary" },
+    "phone": { "field": "contacts.primary.phones.primary.number" }
   },
-  "budget": { "field": "project.amountRequested" },
-  "kickoff": { "field": "project.startDate" }
+  "budget": { "field": "amountRequested.amount" },
+  "kickoff": { "field": "projectTimeline.startDate.date" },
+  "completion": { "field": "projectTimeline.endDate.date" }
 }

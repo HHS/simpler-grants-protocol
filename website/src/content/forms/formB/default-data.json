@@ -1,11 +1,17 @@
 {
   "project_name": "Project B",
+  "project_description": "Project B",
   "institution_type": "University",
+  "institution_name": "Research University",
   "principal_investigator": {
     "first_name": "Bob",
     "middle_name": "B.",
-    "last_name": "Barker"
+    "last_name": "Barker",
+    "title": "Principal Investigator",
+    "email": "email@example.edu",
+    "phone": "555-111-2222"
   },
-  "budget": 25000,
-  "kickoff": "2025-06-01"
+  "budget": "25000",
+  "kickoff": "2025-06-01",
+  "completion": "2026-06-01"
 }

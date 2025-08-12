@@ -1,40 +1,24 @@
 {
   "type": "object",
   "properties": {
-    "projectDetails": {
+    "education_program_name": { "type": "string", "title": "Education Program Name" },
+    "education_program_description": { "type": "string", "title": "Program Description" },
+    "grant_amount": { "type": "string", "title": "Grant Amount (USD)" },
+    "program_start": { "type": "string", "format": "date", "title": "Program Start Date" },
+    "program_end": { "type": "string", "format": "date", "title": "Program End Date" },
+    "program_director": {
       "type": "object",
       "properties": {
-        "title": { "type": "string", "title": "Project title" },
-        "requestedBy": {
-          "type": "string",
-          "title": "Project type",
-          "enum": [
-            "NGO",
-            "Corporation",
-            "College or University",
-            "Individual",
-            "Government",
-            "Other"
-          ]
-        },
-        "fundingNeeded": { "type": "number", "title": "Funding needed (USD)" },
-        "startDate": {
-          "type": "string",
-          "format": "date",
-          "title": "Anticipated start date"
-        }
+        "first_name": { "type": "string", "title": "First Name" },
+        "last_name": { "type": "string", "title": "Last Name" },
+        "title": { "type": "string", "title": "Title" },
+        "email": { "type": "string", "format": "email", "title": "Email" },
+        "phone": { "type": "string", "title": "Phone" }
       },
-      "required": ["title", "startDate"]
+      "title": "Program Director",
+      "required": ["first_name", "last_name", "title", "email", "phone"]
     },
-    "contact": {
-      "type": "object",
-      "properties": {
-        "givenName": { "type": "string", "title": "Given name" },
-        "middleName": { "type": "string", "title": "Middle name" },
-        "familyName": { "type": "string", "title": "Family name" }
-      },
-      "required": ["givenName", "familyName"]
-    }
+    "educational_institution": { "type": "string", "title": "Educational Institution" }
   },
-  "required": ["projectDetails", "contact"]
+  "required": ["education_program_name", "education_program_description", "grant_amount", "program_start", "program_end", "program_director", "educational_institution"]
 }

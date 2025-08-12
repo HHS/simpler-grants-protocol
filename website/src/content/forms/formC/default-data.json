@@ -1,7 +1,15 @@
 {
-  "projectTitle": "Project C",
-  "contactFirstName": "Charlie",
-  "contactLastName": "Chaplin",
-  "fundingNeeded": 5000,
-  "startPeriod": "2025-06-01"
+  "community_project_name": "Project C",
+  "community_project_description": "Project C",
+  "funding_requested": "5000",
+  "project_start": "2025-06-01",
+  "project_end": "2026-06-01",
+  "community_leader": {
+    "first_name": "Charlie",
+    "last_name": "Chaplin",
+    "title": "Community Coordinator",
+    "email": "email@example.org",
+    "phone": "555-111-2222"
+  },
+  "community_organization": "Community Development Association"
 }

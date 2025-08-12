@@ -1,24 +1,50 @@
 {
-  "pointOfContact": {
-    "firstName": { "field": "applicantName.firstName" },
-    "lastName": { "field": "applicantName.lastName" }
+  "title": { "field": "projectTitle" },
+  "description": { "field": "projectDescription" },
+  "amountRequested": {
+    "amount": { "field": "requestedAmount" },
+    "currency": "USD"
   },
-  "project": {
-    "title": { "field": "projectTitle" },
-    "applicantType": {
-      "switch": {
-        "field": "applicantType",
-        "case": {
-          "Nonprofit": "nonprofit-general",
-          "For-profit": "business-general",
-          "Government": "government-general",
-          "Individual": "individual",
-          "Other": "custom"
-        },
-        "default": "custom"
-      }
+  "projectTimeline": {
+    "startDate": {
+      "name": "Project Start Date",
+      "eventType": "singleDate",
+      "date": { "field": "startDate" }
     },
-    "amountRequested": { "field": "requestedAmount" },
-    "startDate": { "field": "startDate" }
+    "endDate": {
+      "name": "Project End Date", 
+      "eventType": "singleDate",
+      "date": { "field": "endDate" }
+    }
+  },
+  "contacts": {
+    "primary": {
+      "name": {
+        "firstName": { "field": "applicantName.firstName" },
+        "lastName": { "field": "applicantName.lastName" }
+      },
+      "title": { "field": "applicantTitle" },
+      "emails": {
+        "primary": { "field": "applicantEmail" }
+      },
+      "phones": {
+        "primary": {
+          "countryCode": "+1",
+          "number": { "field": "applicantPhone" },
+          "isMobile": false
+        }
+      }
+    }
+  },
+  "organizations": {
+    "primary": {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": { "field": "organizationName" },
+      "orgType": {
+        "term": { "field": "applicantType" },
+        "class": "Organization types",
+        "code": "UC000000"
+      }
+    }
   }
 }

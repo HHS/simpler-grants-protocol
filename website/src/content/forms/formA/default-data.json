@@ -1,7 +1,13 @@
 {
   "applicantName": { "firstName": "Alice", "lastName": "Alvarez" },
   "projectTitle": "Project A",
+  "projectDescription": "Project A",
   "applicantType": "Nonprofit",
-  "requestedAmount": 1000,
-  "startDate": "2025-07-01"
+  "requestedAmount": "1000",
+  "startDate": "2025-07-01",
+  "endDate": "2026-07-01",
+  "applicantTitle": "Project Manager",
+  "applicantEmail": "email@example.com",
+  "applicantPhone": "555-111-2222",
+  "organizationName": "Example Organization"
 }

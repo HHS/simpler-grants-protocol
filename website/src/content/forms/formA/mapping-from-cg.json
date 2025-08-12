@@ -1,28 +1,16 @@
 {
   "applicantName": {
-    "firstName": { "field": "pointOfContact.firstName" },
-    "lastName": { "field": "pointOfContact.lastName" }
+    "firstName": { "field": "contacts.primary.name.firstName" },
+    "lastName": { "field": "contacts.primary.name.lastName" }
   },
-  "projectTitle": { "field": "project.title" },
-  "applicantType": {
-    "switch": {
-      "field": "project.applicantType",
-      "case": {
-        "nonprofit-general": "Nonprofit",
-        "nonprofit-religious": "Nonprofit",
-        "nonprofit-educational": "Nonprofit",
-        "business-small": "For-profit",
-        "business-general": "For-profit",
-        "government-tribal": "Government",
-        "government-state": "Government",
-        "government-local": "Government",
-        "government-general": "Government",
-        "individual": "Individual",
-        "custom": "Other"
-      },
-      "default": "custom"
-    }
-  },
-  "requestedAmount": { "field": "project.amountRequested" },
-  "startDate": { "field": "project.startDate" }
+  "projectTitle": { "field": "title" },
+  "projectDescription": { "field": "description" },
+  "applicantType": { "field": "organizations.primary.orgType.term" },
+  "requestedAmount": { "field": "amountRequested.amount" },
+  "startDate": { "field": "projectTimeline.startDate.date" },
+  "endDate": { "field": "projectTimeline.endDate.date" },
+  "applicantTitle": { "field": "contacts.primary.title" },
+  "applicantEmail": { "field": "contacts.primary.emails.primary" },
+  "applicantPhone": { "field": "contacts.primary.phones.primary.number" },
+  "organizationName": { "field": "organizations.primary.name" }
 }

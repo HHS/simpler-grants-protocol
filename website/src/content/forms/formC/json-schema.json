@@ -1,28 +1,24 @@
 {
   "type": "object",
   "properties": {
-    "projectTitle": { "type": "string", "title": "Project Title" },
-    "orgType": {
-      "type": "string",
-      "title": "Applicant Type",
-      "enum": [
-        "Nonprofit",
-        "Church",
-        "Local Government",
-        "Tribal Government",
-        "Small Business",
-        "Individual",
-        "Not Listed"
-      ]
+    "community_project_name": { "type": "string", "title": "Community Project Name" },
+    "community_project_description": { "type": "string", "title": "Project Description" },
+    "funding_requested": { "type": "string", "title": "Funding Requested (USD)" },
+    "project_start": { "type": "string", "format": "date", "title": "Project Start Date" },
+    "project_end": { "type": "string", "format": "date", "title": "Project End Date" },
+    "community_leader": {
+      "type": "object",
+      "properties": {
+        "first_name": { "type": "string", "title": "First Name" },
+        "last_name": { "type": "string", "title": "Last Name" },
+        "title": { "type": "string", "title": "Title" },
+        "email": { "type": "string", "format": "email", "title": "Email" },
+        "phone": { "type": "string", "title": "Phone" }
+      },
+      "title": "Community Leader",
+      "required": ["first_name", "last_name", "title", "email", "phone"]
     },
-    "contactFirstName": { "type": "string", "title": "Contact First Name" },
-    "contactLastName": { "type": "string", "title": "Contact Last Name" },
-    "fundingNeeded": { "type": "number", "title": "Funding Needed (USD)" },
-    "startPeriod": {
-      "type": "string",
-      "format": "date",
-      "title": "Start Period"
-    }
+    "community_organization": { "type": "string", "title": "Community Organization" }
   },
-  "required": ["projectTitle", "contactFirstName", "contactLastName"]
+  "required": ["community_project_name", "community_project_description", "funding_requested", "project_start", "project_end", "community_leader", "community_organization"]
 }
