@@ -1,23 +1,118 @@
 {
-  "pointOfContact": {
-    "firstName": { "field": "FirstName" },
-    "middleName": { "field": "MiddleName" },
-    "lastName": { "field": "LastName" },
-    "email": { "field": "AuthorizedRepresentativeEmail" },
-    "phone": { "field": "AuthorizedRepresentativePhoneNumber" },
-    "address": {
-      "street1": { "field": "Street1" },
-      "street2": { "field": "Street2" },
-      "city": { "field": "City" },
-      "state": { "field": "State" },
-      "zip": { "field": "ZipPostalCode" },
-      "country": { "field": "Country" }
+  "title": { "field": "ProjectTitle" },
+  "description": { "field": "ProjectDescription" },
+  "projectTimeline": {
+    "startDate": {
+      "name": "Project Start Date",
+      "eventType": "singleDate",
+      "date": { "field": "FundingPeriodStartDate" }
+    },
+    "endDate": {
+      "name": "Project End Date",
+      "eventType": "singleDate",
+      "date": { "field": "FundingPeriodEndDate" }
     }
   },
-  "project": {
-    "title": { "field": "ProjectTitle" },
-    "description": { "field": "ProjectDescription" },
-    "startDate": { "field": "FundingPeriodStartDate" },
-    "endDate": { "field": "FundingPeriodEndDate" }
+  "opportunity": {
+    "id": { "field": "OpportunityID" },
+    "title": { "field": "OpportunityTitle" },
+    "customFields": {
+      "federalAgency": {
+        "name": "federalAgency",
+        "fieldType": "string",
+        "value": { "field": "FederalAgency" },
+        "description": "The federal agency managing this opportunity"
+      },
+      "cfdaNumber": {
+        "name": "cfdaNumber",
+        "fieldType": "string",
+        "value": { "field": "CFDANumber" },
+        "description": "The CFDA number for this opportunity"
+      },
+      "cfdaTitle": {
+        "name": "cfdaTitle",
+        "fieldType": "string",
+        "value": { "field": "CFDATitle" },
+        "description": "The CFDA title for this opportunity"
+      }
+    }
+  },
+  "contacts": {
+    "primary": {
+      "name": {
+        "prefix": { "field": "PrefixName" },
+        "firstName": { "field": "FirstName" },
+        "middleName": { "field": "MiddleName" },
+        "lastName": { "field": "LastName" },
+        "suffix": { "field": "Suffix" }
+      },
+      "addresses": {
+        "primary": {
+          "street1": { "field": "Street1" },
+          "street2": { "field": "Street2" },
+          "city": { "field": "City" },
+          "stateOrProvince": { "field": "State" },
+          "country": { "field": "Country" },
+          "postalCode": { "field": "ZipPostalCode" }
+        }
+      },
+      "phones": {
+        "primary": {
+          "countryCode": "+1",
+          "number": { "field": "AuthorizedRepresentativePhoneNumber" }
+        },
+        "otherPhones": {
+          "evening": {
+            "countryCode": "+1",
+            "number": { "field": "EveningPhone" }
+          },
+          "fax": {
+            "countryCode": "+1",
+            "number": { "field": "AuthorizedRepresentativeFax" }
+          }
+        }
+      },
+      "emails": {
+        "primary": { "field": "AuthorizedRepresentativeEmail" }
+      }
+    }
+  },
+  "customFields": {
+    "citizenship": {
+      "name": "citizenship",
+      "fieldType": "string",
+      "value": { "field": "citizenship" },
+      "description": "Whether the applicant is a US citizen"
+    },
+    "alienRegistrationNumber": {
+      "name": "alienRegistrationNumber",
+      "fieldType": "string",
+      "value": { "field": "AlienRegistrationNumber" },
+      "description": "Alien registration number if applicable"
+    },
+    "countryOfOrigin": {
+      "name": "countryOfOrigin",
+      "fieldType": "string",
+      "value": { "field": "CountryofOrigin" },
+      "description": "Country of origin"
+    },
+    "visitDate": {
+      "name": "visitDate",
+      "fieldType": "string",
+      "value": { "field": "VisitDate" },
+      "description": "Date of visit if applicable"
+    },
+    "congressionalDistrictApplicant": {
+      "name": "congressionalDistrictApplicant",
+      "fieldType": "string",
+      "value": { "field": "CongressionalDistrictApplicant" },
+      "description": "Congressional district of the applicant"
+    },
+    "applicationCertification": {
+      "name": "applicationCertification",
+      "fieldType": "string",
+      "value": { "field": "ApplicationCertification" },
+      "description": "Application certification"
+    }
   }
 }

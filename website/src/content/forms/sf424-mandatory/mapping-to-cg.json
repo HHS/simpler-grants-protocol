@@ -1,71 +1,223 @@
 {
-  "pointOfContact": {
-    "firstName": { "field": "organization.contactPerson.firstName" },
-    "lastName": { "field": "organization.contactPerson.lastName" },
-    "email": { "field": "organization.contactPerson.email" },
-    "phone": { "field": "organization.contactPerson.telephoneNumber" },
-    "title": { "field": "organization.contactPerson.title" },
-    "organization": {
-      "field": "organization.contactPerson.organizationalAffiliation"
+  "title": { "field": "descriptiveTitleOfApplicantProject" },
+  "description": { "field": "additionalDescription" },
+  "amountRequested": {
+    "amount": { "field": "estimatedFunding.federal", "transform": "toString" },
+    "currency": "USD"
+  },
+  "projectTimeline": {
+    "startDate": {
+      "name": "Project Start Date",
+      "eventType": "singleDate",
+      "date": { "field": "fundingPeriod.startDate" }
+    },
+    "endDate": {
+      "name": "Project End Date",
+      "eventType": "singleDate",
+      "date": { "field": "fundingPeriod.endDate" }
     }
   },
-  "organization": {
-    "name": { "field": "organization.legalName" },
-    "ein": { "field": "organization.einTin" },
-    "uei": { "field": "organization.samUei" },
-    "address": {
-      "street1": { "field": "organization.address.street1" },
-      "street2": { "field": "organization.address.street2" },
-      "city": { "field": "organization.address.city" },
-      "state": { "field": "organization.address.state" },
-      "zip": { "field": "organization.address.zipPostalCode" },
-      "country": { "field": "organization.address.country" }
+  "opportunity": {
+    "id": { "field": "assistanceListingNumber" },
+    "title": { "field": "assistanceListingTitle" },
+    "customFields": {
+      "federalAgency": {
+        "name": "federalAgency",
+        "fieldType": "string",
+        "value": { "field": "nameOfFederalAgency" },
+        "description": "The federal agency managing this opportunity"
+      },
+      "assistanceListingNumber": {
+        "name": "assistanceListingNumber",
+        "fieldType": "string",
+        "value": { "field": "assistanceListingNumber" },
+        "description": "The assistance listing number"
+      },
+      "assistanceListingTitle": {
+        "name": "assistanceListingTitle",
+        "fieldType": "string",
+        "value": { "field": "assistanceListingTitle" },
+        "description": "The assistance listing title"
+      }
     }
   },
-  "project": {
-    "title": { "field": "descriptiveTitleOfApplicantProject" },
-    "applicantType": {
-      "switch": {
-        "field": "typeOfApplicant",
-        "case": {
-          "A": "government-state",
-          "B": "government-local",
-          "C": "government-local",
-          "D": "government-local",
-          "E": "government-general",
-          "F": "government-general",
-          "G": "government-local",
-          "H": "nonprofit-educational",
-          "I": "government-tribal",
-          "J": "government-tribal",
-          "K": "nonprofit-general",
-          "L": "government-general",
-          "M": "nonprofit-general",
-          "N": "nonprofit-general",
-          "O": "nonprofit-educational",
-          "P": "individual",
-          "Q": "business-general",
-          "R": "business-small",
-          "S": "nonprofit-educational",
-          "T": "nonprofit-educational",
-          "U": "nonprofit-educational",
-          "V": "nonprofit-educational",
-          "W": "custom",
-          "X": "custom"
+  "organizations": {
+    "primary": {
+      "id": { "field": "organization.legalName" },
+      "name": { "field": "organization.legalName" },
+      "ein": { "field": "organization.einTin" },
+      "uei": { "field": "organization.samUei" },
+      "addresses": {
+        "primary": {
+          "street1": { "field": "organization.address.street1" },
+          "street2": { "field": "organization.address.street2" },
+          "city": { "field": "organization.address.city" },
+          "stateOrProvince": { "field": "organization.address.state" },
+          "country": { "field": "organization.address.country" },
+          "postalCode": { "field": "organization.address.zipPostalCode" }
+        }
+      },
+      "customFields": {
+        "departmentName": {
+          "name": "departmentName",
+          "fieldType": "string",
+          "value": { "field": "organization.departmentName" },
+          "description": "Department name"
         },
-        "default": "custom"
+        "divisionName": {
+          "name": "divisionName",
+          "fieldType": "string",
+          "value": { "field": "organization.divisionName" },
+          "description": "Division name"
+        }
+      }
+    }
+  },
+  "contacts": {
+    "primary": {
+      "name": {
+        "prefix": { "field": "organization.contactPerson.prefix" },
+        "firstName": { "field": "organization.contactPerson.firstName" },
+        "middleName": { "field": "organization.contactPerson.middleName" },
+        "lastName": { "field": "organization.contactPerson.lastName" },
+        "suffix": { "field": "organization.contactPerson.suffix" }
+      },
+      "title": { "field": "organization.contactPerson.title" },
+      "addresses": {
+        "primary": {
+          "street1": { "field": "organization.address.street1" },
+          "street2": { "field": "organization.address.street2" },
+          "city": { "field": "organization.address.city" },
+          "stateOrProvince": { "field": "organization.address.state" },
+          "country": { "field": "organization.address.country" },
+          "postalCode": { "field": "organization.address.zipPostalCode" }
+        }
+      },
+      "phones": {
+        "primary": {
+          "countryCode": "+1",
+          "number": { "field": "organization.contactPerson.telephoneNumber" }
+        },
+        "fax": {
+          "countryCode": "+1",
+          "number": { "field": "organization.contactPerson.faxNumber" }
+        }
+      },
+      "emails": {
+        "primary": { "field": "organization.contactPerson.email" }
       }
     },
-    "amountRequested": { "field": "estimatedFunding.federal" },
-    "startDate": { "field": "fundingPeriod.startDate" },
-    "endDate": { "field": "fundingPeriod.endDate" },
-    "federalAgency": { "field": "nameOfFederalAgency" },
-    "assistanceListingNumber": { "field": "assistanceListingNumber" }
+    "otherContacts": {
+      "authorizedRepresentative": {
+        "name": {
+          "prefix": { "field": "authorizedRepresentative.prefix" },
+          "firstName": { "field": "authorizedRepresentative.firstName" },
+          "middleName": { "field": "authorizedRepresentative.middleName" },
+          "lastName": { "field": "authorizedRepresentative.lastName" },
+          "suffix": { "field": "authorizedRepresentative.suffix" }
+        },
+        "title": { "field": "authorizedRepresentative.title" },
+        "phones": {
+          "primary": {
+            "countryCode": "+1",
+            "number": { "field": "authorizedRepresentative.telephoneNumber" }
+          },
+          "fax": {
+            "countryCode": "+1",
+            "number": { "field": "authorizedRepresentative.faxNumber" }
+          }
+        },
+        "emails": {
+          "primary": { "field": "authorizedRepresentative.email" }
+        }
+      }
+    }
   },
-  "submission": {
-    "type": { "field": "typeOfSubmission" },
-    "frequency": { "field": "frequency" },
-    "version": { "field": "version" },
-    "consolidated": { "field": "consolidatedRequest" }
+  "customFields": {
+    "applicantType": {
+      "name": "applicantType",
+      "fieldType": "string",
+      "value": {
+        "switch": {
+          "field": "typeOfApplicant",
+          "case": {
+            "A": "government-state",
+            "B": "government-local",
+            "C": "government-local",
+            "D": "government-local",
+            "E": "government-general",
+            "F": "government-general",
+            "G": "government-local",
+            "H": "nonprofit-educational",
+            "I": "government-tribal",
+            "J": "government-tribal",
+            "K": "nonprofit-general",
+            "L": "government-general",
+            "M": "nonprofit-general",
+            "N": "nonprofit-general",
+            "O": "nonprofit-educational",
+            "P": "individual",
+            "Q": "business-general",
+            "R": "business-small",
+            "S": "nonprofit-educational",
+            "T": "nonprofit-educational",
+            "U": "nonprofit-educational",
+            "V": "nonprofit-educational",
+            "W": "custom",
+            "X": "custom"
+          },
+          "default": "custom"
+        }
+      },
+      "description": "The type of applicant organization"
+    },
+    "typeOfSubmission": {
+      "name": "typeOfSubmission",
+      "fieldType": "string",
+      "value": { "field": "typeOfSubmission" },
+      "description": "Type of submission"
+    },
+    "frequency": {
+      "name": "frequency",
+      "fieldType": "string",
+      "value": { "field": "frequency" },
+      "description": "Frequency of submission"
+    },
+    "version": {
+      "name": "version",
+      "fieldType": "string",
+      "value": { "field": "version" },
+      "description": "Version number"
+    },
+    "consolidatedRequest": {
+      "name": "consolidatedRequest",
+      "fieldType": "string",
+      "value": { "field": "consolidatedRequest" },
+      "description": "Whether this is a consolidated request"
+    },
+    "congressionalDistricts": {
+      "name": "congressionalDistricts",
+      "fieldType": "string",
+      "value": { "field": "congressionalDistricts.applicant" },
+      "description": "Congressional districts"
+    },
+    "areasAffectedByFunding": {
+      "name": "areasAffectedByFunding",
+      "fieldType": "string",
+      "value": { "field": "areasAffectedByFunding" },
+      "description": "Areas affected by funding"
+    },
+    "submissionSubjectToReview": {
+      "name": "submissionSubjectToReview",
+      "fieldType": "string",
+      "value": { "field": "submissionSubjectToReview" },
+      "description": "Whether submission is subject to review"
+    },
+    "applicantDelinquentFederalDebt": {
+      "name": "applicantDelinquentFederalDebt",
+      "fieldType": "string",
+      "value": { "field": "applicantDelinquentFederalDebt" },
+      "description": "Whether applicant has delinquent federal debt"
+    }
   }
 }

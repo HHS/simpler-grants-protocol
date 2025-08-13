@@ -1,29 +1,33 @@
 {
+  "typeOfSubmission": { "field": "customFields.typeOfSubmission.value" },
+  "frequency": { "field": "customFields.frequency.value" },
+  "consolidatedRequest": { "field": "customFields.consolidatedRequest.value" },
+  "version": { "field": "customFields.version.value" },
   "organization": {
     "contactPerson": {
-      "firstName": { "field": "pointOfContact.firstName" },
-      "lastName": { "field": "pointOfContact.lastName" },
-      "email": { "field": "pointOfContact.email" },
-      "telephoneNumber": { "field": "pointOfContact.phone" },
-      "title": { "field": "pointOfContact.title" },
-      "organizationalAffiliation": { "field": "pointOfContact.organization" }
+      "firstName": { "field": "contacts.primary.name.firstName" },
+      "lastName": { "field": "contacts.primary.name.lastName" },
+      "email": { "field": "contacts.primary.emails.primary" },
+      "telephoneNumber": { "field": "contacts.primary.phones.primary.number" },
+      "title": { "field": "contacts.primary.title" }
     },
-    "legalName": { "field": "organization.name" },
-    "einTin": { "field": "organization.ein" },
-    "samUei": { "field": "organization.uei" },
+    "legalName": { "field": "organizations.primary.name" },
+    "einTin": { "field": "organizations.primary.ein" },
+    "samUei": { "field": "organizations.primary.uei" },
     "address": {
-      "street1": { "field": "organization.address.street1" },
-      "street2": { "field": "organization.address.street2" },
-      "city": { "field": "organization.address.city" },
-      "state": { "field": "organization.address.state" },
-      "zipPostalCode": { "field": "organization.address.zip" },
-      "country": { "field": "organization.address.country" }
+      "street1": { "field": "organizations.primary.addresses.primary.street1" },
+      "street2": { "field": "organizations.primary.addresses.primary.street2" },
+      "city": { "field": "organizations.primary.addresses.primary.city" },
+      "state": { "field": "organizations.primary.addresses.primary.stateOrProvince" },
+      "zipPostalCode": { "field": "organizations.primary.addresses.primary.postalCode" },
+      "country": { "field": "organizations.primary.addresses.primary.country" }
     }
   },
-  "descriptiveTitleOfApplicantProject": { "field": "project.title" },
+  "descriptiveTitleOfApplicantProject": { "field": "title" },
+  "additionalDescription": { "field": "description" },
   "typeOfApplicant": {
     "switch": {
-      "field": "project.applicantType",
+      "field": "customFields.applicantType.value",
       "case": {
         "government-state": "A",
         "government-local": "B",
@@ -40,16 +44,19 @@
     }
   },
   "estimatedFunding": {
-    "federal": { "field": "project.amountRequested" }
+    "federal": { "field": "amountRequested.amount" }
   },
   "fundingPeriod": {
-    "startDate": { "field": "project.startDate" },
-    "endDate": { "field": "project.endDate" }
+    "startDate": { "field": "projectTimeline.startDate.date" },
+    "endDate": { "field": "projectTimeline.endDate.date" }
   },
-  "nameOfFederalAgency": { "field": "project.federalAgency" },
-  "assistanceListingNumber": { "field": "project.assistanceListingNumber" },
-  "typeOfSubmission": { "field": "submission.type" },
-  "frequency": { "field": "submission.frequency" },
-  "version": { "field": "submission.version" },
-  "consolidatedRequest": { "field": "submission.consolidated" }
+  "nameOfFederalAgency": { "field": "opportunity.customFields.federalAgency.value" },
+  "assistanceListingNumber": { "field": "opportunity.customFields.assistanceListingNumber.value" },
+  "assistanceListingTitle": { "field": "opportunity.customFields.assistanceListingTitle.value" },
+  "congressionalDistricts": {
+    "applicant": { "field": "customFields.congressionalDistricts.value" }
+  },
+  "areasAffectedByFunding": { "field": "customFields.areasAffectedByFunding.value" },
+  "submissionSubjectToReview": { "field": "customFields.submissionSubjectToReview.value" },
+  "applicantDelinquentFederalDebt": { "field": "customFields.applicantDelinquentFederalDebt.value" }
 }
