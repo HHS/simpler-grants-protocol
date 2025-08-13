@@ -3,7 +3,7 @@
   "properties": {
     "community_project_name": {
       "type": "string",
-      "title": "Community Project Name"
+      "title": "Project Name"
     },
     "community_project_description": {
       "type": "string",
@@ -32,12 +32,12 @@
         "email": { "type": "string", "format": "email", "title": "Email" },
         "phone": { "type": "string", "title": "Phone" }
       },
-      "title": "Community Leader",
+      "title": "Project Contact",
       "required": ["first_name", "last_name", "title", "email", "phone"]
     },
     "community_organization": {
       "type": "string",
-      "title": "Community Organization"
+      "title": "Organization"
     }
   },
   "required": [

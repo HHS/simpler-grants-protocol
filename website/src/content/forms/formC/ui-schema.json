@@ -11,7 +11,7 @@
     { "type": "Control", "scope": "#/properties/project_end" },
     {
       "type": "Group",
-      "label": "Community Leader",
+      "label": "Project Contact",
       "elements": [
         {
           "type": "Control",
