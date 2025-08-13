@@ -12,7 +12,7 @@
       "date": { "field": "ProjectStartDate" }
     },
     "endDate": {
-      "name": "Project End Date", 
+      "name": "Project End Date",
       "eventType": "singleDate",
       "date": { "field": "ProjectEndDate" }
     }
@@ -29,7 +29,7 @@
       },
       "cfdaNumber": {
         "name": "cfdaNumber",
-        "fieldType": "string", 
+        "fieldType": "string",
         "value": { "field": "CFDANumber" },
         "description": "The CFDA number for this opportunity"
       }
@@ -59,7 +59,7 @@
           "description": "The department within the organization"
         },
         "division": {
-          "name": "division", 
+          "name": "division",
           "fieldType": "string",
           "value": { "field": "DivisionName" },
           "description": "The division within the organization"
@@ -169,14 +169,14 @@
       "description": "The total budget for the project"
     },
     "applicantFunding": {
-      "name": "applicantFunding", 
+      "name": "applicantFunding",
       "fieldType": "string",
       "value": { "field": "ApplicantEstimatedFunding" },
       "description": "Funding provided by the applicant"
     },
     "stateFunding": {
       "name": "stateFunding",
-      "fieldType": "string", 
+      "fieldType": "string",
       "value": { "field": "StateEstimatedFunding" },
       "description": "Funding provided by state sources"
     },
@@ -205,7 +205,7 @@
       "description": "Congressional district of the applicant"
     },
     "congressionalDistrictProgramProject": {
-      "name": "congressionalDistrictProgramProject", 
+      "name": "congressionalDistrictProgramProject",
       "fieldType": "string",
       "value": { "field": "CongressionalDistrictProgramProject" },
       "description": "Congressional district of the program/project"

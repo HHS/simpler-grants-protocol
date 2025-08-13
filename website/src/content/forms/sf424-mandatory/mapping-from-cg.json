@@ -18,8 +18,12 @@
       "street1": { "field": "organizations.primary.addresses.primary.street1" },
       "street2": { "field": "organizations.primary.addresses.primary.street2" },
       "city": { "field": "organizations.primary.addresses.primary.city" },
-      "state": { "field": "organizations.primary.addresses.primary.stateOrProvince" },
-      "zipPostalCode": { "field": "organizations.primary.addresses.primary.postalCode" },
+      "state": {
+        "field": "organizations.primary.addresses.primary.stateOrProvince"
+      },
+      "zipPostalCode": {
+        "field": "organizations.primary.addresses.primary.postalCode"
+      },
       "country": { "field": "organizations.primary.addresses.primary.country" }
     }
   },
@@ -50,29 +54,65 @@
     "startDate": { "field": "projectTimeline.startDate.date" },
     "endDate": { "field": "projectTimeline.endDate.date" }
   },
-  "nameOfFederalAgency": { "field": "opportunity.customFields.federalAgency.value" },
-  "assistanceListingNumber": { "field": "opportunity.customFields.assistanceListingNumber.value" },
-  "assistanceListingTitle": { "field": "opportunity.customFields.assistanceListingTitle.value" },
+  "nameOfFederalAgency": {
+    "field": "opportunity.customFields.federalAgency.value"
+  },
+  "assistanceListingNumber": {
+    "field": "opportunity.customFields.assistanceListingNumber.value"
+  },
+  "assistanceListingTitle": {
+    "field": "opportunity.customFields.assistanceListingTitle.value"
+  },
   "congressionalDistricts": {
     "applicant": { "field": "customFields.congressionalDistricts.value" }
   },
-  "areasAffectedByFunding": { "field": "customFields.areasAffectedByFunding.value" },
-  "submissionSubjectToReview": { "field": "customFields.submissionSubjectToReview.value" },
-  "applicantDelinquentFederalDebt": { "field": "customFields.applicantDelinquentFederalDebt.value" },
+  "areasAffectedByFunding": {
+    "field": "customFields.areasAffectedByFunding.value"
+  },
+  "submissionSubjectToReview": {
+    "field": "customFields.submissionSubjectToReview.value"
+  },
+  "applicantDelinquentFederalDebt": {
+    "field": "customFields.applicantDelinquentFederalDebt.value"
+  },
   "dateReceived": { "field": "customFields.dateReceived.value" },
   "authorizedRepresentative": {
     "iAgree": { "field": "customFields.authorizedRepresentativeIAgree.value" },
-    "prefix": { "field": "contacts.otherContacts.authorizedRepresentative.name.prefix" },
-    "firstName": { "field": "contacts.otherContacts.authorizedRepresentative.name.firstName" },
-    "middleName": { "field": "contacts.otherContacts.authorizedRepresentative.name.middleName" },
-    "lastName": { "field": "contacts.otherContacts.authorizedRepresentative.name.lastName" },
-    "suffix": { "field": "contacts.otherContacts.authorizedRepresentative.name.suffix" },
-    "title": { "field": "contacts.otherContacts.authorizedRepresentative.title" },
-    "organizationalAffiliation": { "field": "customFields.authorizedRepresentativeOrganizationalAffiliation.value" },
-    "telephoneNumber": { "field": "contacts.otherContacts.authorizedRepresentative.phones.primary.number" },
-    "faxNumber": { "field": "contacts.otherContacts.authorizedRepresentative.phones.fax.number" },
-    "email": { "field": "contacts.otherContacts.authorizedRepresentative.emails.primary" },
-    "signature": { "field": "customFields.authorizedRepresentativeSignature.value" },
-    "signatureDate": { "field": "customFields.authorizedRepresentativeSignatureDate.value" }
+    "prefix": {
+      "field": "contacts.otherContacts.authorizedRepresentative.name.prefix"
+    },
+    "firstName": {
+      "field": "contacts.otherContacts.authorizedRepresentative.name.firstName"
+    },
+    "middleName": {
+      "field": "contacts.otherContacts.authorizedRepresentative.name.middleName"
+    },
+    "lastName": {
+      "field": "contacts.otherContacts.authorizedRepresentative.name.lastName"
+    },
+    "suffix": {
+      "field": "contacts.otherContacts.authorizedRepresentative.name.suffix"
+    },
+    "title": {
+      "field": "contacts.otherContacts.authorizedRepresentative.title"
+    },
+    "organizationalAffiliation": {
+      "field": "customFields.authorizedRepresentativeOrganizationalAffiliation.value"
+    },
+    "telephoneNumber": {
+      "field": "contacts.otherContacts.authorizedRepresentative.phones.primary.number"
+    },
+    "faxNumber": {
+      "field": "contacts.otherContacts.authorizedRepresentative.phones.fax.number"
+    },
+    "email": {
+      "field": "contacts.otherContacts.authorizedRepresentative.emails.primary"
+    },
+    "signature": {
+      "field": "customFields.authorizedRepresentativeSignature.value"
+    },
+    "signatureDate": {
+      "field": "customFields.authorizedRepresentativeSignatureDate.value"
+    }
   }
 }

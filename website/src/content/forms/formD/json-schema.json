@@ -1,11 +1,25 @@
 {
   "type": "object",
   "properties": {
-    "education_program_name": { "type": "string", "title": "Education Program Name" },
-    "education_program_description": { "type": "string", "title": "Program Description" },
+    "education_program_name": {
+      "type": "string",
+      "title": "Education Program Name"
+    },
+    "education_program_description": {
+      "type": "string",
+      "title": "Program Description"
+    },
     "grant_amount": { "type": "string", "title": "Grant Amount (USD)" },
-    "program_start": { "type": "string", "format": "date", "title": "Program Start Date" },
-    "program_end": { "type": "string", "format": "date", "title": "Program End Date" },
+    "program_start": {
+      "type": "string",
+      "format": "date",
+      "title": "Program Start Date"
+    },
+    "program_end": {
+      "type": "string",
+      "format": "date",
+      "title": "Program End Date"
+    },
     "program_director": {
       "type": "object",
       "properties": {
@@ -18,7 +32,18 @@
       "title": "Program Director",
       "required": ["first_name", "last_name", "title", "email", "phone"]
     },
-    "educational_institution": { "type": "string", "title": "Educational Institution" }
+    "educational_institution": {
+      "type": "string",
+      "title": "Educational Institution"
+    }
   },
-  "required": ["education_program_name", "education_program_description", "grant_amount", "program_start", "program_end", "program_director", "educational_institution"]
+  "required": [
+    "education_program_name",
+    "education_program_description",
+    "grant_amount",
+    "program_start",
+    "program_end",
+    "program_director",
+    "educational_institution"
+  ]
 }

@@ -12,7 +12,7 @@
       "date": { "field": "startDate" }
     },
     "endDate": {
-      "name": "Project End Date", 
+      "name": "Project End Date",
       "eventType": "singleDate",
       "date": { "field": "endDate" }
     }

@@ -31,7 +31,20 @@
     },
     "budget": { "type": "string", "title": "Total Budget (USD)" },
     "kickoff": { "type": "string", "format": "date", "title": "Kick-off Date" },
-    "completion": { "type": "string", "format": "date", "title": "Completion Date" }
+    "completion": {
+      "type": "string",
+      "format": "date",
+      "title": "Completion Date"
+    }
   },
-  "required": ["project_name", "project_description", "institution_type", "institution_name", "principal_investigator", "budget", "kickoff", "completion"]
+  "required": [
+    "project_name",
+    "project_description",
+    "institution_type",
+    "institution_name",
+    "principal_investigator",
+    "budget",
+    "kickoff",
+    "completion"
+  ]
 }

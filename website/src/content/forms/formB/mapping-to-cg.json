@@ -13,7 +13,7 @@
     },
     "endDate": {
       "name": "Project End Date",
-      "eventType": "singleDate", 
+      "eventType": "singleDate",
       "date": { "field": "completion" }
     }
   },

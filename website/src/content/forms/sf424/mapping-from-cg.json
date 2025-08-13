@@ -20,10 +20,16 @@
   "ZipCode": { "field": "contacts.primary.addresses.primary.postalCode" },
   "Country": { "field": "contacts.primary.addresses.primary.country" },
   "OrganizationName": { "field": "organizations.primary.name" },
-  "EmployerTaxpayerIdentificationNumber": { "field": "organizations.primary.ein" },
+  "EmployerTaxpayerIdentificationNumber": {
+    "field": "organizations.primary.ein"
+  },
   "SAMUEI": { "field": "organizations.primary.uei" },
-  "DepartmentName": { "field": "organizations.primary.customFields.department.value" },
-  "DivisionName": { "field": "organizations.primary.customFields.division.value" },
+  "DepartmentName": {
+    "field": "organizations.primary.customFields.department.value"
+  },
+  "DivisionName": {
+    "field": "organizations.primary.customFields.division.value"
+  },
   "ProjectTitle": { "field": "title" },
   "ProjectDescription": { "field": "description" },
   "ProjectStartDate": { "field": "projectTimeline.startDate.date" },
@@ -48,25 +54,45 @@
       "default": "M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)"
     }
   },
-  "ApplicantEstimatedFunding": { "field": "customFields.applicantFunding.value" },
+  "ApplicantEstimatedFunding": {
+    "field": "customFields.applicantFunding.value"
+  },
   "StateEstimatedFunding": { "field": "customFields.stateFunding.value" },
   "LocalEstimatedFunding": { "field": "customFields.localFunding.value" },
   "OtherEstimatedFunding": { "field": "customFields.otherFunding.value" },
-  "ProgramIncomeEstimatedFunding": { "field": "customFields.programIncome.value" },
+  "ProgramIncomeEstimatedFunding": {
+    "field": "customFields.programIncome.value"
+  },
   "FundingOpportunityNumber": { "field": "opportunity.id" },
   "FundingOpportunityTitle": { "field": "opportunity.title" },
   "AgencyName": { "field": "opportunity.customFields.agency.value" },
   "CFDANumber": { "field": "opportunity.customFields.cfdaNumber.value" },
-  "CongressionalDistrictApplicant": { "field": "customFields.congressionalDistrictApplicant.value" },
-  "CongressionalDistrictProgramProject": { "field": "customFields.congressionalDistrictProgramProject.value" },
+  "CongressionalDistrictApplicant": {
+    "field": "customFields.congressionalDistrictApplicant.value"
+  },
+  "CongressionalDistrictProgramProject": {
+    "field": "customFields.congressionalDistrictProgramProject.value"
+  },
   "StateReview": { "field": "customFields.stateReview.value" },
-  "DelinquentFederalDebt": { "field": "customFields.delinquentFederalDebt.value" },
+  "DelinquentFederalDebt": {
+    "field": "customFields.delinquentFederalDebt.value"
+  },
   "CertificationAgree": { "field": "customFields.certificationAgree.value" },
-  "AuthorizedRepresentative": { "field": "contacts.otherContacts.authorizedRepresentative.name.firstName" },
-  "AuthorizedRepresentativeTitle": { "field": "contacts.otherContacts.authorizedRepresentative.title" },
-  "AuthorizedRepresentativePhoneNumber": { "field": "contacts.otherContacts.authorizedRepresentative.phones.primary.number" },
-  "AuthorizedRepresentativeEmail": { "field": "contacts.otherContacts.authorizedRepresentative.emails.primary" },
-  "AuthorizedRepresentativeFax": { "field": "contacts.otherContacts.authorizedRepresentative.phones.fax.number" },
+  "AuthorizedRepresentative": {
+    "field": "contacts.otherContacts.authorizedRepresentative.name.firstName"
+  },
+  "AuthorizedRepresentativeTitle": {
+    "field": "contacts.otherContacts.authorizedRepresentative.title"
+  },
+  "AuthorizedRepresentativePhoneNumber": {
+    "field": "contacts.otherContacts.authorizedRepresentative.phones.primary.number"
+  },
+  "AuthorizedRepresentativeEmail": {
+    "field": "contacts.otherContacts.authorizedRepresentative.emails.primary"
+  },
+  "AuthorizedRepresentativeFax": {
+    "field": "contacts.otherContacts.authorizedRepresentative.phones.fax.number"
+  },
   "AORSignature": { "field": "customFields.aorSignature.value" },
   "DateSigned": { "field": "customFields.dateSigned.value" }
 }

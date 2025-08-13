@@ -1,11 +1,28 @@
 {
   "type": "object",
   "properties": {
-    "community_project_name": { "type": "string", "title": "Community Project Name" },
-    "community_project_description": { "type": "string", "title": "Project Description" },
-    "funding_requested": { "type": "string", "title": "Funding Requested (USD)" },
-    "project_start": { "type": "string", "format": "date", "title": "Project Start Date" },
-    "project_end": { "type": "string", "format": "date", "title": "Project End Date" },
+    "community_project_name": {
+      "type": "string",
+      "title": "Community Project Name"
+    },
+    "community_project_description": {
+      "type": "string",
+      "title": "Project Description"
+    },
+    "funding_requested": {
+      "type": "string",
+      "title": "Funding Requested (USD)"
+    },
+    "project_start": {
+      "type": "string",
+      "format": "date",
+      "title": "Project Start Date"
+    },
+    "project_end": {
+      "type": "string",
+      "format": "date",
+      "title": "Project End Date"
+    },
     "community_leader": {
       "type": "object",
       "properties": {
@@ -18,7 +35,18 @@
       "title": "Community Leader",
       "required": ["first_name", "last_name", "title", "email", "phone"]
     },
-    "community_organization": { "type": "string", "title": "Community Organization" }
+    "community_organization": {
+      "type": "string",
+      "title": "Community Organization"
+    }
   },
-  "required": ["community_project_name", "community_project_description", "funding_requested", "project_start", "project_end", "community_leader", "community_organization"]
+  "required": [
+    "community_project_name",
+    "community_project_description",
+    "funding_requested",
+    "project_start",
+    "project_end",
+    "community_leader",
+    "community_organization"
+  ]
 }

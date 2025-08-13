@@ -234,7 +234,9 @@
     "authorizedRepresentativeOrganizationalAffiliation": {
       "name": "authorizedRepresentativeOrganizationalAffiliation",
       "fieldType": "string",
-      "value": { "field": "authorizedRepresentative.organizationalAffiliation" },
+      "value": {
+        "field": "authorizedRepresentative.organizationalAffiliation"
+      },
       "description": "Organizational affiliation of the authorized representative"
     },
     "authorizedRepresentativeSignature": {

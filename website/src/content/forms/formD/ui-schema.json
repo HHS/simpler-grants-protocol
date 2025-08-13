@@ -31,11 +31,26 @@
       "type": "Group",
       "label": "Application Contact",
       "elements": [
-        { "type": "Control", "scope": "#/properties/program_director/properties/first_name" },
-        { "type": "Control", "scope": "#/properties/program_director/properties/last_name" },
-        { "type": "Control", "scope": "#/properties/program_director/properties/title" },
-        { "type": "Control", "scope": "#/properties/program_director/properties/email" },
-        { "type": "Control", "scope": "#/properties/program_director/properties/phone" }
+        {
+          "type": "Control",
+          "scope": "#/properties/program_director/properties/first_name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/program_director/properties/last_name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/program_director/properties/title"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/program_director/properties/email"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/program_director/properties/phone"
+        }
       ]
     },
     {
