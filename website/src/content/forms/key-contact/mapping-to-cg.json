@@ -1,28 +1,59 @@
 {
-  "organization": {
-    "name": "OrganizationName"
+  "organizations": {
+    "primary": {
+      "id": "OrganizationName",
+      "name": "OrganizationName"
+    }
   },
-  "pointOfContact": {
-    "prefix": { "field": "contacts.Prefix" },
-    "title": { "field": "contacts.Title" },
-    "middleName": { "field": "contacts.MiddleName" },
-    "suffix": { "field": "contacts.Suffix" },
-    "organizationAffiliation": { "field": "contacts.OrganizationAffiliation" },
-    "firstName": { "field": "contacts.FirstName" },
-    "lastName": { "field": "contacts.LastName" },
-    "address": {
-      "street1": { "field": "contacts.Street1" },
-      "street2": { "field": "contacts.Street2" },
-      "city": { "field": "contacts.City" },
-      "county": { "field": "contacts.County" },
-      "state": { "field": "contacts.State" },
-      "province": { "field": "contacts.Province" },
-      "country": { "field": "contacts.Country" },
-      "zipPostalCode": { "field": "contacts.ZipPostalCode" }
+  "contacts": {
+    "primary": {
+      "name": {
+        "prefix": { "field": "contacts.Prefix" },
+        "firstName": { "field": "contacts.FirstName" },
+        "middleName": { "field": "contacts.MiddleName" },
+        "lastName": { "field": "contacts.LastName" },
+        "suffix": { "field": "contacts.Suffix" }
+      },
+      "title": { "field": "contacts.Title" },
+      "addresses": {
+        "primary": {
+          "street1": { "field": "contacts.Street1" },
+          "street2": { "field": "contacts.Street2" },
+          "city": { "field": "contacts.City" },
+          "stateOrProvince": { "field": "contacts.State" },
+          "country": { "field": "contacts.Country" },
+          "postalCode": { "field": "contacts.ZipPostalCode" }
+        }
+      },
+      "phones": {
+        "primary": {
+          "countryCode": "+1",
+          "number": { "field": "contacts.PhoneNumber" }
+        },
+        "otherPhones": {
+          "fax": {
+            "countryCode": "+1",
+            "number": { "field": "contacts.Fax" }
+          }
+        }
+      },
+      "emails": {
+        "primary": { "field": "contacts.Email" }
+      }
+    }
+  },
+  "customFields": {
+    "organizationAffiliation": {
+      "name": "organizationAffiliation",
+      "fieldType": "string",
+      "value": { "field": "contacts.OrganizationAffiliation", "default": "" },
+      "description": "Organization affiliation"
     },
-    "phoneNumber": { "field": "contacts.PhoneNumber" },
-    "fax": { "field": "contacts.Fax" },
-    "email": { "field": "contacts.Email" },
-    "projectRole": { "field": "contacts.ProjectRole" }
+    "projectRole": {
+      "name": "projectRole",
+      "fieldType": "string",
+      "value": { "field": "contacts.ProjectRole" },
+      "description": "Role in the project"
+    }
   }
 }

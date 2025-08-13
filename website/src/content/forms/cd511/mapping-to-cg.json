@@ -1,16 +1,41 @@
 {
-  "pointOfContact": {
-    "prefix": { "field": "PrefixName" },
-    "firstName": { "field": "FirstName" },
-    "middleName": { "field": "MiddleName" },
-    "lastName": { "field": "LastName" },
-    "suffix": { "field": "SuffixName" },
-    "title": { "field": "Title" }
+  "title": { "field": "ProjectName" },
+  "organizations": {
+    "primary": {
+      "id": { "field": "OrganizationName" },
+      "name": { "field": "OrganizationName" }
+    }
   },
-  "organization": {
-    "name": { "field": "OrganizationName" }
+  "contacts": {
+    "primary": {
+      "name": {
+        "prefix": { "field": "PrefixName" },
+        "firstName": { "field": "FirstName" },
+        "middleName": { "field": "MiddleName" },
+        "lastName": { "field": "LastName" },
+        "suffix": { "field": "SuffixName" }
+      },
+      "title": { "field": "Title" }
+    }
   },
-  "project": {
-    "name": { "field": "ProjectName" }
+  "customFields": {
+    "awardNumber": {
+      "name": "awardNumber",
+      "fieldType": "string",
+      "value": { "field": "AwardNumber" },
+      "description": "The award number for this project"
+    },
+    "signature": {
+      "name": "signature",
+      "fieldType": "string",
+      "value": { "field": "Signature" },
+      "description": "Digital signature"
+    },
+    "submittedDate": {
+      "name": "submittedDate",
+      "fieldType": "string",
+      "value": { "field": "SubmittedDate" },
+      "description": "Date the form was submitted"
+    }
   }
 }

@@ -1,11 +1,13 @@
 {
-  "OrganizationName": { "field": "organization.name" },
-  "AwardNumber": { "field": "project.awardNumber" },
-  "ProjectName": { "field": "project.name" },
-  "PrefixName": { "field": "pointOfContact.prefix" },
-  "FirstName": { "field": "pointOfContact.firstName" },
-  "MiddleName": { "field": "pointOfContact.middleName" },
-  "LastName": { "field": "pointOfContact.lastName" },
-  "SuffixName": { "field": "pointOfContact.suffix" },
-  "Title": { "field": "pointOfContact.title" }
+  "OrganizationName": { "field": "organizations.primary.name" },
+  "AwardNumber": { "field": "customFields.awardNumber.value" },
+  "ProjectName": { "field": "title" },
+  "PrefixName": { "field": "contacts.primary.name.prefix" },
+  "FirstName": { "field": "contacts.primary.name.firstName" },
+  "MiddleName": { "field": "contacts.primary.name.middleName" },
+  "LastName": { "field": "contacts.primary.name.lastName" },
+  "SuffixName": { "field": "contacts.primary.name.suffix" },
+  "Title": { "field": "contacts.primary.title" },
+  "Signature": { "field": "customFields.signature.value" },
+  "SubmittedDate": { "field": "customFields.submittedDate.value" }
 }
