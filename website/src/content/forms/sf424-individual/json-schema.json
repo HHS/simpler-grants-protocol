@@ -41,6 +41,13 @@
       "minLength": 0,
       "maxLength": 120
     },
+    "DateReceived": {
+      "type": "string",
+      "title": "Date Received",
+      "description": "Completed by Grants.gov upon submission.",
+      "format": "date",
+      "readOnly": true
+    },
     "OpportunityID": {
       "type": "string",
       "title": "Funding Opportunity Number",

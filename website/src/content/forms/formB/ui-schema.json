@@ -2,7 +2,9 @@
   "type": "VerticalLayout",
   "elements": [
     { "type": "Control", "scope": "#/properties/project_name" },
+    { "type": "Control", "scope": "#/properties/project_description" },
     { "type": "Control", "scope": "#/properties/institution_type" },
+    { "type": "Control", "scope": "#/properties/institution_name" },
     {
       "type": "Group",
       "label": "Principal Investigator",
@@ -18,10 +20,23 @@
         {
           "type": "Control",
           "scope": "#/properties/principal_investigator/properties/last_name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/principal_investigator/properties/title"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/principal_investigator/properties/email"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/principal_investigator/properties/phone"
         }
       ]
     },
     { "type": "Control", "scope": "#/properties/budget" },
-    { "type": "Control", "scope": "#/properties/kickoff" }
+    { "type": "Control", "scope": "#/properties/kickoff" },
+    { "type": "Control", "scope": "#/properties/completion" }
   ]
 }

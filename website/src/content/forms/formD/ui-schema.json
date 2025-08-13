@@ -7,39 +7,40 @@
       "elements": [
         {
           "type": "Control",
-          "scope": "#/properties/projectDetails/properties/title"
+          "scope": "#/properties/education_program_name"
         },
         {
           "type": "Control",
-          "scope": "#/properties/projectDetails/properties/requestedBy"
+          "scope": "#/properties/education_program_description"
         },
         {
           "type": "Control",
-          "scope": "#/properties/projectDetails/properties/fundingNeeded"
+          "scope": "#/properties/grant_amount"
         },
         {
           "type": "Control",
-          "scope": "#/properties/projectDetails/properties/startDate"
+          "scope": "#/properties/program_start"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/program_end"
         }
       ]
     },
     {
       "type": "Group",
-      "label": "Application contact",
+      "label": "Application Contact",
       "elements": [
-        {
-          "type": "Control",
-          "scope": "#/properties/contact/properties/givenName"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/contact/properties/middleName"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/contact/properties/familyName"
-        }
+        { "type": "Control", "scope": "#/properties/program_director/properties/first_name" },
+        { "type": "Control", "scope": "#/properties/program_director/properties/last_name" },
+        { "type": "Control", "scope": "#/properties/program_director/properties/title" },
+        { "type": "Control", "scope": "#/properties/program_director/properties/email" },
+        { "type": "Control", "scope": "#/properties/program_director/properties/phone" }
       ]
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/educational_institution"
     }
   ]
 }

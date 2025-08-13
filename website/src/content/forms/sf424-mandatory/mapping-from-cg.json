@@ -29,18 +29,18 @@
     "switch": {
       "field": "customFields.applicantType.value",
       "case": {
-        "government-state": "A",
-        "government-local": "B",
-        "government-general": "E",
-        "government-tribal": "I",
-        "nonprofit-educational": "H",
-        "nonprofit-general": "M",
-        "individual": "P",
-        "business-small": "R",
-        "business-general": "Q",
-        "custom": "X"
+        "government-state": "A: State Government",
+        "government-local": "B: County Government",
+        "government-general": "E: Regional Organization",
+        "government-tribal": "I: Indian/Native American Tribal Government (Federally Recognized)",
+        "nonprofit-educational": "H: Public/State Controlled Institution of Higher Education",
+        "nonprofit-general": "M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)",
+        "individual": "P: Individual",
+        "business-small": "R: Small Business",
+        "business-general": "Q: For-Profit Organization (Other than Small Business)",
+        "custom": "X: Other (specify)"
       },
-      "default": "X"
+      "default": "X: Other (specify)"
     }
   },
   "estimatedFunding": {
