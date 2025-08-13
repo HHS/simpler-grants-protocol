@@ -1,8 +1,8 @@
 {
   "organizations": {
     "primary": {
-      "id": "OrganizationName",
-      "name": "OrganizationName"
+      "id": { "field": "OrganizationName" },
+      "name": { "field": "OrganizationName" }
     }
   },
   "contacts": {

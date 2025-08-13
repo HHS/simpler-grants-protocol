@@ -408,18 +408,14 @@
       "title": "15. Estimated Funding",
       "properties": {
         "federal": {
-          "type": "number",
+          "type": "string",
           "title": "a. Federal ($)",
-          "description": "Enter the dollar amount. This field is required.",
-          "minimum": 0,
-          "maximum": 999999999999.99
+          "description": "Enter the dollar amount. This field is required."
         },
         "match": {
-          "type": "number",
+          "type": "string",
           "title": "b. Match ($)",
-          "description": "Enter the dollar amount.",
-          "minimum": 0,
-          "maximum": 999999999999.99
+          "description": "Enter the dollar amount."
         }
       },
       "required": ["federal"]

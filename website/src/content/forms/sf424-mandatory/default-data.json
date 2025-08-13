@@ -33,7 +33,7 @@
       "firstName": "Sarah",
       "middleName": "Marie",
       "lastName": "Johnson",
-      "suffix": "",
+      "suffix": "Ph.D",
       "title": "Program Director",
       "organizationalAffiliation": "Community Health Initiative",
       "telephoneNumber": "(417) 555-0123",
@@ -58,8 +58,8 @@
     "endDate": "2025-09-30"
   },
   "estimatedFunding": {
-    "federal": 500000,
-    "match": 125000
+    "federal": "500000",
+    "match": "125000"
   },
   "submissionSubjectToReview": "c. Program is not covered by E.O. 12372",
   "stateReviewDate": "",
@@ -71,13 +71,13 @@
     "firstName": "Michael",
     "middleName": "",
     "lastName": "Thompson",
-    "suffix": "",
+    "suffix": "Ph.D",
     "title": "Executive Director",
     "organizationalAffiliation": "Community Health Initiative",
     "telephoneNumber": "(417) 555-0100",
     "faxNumber": "(417) 555-0101",
     "email": "michael.thompson@communityhealth.org",
-    "signature": "",
+    "signature": "Michael Thompson",
     "signatureDate": ""
   },
   "attachSupportingDocuments": ""

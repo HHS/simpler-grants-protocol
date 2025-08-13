@@ -2,7 +2,7 @@
   "title": { "field": "descriptiveTitleOfApplicantProject" },
   "description": { "field": "additionalDescription" },
   "amountRequested": {
-    "amount": { "field": "estimatedFunding.federal", "transform": "toString" },
+    "amount": { "field": "estimatedFunding.federal" },
     "currency": "USD"
   },
   "projectTimeline": {
@@ -218,6 +218,36 @@
       "fieldType": "string",
       "value": { "field": "applicantDelinquentFederalDebt" },
       "description": "Whether applicant has delinquent federal debt"
+    },
+    "dateReceived": {
+      "name": "dateReceived",
+      "fieldType": "string",
+      "value": { "field": "dateReceived" },
+      "description": "Date the application was received"
+    },
+    "authorizedRepresentativeIAgree": {
+      "name": "authorizedRepresentativeIAgree",
+      "fieldType": "boolean",
+      "value": { "field": "authorizedRepresentative.iAgree" },
+      "description": "Whether the authorized representative agrees to the terms"
+    },
+    "authorizedRepresentativeOrganizationalAffiliation": {
+      "name": "authorizedRepresentativeOrganizationalAffiliation",
+      "fieldType": "string",
+      "value": { "field": "authorizedRepresentative.organizationalAffiliation" },
+      "description": "Organizational affiliation of the authorized representative"
+    },
+    "authorizedRepresentativeSignature": {
+      "name": "authorizedRepresentativeSignature",
+      "fieldType": "string",
+      "value": { "field": "authorizedRepresentative.signature" },
+      "description": "Signature of the authorized representative"
+    },
+    "authorizedRepresentativeSignatureDate": {
+      "name": "authorizedRepresentativeSignatureDate",
+      "fieldType": "string",
+      "value": { "field": "authorizedRepresentative.signatureDate" },
+      "description": "Date of the authorized representative signature"
     }
   }
 }
