@@ -1,5 +1,5 @@
 ---
-title: CommonGrants protocol v0.2.0
+title: CommonGrants protocol v0.1.0
 description: A specification for the CommonGrants protocol.
 ---
 
@@ -104,12 +104,11 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 ### Schemas
 
-The CommonGrants protocol defines the following schemas that are used to represent data in CommonGrants APIs. These schemas are roughly divided into four categories:
+The CommonGrants protocol defines the following schemas that are used to represent data in CommonGrants APIs. These schemas are roughly divided into three categories:
 
 - [Types](#base-types): Foundational data types, like strings, numbers, etc.
 - [Fields](#core-fields): Standardized fields that are reused across models.
 - [Models](#opportunity-models): Domain-specific models for funding opportunities.
-- [Apply Models](#apply-models): Domain-specific models for the application process.
 
 #### Base types
 
@@ -170,100 +169,19 @@ The CommonGrants protocol defines the following models that are specific to fund
 | [OppFunding](/protocol/models/opportunity#oppfunding)           | Details about the funding available for an opportunity |
 | [OppTimeline](/protocol/models/opportunity#opptimeline)         | Key dates in the opportunity's timeline                |
 
-#### Apply models
-
-The CommonGrants protocol defines the following models that are specific to the application process:
-
-**Application models**
-
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [ApplicationBase](/protocol/models/application#applicationbase) | The core model for an application to a competition     |
-| [AppStatus](/protocol/models/application#appstatus)             | The status of an application                           |
-| [AppStatusOptions](/protocol/models/application#appstatusoptions) | The set of values accepted for application status     |
-| [AppFormResponse](/protocol/models/application#appformresponse) | A form response included in an application            |
-
-**Competition models**
-
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [CompetitionBase](/protocol/models/competition#competitionbase) | The core model for a competition                       |
-| [CompetitionStatus](/protocol/models/competition#competitionstatus) | The status of a competition                           |
-| [CompetitionStatusOptions](/protocol/models/competition#competitionstatusoptions) | The set of values accepted for competition status     |
-| [CompetitionForms](/protocol/models/competition#competitionforms) | The forms required for a competition                  |
-| [CompetitionTimeline](/protocol/models/competition#competitiontimeline) | Key dates in the competition's timeline               |
-
-**Form models**
-
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [Form](/protocol/models/form#form)                             | A form for collecting data from a user                |
-| [FormJsonSchema](/protocol/models/form#formjsonschema)         | A JSON schema used to validate form responses         |
-| [FormUISchema](/protocol/models/form#formuischema)             | A UI schema used to render the form in the browser    |
-
-**Form response models**
-
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [FormResponseBase](/protocol/models/form-response#formresponsebase) | The core model for a form response                    |
-| [FormResponseStatus](/protocol/models/form-response#formresponsestatus) | The status of a form response                         |
-| [FormResponseStatusOptions](/protocol/models/form-response#formresponsestatusoptions) | The set of values accepted for form response status   |
-
-**Mapping models**
-
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [MappingSchema](/protocol/models/mapping#mappingschema)         | A mapping format for translating data between schemas |
-| [MappingFunction](/protocol/models/mapping#mappingfunction)     | The set of supported mapping functions                |
-| [MappingConstantFunction](/protocol/models/mapping#mappingconstantfunction) | Returns a constant value                              |
-| [MappingFieldFunction](/protocol/models/mapping#mappingfieldfunction) | Returns the value of a field in the source data      |
-| [MappingSwitchFunction](/protocol/models/mapping#mappingswitchfunction) | Returns a new value based on a switch statement      |
-
-**Applicant type models**
-
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [ApplicantType](/protocol/models/applicant-type#applicanttype) | The type of applicant eligible to apply for funding   |
-| [ApplicantTypeOptions](/protocol/models/applicant-type#applicanttypeoptions) | The set of possible applicant types                   |
-
 ### Routes and operations
 
-The CommonGrants protocol defines the following routes and operations that are specific to funding opportunities and the application process.
+The CommonGrants protocol defines the following routes and operations that are specific to funding opportunities.
 
 :::note
 While omitted for brevity in the following table, all protocol-defined routes MUST be prefixed with `/common-grants/`. View the full [OpenAPI docs](/protocol/api-docs) for more details about each route.
 :::
-
-#### Opportunity routes
 
 | Route                        | Status   | Description                                                      |
 | ---------------------------- | -------- | ---------------------------------------------------------------- |
 | `GET /opportunities`         | Required | Get a paginated list of opportunities sorted by `lastModifiedAt` |
 | `GET /opportunities/{id}`    | Required | View details about a specific opportunity                        |
 | `POST /opportunities/search` | Optional | Search and filter funding opportunities                          |
-
-#### Competition routes
-
-| Route                        | Status      | Description                                                      |
-| ---------------------------- | ----------- | ---------------------------------------------------------------- |
-| `GET /competitions/{compId}` | Experimental | View details about a specific competition                        |
-
-#### Application routes
-
-| Route                                    | Status      | Description                                                      |
-| ---------------------------------------- | ----------- | ---------------------------------------------------------------- |
-| `POST /applications/start`               | Experimental | Start a new application for a given competition                 |
-| `GET /applications/{appId}`              | Experimental | View an application for a given competition                     |
-| `PUT /applications/{appId}/submit`       | Experimental | Submit an application to a competition                          |
-| `PUT /applications/{appId}/forms/{formId}` | Experimental | Respond to a form in an application                            |
-| `GET /applications/{appId}/forms/{formId}` | Experimental | View form responses in an application                          |
-
-#### Form routes
-
-| Route                | Status      | Description                                                      |
-| -------------------- | ----------- | ---------------------------------------------------------------- |
-| `GET /forms`         | Experimental | Get a paginated list of forms sorted by `lastModifiedAt`        |
-| `GET /forms/{formId}` | Experimental | View details about a specific form                              |
 
 #### Pagination
 
