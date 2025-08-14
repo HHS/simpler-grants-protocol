@@ -3,6 +3,10 @@ title: CommonGrants protocol v0.1.0
 description: A specification for the CommonGrants protocol.
 ---
 
+:::tip[Version History]
+This is the **v0.1.0** specification which has been superseded by [v0.2.0](/protocol/specification). This version is maintained for reference only.
+:::
+
 This document outlines the technical specification for the CommonGrants protocol, which defines:
 
 - The required routes, operations, and schemas for a CommonGrants API;

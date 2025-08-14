@@ -67,7 +67,10 @@ export default defineConfig({
         {
           label: "Protocol",
           items: [
-            { label: "Specification", link: "protocol/specification" },
+            {
+              label: "Specification",
+              link: "protocol/specification",
+            },
             {
               label: "OpenAPI docs",
               link: "protocol/api-docs",
