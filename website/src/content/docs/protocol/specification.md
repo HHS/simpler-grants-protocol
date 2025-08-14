@@ -176,55 +176,55 @@ The CommonGrants protocol defines the following models that are specific to the 
 
 **Application models**
 
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [ApplicationBase](/protocol/models/application#applicationbase) | The core model for an application to a competition     |
-| [AppStatus](/protocol/models/application#appstatus)             | The status of an application                           |
-| [AppStatusOptions](/protocol/models/application#appstatusoptions) | The set of values accepted for application status     |
-| [AppFormResponse](/protocol/models/application#appformresponse) | A form response included in an application            |
+| Model                                                             | Description                                        |
+| ----------------------------------------------------------------- | -------------------------------------------------- |
+| [ApplicationBase](/protocol/models/application#applicationbase)   | The core model for an application to a competition |
+| [AppStatus](/protocol/models/application#appstatus)               | The status of an application                       |
+| [AppStatusOptions](/protocol/models/application#appstatusoptions) | The set of values accepted for application status  |
+| [AppFormResponse](/protocol/models/application#appformresponse)   | A form response included in an application         |
 
 **Competition models**
 
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [CompetitionBase](/protocol/models/competition#competitionbase) | The core model for a competition                       |
-| [CompetitionStatus](/protocol/models/competition#competitionstatus) | The status of a competition                           |
-| [CompetitionStatusOptions](/protocol/models/competition#competitionstatusoptions) | The set of values accepted for competition status     |
-| [CompetitionForms](/protocol/models/competition#competitionforms) | The forms required for a competition                  |
-| [CompetitionTimeline](/protocol/models/competition#competitiontimeline) | Key dates in the competition's timeline               |
+| Model                                                                             | Description                                       |
+| --------------------------------------------------------------------------------- | ------------------------------------------------- |
+| [CompetitionBase](/protocol/models/competition#competitionbase)                   | The core model for a competition                  |
+| [CompetitionStatus](/protocol/models/competition#competitionstatus)               | The status of a competition                       |
+| [CompetitionStatusOptions](/protocol/models/competition#competitionstatusoptions) | The set of values accepted for competition status |
+| [CompetitionForms](/protocol/models/competition#competitionforms)                 | The forms required for a competition              |
+| [CompetitionTimeline](/protocol/models/competition#competitiontimeline)           | Key dates in the competition's timeline           |
 
 **Form models**
 
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [Form](/protocol/models/form#form)                             | A form for collecting data from a user                |
-| [FormJsonSchema](/protocol/models/form#formjsonschema)         | A JSON schema used to validate form responses         |
-| [FormUISchema](/protocol/models/form#formuischema)             | A UI schema used to render the form in the browser    |
+| Model                                                  | Description                                        |
+| ------------------------------------------------------ | -------------------------------------------------- |
+| [Form](/protocol/models/form#form)                     | A form for collecting data from a user             |
+| [FormJsonSchema](/protocol/models/form#formjsonschema) | A JSON schema used to validate form responses      |
+| [FormUISchema](/protocol/models/form#formuischema)     | A UI schema used to render the form in the browser |
 
 **Form response models**
 
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [FormResponseBase](/protocol/models/form-response#formresponsebase) | The core model for a form response                    |
-| [FormResponseStatus](/protocol/models/form-response#formresponsestatus) | The status of a form response                         |
-| [FormResponseStatusOptions](/protocol/models/form-response#formresponsestatusoptions) | The set of values accepted for form response status   |
+| Model                                                                                 | Description                                         |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| [FormResponseBase](/protocol/models/form-response#formresponsebase)                   | The core model for a form response                  |
+| [FormResponseStatus](/protocol/models/form-response#formresponsestatus)               | The status of a form response                       |
+| [FormResponseStatusOptions](/protocol/models/form-response#formresponsestatusoptions) | The set of values accepted for form response status |
 
 **Mapping models**
 
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [MappingSchema](/protocol/models/mapping#mappingschema)         | A mapping format for translating data between schemas |
-| [MappingFunction](/protocol/models/mapping#mappingfunction)     | The set of supported mapping functions                |
+| Model                                                                       | Description                                           |
+| --------------------------------------------------------------------------- | ----------------------------------------------------- |
+| [MappingSchema](/protocol/models/mapping#mappingschema)                     | A mapping format for translating data between schemas |
+| [MappingFunction](/protocol/models/mapping#mappingfunction)                 | The set of supported mapping functions                |
 | [MappingConstantFunction](/protocol/models/mapping#mappingconstantfunction) | Returns a constant value                              |
-| [MappingFieldFunction](/protocol/models/mapping#mappingfieldfunction) | Returns the value of a field in the source data      |
-| [MappingSwitchFunction](/protocol/models/mapping#mappingswitchfunction) | Returns a new value based on a switch statement      |
+| [MappingFieldFunction](/protocol/models/mapping#mappingfieldfunction)       | Returns the value of a field in the source data       |
+| [MappingSwitchFunction](/protocol/models/mapping#mappingswitchfunction)     | Returns a new value based on a switch statement       |
 
 **Applicant type models**
 
-| Model                                                           | Description                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------ |
-| [ApplicantType](/protocol/models/applicant-type#applicanttype) | The type of applicant eligible to apply for funding   |
-| [ApplicantTypeOptions](/protocol/models/applicant-type#applicanttypeoptions) | The set of possible applicant types                   |
+| Model                                                                        | Description                                         |
+| ---------------------------------------------------------------------------- | --------------------------------------------------- |
+| [ApplicantType](/protocol/models/applicant-type#applicanttype)               | The type of applicant eligible to apply for funding |
+| [ApplicantTypeOptions](/protocol/models/applicant-type#applicanttypeoptions) | The set of possible applicant types                 |
 
 ### Routes and operations
 
@@ -244,26 +244,26 @@ While omitted for brevity in the following table, all protocol-defined routes MU
 
 #### Competition routes
 
-| Route                        | Status      | Description                                                      |
-| ---------------------------- | ----------- | ---------------------------------------------------------------- |
-| `GET /competitions/{compId}` | Experimental | View details about a specific competition                        |
+| Route                        | Status       | Description                               |
+| ---------------------------- | ------------ | ----------------------------------------- |
+| `GET /competitions/{compId}` | Experimental | View details about a specific competition |
 
 #### Application routes
 
-| Route                                    | Status      | Description                                                      |
-| ---------------------------------------- | ----------- | ---------------------------------------------------------------- |
-| `POST /applications/start`               | Experimental | Start a new application for a given competition                 |
-| `GET /applications/{appId}`              | Experimental | View an application for a given competition                     |
-| `PUT /applications/{appId}/submit`       | Experimental | Submit an application to a competition                          |
-| `PUT /applications/{appId}/forms/{formId}` | Experimental | Respond to a form in an application                            |
-| `GET /applications/{appId}/forms/{formId}` | Experimental | View form responses in an application                          |
+| Route                                      | Status       | Description                                     |
+| ------------------------------------------ | ------------ | ----------------------------------------------- |
+| `POST /applications/start`                 | Experimental | Start a new application for a given competition |
+| `GET /applications/{appId}`                | Experimental | View an application for a given competition     |
+| `PUT /applications/{appId}/submit`         | Experimental | Submit an application to a competition          |
+| `PUT /applications/{appId}/forms/{formId}` | Experimental | Respond to a form in an application             |
+| `GET /applications/{appId}/forms/{formId}` | Experimental | View form responses in an application           |
 
 #### Form routes
 
-| Route                | Status      | Description                                                      |
-| -------------------- | ----------- | ---------------------------------------------------------------- |
-| `GET /forms`         | Experimental | Get a paginated list of forms sorted by `lastModifiedAt`        |
-| `GET /forms/{formId}` | Experimental | View details about a specific form                              |
+| Route                 | Status       | Description                                              |
+| --------------------- | ------------ | -------------------------------------------------------- |
+| `GET /forms`          | Experimental | Get a paginated list of forms sorted by `lastModifiedAt` |
+| `GET /forms/{formId}` | Experimental | View details about a specific form                       |
 
 #### Pagination
 
