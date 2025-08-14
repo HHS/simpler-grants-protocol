@@ -6,8 +6,12 @@
     "LastName": "Doe",
     "Street1": "123 Main St",
     "City": "Anytown",
+    "State": "CA",
     "Country": "USA",
+    "ZipPostalCode": "90210",
     "PhoneNumber": "123-456-7890",
-    "Email": "john.doe@example.com"
+    "Email": "john.doe@example.com",
+    "Fax": "555-111-2222",
+    "OrganizationAffiliation": "Test Organization"
   }
 }

@@ -1,11 +1,40 @@
 {
   "type": "VerticalLayout",
   "elements": [
-    { "type": "Control", "scope": "#/properties/projectTitle" },
-    { "type": "Control", "scope": "#/properties/orgType" },
-    { "type": "Control", "scope": "#/properties/contactFirstName" },
-    { "type": "Control", "scope": "#/properties/contactLastName" },
-    { "type": "Control", "scope": "#/properties/fundingNeeded" },
-    { "type": "Control", "scope": "#/properties/startPeriod" }
+    { "type": "Control", "scope": "#/properties/community_project_name" },
+    {
+      "type": "Control",
+      "scope": "#/properties/community_project_description"
+    },
+    { "type": "Control", "scope": "#/properties/funding_requested" },
+    { "type": "Control", "scope": "#/properties/project_start" },
+    { "type": "Control", "scope": "#/properties/project_end" },
+    {
+      "type": "Group",
+      "label": "Project Contact",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/community_leader/properties/first_name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/community_leader/properties/last_name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/community_leader/properties/title"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/community_leader/properties/email"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/community_leader/properties/phone"
+        }
+      ]
+    },
+    { "type": "Control", "scope": "#/properties/community_organization" }
   ]
 }

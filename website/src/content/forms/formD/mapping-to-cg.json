@@ -1,26 +1,50 @@
 {
-  "project": {
-    "title": { "field": "projectDetails.title" },
-    "applicantType": {
-      "switch": {
-        "field": "projectDetails.requestedBy",
-        "case": {
-          "NGO": "nonprofit-general",
-          "Corporation": "business-general",
-          "College or University": "nonprofit-educational",
-          "Individual": "individual",
-          "Government": "government-general",
-          "Other": "custom"
-        },
-        "default": "custom"
-      }
-    },
-    "amountRequested": { "field": "projectDetails.fundingNeeded" },
-    "startDate": { "field": "projectDetails.startDate" }
+  "title": { "field": "education_program_name" },
+  "description": { "field": "education_program_description" },
+  "amountRequested": {
+    "amount": { "field": "grant_amount" },
+    "currency": "USD"
   },
-  "pointOfContact": {
-    "firstName": { "field": "contact.givenName" },
-    "middleName": { "field": "contact.middleName" },
-    "lastName": { "field": "contact.familyName" }
+  "projectTimeline": {
+    "startDate": {
+      "name": "Program Start Date",
+      "eventType": "singleDate",
+      "date": { "field": "program_start" }
+    },
+    "endDate": {
+      "name": "Program End Date",
+      "eventType": "singleDate",
+      "date": { "field": "program_end" }
+    }
+  },
+  "contacts": {
+    "primary": {
+      "name": {
+        "firstName": { "field": "program_director.first_name" },
+        "lastName": { "field": "program_director.last_name" }
+      },
+      "title": { "field": "program_director.title" },
+      "emails": {
+        "primary": { "field": "program_director.email" }
+      },
+      "phones": {
+        "primary": {
+          "countryCode": "+1",
+          "number": { "field": "program_director.phone" },
+          "isMobile": false
+        }
+      }
+    }
+  },
+  "organizations": {
+    "primary": {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": { "field": "educational_institution" },
+      "orgType": {
+        "term": "Educational Institution",
+        "class": "Organization types",
+        "code": "UC000000"
+      }
+    }
   }
 }

@@ -1,55 +1,244 @@
 {
-  "pointOfContact": {
-    "firstName": { "field": "FirstName" },
-    "middleName": { "field": "MiddleName" },
-    "lastName": { "field": "LastName" },
-    "email": { "field": "Email" },
-    "phone": { "field": "PhoneNumber" },
-    "title": { "field": "Title" },
-    "address": {
-      "street1": { "field": "Street1" },
-      "street2": { "field": "Street2" },
-      "city": { "field": "City" },
-      "state": { "field": "State" },
-      "zip": { "field": "ZipCode" },
-      "country": { "field": "Country" }
+  "title": { "field": "ProjectTitle" },
+  "description": { "field": "ProjectDescription" },
+  "amountRequested": {
+    "amount": { "field": "FederalEstimatedFunding" },
+    "currency": "USD"
+  },
+  "projectTimeline": {
+    "startDate": {
+      "name": "Project Start Date",
+      "eventType": "singleDate",
+      "date": { "field": "ProjectStartDate" }
+    },
+    "endDate": {
+      "name": "Project End Date",
+      "eventType": "singleDate",
+      "date": { "field": "ProjectEndDate" }
     }
   },
-  "organization": {
-    "name": { "field": "OrganizationName" },
-    "ein": { "field": "EmployerTaxpayerIdentificationNumber" },
-    "uei": { "field": "SAMUEI" },
-    "department": { "field": "DepartmentName" },
-    "division": { "field": "DivisionName" }
-  },
-  "project": {
-    "title": { "field": "ProjectTitle" },
-    "startDate": { "field": "ProjectStartDate" },
-    "endDate": { "field": "ProjectEndDate" },
-    "amountRequested": { "field": "FederalEstimatedFunding" },
-    "totalBudget": { "field": "TotalEstimatedFunding" },
-    "applicantType": {
-      "switch": {
-        "field": "ApplicantTypeCode1",
-        "case": {
-          "Nonprofit": "nonprofit-general",
-          "Educational": "nonprofit-educational",
-          "Government": "government-general",
-          "Small Business": "business-small",
-          "For-Profit": "business-general",
-          "Individual": "individual",
-          "Other": "custom"
-        },
-        "default": "nonprofit-general"
+  "opportunity": {
+    "id": { "field": "FundingOpportunityNumber" },
+    "title": { "field": "FundingOpportunityTitle" },
+    "customFields": {
+      "agency": {
+        "name": "agency",
+        "fieldType": "string",
+        "value": { "field": "AgencyName" },
+        "description": "The agency responsible for managing this opportunity"
+      },
+      "cfdaNumber": {
+        "name": "cfdaNumber",
+        "fieldType": "string",
+        "value": { "field": "CFDANumber" },
+        "description": "The CFDA number for this opportunity"
       }
     }
   },
-  "funding": {
-    "federal": { "field": "FederalEstimatedFunding" },
-    "applicant": { "field": "ApplicantEstimatedFunding" },
-    "state": { "field": "StateEstimatedFunding" },
-    "local": { "field": "LocalEstimatedFunding" },
-    "other": { "field": "OtherEstimatedFunding" },
-    "programIncome": { "field": "ProgramIncomeEstimatedFunding" }
+  "organizations": {
+    "primary": {
+      "id": { "field": "SAMUEI" },
+      "name": { "field": "OrganizationName" },
+      "ein": { "field": "EmployerTaxpayerIdentificationNumber" },
+      "uei": { "field": "SAMUEI" },
+      "addresses": {
+        "primary": {
+          "street1": { "field": "Street1" },
+          "street2": { "field": "Street2" },
+          "city": { "field": "City" },
+          "stateOrProvince": { "field": "State" },
+          "country": { "field": "Country" },
+          "postalCode": { "field": "ZipCode" }
+        }
+      },
+      "customFields": {
+        "department": {
+          "name": "department",
+          "fieldType": "string",
+          "value": { "field": "DepartmentName" },
+          "description": "The department within the organization"
+        },
+        "division": {
+          "name": "division",
+          "fieldType": "string",
+          "value": { "field": "DivisionName" },
+          "description": "The division within the organization"
+        }
+      }
+    }
+  },
+  "contacts": {
+    "primary": {
+      "name": {
+        "prefix": { "field": "Prefix" },
+        "firstName": { "field": "FirstName" },
+        "middleName": { "field": "MiddleName" },
+        "lastName": { "field": "LastName" },
+        "suffix": { "field": "Suffix" }
+      },
+      "title": { "field": "Title" },
+      "addresses": {
+        "primary": {
+          "street1": { "field": "Street1" },
+          "street2": { "field": "Street2" },
+          "city": { "field": "City" },
+          "stateOrProvince": { "field": "State" },
+          "country": { "field": "Country" },
+          "postalCode": { "field": "ZipCode" }
+        }
+      },
+      "phones": {
+        "primary": {
+          "countryCode": "+1",
+          "number": { "field": "PhoneNumber" }
+        },
+        "fax": {
+          "countryCode": "+1",
+          "number": { "field": "Fax" }
+        }
+      },
+      "emails": {
+        "primary": { "field": "Email" }
+      }
+    },
+    "otherContacts": {
+      "authorizedRepresentative": {
+        "name": {
+          "firstName": { "field": "AuthorizedRepresentative" },
+          "lastName": { "field": "AuthorizedRepresentative" }
+        },
+        "title": { "field": "AuthorizedRepresentativeTitle" },
+        "phones": {
+          "primary": {
+            "countryCode": "+1",
+            "number": { "field": "AuthorizedRepresentativePhoneNumber" }
+          },
+          "fax": {
+            "countryCode": "+1",
+            "number": { "field": "AuthorizedRepresentativeFax" }
+          }
+        },
+        "emails": {
+          "primary": { "field": "AuthorizedRepresentativeEmail" }
+        }
+      }
+    }
+  },
+  "customFields": {
+    "applicantType": {
+      "name": "applicantType",
+      "fieldType": "string",
+      "value": {
+        "switch": {
+          "field": "ApplicantTypeCode1",
+          "case": {
+            "A: State Government": "government-state",
+            "B: County Government": "government-local",
+            "C: City or Township Government": "government-local",
+            "D: Special District Government": "government-local",
+            "E: Regional Organization": "government-general",
+            "F: U.S. Territory or Possession": "government-general",
+            "G: Independent School District": "government-local",
+            "H: Public/State Controlled Institution of Higher Education": "nonprofit-educational",
+            "I: Indian/Native American Tribal Government (Federally Recognized)": "government-tribal",
+            "J: Indian/Native American Tribal Government (Other than Federally Recognized)": "government-tribal",
+            "K: Indian/Native American Tribally Designated Organization": "government-tribal",
+            "L: Public/Indian Housing Authority": "government-local",
+            "M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)": "nonprofit-general",
+            "N: Nonprofit without 501C3 IRS Status (Other than Institution of Higher Education)": "nonprofit-general",
+            "O: Private Institution of Higher Education": "nonprofit-educational",
+            "P: Individual": "individual",
+            "Q: For-Profit Organization (Other than Small Business)": "business-general",
+            "R: Small Business": "business-small",
+            "S: Hispanic-serving Institution": "nonprofit-educational",
+            "T: Historically Black Colleges and Universities (HBCUs)": "nonprofit-educational",
+            "U: Tribally Controlled Colleges and Universities (TCCUs)": "nonprofit-educational",
+            "V: Alaska Native and Native Hawaiian Serving Institutions": "nonprofit-educational",
+            "W: Non-domestic (non-US) Entity": "custom",
+            "X: Other (specify)": "custom"
+          },
+          "default": "nonprofit-general"
+        }
+      },
+      "description": "The type of applicant organization"
+    },
+    "totalBudget": {
+      "name": "totalBudget",
+      "fieldType": "string",
+      "value": { "field": "TotalEstimatedFunding" },
+      "description": "The total budget for the project"
+    },
+    "applicantFunding": {
+      "name": "applicantFunding",
+      "fieldType": "string",
+      "value": { "field": "ApplicantEstimatedFunding" },
+      "description": "Funding provided by the applicant"
+    },
+    "stateFunding": {
+      "name": "stateFunding",
+      "fieldType": "string",
+      "value": { "field": "StateEstimatedFunding" },
+      "description": "Funding provided by state sources"
+    },
+    "localFunding": {
+      "name": "localFunding",
+      "fieldType": "string",
+      "value": { "field": "LocalEstimatedFunding" },
+      "description": "Funding provided by local sources"
+    },
+    "otherFunding": {
+      "name": "otherFunding",
+      "fieldType": "string",
+      "value": { "field": "OtherEstimatedFunding" },
+      "description": "Funding from other sources"
+    },
+    "programIncome": {
+      "name": "programIncome",
+      "fieldType": "string",
+      "value": { "field": "ProgramIncomeEstimatedFunding" },
+      "description": "Program income funding"
+    },
+    "congressionalDistrictApplicant": {
+      "name": "congressionalDistrictApplicant",
+      "fieldType": "string",
+      "value": { "field": "CongressionalDistrictApplicant" },
+      "description": "Congressional district of the applicant"
+    },
+    "congressionalDistrictProgramProject": {
+      "name": "congressionalDistrictProgramProject",
+      "fieldType": "string",
+      "value": { "field": "CongressionalDistrictProgramProject" },
+      "description": "Congressional district of the program/project"
+    },
+    "stateReview": {
+      "name": "stateReview",
+      "fieldType": "string",
+      "value": { "field": "StateReview" },
+      "description": "Whether state review is required"
+    },
+    "delinquentFederalDebt": {
+      "name": "delinquentFederalDebt",
+      "fieldType": "string",
+      "value": { "field": "DelinquentFederalDebt" },
+      "description": "Whether applicant has delinquent federal debt"
+    },
+    "certificationAgree": {
+      "name": "certificationAgree",
+      "fieldType": "string",
+      "value": { "field": "CertificationAgree" },
+      "description": "Whether applicant agrees to certifications"
+    },
+    "aorSignature": {
+      "name": "aorSignature",
+      "fieldType": "string",
+      "value": { "field": "AORSignature" },
+      "description": "Authorized representative signature"
+    },
+    "dateSigned": {
+      "name": "dateSigned",
+      "fieldType": "string",
+      "value": { "field": "DateSigned" },
+      "description": "Date the application was signed"
+    }
   }
 }

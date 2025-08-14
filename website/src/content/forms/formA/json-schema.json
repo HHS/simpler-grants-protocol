@@ -11,17 +11,43 @@
       "required": ["firstName", "lastName"]
     },
     "projectTitle": { "type": "string", "title": "Project Title" },
+    "projectDescription": { "type": "string", "title": "Project Description" },
     "applicantType": {
       "type": "string",
       "title": "Applicant Type",
       "enum": ["Nonprofit", "For-profit", "Government", "Individual", "Other"]
     },
-    "requestedAmount": { "type": "number", "title": "Requested Amount (USD)" },
+    "requestedAmount": { "type": "string", "title": "Requested Amount (USD)" },
     "startDate": {
       "type": "string",
       "format": "date",
       "title": "Proposed Start Date"
-    }
+    },
+    "endDate": {
+      "type": "string",
+      "format": "date",
+      "title": "Proposed End Date"
+    },
+    "applicantTitle": { "type": "string", "title": "Applicant Title" },
+    "applicantEmail": {
+      "type": "string",
+      "format": "email",
+      "title": "Applicant Email"
+    },
+    "applicantPhone": { "type": "string", "title": "Applicant Phone" },
+    "organizationName": { "type": "string", "title": "Organization Name" }
   },
-  "required": ["applicantName", "projectTitle"]
+  "required": [
+    "applicantName",
+    "projectTitle",
+    "projectDescription",
+    "applicantType",
+    "requestedAmount",
+    "startDate",
+    "endDate",
+    "applicantTitle",
+    "applicantEmail",
+    "applicantPhone",
+    "organizationName"
+  ]
 }

@@ -1,18 +1,46 @@
 {
-  "FirstName": { "field": "pointOfContact.firstName" },
-  "MiddleName": { "field": "pointOfContact.middleName" },
-  "LastName": { "field": "pointOfContact.lastName" },
-  "AuthorizedRepresentativeEmail": { "field": "pointOfContact.email" },
-  "AuthorizedRepresentativePhoneNumber": { "field": "pointOfContact.phone" },
-  "Street1": { "field": "pointOfContact.address.street1" },
-  "Street2": { "field": "pointOfContact.address.street2" },
-  "City": { "field": "pointOfContact.address.city" },
-  "State": { "field": "pointOfContact.address.state" },
-  "ZipPostalCode": { "field": "pointOfContact.address.zip" },
-  "Country": { "field": "pointOfContact.address.country" },
-  "ProjectTitle": { "field": "project.title" },
-  "ProjectDescription": { "field": "project.description" },
-  "CFDANumber": { "field": "project.amountRequested" },
-  "FundingPeriodStartDate": { "field": "project.startDate" },
-  "FundingPeriodEndDate": { "field": "project.endDate" }
+  "FederalAgency": { "field": "opportunity.customFields.federalAgency.value" },
+  "CFDANumber": { "field": "opportunity.customFields.cfdaNumber.value" },
+  "CFDATitle": { "field": "opportunity.customFields.cfdaTitle.value" },
+  "OpportunityID": { "field": "opportunity.id" },
+  "OpportunityTitle": { "field": "opportunity.title" },
+  "PrefixName": { "field": "contacts.primary.name.prefix" },
+  "FirstName": { "field": "contacts.primary.name.firstName" },
+  "MiddleName": { "field": "contacts.primary.name.middleName" },
+  "LastName": { "field": "contacts.primary.name.lastName" },
+  "Suffix": { "field": "contacts.primary.name.suffix" },
+  "AuthorizedRepresentativePhoneNumber": {
+    "field": "contacts.primary.phones.primary.number"
+  },
+  "EveningPhone": {
+    "field": "contacts.primary.phones.otherPhones.evening.number"
+  },
+  "AuthorizedRepresentativeFax": {
+    "field": "contacts.primary.phones.otherPhones.fax.number"
+  },
+  "AuthorizedRepresentativeEmail": {
+    "field": "contacts.primary.emails.primary"
+  },
+  "Street1": { "field": "contacts.primary.addresses.primary.street1" },
+  "Street2": { "field": "contacts.primary.addresses.primary.street2" },
+  "City": { "field": "contacts.primary.addresses.primary.city" },
+  "State": { "field": "contacts.primary.addresses.primary.stateOrProvince" },
+  "Country": { "field": "contacts.primary.addresses.primary.country" },
+  "ZipPostalCode": { "field": "contacts.primary.addresses.primary.postalCode" },
+  "citizenship": { "field": "customFields.citizenship.value" },
+  "AlienRegistrationNumber": {
+    "field": "customFields.alienRegistrationNumber.value"
+  },
+  "CountryofOrigin": { "field": "customFields.countryOfOrigin.value" },
+  "VisitDate": { "field": "customFields.visitDate.value" },
+  "CongressionalDistrictApplicant": {
+    "field": "customFields.congressionalDistrictApplicant.value"
+  },
+  "ProjectTitle": { "field": "title" },
+  "ProjectDescription": { "field": "description" },
+  "FundingPeriodStartDate": { "field": "projectTimeline.startDate.date" },
+  "FundingPeriodEndDate": { "field": "projectTimeline.endDate.date" },
+  "ApplicationCertification": {
+    "field": "customFields.applicationCertification.value"
+  }
 }

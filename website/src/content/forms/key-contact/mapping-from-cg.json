@@ -1,12 +1,13 @@
 {
-  "OrganizationName": { "field": "organization.name" },
+  "OrganizationName": { "field": "organizations.primary.name" },
   "contacts": {
-    "FirstName": { "field": "pointOfContact.firstName" },
-    "LastName": { "field": "pointOfContact.lastName" },
-    "Street1": { "field": "pointOfContact.address.street1" },
-    "City": { "field": "pointOfContact.address.city" },
-    "Country": { "field": "pointOfContact.address.country" },
-    "PhoneNumber": { "field": "pointOfContact.phoneNumber" },
-    "Email": { "field": "pointOfContact.email" }
+    "FirstName": { "field": "contacts.primary.name.firstName" },
+    "LastName": { "field": "contacts.primary.name.lastName" },
+    "Street1": { "field": "contacts.primary.addresses.primary.street1" },
+    "City": { "field": "contacts.primary.addresses.primary.city" },
+    "Country": { "field": "contacts.primary.addresses.primary.country" },
+    "PhoneNumber": { "field": "contacts.primary.phones.primary.number" },
+    "Email": { "field": "contacts.primary.emails.primary" },
+    "ProjectRole": { "field": "customFields.projectRole.value" }
   }
 }

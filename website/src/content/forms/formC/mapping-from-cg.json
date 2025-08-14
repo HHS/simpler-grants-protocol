@@ -1,25 +1,15 @@
 {
-  "projectTitle": { "field": "project.title" },
-  "orgType": {
-    "switch": {
-      "field": "project.applicantType",
-      "case": {
-        "nonprofit-general": "Nonprofit",
-        "nonprofit-educational": "Church",
-        "business-small": "Small Business",
-        "business-general": "Not Listed",
-        "government-tribal": "Tribal Government",
-        "government-state": "Local Government",
-        "government-local": "Local Government",
-        "government-general": "Local Government",
-        "individual": "Individual",
-        "custom": "Not Listed"
-      },
-      "default": "custom"
-    }
+  "community_project_name": { "field": "title" },
+  "community_project_description": { "field": "description" },
+  "funding_requested": { "field": "amountRequested.amount" },
+  "project_start": { "field": "projectTimeline.startDate.date" },
+  "project_end": { "field": "projectTimeline.endDate.date" },
+  "community_leader": {
+    "first_name": { "field": "contacts.primary.name.firstName" },
+    "last_name": { "field": "contacts.primary.name.lastName" },
+    "title": { "field": "contacts.primary.title" },
+    "email": { "field": "contacts.primary.emails.primary" },
+    "phone": { "field": "contacts.primary.phones.primary.number" }
   },
-  "contactFirstName": { "field": "pointOfContact.firstName" },
-  "contactLastName": { "field": "pointOfContact.lastName" },
-  "fundingNeeded": { "field": "project.amountRequested" },
-  "startPeriod": { "field": "project.startDate" }
+  "community_organization": { "field": "organizations.primary.name" }
 }

@@ -1,11 +1,15 @@
 {
-  "projectDetails": {
-    "title": "Project D",
-    "fundingNeeded": 80000,
-    "startDate": "2025-06-01"
+  "education_program_name": "Project D",
+  "education_program_description": "Project D",
+  "grant_amount": "80000",
+  "program_start": "2025-06-01",
+  "program_end": "2026-06-01",
+  "program_director": {
+    "first_name": "Diana",
+    "last_name": "Darby",
+    "title": "Program Director",
+    "email": "email@example.edu",
+    "phone": "555-111-2222"
   },
-  "contact": {
-    "givenName": "Diana",
-    "familyName": "Darby"
-  }
+  "educational_institution": "State University"
 }

@@ -19,14 +19,13 @@
     {
       "type": "Group",
       "label": "3. Date Received",
-      "name": "DateReived",
+      "name": "DateReceived",
       "elements": [
         {
           "type": "Control",
-          "schema": {
-            "title": "Date received",
-            "type": "null",
-            "description": "Completed by Grants.gov upon submission."
+          "scope": "#/properties/DateReceived",
+          "options": {
+            "readonly": true
           }
         }
       ]

@@ -1,26 +1,51 @@
 {
-  "pointOfContact": {
-    "firstName": { "field": "principal_investigator.first_name" },
-    "middleName": { "field": "principal_investigator.middle_name" },
-    "lastName": { "field": "principal_investigator.last_name" }
+  "title": { "field": "project_name" },
+  "description": { "field": "project_description" },
+  "amountRequested": {
+    "amount": { "field": "budget" },
+    "currency": "USD"
   },
-  "project": {
-    "title": { "field": "project_name" },
-    "applicantType": {
-      "switch": {
-        "field": "institution_type",
-        "case": {
-          "University": "nonprofit-educational",
-          "Nonprofit": "nonprofit-general",
-          "Corporation": "business-general",
-          "Government": "government-general",
-          "Independent Researcher": "individual",
-          "Not Listed": "custom"
-        },
-        "default": "custom"
-      }
+  "projectTimeline": {
+    "startDate": {
+      "name": "Project Start Date",
+      "eventType": "singleDate",
+      "date": { "field": "kickoff" }
     },
-    "amountRequested": { "field": "budget" },
-    "startDate": { "field": "kickoff" }
+    "endDate": {
+      "name": "Project End Date",
+      "eventType": "singleDate",
+      "date": { "field": "completion" }
+    }
+  },
+  "contacts": {
+    "primary": {
+      "name": {
+        "firstName": { "field": "principal_investigator.first_name" },
+        "middleName": { "field": "principal_investigator.middle_name" },
+        "lastName": { "field": "principal_investigator.last_name" }
+      },
+      "title": { "field": "principal_investigator.title" },
+      "emails": {
+        "primary": { "field": "principal_investigator.email" }
+      },
+      "phones": {
+        "primary": {
+          "countryCode": "+1",
+          "number": { "field": "principal_investigator.phone" },
+          "isMobile": false
+        }
+      }
+    }
+  },
+  "organizations": {
+    "primary": {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": { "field": "institution_name" },
+      "orgType": {
+        "term": { "field": "institution_type" },
+        "class": "Organization types",
+        "code": "UC000000"
+      }
+    }
   }
 }
