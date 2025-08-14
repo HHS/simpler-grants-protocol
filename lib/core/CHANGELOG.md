@@ -1,5 +1,11 @@
 # @common-grants/core
 
+## 0.2.2
+
+### Patch Changes
+
+- 300e191: Fix bug in phone number validation logic
+
 ## 0.2.1
 
 ### Patch Changes

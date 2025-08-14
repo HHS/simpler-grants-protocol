@@ -1,5 +1,12 @@
 # @common-grants/cli
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [300e191]
+  - @common-grants/core@0.2.2
+
 ## 0.2.0
 
 ### Minor Changes
