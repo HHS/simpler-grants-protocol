@@ -110,7 +110,7 @@ Because experimental routes and operations are considered unstable, breaking cha
 
 ### Schemas
 
-The CommonGrants protocol defines the following schemas that are used to represent data in CommonGrants APIs. These schemas are organized into following categories:
+The CommonGrants protocol defines the following schemas that are used to represent data in CommonGrants APIs. The schemas are loosely organized into the following categories:
 
 - [Types](#base-types): Foundational data types, like strings, numbers, etc.
 - [Fields](#core-fields): Standardized fields that are reused across models.
