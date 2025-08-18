@@ -121,11 +121,15 @@ The CommonGrants protocol defines the following schemas that are used to represe
 
 **String types**
 
-| Type                                    | Description                      |
-| --------------------------------------- | -------------------------------- |
-| [string](/protocol/types/string#string) | A sequence of characters         |
-| [uuid](/protocol/types/string#uuid)     | A universally unique identifier  |
-| [url](/protocol/types/string#url)       | A Uniform Resource Locator (URL) |
+| Type                                                  | Description                                                                        |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [string](/protocol/types/string#string)               | A sequence of characters                                                           |
+| [uuid](/protocol/types/string#uuid)                   | A universally unique identifier                                                    |
+| [url](/protocol/types/string#url)                     | A Uniform Resource Locator (URL)                                                   |
+| [email](/protocol/types/string#email)                 | An email address                                                                   |
+| [employerTaxId](/protocol/types/string#employertaxid) | An Employer Identification Number (EIN)                                            |
+| [samUEI](/protocol/types/string#samuei)               | A Unique Entity Identifier (UEI) assigned by the System for Award Management (SAM) |
+| [duns](/protocol/types/string#duns)                   | A Data Universal Numbering System (DUNS) number                                    |
 
 **Numeric types**
 
@@ -143,6 +147,7 @@ The CommonGrants protocol defines the following schemas that are used to represe
 | [isoDate](/protocol/types/date#isodate)               | Calendar date in ISO 8601 format (YYYY-MM-DD)                         |
 | [utcDateTime](/protocol/types/date#utcdatetime)       | Datetime with UTC timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ssZ)  |
 | [offsetDateTime](/protocol/types/date#offsetdatetime) | Datetime with timezone in ISO 8601 format (YYYY-MM-DDThh:mm:ss±hh:mm) |
+| [calendarYear](/protocol/types/date#calendaryear)     | A calendar year in the format YYYY                                    |
 
 **Other types**
 
@@ -164,6 +169,11 @@ The CommonGrants protocol defines the following fields that are reused across mo
 | [Event](/protocol/fields/event)              | A description of an event with an associated date |
 | [CustomField](/protocol/fields/custom-field) | A model for defining custom fields on a record    |
 | [SystemMetadata](/protocol/fields/metadata)  | System-managed metadata for records               |
+| [Address](/protocol/fields/address)          | A physical address                                |
+| [File](/protocol/fields/file)                | A file attachment                                 |
+| [Name](/protocol/fields/name)                | A person's name                                   |
+| [Phone](/protocol/fields/phone)              | A phone number                                    |
+| [PCS term](/protocol/fields/pcs)             | A Philanthropy Classification System (PCS) term   |
 
 #### Opportunity models
 
@@ -245,7 +255,7 @@ While omitted for brevity in the following table, all protocol-defined routes MU
 | Route                        | Status   | Description                                                      |
 | ---------------------------- | -------- | ---------------------------------------------------------------- |
 | `GET /opportunities`         | Required | Get a paginated list of opportunities sorted by `lastModifiedAt` |
-| `GET /opportunities/{id}`    | Required | View details about a specific opportunity                        |
+| `GET /opportunities/{oppId}` | Required | View details about a specific opportunity                        |
 | `POST /opportunities/search` | Optional | Search and filter funding opportunities                          |
 
 #### Competition routes
