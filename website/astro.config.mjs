@@ -138,10 +138,6 @@ export default defineConfig({
           label: "Governance",
           items: [
             {
-              label: "Request for Comments",
-              link: "governance/rfc",
-            },
-            {
               label: "Recording decisions",
               link: "governance/decisions",
             },
@@ -149,6 +145,11 @@ export default defineConfig({
               label: "ADRs",
               collapsed: true,
               autogenerate: { directory: "governance/adr" },
+            },
+            {
+              label: "RFCs",
+              collapsed: true,
+              autogenerate: { directory: "governance/rfc" },
             },
           ],
         },
