@@ -1,0 +1,65 @@
+---
+title: "Requests for Comments (RFCs)"
+description: "Requests for Comments (RFCs)"
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+:::tip[Looking to provide input?]
+Skip to the list of [active RFCs](/governance/rfc#active-rfcs) below to see which RFCs are currently accepting comments.
+:::
+
+## About RFCs
+
+RFCs (Requests for Comments) are a collaborative approach to discussing and managing changes to the CommonGrants protocol with the community. Most RFCs will have both a dedicated RFC page that outlines the feedback we're requesting and a corresponding Discourse topic to manage public comments.
+
+### When are RFCs used?
+
+CommonGrants uses RFCs to gather feedback on changes to the protocol or how it's managed. Examples of RFC topics include:
+
+- **Protocol changes:** Adding, updating, or removing fields, models, or routes
+- **Management changes:**
+  - Modifying the versioning strategy
+  - Updating how compliance is defined and measured
+  - Changing the governance model
+
+### RFC process
+
+There are two types of RFCs, each with a slightly different process:
+
+#### CommonGrants-driven RFCs
+These are introduced by the CommonGrants team to gather feedback on changes in recent releases:
+
+1. The CommonGrants team publishes a new release or pre-release of the protocol
+2. The team creates an RFC outlining the changes for which feedback is requested
+3. The community reviews the RFC and provides feedback in the corresponding Discourse topic
+4. The team reviews feedback and incorporates it into the next release
+
+#### Community-driven RFCs
+These are proposed by community members requesting changes in upcoming releases:
+
+1. Community members use the RFC issue template to propose a change
+2. The CommonGrants team may meet with the author to clarify and refine the proposal
+3. The team translates the proposal into an RFC open for public comment
+4. The community reviews the RFC and provides feedback in the corresponding Discourse topic
+5. After the comment period ends, the team reviews comments and decides whether to incorporate the proposed change in a future release
+
+## Active RFCs
+
+<CardGrid>
+  <LinkCard
+    title="RFC-0002"
+    description="Apply models and routes added in CommonGrants v0.2.0"
+    href="/governance/rfc/0002"
+  />
+</CardGrid>
+
+## Past RFCs
+
+<CardGrid>
+  <LinkCard
+    title="RFC-0001"
+    description="CommonGrants v0.1.0 draft"
+    href="/governance/rfc/0001"
+  />
+</CardGrid>
