@@ -120,11 +120,6 @@ class PydanticToMarshmallowConverter:
                 or "fields.Nested(" in marshmallow_field
             )
 
-            # Check if this is a list with nested field
-            is_list_with_nested = marshmallow_field.startswith(
-                "fields.List(fields.Nested("
-            )
-
             # Check if this is a list field (already has closing parenthesis)
             is_list_field = marshmallow_field.startswith(
                 "fields.List("
