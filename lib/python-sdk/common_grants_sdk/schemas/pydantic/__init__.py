@@ -4,8 +4,12 @@ from .base import CommonGrantsBaseModel
 from .fields import (
     CustomField,
     CustomFieldType,
+    DateRangeEvent,
     Event,
+    EventType,
     Money,
+    OtherEvent,
+    SingleDateEvent,
     SystemMetadata,
 )
 from .filters import (
@@ -82,8 +86,12 @@ __all__ = [
     # Fields
     "CustomField",
     "CustomFieldType",
+    "DateRangeEvent",
     "Event",
+    "EventType",
     "Money",
+    "OtherEvent",
+    "SingleDateEvent",
     "SystemMetadata",
     # Filters
     "ArrayOperator",
