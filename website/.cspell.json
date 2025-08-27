@@ -21,7 +21,8 @@
     "transpiles",
     "tspconfig",
     "typespec",
-    "widal001"
+    "widal001",
+    "RJSF"
   ],
   "ignoreWords": [
     "opblock",
