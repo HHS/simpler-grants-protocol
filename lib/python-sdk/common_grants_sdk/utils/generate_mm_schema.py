@@ -16,12 +16,12 @@ class PydanticToMarshmallowConverter:
 
     # Mapping of Pydantic types to Marshmallow field types
     TYPE_MAPPING = {
-        "str": "String",
+        "str": "Raw",
         "int": "Integer", 
         "float": "Decimal",
         "bool": "Boolean",
         "UUID": "UUID",
-        "datetime": "DateTime",
+        "datetime": "Raw",
         "date": "Date",
         "time": "Time",
         "dict": "Dict",
@@ -30,13 +30,13 @@ class PydanticToMarshmallowConverter:
         "Optional": "Optional",
         "Union": "Union",
         "Any": "Raw",
-        "HttpUrl": "String",
-        "EmailStr": "String",
-        "AnyUrl": "String",
-        "DecimalString": "String",
+        "HttpUrl": "Raw",
+        "EmailStr": "Raw",
+        "AnyUrl": "Raw",
+        "DecimalString": "Raw",
         "ISODate": "Date",
         "ISOTime": "Time",
-        "UTCDateTime": "DateTime",
+        "UTCDateTime": "Raw",
     }
 
     # Types that should be treated as basic types (not nested schemas)
@@ -244,7 +244,7 @@ class PydanticToMarshmallowConverter:
                     if in_degree[dep_name] == 0:
                         queue.append(dep_name)
         
-        # Handle any remaining models (these might be circular dependencies or just not processed)
+        # Handle any remaining models
         remaining = [name for name in self.models if name not in sorted_models]
         if remaining:
             print(f"Warning: Models with unresolved dependencies: {remaining}")
@@ -273,7 +273,7 @@ class PydanticToMarshmallowConverter:
             class_name = model_class.__name__
             fields = getattr(model_class, 'model_fields', {})
             
-            schema_lines = [f"class {class_name}Schema(Schema):"]
+            schema_lines = [f"class CG{class_name}Schema(Schema):"]
             
             for field_name, field_info in fields.items():
                 try:
@@ -284,27 +284,21 @@ class PydanticToMarshmallowConverter:
                     # Handle field metadata
                     metadata = self._extract_field_metadata(field_info)
                     
-                    # Handle required fields
-                    is_required = not getattr(field_info, 'is_required', lambda: True)()
+                    # Handle required fields - check if field is optional
+                    is_optional = self._is_field_optional(field_info)
                     
                     # Build field definition
-                    if metadata or not is_required:
-                        if not is_required:
-                            metadata_parts = [metadata] if metadata else []
-                            metadata_parts.append("allow_none=True")
-                            # Check if this is a nested field or list field that already has parentheses
-                            if "fields.Nested(" in marshmallow_field or "fields.List(" in marshmallow_field:
-                                # For nested/list fields, add metadata to the existing constructor
-                                field_def = f"    {field_name} = {marshmallow_field[:-1]}, {', '.join(metadata_parts)})"
-                            else:
-                                field_def = f"    {field_name} = {marshmallow_field}({', '.join(metadata_parts)})"
+                    metadata_parts = [metadata] if metadata else []
+                    if is_optional:
+                        metadata_parts.append("allow_none=True")
+                    
+                    if metadata_parts:
+                        # Check if this is a nested field or list field that already has parentheses
+                        if "fields.Nested(" in marshmallow_field or "fields.List(" in marshmallow_field:
+                            # For nested/list fields, add metadata to the existing constructor
+                            field_def = f"    {field_name} = {marshmallow_field[:-1]}, {', '.join(metadata_parts)})"
                         else:
-                            # Check if this is a nested field or list field that already has parentheses
-                            if "fields.Nested(" in marshmallow_field or "fields.List(" in marshmallow_field:
-                                # For nested/list fields, add metadata to the existing constructor
-                                field_def = f"    {field_name} = {marshmallow_field[:-1]}, {metadata})"
-                            else:
-                                field_def = f"    {field_name} = {marshmallow_field}({metadata})"
+                            field_def = f"    {field_name} = {marshmallow_field}({', '.join(metadata_parts)})"
                     else:
                         # Check if this is a nested field or list field that already has parentheses
                         if "fields.Nested(" in marshmallow_field or "fields.List(" in marshmallow_field:
@@ -378,7 +372,7 @@ class PydanticToMarshmallowConverter:
             if annotation in self.TYPE_MAPPING:
                 return f"fields.{self.TYPE_MAPPING[annotation]}"
             else:
-                return f"fields.Nested('{annotation}Schema')"
+                return f"fields.Nested('CG{annotation}Schema')"
         
         # Handle type annotations
         if hasattr(annotation, '__origin__'):
@@ -400,7 +394,7 @@ class PydanticToMarshmallowConverter:
                         if inner_type in self.TYPE_MAPPING:
                             return f"fields.List(fields.{self.TYPE_MAPPING[inner_type]})"
                         else:
-                            return f"fields.List(fields.Nested('{inner_type}Schema'))"
+                            return f"fields.List(fields.Nested('CG{inner_type}Schema'))"
                 else:
                     return "fields.List(fields.Raw)"
             elif origin is Union:
@@ -418,7 +412,7 @@ class PydanticToMarshmallowConverter:
                                 if inner_type in self.TYPE_MAPPING:
                                     return f"fields.List(fields.{self.TYPE_MAPPING[inner_type]})"
                                 else:
-                                    return f"fields.List(fields.Nested('{inner_type}Schema'))"
+                                    return f"fields.List(fields.Nested('CG{inner_type}Schema'))"
                             else:
                                 return "fields.List(fields.Raw)"
                         else:
@@ -430,7 +424,7 @@ class PydanticToMarshmallowConverter:
                         if inner_type in self.TYPE_MAPPING:
                             return f"fields.{self.TYPE_MAPPING[inner_type]}"
                         else:
-                            return f"fields.Nested('{inner_type}Schema')"
+                            return f"fields.Nested('CG{inner_type}Schema')"
                 else:
                     # Multiple non-None types in Union - use Raw
                     return "fields.Raw"
@@ -456,7 +450,47 @@ class PydanticToMarshmallowConverter:
                 if self._is_generic_type(annotation):
                     return "fields.Raw"
                 else:
-                    return f"fields.Nested('{type_name}Schema')"
+                    return f"fields.Nested('CG{type_name}Schema')"
+
+    def _is_field_optional(self, field_info) -> bool:
+        """Check if a field is optional (can be None)."""
+        # Check if field has a default value
+        if hasattr(field_info, 'default') and field_info.default is not None:
+            return True
+        
+        # Check if field has a default_factory
+        if hasattr(field_info, 'default_factory') and field_info.default_factory is not None:
+            return True
+        
+        # Check if the annotation is Optional or Union with None
+        if hasattr(field_info, 'annotation') and field_info.annotation is not None:
+            annotation = field_info.annotation
+            
+            # Handle string annotations
+            if isinstance(annotation, str):
+                return annotation.startswith("Optional[") or "None" in annotation
+            
+            # Handle type annotations
+            if hasattr(annotation, '__origin__'):
+                origin = annotation.__origin__
+                args = getattr(annotation, '__args__', None)
+                
+                if origin is Union and args:
+                    # Check if None is in the Union
+                    return type(None) in args
+                elif origin is list or origin is List:
+                    # List fields are generally optional
+                    return True
+        
+        # For fields that might be None, be more permissive
+        # Check if the field type suggests it could be None
+        field_type = self._get_field_type_direct(field_info)
+        if field_type in ["str", "datetime", "date", "time", "HttpUrl", "AnyUrl"]:
+            # These types are often optional in practice
+            return True
+        
+        # Default to required
+        return False
 
     def _extract_field_metadata(self, field_info) -> str:
         """Extract metadata from a Pydantic field."""
@@ -471,6 +505,8 @@ class PydanticToMarshmallowConverter:
             metadata_parts.append(f'data_key="{field_info.alias}"')
         
         return ", ".join(metadata_parts)
+
+
 
     def generate_marshmallow_file(self) -> str:
         """Generate the complete marshmallow file content."""

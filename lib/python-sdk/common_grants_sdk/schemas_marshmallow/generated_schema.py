@@ -2,243 +2,243 @@
 
 from marshmallow import Schema, fields
 
-class CustomFieldSchema(Schema):
-    name = fields.String(description="Name of the custom field", allow_none=True)
+class CGCustomFieldSchema(Schema):
+    name = fields.Raw(description="Name of the custom field", allow_none=True)
     field_type = fields.String(description="The JSON schema type to use when de-serializing the `value` field", data_key="fieldType", allow_none=True)
-    schema_url = fields.String(description="Link to the full JSON schema for this custom field", data_key="schema")
+    schema_url = fields.Raw(description="Link to the full JSON schema for this custom field", data_key="schema", allow_none=True)
     value = fields.Raw(description="Value of the custom field", allow_none=True)
-    description = fields.String(description="Description of the custom field's purpose")
+    description = fields.Raw(description="Description of the custom field's purpose", allow_none=True)
 
-class DateRangeEventSchema(Schema):
-    name = fields.String(description="Human-readable name of the event (e.g., 'Application posted', 'Question deadline')", allow_none=True)
-    event_type = fields.String(data_key="eventType")
-    description = fields.String(description="Description of what this event represents")
+class CGDateRangeEventSchema(Schema):
+    name = fields.Raw(description="Human-readable name of the event (e.g., 'Application posted', 'Question deadline')", allow_none=True)
+    event_type = fields.String(data_key="eventType", allow_none=True)
+    description = fields.Raw(description="Description of what this event represents", allow_none=True)
     start_date = fields.Date(description="Start date of the event in ISO 8601 format: YYYY-MM-DD", data_key="startDate", allow_none=True)
-    start_time = fields.Time(description="Start time of the event in ISO 8601 format: HH:MM:SS", data_key="startTime")
+    start_time = fields.Time(description="Start time of the event in ISO 8601 format: HH:MM:SS", data_key="startTime", allow_none=True)
     end_date = fields.Date(description="End date of the event in ISO 8601 format: YYYY-MM-DD", data_key="endDate", allow_none=True)
-    end_time = fields.Time(description="End time of the event in ISO 8601 format: HH:MM:SS", data_key="endTime")
+    end_time = fields.Time(description="End time of the event in ISO 8601 format: HH:MM:SS", data_key="endTime", allow_none=True)
 
-class OtherEventSchema(Schema):
-    name = fields.String(description="Human-readable name of the event (e.g., 'Application posted', 'Question deadline')", allow_none=True)
-    event_type = fields.String(data_key="eventType")
-    description = fields.String(description="Description of what this event represents")
-    details = fields.String(description="Details of the event's timeline (e.g. 'Every other Tuesday')")
+class CGOtherEventSchema(Schema):
+    name = fields.Raw(description="Human-readable name of the event (e.g., 'Application posted', 'Question deadline')", allow_none=True)
+    event_type = fields.String(data_key="eventType", allow_none=True)
+    description = fields.Raw(description="Description of what this event represents", allow_none=True)
+    details = fields.Raw(description="Details of the event's timeline (e.g. 'Every other Tuesday')", allow_none=True)
 
-class SingleDateEventSchema(Schema):
-    name = fields.String(description="Human-readable name of the event (e.g., 'Application posted', 'Question deadline')", allow_none=True)
-    event_type = fields.String(data_key="eventType")
-    description = fields.String(description="Description of what this event represents")
+class CGSingleDateEventSchema(Schema):
+    name = fields.Raw(description="Human-readable name of the event (e.g., 'Application posted', 'Question deadline')", allow_none=True)
+    event_type = fields.String(data_key="eventType", allow_none=True)
+    description = fields.Raw(description="Description of what this event represents", allow_none=True)
     date = fields.Date(description="Date of the event in ISO 8601 format: YYYY-MM-DD", allow_none=True)
-    time = fields.Time(description="Time of the event in ISO 8601 format: HH:MM:SS")
+    time = fields.Time(description="Time of the event in ISO 8601 format: HH:MM:SS", allow_none=True)
 
-class SystemMetadataSchema(Schema):
-    created_at = fields.DateTime(description="The timestamp (in UTC) at which the record was created.", data_key="createdAt", allow_none=True)
-    last_modified_at = fields.DateTime(description="The timestamp (in UTC) at which the record was last modified.", data_key="lastModifiedAt", allow_none=True)
+class CGSystemMetadataSchema(Schema):
+    created_at = fields.Raw(description="The timestamp (in UTC) at which the record was created.", data_key="createdAt", allow_none=True)
+    last_modified_at = fields.Raw(description="The timestamp (in UTC) at which the record was last modified.", data_key="lastModifiedAt", allow_none=True)
 
-class DateComparisonFilterSchema(Schema):
+class CGDateComparisonFilterSchema(Schema):
     operator = fields.String(description="The operator to apply to the filter value", allow_none=True)
     value = fields.Date(description="The date value to compare against", allow_none=True)
 
-class DefaultFilterSchema(Schema):
+class CGDefaultFilterSchema(Schema):
     operator = fields.Raw(description="The operator to apply to the filter value", allow_none=True)
     value = fields.Raw(description="The value to use for the filter operation", allow_none=True)
 
-class MoneyComparisonFilterSchema(Schema):
+class CGMoneyComparisonFilterSchema(Schema):
     operator = fields.String(description="The operator to apply to the filter value", allow_none=True)
-    value = fields.Nested('MoneySchema', description="The money value to compare against", allow_none=True)
+    value = fields.Nested('CGMoneySchema', description="The money value to compare against", allow_none=True)
 
-class NumberArrayFilterSchema(Schema):
+class CGNumberArrayFilterSchema(Schema):
     operator = fields.String(description="The operator to apply to the filter value", allow_none=True)
     value = fields.List(fields.Raw, description="The array of numeric values", allow_none=True)
 
-class NumberComparisonFilterSchema(Schema):
+class CGNumberComparisonFilterSchema(Schema):
     operator = fields.String(description="The comparison operator to apply to the filter value", allow_none=True)
     value = fields.Raw(description="The numeric value to compare against", allow_none=True)
 
-class NumberRangeFilterSchema(Schema):
+class CGNumberRangeFilterSchema(Schema):
     operator = fields.String(description="The operator to apply to the filter value", allow_none=True)
-    value = fields.Nested('NumberRangeSchema', description="The numeric range value", allow_none=True)
+    value = fields.Nested('CGNumberRangeSchema', description="The numeric range value", allow_none=True)
 
-class OppDefaultFiltersSchema(Schema):
-    status = fields.Nested('StringArrayFilterSchema', description="`status.value` matches one of the following values")
-    close_date_range = fields.Nested('DateRangeFilterSchema', description="`keyDates.closeDate` is between the given range", data_key="closeDateRange")
-    total_funding_available_range = fields.Nested('MoneyRangeFilterSchema', description="`funding.totalAmountAvailable` is between the given range", data_key="totalFundingAvailableRange")
-    min_award_amount_range = fields.Nested('MoneyRangeFilterSchema', description="`funding.minAwardAmount` is between the given range", data_key="minAwardAmountRange")
-    max_award_amount_range = fields.Nested('MoneyRangeFilterSchema', description="`funding.maxAwardAmount` is between the given range", data_key="maxAwardAmountRange")
+class CGOppDefaultFiltersSchema(Schema):
+    status = fields.Nested('CGStringArrayFilterSchema', description="`status.value` matches one of the following values", allow_none=True)
+    close_date_range = fields.Nested('CGDateRangeFilterSchema', description="`keyDates.closeDate` is between the given range", data_key="closeDateRange", allow_none=True)
+    total_funding_available_range = fields.Nested('CGMoneyRangeFilterSchema', description="`funding.totalAmountAvailable` is between the given range", data_key="totalFundingAvailableRange", allow_none=True)
+    min_award_amount_range = fields.Nested('CGMoneyRangeFilterSchema', description="`funding.minAwardAmount` is between the given range", data_key="minAwardAmountRange", allow_none=True)
+    max_award_amount_range = fields.Nested('CGMoneyRangeFilterSchema', description="`funding.maxAwardAmount` is between the given range", data_key="maxAwardAmountRange", allow_none=True)
 
-class StringComparisonFilterSchema(Schema):
+class CGStringComparisonFilterSchema(Schema):
     operator = fields.Raw(description="The operator to apply to the filter value", allow_none=True)
-    value = fields.String(description="The string value to compare against", allow_none=True)
+    value = fields.Raw(description="The string value to compare against", allow_none=True)
 
-class PaginatedBaseSchema(Schema):
-    page = fields.Integer(description="The page number to retrieve")
-    page_size = fields.Integer(description="The number of items per page", data_key="pageSize")
+class CGPaginatedBaseSchema(Schema):
+    page = fields.Integer(description="The page number to retrieve", allow_none=True)
+    page_size = fields.Integer(description="The number of items per page", data_key="pageSize", allow_none=True)
 
-class PaginatedQueryParamsSchema(Schema):
-    page = fields.Integer(description="The page number to retrieve")
-    page_size = fields.Integer(description="The number of items per page", data_key="pageSize")
+class CGPaginatedQueryParamsSchema(Schema):
+    page = fields.Integer(description="The page number to retrieve", allow_none=True)
+    page_size = fields.Integer(description="The number of items per page", data_key="pageSize", allow_none=True)
 
-class OpportunitySearchRequestSchema(Schema):
-    search = fields.String(description="Search query string")
-    filters = fields.Nested('OppFiltersSchema', description="Filters to apply to the opportunity search")
-    sorting = fields.Nested('OppSortingSchema')
-    pagination = fields.Nested('PaginatedBodyParamsSchema')
+class CGOpportunitySearchRequestSchema(Schema):
+    search = fields.Raw(description="Search query string", allow_none=True)
+    filters = fields.Nested('CGOppFiltersSchema', description="Filters to apply to the opportunity search", allow_none=True)
+    sorting = fields.Nested('CGOppSortingSchema', allow_none=True)
+    pagination = fields.Nested('CGPaginatedBodyParamsSchema', allow_none=True)
 
-class DefaultResponseSchema(Schema):
+class CGDefaultResponseSchema(Schema):
     status = fields.Integer(description="The HTTP status code", allow_none=True)
-    message = fields.String(description="The message", allow_none=True)
+    message = fields.Raw(description="The message", allow_none=True)
 
-class ErrorSchema(Schema):
-    status = fields.Integer(description="The HTTP status code")
-    message = fields.String(description="Human-readable error message")
+class CGErrorSchema(Schema):
+    status = fields.Integer(description="The HTTP status code", allow_none=True)
+    message = fields.Raw(description="Human-readable error message", allow_none=True)
     errors = fields.List(fields.Raw, description="List of errors", allow_none=True)
 
-class FilteredSchema(Schema):
-    status = fields.Integer(description="The HTTP status code")
-    message = fields.String(description="The message")
-    items = fields.List(fields.Nested('ItemsTSchema'), description="Items from the current page", allow_none=True)
-    pagination_info = fields.Nested('PaginatedResultsInfoSchema', description="Details about the paginated results", data_key="paginationInfo", allow_none=True)
-    sort_info = fields.Nested('SortedResultsInfoSchema', description="The sort order of the items", data_key="sortInfo", allow_none=True)
-    filter_info = fields.Nested('FilterInfoSchema', description="The filters applied to the response items", data_key="filterInfo", allow_none=True)
-
-class OpportunitiesListResponseSchema(Schema):
+class CGFilteredSchema(Schema):
     status = fields.Integer(description="The HTTP status code", allow_none=True)
-    message = fields.String(description="The message", allow_none=True)
-    items = fields.List(fields.Nested('OpportunityBaseSchema'), description="The list of opportunities", allow_none=True)
-    pagination_info = fields.Nested('PaginatedResultsInfoSchema', description="The pagination details", data_key="paginationInfo", allow_none=True)
+    message = fields.Raw(description="The message", allow_none=True)
+    items = fields.List(fields.Nested('CGItemsTSchema'), description="Items from the current page", allow_none=True)
+    pagination_info = fields.Nested('CGPaginatedResultsInfoSchema', description="Details about the paginated results", data_key="paginationInfo", allow_none=True)
+    sort_info = fields.Nested('CGSortedResultsInfoSchema', description="The sort order of the items", data_key="sortInfo", allow_none=True)
+    filter_info = fields.Nested('CGFilterInfoSchema', description="The filters applied to the response items", data_key="filterInfo", allow_none=True)
 
-class OpportunitiesSearchResponseSchema(Schema):
+class CGOpportunitiesListResponseSchema(Schema):
     status = fields.Integer(description="The HTTP status code", allow_none=True)
-    message = fields.String(description="The message", allow_none=True)
-    items = fields.List(fields.Nested('OpportunityBaseSchema'), description="The list of opportunities", allow_none=True)
-    pagination_info = fields.Nested('PaginatedResultsInfoSchema', description="The pagination details", data_key="paginationInfo", allow_none=True)
-    sort_info = fields.Nested('SortedResultsInfoSchema', description="The sorting details", data_key="sortInfo", allow_none=True)
+    message = fields.Raw(description="The message", allow_none=True)
+    items = fields.List(fields.Nested('CGOpportunityBaseSchema'), description="The list of opportunities", allow_none=True)
+    pagination_info = fields.Nested('CGPaginatedResultsInfoSchema', description="The pagination details", data_key="paginationInfo", allow_none=True)
+
+class CGOpportunitiesSearchResponseSchema(Schema):
+    status = fields.Integer(description="The HTTP status code", allow_none=True)
+    message = fields.Raw(description="The message", allow_none=True)
+    items = fields.List(fields.Nested('CGOpportunityBaseSchema'), description="The list of opportunities", allow_none=True)
+    pagination_info = fields.Nested('CGPaginatedResultsInfoSchema', description="The pagination details", data_key="paginationInfo", allow_none=True)
+    sort_info = fields.Nested('CGSortedResultsInfoSchema', description="The sorting details", data_key="sortInfo", allow_none=True)
     filter_info = fields.Raw(description="The filter details", data_key="filterInfo", allow_none=True)
 
-class OpportunityResponseSchema(Schema):
+class CGOpportunityResponseSchema(Schema):
     status = fields.Integer(description="The HTTP status code", allow_none=True)
-    message = fields.String(description="The message", allow_none=True)
-    data = fields.Nested('OpportunityBaseSchema', description="The opportunity", allow_none=True)
+    message = fields.Raw(description="The message", allow_none=True)
+    data = fields.Nested('CGOpportunityBaseSchema', description="The opportunity", allow_none=True)
 
-class PaginatedSchema(Schema):
-    status = fields.Integer(description="The HTTP status code")
-    message = fields.String(description="The message")
-    items = fields.List(fields.Nested('ItemsTSchema'), description="Items from the current page", allow_none=True)
-    pagination_info = fields.Nested('PaginatedResultsInfoSchema', description="Details about the paginated results", data_key="paginationInfo", allow_none=True)
+class CGPaginatedSchema(Schema):
+    status = fields.Integer(description="The HTTP status code", allow_none=True)
+    message = fields.Raw(description="The message", allow_none=True)
+    items = fields.List(fields.Nested('CGItemsTSchema'), description="Items from the current page", allow_none=True)
+    pagination_info = fields.Nested('CGPaginatedResultsInfoSchema', description="Details about the paginated results", data_key="paginationInfo", allow_none=True)
 
-class SortedSchema(Schema):
-    status = fields.Integer(description="The HTTP status code")
-    message = fields.String(description="The message")
-    items = fields.List(fields.Nested('ItemsTSchema'), description="Items from the current page", allow_none=True)
-    pagination_info = fields.Nested('PaginatedResultsInfoSchema', description="Details about the paginated results", data_key="paginationInfo", allow_none=True)
-    sort_info = fields.Nested('SortedResultsInfoSchema', description="The sort order of the items", data_key="sortInfo", allow_none=True)
+class CGSortedSchema(Schema):
+    status = fields.Integer(description="The HTTP status code", allow_none=True)
+    message = fields.Raw(description="The message", allow_none=True)
+    items = fields.List(fields.Nested('CGItemsTSchema'), description="Items from the current page", allow_none=True)
+    pagination_info = fields.Nested('CGPaginatedResultsInfoSchema', description="Details about the paginated results", data_key="paginationInfo", allow_none=True)
+    sort_info = fields.Nested('CGSortedResultsInfoSchema', description="The sort order of the items", data_key="sortInfo", allow_none=True)
 
-class SuccessSchema(Schema):
-    status = fields.Integer(description="The HTTP status code")
-    message = fields.String(description="The message")
+class CGSuccessSchema(Schema):
+    status = fields.Integer(description="The HTTP status code", allow_none=True)
+    message = fields.Raw(description="The message", allow_none=True)
 
-class SortBaseSchema(Schema):
-    sort_by = fields.String(description="The field to sort by", data_key="sortBy", allow_none=True)
-    custom_sort_by = fields.String(description="Implementation-defined sort key", data_key="customSortBy")
+class CGSortBaseSchema(Schema):
+    sort_by = fields.Raw(description="The field to sort by", data_key="sortBy", allow_none=True)
+    custom_sort_by = fields.Raw(description="Implementation-defined sort key", data_key="customSortBy", allow_none=True)
 
-class SortBodyParamsSchema(Schema):
-    sort_by = fields.String(description="The field to sort by", data_key="sortBy", allow_none=True)
-    custom_sort_by = fields.String(description="Implementation-defined sort key", data_key="customSortBy")
-    sort_order = fields.Nested('SortOrderSchema', description="The order to sort by", data_key="sortOrder")
+class CGSortBodyParamsSchema(Schema):
+    sort_by = fields.Raw(description="The field to sort by", data_key="sortBy", allow_none=True)
+    custom_sort_by = fields.Raw(description="Implementation-defined sort key", data_key="customSortBy", allow_none=True)
+    sort_order = fields.Nested('CGSortOrderSchema', description="The order to sort by", data_key="sortOrder", allow_none=True)
 
-class SortQueryParamsSchema(Schema):
-    sort_by = fields.String(description="The field to sort by", data_key="sortBy", allow_none=True)
-    custom_sort_by = fields.String(description="Implementation-defined sort key", data_key="customSortBy")
-    sort_order = fields.Nested('SortOrderSchema', description="The order to sort by", data_key="sortOrder")
+class CGSortQueryParamsSchema(Schema):
+    sort_by = fields.Raw(description="The field to sort by", data_key="sortBy", allow_none=True)
+    custom_sort_by = fields.Raw(description="Implementation-defined sort key", data_key="customSortBy", allow_none=True)
+    sort_order = fields.Nested('CGSortOrderSchema', description="The order to sort by", data_key="sortOrder", allow_none=True)
 
-class MoneySchema(Schema):
-    amount = fields.String(description="The amount of money", allow_none=True)
-    currency = fields.String(description="The ISO 4217 currency code (e.g., 'USD', 'EUR')", allow_none=True)
+class CGMoneySchema(Schema):
+    amount = fields.Raw(description="The amount of money", allow_none=True)
+    currency = fields.Raw(description="The ISO 4217 currency code (e.g., 'USD', 'EUR')", allow_none=True)
 
-class DateRangeSchema(Schema):
-    min = fields.Date(description="The minimum date in the range")
-    max = fields.Date(description="The maximum date in the range")
+class CGDateRangeSchema(Schema):
+    min = fields.Date(description="The minimum date in the range", allow_none=True)
+    max = fields.Date(description="The maximum date in the range", allow_none=True)
 
-class NumberRangeSchema(Schema):
+class CGNumberRangeSchema(Schema):
     min = fields.Raw(description="The minimum value in the range", allow_none=True)
     max = fields.Raw(description="The maximum value in the range", allow_none=True)
 
-class StringArrayFilterSchema(Schema):
+class CGStringArrayFilterSchema(Schema):
     operator = fields.String(description="The operator to apply to the filter value", allow_none=True)
-    value = fields.List(fields.String, description="The array of string values", allow_none=True)
+    value = fields.List(fields.Raw, description="The array of string values", allow_none=True)
 
-class OppStatusSchema(Schema):
+class CGOppStatusSchema(Schema):
     value = fields.String(description="The status value, from a predefined set of options", allow_none=True)
-    custom_value = fields.String(description="A custom status value", data_key="customValue")
-    description = fields.String(description="A human-readable description of the status")
+    custom_value = fields.Raw(description="A custom status value", data_key="customValue", allow_none=True)
+    description = fields.Raw(description="A human-readable description of the status", allow_none=True)
 
-class OppTimelineSchema(Schema):
-    post_date = fields.Raw(description="The date (and time) at which the opportunity is posted", data_key="postDate")
-    close_date = fields.Raw(description="The date (and time) at which the opportunity closes", data_key="closeDate")
-    other_dates = fields.Raw(description="An optional map of other key dates or events in the opportunity timeline", data_key="otherDates")
+class CGOppTimelineSchema(Schema):
+    post_date = fields.Raw(description="The date (and time) at which the opportunity is posted", data_key="postDate", allow_none=True)
+    close_date = fields.Raw(description="The date (and time) at which the opportunity closes", data_key="closeDate", allow_none=True)
+    other_dates = fields.Raw(description="An optional map of other key dates or events in the opportunity timeline", data_key="otherDates", allow_none=True)
 
-class PaginatedBodyParamsSchema(Schema):
-    page = fields.Integer(description="The page number to retrieve")
-    page_size = fields.Integer(description="The number of items per page", data_key="pageSize")
+class CGPaginatedBodyParamsSchema(Schema):
+    page = fields.Integer(description="The page number to retrieve", allow_none=True)
+    page_size = fields.Integer(description="The number of items per page", data_key="pageSize", allow_none=True)
 
-class PaginatedResultsInfoSchema(Schema):
-    page = fields.Integer(description="The page number to retrieve")
-    page_size = fields.Integer(description="The number of items per page", data_key="pageSize")
+class CGPaginatedResultsInfoSchema(Schema):
+    page = fields.Integer(description="The page number to retrieve", allow_none=True)
+    page_size = fields.Integer(description="The number of items per page", data_key="pageSize", allow_none=True)
     total_items = fields.Integer(description="The total number of items", data_key="totalItems", allow_none=True)
     total_pages = fields.Integer(description="The total number of pages", data_key="totalPages", allow_none=True)
 
-class FilterInfoSchema(Schema):
-    filters = fields.Nested('FilterTSchema', description="The filters applied to the response items", allow_none=True)
-    errors = fields.List(fields.String, description="Non-fatal errors that occurred during filtering")
+class CGFilterInfoSchema(Schema):
+    filters = fields.Nested('CGFilterTSchema', description="The filters applied to the response items", allow_none=True)
+    errors = fields.List(fields.Raw, description="Non-fatal errors that occurred during filtering", allow_none=True)
 
-class OppSortingSchema(Schema):
+class CGOppSortingSchema(Schema):
     sort_by = fields.String(description="The field to sort by", data_key="sortBy", allow_none=True)
-    sort_order = fields.String(description="The sort order (asc or desc)", data_key="sortOrder")
-    custom_sort_by = fields.String(description="The custom field to sort by when sortBy is 'custom'", data_key="customSortBy")
+    sort_order = fields.Raw(description="The sort order (asc or desc)", data_key="sortOrder", allow_none=True)
+    custom_sort_by = fields.Raw(description="The custom field to sort by when sortBy is 'custom'", data_key="customSortBy", allow_none=True)
 
-class SortedResultsInfoSchema(Schema):
-    sort_by = fields.String(description="The field to sort by", data_key="sortBy", allow_none=True)
-    custom_sort_by = fields.String(description="Implementation-defined sort key", data_key="customSortBy")
-    sort_order = fields.String(description="The order in which the results are sorted", data_key="sortOrder", allow_none=True)
-    errors = fields.List(fields.String, description="Non-fatal errors that occurred during sorting")
+class CGSortedResultsInfoSchema(Schema):
+    sort_by = fields.Raw(description="The field to sort by", data_key="sortBy", allow_none=True)
+    custom_sort_by = fields.Raw(description="Implementation-defined sort key", data_key="customSortBy", allow_none=True)
+    sort_order = fields.Raw(description="The order in which the results are sorted", data_key="sortOrder", allow_none=True)
+    errors = fields.List(fields.Raw, description="Non-fatal errors that occurred during sorting", allow_none=True)
 
-class DateRangeFilterSchema(Schema):
+class CGDateRangeFilterSchema(Schema):
     operator = fields.String(description="The operator to apply to the filter value", allow_none=True)
-    value = fields.Nested('DateRangeSchema', description="The date range value", allow_none=True)
+    value = fields.Nested('CGDateRangeSchema', description="The date range value", allow_none=True)
 
-class MoneyRangeSchema(Schema):
-    min = fields.Nested('MoneySchema', description="The minimum amount in the range", allow_none=True)
-    max = fields.Nested('MoneySchema', description="The maximum amount in the range", allow_none=True)
+class CGMoneyRangeSchema(Schema):
+    min = fields.Nested('CGMoneySchema', description="The minimum amount in the range", allow_none=True)
+    max = fields.Nested('CGMoneySchema', description="The maximum amount in the range", allow_none=True)
 
-class MoneyRangeFilterSchema(Schema):
+class CGMoneyRangeFilterSchema(Schema):
     operator = fields.String(description="The operator to apply to the filter value", allow_none=True)
-    value = fields.Nested('MoneyRangeSchema', description="The money range value", allow_none=True)
+    value = fields.Nested('CGMoneyRangeSchema', description="The money range value", allow_none=True)
 
-class OppFiltersSchema(Schema):
-    status = fields.Nested('StringArrayFilterSchema', description="`status.value` matches one of the following values")
-    close_date_range = fields.Nested('DateRangeFilterSchema', description="`keyDates.closeDate` is between the given range", data_key="closeDateRange")
-    total_funding_available_range = fields.Nested('MoneyRangeFilterSchema', description="`funding.totalAmountAvailable` is between the given range", data_key="totalFundingAvailableRange")
-    min_award_amount_range = fields.Nested('MoneyRangeFilterSchema', description="`funding.minAwardAmount` is between the given range", data_key="minAwardAmountRange")
-    max_award_amount_range = fields.Nested('MoneyRangeFilterSchema', description="`funding.maxAwardAmount` is between the given range", data_key="maxAwardAmountRange")
-    custom_filters = fields.Raw(description="Additional custom filters to apply to the search", data_key="customFilters")
+class CGOppFiltersSchema(Schema):
+    status = fields.Nested('CGStringArrayFilterSchema', description="`status.value` matches one of the following values", allow_none=True)
+    close_date_range = fields.Nested('CGDateRangeFilterSchema', description="`keyDates.closeDate` is between the given range", data_key="closeDateRange", allow_none=True)
+    total_funding_available_range = fields.Nested('CGMoneyRangeFilterSchema', description="`funding.totalAmountAvailable` is between the given range", data_key="totalFundingAvailableRange", allow_none=True)
+    min_award_amount_range = fields.Nested('CGMoneyRangeFilterSchema', description="`funding.minAwardAmount` is between the given range", data_key="minAwardAmountRange", allow_none=True)
+    max_award_amount_range = fields.Nested('CGMoneyRangeFilterSchema', description="`funding.maxAwardAmount` is between the given range", data_key="maxAwardAmountRange", allow_none=True)
+    custom_filters = fields.Raw(description="Additional custom filters to apply to the search", data_key="customFilters", allow_none=True)
 
-class OppFundingSchema(Schema):
-    details = fields.String(description="Details about the funding available for this opportunity that don't fit other fields")
-    total_amount_available = fields.Nested('MoneySchema', description="Total amount of funding available for this opportunity", data_key="totalAmountAvailable")
-    min_award_amount = fields.Nested('MoneySchema', description="Minimum amount of funding granted per award", data_key="minAwardAmount")
-    max_award_amount = fields.Nested('MoneySchema', description="Maximum amount of funding granted per award", data_key="maxAwardAmount")
-    min_award_count = fields.Integer(description="Minimum number of awards granted", data_key="minAwardCount")
-    max_award_count = fields.Integer(description="Maximum number of awards granted", data_key="maxAwardCount")
-    estimated_award_count = fields.Integer(description="Estimated number of awards that will be granted", data_key="estimatedAwardCount")
+class CGOppFundingSchema(Schema):
+    details = fields.Raw(description="Details about the funding available for this opportunity that don't fit other fields", allow_none=True)
+    total_amount_available = fields.Nested('CGMoneySchema', description="Total amount of funding available for this opportunity", data_key="totalAmountAvailable", allow_none=True)
+    min_award_amount = fields.Nested('CGMoneySchema', description="Minimum amount of funding granted per award", data_key="minAwardAmount", allow_none=True)
+    max_award_amount = fields.Nested('CGMoneySchema', description="Maximum amount of funding granted per award", data_key="maxAwardAmount", allow_none=True)
+    min_award_count = fields.Integer(description="Minimum number of awards granted", data_key="minAwardCount", allow_none=True)
+    max_award_count = fields.Integer(description="Maximum number of awards granted", data_key="maxAwardCount", allow_none=True)
+    estimated_award_count = fields.Integer(description="Estimated number of awards that will be granted", data_key="estimatedAwardCount", allow_none=True)
 
-class OpportunityBaseSchema(Schema):
-    created_at = fields.DateTime(description="The timestamp (in UTC) at which the record was created.", data_key="createdAt", allow_none=True)
-    last_modified_at = fields.DateTime(description="The timestamp (in UTC) at which the record was last modified.", data_key="lastModifiedAt", allow_none=True)
+class CGOpportunityBaseSchema(Schema):
+    created_at = fields.Raw(description="The timestamp (in UTC) at which the record was created.", data_key="createdAt", allow_none=True)
+    last_modified_at = fields.Raw(description="The timestamp (in UTC) at which the record was last modified.", data_key="lastModifiedAt", allow_none=True)
     id = fields.UUID(description="Globally unique id for the opportunity", allow_none=True)
-    title = fields.String(description="Title or name of the funding opportunity", allow_none=True)
-    status = fields.Nested('OppStatusSchema', description="Status of the opportunity", allow_none=True)
-    description = fields.String(description="Description of the opportunity's purpose and scope", allow_none=True)
-    funding = fields.Nested('OppFundingSchema', description="Details about the funding available")
-    key_dates = fields.Nested('OppTimelineSchema', description="Key dates for the opportunity, such as when the application opens and closes", data_key="keyDates")
-    source = fields.String(description="URL for the original source of the opportunity")
-    custom_fields = fields.Raw(description="Additional custom fields specific to this opportunity", data_key="customFields")
+    title = fields.Raw(description="Title or name of the funding opportunity", allow_none=True)
+    status = fields.Nested('CGOppStatusSchema', description="Status of the opportunity", allow_none=True)
+    description = fields.Raw(description="Description of the opportunity's purpose and scope", allow_none=True)
+    funding = fields.Nested('CGOppFundingSchema', description="Details about the funding available", allow_none=True)
+    key_dates = fields.Nested('CGOppTimelineSchema', description="Key dates for the opportunity, such as when the application opens and closes", data_key="keyDates", allow_none=True)
+    source = fields.Raw(description="URL for the original source of the opportunity", allow_none=True)
+    custom_fields = fields.Raw(description="Additional custom fields specific to this opportunity", data_key="customFields", allow_none=True)
