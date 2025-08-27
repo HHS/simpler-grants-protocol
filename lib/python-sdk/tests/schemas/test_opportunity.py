@@ -4,11 +4,11 @@ import pytest
 from datetime import datetime, date, UTC
 from uuid import uuid4
 
-from common_grants_sdk.schemas.fields import Money, EventType, SingleDateEvent
-from common_grants_sdk.schemas.models.opp_base import OpportunityBase
-from common_grants_sdk.schemas.models.opp_funding import OppFunding
-from common_grants_sdk.schemas.models.opp_status import OppStatus, OppStatusOptions
-from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
+from common_grants_sdk.schemas.pydantic.fields import Money, EventType, SingleDateEvent
+from common_grants_sdk.schemas.pydantic.models.opp_base import OpportunityBase
+from common_grants_sdk.schemas.pydantic.models.opp_funding import OppFunding
+from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatus, OppStatusOptions
+from common_grants_sdk.schemas.pydantic.models.opp_timeline import OppTimeline
 
 
 @pytest.fixture
@@ -152,7 +152,7 @@ def test_optional_timeline_fields():
 
 def test_opportunity_with_custom_fields():
     """Test opportunity with custom fields."""
-    from common_grants_sdk.schemas.fields import CustomFieldType
+    from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 
     opportunity = OpportunityBase.model_validate(
         {

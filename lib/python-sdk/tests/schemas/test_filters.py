@@ -3,7 +3,7 @@
 from datetime import date
 import pytest
 
-from common_grants_sdk.schemas.filters.base import (
+from common_grants_sdk.schemas.pydantic.filters.base import (
     ArrayOperator,
     ComparisonOperator,
     DefaultFilter,
@@ -11,28 +11,28 @@ from common_grants_sdk.schemas.filters.base import (
     RangeOperator,
     StringOperator,
 )
-from common_grants_sdk.schemas.filters.string import (
+from common_grants_sdk.schemas.pydantic.filters.string import (
     StringArrayFilter,
     StringComparisonFilter,
 )
-from common_grants_sdk.schemas.filters.date import (
+from common_grants_sdk.schemas.pydantic.filters.date import (
     DateRange,
     DateRangeFilter,
     DateComparisonFilter,
 )
-from common_grants_sdk.schemas.filters.money import (
+from common_grants_sdk.schemas.pydantic.filters.money import (
     MoneyRange,
     MoneyRangeFilter,
     MoneyComparisonFilter,
     InvalidMoneyValueError,
 )
-from common_grants_sdk.schemas.filters.numeric import (
+from common_grants_sdk.schemas.pydantic.filters.numeric import (
     NumberArrayFilter,
     NumberComparisonFilter,
     NumberRange,
     NumberRangeFilter,
 )
-from common_grants_sdk.schemas.fields import Money
+from common_grants_sdk.schemas.pydantic.fields import Money
 
 
 def test_filter_operators():

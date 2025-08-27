@@ -1,0 +1,5 @@
+"""CommonGrants marshmallow schemas package."""
+
+from .generated_schema import *
+
+__all__ = [name for name in dir() if not name.startswith("_")]

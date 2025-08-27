@@ -5,11 +5,11 @@ from uuid import UUID
 
 from pydantic import Field, HttpUrl
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
-from common_grants_sdk.schemas.fields import CustomField, SystemMetadata
-from common_grants_sdk.schemas.models.opp_funding import OppFunding
-from common_grants_sdk.schemas.models.opp_status import OppStatus
-from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
+from ..base import CommonGrantsBaseModel
+from ..fields import CustomField, SystemMetadata
+from .opp_funding import OppFunding
+from .opp_status import OppStatus
+from .opp_timeline import OppTimeline
 
 
 class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):

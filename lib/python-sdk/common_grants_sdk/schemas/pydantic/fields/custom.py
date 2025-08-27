@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 from pydantic import Field, HttpUrl
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
+from ..base import CommonGrantsBaseModel
 
 
 # CustomField

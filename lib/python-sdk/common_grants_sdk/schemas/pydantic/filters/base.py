@@ -5,7 +5,7 @@ from typing import Union
 
 from pydantic import Field, field_validator
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
+from ..base import CommonGrantsBaseModel
 
 # ############################################################
 # Enums

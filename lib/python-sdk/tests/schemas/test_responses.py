@@ -4,9 +4,9 @@ import pytest
 from pydantic import ValidationError
 from typing import Optional
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
-from common_grants_sdk.schemas.pagination import PaginatedResultsInfo
-from common_grants_sdk.schemas.responses import (
+from common_grants_sdk.schemas.pydantic.base import CommonGrantsBaseModel
+from common_grants_sdk.schemas.pydantic.pagination import PaginatedResultsInfo
+from common_grants_sdk.schemas.pydantic.responses import (
     DefaultResponse,
     Error,
     Filtered,
@@ -14,8 +14,8 @@ from common_grants_sdk.schemas.responses import (
     Sorted,
     Success,
 )
-from common_grants_sdk.schemas.sorting import SortedResultsInfo
-from common_grants_sdk.schemas.responses import FilterInfo
+from common_grants_sdk.schemas.pydantic.sorting import SortedResultsInfo
+from common_grants_sdk.schemas.pydantic.responses import FilterInfo
 
 
 class TestDefaultResponse:

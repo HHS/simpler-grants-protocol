@@ -3,7 +3,7 @@
 import pytest
 from datetime import date, time, datetime, timezone
 
-from common_grants_sdk.schemas.fields import (
+from common_grants_sdk.schemas.pydantic.fields import (
     Money,
     EventType,
     SingleDateEvent,
@@ -13,7 +13,7 @@ from common_grants_sdk.schemas.fields import (
     CustomFieldType,
     SystemMetadata,
 )
-from common_grants_sdk.schemas.types import validate_decimal_string
+from common_grants_sdk.schemas.pydantic.types import validate_decimal_string
 
 
 def test_money_validation():

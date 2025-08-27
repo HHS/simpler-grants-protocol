@@ -2,8 +2,8 @@
 
 from pydantic import Field
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
-from common_grants_sdk.schemas.types import UTCDateTime
+from ..base import CommonGrantsBaseModel
+from ..types import UTCDateTime
 
 
 # SystemMetadata

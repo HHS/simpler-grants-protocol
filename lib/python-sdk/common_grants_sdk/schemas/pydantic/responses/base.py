@@ -2,7 +2,7 @@
 
 from pydantic import Field
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
+from ..base import CommonGrantsBaseModel
 
 
 class DefaultResponse(CommonGrantsBaseModel):

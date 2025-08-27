@@ -7,6 +7,5 @@ A Python implementation of the CommonGrants protocol.
 __version__ = "0.1.0"
 
 from . import schemas
-from . import schemas_marshmallow
 
-__all__ = ["schemas", "schemas_marshmallow"]
+__all__ = ["schemas"]

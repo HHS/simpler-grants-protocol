@@ -9,28 +9,6 @@ class CGCustomFieldSchema(Schema):
     value = fields.Raw(metadata={"description": "Value of the custom field"}, allow_none=True)
     description = fields.Raw(metadata={"description": "Description of the custom field's purpose"}, allow_none=True)
 
-class CGDateRangeEventSchema(Schema):
-    name = fields.Raw(metadata={"description": "Human-readable name of the event (e.g., 'Application posted', 'Question deadline')"}, allow_none=True)
-    event_type = fields.String(allow_none=True, data_key="eventType")
-    description = fields.Raw(metadata={"description": "Description of what this event represents"}, allow_none=True)
-    start_date = fields.Date(metadata={"description": "Start date of the event in ISO 8601 format: YYYY-MM-DD"}, allow_none=True, data_key="startDate")
-    start_time = fields.Time(metadata={"description": "Start time of the event in ISO 8601 format: HH:MM:SS"}, allow_none=True, data_key="startTime")
-    end_date = fields.Date(metadata={"description": "End date of the event in ISO 8601 format: YYYY-MM-DD"}, allow_none=True, data_key="endDate")
-    end_time = fields.Time(metadata={"description": "End time of the event in ISO 8601 format: HH:MM:SS"}, allow_none=True, data_key="endTime")
-
-class CGOtherEventSchema(Schema):
-    name = fields.Raw(metadata={"description": "Human-readable name of the event (e.g., 'Application posted', 'Question deadline')"}, allow_none=True)
-    event_type = fields.String(allow_none=True, data_key="eventType")
-    description = fields.Raw(metadata={"description": "Description of what this event represents"}, allow_none=True)
-    details = fields.Raw(metadata={"description": "Details of the event's timeline (e.g. 'Every other Tuesday')"}, allow_none=True)
-
-class CGSingleDateEventSchema(Schema):
-    name = fields.Raw(metadata={"description": "Human-readable name of the event (e.g., 'Application posted', 'Question deadline')"}, allow_none=True)
-    event_type = fields.String(allow_none=True, data_key="eventType")
-    description = fields.Raw(metadata={"description": "Description of what this event represents"}, allow_none=True)
-    date = fields.Date(metadata={"description": "Date of the event in ISO 8601 format: YYYY-MM-DD"}, allow_none=True)
-    time = fields.Time(metadata={"description": "Time of the event in ISO 8601 format: HH:MM:SS"}, allow_none=True)
-
 class CGSystemMetadataSchema(Schema):
     created_at = fields.Raw(metadata={"description": "The timestamp (in UTC) at which the record was created."}, allow_none=True, data_key="createdAt")
     last_modified_at = fields.Raw(metadata={"description": "The timestamp (in UTC) at which the record was last modified."}, allow_none=True, data_key="lastModifiedAt")
@@ -151,9 +129,31 @@ class CGSortQueryParamsSchema(Schema):
     custom_sort_by = fields.Raw(metadata={"description": "Implementation-defined sort key"}, allow_none=True, data_key="customSortBy")
     sort_order = fields.Nested('CGSortOrderSchema', metadata={"description": "The order to sort by"}, allow_none=True, data_key="sortOrder")
 
+class CGDateRangeEventSchema(Schema):
+    name = fields.Raw(metadata={"description": "Human-readable name of the event (e.g., 'Application posted', 'Question deadline')"}, allow_none=True)
+    event_type = fields.String(allow_none=True, data_key="eventType")
+    description = fields.Raw(metadata={"description": "Description of what this event represents"}, allow_none=True)
+    start_date = fields.Date(metadata={"description": "Start date of the event in ISO 8601 format: YYYY-MM-DD"}, allow_none=True, data_key="startDate")
+    start_time = fields.Time(metadata={"description": "Start time of the event in ISO 8601 format: HH:MM:SS"}, allow_none=True, data_key="startTime")
+    end_date = fields.Date(metadata={"description": "End date of the event in ISO 8601 format: YYYY-MM-DD"}, allow_none=True, data_key="endDate")
+    end_time = fields.Time(metadata={"description": "End time of the event in ISO 8601 format: HH:MM:SS"}, allow_none=True, data_key="endTime")
+
 class CGMoneySchema(Schema):
     amount = fields.Raw(metadata={"description": "The amount of money"}, allow_none=True)
     currency = fields.Raw(metadata={"description": "The ISO 4217 currency code (e.g., 'USD', 'EUR')"}, allow_none=True)
+
+class CGOtherEventSchema(Schema):
+    name = fields.Raw(metadata={"description": "Human-readable name of the event (e.g., 'Application posted', 'Question deadline')"}, allow_none=True)
+    event_type = fields.String(allow_none=True, data_key="eventType")
+    description = fields.Raw(metadata={"description": "Description of what this event represents"}, allow_none=True)
+    details = fields.Raw(metadata={"description": "Details of the event's timeline (e.g. 'Every other Tuesday')"}, allow_none=True)
+
+class CGSingleDateEventSchema(Schema):
+    name = fields.Raw(metadata={"description": "Human-readable name of the event (e.g., 'Application posted', 'Question deadline')"}, allow_none=True)
+    event_type = fields.String(allow_none=True, data_key="eventType")
+    description = fields.Raw(metadata={"description": "Description of what this event represents"}, allow_none=True)
+    date = fields.Date(metadata={"description": "Date of the event in ISO 8601 format: YYYY-MM-DD"}, allow_none=True)
+    time = fields.Time(metadata={"description": "Time of the event in ISO 8601 format: HH:MM:SS"}, allow_none=True)
 
 class CGDateRangeSchema(Schema):
     min = fields.Date(metadata={"description": "The minimum date in the range"}, allow_none=True)
@@ -171,11 +171,6 @@ class CGOppStatusSchema(Schema):
     value = fields.String(metadata={"description": "The status value, from a predefined set of options"}, allow_none=True)
     custom_value = fields.Raw(metadata={"description": "A custom status value"}, allow_none=True, data_key="customValue")
     description = fields.Raw(metadata={"description": "A human-readable description of the status"}, allow_none=True)
-
-class CGOppTimelineSchema(Schema):
-    post_date = fields.Raw(metadata={"description": "The date (and time) at which the opportunity is posted"}, allow_none=True, data_key="postDate")
-    close_date = fields.Raw(metadata={"description": "The date (and time) at which the opportunity closes"}, allow_none=True, data_key="closeDate")
-    other_dates = fields.Raw(metadata={"description": "An optional map of other key dates or events in the opportunity timeline"}, allow_none=True, data_key="otherDates")
 
 class CGPaginatedBodyParamsSchema(Schema):
     page = fields.Integer(metadata={"description": "The page number to retrieve"}, allow_none=True)
@@ -230,6 +225,11 @@ class CGOppFundingSchema(Schema):
     min_award_count = fields.Integer(metadata={"description": "Minimum number of awards granted"}, allow_none=True, data_key="minAwardCount")
     max_award_count = fields.Integer(metadata={"description": "Maximum number of awards granted"}, allow_none=True, data_key="maxAwardCount")
     estimated_award_count = fields.Integer(metadata={"description": "Estimated number of awards that will be granted"}, allow_none=True, data_key="estimatedAwardCount")
+
+class CGOppTimelineSchema(Schema):
+    post_date = fields.Nested('CGSingleDateEventSchema', metadata={"description": "The date (and time) at which the opportunity is posted"}, allow_none=True, data_key="postDate")
+    close_date = fields.Nested('CGSingleDateEventSchema', metadata={"description": "The date (and time) at which the opportunity closes"}, allow_none=True, data_key="closeDate")
+    other_dates = fields.Raw(metadata={"description": "An optional map of other key dates or events in the opportunity timeline"}, allow_none=True, data_key="otherDates")
 
 class CGOpportunityBaseSchema(Schema):
     created_at = fields.Raw(metadata={"description": "The timestamp (in UTC) at which the record was created."}, allow_none=True, data_key="createdAt")

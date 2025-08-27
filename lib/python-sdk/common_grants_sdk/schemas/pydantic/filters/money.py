@@ -4,8 +4,8 @@ from typing import Optional
 
 from pydantic import Field, ValidationInfo, field_validator
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
-from common_grants_sdk.schemas.fields import Money
+from ..base import CommonGrantsBaseModel
+from ..fields import Money
 from .base import (
     ComparisonOperator,
     RangeOperator,
