@@ -282,30 +282,13 @@ class PydanticToMarshmallowConverter:
                     marshmallow_field = self._convert_field_type_direct(field_info)
                     
                     # Handle field metadata
-                    metadata = self._extract_field_metadata(field_info)
+                    metadata, data_key = self._extract_field_metadata(field_info)
                     
                     # Handle required fields - check if field is optional
                     is_optional = self._is_field_optional(field_info)
                     
                     # Build field definition
-                    metadata_parts = [metadata] if metadata else []
-                    if is_optional:
-                        metadata_parts.append("allow_none=True")
-                    
-                    if metadata_parts:
-                        # Check if this is a nested field or list field that already has parentheses
-                        if "fields.Nested(" in marshmallow_field or "fields.List(" in marshmallow_field:
-                            # For nested/list fields, add metadata to the existing constructor
-                            field_def = f"    {field_name} = {marshmallow_field[:-1]}, {', '.join(metadata_parts)})"
-                        else:
-                            field_def = f"    {field_name} = {marshmallow_field}({', '.join(metadata_parts)})"
-                    else:
-                        # Check if this is a nested field or list field that already has parentheses
-                        if "fields.Nested(" in marshmallow_field or "fields.List(" in marshmallow_field:
-                            # For nested/list fields, we need the closing parenthesis
-                            field_def = f"    {field_name} = {marshmallow_field}"
-                        else:
-                            field_def = f"    {field_name} = {marshmallow_field}()"
+                    field_def = self._build_field_definition(field_name, marshmallow_field, metadata, data_key, is_optional)
                     
                     schema_lines.append(field_def)
                 except Exception as e:
@@ -492,20 +475,60 @@ class PydanticToMarshmallowConverter:
         # Default to required
         return False
 
-    def _extract_field_metadata(self, field_info) -> str:
-        """Extract metadata from a Pydantic field."""
-        metadata_parts = []
+    def _extract_field_metadata(self, field_info) -> tuple[dict, str]:
+        """Extract metadata from a Pydantic field. Returns (metadata_dict, data_key)."""
+        metadata = {}
+        data_key = None
         
         # Add description if available
         if hasattr(field_info, 'description') and field_info.description:
-            metadata_parts.append(f'description="{field_info.description}"')
+            metadata['description'] = field_info.description
         
-        # Add data_key if available
+        # Extract data_key separately (should be a direct argument, not in metadata)
         if hasattr(field_info, 'alias') and field_info.alias:
-            metadata_parts.append(f'data_key="{field_info.alias}"')
+            data_key = field_info.alias
         
-        return ", ".join(metadata_parts)
+        return metadata, data_key
 
+    def _build_field_definition(self, field_name: str, marshmallow_field: str, metadata: dict, data_key: str, is_optional: bool) -> str:
+        """Build a field definition with proper metadata handling"""
+        # Direct arguments that should not go into metadata
+        direct_args = []
+        if is_optional:
+            direct_args.append("allow_none=True")
+        if data_key:
+            direct_args.append(f'data_key="{data_key}"')
+        
+        # Build the field definition
+        if "fields.Nested(" in marshmallow_field or "fields.List(" in marshmallow_field:
+            # For nested/list fields, we need to handle the existing constructor carefully
+            if metadata:
+                # If we have metadata, we need to add it to the existing constructor
+                metadata_str = ", ".join([f'"{k}": "{v}"' for k, v in metadata.items()])
+                if direct_args:
+                    field_def = f"    {field_name} = {marshmallow_field[:-1]}, metadata={{{metadata_str}}}, {', '.join(direct_args)})"
+                else:
+                    field_def = f"    {field_name} = {marshmallow_field[:-1]}, metadata={{{metadata_str}}})"
+            else:
+                # No metadata, just add direct args if any
+                if direct_args:
+                    field_def = f"    {field_name} = {marshmallow_field[:-1]}, {', '.join(direct_args)})"
+                else:
+                    field_def = f"    {field_name} = {marshmallow_field}"
+        else:
+            # For simple fields, build the constructor
+            args = []
+            if metadata:
+                metadata_str = ", ".join([f'"{k}": "{v}"' for k, v in metadata.items()])
+                args.append(f"metadata={{{metadata_str}}}")
+            args.extend(direct_args)
+            
+            if args:
+                field_def = f"    {field_name} = {marshmallow_field}({', '.join(args)})"
+            else:
+                field_def = f"    {field_name} = {marshmallow_field}()"
+        
+        return field_def
 
 
     def generate_marshmallow_file(self) -> str:
