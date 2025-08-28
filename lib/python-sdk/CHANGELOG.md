@@ -1,5 +1,11 @@
 # common-grants-sdk
 
+## 0.3.0
+
+### Minor Changes
+
+- 96704dd: Add marshmallow schemas to match existing pydantic schemas
+
 ## 0.2.2
 
 ### Patch Changes
