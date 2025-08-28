@@ -4,9 +4,9 @@ from typing import Generic, TypeVar, Optional
 
 from pydantic import Field
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
-from common_grants_sdk.schemas.pagination import PaginatedResultsInfo
-from common_grants_sdk.schemas.sorting import SortedResultsInfo
+from ..base import CommonGrantsBaseModel
+from ..pagination import PaginatedResultsInfo
+from ..sorting import SortedResultsInfo
 from .base import DefaultResponse
 
 T = TypeVar("T")

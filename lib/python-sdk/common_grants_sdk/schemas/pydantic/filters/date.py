@@ -5,12 +5,12 @@ from typing import Optional
 
 from pydantic import Field, field_validator
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
-from common_grants_sdk.schemas.filters.base import (
+from ..base import CommonGrantsBaseModel
+from .base import (
     ComparisonOperator,
     RangeOperator,
 )
-from common_grants_sdk.schemas.types import ISODate
+from ..types import ISODate
 
 # ############################################################
 # Models
