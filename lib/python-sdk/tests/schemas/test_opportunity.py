@@ -7,7 +7,10 @@ from uuid import uuid4
 from common_grants_sdk.schemas.pydantic.fields import Money, EventType, SingleDateEvent
 from common_grants_sdk.schemas.pydantic.models.opp_base import OpportunityBase
 from common_grants_sdk.schemas.pydantic.models.opp_funding import OppFunding
-from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatus, OppStatusOptions
+from common_grants_sdk.schemas.pydantic.models.opp_status import (
+    OppStatus,
+    OppStatusOptions,
+)
 from common_grants_sdk.schemas.pydantic.models.opp_timeline import OppTimeline
 
 
