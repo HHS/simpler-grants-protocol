@@ -1,0 +1,27 @@
+name: "Website - Cleanup PR Preview"
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup-preview:
+    runs-on: ubuntu-latest
+    name: Cleanup PR preview
+    steps:
+      - name: Delete Worker for PR
+        run: |
+          npx wrangler delete --name cg-pr-${{ github.event.pull_request.number }} --yes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Delete preview link comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            🗑️ **Preview Cleaned Up**
+
+            The preview for this PR has been automatically deleted.
+          edit-mode: replace
