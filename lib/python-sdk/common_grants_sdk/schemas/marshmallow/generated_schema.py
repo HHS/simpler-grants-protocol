@@ -4,6 +4,7 @@ This file contains all Marshmallow schemas that correspond to Pydantic models,
 organized by category for better maintainability.
 """
 
+from typing import Any
 from marshmallow import Schema, fields, validate
 
 
@@ -100,10 +101,8 @@ class EventBase(Schema):
             "description": "Human-readable name of the event (e.g., 'Application posted', 'Question deadline')"
         },
     )
-    eventType = fields.Nested(
-        EventType,
+    eventType = EventType(
         required=True,
-        metadata={"description": "Type of event"},
     )
     description = fields.String(
         allow_none=True,
@@ -506,11 +505,11 @@ class MoneyComparisonFilter(Schema):
 class NumberRange(Schema):
     """Represents a range between two numeric values."""
 
-    min = fields.Number(
+    min: Any = fields.Number(
         required=True,
         metadata={"description": "The minimum value in the range"},
     )
-    max = fields.Number(
+    max: Any = fields.Number(
         required=True,
         metadata={"description": "The maximum value in the range"},
     )
@@ -525,7 +524,7 @@ class NumberComparisonFilter(Schema):
             "description": "The comparison operator to apply to the filter value"
         },
     )
-    value = fields.Number(
+    value: Any = fields.Number(
         required=True,
         metadata={"description": "The numeric value to compare against"},
     )
@@ -703,20 +702,16 @@ class SortBase(Schema):
 class SortQueryParams(SortBase):
     """Query parameters for sorting."""
 
-    sortOrder = fields.Nested(
-        SortOrder,
+    sortOrder = SortOrder(
         allow_none=True,
-        metadata={"description": "The order to sort by"},
     )
 
 
 class SortBodyParams(SortBase):
     """Sorting parameters included in the request body."""
 
-    sortOrder = fields.Nested(
-        SortOrder,
+    sortOrder = SortOrder(
         allow_none=True,
-        metadata={"description": "The order to sort by"},
     )
 
 
