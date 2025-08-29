@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "common-grants-sdk"
-version = "0.2.2"
+version = "0.3.0"
 description = "Python SDK for the CommonGrants protocol"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
@@ -9,6 +9,7 @@ packages = [{include = "common_grants_sdk"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 pydantic = "^2.11.0"
+marshmallow = "^3.20.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -5,8 +5,8 @@ from typing import Literal, Optional, Union
 
 from pydantic import Field
 
-from common_grants_sdk.schemas.base import CommonGrantsBaseModel
-from common_grants_sdk.schemas.types import ISODate, ISOTime
+from ..base import CommonGrantsBaseModel
+from ..types import ISODate, ISOTime
 
 
 # Event Types

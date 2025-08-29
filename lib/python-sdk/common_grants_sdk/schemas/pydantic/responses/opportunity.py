@@ -2,9 +2,9 @@
 
 from pydantic import Field
 
-from common_grants_sdk.schemas.models import OpportunityBase
-from common_grants_sdk.schemas.pagination import PaginatedResultsInfo
-from common_grants_sdk.schemas.sorting import SortedResultsInfo
+from ..models import OpportunityBase
+from ..pagination import PaginatedResultsInfo
+from ..sorting import SortedResultsInfo
 from .base import DefaultResponse
 from .success import FilterInfo
 

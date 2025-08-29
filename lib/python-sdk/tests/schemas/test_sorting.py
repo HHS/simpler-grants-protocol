@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from common_grants_sdk.schemas import OppSortBy, OppSorting, SortedResultsInfo
+from common_grants_sdk.schemas.pydantic import OppSortBy, OppSorting, SortedResultsInfo
 
 
 class TestOppSortBy:

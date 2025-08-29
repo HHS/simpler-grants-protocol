@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from common_grants_sdk.schemas import (
+from common_grants_sdk.schemas.pydantic import (
     PaginatedBodyParams,
     Paginated,
     PaginatedBase,
