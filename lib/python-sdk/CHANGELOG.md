@@ -1,5 +1,11 @@
 # common-grants-sdk
 
+## 0.3.1
+
+### Patch Changes
+
+- e8320c4: Add more marshmallow models (experimental)
+
 ## 0.3.0
 
 ### Minor Changes
