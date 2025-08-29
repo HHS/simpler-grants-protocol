@@ -10,6 +10,9 @@ defaults:
   run:
     working-directory: ./website
 
+env:
+  CLOUDFLARE_WORKERS_DOMAIN: billy-daly.workers.dev
+
 jobs:
   deploy-preview:
     if: github.event.action != 'closed'
