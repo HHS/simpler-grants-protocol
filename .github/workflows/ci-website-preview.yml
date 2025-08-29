@@ -10,6 +10,9 @@ defaults:
   run:
     working-directory: ./website
 
+env:
+  CLOUDFLARE_WORKERS_DOMAIN: billy-daly.workers.dev
+
 jobs:
   deploy-preview:
     if: github.event.action != 'closed'
@@ -31,14 +34,23 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-  delete-preview:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Delete PR preview
-    steps:
-      - name: Delete Worker for PR
-        run: |
-          npx wrangler delete --name cg-pr-${{ github.event.pull_request.number }} --yes
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Find existing comment
+        id: find-comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: Website Preview Deployed
+
+      - name: Post preview link comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            🚀 **Website Preview Deployed!**
+
+            Preview your changes at: https://cg-pr-${{ github.event.pull_request.number }}.${{ env.CLOUDFLARE_WORKERS_DOMAIN }}
+
+            This preview will be automatically deleted when the PR is closed.
+          edit-mode: replace
