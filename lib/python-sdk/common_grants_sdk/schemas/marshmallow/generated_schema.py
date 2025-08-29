@@ -1,19 +1,26 @@
-"""Manual Marshmallow schemas for CommonGrants Protocol models.
+"""Complete Marshmallow schemas for CommonGrants Protocol models.
 
-These schemas are manually created to avoid naming conflicts and provide
-proper OpenAPI generation for the simpler-grants-gov API.
+This file contains all Marshmallow schemas that correspond to Pydantic models,
+organized by category for better maintainability.
 """
 
 from marshmallow import Schema, fields, validate
 
 
-# Basic field types
+# =============================================================================
+# BASIC FIELD TYPES
+# =============================================================================
+
+
 class Money(Schema):
     """Represents a monetary amount in a specific currency."""
 
-    amount = fields.String(required=True, metadata={"description": "The amount of money"})
+    amount = fields.String(
+        required=True, metadata={"description": "The amount of money"}
+    )
     currency = fields.String(
-        required=True, metadata={"description": "The ISO 4217 currency code (e.g., 'USD', 'EUR')"}
+        required=True,
+        metadata={"description": "The ISO 4217 currency code (e.g., 'USD', 'EUR')"},
     )
 
 
@@ -23,45 +30,425 @@ class SingleDateEvent(Schema):
     name = fields.String(
         allow_none=True, metadata={"description": "Human-readable name of the event"}
     )
-    event_type = fields.String(allow_none=True, data_key="eventType")
+    eventType = fields.String(
+        allow_none=True, metadata={"description": "Type of event"}
+    )
     description = fields.String(
-        allow_none=True, metadata={"description": "Description of what this event represents"}
+        allow_none=True,
+        metadata={"description": "Description of what this event represents"},
     )
     date = fields.Date(
-        allow_none=True, metadata={"description": "Date of the event in ISO 8601 format: YYYY-MM-DD"}
+        allow_none=True,
+        metadata={"description": "Date of the event in ISO 8601 format: YYYY-MM-DD"},
     )
     time = fields.Time(
-        allow_none=True, metadata={"description": "Time of the event in ISO 8601 format: HH:MM:SS"}
+        allow_none=True,
+        metadata={"description": "Time of the event in ISO 8601 format: HH:MM:SS"},
     )
 
 
 class DateRange(Schema):
     """Range filter for date values."""
 
-    min = fields.Date(allow_none=True, metadata={"description": "The minimum date in the range"})
-    max = fields.Date(allow_none=True, metadata={"description": "The maximum date in the range"})
+    min = fields.Date(
+        allow_none=True, metadata={"description": "The minimum date in the range"}
+    )
+    max = fields.Date(
+        allow_none=True, metadata={"description": "The maximum date in the range"}
+    )
 
 
 class MoneyRange(Schema):
     """Range filter for money values."""
 
     min = fields.Nested(
-        Money, allow_none=True, metadata={"description": "The minimum amount in the range"}
+        Money,
+        allow_none=True,
+        metadata={"description": "The minimum amount in the range"},
     )
     max = fields.Nested(
-        Money, allow_none=True, metadata={"description": "The maximum amount in the range"}
+        Money,
+        allow_none=True,
+        metadata={"description": "The maximum amount in the range"},
     )
 
 
-# Filter schemas
+# =============================================================================
+# FIELD MODELS
+# =============================================================================
+
+
+class EventType(fields.String):
+    """Enum field for event types."""
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            validate=validate.OneOf(["singleDate", "dateRange", "other"]),
+            metadata={
+                "description": "Type of event (e.g., a single date, a date range, or a custom event)"
+            },
+            **kwargs
+        )
+
+
+class EventBase(Schema):
+    """Base model for all events."""
+
+    name = fields.String(
+        required=True,
+        metadata={
+            "description": "Human-readable name of the event (e.g., 'Application posted', 'Question deadline')"
+        },
+    )
+    eventType = fields.Nested(
+        EventType,
+        required=True,
+        metadata={"description": "Type of event"},
+    )
+    description = fields.String(
+        allow_none=True,
+        metadata={"description": "Description of what this event represents"},
+    )
+
+
+class DateRangeEvent(EventBase):
+    """Description of an event that has a start and end date (and possible time) associated with it."""
+
+    startDate = fields.Date(
+        required=True,
+        metadata={
+            "description": "Start date of the event in ISO 8601 format: YYYY-MM-DD"
+        },
+    )
+    startTime = fields.Time(
+        allow_none=True,
+        metadata={
+            "description": "Start time of the event in ISO 8601 format: HH:MM:SS"
+        },
+    )
+    endDate = fields.Date(
+        required=True,
+        metadata={
+            "description": "End date of the event in ISO 8601 format: YYYY-MM-DD"
+        },
+    )
+    endTime = fields.Time(
+        allow_none=True,
+        metadata={"description": "End time of the event in ISO 8601 format: HH:MM:SS"},
+    )
+
+
+class OtherEvent(EventBase):
+    """Description of an event that is not a single date or date range."""
+
+    details = fields.String(
+        allow_none=True,
+        metadata={
+            "description": "Details of the event's timeline (e.g. 'Every other Tuesday')"
+        },
+    )
+
+
+class SystemMetadata(Schema):
+    """System-managed metadata fields for tracking record creation and modification."""
+
+    createdAt = fields.DateTime(
+        required=True,
+        metadata={
+            "description": "The timestamp (in UTC) at which the record was created."
+        },
+    )
+    lastModifiedAt = fields.DateTime(
+        required=True,
+        metadata={
+            "description": "The timestamp (in UTC) at which the record was last modified."
+        },
+    )
+
+
+class CustomFieldType(fields.String):
+    """Enum field for custom field types."""
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            validate=validate.OneOf(
+                ["string", "number", "integer", "boolean", "object", "array"]
+            ),
+            metadata={
+                "description": "The JSON schema type to use when de-serializing the value field"
+            },
+            **kwargs
+        )
+
+
+class CustomField(Schema):
+    """Schema for defining custom fields on a record."""
+
+    name = fields.String(required=True)
+    fieldType = CustomFieldType(required=True)
+    schema = fields.Url(allow_none=True)
+    value = fields.Raw(required=True)
+    description = fields.String(allow_none=True)
+
+
+# =============================================================================
+# MODEL MODELS
+# =============================================================================
+
+
+class OppStatusOptions(fields.String):
+    """Enum field for opportunity status options."""
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            validate=validate.OneOf(["forecasted", "open", "custom", "closed"]),
+            metadata={"description": "The status of the opportunity"},
+            **kwargs
+        )
+
+
+class OppStatus(Schema):
+    """Status of an opportunity."""
+
+    value = fields.String(
+        allow_none=True,
+        metadata={"description": "The status value, from a predefined set of options"},
+    )
+    customValue = fields.String(
+        allow_none=True, metadata={"description": "A custom status value"}
+    )
+    description = fields.String(
+        allow_none=True,
+        metadata={"description": "A human-readable description of the status"},
+    )
+
+
+class OppFunding(Schema):
+    """Funding details for an opportunity."""
+
+    details = fields.String(
+        allow_none=True,
+        metadata={
+            "description": "Details about the funding available for this opportunity that don't fit other fields"
+        },
+    )
+    totalAmountAvailable = fields.Nested(
+        Money,
+        allow_none=True,
+        metadata={
+            "description": "Total amount of funding available for this opportunity"
+        },
+    )
+    minAwardAmount = fields.Nested(
+        Money,
+        allow_none=True,
+        metadata={"description": "Minimum amount of funding granted per award"},
+    )
+    maxAwardAmount = fields.Nested(
+        Money,
+        allow_none=True,
+        metadata={"description": "Maximum amount of funding granted per award"},
+    )
+    minAwardCount = fields.Integer(
+        allow_none=True,
+        metadata={"description": "Minimum number of awards granted"},
+    )
+    maxAwardCount = fields.Integer(
+        allow_none=True,
+        metadata={"description": "Maximum number of awards granted"},
+    )
+    estimatedAwardCount = fields.Integer(
+        allow_none=True,
+        metadata={"description": "Estimated number of awards that will be granted"},
+    )
+
+
+class OppTimeline(Schema):
+    """Timeline for an opportunity."""
+
+    postDate = fields.Nested(
+        SingleDateEvent,
+        allow_none=True,
+        metadata={
+            "description": "The date (and time) at which the opportunity is posted"
+        },
+    )
+    closeDate = fields.Nested(
+        SingleDateEvent,
+        allow_none=True,
+        metadata={"description": "The date (and time) at which the opportunity closes"},
+    )
+    otherDates = fields.Raw(
+        allow_none=True,
+        metadata={
+            "description": "An optional map of other key dates or events in the opportunity timeline"
+        },
+    )
+
+
+class OpportunityBase(Schema):
+    """Base opportunity model."""
+
+    createdAt = fields.Raw(
+        allow_none=True,
+        metadata={
+            "description": "The timestamp (in UTC) at which the record was created."
+        },
+    )
+    lastModifiedAt = fields.Raw(
+        allow_none=True,
+        metadata={
+            "description": "The timestamp (in UTC) at which the record was last modified."
+        },
+    )
+    id = fields.UUID(
+        allow_none=True,
+        metadata={"description": "Globally unique id for the opportunity"},
+    )
+    title = fields.String(
+        allow_none=True,
+        metadata={"description": "Title or name of the funding opportunity"},
+    )
+    status = fields.Nested(
+        OppStatus,
+        allow_none=True,
+        metadata={"description": "Status of the opportunity"},
+    )
+    description = fields.String(
+        allow_none=True,
+        metadata={"description": "Description of the opportunity's purpose and scope"},
+    )
+    funding = fields.Nested(
+        OppFunding,
+        allow_none=True,
+        metadata={"description": "Details about the funding available"},
+    )
+    keyDates = fields.Nested(
+        OppTimeline,
+        allow_none=True,
+        metadata={
+            "description": "Key dates for the opportunity, such as when the application opens and closes"
+        },
+    )
+    source = fields.Raw(
+        allow_none=True,
+        metadata={"description": "URL for the original source of the opportunity"},
+    )
+    customFields = fields.Dict(
+        keys=fields.String(),
+        values=fields.Nested(CustomField),
+        allow_none=True,
+        metadata={
+            "description": "Additional custom fields specific to this opportunity"
+        },
+    )
+
+
+# =============================================================================
+# FILTER MODELS
+# =============================================================================
+
+
+class EquivalenceOperator(fields.String):
+    """Enum field for equivalence operators."""
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            validate=validate.OneOf(["eq", "neq"]),
+            metadata={"description": "The operator to apply to the filter"},
+            **kwargs
+        )
+
+
+class ComparisonOperator(fields.String):
+    """Enum field for comparison operators."""
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            validate=validate.OneOf(["gt", "gte", "lt", "lte"]),
+            metadata={
+                "description": "Operators that filter a field based on a comparison to a value"
+            },
+            **kwargs
+        )
+
+
+class ArrayOperator(fields.String):
+    """Enum field for array operators."""
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            validate=validate.OneOf(["in", "notIn"]),
+            metadata={
+                "description": "Operators that filter a field based on an array of values"
+            },
+            **kwargs
+        )
+
+
+class StringOperator(fields.String):
+    """Enum field for string operators."""
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            validate=validate.OneOf(["like", "notLike"]),
+            metadata={
+                "description": "Operators that filter a field based on a string value"
+            },
+            **kwargs
+        )
+
+
+class RangeOperator(fields.String):
+    """Enum field for range operators."""
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            validate=validate.OneOf(["between", "outside"]),
+            metadata={
+                "description": "Operators that filter a field based on a range of values"
+            },
+            **kwargs
+        )
+
+
+class DefaultFilter(Schema):
+    """Base class for all filters that matches Core v0.1.0 DefaultFilter structure."""
+
+    operator = fields.String(
+        required=True,
+        metadata={"description": "The operator to apply to the filter value"},
+    )
+    value = fields.Raw(
+        required=True,
+        metadata={"description": "The value to use for the filter operation"},
+    )
+
+
 class StringArrayFilter(Schema):
     """Filter for string arrays."""
 
     operator = fields.String(
-        allow_none=True, metadata={"description": "The operator to apply to the filter value"}
+        allow_none=True,
+        metadata={"description": "The operator to apply to the filter value"},
     )
     value = fields.List(
-        fields.String, allow_none=True, metadata={"description": "The array of string values"}
+        fields.String,
+        allow_none=True,
+        metadata={"description": "The array of string values"},
+    )
+
+
+class StringComparisonFilter(Schema):
+    """Filter that applies a comparison to a string value."""
+
+    operator = fields.String(
+        required=True,
+        metadata={"description": "The operator to apply to the filter value"},
+    )
+    value = fields.String(
+        required=True,
+        metadata={"description": "The string value to compare against"},
     )
 
 
@@ -69,10 +456,24 @@ class DateRangeFilter(Schema):
     """Filter for date ranges."""
 
     operator = fields.String(
-        allow_none=True, metadata={"description": "The operator to apply to the filter value"}
+        allow_none=True,
+        metadata={"description": "The operator to apply to the filter value"},
     )
     value = fields.Nested(
         DateRange, allow_none=True, metadata={"description": "The date range value"}
+    )
+
+
+class DateComparisonFilter(Schema):
+    """Filter that matches dates against a specific value."""
+
+    operator = fields.String(
+        required=True,
+        metadata={"description": "The operator to apply to the filter value"},
+    )
+    value = fields.Date(
+        required=True,
+        metadata={"description": "The date value to compare against"},
     )
 
 
@@ -80,10 +481,113 @@ class MoneyRangeFilter(Schema):
     """Filter for money ranges."""
 
     operator = fields.String(
-        allow_none=True, metadata={"description": "The operator to apply to the filter value"}
+        allow_none=True,
+        metadata={"description": "The operator to apply to the filter value"},
     )
     value = fields.Nested(
         MoneyRange, allow_none=True, metadata={"description": "The money range value"}
+    )
+
+
+class MoneyComparisonFilter(Schema):
+    """Filter for money values using comparison operators."""
+
+    operator = fields.String(
+        required=True,
+        metadata={"description": "The operator to apply to the filter value"},
+    )
+    value = fields.Nested(
+        Money,  # Reference to Money schema
+        required=True,
+        metadata={"description": "The money value to compare against"},
+    )
+
+
+class NumberRange(Schema):
+    """Represents a range between two numeric values."""
+
+    min = fields.Number(
+        required=True,
+        metadata={"description": "The minimum value in the range"},
+    )
+    max = fields.Number(
+        required=True,
+        metadata={"description": "The maximum value in the range"},
+    )
+
+
+class NumberComparisonFilter(Schema):
+    """Filter that matches numbers against a specific value."""
+
+    operator = fields.String(
+        required=True,
+        metadata={
+            "description": "The comparison operator to apply to the filter value"
+        },
+    )
+    value = fields.Number(
+        required=True,
+        metadata={"description": "The numeric value to compare against"},
+    )
+
+
+class NumberRangeFilter(Schema):
+    """Filter that matches numbers within a specified range."""
+
+    operator = fields.String(
+        required=True,
+        metadata={"description": "The operator to apply to the filter value"},
+    )
+    value = fields.Nested(
+        NumberRange,
+        required=True,
+        metadata={"description": "The numeric range value"},
+    )
+
+
+class NumberArrayFilter(Schema):
+    """Filter that matches against an array of numeric values."""
+
+    operator = fields.String(
+        required=True,
+        metadata={"description": "The operator to apply to the filter value"},
+    )
+    value = fields.List(
+        fields.Number,
+        required=True,
+        metadata={"description": "The array of numeric values"},
+    )
+
+
+class OppDefaultFilters(Schema):
+    """Standard filters available for searching opportunities."""
+
+    status = fields.Nested(
+        StringArrayFilter,  # Reference to existing schema
+        allow_none=True,
+        metadata={"description": "`status.value` matches one of the following values"},
+    )
+    closeDateRange = fields.Nested(
+        DateRangeFilter,  # Reference to existing schema
+        allow_none=True,
+        metadata={"description": "`keyDates.closeDate` is between the given range"},
+    )
+    totalFundingAvailableRange = fields.Nested(
+        MoneyRangeFilter,  # Reference to existing schema
+        allow_none=True,
+        metadata={
+            "description": "`funding.totalAmountAvailable` is between the given range"
+        },
+    )
+    minAwardAmountRange = fields.Nested(
+        MoneyRangeFilter,  # Reference to existing schema
+        allow_none=True,
+        metadata={"description": "`funding.minAwardAmount` is between the given range"},
+    )
+    maxAwardAmountRange = fields.Nested(
+        MoneyRangeFilter,  # Reference to existing schema
+        allow_none=True,
+        metadata={"description": "`funding.maxAwardAmount` is between the given range"},
     )
 
 
@@ -95,197 +599,127 @@ class OppFilters(Schema):
         allow_none=True,
         metadata={"description": "`status.value` matches one of the following values"},
     )
-    close_date_range = fields.Nested(
+    closeDateRange = fields.Nested(
         DateRangeFilter,
         allow_none=True,
-        data_key="closeDateRange",
         metadata={"description": "`keyDates.closeDate` is between the given range"},
     )
-    total_funding_available_range = fields.Nested(
+    totalFundingAvailableRange = fields.Nested(
         MoneyRangeFilter,
         allow_none=True,
-        data_key="totalFundingAvailableRange",
-        metadata={"description": "`funding.totalAmountAvailable` is between the given range"},
+        metadata={
+            "description": "`funding.totalAmountAvailable` is between the given range"
+        },
     )
-    min_award_amount_range = fields.Nested(
+    minAwardAmountRange = fields.Nested(
         MoneyRangeFilter,
         allow_none=True,
-        data_key="minAwardAmountRange",
         metadata={"description": "`funding.minAwardAmount` is between the given range"},
     )
-    max_award_amount_range = fields.Nested(
+    maxAwardAmountRange = fields.Nested(
         MoneyRangeFilter,
         allow_none=True,
-        data_key="maxAwardAmountRange",
         metadata={"description": "`funding.maxAwardAmount` is between the given range"},
     )
-    custom_filters = fields.Raw(
+    customFilters = fields.Raw(
         allow_none=True,
-        data_key="customFilters",
         metadata={"description": "Additional custom filters to apply to the search"},
     )
 
 
-# Core opportunity schemas
-class OppStatus(Schema):
-    """Status of an opportunity."""
-
-    value = fields.String(
-        allow_none=True,
-        metadata={"description": "The status value, from a predefined set of options"},
-    )
-    custom_value = fields.String(
-        allow_none=True, data_key="customValue", metadata={"description": "A custom status value"}
-    )
-    description = fields.String(
-        allow_none=True, metadata={"description": "A human-readable description of the status"}
-    )
+# =============================================================================
+# PAGINATION MODELS
+# =============================================================================
 
 
-class OppFunding(Schema):
-    """Funding details for an opportunity."""
-
-    details = fields.String(
-        allow_none=True,
-        metadata={"description": "Details about the funding available for this opportunity that don't fit other fields"},
-    )
-    total_amount_available = fields.Nested(
-        Money,
-        allow_none=True,
-        data_key="totalAmountAvailable",
-        metadata={"description": "Total amount of funding available for this opportunity"},
-    )
-    min_award_amount = fields.Nested(
-        Money,
-        allow_none=True,
-        data_key="minAwardAmount",
-        metadata={"description": "Minimum amount of funding granted per award"},
-    )
-    max_award_amount = fields.Nested(
-        Money,
-        allow_none=True,
-        data_key="maxAwardAmount",
-        metadata={"description": "Maximum amount of funding granted per award"},
-    )
-    min_award_count = fields.Integer(
-        allow_none=True,
-        data_key="minAwardCount",
-        metadata={"description": "Minimum number of awards granted"},
-    )
-    max_award_count = fields.Integer(
-        allow_none=True,
-        data_key="maxAwardCount",
-        metadata={"description": "Maximum number of awards granted"},
-    )
-    estimated_award_count = fields.Integer(
-        allow_none=True,
-        data_key="estimatedAwardCount",
-        metadata={"description": "Estimated number of awards that will be granted"},
-    )
-
-
-class OppTimeline(Schema):
-    """Timeline for an opportunity."""
-
-    post_date = fields.Nested(
-        SingleDateEvent,
-        allow_none=True,
-        data_key="postDate",
-        metadata={"description": "The date (and time) at which the opportunity is posted"},
-    )
-    close_date = fields.Nested(
-        SingleDateEvent,
-        allow_none=True,
-        data_key="closeDate",
-        metadata={"description": "The date (and time) at which the opportunity closes"},
-    )
-    other_dates = fields.Raw(
-        allow_none=True,
-        data_key="otherDates",
-        metadata={"description": "An optional map of other key dates or events in the opportunity timeline"},
-    )
-
-
-class OpportunityBase(Schema):
-    """Base opportunity model."""
-
-    created_at = fields.Raw(
-        allow_none=True,
-        data_key="createdAt",
-        metadata={"description": "The timestamp (in UTC) at which the record was created."},
-    )
-    last_modified_at = fields.Raw(
-        allow_none=True,
-        data_key="lastModifiedAt",
-        metadata={"description": "The timestamp (in UTC) at which the record was last modified."},
-    )
-    id = fields.UUID(
-        allow_none=True, metadata={"description": "Globally unique id for the opportunity"}
-    )
-    title = fields.String(
-        allow_none=True, metadata={"description": "Title or name of the funding opportunity"}
-    )
-    status = fields.Nested(
-        OppStatus, allow_none=True, metadata={"description": "Status of the opportunity"}
-    )
-    description = fields.String(
-        allow_none=True,
-        metadata={"description": "Description of the opportunity's purpose and scope"},
-    )
-    funding = fields.Nested(
-        OppFunding, allow_none=True, metadata={"description": "Details about the funding available"}
-    )
-    key_dates = fields.Nested(
-        OppTimeline,
-        allow_none=True,
-        data_key="keyDates",
-        metadata={"description": "Key dates for the opportunity, such as when the application opens and closes"},
-    )
-    source = fields.Raw(
-        allow_none=True, metadata={"description": "URL for the original source of the opportunity"}
-    )
-    custom_fields = fields.Raw(
-        allow_none=True,
-        data_key="customFields",
-        metadata={"description": "Additional custom fields specific to this opportunity"},
-    )
-
-
-# Pagination schemas
 class PaginatedBodyParams(Schema):
     """Parameters for pagination in the body of a request."""
 
-    page = fields.Integer(allow_none=True, metadata={"description": "The page number to retrieve"})
-    page_size = fields.Integer(
-        allow_none=True, data_key="pageSize", metadata={"description": "The number of items per page"}
+    page = fields.Integer(
+        allow_none=True, metadata={"description": "The page number to retrieve"}
+    )
+    pageSize = fields.Integer(
+        allow_none=True, metadata={"description": "The number of items per page"}
     )
 
 
 class PaginatedQueryParams(Schema):
     """Parameters for pagination in query parameters."""
 
-    page = fields.Integer(allow_none=True, metadata={"description": "The page number to retrieve"})
-    page_size = fields.Integer(
-        allow_none=True, data_key="pageSize", metadata={"description": "The number of items per page"}
+    page = fields.Integer(
+        allow_none=True, metadata={"description": "The page number to retrieve"}
+    )
+    pageSize = fields.Integer(
+        allow_none=True, metadata={"description": "The number of items per page"}
     )
 
 
 class PaginatedResultsInfo(Schema):
     """Information about the pagination of a list."""
 
-    page = fields.Integer(allow_none=True, metadata={"description": "The page number to retrieve"})
-    page_size = fields.Integer(
-        allow_none=True, data_key="pageSize", metadata={"description": "The number of items per page"}
+    page = fields.Integer(
+        allow_none=True, metadata={"description": "The page number to retrieve"}
     )
-    total_items = fields.Integer(
-        required=True, data_key="totalItems", metadata={"description": "The total number of items"}
+    pageSize = fields.Integer(
+        allow_none=True, metadata={"description": "The number of items per page"}
     )
-    total_pages = fields.Integer(
-        required=True, data_key="totalPages", metadata={"description": "The total number of pages"}
+    totalItems = fields.Integer(
+        required=True, metadata={"description": "The total number of items"}
+    )
+    totalPages = fields.Integer(
+        required=True, metadata={"description": "The total number of pages"}
     )
 
 
-# Sorting schemas
+# =============================================================================
+# SORTING MODELS
+# =============================================================================
+
+
+class SortOrder(fields.String):
+    """Enum field for sort order options."""
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            validate=validate.OneOf(["asc", "desc"]),
+            metadata={"description": "Sort order enumeration"},
+            **kwargs
+        )
+
+
+class SortBase(Schema):
+    """Base class for sorting-related models."""
+
+    sortBy = fields.String(
+        required=True,
+        metadata={"description": "The field to sort by"},
+    )
+    customSortBy = fields.String(
+        allow_none=True,
+        metadata={"description": "Implementation-defined sort key"},
+    )
+
+
+class SortQueryParams(SortBase):
+    """Query parameters for sorting."""
+
+    sortOrder = fields.Nested(
+        SortOrder,
+        allow_none=True,
+        metadata={"description": "The order to sort by"},
+    )
+
+
+class SortBodyParams(SortBase):
+    """Sorting parameters included in the request body."""
+
+    sortOrder = fields.Nested(
+        SortOrder,
+        allow_none=True,
+        metadata={"description": "The order to sort by"},
+    )
+
+
 class OppSortBy(fields.String):
     """Enum field for opportunity sort by options."""
 
@@ -313,17 +747,13 @@ class OppSortBy(fields.String):
 class OppSorting(Schema):
     """Sorting parameters for opportunities."""
 
-    sort_by = OppSortBy(
-        required=True, data_key="sortBy"
-    )
-    sort_order = fields.String(
+    sortBy = OppSortBy(required=True)
+    sortOrder = fields.String(
         allow_none=True,
-        data_key="sortOrder",
         metadata={"description": "The sort order (asc or desc)"},
     )
-    custom_sort_by = fields.String(
+    customSortBy = fields.String(
         allow_none=True,
-        data_key="customSortBy",
         metadata={"description": "The custom field to sort by when sortBy is 'custom'"},
     )
 
@@ -331,71 +761,129 @@ class OppSorting(Schema):
 class SortedResultsInfo(Schema):
     """Information about sorting results."""
 
-    sort_by = fields.String(
-        required=True, data_key="sortBy", metadata={"description": "The field to sort by"}
+    sortBy = fields.String(
+        required=True, metadata={"description": "The field to sort by"}
     )
-    custom_sort_by = fields.String(
+    customSortBy = fields.String(
         allow_none=True,
-        data_key="customSortBy",
         metadata={"description": "Implementation-defined sort key"},
     )
-    sort_order = fields.String(
+    sortOrder = fields.String(
         required=True,
-        data_key="sortOrder",
         metadata={"description": "The order in which the results are sorted"},
     )
     errors = fields.List(
         fields.String,
-        allow_none=True,
+        missing=[],
         metadata={"description": "Non-fatal errors that occurred during sorting"},
     )
 
 
-# Filter info schema
-class FilterInfo(Schema):
-    """Information about applied filters."""
-
-    filters = fields.Raw(
-        required=True, metadata={"description": "The filters applied to the response items"}
-    )
-    errors = fields.List(
-        fields.String,
-        allow_none=True,
-        metadata={"description": "Non-fatal errors that occurred during filtering"},
-    )
+# =============================================================================
+# REQUEST MODELS
+# =============================================================================
 
 
-# Request schemas
 class OpportunitySearchRequest(Schema):
     """Request schema for searching opportunities."""
 
-    search = fields.String(allow_none=True, metadata={"description": "Search query string"})
+    search = fields.String(
+        allow_none=True, metadata={"description": "Search query string"}
+    )
     filters = fields.Nested(
         OppFilters,
         allow_none=True,
         metadata={"description": "Filters to apply to the opportunity search"},
     )
     sorting = fields.Nested(
-        OppSorting, allow_none=True, metadata={"description": "Sorting parameters for opportunities"}
+        OppSorting,
+        allow_none=True,
+        metadata={"description": "Sorting parameters for opportunities"},
     )
     pagination = fields.Nested(PaginatedBodyParams, allow_none=True)
 
 
-# Response schemas
+# =============================================================================
+# RESPONSE MODELS
+# =============================================================================
+
+
+class DefaultResponse(Schema):
+    """Response for a default operation."""
+
+    status = fields.Integer(
+        required=True,
+        metadata={"description": "The HTTP status code"},
+    )
+    message = fields.String(
+        required=True,
+        metadata={"description": "The message"},
+    )
+
+
+class Success(DefaultResponse):
+    """Default success response."""
+
+    status = fields.Integer(
+        default=200,
+        metadata={"description": "The HTTP status code"},
+    )
+    message = fields.String(
+        default="Success",
+        metadata={"description": "The message"},
+    )
+
+
+class Paginated(Success):
+    """Template for a response with a paginated list of items."""
+
+    items = fields.List(
+        fields.Raw,
+        required=True,
+        metadata={"description": "Items from the current page"},
+    )
+    paginationInfo = fields.Nested(
+        PaginatedResultsInfo,  # Reference to existing schema
+        required=True,
+        metadata={"description": "Details about the paginated results"},
+    )
+
+
+class Sorted(Paginated):
+    """A paginated list of items with a sort order."""
+
+    sortInfo = fields.Nested(
+        SortedResultsInfo,  # Reference to existing schema
+        required=True,
+        metadata={"description": "The sort order of the items"},
+    )
+
+
+class Filtered(Sorted):
+    """A paginated list of items with a filter."""
+
+    filterInfo = fields.Nested(
+        "FilterInfo",  # Reference to existing schema
+        required=True,
+        metadata={"description": "The filters applied to the response items"},
+    )
+
+
 class OpportunitiesListResponse(Schema):
     """Response schema for listing opportunities."""
 
-    status = fields.Integer(required=True, metadata={"description": "The HTTP status code"})
+    status = fields.Integer(
+        required=True, metadata={"description": "The HTTP status code"}
+    )
     message = fields.String(required=True, metadata={"description": "The message"})
     items = fields.List(
         fields.Nested(OpportunityBase),
         required=True,
         metadata={"description": "The list of opportunities"},
     )
-    pagination_info = fields.Nested(
+    paginationInfo = fields.Nested(
         PaginatedResultsInfo,
         required=True,
-        data_key="paginationInfo",
         metadata={"description": "The pagination details"},
     )
 
@@ -403,29 +891,28 @@ class OpportunitiesListResponse(Schema):
 class OpportunitiesSearchResponse(Schema):
     """Response schema for searching opportunities."""
 
-    status = fields.Integer(required=True, metadata={"description": "The HTTP status code"})
+    status = fields.Integer(
+        required=True, metadata={"description": "The HTTP status code"}
+    )
     message = fields.String(required=True, metadata={"description": "The message"})
     items = fields.List(
         fields.Nested(OpportunityBase),
         required=True,
         metadata={"description": "The list of opportunities"},
     )
-    pagination_info = fields.Nested(
+    paginationInfo = fields.Nested(
         PaginatedResultsInfo,
         required=True,
-        data_key="paginationInfo",
         metadata={"description": "The pagination details"},
     )
-    sort_info = fields.Nested(
+    sortInfo = fields.Nested(
         SortedResultsInfo,
         required=True,
-        data_key="sortInfo",
         metadata={"description": "The sorting details"},
     )
-    filter_info = fields.Nested(
-        FilterInfo,
+    filterInfo = fields.Nested(
+        "FilterInfo",
         required=True,
-        data_key="filterInfo",
         metadata={"description": "The filter details"},
     )
 
@@ -433,24 +920,40 @@ class OpportunitiesSearchResponse(Schema):
 class OpportunityResponse(Schema):
     """Response schema for a single opportunity."""
 
-    status = fields.Integer(required=True, metadata={"description": "The HTTP status code"})
+    status = fields.Integer(
+        required=True, metadata={"description": "The HTTP status code"}
+    )
     message = fields.String(required=True, metadata={"description": "The message"})
-    data = fields.Nested(OpportunityBase, required=True, metadata={"description": "The opportunity"})
+    data = fields.Nested(
+        OpportunityBase, required=True, metadata={"description": "The opportunity"}
+    )
 
 
-# Error response schema
+# =============================================================================
+# ERROR RESPONSE MODELS
+# =============================================================================
+
+
 class Error(Schema):
     """Standard error response schema."""
 
-    status = fields.Integer(required=True, metadata={"description": "The HTTP status code"})
-    message = fields.String(required=True, metadata={"description": "Human-readable error message"})
-    errors = fields.List(fields.Raw, required=True, metadata={"description": "List of errors"})
+    status = fields.Integer(
+        required=True, metadata={"description": "The HTTP status code"}
+    )
+    message = fields.String(
+        required=True, metadata={"description": "Human-readable error message"}
+    )
+    errors = fields.List(
+        fields.Raw, required=True, metadata={"description": "List of errors"}
+    )
 
 
 class ValidationError(Schema):
     """Validation error schema."""
 
-    loc = fields.List(fields.Raw, required=True, metadata={"description": "Location of the error"})
+    loc = fields.List(
+        fields.Raw, required=True, metadata={"description": "Location of the error"}
+    )
     msg = fields.String(required=True, metadata={"description": "Error message"})
     type = fields.String(required=True, metadata={"description": "Error type"})
 
@@ -468,6 +971,47 @@ class HTTPValidationError(Schema):
 class HTTPError(Schema):
     """APIFlask HTTP error schema."""
 
-    status = fields.Integer(required=True, metadata={"description": "The HTTP status code"})
-    message = fields.String(required=True, metadata={"description": "Human-readable error message"})
-    errors = fields.List(fields.Raw, required=True, metadata={"description": "List of errors"})
+    status = fields.Integer(required=True, metadata={"description": "HTTP status code"})
+    message = fields.String(
+        required=True, metadata={"description": "Human-readable error message"}
+    )
+    errors = fields.List(
+        fields.Raw, required=True, metadata={"description": "List of errors"}
+    )
+
+
+# =============================================================================
+# FILTER INFO MODELS
+# =============================================================================
+
+
+class FilterInfo(Schema):
+    """Information about applied filters."""
+
+    filters = fields.Raw(
+        required=True,
+        metadata={"description": "The filters applied to the response items"},
+    )
+    errors = fields.List(
+        fields.String,
+        missing=[],
+        metadata={"description": "Non-fatal errors that occurred during filtering"},
+    )
+
+
+# =============================================================================
+# TYPE MODELS (for reference, these are type aliases in Pydantic)
+# =============================================================================
+
+# Note: These are type aliases in Pydantic and don't need Marshmallow equivalents
+# ISODate = date
+# ISOTime = time
+# UTCDateTime = datetime
+# DecimalString = Annotated[str, BeforeValidator(validate_decimal_string)]
+
+# =============================================================================
+# BASE MODELS (for reference)
+# =============================================================================
+
+# Note: CommonGrantsBaseModel is a base class in Pydantic
+# but not used in Marshmallow
