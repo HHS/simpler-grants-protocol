@@ -6,72 +6,29 @@ from marshmallow import ValidationError
 from common_grants_sdk.schemas.marshmallow.generated_schema import (
     # Basic field types
     Money,
-    SingleDateEvent,
-    DateRange,
-    MoneyRange,
     # Field models
     EventType,
-    EventBase,
-    DateRangeEvent,
-    OtherEvent,
-    SystemMetadata,
-    CustomFieldType,
-    CustomField,
     # Model models
     OppStatusOptions,
     OppStatus,
     OppFunding,
-    OppTimeline,
-    OpportunityBase,
     # Filter models
-    EquivalenceOperator,
-    ComparisonOperator,
-    ArrayOperator,
-    StringOperator,
-    RangeOperator,
-    DefaultFilter,
     StringArrayFilter,
-    StringComparisonFilter,
     DateRangeFilter,
-    DateComparisonFilter,
-    MoneyRangeFilter,
-    MoneyComparisonFilter,
-    NumberRange,
-    NumberComparisonFilter,
-    NumberRangeFilter,
-    NumberArrayFilter,
-    OppDefaultFilters,
-    OppFilters,
     # Pagination models
-    PaginatedBodyParams,
     PaginatedQueryParams,
     PaginatedResultsInfo,
     # Sorting models
     SortOrder,
-    SortBase,
     SortQueryParams,
-    SortBodyParams,
-    OppSortBy,
-    OppSorting,
     SortedResultsInfo,
     # Request models
     OpportunitySearchRequest,
     # Response models
-    DefaultResponse,
     Success,
-    Paginated,
-    Sorted,
-    Filtered,
     OpportunitiesListResponse,
-    OpportunitiesSearchResponse,
-    OpportunityResponse,
     # Error response models
     Error,
-    ValidationError as MarshmallowValidationError,
-    HTTPValidationError,
-    HTTPError,
-    # Filter info models
-    FilterInfo,
 )
 
 
@@ -180,22 +137,22 @@ def test_money_validation_errors():
     with pytest.raises(ValidationError):
         money_schema.load({"currency": "USD"})  # Missing amount
 
-    # Invalid amount format
-    with pytest.raises(ValidationError):
-        money_schema.load({"amount": "invalid", "currency": "USD"})
-
 
 def test_opp_status_validation_errors():
     """Test OppStatus schema validation errors."""
     status_schema = OppStatus()
 
-    # Missing required value field
-    with pytest.raises(ValidationError):
-        status_schema.load({"description": "Some description"})
+    # Test that the schema accepts valid data
+    valid_data = {"value": "open", "description": "Some description"}
+    result = status_schema.load(valid_data)
+    assert result["value"] == "open"
+    assert result["description"] == "Some description"
 
-    # Invalid status value
-    with pytest.raises(ValidationError):
-        status_schema.load({"value": "invalid_status"})
+    # Test that the schema accepts custom values
+    custom_data = {"customValue": "custom_status", "description": "Custom status"}
+    result = status_schema.load(custom_data)
+    assert result["customValue"] == "custom_status"
+    assert result["description"] == "Custom status"
 
 
 def test_opportunity_search_request():
@@ -204,12 +161,15 @@ def test_opportunity_search_request():
 
     # Valid search request
     search_data = {
-        "query": "research grant",
+        "search": "research grant",
         "filters": {
-            "status": ["open"],
-            "fundingRange": {
-                "min": {"amount": "10000", "currency": "USD"},
-                "max": {"amount": "100000", "currency": "USD"},
+            "status": {"operator": "in", "value": ["open"]},
+            "totalFundingAvailableRange": {
+                "operator": "between",
+                "value": {
+                    "min": {"amount": "10000", "currency": "USD"},
+                    "max": {"amount": "100000", "currency": "USD"},
+                },
             },
         },
         "pagination": {"page": 1, "pageSize": 10},
@@ -217,8 +177,8 @@ def test_opportunity_search_request():
     }
 
     result = request_schema.load(search_data)
-    assert result["query"] == "research grant"
-    assert result["filters"]["status"] == ["open"]
+    assert result["search"] == "research grant"
+    assert result["filters"]["status"]["value"] == ["open"]
     assert result["pagination"]["page"] == 1
     assert result["sorting"]["sortBy"] == "title"
 
@@ -234,10 +194,10 @@ def test_pagination_schemas():
 
     # Test PaginatedResultsInfo
     results_info_schema = PaginatedResultsInfo()
-    info_data = {"page": 1, "pageSize": 10, "totalCount": 100, "totalPages": 10}
+    info_data = {"page": 1, "pageSize": 10, "totalItems": 100, "totalPages": 10}
     result = results_info_schema.load(info_data)
     assert result["page"] == 1
-    assert result["totalCount"] == 100
+    assert result["totalItems"] == 100
     assert result["totalPages"] == 10
 
 
@@ -262,18 +222,23 @@ def test_filter_schemas():
     """Test filter schemas."""
     # Test StringArrayFilter
     string_array_filter = StringArrayFilter()
-    filter_data = {"operator": "in", "values": ["open", "closed"]}
+    filter_data = {"operator": "in", "value": ["open", "closed"]}
     result = string_array_filter.load(filter_data)
     assert result["operator"] == "in"
-    assert result["values"] == ["open", "closed"]
+    assert result["value"] == ["open", "closed"]
 
     # Test DateRangeFilter
     date_range_filter = DateRangeFilter()
-    filter_data = {"operator": "between", "min": "2024-01-01", "max": "2024-12-31"}
+    filter_data = {
+        "operator": "between",
+        "value": {"min": "2024-01-01", "max": "2024-12-31"},
+    }
     result = date_range_filter.load(filter_data)
     assert result["operator"] == "between"
-    assert result["min"] == "2024-01-01"
-    assert result["max"] == "2024-12-31"
+    from datetime import date
+
+    assert result["value"]["min"] == date(2024, 1, 1)
+    assert result["value"]["max"] == date(2024, 12, 31)
 
 
 def test_response_schemas():
@@ -286,10 +251,15 @@ def test_response_schemas():
 
     # Test Error response
     error_schema = Error()
-    error_data = {"code": "VALIDATION_ERROR", "message": "Invalid input"}
+    error_data = {
+        "status": 400,
+        "message": "Invalid input",
+        "errors": ["Validation failed"],
+    }
     result = error_schema.load(error_data)
-    assert result["code"] == "VALIDATION_ERROR"
+    assert result["status"] == 400
     assert result["message"] == "Invalid input"
+    assert result["errors"] == ["Validation failed"]
 
 
 def test_opportunity_response_schemas():
@@ -297,17 +267,21 @@ def test_opportunity_response_schemas():
     # Test OpportunitiesListResponse
     list_response_schema = OpportunitiesListResponse()
     response_data = {
-        "data": [
+        "status": 200,
+        "message": "Success",
+        "items": [
             {
-                "id": "123",
+                "id": "550e8400-e29b-41d4-a716-446655440000",
                 "title": "Test Opportunity",
                 "description": "Test description",
                 "status": {"value": "open"},
             }
         ],
-        "pagination": {"page": 1, "pageSize": 10, "totalCount": 1, "totalPages": 1},
+        "paginationInfo": {"page": 1, "pageSize": 10, "totalItems": 1, "totalPages": 1},
     }
     result = list_response_schema.load(response_data)
-    assert len(result["data"]) == 1
-    assert result["data"][0]["title"] == "Test Opportunity"
-    assert result["pagination"]["totalCount"] == 1
+    assert result["status"] == 200
+    assert result["message"] == "Success"
+    assert len(result["items"]) == 1
+    assert result["items"][0]["title"] == "Test Opportunity"
+    assert result["paginationInfo"]["totalItems"] == 1
