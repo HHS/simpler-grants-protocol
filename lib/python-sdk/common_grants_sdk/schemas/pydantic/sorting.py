@@ -63,7 +63,7 @@ class SortedResultsInfo(SortBase):
         description="The order in which the results are sorted",
     )
     errors: Optional[list[str]] = Field(
-        default=[],
+        default_factory=list,
         description="Non-fatal errors that occurred during sorting",
         json_schema_extra={"items": {"type": "string"}},
     )

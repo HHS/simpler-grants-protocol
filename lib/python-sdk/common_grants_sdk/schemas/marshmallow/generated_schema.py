@@ -769,7 +769,7 @@ class SortedResultsInfo(Schema):
     )
     errors = fields.List(
         fields.String,
-        load_default=[],
+        default_factory=list,
         metadata={"description": "Non-fatal errors that occurred during sorting"},
     )
 
@@ -989,7 +989,7 @@ class FilterInfo(Schema):
     )
     errors = fields.List(
         fields.String,
-        load_default=[],
+        default_factory=list,
         metadata={"description": "Non-fatal errors that occurred during filtering"},
     )
 

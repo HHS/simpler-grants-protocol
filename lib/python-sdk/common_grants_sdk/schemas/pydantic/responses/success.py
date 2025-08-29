@@ -61,7 +61,7 @@ class FilterInfo(CommonGrantsBaseModel, Generic[FilterT]):
         ..., description="The filters applied to the response items"
     )
     errors: Optional[list[str]] = Field(
-        default=[],
+        default_factory=list,
         description="Non-fatal errors that occurred during filtering",
     )
 
