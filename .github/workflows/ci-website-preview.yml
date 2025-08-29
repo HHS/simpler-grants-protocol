@@ -4,11 +4,13 @@ on:
   pull_request:
     paths:
       - website/**
-      - .github/workflows/ci-website.yml
+      - .github/workflows/ci-website-preview.yml
 
 defaults:
   run:
     working-directory: ./website
+env:
+  CLOUDFLARE_WORKERS_DOMAIN: billy-daly.workers.dev
 
 jobs:
   deploy-preview:
@@ -30,6 +32,12 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Post preview link comment
+        if: github.event.action == 'opened'
+        run: |
+          PREVIEW_URL="https://cg-pr-${{ github.event.pull_request.number }}.${{ env.CLOUDFLARE_WORKERS_DOMAIN }}"
+          gh pr comment ${{ github.event.pull_request.number }} --body "🚀 **Website Preview Deployed!**\n\nPreview your changes at: $PREVIEW_URL\n\nThis preview will be automatically deleted when the PR is closed."
 
   delete-preview:
     if: github.event.action == 'closed'
