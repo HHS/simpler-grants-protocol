@@ -505,11 +505,11 @@ class MoneyComparisonFilter(Schema):
 class NumberRange(Schema):
     """Represents a range between two numeric values."""
 
-    min: Any = fields.Number(
+    min: Any = fields.Float(
         required=True,
         metadata={"description": "The minimum value in the range"},
     )
-    max: Any = fields.Number(
+    max: Any = fields.Float(
         required=True,
         metadata={"description": "The maximum value in the range"},
     )
@@ -524,7 +524,7 @@ class NumberComparisonFilter(Schema):
             "description": "The comparison operator to apply to the filter value"
         },
     )
-    value: Any = fields.Number(
+    value: Any = fields.Float(
         required=True,
         metadata={"description": "The numeric value to compare against"},
     )
@@ -769,7 +769,7 @@ class SortedResultsInfo(Schema):
     )
     errors = fields.List(
         fields.String,
-        missing=[],
+        load_default=[],
         metadata={"description": "Non-fatal errors that occurred during sorting"},
     )
 
@@ -820,11 +820,11 @@ class Success(DefaultResponse):
     """Default success response."""
 
     status = fields.Integer(
-        default=200,
+        dump_default=200,
         metadata={"description": "The HTTP status code"},
     )
     message = fields.String(
-        default="Success",
+        dump_default="Success",
         metadata={"description": "The message"},
     )
 
@@ -989,7 +989,7 @@ class FilterInfo(Schema):
     )
     errors = fields.List(
         fields.String,
-        missing=[],
+        load_default=[],
         metadata={"description": "Non-fatal errors that occurred during filtering"},
     )
 
