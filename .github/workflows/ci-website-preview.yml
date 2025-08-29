@@ -43,15 +43,3 @@ jobs:
             Preview your changes at: https://cg-pr-${{ github.event.pull_request.number }}.${{ env.CLOUDFLARE_WORKERS_DOMAIN }}
 
             This preview will be automatically deleted when the PR is closed.
-
-  delete-preview:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Delete PR preview
-    steps:
-      - name: Delete Worker for PR
-        run: |
-          npx wrangler delete --name cg-pr-${{ github.event.pull_request.number }} --yes
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
