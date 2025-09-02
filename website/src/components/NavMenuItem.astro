@@ -55,7 +55,7 @@ const { label, items } = Astro.props;
     padding: 0.5rem 0.75rem;
     background: none;
     border: none;
-    color: var(--sl-color-text);
+    color: var(--sl-color-white);
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
@@ -66,18 +66,18 @@ const { label, items } = Astro.props;
   }
 
   .nav-menu-button:hover {
-    background-color: var(--sl-color-hairline);
-    color: var(--sl-color-accent);
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-accent-high);
   }
 
   .nav-menu-button:focus {
-    outline: 2px solid var(--sl-color-accent);
+    outline: 2px solid var(--sl-color-accent-high);
     outline-offset: 2px;
   }
 
   .nav-menu-item:focus-within .nav-menu-button {
-    background-color: var(--sl-color-hairline);
-    color: var(--sl-color-accent);
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-accent-high);
   }
 
   .nav-menu-item:focus-within .nav-menu-arrow {
@@ -95,8 +95,8 @@ const { label, items } = Astro.props;
     left: 0;
     right: 0;
     min-width: 12rem;
-    background-color: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-hairline-shade);
+    background-color: var(--sl-color-black);
+    border: 1px solid var(--sl-color-gray-5);
     border-radius: 0.5rem;
     box-shadow:
       0 10px 15px -3px rgba(0, 0, 0, 0.1),
@@ -122,7 +122,7 @@ const { label, items } = Astro.props;
   .nav-menu-link {
     display: block;
     padding: 0.75rem 1rem;
-    color: var(--sl-color-text);
+    color: var(--sl-color-white);
     text-decoration: none;
     transition:
       background-color 0.2s ease,
@@ -138,20 +138,14 @@ const { label, items } = Astro.props;
 
   .nav-menu-link:hover,
   .nav-menu-link:focus {
-    background-color: var(--sl-color-hairline);
-    color: var(--sl-color-accent);
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-accent-high);
     outline: none;
   }
 
   .nav-menu-link:focus {
-    outline: 2px solid var(--sl-color-accent);
+    outline: 2px solid var(--sl-color-accent-high);
     outline-offset: -2px;
-  }
-
-  /* Dark mode adjustments */
-  :global(.dark) .nav-menu-dropdown {
-    background-color: var(--sl-color-bg);
-    border-color: var(--sl-color-hairline-shade);
   }
 </style>
 
