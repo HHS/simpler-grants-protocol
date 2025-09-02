@@ -27,7 +27,7 @@ const ctaConfig = {
   <div class="title-wrapper sl-flex">
     <SiteTitle />
   </div>
-  <div class="sl-flex print:hidden">
+  <div class="sl-flex print:hidden search-container">
     {shouldRenderSearch && <Search />}
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
@@ -53,6 +53,10 @@ const ctaConfig = {
 
 <style>
   @layer starlight.core {
+    .search-container {
+      max-width: 10rem;
+    }
+
     .header {
       display: flex;
       gap: var(--sl-nav-gap);
@@ -104,12 +108,9 @@ const ctaConfig = {
         );
         display: grid;
         grid-template-columns:
-        /* 1 (site title): runs up until the main content column's left edge or the width of the title, whichever is the largest  */
+        /* 1 (site title): runs up until width of the title */
           minmax(
-            calc(
-              var(--__sidebar-width) +
-                max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))
-            ),
+            calc(max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))),
             auto
           )
           /* 2 (search box): all free space that is available. */
