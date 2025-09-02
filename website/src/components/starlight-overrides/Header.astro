@@ -8,6 +8,7 @@ import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
 import MobileMenuToggle from "@astrojs/starlight/components/MobileMenuToggle.astro";
 import { LinkButton } from "@astrojs/starlight/components";
+import NavMenuItem from "../NavMenuItem.astro";
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -21,6 +22,33 @@ const ctaConfig = {
   text: "Get in touch",
   url: "https://forms.gle/XUJuEnNtaZkdc1MQ6",
 };
+const NavMenuItems = [
+  {
+    label: "Learn more",
+    items: [
+      { label: "Getting started", href: "/getting-started" },
+      { label: "About CommonGrants", href: "/about" },
+      { label: "Form library", href: "/forms/library" },
+    ],
+  },
+  {
+    label: "Protocol",
+    items: [
+      { label: "Specification", href: "/protocol/specification" },
+      { label: "OpenAPI docs", href: "/protocol/api-docs" },
+      { label: "Types", href: "/protocol/types" },
+      { label: "Fields", href: "/protocol/fields" },
+      { label: "Models", href: "/protocol/models" },
+    ],
+  },
+  {
+    label: "Guides",
+    items: [
+      { label: "Using Python", href: "/guides/using-python" },
+      { label: "Using TypeScript", href: "/guides/using-typescript" },
+    ],
+  },
+];
 ---
 
 <div class="header">
@@ -31,6 +59,11 @@ const ctaConfig = {
     {shouldRenderSearch && <Search />}
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
+    {
+      NavMenuItems.map((item) => (
+        <NavMenuItem label={item.label} items={item.items ?? []} />
+      ))
+    }
     <div class="sl-flex social-icons">
       <SocialIcons />
     </div>
