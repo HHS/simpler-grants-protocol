@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from common_grants_sdk.schemas import (
+from common_grants_sdk.schemas.pydantic import (
     FilterInfo,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
@@ -10,7 +10,7 @@ from common_grants_sdk.schemas import (
     PaginatedResultsInfo,
     SortedResultsInfo,
 )
-from common_grants_sdk.schemas.sorting import OppSortBy, OppSorting
+from common_grants_sdk.schemas.pydantic.sorting import OppSortBy, OppSorting
 from fastapi import status
 
 from common_grants.schemas import OppFilters, OpportunityBase

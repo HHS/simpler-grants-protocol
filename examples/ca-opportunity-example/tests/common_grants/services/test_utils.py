@@ -4,7 +4,7 @@ from datetime import date
 from typing import cast
 from uuid import UUID
 
-from common_grants_sdk.schemas.fields import EventType, SingleDateEvent
+from common_grants_sdk.schemas.pydantic.fields import EventType, SingleDateEvent
 
 from common_grants.schemas import (
     OppFilters,

@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from typing import Any
 from uuid import uuid5
 
-from common_grants_sdk.schemas.fields import EventType, Money, SingleDateEvent
+from common_grants_sdk.schemas.pydantic.fields import EventType, Money, SingleDateEvent
 
 from common_grants.constants import CA_OPPORTUNITY_NAMESPACE
 from common_grants.schemas import (
