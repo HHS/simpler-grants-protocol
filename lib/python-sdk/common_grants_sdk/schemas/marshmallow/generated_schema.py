@@ -51,11 +51,11 @@ class SingleDateEvent(Schema):
 class DateRange(Schema):
     """Range filter for date values."""
 
-    min = fields.Date(
+    min = fields.Raw(
         allow_none=True, 
         metadata={"description": "The minimum date in the range"}
     )
-    max = fields.Date(
+    max = fields.Raw(
         allow_none=True, 
         metadata={"description": "The maximum date in the range"}
     )
