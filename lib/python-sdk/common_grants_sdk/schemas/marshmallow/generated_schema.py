@@ -191,6 +191,25 @@ class CustomField(Schema):
 
 
 # =============================================================================
+# FILTER INFO MODELS
+# =============================================================================
+
+
+class FilterInfo(Schema):
+    """Information about applied filters."""
+
+    filters = fields.Raw(
+        required=True,
+        metadata={"description": "The filters applied to the response items"},
+    )
+    errors = fields.List(
+        fields.String,
+        load_default=[],
+        metadata={"description": "Non-fatal errors that occurred during filtering"},
+    )
+
+
+# =============================================================================
 # MODEL MODELS
 # =============================================================================
 
@@ -496,7 +515,7 @@ class MoneyComparisonFilter(Schema):
         metadata={"description": "The operator to apply to the filter value"},
     )
     value = fields.Nested(
-        Money,  # Reference to Money schema
+        Money,
         required=True,
         metadata={"description": "The money value to compare against"},
     )
@@ -562,29 +581,29 @@ class OppDefaultFilters(Schema):
     """Standard filters available for searching opportunities."""
 
     status = fields.Nested(
-        StringArrayFilter,  # Reference to existing schema
+        StringArrayFilter,
         allow_none=True,
         metadata={"description": "`status.value` matches one of the following values"},
     )
     closeDateRange = fields.Nested(
-        DateRangeFilter,  # Reference to existing schema
+        DateRangeFilter,
         allow_none=True,
         metadata={"description": "`keyDates.closeDate` is between the given range"},
     )
     totalFundingAvailableRange = fields.Nested(
-        MoneyRangeFilter,  # Reference to existing schema
+        MoneyRangeFilter,
         allow_none=True,
         metadata={
             "description": "`funding.totalAmountAvailable` is between the given range"
         },
     )
     minAwardAmountRange = fields.Nested(
-        MoneyRangeFilter,  # Reference to existing schema
+        MoneyRangeFilter,
         allow_none=True,
         metadata={"description": "`funding.minAwardAmount` is between the given range"},
     )
     maxAwardAmountRange = fields.Nested(
-        MoneyRangeFilter,  # Reference to existing schema
+        MoneyRangeFilter,
         allow_none=True,
         metadata={"description": "`funding.maxAwardAmount` is between the given range"},
     )
@@ -838,7 +857,7 @@ class Paginated(Success):
         metadata={"description": "Items from the current page"},
     )
     paginationInfo = fields.Nested(
-        PaginatedResultsInfo,  # Reference to existing schema
+        PaginatedResultsInfo,
         required=True,
         metadata={"description": "Details about the paginated results"},
     )
@@ -848,7 +867,7 @@ class Sorted(Paginated):
     """A paginated list of items with a sort order."""
 
     sortInfo = fields.Nested(
-        SortedResultsInfo,  # Reference to existing schema
+        SortedResultsInfo,
         required=True,
         metadata={"description": "The sort order of the items"},
     )
@@ -858,7 +877,7 @@ class Filtered(Sorted):
     """A paginated list of items with a filter."""
 
     filterInfo = fields.Nested(
-        "FilterInfo",  # Reference to existing schema
+        FilterInfo,
         required=True,
         metadata={"description": "The filters applied to the response items"},
     )
@@ -906,7 +925,7 @@ class OpportunitiesSearchResponse(Schema):
         metadata={"description": "The sorting details"},
     )
     filterInfo = fields.Nested(
-        "FilterInfo",
+        FilterInfo,
         required=True,
         metadata={"description": "The filter details"},
     )
@@ -972,25 +991,6 @@ class HTTPError(Schema):
     )
     errors = fields.List(
         fields.Raw, required=True, metadata={"description": "List of errors"}
-    )
-
-
-# =============================================================================
-# FILTER INFO MODELS
-# =============================================================================
-
-
-class FilterInfo(Schema):
-    """Information about applied filters."""
-
-    filters = fields.Raw(
-        required=True,
-        metadata={"description": "The filters applied to the response items"},
-    )
-    errors = fields.List(
-        fields.String,
-        load_default=[],
-        metadata={"description": "Non-fatal errors that occurred during filtering"},
     )
 
 
