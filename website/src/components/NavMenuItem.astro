@@ -11,7 +11,13 @@ const { label, items } = Astro.props;
 ---
 
 <div class="nav-menu-item">
-  <button class="nav-menu-button" aria-haspopup="true">
+  <button
+    class="nav-menu-button"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="nav-menu-{label.toLowerCase().replace(/\s+/g, '-')}"
+    id="nav-button-{label.toLowerCase().replace(/\s+/g, '-')}"
+  >
     {label}
     <svg
       class="nav-menu-arrow"
@@ -31,10 +37,15 @@ const { label, items } = Astro.props;
     </svg>
   </button>
 
-  <div class="nav-menu-dropdown">
+  <div
+    class="nav-menu-dropdown"
+    role="menu"
+    aria-labelledby="nav-button-{label.toLowerCase().replace(/\s+/g, '-')}"
+    id="nav-menu-{label.toLowerCase().replace(/\s+/g, '-')}"
+  >
     {
       items.map((item) => (
-        <a href={item.href} class="nav-menu-link">
+        <a href={item.href} class="nav-menu-link" role="menuitem" tabindex="-1">
           {item.label}
         </a>
       ))
@@ -75,12 +86,14 @@ const { label, items } = Astro.props;
     outline-offset: 2px;
   }
 
-  .nav-menu-item:focus-within .nav-menu-button {
+  .nav-menu-item:focus-within .nav-menu-button,
+  .nav-menu-item.open .nav-menu-button {
     background-color: var(--sl-color-gray-6);
     color: var(--sl-color-accent-high);
   }
 
-  .nav-menu-item:focus-within .nav-menu-arrow {
+  .nav-menu-item:focus-within .nav-menu-arrow,
+  .nav-menu-item.open .nav-menu-arrow {
     transform: rotate(180deg);
   }
 
@@ -113,7 +126,8 @@ const { label, items } = Astro.props;
     margin-top: 0.25rem;
   }
 
-  .nav-menu-item:focus-within .nav-menu-dropdown {
+  .nav-menu-item:focus-within .nav-menu-dropdown,
+  .nav-menu-item.open .nav-menu-dropdown {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -150,15 +164,143 @@ const { label, items } = Astro.props;
 </style>
 
 <script>
-  // Simple click handler to prevent default button behavior
+  // Enhanced accessibility and Safari compatibility
   document.addEventListener("DOMContentLoaded", () => {
     const navButtons = document.querySelectorAll(".nav-menu-button");
 
     navButtons.forEach((button) => {
+      const navMenuItem = button.closest(".nav-menu-item");
+      const dropdown = navMenuItem?.querySelector(".nav-menu-dropdown");
+      const menuItems = dropdown?.querySelectorAll(".nav-menu-link");
+
+      if (!navMenuItem || !dropdown || !menuItems) return;
+
+      let currentIndex = -1;
+
+      // Toggle dropdown function
+      const toggleDropdown = (isOpen: boolean) => {
+        const wasOpen = navMenuItem.classList.contains("open");
+
+        if (isOpen && !wasOpen) {
+          // Open dropdown
+          navMenuItem.classList.add("open");
+          button.setAttribute("aria-expanded", "true");
+          currentIndex = -1;
+        } else if (!isOpen && wasOpen) {
+          // Close dropdown
+          navMenuItem.classList.remove("open");
+          button.setAttribute("aria-expanded", "false");
+          currentIndex = -1;
+          // Return focus to button
+          (button as HTMLElement).focus();
+        }
+      };
+
+      // Close all other dropdowns
+      const closeOtherDropdowns = () => {
+        document.querySelectorAll(".nav-menu-item.open").forEach((item) => {
+          if (item !== navMenuItem) {
+            const otherButton = item.querySelector(
+              ".nav-menu-button",
+            ) as HTMLButtonElement;
+            item.classList.remove("open");
+            otherButton?.setAttribute("aria-expanded", "false");
+          }
+        });
+      };
+
+      // Handle button click
       button.addEventListener("click", (e) => {
-        // Prevent default button behavior - we want focus to move to dropdown
         e.preventDefault();
+        const isOpen = navMenuItem.classList.contains("open");
+        closeOtherDropdowns();
+        toggleDropdown(!isOpen);
       });
+
+      // Handle button keyboard events
+      button.addEventListener("keydown", (e) => {
+        const keyEvent = e as KeyboardEvent;
+        switch (keyEvent.key) {
+          case "Enter":
+          case " ":
+            e.preventDefault();
+            closeOtherDropdowns();
+            toggleDropdown(!navMenuItem.classList.contains("open"));
+            break;
+          case "ArrowDown":
+            e.preventDefault();
+            if (!navMenuItem.classList.contains("open")) {
+              closeOtherDropdowns();
+              toggleDropdown(true);
+            }
+            currentIndex = 0;
+            (menuItems[0] as HTMLElement)?.focus();
+            break;
+          case "ArrowUp":
+            e.preventDefault();
+            if (!navMenuItem.classList.contains("open")) {
+              closeOtherDropdowns();
+              toggleDropdown(true);
+            }
+            currentIndex = menuItems.length - 1;
+            (menuItems[menuItems.length - 1] as HTMLElement)?.focus();
+            break;
+        }
+      });
+
+      // Handle menu item keyboard events
+      menuItems.forEach((item, index) => {
+        item.addEventListener("keydown", (e) => {
+          const keyEvent = e as KeyboardEvent;
+          switch (keyEvent.key) {
+            case "ArrowDown":
+              e.preventDefault();
+              currentIndex = (index + 1) % menuItems.length;
+              (menuItems[currentIndex] as HTMLElement)?.focus();
+              break;
+            case "ArrowUp":
+              e.preventDefault();
+              currentIndex = index === 0 ? menuItems.length - 1 : index - 1;
+              (menuItems[currentIndex] as HTMLElement)?.focus();
+              break;
+            case "Escape":
+              e.preventDefault();
+              toggleDropdown(false);
+              break;
+            case "Tab":
+              // Allow tab to close dropdown and continue navigation
+              toggleDropdown(false);
+              break;
+          }
+        });
+      });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", (e) => {
+      const target = e.target as Element;
+      if (target && !target.closest(".nav-menu-item")) {
+        document.querySelectorAll(".nav-menu-item.open").forEach((item) => {
+          const button = item.querySelector(
+            ".nav-menu-button",
+          ) as HTMLButtonElement;
+          item.classList.remove("open");
+          button?.setAttribute("aria-expanded", "false");
+        });
+      }
+    });
+
+    // Close dropdowns when pressing Escape (global)
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        document.querySelectorAll(".nav-menu-item.open").forEach((item) => {
+          const button = item.querySelector(
+            ".nav-menu-button",
+          ) as HTMLButtonElement;
+          item.classList.remove("open");
+          button?.setAttribute("aria-expanded", "false");
+        });
+      }
     });
   });
 </script>
