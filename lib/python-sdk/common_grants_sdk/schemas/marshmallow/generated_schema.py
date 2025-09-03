@@ -51,6 +51,10 @@ class SingleDateEvent(Schema):
 class DateRange(Schema):
     """Range filter for date values."""
 
+    # Note: The `min` and `max` field types are `Raw` instead of `Date` because
+    # when they are `Date` type they cause a runtime serialization error in an 
+    # APIFlask api implementation (e.g. simpler-grants-gov/api), and the only
+    # currently known workaround is to use the `Raw` type instead
     min = fields.Raw(
         allow_none=True, 
         metadata={"description": "The minimum date in the range"}
