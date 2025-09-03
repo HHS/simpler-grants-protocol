@@ -49,46 +49,6 @@ The Makefile exposes the following commands:
 | `make dev`            | Runs the development server                 |
 | `make gen-openapi`    | Generates the OpenAPI specification         |
 
-## Project Structure
-
-```
-├── pyproject.toml          # Python project configuration and dependencies
-├── poetry.lock             # Locked versions of dependencies
-├── Makefile                # Development workflow commands
-├── README.md               # Project documentation
-├── openapi.yaml            # Generated OpenAPI specification
-│
-├── src/
-│   └── common_grants/              # Main package directory
-│       ├── api.py                  # FastAPI application setup and config
-│       ├── constants.py            # Application constants and configuration
-│       ├── routes/                 # API route handlers and endpoints
-│       │   └── opportunities.py    # Opportunity-related endpoints
-│       │
-│       ├── schemas/                # Data models and schema definitions
-│       │   └── __init__.py         # Schema exports (imports from Python SDK)
-│       │
-│       ├── services/               # Business logic and data operations
-│       │   ├── opportunity.py      # Opportunity-related operations
-│       │   └── utils.py            # Shared utility functions
-│       │
-│       ├── utils/                  # Utility modules
-│       │   ├── opp_transform.py    # Data transformation utilities
-│       │   └── opp_data_source.py  # Data source utilities
-│       │
-│       ├── data/                   # Sample data files
-│       │   └── *.json              # Sample opportunity data
-│       │
-│       └── scripts/                # Utility scripts
-│           ├── generate_openapi.py # OpenAPI specification generator
-│           └── check_domain.sh     # Domain validation script
-│
-└── tests/                  # Test suite
-    └── common_grants/      # Tests matching package structure
-        ├── services/       # Service layer tests
-        └── utils/          # Utility function tests
-```
-
 ## Dependencies
 
 This template depends on the CommonGrants Python SDK (`common-grants-sdk`) for core field types and models:
