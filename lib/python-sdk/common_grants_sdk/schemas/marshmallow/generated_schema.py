@@ -552,7 +552,7 @@ class NumberArrayFilter(Schema):
         metadata={"description": "The operator to apply to the filter value"},
     )
     value = fields.List(
-        fields.Number,
+        fields.Float,
         required=True,
         metadata={"description": "The array of numeric values"},
     )
@@ -769,7 +769,7 @@ class SortedResultsInfo(Schema):
     )
     errors = fields.List(
         fields.String,
-        default_factory=list,
+        load_default=[],
         metadata={"description": "Non-fatal errors that occurred during sorting"},
     )
 
@@ -989,7 +989,7 @@ class FilterInfo(Schema):
     )
     errors = fields.List(
         fields.String,
-        default_factory=list,
+        load_default=[],
         metadata={"description": "Non-fatal errors that occurred during filtering"},
     )
 
