@@ -5,7 +5,7 @@ These schemas are based on the TypeSpec models defined in the CommonGrants speci
 """
 
 # Import and re-export all models from the Python SDK
-from common_grants_sdk.schemas import (
+from common_grants_sdk.schemas.pydantic import (
     ArrayOperator,
     ComparisonOperator,
     # Fields

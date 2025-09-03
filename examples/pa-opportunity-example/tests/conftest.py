@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from uuid import uuid4
 
 import pytest
-from common_grants_sdk.schemas.fields import EventType, SingleDateEvent
+from common_grants_sdk.schemas.pydantic.fields import EventType, SingleDateEvent
 from fastapi.testclient import TestClient
 
 from common_grants.api import app
