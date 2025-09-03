@@ -37,9 +37,12 @@ The Makefile exposes the following commands:
 | --------------------- | ------------------------------------------- |
 | `make install`        | Installs the python dependencies and API    |
 | `make test`           | Runs the unit test suite and test coverage  |
+| `make test-coverage`  | Runs tests with coverage report             |
 | `make format`         | Runs formatting with black                  |
 | `make lint`           | Runs linting with ruff                      |
-| `make check-domain`   | Runs domain config validation
+| `make check-format`   | Checks formatting without making changes    |
+| `make check-lint`     | Checks linting without making changes      |
+| `make check-domain`   | Runs domain config validation               |
 | `make check-spec`     | Validates the OpenAPI specification         |
 | `make check-types`    | Runs type checking with pyright             |
 | `make checks`         | Runs linting, formatting, and type checking |
@@ -58,39 +61,32 @@ The Makefile exposes the following commands:
 ├── src/
 │   └── common_grants/              # Main package directory
 │       ├── api.py                  # FastAPI application setup and config
+│       ├── constants.py            # Application constants and configuration
 │       ├── routes/                 # API route handlers and endpoints
-│       │   ├── opportunities.py    # Opportunity-related endpoints
-│       │   └── ...                 # Other route modules
+│       │   └── opportunities.py    # Opportunity-related endpoints
 │       │
-│       ├── schemas/                    # Data models and schema definitions
-│       │   ├── filters/                # Query filter models
-│       │   │   ├── base.py             # Base filter types and operators
-│       │   │   ├── date_filters.py     # Date-specific filters
-│       │   │   ├── money_filters.py    # Money-specific filters
-│       │   │   └── string_filters.py   # String-specific filters
-│       │   ├── models/                 # Core domain models
-│       │   │   ├── opp_search.py       # Search request models
-│       │   │   ├── opp_search_request.py # Search request handling
-│       │   │   └── ...                 # Other models
-│       │   ├── pagination.py           # Pagination models and parameters
-│       │   ├── response.py             # API response wrappers
-│       │   ├── sorting.py              # Sorting models and parameters
-│       │   └── __init__.py             # Schema exports (imports from Python SDK)
+│       ├── schemas/                # Data models and schema definitions
+│       │   └── __init__.py         # Schema exports (imports from Python SDK)
 │       │
 │       ├── services/               # Business logic and data operations
 │       │   ├── opportunity.py      # Opportunity-related operations
 │       │   └── utils.py            # Shared utility functions
 │       │
+│       ├── utils/                  # Utility modules
+│       │   ├── opp_transform.py    # Data transformation utilities
+│       │   └── opp_data_source.py  # Data source utilities
+│       │
+│       ├── data/                   # Sample data files
+│       │   └── *.json              # Sample opportunity data
+│       │
 │       └── scripts/                # Utility scripts
-│           └── generate_openapi.py # OpenAPI specification generator
+│           ├── generate_openapi.py # OpenAPI specification generator
+│           └── check_domain.sh     # Domain validation script
 │
 └── tests/                  # Test suite
     └── common_grants/      # Tests matching package structure
-        ├── schemas/        # Schema-related tests
-        │   ├── fields/     # Field type tests (tests SDK imports)
-        │   ├── filters/    # Filter model tests
-        │   └── models/     # Domain model tests
-        └── routes/         # Route handler tests
+        ├── services/       # Service layer tests
+        └── utils/          # Utility function tests
 ```
 
 ## Dependencies
