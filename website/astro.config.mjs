@@ -31,7 +31,8 @@ export default defineConfig({
       favicon: "/favicon.ico",
       customCss: ["./src/styles/custom.css"],
       components: {
-        Header: "./src/components/Header.astro",
+        Header: "./src/components/starlight-overrides/Header.astro",
+        PageFrame: "./src/components/starlight-overrides/PageFrame.astro",
       },
       plugins: [
         // Generate the OpenAPI documentation pages.

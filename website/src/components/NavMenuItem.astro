@@ -1,0 +1,306 @@
+---
+export interface Props {
+  label: string;
+  items: Array<{
+    label: string;
+    href: string;
+  }>;
+}
+
+const { label, items } = Astro.props;
+---
+
+<div class="nav-menu-item">
+  <button
+    class="nav-menu-button"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="nav-menu-{label.toLowerCase().replace(/\s+/g, '-')}"
+    id="nav-button-{label.toLowerCase().replace(/\s+/g, '-')}"
+  >
+    {label}
+    <svg
+      class="nav-menu-arrow"
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M3 4.5L6 7.5L9 4.5"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"></path>
+    </svg>
+  </button>
+
+  <div
+    class="nav-menu-dropdown"
+    role="menu"
+    aria-labelledby="nav-button-{label.toLowerCase().replace(/\s+/g, '-')}"
+    id="nav-menu-{label.toLowerCase().replace(/\s+/g, '-')}"
+  >
+    {
+      items.map((item) => (
+        <a href={item.href} class="nav-menu-link" role="menuitem" tabindex="-1">
+          {item.label}
+        </a>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .nav-menu-item {
+    position: relative;
+    display: inline-block;
+  }
+
+  .nav-menu-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: none;
+    border: none;
+    color: var(--sl-color-white);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 0.375rem;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .nav-menu-button:hover {
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-accent-high);
+  }
+
+  .nav-menu-button:focus {
+    outline: 2px solid var(--sl-color-accent-high);
+    outline-offset: 2px;
+  }
+
+  .nav-menu-item:focus-within .nav-menu-button,
+  .nav-menu-item.open .nav-menu-button {
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-accent-high);
+  }
+
+  .nav-menu-item:focus-within .nav-menu-arrow,
+  .nav-menu-item.open .nav-menu-arrow {
+    transform: rotate(180deg);
+  }
+
+  .nav-menu-arrow {
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .nav-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    min-width: 12rem;
+    background-color: var(--sl-color-black);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-0.5rem);
+    transition:
+      opacity 0.2s ease,
+      visibility 0.2s ease,
+      transform 0.2s ease;
+    padding: 0.5rem 0;
+    margin-top: 0.25rem;
+  }
+
+  .nav-menu-item:focus-within .nav-menu-dropdown,
+  .nav-menu-item.open .nav-menu-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .nav-menu-link {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--sl-color-white);
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+
+  .nav-menu-link:hover,
+  .nav-menu-link:focus {
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-accent-high);
+    outline: none;
+  }
+
+  .nav-menu-link:focus {
+    outline: 2px solid var(--sl-color-accent-high);
+    outline-offset: -2px;
+  }
+</style>
+
+<script>
+  // Enhanced accessibility and Safari compatibility
+  document.addEventListener("DOMContentLoaded", () => {
+    const navButtons = document.querySelectorAll(".nav-menu-button");
+
+    navButtons.forEach((button) => {
+      const navMenuItem = button.closest(".nav-menu-item");
+      const dropdown = navMenuItem?.querySelector(".nav-menu-dropdown");
+      const menuItems = dropdown?.querySelectorAll(".nav-menu-link");
+
+      if (!navMenuItem || !dropdown || !menuItems) return;
+
+      let currentIndex = -1;
+
+      // Toggle dropdown function
+      const toggleDropdown = (isOpen: boolean) => {
+        const wasOpen = navMenuItem.classList.contains("open");
+
+        if (isOpen && !wasOpen) {
+          // Open dropdown
+          navMenuItem.classList.add("open");
+          button.setAttribute("aria-expanded", "true");
+          currentIndex = -1;
+        } else if (!isOpen && wasOpen) {
+          // Close dropdown
+          navMenuItem.classList.remove("open");
+          button.setAttribute("aria-expanded", "false");
+          currentIndex = -1;
+          // Return focus to button
+          (button as HTMLElement).focus();
+        }
+      };
+
+      // Close all other dropdowns
+      const closeOtherDropdowns = () => {
+        document.querySelectorAll(".nav-menu-item.open").forEach((item) => {
+          if (item !== navMenuItem) {
+            const otherButton = item.querySelector(
+              ".nav-menu-button",
+            ) as HTMLButtonElement;
+            item.classList.remove("open");
+            otherButton?.setAttribute("aria-expanded", "false");
+          }
+        });
+      };
+
+      // Handle button click
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        const isOpen = navMenuItem.classList.contains("open");
+        closeOtherDropdowns();
+        toggleDropdown(!isOpen);
+      });
+
+      // Handle button keyboard events
+      button.addEventListener("keydown", (e) => {
+        const keyEvent = e as KeyboardEvent;
+        switch (keyEvent.key) {
+          case "Enter":
+          case " ":
+            e.preventDefault();
+            closeOtherDropdowns();
+            toggleDropdown(!navMenuItem.classList.contains("open"));
+            break;
+          case "ArrowDown":
+            e.preventDefault();
+            if (!navMenuItem.classList.contains("open")) {
+              closeOtherDropdowns();
+              toggleDropdown(true);
+            }
+            currentIndex = 0;
+            (menuItems[0] as HTMLElement)?.focus();
+            break;
+          case "ArrowUp":
+            e.preventDefault();
+            if (!navMenuItem.classList.contains("open")) {
+              closeOtherDropdowns();
+              toggleDropdown(true);
+            }
+            currentIndex = menuItems.length - 1;
+            (menuItems[menuItems.length - 1] as HTMLElement)?.focus();
+            break;
+        }
+      });
+
+      // Handle menu item keyboard events
+      menuItems.forEach((item, index) => {
+        item.addEventListener("keydown", (e) => {
+          const keyEvent = e as KeyboardEvent;
+          switch (keyEvent.key) {
+            case "ArrowDown":
+              e.preventDefault();
+              currentIndex = (index + 1) % menuItems.length;
+              (menuItems[currentIndex] as HTMLElement)?.focus();
+              break;
+            case "ArrowUp":
+              e.preventDefault();
+              currentIndex = index === 0 ? menuItems.length - 1 : index - 1;
+              (menuItems[currentIndex] as HTMLElement)?.focus();
+              break;
+            case "Escape":
+              e.preventDefault();
+              toggleDropdown(false);
+              break;
+            case "Tab":
+              // Allow tab to close dropdown and continue navigation
+              toggleDropdown(false);
+              break;
+          }
+        });
+      });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", (e) => {
+      const target = e.target as Element;
+      if (target && !target.closest(".nav-menu-item")) {
+        document.querySelectorAll(".nav-menu-item.open").forEach((item) => {
+          const button = item.querySelector(
+            ".nav-menu-button",
+          ) as HTMLButtonElement;
+          item.classList.remove("open");
+          button?.setAttribute("aria-expanded", "false");
+        });
+      }
+    });
+
+    // Close dropdowns when pressing Escape (global)
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        document.querySelectorAll(".nav-menu-item.open").forEach((item) => {
+          const button = item.querySelector(
+            ".nav-menu-button",
+          ) as HTMLButtonElement;
+          item.classList.remove("open");
+          button?.setAttribute("aria-expanded", "false");
+        });
+      }
+    });
+  });
+</script>

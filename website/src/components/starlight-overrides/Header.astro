@@ -6,7 +6,9 @@ import Search from "@astrojs/starlight/components/Search.astro";
 import SiteTitle from "@astrojs/starlight/components/SiteTitle.astro";
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
+import MobileMenuToggle from "@astrojs/starlight/components/MobileMenuToggle.astro";
 import { LinkButton } from "@astrojs/starlight/components";
+import NavMenuItem from "../NavMenuItem.astro";
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -20,16 +22,48 @@ const ctaConfig = {
   text: "Get in touch",
   url: "https://forms.gle/XUJuEnNtaZkdc1MQ6",
 };
+const NavMenuItems = [
+  {
+    label: "Learn more",
+    items: [
+      { label: "Getting started", href: "/getting-started" },
+      { label: "About CommonGrants", href: "/about" },
+      { label: "Form library", href: "/forms/library" },
+    ],
+  },
+  {
+    label: "Protocol",
+    items: [
+      { label: "Specification", href: "/protocol/specification" },
+      { label: "OpenAPI docs", href: "/protocol/api-docs" },
+      { label: "Types", href: "/protocol/types" },
+      { label: "Fields", href: "/protocol/fields" },
+      { label: "Models", href: "/protocol/models" },
+    ],
+  },
+  {
+    label: "Guides",
+    items: [
+      { label: "Using Python", href: "/guides/using-python" },
+      { label: "Using TypeScript", href: "/guides/using-typescript" },
+    ],
+  },
+];
 ---
 
 <div class="header">
   <div class="title-wrapper sl-flex">
     <SiteTitle />
   </div>
-  <div class="sl-flex print:hidden">
+  <div class="sl-flex print:hidden search-container">
     {shouldRenderSearch && <Search />}
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
+    {
+      NavMenuItems.map((item) => (
+        <NavMenuItem label={item.label} items={item.items ?? []} />
+      ))
+    }
     <div class="sl-flex social-icons">
       <SocialIcons />
     </div>
@@ -46,11 +80,16 @@ const ctaConfig = {
         </LinkButton>
       )
     }
+    <MobileMenuToggle />
   </div>
 </div>
 
 <style>
   @layer starlight.core {
+    .search-container {
+      max-width: 10rem;
+    }
+
     .header {
       display: flex;
       gap: var(--sl-nav-gap);
@@ -102,12 +141,9 @@ const ctaConfig = {
         );
         display: grid;
         grid-template-columns:
-        /* 1 (site title): runs up until the main content column's left edge or the width of the title, whichever is the largest  */
+        /* 1 (site title): runs up until width of the title */
           minmax(
-            calc(
-              var(--__sidebar-width) +
-                max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))
-            ),
+            calc(max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))),
             auto
           )
           /* 2 (search box): all free space that is available. */
