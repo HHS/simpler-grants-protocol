@@ -7,8 +7,6 @@ from common_grants_sdk.schemas.pydantic import (
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
-)
-from common_grants_sdk.schemas.pydantic.requests.opportunity import (
     OpportunitySearchRequest,
 )
 from fastapi import APIRouter, HTTPException, Query, status
