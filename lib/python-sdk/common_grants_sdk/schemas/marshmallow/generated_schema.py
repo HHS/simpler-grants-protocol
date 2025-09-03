@@ -52,10 +52,12 @@ class DateRange(Schema):
     """Range filter for date values."""
 
     min = fields.Date(
-        allow_none=True, metadata={"description": "The minimum date in the range"}
+        allow_none=True, 
+        metadata={"description": "The minimum date in the range"}
     )
     max = fields.Date(
-        allow_none=True, metadata={"description": "The maximum date in the range"}
+        allow_none=True, 
+        metadata={"description": "The maximum date in the range"}
     )
 
 
@@ -478,7 +480,9 @@ class DateRangeFilter(Schema):
         metadata={"description": "The operator to apply to the filter value"},
     )
     value = fields.Nested(
-        DateRange, allow_none=True, metadata={"description": "The date range value"}
+        DateRange, 
+        allow_none=True, 
+        metadata={"description": "The date range value"}
     )
 
 
@@ -814,7 +818,10 @@ class OpportunitySearchRequest(Schema):
         allow_none=True,
         metadata={"description": "Sorting parameters for opportunities"},
     )
-    pagination = fields.Nested(PaginatedBodyParams, allow_none=True)
+    pagination = fields.Nested(
+        PaginatedBodyParams, 
+        allow_none=True
+    )
 
 
 # =============================================================================
@@ -939,7 +946,9 @@ class OpportunityResponse(Schema):
     )
     message = fields.String(required=True, metadata={"description": "The message"})
     data = fields.Nested(
-        OpportunityBase, required=True, metadata={"description": "The opportunity"}
+        OpportunityBase, 
+        required=True, 
+        metadata={"description": "The opportunity"}
     )
 
 
