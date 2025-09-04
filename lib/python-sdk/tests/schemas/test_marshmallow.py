@@ -235,10 +235,8 @@ def test_filter_schemas():
     }
     result = date_range_filter.load(filter_data)
     assert result["operator"] == "between"
-    from datetime import date
-
-    assert result["value"]["min"] == date(2024, 1, 1)
-    assert result["value"]["max"] == date(2024, 12, 31)
+    assert result["value"]["min"] == "2024-01-01"
+    assert result["value"]["max"] == "2024-12-31"
 
 
 def test_response_schemas():

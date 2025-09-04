@@ -9,8 +9,8 @@ import re
 from typing import Any
 from uuid import uuid5
 
-from common_grants_sdk.schemas.fields import CustomFieldType
-from common_grants_sdk.schemas.models import OppStatusOptions
+from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
+from common_grants_sdk.schemas.pydantic.models import OppStatusOptions
 
 from common_grants.constants import CA_OPPORTUNITY_NAMESPACE
 

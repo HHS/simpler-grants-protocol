@@ -5,8 +5,8 @@ from datetime import date, datetime
 from typing import Any
 
 import pytest
-from common_grants_sdk.schemas.fields import CustomFieldType
-from common_grants_sdk.schemas.models import OppStatusOptions
+from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
+from common_grants_sdk.schemas.pydantic.models import OppStatusOptions
 
 from common_grants.utils.opp_transform import OpportunityTransformer
 

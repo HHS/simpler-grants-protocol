@@ -4,12 +4,13 @@ from datetime import date
 from typing import cast
 from uuid import UUID
 
-from common_grants_sdk.schemas.fields import EventType, SingleDateEvent
-
-from common_grants.schemas import (
+from common_grants_sdk.schemas.pydantic import (
+    EventType,
     OppFilters,
     OppStatusOptions,
+    SingleDateEvent,
 )
+
 from common_grants.services.utils import (
     build_applied_filters,
     mock_opportunity,

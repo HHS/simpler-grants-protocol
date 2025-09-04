@@ -2,18 +2,20 @@
 
 from uuid import UUID
 
-from common_grants_sdk.schemas import (
+from common_grants_sdk.schemas.pydantic import (
     FilterInfo,
+    OppFilters,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
+    OpportunityBase,
+    OppSortBy,
+    OppSorting,
     PaginatedBodyParams,
     PaginatedResultsInfo,
     SortedResultsInfo,
 )
-from common_grants_sdk.schemas.sorting import OppSortBy, OppSorting
 from fastapi import status
 
-from common_grants.schemas import OppFilters, OpportunityBase
 from common_grants.services.utils import build_applied_filters
 from common_grants.utils.opp_data_source import OpportunityDataSource
 from common_grants.utils.opp_transform import OpportunityTransformer

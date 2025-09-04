@@ -25,8 +25,9 @@ poetry add common-grants-sdk
 from datetime import datetime, date, UTC
 from uuid import uuid4
 
-from common_grants_sdk.schemas.fields import Money, Event
-from common_grants_sdk.schemas.models import (
+from common_grants_sdk.schemas.pydantic import (
+    Event,
+    Money,
     OpportunityBase,
     OppFunding,
     OppStatus,
@@ -172,4 +173,4 @@ assert transformed_data == {
 
 ## License
 
-See [LICENSE](../../LICENSE) for details. 
+See [LICENSE](../../LICENSE.md)

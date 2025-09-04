@@ -2,13 +2,13 @@
 
 from uuid import UUID
 
-from common_grants_sdk.schemas import (
+from common_grants_sdk.schemas.pydantic import (
     Error,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
     OpportunityResponse,
+    OpportunitySearchRequest,
 )
-from common_grants_sdk.schemas.requests.opportunity import OpportunitySearchRequest
 from fastapi import APIRouter, HTTPException, Query, status
 
 from common_grants.services.opportunity import OpportunityService

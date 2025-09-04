@@ -1,7 +1,7 @@
 """Tests for the opportunity service layer."""
 
 import pytest
-from common_grants_sdk.schemas import (
+from common_grants_sdk.schemas.pydantic import (
     OppFilters,
     OppSortBy,
     OppSorting,

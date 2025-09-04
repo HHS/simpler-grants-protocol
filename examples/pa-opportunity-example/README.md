@@ -37,61 +37,17 @@ The Makefile exposes the following commands:
 | --------------------- | ------------------------------------------- |
 | `make install`        | Installs the python dependencies and API    |
 | `make test`           | Runs the unit test suite and test coverage  |
+| `make test-coverage`  | Runs tests with coverage report             |
 | `make format`         | Runs formatting with black                  |
 | `make lint`           | Runs linting with ruff                      |
-| `make check-domain`   | Runs domain config validation
+| `make check-format`   | Checks formatting without making changes    |
+| `make check-lint`     | Checks linting without making changes      |
+| `make check-domain`   | Runs domain config validation               |
 | `make check-spec`     | Validates the OpenAPI specification         |
 | `make check-types`    | Runs type checking with pyright             |
 | `make checks`         | Runs linting, formatting, and type checking |
 | `make dev`            | Runs the development server                 |
 | `make gen-openapi`    | Generates the OpenAPI specification         |
-
-## Project Structure
-
-```
-├── pyproject.toml          # Python project configuration and dependencies
-├── poetry.lock             # Locked versions of dependencies
-├── Makefile                # Development workflow commands
-├── README.md               # Project documentation
-├── openapi.yaml            # Generated OpenAPI specification
-│
-├── src/
-│   └── common_grants/              # Main package directory
-│       ├── api.py                  # FastAPI application setup and config
-│       ├── routes/                 # API route handlers and endpoints
-│       │   ├── opportunities.py    # Opportunity-related endpoints
-│       │   └── ...                 # Other route modules
-│       │
-│       ├── schemas/                    # Data models and schema definitions
-│       │   ├── filters/                # Query filter models
-│       │   │   ├── base.py             # Base filter types and operators
-│       │   │   ├── date_filters.py     # Date-specific filters
-│       │   │   ├── money_filters.py    # Money-specific filters
-│       │   │   └── string_filters.py   # String-specific filters
-│       │   ├── models/                 # Core domain models
-│       │   │   ├── opp_search.py       # Search request models
-│       │   │   ├── opp_search_request.py # Search request handling
-│       │   │   └── ...                 # Other models
-│       │   ├── pagination.py           # Pagination models and parameters
-│       │   ├── response.py             # API response wrappers
-│       │   ├── sorting.py              # Sorting models and parameters
-│       │   └── __init__.py             # Schema exports (imports from Python SDK)
-│       │
-│       ├── services/               # Business logic and data operations
-│       │   ├── opportunity.py      # Opportunity-related operations
-│       │   └── utils.py            # Shared utility functions
-│       │
-│       └── scripts/                # Utility scripts
-│           └── generate_openapi.py # OpenAPI specification generator
-│
-└── tests/                  # Test suite
-    └── common_grants/      # Tests matching package structure
-        ├── schemas/        # Schema-related tests
-        │   ├── fields/     # Field type tests (tests SDK imports)
-        │   ├── filters/    # Filter model tests
-        │   └── models/     # Domain model tests
-        └── routes/         # Route handler tests
-```
 
 ## Dependencies
 

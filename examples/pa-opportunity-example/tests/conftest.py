@@ -4,18 +4,19 @@ from datetime import date, datetime, timezone
 from uuid import uuid4
 
 import pytest
-from common_grants_sdk.schemas.fields import EventType, SingleDateEvent
-from fastapi.testclient import TestClient
-
-from common_grants.api import app
-from common_grants.schemas import (
+from common_grants_sdk.schemas.pydantic import (
+    EventType,
     Money,
     OppFunding,
     OpportunityBase,
     OppStatus,
     OppStatusOptions,
     OppTimeline,
+    SingleDateEvent,
 )
+from fastapi.testclient import TestClient
+
+from common_grants.api import app
 
 
 @pytest.fixture(scope="session", name="client")
