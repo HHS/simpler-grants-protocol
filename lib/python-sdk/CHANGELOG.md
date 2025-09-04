@@ -1,5 +1,11 @@
 # common-grants-sdk
 
+## 0.3.2
+
+### Patch Changes
+
+- 4900dd4: Fixed bug in marshmallow model that could cause serialization errors; updated examples and documentation.
+
 ## 0.3.1
 
 ### Patch Changes
