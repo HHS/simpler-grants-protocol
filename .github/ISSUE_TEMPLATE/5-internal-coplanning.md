@@ -1,6 +1,6 @@
 ---
 name: Internal - Co-planning Proposal
-description: Describe a co-planning proposal
+about: Describe a co-planning proposal
 type: Epic
 labels: ["co-planning"]
 ---
