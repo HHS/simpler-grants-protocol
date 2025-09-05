@@ -18,4 +18,5 @@ namespace CommonGrants;
 enum Versions {
   v0_1: "0.1.0",
   v0_2: "0.2.0",
+  v0_3: "0.3.0",
 }

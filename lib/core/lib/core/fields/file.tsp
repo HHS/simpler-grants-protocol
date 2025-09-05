@@ -47,4 +47,24 @@ namespace Examples.File {
     createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
     lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),
   };
+
+  const excelFile = #{
+    downloadUrl: "https://example.com/excel.xlsx",
+    name: "excel.xlsx",
+    description: "The excel file for the application",
+    sizeInBytes: 1000,
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
+    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),
+  };
+
+  const zipFile = #{
+    downloadUrl: "https://example.com/application.zip",
+    name: "application.zip",
+    description: "The zip file for the application",
+    sizeInBytes: 50000,
+    mimeType: "application/zip",
+    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
+    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),
+  };
 }
