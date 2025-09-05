@@ -187,6 +187,23 @@ namespace Examples.Application {
     ...Examples.FormResponse.formResponse,
   };
 
+  const attachmentsCustomField = #{
+    name: "attachments",
+    fieldType: Fields.CustomFieldType.object,
+    value: #{
+      contacts: Fields.Examples.File.pdfFile,
+      budget: Fields.Examples.File.excelFile,
+    },
+    description: "The attachments for the application",
+  };
+
+  const applicationZipFileCustomField = #{
+    name: "applicationZipFile",
+    fieldType: Fields.CustomFieldType.object,
+    value: Fields.Examples.File.zipFile,
+    description: "The zip file for the application",
+  };
+
   const applicationBase = #{
     id: "123e4567-e89b-12d3-a456-426614174000",
     name: "My Application",
@@ -197,5 +214,9 @@ namespace Examples.Application {
     submittedAt: null,
     createdAt: utcDateTime.fromISO("2021-01-01T00:00:00Z"),
     lastModifiedAt: utcDateTime.fromISO("2021-01-01T00:00:00Z"),
+    customFields: #{
+      attachments: attachmentsCustomField,
+      applicationZipFile: applicationZipFileCustomField,
+    },
   };
 }
