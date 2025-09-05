@@ -63,4 +63,20 @@ interface Applications {
     | Responses.ApplicationSubmissionError
     | Responses.NotFound
     | Responses.Unauthorized;
+
+  // ###############################
+  // Search applications
+  // ###############################
+
+  @summary("Search applications")
+  @doc("Search for applications. Note: The search results for a given query will depend on the scopes attached to the API token used to make the request.")
+  @get
+  @route("/search")
+  searchApplications(
+    /** The filters to apply to the search */
+    @query filters: Models.AppFilters,
+
+    /** The sorting to apply to the search */
+    @query sorting: Models.AppSorting,
+  ): Responses.Filtered<Models.ApplicationBase, Models.AppFilters>;
 }
