@@ -9,6 +9,7 @@ form:
       {
         "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
         "name": "Form A",
+        "version" "0.2.0",
         "description": "Form A description",
         "instructions": "Form A instructions",
         "jsonSchema": {
@@ -65,7 +66,7 @@ form:
       }
   jsonSchema:
     file:
-      path: "website/public/schemas/yaml/Form.yaml"
+      path: "website/public/schemas/yaml/FormBase.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/models/form.tsp"
@@ -124,7 +125,7 @@ formUISchema:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
-## Form
+## FormBase
 
 A form for collecting data from a user.
 
@@ -134,6 +135,7 @@ A form for collecting data from a user.
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
 | id                      | [uuid](/protocol/types/string#uuid)                                                                              | Yes      | The form's unique identifier                                               |
 | name                    | [string](/protocol/types/string#string)                                                                          | Yes      | The form's name                                                            |
+| version                 | [string](/protocol/types/string#string)                                                                          | No       | The form version                                                           |
 | description             | [string](/protocol/types/string#string)                                                                          | No       | The form's description                                                     |
 | instructions            | [string](/protocol/types/string#string) or [Array](/protocol/types/other#array)\<[File](/protocol/fields/file)\> | No       | The form's instructions                                                    |
 | jsonSchema              | [FormJsonSchema](#formjsonschema)                                                                                | No       | The form's JSON schema used to render the form and validate responses      |

@@ -60,7 +60,10 @@
     "samuei",
     "duns",
     "uischema",
-    "jsonforms"
+    "jsonforms",
+    "openxmlformats",
+    "officedocument",
+    "spreadsheetml"
   ],
   "import": []
 }

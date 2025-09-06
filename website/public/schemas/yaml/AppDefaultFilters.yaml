@@ -1,0 +1,45 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AppDefaultFilters.yaml
+type: object
+properties:
+  opportunityId:
+    $ref: StringArrayFilter.yaml
+    examples:
+      - operator: in
+        value:
+          - ad3b469a-d89a-42d3-c439-6c1234567890
+    description: "`opportunityId` matches one of the following values"
+  competitionId:
+    $ref: StringArrayFilter.yaml
+    examples:
+      - operator: in
+        value:
+          - 123e4567-e89b-12d3-a456-426614174000
+    description: "`competitionId` matches one of the following values"
+  submittedAtRange:
+    $ref: DateRangeFilter.yaml
+    examples:
+      - operator: between
+        value:
+          min: 2025-01-01
+          max: 2025-01-30
+    description: "`submittedAt` is between the given range"
+  status:
+    $ref: StringArrayFilter.yaml
+    examples:
+      - operator: in
+        value:
+          - submitted
+          - accepted
+    description: "`status.value` matches one of the following values"
+allOf:
+  - $ref: "#/$defs/RecordDefaultFilter"
+unevaluatedProperties:
+  not: {}
+description: The standard set of filters supported for application searches
+$defs:
+  RecordDefaultFilter:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: DefaultFilter.yaml

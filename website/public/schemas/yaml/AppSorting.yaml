@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AppSorting.yaml
+type: object
+properties:
+  sortBy:
+    $ref: AppSortBy.yaml
+    examples:
+      - opportunityId
+    description: The field to sort by
+required:
+  - sortBy
+allOf:
+  - $ref: SortBodyParams.yaml
+unevaluatedProperties:
+  not: {}
+description: Sorting parameters for applications

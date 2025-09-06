@@ -6,7 +6,7 @@ info:
 
     In order for an API to be "compliant" with the CommonGrants protocol,
     it must implement all of the routes with the "required" tag in this specification.
-  version: 0.2.0
+  version: 0.3.0
 tags:
   - name: Opportunities
     description: Endpoints related to funding opportunities
@@ -25,6 +25,81 @@ tags:
   - name: experimental
     description: Endpoints that MAY be implemented by CommonGrants APIs, but are not guaranteed to be stable
 paths:
+  /common-grants/applications/search:
+    get:
+      operationId: Applications_searchApplications
+      summary: Search applications
+      description: 'Search for applications. Note: The search results for a given query will depend on the scopes attached to the API token used to make the request.'
+      parameters:
+        - name: filters
+          in: query
+          required: true
+          description: The filters to apply to the search
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Models.AppFilters'
+          explode: false
+        - name: sorting
+          in: query
+          required: true
+          description: The sorting to apply to the search
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Models.AppSorting'
+          explode: false
+      responses:
+        '200':
+          description: A paginated list of items with a filter
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - paginationInfo
+                  - status
+                  - message
+                  - sortInfo
+                  - filterInfo
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.ApplicationBase'
+                    description: Items from the current page
+                  paginationInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+                    description: Details about the paginated results
+                  status:
+                    type: integer
+                    format: int32
+                    example: 200
+                  message:
+                    type: string
+                    example: Success
+                  sortInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
+                    description: The sort order of the items
+                  filterInfo:
+                    type: object
+                    properties:
+                      filters:
+                        $ref: '#/components/schemas/CommonGrants.Models.AppFilters'
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                        description: Non-fatal errors that occurred during filtering
+                    required:
+                      - filters
+                    description: The filters applied to the response items
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A paginated list of items with a filter
+      tags:
+        - Applications
+        - experimental
+        - Application Reviews
   /common-grants/applications/start:
     post:
       operationId: Applications_startApplication
@@ -317,7 +392,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/CommonGrants.Models.Form'
+                      $ref: '#/components/schemas/CommonGrants.Models.FormBase'
                     description: Items from the current page
                   paginationInfo:
                     allOf:
@@ -353,7 +428,7 @@ paths:
                 properties:
                   data:
                     allOf:
-                      - $ref: '#/components/schemas/CommonGrants.Models.Form'
+                      - $ref: '#/components/schemas/CommonGrants.Models.FormBase'
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
@@ -925,6 +1000,91 @@ components:
         - like
         - notLike
       description: Operators that filter a field based on a string value
+    CommonGrants.Models.AppDefaultFilters:
+      type: object
+      properties:
+        opportunityId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`opportunityId` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - ad3b469a-d89a-42d3-c439-6c1234567890
+        competitionId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`competitionId` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - 123e4567-e89b-12d3-a456-426614174000
+        submittedAtRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`submittedAt` is between the given range'
+          example:
+            operator: between
+            value:
+              min: '2025-01-01'
+              max: '2025-01-30'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - submitted
+              - accepted
+      allOf:
+        - type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Filters.DefaultFilter'
+      description: The standard set of filters supported for application searches
+    CommonGrants.Models.AppFilters:
+      type: object
+      properties:
+        opportunityId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`opportunityId` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - ad3b469a-d89a-42d3-c439-6c1234567890
+        competitionId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`competitionId` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - 123e4567-e89b-12d3-a456-426614174000
+        submittedAtRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`submittedAt` is between the given range'
+          example:
+            operator: between
+            value:
+              min: '2025-01-01'
+              max: '2025-01-30'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - submitted
+              - accepted
+        customFilters:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Filters.DefaultFilter'
+          description: Additional implementation-defined filters to apply to the search
+      description: Filters to apply when searching for applications
     CommonGrants.Models.AppFormResponse:
       type: object
       required:
@@ -999,6 +1159,30 @@ components:
             message: Country is required
         createdAt: '2021-01-01T00:00:00Z'
         lastModifiedAt: '2021-01-01T00:00:00Z'
+    CommonGrants.Models.AppSortBy:
+      type: string
+      enum:
+        - lastModifiedAt
+        - createdAt
+        - submittedAt
+        - status.value
+        - opportunityId
+        - competitionId
+        - custom
+      description: The fields that can be used to sort applications
+    CommonGrants.Models.AppSorting:
+      type: object
+      required:
+        - sortBy
+      properties:
+        sortBy:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AppSortBy'
+          description: The field to sort by
+          example: opportunityId
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Sorting.SortBodyParams'
+      description: Sorting parameters for applications
     CommonGrants.Models.AppStatus:
       type: object
       required:
@@ -1079,6 +1263,7 @@ components:
         - id
         - name
         - competitionId
+        - opportunityId
         - formResponses
         - status
         - createdAt
@@ -1095,6 +1280,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
           description: The unique identifier for the competition
+        opportunityId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The unique identifier for the opportunity being applied to
         formResponses:
           type: object
           additionalProperties:
@@ -1133,6 +1322,7 @@ components:
         id: 123e4567-e89b-12d3-a456-426614174000
         name: My Application
         competitionId: 123e4567-e89b-12d3-a456-426614174000
+        opportunityId: ad3b469a-d89a-42d3-c439-6c1234567890
         formResponses:
           formA:
             applicationId: 123e4567-e89b-12d3-a456-426614174000
@@ -1393,7 +1583,7 @@ components:
         forms:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/CommonGrants.Models.Form'
+            $ref: '#/components/schemas/CommonGrants.Models.FormBase'
           description: The forms for the competition
         validation:
           type: object
@@ -1554,7 +1744,7 @@ components:
         closeDate: {}
         otherDates:
           reviewPeriod: {}
-    CommonGrants.Models.Form:
+    CommonGrants.Models.FormBase:
       type: object
       required:
         - id
@@ -1572,6 +1762,8 @@ components:
         description:
           type: string
           description: The form's description.
+        version:
+          type: string
         instructions:
           anyOf:
             - type: string

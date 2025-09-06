@@ -213,7 +213,7 @@ The CommonGrants protocol defines the following models that are specific to the 
 
 | Model                                                  | Description                                        |
 | ------------------------------------------------------ | -------------------------------------------------- |
-| [Form](/protocol/models/form#form)                     | A form for collecting data from a user             |
+| [FormBase](/protocol/models/form#formbase)             | A form for collecting data from a user             |
 | [FormJsonSchema](/protocol/models/form#formjsonschema) | A JSON schema used to validate form responses      |
 | [FormUISchema](/protocol/models/form#formuischema)     | A UI schema used to render the form in the browser |
 

@@ -1,0 +1,12 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AppSortBy.yaml
+type: string
+enum:
+  - lastModifiedAt
+  - createdAt
+  - submittedAt
+  - status.value
+  - opportunityId
+  - competitionId
+  - custom
+description: The fields that can be used to sort applications

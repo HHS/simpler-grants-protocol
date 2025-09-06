@@ -3,6 +3,9 @@ name: "Website - Cleanup PR Preview"
 on:
   pull_request:
     types: [closed]
+    paths:
+      - website/**
+      - .github/workflows/ci-website.yml
 
 jobs:
   cleanup-preview:
