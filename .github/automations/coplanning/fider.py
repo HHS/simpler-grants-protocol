@@ -39,7 +39,9 @@ def fetch_posts() -> dict[str, PostData]:
 def parse_posts(posts: list[dict], fider_url: str) -> dict[str, PostData]:
     """Parse Fider posts and return PostData keyed by GitHub issue URLs."""
     posts_dict: dict[str, PostData] = {}
-    pattern = re.compile(r"https://github\.com/[^/]+/[^/]+/issues/[0-9]+")
+    pattern = re.compile(
+        r"\[GitHub issue\]\((https://github\.com/[^/]+/[^/]+/issues/[0-9]+)\)"
+    )
 
     for post in posts:
         description = post.get("description", "")
@@ -48,7 +50,7 @@ def parse_posts(posts: list[dict], fider_url: str) -> dict[str, PostData]:
         matches = pattern.findall(description)
         if not matches:
             continue
-        github_url = matches[0]  # Take the first match
+        github_url = matches[-1]  # Take the last match (captured group)
         fider_url = f"{FIDER_URL}/posts/{post.get('number')}"
         posts_dict[github_url] = PostData(
             url=fider_url,
