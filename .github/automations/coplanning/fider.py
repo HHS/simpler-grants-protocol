@@ -50,7 +50,10 @@ def parse_posts(posts: list[dict], fider_url: str) -> dict[str, PostData]:
         matches = pattern.findall(description)
         if not matches:
             continue
-        github_url = matches[-1]  # Take the last match (captured group)
+        # Take the last match if there are multiple GitHub issue URLs in the post
+        # This is because the source GitHub issue URL is always inserted
+        # at the end of the fider post by utils.format_post_description()
+        github_url = matches[-1]
         fider_url = f"{FIDER_URL}/posts/{post.get('number')}"
         posts_dict[github_url] = PostData(
             url=fider_url,
