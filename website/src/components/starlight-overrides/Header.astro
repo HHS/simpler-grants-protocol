@@ -8,7 +8,71 @@ import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
 import MobileMenuToggle from "@astrojs/starlight/components/MobileMenuToggle.astro";
 import { LinkButton } from "@astrojs/starlight/components";
-import NavMenuItem from "../NavMenuItem.astro";
+import NavMenuItem, {
+  type Props as NavMenuItemProps,
+} from "../NavMenuItem.astro";
+
+export interface Props {
+  ctaButton?: {
+    url: string;
+    text: string;
+  };
+  navMenuItems?: NavMenuItemProps[];
+}
+
+// Set props locally - can be easily modified here
+const props: Props = {
+  ctaButton: undefined, // Set to { url: "...", text: "..." } to enable
+  navMenuItems: [
+    {
+      label: "Learn more",
+      items: [
+        { label: "Getting started", href: "/getting-started" },
+        { label: "About CommonGrants", href: "/about" },
+        { label: "Form library", href: "/forms/library" },
+      ],
+    },
+    {
+      label: "Protocol",
+      items: [
+        { label: "Specification", href: "/protocol/specification" },
+        { label: "OpenAPI docs", href: "/protocol/api-docs" },
+        { label: "Types", href: "/protocol/types" },
+        { label: "Fields", href: "/protocol/fields" },
+        { label: "Models", href: "/protocol/models" },
+      ],
+    },
+    {
+      label: "Guides",
+      items: [
+        { label: "Using Python", href: "/guides/using-python" },
+        { label: "Using TypeScript", href: "/guides/using-typescript" },
+      ],
+    },
+    {
+      label: "Get involved",
+      items: [
+        {
+          label: "Vote for features",
+          href: "https://commongrants.fider.io",
+          external: true,
+        },
+        {
+          label: "Contact us",
+          href: "https://forms.gle/XUJuEnNtaZkdc1MQ6",
+          external: true,
+        },
+        {
+          label: "Ask a question",
+          href: "https://forum.simpler.grants.gov/c/commongrants/8",
+          external: true,
+        },
+      ],
+    },
+  ],
+};
+
+const { ctaButton, navMenuItems } = props;
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -16,39 +80,6 @@ import NavMenuItem from "../NavMenuItem.astro";
 const shouldRenderSearch =
   config.pagefind ||
   config.components.Search !== "@astrojs/starlight/components/Search.astro";
-
-// Get CTA configuration from Starlight config
-const ctaConfig = {
-  text: "Get in touch",
-  url: "https://forms.gle/XUJuEnNtaZkdc1MQ6",
-};
-const NavMenuItems = [
-  {
-    label: "Learn more",
-    items: [
-      { label: "Getting started", href: "/getting-started" },
-      { label: "About CommonGrants", href: "/about" },
-      { label: "Form library", href: "/forms/library" },
-    ],
-  },
-  {
-    label: "Protocol",
-    items: [
-      { label: "Specification", href: "/protocol/specification" },
-      { label: "OpenAPI docs", href: "/protocol/api-docs" },
-      { label: "Types", href: "/protocol/types" },
-      { label: "Fields", href: "/protocol/fields" },
-      { label: "Models", href: "/protocol/models" },
-    ],
-  },
-  {
-    label: "Guides",
-    items: [
-      { label: "Using Python", href: "/guides/using-python" },
-      { label: "Using TypeScript", href: "/guides/using-typescript" },
-    ],
-  },
-];
 ---
 
 <div class="header">
@@ -60,9 +91,10 @@ const NavMenuItems = [
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
     {
-      NavMenuItems.map((item) => (
-        <NavMenuItem label={item.label} items={item.items ?? []} />
-      ))
+      navMenuItems &&
+        navMenuItems.map((item) => (
+          <NavMenuItem label={item.label} items={item.items ?? []} />
+        ))
     }
     <div class="sl-flex social-icons">
       <SocialIcons />
@@ -70,13 +102,13 @@ const NavMenuItems = [
     <ThemeSelect />
     <LanguageSelect />
     {
-      ctaConfig && (
+      ctaButton && (
         <LinkButton
-          href={ctaConfig.url}
+          href={ctaButton.url}
           variant="primary"
           class="header-link-button"
         >
-          {ctaConfig.text}
+          {ctaButton.text}
         </LinkButton>
       )
     }
