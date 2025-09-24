@@ -62,8 +62,22 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: "Get in touch with us →",
-          link: "https://forms.gle/XUJuEnNtaZkdc1MQ6",
+          label: "Get involved",
+          collapsed: true,
+          items: [
+            {
+              label: "Vote for features →",
+              link: "https://commongrants.fider.io",
+            },
+            {
+              label: "Contact us →",
+              link: "https://forms.gle/XUJuEnNtaZkdc1MQ6",
+            },
+            {
+              label: "Ask a question →",
+              link: "https://forum.simpler.grants.gov/c/commongrants/8",
+            },
+          ],
         },
         {
           label: "Welcome",
