@@ -90,12 +90,7 @@ const shouldRenderSearch =
     {shouldRenderSearch && <Search />}
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
-    {
-      navMenuItems &&
-        navMenuItems.map((item) => (
-          <NavMenuItem label={item.label} items={item.items ?? []} />
-        ))
-    }
+    {navMenuItems && navMenuItems.map((item) => <NavMenuItem {...item} />)}
     <div class="sl-flex social-icons">
       <SocialIcons />
     </div>
