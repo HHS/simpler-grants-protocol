@@ -4,6 +4,7 @@ export interface Props {
   items: Array<{
     label: string;
     href: string;
+    external?: boolean;
   }>;
 }
 
@@ -45,8 +46,34 @@ const { label, items } = Astro.props;
   >
     {
       items.map((item) => (
-        <a href={item.href} class="nav-menu-link" role="menuitem" tabindex="-1">
-          {item.label}
+        <a
+          href={item.href}
+          class="nav-menu-link"
+          role="menuitem"
+          tabindex="-1"
+          target={item.external ? "_blank" : undefined}
+          rel={item.external ? "noopener noreferrer" : undefined}
+        >
+          <span class="nav-menu-link-text">{item.label}</span>
+          {item.external && (
+            <svg
+              class="nav-menu-external-icon"
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M4.5 2.25H9.75V7.5M2.25 9.75L9.75 2.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          )}
         </a>
       ))
     }
@@ -134,7 +161,9 @@ const { label, items } = Astro.props;
   }
 
   .nav-menu-link {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 0.75rem 1rem;
     color: var(--sl-color-white);
     text-decoration: none;
@@ -144,10 +173,20 @@ const { label, items } = Astro.props;
     border: none;
     background: none;
     width: 100%;
-    text-align: left;
     cursor: pointer;
     font-weight: 500;
     font-size: 0.9rem;
+  }
+
+  .nav-menu-link-text {
+    flex: 1;
+  }
+
+  .nav-menu-external-icon {
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
   }
 
   .nav-menu-link:hover,
@@ -155,6 +194,11 @@ const { label, items } = Astro.props;
     background-color: var(--sl-color-gray-6);
     color: var(--sl-color-accent-high);
     outline: none;
+  }
+
+  .nav-menu-link:hover .nav-menu-external-icon,
+  .nav-menu-link:focus .nav-menu-external-icon {
+    opacity: 1;
   }
 
   .nav-menu-link:focus {
