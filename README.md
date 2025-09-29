@@ -115,6 +115,7 @@ flowchart LR
     direction LR
         HHS/simpler-grants-protocol#332["Create an Express.js API template"]
         HHS/simpler-grants-protocol#333["Create a Go API template"]
+        HHS/simpler-grants-protocol#343["Create a FastAPI template"]:::Done
     end
 
 
@@ -126,6 +127,7 @@ flowchart LR
     HHS/simpler-grants-protocol#323 --> HHS/simpler-grants-protocol#333
     HHS/simpler-grants-protocol#323 --> HHS/simpler-grants-protocol#329
     HHS/simpler-grants-protocol#331 --> HHS/simpler-grants-protocol#335
+    HHS/simpler-grants-protocol#342 --> HHS/simpler-grants-protocol#343
     HHS/simpler-grants-protocol#342 --> HHS/simpler-grants-protocol#324
 
   end
