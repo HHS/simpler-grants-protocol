@@ -47,6 +47,8 @@ def get_env(name: str) -> str:
 # #######################################################
 # GraphQL requests
 # #######################################################
+
+
 def get_query_from_file(file_path: str) -> str:
     """Get a GraphQL query from a file."""
     # Read the GraphQL query from file

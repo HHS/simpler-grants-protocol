@@ -27,7 +27,6 @@ fragment IssueDetails on Issue {
   }
   number
   title
-  url
 }
 
 # Project items

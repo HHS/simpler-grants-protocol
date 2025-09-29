@@ -20,10 +20,9 @@ class CliArgs:
 class Issue:
     """An issue from the GitHub API."""
 
-    title: str
-    number: int
-    url: str
     repo: str
+    number: int
+    title: str
     status: str | None = None
     group: str | None = None
 

@@ -3,7 +3,7 @@ import json
 
 from data import CliArgs, Dependency, Issue
 from diagram import Diagram
-from utils import get_env, get_query_from_file, log, make_request
+from utils import err, get_env, get_query_from_file, log, make_request
 
 GITHUB_API_TOKEN = get_env("GITHUB_API_TOKEN")
 
@@ -21,15 +21,8 @@ def map_issue_dependencies(args: CliArgs) -> Diagram:
         "repo": args.repo,
         "issueType": args.issue_type,
     }
-    responses = make_paginated_graphql_request(query, payload, args.batch)
-    # Parse the responses
-    issue_data = (
-        responses.get("data", {})
-        .get("repository", {})
-        .get("issues", {})
-        .get("nodes", [])
-    )
-    return parse_graphql_response(issue_data, args)
+    issues = make_paginated_graphql_request(query, payload, args.batch)
+    return parse_graphql_response(issues, args)
 
 
 def map_repo_dependencies(args: CliArgs) -> Diagram:
@@ -41,15 +34,8 @@ def map_repo_dependencies(args: CliArgs) -> Diagram:
         "repo": args.repo,
         "issueType": args.issue_type,
     }
-    responses = make_paginated_graphql_request(query, payload, args.batch)
-    # Parse the responses
-    issue_data = (
-        responses.get("data", {})
-        .get("repository", {})
-        .get("issues", {})
-        .get("nodes", [])
-    )
-    return parse_graphql_response(issue_data, args)
+    issues = make_paginated_graphql_request(query, payload, args.batch)
+    return parse_graphql_response(issues, args)
 
 
 # #######################################################
@@ -64,16 +50,13 @@ def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
 
     # Extract issues from GraphQL response
     for issue_data in response_data:
-        # Extract issue number from URL
-        issue_url = issue_data["url"]
+        # Extract issue number and repository
         issue_repo = issue_data["repository"]["nameWithOwner"]
         issue_number = issue_data["number"]
 
-        # Parse group name from title pattern: [<group name>] <Issue title>
+        # Parse group name from title pattern: "[<group name>] <Issue title>"
         title = issue_data["title"]
         group = "Other"
-
-        # Determine group based on title prefix (e.g., [SDK] Create a Python SDK)
         match = re.match(r"^\[([^\]]+)\]\s*(.*)$", title)
         if match:
             group = match.group(1).strip()
@@ -86,7 +69,6 @@ def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
         issue = Issue(
             title=clean_title,
             number=issue_number,
-            url=issue_url,
             repo=issue_repo,
             status=extract_status(issue_data, args.project),
             group=group,
@@ -98,16 +80,17 @@ def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
         issues[group].append(issue)
 
         # Extract dependencies from blocking relationships
-        for blocked_issue in issue_data["blocking"]["nodes"]:
-            blocked_repo = blocked_issue["repository"]["nameWithOwner"]
-            blocked_number = blocked_issue["number"]
+        for blocked_issue in issue_data.get("blocking", {}).get("nodes", []):
+            blocked_repo = blocked_issue.get("repository", {}).get("nameWithOwner")
+            blocked_number = blocked_issue.get("number")
 
             # Create dependency: blocked issue is blocked by current issue
-            dependency = Dependency(
-                blocked=f"{blocked_repo}#{blocked_number}",
-                blocked_by=f"{issue_repo}#{issue_number}",
-            )
-            dependencies.append(dependency)
+            if blocked_repo and blocked_number:
+                dependency = Dependency(
+                    blocked=f"{blocked_repo}#{blocked_number}",
+                    blocked_by=f"{issue_repo}#{issue_number}",
+                )
+                dependencies.append(dependency)
 
     return Diagram(subgraphs=issues, dependencies=dependencies)
 
@@ -166,13 +149,15 @@ def make_paginated_graphql_request(
     query: str,
     variables: dict,
     batch: int,
-) -> dict:
-    """Make a paginated GraphQL request."""
+    path_to_nodes: list[str] = ["repository", "issues"],
+) -> list:
+    """Make a paginated GraphQL request and return a list of nodes."""
     # Prepare variables for pagination
     variables["batch"] = batch
     cursor = None
-    all_data = []
+    all_nodes = []
 
+    # Continue to fetch nodes until there are no more pages
     while True:
         # Add cursor to variables if we have one
         if cursor:
@@ -180,28 +165,32 @@ def make_paginated_graphql_request(
 
         # Make the GraphQL request using the helper function
         response = make_graphql_request(query, variables)
-
         if not response:
-            return {}
-
+            return []
         data = response["data"]
 
-        # Navigate to the issues data based on the query structure
-        if "repository" in data and "issues" in data["repository"]:
-            issues_data = data["repository"]["issues"]
+        # Navigate to the paginated data using the path
+        paginated_data = data
+        for key in path_to_nodes:
+            paginated_data = paginated_data.get(key)
+            if paginated_data is None:
+                err(
+                    message=f"Unexpected GraphQL response structure: "
+                    f"missing key '{key}' in path {path_to_nodes}",
+                    exit=True,
+                )
+                return []
 
-            # Add current batch to all_data
-            if "nodes" in issues_data:
-                all_data.extend(issues_data["nodes"])
+        # Add current batch to all_data
+        nodes = paginated_data.get("nodes")
+        if nodes:
+            all_nodes.extend(nodes)
 
-            # Check if there are more pages
-            if "pageInfo" in issues_data and issues_data["pageInfo"]["hasNextPage"]:
-                cursor = issues_data["pageInfo"]["endCursor"]
-            else:
-                break
+        # Check if there are more pages
+        page_info = paginated_data.get("pageInfo", {})
+        if page_info.get("hasNextPage"):
+            cursor = page_info.get("endCursor")
         else:
-            log("Unexpected GraphQL response structure")
             break
 
-    # Return the accumulated data
-    return {"data": {"repository": {"issues": {"nodes": all_data}}}}
+    return all_nodes
