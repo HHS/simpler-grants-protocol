@@ -1,9 +1,13 @@
 import json
 import logging
 import os
+import re
 import sys
 import urllib.request
 from pathlib import Path
+
+PROJECT_DIR = Path(__file__).parent
+REPO_ROOT = PROJECT_DIR.parent.parent.parent
 
 # #######################################################
 # Logging
@@ -49,10 +53,10 @@ def get_env(name: str) -> str:
 # #######################################################
 
 
-def get_query_from_file(file_path: str) -> str:
+def get_query_from_file(file_name: str) -> str:
     """Get a GraphQL query from a file."""
     # Read the GraphQL query from file
-    query_file_path = Path(__file__).parent / "queries" / file_path
+    query_file_path = PROJECT_DIR / "queries" / file_name
     if not query_file_path.exists():
         log(f"GraphQL query file not found: {query_file_path}")
         return ""
@@ -62,6 +66,36 @@ def get_query_from_file(file_path: str) -> str:
     except Exception as e:
         log(f"Error reading query file: {e}")
         return ""
+
+
+# #######################################################
+# Markdown parsing
+# #######################################################
+
+
+def update_markdown_section(
+    content: str,
+    section: str,
+    new_content: str,
+) -> str:
+    """Updates or adds a section to the markdown content."""
+    # Create the section header to search for
+    section_header = f"### {section}"
+
+    # Check if the section already exists
+    if section_header in content:
+        # Section exists, update it with new content
+        # Find the section and replace its content
+        pattern = rf"({re.escape(section_header)}.*?)(?=\n###|\Z)"
+        replacement = f"{section_header}\n{new_content}"
+
+        # Use re.sub with DOTALL flag to match across multiple lines
+        updated_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+        return updated_content
+    else:
+        # Section doesn't exist, append it at the bottom
+        new_section = f"\n\n{section_header}\n{new_content}"
+        return content + new_section
 
 
 # #######################################################

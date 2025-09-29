@@ -8,7 +8,6 @@ Usage: From the root of the deps_mapping/ directory:
     --repo "simpler-grants-protocol" \
     --project 17 \
     --issue-type "Epic" \
-    --label "Co-planning" \
     --state "open" \
     --dry-run
 """
@@ -44,7 +43,6 @@ def parse_args() -> CliArgs:
         help="GitHub project number",
     )
     parser.add_argument("--issue-type", required=True, help="GitHub issue type")
-    parser.add_argument("--label", required=True, help="GitHub issue label")
     parser.add_argument("--state", default="open", help="GitHub issue state")
     parser.add_argument("--batch", type=int, default=100, help="Batch size")
     parser.add_argument("--dry-run", action="store_true", help="Dry run mode")
@@ -56,7 +54,6 @@ def parse_args() -> CliArgs:
         repo=args.repo,
         project=args.project,
         issue_type=args.issue_type,
-        label=args.label,
         state=args.state,
         batch=args.batch,
         dry_run=args.dry_run,
@@ -74,15 +71,10 @@ def main() -> int:
     if args.dry_run:
         log("Running in dry run mode")
 
-    diagram = None
     if args.scope == "issue":
-        diagram = github.map_issue_dependencies(args)
+        github.map_issue_dependencies(args)
     elif args.scope == "repo":
-        diagram = github.map_repo_dependencies(args)
-
-    if diagram:
-        print(diagram.generate_diagram())
-
+        github.map_repo_dependencies(args)
     return 0  # success
 
 

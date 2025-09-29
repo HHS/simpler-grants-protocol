@@ -10,7 +10,6 @@ class CliArgs:
     repo: str
     project: int
     issue_type: str
-    label: str | None = None
     state: str = "open"
     batch: int = 100
     dry_run: bool = False

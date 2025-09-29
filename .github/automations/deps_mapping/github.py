@@ -1,10 +1,21 @@
 import re
 import json
+import pathlib
 
 from data import CliArgs, Dependency, Issue
 from diagram import Diagram
-from utils import err, get_env, get_query_from_file, log, make_request
+from utils import (
+    REPO_ROOT,
+    err,
+    get_env,
+    get_query_from_file,
+    log,
+    make_request,
+    update_markdown_section,
+)
 
+
+README_PATH = REPO_ROOT / "README.md"
 GITHUB_API_TOKEN = get_env("GITHUB_API_TOKEN")
 
 # #######################################################
@@ -12,7 +23,7 @@ GITHUB_API_TOKEN = get_env("GITHUB_API_TOKEN")
 # #######################################################
 
 
-def map_issue_dependencies(args: CliArgs) -> Diagram:
+def map_issue_dependencies(args: CliArgs) -> None:
     """Parse dependencies for a single issue."""
     # Make the GraphQL request
     query = get_query_from_file("fetch-repo.graphql")
@@ -22,10 +33,11 @@ def map_issue_dependencies(args: CliArgs) -> Diagram:
         "issueType": args.issue_type,
     }
     issues = make_paginated_graphql_request(query, payload, args.batch)
-    return parse_graphql_response(issues, args)
+    diagram = parse_graphql_response(issues, args)
+    print(diagram.generate_diagram())
 
 
-def map_repo_dependencies(args: CliArgs) -> Diagram:
+def map_repo_dependencies(args: CliArgs) -> None:
     """Parse issue dependencies for a given repository."""
     # Make the GraphQL request
     query = get_query_from_file("fetch-repo.graphql")
@@ -35,7 +47,46 @@ def map_repo_dependencies(args: CliArgs) -> Diagram:
         "issueType": args.issue_type,
     }
     issues = make_paginated_graphql_request(query, payload, args.batch)
-    return parse_graphql_response(issues, args)
+    diagram = parse_graphql_response(issues, args)
+    write_diagram_to_readme(diagram, README_PATH)
+
+
+def write_diagram_to_readme(
+    diagram: Diagram,
+    readme_path: pathlib.Path,
+) -> None:
+    """Write the diagram to the README file, updating the dependency graph section."""
+    try:
+        # Read the current README content
+        with open(readme_path, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+
+        # Generate the diagram content
+        section_content = f"""
+Here are the dependencies between features on our co-planning board:
+
+```mermaid
+{diagram.generate_diagram()}
+```
+"""
+
+        # Update the dependency graph section
+        updated_content = update_markdown_section(
+            content=readme_content,
+            section="Feature dependencies",
+            new_content=section_content,
+        )
+
+        # Write the updated content back to the README
+        with open(readme_path, "w", encoding="utf-8") as f:
+            f.write(updated_content)
+
+        log(f"Successfully updated {readme_path} with dependency diagram")
+
+    except FileNotFoundError:
+        err(f"README file not found: {readme_path}")
+    except Exception as e:
+        err(f"Failed to update README: {e}")
 
 
 # #######################################################
