@@ -160,10 +160,14 @@ def map_issues_dependencies(args: CliArgs) -> Diagram:
 
 def map_repo_dependencies(args: CliArgs) -> Diagram:
     """Parse issue dependencies for a given repository."""
-    # Mock implementation - return all issues and dependencies for the repository
+    log(f"Fetching dependencies for {args.org}/{args.repo}")
+
+    # Debug logging to check variable values
+    log(f"Variables: org='{args.org}', repo='{args.repo}', batch={args.batch}")
+
     responses = make_paginated_graphql_request(
-        "queries/repo_issues.graphql",
-        {"owner": args.org, "name": args.repo},
+        "fetch-repo.graphql",
+        {"org": args.org, "repo": args.repo, "label": args.label},
         args.batch,
     )
     print(responses)

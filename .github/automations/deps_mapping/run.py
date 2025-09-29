@@ -8,6 +8,7 @@ Usage: From the root of the deps_mapping/ directory:
     --repo "simpler-grants-protocol" \
     --project 17 \
     --issue-type "Epic" \
+    --label "Co-planning" \
     --state "open" \
     --dry-run
 """
@@ -37,12 +38,8 @@ def parse_args() -> CliArgs:
     parser.add_argument("--org", required=True, help="GitHub organization")
     parser.add_argument("--repo", required=True, help="GitHub repository")
     parser.add_argument("--project", required=True, help="GitHub project number")
-    parser.add_argument(
-        "--issue-type",
-        required=True,
-        action="append",
-        help="GitHub issue type (can be specified multiple times for multiple types)",
-    )
+    parser.add_argument("--issue-type", required=True, help="GitHub issue type")
+    parser.add_argument("--label", required=True, help="GitHub issue label")
     parser.add_argument("--state", default="open", help="GitHub issue state")
     parser.add_argument("--batch", type=int, default=100, help="Batch size")
     parser.add_argument("--dry-run", action="store_true", help="Dry run mode")
@@ -53,7 +50,8 @@ def parse_args() -> CliArgs:
         org=args.org,
         repo=args.repo,
         project=args.project,
-        issue_types=args.issue_type,
+        issue_type=args.issue_type,
+        label=args.label,
         state=args.state,
         batch=args.batch,
         dry_run=args.dry_run,
