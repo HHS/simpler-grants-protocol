@@ -1,0 +1,36 @@
+query (
+  $org: String!
+  $repo: String!
+  $label: String!
+  $state: String!
+  $batch: Int!
+  $cursor: String
+) {
+  repository(owner: $org, name: $repo) {
+    issues(
+      first: $batch
+      after: $cursor
+      filterBy: { type: "Epic", labels: $label }
+    ) {
+      nodes {
+        repository {
+          name
+          owner {
+            login
+          }
+        }
+        title
+        url
+        blocking(first: $batch) {
+          nodes {
+            url
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

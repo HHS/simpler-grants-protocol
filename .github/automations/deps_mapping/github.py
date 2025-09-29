@@ -1,5 +1,8 @@
 from data import CliArgs, Dependency, Issue
 from diagram import Diagram
+from utils import get_env, log, make_request
+
+GITHUB_API_TOKEN = get_env("GITHUB_API_TOKEN")
 
 
 def map_issues_dependencies(args: CliArgs) -> Diagram:
@@ -158,6 +161,12 @@ def map_issues_dependencies(args: CliArgs) -> Diagram:
 def map_repo_dependencies(args: CliArgs) -> Diagram:
     """Parse issue dependencies for a given repository."""
     # Mock implementation - return all issues and dependencies for the repository
+    responses = make_paginated_graphql_request(
+        "queries/repo_issues.graphql",
+        {"owner": args.org, "name": args.repo},
+        args.batch,
+    )
+    print(responses)
     return map_issues_dependencies(args)
 
 
@@ -165,3 +174,93 @@ def map_project_dependencies(args: CliArgs) -> Diagram:
     """Parse issue dependencies for a given project."""
     # Mock implementation - return all issues and dependencies for the project
     return map_issues_dependencies(args)
+
+
+# #######################################################
+# Make paginated GraphQL requests
+# #######################################################
+
+
+def make_paginated_graphql_request(
+    query_path: str,
+    variables: dict,
+    batch: int,
+) -> dict:
+    """Make a paginated GraphQL request."""
+    import os
+    import json
+
+    # Read the GraphQL query from file
+    query_file_path = os.path.join(os.path.dirname(__file__), "queries", query_path)
+    try:
+        with open(query_file_path, "r") as f:
+            query = f.read()
+    except FileNotFoundError:
+        log(f"GraphQL query file not found: {query_file_path}")
+        return {}
+    except Exception as e:
+        log(f"Error reading query file: {e}")
+        return {}
+
+    headers = {
+        "Authorization": f"token {GITHUB_API_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json",
+    }
+
+    url = "https://api.github.com/graphql"
+
+    # Prepare variables for pagination
+    variables["batch"] = batch
+    cursor = None
+    all_data = []
+
+    while True:
+        # Add cursor to variables if we have one
+        if cursor:
+            variables["cursor"] = cursor
+
+        # Prepare the GraphQL request payload
+        payload = {"query": query, "variables": variables}
+
+        try:
+            # Make the GraphQL request
+            response = make_request(
+                url, headers, method="POST", data=json.dumps(payload)
+            )
+
+            # Check for GraphQL errors
+            if "errors" in response:
+                log(f"GraphQL errors: {response['errors']}")
+                return {}
+
+            # Check if we have data
+            if "data" not in response:
+                log("No data in GraphQL response")
+                return {}
+
+            data = response["data"]
+
+            # Navigate to the issues data based on the query structure
+            if "repository" in data and "issues" in data["repository"]:
+                issues_data = data["repository"]["issues"]
+
+                # Add current batch to all_data
+                if "nodes" in issues_data:
+                    all_data.extend(issues_data["nodes"])
+
+                # Check if there are more pages
+                if "pageInfo" in issues_data and issues_data["pageInfo"]["hasNextPage"]:
+                    cursor = issues_data["pageInfo"]["endCursor"]
+                else:
+                    break
+            else:
+                log("Unexpected GraphQL response structure")
+                break
+
+        except Exception as e:
+            log(f"Error making GraphQL request: {e}")
+            return {}
+
+    # Return the accumulated data
+    return {"data": {"repository": {"issues": {"nodes": all_data}}}}
