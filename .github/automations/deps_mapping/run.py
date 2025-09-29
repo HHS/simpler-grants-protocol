@@ -32,7 +32,7 @@ def parse_args() -> CliArgs:
     parser.add_argument(
         "--scope",
         required=True,
-        choices=["issue", "repo", "project"],
+        choices=["issue", "repo"],
         help="Scope of the dependencies to map",
     )
     parser.add_argument("--org", required=True, help="GitHub organization")
@@ -71,11 +71,9 @@ def main() -> int:
 
     diagram = None
     if args.scope == "issue":
-        diagram = github.map_issues_dependencies(args)
+        diagram = github.map_issue_dependencies(args)
     elif args.scope == "repo":
         diagram = github.map_repo_dependencies(args)
-    elif args.scope == "project":
-        diagram = github.map_project_dependencies(args)
 
     if diagram:
         print(diagram.generate_diagram())

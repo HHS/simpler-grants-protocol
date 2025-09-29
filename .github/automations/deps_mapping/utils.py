@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import urllib.request
+from pathlib import Path
 
 # #######################################################
 # Logging
@@ -41,6 +42,24 @@ def get_env(name: str) -> str:
         err(f"{name} environment variable must be set")
         return ""
     return value
+
+
+# #######################################################
+# GraphQL requests
+# #######################################################
+def get_query_from_file(file_path: str) -> str:
+    """Get a GraphQL query from a file."""
+    # Read the GraphQL query from file
+    query_file_path = Path(__file__).parent / "queries" / file_path
+    if not query_file_path.exists():
+        log(f"GraphQL query file not found: {query_file_path}")
+        return ""
+    try:
+        with open(query_file_path, "r") as f:
+            return f.read()
+    except Exception as e:
+        log(f"Error reading query file: {e}")
+        return ""
 
 
 # #######################################################
