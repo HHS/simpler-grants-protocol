@@ -4,9 +4,9 @@ from data import Dependency, Issue
 
 STATUS_CLASSES = {
     "In Progress": ":::InProgress",
+    "In Review": ":::InProgress",
     "Done": ":::Done",
     "Closed": ":::Done",
-    "Open": ":::InProgress",
 }
 
 

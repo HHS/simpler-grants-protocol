@@ -37,7 +37,12 @@ def parse_args() -> CliArgs:
     )
     parser.add_argument("--org", required=True, help="GitHub organization")
     parser.add_argument("--repo", required=True, help="GitHub repository")
-    parser.add_argument("--project", required=True, help="GitHub project number")
+    parser.add_argument(
+        "--project",
+        type=int,
+        required=True,
+        help="GitHub project number",
+    )
     parser.add_argument("--issue-type", required=True, help="GitHub issue type")
     parser.add_argument("--label", required=True, help="GitHub issue label")
     parser.add_argument("--state", default="open", help="GitHub issue state")

@@ -23,12 +23,13 @@ def map_issue_dependencies(args: CliArgs) -> Diagram:
     }
     responses = make_paginated_graphql_request(query, payload, args.batch)
     # Parse the responses
-    return parse_graphql_response(
+    issue_data = (
         responses.get("data", {})
         .get("repository", {})
         .get("issues", {})
         .get("nodes", [])
     )
+    return parse_graphql_response(issue_data, args)
 
 
 def map_repo_dependencies(args: CliArgs) -> Diagram:
@@ -42,12 +43,13 @@ def map_repo_dependencies(args: CliArgs) -> Diagram:
     }
     responses = make_paginated_graphql_request(query, payload, args.batch)
     # Parse the responses
-    return parse_graphql_response(
+    issue_data = (
         responses.get("data", {})
         .get("repository", {})
         .get("issues", {})
         .get("nodes", [])
     )
+    return parse_graphql_response(issue_data, args)
 
 
 # #######################################################
@@ -55,7 +57,7 @@ def map_repo_dependencies(args: CliArgs) -> Diagram:
 # #######################################################
 
 
-def parse_graphql_response(response_data: list[dict]) -> Diagram:
+def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
     """Parse GraphQL response data into a Diagram."""
     issues = {}
     dependencies = []
@@ -86,7 +88,7 @@ def parse_graphql_response(response_data: list[dict]) -> Diagram:
             number=issue_number,
             url=issue_url,
             repo=issue_repo,
-            status="Todo",  # Default status since GraphQL doesn't provide this
+            status=extract_status(issue_data, args.project),
             group=group,
         )
 
@@ -108,6 +110,24 @@ def parse_graphql_response(response_data: list[dict]) -> Diagram:
             dependencies.append(dependency)
 
     return Diagram(subgraphs=issues, dependencies=dependencies)
+
+
+def extract_status(issue_data: dict, project: int, default: str = "Todo") -> str:
+    """Extract status from project items filtered by project number.
+
+    Defaults to "Todo" if no match found, or if the issue has no project items.
+
+    This is equivalent to the following jq expression:
+    (.[] | select(.project.number == $project) | .status.name) // $default
+    """
+    return next(
+        (
+            item.get("status", {}).get("name")
+            for item in issue_data.get("projectItems", {}).get("nodes", [])
+            if item.get("project", {}).get("number") == project
+        ),
+        default,  # Default value if no match found
+    )
 
 
 # #######################################################
