@@ -63,7 +63,7 @@ SUBGRAPH_TEMPLATE = """
     end
 """
 
-ISSUE_TEMPLATE = '        {repo}/{number}["{title}"]{status_class}'
+ISSUE_TEMPLATE = '        {repo}#{number}["{title}"]{status_class}'
 
 
 # #######################################################

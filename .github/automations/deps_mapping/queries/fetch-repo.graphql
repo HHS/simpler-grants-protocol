@@ -1,27 +1,27 @@
 query (
   $org: String!
   $repo: String!
-  $label: String!
+  $issueType: String!
   $batch: Int!
   $cursor: String
 ) {
   repository(owner: $org, name: $repo) {
-    issues(
-      first: $batch
-      after: $cursor
-      filterBy: { type: "Epic", labels: [$label] }
-    ) {
+    issues(first: $batch, after: $cursor, filterBy: { type: $issueType }) {
       nodes {
         repository {
-          name
-          owner {
-            login
-          }
+          nameWithOwner
         }
+        number
         title
         url
         blocking(first: $batch) {
           nodes {
+            number
+            repository {
+              nameWithOwner
+            }
+            number
+            title
             url
           }
         }

@@ -1,177 +1,46 @@
+import re
+
 from data import CliArgs, Dependency, Issue
 from diagram import Diagram
 from utils import get_env, log, make_request
 
 GITHUB_API_TOKEN = get_env("GITHUB_API_TOKEN")
 
+# #######################################################
+# Mapping functions
+# #######################################################
+
 
 def map_issues_dependencies(args: CliArgs) -> Diagram:
     """Parse dependencies for a single issue."""
-    # Create mock issues based on the diagram data
-    issues = {
-        "SDK": [
-            Issue(
-                title="Create a Python SDK ✔️",
-                number=345,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/345",
-                repo=args.repo,
-                status="Done",
-                group="SDK",
-            ),
-            Issue(
-                title="Create a TypeScript SDK",
-                number=321,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/321",
-                repo=args.repo,
-                status="Todo",
-                group="SDK",
-            ),
-            Issue(
-                title="Create a Go SDK",
-                number=323,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/323",
-                repo=args.repo,
-                status="Todo",
-                group="SDK",
-            ),
-            Issue(
-                title="Create a Python API client",
-                number=324,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/324",
-                repo=args.repo,
-                status="Todo",
-                group="SDK",
-            ),
-            Issue(
-                title="Create a TypeScript API client",
-                number=328,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/328",
-                repo=args.repo,
-                status="Todo",
-                group="SDK",
-            ),
-            Issue(
-                title="Create a Go API client",
-                number=329,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/329",
-                repo=args.repo,
-                status="Todo",
-                group="SDK",
-            ),
-        ],
-        "Template": [
-            Issue(
-                title="Create an Express.js API template",
-                number=332,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/332",
-                repo=args.repo,
-                status="Todo",
-                group="Template",
-            ),
-            Issue(
-                title="Create a Go API template",
-                number=333,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/333",
-                repo=args.repo,
-                status="Todo",
-                group="Template",
-            ),
-            Issue(
-                title="Create a FastAPI template ✔️",
-                number=346,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/346",
-                repo=args.repo,
-                status="Done",
-                group="Template",
-            ),
-        ],
-        "Website": [
-            Issue(
-                title="Create a custom fields catalog",
-                number=330,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/330",
-                repo=args.repo,
-                status="Todo",
-                group="Website",
-            ),
-            Issue(
-                title="Add mock API playground to CommonGrants.org",
-                number=334,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/334",
-                repo=args.repo,
-                status="Todo",
-                group="Website",
-            ),
-        ],
-        "CLI": [
-            Issue(
-                title="Make API spec validation configurable",
-                number=331,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/331",
-                repo=args.repo,
-                status="Todo",
-                group="CLI",
-            ),
-            Issue(
-                title="Create GH action and badge for CommonGrants compliance",
-                number=335,
-                url=f"https://github.com/{args.org}/{args.repo}/issues/335",
-                repo=args.repo,
-                status="Todo",
-                group="CLI",
-            ),
-        ],
-    }
+    responses = make_paginated_graphql_request(
+        "fetch-repo.graphql",
+        {"org": args.org, "repo": args.repo, "issueType": args.issue_type},
+        args.batch,
+    )
 
-    # Create dependencies based on the diagram
-    dependencies = [
-        Dependency(
-            blocked="simpler-grants-protocol/328",
-            blocked_by="simpler-grants-protocol/321",
-        ),  # TS SDK -> TS API client
-        Dependency(
-            blocked="simpler-grants-protocol/324",
-            blocked_by="simpler-grants-protocol/345",
-        ),  # Py SDK -> Py API client
-        Dependency(
-            blocked="simpler-grants-protocol/329",
-            blocked_by="simpler-grants-protocol/323",
-        ),  # Go SDK -> Go API client
-        Dependency(
-            blocked="simpler-grants-protocol/333",
-            blocked_by="simpler-grants-protocol/323",
-        ),  # Go SDK -> Go API template
-        Dependency(
-            blocked="simpler-grants-protocol/332",
-            blocked_by="simpler-grants-protocol/321",
-        ),  # TS SDK -> Express.js template
-        Dependency(
-            blocked="simpler-grants-protocol/346",
-            blocked_by="simpler-grants-protocol/345",
-        ),  # Py SDK -> FastAPI template
-        Dependency(
-            blocked="simpler-grants-protocol/335",
-            blocked_by="simpler-grants-protocol/331",
-        ),  # API spec validation -> GH action
-    ]
-
-    return Diagram(subgraphs=issues, dependencies=dependencies)
+    return parse_graphql_response(
+        responses.get("data", {})
+        .get("repository", {})
+        .get("issues", {})
+        .get("nodes", [])
+    )
 
 
 def map_repo_dependencies(args: CliArgs) -> Diagram:
     """Parse issue dependencies for a given repository."""
-    log(f"Fetching dependencies for {args.org}/{args.repo}")
-
-    # Debug logging to check variable values
-    log(f"Variables: org='{args.org}', repo='{args.repo}', batch={args.batch}")
-
     responses = make_paginated_graphql_request(
         "fetch-repo.graphql",
-        {"org": args.org, "repo": args.repo, "label": args.label},
+        {"org": args.org, "repo": args.repo, "issueType": args.issue_type},
         args.batch,
     )
-    print(responses)
-    return map_issues_dependencies(args)
+
+    return parse_graphql_response(
+        responses.get("data", {})
+        .get("repository", {})
+        .get("issues", {})
+        .get("nodes", [])
+    )
 
 
 def map_project_dependencies(args: CliArgs) -> Diagram:
@@ -181,7 +50,67 @@ def map_project_dependencies(args: CliArgs) -> Diagram:
 
 
 # #######################################################
-# Make paginated GraphQL requests
+# Parsing functions
+# #######################################################
+
+
+def parse_graphql_response(response_data: list[dict]) -> Diagram:
+    """Parse GraphQL response data into a Diagram."""
+    issues = {}
+    dependencies = []
+
+    # Extract issues from GraphQL response
+    for issue_data in response_data:
+        # Extract issue number from URL
+        issue_url = issue_data["url"]
+        issue_repo = issue_data["repository"]["nameWithOwner"]
+        issue_number = issue_data["number"]
+
+        # Parse group name from title pattern: [<group name>] <Issue title>
+        title = issue_data["title"]
+        group = "Other"
+
+        # Determine group based on title prefix (e.g., [SDK] Create a Python SDK)
+        match = re.match(r"^\[([^\]]+)\]\s*(.*)$", title)
+        if match:
+            group = match.group(1).strip()
+            # Remove the prefix from the title
+            clean_title = match.group(2).strip()
+        else:
+            clean_title = title
+
+        # Create Issue object
+        issue = Issue(
+            title=clean_title,
+            number=issue_number,
+            url=issue_url,
+            repo=issue_repo,
+            status="Todo",  # Default status since GraphQL doesn't provide this
+            group=group,
+        )
+
+        # Add to appropriate group
+        if group not in issues:
+            issues[group] = []
+        issues[group].append(issue)
+
+        # Extract dependencies from blocking relationships
+        for blocked_issue in issue_data["blocking"]["nodes"]:
+            blocked_repo = blocked_issue["repository"]["nameWithOwner"]
+            blocked_number = blocked_issue["number"]
+
+            # Create dependency: blocked issue is blocked by current issue
+            dependency = Dependency(
+                blocked=f"{blocked_repo}#{blocked_number}",
+                blocked_by=f"{issue_repo}#{issue_number}",
+            )
+            dependencies.append(dependency)
+
+    return Diagram(subgraphs=issues, dependencies=dependencies)
+
+
+# #######################################################
+# Request functions
 # #######################################################
 
 
