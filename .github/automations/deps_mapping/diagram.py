@@ -47,7 +47,7 @@ flowchart LR
   subgraph Canvas["Dependencies"]
     direction LR
 
-{subgraphs}
+{issues}
 
     %% ─────────────────────────────
     %% Relationships
@@ -80,11 +80,16 @@ class Diagram:
     issues: dict[issue_slug, Issue]
     dependencies: list[Dependency]
 
-    def generate_diagram(self) -> str:
-        """Generate a diagram of the dependencies between issues."""
+    def generate_diagram(self, *, group_issues: bool = True) -> str:
+        """Generate a diagram of the dependencies between issues.
+
+        Args:
+            group_by_subgraphs: If True, group issues by subgraphs. If False,
+                               display all issues directly in the canvas.
+        """
         return DIAGRAM_TEMPLATE.format(
             styles=self._format_styles(),
-            subgraphs=self._format_subgraphs(),
+            issues=self._format_issues(group_issues),
             relationships=self._format_relationships(),
         )
 
@@ -167,18 +172,25 @@ class Diagram:
             for name in self.subgraphs
         )
 
-    def _format_subgraphs(self) -> str:
+    def _format_issues(self, group_issues: bool = True) -> str:
         """Generate the subgraphs for the 'Canvas' section of the diagram."""
-        # Generate subgraph structure
-        subgraphs = []
-        for name, issues in self.subgraphs.items():
-            subgraph = SUBGRAPH_TEMPLATE.format(
-                slug=format_slug(name),
-                name=name,
-                issues=format_subgraph_items(issues),
-            )
-            subgraphs.append(subgraph)
-        return "\n".join(subgraphs)
+        if group_issues:
+            # Generate subgraph structure
+            subgraphs = []
+            for name, issues in self.subgraphs.items():
+                subgraph = SUBGRAPH_TEMPLATE.format(
+                    slug=format_slug(name),
+                    name=name,
+                    issues=format_subgraph_items(issues),
+                )
+                subgraphs.append(subgraph)
+            return "\n".join(subgraphs)
+        else:
+            # Display all issues directly in the canvas without subgraph grouping
+            all_issues = []
+            for issue in self.issues.values():
+                all_issues.append(issue)
+            return format_subgraph_items(all_issues)
 
     def _format_relationships(self) -> str:
         """Format the subgraph relationships."""

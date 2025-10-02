@@ -34,7 +34,10 @@ def map_issue_dependencies(args: CliArgs) -> None:
     }
     issues = make_paginated_graphql_request(query, payload, args.batch)
     diagram = parse_graphql_response(issues, args)
-    print(diagram.generate_diagram())
+    for issue in diagram.issues:
+        issue_diagram = diagram.extract_issue_diagram(issue)
+        print(f"\n## {issue}\n")
+        print(issue_diagram.generate_diagram(group_issues=False))
 
 
 def map_repo_dependencies(args: CliArgs) -> None:
