@@ -5,7 +5,8 @@ on:
     paths:
       - ".github/automations/deps_mapping/**"
       - ".github/workflows/deps-mapping-issue.yml"
-  # TODO: Enable scheduled runs and workflow_dispatch
+  workflow_dispatch:
+  # TODO: Enable scheduled runs
 
 permissions:
   issues: write
@@ -24,6 +25,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,3 +44,15 @@ jobs:
             --labels "co-planning" \
             --issue-type "Epic" \
             --scope "repo"
+
+      - name: Commit changes to PR
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B ${{ github.head_ref }}
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -am "docs: Update README with dependency diagram"
+            git push origin ${{ github.head_ref }}
+          fi
