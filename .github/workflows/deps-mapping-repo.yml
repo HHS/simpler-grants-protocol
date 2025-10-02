@@ -1,4 +1,4 @@
-name: "Dependency mapping: Issue level"
+name: "Dependency mapping: Repo level"
 
 on:
   pull_request:
@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Run script (dry run)
+      - name: Run script
         if: github.event_name == 'pull_request'
         run: |
           python run.py \
@@ -39,7 +39,7 @@ jobs:
             --project 17 \
             --labels "co-planning" \
             --issue-type "Epic" \
-            --scope "issue"
+            --scope "repo"
 
       - name: Commit changes
         # Only commit changes if this is a pull request and there are changes
