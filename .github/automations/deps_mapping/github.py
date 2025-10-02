@@ -96,7 +96,8 @@ Here are the dependencies between features on our co-planning board:
 
 def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
     """Parse GraphQL response data into a Diagram."""
-    issues = {}
+    issues: dict[str, Issue] = {}
+    subgraphs: dict[str, list[Issue]] = {}
     dependencies = []
 
     # Extract issues from GraphQL response
@@ -104,6 +105,7 @@ def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
         # Extract issue number and repository
         issue_repo = issue_data["repository"]["nameWithOwner"]
         issue_number = issue_data["number"]
+        issue_slug = f"{issue_repo}#{issue_number}"
 
         # Parse group name from title pattern: "[<group name>] <Issue title>"
         title = issue_data["title"]
@@ -118,6 +120,7 @@ def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
 
         # Create Issue object
         issue = Issue(
+            slug=issue_slug,
             title=clean_title,
             number=issue_number,
             repo=issue_repo,
@@ -126,24 +129,27 @@ def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
         )
 
         # Add to appropriate group
-        if group not in issues:
-            issues[group] = []
-        issues[group].append(issue)
+        if group not in subgraphs:
+            subgraphs[group] = []
+        subgraphs[group].append(issue)
+
+        # Add to issues
+        issues[issue_slug] = issue
 
         # Extract dependencies from blocking relationships
         for blocked_issue in issue_data.get("blocking", {}).get("nodes", []):
             blocked_repo = blocked_issue.get("repository", {}).get("nameWithOwner")
             blocked_number = blocked_issue.get("number")
-
+            blocked_slug = f"{blocked_repo}#{blocked_number}"
             # Create dependency: blocked issue is blocked by current issue
             if blocked_repo and blocked_number:
                 dependency = Dependency(
-                    blocked=f"{blocked_repo}#{blocked_number}",
-                    blocked_by=f"{issue_repo}#{issue_number}",
+                    blocked=blocked_slug,
+                    blocked_by=issue_slug,
                 )
                 dependencies.append(dependency)
 
-    return Diagram(subgraphs=issues, dependencies=dependencies)
+    return Diagram(subgraphs=subgraphs, issues=issues, dependencies=dependencies)
 
 
 def extract_status(issue_data: dict, project: int, default: str = "Todo") -> str:

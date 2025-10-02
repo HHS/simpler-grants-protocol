@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 
 
+issue_slug = str
+
+
 @dataclass
 class CliArgs:
     """Command line arguments for the application."""
@@ -19,6 +22,7 @@ class CliArgs:
 class Issue:
     """An issue from the GitHub API."""
 
+    slug: issue_slug
     repo: str
     number: int
     title: str
@@ -30,5 +34,5 @@ class Issue:
 class Dependency:
     """A dependency between two issues."""
 
-    blocked: str
-    blocked_by: str
+    blocked: issue_slug
+    blocked_by: issue_slug
