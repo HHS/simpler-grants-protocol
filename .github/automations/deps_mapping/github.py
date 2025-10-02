@@ -6,7 +6,7 @@ from data import CliArgs, Dependency, Issue
 from diagram import Diagram
 from utils import (
     REPO_ROOT,
-    err,
+    err_and_exit,
     get_env,
     get_query_from_file,
     log,
@@ -84,9 +84,9 @@ Here are the dependencies between features on our co-planning board:
         log(f"Successfully updated {readme_path} with dependency diagram")
 
     except FileNotFoundError:
-        err(f"README file not found: {readme_path}")
+        err_and_exit(f"README file not found: {readme_path}")
     except Exception as e:
-        err(f"Failed to update README: {e}")
+        err_and_exit(f"Failed to update README: {e}")
 
 
 # #######################################################
@@ -225,12 +225,10 @@ def make_paginated_graphql_request(
         for key in path_to_nodes:
             paginated_data = paginated_data.get(key)
             if paginated_data is None:
-                err(
+                err_and_exit(
                     message=f"Unexpected GraphQL response structure: "
                     f"missing key '{key}' in path {path_to_nodes}",
-                    exit=True,
                 )
-                return []
 
         # Add current batch to all_data
         nodes = paginated_data.get("nodes")

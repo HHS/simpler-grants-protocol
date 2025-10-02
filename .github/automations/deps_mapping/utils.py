@@ -5,6 +5,7 @@ import re
 import sys
 import urllib.request
 from pathlib import Path
+from typing import Never
 
 PROJECT_DIR = Path(__file__).parent
 REPO_ROOT = PROJECT_DIR.parent.parent.parent
@@ -27,11 +28,15 @@ def log(message: str) -> None:
     logger.info(message)
 
 
-def err(message: str, *, exit: bool = True) -> None:
+def err(message: str) -> None:
     """Log an error message and exit."""
     logger.error(message)
-    if exit:
-        sys.exit(1)
+
+
+def err_and_exit(message: str) -> Never:
+    """Log an error message and exit."""
+    err(message)
+    sys.exit(1)
 
 
 # #######################################################
@@ -43,8 +48,7 @@ def get_env(name: str) -> str:
     """Get an environment variable and exit if it's not set."""
     value = os.environ.get(name)
     if not value:
-        err(f"{name} environment variable must be set")
-        return ""
+        err_and_exit(f"{name} environment variable must be set")
     return value
 
 
@@ -122,11 +126,8 @@ def make_request(
         with urllib.request.urlopen(req) as response:
             return json.loads(response.read().decode())
     except urllib.request.HTTPError as e:
-        err(f"HTTP request failed: {e.code} - {e.reason}", exit=True)
-        return {}  # For type checking, never reached due to sys.exit() in err()
+        err_and_exit(f"HTTP request failed: {e.code} - {e.reason}")
     except json.JSONDecodeError:
-        err("Failed to parse JSON response", exit=True)
-        return {}  # For type checking, never reached due to sys.exit() in err()
+        err_and_exit("Failed to parse JSON response")
     except Exception as e:
-        err(f"Request failed: {e}", exit=True)
-        return {}  # For type checking, never reached due to sys.exit() in err()
+        err_and_exit(f"Request failed: {e}")
