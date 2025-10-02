@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal
+from enum import StrEnum
 
 from data import Dependency, Issue, issue_slug
 
@@ -72,6 +72,13 @@ ISSUE_TEMPLATE = '        {slug}["{title}"]{status_class}'
 # #######################################################
 
 
+class Direction(StrEnum):
+    """The direction of the dependency."""
+
+    UPSTREAM = "upstream"
+    DOWNSTREAM = "downstream"
+
+
 @dataclass
 class Diagram:
     """A diagram of the dependencies between issues."""
@@ -100,10 +107,12 @@ class Diagram:
 
         # Get all upstream and downstream dependencies recursively (with dependencies)
         upstream_issues, upstream_deps = self._traverse_dependencies(
-            issue_slug, "upstream"
+            issue_slug=issue_slug,
+            direction=Direction.UPSTREAM,
         )
         downstream_issues, downstream_deps = self._traverse_dependencies(
-            issue_slug, "downstream"
+            issue_slug=issue_slug,
+            direction=Direction.DOWNSTREAM,
         )
 
         # Merge all related issues (target + upstream + downstream)
@@ -123,7 +132,7 @@ class Diagram:
     def _traverse_dependencies(
         self,
         issue_slug: str,
-        direction: Literal["upstream", "downstream"],
+        direction: Direction,
     ) -> tuple[dict[str, Issue], list[Dependency]]:
         """Recursively traverse dependencies in the specified direction."""
         issues = {}
@@ -138,10 +147,10 @@ class Diagram:
             visited.add(current_issue)
 
             # Set up direction-specific logic
-            if direction == "upstream":
+            if direction == Direction.UPSTREAM:
                 curr_field = "blocked"
                 next_field = "blocked_by"
-            elif direction == "downstream":
+            elif direction == Direction.DOWNSTREAM:
                 curr_field = "blocked_by"
                 next_field = "blocked"
 
