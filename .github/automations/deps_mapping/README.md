@@ -10,33 +10,56 @@ This will generate a diagram of the dependencies between all issues in the repos
 
 ```bash
 python run.py \
-    --scope repo \
     --org HHS \
     --repo simpler-grants-protocol \
     --project 17 \
-    --issue-type Epic
+    --labels "co-planning" \
+    --issue-type Epic \
+    --scope repo
 ```
 
 ### Mapping dependencies for a single issue
 
-> [!NOTE]
-> **Coming soon:** This feature has been mocked up, but is not yet implemented.
-
-This will generate a diagram of the dependencies upstream and downstream of a specific issue. In the future, this script will also update a "Dependencies" section within each issue's body.
+This will generate a diagram of the dependencies upstream and downstream of a specific issue, and post the diagram to the "Dependencies" section within each issue's body.
 
 ```bash
 python run.py \
-    --scope issue \
     --org HHS \
     --repo simpler-grants-protocol \
     --project 17 \
-    --issue-type Epic
+    --issue-type Epic \
+    --labels "co-planning" \
+    --scope issue
 ```
 
-## Next steps
+## Configuring the sync behavior
 
-- [ ] Update the script to map dependencies for a single issue when the `--scope` argument is set to `issue`
-- [ ] Update the script to update the "Dependencies" section within each issue's body when the `--scope` argument is set to `issue`
-- [ ] Create a GitHub action that triggers the repo-level dependency mapping workflow and opens a PR with the updated `README.md` file when the `--scope` argument is set to `repo`
-- [ ] Create a GitHub action that triggers the issue-level dependency mapping workflow when the `--scope` argument is set to `issue`
-- [ ] Add unit tests for the script
+The CLI supports the following options:
+
+- `--org`: The GitHub organization that owns the repository
+- `--repo`: The GitHub repository to sync data from
+- `--labels`: The GitHub issue label to sync data from, can be specified multiple times
+- `--state`: The GitHub issue state to sync data from (e.g. `open`, `closed`, `all`), defaults to `open`
+- `--batch`: The number of issues to sync at a time, defaults to `100` which is the max batch size for the GitHub API
+- `--scope`: The scope of the dependencies to map (`issue` or `repo`)
+- `--dry-run`: Whether to run the sync in dry run mode (e.g. log the insert or update but don't actually perform them)
+
+## Local development
+
+Before running the script locally, you can use the `loadenv.sh` script to load the environment variables from a local `.env` file.
+
+```bash
+source loadenv.sh
+python run.py \
+    --org "HHS" \
+    --repo "simpler-grants-gov" \
+    --project 17 \
+    --labels "co-planning" \
+    --issue-type Epic \
+    --scope issue
+```
+
+The environment variables that need to be set are:
+- `GITHUB_API_TOKEN`: The GitHub API token
+
+You can also run the script with the `--dry-run` flag to see what would be done without actually performing the actions.

@@ -2,12 +2,18 @@ query (
   $org: String!
   $repo: String!
   $issueType: String!
+  $labels: [String!]
   $batch: Int!
   $cursor: String
 ) {
   repository(owner: $org, name: $repo) {
-    issues(first: $batch, after: $cursor, filterBy: { type: $issueType }) {
+    issues(
+      first: $batch
+      after: $cursor
+      filterBy: { type: $issueType, labels: $labels }
+    ) {
       nodes {
+        body
         ...IssueDetails
         ...ProjectItems
         ...BlockedItems
