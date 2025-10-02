@@ -61,7 +61,5 @@ python run.py \
 
 The environment variables that need to be set are:
 - `GITHUB_API_TOKEN`: The GitHub API token
-- `FIDER_API_TOKEN`: The Fider API token
-- `FIDER_BOARD`: The name of the Fider board to sync to (e.g. `commongrants` for the CommonGrants.Fider.io board)
 
 You can also run the script with the `--dry-run` flag to see what would be done without actually performing the actions.
