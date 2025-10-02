@@ -10,6 +10,7 @@ on:
 
 permissions:
   issues: write
+  contents: write
 
 defaults:
   run:
@@ -46,6 +47,7 @@ jobs:
             --scope "repo"
 
       - name: Commit changes to PR
+        if: github.event_name == 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -53,6 +55,6 @@ jobs:
           if git diff --quiet; then
             echo "No changes to commit"
           else
-            git commit -am "docs: Update README with dependency diagram"
+            git commit -am "docs: Update README with dependency diagram [skip ci]"
             git push origin ${{ github.head_ref }}
           fi
