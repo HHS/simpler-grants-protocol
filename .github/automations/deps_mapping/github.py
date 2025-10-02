@@ -27,14 +27,7 @@ GITHUB_API_TOKEN = get_env("GITHUB_API_TOKEN")
 def map_issue_dependencies(args: CliArgs) -> None:
     """Parse dependencies for a single issue."""
     # Make the GraphQL request
-    query = get_query_from_file("fetch-repo.graphql")
-    payload = {
-        "org": args.org,
-        "repo": args.repo,
-        "issueType": args.issue_type,
-    }
-    issues = make_paginated_graphql_request(query, payload, args.batch)
-    diagram = parse_graphql_response(issues, args)
+    diagram = fetch_and_parse_issues_from_repo(args)
 
     # Update each issue with the dependency diagram
     for issue, issue_data in diagram.issues.items():
@@ -63,14 +56,7 @@ Here are the upstream and downstream dependencies for this issue:
 def map_repo_dependencies(args: CliArgs) -> None:
     """Parse issue dependencies for a given repository."""
     # Make the GraphQL request
-    query = get_query_from_file("fetch-repo.graphql")
-    payload = {
-        "org": args.org,
-        "repo": args.repo,
-        "issueType": args.issue_type,
-    }
-    issues = make_paginated_graphql_request(query, payload, args.batch)
-    diagram = parse_graphql_response(issues, args)
+    diagram = fetch_and_parse_issues_from_repo(args)
     write_diagram_to_readme(diagram, README_PATH)
 
 
@@ -197,6 +183,21 @@ def extract_status(issue_data: dict, project: int, default: str = "Todo") -> str
 # #######################################################
 # Request functions
 # #######################################################
+
+
+def fetch_and_parse_issues_from_repo(args: CliArgs) -> Diagram:
+    """Fetch and parse issues from a GitHub repository."""
+    query = get_query_from_file("fetch-repo.graphql")
+    payload: dict = {
+        "org": args.org,
+        "repo": args.repo,
+        "issueType": args.issue_type,
+    }
+    if args.labels:
+        log(f"Fetching issues with labels: {args.labels}")
+        payload["labels"] = args.labels
+    issues = make_paginated_graphql_request(query, payload, args.batch)
+    return parse_graphql_response(issues, args)
 
 
 def update_github_issue(
