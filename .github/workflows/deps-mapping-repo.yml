@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -48,10 +48,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -B ${{ github.head_ref }}
           if git diff --quiet; then
             echo "No changes to commit"
           else
             git commit -am "docs: Update README with dependency diagram [skip ci]"
-            git push origin ${{ github.head_ref }}
+            git push
           fi
