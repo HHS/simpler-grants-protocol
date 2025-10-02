@@ -1,10 +1,7 @@
 name: "Dependency mapping: Repo level"
 
 on:
-  pull_request:
-    paths:
-      - ".github/automations/deps_mapping/**"
-      - ".github/workflows/deps-mapping-issue.yml"
+  pull_request: # run on every PR
   workflow_dispatch:
   # TODO: Enable scheduled runs
 
