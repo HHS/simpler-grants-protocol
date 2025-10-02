@@ -51,7 +51,6 @@ flowchart LR
   classDef Done fill:#8DE28D,stroke:#204e34,stroke-width:3px,color:#000
   style Canvas fill:transparent,stroke:#171716
   style Legend fill:#F7F7F4,stroke:#171716
-  style commongrants fill:#F7F7F4,stroke:#171716
   style sdk fill:#F7F7F4,stroke:#171716
   style website fill:#F7F7F4,stroke:#171716
   style cli fill:#F7F7F4,stroke:#171716
@@ -74,16 +73,6 @@ flowchart LR
   %% ─────────────────────────────
   subgraph Canvas["Dependencies"]
     direction LR
-
-
-    subgraph commongrants["CommonGrants"]
-    direction LR
-        HHS/simpler-grants-protocol#299["Improvements - Quad 4"]
-        HHS/simpler-grants-protocol#309["Co-planning board setup"]
-        HHS/simpler-grants-protocol#310["Proposal selection and delivery"]
-        HHS/simpler-grants-protocol#311["Open source contribution to Fider"]
-        HHS/simpler-grants-protocol#316["Support application fetching"]
-    end
 
 
     subgraph sdk["SDK"]
