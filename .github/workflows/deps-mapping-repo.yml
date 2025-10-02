@@ -1,0 +1,57 @@
+name: "Dependency mapping: Repo level"
+
+on:
+  pull_request: # run on every PR
+  workflow_dispatch:
+  # TODO: Enable scheduled runs
+
+permissions:
+  issues: write
+  contents: write
+
+defaults:
+  run:
+    working-directory: ./.github/automations/deps_mapping
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_API_TOKEN: ${{ secrets.GH_PROJECT_ACCESS_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Run script
+        if: github.event_name == 'pull_request'
+        run: |
+          python run.py \
+            --org "${{ github.repository_owner }}" \
+            --repo "${{ github.event.repository.name }}" \
+            --project 17 \
+            --labels "co-planning" \
+            --issue-type "Epic" \
+            --scope "repo"
+
+      - name: Commit changes to PR
+        if: github.event_name == 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B ${{ github.head_ref }}
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -am "docs: Update README with dependency diagram [skip ci]"
+            git push origin ${{ github.head_ref }}
+          fi

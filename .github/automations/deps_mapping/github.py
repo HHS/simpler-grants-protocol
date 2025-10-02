@@ -7,6 +7,7 @@ from diagram import Diagram
 from utils import (
     REPO_ROOT,
     err,
+    err_and_exit,
     get_env,
     get_query_from_file,
     log,
@@ -26,28 +27,36 @@ GITHUB_API_TOKEN = get_env("GITHUB_API_TOKEN")
 def map_issue_dependencies(args: CliArgs) -> None:
     """Parse dependencies for a single issue."""
     # Make the GraphQL request
-    query = get_query_from_file("fetch-repo.graphql")
-    payload = {
-        "org": args.org,
-        "repo": args.repo,
-        "issueType": args.issue_type,
-    }
-    issues = make_paginated_graphql_request(query, payload, args.batch)
-    diagram = parse_graphql_response(issues, args)
-    print(diagram.generate_diagram())
+    diagram = fetch_and_parse_issues_from_repo(args)
+
+    # Update each issue with the dependency diagram
+    for issue, issue_data in diagram.issues.items():
+        issue_url = f"https://github.com/{issue_data.repo}/issues/{issue_data.number}"
+        issue_diagram = diagram.extract_issue_diagram(issue)
+        diagram_content = f"""
+Here are the upstream and downstream dependencies for this issue:
+
+```mermaid
+{issue_diagram.generate_diagram(group_issues=False)}
+```
+"""
+        issue_body = update_markdown_section(
+            content=issue_data.body,
+            section="Dependencies",
+            new_content=diagram_content,
+        )
+        if args.dry_run:
+            log(f"[DRY RUN] Would update GitHub issue {issue_url}")
+            log(f"[DRY RUN] New issue body:\n{issue_body}")
+            continue
+        log(f"Updating GitHub issue {issue_url}")
+        update_github_issue(issue_data.repo, issue_data.number, issue_body)
 
 
 def map_repo_dependencies(args: CliArgs) -> None:
     """Parse issue dependencies for a given repository."""
     # Make the GraphQL request
-    query = get_query_from_file("fetch-repo.graphql")
-    payload = {
-        "org": args.org,
-        "repo": args.repo,
-        "issueType": args.issue_type,
-    }
-    issues = make_paginated_graphql_request(query, payload, args.batch)
-    diagram = parse_graphql_response(issues, args)
+    diagram = fetch_and_parse_issues_from_repo(args)
     write_diagram_to_readme(diagram, README_PATH)
 
 
@@ -84,9 +93,9 @@ Here are the dependencies between features on our co-planning board:
         log(f"Successfully updated {readme_path} with dependency diagram")
 
     except FileNotFoundError:
-        err(f"README file not found: {readme_path}")
+        err_and_exit(f"README file not found: {readme_path}")
     except Exception as e:
-        err(f"Failed to update README: {e}")
+        err_and_exit(f"Failed to update README: {e}")
 
 
 # #######################################################
@@ -96,7 +105,8 @@ Here are the dependencies between features on our co-planning board:
 
 def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
     """Parse GraphQL response data into a Diagram."""
-    issues = {}
+    issues: dict[str, Issue] = {}
+    subgraphs: dict[str, list[Issue]] = {}
     dependencies = []
 
     # Extract issues from GraphQL response
@@ -104,6 +114,7 @@ def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
         # Extract issue number and repository
         issue_repo = issue_data["repository"]["nameWithOwner"]
         issue_number = issue_data["number"]
+        issue_slug = f"{issue_repo}#{issue_number}"
 
         # Parse group name from title pattern: "[<group name>] <Issue title>"
         title = issue_data["title"]
@@ -118,32 +129,37 @@ def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
 
         # Create Issue object
         issue = Issue(
+            slug=issue_slug,
             title=clean_title,
             number=issue_number,
             repo=issue_repo,
+            body=issue_data.get("body", ""),
             status=extract_status(issue_data, args.project),
             group=group,
         )
 
         # Add to appropriate group
-        if group not in issues:
-            issues[group] = []
-        issues[group].append(issue)
+        if group not in subgraphs:
+            subgraphs[group] = []
+        subgraphs[group].append(issue)
+
+        # Add to issues
+        issues[issue_slug] = issue
 
         # Extract dependencies from blocking relationships
         for blocked_issue in issue_data.get("blocking", {}).get("nodes", []):
             blocked_repo = blocked_issue.get("repository", {}).get("nameWithOwner")
             blocked_number = blocked_issue.get("number")
-
+            blocked_slug = f"{blocked_repo}#{blocked_number}"
             # Create dependency: blocked issue is blocked by current issue
             if blocked_repo and blocked_number:
                 dependency = Dependency(
-                    blocked=f"{blocked_repo}#{blocked_number}",
-                    blocked_by=f"{issue_repo}#{issue_number}",
+                    blocked=blocked_slug,
+                    blocked_by=issue_slug,
                 )
                 dependencies.append(dependency)
 
-    return Diagram(subgraphs=issues, dependencies=dependencies)
+    return Diagram(subgraphs=subgraphs, issues=issues, dependencies=dependencies)
 
 
 def extract_status(issue_data: dict, project: int, default: str = "Todo") -> str:
@@ -167,6 +183,48 @@ def extract_status(issue_data: dict, project: int, default: str = "Todo") -> str
 # #######################################################
 # Request functions
 # #######################################################
+
+
+def fetch_and_parse_issues_from_repo(args: CliArgs) -> Diagram:
+    """Fetch and parse issues from a GitHub repository."""
+    query = get_query_from_file("fetch-repo.graphql")
+    payload: dict = {
+        "org": args.org,
+        "repo": args.repo,
+        "issueType": args.issue_type,
+    }
+    if args.labels:
+        log(f"Fetching issues with labels: {args.labels}")
+        payload["labels"] = args.labels
+    issues = make_paginated_graphql_request(query, payload, args.batch)
+    return parse_graphql_response(issues, args)
+
+
+def update_github_issue(
+    repoWithOwner: str,
+    issue_number: int,
+    issue_body: str,
+) -> None:
+    """Update a GitHub issue."""
+    log(f"Updating GitHub issue #{issue_number} in {repoWithOwner}")
+
+    headers = {
+        "Authorization": f"token {GITHUB_API_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    url = f"https://api.github.com/repos/{repoWithOwner}/issues/{issue_number}"
+
+    # Prepare the data to update
+    data = {"body": issue_body}
+
+    # Make PATCH request to update the issue
+    response = make_request(url, headers, method="PATCH", data=json.dumps(data))
+
+    if response:
+        log(f"Successfully updated GitHub issue #{issue_number}")
+    else:
+        err(f"Failed to update GitHub issue #{issue_number}")
 
 
 def make_graphql_request(query: str, variables: dict) -> dict:
@@ -225,12 +283,10 @@ def make_paginated_graphql_request(
         for key in path_to_nodes:
             paginated_data = paginated_data.get(key)
             if paginated_data is None:
-                err(
+                err_and_exit(
                     message=f"Unexpected GraphQL response structure: "
                     f"missing key '{key}' in path {path_to_nodes}",
-                    exit=True,
                 )
-                return []
 
         # Add current batch to all_data
         nodes = paginated_data.get("nodes")
