@@ -52,6 +52,6 @@ jobs:
           if git diff --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "docs: Update README with dependency diagram"
+            git commit -am "docs: Update README with dependency diagram"
             git push
           fi
