@@ -26,6 +26,7 @@ class Issue:
     repo: str
     number: int
     title: str
+    body: str = ""
     status: str | None = None
     group: str | None = None
 

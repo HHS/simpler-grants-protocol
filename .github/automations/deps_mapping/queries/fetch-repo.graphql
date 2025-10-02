@@ -8,6 +8,7 @@ query (
   repository(owner: $org, name: $repo) {
     issues(first: $batch, after: $cursor, filterBy: { type: $issueType }) {
       nodes {
+        body
         ...IssueDetails
         ...ProjectItems
         ...BlockedItems

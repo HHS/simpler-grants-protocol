@@ -6,6 +6,7 @@ from data import CliArgs, Dependency, Issue
 from diagram import Diagram
 from utils import (
     REPO_ROOT,
+    err,
     err_and_exit,
     get_env,
     get_query_from_file,
@@ -34,10 +35,29 @@ def map_issue_dependencies(args: CliArgs) -> None:
     }
     issues = make_paginated_graphql_request(query, payload, args.batch)
     diagram = parse_graphql_response(issues, args)
-    for issue in diagram.issues:
+
+    # Update each issue with the dependency diagram
+    for issue, issue_data in diagram.issues.items():
+        issue_url = f"https://github.com/{issue_data.repo}/issues/{issue_data.number}"
         issue_diagram = diagram.extract_issue_diagram(issue)
-        print(f"\n## {issue}\n")
-        print(issue_diagram.generate_diagram(group_issues=False))
+        diagram_content = f"""
+Here are the upstream and downstream dependencies for this issue:
+
+```mermaid
+{issue_diagram.generate_diagram(group_issues=False)}
+```
+"""
+        issue_body = update_markdown_section(
+            content=issue_data.body,
+            section="Dependencies",
+            new_content=diagram_content,
+        )
+        if args.dry_run:
+            log(f"[DRY RUN] Would update GitHub issue {issue_url}")
+            log(f"[DRY RUN] New issue body:\n{issue_body}")
+            continue
+        log(f"Updating GitHub issue {issue_url}")
+        update_github_issue(issue_data.repo, issue_data.number, issue_body)
 
 
 def map_repo_dependencies(args: CliArgs) -> None:
@@ -127,6 +147,7 @@ def parse_graphql_response(response_data: list[dict], args: CliArgs) -> Diagram:
             title=clean_title,
             number=issue_number,
             repo=issue_repo,
+            body=issue_data.get("body", ""),
             status=extract_status(issue_data, args.project),
             group=group,
         )
@@ -176,6 +197,33 @@ def extract_status(issue_data: dict, project: int, default: str = "Todo") -> str
 # #######################################################
 # Request functions
 # #######################################################
+
+
+def update_github_issue(
+    repoWithOwner: str,
+    issue_number: int,
+    issue_body: str,
+) -> None:
+    """Update a GitHub issue."""
+    log(f"Updating GitHub issue #{issue_number} in {repoWithOwner}")
+
+    headers = {
+        "Authorization": f"token {GITHUB_API_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    url = f"https://api.github.com/repos/{repoWithOwner}/issues/{issue_number}"
+
+    # Prepare the data to update
+    data = {"body": issue_body}
+
+    # Make PATCH request to update the issue
+    response = make_request(url, headers, method="PATCH", data=json.dumps(data))
+
+    if response:
+        log(f"Successfully updated GitHub issue #{issue_number}")
+    else:
+        err(f"Failed to update GitHub issue #{issue_number}")
 
 
 def make_graphql_request(query: str, variables: dict) -> dict:
