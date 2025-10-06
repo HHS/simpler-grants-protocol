@@ -7,7 +7,7 @@ CommonGrants is an open standard for sharing data about funding opportunities, a
 [![Screenshot of CommonGrants website](./static/website.png)](https://commongrants.org)
 
 ## Key resources
-
+- [DeepWiki link](https://deepwiki.com/HHS/simpler-grants-protocol): gives a continuously updated view of the entire repo, including diagrams and the ability to interactively search and ask questions about the repo.
 - [Protocol website](https://commongrants.org)
   - [Quickstart guide](https://commongrants.org/getting-started): Learn how to define a CommonGrants API using TypeSpec.
   - [OpenAPI docs](https://commongrants.org/protocol/api-docs): The OpenAPI docs for routes currently supported by the CommonGrants protocol.
