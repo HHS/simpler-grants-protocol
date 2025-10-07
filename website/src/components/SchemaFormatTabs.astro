@@ -3,6 +3,7 @@ import { Code } from "@astrojs/starlight/components";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
+import yaml from "js-yaml";
 
 /**
  * Configuration for a code block to be displayed in a tab.
@@ -44,7 +45,7 @@ if (!example && !jsonSchema && !typeSpec && !python) {
   throw new Error("SchemaFormatTabs requires at least one tab to be provided");
 }
 
-const exampleCode = example ? extractCode(example) : null;
+const exampleCode = example ? generateCodeFromSchema(example) : null;
 const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
 const typeSpecCode = typeSpec ? extractCode(typeSpec) : null;
 const pythonCode = python ? extractCode(python) : null;
@@ -131,6 +132,200 @@ function extractCode(props: CodeBlockConfig): string {
   }
   throw new Error("Either code or file must be provided");
 }
+
+/**
+ * Generate JSON from a Schema file.
+ * @param props - The code block configuration containing the schema file path
+ * @returns A JSON string with example data based on the schema
+ * @throws Error if the schema file cannot be read or parsed
+ */
+function generateCodeFromSchema(props: CodeBlockConfig): string {
+  if (props.code) {
+    return props.code;
+  }
+  try {
+    // Parse the YAML schema
+    const content = extractCode(props);
+    const schema = yaml.load(content, { schema: yaml.CORE_SCHEMA }) as any;
+    
+     // Generate cod3 from the schema
+     const exampleData = generateJsonFromSchemaObject(schema, new Set(), schema);
+    
+    // Format as pretty JSON
+    return JSON.stringify(exampleData, null, 2);
+  } catch (error) {
+    throw new Error(`Error generating example from schema ${props.file.path}: ${error}`);
+  }
+}
+
+/**
+ * Recursively generate JSON from a JSON Schema object.
+ * @param schema - The JSON Schema object
+ * @param visitedRefs - Set of visited $ref paths to prevent infinite recursion
+ * @param rootSchema - The root schema object for resolving internal $defs
+ * @returns Example data matching the schema structure
+ */
+function generateJsonFromSchemaObject(schema: any, visitedRefs: Set<string>, rootSchema?: any): any {
+  if (!schema || typeof schema !== 'object') {
+    return null;
+  }
+
+  // Handle $ref references - resolve them by loading the referenced schema file
+  if (schema.$ref) {
+    // Prevent infinite recursion
+    if (visitedRefs.has(schema.$ref)) {
+      return null; // Prevent infinite recursion
+    }
+    visitedRefs.add(schema.$ref);
+    
+    // Resolve the reference by loading the referenced schema file
+    const referencedSchema = resolveSchemaReference(schema.$ref, rootSchema);
+    if (referencedSchema) {
+      const result = generateJsonFromSchemaObject(referencedSchema, visitedRefs, rootSchema);
+      visitedRefs.delete(schema.$ref); // Remove from visited set after processing
+      return result;
+    }
+    
+    // If reference can't be resolved, return null
+    visitedRefs.delete(schema.$ref); // Remove from visited set
+    return null;
+  }
+
+  // Handle anyOf/oneOf/allOf unions
+  if (schema.anyOf && Array.isArray(schema.anyOf)) {
+    // Use the first option in anyOf
+    return generateJsonFromSchemaObject(schema.anyOf[0], visitedRefs, rootSchema);
+  }
+  if (schema.oneOf && Array.isArray(schema.oneOf)) {
+    // Use the first option in oneOf
+    return generateJsonFromSchemaObject(schema.oneOf[0], visitedRefs, rootSchema);
+  }
+  if (schema.allOf && Array.isArray(schema.allOf)) {
+    // Merge all options in allOf
+    const mergedSchema = schema.allOf.reduce((acc, item) => ({ ...acc, ...item }), {});
+    return generateJsonFromSchemaObject(mergedSchema, visitedRefs, rootSchema);
+  }
+
+  // Handle different schema types
+  switch (schema.type) {
+    case 'object':
+      const obj: any = {};
+      
+      // If this object has examples, try to use them as a template
+      if (schema.examples && schema.examples.length > 0) {
+        const example = schema.examples[0];
+        if (typeof example === 'object' && example !== null) {
+          // Use the example as a template, but still generate missing fields
+          for (const [key, value] of Object.entries(example)) {
+            if (schema.properties && schema.properties[key]) {
+              // Use the example value directly - it's already properly formatted
+              obj[key] = value;
+            }
+          }
+        }
+      }
+      
+      if (schema.properties) {
+        for (const [key, propSchema] of Object.entries(schema.properties)) {
+          const isRequired = schema.required && schema.required.includes(key);
+          
+          // If we already have a value from examples, use it
+          if (obj[key] !== undefined) {
+            continue;
+          }
+          
+          const exampleValue = generateJsonFromSchemaObject(propSchema as any, visitedRefs, rootSchema);
+          
+          // Include required fields and optional fields that have valid examples
+          if (isRequired || (exampleValue !== null && exampleValue !== undefined)) {
+            obj[key] = exampleValue;
+          }
+        }
+      }
+      return obj;
+
+    case 'array':
+      if (schema.items) {
+        const itemExample = generateJsonFromSchemaObject(schema.items, visitedRefs, rootSchema);
+        return [itemExample];
+      }
+      return [];
+
+    case 'string':
+      if (schema.enum) {
+        return schema.enum[0];
+      }
+      if (schema.format === 'date-time') {
+        return new Date().toISOString().split('T')[0];
+      }
+      if (schema.format === 'uri') {
+        return "https://example.com";
+      }
+      if (schema.examples && schema.examples.length > 0) {
+        return schema.examples[0];
+      }
+      return "Sample string value";
+
+    case 'integer':
+      if (schema.examples && schema.examples.length > 0) {
+        return schema.examples[0];
+      }
+      return 10;
+
+    case 'number':
+      if (schema.examples && schema.examples.length > 0) {
+        return schema.examples[0];
+      }
+      return 100.50;
+
+    case 'boolean':
+      return true;
+
+    default:
+      return null;
+  }
+}
+
+/**
+ * Resolves a schema reference by loading the referenced schema file or resolving internal definitions.
+ * @param ref - The reference string (e.g., "OppStatus.yaml", "#/$defs/RecordEvent")
+ * @param rootSchema - The root schema object for resolving internal $defs
+ * @returns The parsed schema object, or null if the reference cannot be resolved
+ */
+function resolveSchemaReference(ref: string, rootSchema?: any): any {
+  // Handle internal $defs references (e.g., "#/$defs/RecordEvent")
+  if (ref.startsWith('#/$defs/')) {
+    if (rootSchema && rootSchema.$defs) {
+      const defName = ref.replace('#/$defs/', '');
+      return rootSchema.$defs[defName] || null;
+    }
+    return null;
+  }
+  try {
+    const websiteRoot = process.cwd();
+    const repoRoot = dirname(websiteRoot);
+    
+    // Handle different reference formats
+    let filePath: string;
+    if (ref.startsWith('website/public/schemas/yaml/')) {
+      // Full path reference
+      filePath = join(repoRoot, ref);
+    } else if (ref.includes('/')) {
+      // Relative path reference
+      filePath = join(repoRoot, 'website/public/schemas/yaml', ref);
+    } else {
+      // Just filename reference
+      filePath = join(repoRoot, 'website/public/schemas/yaml', ref);
+    }
+    
+    const content = readFileSync(filePath, "utf-8");
+    return yaml.load(content, { schema: yaml.CORE_SCHEMA }) as any;
+  } catch (error) {
+    // If we can't load the referenced schema, return null
+    return null;
+  }
+}
+
 ---
 
 <Tabs>
