@@ -16,8 +16,13 @@ defaults:
 
 jobs:
   sync:
+    # Only run this job if the PR is from the same repository,
+    # Or if the workflow is triggered manually or on a schedule
+    if: |
+      github.event.pull_request.head.repo.full_name == github.repository ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule'
     runs-on: ubuntu-latest
-
     env:
       GITHUB_API_TOKEN: ${{ secrets.GH_PROJECT_ACCESS_TOKEN }}
 
