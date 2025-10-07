@@ -28,6 +28,7 @@ CommonGrants is an open standard for sharing data about funding opportunities, a
   - [Code of conduct](CODE_OF_CONDUCT.md): Our community guidelines.
   - [Contributing](CONTRIBUTING.md): How to contribute to the CommonGrants project.
   - [Security policy](SECURITY.md): How to report a security issue.
+  - [DeepWiki link](https://deepwiki.com/HHS/simpler-grants-protocol): Gives a continuously updated view of the entire repo, including diagrams and the ability to interactively search and ask questions about the repo.
 
 ## Upcoming features
 
