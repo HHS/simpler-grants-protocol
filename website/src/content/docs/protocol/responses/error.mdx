@@ -5,14 +5,8 @@ sidebar:
   order: 5
 error:
   example:
-    code: |
-      {
-        "status": 404,
-        "message": "Not Found",
-        "errors": [
-          "Resource not found"
-        ]
-      }
+    file:
+      path: "website/public/schemas/yaml/Error.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/Error.yaml"
@@ -28,17 +22,8 @@ error:
       endLine: 26
 applicationSubmissionError:
   example:
-    code: |
-      {
-        "status": 400,
-        "message": "Application submission failed due to validation errors",
-        "errors": [
-          {
-            "field": "formA.name",
-            "message": "Name is required"
-          }
-        ]
-      }
+    file:
+      path: "website/public/schemas/yaml/ApplicationSubmissionError.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/ApplicationSubmissionError.yaml"

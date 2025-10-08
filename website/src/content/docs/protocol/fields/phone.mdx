@@ -3,13 +3,8 @@ title: Phone
 description: A model for representing a phone number
 phone:
   example:
-    code: |
-      {
-        "countryCode": "+1",
-        "number": "555-123-4567",
-        "extension": "123",
-        "isMobile": true
-      }
+    file:
+      path: "website/public/schemas/yaml/Phone.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/Phone.yaml"
@@ -20,32 +15,8 @@ phone:
       endLine: 19
 phoneCollection:
   example:
-    code: |
-      {
-        "primary": {
-          "countryCode": "+1",
-          "number": "444-456-1230",
-          "isMobile": true
-        },
-        "fax": {
-          "countryCode": "+1",
-          "number": "555-123-4567",
-          "extension": "123",
-          "isMobile": false
-        },
-        "otherPhones": {
-          "support": {
-            "countryCode": "+1",
-            "number": "333-456-1230",
-            "isMobile": false
-          },
-          "marketing": {
-            "countryCode": "+1",
-            "number": "444-456-1230",
-            "isMobile": true
-          }
-        }
-      }
+    file:
+      path: "website/public/schemas/yaml/PhoneCollection.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PhoneCollection.yaml"

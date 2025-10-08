@@ -3,14 +3,8 @@ title: Date filters
 description: Filters applied to date fields.
 dateRangeFilter:
   example:
-    code: |
-      {
-        "operator": "between",
-        "value": {
-          "min": "2021-01-01",
-          "max": "2021-01-02"
-        }
-      }
+    file:
+      path: "website/public/schemas/yaml/DateRangeFilter.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/DateRangeFilter.yaml"
@@ -26,11 +20,8 @@ dateRangeFilter:
       endLine: 52
 dateComparisonFilter:
   example:
-    code: |
-      {
-        "operator": "eq",
-        "value": "2021-01-01"
-      }
+    file:
+      path: "website/public/schemas/yaml/DateComparisonFilter.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/DateComparisonFilter.yaml"

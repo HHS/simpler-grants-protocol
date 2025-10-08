@@ -5,68 +5,11 @@ sidebar:
   order: 5
 form:
   example:
-    code: |
-      {
-        "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
-        "name": "Form A",
-        "version" "0.2.0",
-        "description": "Form A description",
-        "instructions": "Form A instructions",
-        "jsonSchema": {
-          "$id": "formA.json",
-          "type": "object",
-          "properties": {
-            "name": {
-              "first": { "type": "string" },
-              "last": { "type": "string" }
-            },
-            "email": { "type": "string" },
-            "phone": { "type": "string" }
-          }
-        },
-        "uiSchema": {
-          "type": "VerticalLayout",
-          "elements": [
-            {
-              "type": "Group",
-              "label": "Name",
-              "elements": [
-                { "type": "Control", "scope": "#/properties/name/first" },
-                { "type": "Control", "scope": "#/properties/name/last" }
-              ]
-            },
-            { "type": "Control", "scope": "#/properties/email" },
-            { "type": "Control", "scope": "#/properties/phone" }
-          ]
-        },
-        "mappingToCommonGrants": {
-          "name": {
-            "firstName": { "field": "name.first" },
-            "lastName": { "field": "name.last" }
-          },
-          "emails": { "primary": { "field": "email" } },
-          "phones": { "primary": { "field": "phone" } }
-        },
-        "mappingFromCommonGrants": {
-          "name": {
-            "first": { "field": "name.firstName" },
-            "last": { "field": "name.lastName" }
-          },
-          "email": { "field": "emails.primary" },
-          "phone": { "field": "phones.primary" }
-        },
-        "customFields": {
-          "formType": {
-            "name": "Form Type",
-            "fieldType": "string",
-            "value": "application",
-            "description": "The type of form"
-          }
-        }
-      }
+    file:
+      path: "website/public/schemas/yaml/Form.yaml"
   jsonSchema:
     file:
-      path: "website/public/schemas/yaml/FormBase.yaml"
+      path: "website/public/schemas/yaml/Form.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/models/form.tsp"

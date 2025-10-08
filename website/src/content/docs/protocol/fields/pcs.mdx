@@ -3,13 +3,8 @@ title: PCS term
 description: A Philanthropy Classification System (PCS) term.
 pcsTerm:
   example:
-    code: |
-      {
-        "term": "Nonprofit",
-        "class": "Organization types",
-        "code": "UC000000",
-        "description": "Nonprofit organization"
-      }
+    file:
+      path: "website/public/schemas/yaml/PCSTerm.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PCSTerm.yaml"
@@ -20,7 +15,8 @@ pcsTerm:
       endLine: 31
 pcsClass:
   example:
-    code: '"Organization types"'
+    file:
+      path: "website/public/schemas/yaml/PCSClass.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PCSClass.yaml"
@@ -31,13 +27,8 @@ pcsClass:
       endLine: 45
 pcsOrgType:
   example:
-    code: |
-      {
-        "term": "Nonprofit",
-        "class": "Organization types",
-        "code": "UC000000",
-        "description": "Nonprofit organization"
-      }
+    file:
+      path: "website/public/schemas/yaml/PCSOrgType.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PCSOrgType.yaml"
@@ -48,13 +39,8 @@ pcsOrgType:
       endLine: 59
 pcsSubject:
   example:
-    code: |
-      {
-        "term": "Education",
-        "class": "Subjects",
-        "code": "SB000000",
-        "description": "All formally constituted educational institutions (except art and performing art schools) and projects or activities."
-      }
+    file:
+      path: "website/public/schemas/yaml/PCSSubject.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PCSSubject.yaml"
@@ -65,13 +51,8 @@ pcsSubject:
       endLine: 69
 pcsPopulation:
   example:
-    code: |
-      {
-        "term": "Children and youth",
-        "class": "Population groups",
-        "code": "PA010000",
-        "description": "Young people from birth to 18 years of age."
-      }
+    file:
+      path: "website/public/schemas/yaml/PCSPopulation.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PCSPopulation.yaml"
@@ -82,13 +63,8 @@ pcsPopulation:
       endLine: 79
 pcsSupportStrategy:
   example:
-    code: |
-      {
-        "term": "Cash grants",
-        "class": "Support strategies",
-        "code": "TA000000",
-        "description": "Direct monetary contributions of cash or cash equivalents."
-      }
+    file:
+      path: "website/public/schemas/yaml/PCSSupportStrategy.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PCSSupportStrategy.yaml"
@@ -99,13 +75,8 @@ pcsSupportStrategy:
       endLine: 89
 pcsTransactionType:
   example:
-    code: |
-      {
-        "term": "Cash grants",
-        "class": "Transaction types",
-        "code": "TA000000",
-        "description": "Direct monetary contributions of cash or cash equivalents."
-      }
+    file:
+      path: "website/public/schemas/yaml/PCSTransactionType.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PCSTransactionType.yaml"

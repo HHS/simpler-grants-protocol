@@ -3,20 +3,8 @@ title: Money filters
 description: Filters applied to monetary values.
 moneyRangeFilter:
   example:
-    code: |
-      {
-        "operator": "within",
-        "value": {
-          "min": {
-            "amount": "1000",
-            "currency": "USD"
-          },
-          "max": {
-            "amount": "10000",
-            "currency": "USD"
-          }
-        }
-      }
+    file:
+      path: "website/public/schemas/yaml/MoneyRangeFilter.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/MoneyRangeFilter.yaml"
@@ -32,14 +20,8 @@ moneyRangeFilter:
       endLine: 50
 moneyComparisonFilter:
   example:
-    code: |
-      {
-        "operator": "eq",
-        "value": {
-          "amount": "1000",
-          "currency": "USD"
-        }
-      }
+    file:
+      path: "website/public/schemas/yaml/MoneyComparisonFilter.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/MoneyComparisonFilter.yaml"

@@ -3,7 +3,8 @@ title: Sorting
 description: Defines a set of parameters and patterns for sorting routes
 sortOrder:
   example:
-    code: '"asc"'
+    file:
+      path: "website/public/schemas/yaml/SortOrder.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/SortOrder.yaml"
@@ -19,7 +20,8 @@ sortOrder:
       endLine: 13
 sortQueryParams:
   example:
-    code: "/common-grants/opportunities?sortBy=lastModifiedAt&sortOrder=asc"
+    file:
+      path: "website/public/schemas/yaml/SortQueryParams.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/SortQueryParams.yaml"
@@ -35,11 +37,8 @@ sortQueryParams:
       endLine: 43
 sortBodyParams:
   example:
-    code: |
-      {
-        "sortBy": "lastModifiedAt",
-        "sortOrder": "asc"
-      }
+    file:
+      path: "website/public/schemas/yaml/SortBodyParams.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/SortBodyParams.yaml"
@@ -55,12 +54,8 @@ sortBodyParams:
       endLine: 54
 sortedResultsInfo:
   example:
-    code: |
-      {
-        "sortBy": "lastModifiedAt",
-        "customSortBy": "customField",
-        "sortOrder": "asc"
-      }
+    file:
+      path: "website/public/schemas/yaml/SortedResultsInfo.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/SortedResultsInfo.yaml"
