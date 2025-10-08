@@ -201,9 +201,49 @@ function generateJsonFromSchemaObject(schema: any, visitedRefs: Set<string>, roo
     return generateJsonFromSchemaObject(schema.oneOf[0], visitedRefs, rootSchema);
   }
   if (schema.allOf && Array.isArray(schema.allOf)) {
-    // Merge all options in allOf
-    const mergedSchema = schema.allOf.reduce((acc, item) => ({ ...acc, ...item }), {});
-    return generateJsonFromSchemaObject(mergedSchema, visitedRefs, rootSchema);
+    // For allOf, we need to process each item and merge the results
+    // This is different from anyOf/oneOf where we pick one option
+    const allOfResults: any[] = [];
+    
+    for (const item of schema.allOf) {
+      if (item.$ref) {
+        // Resolve the reference and process it
+        const resolvedSchema = resolveSchemaReference(item.$ref, rootSchema);
+        if (resolvedSchema) {
+          const result = generateJsonFromSchemaObject(resolvedSchema, visitedRefs, rootSchema);
+          if (result !== null) {
+            allOfResults.push(result);
+          }
+        }
+      } else {
+        // Process the item directly
+        const result = generateJsonFromSchemaObject(item, visitedRefs, rootSchema);
+        if (result !== null) {
+          allOfResults.push(result);
+        }
+      }
+    }
+    
+    // Merge all the results into a single object
+    if (allOfResults.length > 0) {
+      const mergedResult = allOfResults.reduce((acc, result) => {
+        if (typeof result === 'object' && result !== null) {
+          return { ...acc, ...result };
+        }
+        return acc;
+      }, {});
+      
+      // Also process the current schema's own properties
+      const currentResult = generateJsonFromSchemaObject({ ...schema, allOf: undefined }, visitedRefs, rootSchema);
+      if (currentResult && typeof currentResult === 'object') {
+        return { ...mergedResult, ...currentResult };
+      }
+      
+      return mergedResult;
+    }
+    
+    // Fallback: process current schema without allOf
+    return generateJsonFromSchemaObject({ ...schema, allOf: undefined }, visitedRefs, rootSchema);
   }
 
   // Handle different schema types
