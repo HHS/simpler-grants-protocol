@@ -155,10 +155,9 @@ function extractCode(props: CodeBlockConfig): string {
 /**
  * Generate JSON from a Schema file.
  * @param props - The code block configuration containing the schema file path
- * @returns A JSON string with example data based on the schema
- * @throws Error if the schema file cannot be read or parsed
+ * @returns A JSON string with example data based on the schema, or null if generation fails
  */
-function generateCodeFromSchema(props: CodeBlockConfig): string {
+function generateCodeFromSchema(props: CodeBlockConfig): string | null {
   if (props.code) {
     return props.code;
   }
@@ -173,7 +172,8 @@ function generateCodeFromSchema(props: CodeBlockConfig): string {
     // Format as pretty JSON
     return JSON.stringify(exampleData, null, 2);
   } catch (error) {
-    throw new Error(`Error generating example from schema ${props.file?.path || 'unknown'}: ${error}`);
+    console.warn(`Warning: Could not generate example from schema ${props.file?.path || 'unknown'}: ${error}`);
+    return null;
   }
 }
 
