@@ -13,9 +13,7 @@ tags:
   - name: Competitions
     description: Endpoints related to competitions, which are distinct application processes for the same funding opportunity
   - name: Applications
-    description: Endpoints related to submitting applications for a given competition
-  - name: Application Reviews
-    description: Endpoints related to reviewing applications for a given competition
+    description: Endpoints related to applications for a given competition
   - name: Forms
     description: Endpoints related to forms
   - name: required
@@ -1163,40 +1161,6 @@ components:
         submittedAt: null
         createdAt: '2021-01-01T00:00:00Z'
         lastModifiedAt: '2021-01-01T00:00:00Z'
-        customFields:
-          attachments:
-            name: attachments
-            fieldType: object
-            value:
-              contacts:
-                downloadUrl: https://example.com/file.pdf
-                name: example.pdf
-                description: A PDF file with instructions
-                sizeInBytes: 1000
-                mimeType: application/pdf
-                createdAt: '2025-01-01T17:01:01'
-                lastModifiedAt: '2025-01-02T17:30:00'
-              budget:
-                downloadUrl: https://example.com/excel.xlsx
-                name: excel.xlsx
-                description: The excel file for the application
-                sizeInBytes: 1000
-                mimeType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-                createdAt: '2025-01-01T17:01:01'
-                lastModifiedAt: '2025-01-02T17:30:00'
-            description: The attachments for the application
-          applicationZipFile:
-            name: applicationZipFile
-            fieldType: object
-            value:
-              downloadUrl: https://example.com/application.zip
-              name: application.zip
-              description: The zip file for the application
-              sizeInBytes: 50000
-              mimeType: application/zip
-              createdAt: '2025-01-01T17:01:01'
-              lastModifiedAt: '2025-01-02T17:30:00'
-            description: The zip file for the application
     CommonGrants.Models.CompetitionBase:
       type: object
       required:
@@ -1329,8 +1293,6 @@ components:
                   last: {}
                 email: {}
                 phone: {}
-              createdAt: '2025-01-01T17:01:01'
-              lastModifiedAt: '2025-01-02T17:30:00'
             formB:
               id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
               name: Form A
@@ -1377,8 +1339,6 @@ components:
                   last: {}
                 email: {}
                 phone: {}
-              createdAt: '2025-01-01T17:01:01'
-              lastModifiedAt: '2025-01-02T17:30:00'
           validation:
             required:
               - formA
@@ -1448,8 +1408,6 @@ components:
                 last: {}
               email: {}
               phone: {}
-            createdAt: '2025-01-01T17:01:01'
-            lastModifiedAt: '2025-01-02T17:30:00'
           formB:
             id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
             name: Form A
@@ -1496,8 +1454,6 @@ components:
                 last: {}
               email: {}
               phone: {}
-            createdAt: '2025-01-01T17:01:01'
-            lastModifiedAt: '2025-01-02T17:30:00'
         validation:
           required:
             - formA
@@ -1559,8 +1515,6 @@ components:
       required:
         - id
         - name
-        - createdAt
-        - lastModifiedAt
       properties:
         id:
           allOf:
@@ -1600,16 +1554,6 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/CommonGrants.Fields.CustomField'
           description: Custom attributes about the form itself, not custom fields within the form.
-        createdAt:
-          type: string
-          format: date-time
-          description: The timestamp (in UTC) at which the record was created.
-          readOnly: true
-        lastModifiedAt:
-          type: string
-          format: date-time
-          description: The timestamp (in UTC) at which the record was last modified.
-          readOnly: true
       description: A form for collecting data from a user.
       example:
         id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
@@ -1657,8 +1601,6 @@ components:
             last: {}
           email: {}
           phone: {}
-        createdAt: '2025-01-01T17:01:01'
-        lastModifiedAt: '2025-01-02T17:30:00'
     CommonGrants.Models.FormJsonSchema:
       type: object
       additionalProperties: {}
