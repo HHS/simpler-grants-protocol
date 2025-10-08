@@ -59,6 +59,7 @@ export function createAjvWithSchemas(): Ajv2020 {
     formats: {
       // Define any custom formats you want to support
       date: true, // Allow any string for date format
+      "date-time": true, // Allow any string for date-time format
       time: true, // Allow any string for time format
       uuid: true, // Allow any string for uuid format
       email: true, // Allow any string for email format

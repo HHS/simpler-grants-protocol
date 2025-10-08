@@ -90,12 +90,12 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
   const baseUrl = "https://commongrants.org/";
   const pathPrefix = "website/public/";
   let filePath = props.file.path;
-  
+
   // Trim public directory prefix if present
   if (filePath.startsWith(pathPrefix)) {
     filePath = filePath.substring(pathPrefix.length);
   }
-  
+
   return `${baseUrl}${filePath}`;
 }
 
@@ -111,7 +111,7 @@ function extractGithubUrl(props: CodeBlockConfig): string | null {
 
   const baseUrl = "https://github.com/HHS/simpler-grants-protocol/tree/main/";
   let url = `${baseUrl}/${props.file.path}`;
-  
+
   if (props.file.startLine || props.file.endLine) {
     const start = props.file.startLine || 1;
     const end = props.file.endLine || start;
@@ -120,7 +120,7 @@ function extractGithubUrl(props: CodeBlockConfig): string | null {
       url += `-L${end}`;
     }
   }
-  
+
   return url;
 }
 
@@ -168,15 +168,17 @@ function generateCodeFromSchema(props: CodeBlockConfig): string | null {
   try {
     // Parse the YAML schema
     const content = extractCode(props);
-    const schema = yaml.load(content, { schema: yaml.CORE_SCHEMA }) as JsonSchema;
-    
-     // Generate cod3 from the schema
-     const exampleData = generateJsonFromSchemaObject(schema, new Set(), schema);
-    
-    // Format as pretty JSON
+    const schema = yaml.load(content, {
+      schema: yaml.CORE_SCHEMA,
+    }) as JsonSchema;
+
+    // Generate and format code from the schema
+    const exampleData = generateJsonFromSchemaObject(schema, new Set(), schema);
     return JSON.stringify(exampleData, null, 2);
   } catch (error) {
-    console.warn(`Warning: Could not generate example from schema ${props.file?.path || 'unknown'}: ${error}`);
+    console.warn(
+      `Warning: Could not generate example from schema ${props.file?.path || "unknown"}: ${error}`,
+    );
     return null;
   }
 }
@@ -188,8 +190,12 @@ function generateCodeFromSchema(props: CodeBlockConfig): string | null {
  * @param rootSchema - The root schema object for resolving internal $defs
  * @returns Example data matching the schema structure
  */
-function generateJsonFromSchemaObject(schema: JsonSchema, visitedRefs: Set<string>, rootSchema?: JsonSchema): unknown {
-  if (!schema || typeof schema !== 'object') {
+function generateJsonFromSchemaObject(
+  schema: JsonSchema,
+  visitedRefs: Set<string>,
+  rootSchema?: JsonSchema,
+): unknown {
+  if (!schema || typeof schema !== "object") {
     return null;
   }
 
@@ -200,15 +206,19 @@ function generateJsonFromSchemaObject(schema: JsonSchema, visitedRefs: Set<strin
       return null; // Prevent infinite recursion
     }
     visitedRefs.add(schema.$ref);
-    
+
     // Resolve the reference by loading the referenced schema file
     const referencedSchema = resolveSchemaReference(schema.$ref, rootSchema);
     if (referencedSchema) {
-      const result = generateJsonFromSchemaObject(referencedSchema, visitedRefs, rootSchema);
+      const result = generateJsonFromSchemaObject(
+        referencedSchema,
+        visitedRefs,
+        rootSchema,
+      );
       visitedRefs.delete(schema.$ref); // Remove from visited set after processing
       return result;
     }
-    
+
     // If reference can't be resolved, return null
     visitedRefs.delete(schema.$ref); // Remove from visited set
     return null;
@@ -217,67 +227,97 @@ function generateJsonFromSchemaObject(schema: JsonSchema, visitedRefs: Set<strin
   // Handle anyOf/oneOf/allOf unions
   if (schema.anyOf && Array.isArray(schema.anyOf)) {
     // Use the first option in anyOf
-    return generateJsonFromSchemaObject(schema.anyOf[0], visitedRefs, rootSchema);
+    return generateJsonFromSchemaObject(
+      schema.anyOf[0],
+      visitedRefs,
+      rootSchema,
+    );
   }
   if (schema.oneOf && Array.isArray(schema.oneOf)) {
     // Use the first option in oneOf
-    return generateJsonFromSchemaObject(schema.oneOf[0], visitedRefs, rootSchema);
+    return generateJsonFromSchemaObject(
+      schema.oneOf[0],
+      visitedRefs,
+      rootSchema,
+    );
   }
   if (schema.allOf && Array.isArray(schema.allOf)) {
     // For allOf, we need to process each item and merge the results
     // This is different from anyOf/oneOf where we pick one option
     const allOfResults: unknown[] = [];
-    
+
     for (const item of schema.allOf) {
       if (item.$ref) {
         // Resolve the reference and process it
         const resolvedSchema = resolveSchemaReference(item.$ref, rootSchema);
         if (resolvedSchema) {
-          const result = generateJsonFromSchemaObject(resolvedSchema, visitedRefs, rootSchema);
+          const result = generateJsonFromSchemaObject(
+            resolvedSchema,
+            visitedRefs,
+            rootSchema,
+          );
           if (result !== null) {
             allOfResults.push(result);
           }
         }
       } else {
         // Process the item directly
-        const result = generateJsonFromSchemaObject(item, visitedRefs, rootSchema);
+        const result = generateJsonFromSchemaObject(
+          item,
+          visitedRefs,
+          rootSchema,
+        );
         if (result !== null) {
           allOfResults.push(result);
         }
       }
     }
-    
+
     // Merge all the results into a single object
     if (allOfResults.length > 0) {
-      const mergedResult = allOfResults.reduce((acc: Record<string, unknown>, result) => {
-        if (typeof result === 'object' && result !== null) {
-          return Object.assign(acc, result as Record<string, unknown>);
-        }
-        return acc;
-      }, {});
-      
+      const mergedResult = allOfResults.reduce(
+        (acc: Record<string, unknown>, result) => {
+          if (typeof result === "object" && result !== null) {
+            return Object.assign(acc, result as Record<string, unknown>);
+          }
+          return acc;
+        },
+        {},
+      );
+
       // Also process the current schema's own properties
-      const currentResult = generateJsonFromSchemaObject({ ...schema, allOf: undefined }, visitedRefs, rootSchema);
-      if (currentResult && typeof currentResult === 'object') {
-        return Object.assign(mergedResult, currentResult as Record<string, unknown>);
+      const currentResult = generateJsonFromSchemaObject(
+        { ...schema, allOf: undefined },
+        visitedRefs,
+        rootSchema,
+      );
+      if (currentResult && typeof currentResult === "object") {
+        return Object.assign(
+          mergedResult,
+          currentResult as Record<string, unknown>,
+        );
       }
-      
+
       return mergedResult;
     }
-    
+
     // Fallback: process current schema without allOf
-    return generateJsonFromSchemaObject({ ...schema, allOf: undefined }, visitedRefs, rootSchema);
+    return generateJsonFromSchemaObject(
+      { ...schema, allOf: undefined },
+      visitedRefs,
+      rootSchema,
+    );
   }
 
   // Handle different schema types
   switch (schema.type) {
-    case 'object': {
+    case "object": {
       const obj: Record<string, unknown> = {};
-      
+
       // If this object has examples, try to use them as a template
       if (schema.examples && schema.examples.length > 0) {
         const example = schema.examples[0];
-        if (typeof example === 'object' && example !== null) {
+        if (typeof example === "object" && example !== null) {
           // Use the example as a template, but still generate missing fields
           for (const [key, value] of Object.entries(example)) {
             if (schema.properties && schema.properties[key]) {
@@ -287,20 +327,27 @@ function generateJsonFromSchemaObject(schema: JsonSchema, visitedRefs: Set<strin
           }
         }
       }
-      
+
       if (schema.properties) {
         for (const [key, propSchema] of Object.entries(schema.properties)) {
           const isRequired = schema.required && schema.required.includes(key);
-          
+
           // If we already have a value from examples, use it
           if (obj[key] !== undefined) {
             continue;
           }
-          
-          const exampleValue = generateJsonFromSchemaObject(propSchema as JsonSchema, visitedRefs, rootSchema);
-          
+
+          const exampleValue = generateJsonFromSchemaObject(
+            propSchema as JsonSchema,
+            visitedRefs,
+            rootSchema,
+          );
+
           // Include required fields and optional fields that have valid examples
-          if (isRequired || (exampleValue !== null && exampleValue !== undefined)) {
+          if (
+            isRequired ||
+            (exampleValue !== null && exampleValue !== undefined)
+          ) {
             obj[key] = exampleValue;
           }
         }
@@ -308,21 +355,25 @@ function generateJsonFromSchemaObject(schema: JsonSchema, visitedRefs: Set<strin
       return obj;
     }
 
-    case 'array':
+    case "array":
       if (schema.items) {
-        const itemExample = generateJsonFromSchemaObject(schema.items as JsonSchema, visitedRefs, rootSchema);
+        const itemExample = generateJsonFromSchemaObject(
+          schema.items as JsonSchema,
+          visitedRefs,
+          rootSchema,
+        );
         return [itemExample];
       }
       return [];
 
-    case 'string':
+    case "string":
       if (schema.enum) {
         return schema.enum[0];
       }
-      if (schema.format === 'date-time') {
-        return new Date().toISOString().split('T')[0];
+      if (schema.format === "date-time") {
+        return new Date().toISOString().split("T")[0];
       }
-      if (schema.format === 'uri') {
+      if (schema.format === "uri") {
         return "https://example.com";
       }
       if (schema.examples && schema.examples.length > 0) {
@@ -330,19 +381,19 @@ function generateJsonFromSchemaObject(schema: JsonSchema, visitedRefs: Set<strin
       }
       return "Sample string value";
 
-    case 'integer':
+    case "integer":
       if (schema.examples && schema.examples.length > 0) {
         return schema.examples[0];
       }
       return 10;
 
-    case 'number':
+    case "number":
       if (schema.examples && schema.examples.length > 0) {
         return schema.examples[0];
       }
-      return 100.50;
+      return 100.5;
 
-    case 'boolean':
+    case "boolean":
       return true;
 
     default:
@@ -356,16 +407,19 @@ function generateJsonFromSchemaObject(schema: JsonSchema, visitedRefs: Set<strin
  * @param rootSchema - The root schema object for resolving internal $defs
  * @returns The parsed schema object, or null if the reference cannot be resolved
  */
-function resolveSchemaReference(ref: string, rootSchema?: JsonSchema): JsonSchema | null {
+function resolveSchemaReference(
+  ref: string,
+  rootSchema?: JsonSchema,
+): JsonSchema | null {
   // Handle internal $defs references (e.g., "#/$defs/RecordEvent")
-  if (ref.startsWith('#/$defs/')) {
+  if (ref.startsWith("#/$defs/")) {
     if (rootSchema && rootSchema.$defs) {
-      const defName = ref.replace('#/$defs/', '');
+      const defName = ref.replace("#/$defs/", "");
       return rootSchema.$defs[defName] || null;
     }
     return null;
   }
-  
+
   // Use AJV to resolve external references
   try {
     const resolvedSchema = ajv.getSchema(ref);
@@ -374,7 +428,6 @@ function resolveSchemaReference(ref: string, rootSchema?: JsonSchema): JsonSchem
     return null;
   }
 }
-
 ---
 
 <Tabs>
@@ -389,7 +442,15 @@ function resolveSchemaReference(ref: string, rootSchema?: JsonSchema): JsonSchem
   {
     jsonSchemaCode && (
       <TabItem label="JSON Schema">
-        <p>The {jsonSchemaUrl && <a href={jsonSchemaUrl} target="_blank" rel="noopener noreferrer">JSON Schema</a>} for this model.</p>
+        <p>
+          The{" "}
+          {jsonSchemaUrl && (
+            <a href={jsonSchemaUrl} target="_blank" rel="noopener noreferrer">
+              JSON Schema
+            </a>
+          )}{" "}
+          for this model.
+        </p>
         <Code code={jsonSchemaCode} lang="yaml" />
       </TabItem>
     )
@@ -397,7 +458,17 @@ function resolveSchemaReference(ref: string, rootSchema?: JsonSchema): JsonSchem
   {
     typeSpecCode && (
       <TabItem label="TypeSpec">
-        <p>The {typeSpecUrl ? <a href={typeSpecUrl} target="_blank" rel="noopener noreferrer">TypeSpec code</a> : "TypeSpec code"} for this model.</p>
+        <p>
+          The{" "}
+          {typeSpecUrl ? (
+            <a href={typeSpecUrl} target="_blank" rel="noopener noreferrer">
+              TypeSpec code
+            </a>
+          ) : (
+            "TypeSpec code"
+          )}{" "}
+          for this model.
+        </p>
         <Code code={typeSpecCode} lang="typespec" />
       </TabItem>
     )
@@ -405,7 +476,17 @@ function resolveSchemaReference(ref: string, rootSchema?: JsonSchema): JsonSchem
   {
     pythonCode && (
       <TabItem label="Python">
-        <p>The {pythonUrl ? <a href={pythonUrl} target="_blank" rel="noopener noreferrer">Python code</a> : "Python code"} for this model.</p>
+        <p>
+          The{" "}
+          {pythonUrl ? (
+            <a href={pythonUrl} target="_blank" rel="noopener noreferrer">
+              Python code
+            </a>
+          ) : (
+            "Python code"
+          )}{" "}
+          for this model.
+        </p>
         <Code code={pythonCode} lang="python" />
       </TabItem>
     )
