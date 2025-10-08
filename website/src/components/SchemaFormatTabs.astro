@@ -4,6 +4,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import yaml from "js-yaml";
+import { createAjvWithSchemas } from "../lib/validation";
 
 /**
  * Configuration for a code block to be displayed in a tab.
@@ -63,6 +64,9 @@ const { example, jsonSchema, typeSpec, python } = Astro.props;
 if (!example && !jsonSchema && !typeSpec && !python) {
   throw new Error("SchemaFormatTabs requires at least one tab to be provided");
 }
+
+// Create AJV instance for schema reference resolution
+const ajv = createAjvWithSchemas();
 
 const exampleCode = example ? generateCodeFromSchema(example) : null;
 const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
@@ -347,7 +351,7 @@ function generateJsonFromSchemaObject(schema: JsonSchema, visitedRefs: Set<strin
 }
 
 /**
- * Resolves a schema reference by loading the referenced schema file or resolving internal definitions.
+ * Resolves a schema reference using AJV's built-in reference resolution.
  * @param ref - The reference string (e.g., "OppStatus.yaml", "#/$defs/RecordEvent")
  * @param rootSchema - The root schema object for resolving internal $defs
  * @returns The parsed schema object, or null if the reference cannot be resolved
@@ -361,27 +365,12 @@ function resolveSchemaReference(ref: string, rootSchema?: JsonSchema): JsonSchem
     }
     return null;
   }
+  
+  // Use AJV to resolve external references
   try {
-    const websiteRoot = process.cwd();
-    const repoRoot = dirname(websiteRoot);
-    
-    // Handle different reference formats
-    let filePath: string;
-    if (ref.startsWith('website/public/schemas/yaml/')) {
-      // Full path reference
-      filePath = join(repoRoot, ref);
-    } else if (ref.includes('/')) {
-      // Relative path reference
-      filePath = join(repoRoot, 'website/public/schemas/yaml', ref);
-    } else {
-      // Just filename reference
-      filePath = join(repoRoot, 'website/public/schemas/yaml', ref);
-    }
-    
-    const content = readFileSync(filePath, "utf-8");
-    return yaml.load(content, { schema: yaml.CORE_SCHEMA }) as JsonSchema;
+    const resolvedSchema = ajv.getSchema(ref);
+    return (resolvedSchema?.schema as JsonSchema) || null;
   } catch {
-    // If we can't load the referenced schema, return null
     return null;
   }
 }

@@ -51,7 +51,7 @@ interface CommonGrantsValidationProps {
  * Loads all YAML schema files and creates an Ajv instance ready for validation
  * This is the main function to use for schema validation
  */
-function createAjvWithSchemas(): Ajv2020 {
+export function createAjvWithSchemas(): Ajv2020 {
   const ajv = new Ajv2020({
     allErrors: true,
     verbose: true,
