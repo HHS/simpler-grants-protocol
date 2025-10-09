@@ -172,12 +172,15 @@ function generateCodeFromSchema(props: CodeBlockConfig): string | null {
       schema: yaml.CORE_SCHEMA,
     }) as JsonSchema;
 
-    // Generate and format code from the schema
+    // Generate and validate code
     const exampleData = generateJsonFromSchemaObject(schema, new Set(), schema);
+    validateGeneratedExample(exampleData, schema);
+
+    // Format generated code
     return JSON.stringify(exampleData, null, 2);
   } catch (error) {
     console.warn(
-      `Warning: Could not generate example from schema ${props.file?.path || "unknown"}: ${error}`,
+      `Warning: Could not generate code from schema ${props.file?.path || "unknown"}: ${error}`,
     );
     return null;
   }
@@ -219,94 +222,137 @@ function generateJsonFromSchemaObject(
       return result;
     }
 
-    // If reference can't be resolved, return null
+    // Resolve the reference from $defs if it's an internal reference
+    if (schema.$ref.startsWith("#/$defs/") && rootSchema && rootSchema.$defs) {
+      const defName = schema.$ref.replace("#/$defs/", "");
+      const defSchema = rootSchema.$defs[defName];
+      if (defSchema) {
+        const result = generateJsonFromSchemaObject(
+          defSchema,
+          visitedRefs,
+          rootSchema,
+        );
+        visitedRefs.delete(schema.$ref);
+        return result;
+      }
+    }
+
+    // Generate default value for unresolved refs based on type name
+    if (schema.$ref.includes("uuid")) {
+      return "00000000-0000-0000-0000-000000000000";
+    }
+    if (schema.$ref.includes("isoDate")) {
+      return new Date().toISOString().split("T")[0];
+    }
+    if (schema.$ref.includes("isoTime")) {
+      return new Date().toISOString().split("T")[1].split(".")[0];
+    }
+
+    // Return null for refs that cannot be resolved
     visitedRefs.delete(schema.$ref); // Remove from visited set
     return null;
   }
 
-  // Handle anyOf/oneOf/allOf unions
+  // Handle anyOf
   if (schema.anyOf && Array.isArray(schema.anyOf)) {
-    // Use the first option in anyOf
-    return generateJsonFromSchemaObject(
-      schema.anyOf[0],
-      visitedRefs,
-      rootSchema,
+    const optionWithExamples = schema.anyOf.find(
+      (option) => option.examples && option.examples.length > 0,
     );
+    const optionToUse = optionWithExamples || schema.anyOf[0];
+    return generateJsonFromSchemaObject(optionToUse, visitedRefs, rootSchema);
   }
-  if (schema.oneOf && Array.isArray(schema.oneOf)) {
-    // Use the first option in oneOf
-    return generateJsonFromSchemaObject(
-      schema.oneOf[0],
-      visitedRefs,
-      rootSchema,
-    );
-  }
-  if (schema.allOf && Array.isArray(schema.allOf)) {
-    // For allOf, we need to process each item and merge the results
-    // This is different from anyOf/oneOf where we pick one option
-    const allOfResults: unknown[] = [];
 
+  // Handle oneOf
+  if (schema.oneOf && Array.isArray(schema.oneOf)) {
+    const optionWithExamples = schema.oneOf.find(
+      (option) => option.examples && option.examples.length > 0,
+    );
+    const optionToUse = optionWithExamples || schema.oneOf[0];
+    return generateJsonFromSchemaObject(optionToUse, visitedRefs, rootSchema);
+  }
+
+  // Handle allOf
+  if (schema.allOf && Array.isArray(schema.allOf)) {
+    // Collect all properties, required fields, and examples from all schemas
+    const mergedSchema: JsonSchema = {
+      type: "object",
+      properties: {},
+      required: [],
+      examples: [],
+    };
+
+    // Process each allOf item
     for (const item of schema.allOf) {
+      let itemSchema: JsonSchema;
+
       if (item.$ref) {
-        // Resolve the reference and process it
+        // Resolve the reference
         const resolvedSchema = resolveSchemaReference(item.$ref, rootSchema);
         if (resolvedSchema) {
-          const result = generateJsonFromSchemaObject(
-            resolvedSchema,
-            visitedRefs,
-            rootSchema,
-          );
-          if (result !== null) {
-            allOfResults.push(result);
-          }
+          itemSchema = resolvedSchema;
+        } else {
+          continue;
         }
       } else {
-        // Process the item directly
-        const result = generateJsonFromSchemaObject(
-          item,
-          visitedRefs,
-          rootSchema,
-        );
-        if (result !== null) {
-          allOfResults.push(result);
-        }
+        itemSchema = item;
+      }
+
+      // Merge properties
+      if (itemSchema.properties) {
+        mergedSchema.properties = {
+          ...mergedSchema.properties,
+          ...itemSchema.properties,
+        };
+      }
+
+      // Merge required fields
+      if (itemSchema.required) {
+        mergedSchema.required = [
+          ...(mergedSchema.required || []),
+          ...itemSchema.required,
+        ];
+      }
+
+      // Prefer examples from the first schema that has them, but don't require them
+      if (
+        itemSchema.examples &&
+        itemSchema.examples.length > 0 &&
+        !mergedSchema.examples?.length
+      ) {
+        mergedSchema.examples = itemSchema.examples;
       }
     }
 
-    // Merge all the results into a single object
-    if (allOfResults.length > 0) {
-      const mergedResult = allOfResults.reduce(
-        (acc: Record<string, unknown>, result) => {
-          if (typeof result === "object" && result !== null) {
-            return Object.assign(acc, result as Record<string, unknown>);
-          }
-          return acc;
-        },
-        {},
-      );
-
-      // Also process the current schema's own properties
-      const currentResult = generateJsonFromSchemaObject(
-        { ...schema, allOf: undefined },
-        visitedRefs,
-        rootSchema,
-      );
-      if (currentResult && typeof currentResult === "object") {
-        return Object.assign(
-          mergedResult,
-          currentResult as Record<string, unknown>,
-        );
-      }
-
-      return mergedResult;
+    // Also include properties from the current schema
+    if (schema.properties) {
+      mergedSchema.properties = {
+        ...mergedSchema.properties,
+        ...schema.properties,
+      };
+    }
+    if (schema.required) {
+      mergedSchema.required = [
+        ...(mergedSchema.required || []),
+        ...schema.required,
+      ];
     }
 
-    // Fallback: process current schema without allOf
-    return generateJsonFromSchemaObject(
-      { ...schema, allOf: undefined },
-      visitedRefs,
-      rootSchema,
-    );
+    // Prefer examples from the current schema if no examples found yet
+    if (
+      schema.examples &&
+      schema.examples.length > 0 &&
+      !mergedSchema.examples?.length
+    ) {
+      mergedSchema.examples = schema.examples;
+    }
+
+    // Remove duplicates from required array
+    if (mergedSchema.required) {
+      mergedSchema.required = [...new Set(mergedSchema.required)];
+    }
+
+    // Generate code from the merged schema
+    return generateJsonFromSchemaObject(mergedSchema, visitedRefs, rootSchema);
   }
 
   // Handle different schema types
@@ -314,41 +360,76 @@ function generateJsonFromSchemaObject(
     case "object": {
       const obj: Record<string, unknown> = {};
 
-      // If this object has examples, try to use them as a template
-      if (schema.examples && schema.examples.length > 0) {
-        const example = schema.examples[0];
-        if (typeof example === "object" && example !== null) {
-          // Use the example as a template, but still generate missing fields
-          for (const [key, value] of Object.entries(example)) {
-            if (schema.properties && schema.properties[key]) {
-              // Use the example value directly - it's already properly formatted
-              obj[key] = value;
+      if (schema.properties) {
+        if (schema.required) {
+          // Generate all required fields
+          for (const requiredKey of schema.required) {
+            if (
+              schema.properties[requiredKey] &&
+              obj[requiredKey] === undefined
+            ) {
+              const exampleValue = generateJsonFromSchemaObject(
+                schema.properties[requiredKey] as JsonSchema,
+                visitedRefs,
+                rootSchema,
+              );
+              obj[requiredKey] = exampleValue;
+            }
+          }
+        }
+
+        // Generate optional fields
+        for (const [key, propSchema] of Object.entries(schema.properties)) {
+          const isRequired = schema.required && schema.required.includes(key);
+          if (obj[key] !== undefined) {
+            continue;
+          }
+          if (!isRequired) {
+            const exampleValue = generateJsonFromSchemaObject(
+              propSchema as JsonSchema,
+              visitedRefs,
+              rootSchema,
+            );
+            if (exampleValue !== null && exampleValue !== undefined) {
+              obj[key] = exampleValue;
             }
           }
         }
       }
 
-      if (schema.properties) {
-        for (const [key, propSchema] of Object.entries(schema.properties)) {
-          const isRequired = schema.required && schema.required.includes(key);
-
-          // If we already have a value from examples, use it
-          if (obj[key] !== undefined) {
-            continue;
-          }
-
+      // If the object is empty but has required fields
+      if (
+        Object.keys(obj).length === 0 &&
+        schema.required &&
+        schema.required.length > 0
+      ) {
+        const firstRequired = schema.required[0];
+        if (schema.properties && schema.properties[firstRequired]) {
           const exampleValue = generateJsonFromSchemaObject(
-            propSchema as JsonSchema,
+            schema.properties[firstRequired] as JsonSchema,
             visitedRefs,
             rootSchema,
           );
+          if (exampleValue !== null && exampleValue !== undefined) {
+            obj[firstRequired] = exampleValue;
+          }
+        }
+      }
 
-          // Include required fields and optional fields that have valid examples
-          if (
-            isRequired ||
-            (exampleValue !== null && exampleValue !== undefined)
-          ) {
-            obj[key] = exampleValue;
+      // If the object is empty and has unevaluatedProperties
+      if (Object.keys(obj).length === 0 && schema.unevaluatedProperties) {
+        if (
+          typeof schema.unevaluatedProperties === "object" &&
+          schema.unevaluatedProperties.$ref
+        ) {
+          // Generate a property using the unevaluatedProperties schema
+          const sampleValue = generateJsonFromSchemaObject(
+            schema.unevaluatedProperties as JsonSchema,
+            visitedRefs,
+            rootSchema,
+          );
+          if (sampleValue !== null && sampleValue !== undefined) {
+            obj["property"] = sampleValue;
           }
         }
       }
@@ -370,15 +451,53 @@ function generateJsonFromSchemaObject(
       if (schema.enum) {
         return schema.enum[0];
       }
+      if (schema.const) {
+        return schema.const;
+      }
       if (schema.format === "date-time") {
+        return new Date().toISOString();
+      }
+      if (schema.format === "date") {
         return new Date().toISOString().split("T")[0];
+      }
+      if (schema.format === "time") {
+        return new Date().toISOString().split("T")[1].split(".")[0];
       }
       if (schema.format === "uri") {
         return "https://example.com";
       }
+      if (schema.$ref && schema.$ref.includes("uuid")) {
+        return "00000000-0000-0000-0000-000000000000";
+      }
       if (schema.examples && schema.examples.length > 0) {
         return schema.examples[0];
       }
+
+      // Handle common patterns
+      if (schema.pattern) {
+        if (schema.pattern === "^\\+[1-9][0-9]{0,3}$") {
+          return "+1"; // Country code pattern
+        }
+        if (schema.pattern === "^[0-9]{3}-[0-9]{3}-[0-9]{4}$") {
+          return "555-123-4567"; // US phone number pattern
+        }
+        if (
+          schema.pattern === "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+        ) {
+          return "example@example.com"; // Email pattern
+        }
+        // For other patterns, try to generate a simple valid value
+        if (schema.pattern.includes("^\\+")) {
+          return "+1"; // Generic country code
+        }
+        if (schema.pattern.includes("@")) {
+          return "example@example.com"; // Generic email
+        }
+        if (schema.pattern.includes("[0-9]")) {
+          return "123"; // Generic numeric string
+        }
+      }
+
       return "Sample string value";
 
     case "integer":
@@ -415,7 +534,10 @@ function resolveSchemaReference(
   if (ref.startsWith("#/$defs/")) {
     if (rootSchema && rootSchema.$defs) {
       const defName = ref.replace("#/$defs/", "");
-      return rootSchema.$defs[defName] || null;
+      const defSchema = rootSchema.$defs[defName];
+      if (defSchema) {
+        return defSchema;
+      }
     }
     return null;
   }
@@ -423,9 +545,58 @@ function resolveSchemaReference(
   // Use AJV to resolve external references
   try {
     const resolvedSchema = ajv.getSchema(ref);
-    return (resolvedSchema?.schema as JsonSchema) || null;
+    if (resolvedSchema?.schema) {
+      const schema = resolvedSchema.schema as JsonSchema;
+      // If the resolved schema has $defs, merge them into the rootSchema
+      if (schema.$defs && rootSchema) {
+        if (!rootSchema.$defs) {
+          rootSchema.$defs = {};
+        }
+        // Merge the $defs from the resolved schema
+        Object.assign(rootSchema.$defs, schema.$defs);
+      }
+      return schema;
+    }
+    return null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Validates generated example data against a JSON schema using AJV and logs results.
+ * @param data - The generated example data to validate
+ * @param schema - The JSON schema to validate against
+ */
+function validateGeneratedExample(data: unknown, schema: JsonSchema): void {
+  const schemaId = schema.$id;
+  let validate;
+
+  if (schemaId && ajv.getSchema(schemaId)) {
+    // Schema is already registered, get the existing compiled validator
+    validate = ajv.getSchema(schemaId);
+  } else {
+    // Schema is not registered, compile it directly
+    validate = ajv.compile(schema);
+  }
+
+  if (!validate(data)) {
+    // Convert AJV errors to a readable format
+    const errors = (validate.errors || []).map((error) => ({
+      path: error.instancePath || error.schemaPath || "",
+      message: error.message || "Validation failed",
+      value: error.data,
+    }));
+
+    // Log warning with error count
+    console.warn(
+      `Warning: Generated example for schema ${schemaId || "unknown"} failed validation (${errors.length} errors)`,
+    );
+
+    // Log first 3 errors for debugging
+    if (errors.length > 0) {
+      console.log("Validation errors:", errors);
+    }
   }
 }
 ---
