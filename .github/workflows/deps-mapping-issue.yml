@@ -43,3 +43,14 @@ jobs:
             --issue-type "Epic" \
             --scope "issue" \
             --dry-run
+
+      - name: Run script (real run)
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+        run: |
+          python run.py \
+            --org "${{ github.repository_owner }}" \
+            --repo "${{ github.event.repository.name }}" \
+            --project 17 \
+            --labels "co-planning" \
+            --issue-type "Epic" \
+            --scope "issue"

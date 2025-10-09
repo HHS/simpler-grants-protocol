@@ -83,7 +83,7 @@ flowchart LR
         HHS/simpler-grants-protocol#324["Create a Python API client"]
         HHS/simpler-grants-protocol#328["Create a TypeScript API client"]
         HHS/simpler-grants-protocol#329["Create a Go API client"]
-        HHS/simpler-grants-protocol#342["Create a Python SDK"]:::Done
+        HHS/simpler-grants-protocol#342["Create a Python SDK ✔️"]:::Done
     end
 
 
@@ -105,7 +105,7 @@ flowchart LR
     direction LR
         HHS/simpler-grants-protocol#332["Create an Express.js API template"]
         HHS/simpler-grants-protocol#333["Create a Go API template"]
-        HHS/simpler-grants-protocol#343["Create a FastAPI template"]:::Done
+        HHS/simpler-grants-protocol#343["Create a FastAPI template ✔️"]:::Done
     end
 
 

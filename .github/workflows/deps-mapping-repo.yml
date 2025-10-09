@@ -3,7 +3,8 @@ name: "Dependency mapping: Repo level"
 on:
   pull_request: # run on every PR
   workflow_dispatch:
-  # TODO: Enable scheduled runs
+  schedule:
+    - cron: "0 0 * * 1" # run weekly at midnight on Monday
 
 permissions:
   issues: write
@@ -15,8 +16,13 @@ defaults:
 
 jobs:
   sync:
+    # Only run this job if the PR is from the same repository,
+    # Or if the workflow is triggered manually or on a schedule
+    if: |
+      github.event.pull_request.head.repo.full_name == github.repository ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule'
     runs-on: ubuntu-latest
-
     env:
       GITHUB_API_TOKEN: ${{ secrets.GH_PROJECT_ACCESS_TOKEN }}
 
@@ -44,7 +50,23 @@ jobs:
             --scope "repo"
 
       - name: Commit changes to PR
+        # Commit changes to PR when triggered by a PR, and don't skip CI
+        # We don't want to skip CI because it will prevent the bump version workflow
+        # from running on the main branch after the PR is merged
         if: github.event_name == 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -am "docs: Update README with dependency diagram"
+            git push
+          fi
+
+      - name: Commit changes to main
+        # Commit changes to main with skip CI when triggered manually or on a schedule
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
