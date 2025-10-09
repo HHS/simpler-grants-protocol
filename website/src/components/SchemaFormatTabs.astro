@@ -82,6 +82,7 @@ if (!example && !jsonSchema && !typeSpec && !python) {
 const ajv = createAjvWithSchemas();
 
 // Constants for default values and patterns
+const CACHED_DATE = new Date();
 const DEFAULT_VALUES = {
   UUID: "00000000-0000-0000-0000-000000000000",
   EMAIL: "example@example.com",
@@ -93,6 +94,9 @@ const DEFAULT_VALUES = {
   NUMBER: 100.5,
   BOOLEAN: true,
   GENERIC_NUMERIC: "123",
+  ISO_DATE: CACHED_DATE.toISOString().split("T")[0],
+  ISO_TIME: CACHED_DATE.toISOString().split("T")[1].split(".")[0],
+  ISO_DATETIME: CACHED_DATE.toISOString(),
 } as const;
 
 const PATTERNS = {
@@ -100,12 +104,6 @@ const PATTERNS = {
   PHONE: "^[0-9]{3}-[0-9]{3}-[0-9]{4}$",
   EMAIL: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
 } as const;
-
-// Cache date object to avoid multiple Date() creations
-const CACHED_DATE = new Date();
-const ISO_DATE = CACHED_DATE.toISOString().split("T")[0];
-const ISO_TIME = CACHED_DATE.toISOString().split("T")[1].split(".")[0];
-const ISO_DATETIME = CACHED_DATE.toISOString();
 
 const exampleCode = example ? generateCodeFromSchema(example) : null;
 const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
@@ -454,10 +452,10 @@ function generateDefaultValueFromRef(ref: string): unknown {
     return DEFAULT_VALUES.UUID;
   }
   if (ref.includes("isoDate")) {
-    return ISO_DATE;
+    return DEFAULT_VALUES.ISO_DATE;
   }
   if (ref.includes("isoTime")) {
-    return ISO_TIME;
+    return DEFAULT_VALUES.ISO_TIME;
   }
   return null;
 }
@@ -720,13 +718,13 @@ function generatePrimitiveValue(
         return schema.const;
       }
       if (schema.format === "date-time") {
-        return ISO_DATETIME;
+        return DEFAULT_VALUES.ISO_DATETIME;
       }
       if (schema.format === "date") {
-        return ISO_DATE;
+        return DEFAULT_VALUES.ISO_DATE;
       }
       if (schema.format === "time") {
-        return ISO_TIME;
+        return DEFAULT_VALUES.ISO_TIME;
       }
       if (schema.format === "uri") {
         return DEFAULT_VALUES.URI;
