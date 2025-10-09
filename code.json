@@ -11,7 +11,7 @@
     ],
     "usageType": ["openSource"]
   },
-  "organization": "Centers for Medicare & Medicaid Services",
+  "organization": "HHS",
   "repositoryURL": "https://github.com/HHS/simpler-grants-protocol",
   "repositoryVisibility": "public",
   "vcs": "git",
