@@ -3,7 +3,8 @@ title: Event
 description: A comprehensive model for representing various types of events with dates, date ranges, and custom event types
 eventType:
   example:
-    code: "singleDate"
+    file:
+      path: "website/public/schemas/yaml/EventType.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/EventType.yaml"
@@ -19,14 +20,8 @@ eventType:
       endLine: 18
 event:
   example:
-    code: |
-      {
-        "name": "Application Deadline",
-        "eventType": "singleDate",
-        "date": "2024-04-30",
-        "time": "17:00:00",
-        "description": "Final deadline for all submissions"
-      }
+    file:
+      path: "website/public/schemas/yaml/Event.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/Event.yaml"
@@ -42,12 +37,8 @@ event:
       endLine: 104
 eventBase:
   example:
-    code: |
-      {
-        "name": "Application Deadline",
-        "eventType": "singleDate",
-        "description": "Final deadline for all submissions"
-      }
+    file:
+      path: "website/public/schemas/yaml/EventBase.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/EventBase.yaml"
@@ -63,14 +54,8 @@ eventBase:
       endLine: 38
 singleDateEvent:
   example:
-    code: |
-      {
-        "name": "Application Deadline",
-        "eventType": "singleDate",
-        "date": "2024-04-30",
-        "time": "17:00:00",
-        "description": "Final deadline for all submissions"
-      }
+    file:
+      path: "website/public/schemas/yaml/SingleDateEvent.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/SingleDateEvent.yaml"
@@ -86,15 +71,8 @@ singleDateEvent:
       endLine: 56
 dateRangeEvent:
   example:
-    code: |
-      {
-        "name": "Application Period",
-        "eventType": "dateRange",
-        "startDate": "2024-01-01",
-        "endDate": "2024-01-31",
-        "endTime": "17:00:00",
-        "description": "Primary application period for the grant opportunity"
-      }
+    file:
+      path: "website/public/schemas/yaml/DateRangeEvent.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/DateRangeEvent.yaml"
@@ -110,13 +88,8 @@ dateRangeEvent:
       endLine: 86
 otherEvent:
   example:
-    code: |
-      {
-        "name": "Info Sessions",
-        "eventType": "other",
-        "details": "Every other Tuesday at 10:00 AM during the application period",
-        "description": "Info sessions for the opportunity"
-      }
+    file:
+      path: "website/public/schemas/yaml/OtherEvent.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/OtherEvent.yaml"

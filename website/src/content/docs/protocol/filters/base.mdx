@@ -3,11 +3,8 @@ title: Base filters
 description: Base models used to build field-specific filters.
 defaultFilter:
   example:
-    code: |
-      {
-        "operator": "eq",
-        "value": "example"
-      }
+    file:
+      path: "website/public/schemas/yaml/DefaultFilter.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/DefaultFilter.yaml"
@@ -23,7 +20,8 @@ defaultFilter:
       endLine: 70
 equivalenceOperators:
   example:
-    code: '"eq"'
+    file:
+      path: "website/public/schemas/yaml/EquivalenceOperators.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/EquivalenceOperators.yaml"
@@ -39,7 +37,8 @@ equivalenceOperators:
       endLine: 19
 comparisonOperators:
   example:
-    code: '"gt"'
+    file:
+      path: "website/public/schemas/yaml/ComparisonOperators.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/ComparisonOperators.yaml"
@@ -55,7 +54,8 @@ comparisonOperators:
       endLine: 28
 stringOperators:
   example:
-    code: '"like"'
+    file:
+      path: "website/public/schemas/yaml/StringOperators.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/StringOperators.yaml"
@@ -71,7 +71,8 @@ stringOperators:
       endLine: 42
 arrayOperators:
   example:
-    code: '"in"'
+    file:
+      path: "website/public/schemas/yaml/ArrayOperators.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/ArrayOperators.yaml"
@@ -87,7 +88,8 @@ arrayOperators:
       endLine: 35
 rangeOperators:
   example:
-    code: '"between"'
+    file:
+      path: "website/public/schemas/yaml/RangeOperators.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/RangeOperators.yaml"

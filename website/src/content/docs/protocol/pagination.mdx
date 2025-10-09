@@ -3,7 +3,8 @@ title: Pagination
 description: Defines a set of parameters and patterns for paginated routes
 paginatedQueryParams:
   example:
-    code: "/common-grants/opportunities?page=1&pageSize=100"
+    file:
+      path: "website/public/schemas/yaml/PaginatedQueryParams.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PaginatedQueryParams.yaml"
@@ -19,11 +20,8 @@ paginatedQueryParams:
       endLine: 29
 paginatedBodyParams:
   example:
-    code: |
-      {
-        "page": 1,
-        "pageSize": 100
-      }
+    file:
+      path: "website/public/schemas/yaml/PaginatedBodyParams.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PaginatedBodyParams.yaml"
@@ -39,13 +37,8 @@ paginatedBodyParams:
       endLine: 25
 paginatedResultsInfo:
   example:
-    code: |
-      {
-        "page": 1,
-        "pageSize": 10,
-        "totalItems": 100,
-        "totalPages": 10
-      }
+    file:
+      path: "website/public/schemas/yaml/PaginatedResultsInfo.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/PaginatedResultsInfo.yaml"

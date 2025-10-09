@@ -5,80 +5,8 @@ sidebar:
   order: 1
 opportunityBase:
   example:
-    code: |
-      {
-        "id": "049b4b15-f219-4037-901e-cd95ac32fbc8",
-        "title": "Healthcare Innovation Research Grant",
-        "description": "Funding for innovative healthcare delivery solutions",
-        "status": {
-          "value": "open",
-          "description": "Opportunity is actively accepting applications"
-        },
-        "funding": {
-          "totalAmountAvailable": {
-            "amount": "1000000.00",
-            "currency": "USD"
-          },
-          "minAwardAmount": {
-            "amount": "10000.00",
-            "currency": "USD"
-          },
-          "maxAwardAmount": {
-            "amount": "50000.00",
-            "currency": "USD"
-          },
-          "minAwardCount": 5,
-          "maxAwardCount": 20,
-          "estimatedAwardCount": 10
-        },
-        "keyDates": {
-          "postDate": {
-            "name": "Opportunity posted",
-            "eventType": "singleDate",
-            "date": "2024-03-01",
-            "description": "Opportunity is posted publicly"
-          },
-          "closeDate": {
-            "name": "Opportunity closed",
-            "eventType": "singleDate",
-            "date": "2024-04-30",
-            "description": "Opportunity is closed to all applications"
-          },
-          "otherDates": {
-            "anticipatedAward": {
-              "name": "Anticipated award date",
-              "eventType": "singleDate",
-              "date": "2025-03-15",
-              "description": "When we expect to announce awards for this opportunity."
-            },
-            "applicationPeriod": {
-              "name": "Application period",
-              "eventType": "dateRange",
-              "startDate": "2024-03-01",
-              "endDate": "2024-04-30",
-              "description": "Applications are accepted during this period"
-            }
-          }
-        },
-        "source": "https://grants.gov/opportunity/123",
-        "acceptedApplicantTypes": ["individual", "organization"],
-        "customFields": {
-          "programArea": {
-            "name": "programArea",
-            "type": "string",
-            "value": "Healthcare Technology",
-            "description": "The primary focus area for this grant"
-          },
-          "eligibilityType": {
-            "name": "eligibilityType",
-            "type": "string",
-            "value": "Non-profit organizations",
-            "description": "The type of organizations eligible to apply"
-          }
-        },
-        "createdAt": "2024-02-28T12:00:00Z",
-        "lastModifiedAt": "2024-02-28T12:00:00Z"
-      }
+    file:
+      path: "website/public/schemas/yaml/OpportunityBase.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/OpportunityBase.yaml"
@@ -94,54 +22,8 @@ opportunityBase:
       endLine: 42
 opportunityDetails:
   example:
-    code: |
-      {
-        "id": "049b4b15-f219-4037-901e-cd95ac32fbc8",
-        "title": "Healthcare Innovation Research Grant",
-        "description": "Funding for innovative healthcare delivery solutions",
-        "status": {
-          "value": "open",
-          "description": "Opportunity is actively accepting applications"
-        },
-        "funding": {
-          "totalAmountAvailable": {
-            "amount": "1000000.00", 
-            "currency": "USD"
-          },
-          "minAwardAmount": {
-            "amount": "10000.00",
-            "currency": "USD"
-          },
-          "maxAwardAmount": {
-            "amount": "50000.00",
-            "currency": "USD"
-          },
-          "minAwardCount": 5,
-          "maxAwardCount": 20,
-          "estimatedAwardCount": 10
-        },
-        "keyDates": {
-          "postDate": {
-            "name": "Opportunity posted",
-            "eventType": "singleDate",
-            "date": "2024-03-01",
-            "description": "Opportunity is posted publicly"
-          },
-          "closeDate": {
-            "name": "Opportunity closed",
-            "eventType": "singleDate",
-            "date": "2024-04-30",
-            "description": "Opportunity is closed to all applications"
-          },
-        },
-        "acceptedApplicantTypes": ["individual", "organization"],
-        "competitions": [
-          {
-            "id": "123",
-            "title": "Healthcare Innovation Competition"
-          }
-        ]
-      }
+    file:
+      path: "website/public/schemas/yaml/OpportunityDetails.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/OpportunityDetails.yaml"
@@ -152,11 +34,8 @@ opportunityDetails:
       endLine: 88
 oppStatus:
   example:
-    code: |
-      {
-        "value": "open",
-        "description": "Opportunity is actively accepting applications"
-      }
+    file:
+      path: "website/public/schemas/yaml/OppStatus.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/OppStatus.yaml"
@@ -172,7 +51,8 @@ oppStatus:
       endLine: 45
 oppStatusOptions:
   example:
-    code: '"open"'
+    file:
+      path: "website/public/schemas/yaml/OppStatusOptions.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/OppStatusOptions.yaml"
@@ -188,24 +68,8 @@ oppStatusOptions:
       endLine: 27
 oppFunding:
   example:
-    code: |
-      {
-        "totalAmountAvailable": {
-          "amount": "1000000.00",
-          "currency": "USD"
-        },
-        "minAwardAmount": {
-          "amount": "10000.00",
-          "currency": "USD"
-        },
-        "maxAwardAmount": {
-          "amount": "50000.00",
-          "currency": "USD"
-        },
-        "minAwardCount": 5,
-        "maxAwardCount": 20,
-        "estimatedAwardCount": 10
-      }
+    file:
+      path: "website/public/schemas/yaml/OppFunding.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/OppFunding.yaml"
@@ -221,43 +85,8 @@ oppFunding:
       endLine: 47
 oppTimeline:
   example:
-    code: |
-      {
-        "postDate": {
-          "name": "Opportunity posted",
-          "eventType": "singleDate",
-          "date": "2024-03-01",
-          "description": "Applications begin being accepted"
-        },
-        "closeDate": {
-          "name": "Opportunity closed",
-          "eventType": "singleDate",
-          "date": "2024-04-30",
-          "time": "17:00:00",
-          "description": "Final deadline for all submissions"
-        },
-        "otherDates": {
-          "applicationPeriod": {
-            "name": "Application period",
-            "eventType": "dateRange",
-            "startDate": "2024-03-01",
-            "endDate": "2024-04-30",
-            "description": "Applications are accepted during this period"
-          },
-          "infoSessions": {
-            "name": "Information session",
-            "eventType": "other",
-            "details": "Every Tuesday at 10:00 AM in March",
-            "description": "Information session about the opportunity"
-          },
-          "anticipatedAward": {
-            "name": "Anticipated award date",
-            "eventType": "singleDate",
-            "date": "2025-03-15",
-            "description": "When we expect to announce awards for this opportunity."
-          }
-        }
-      }
+    file:
+      path: "website/public/schemas/yaml/OppTimeline.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/OppTimeline.yaml"

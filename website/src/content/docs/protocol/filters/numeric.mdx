@@ -3,11 +3,8 @@ title: Numeric filters
 description: Filters that can be applied to numeric fields.
 numberComparisonFilter:
   example:
-    code: |
-      {
-        "operator": "eq",
-        "value": 1000
-      }
+    file:
+      path: "website/public/schemas/yaml/NumberComparisonFilter.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/NumberComparisonFilter.yaml"
@@ -23,14 +20,8 @@ numberComparisonFilter:
       endLine: 35
 numberRangeFilter:
   example:
-    code: |
-      {
-        "operator": "within",
-        "value": {
-          "min": 1000,
-          "max": 10000
-        }
-      }
+    file:
+      path: "website/public/schemas/yaml/NumberRangeFilter.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/NumberRangeFilter.yaml"
@@ -46,11 +37,8 @@ numberRangeFilter:
       endLine: 61
 numberArrayFilter:
   example:
-    code: |
-      {
-        "operator": "in",
-        "value": [1000, 2000, 3000]
-      }
+    file:
+      path: "website/public/schemas/yaml/NumberArrayFilter.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/NumberArrayFilter.yaml"
