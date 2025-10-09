@@ -777,13 +777,11 @@ function generatePrimitiveValue(
     jsonSchemaCode && (
       <TabItem label="JSON Schema">
         <p>
-          The{" "}
-          {jsonSchemaUrl && (
-            <a href={jsonSchemaUrl} target="_blank" rel="noopener noreferrer">
-              JSON Schema
-            </a>
-          )}{" "}
-          for this model.
+          {"The "}
+          <a href={jsonSchemaUrl} target="_blank" rel="noopener noreferrer">
+            JSON Schema
+          </a>
+          {" for this model."}
         </p>
         <Code code={jsonSchemaCode} lang="yaml" />
       </TabItem>
@@ -793,15 +791,11 @@ function generatePrimitiveValue(
     typeSpecCode && (
       <TabItem label="TypeSpec">
         <p>
-          The{" "}
-          {typeSpecUrl ? (
-            <a href={typeSpecUrl} target="_blank" rel="noopener noreferrer">
-              TypeSpec code
-            </a>
-          ) : (
-            "TypeSpec code"
-          )}{" "}
-          for this model.
+          {"The "}
+          <a href={typeSpecUrl} target="_blank" rel="noopener noreferrer">
+            TypeSpec code
+          </a>
+          {" for this model."}
         </p>
         <Code code={typeSpecCode} lang="typespec" />
       </TabItem>
@@ -811,15 +805,11 @@ function generatePrimitiveValue(
     pythonCode && (
       <TabItem label="Python">
         <p>
-          The{" "}
-          {pythonUrl ? (
-            <a href={pythonUrl} target="_blank" rel="noopener noreferrer">
-              Python code
-            </a>
-          ) : (
-            "Python code"
-          )}{" "}
-          for this model.
+          {"The "}
+          <a href={pythonUrl} target="_blank" rel="noopener noreferrer">
+            Python code
+          </a>
+          {" for this model."}
         </p>
         <Code code={pythonCode} lang="python" />
       </TabItem>
