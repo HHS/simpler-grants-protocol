@@ -1,0 +1,27 @@
+name: Update code.json
+on:
+  schedule:
+    - cron: 0 0 1 * * # First day of every month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  update-code-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update code.json
+        uses: DSACMS/automated-codejson-generator@v1.2.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: "main"
+          # TODO(widal001): Set this to true after testing
+          SKIP_PR: "false"

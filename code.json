@@ -1,0 +1,47 @@
+{
+  "name": "simpler-grants-protocol",
+  "description": "A common standard for sharing data in the grant ecosystem.",
+  "status": "",
+  "permissions": {
+    "licenses": [
+      {
+        "name": "CC0-1.0",
+        "URL": "https://github.com/HHS/simpler-grants-protocol/blob/main/LICENSE.md"
+      }
+    ],
+    "usageType": ["openSource"]
+  },
+  "organization": "HHS",
+  "repositoryURL": "https://github.com/HHS/simpler-grants-protocol",
+  "repositoryVisibility": "public",
+  "vcs": "git",
+  "laborHours": 4176,
+  "reuseFrequency": {
+    "forks": 5
+  },
+  "languages": [
+    "TypeScript",
+    "MDX",
+    "Python",
+    "TypeSpec",
+    "Astro",
+    "JavaScript",
+    "CSS",
+    "Roff",
+    "Makefile",
+    "Shell"
+  ],
+  "maintenance": "contract",
+  "contractNumber": "",
+  "SBOM": "https://github.com/HHS/simpler-grants-protocol/network/dependencies",
+  "date": {
+    "created": "2024-12-19T21:14:35Z",
+    "lastModified": "2025-10-07T15:56:02Z",
+    "metaDataLastUpdated": "2025-10-07T16:00:26.350Z"
+  },
+  "tags": ["grants", "standards", "api"],
+  "contact": {
+    "email": "simpler@grants.gov"
+  },
+  "feedbackMechanism": "https://github.com/HHS/simpler-grants-protocol/issues"
+}
