@@ -426,7 +426,7 @@ function getSchemaDocMap(): Map<string, string> {
     uuid: "/protocol/types/string#uuid",
     string: "/protocol/types/string#string",
     integer: "/protocol/types/numeric#integer",
-    number: "/protocol/types/numeric#number",
+    number: "/protocol/types/numeric#numeric",
     boolean: "/protocol/types/boolean#boolean",
     url: "/protocol/types/string#url",
     utcDateTime: "/protocol/types/date#utcdatetime",
@@ -590,9 +590,7 @@ if (isEnumSchema) {
             ))
           : (tableRows as PropertyRow[]).map((row) => (
               <tr>
-                <td>
-                  <code>{row.property}</code>
-                </td>
+                <td>{row.property}</td>
                 <td set:html={row.type} />
                 <td>{row.required ? "Yes" : "No"}</td>
                 <td>{row.description}</td>
@@ -612,21 +610,18 @@ if (isEnumSchema) {
   table {
     width: 100%;
     border-collapse: collapse;
-    border: 1px solid var(--sl-color-gray-3);
-    border-radius: 0.5rem;
-    overflow: hidden;
   }
 
   th {
     padding: 0.75rem;
     text-align: left;
     font-weight: 600;
-    border-bottom: 1px solid var(--sl-color-gray-3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   td {
     padding: 0.75rem;
-    border-bottom: 1px solid var(--sl-color-gray-2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     vertical-align: top;
   }
 
