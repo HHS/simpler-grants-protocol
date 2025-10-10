@@ -28,21 +28,11 @@ addressCollection:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 An address is a physical location.
 
-### Table
-
-| Property        | Type                                      | Required | Description                                                                  |
-| --------------- | ----------------------------------------- | -------- | ---------------------------------------------------------------------------- |
-| street1         | [string](/protocol/types/string#string)   | Yes      | The primary street address line.                                             |
-| street2         | [string](/protocol/types/string#string)   | No       | Additional street address information (e.g., apartment number, suite, etc.). |
-| city            | [string](/protocol/types/string#string)   | Yes      | The city of the location.                                                    |
-| stateOrProvince | [string](/protocol/types/string#string)   | Yes      | The state of the location.                                                   |
-| postalCode      | [string](/protocol/types/string#string)   | Yes      | The postal code of the location.                                             |
-| latitude        | [number](/protocol/types/numeric#numeric) | Yes      | The latitude coordinate of the address location.                             |
-| longitude       | [number](/protocol/types/numeric#numeric) | Yes      | The longitude coordinate of the address location.                            |
-| geography       | [Record](/protocol/types/other#record)    | No       | Additional geospatial data in GeoJSON format.                                |
+<SchemaTable spec={frontmatter.address} />
 
 ### Formats
 
@@ -56,12 +46,7 @@ An address is a physical location.
 
 A collection of addresses for a person or organization.
 
-### Table
-
-| Property       | Type                                                                          | Required | Description                                        |
-| -------------- | ----------------------------------------------------------------------------- | -------- | -------------------------------------------------- |
-| primary        | [Address](/protocol/fields/address)                                           | Yes      | The primary address for a person or organization   |
-| otherAddresses | [Record](/protocol/types/other#record)\<[Address](/protocol/fields/address)\> | No       | Additional addresses keyed by a descriptive label. |
+<SchemaTable spec={frontmatter.addressCollection} />
 
 ### Formats
 

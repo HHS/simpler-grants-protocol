@@ -16,18 +16,11 @@ name:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 A person's name.
 
-### Table
-
-| Property   | Type                                    | Required | Description                                     |
-| ---------- | --------------------------------------- | -------- | ----------------------------------------------- |
-| prefix     | [string](/protocol/types/string#string) | No       | Honorific prefix (e.g., Mr., Mrs., Dr., Prof.). |
-| firstName  | [string](/protocol/types/string#string) | Yes      | The person's first or given name.               |
-| middleName | [string](/protocol/types/string#string) | No       | The person's middle name or names.              |
-| lastName   | [string](/protocol/types/string#string) | Yes      | The person's last name or family name.          |
-| suffix     | [string](/protocol/types/string#string) | No       | Name suffix (e.g., Jr., Sr., III, Ph.D.).       |
+<SchemaTable spec={frontmatter.name} />
 
 ### Formats
 

@@ -248,23 +248,13 @@ proposalOrgs:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 ## ProposalBase
 
 A proposal for funding.
 
-### Table
-
-| Property        | Type                                                                                   | Required | Description                                                           |
-| --------------- | -------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------- |
-| title           | [string](/protocol/types/string#string)                                                | No       | The title of the proposal and/or the project requesting funding       |
-| description     | [string](/protocol/types/string#string)                                                | No       | The description of the proposal and/or the project requesting funding |
-| amountRequested | [Money](/protocol/fields/money)                                                        | No       | The amount of money requested                                         |
-| projectTimeline | [ProjectTimeline](#projecttimeline)                                                    | No       | The key dates for the project                                         |
-| opportunity     | [ProposalOpportunity](#proposalopportunity)                                            | No       | The opportunity to which this proposal is related                     |
-| organizations   | [ProposalOrgs](#proposalorgs)                                                          | No       | The organization that is requesting funding                           |
-| contacts        | [ProposalContacts](#proposalcontacts)                                                  | No       | The point of contact for the project                                  |
-| customFields    | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The project's custom fields                                           |
+<SchemaTable spec={frontmatter.proposalBase} />
 
 ### Formats
 
@@ -278,13 +268,7 @@ A proposal for funding.
 
 The opportunity to which this proposal is related.
 
-### Table
-
-| Property     | Type                                                                                   | Required | Description                         |
-| ------------ | -------------------------------------------------------------------------------------- | -------- | ----------------------------------- |
-| id           | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The opportunity's unique identifier |
-| title        | [string](/protocol/types/string#string)                                                | No       | The opportunity's name              |
-| customFields | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The opportunity's custom fields     |
+<SchemaTable spec={frontmatter.proposalOpportunity} />
 
 ### Formats
 
@@ -298,14 +282,7 @@ The opportunity to which this proposal is related.
 
 The key dates for the project.
 
-### Table
-
-| Property        | Type                                                                      | Required | Description                                                     |
-| --------------- | ------------------------------------------------------------------------- | -------- | --------------------------------------------------------------- |
-| startDate       | [Event](/protocol/fields/event)                                           | No       | The start date of the period for which the funding is requested |
-| endDate         | [Event](/protocol/fields/event)                                           | No       | The end date of the period for which the funding is requested   |
-| otherDates      | [Record](/protocol/types/other#record)\<[Event](/protocol/fields/event)\> | No       | The key dates for the project                                   |
-| timelineDetails | [string](/protocol/types/string#string)                                   | No       | Details about the timeline that don't fit into the other fields |
+<SchemaTable spec={frontmatter.projectTimeline} />
 
 ### Formats
 
@@ -319,12 +296,7 @@ The key dates for the project.
 
 The point of contact for the project.
 
-### Table
-
-| Property      | Type                                                                            | Required | Description                                                               |
-| ------------- | ------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------- |
-| primary       | [PersonBase](/protocol/models/person)                                           | Yes      | The primary point of contact for the proposal                             |
-| otherContacts | [Record](/protocol/types/other#record)\<[PersonBase](/protocol/models/person)\> | No       | Other points of contact for the proposal (key personnel, representatives) |
+<SchemaTable spec={frontmatter.proposalContacts} />
 
 ### Formats
 
@@ -338,12 +310,7 @@ The point of contact for the project.
 
 The organization that is requesting funding.
 
-### Table
-
-| Property  | Type                                                                                        | Required | Description                                                                  |
-| --------- | ------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
-| primary   | [OrganizationBase](/protocol/models/organization)                                           | Yes      | The primary organization that is requesting funding                          |
-| otherOrgs | [Record](/protocol/types/other#record)\<[OrganizationBase](/protocol/models/organization)\> | No       | Other organizations supporting the proposal (fiscal sponsor, partners, etc.) |
+<SchemaTable spec={frontmatter.proposalOrgs} />
 
 ### Formats
 

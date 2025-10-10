@@ -103,6 +103,7 @@ oppTimeline:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 ## OpportunityBase
 
@@ -110,18 +111,7 @@ A funding opportunity, such as a grant or loan.
 
 ### Table
 
-| Property       | Type                                                                                   | Required | Description                                                  |
-| -------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
-| id             | [uuid](/protocol/types/string#uuid)                                                    | Yes      | Globally unique id for the opportunity                       |
-| title          | [string](/protocol/types/string#string)                                                | Yes      | Title or name of the funding opportunity                     |
-| status         | [OppStatus](#oppstatus)                                                                | Yes      | Status of the opportunity                                    |
-| description    | [string](/protocol/types/string#string)                                                | Yes      | Description of the opportunity's purpose and scope           |
-| funding        | [OppFunding](#oppfunding)                                                              | No       | Details about the funding available                          |
-| keyDates       | [OppTimeline](#opptimeline)                                                            | No       | Key dates for the opportunity                                |
-| source         | [url](/protocol/types/string#url)                                                      | No       | URL for the original source of the opportunity               |
-| customFields   | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Additional custom fields specific to this opportunity        |
-| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created       |
-| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was last modified |
+<SchemaTable spec={frontmatter.opportunityBase} />
 
 ### Formats
 
@@ -138,20 +128,7 @@ A funding opportunity with additional details, like available competitions.
 
 ### Table
 
-| Property               | Type                                                                                   | Required | Description                                                    |
-| ---------------------- | -------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------- |
-| id                     | [uuid](/protocol/types/string#uuid)                                                    | Yes      | Globally unique id for the opportunity                         |
-| title                  | [string](/protocol/types/string#string)                                                | Yes      | Title or name of the funding opportunity                       |
-| status                 | [OppStatus](#oppstatus)                                                                | Yes      | Status of the opportunity                                      |
-| description            | [string](/protocol/types/string#string)                                                | Yes      | Description of the opportunity's purpose and scope             |
-| funding                | [OppFunding](#oppfunding)                                                              | No       | Details about the funding available                            |
-| keyDates               | [OppTimeline](#opptimeline)                                                            | No       | Key dates for the opportunity                                  |
-| source                 | [url](/protocol/types/string#url)                                                      | No       | URL for the original source of the opportunity                 |
-| acceptedApplicantTypes | [ApplicantType](/protocol/models/applicant-type#applicanttype)                         | No       | The types of applicants that are accepted for this opportunity |
-| competitions           | [CompetitionBase](/protocol/models/competition#competitionbase)                        | No       | The competitions associated with the opportunity               |
-| customFields           | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Additional custom fields specific to this opportunity          |
-| createdAt              | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created         |
-| lastModifiedAt         | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was last modified   |
+<SchemaTable spec={frontmatter.opportunityDetails} />
 
 ### Formats
 
@@ -168,11 +145,7 @@ The status of an opportunity, such as whether it is accepting applications.
 
 ### Table
 
-| Property    | Type                                    | Required | Description                                |
-| ----------- | --------------------------------------- | -------- | ------------------------------------------ |
-| value       | [OppStatusOptions](#oppstatusoptions)   | Yes      | The status value                           |
-| customValue | [string](/protocol/types/string#string) | No       | The display value for a custom status      |
-| description | [string](/protocol/types/string#string) | No       | A human-readable description of the status |
+<SchemaTable spec={frontmatter.oppStatus} />
 
 ### Formats
 
@@ -189,12 +162,7 @@ The set of values accepted for opportunity status.
 
 ### Table
 
-| Value      | Description                                                    |
-| ---------- | -------------------------------------------------------------- |
-| forecasted | Opportunity is anticipated, but not yet accepting applications |
-| open       | Opportunity is actively accepting applications                 |
-| closed     | Opportunity is no longer accepting applications                |
-| custom     | Custom opportunity status defined within the record            |
+<SchemaTable spec={frontmatter.oppStatusOptions} />
 
 ### Formats
 
@@ -211,14 +179,7 @@ Details about the funding available for an opportunity.
 
 ### Table
 
-| Property             | Type                                       | Required | Description                                     |
-| -------------------- | ------------------------------------------ | -------- | ----------------------------------------------- |
-| totalAmountAvailable | [Money](/protocol/fields/money)            | No       | Total amount of funding available               |
-| minAwardAmount       | [Money](/protocol/fields/money)            | No       | Minimum amount of funding granted per award     |
-| maxAwardAmount       | [Money](/protocol/fields/money)            | No       | Maximum amount of funding granted per award     |
-| minAwardCount        | [integer](/protocol/types/numeric#integer) | No       | Minimum number of awards granted                |
-| maxAwardCount        | [integer](/protocol/types/numeric#integer) | No       | Maximum number of awards granted                |
-| estimatedAwardCount  | [integer](/protocol/types/numeric#integer) | No       | Estimated number of awards that will be granted |
+<SchemaTable spec={frontmatter.oppFunding} />
 
 ### Formats
 
@@ -235,11 +196,7 @@ Key dates in the opportunity's timeline, such as when the application opens and 
 
 ### Table
 
-| Property   | Type                                                                            | Required | Description                                                    |
-| ---------- | ------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------- |
-| postDate   | [Event](/protocol/fields/event#event)                                           | No       | The date (and time) at which the opportunity is posted         |
-| closeDate  | [Event](/protocol/fields/event#event)                                           | No       | The date (and time) at which the opportunity closes            |
-| otherDates | [Record](/protocol/types/other#record)\<[Event](/protocol/fields/event#event)\> | No       | An optional map of other key dates in the opportunity timeline |
+<SchemaTable spec={frontmatter.oppTimeline} />
 
 ### Formats
 

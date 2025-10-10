@@ -97,6 +97,7 @@ mappingSwitchFunction:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ## MappingSchema
@@ -192,11 +193,7 @@ A function for mapping data from one schema to another.
 
 Returns a constant value.
 
-### Table
-
-| Property | Type                                    | Description                             |
-| -------- | --------------------------------------- | --------------------------------------- |
-| const    | [string](/protocol/types/string#string) | A constant value to add to the mapping. |
+<SchemaTable spec={frontmatter.mappingConstantFunction} />
 
 ### Formats
 
@@ -210,11 +207,7 @@ Returns a constant value.
 
 Returns the value of a field in the source data.
 
-### Table
-
-| Property | Type                                    | Description                                                                                    |
-| -------- | --------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| field    | [string](/protocol/types/string#string) | A dot-separated path to a field in the source schema whose value will be added to the mapping. |
+<SchemaTable spec={frontmatter.mappingFieldFunction} />
 
 ### Formats
 
@@ -228,19 +221,7 @@ Returns the value of a field in the source data.
 
 Returns a new value based on the value of a field in the source data using a switch-case lookup.
 
-### Table
-
-| Property | Type   | Required | Description                                                                   |
-| -------- | ------ | -------- | ----------------------------------------------------------------------------- |
-| switch   | object | Yes      | The switch configuration object containing field, case, and optional default. |
-
-Where the `switch` configuration object has the following properties:
-
-| Property | Type                                                                               | Required | Description                                                                                  |
-| -------- | ---------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| field    | [string](/protocol/types/string#string)                                            | Yes      | A dot-separated path to a field in the source schema whose value will be used for switching. |
-| case     | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\> | Yes      | A mapping of source field values to desired output values.                                   |
-| default  | [unknown](/protocol/types/other#unknown)                                           | No       | The default value to output if no case matches the source field value.                       |
+<SchemaTable spec={frontmatter.mappingSwitchFunction} />
 
 ### Formats
 

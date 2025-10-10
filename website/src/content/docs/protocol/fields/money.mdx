@@ -21,15 +21,11 @@ money:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 A monetary amount and the currency in which it is denominated.
 
-### Table
-
-| Property | Type                                                   | Required | Description                                     |
-| -------- | ------------------------------------------------------ | -------- | ----------------------------------------------- |
-| amount   | [decimalString](/protocol/types/numeric#decimalstring) | Yes      | The amount of money                             |
-| currency | [string](/protocol/types/string#string)                | Yes      | The ISO 4217 currency code (e.g., "USD", "EUR") |
+<SchemaTable spec={frontmatter.money} />
 
 ### Formats
 
