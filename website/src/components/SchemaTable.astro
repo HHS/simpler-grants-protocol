@@ -121,7 +121,7 @@ function generatePropertyRows(schema: JsonSchema): PropertyRow[] {
         )) {
           const isRequired =
             allOfItem.required?.includes(propertyName) || false;
-          const type = formatPropertyType(propSchema);
+          const type = formatPropertyType(propSchema, schema);
           const description = propSchema.description || "";
 
           rows.push({
@@ -145,7 +145,7 @@ function generatePropertyRows(schema: JsonSchema): PropertyRow[] {
       schema.properties,
     )) {
       const isRequired = schema.required?.includes(propertyName) || false;
-      const type = formatPropertyType(propSchema);
+      const type = formatPropertyType(propSchema, schema);
       const description = propSchema.description || "";
 
       rows.push({
@@ -233,17 +233,48 @@ function resolveSchemaReference(ref: string): JsonSchema | null {
 /**
  * Formats a schema property type for display
  */
-function formatPropertyType(propSchema: JsonSchema): string {
+function formatPropertyType(
+  propSchema: JsonSchema,
+  currentSchema?: JsonSchema,
+): string {
   // Handle $ref
   if (propSchema.$ref) {
-    return formatTypeReference(propSchema.$ref);
+    return formatTypeReference(propSchema.$ref, currentSchema);
+  }
+
+  // Handle anyOf union types
+  if (propSchema.anyOf && Array.isArray(propSchema.anyOf)) {
+    const types = propSchema.anyOf
+      .map((subSchema) => formatPropertyType(subSchema, currentSchema))
+      .filter((type) => type !== "null")
+      .join(" or ");
+    return types || "unknown";
+  }
+
+  // Handle oneOf union types
+  if (propSchema.oneOf && Array.isArray(propSchema.oneOf)) {
+    const types = propSchema.oneOf
+      .map((subSchema) => formatPropertyType(subSchema, currentSchema))
+      .filter((type) => type !== "null")
+      .join(" or ");
+    return types || "unknown";
   }
 
   // Handle array types
   if (propSchema.type === "array" && propSchema.items) {
     if (propSchema.items.$ref) {
-      const itemType = formatTypeReference(propSchema.items.$ref);
+      const itemType = formatTypeReference(
+        propSchema.items.$ref,
+        currentSchema,
+      );
       return `Array<${itemType}>`;
+    }
+    // Handle empty object schema for array items
+    if (
+      typeof propSchema.items === "object" &&
+      Object.keys(propSchema.items).length === 0
+    ) {
+      return `Array&lt;unknown&gt;`;
     }
     return `Array<${propSchema.items.type || "unknown"}>`;
   }
@@ -257,24 +288,56 @@ function formatPropertyType(propSchema: JsonSchema): string {
     ) {
       const valueType = formatTypeReference(
         propSchema.unevaluatedProperties.$ref as string,
+        currentSchema,
       );
       return `<a href="/protocol/types/other#record">Record</a>&lt;${valueType}&gt;`;
     }
     return `<a href="/protocol/types/other#record">Record</a>`;
   }
 
-  // Handle basic types
+  // Handle basic types with format
   if (propSchema.type) {
-    const typeLinkMap: Record<string, string> = {
-      string: "/protocol/types/string#string",
-      integer: "/protocol/types/numeric#integer",
-      number: "/protocol/types/numeric#number",
-      boolean: "/protocol/types/boolean#boolean",
-    };
+    // Handle string with format (like date-time)
+    if (propSchema.type === "string" && propSchema.format) {
+      // Map format to type name
+      const formatToTypeMap: Record<string, string> = {
+        "date-time": "utcDateTime",
+        date: "isoDate",
+        time: "isoTime",
+        uri: "url",
+        email: "email",
+        uuid: "uuid",
+      };
 
-    const link = typeLinkMap[propSchema.type];
-    if (link) {
-      return `<a href="${link}">${propSchema.type}</a>`;
+      const typeName = formatToTypeMap[propSchema.format];
+      if (typeName) {
+        // Use dynamic schema discovery to find the documentation path
+        const schemaMap = getSchemaDocMap();
+        const docPath = schemaMap.get(typeName);
+
+        if (docPath) {
+          // Convert type name to lowercase for anchor (e.g., "utcDateTime" -> "utcdatetime")
+          const anchor = typeName.toLowerCase();
+          const linkWithAnchor = docPath.includes("#")
+            ? docPath
+            : `${docPath}#${anchor}`;
+          return `<a href="${linkWithAnchor}">${typeName}</a>`;
+        }
+        return typeName;
+      }
+    }
+
+    // Use dynamic schema discovery for basic types
+    const schemaMap = getSchemaDocMap();
+    const docPath = schemaMap.get(propSchema.type);
+
+    if (docPath) {
+      // Convert type name to lowercase for anchor
+      const anchor = propSchema.type.toLowerCase();
+      const linkWithAnchor = docPath.includes("#")
+        ? docPath
+        : `${docPath}#${anchor}`;
+      return `<a href="${linkWithAnchor}">${propSchema.type}</a>`;
     }
 
     return propSchema.type;
@@ -286,9 +349,26 @@ function formatPropertyType(propSchema: JsonSchema): string {
 /**
  * Converts a schema reference to a displayable type string with link
  */
-function formatTypeReference(ref: string): string {
+function formatTypeReference(ref: string, currentSchema?: JsonSchema): string {
   // Handle internal $defs references
   if (ref.startsWith("#/$defs/")) {
+    // Try to resolve the $defs reference from the current schema
+    if (currentSchema && currentSchema.$defs) {
+      const defName = ref.replace("#/$defs/", "");
+      const defSchema = currentSchema.$defs[defName];
+      if (
+        defSchema &&
+        defSchema.unevaluatedProperties &&
+        typeof defSchema.unevaluatedProperties === "object" &&
+        "$ref" in defSchema.unevaluatedProperties
+      ) {
+        const valueType = formatTypeReference(
+          defSchema.unevaluatedProperties.$ref as string,
+          currentSchema,
+        );
+        return `<a href="/protocol/types/other#record">Record</a>&lt;${valueType}&gt;`;
+      }
+    }
     return `<a href="/protocol/types/other#record">Record</a>`;
   }
 
