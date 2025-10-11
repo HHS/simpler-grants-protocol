@@ -16,20 +16,13 @@ file:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 A file attachment.
 
 ### Table
 
-| Property       | Type                                            | Required | Description                    |
-| -------------- | ----------------------------------------------- | -------- | ------------------------------ |
-| downloadUrl    | [url](/protocol/types/string#url)               | Yes      | The file's download URL.       |
-| name           | [string](/protocol/types/string#string)         | Yes      | The file's name.               |
-| description    | [string](/protocol/types/string#string)         | No       | The file's description.        |
-| sizeInBytes    | [numeric](/protocol/types/numeric#numeric)      | No       | The file's size in bytes.      |
-| mimeType       | [string](/protocol/types/string#string)         | No       | The file's MIME type.          |
-| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime) | Yes      | The file's creation date.      |
-| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime) | Yes      | The file's last modified date. |
+<SchemaTable spec={frontmatter.file} />
 
 ### Formats
 
