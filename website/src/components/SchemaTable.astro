@@ -7,6 +7,14 @@ import { createAjvWithSchemas } from "../lib/validation";
 const DOCS_DIR = "src/content/docs";
 const PROTOCOL_DOCS_DIR = "src/content/docs/protocol";
 const SCHEMAS_DIR = "website/public/schemas/yaml";
+
+// JSON Schema type constants
+const ARRAY_TYPE = "array";
+const OBJECT_TYPE = "object";
+const STRING_TYPE = "string";
+const UNKNOWN_TYPE = "unknown";
+const RECORD_TYPE = "record";
+
 const { spec } = Astro.props;
 const ajv = createAjvWithSchemas();
 
@@ -244,26 +252,26 @@ function formatPropertyType(
   }
 
   // Handle array types
-  if (propSchema.type === "array" && propSchema.items) {
+  if (propSchema.type === ARRAY_TYPE && propSchema.items) {
     if (propSchema.items.$ref) {
       const itemType = formatTypeReference(
         propSchema.items.$ref,
         currentSchema,
       );
-      return `${formatTypeReference("array", currentSchema)}<${itemType}>`;
+      return `${formatTypeReference(ARRAY_TYPE, currentSchema)}<${itemType}>`;
     }
     // Handle empty object schema for array items
     if (
       typeof propSchema.items === "object" &&
       Object.keys(propSchema.items).length === 0
     ) {
-      const unknownLink = formatTypeReference("unknown", currentSchema);
-      return `${formatTypeReference("array", currentSchema)}<${unknownLink}>`;
+      const unknownLink = formatTypeReference(UNKNOWN_TYPE, currentSchema);
+      return `${formatTypeReference(ARRAY_TYPE, currentSchema)}<${unknownLink}>`;
     }
     // Handle basic type items (like type: "number")
-    const itemType = propSchema.items.type || "unknown";
+    const itemType = propSchema.items.type || UNKNOWN_TYPE;
     const itemTypeLink = formatTypeReference(itemType, currentSchema);
-    const arrayLink = formatTypeReference("array", currentSchema);
+    const arrayLink = formatTypeReference(ARRAY_TYPE, currentSchema);
     return `${arrayLink}<${itemTypeLink}>`;
   }
 
@@ -273,7 +281,7 @@ function formatPropertyType(
       .map((subSchema) => formatPropertyType(subSchema, currentSchema))
       .filter((type) => type !== "null")
       .join(" or ");
-    return types || "unknown";
+    return types || UNKNOWN_TYPE;
   }
 
   // Handle oneOf union types
@@ -282,11 +290,11 @@ function formatPropertyType(
       .map((subSchema) => formatPropertyType(subSchema, currentSchema))
       .filter((type) => type !== "null")
       .join(" or ");
-    return types || "unknown";
+    return types || UNKNOWN_TYPE;
   }
 
   // Handle Record types (objects with unevaluatedProperties)
-  if (propSchema.type === "object" && propSchema.unevaluatedProperties) {
+  if (propSchema.type === OBJECT_TYPE && propSchema.unevaluatedProperties) {
     if (
       typeof propSchema.unevaluatedProperties === "object" &&
       propSchema.unevaluatedProperties !== null &&
@@ -296,15 +304,15 @@ function formatPropertyType(
         propSchema.unevaluatedProperties.$ref as string,
         currentSchema,
       );
-      return `<a href="/protocol/types/other#record">Record</a>&lt;${valueType}&gt;`;
+      return `${formatTypeReference(RECORD_TYPE, currentSchema)}<${valueType}>`;
     }
-    return `<a href="/protocol/types/other#record">Record</a>`;
+    return formatTypeReference(RECORD_TYPE, currentSchema);
   }
 
   // Handle basic types with format
   if (propSchema.type) {
     // Handle string with format (like date-time)
-    if (propSchema.type === "string" && propSchema.format) {
+    if (propSchema.type === STRING_TYPE && propSchema.format) {
       // Map format to type name
       const formatToTypeMap: Record<string, string> = {
         "date-time": "utcDateTime",
@@ -334,7 +342,7 @@ function formatPropertyType(
     }
 
     // Use dynamic schema discovery for basic types (but not arrays, which are handled above)
-    if (propSchema.type !== "array") {
+    if (propSchema.type !== ARRAY_TYPE) {
       const schemaMap = getSchemaDocMap();
       const docPath = schemaMap.get(propSchema.type);
 
@@ -351,7 +359,7 @@ function formatPropertyType(
     }
   }
 
-  return "unknown";
+  return UNKNOWN_TYPE;
 }
 
 /**
@@ -374,10 +382,10 @@ function formatTypeReference(ref: string, currentSchema?: JsonSchema): string {
           defSchema.unevaluatedProperties.$ref as string,
           currentSchema,
         );
-        return `<a href="/protocol/types/other#record">Record</a>&lt;${valueType}&gt;`;
+        return `${formatTypeReference(RECORD_TYPE, currentSchema)}<${valueType}>`;
       }
     }
-    return `<a href="/protocol/types/other#record">Record</a>`;
+    return formatTypeReference(RECORD_TYPE, currentSchema);
   }
 
   // Handle external references
@@ -583,8 +591,8 @@ try {
 }
 
 // Determine table type and generate rows
-const isEnumSchema = schemaData.type === "string" && schemaData.enum;
-const isObjectSchema = schemaData.type === "object" && schemaData.properties;
+const isEnumSchema = schemaData.type === STRING_TYPE && schemaData.enum;
+const isObjectSchema = schemaData.type === OBJECT_TYPE && schemaData.properties;
 
 let tableRows: PropertyRow[] | EnumRow[] = [];
 let tableHeaders: string[] = [];
