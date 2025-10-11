@@ -58,6 +58,7 @@ interface FrontmatterSchemaDef {
     file?: {
       path?: string;
     };
+    code?: string;
   };
 }
 
@@ -242,6 +243,30 @@ function formatPropertyType(
     return formatTypeReference(propSchema.$ref, currentSchema);
   }
 
+  // Handle array types
+  if (propSchema.type === "array" && propSchema.items) {
+    if (propSchema.items.$ref) {
+      const itemType = formatTypeReference(
+        propSchema.items.$ref,
+        currentSchema,
+      );
+      return `${formatTypeReference("array", currentSchema)}<${itemType}>`;
+    }
+    // Handle empty object schema for array items
+    if (
+      typeof propSchema.items === "object" &&
+      Object.keys(propSchema.items).length === 0
+    ) {
+      const unknownLink = formatTypeReference("unknown", currentSchema);
+      return `${formatTypeReference("array", currentSchema)}<${unknownLink}>`;
+    }
+    // Handle basic type items (like type: "number")
+    const itemType = propSchema.items.type || "unknown";
+    const itemTypeLink = formatTypeReference(itemType, currentSchema);
+    const arrayLink = formatTypeReference("array", currentSchema);
+    return `${arrayLink}<${itemTypeLink}>`;
+  }
+
   // Handle anyOf union types
   if (propSchema.anyOf && Array.isArray(propSchema.anyOf)) {
     const types = propSchema.anyOf
@@ -258,25 +283,6 @@ function formatPropertyType(
       .filter((type) => type !== "null")
       .join(" or ");
     return types || "unknown";
-  }
-
-  // Handle array types
-  if (propSchema.type === "array" && propSchema.items) {
-    if (propSchema.items.$ref) {
-      const itemType = formatTypeReference(
-        propSchema.items.$ref,
-        currentSchema,
-      );
-      return `Array<${itemType}>`;
-    }
-    // Handle empty object schema for array items
-    if (
-      typeof propSchema.items === "object" &&
-      Object.keys(propSchema.items).length === 0
-    ) {
-      return `Array&lt;unknown&gt;`;
-    }
-    return `Array<${propSchema.items.type || "unknown"}>`;
   }
 
   // Handle Record types (objects with unevaluatedProperties)
@@ -327,20 +333,22 @@ function formatPropertyType(
       }
     }
 
-    // Use dynamic schema discovery for basic types
-    const schemaMap = getSchemaDocMap();
-    const docPath = schemaMap.get(propSchema.type);
+    // Use dynamic schema discovery for basic types (but not arrays, which are handled above)
+    if (propSchema.type !== "array") {
+      const schemaMap = getSchemaDocMap();
+      const docPath = schemaMap.get(propSchema.type);
 
-    if (docPath) {
-      // Convert type name to lowercase for anchor
-      const anchor = propSchema.type.toLowerCase();
-      const linkWithAnchor = docPath.includes("#")
-        ? docPath
-        : `${docPath}#${anchor}`;
-      return `<a href="${linkWithAnchor}">${propSchema.type}</a>`;
+      if (docPath) {
+        // Convert type name to lowercase for anchor
+        const anchor = propSchema.type.toLowerCase();
+        const linkWithAnchor = docPath.includes("#")
+          ? docPath
+          : `${docPath}#${anchor}`;
+        return `<a href="${linkWithAnchor}">${propSchema.type}</a>`;
+      }
+
+      return propSchema.type;
     }
-
-    return propSchema.type;
   }
 
   return "unknown";
@@ -393,6 +401,19 @@ function formatTypeReference(ref: string, currentSchema?: JsonSchema): string {
     return typeName;
   }
 
+  // Handle plain type names (like "array", "number", "string", etc.)
+  const schemaMap = getSchemaDocMap();
+  const docPath = schemaMap.get(ref);
+
+  if (docPath) {
+    // Convert type name to lowercase for anchor
+    const anchor = ref.toLowerCase();
+    const linkWithAnchor = docPath.includes("#")
+      ? docPath
+      : `${docPath}#${anchor}`;
+    return `<a href="${linkWithAnchor}">${ref}</a>`;
+  }
+
   return ref;
 }
 
@@ -419,23 +440,6 @@ function getSchemaDocMap(): Map<string, string> {
     }
   } catch (error) {
     console.warn(`Warning: Could not build schema documentation map: ${error}`);
-  }
-
-  // Add some common mappings for basic types
-  const commonMappings: Record<string, string> = {
-    uuid: "/protocol/types/string#uuid",
-    string: "/protocol/types/string#string",
-    integer: "/protocol/types/numeric#integer",
-    number: "/protocol/types/numeric#numeric",
-    boolean: "/protocol/types/boolean#boolean",
-    url: "/protocol/types/string#url",
-    utcDateTime: "/protocol/types/date#utcdatetime",
-  };
-
-  for (const [schemaName, docPath] of Object.entries(commonMappings)) {
-    if (!map.has(schemaName)) {
-      map.set(schemaName, docPath);
-    }
   }
 
   schemaDocMap = map;
@@ -513,6 +517,34 @@ function extractSchemaReferences(
               ?.replace(".yaml", "");
             if (schemaFileName) {
               references.push({ schemaName: schemaFileName, docPath });
+            }
+          }
+        } else if (jsonSchema?.code) {
+          // Handle inline schemas (like basic types in types/ directory)
+          // The schema name is the frontmatter key
+          const schemaName = Object.keys(frontmatter).find(
+            (k) => frontmatter[k] === schemaDef,
+          );
+          if (schemaName) {
+            references.push({ schemaName, docPath });
+
+            // Also add the actual JSON Schema type to the map
+            try {
+              const schemaCode = yaml.load(jsonSchema.code) as {
+                type?: string;
+              };
+              if (
+                schemaCode &&
+                typeof schemaCode === "object" &&
+                schemaCode.type
+              ) {
+                references.push({ schemaName: schemaCode.type, docPath });
+              }
+            } catch (error) {
+              // If we can't parse the schema code, just continue
+              console.warn(
+                `Warning: Could not parse schema code for ${schemaName}: ${error}`,
+              );
             }
           }
         }
