@@ -1,0 +1,1258 @@
+{
+  "schemas": {
+    "Address": {
+      "schemaName": "Address",
+      "filePath": "public/schemas/yaml/Address.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "street1",
+        "street2",
+        "city",
+        "stateOrProvince",
+        "country",
+        "postalCode",
+        "latitude",
+        "longitude",
+        "geography"
+      ],
+      "lastModified": 1760484555219,
+      "contentHash": "tnxmec"
+    },
+    "AddressCollection": {
+      "schemaName": "AddressCollection",
+      "filePath": "public/schemas/yaml/AddressCollection.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["primary", "otherAddresses"],
+      "lastModified": 1760484555219,
+      "contentHash": "azzi19"
+    },
+    "AllOperators": {
+      "schemaName": "AllOperators",
+      "filePath": "public/schemas/yaml/AllOperators.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": [
+        "eq",
+        "neq",
+        "gt",
+        "gte",
+        "lt",
+        "lte",
+        "in",
+        "notIn",
+        "between",
+        "outside",
+        "like",
+        "notLike"
+      ],
+      "lastModified": 1760484555219,
+      "contentHash": "-8fuueu"
+    },
+    "AppDefaultFilters": {
+      "schemaName": "AppDefaultFilters",
+      "filePath": "public/schemas/yaml/AppDefaultFilters.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "opportunityId",
+        "competitionId",
+        "submittedAtRange",
+        "status"
+      ],
+      "lastModified": 1760484555219,
+      "contentHash": "-74s2hl"
+    },
+    "AppFilters": {
+      "schemaName": "AppFilters",
+      "filePath": "public/schemas/yaml/AppFilters.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "opportunityId",
+        "competitionId",
+        "submittedAtRange",
+        "status",
+        "customFilters"
+      ],
+      "lastModified": 1760484555219,
+      "contentHash": "-yj3y0d"
+    },
+    "AppFormResponse": {
+      "schemaName": "AppFormResponse",
+      "filePath": "public/schemas/yaml/AppFormResponse.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "applicationId",
+        "id",
+        "formId",
+        "response",
+        "status",
+        "validationErrors",
+        "customFields",
+        "createdAt",
+        "lastModifiedAt"
+      ],
+      "lastModified": 1760484555219,
+      "contentHash": "-kke74l"
+    },
+    "AppSortBy": {
+      "schemaName": "AppSortBy",
+      "filePath": "public/schemas/yaml/AppSortBy.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": [
+        "lastModifiedAt",
+        "createdAt",
+        "submittedAt",
+        "status.value",
+        "opportunityId",
+        "competitionId",
+        "custom"
+      ],
+      "lastModified": 1760484555220,
+      "contentHash": "-olpbju"
+    },
+    "AppSorting": {
+      "schemaName": "AppSorting",
+      "filePath": "public/schemas/yaml/AppSorting.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["sortBy"],
+      "lastModified": 1760484555220,
+      "contentHash": "pm9mg2"
+    },
+    "AppStatus": {
+      "schemaName": "AppStatus",
+      "filePath": "public/schemas/yaml/AppStatus.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["value", "customValue", "description"],
+      "lastModified": 1760484555220,
+      "contentHash": "-eedl6t"
+    },
+    "AppStatusOptions": {
+      "schemaName": "AppStatusOptions",
+      "filePath": "public/schemas/yaml/AppStatusOptions.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": [
+        "inProgress",
+        "submitted",
+        "accepted",
+        "rejected",
+        "custom"
+      ],
+      "lastModified": 1760484555220,
+      "contentHash": "-aihjkt"
+    },
+    "ApplicantType": {
+      "schemaName": "ApplicantType",
+      "filePath": "public/schemas/yaml/ApplicantType.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["value", "customValue", "description"],
+      "lastModified": 1760484555220,
+      "contentHash": "-6c4fm0"
+    },
+    "ApplicantTypeOptions": {
+      "schemaName": "ApplicantTypeOptions",
+      "filePath": "public/schemas/yaml/ApplicantTypeOptions.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": [
+        "individual",
+        "organization",
+        "government_state",
+        "government_county",
+        "government_municipal",
+        "government_special_district",
+        "government_tribal",
+        "organization_tribal_other",
+        "school_district_independent",
+        "higher_education_public",
+        "higher_education_private",
+        "non_profit_with_501c3",
+        "nonprofit_without_501c3",
+        "for_profit_small_business",
+        "for_profit_not_small_business",
+        "unrestricted",
+        "custom"
+      ],
+      "lastModified": 1760484555220,
+      "contentHash": "-bcm2s6"
+    },
+    "ApplicationBase": {
+      "schemaName": "ApplicationBase",
+      "filePath": "public/schemas/yaml/ApplicationBase.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "id",
+        "name",
+        "competitionId",
+        "opportunityId",
+        "formResponses",
+        "status",
+        "submittedAt",
+        "validationErrors",
+        "customFields",
+        "createdAt",
+        "lastModifiedAt"
+      ],
+      "lastModified": 1760484555220,
+      "contentHash": "w4q1t2"
+    },
+    "ApplicationSubmissionError": {
+      "schemaName": "ApplicationSubmissionError",
+      "filePath": "public/schemas/yaml/ApplicationSubmissionError.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["status"],
+      "lastModified": 1760484555221,
+      "contentHash": "-b23kks"
+    },
+    "ArrayOperators": {
+      "schemaName": "ArrayOperators",
+      "filePath": "public/schemas/yaml/ArrayOperators.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["in", "notIn"],
+      "lastModified": 1760484555221,
+      "contentHash": "-ih9wcg"
+    },
+    "ComparisonOperators": {
+      "schemaName": "ComparisonOperators",
+      "filePath": "public/schemas/yaml/ComparisonOperators.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["gt", "gte", "lt", "lte"],
+      "lastModified": 1760484555221,
+      "contentHash": "-mdz4ff"
+    },
+    "CompetitionBase": {
+      "schemaName": "CompetitionBase",
+      "filePath": "public/schemas/yaml/CompetitionBase.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "id",
+        "opportunityId",
+        "title",
+        "description",
+        "instructions",
+        "status",
+        "keyDates",
+        "forms",
+        "acceptedApplicantTypes",
+        "customFields",
+        "createdAt",
+        "lastModifiedAt"
+      ],
+      "lastModified": 1760484555221,
+      "contentHash": "-qes989"
+    },
+    "CompetitionForms": {
+      "schemaName": "CompetitionForms",
+      "filePath": "public/schemas/yaml/CompetitionForms.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["forms", "validation"],
+      "lastModified": 1760484555221,
+      "contentHash": "ghlpsu"
+    },
+    "CompetitionStatus": {
+      "schemaName": "CompetitionStatus",
+      "filePath": "public/schemas/yaml/CompetitionStatus.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["value", "customValue", "description"],
+      "lastModified": 1760484555221,
+      "contentHash": "-5jjdu2"
+    },
+    "CompetitionStatusOptions": {
+      "schemaName": "CompetitionStatusOptions",
+      "filePath": "public/schemas/yaml/CompetitionStatusOptions.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["open", "closed", "custom"],
+      "lastModified": 1760484555221,
+      "contentHash": "-afm5kz"
+    },
+    "CompetitionTimeline": {
+      "schemaName": "CompetitionTimeline",
+      "filePath": "public/schemas/yaml/CompetitionTimeline.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["openDate", "closeDate", "otherDates"],
+      "lastModified": 1760484555222,
+      "contentHash": "8zxz4r"
+    },
+    "CustomField": {
+      "schemaName": "CustomField",
+      "filePath": "public/schemas/yaml/CustomField.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["name", "fieldType", "schema", "value", "description"],
+      "lastModified": 1760484555222,
+      "contentHash": "5gdvdn"
+    },
+    "CustomFieldType": {
+      "schemaName": "CustomFieldType",
+      "filePath": "public/schemas/yaml/CustomFieldType.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "object",
+        "array"
+      ],
+      "lastModified": 1760484555222,
+      "contentHash": "-xfhi1h"
+    },
+    "DateComparisonFilter": {
+      "schemaName": "DateComparisonFilter",
+      "filePath": "public/schemas/yaml/DateComparisonFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555222,
+      "contentHash": "2xj9pz"
+    },
+    "DateRangeEvent": {
+      "schemaName": "DateRangeEvent",
+      "filePath": "public/schemas/yaml/DateRangeEvent.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "eventType",
+        "startDate",
+        "startTime",
+        "endDate",
+        "endTime"
+      ],
+      "lastModified": 1760484555222,
+      "contentHash": "csdc0e"
+    },
+    "DateRangeFilter": {
+      "schemaName": "DateRangeFilter",
+      "filePath": "public/schemas/yaml/DateRangeFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555222,
+      "contentHash": "8tjld2"
+    },
+    "DefaultFilter": {
+      "schemaName": "DefaultFilter",
+      "filePath": "public/schemas/yaml/DefaultFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555222,
+      "contentHash": "qwos5d"
+    },
+    "EmailCollection": {
+      "schemaName": "EmailCollection",
+      "filePath": "public/schemas/yaml/EmailCollection.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["primary", "otherEmails"],
+      "lastModified": 1760484555223,
+      "contentHash": "s5dbrt"
+    },
+    "EquivalenceOperators": {
+      "schemaName": "EquivalenceOperators",
+      "filePath": "public/schemas/yaml/EquivalenceOperators.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["eq", "neq"],
+      "lastModified": 1760484555223,
+      "contentHash": "-slsz05"
+    },
+    "Error": {
+      "schemaName": "Error",
+      "filePath": "public/schemas/yaml/Error.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["status", "message", "errors"],
+      "lastModified": 1760484555223,
+      "contentHash": "hf1mxd"
+    },
+    "Event": {
+      "schemaName": "Event",
+      "filePath": "public/schemas/yaml/Event.yaml",
+      "type": "unknown",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555223,
+      "contentHash": "bo1ki1"
+    },
+    "EventBase": {
+      "schemaName": "EventBase",
+      "filePath": "public/schemas/yaml/EventBase.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["name", "eventType", "description"],
+      "lastModified": 1760484555223,
+      "contentHash": "-da2tjm"
+    },
+    "EventType": {
+      "schemaName": "EventType",
+      "filePath": "public/schemas/yaml/EventType.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["singleDate", "dateRange", "other"],
+      "lastModified": 1760484555223,
+      "contentHash": "-c5xoyl"
+    },
+    "File": {
+      "schemaName": "File",
+      "filePath": "public/schemas/yaml/File.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "downloadUrl",
+        "name",
+        "description",
+        "sizeInBytes",
+        "mimeType",
+        "createdAt",
+        "lastModifiedAt"
+      ],
+      "lastModified": 1760484555223,
+      "contentHash": "-urtuud"
+    },
+    "FormBase": {
+      "schemaName": "FormBase",
+      "filePath": "public/schemas/yaml/FormBase.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "id",
+        "name",
+        "description",
+        "version",
+        "instructions",
+        "jsonSchema",
+        "uiSchema",
+        "mappingToCommonGrants",
+        "mappingFromCommonGrants",
+        "customFields",
+        "createdAt",
+        "lastModifiedAt"
+      ],
+      "lastModified": 1760484555224,
+      "contentHash": "uxxxi8"
+    },
+    "FormJsonSchema": {
+      "schemaName": "FormJsonSchema",
+      "filePath": "public/schemas/yaml/FormJsonSchema.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [],
+      "lastModified": 1760484555224,
+      "contentHash": "iyzl8a"
+    },
+    "FormResponseBase": {
+      "schemaName": "FormResponseBase",
+      "filePath": "public/schemas/yaml/FormResponseBase.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "id",
+        "formId",
+        "response",
+        "status",
+        "validationErrors",
+        "customFields",
+        "createdAt",
+        "lastModifiedAt"
+      ],
+      "lastModified": 1760484555224,
+      "contentHash": "-tane9o"
+    },
+    "FormResponseStatus": {
+      "schemaName": "FormResponseStatus",
+      "filePath": "public/schemas/yaml/FormResponseStatus.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["value", "customValue", "description"],
+      "lastModified": 1760484555224,
+      "contentHash": "hznqia"
+    },
+    "FormResponseStatusOptions": {
+      "schemaName": "FormResponseStatusOptions",
+      "filePath": "public/schemas/yaml/FormResponseStatusOptions.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["notStarted", "inProgress", "complete"],
+      "lastModified": 1760484555224,
+      "contentHash": "544olp"
+    },
+    "FormUISchema": {
+      "schemaName": "FormUISchema",
+      "filePath": "public/schemas/yaml/FormUISchema.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [],
+      "lastModified": 1760484555224,
+      "contentHash": "-y76jdt"
+    },
+    "MappingConstantFunction": {
+      "schemaName": "MappingConstantFunction",
+      "filePath": "public/schemas/yaml/MappingConstantFunction.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["const"],
+      "lastModified": 1760484555224,
+      "contentHash": "n9ek8j"
+    },
+    "MappingFieldFunction": {
+      "schemaName": "MappingFieldFunction",
+      "filePath": "public/schemas/yaml/MappingFieldFunction.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["field"],
+      "lastModified": 1760484555224,
+      "contentHash": "-516toi"
+    },
+    "MappingFunction": {
+      "schemaName": "MappingFunction",
+      "filePath": "public/schemas/yaml/MappingFunction.yaml",
+      "type": "unknown",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555225,
+      "contentHash": "wfajjq"
+    },
+    "MappingSchema": {
+      "schemaName": "MappingSchema",
+      "filePath": "public/schemas/yaml/MappingSchema.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [],
+      "lastModified": 1760484555225,
+      "contentHash": "-7fzk8t"
+    },
+    "MappingSwitchFunction": {
+      "schemaName": "MappingSwitchFunction",
+      "filePath": "public/schemas/yaml/MappingSwitchFunction.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["switch"],
+      "lastModified": 1760484555225,
+      "contentHash": "dweewc"
+    },
+    "Money": {
+      "schemaName": "Money",
+      "filePath": "public/schemas/yaml/Money.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["amount", "currency"],
+      "lastModified": 1760484555225,
+      "contentHash": "-38s8yn"
+    },
+    "MoneyComparisonFilter": {
+      "schemaName": "MoneyComparisonFilter",
+      "filePath": "public/schemas/yaml/MoneyComparisonFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555225,
+      "contentHash": "ssuk5c"
+    },
+    "MoneyRangeFilter": {
+      "schemaName": "MoneyRangeFilter",
+      "filePath": "public/schemas/yaml/MoneyRangeFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555225,
+      "contentHash": "-8ho8e4"
+    },
+    "Name": {
+      "schemaName": "Name",
+      "filePath": "public/schemas/yaml/Name.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["prefix", "firstName", "middleName", "lastName", "suffix"],
+      "lastModified": 1760484555225,
+      "contentHash": "1k7476"
+    },
+    "NumberArrayFilter": {
+      "schemaName": "NumberArrayFilter",
+      "filePath": "public/schemas/yaml/NumberArrayFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555226,
+      "contentHash": "-iad3nt"
+    },
+    "NumberComparisonFilter": {
+      "schemaName": "NumberComparisonFilter",
+      "filePath": "public/schemas/yaml/NumberComparisonFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555226,
+      "contentHash": "-81t4ty"
+    },
+    "NumberRangeFilter": {
+      "schemaName": "NumberRangeFilter",
+      "filePath": "public/schemas/yaml/NumberRangeFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555226,
+      "contentHash": "3qfauw"
+    },
+    "OppDefaultFilters": {
+      "schemaName": "OppDefaultFilters",
+      "filePath": "public/schemas/yaml/OppDefaultFilters.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "status",
+        "closeDateRange",
+        "totalFundingAvailableRange",
+        "minAwardAmountRange",
+        "maxAwardAmountRange"
+      ],
+      "lastModified": 1760484555226,
+      "contentHash": "-5qcyny"
+    },
+    "OppFilters": {
+      "schemaName": "OppFilters",
+      "filePath": "public/schemas/yaml/OppFilters.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "status",
+        "closeDateRange",
+        "totalFundingAvailableRange",
+        "minAwardAmountRange",
+        "maxAwardAmountRange",
+        "customFilters"
+      ],
+      "lastModified": 1760484555226,
+      "contentHash": "-bpsdhn"
+    },
+    "OppFunding": {
+      "schemaName": "OppFunding",
+      "filePath": "public/schemas/yaml/OppFunding.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "details",
+        "totalAmountAvailable",
+        "minAwardAmount",
+        "maxAwardAmount",
+        "minAwardCount",
+        "maxAwardCount",
+        "estimatedAwardCount"
+      ],
+      "lastModified": 1760484555226,
+      "contentHash": "42kz6o"
+    },
+    "OppSortBy": {
+      "schemaName": "OppSortBy",
+      "filePath": "public/schemas/yaml/OppSortBy.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": [
+        "lastModifiedAt",
+        "createdAt",
+        "title",
+        "status.value",
+        "keyDates.closeDate",
+        "funding.maxAwardAmount",
+        "funding.minAwardAmount",
+        "funding.totalAmountAvailable",
+        "funding.estimatedAwardCount",
+        "custom"
+      ],
+      "lastModified": 1760484555226,
+      "contentHash": "-197drb"
+    },
+    "OppSorting": {
+      "schemaName": "OppSorting",
+      "filePath": "public/schemas/yaml/OppSorting.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["sortBy"],
+      "lastModified": 1760484555226,
+      "contentHash": "f4ldn4"
+    },
+    "OppStatus": {
+      "schemaName": "OppStatus",
+      "filePath": "public/schemas/yaml/OppStatus.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["value", "customValue", "description"],
+      "lastModified": 1760484555227,
+      "contentHash": "ljwb8z"
+    },
+    "OppStatusOptions": {
+      "schemaName": "OppStatusOptions",
+      "filePath": "public/schemas/yaml/OppStatusOptions.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["forecasted", "open", "closed", "custom"],
+      "lastModified": 1760484555227,
+      "contentHash": "-gg45dl"
+    },
+    "OppTimeline": {
+      "schemaName": "OppTimeline",
+      "filePath": "public/schemas/yaml/OppTimeline.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["postDate", "closeDate", "otherDates"],
+      "lastModified": 1760484555227,
+      "contentHash": "4ldr0r"
+    },
+    "OpportunityBase": {
+      "schemaName": "OpportunityBase",
+      "filePath": "public/schemas/yaml/OpportunityBase.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "id",
+        "title",
+        "status",
+        "description",
+        "funding",
+        "keyDates",
+        "acceptedApplicantTypes",
+        "source",
+        "customFields",
+        "createdAt",
+        "lastModifiedAt"
+      ],
+      "lastModified": 1760484555227,
+      "contentHash": "-isfb83"
+    },
+    "OpportunityDetails": {
+      "schemaName": "OpportunityDetails",
+      "filePath": "public/schemas/yaml/OpportunityDetails.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["competitions"],
+      "lastModified": 1760484555227,
+      "contentHash": "u5dinv"
+    },
+    "OrgSocialLinks": {
+      "schemaName": "OrgSocialLinks",
+      "filePath": "public/schemas/yaml/OrgSocialLinks.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "website",
+        "facebook",
+        "twitterOrX",
+        "bluesky",
+        "instagram",
+        "linkedin",
+        "otherSocials"
+      ],
+      "lastModified": 1760484555227,
+      "contentHash": "3gtjks"
+    },
+    "OrganizationBase": {
+      "schemaName": "OrganizationBase",
+      "filePath": "public/schemas/yaml/OrganizationBase.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "id",
+        "name",
+        "orgType",
+        "ein",
+        "uei",
+        "duns",
+        "addresses",
+        "phones",
+        "emails",
+        "mission",
+        "yearFounded",
+        "socials",
+        "customFields"
+      ],
+      "lastModified": 1760484555227,
+      "contentHash": "jjucpa"
+    },
+    "OtherEvent": {
+      "schemaName": "OtherEvent",
+      "filePath": "public/schemas/yaml/OtherEvent.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["eventType", "details", "description"],
+      "lastModified": 1760484555228,
+      "contentHash": "qne37i"
+    },
+    "PCSClass": {
+      "schemaName": "PCSClass",
+      "filePath": "public/schemas/yaml/PCSClass.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": [
+        "Organization types",
+        "Subjects",
+        "Population groups",
+        "Transaction types",
+        "Support strategies"
+      ],
+      "lastModified": 1760484555228,
+      "contentHash": "3dp8qt"
+    },
+    "PCSOrgType": {
+      "schemaName": "PCSOrgType",
+      "filePath": "public/schemas/yaml/PCSOrgType.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["class"],
+      "lastModified": 1760484555228,
+      "contentHash": "-osiuuc"
+    },
+    "PCSPopulation": {
+      "schemaName": "PCSPopulation",
+      "filePath": "public/schemas/yaml/PCSPopulation.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["class"],
+      "lastModified": 1760484555228,
+      "contentHash": "ys3klj"
+    },
+    "PCSSubject": {
+      "schemaName": "PCSSubject",
+      "filePath": "public/schemas/yaml/PCSSubject.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["class"],
+      "lastModified": 1760484555228,
+      "contentHash": "-47sw9u"
+    },
+    "PCSSupportStrategy": {
+      "schemaName": "PCSSupportStrategy",
+      "filePath": "public/schemas/yaml/PCSSupportStrategy.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["class"],
+      "lastModified": 1760484555228,
+      "contentHash": "-fzyzo0"
+    },
+    "PCSTerm": {
+      "schemaName": "PCSTerm",
+      "filePath": "public/schemas/yaml/PCSTerm.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["term", "class", "code", "description"],
+      "lastModified": 1760484555228,
+      "contentHash": "-6vh2x9"
+    },
+    "PCSTransactionType": {
+      "schemaName": "PCSTransactionType",
+      "filePath": "public/schemas/yaml/PCSTransactionType.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["class"],
+      "lastModified": 1760484555229,
+      "contentHash": "1fbyh3"
+    },
+    "PaginatedBodyParams": {
+      "schemaName": "PaginatedBodyParams",
+      "filePath": "public/schemas/yaml/PaginatedBodyParams.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["page", "pageSize"],
+      "lastModified": 1760484555229,
+      "contentHash": "-tbaz8k"
+    },
+    "PaginatedQueryParams": {
+      "schemaName": "PaginatedQueryParams",
+      "filePath": "public/schemas/yaml/PaginatedQueryParams.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["page", "pageSize"],
+      "lastModified": 1760484555229,
+      "contentHash": "9ioi06"
+    },
+    "PaginatedResultsInfo": {
+      "schemaName": "PaginatedResultsInfo",
+      "filePath": "public/schemas/yaml/PaginatedResultsInfo.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["page", "pageSize", "totalItems", "totalPages"],
+      "lastModified": 1760484555229,
+      "contentHash": "s16alq"
+    },
+    "PersonBase": {
+      "schemaName": "PersonBase",
+      "filePath": "public/schemas/yaml/PersonBase.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "name",
+        "title",
+        "addresses",
+        "phones",
+        "emails",
+        "dateOfBirth",
+        "customFields"
+      ],
+      "lastModified": 1760484555229,
+      "contentHash": "-25jfde"
+    },
+    "Phone": {
+      "schemaName": "Phone",
+      "filePath": "public/schemas/yaml/Phone.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["countryCode", "number", "extension", "isMobile"],
+      "lastModified": 1760484555229,
+      "contentHash": "-sdsi78"
+    },
+    "PhoneCollection": {
+      "schemaName": "PhoneCollection",
+      "filePath": "public/schemas/yaml/PhoneCollection.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["primary", "fax", "otherPhones"],
+      "lastModified": 1760484555229,
+      "contentHash": "uzm3ky"
+    },
+    "ProjectTimeline": {
+      "schemaName": "ProjectTimeline",
+      "filePath": "public/schemas/yaml/ProjectTimeline.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["startDate", "endDate", "otherDates", "timelineDetails"],
+      "lastModified": 1760484555230,
+      "contentHash": "-24mq6y"
+    },
+    "ProposalBase": {
+      "schemaName": "ProposalBase",
+      "filePath": "public/schemas/yaml/ProposalBase.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": [
+        "title",
+        "description",
+        "amountRequested",
+        "projectTimeline",
+        "opportunity",
+        "organizations",
+        "contacts",
+        "customFields"
+      ],
+      "lastModified": 1760484555230,
+      "contentHash": "agobtl"
+    },
+    "ProposalContacts": {
+      "schemaName": "ProposalContacts",
+      "filePath": "public/schemas/yaml/ProposalContacts.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["primary", "otherContacts"],
+      "lastModified": 1760484555230,
+      "contentHash": "5wlw7t"
+    },
+    "ProposalOpportunity": {
+      "schemaName": "ProposalOpportunity",
+      "filePath": "public/schemas/yaml/ProposalOpportunity.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["id", "title", "customFields"],
+      "lastModified": 1760484555230,
+      "contentHash": "-kviem2"
+    },
+    "ProposalOrgs": {
+      "schemaName": "ProposalOrgs",
+      "filePath": "public/schemas/yaml/ProposalOrgs.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["primary", "otherOrgs"],
+      "lastModified": 1760484555230,
+      "contentHash": "-h1dl8z"
+    },
+    "RangeOperators": {
+      "schemaName": "RangeOperators",
+      "filePath": "public/schemas/yaml/RangeOperators.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["between", "outside"],
+      "lastModified": 1760484555230,
+      "contentHash": "nbvrfu"
+    },
+    "SingleDateEvent": {
+      "schemaName": "SingleDateEvent",
+      "filePath": "public/schemas/yaml/SingleDateEvent.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["eventType", "date", "time"],
+      "lastModified": 1760484555231,
+      "contentHash": "-g2cwf9"
+    },
+    "SortBodyParams": {
+      "schemaName": "SortBodyParams",
+      "filePath": "public/schemas/yaml/SortBodyParams.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["sortBy", "customSortBy", "sortOrder"],
+      "lastModified": 1760484555231,
+      "contentHash": "-ufxm66"
+    },
+    "SortOrder": {
+      "schemaName": "SortOrder",
+      "filePath": "public/schemas/yaml/SortOrder.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["asc", "desc"],
+      "lastModified": 1760484555231,
+      "contentHash": "2mprlt"
+    },
+    "SortQueryParams": {
+      "schemaName": "SortQueryParams",
+      "filePath": "public/schemas/yaml/SortQueryParams.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["sortBy", "customSortBy", "sortOrder"],
+      "lastModified": 1760484555231,
+      "contentHash": "ny3fuw"
+    },
+    "SortedResultsInfo": {
+      "schemaName": "SortedResultsInfo",
+      "filePath": "public/schemas/yaml/SortedResultsInfo.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["sortBy", "customSortBy", "sortOrder", "errors"],
+      "lastModified": 1760484555231,
+      "contentHash": "gy5q6c"
+    },
+    "StringArrayFilter": {
+      "schemaName": "StringArrayFilter",
+      "filePath": "public/schemas/yaml/StringArrayFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555231,
+      "contentHash": "519pvf"
+    },
+    "StringComparisonFilter": {
+      "schemaName": "StringComparisonFilter",
+      "filePath": "public/schemas/yaml/StringComparisonFilter.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["operator", "value"],
+      "lastModified": 1760484555231,
+      "contentHash": "-1jv1nq"
+    },
+    "StringOperators": {
+      "schemaName": "StringOperators",
+      "filePath": "public/schemas/yaml/StringOperators.yaml",
+      "type": "string",
+      "isEnum": true,
+      "isObject": false,
+      "enumValues": ["like", "notLike"],
+      "lastModified": 1760484555232,
+      "contentHash": "ek3iz8"
+    },
+    "Success": {
+      "schemaName": "Success",
+      "filePath": "public/schemas/yaml/Success.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["status", "message"],
+      "lastModified": 1760484555232,
+      "contentHash": "cl5z5h"
+    },
+    "SystemMetadata": {
+      "schemaName": "SystemMetadata",
+      "filePath": "public/schemas/yaml/SystemMetadata.yaml",
+      "type": "object",
+      "isEnum": false,
+      "isObject": true,
+      "properties": ["createdAt", "lastModifiedAt"],
+      "lastModified": 1760484555232,
+      "contentHash": "m5bp1q"
+    },
+    "calendarYear": {
+      "schemaName": "calendarYear",
+      "filePath": "public/schemas/yaml/calendarYear.yaml",
+      "type": "string",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555232,
+      "contentHash": "-kw39qs"
+    },
+    "decimalString": {
+      "schemaName": "decimalString",
+      "filePath": "public/schemas/yaml/decimalString.yaml",
+      "type": "string",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555232,
+      "contentHash": "-6w7rl6"
+    },
+    "duns": {
+      "schemaName": "duns",
+      "filePath": "public/schemas/yaml/duns.yaml",
+      "type": "string",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555232,
+      "contentHash": "uac3xa"
+    },
+    "email": {
+      "schemaName": "email",
+      "filePath": "public/schemas/yaml/email.yaml",
+      "type": "string",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555232,
+      "contentHash": "v7k949"
+    },
+    "employerTaxId": {
+      "schemaName": "employerTaxId",
+      "filePath": "public/schemas/yaml/employerTaxId.yaml",
+      "type": "string",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555233,
+      "contentHash": "-co77u"
+    },
+    "isoDate": {
+      "schemaName": "isoDate",
+      "filePath": "public/schemas/yaml/isoDate.yaml",
+      "type": "string",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555233,
+      "contentHash": "10dwyq"
+    },
+    "isoTime": {
+      "schemaName": "isoTime",
+      "filePath": "public/schemas/yaml/isoTime.yaml",
+      "type": "string",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555233,
+      "contentHash": "tx7rcy"
+    },
+    "samUEI": {
+      "schemaName": "samUEI",
+      "filePath": "public/schemas/yaml/samUEI.yaml",
+      "type": "string",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555233,
+      "contentHash": "hq3gxi"
+    },
+    "uuid": {
+      "schemaName": "uuid",
+      "filePath": "public/schemas/yaml/uuid.yaml",
+      "type": "string",
+      "isEnum": false,
+      "isObject": false,
+      "lastModified": 1760484555233,
+      "contentHash": "-6wmluz"
+    }
+  },
+  "generatedAt": 1760484555744,
+  "totalSchemas": 103
+}

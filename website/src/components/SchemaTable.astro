@@ -1,35 +1,11 @@
 ---
-import { readFileSync, readdirSync } from "fs";
-import { join, dirname } from "path";
-import yaml from "js-yaml";
-import { createAjvWithSchemas } from "../lib/validation";
-
-const DOCS_DIR = "src/content/docs";
-const PROTOCOL_DOCS_DIR = "src/content/docs/protocol";
-const SCHEMAS_DIR = "website/public/schemas/yaml";
-
-// JSON Schema type constants
-const ARRAY_TYPE = "array";
-const OBJECT_TYPE = "object";
-const STRING_TYPE = "string";
-const UNKNOWN_TYPE = "unknown";
-const RECORD_TYPE = "record";
+import { SchemaLoader } from "../lib/schema-loader";
+import type { SchemaSpec, JsonSchema } from "../lib/schema-loader";
+import { SchemaDocMapper } from "../lib/schema-doc-mapper";
+import { TableGenerator } from "../lib/table-generator";
+import type { PropertyRow, EnumRow } from "../lib/table-generator";
 
 const { spec } = Astro.props;
-const ajv = createAjvWithSchemas();
-
-/**
- * Configuration for a schema spec
- */
-interface SchemaSpec {
-  /** JSON Schema configuration containing the file path */
-  jsonSchema?: {
-    file?: {
-      /** Path to the schema file relative to the repository root */
-      path: string;
-    };
-  };
-}
 
 /**
  * Props for the SchemaTable component.
@@ -39,569 +15,73 @@ interface Props {
   spec: SchemaSpec;
 }
 
-/**
- * JSON Schema object structure
- */
-interface JsonSchema {
-  type?: string;
-  properties?: Record<string, JsonSchema>;
-  required?: string[];
-  description?: string;
-  enum?: unknown[];
-  items?: JsonSchema;
-  $ref?: string;
-  anyOf?: JsonSchema[];
-  oneOf?: JsonSchema[];
-  allOf?: JsonSchema[];
-  format?: string;
-  $defs?: Record<string, JsonSchema>;
-  [key: string]: unknown;
-}
+// Schema documentation path getter
+const getSchemaDocPath = (schemaName: string): string | undefined => {
+  return SchemaDocMapper.getSchemaDocPath(schemaName);
+};
 
 /**
- * Frontmatter schema definition structure
- */
-interface FrontmatterSchemaDef {
-  jsonSchema?: {
-    file?: {
-      path?: string;
-    };
-    code?: string;
-  };
-}
-
-/**
- * Frontmatter structure
- */
-interface Frontmatter {
-  [key: string]: FrontmatterSchemaDef | unknown;
-}
-
-/**
- * Table row for property tables
- */
-interface PropertyRow {
-  property: string;
-  type: string;
-  required: boolean;
-  description: string;
-}
-
-/**
- * Table row for enum tables
- */
-interface EnumRow {
-  value: string;
-  description: string;
-}
-
-/**
- * Schema documentation mapping cache
- */
-let schemaDocMap: Map<string, string> | null = null;
-
-/**
- * Generates property table rows from an object schema
- */
-function generatePropertyRows(schema: JsonSchema): PropertyRow[] {
-  const rows: PropertyRow[] = [];
-  const requiredFields = new Set<string>();
-
-  // Handle allOf schemas by merging properties from all referenced schemas
-  if (schema.allOf && Array.isArray(schema.allOf)) {
-    for (const allOfItem of schema.allOf) {
-      if (allOfItem.$ref) {
-        const resolvedSchema = resolveSchemaReference(allOfItem.$ref);
-        if (resolvedSchema) {
-          const allOfRows = generatePropertyRows(resolvedSchema);
-          rows.push(...allOfRows);
-
-          // Collect required fields from allOf schemas
-          if (resolvedSchema.required) {
-            resolvedSchema.required.forEach((field) =>
-              requiredFields.add(field),
-            );
-          }
-        }
-      } else if (allOfItem.properties) {
-        // Handle inline allOf properties
-        for (const [propertyName, propSchema] of Object.entries(
-          allOfItem.properties,
-        )) {
-          const isRequired =
-            allOfItem.required?.includes(propertyName) || false;
-          const type = formatPropertyType(propSchema, schema);
-          const description = propSchema.description || "";
-
-          rows.push({
-            property: propertyName,
-            type,
-            required: isRequired,
-            description,
-          });
-        }
-
-        if (allOfItem.required) {
-          allOfItem.required.forEach((field) => requiredFields.add(field));
-        }
-      }
-    }
-  }
-
-  // Handle direct properties
-  if (schema.properties) {
-    for (const [propertyName, propSchema] of Object.entries(
-      schema.properties,
-    )) {
-      const isRequired = schema.required?.includes(propertyName) || false;
-      const type = formatPropertyType(propSchema, schema);
-      const description = propSchema.description || "";
-
-      rows.push({
-        property: propertyName,
-        type,
-        required: isRequired,
-        description,
-      });
-    }
-
-    if (schema.required) {
-      schema.required.forEach((field) => requiredFields.add(field));
-    }
-  }
-
-  // Update required status for all rows based on collected required fields
-  rows.forEach((row) => {
-    if (requiredFields.has(row.property)) {
-      row.required = true;
-    }
-  });
-
-  // Remove duplicates based on property name, keeping the last occurrence
-  const uniqueRows = new Map<string, PropertyRow>();
-  rows.forEach((row) => {
-    uniqueRows.set(row.property, row);
-  });
-
-  return Array.from(uniqueRows.values());
-}
-
-/**
- * Generates enum table rows from an enum schema
- */
-function generateEnumRows(schema: JsonSchema): EnumRow[] {
-  if (!schema.enum || !Array.isArray(schema.enum)) {
-    return [];
-  }
-
-  const rows: EnumRow[] = [];
-
-  for (const enumValue of schema.enum) {
-    const value = String(enumValue);
-    let description = "";
-
-    // Try to extract description from the schema description
-    if (schema.description) {
-      // Look for description patterns like "- `value`: description"
-      const lines = schema.description.split("\n");
-      for (const line of lines) {
-        if (line.includes(`\`${value}\``)) {
-          const match = line.match(/`[^`]+`:\s*(.+)/);
-          if (match) {
-            description = match[1].trim();
-            break;
-          }
-        }
-      }
-    }
-
-    rows.push({
-      value,
-      description,
-    });
-  }
-
-  return rows;
-}
-
-/**
- * Resolves a schema reference to get the actual schema object
- */
-function resolveSchemaReference(ref: string): JsonSchema | null {
-  try {
-    const resolvedSchema = ajv.getSchema(ref);
-    if (resolvedSchema?.schema) {
-      return resolvedSchema.schema as JsonSchema;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Formats a schema property type for display
- */
-function formatPropertyType(
-  propSchema: JsonSchema,
-  currentSchema?: JsonSchema,
-): string {
-  // Handle $ref
-  if (propSchema.$ref) {
-    return formatTypeReference(propSchema.$ref, currentSchema);
-  }
-
-  // Handle array types
-  if (propSchema.type === ARRAY_TYPE && propSchema.items) {
-    if (propSchema.items.$ref) {
-      const itemType = formatTypeReference(
-        propSchema.items.$ref,
-        currentSchema,
-      );
-      return `${formatTypeReference(ARRAY_TYPE, currentSchema)}<${itemType}>`;
-    }
-    // Handle empty object schema for array items
-    if (
-      typeof propSchema.items === "object" &&
-      Object.keys(propSchema.items).length === 0
-    ) {
-      const unknownLink = formatTypeReference(UNKNOWN_TYPE, currentSchema);
-      return `${formatTypeReference(ARRAY_TYPE, currentSchema)}<${unknownLink}>`;
-    }
-    // Handle basic type items (like type: "number")
-    const itemType = propSchema.items.type || UNKNOWN_TYPE;
-    const itemTypeLink = formatTypeReference(itemType, currentSchema);
-    const arrayLink = formatTypeReference(ARRAY_TYPE, currentSchema);
-    return `${arrayLink}<${itemTypeLink}>`;
-  }
-
-  // Handle anyOf union types
-  if (propSchema.anyOf && Array.isArray(propSchema.anyOf)) {
-    const types = propSchema.anyOf
-      .map((subSchema) => formatPropertyType(subSchema, currentSchema))
-      .filter((type) => type !== "null")
-      .join(" or ");
-    return types || UNKNOWN_TYPE;
-  }
-
-  // Handle oneOf union types
-  if (propSchema.oneOf && Array.isArray(propSchema.oneOf)) {
-    const types = propSchema.oneOf
-      .map((subSchema) => formatPropertyType(subSchema, currentSchema))
-      .filter((type) => type !== "null")
-      .join(" or ");
-    return types || UNKNOWN_TYPE;
-  }
-
-  // Handle Record types (objects with unevaluatedProperties)
-  if (propSchema.type === OBJECT_TYPE && propSchema.unevaluatedProperties) {
-    if (
-      typeof propSchema.unevaluatedProperties === "object" &&
-      propSchema.unevaluatedProperties !== null &&
-      "$ref" in propSchema.unevaluatedProperties
-    ) {
-      const valueType = formatTypeReference(
-        propSchema.unevaluatedProperties.$ref as string,
-        currentSchema,
-      );
-      return `${formatTypeReference(RECORD_TYPE, currentSchema)}<${valueType}>`;
-    }
-    return formatTypeReference(RECORD_TYPE, currentSchema);
-  }
-
-  // Handle basic types with format
-  if (propSchema.type) {
-    // Handle string with format (like date-time)
-    if (propSchema.type === STRING_TYPE && propSchema.format) {
-      // Map format to type name
-      const formatToTypeMap: Record<string, string> = {
-        "date-time": "utcDateTime",
-        date: "isoDate",
-        time: "isoTime",
-        uri: "url",
-        email: "email",
-        uuid: "uuid",
-      };
-
-      const typeName = formatToTypeMap[propSchema.format];
-      if (typeName) {
-        // Use dynamic schema discovery to find the documentation path
-        const schemaMap = getSchemaDocMap();
-        const docPath = schemaMap.get(typeName);
-
-        if (docPath) {
-          // Convert type name to lowercase for anchor (e.g., "utcDateTime" -> "utcdatetime")
-          const anchor = typeName.toLowerCase();
-          const linkWithAnchor = docPath.includes("#")
-            ? docPath
-            : `${docPath}#${anchor}`;
-          return `<a href="${linkWithAnchor}">${typeName}</a>`;
-        }
-        return typeName;
-      }
-    }
-
-    // Use dynamic schema discovery for basic types (but not arrays, which are handled above)
-    if (propSchema.type !== ARRAY_TYPE) {
-      const schemaMap = getSchemaDocMap();
-      const docPath = schemaMap.get(propSchema.type);
-
-      if (docPath) {
-        // Convert type name to lowercase for anchor
-        const anchor = propSchema.type.toLowerCase();
-        const linkWithAnchor = docPath.includes("#")
-          ? docPath
-          : `${docPath}#${anchor}`;
-        return `<a href="${linkWithAnchor}">${propSchema.type}</a>`;
-      }
-
-      return propSchema.type;
-    }
-  }
-
-  return UNKNOWN_TYPE;
-}
-
-/**
- * Converts a schema reference to a displayable type string with link
- */
-function formatTypeReference(ref: string, currentSchema?: JsonSchema): string {
-  // Handle internal $defs references
-  if (ref.startsWith("#/$defs/")) {
-    // Try to resolve the $defs reference from the current schema
-    if (currentSchema && currentSchema.$defs) {
-      const defName = ref.replace("#/$defs/", "");
-      const defSchema = currentSchema.$defs[defName];
-      if (
-        defSchema &&
-        defSchema.unevaluatedProperties &&
-        typeof defSchema.unevaluatedProperties === "object" &&
-        "$ref" in defSchema.unevaluatedProperties
-      ) {
-        const valueType = formatTypeReference(
-          defSchema.unevaluatedProperties.$ref as string,
-          currentSchema,
-        );
-        return `${formatTypeReference(RECORD_TYPE, currentSchema)}<${valueType}>`;
-      }
-    }
-    return formatTypeReference(RECORD_TYPE, currentSchema);
-  }
-
-  // Handle external references
-  if (ref.endsWith(".yaml")) {
-    const typeName = ref.replace(".yaml", "");
-
-    // Use dynamic schema documentation mapping
-    const schemaMap = getSchemaDocMap();
-    const docPath = schemaMap.get(typeName);
-
-    if (docPath) {
-      // Convert type name to lowercase for anchor (e.g., "OppStatus" -> "oppstatus")
-      const anchor = typeName.toLowerCase();
-      const linkWithAnchor = docPath.includes("#")
-        ? docPath
-        : `${docPath}#${anchor}`;
-      return `<a href="${linkWithAnchor}">${typeName}</a>`;
-    }
-
-    // Fallback: return type name without link if no documentation found
-    return typeName;
-  }
-
-  // Handle plain type names (like "array", "number", "string", etc.)
-  const schemaMap = getSchemaDocMap();
-  const docPath = schemaMap.get(ref);
-
-  if (docPath) {
-    // Convert type name to lowercase for anchor
-    const anchor = ref.toLowerCase();
-    const linkWithAnchor = docPath.includes("#")
-      ? docPath
-      : `${docPath}#${anchor}`;
-    return `<a href="${linkWithAnchor}">${ref}</a>`;
-  }
-
-  return ref;
-}
-
-/**
- * Builds a mapping of schema names to their documentation paths
- */
-function getSchemaDocMap(): Map<string, string> {
-  if (schemaDocMap) {
-    return schemaDocMap;
-  }
-
-  const map = new Map<string, string>();
-
-  try {
-    const docsDir = join(process.cwd(), PROTOCOL_DOCS_DIR);
-    const mdxFiles = findMdxFiles(docsDir);
-
-    for (const file of mdxFiles) {
-      const references = extractSchemaReferences(file);
-
-      for (const { schemaName, docPath } of references) {
-        map.set(schemaName, docPath);
-      }
-    }
-  } catch (error) {
-    console.warn(`Warning: Could not build schema documentation map: ${error}`);
-  }
-
-  schemaDocMap = map;
-  return map;
-}
-
-/**
- * Recursively finds all .mdx files in a directory
- */
-function findMdxFiles(dir: string): string[] {
-  const files: string[] = [];
-
-  try {
-    const entries = readdirSync(dir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-
-      if (entry.isDirectory()) {
-        files.push(...findMdxFiles(fullPath));
-      } else if (entry.isFile() && entry.name.endsWith(".mdx")) {
-        files.push(fullPath);
-      }
-    }
-  } catch (error) {
-    // Directory doesn't exist or can't be read
-    console.warn(`Warning: Could not read directory ${dir}: ${error}`);
-  }
-
-  return files;
-}
-
-/**
- * Extracts schema references from an MDX file's frontmatter
- */
-function extractSchemaReferences(
-  filePath: string,
-): Array<{ schemaName: string; docPath: string }> {
-  const references: Array<{ schemaName: string; docPath: string }> = [];
-
-  try {
-    const content = readFileSync(filePath, "utf-8");
-    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-
-    if (!frontmatterMatch) return references;
-
-    const frontmatterYaml = frontmatterMatch[1];
-    const frontmatter = yaml.load(frontmatterYaml) as Frontmatter;
-
-    // Convert file path to documentation URL
-    const relativePath = filePath.replace(
-      process.cwd() + "/" + DOCS_DIR + "/",
-      "",
-    );
-    const docPath = "/" + relativePath.replace(/\.mdx$/, "");
-
-    // Extract schema paths from each schema definition
-    for (const [, schemaDef] of Object.entries(frontmatter)) {
-      if (
-        typeof schemaDef === "object" &&
-        schemaDef !== null &&
-        "jsonSchema" in schemaDef
-      ) {
-        const jsonSchema = (schemaDef as FrontmatterSchemaDef).jsonSchema;
-        if (
-          jsonSchema?.file?.path &&
-          typeof jsonSchema.file.path === "string"
-        ) {
-          const schemaPath = jsonSchema.file.path;
-          if (schemaPath.includes(SCHEMAS_DIR + "/")) {
-            // Extract schema name from path
-            const schemaFileName = schemaPath
-              .split("/")
-              .pop()
-              ?.replace(".yaml", "");
-            if (schemaFileName) {
-              references.push({ schemaName: schemaFileName, docPath });
-            }
-          }
-        } else if (jsonSchema?.code) {
-          // Handle inline schemas (like basic types in types/ directory)
-          // The schema name is the frontmatter key
-          const schemaName = Object.keys(frontmatter).find(
-            (k) => frontmatter[k] === schemaDef,
-          );
-          if (schemaName) {
-            references.push({ schemaName, docPath });
-
-            // Also add the actual JSON Schema type to the map
-            try {
-              const schemaCode = yaml.load(jsonSchema.code) as {
-                type?: string;
-              };
-              if (
-                schemaCode &&
-                typeof schemaCode === "object" &&
-                schemaCode.type
-              ) {
-                references.push({ schemaName: schemaCode.type, docPath });
-              }
-            } catch (error) {
-              // If we can't parse the schema code, just continue
-              console.warn(
-                `Warning: Could not parse schema code for ${schemaName}: ${error}`,
-              );
-            }
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.warn(`Warning: Could not read file ${filePath}: ${error}`);
-  }
-
-  return references;
-}
-
-/**
- * Main
+ * Main component logic with proper error handling
  */
 
-// Extract schema path from spec
-if (!spec.jsonSchema?.file?.path) {
-  throw new Error("SchemaTable requires a spec with jsonSchema.file.path");
-}
-
-const schemaPath = spec.jsonSchema.file.path;
-
-// Load and parse the schema
-let schemaData: JsonSchema;
+// Validate schema spec
 try {
-  const websiteRoot = process.cwd();
-  const repoRoot = dirname(websiteRoot);
-  const filePath = join(repoRoot, schemaPath);
-  const content = readFileSync(filePath, "utf-8");
-  schemaData = yaml.load(content, {
-    schema: yaml.CORE_SCHEMA,
-  }) as JsonSchema;
+  SchemaLoader.validateSchemaSpec(spec);
 } catch (error) {
-  throw new Error(`Error reading schema file ${schemaPath}: ${error}`);
+  console.error("Schema spec validation:", error);
+  throw error;
 }
 
-// Determine table type and generate rows
-const isEnumSchema = schemaData.type === STRING_TYPE && schemaData.enum;
-const isObjectSchema = schemaData.type === OBJECT_TYPE && schemaData.properties;
+// Load and parse the schema with error handling
+let schemaData: JsonSchema;
+if (spec.jsonSchema?.file?.path) {
+  // Handle file-based schema
+  const schemaPath = spec.jsonSchema.file.path;
+  try {
+    schemaData = SchemaLoader.loadSchema(schemaPath);
+  } catch (error) {
+    console.error(`Loading schema from ${schemaPath}:`, error);
+    throw error;
+  }
+} else if (spec.jsonSchema?.code) {
+  // Handle inline schema
+  try {
+    schemaData = SchemaLoader.loadInlineSchema(spec.jsonSchema!.code!);
+  } catch (error) {
+    console.error("Loading inline schema:", error);
+    throw error;
+  }
+} else {
+  throw new Error(
+    "Schema spec must have either jsonSchema.file.path or jsonSchema.code",
+  );
+}
+
+// Determine table type and generate rows with error handling
+const isEnumSchema = SchemaLoader.isEnumSchema(schemaData);
+const isObjectSchema = SchemaLoader.isObjectSchema(schemaData);
 
 let tableRows: PropertyRow[] | EnumRow[] = [];
 let tableHeaders: string[] = [];
 
 if (isEnumSchema) {
-  tableRows = generateEnumRows(schemaData);
+  try {
+    tableRows = TableGenerator.generateEnumRows(schemaData);
+  } catch (error) {
+    console.error("Generating enum table rows:", error);
+    throw error;
+  }
   tableHeaders = ["Value", "Description"];
 } else if (isObjectSchema) {
-  tableRows = generatePropertyRows(schemaData);
+  try {
+    tableRows = TableGenerator.generatePropertyRows(
+      schemaData,
+      getSchemaDocPath,
+    );
+  } catch (error) {
+    console.error("Generating property table rows:", error);
+    throw error;
+  }
   tableHeaders = ["Property", "Type", "Required", "Description"];
 } else {
   throw new Error(
@@ -638,51 +118,3 @@ if (isEnumSchema) {
     </tbody>
   </table>
 </div>
-
-<style>
-  .table-wrapper {
-    overflow-x: auto;
-    margin: 1rem 0;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  th {
-    padding: 0.75rem;
-    text-align: left;
-    font-weight: 600;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  td {
-    padding: 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    vertical-align: top;
-  }
-
-  td:first-child {
-    width: 25%;
-  }
-
-  tr:last-child td {
-    border-bottom: none;
-  }
-
-  code {
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-  }
-
-  a {
-    color: var(--sl-color-accent-high);
-    text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-</style>
