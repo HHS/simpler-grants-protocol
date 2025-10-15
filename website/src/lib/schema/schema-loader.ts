@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import yaml from "js-yaml";
-import { createAjvWithSchemas } from "./validation";
+import { createAjvWithSchemas } from "../validation";
 import { HashUtils } from "./hash-utils";
 
 /**

@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
 import Ajv2020 from "ajv/dist/2020";
-import { Paths } from "./paths";
+import { Paths } from "./schema/paths";
 
 // #########################################################
 // CommonGrants schema and validator

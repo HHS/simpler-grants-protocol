@@ -5,9 +5,9 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import yaml from "js-yaml";
 import { createAjvWithSchemas } from "../lib/validation";
-import type { JsonSchema } from "../lib/schema-loader";
-import { SchemaLoadError } from "../lib/schema-loader";
-import { Paths } from "../lib/paths";
+import type { JsonSchema } from "../lib/schema/schema-loader";
+import { SchemaLoadError } from "../lib/schema/schema-loader";
+import { Paths } from "../lib/schema/paths";
 
 /**
  * Configuration for a code block to be displayed in a tab.

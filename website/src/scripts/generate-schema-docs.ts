@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import yaml from "js-yaml";
 import { BuildScriptUtils } from "./utils";
-import { Paths } from "../lib/paths";
+import { Paths } from "../lib/schema/paths";
 
 /**
  * Frontmatter schema definition structure

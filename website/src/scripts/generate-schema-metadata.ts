@@ -2,8 +2,8 @@ import { readFileSync, writeFileSync, statSync } from "fs";
 import { join } from "path";
 import yaml from "js-yaml";
 import { BuildScriptUtils } from "./utils";
-import { HashUtils } from "../lib/hash-utils";
-import { Paths } from "../lib/paths";
+import { HashUtils } from "../lib/schema/hash-utils";
+import { Paths } from "../lib/schema/paths";
 
 /**
  * Pre-computed schema metadata

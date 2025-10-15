@@ -1,11 +1,11 @@
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import yaml from "js-yaml";
-import { TypeFormatter } from "../lib/type-formatter";
-import { SchemaDocMapper } from "../lib/schema-doc-mapper";
+import { TypeFormatter } from "../lib/schema/type-formatter";
+import { SchemaDocMapper } from "../lib/schema/schema-doc-mapper";
 import { BuildScriptUtils } from "./utils";
-import { HashUtils } from "../lib/hash-utils";
-import { Paths } from "../lib/paths";
+import { HashUtils } from "../lib/schema/hash-utils";
+import { Paths } from "../lib/schema/paths";
 
 /**
  * Pre-computed type formatting entry

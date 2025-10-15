@@ -1,9 +1,9 @@
 ---
-import { SchemaLoader } from "../lib/schema-loader";
-import type { JsonSchema } from "../lib/schema-loader";
-import { SchemaDocMapper } from "../lib/schema-doc-mapper";
-import { TableGenerator } from "../lib/table-generator";
-import type { PropertyRow, EnumRow } from "../lib/table-generator";
+import { SchemaLoader } from "../lib/schema/schema-loader";
+import type { JsonSchema } from "../lib/schema/schema-loader";
+import { SchemaDocMapper } from "../lib/schema/schema-doc-mapper";
+import { TableGenerator } from "../lib/schema/table-generator";
+import type { PropertyRow, EnumRow } from "../lib/schema/table-generator";
 
 const { filePath, code } = Astro.props;
 
