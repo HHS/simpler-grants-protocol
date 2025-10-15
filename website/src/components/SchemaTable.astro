@@ -11,7 +11,7 @@ const { filePath, code } = Astro.props;
  * Props for the SchemaTable component.
  */
 interface Props {
-  /** Path to the schema file relative to the repository root, or inline schema code */
+  /** Path to the schema file relative to the repository root */
   filePath?: string;
   /** Inline schema code (YAML string) */
   code?: string;
@@ -23,10 +23,10 @@ const getSchemaDocPath = (schemaName: string): string | undefined => {
 };
 
 /**
- * Main component logic with proper error handling
+ * Main component logic with error handling
  */
 
-// Load and parse the schema with error handling
+// Load and parse the schema
 let schemaData: JsonSchema;
 try {
   if (filePath) {
@@ -41,7 +41,7 @@ try {
   throw error;
 }
 
-// Determine table type and generate rows with error handling
+// Determine table type and generate rows
 const isEnumSchema = SchemaLoader.isEnumSchema(schemaData);
 const isObjectSchema = SchemaLoader.isObjectSchema(schemaData);
 
