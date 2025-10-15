@@ -13,6 +13,10 @@ export default [
       "node_modules/", // Where JavaScript libraries are installed
       "*.min.js", // All minified files
       ".astro/", // Astro generated code
+      // Generated cache files
+      "public/schema-docs-mapping.json",
+      "public/schema-metadata.json", 
+      "public/type-formatting-cache.json",
     ],
   },
   pluginJs.configs.recommended,
