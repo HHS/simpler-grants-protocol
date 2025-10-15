@@ -5,6 +5,9 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import yaml from "js-yaml";
 import { createAjvWithSchemas } from "../lib/validation";
+import type { JsonSchema } from "../lib/schema-loader";
+import { SchemaLoadError } from "../lib/schema-loader";
+import { Paths } from "../lib/paths";
 
 /**
  * Configuration for a code block to be displayed in a tab.
@@ -24,24 +27,6 @@ interface CodeBlockConfig {
   };
 }
 
-/**
- * JSON Schema object structure
- */
-interface JsonSchema {
-  type?: string;
-  properties?: Record<string, JsonSchema>;
-  required?: string[];
-  examples?: unknown[];
-  enum?: unknown[];
-  items?: JsonSchema;
-  $ref?: string;
-  anyOf?: JsonSchema[];
-  oneOf?: JsonSchema[];
-  allOf?: JsonSchema[];
-  format?: string;
-  $defs?: Record<string, JsonSchema>;
-  [key: string]: unknown;
-}
 
 /**
  * AJV validator function interface
@@ -125,7 +110,7 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
   }
 
   const baseUrl = "https://commongrants.org/";
-  const pathPrefix = "website/public/";
+  const pathPrefix = `${Paths.PUBLIC_DIR}/`;
   let filePath = props.file.path;
 
   // Trim public directory prefix if present
@@ -187,10 +172,13 @@ function extractCode(props: CodeBlockConfig): string {
 
       return content;
     } catch (error) {
-      throw new Error(`Error reading file ${props.file.path}: ${error}`);
+      throw new SchemaLoadError(
+        `Error reading file ${props.file.path}`,
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
-  throw new Error("Either code or file must be provided");
+  throw new SchemaLoadError("Either code or file must be provided");
 }
 
 /**
@@ -217,11 +205,11 @@ function generateCodeFromSchema(props: CodeBlockConfig): string | null {
     // Format generated code
     return JSON.stringify(exampleData, null, 2);
   } catch (error) {
-    return handleError(
-      `Could not generate code from schema ${props.file?.path || "unknown"}`,
-      error,
-      null,
-    ) as string | null;
+    console.warn(
+      `Could not generate code from schema ${props.file?.path || "unknown"}:`,
+      error
+    );
+    return null;
   }
 }
 
@@ -670,21 +658,6 @@ function generateObjectFromSchema(
   return obj;
 }
 
-/**
- * Helper function for consistent error handling
- * @param operation - Description of the operation that failed
- * @param error - The error that occurred
- * @param fallback - Fallback value to return
- * @returns The fallback value
- */
-function handleError(
-  operation: string,
-  error: unknown,
-  fallback: unknown = null,
-): unknown {
-  console.warn(`Warning: ${operation} failed: ${error}`);
-  return fallback;
-}
 
 /**
  * Helper function to generate value for primitive types

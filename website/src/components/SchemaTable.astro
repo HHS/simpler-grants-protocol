@@ -1,18 +1,20 @@
 ---
 import { SchemaLoader } from "../lib/schema-loader";
-import type { SchemaSpec, JsonSchema } from "../lib/schema-loader";
+import type { JsonSchema } from "../lib/schema-loader";
 import { SchemaDocMapper } from "../lib/schema-doc-mapper";
 import { TableGenerator } from "../lib/table-generator";
 import type { PropertyRow, EnumRow } from "../lib/table-generator";
 
-const { spec } = Astro.props;
+const { filePath, code } = Astro.props;
 
 /**
  * Props for the SchemaTable component.
  */
 interface Props {
-  /** Schema specification object from frontmatter */
-  spec: SchemaSpec;
+  /** Path to the schema file relative to the repository root, or inline schema code */
+  filePath?: string;
+  /** Inline schema code (YAML string) */
+  code?: string;
 }
 
 // Schema documentation path getter
@@ -24,37 +26,19 @@ const getSchemaDocPath = (schemaName: string): string | undefined => {
  * Main component logic with proper error handling
  */
 
-// Validate schema spec
-try {
-  SchemaLoader.validateSchemaSpec(spec);
-} catch (error) {
-  console.error("Schema spec validation:", error);
-  throw error;
-}
-
 // Load and parse the schema with error handling
 let schemaData: JsonSchema;
-if (spec.jsonSchema?.file?.path) {
-  // Handle file-based schema
-  const schemaPath = spec.jsonSchema.file.path;
-  try {
-    schemaData = SchemaLoader.loadSchema(schemaPath);
-  } catch (error) {
-    console.error(`Loading schema from ${schemaPath}:`, error);
-    throw error;
+try {
+  if (filePath) {
+    schemaData = SchemaLoader.loadSchema(filePath);
+  } else if (code) {
+    schemaData = SchemaLoader.loadInlineSchema(code);
+  } else {
+    throw new Error("Either filePath or code must be provided");
   }
-} else if (spec.jsonSchema?.code) {
-  // Handle inline schema
-  try {
-    schemaData = SchemaLoader.loadInlineSchema(spec.jsonSchema!.code!);
-  } catch (error) {
-    console.error("Loading inline schema:", error);
-    throw error;
-  }
-} else {
-  throw new Error(
-    "Schema spec must have either jsonSchema.file.path or jsonSchema.code",
-  );
+} catch (error) {
+  console.error(`Loading schema:`, error);
+  throw error;
 }
 
 // Determine table type and generate rows with error handling
