@@ -15,7 +15,7 @@ export default [
       ".astro/", // Astro generated code
       // Generated cache files
       "public/schema-docs-mapping.json",
-      "public/schema-metadata.json", 
+      "public/schema-metadata.json",
       "public/type-formatting-cache.json",
     ],
   },
