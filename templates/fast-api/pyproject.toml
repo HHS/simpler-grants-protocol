@@ -9,17 +9,17 @@ version = "0.1.0"
 [tool.poetry.dependencies]
 common-grants-sdk = "~0.3.1"
 #common-grants-sdk = {path = "../../lib/python-sdk", develop = true}
-fastapi = {extras = ["standard"], version = "^0.115.11"}
+fastapi = {extras = ["standard"], version = "^0.119.0"}
 python = "^3.11"
 pyyaml = "^6.0.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
+mypy = "^1.15.0"
 pyright = "^1.1.396"
 pytest = "^8.3.5"
 pytest-cov = "^6.0.0"
 ruff = "^0.9.10"
-mypy = "^1.15.0"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
