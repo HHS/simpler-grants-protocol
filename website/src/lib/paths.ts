@@ -8,14 +8,11 @@ export class Paths {
   static readonly OPENAPI_DIR = "public/openapi";
 
   // Generated cache files
-  static readonly SCHEMA_DOCS_MAPPING = "public/schema-docs-mapping.json";
-  static readonly SCHEMA_METADATA = "public/schema-metadata.json";
-  static readonly TYPE_FORMATTING_CACHE = "public/type-formatting-cache.json";
+  static readonly SCHEMA_DOCS_MAPPING = "cache/schema-docs-mapping.json";
+  static readonly SCHEMA_METADATA = "cache/schema-metadata.json";
+  static readonly TYPE_FORMATTING_CACHE = "cache/type-formatting-cache.json";
 
   // Source directories
   static readonly CONTENT_DOCS_DIR = "src/content/docs";
   static readonly PROTOCOL_DOCS_DIR = "src/content/docs/protocol";
-
-  // Build script output directories
-  static readonly TSP_OUTPUT_DIR = "tsp-output";
 }

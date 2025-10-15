@@ -6,6 +6,8 @@ dist/
 */.generated/
 # TypeSpec output
 tsp-output/
+# generated json cache
+cache/
 
 # dependencies
 node_modules/

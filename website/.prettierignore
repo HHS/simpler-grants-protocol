@@ -5,6 +5,4 @@ node_modules/
 public/openapi/*openapi*.yaml
 
 # Generated cache files
-public/schema-docs-mapping.json
-public/schema-metadata.json
-public/type-formatting-cache.json
+cache/
