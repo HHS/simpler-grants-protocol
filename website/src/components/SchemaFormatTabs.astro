@@ -6,7 +6,6 @@ import { join, dirname } from "path";
 import yaml from "js-yaml";
 import { createAjvWithSchemas } from "../lib/validation";
 import type { JsonSchema } from "../lib/schema/schema-loader";
-import { SchemaLoadError } from "../lib/schema/schema-loader";
 import { Paths } from "../lib/schema/paths";
 
 /**
@@ -171,13 +170,10 @@ function extractCode(props: CodeBlockConfig): string {
 
       return content;
     } catch (error) {
-      throw new SchemaLoadError(
-        `Error reading file ${props.file.path}`,
-        error instanceof Error ? error : new Error(String(error)),
-      );
+      throw new Error(`Error reading file ${props.file.path}: ${error}`);
     }
   }
-  throw new SchemaLoadError("Either code or file must be provided");
+  throw new Error("Either code or file must be provided");
 }
 
 /**
@@ -204,11 +200,11 @@ function generateCodeFromSchema(props: CodeBlockConfig): string | null {
     // Format generated code
     return JSON.stringify(exampleData, null, 2);
   } catch (error) {
-    console.warn(
-      `Could not generate code from schema ${props.file?.path || "unknown"}:`,
+    return handleError(
+      `Could not generate code from schema ${props.file?.path || "unknown"}`,
       error,
-    );
-    return null;
+      null,
+    ) as string | null;
   }
 }
 
@@ -655,6 +651,22 @@ function generateObjectFromSchema(
   }
 
   return obj;
+}
+
+/**
+ * Helper function for consistent error handling
+ * @param operation - Description of the operation that failed
+ * @param error - The error that occurred
+ * @param fallback - Fallback value to return
+ * @returns The fallback value
+ */
+function handleError(
+  operation: string,
+  error: unknown,
+  fallback: unknown = null,
+): unknown {
+  console.warn(`Warning: ${operation} failed: ${error}`);
+  return fallback;
 }
 
 /**
