@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
 
@@ -76,13 +76,23 @@ export default function OpenApiDocs({ className }: OpenApiDocsProps) {
   // Set up state management
   // #########################################################
 
-  // Step 1: Read URL parameters on initial load
-  const urlParams = getUrlParams();
-  const initialVersion = getValidVersion(urlParams.version, defaultVersion);
-
-  // Step 2: Create the state for the selected version
-  const [selectedVersion, setSelectedVersion] = useState(initialVersion);
+  // Step 1: Initialize with default version, will be updated from URL on client side
+  const [selectedVersion, setSelectedVersion] = useState(defaultVersion);
   const [key, setKey] = useState(0); // Force re-render when version changes
+  const [isClient, setIsClient] = useState(false); // Track if we're on client side
+
+  // Step 2: Handle URL parameters on client side mount
+  useEffect(() => {
+    setIsClient(true);
+    const urlParams = getUrlParams();
+    const versionFromUrl = getValidVersion(urlParams.version, defaultVersion);
+
+    // Only update if the URL version is different from current state
+    if (versionFromUrl !== selectedVersion) {
+      setSelectedVersion(versionFromUrl);
+      setKey((prev) => prev + 1); // Force SwaggerUI to re-render
+    }
+  }, []); // Empty dependency array - only run on mount
 
   // #########################################################
   // Handle version changes
@@ -114,11 +124,13 @@ export default function OpenApiDocs({ className }: OpenApiDocsProps) {
       </div>
 
       <div id="swagger-container">
-        <SwaggerUI
-          key={key}
-          url={`/openapi/openapi.${selectedVersion}.yaml`}
-          supportedSubmitMethods={[]}
-        />
+        {isClient && (
+          <SwaggerUI
+            key={key}
+            url={`/openapi/openapi.${selectedVersion}.yaml`}
+            supportedSubmitMethods={[]}
+          />
+        )}
       </div>
     </div>
   );
