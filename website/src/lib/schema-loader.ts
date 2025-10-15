@@ -20,6 +20,7 @@ export interface JsonSchema {
   allOf?: JsonSchema[];
   format?: string;
   $defs?: Record<string, JsonSchema>;
+  examples?: unknown[];
   [key: string]: unknown;
 }
 
