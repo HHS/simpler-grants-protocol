@@ -27,7 +27,6 @@ interface CodeBlockConfig {
   };
 }
 
-
 /**
  * AJV validator function interface
  */
@@ -174,7 +173,7 @@ function extractCode(props: CodeBlockConfig): string {
     } catch (error) {
       throw new SchemaLoadError(
         `Error reading file ${props.file.path}`,
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }
@@ -207,7 +206,7 @@ function generateCodeFromSchema(props: CodeBlockConfig): string | null {
   } catch (error) {
     console.warn(
       `Could not generate code from schema ${props.file?.path || "unknown"}:`,
-      error
+      error,
     );
     return null;
   }
@@ -657,7 +656,6 @@ function generateObjectFromSchema(
 
   return obj;
 }
-
 
 /**
  * Helper function to generate value for primitive types

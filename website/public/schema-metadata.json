@@ -26,10 +26,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "primary",
-        "otherAddresses"
-      ],
+      "properties": ["primary", "otherAddresses"],
       "lastModified": 1760488995144,
       "contentHash": "azzi19"
     },
@@ -131,9 +128,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "sortBy"
-      ],
+      "properties": ["sortBy"],
       "lastModified": 1760488995145,
       "contentHash": "pm9mg2"
     },
@@ -143,11 +138,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "value",
-        "customValue",
-        "description"
-      ],
+      "properties": ["value", "customValue", "description"],
       "lastModified": 1760488995145,
       "contentHash": "-eedl6t"
     },
@@ -173,11 +164,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "value",
-        "customValue",
-        "description"
-      ],
+      "properties": ["value", "customValue", "description"],
       "lastModified": 1760488995145,
       "contentHash": "-6c4fm0"
     },
@@ -237,9 +224,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "status"
-      ],
+      "properties": ["status"],
       "lastModified": 1760488995146,
       "contentHash": "-b23kks"
     },
@@ -249,10 +234,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "in",
-        "notIn"
-      ],
+      "enumValues": ["in", "notIn"],
       "lastModified": 1760488995146,
       "contentHash": "-ih9wcg"
     },
@@ -262,12 +244,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "gt",
-        "gte",
-        "lt",
-        "lte"
-      ],
+      "enumValues": ["gt", "gte", "lt", "lte"],
       "lastModified": 1760488995146,
       "contentHash": "-mdz4ff"
     },
@@ -300,10 +277,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "forms",
-        "validation"
-      ],
+      "properties": ["forms", "validation"],
       "lastModified": 1760488995147,
       "contentHash": "ghlpsu"
     },
@@ -313,11 +287,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "value",
-        "customValue",
-        "description"
-      ],
+      "properties": ["value", "customValue", "description"],
       "lastModified": 1760488995147,
       "contentHash": "-5jjdu2"
     },
@@ -327,11 +297,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "open",
-        "closed",
-        "custom"
-      ],
+      "enumValues": ["open", "closed", "custom"],
       "lastModified": 1760488995147,
       "contentHash": "-afm5kz"
     },
@@ -341,11 +307,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "openDate",
-        "closeDate",
-        "otherDates"
-      ],
+      "properties": ["openDate", "closeDate", "otherDates"],
       "lastModified": 1760488995147,
       "contentHash": "8zxz4r"
     },
@@ -355,13 +317,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "name",
-        "fieldType",
-        "schema",
-        "value",
-        "description"
-      ],
+      "properties": ["name", "fieldType", "schema", "value", "description"],
       "lastModified": 1760488995147,
       "contentHash": "5gdvdn"
     },
@@ -388,10 +344,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995148,
       "contentHash": "2xj9pz"
     },
@@ -417,10 +370,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995148,
       "contentHash": "8tjld2"
     },
@@ -430,10 +380,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995148,
       "contentHash": "qwos5d"
     },
@@ -443,10 +390,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "primary",
-        "otherEmails"
-      ],
+      "properties": ["primary", "otherEmails"],
       "lastModified": 1760488995148,
       "contentHash": "s5dbrt"
     },
@@ -456,10 +400,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "eq",
-        "neq"
-      ],
+      "enumValues": ["eq", "neq"],
       "lastModified": 1760488995148,
       "contentHash": "-slsz05"
     },
@@ -469,11 +410,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "status",
-        "message",
-        "errors"
-      ],
+      "properties": ["status", "message", "errors"],
       "lastModified": 1760488995148,
       "contentHash": "hf1mxd"
     },
@@ -492,11 +429,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "name",
-        "eventType",
-        "description"
-      ],
+      "properties": ["name", "eventType", "description"],
       "lastModified": 1760488995149,
       "contentHash": "-da2tjm"
     },
@@ -506,11 +439,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "singleDate",
-        "dateRange",
-        "other"
-      ],
+      "enumValues": ["singleDate", "dateRange", "other"],
       "lastModified": 1760488995149,
       "contentHash": "-c5xoyl"
     },
@@ -590,11 +519,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "value",
-        "customValue",
-        "description"
-      ],
+      "properties": ["value", "customValue", "description"],
       "lastModified": 1760488995150,
       "contentHash": "hznqia"
     },
@@ -604,11 +529,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "notStarted",
-        "inProgress",
-        "complete"
-      ],
+      "enumValues": ["notStarted", "inProgress", "complete"],
       "lastModified": 1760488995150,
       "contentHash": "544olp"
     },
@@ -628,9 +549,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "const"
-      ],
+      "properties": ["const"],
       "lastModified": 1760488995150,
       "contentHash": "n9ek8j"
     },
@@ -640,9 +559,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "field"
-      ],
+      "properties": ["field"],
       "lastModified": 1760488995150,
       "contentHash": "-516toi"
     },
@@ -671,9 +588,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "switch"
-      ],
+      "properties": ["switch"],
       "lastModified": 1760488995150,
       "contentHash": "dweewc"
     },
@@ -683,10 +598,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "amount",
-        "currency"
-      ],
+      "properties": ["amount", "currency"],
       "lastModified": 1760488995151,
       "contentHash": "-38s8yn"
     },
@@ -696,10 +608,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995151,
       "contentHash": "ssuk5c"
     },
@@ -709,10 +618,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995151,
       "contentHash": "-8ho8e4"
     },
@@ -722,13 +628,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "prefix",
-        "firstName",
-        "middleName",
-        "lastName",
-        "suffix"
-      ],
+      "properties": ["prefix", "firstName", "middleName", "lastName", "suffix"],
       "lastModified": 1760488995151,
       "contentHash": "1k7476"
     },
@@ -738,10 +638,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995151,
       "contentHash": "-iad3nt"
     },
@@ -751,10 +648,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995151,
       "contentHash": "-81t4ty"
     },
@@ -764,10 +658,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995151,
       "contentHash": "3qfauw"
     },
@@ -849,9 +740,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "sortBy"
-      ],
+      "properties": ["sortBy"],
       "lastModified": 1760488995152,
       "contentHash": "f4ldn4"
     },
@@ -861,11 +750,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "value",
-        "customValue",
-        "description"
-      ],
+      "properties": ["value", "customValue", "description"],
       "lastModified": 1760488995152,
       "contentHash": "ljwb8z"
     },
@@ -875,12 +760,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "forecasted",
-        "open",
-        "closed",
-        "custom"
-      ],
+      "enumValues": ["forecasted", "open", "closed", "custom"],
       "lastModified": 1760488995152,
       "contentHash": "-gg45dl"
     },
@@ -890,11 +770,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "postDate",
-        "closeDate",
-        "otherDates"
-      ],
+      "properties": ["postDate", "closeDate", "otherDates"],
       "lastModified": 1760488995153,
       "contentHash": "4ldr0r"
     },
@@ -926,9 +802,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "competitions"
-      ],
+      "properties": ["competitions"],
       "lastModified": 1760488995153,
       "contentHash": "u5dinv"
     },
@@ -980,11 +854,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "eventType",
-        "details",
-        "description"
-      ],
+      "properties": ["eventType", "details", "description"],
       "lastModified": 1760488995153,
       "contentHash": "qne37i"
     },
@@ -1010,9 +880,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "class"
-      ],
+      "properties": ["class"],
       "lastModified": 1760488995154,
       "contentHash": "-osiuuc"
     },
@@ -1022,9 +890,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "class"
-      ],
+      "properties": ["class"],
       "lastModified": 1760488995154,
       "contentHash": "ys3klj"
     },
@@ -1034,9 +900,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "class"
-      ],
+      "properties": ["class"],
       "lastModified": 1760488995154,
       "contentHash": "-47sw9u"
     },
@@ -1046,9 +910,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "class"
-      ],
+      "properties": ["class"],
       "lastModified": 1760488995154,
       "contentHash": "-fzyzo0"
     },
@@ -1058,12 +920,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "term",
-        "class",
-        "code",
-        "description"
-      ],
+      "properties": ["term", "class", "code", "description"],
       "lastModified": 1760488995154,
       "contentHash": "-6vh2x9"
     },
@@ -1073,9 +930,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "class"
-      ],
+      "properties": ["class"],
       "lastModified": 1760488995154,
       "contentHash": "1fbyh3"
     },
@@ -1085,10 +940,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "page",
-        "pageSize"
-      ],
+      "properties": ["page", "pageSize"],
       "lastModified": 1760488995154,
       "contentHash": "-tbaz8k"
     },
@@ -1098,10 +950,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "page",
-        "pageSize"
-      ],
+      "properties": ["page", "pageSize"],
       "lastModified": 1760488995155,
       "contentHash": "9ioi06"
     },
@@ -1111,12 +960,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "page",
-        "pageSize",
-        "totalItems",
-        "totalPages"
-      ],
+      "properties": ["page", "pageSize", "totalItems", "totalPages"],
       "lastModified": 1760488995155,
       "contentHash": "s16alq"
     },
@@ -1144,12 +988,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "countryCode",
-        "number",
-        "extension",
-        "isMobile"
-      ],
+      "properties": ["countryCode", "number", "extension", "isMobile"],
       "lastModified": 1760488995155,
       "contentHash": "-sdsi78"
     },
@@ -1159,11 +998,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "primary",
-        "fax",
-        "otherPhones"
-      ],
+      "properties": ["primary", "fax", "otherPhones"],
       "lastModified": 1760488995155,
       "contentHash": "uzm3ky"
     },
@@ -1173,12 +1008,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "startDate",
-        "endDate",
-        "otherDates",
-        "timelineDetails"
-      ],
+      "properties": ["startDate", "endDate", "otherDates", "timelineDetails"],
       "lastModified": 1760488995155,
       "contentHash": "-24mq6y"
     },
@@ -1207,10 +1037,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "primary",
-        "otherContacts"
-      ],
+      "properties": ["primary", "otherContacts"],
       "lastModified": 1760488995156,
       "contentHash": "5wlw7t"
     },
@@ -1220,11 +1047,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "id",
-        "title",
-        "customFields"
-      ],
+      "properties": ["id", "title", "customFields"],
       "lastModified": 1760488995156,
       "contentHash": "-kviem2"
     },
@@ -1234,10 +1057,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "primary",
-        "otherOrgs"
-      ],
+      "properties": ["primary", "otherOrgs"],
       "lastModified": 1760488995156,
       "contentHash": "-h1dl8z"
     },
@@ -1247,10 +1067,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "between",
-        "outside"
-      ],
+      "enumValues": ["between", "outside"],
       "lastModified": 1760488995156,
       "contentHash": "nbvrfu"
     },
@@ -1260,11 +1077,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "eventType",
-        "date",
-        "time"
-      ],
+      "properties": ["eventType", "date", "time"],
       "lastModified": 1760488995156,
       "contentHash": "-g2cwf9"
     },
@@ -1274,11 +1087,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "sortBy",
-        "customSortBy",
-        "sortOrder"
-      ],
+      "properties": ["sortBy", "customSortBy", "sortOrder"],
       "lastModified": 1760488995156,
       "contentHash": "-ufxm66"
     },
@@ -1288,10 +1097,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "asc",
-        "desc"
-      ],
+      "enumValues": ["asc", "desc"],
       "lastModified": 1760488995156,
       "contentHash": "2mprlt"
     },
@@ -1301,11 +1107,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "sortBy",
-        "customSortBy",
-        "sortOrder"
-      ],
+      "properties": ["sortBy", "customSortBy", "sortOrder"],
       "lastModified": 1760488995157,
       "contentHash": "ny3fuw"
     },
@@ -1315,12 +1117,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "sortBy",
-        "customSortBy",
-        "sortOrder",
-        "errors"
-      ],
+      "properties": ["sortBy", "customSortBy", "sortOrder", "errors"],
       "lastModified": 1760488995157,
       "contentHash": "gy5q6c"
     },
@@ -1330,10 +1127,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995157,
       "contentHash": "519pvf"
     },
@@ -1343,10 +1137,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "operator",
-        "value"
-      ],
+      "properties": ["operator", "value"],
       "lastModified": 1760488995157,
       "contentHash": "-1jv1nq"
     },
@@ -1356,10 +1147,7 @@
       "type": "string",
       "isEnum": true,
       "isObject": false,
-      "enumValues": [
-        "like",
-        "notLike"
-      ],
+      "enumValues": ["like", "notLike"],
       "lastModified": 1760488995157,
       "contentHash": "ek3iz8"
     },
@@ -1369,10 +1157,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "status",
-        "message"
-      ],
+      "properties": ["status", "message"],
       "lastModified": 1760488995157,
       "contentHash": "cl5z5h"
     },
@@ -1382,10 +1167,7 @@
       "type": "object",
       "isEnum": false,
       "isObject": true,
-      "properties": [
-        "createdAt",
-        "lastModifiedAt"
-      ],
+      "properties": ["createdAt", "lastModifiedAt"],
       "lastModified": 1760488995157,
       "contentHash": "m5bp1q"
     },
