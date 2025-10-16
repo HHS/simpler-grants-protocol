@@ -66,6 +66,7 @@ formResponseStatusOptions:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 ## FormResponseBase
 
@@ -73,16 +74,7 @@ Base model for a form response.
 
 ### Table
 
-| Property         | Type                                                                                   | Required | Description                                  |
-| ---------------- | -------------------------------------------------------------------------------------- | -------- | -------------------------------------------- |
-| id               | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The form's unique identifier.                |
-| form             | [Form](/protocol/models/form)                                                          | Yes      | The form being responded to.                 |
-| response         | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\>     | Yes      | The response to the form.                    |
-| status           | [FormResponseStatus](#formresponsestatus)                                              | Yes      | The status of the form response.             |
-| validationErrors | [Array](/protocol/types/other#array)\<[unknown](/protocol/types/other#unknown)\>       | No       | The validation errors for the form response. |
-| customFields     | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields about the form response.   |
-| createdAt        | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The form's creation date.                    |
-| lastModifiedAt   | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The form's last modified date.               |
+<SchemaTable filePath={frontmatter.formResponse.jsonSchema.file.path} />
 
 ### Formats
 
@@ -98,11 +90,7 @@ The status of a form response.
 
 ### Table
 
-| Property    | Type                                                    | Required | Description                    |
-| ----------- | ------------------------------------------------------- | -------- | ------------------------------ |
-| value       | [FormResponseStatusOptions](#formresponsestatusoptions) | Yes      | The form's status.             |
-| customValue | [string](/protocol/types/string#string)                 | No       | A custom value for the status. |
-| description | [string](/protocol/types/string#string)                 | No       | A description of the status.   |
+<SchemaTable filePath={frontmatter.formResponseStatus.jsonSchema.file.path} />
 
 ### Formats
 
@@ -116,14 +104,11 @@ The status of a form response.
 
 The options for the status of a form response.
 
-### Options
+### Table
 
-| Value      | Description                            |
-| ---------- | -------------------------------------- |
-| notStarted | The form response has not been started |
-| inProgress | The form response is in progress       |
-| complete   | The form response is complete          |
-| custom     | A custom status                        |
+<SchemaTable
+  filePath={frontmatter.formResponseStatusOptions.jsonSchema.file.path}
+/>
 
 ### Formats
 

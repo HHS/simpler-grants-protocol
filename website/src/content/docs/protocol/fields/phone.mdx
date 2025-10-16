@@ -28,17 +28,13 @@ phoneCollection:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 A phone number.
 
 ### Table
 
-| Property    | Type                                     | Required | Description                                                |
-| ----------- | ---------------------------------------- | -------- | ---------------------------------------------------------- |
-| countryCode | [string](/protocol/types/string#string)  | Yes      | The international country code (e.g., "+1" for US/Canada). |
-| number      | [string](/protocol/types/string#string)  | Yes      | The local phone number without the country code.           |
-| extension   | [string](/protocol/types/string#string)  | No       | Optional extension number for the phone line.              |
-| isMobile    | [boolean](/protocol/types/other#boolean) | No       | Indicates whether this is a mobile/cell phone number.      |
+<SchemaTable filePath={frontmatter.phone.jsonSchema.file.path} />
 
 ### Formats
 
@@ -54,11 +50,7 @@ A collection of phone numbers for a person or organization.
 
 ### Table
 
-| Property    | Type                                                                      | Required | Description                                           |
-| ----------- | ------------------------------------------------------------------------- | -------- | ----------------------------------------------------- |
-| primary     | [Phone](/protocol/fields/phone)                                           | Yes      | The primary phone number for a person or organization |
-| fax         | [Phone](/protocol/fields/phone)                                           | No       | The fax number, if applicable                         |
-| otherPhones | [Record](/protocol/types/other#record)\<[Phone](/protocol/fields/phone)\> | No       | Additional phone numbers keyed by a descriptive label |
+<SchemaTable filePath={frontmatter.phoneCollection.jsonSchema.file.path} />
 
 ### Formats
 

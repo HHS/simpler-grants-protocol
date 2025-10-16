@@ -27,6 +27,7 @@ emailCollection:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 An email address. Alias for the [email](/protocol/types/string#email) type.
 
@@ -44,10 +45,7 @@ A collection of email addresses for a person or organization.
 
 ### Table
 
-| Property    | Type                                                                            | Required | Description                                             |
-| ----------- | ------------------------------------------------------------------------------- | -------- | ------------------------------------------------------- |
-| primary     | [email](/protocol/types/string#email)                                           | Yes      | The primary email address for a person or organization  |
-| otherEmails | [Record](/protocol/types/other#record)\<[email](/protocol/types/string#email)\> | No       | Additional email addresses keyed by a descriptive label |
+<SchemaTable filePath={frontmatter.emailCollection.jsonSchema.file.path} />
 
 ### Formats
 

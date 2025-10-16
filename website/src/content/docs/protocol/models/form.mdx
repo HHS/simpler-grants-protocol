@@ -67,6 +67,7 @@ formUISchema:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 ## FormBase
 
@@ -74,18 +75,7 @@ A form for collecting data from a user.
 
 ### Table
 
-| Property                | Type                                                                                                             | Required | Description                                                                |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
-| id                      | [uuid](/protocol/types/string#uuid)                                                                              | Yes      | The form's unique identifier                                               |
-| name                    | [string](/protocol/types/string#string)                                                                          | Yes      | The form's name                                                            |
-| version                 | [string](/protocol/types/string#string)                                                                          | No       | The form version                                                           |
-| description             | [string](/protocol/types/string#string)                                                                          | No       | The form's description                                                     |
-| instructions            | [string](/protocol/types/string#string) or [Array](/protocol/types/other#array)\<[File](/protocol/fields/file)\> | No       | The form's instructions                                                    |
-| jsonSchema              | [FormJsonSchema](#formjsonschema)                                                                                | No       | The form's JSON schema used to render the form and validate responses      |
-| uiSchema                | [FormUISchema](#formuischema)                                                                                    | No       | The form's UI schema used to render the form in the browser                |
-| mappingToCommonGrants   | [MappingSchema](/protocol/models/mapping)                                                                        | No       | A mapping from form schema to CommonGrants schema                          |
-| mappingFromCommonGrants | [MappingSchema](/protocol/models/mapping)                                                                        | No       | A mapping from CommonGrants schema to form schema                          |
-| customFields            | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\>                           | No       | Custom attributes about the form itself, not custom fields within the form |
+<SchemaTable filePath={frontmatter.form.jsonSchema.file.path} />
 
 ### Formats
 

@@ -5,6 +5,8 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import yaml from "js-yaml";
 import { createAjvWithSchemas } from "../lib/validation";
+import type { JsonSchema } from "../lib/schema/schema-loader";
+import { Paths } from "../lib/schema/paths";
 
 /**
  * Configuration for a code block to be displayed in a tab.
@@ -22,25 +24,6 @@ interface CodeBlockConfig {
     /** Ending line number (1-based) to extract code from */
     endLine?: number;
   };
-}
-
-/**
- * JSON Schema object structure
- */
-interface JsonSchema {
-  type?: string;
-  properties?: Record<string, JsonSchema>;
-  required?: string[];
-  examples?: unknown[];
-  enum?: unknown[];
-  items?: JsonSchema;
-  $ref?: string;
-  anyOf?: JsonSchema[];
-  oneOf?: JsonSchema[];
-  allOf?: JsonSchema[];
-  format?: string;
-  $defs?: Record<string, JsonSchema>;
-  [key: string]: unknown;
 }
 
 /**
@@ -125,7 +108,7 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
   }
 
   const baseUrl = "https://commongrants.org/";
-  const pathPrefix = "website/public/";
+  const pathPrefix = `${Paths.PUBLIC_DIR}/`;
   let filePath = props.file.path;
 
   // Trim public directory prefix if present

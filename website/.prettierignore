@@ -3,3 +3,6 @@ dist/
 .astro/
 node_modules/ 
 public/openapi/*openapi*.yaml
+
+# Generated cache files
+cache/

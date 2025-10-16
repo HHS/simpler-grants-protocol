@@ -67,6 +67,7 @@ personBase:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 ## PersonBase
 
@@ -74,15 +75,7 @@ A person affiliated with an organization or grant application.
 
 ### Table
 
-| Property     | Type                                                                                   | Required | Description                  |
-| ------------ | -------------------------------------------------------------------------------------- | -------- | ---------------------------- |
-| name         | [Name](/protocol/fields/name)                                                          | Yes      | The person's full name       |
-| title        | [string](/protocol/types/string#string)                                                | No       | The person's title           |
-| dateOfBirth  | [isoDate](/protocol/types/date#isodate)                                                | No       | The person's date of birth   |
-| addresses    | [AddressCollection](/protocol/fields/address#addresscollection)                        | No       | The person's addresses       |
-| phones       | [PhoneCollection](/protocol/fields/phone#phonecollection)                              | No       | The person's phone numbers   |
-| emails       | [EmailCollection](/protocol/fields/email#emailcollection)                              | No       | The person's email addresses |
-| customFields | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Custom fields for the person |
+<SchemaTable filePath={frontmatter.personBase.jsonSchema.file.path} />
 
 ### Formats
 

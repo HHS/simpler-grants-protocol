@@ -138,6 +138,7 @@ competitionTimeline:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 ## CompetitionBase
 
@@ -147,20 +148,7 @@ A competition is an application process for a funding opportunity. It often has 
 
 ### Table
 
-| Property               | Type                                                                                                             | Required | Description                                       |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------- |
-| id                     | [uuid](/protocol/types/string#uuid)                                                                              | Yes      | The competition's unique identifier.              |
-| opportunityId          | [uuid](/protocol/types/string#uuid)                                                                              | Yes      | The opportunity id for the competition.           |
-| title                  | [string](/protocol/types/string#string)                                                                          | Yes      | The title of the competition.                     |
-| description            | [string](/protocol/types/string#string)                                                                          | No       | The description of the competition.               |
-| instructions           | [string](/protocol/types/string#string) or [Array](/protocol/types/other#array)\<[File](/protocol/fields/file)\> | No       | The instructions for the competition.             |
-| status                 | [CompetitionStatus](#competitionstatus)                                                                          | Yes      | The status of the competition.                    |
-| keyDates               | [CompetitionTimeline](#competitiontimeline)                                                                      | No       | The key dates in the competition timeline.        |
-| forms                  | [CompetitionForms](#competitionforms)                                                                            | Yes      | The forms for the competition.                    |
-| acceptedApplicantTypes | [Array](/protocol/types/other#array)\<[ApplicantType](/protocol/models/applicant-type)\>                         | No       | The accepted applicant types for the competition. |
-| customFields           | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\>                           | No       | The custom fields for the competition.            |
-| createdAt              | [utcDateTime](/protocol/types/date#utcdatetime)                                                                  | Yes      | The competition's creation date.                  |
-| lastModifiedAt         | [utcDateTime](/protocol/types/date#utcdatetime)                                                                  | Yes      | The competition's last modified date.             |
+<SchemaTable filePath={frontmatter.competition.jsonSchema.file.path} />
 
 ### Formats
 
@@ -176,11 +164,7 @@ The status of the competition.
 
 ### Table
 
-| Property    | Type                                                  | Required | Description                                 |
-| ----------- | ----------------------------------------------------- | -------- | ------------------------------------------- |
-| value       | [CompetitionStatusOptions](#competitionstatusoptions) | Yes      | The status value.                           |
-| customValue | [string](/protocol/types/string#string)               | No       | Custom status value when value is "custom". |
-| description | [string](/protocol/types/string#string)               | No       | Description of the status.                  |
+<SchemaTable filePath={frontmatter.competitionStatus.jsonSchema.file.path} />
 
 ### Formats
 
@@ -194,13 +178,11 @@ The status of the competition.
 
 Enumeration of possible competition status values.
 
-### Values
+### Table
 
-| Value  | Description                                |
-| ------ | ------------------------------------------ |
-| open   | The competition is open for applications   |
-| closed | The competition is closed for applications |
-| custom | The competition is in a custom status      |
+<SchemaTable
+  filePath={frontmatter.competitionStatusOptions.jsonSchema.file.path}
+/>
 
 ### Formats
 
@@ -216,10 +198,7 @@ Set of forms that need to be completed to apply to the competition.
 
 ### Table
 
-| Property   | Type                                                                               | Required | Description                                     |
-| ---------- | ---------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
-| forms      | [Record](/protocol/types/other#record)\<[Form](/protocol/models/form)\>            | Yes      | The forms for the competition.                  |
-| validation | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\> | No       | The validation rules for the competition forms. |
+<SchemaTable filePath={frontmatter.competitionForms.jsonSchema.file.path} />
 
 ### Formats
 
@@ -235,11 +214,7 @@ The key dates in the competition timeline.
 
 ### Table
 
-| Property   | Type                                                                      | Required | Description                                   |
-| ---------- | ------------------------------------------------------------------------- | -------- | --------------------------------------------- |
-| openDate   | [Event](/protocol/fields/event)                                           | No       | The start date of the competition.            |
-| closeDate  | [Event](/protocol/fields/event)                                           | No       | The end date of the competition.              |
-| otherDates | [Record](/protocol/types/other#record)\<[Event](/protocol/fields/event)\> | No       | Additional dates in the competition timeline. |
+<SchemaTable filePath={frontmatter.competitionTimeline.jsonSchema.file.path} />
 
 ### Formats
 

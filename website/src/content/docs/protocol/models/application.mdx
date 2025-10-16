@@ -100,6 +100,7 @@ appFormResponse:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 ## ApplicationBase
 
@@ -107,17 +108,7 @@ Base model for an application to a funding opportunity.
 
 ### Table
 
-| Property       | Type                                                                                   | Required | Description                                                  |
-| -------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
-| id             | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the application                    |
-| name           | [string](/protocol/types/string#string)                                                | Yes      | The name of the application                                  |
-| competitionId  | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the competition                    |
-| formResponses  | [Record](/protocol/types/other#record)\<[AppFormResponse](#appformresponse)\>          | Yes      | The form responses for the application                       |
-| status         | [AppStatus](#appstatus)                                                                | Yes      | The status of the application                                |
-| submittedAt    | [utcDateTime](/protocol/types/date#utcdatetime)                                        | No       | The date and time the application was submitted              |
-| customFields   | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields about the application                      |
-| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created       |
-| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was last modified |
+<SchemaTable filePath={frontmatter.applicationBase.jsonSchema.file.path} />
 
 ### Formats
 
@@ -133,11 +124,7 @@ The status of an application.
 
 ### Table
 
-| Property    | Type                                    | Required | Description                    |
-| ----------- | --------------------------------------- | -------- | ------------------------------ |
-| value       | [AppStatusOptions](#appstatusoptions)   | Yes      | The status of the application. |
-| customValue | [string](/protocol/types/string#string) | No       | A custom value for the status. |
-| description | [string](/protocol/types/string#string) | No       | A description of the status.   |
+<SchemaTable filePath={frontmatter.appStatus.jsonSchema.file.path} />
 
 ### Formats
 
@@ -153,13 +140,7 @@ The default set of values accepted for application status.
 
 ### Table
 
-| Value      | Description                         |
-| ---------- | ----------------------------------- |
-| inProgress | The application is in progress      |
-| submitted  | The application has been submitted. |
-| accepted   | The application has been accepted.  |
-| rejected   | The application has been rejected.  |
-| custom     | A custom status                     |
+<SchemaTable filePath={frontmatter.appStatusOptions.jsonSchema.file.path} />
 
 ### Formats
 
@@ -175,17 +156,7 @@ A form response associated with an application.
 
 ### Table
 
-| Property         | Type                                                                                   | Required | Description                                                  |
-| ---------------- | -------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------ |
-| id               | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the form response                  |
-| form             | [Form](/protocol/models/form)                                                          | Yes      | The form being responded to                                  |
-| response         | [Record](/protocol/types/other#record)\<[unknown](/protocol/types/other#unknown)\>     | Yes      | The response to the form                                     |
-| status           | [FormResponseStatus](/protocol/models/form-response#formresponsestatus)                | Yes      | The status of the form response                              |
-| validationErrors | [Array](/protocol/types/other#array)\<[unknown](/protocol/types/other#unknown)\>       | No       | The validation errors for the form response                  |
-| customFields     | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | The custom fields about the form response                    |
-| applicationId    | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The unique identifier for the application                    |
-| createdAt        | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was created       |
-| lastModifiedAt   | [utcDateTime](/protocol/types/date#utcdatetime)                                        | Yes      | The timestamp (in UTC) at which the record was last modified |
+<SchemaTable filePath={frontmatter.appFormResponse.jsonSchema.file.path} />
 
 ### Formats
 

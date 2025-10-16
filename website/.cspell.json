@@ -1,6 +1,6 @@
 {
   "version": "0.2",
-  "ignorePaths": ["dist/", "astro/", "*.svg", "src/content/forms/"],
+  "ignorePaths": ["dist/", "astro/", "*.svg", "src/content/forms/", "cache/"],
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [

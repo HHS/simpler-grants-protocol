@@ -1,0 +1,104 @@
+---
+import { SchemaLoader } from "../lib/schema/schema-loader";
+import type { JsonSchema } from "../lib/schema/schema-loader";
+import { SchemaDocMapper } from "../lib/schema/schema-doc-mapper";
+import { TableGenerator } from "../lib/schema/table-generator";
+import type { PropertyRow, EnumRow } from "../lib/schema/table-generator";
+
+const { filePath, code } = Astro.props;
+
+/**
+ * Props for the SchemaTable component.
+ */
+interface Props {
+  /** Path to the schema file relative to the repository root */
+  filePath?: string;
+  /** Inline schema code (YAML string) */
+  code?: string;
+}
+
+// Schema documentation path getter
+const getSchemaDocPath = (schemaName: string): string | undefined => {
+  return SchemaDocMapper.getSchemaDocPath(schemaName);
+};
+
+/**
+ * Main component logic with error handling
+ */
+
+// Load and parse the schema
+let schemaData: JsonSchema;
+try {
+  if (filePath) {
+    schemaData = SchemaLoader.loadSchema(filePath);
+  } else if (code) {
+    schemaData = SchemaLoader.loadInlineSchema(code);
+  } else {
+    throw new Error("Either filePath or code must be provided");
+  }
+} catch (error) {
+  console.error(`Loading schema:`, error);
+  throw error;
+}
+
+// Determine table type and generate rows
+const isEnumSchema = SchemaLoader.isEnumSchema(schemaData);
+const isObjectSchema = SchemaLoader.isObjectSchema(schemaData);
+
+let tableRows: PropertyRow[] | EnumRow[] = [];
+let tableHeaders: string[] = [];
+
+if (isEnumSchema) {
+  try {
+    tableRows = TableGenerator.generateEnumRows(schemaData);
+  } catch (error) {
+    console.error("Generating enum table rows:", error);
+    throw error;
+  }
+  tableHeaders = ["Value", "Description"];
+} else if (isObjectSchema) {
+  try {
+    tableRows = TableGenerator.generatePropertyRows(
+      schemaData,
+      getSchemaDocPath,
+    );
+  } catch (error) {
+    console.error("Generating property table rows:", error);
+    throw error;
+  }
+  tableHeaders = ["Property", "Type", "Required", "Description"];
+} else {
+  throw new Error(
+    `Unsupported schema type for table generation: ${schemaData.type}`,
+  );
+}
+---
+
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        {tableHeaders.map((header) => <th>{header}</th>)}
+      </tr>
+    </thead>
+    <tbody>
+      {
+        isEnumSchema
+          ? (tableRows as EnumRow[]).map((row) => (
+              <tr>
+                <td>{row.value}</td>
+                <td>{row.description}</td>
+              </tr>
+            ))
+          : (tableRows as PropertyRow[]).map((row) => (
+              <tr>
+                <td>{row.property}</td>
+                <td set:html={row.type} />
+                <td>{row.required ? "Yes" : "No"}</td>
+                <td>{row.description}</td>
+              </tr>
+            ))
+      }
+    </tbody>
+  </table>
+</div>

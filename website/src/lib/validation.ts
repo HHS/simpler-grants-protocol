@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
 import Ajv2020 from "ajv/dist/2020";
+import { Paths } from "./schema/paths";
 
 // #########################################################
 // CommonGrants schema and validator
@@ -68,7 +69,7 @@ export function createAjvWithSchemas(): Ajv2020 {
   });
 
   // Load all YAML schema files from the yaml directory
-  const yamlDir = path.resolve(process.cwd(), "public/schemas/yaml");
+  const yamlDir = path.resolve(process.cwd(), Paths.SCHEMAS_DIR);
   const files = fs
     .readdirSync(yamlDir)
     .filter((file) => file.endsWith(".yaml"));

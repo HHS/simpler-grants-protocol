@@ -21,15 +21,13 @@ systemMetadata:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 
 System-managed metadata that is automatically added to records.
 
 ### Table
 
-| Property       | Type                                            | Required | Description                                                  |
-| -------------- | ----------------------------------------------- | -------- | ------------------------------------------------------------ |
-| createdAt      | [utcDateTime](/protocol/types/date#utcdatetime) | Yes      | The timestamp (in UTC) at which the record was created       |
-| lastModifiedAt | [utcDateTime](/protocol/types/date#utcdatetime) | Yes      | The timestamp (in UTC) at which the record was last modified |
+<SchemaTable filePath={frontmatter.systemMetadata.jsonSchema.file.path} />
 
 ### Formats
 
