@@ -82,7 +82,8 @@ const sortedChangelog = [...changelogData].sort((a, b) => {
         <td>
           <ul>
             {entry.changes.map((change) => (
-              <li>{change}</li>
+              // Convert `propName` --> <code>propName</code>
+              <li set:html={change.replace(/`([^`]+)`/g, '<code>$1</code>')}></li>
             ))}
           </ul>
         </td>
