@@ -46,18 +46,18 @@ if (!changelogData || !Array.isArray(changelogData)) {
 // Sort changelog entries by version (newest first)
 const sortedChangelog = [...changelogData].sort((a, b) => {
   // Simple version comparison - assumes semantic versioning
-  const aParts = a.version.split('.').map(Number);
-  const bParts = b.version.split('.').map(Number);
-  
+  const aParts = a.version.split(".").map(Number);
+  const bParts = b.version.split(".").map(Number);
+
   for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
     const aPart = aParts[i] || 0;
     const bPart = bParts[i] || 0;
-    
+
     if (aPart !== bPart) {
       return bPart - aPart; // Descending order (newest first)
     }
   }
-  
+
   return 0;
 });
 
@@ -74,20 +74,24 @@ const sortedChangelog = [...changelogData].sort((a, b) => {
     </tr>
   </thead>
   <tbody>
-    {sortedChangelog.map((entry) => (
-      <tr>
-        <td>
-          <strong>{entry.version}</strong>
-        </td>
-        <td>
-          <ul>
-            {entry.changes.map((change) => (
-              // Convert `propName` --> <code>propName</code>
-              <li set:html={change.replace(/`([^`]+)`/g, '<code>$1</code>')}></li>
-            ))}
-          </ul>
-        </td>
-      </tr>
-    ))}
+    {
+      sortedChangelog.map((entry) => (
+        <tr>
+          <td>
+            <strong>{entry.version}</strong>
+          </td>
+          <td>
+            <ul>
+              {entry.changes.map((change) => (
+                // Convert `propName` --> <code>propName</code>
+                <li
+                  set:html={change.replace(/`([^`]+)`/g, "<code>$1</code>")}
+                />
+              ))}
+            </ul>
+          </td>
+        </tr>
+      ))
+    }
   </tbody>
 </table>
