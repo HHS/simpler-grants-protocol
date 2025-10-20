@@ -68,6 +68,7 @@ personBase:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## PersonBase
 
@@ -84,3 +85,7 @@ A person affiliated with an organization or grant application.
   jsonSchema={frontmatter.personBase.jsonSchema}
   typeSpec={frontmatter.personBase.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="PersonBase" />

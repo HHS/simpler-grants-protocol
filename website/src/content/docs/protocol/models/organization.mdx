@@ -124,6 +124,7 @@ orgSocialLinks:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## OrganizationBase
 
@@ -155,6 +156,10 @@ An organization that can apply to or host funding opportunities.
   typeSpec={frontmatter.organizationBase.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="OrganizationBase" />
+
 ## OrgSocialLinks
 
 A collection of social media and web presence links for an organization.
@@ -178,3 +183,7 @@ A collection of social media and web presence links for an organization.
   jsonSchema={frontmatter.orgSocialLinks.jsonSchema}
   typeSpec={frontmatter.orgSocialLinks.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="OrgSocialLinks" />

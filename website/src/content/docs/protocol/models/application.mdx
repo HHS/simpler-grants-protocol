@@ -101,6 +101,7 @@ appFormResponse:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## ApplicationBase
 
@@ -118,6 +119,10 @@ Base model for an application to a funding opportunity.
   typeSpec={frontmatter.applicationBase.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="ApplicationBase" />
+
 ## AppStatus
 
 The status of an application.
@@ -133,6 +138,10 @@ The status of an application.
   jsonSchema={frontmatter.appStatus.jsonSchema}
   typeSpec={frontmatter.appStatus.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="AppStatus" />
 
 ## AppStatusOptions
 
@@ -150,6 +159,10 @@ The default set of values accepted for application status.
   typeSpec={frontmatter.appStatusOptions.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="AppStatusOptions" />
+
 ## AppFormResponse
 
 A form response associated with an application.
@@ -165,3 +178,7 @@ A form response associated with an application.
   jsonSchema={frontmatter.appFormResponse.jsonSchema}
   typeSpec={frontmatter.appFormResponse.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="AppFormResponse" />
