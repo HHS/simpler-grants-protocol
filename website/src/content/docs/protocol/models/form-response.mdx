@@ -67,6 +67,7 @@ formResponseStatusOptions:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## FormResponseBase
 
@@ -84,6 +85,10 @@ Base model for a form response.
   typeSpec={frontmatter.formResponse.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="FormResponseBase" />
+
 ## FormResponseStatus
 
 The status of a form response.
@@ -99,6 +104,10 @@ The status of a form response.
   jsonSchema={frontmatter.formResponseStatus.jsonSchema}
   typeSpec={frontmatter.formResponseStatus.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="FormResponseStatus" />
 
 ## FormResponseStatusOptions
 
@@ -117,3 +126,7 @@ The options for the status of a form response.
   jsonSchema={frontmatter.formResponseStatusOptions.jsonSchema}
   typeSpec={frontmatter.formResponseStatusOptions.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="FormResponseStatusOptions" />

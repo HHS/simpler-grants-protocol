@@ -249,6 +249,7 @@ proposalOrgs:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## ProposalBase
 
@@ -266,6 +267,10 @@ A proposal for funding.
   typeSpec={frontmatter.proposalBase.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="ProposalBase" />
+
 ## ProposalOpportunity
 
 The opportunity to which this proposal is related.
@@ -281,6 +286,10 @@ The opportunity to which this proposal is related.
   jsonSchema={frontmatter.proposalOpportunity.jsonSchema}
   typeSpec={frontmatter.proposalOpportunity.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="ProposalOpportunity" />
 
 ## ProjectTimeline
 
@@ -298,6 +307,10 @@ The key dates for the project.
   typeSpec={frontmatter.projectTimeline.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="ProjectTimeline" />
+
 ## ProposalContacts
 
 The point of contact for the project.
@@ -314,6 +327,10 @@ The point of contact for the project.
   typeSpec={frontmatter.proposalContacts.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="ProposalContacts" />
+
 ## ProposalOrgs
 
 The organization that is requesting funding.
@@ -329,3 +346,7 @@ The organization that is requesting funding.
   jsonSchema={frontmatter.proposalOrgs.jsonSchema}
   typeSpec={frontmatter.proposalOrgs.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="ProposalOrgs" />

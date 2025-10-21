@@ -139,6 +139,7 @@ competitionTimeline:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## CompetitionBase
 
@@ -158,6 +159,10 @@ A competition is an application process for a funding opportunity. It often has 
   typeSpec={frontmatter.competition.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="CompetitionBase" />
+
 ## CompetitionStatus
 
 The status of the competition.
@@ -173,6 +178,10 @@ The status of the competition.
   jsonSchema={frontmatter.competitionStatus.jsonSchema}
   typeSpec={frontmatter.competitionStatus.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="CompetitionStatus" />
 
 ## CompetitionStatusOptions
 
@@ -192,6 +201,10 @@ Enumeration of possible competition status values.
   typeSpec={frontmatter.competitionStatusOptions.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="CompetitionStatusOptions" />
+
 ## CompetitionForms
 
 Set of forms that need to be completed to apply to the competition.
@@ -208,6 +221,10 @@ Set of forms that need to be completed to apply to the competition.
   typeSpec={frontmatter.competitionForms.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="CompetitionForms" />
+
 ## CompetitionTimeline
 
 The key dates in the competition timeline.
@@ -223,3 +240,7 @@ The key dates in the competition timeline.
   jsonSchema={frontmatter.competitionTimeline.jsonSchema}
   typeSpec={frontmatter.competitionTimeline.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="CompetitionTimeline" />

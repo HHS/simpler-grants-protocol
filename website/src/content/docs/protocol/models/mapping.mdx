@@ -98,6 +98,7 @@ mappingSwitchFunction:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 ## MappingSchema
@@ -169,6 +170,10 @@ To the following output:
   typeSpec={frontmatter.mappingSchema.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="MappingSchema" />
+
 ## MappingFunction
 
 A function for mapping data from one schema to another.
@@ -189,6 +194,10 @@ A function for mapping data from one schema to another.
   typeSpec={frontmatter.mappingFunction.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="MappingFunction" />
+
 ## MappingConstantFunction
 
 Returns a constant value.
@@ -207,6 +216,10 @@ Returns a constant value.
   typeSpec={frontmatter.mappingConstantFunction.typeSpec}
 />
 
+### Changelog
+
+<SchemaChangelog schema="MappingConstantFunction" />
+
 ## MappingFieldFunction
 
 Returns the value of a field in the source data.
@@ -222,6 +235,10 @@ Returns the value of a field in the source data.
   jsonSchema={frontmatter.mappingFieldFunction.jsonSchema}
   typeSpec={frontmatter.mappingFieldFunction.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="MappingFieldFunction" />
 
 ## MappingSwitchFunction
 
@@ -240,3 +257,7 @@ Returns a new value based on the value of a field in the source data using a swi
   jsonSchema={frontmatter.mappingSwitchFunction.jsonSchema}
   typeSpec={frontmatter.mappingSwitchFunction.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="MappingSwitchFunction" />

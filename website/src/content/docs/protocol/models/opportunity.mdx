@@ -104,6 +104,7 @@ oppTimeline:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## OpportunityBase
 
@@ -122,6 +123,10 @@ A funding opportunity, such as a grant or loan.
   python={frontmatter.opportunityBase.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="OpportunityBase" />
+
 ## OpportunityDetails
 
 A funding opportunity with additional details, like available competitions.
@@ -138,6 +143,10 @@ A funding opportunity with additional details, like available competitions.
   typeSpec={frontmatter.opportunityDetails.typeSpec}
   python={frontmatter.opportunityDetails.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="OpportunityDetails" />
 
 ## OppStatus
 
@@ -156,6 +165,10 @@ The status of an opportunity, such as whether it is accepting applications.
   python={frontmatter.oppStatus.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="OppStatus" />
+
 ## OppStatusOptions
 
 The set of values accepted for opportunity status.
@@ -172,6 +185,10 @@ The set of values accepted for opportunity status.
   typeSpec={frontmatter.oppStatusOptions.typeSpec}
   python={frontmatter.oppStatusOptions.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="OppStatusOptions" />
 
 ## OppFunding
 
@@ -190,6 +207,10 @@ Details about the funding available for an opportunity.
   python={frontmatter.oppFunding.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="OppFunding" />
+
 ## OppTimeline
 
 Key dates in the opportunity's timeline, such as when the application opens and closes.
@@ -206,3 +227,7 @@ Key dates in the opportunity's timeline, such as when the application opens and 
   typeSpec={frontmatter.oppTimeline.typeSpec}
   python={frontmatter.oppTimeline.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="OppTimeline" />

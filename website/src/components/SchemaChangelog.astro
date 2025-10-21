@@ -1,0 +1,97 @@
+---
+import changelogIndex from "@/content/changelog/index.json";
+
+// ############################################################################
+// Declare Changelog interfaces
+// ############################################################################
+
+/** A single changelog entry */
+interface ChangelogEntry {
+  /** Version number (e.g., "1.2.0", "2.0.0") */
+  version: string;
+  /** Array of changes for this version */
+  changes: string[];
+}
+
+/** Interface for the changelog index structure */
+interface ChangelogIndex {
+  [schemaName: string]: ChangelogEntry[];
+}
+
+/** Props for the SchemaChangelog component */
+interface Props {
+  /** Schema name to look up changelog data */
+  schema: string;
+}
+
+const { schema } = Astro.props;
+
+// ############################################################################
+// Fetch and sort changelog data
+// ############################################################################
+
+// Validate that schema is provided
+if (!schema) {
+  throw new Error("schema prop must be provided");
+}
+
+// Load changelog data for the specified schema
+const changelogData = (changelogIndex as ChangelogIndex)[schema];
+
+// Validate that changelog data exists for this schema
+if (!changelogData || !Array.isArray(changelogData)) {
+  throw new Error(`No changelog data found for schema: ${schema}`);
+}
+
+// Sort changelog entries by version (newest first)
+const sortedChangelog = [...changelogData].sort((a, b) => {
+  // Simple version comparison - assumes semantic versioning
+  const aParts = a.version.split(".").map(Number);
+  const bParts = b.version.split(".").map(Number);
+
+  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+    const aPart = aParts[i] || 0;
+    const bPart = bParts[i] || 0;
+
+    if (aPart !== bPart) {
+      return bPart - aPart; // Descending order (newest first)
+    }
+  }
+
+  return 0;
+});
+
+// ############################################################################
+// Component rendering
+// ############################################################################
+---
+
+<table>
+  <thead>
+    <tr>
+      <th>Version</th>
+      <th>Changes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {
+      sortedChangelog.map((entry) => (
+        <tr>
+          <td>
+            <strong>{entry.version}</strong>
+          </td>
+          <td>
+            <ul>
+              {entry.changes.map((change) => (
+                // Convert `propName` --> <code>propName</code>
+                <li
+                  set:html={change.replace(/`([^`]+)`/g, "<code>$1</code>")}
+                />
+              ))}
+            </ul>
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

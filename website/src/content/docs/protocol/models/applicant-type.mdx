@@ -32,6 +32,7 @@ applicantTypeOptions:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## ApplicantType
 
@@ -52,6 +53,10 @@ The type of applicant for a funding opportunity.
   jsonSchema={frontmatter.applicantType.jsonSchema}
   typeSpec={frontmatter.applicantType.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="ApplicantType" />
 
 ## ApplicantTypeOptions
 
@@ -76,3 +81,15 @@ The type of applicant for a funding opportunity.
 | for_profit_not_small_business | For-profit organization that is not a small business                 |
 | unrestricted                  | Anyone can apply (unrestricted)                                      |
 | custom                        | Custom applicant type                                                |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.applicantTypeOptions.example}
+  jsonSchema={frontmatter.applicantTypeOptions.jsonSchema}
+  typeSpec={frontmatter.applicantTypeOptions.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="ApplicantTypeOptions" />
