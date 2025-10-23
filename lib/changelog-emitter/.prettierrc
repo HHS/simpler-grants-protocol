@@ -1,0 +1,6 @@
+{
+  "trailingComma": "all",
+  "tabWidth": 2,
+  "plugins": ["@typespec/prettier-plugin-typespec"],
+  "overrides": [{ "files": "*.tsp", "options": { "parser": "typespec" } }]
+}

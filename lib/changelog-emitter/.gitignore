@@ -1,0 +1,12 @@
+# MacOS
+.DS_Store
+
+# Default TypeSpec output
+tsp-output/
+dist/
+
+# Publishable package
+*.tgz
+
+# Dependency directories
+node_modules/
