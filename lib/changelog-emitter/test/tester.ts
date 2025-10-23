@@ -1,6 +1,7 @@
 import { resolvePath } from "@typespec/compiler";
 import { createTester } from "@typespec/compiler/testing";
 import { deepStrictEqual } from "node:assert";
+import { Changelog } from "../src/types.js";
 
 export const outputPath = "changelog.json";
 
@@ -57,7 +58,7 @@ export async function emit(
  */
 export async function emitAndValidate(
   code: string,
-  expected: any,
+  expected: Changelog,
   options = {}
 ): Promise<void> {
   const outputs = await emit(code, options);

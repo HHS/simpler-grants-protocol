@@ -2,3 +2,4 @@ packages:
   - lib/cli
   - lib/core
   - lib/python-sdk
+  - lib/changelog-emitter
