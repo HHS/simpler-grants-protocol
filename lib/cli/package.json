@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.1",
-    "@common-grants/core": "0.2.3",
+    "@common-grants/core": "workspace:*",
     "@typespec/compiler": "^1.5.0",
     "@typespec/json-schema": "^1.5.0",
     "@typespec/openapi3": "^1.5.0",
