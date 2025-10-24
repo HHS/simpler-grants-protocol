@@ -83,7 +83,7 @@ enum CompetitionStatusOptions {
 @example(Examples.Competition.forms)
 model CompetitionForms {
   /** The forms for the competition */
-  forms: Record<Models.FormBase>;
+  forms: Record<Models.Form>;
 
   /** The validation rules for the competition forms */
   validation?: Record<unknown>;
