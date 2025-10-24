@@ -1,13 +1,5 @@
 # @common-grants/cli
 
-## 0.2.2
-
-### Patch Changes
-
-- 72bd1ec: Updates dependencies
-- Updated dependencies [72bd1ec]
-  - @common-grants/core@0.2.3
-
 ## 0.2.1
 
 ### Patch Changes
