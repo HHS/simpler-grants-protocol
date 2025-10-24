@@ -168,7 +168,7 @@ describe("Models - Log @removed()", () => {
 // #########################################################
 
 describe("Models - Log @renamedFrom()", () => {
-  it.skip("should include both the old and new model names", async () => {
+  it("should include both the old and new model names", async () => {
     const code = `
       @versioned(Versions)
       namespace Service {
@@ -190,7 +190,7 @@ describe("Models - Log @renamedFrom()", () => {
       [USER_MODEL]: [
         {
           version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
+          changes: [Log.added(MODEL_TYPE, "Person")],
         },
         {
           version: V2_VERSION,
@@ -200,7 +200,7 @@ describe("Models - Log @renamedFrom()", () => {
     });
   });
 
-  it.skip("should correctly track multiple renamings", async () => {
+  it("should correctly track multiple renamings", async () => {
     const code = `
       @versioned(Versions)
       namespace Service {
@@ -224,7 +224,7 @@ describe("Models - Log @renamedFrom()", () => {
       [USER_MODEL]: [
         {
           version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
+          changes: [Log.added(MODEL_TYPE, "Person")],
         },
         {
           version: V2_VERSION,

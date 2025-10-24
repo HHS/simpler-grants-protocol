@@ -54,7 +54,7 @@ describe("Namespaces", () => {
           }
         }
         namespace Things {
-          model Car {
+          model ${CAR_MODEL} {
             id: string;
             name: string;
           }

@@ -112,7 +112,7 @@ describe("Props - Log @removed()", () => {
         }
 
         model ${USER_MODEL} {
-          ${ID_PROPERTY}: ${STRING_TYPE};
+          id: string;
           @removed(Versions.v2)
           ${NAME_PROPERTY}: ${STRING_TYPE};
         }
@@ -143,7 +143,7 @@ describe("Props - Log @removed()", () => {
         }
 
         model ${USER_MODEL} {
-          ${ID_PROPERTY}: ${STRING_TYPE};
+          id: string;
           @removed(Versions.v2)
           ${NAME_PROPERTY}: ${STRING_TYPE};
           @removed(Versions.v2)
@@ -185,7 +185,7 @@ describe("Props - Log @madeRequired()", () => {
         }
 
         model ${USER_MODEL} {
-          ${ID_PROPERTY}: ${STRING_TYPE};
+          id: string;
           ${NAME_PROPERTY}?: ${STRING_TYPE};
           @madeRequired(Versions.v2)
           ${EMAIL_PROPERTY}: ${STRING_TYPE};
@@ -223,7 +223,7 @@ describe("Props - Log @madeOptional()", () => {
         }
 
         model ${USER_MODEL} {
-          ${ID_PROPERTY}: ${STRING_TYPE};
+          id: string;
           ${NAME_PROPERTY}: ${STRING_TYPE};
           @madeOptional(Versions.v2)
           ${EMAIL_PROPERTY}?: ${STRING_TYPE};
@@ -261,7 +261,7 @@ describe("Props - Log @typeChangedFrom()", () => {
         }
 
         model ${USER_MODEL} {
-          ${ID_PROPERTY}: ${STRING_TYPE};
+          id: string;
           @typeChangedFrom(Versions.v2, ${STRING_TYPE})
           ${NAME_PROPERTY}: ${NUMBER_TYPE};
         }
@@ -295,7 +295,7 @@ describe("Props - Log @typeChangedFrom()", () => {
         }
 
         model ${USER_MODEL} {
-          ${ID_PROPERTY}: ${STRING_TYPE};
+          id: string;
           @typeChangedFrom(Versions.v2, ${STRING_TYPE})
           @typeChangedFrom(Versions.v3, ${NUMBER_TYPE})
           ${NAME_PROPERTY}: ${BOOLEAN_TYPE};
@@ -319,6 +319,126 @@ describe("Props - Log @typeChangedFrom()", () => {
           version: V3_VERSION,
           changes: [
             Log.typeChangedFrom(NAME_PROPERTY, NUMBER_TYPE, BOOLEAN_TYPE),
+          ],
+        },
+      ],
+    });
+  });
+});
+
+// #########################################################
+// # Name Changed
+// #########################################################
+
+describe("Props - Log @renamedFrom()", () => {
+  it("should log when a property name is changed", async () => {
+    const code = `
+      @versioned(Versions)
+      namespace Service {
+        enum Versions {
+          v1,
+          v2,
+          v3,
+        }
+
+        model ${USER_MODEL} {
+          id: string;
+          @renamedFrom(Versions.v2, "fullName")
+          ${NAME_PROPERTY}: ${STRING_TYPE};
+        }
+      }
+    `;
+
+    await emitAndValidate(code, {
+      [USER_MODEL]: [
+        {
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
+        },
+        {
+          version: V2_VERSION,
+          changes: [
+            Log.renamedFrom(MODEL_PROPERTY_TYPE, "fullName", NAME_PROPERTY),
+          ],
+        },
+      ],
+    });
+  });
+
+  it("should log multiple name changes to the same property", async () => {
+    const code = `
+      @versioned(Versions)
+      namespace Service {
+        enum Versions {
+          v1,
+          v2,
+          v3,
+        }
+
+        model ${USER_MODEL} {
+          id: string;
+          @renamedFrom(Versions.v2, "fullName")
+          @renamedFrom(Versions.v3, "firstName")
+          ${NAME_PROPERTY}: ${STRING_TYPE};
+        }
+      }
+    `;
+
+    await emitAndValidate(code, {
+      [USER_MODEL]: [
+        {
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
+        },
+        {
+          version: V2_VERSION,
+          changes: [
+            Log.renamedFrom(MODEL_PROPERTY_TYPE, "fullName", "firstName"),
+          ],
+        },
+        {
+          version: V3_VERSION,
+          changes: [
+            Log.renamedFrom(MODEL_PROPERTY_TYPE, "firstName", NAME_PROPERTY),
+          ],
+        },
+      ],
+    });
+  });
+
+  it("Should use the original name when a renamed property is first added", async () => {
+    const code = `
+      @versioned(Versions)
+      namespace Service {
+        enum Versions {
+          v1,
+          v2,
+          v3,
+        }
+
+        model ${USER_MODEL} {
+          id: string;
+          @added(Versions.v2)
+          @renamedFrom(Versions.v3, "fullName")
+          ${NAME_PROPERTY}: ${STRING_TYPE};
+        }
+      }
+    `;
+
+    await emitAndValidate(code, {
+      [USER_MODEL]: [
+        {
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
+        },
+        {
+          version: V2_VERSION,
+          changes: [Log.added(MODEL_PROPERTY_TYPE, "fullName")],
+        },
+        {
+          version: V3_VERSION,
+          changes: [
+            Log.renamedFrom(MODEL_PROPERTY_TYPE, "fullName", NAME_PROPERTY),
           ],
         },
       ],

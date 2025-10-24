@@ -2,10 +2,11 @@ import { EmitContext, Model, ModelProperty } from "@typespec/compiler";
 import {
   getAddedOnVersions,
   getRemovedOnVersions,
+  getRenamedFrom,
   Version,
 } from "@typespec/versioning";
 import { ChangelogEntry } from "../types.js";
-import { getOrCreateEntry } from "./index.js";
+import { getOrCreateEntry, getNameAtVersion } from "./index.js";
 import { Log } from "./logging.js";
 import { TargetType } from "../types.js";
 
@@ -68,12 +69,14 @@ export function logModelChanges(
   // Process model-level changes
   logModelAdditions(context, model, allVersions, modelChangelog);
   logModelRemovals(context, model, modelChangelog);
+  logModelRenames(context, model, modelChangelog);
 
   // Process model properties
   const properties = Array.from(model.properties.values()) as ModelProperty[];
   for (const property of properties) {
     logModelPropertyAdditions(context, property, modelChangelog);
     logModelPropertyRemovals(context, property, modelChangelog);
+    logModelPropertyRenames(context, property, modelChangelog);
     logModelPropertyMadeRequired(context, property, modelChangelog);
     logModelPropertyMadeOptional(context, property, modelChangelog);
   }
@@ -105,18 +108,29 @@ function logModelAdditions(
   modelChangelog: ChangelogEntry[],
 ): void {
   const modelAddedVersions = getAddedOnVersions(context.program, model);
+  const renamedFromData = getRenamedFrom(context.program, model);
 
   if (modelAddedVersions && modelAddedVersions.length > 0) {
     for (const version of modelAddedVersions) {
       const entry = getOrCreateEntry(modelChangelog, version.name);
-      entry.changes.push(Log.added(TargetType.Model, model.name));
+      const modelNameAtVersion = getNameAtVersion(
+        model.name,
+        version,
+        renamedFromData,
+      );
+      entry.changes.push(Log.added(TargetType.Model, modelNameAtVersion));
     }
   } else {
     // If no explicit @added, assume it was created in the first version
     const firstVersion = allVersions[0];
     if (firstVersion) {
       const entry = getOrCreateEntry(modelChangelog, firstVersion.name);
-      entry.changes.push(Log.added(TargetType.Model, model.name));
+      const modelNameAtVersion = getNameAtVersion(
+        model.name,
+        firstVersion,
+        renamedFromData,
+      );
+      entry.changes.push(Log.added(TargetType.Model, modelNameAtVersion));
     }
   }
 }
@@ -130,10 +144,53 @@ function logModelRemovals(
   modelChangelog: ChangelogEntry[],
 ): void {
   const modelRemovedVersions = getRemovedOnVersions(context.program, model);
+  const renamedFromData = getRenamedFrom(context.program, model);
+
   if (modelRemovedVersions && modelRemovedVersions.length > 0) {
     for (const version of modelRemovedVersions) {
       const entry = getOrCreateEntry(modelChangelog, version.name);
-      entry.changes.push(Log.removed(TargetType.Model, model.name));
+      const modelNameAtVersion = getNameAtVersion(
+        model.name,
+        version,
+        renamedFromData,
+      );
+      entry.changes.push(Log.removed(TargetType.Model, modelNameAtVersion));
+    }
+  }
+}
+
+/**
+ * Record a changelog entry each time the model was renamed.
+ */
+function logModelRenames(
+  context: EmitContext,
+  model: Model,
+  modelChangelog: ChangelogEntry[],
+): void {
+  const renamedFromData = getRenamedFrom(context.program, model);
+  if (renamedFromData && renamedFromData.length > 0) {
+    // Sort by version index to maintain chronological order
+    const sortedRenames = [...renamedFromData].sort(
+      (a, b) => a.version.index - b.version.index,
+    );
+
+    for (let i = 0; i < sortedRenames.length; i++) {
+      const rename = sortedRenames[i];
+      const entry = getOrCreateEntry(modelChangelog, rename.version.name);
+
+      // Determine the new name for this rename
+      // For the last rename, the new name is the current model name
+      // For intermediate renames, the new name is the old name of the next rename
+      let newName: string;
+      if (i === sortedRenames.length - 1) {
+        newName = model.name;
+      } else {
+        newName = sortedRenames[i + 1].oldName;
+      }
+
+      entry.changes.push(
+        Log.renamedFrom(TargetType.Model, rename.oldName, newName),
+      );
     }
   }
 }
@@ -151,10 +208,19 @@ function logModelPropertyAdditions(
   modelChangelog: ChangelogEntry[],
 ): void {
   const propertyAddedVersions = getAddedOnVersions(context.program, property);
+  const renamedFromData = getRenamedFrom(context.program, property);
+
   if (propertyAddedVersions && propertyAddedVersions.length > 0) {
     for (const version of propertyAddedVersions) {
       const entry = getOrCreateEntry(modelChangelog, version.name);
-      entry.changes.push(Log.added(TargetType.ModelProperty, property.name));
+      const propertyNameAtVersion = getNameAtVersion(
+        property.name,
+        version,
+        renamedFromData,
+      );
+      entry.changes.push(
+        Log.added(TargetType.ModelProperty, propertyNameAtVersion),
+      );
     }
   }
 }
@@ -171,10 +237,19 @@ function logModelPropertyRemovals(
     context.program,
     property,
   );
+  const renamedFromData = getRenamedFrom(context.program, property);
+
   if (propertyRemovedVersions && propertyRemovedVersions.length > 0) {
     for (const version of propertyRemovedVersions) {
       const entry = getOrCreateEntry(modelChangelog, version.name);
-      entry.changes.push(Log.removed(TargetType.ModelProperty, property.name));
+      const propertyNameAtVersion = getNameAtVersion(
+        property.name,
+        version,
+        renamedFromData,
+      );
+      entry.changes.push(
+        Log.removed(TargetType.ModelProperty, propertyNameAtVersion),
+      );
     }
   }
 }
@@ -231,6 +306,42 @@ function logModelPropertyMadeOptional(
           entry.changes.push(Log.madeOptional(property.name));
         }
       }
+    }
+  }
+}
+
+/**
+ * Record a changelog entry each time a property was renamed.
+ */
+function logModelPropertyRenames(
+  context: EmitContext,
+  property: ModelProperty,
+  modelChangelog: ChangelogEntry[],
+): void {
+  const renamedFromData = getRenamedFrom(context.program, property);
+  if (renamedFromData && renamedFromData.length > 0) {
+    // Sort by version index to maintain chronological order
+    const sortedRenames = [...renamedFromData].sort(
+      (a, b) => a.version.index - b.version.index,
+    );
+
+    for (let i = 0; i < sortedRenames.length; i++) {
+      const rename = sortedRenames[i];
+      const entry = getOrCreateEntry(modelChangelog, rename.version.name);
+
+      // Determine the new name for this rename
+      // For the last rename, the new name is the current property name
+      // For intermediate renames, the new name is the old name of the next rename
+      let newName: string;
+      if (i === sortedRenames.length - 1) {
+        newName = property.name;
+      } else {
+        newName = sortedRenames[i + 1].oldName;
+      }
+
+      entry.changes.push(
+        Log.renamedFrom(TargetType.ModelProperty, rename.oldName, newName),
+      );
     }
   }
 }
