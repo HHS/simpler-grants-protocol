@@ -1,0 +1,9 @@
+# Auto-generated files
+CHANGELOG.md
+
+# Build outputs
+dist/
+tsp-output/
+
+# Dependencies
+node_modules/

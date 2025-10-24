@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
