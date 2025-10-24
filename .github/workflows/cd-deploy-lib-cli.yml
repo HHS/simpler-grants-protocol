@@ -44,10 +44,12 @@ jobs:
         with:
           ref: ${{ github.event.inputs.tag }}
 
+      # Setup .npmrc file to publish to npm
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
+          registry-url: https://registry.npmjs.org
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
