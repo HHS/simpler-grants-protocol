@@ -74,7 +74,6 @@ describe("Logging utils", () => {
         "Removed `UserService` interface",
       );
     });
-
   });
 
   describe("Log.madeRequired", () => {

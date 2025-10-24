@@ -7,12 +7,7 @@
 import { it, describe } from "vitest";
 import { emitAndValidate } from "./tester.js";
 import { Log } from "../src/index.js";
-import {
-  V1_VERSION,
-  MODEL_TYPE,
-  USER_MODEL,
-  CAR_MODEL,
-} from "./constants.js";
+import { V1_VERSION, MODEL_TYPE, USER_MODEL, CAR_MODEL } from "./constants.js";
 
 describe("Namespaces", () => {
   it("should detect changes in sub-namespaces", async () => {
