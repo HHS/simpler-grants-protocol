@@ -1,5 +1,13 @@
 # @common-grants/cli
 
+## 0.2.2
+
+### Patch Changes
+
+- f5187cb: Updates dependencies
+- Updated dependencies [f5187cb]
+  - @common-grants/core@0.2.3
+
 ## 0.2.1
 
 ### Patch Changes
