@@ -31,6 +31,7 @@ enum Versions {
 @added(Versions.v1)
 model Person {
   id: string;
+
   @added(Versions.v2)
   name: string;
 }
@@ -51,15 +52,16 @@ This will generate the following file in `tsp-output/typespec-versioning-changel
   "Person": [
     {
       "version": "v1",
-      "changes": [ "Schema created" ]
+      "changes": ["Schema created"]
     },
     {
       "version": "v2",
-      "changes": [ "Added `name` field" ]
+      "changes": ["Added `name` field"]
     }
   ]
 }
 ```
+
 ## Coverage
 
 This emitter currently supports the following versioning decorators:
@@ -86,25 +88,25 @@ using Versioning;
 namespace Service;
 
 enum Versions {
-    v1,
-    v2,
+  v1,
+  v2,
 }
 
 @added(Versions.v1)
 model Person {
-    id: string;
+  id: string;
 
-    @added(Versions.v2)
-    name: string;
+  @added(Versions.v2)
+  name: string;
 
-    @madeOptional(Versions.v2)
-    age?: integer;
+  @madeOptional(Versions.v2)
+  age?: integer;
 }
 
 @added(Versions.v2)
 model Car {
-    id: string;
-    make: string;
+  id: string;
+  make: string;
 }
 ```
 
@@ -115,24 +117,17 @@ Generates the following output:
   "Person": [
     {
       "version": "v1",
-      "changes": [
-        "Schema created"
-      ]
+      "changes": ["Schema created"]
     },
     {
       "version": "v2",
-      "changes": [
-        "Added `name` field",
-        "Made `age` field optional"
-      ]
+      "changes": ["Added `name` field", "Made `age` field optional"]
     }
   ],
   "Car": [
     {
       "version": "v2",
-      "changes": [
-        "Schema created"
-      ]
+      "changes": ["Schema created"]
     }
   ]
 }
@@ -186,25 +181,19 @@ Generates the following output:
   "Person": [
     {
       "version": "v1",
-      "changes": [
-        "Schema created"
-      ]
+      "changes": ["Schema created"]
     }
   ],
   "Car": [
     {
       "version": "v2",
-      "changes": [
-        "Schema created"
-      ]
+      "changes": ["Schema created"]
     }
   ],
   "Pet": [
     {
       "version": "v3",
-      "changes": [
-        "Schema created"
-      ]
+      "changes": ["Schema created"]
     }
   ]
 }
@@ -222,15 +211,14 @@ using Versioning;
 @versioned(Versions)
 namespace Service;
 
-  enum Versions {
-    v1,
-    v2,
-    v3,
-  }
+enum Versions {
+  v1,
+  v2,
+  v3,
+}
 
 @added(Versions.v1)
 model Person {
-
   @typeChangedFrom(Versions.v2, integer)
   id: string;
 
@@ -242,7 +230,6 @@ model Person {
 
 @added(Versions.v2)
 model Car {
-
   id: string;
 
   @renamedFrom(Versions.v3, "kind")
@@ -261,9 +248,7 @@ Generates the following output:
   "Person": [
     {
       "version": "v1",
-      "changes": [
-        "Schema created"
-      ]
+      "changes": ["Schema created"]
     },
     {
       "version": "v2",
@@ -276,10 +261,7 @@ Generates the following output:
   "Car": [
     {
       "version": "v2",
-      "changes": [
-        "Schema created",
-        "Added `color` field"
-      ]
+      "changes": ["Schema created", "Added `color` field"]
     },
     {
       "version": "v3",

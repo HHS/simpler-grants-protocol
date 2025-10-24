@@ -6,7 +6,7 @@ import {
   Namespace,
   Enum,
 } from "@typespec/compiler";
-import { getAllVersions } from "@typespec/versioning";
+import { getAllVersions, Version } from "@typespec/versioning";
 import { Changelog } from "./types.js";
 import { logModelChanges } from "./utils/model.js";
 import { logEnumChanges } from "./utils/enum.js";
@@ -27,7 +27,7 @@ const changelogPath = "changelog.json";
 export function generateChangelog(
   context: EmitContext,
   namespace: Namespace,
-  parentVersions?: any
+  parentVersions?: Version[],
 ): Changelog {
   const changelog: Changelog = {};
 
@@ -40,13 +40,13 @@ export function generateChangelog(
   if (!allVersions) {
     // If no versions found, still process sub-namespaces recursively
     const subNamespaces = Array.from(
-      namespace.namespaces.values()
+      namespace.namespaces.values(),
     ) as Namespace[];
     for (const subNamespace of subNamespaces) {
       const subChangelog = generateChangelog(
         context,
         subNamespace,
-        parentVersions
+        parentVersions,
       );
       // Merge sub-namespace changelog into main changelog
       for (const [schemaName, entries] of Object.entries(subChangelog)) {
@@ -70,7 +70,7 @@ export function generateChangelog(
 
   // Recursively process sub-namespaces, passing down the versions
   const subNamespaces = Array.from(
-    namespace.namespaces.values()
+    namespace.namespaces.values(),
   ) as Namespace[];
   for (const subNamespace of subNamespaces) {
     const subChangelog = generateChangelog(context, subNamespace, allVersions);

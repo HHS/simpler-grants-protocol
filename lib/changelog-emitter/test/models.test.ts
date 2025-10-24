@@ -6,9 +6,15 @@
 
 import { it, describe } from "vitest";
 import { emitAndValidate } from "./tester.js";
-import { Log, TargetType } from "../src/index.js";
-
-const modelType = TargetType.Model;
+import { Log } from "../src/index.js";
+import {
+  MODEL_TYPE,
+  USER_MODEL,
+  CAR_MODEL,
+  V1_VERSION,
+  V2_VERSION,
+  V3_VERSION,
+} from "./constants.js";
 
 // #########################################################
 // # Added
@@ -24,13 +30,13 @@ describe("Models - Log @added()", () => {
       }
 
       @added(Versions.v1)
-      model User {
+      model ${USER_MODEL} {
         id: string;
         name: string;
       }
 
       @added(Versions.v1)
-      model Car {
+      model ${CAR_MODEL} {
         id: string;
         name: string;
       }
@@ -38,16 +44,16 @@ describe("Models - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
       ],
-      Car: [
+      [CAR_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, CAR_MODEL)],
         },
       ],
     });
@@ -58,10 +64,10 @@ describe("Models - Log @added()", () => {
       @versioned(Versions)
       namespace Service {
         enum Versions {
-          v1,
+          ${V1_VERSION},
         }
         
-        model User {
+        model ${USER_MODEL} {
           id: string;
           name: string;
         }
@@ -69,10 +75,10 @@ describe("Models - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
       ],
     });
@@ -89,13 +95,13 @@ describe("Models - Log @added()", () => {
         }
 
         @added(Versions.v1)
-        model User {
+        model ${USER_MODEL} {
           id: string;
           name: string;
         }
 
         @added(Versions.v3)
-        model Car {
+        model ${CAR_MODEL} {
           id: string;
           name: string;
         }
@@ -103,16 +109,16 @@ describe("Models - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
       ],
-      Car: [
+      [CAR_MODEL]: [
         {
-          version: "v3",
-          changes: [Log.added(modelType, "User")],
+          version: V3_VERSION,
+          changes: [Log.added(MODEL_TYPE, CAR_MODEL)],
         },
       ],
     });
@@ -135,7 +141,7 @@ describe("Models - Log @removed()", () => {
 
         @added(Versions.v1)
         @removed(Versions.v2)
-        model User {
+        model ${USER_MODEL} {
           id: string;
           name: string;
         }
@@ -143,14 +149,14 @@ describe("Models - Log @removed()", () => {
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.removed(modelType, "User")],
+          version: V2_VERSION,
+          changes: [Log.removed(MODEL_TYPE, USER_MODEL)],
         },
       ],
     });
@@ -173,7 +179,7 @@ describe("Models - Log @renamedFrom()", () => {
 
         @added(Versions.v1)
         @renamedFrom(Versions.v2, "Person")
-        model User {
+        model ${USER_MODEL} {
           id: string;
           name: string;
         }
@@ -181,14 +187,14 @@ describe("Models - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.renamedFrom(modelType, "Person", "User")],
+          version: V2_VERSION,
+          changes: [Log.renamedFrom(MODEL_TYPE, "Person", USER_MODEL)],
         },
       ],
     });
@@ -207,7 +213,7 @@ describe("Models - Log @renamedFrom()", () => {
         @added(Versions.v1)
         @renamedFrom(Versions.v2, "Person")
         @renamedFrom(Versions.v3, "AccountOwner")
-        model User {
+        model ${USER_MODEL} {
           id: string;
           name: string;
         }
@@ -215,18 +221,18 @@ describe("Models - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.renamedFrom(modelType, "Person", "AccountOwner")],
+          version: V2_VERSION,
+          changes: [Log.renamedFrom(MODEL_TYPE, "Person", "AccountOwner")],
         },
         {
-          version: "v3",
-          changes: [Log.renamedFrom(modelType, "AccountOwner", "User")],
+          version: V3_VERSION,
+          changes: [Log.renamedFrom(MODEL_TYPE, "AccountOwner", USER_MODEL)],
         },
       ],
     });

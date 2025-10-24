@@ -14,7 +14,7 @@ export const EmitterTester = createTester(
   resolvePath(import.meta.dirname, ".."),
   {
     libraries: ["@typespec/versioning", "typespec-versioning-changelog"],
-  }
+  },
 )
   .importLibraries()
   .using("Versioning")
@@ -32,7 +32,7 @@ export const EmitterTester = createTester(
  */
 export async function emit(
   code: string,
-  options = {}
+  options = {},
 ): Promise<Record<string, string>> {
   const host = await EmitterTester.createInstance();
   const [result, diagnostics] = await host.compileAndDiagnose(code, {
@@ -59,7 +59,7 @@ export async function emit(
 export async function emitAndValidate(
   code: string,
   expected: Changelog,
-  options = {}
+  options = {},
 ): Promise<void> {
   const outputs = await emit(code, options);
   const changelog = JSON.parse(outputs[outputPath]);

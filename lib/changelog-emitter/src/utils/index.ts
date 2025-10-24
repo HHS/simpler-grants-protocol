@@ -11,7 +11,7 @@ import { ChangelogEntry } from "../types.js";
  */
 export function getOrCreateEntry(
   changelog: ChangelogEntry[],
-  versionName: string
+  versionName: string,
 ): ChangelogEntry {
   let entry = changelog.find((e) => e.version === versionName);
   if (!entry) {

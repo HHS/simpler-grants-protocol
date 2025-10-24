@@ -8,10 +8,21 @@
 
 import { it, describe } from "vitest";
 import { emitAndValidate } from "./tester.js";
-import { Log, TargetType } from "../src/index.js";
-
-const modelType = TargetType.Model;
-const propType = TargetType.ModelProperty;
+import { Log } from "../src/index.js";
+import {
+  MODEL_TYPE,
+  MODEL_PROPERTY_TYPE,
+  USER_MODEL,
+  ID_PROPERTY,
+  NAME_PROPERTY,
+  EMAIL_PROPERTY,
+  STRING_TYPE,
+  NUMBER_TYPE,
+  BOOLEAN_TYPE,
+  V1_VERSION,
+  V2_VERSION,
+  V3_VERSION,
+} from "./constants.js";
 
 // #########################################################
 // # Added
@@ -27,23 +38,23 @@ describe("Props - Log @added()", () => {
           v2,
         }
 
-        model User {
-          id: string;
+        model ${USER_MODEL} {
+          ${ID_PROPERTY}: ${STRING_TYPE};
           @added(Versions.v2)
-          name: string;
+          ${NAME_PROPERTY}: ${STRING_TYPE};
         }
       }
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.added(propType, "name")],
+          version: V2_VERSION,
+          changes: [Log.added(MODEL_PROPERTY_TYPE, NAME_PROPERTY)],
         },
       ],
     });
@@ -58,25 +69,28 @@ describe("Props - Log @added()", () => {
           v2,
         }
 
-        model User {
-          id: string;
+        model ${USER_MODEL} {
+          ${ID_PROPERTY}: ${STRING_TYPE};
           @added(Versions.v2)
-          name: string;
+          ${NAME_PROPERTY}: ${STRING_TYPE};
           @added(Versions.v2)
-          age: int32;
+          ${EMAIL_PROPERTY}: ${STRING_TYPE};
         }
       }
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.added(propType, "name"), Log.added(propType, "age")],
+          version: V2_VERSION,
+          changes: [
+            Log.added(MODEL_PROPERTY_TYPE, NAME_PROPERTY),
+            Log.added(MODEL_PROPERTY_TYPE, EMAIL_PROPERTY),
+          ],
         },
       ],
     });
@@ -97,23 +111,23 @@ describe("Props - Log @removed()", () => {
           v2,
         }
 
-        model User {
-          id: string;
+        model ${USER_MODEL} {
+          ${ID_PROPERTY}: ${STRING_TYPE};
           @removed(Versions.v2)
-          name: string;
+          ${NAME_PROPERTY}: ${STRING_TYPE};
         }
       }
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.removed(propType, "name")],
+          version: V2_VERSION,
+          changes: [Log.removed(MODEL_PROPERTY_TYPE, NAME_PROPERTY)],
         },
       ],
     });
@@ -128,28 +142,27 @@ describe("Props - Log @removed()", () => {
           v2,
         }
 
-        @added(Versions.v1)
-        model User {
-          id: string;
+        model ${USER_MODEL} {
+          ${ID_PROPERTY}: ${STRING_TYPE};
           @removed(Versions.v2)
-          name: string;
+          ${NAME_PROPERTY}: ${STRING_TYPE};
           @removed(Versions.v2)
-          age: int32;
+          ${EMAIL_PROPERTY}: ${STRING_TYPE};
         }
       }
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
+          version: V2_VERSION,
           changes: [
-            Log.removed(propType, "name"),
-            Log.removed(propType, "age"),
+            Log.removed(MODEL_PROPERTY_TYPE, NAME_PROPERTY),
+            Log.removed(MODEL_PROPERTY_TYPE, EMAIL_PROPERTY),
           ],
         },
       ],
@@ -158,7 +171,7 @@ describe("Props - Log @removed()", () => {
 });
 
 // #########################################################
-// # Made required
+// # Made Required
 // #########################################################
 
 describe("Props - Log @madeRequired()", () => {
@@ -171,24 +184,24 @@ describe("Props - Log @madeRequired()", () => {
           v2,
         }
 
-        @added(Versions.v1)
-        model User {
-          id: string;
+        model ${USER_MODEL} {
+          ${ID_PROPERTY}: ${STRING_TYPE};
+          ${NAME_PROPERTY}?: ${STRING_TYPE};
           @madeRequired(Versions.v2)
-          name: string;
+          ${EMAIL_PROPERTY}: ${STRING_TYPE};
         }
       }
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.madeRequired("name")],
+          version: V2_VERSION,
+          changes: [Log.madeRequired(EMAIL_PROPERTY)],
         },
       ],
     });
@@ -196,7 +209,7 @@ describe("Props - Log @madeRequired()", () => {
 });
 
 // #########################################################
-// # Made optional
+// # Made Optional
 // #########################################################
 
 describe("Props - Log @madeOptional()", () => {
@@ -209,24 +222,24 @@ describe("Props - Log @madeOptional()", () => {
           v2,
         }
 
-        @added(Versions.v1)
-        model User {
-          id: string;
+        model ${USER_MODEL} {
+          ${ID_PROPERTY}: ${STRING_TYPE};
+          ${NAME_PROPERTY}: ${STRING_TYPE};
           @madeOptional(Versions.v2)
-          name?: string;
+          ${EMAIL_PROPERTY}?: ${STRING_TYPE};
         }
       }
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.madeOptional("name")],
+          version: V2_VERSION,
+          changes: [Log.madeOptional(EMAIL_PROPERTY)],
         },
       ],
     });
@@ -234,11 +247,11 @@ describe("Props - Log @madeOptional()", () => {
 });
 
 // #########################################################
-// Changed type
+// # Type Changed
 // #########################################################
 
-describe.skip("Props - Log @typeChangedFrom()", () => {
-  it("should log when a property type is changed", async () => {
+describe("Props - Log @typeChangedFrom()", () => {
+  it.skip("should log when a property type is changed", async () => {
     const code = `
       @versioned(Versions)
       namespace Service {
@@ -247,30 +260,31 @@ describe.skip("Props - Log @typeChangedFrom()", () => {
           v2,
         }
 
-        @added(Versions.v1)
-        model User {
-          id: string;
-          @typeChangedFrom(Versions.v2, string)
-          name: int32;
+        model ${USER_MODEL} {
+          ${ID_PROPERTY}: ${STRING_TYPE};
+          @typeChangedFrom(Versions.v2, ${STRING_TYPE})
+          ${NAME_PROPERTY}: ${NUMBER_TYPE};
         }
       }
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.typeChangedFrom(propType, "string", "int32")],
+          version: V2_VERSION,
+          changes: [
+            Log.typeChangedFrom(NAME_PROPERTY, STRING_TYPE, NUMBER_TYPE),
+          ],
         },
       ],
     });
   });
 
-  it("should log multiple type changes to the same property", async () => {
+  it.skip("should log multiple type changes to the same property", async () => {
     const code = `
       @versioned(Versions)
       namespace Service {
@@ -280,29 +294,32 @@ describe.skip("Props - Log @typeChangedFrom()", () => {
           v3,
         }
 
-        @added(Versions.v1)
-        model User {
-          id: string;
-          @typeChangedFrom(Versions.v2, boolean)
-          @typeChangedFrom(Versions.v3, integer)
-          error: string;
+        model ${USER_MODEL} {
+          ${ID_PROPERTY}: ${STRING_TYPE};
+          @typeChangedFrom(Versions.v2, ${STRING_TYPE})
+          @typeChangedFrom(Versions.v3, ${NUMBER_TYPE})
+          ${NAME_PROPERTY}: ${BOOLEAN_TYPE};
         }
       }
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
         {
-          version: "v2",
-          changes: [Log.typeChangedFrom(propType, "boolean", "integer")],
+          version: V2_VERSION,
+          changes: [
+            Log.typeChangedFrom(NAME_PROPERTY, STRING_TYPE, NUMBER_TYPE),
+          ],
         },
         {
-          version: "v3",
-          changes: [Log.typeChangedFrom(propType, "integer", "string")],
+          version: V3_VERSION,
+          changes: [
+            Log.typeChangedFrom(NAME_PROPERTY, NUMBER_TYPE, BOOLEAN_TYPE),
+          ],
         },
       ],
     });

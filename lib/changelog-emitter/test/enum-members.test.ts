@@ -6,10 +6,25 @@
 
 import { it, describe } from "vitest";
 import { emitAndValidate } from "./tester.js";
-import { Log, TargetType } from "../src/index.js";
-
-const enumType = TargetType.Enum;
-const enumMemberType = TargetType.EnumMember;
+import { Log } from "../src/index.js";
+import {
+  ENUM_TYPE,
+  ENUM_MEMBER_TYPE,
+  STATUS_ENUM,
+  PRIORITY_ENUM,
+  CATEGORY_ENUM,
+  ACTIVE_MEMBER,
+  INACTIVE_MEMBER,
+  HIGH_MEMBER,
+  MEDIUM_MEMBER,
+  LOW_MEMBER,
+  ELECTRONICS_MEMBER,
+  CLOTHING_MEMBER,
+  BOOKS_MEMBER,
+  V1_VERSION,
+  V2_VERSION,
+  V3_VERSION,
+} from "./constants.js";
 
 // #########################################################
 // # Added
@@ -26,23 +41,23 @@ describe("Enum members - Log @added()", () => {
         }
 
         @added(Versions.v1)
-        enum Status {
-          active,
+        enum ${STATUS_ENUM} {
+          ${ACTIVE_MEMBER},
           @added(Versions.v2)
-          inactive,
+          ${INACTIVE_MEMBER},
         }
       }
     `;
 
     await emitAndValidate(code, {
-      Status: [
+      [STATUS_ENUM]: [
         {
-          version: "v1",
-          changes: [Log.added(enumType, "Status")],
+          version: V1_VERSION,
+          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
         },
         {
-          version: "v2",
-          changes: [Log.added(enumMemberType, "inactive")],
+          version: V2_VERSION,
+          changes: [Log.added(ENUM_MEMBER_TYPE, INACTIVE_MEMBER)],
         },
       ],
     });
@@ -58,27 +73,27 @@ describe("Enum members - Log @added()", () => {
         }
 
         @added(Versions.v1)
-        enum Priority {
-          low,
+        enum ${PRIORITY_ENUM} {
+          ${HIGH_MEMBER},
           @added(Versions.v2)
-          medium,
+          ${MEDIUM_MEMBER},
           @added(Versions.v2)
-          high,
+          ${LOW_MEMBER},
         }
       }
     `;
 
     await emitAndValidate(code, {
-      Priority: [
+      [PRIORITY_ENUM]: [
         {
-          version: "v1",
-          changes: [Log.added(enumType, "Status")],
+          version: V1_VERSION,
+          changes: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
         },
         {
-          version: "v2",
+          version: V2_VERSION,
           changes: [
-            Log.added(enumMemberType, "medium"),
-            Log.added(enumMemberType, "high"),
+            Log.added(ENUM_MEMBER_TYPE, MEDIUM_MEMBER),
+            Log.added(ENUM_MEMBER_TYPE, LOW_MEMBER),
           ],
         },
       ],
@@ -96,29 +111,29 @@ describe("Enum members - Log @added()", () => {
         }
 
         @added(Versions.v1)
-        enum Category {
-          personal,
+        enum ${CATEGORY_ENUM} {
+          ${ELECTRONICS_MEMBER},
           @added(Versions.v2)
-          work,
+          ${CLOTHING_MEMBER},
           @added(Versions.v3)
-          education,
+          ${BOOKS_MEMBER},
         }
       }
     `;
 
     await emitAndValidate(code, {
-      Category: [
+      [CATEGORY_ENUM]: [
         {
-          version: "v1",
-          changes: [Log.added(enumType, "Status")],
+          version: V1_VERSION,
+          changes: [Log.added(ENUM_TYPE, CATEGORY_ENUM)],
         },
         {
-          version: "v2",
-          changes: [Log.added(enumMemberType, "work")],
+          version: V2_VERSION,
+          changes: [Log.added(ENUM_MEMBER_TYPE, CLOTHING_MEMBER)],
         },
         {
-          version: "v3",
-          changes: [Log.added(enumMemberType, "education")],
+          version: V3_VERSION,
+          changes: [Log.added(ENUM_MEMBER_TYPE, BOOKS_MEMBER)],
         },
       ],
     });
@@ -140,23 +155,23 @@ describe("Enum members - Log @removed()", () => {
         }
 
         @added(Versions.v1)
-        enum Status {
-          active,
+        enum ${STATUS_ENUM} {
+          ${ACTIVE_MEMBER},
           @removed(Versions.v2)
-          inactive,
+          ${INACTIVE_MEMBER},
         }
       }
     `;
 
     await emitAndValidate(code, {
-      Status: [
+      [STATUS_ENUM]: [
         {
-          version: "v1",
-          changes: [Log.added(enumType, "Status")],
+          version: V1_VERSION,
+          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
         },
         {
-          version: "v2",
-          changes: [Log.removed(enumMemberType, "inactive")],
+          version: V2_VERSION,
+          changes: [Log.removed(ENUM_MEMBER_TYPE, INACTIVE_MEMBER)],
         },
       ],
     });
@@ -172,27 +187,27 @@ describe("Enum members - Log @removed()", () => {
         }
 
         @added(Versions.v1)
-        enum Priority {
-          low,
+        enum ${PRIORITY_ENUM} {
+          ${HIGH_MEMBER},
           @removed(Versions.v2)
-          medium,
+          ${MEDIUM_MEMBER},
           @removed(Versions.v2)
-          high,
+          ${LOW_MEMBER},
         }
       }
     `;
 
     await emitAndValidate(code, {
-      Priority: [
+      [PRIORITY_ENUM]: [
         {
-          version: "v1",
-          changes: [Log.added(enumType, "Status")],
+          version: V1_VERSION,
+          changes: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
         },
         {
-          version: "v2",
+          version: V2_VERSION,
           changes: [
-            Log.removed(enumMemberType, "medium"),
-            Log.removed(enumMemberType, "high"),
+            Log.removed(ENUM_MEMBER_TYPE, MEDIUM_MEMBER),
+            Log.removed(ENUM_MEMBER_TYPE, LOW_MEMBER),
           ],
         },
       ],
@@ -204,8 +219,8 @@ describe("Enum members - Log @removed()", () => {
 // # Renamed
 // #########################################################
 
-describe.skip("Enum members - Log @renamedFrom()", () => {
-  it("should log when an enum member is renamed", async () => {
+describe("Enum members - Log @renamedFrom()", () => {
+  it.skip("should log when an enum member is renamed", async () => {
     const code = `
       @versioned(Versions)
       namespace Service {
@@ -215,29 +230,31 @@ describe.skip("Enum members - Log @renamedFrom()", () => {
         }
 
         @added(Versions.v1)
-        enum Status {
-          active,
+        enum ${STATUS_ENUM} {
+          ${ACTIVE_MEMBER},
           @renamedFrom(Versions.v2, "disabled")
-          inactive,
+          ${INACTIVE_MEMBER},
         }
       }
     `;
 
     await emitAndValidate(code, {
-      Status: [
+      [STATUS_ENUM]: [
         {
-          version: "v1",
-          changes: [Log.added(enumType, "Status")],
+          version: V1_VERSION,
+          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
         },
         {
-          version: "v2",
-          changes: [Log.renamedFrom(enumMemberType, "disabled", "inactive")],
+          version: V2_VERSION,
+          changes: [
+            Log.renamedFrom(ENUM_MEMBER_TYPE, "disabled", INACTIVE_MEMBER),
+          ],
         },
       ],
     });
   });
 
-  it("should log multiple renamings of the same enum member", async () => {
+  it.skip("should log multiple renamings of the same enum member", async () => {
     const code = `
       @versioned(Versions)
       namespace Service {
@@ -248,28 +265,30 @@ describe.skip("Enum members - Log @renamedFrom()", () => {
         }
 
         @added(Versions.v1)
-        enum Priority {
-          low,
-          @renamedFrom(Versions.v2, "normal")
-          @renamedFrom(Versions.v3, "standard")
-          medium,
+        enum ${STATUS_ENUM} {
+          ${ACTIVE_MEMBER},
+          @renamedFrom(Versions.v2, "disabled")
+          @renamedFrom(Versions.v3, "offline")
+          ${INACTIVE_MEMBER},
         }
       }
     `;
 
     await emitAndValidate(code, {
-      Priority: [
+      [STATUS_ENUM]: [
         {
-          version: "v1",
-          changes: [Log.added(enumType, "Status")],
+          version: V1_VERSION,
+          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
         },
         {
-          version: "v2",
-          changes: [Log.renamedFrom(enumMemberType, "normal", "standard")],
+          version: V2_VERSION,
+          changes: [Log.renamedFrom(ENUM_MEMBER_TYPE, "disabled", "offline")],
         },
         {
-          version: "v3",
-          changes: [Log.renamedFrom(enumMemberType, "standard", "medium")],
+          version: V3_VERSION,
+          changes: [
+            Log.renamedFrom(ENUM_MEMBER_TYPE, "offline", INACTIVE_MEMBER),
+          ],
         },
       ],
     });

@@ -13,9 +13,9 @@ export interface Changelog {
  * Based on https://typespec.io/docs/libraries/versioning/reference/decorators/
  */
 export enum TargetType {
-  Model = "Schema",
+  Model = "model",
   ModelProperty = "field",
-  Enum = "Schema",
+  Enum = "enum",
   EnumMember = "member",
   Operation = "operation",
   Union = "union",

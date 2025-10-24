@@ -6,9 +6,13 @@
 
 import { it, describe } from "vitest";
 import { emitAndValidate } from "./tester.js";
-import { Log, TargetType } from "../src/index.js";
-
-const modelType = TargetType.Model;
+import { Log } from "../src/index.js";
+import {
+  V1_VERSION,
+  MODEL_TYPE,
+  USER_MODEL,
+  CAR_MODEL,
+} from "./constants.js";
 
 describe("Namespaces", () => {
   it("should detect changes in sub-namespaces", async () => {
@@ -22,7 +26,7 @@ describe("Namespaces", () => {
 
         namespace Schemas {
           @added(Versions.v1)
-          model User {
+          model ${USER_MODEL} {
             id: string;
             name: string;
           }
@@ -31,10 +35,10 @@ describe("Namespaces", () => {
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
           version: "v1",
-          changes: [Log.added(modelType, "User")],
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
       ],
     });
@@ -49,7 +53,7 @@ describe("Namespaces", () => {
           v2,
         }
         namespace People {
-          model User {
+          model ${USER_MODEL} {
             id: string;
             name: string;
           }
@@ -64,16 +68,16 @@ describe("Namespaces", () => {
     `;
 
     await emitAndValidate(code, {
-      User: [
+      [USER_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "User")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
         },
       ],
-      Car: [
+      [CAR_MODEL]: [
         {
-          version: "v1",
-          changes: [Log.added(modelType, "Car")],
+          version: V1_VERSION,
+          changes: [Log.added(MODEL_TYPE, CAR_MODEL)],
         },
       ],
     });

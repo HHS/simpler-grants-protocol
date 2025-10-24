@@ -1,5 +1,9 @@
 import { EmitContext, Enum, EnumMember } from "@typespec/compiler";
-import { getAddedOnVersions, getRemovedOnVersions } from "@typespec/versioning";
+import {
+  getAddedOnVersions,
+  getRemovedOnVersions,
+  Version,
+} from "@typespec/versioning";
 import { ChangelogEntry } from "../types.js";
 import { getOrCreateEntry } from "./index.js";
 import { Log } from "./logging.js";
@@ -52,8 +56,8 @@ import { TargetType } from "../types.js";
 export function logEnumChanges(
   context: EmitContext,
   enumType: Enum,
-  allVersions: any[],
-  changelog: { [schemaName: string]: ChangelogEntry[] }
+  allVersions: Version[],
+  changelog: { [schemaName: string]: ChangelogEntry[] },
 ): void {
   // Skip the Versions enum
   if (enumType.name === "Versions") {
@@ -97,8 +101,8 @@ export function logEnumChanges(
 function logEnumAdditions(
   context: EmitContext,
   enumType: Enum,
-  allVersions: any[],
-  enumChangelog: ChangelogEntry[]
+  allVersions: Version[],
+  enumChangelog: ChangelogEntry[],
 ): void {
   const enumAddedVersions = getAddedOnVersions(context.program, enumType);
 
@@ -123,7 +127,7 @@ function logEnumAdditions(
 function logEnumRemovals(
   context: EmitContext,
   enumType: Enum,
-  enumChangelog: ChangelogEntry[]
+  enumChangelog: ChangelogEntry[],
 ): void {
   const enumRemovedVersions = getRemovedOnVersions(context.program, enumType);
   if (enumRemovedVersions && enumRemovedVersions.length > 0) {
@@ -144,7 +148,7 @@ function logEnumRemovals(
 function logEnumMemberAdditions(
   context: EmitContext,
   member: EnumMember,
-  enumChangelog: ChangelogEntry[]
+  enumChangelog: ChangelogEntry[],
 ): void {
   const memberAddedVersions = getAddedOnVersions(context.program, member);
   if (memberAddedVersions && memberAddedVersions.length > 0) {
@@ -161,7 +165,7 @@ function logEnumMemberAdditions(
 function logEnumMemberRemovals(
   context: EmitContext,
   member: EnumMember,
-  enumChangelog: ChangelogEntry[]
+  enumChangelog: ChangelogEntry[],
 ): void {
   const memberRemovedVersions = getRemovedOnVersions(context.program, member);
   if (memberRemovedVersions && memberRemovedVersions.length > 0) {

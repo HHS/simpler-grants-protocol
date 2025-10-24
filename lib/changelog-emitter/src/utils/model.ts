@@ -1,5 +1,9 @@
 import { EmitContext, Model, ModelProperty } from "@typespec/compiler";
-import { getAddedOnVersions, getRemovedOnVersions } from "@typespec/versioning";
+import {
+  getAddedOnVersions,
+  getRemovedOnVersions,
+  Version,
+} from "@typespec/versioning";
 import { ChangelogEntry } from "../types.js";
 import { getOrCreateEntry } from "./index.js";
 import { Log } from "./logging.js";
@@ -55,8 +59,8 @@ import { TargetType } from "../types.js";
 export function logModelChanges(
   context: EmitContext,
   model: Model,
-  allVersions: any[],
-  changelog: { [schemaName: string]: ChangelogEntry[] }
+  allVersions: Version[],
+  changelog: { [schemaName: string]: ChangelogEntry[] },
 ): void {
   const modelName = model.name;
   const modelChangelog: ChangelogEntry[] = [];
@@ -97,8 +101,8 @@ export function logModelChanges(
 function logModelAdditions(
   context: EmitContext,
   model: Model,
-  allVersions: any[],
-  modelChangelog: ChangelogEntry[]
+  allVersions: Version[],
+  modelChangelog: ChangelogEntry[],
 ): void {
   const modelAddedVersions = getAddedOnVersions(context.program, model);
 
@@ -123,7 +127,7 @@ function logModelAdditions(
 function logModelRemovals(
   context: EmitContext,
   model: Model,
-  modelChangelog: ChangelogEntry[]
+  modelChangelog: ChangelogEntry[],
 ): void {
   const modelRemovedVersions = getRemovedOnVersions(context.program, model);
   if (modelRemovedVersions && modelRemovedVersions.length > 0) {
@@ -144,7 +148,7 @@ function logModelRemovals(
 function logModelPropertyAdditions(
   context: EmitContext,
   property: ModelProperty,
-  modelChangelog: ChangelogEntry[]
+  modelChangelog: ChangelogEntry[],
 ): void {
   const propertyAddedVersions = getAddedOnVersions(context.program, property);
   if (propertyAddedVersions && propertyAddedVersions.length > 0) {
@@ -161,11 +165,11 @@ function logModelPropertyAdditions(
 function logModelPropertyRemovals(
   context: EmitContext,
   property: ModelProperty,
-  modelChangelog: ChangelogEntry[]
+  modelChangelog: ChangelogEntry[],
 ): void {
   const propertyRemovedVersions = getRemovedOnVersions(
     context.program,
-    property
+    property,
   );
   if (propertyRemovedVersions && propertyRemovedVersions.length > 0) {
     for (const version of propertyRemovedVersions) {
@@ -181,7 +185,7 @@ function logModelPropertyRemovals(
 function logModelPropertyMadeRequired(
   context: EmitContext,
   property: ModelProperty,
-  modelChangelog: ChangelogEntry[]
+  modelChangelog: ChangelogEntry[],
 ): void {
   const propertyDecorators = property.decorators;
   if (propertyDecorators) {
@@ -209,7 +213,7 @@ function logModelPropertyMadeRequired(
 function logModelPropertyMadeOptional(
   context: EmitContext,
   property: ModelProperty,
-  modelChangelog: ChangelogEntry[]
+  modelChangelog: ChangelogEntry[],
 ): void {
   const propertyDecorators = property.decorators;
   if (propertyDecorators) {
