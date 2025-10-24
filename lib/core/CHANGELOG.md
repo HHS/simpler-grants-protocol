@@ -1,11 +1,5 @@
 # @common-grants/core
 
-## 0.2.3
-
-### Patch Changes
-
-- 72bd1ec: Updates dependencies
-
 ## 0.2.2
 
 ### Patch Changes
@@ -27,6 +21,7 @@
 - 66b75a7: Adds apply routes and models
 
   Adds the following routes for to support apply:
+
   - Competitions
     - `GET /common-grants/competitions/{compId}` View competition details
   - Applications
@@ -40,6 +35,7 @@
     - `GET /common-grants/forms/{formId}` View form details
 
   Adds the following models used by the apply routes:
+
   - Application
     - `ApplicationBase`
     - `ApplicationStatus`
