@@ -42,6 +42,4 @@ jobs:
       - name: Dry run publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cd lib/cli
-          npm publish --access public --dry-run
+        run: npm publish --access public --dry-run
