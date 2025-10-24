@@ -13,10 +13,6 @@ model ApplicationBase {
   /** The unique identifier for the competition */
   competitionId: Types.uuid;
 
-  /** The unique identifier for the opportunity being applied to */
-  @Versioning.added(CommonGrants.Versions.v0_3)
-  opportunityId: Types.uuid;
-
   /** The form responses for the application */
   formResponses: Record<AppFormResponse>;
 
@@ -89,79 +85,6 @@ model AppFormResponse {
 }
 
 // #########################################################
-// AppFilters
-// #########################################################
-
-/** Filters to apply when searching for applications */
-@Versioning.added(CommonGrants.Versions.v0_3)
-model AppFilters {
-  /** The default filters to apply to the search */
-  ...AppDefaultFilters;
-
-  /** Additional implementation-defined filters to apply to the search */
-  customFilters?: Record<Filters.DefaultFilter>;
-}
-
-/** The standard set of filters supported for application searches */
-@Versioning.added(CommonGrants.Versions.v0_3)
-model AppDefaultFilters extends Record<Filters.DefaultFilter> {
-  /** `opportunityId` matches one of the following values */
-  @example(#{
-    operator: Filters.ArrayOperators.in,
-    value: #["ad3b469a-d89a-42d3-c439-6c1234567890"],
-  })
-  opportunityId?: Filters.StringArrayFilter;
-
-  /** `competitionId` matches one of the following values */
-  @example(#{
-    operator: Filters.ArrayOperators.in,
-    value: #["123e4567-e89b-12d3-a456-426614174000"],
-  })
-  competitionId?: Filters.StringArrayFilter;
-
-  /** `submittedAt` is between the given range */
-  @example(#{
-    operator: Filters.RangeOperators.between,
-    value: #{
-      min: Types.isoDate.fromISO("2025-01-01"),
-      max: Types.isoDate.fromISO("2025-01-30"),
-    },
-  })
-  submittedAtRange?: Filters.DateRangeFilter;
-
-  /** `status.value` matches one of the following values */
-  @example(#{
-    operator: Filters.ArrayOperators.in,
-    value: #["submitted", "accepted"],
-  })
-  status?: Filters.StringArrayFilter;
-}
-
-// #########################################################
-// AppSorting
-// #########################################################
-
-/** The fields that can be used to sort applications */
-@Versioning.added(CommonGrants.Versions.v0_3)
-enum AppSortBy {
-  lastModifiedAt,
-  createdAt,
-  submittedAt,
-  status: "status.value",
-  opportunityId,
-  competitionId,
-  custom,
-}
-
-/** Sorting parameters for applications */
-@Versioning.added(CommonGrants.Versions.v0_3)
-model AppSorting extends Sorting.SortBodyParams {
-  /** The field to sort by */
-  @example(AppSortBy.opportunityId)
-  sortBy: AppSortBy;
-}
-
-// #########################################################
 // Examples
 // #########################################################
 
@@ -187,36 +110,14 @@ namespace Examples.Application {
     ...Examples.FormResponse.formResponse,
   };
 
-  const attachmentsCustomField = #{
-    name: "attachments",
-    fieldType: Fields.CustomFieldType.object,
-    value: #{
-      contacts: Fields.Examples.File.pdfFile,
-      budget: Fields.Examples.File.excelFile,
-    },
-    description: "The attachments for the application",
-  };
-
-  const applicationZipFileCustomField = #{
-    name: "applicationZipFile",
-    fieldType: Fields.CustomFieldType.object,
-    value: Fields.Examples.File.zipFile,
-    description: "The zip file for the application",
-  };
-
   const applicationBase = #{
     id: "123e4567-e89b-12d3-a456-426614174000",
     name: "My Application",
     competitionId: "123e4567-e89b-12d3-a456-426614174000",
-    opportunityId: "ad3b469a-d89a-42d3-c439-6c1234567890",
     formResponses: #{ formA: formResponse },
     status: inProgressStatus,
     submittedAt: null,
     createdAt: utcDateTime.fromISO("2021-01-01T00:00:00Z"),
     lastModifiedAt: utcDateTime.fromISO("2021-01-01T00:00:00Z"),
-    customFields: #{
-      attachments: attachmentsCustomField,
-      applicationZipFile: applicationZipFileCustomField,
-    },
   };
 }

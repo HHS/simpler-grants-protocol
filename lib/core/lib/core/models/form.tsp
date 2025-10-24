@@ -9,8 +9,7 @@ namespace CommonGrants.Models;
 /** A form for collecting data from a user. */
 @example(Examples.Form.form)
 @Versioning.added(CommonGrants.Versions.v0_2)
-@Versioning.renamedFrom(CommonGrants.Versions.v0_3, "Form")
-model FormBase {
+model Form {
   /** The form's unique identifier. */
   id: Types.uuid;
 
@@ -19,9 +18,6 @@ model FormBase {
 
   /** The form's description. */
   description?: string;
-
-  @Versioning.added(CommonGrants.Versions.v0_3)
-  version?: string;
 
   /** The form's instructions. */
   instructions?: string | Fields.File[];
@@ -40,9 +36,6 @@ model FormBase {
 
   /** Custom attributes about the form itself, not custom fields within the form. */
   customFields?: Record<Fields.CustomField>;
-
-  /** The system metadata for the form. */
-  ...Fields.SystemMetadata;
 }
 
 // #########################################################
@@ -81,8 +74,6 @@ namespace Examples.Form {
     uiSchema: uiSchema,
     mappingToCommonGrants: mappingToCommonGrants,
     mappingFromCommonGrants: mappingFromCommonGrants,
-    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
-    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),
   };
 
   const formSchema = #{

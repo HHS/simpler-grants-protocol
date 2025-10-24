@@ -32,16 +32,8 @@ using Versioning;
 )
 @tagMetadata("Forms", #{ description: "Endpoints related to forms" })
 @tagMetadata(
-  "Application Reviews",
-  #{
-    description: "Endpoints related to reviewing applications for a given competition",
-  }
-)
-@tagMetadata(
   "Applications",
-  #{
-    description: "Endpoints related to submitting applications for a given competition",
-  }
+  #{ description: "Endpoints related to applications for a given competition" }
 )
 @tagMetadata(
   "Competitions",
@@ -130,14 +122,6 @@ namespace Applications {
 
   @added(Versions.v0_2)
   op submitApplication is ApplicationRouter.submitApplication;
-
-  // ################################
-  // Search applications
-  // ################################
-
-  @added(Versions.v0_3)
-  @tag("Application Reviews")
-  op searchApplications is ApplicationRouter.searchApplications;
 }
 
 // #########################################################

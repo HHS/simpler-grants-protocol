@@ -28,6 +28,9 @@ jobs:
   deploy:
     needs: create-release-from-tag
     runs-on: ubuntu-latest
+    environment:
+      name: npm-core
+      url: https://www.npmjs.com/package/@common-grants/core
     permissions:
       contents: read
       id-token: write
@@ -42,17 +45,22 @@ jobs:
           ref: ${{ github.event.inputs.tag }}
 
       # Setup .npmrc file to publish to npm
-      - uses: actions/setup-node@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-          registry-url: "https://registry.npmjs.org"
-          cache: "npm"
+          registry-url: https://registry.npmjs.org
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run checks
-        run: npm run checks
+        run: pnpm --filter @common-grants/core run checks
 
       - name: Publish to npm
         env:
