@@ -22,6 +22,28 @@ jobs:
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install workspace dependencies
+        # Needs to be run from the root of the repository because
+        # the changelog-emitter dependency is a file: dependency.
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
+      - name: Build changelog-emitter dependency
+        # Build the local file: dependency before installing website deps
+        working-directory: .
+        run: pnpm --filter typespec-versioning-changelog run build
+
       - name: Install, build, and upload your site
         uses: withastro/action@v3
         with:
