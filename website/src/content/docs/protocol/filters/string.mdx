@@ -38,6 +38,7 @@ stringArrayFilter:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## StringComparisonFilter
 
@@ -59,6 +60,10 @@ A filter that applies a comparison to a string value.
   python={frontmatter.stringComparisonFilter.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="StringComparisonFilter" />
+
 ## StringArrayFilter
 
 A filter that applies a comparison to an array of string values.
@@ -78,3 +83,7 @@ A filter that applies a comparison to an array of string values.
   typeSpec={frontmatter.stringArrayFilter.typeSpec}
   python={frontmatter.stringArrayFilter.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="StringArrayFilter" />

@@ -55,6 +55,7 @@ paginatedResultsInfo:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## PaginatedQueryParams
 
@@ -76,6 +77,10 @@ Query parameters for paginated routes. These parameters should be used on GET ro
   python={frontmatter.paginatedQueryParams.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="PaginatedQueryParams" />
+
 ## PaginatedBodyParams
 
 Body parameters for paginated routes. These parameters should be used on POST and PUT routes that support pagination.
@@ -95,6 +100,10 @@ Body parameters for paginated routes. These parameters should be used on POST an
   typeSpec={frontmatter.paginatedBodyParams.typeSpec}
   python={frontmatter.paginatedBodyParams.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="PaginatedBodyParams" />
 
 ## PaginatedResultsInfo
 
@@ -117,3 +126,7 @@ Details about the paginated results. This model should included in the response 
   typeSpec={frontmatter.paginatedResultsInfo.typeSpec}
   python={frontmatter.paginatedResultsInfo.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="PaginatedResultsInfo" />

@@ -29,6 +29,7 @@ addressCollection:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 An address is a physical location.
 
@@ -43,6 +44,10 @@ An address is a physical location.
   jsonSchema={frontmatter.address.jsonSchema}
   typeSpec={frontmatter.address.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="Address" />
 
 ## AddressCollection
 
@@ -59,3 +64,7 @@ A collection of addresses for a person or organization.
   jsonSchema={frontmatter.addressCollection.jsonSchema}
   typeSpec={frontmatter.addressCollection.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="AddressCollection" />

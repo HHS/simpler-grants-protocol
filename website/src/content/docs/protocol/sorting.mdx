@@ -72,6 +72,7 @@ sortedResultsInfo:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## SortOrder
 
@@ -92,6 +93,10 @@ The order or direction to sort results by.
   typeSpec={frontmatter.sortOrder.typeSpec}
   python={frontmatter.sortOrder.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="SortOrder" />
 
 ## SortQueryParams
 
@@ -114,6 +119,10 @@ Query parameters for sorting. These parameters should be used on GET routes that
   python={frontmatter.sortQueryParams.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="SortQueryParams" />
+
 ## SortBodyParams
 
 Body parameters for sorting. These parameters should be used on POST and PUT routes that support sorting.
@@ -134,6 +143,10 @@ Body parameters for sorting. These parameters should be used on POST and PUT rou
   typeSpec={frontmatter.sortBodyParams.typeSpec}
   python={frontmatter.sortBodyParams.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="SortBodyParams" />
 
 ## SortedResultsInfo
 
@@ -156,3 +169,7 @@ Information about the sort order of the items returned. This model should be inc
   typeSpec={frontmatter.sortedResultsInfo.typeSpec}
   python={frontmatter.sortedResultsInfo.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="SortedResultsInfo" />

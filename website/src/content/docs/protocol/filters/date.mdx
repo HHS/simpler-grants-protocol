@@ -38,6 +38,7 @@ dateComparisonFilter:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## DateRangeFilter
 
@@ -68,6 +69,10 @@ Filters by comparing a field to a range of date values.
   python={frontmatter.dateRangeFilter.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="DateRangeFilter" />
+
 ## DateComparisonFilter
 
 Filters by comparing a field to a date value.
@@ -87,3 +92,7 @@ Filters by comparing a field to a date value.
   typeSpec={frontmatter.dateComparisonFilter.typeSpec}
   python={frontmatter.dateComparisonFilter.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="DateComparisonFilter" />

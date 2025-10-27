@@ -22,6 +22,7 @@ money:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 A monetary amount and the currency in which it is denominated.
 
@@ -37,3 +38,7 @@ A monetary amount and the currency in which it is denominated.
   typeSpec={frontmatter.money.typeSpec}
   python={frontmatter.money.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="Money" />

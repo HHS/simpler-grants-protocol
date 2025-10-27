@@ -22,6 +22,7 @@ systemMetadata:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 System-managed metadata that is automatically added to records.
 
@@ -37,3 +38,7 @@ System-managed metadata that is automatically added to records.
   typeSpec={frontmatter.systemMetadata.typeSpec}
   python={frontmatter.systemMetadata.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="SystemMetadata" />

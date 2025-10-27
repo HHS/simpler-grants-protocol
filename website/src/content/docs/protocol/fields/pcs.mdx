@@ -88,6 +88,7 @@ pcsTransactionType:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## PCSTerm
 
@@ -111,6 +112,10 @@ Visit [taxonomy.candid.org](https://taxonomy.candid.org/) for more information.
   jsonSchema={frontmatter.pcsTerm.jsonSchema}
   typeSpec={frontmatter.pcsTerm.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="PCSTerm" />
 
 ## PCSClass
 

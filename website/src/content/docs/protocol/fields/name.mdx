@@ -17,6 +17,7 @@ name:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 A person's name.
 
@@ -31,3 +32,7 @@ A person's name.
   jsonSchema={frontmatter.name.jsonSchema}
   typeSpec={frontmatter.name.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="Name" />

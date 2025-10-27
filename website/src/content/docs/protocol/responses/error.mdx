@@ -35,6 +35,7 @@ applicationSubmissionError:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 Outlines the default error response schema, and some common error types.
 
@@ -76,6 +77,10 @@ using CommonGrants.Responses;
 op getTest(): Ok<TestModel> | Error;
 ```
 
+### Changelog
+
+<SchemaChangelog schema="Error" />
+
 ## ApplicationSubmissionError
 
 A failure to submit an application due to validation errors.
@@ -95,6 +100,10 @@ A failure to submit an application due to validation errors.
   jsonSchema={frontmatter.applicationSubmissionError.jsonSchema}
   typeSpec={frontmatter.applicationSubmissionError.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="ApplicationSubmissionError" />
 
 ## Common Error Types
 
