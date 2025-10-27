@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "npm run typespec && astro dev",
     "start": "npm run typespec && astro dev",
-    "build": "npm run typespec && astro build",
+    "build": "npm run typespec && npm run generate && astro build",
     "preview": "astro build && astro preview",
     "preview:wrangler": "npm run build && wrangler dev",
     "astro": "astro",
