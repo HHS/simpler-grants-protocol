@@ -1,8 +1,4 @@
-/** Tests logging changes to `Namespace` with the following decorators:
- * - @Versioning.added
- * - @Versioning.removed
- * - @Versioning.renamedFrom
- */
+/** Tests logging changes to targets split across multiple namespaces. */
 
 import { it, describe } from "vitest";
 import { emitAndValidate } from "./tester.js";

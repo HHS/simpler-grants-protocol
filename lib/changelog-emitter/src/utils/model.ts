@@ -6,7 +6,11 @@ import {
   Version,
 } from "@typespec/versioning";
 import { ChangelogEntry } from "../types.js";
-import { getOrCreateEntry, getNameAtVersion } from "./index.js";
+import {
+  getOrCreateEntry,
+  getNameAtVersion,
+  getVersionString,
+} from "./index.js";
 import { Log } from "./logging.js";
 import { TargetType } from "../types.js";
 
@@ -85,8 +89,12 @@ export function logModelChanges(
   if (modelChangelog.length > 0) {
     // Sort by version index to maintain order
     modelChangelog.sort((a, b) => {
-      const versionA = allVersions.find((v) => v.name === a.version);
-      const versionB = allVersions.find((v) => v.name === b.version);
+      const versionA = allVersions.find(
+        (v) => getVersionString(v) === a.version,
+      );
+      const versionB = allVersions.find(
+        (v) => getVersionString(v) === b.version,
+      );
       return (versionA?.index || 0) - (versionB?.index || 0);
     });
 
@@ -112,7 +120,7 @@ function logModelAdditions(
 
   if (modelAddedVersions && modelAddedVersions.length > 0) {
     for (const version of modelAddedVersions) {
-      const entry = getOrCreateEntry(modelChangelog, version.name);
+      const entry = getOrCreateEntry(modelChangelog, getVersionString(version));
       const modelNameAtVersion = getNameAtVersion(
         model.name,
         version,
@@ -124,7 +132,10 @@ function logModelAdditions(
     // If no explicit @added, assume it was created in the first version
     const firstVersion = allVersions[0];
     if (firstVersion) {
-      const entry = getOrCreateEntry(modelChangelog, firstVersion.name);
+      const entry = getOrCreateEntry(
+        modelChangelog,
+        getVersionString(firstVersion),
+      );
       const modelNameAtVersion = getNameAtVersion(
         model.name,
         firstVersion,
@@ -148,7 +159,7 @@ function logModelRemovals(
 
   if (modelRemovedVersions && modelRemovedVersions.length > 0) {
     for (const version of modelRemovedVersions) {
-      const entry = getOrCreateEntry(modelChangelog, version.name);
+      const entry = getOrCreateEntry(modelChangelog, getVersionString(version));
       const modelNameAtVersion = getNameAtVersion(
         model.name,
         version,
@@ -176,7 +187,10 @@ function logModelRenames(
 
     for (let i = 0; i < sortedRenames.length; i++) {
       const rename = sortedRenames[i];
-      const entry = getOrCreateEntry(modelChangelog, rename.version.name);
+      const entry = getOrCreateEntry(
+        modelChangelog,
+        getVersionString(rename.version),
+      );
 
       // Determine the new name for this rename
       // For the last rename, the new name is the current model name
@@ -212,7 +226,7 @@ function logModelPropertyAdditions(
 
   if (propertyAddedVersions && propertyAddedVersions.length > 0) {
     for (const version of propertyAddedVersions) {
-      const entry = getOrCreateEntry(modelChangelog, version.name);
+      const entry = getOrCreateEntry(modelChangelog, getVersionString(version));
       const propertyNameAtVersion = getNameAtVersion(
         property.name,
         version,
@@ -241,7 +255,7 @@ function logModelPropertyRemovals(
 
   if (propertyRemovedVersions && propertyRemovedVersions.length > 0) {
     for (const version of propertyRemovedVersions) {
-      const entry = getOrCreateEntry(modelChangelog, version.name);
+      const entry = getOrCreateEntry(modelChangelog, getVersionString(version));
       const propertyNameAtVersion = getNameAtVersion(
         property.name,
         version,
@@ -273,7 +287,14 @@ function logModelPropertyMadeRequired(
           "name" in versionArg.value &&
           typeof versionArg.value.name === "string"
         ) {
-          const versionName = versionArg.value.name;
+          // Check if the enum member has a string value (e.g., v1: "1.0.0")
+          let versionName = versionArg.value.name;
+          if (
+            "value" in versionArg.value &&
+            typeof versionArg.value.value === "string"
+          ) {
+            versionName = versionArg.value.value;
+          }
           const entry = getOrCreateEntry(modelChangelog, versionName);
           entry.changes.push(Log.madeRequired(property.name));
         }
@@ -301,7 +322,14 @@ function logModelPropertyMadeOptional(
           "name" in versionArg.value &&
           typeof versionArg.value.name === "string"
         ) {
-          const versionName = versionArg.value.name;
+          // Check if the enum member has a string value (e.g., v1: "1.0.0")
+          let versionName = versionArg.value.name;
+          if (
+            "value" in versionArg.value &&
+            typeof versionArg.value.value === "string"
+          ) {
+            versionName = versionArg.value.value;
+          }
           const entry = getOrCreateEntry(modelChangelog, versionName);
           entry.changes.push(Log.madeOptional(property.name));
         }
@@ -327,7 +355,10 @@ function logModelPropertyRenames(
 
     for (let i = 0; i < sortedRenames.length; i++) {
       const rename = sortedRenames[i];
-      const entry = getOrCreateEntry(modelChangelog, rename.version.name);
+      const entry = getOrCreateEntry(
+        modelChangelog,
+        getVersionString(rename.version),
+      );
 
       // Determine the new name for this rename
       // For the last rename, the new name is the current property name

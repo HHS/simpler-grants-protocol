@@ -5,7 +5,7 @@ import {
   Version,
 } from "@typespec/versioning";
 import { ChangelogEntry } from "../types.js";
-import { getOrCreateEntry } from "./index.js";
+import { getOrCreateEntry, getVersionString } from "./index.js";
 import { Log } from "./logging.js";
 import { TargetType } from "../types.js";
 
@@ -82,8 +82,12 @@ export function logEnumChanges(
   if (enumChangelog.length > 0) {
     // Sort by version index to maintain order
     enumChangelog.sort((a, b) => {
-      const versionA = allVersions.find((v) => v.name === a.version);
-      const versionB = allVersions.find((v) => v.name === b.version);
+      const versionA = allVersions.find(
+        (v) => getVersionString(v) === a.version,
+      );
+      const versionB = allVersions.find(
+        (v) => getVersionString(v) === b.version,
+      );
       return (versionA?.index || 0) - (versionB?.index || 0);
     });
 
@@ -108,14 +112,17 @@ function logEnumAdditions(
 
   if (enumAddedVersions && enumAddedVersions.length > 0) {
     for (const version of enumAddedVersions) {
-      const entry = getOrCreateEntry(enumChangelog, version.name);
+      const entry = getOrCreateEntry(enumChangelog, getVersionString(version));
       entry.changes.push(Log.added(TargetType.Enum, enumType.name));
     }
   } else {
     // If no explicit @added, assume it was created in the first version
     const firstVersion = allVersions[0];
     if (firstVersion) {
-      const entry = getOrCreateEntry(enumChangelog, firstVersion.name);
+      const entry = getOrCreateEntry(
+        enumChangelog,
+        getVersionString(firstVersion),
+      );
       entry.changes.push(Log.added(TargetType.Enum, enumType.name));
     }
   }
@@ -132,7 +139,7 @@ function logEnumRemovals(
   const enumRemovedVersions = getRemovedOnVersions(context.program, enumType);
   if (enumRemovedVersions && enumRemovedVersions.length > 0) {
     for (const version of enumRemovedVersions) {
-      const entry = getOrCreateEntry(enumChangelog, version.name);
+      const entry = getOrCreateEntry(enumChangelog, getVersionString(version));
       entry.changes.push(Log.removed(TargetType.Enum, enumType.name));
     }
   }
@@ -153,7 +160,7 @@ function logEnumMemberAdditions(
   const memberAddedVersions = getAddedOnVersions(context.program, member);
   if (memberAddedVersions && memberAddedVersions.length > 0) {
     for (const version of memberAddedVersions) {
-      const entry = getOrCreateEntry(enumChangelog, version.name);
+      const entry = getOrCreateEntry(enumChangelog, getVersionString(version));
       entry.changes.push(Log.added(TargetType.EnumMember, member.name));
     }
   }
@@ -170,7 +177,7 @@ function logEnumMemberRemovals(
   const memberRemovedVersions = getRemovedOnVersions(context.program, member);
   if (memberRemovedVersions && memberRemovedVersions.length > 0) {
     for (const version of memberRemovedVersions) {
-      const entry = getOrCreateEntry(enumChangelog, version.name);
+      const entry = getOrCreateEntry(enumChangelog, getVersionString(version));
       entry.changes.push(Log.removed(TargetType.EnumMember, member.name));
     }
   }

@@ -2,6 +2,26 @@ import { ChangelogEntry } from "../types.js";
 import { Version } from "@typespec/versioning";
 
 /**
+ * Get the version string from a Version object.
+ * If the enum member has a string value assigned (e.g., v1: "1.0.0"), use that.
+ * Otherwise, use the enum member name (e.g., "v1").
+ *
+ * @param version - The version object
+ * @returns The version string
+ */
+export function getVersionString(version: Version): string {
+  // Check if the version has an enumMember with a value
+  if (
+    version.enumMember?.value &&
+    typeof version.enumMember.value === "string"
+  ) {
+    return version.enumMember.value;
+  }
+  // Fall back to the version name
+  return version.name;
+}
+
+/**
  * Get or create a changelog entry for a specific version.
  * If an entry for the version already exists, it returns that entry.
  * Otherwise, it creates a new entry with an empty changes array.
