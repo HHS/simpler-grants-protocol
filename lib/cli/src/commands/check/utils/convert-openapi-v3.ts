@@ -27,6 +27,9 @@ export function convertOpenApiToV3(schema: OpenAPISchema): OpenAPISchema {
   // Move schemas from components to definitions
   moveSchemasToDefinitions(schema);
 
+  // Normalize type fields from arrays to strings
+  normalizeTypeFields(schema);
+
   // Convert all schema references
   return convertRefs(schema) as OpenAPISchema;
 }
@@ -81,6 +84,60 @@ function moveDefsToDefinitions(obj: unknown): void {
       // Recursively process all properties
       for (const value of Object.values(o)) {
         moveDefsToDefinitions(value);
+      }
+    }
+  }
+}
+
+/**
+ * Normalize `type` fields in schemas from arrays to strings for OpenAPI 3.0.0.
+ * OpenAPI 3.1 allows type to be an array, but 3.0 requires it to be a string.
+ * And leaving it as an array raises an error because of how we compare types.
+ *
+ * @see https://swagger.io/docs/specification/v3_0/data-models/data-types/
+ *
+ * @example The following schema would
+ *
+ * ```yaml
+ * type:
+ *   - string
+ *   - null
+ * ```
+ * to the following schema:
+ * ```yaml
+ * type: string
+ * ```
+ *
+ * @param obj - The object to process
+ */
+function normalizeTypeFields(obj: unknown): void {
+  if (typeof obj === "object" && obj !== null) {
+    if (Array.isArray(obj)) {
+      obj.forEach(item => normalizeTypeFields(item));
+    } else {
+      const o = obj as Record<string, unknown>;
+
+      // Check if this object has a type field that is an array
+      if (o.type && Array.isArray(o.type)) {
+        // If the array has only one element, convert it to a string
+        if (o.type.length === 1) {
+          o.type = o.type[0];
+        } else if (o.type.length > 1) {
+          // For multiple types, we need to use oneOf or anyOf
+          // For now, just take the first non-null type
+          const nonNullTypes = o.type.filter((t: unknown) => t !== "null");
+          if (nonNullTypes.length === 1) {
+            o.type = nonNullTypes[0];
+          } else if (nonNullTypes.length > 1) {
+            // Take the first type - this is a simplification
+            o.type = nonNullTypes[0];
+          }
+        }
+      }
+
+      // Recursively process all properties
+      for (const value of Object.values(o)) {
+        normalizeTypeFields(value);
       }
     }
   }
