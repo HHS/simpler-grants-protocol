@@ -6,10 +6,7 @@ import { Document } from "./utils/types";
 import { CheckApiOptions, CheckSpecOptions, availableVersions } from "./check-args";
 import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
 import { convertOpenApiToV3, OpenAPISchema } from "./utils/convert-openapi-v3";
-import {
-  detectCompositionIssues,
-  transformSpecCompositionToCg,
-} from "./utils/transform-spec-composition";
+import { transformSpecCompositionToCg } from "./utils/transform-spec-composition";
 import * as path from "path";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
@@ -106,8 +103,9 @@ async function loadAndParseSpec(
   })) as Document;
 
   // Check for composition issues and apply transformation if needed
-  if (applyTransformation && detectCompositionIssues(dereferencedSpec)) {
-    return transformSpecCompositionToCg(dereferencedSpec);
+  if (applyTransformation) {
+    const result = transformSpecCompositionToCg(dereferencedSpec);
+    return result.transformed;
   }
 
   return dereferencedSpec;

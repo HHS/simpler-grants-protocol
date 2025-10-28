@@ -111,7 +111,7 @@ describe("transform-spec-composition", () => {
   });
 
   describe("transformSpecCompositionToCg", () => {
-    it("should transform response schemas with $ref", () => {
+    it("should transform response schemas with $ref and return issue status", () => {
       const spec: OpenAPIV3.Document = {
         openapi: "3.0.0",
         info: { title: "Test API", version: "1.0.0" },
@@ -154,8 +154,11 @@ describe("transform-spec-composition", () => {
 
       const result = transformSpecCompositionToCg(spec);
 
+      // Check that issues were detected
+      expect(result.hadIssues).toBe(true);
+
       // Check that the response schema was inlined and transformed
-      const response = result.paths?.["/test"]?.get?.responses?.["200"];
+      const response = result.transformed.paths?.["/test"]?.get?.responses?.["200"];
       const responseSchema =
         response && "content" in response
           ? response.content?.["application/json"]?.schema
@@ -170,7 +173,7 @@ describe("transform-spec-composition", () => {
       expect("allOf" in (responseSchema as Record<string, unknown>)).toBe(false);
     });
 
-    it("should transform component schemas", () => {
+    it("should transform component schemas and return issue status", () => {
       const spec: OpenAPIV3.Document = {
         openapi: "3.0.0",
         info: { title: "Test API", version: "1.0.0" },
@@ -190,7 +193,10 @@ describe("transform-spec-composition", () => {
 
       const result = transformSpecCompositionToCg(spec);
 
-      const transformedSchema = result.components?.schemas?.TestSchema;
+      // Check that issues were detected
+      expect(result.hadIssues).toBe(true);
+
+      const transformedSchema = result.transformed.components?.schemas?.TestSchema;
       expect(transformedSchema).toEqual({
         $ref: "#/components/schemas/BaseSchema",
         properties: {
@@ -199,6 +205,29 @@ describe("transform-spec-composition", () => {
       });
       expect("type" in (transformedSchema as Record<string, unknown>)).toBe(false);
       expect("allOf" in (transformedSchema as Record<string, unknown>)).toBe(false);
+    });
+
+    it("should return hadIssues: false when no transformation is needed", () => {
+      const spec: OpenAPIV3.Document = {
+        openapi: "3.0.0",
+        info: { title: "Test API", version: "1.0.0" },
+        paths: {},
+        components: {
+          schemas: {
+            TestSchema: {
+              type: "string",
+              properties: {
+                field: { type: "string" },
+              },
+            },
+          },
+        },
+      };
+
+      const result = transformSpecCompositionToCg(spec);
+
+      // Check that no issues were detected
+      expect(result.hadIssues).toBe(false);
     });
   });
 
