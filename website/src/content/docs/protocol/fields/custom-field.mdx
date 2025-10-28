@@ -37,6 +37,7 @@ customFieldType:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 A model for defining custom fields on a record.
 
@@ -61,6 +62,10 @@ A model for defining custom fields on a record.
   python={frontmatter.customField.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="CustomField" />
+
 ## CustomFieldType
 
 The set of JSON schema types supported by a custom field.
@@ -84,3 +89,7 @@ The set of JSON schema types supported by a custom field.
   typeSpec={frontmatter.customFieldType.typeSpec}
   python={frontmatter.customFieldType.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="CustomFieldType" />

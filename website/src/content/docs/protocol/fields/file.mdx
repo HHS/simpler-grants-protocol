@@ -17,6 +17,7 @@ file:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 A file attachment.
 
@@ -31,3 +32,7 @@ A file attachment.
   jsonSchema={frontmatter.file.jsonSchema}
   typeSpec={frontmatter.file.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="File" />

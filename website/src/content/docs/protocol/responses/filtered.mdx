@@ -81,6 +81,9 @@ filtered:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
+
+## Filtered
 
 A 200 response with a paginated list of filtered items.
 
@@ -103,3 +106,7 @@ A 200 response with a paginated list of filtered items.
   typeSpec={frontmatter.filtered.typeSpec}
   python={frontmatter.filtered.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="Filtered" />

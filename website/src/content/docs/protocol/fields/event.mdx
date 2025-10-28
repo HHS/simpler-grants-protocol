@@ -106,6 +106,7 @@ otherEvent:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 A comprehensive system for representing various types of events including single dates, date ranges, and custom events.
 
@@ -130,6 +131,10 @@ Defines the different types of events that can be represented
   python={frontmatter.eventType.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="EventType" />
+
 ## Event
 
 The `Event` union represents all possible event types.
@@ -151,6 +156,8 @@ The `Event` union represents all possible event types.
   python={frontmatter.event.python}
 />
 
+{/* TODO: Add changelog once unions are supported */}
+
 ## EventBase
 
 Base model for all events with common properties
@@ -171,6 +178,10 @@ Base model for all events with common properties
   typeSpec={frontmatter.eventBase.typeSpec}
   python={frontmatter.eventBase.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="EventBase" />
 
 ## SingleDateEvent
 
@@ -194,6 +205,10 @@ Represents an event that has a specific date (and optional time) associated with
   typeSpec={frontmatter.singleDateEvent.typeSpec}
   python={frontmatter.singleDateEvent.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="SingleDateEvent" />
 
 ## DateRangeEvent
 
@@ -220,6 +235,10 @@ Represents an event that spans a period of time with start and end dates (and op
   python={frontmatter.dateRangeEvent.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="DateRangeEvent" />
+
 ## OtherEvent
 
 Represents custom events that don't fit the single date or date range patterns.
@@ -241,3 +260,7 @@ Represents custom events that don't fit the single date or date range patterns.
   typeSpec={frontmatter.otherEvent.typeSpec}
   python={frontmatter.otherEvent.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="OtherEvent" />

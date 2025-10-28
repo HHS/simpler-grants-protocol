@@ -55,6 +55,7 @@ numberArrayFilter:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## NumberComparisonFilter
 
@@ -75,6 +76,10 @@ Filters by comparing a field to a numeric value.
   typeSpec={frontmatter.numberComparisonFilter.typeSpec}
   python={frontmatter.numberComparisonFilter.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="NumberComparisonFilter" />
 
 ## NumberRangeFilter
 
@@ -105,6 +110,10 @@ Filters by comparing a field to a range of numeric values.
   python={frontmatter.numberRangeFilter.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="NumberRangeFilter" />
+
 ## NumberArrayFilter
 
 Filters by comparing a field to an array of numeric values.
@@ -124,3 +133,7 @@ Filters by comparing a field to an array of numeric values.
   typeSpec={frontmatter.numberArrayFilter.typeSpec}
   python={frontmatter.numberArrayFilter.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="NumberArrayFilter" />

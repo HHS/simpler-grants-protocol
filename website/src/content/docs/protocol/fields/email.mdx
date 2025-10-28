@@ -28,6 +28,7 @@ emailCollection:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 An email address. Alias for the [email](/protocol/types/string#email) type.
 
@@ -54,3 +55,7 @@ A collection of email addresses for a person or organization.
   jsonSchema={frontmatter.emailCollection.jsonSchema}
   typeSpec={frontmatter.emailCollection.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="EmailCollection" />

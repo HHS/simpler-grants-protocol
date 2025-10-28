@@ -64,6 +64,9 @@ paginated:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
+
+## Paginated
 
 A 200 response with a paginated list of items.
 
@@ -84,6 +87,10 @@ A 200 response with a paginated list of items.
   typeSpec={frontmatter.paginated.typeSpec}
   python={frontmatter.paginated.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="Paginated" />
 
 ### Usage
 

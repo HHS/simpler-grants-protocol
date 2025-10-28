@@ -1,0 +1,43 @@
+{
+  "name": "typespec-versioning-changelog",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./testing": {
+      "types": "./dist/src/testing/index.d.ts",
+      "default": "./dist/src/testing/index.js"
+    }
+  },
+  "peerDependencies": {
+    "@typespec/compiler": "^1.0.0",
+    "@typespec/versioning": "^0.70.0"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@typespec/compiler": "^1.5.0",
+    "@typespec/prettier-plugin-typespec": "^1.5.0",
+    "eslint": "^9.15.0",
+    "@eslint/js": "^9.15.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.15.0",
+    "vitest": "^3.2.4"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . --fix",
+    "format": "prettier .  --write",
+    "check:format": "prettier --check .",
+    "check:lint": "eslint . --report-unused-disable-directives --max-warnings=0",
+    "checks": "npm run check:lint && npm run check:format"
+  },
+  "packageManager": "npm@11.6.2+sha512.ee22b335fcbc95662cdf3ab8a053daf045d9cf9c6df6040d28965abb707512b2c16fa6c5eec049d34c74f78f390cebd14f697919eadb97756564d4f9eccc4954"
+}

@@ -29,6 +29,7 @@ phoneCollection:
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 A phone number.
 
@@ -43,6 +44,10 @@ A phone number.
   jsonSchema={frontmatter.phone.jsonSchema}
   typeSpec={frontmatter.phone.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="Phone" />
 
 ## PhoneCollection
 
@@ -59,3 +64,7 @@ A collection of phone numbers for a person or organization.
   jsonSchema={frontmatter.phoneCollection.jsonSchema}
   typeSpec={frontmatter.phoneCollection.typeSpec}
 />
+
+### Changelog
+
+<SchemaChangelog schema="PhoneCollection" />

@@ -23,6 +23,9 @@ success:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
+
+## Success
 
 A 200 response with data.
 
@@ -42,6 +45,10 @@ A 200 response with data.
   typeSpec={frontmatter.success.typeSpec}
   python={frontmatter.success.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="Success" />
 
 ### Usage
 

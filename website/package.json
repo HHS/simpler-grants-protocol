@@ -5,14 +5,16 @@
   "scripts": {
     "dev": "npm run typespec && astro dev",
     "start": "npm run typespec && astro dev",
-    "build": "npm run typespec && astro build",
+    "build": "npm run typespec && npm run generate && astro build",
     "preview": "astro build && astro preview",
     "preview:wrangler": "npm run build && wrangler dev",
     "astro": "astro",
-    "typespec": "npm run typespec:clear-output && npm run typespec:openapi && npm run typespec:json-schema && npm run generate:schema-docs && npm run generate:schema-metadata && npm run generate:type-formatting",
-    "typespec:openapi": "tsp compile src/specs/main.tsp && cp tsp-output/@typespec/openapi3/** public/openapi",
-    "typespec:json-schema": "tsp compile src/specs/main.tsp && cp tsp-output/@typespec/json-schema/** public/schemas/yaml",
+    "typespec": "npm run typespec:clear-output && npm run typespec:compile && npm run typespec:openapi && npm run typespec:json-schema",
+    "typespec:compile": "tsp compile src/specs/main.tsp",
+    "typespec:openapi": "cp tsp-output/@typespec/openapi3/** public/openapi",
+    "typespec:json-schema": "cp tsp-output/@typespec/json-schema/** public/schemas/yaml",
     "typespec:clear-output": "rm -rf tsp-output && rm -rf public/schemas/yaml/* && rm -rf public/openapi/*",
+    "generate": "npm run generate:schema-docs && npm run generate:schema-metadata && npm run generate:type-formatting",
     "generate:schema-docs": "tsx src/scripts/generate-schema-docs.ts",
     "generate:schema-metadata": "tsx src/scripts/generate-schema-metadata.ts",
     "generate:type-formatting": "tsx src/scripts/generate-type-formatting.ts",
@@ -46,7 +48,8 @@
     "sharp": "^0.32.5",
     "swagger-ui-react": "^5.20.2",
     "tsx": "^4.20.3",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "typespec-versioning-changelog": "file:../lib/changelog-emitter"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

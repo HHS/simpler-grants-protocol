@@ -38,6 +38,7 @@ moneyComparisonFilter:
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## MoneyRangeFilter
 
@@ -68,6 +69,10 @@ Filters by comparing a field to a range of monetary values.
   python={frontmatter.moneyRangeFilter.python}
 />
 
+### Changelog
+
+<SchemaChangelog schema="MoneyRangeFilter" />
+
 ## MoneyComparisonFilter
 
 Filters by comparing a field to a monetary value.
@@ -87,3 +92,7 @@ Filters by comparing a field to a monetary value.
   typeSpec={frontmatter.moneyComparisonFilter.typeSpec}
   python={frontmatter.moneyComparisonFilter.python}
 />
+
+### Changelog
+
+<SchemaChangelog schema="MoneyComparisonFilter" />
