@@ -6,7 +6,10 @@ import { Document } from "./utils/types";
 import { CheckApiOptions, CheckSpecOptions, availableVersions } from "./check-args";
 import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
 import { convertOpenApiToV3, OpenAPISchema } from "./utils/convert-openapi-v3";
-import { detectCompositionIssues, transformSpecCompositionToCg } from "./utils/transform-spec-composition";
+import {
+  detectCompositionIssues,
+  transformSpecCompositionToCg,
+} from "./utils/transform-spec-composition";
 import * as path from "path";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
@@ -71,7 +74,10 @@ function validateSpecs(baseDoc: Document, implDoc: Document): ErrorCollection {
  *   3) Converting the spec to OpenAPI v3.0 if needed
  *   4) Dereferencing the spec, ignoring circular references
  */
-async function loadAndParseSpec(specPath: string, applyTransformation: boolean = true): Promise<Document> {
+async function loadAndParseSpec(
+  specPath: string,
+  applyTransformation: boolean = true
+): Promise<Document> {
   const specContent = fs.readFileSync(specPath, "utf8");
 
   // Detect format based on file extension
@@ -100,7 +106,7 @@ async function loadAndParseSpec(specPath: string, applyTransformation: boolean =
   })) as Document;
 
   // Check for composition issues and apply transformation if needed
-  if ((applyTransformation) && detectCompositionIssues(dereferencedSpec)) {
+  if (applyTransformation && detectCompositionIssues(dereferencedSpec)) {
     return transformSpecCompositionToCg(dereferencedSpec);
   }
 
