@@ -6,6 +6,7 @@ import { Document } from "./utils/types";
 import { CheckApiOptions, CheckSpecOptions, availableVersions } from "./check-args";
 import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
 import { convertOpenApiToV3, OpenAPISchema } from "./utils/convert-openapi-v3";
+import { detectCompositionIssues, transformSpecCompositionToCg } from "./utils/transform-spec-composition";
 import * as path from "path";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
@@ -29,8 +30,8 @@ export class DefaultCheckService {
   async checkSpec(specPath: string, options: CheckSpecOptions): Promise<void> {
     // Get the base spec and implementation spec
     const baseSpecPath = options.base || getBaseSpecPath(options.protocolVersion);
-    const baseDoc = await loadAndParseSpec(baseSpecPath);
-    const implDoc = await loadAndParseSpec(specPath);
+    const baseDoc = await loadAndParseSpec(baseSpecPath, false);
+    const implDoc = await loadAndParseSpec(specPath, true);
 
     // Validate the specs
     const errors = validateSpecs(baseDoc, implDoc);
@@ -70,7 +71,7 @@ function validateSpecs(baseDoc: Document, implDoc: Document): ErrorCollection {
  *   3) Converting the spec to OpenAPI v3.0 if needed
  *   4) Dereferencing the spec, ignoring circular references
  */
-async function loadAndParseSpec(specPath: string): Promise<Document> {
+async function loadAndParseSpec(specPath: string, applyTransformation: boolean = true): Promise<Document> {
   const specContent = fs.readFileSync(specPath, "utf8");
 
   // Detect format based on file extension
@@ -94,9 +95,16 @@ async function loadAndParseSpec(specPath: string): Promise<Document> {
   const convertedSpec = convertOpenApiToV3(rawSpec) as OpenAPIV3.Document;
 
   // Dereference the spec, ignoring circular references to prevent stack overflows
-  return (await SwaggerParser.dereference(convertedSpec, {
+  const dereferencedSpec = (await SwaggerParser.dereference(convertedSpec, {
     dereference: { circular: "ignore" },
   })) as Document;
+
+  // Check for composition issues and apply transformation if needed
+  if ((applyTransformation) && detectCompositionIssues(dereferencedSpec)) {
+    return transformSpecCompositionToCg(dereferencedSpec);
+  }
+
+  return dereferencedSpec;
 }
 
 /**
