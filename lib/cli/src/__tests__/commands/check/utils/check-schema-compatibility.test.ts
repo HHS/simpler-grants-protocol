@@ -77,6 +77,195 @@ describe("Schema Compatibility Checks", () => {
   });
 
   // ############################################################
+  // Type checking - OpenAPI 3.1 array types (compatible with OpenAPI 3.0)
+  // ############################################################
+
+  it("should allow type: [object] to be compatible with type: object", () => {
+    // Arrange - Base uses string type, impl uses array type (OpenAPI 3.1)
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: "object" },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["object"] as unknown as "object" },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(0);
+  });
+
+  it("should allow type: object to be compatible with type: [object]", () => {
+    // Arrange - Base uses array type (OpenAPI 3.1), impl uses string type
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["string"] as unknown as "string" },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: "string" },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(0);
+  });
+
+  it("should allow multiple types in same order", () => {
+    // Arrange - Impl uses nullable type (OpenAPI 3.1 syntax)
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["string", "integer"] as unknown as "string" },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["string", "integer"] as unknown as "string" },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(0);
+  });
+
+  it("should allow multiple types in different order", () => {
+    // Arrange - Impl uses nullable type (OpenAPI 3.1 syntax)
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["string", "integer"] as unknown as "string" },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["integer", "string"] as unknown as "string" },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(0);
+  });
+
+  it("should flag mismatched array types", () => {
+    // Arrange - Array types don't match
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["integer"] as unknown as "integer" },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["string"] as unknown as "string" },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        conflictType: "TYPE_CONFLICT",
+        location: `${location}.foo`,
+        baseType: "integer",
+        implType: "string",
+      })
+    );
+  });
+
+  it("should flag mismatched types when impl has multiple types and base has different string type", () => {
+    // Arrange - Base string type doesn't match impl array type
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: "string" },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["integer"] as unknown as "string" },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        conflictType: "TYPE_CONFLICT",
+        location: `${location}.foo`,
+        baseType: "string",
+        implType: "integer",
+      })
+    );
+  });
+
+  it("should show all types in error message when there are multiple mismatched types", () => {
+    // Arrange - Both have multiple types but they don't match
+    const baseSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["string", "number"] as unknown as "string" },
+      },
+    };
+
+    const implSchema: OpenAPIV3.SchemaObject = {
+      type: "object",
+      properties: {
+        foo: { type: ["integer", "boolean"] as unknown as "string" },
+      },
+    };
+
+    // Act
+    const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        conflictType: "TYPE_CONFLICT",
+        location: `${location}.foo`,
+        baseType: "string | number",
+        implType: "integer | boolean",
+      })
+    );
+  });
+
+  // ############################################################
   // Required properties
   // ############################################################
 

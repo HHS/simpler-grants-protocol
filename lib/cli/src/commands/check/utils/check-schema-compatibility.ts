@@ -63,7 +63,45 @@ export function checkSchemaCompatibility(
 // ############################################################
 
 /**
+ * Checks if two type values are compatible.
+ * Handles both string types (OpenAPI 3.0) and array types (OpenAPI 3.1).
+ *
+ * Examples of compatible types:
+ * - "object" and ["object"] are compatible
+ * - ["string", "integer"] and ["integer", "string"] are compatible (same types, different order)
+ * - ["integer"] and "integer" are compatible
+ *
+ * @param baseType - The base schema type
+ * @param implType - The implementation schema type
+ * @returns true if types are compatible, false otherwise
+ */
+function areTypesCompatible(
+  baseType: string | string[] | undefined,
+  implType: string | string[] | undefined
+): boolean {
+  if (!baseType || !implType) {
+    return true; // If either is undefined, consider compatible
+  }
+
+  // Convert both to arrays for easier comparison
+  const baseTypes = Array.isArray(baseType) ? baseType : [baseType];
+  const implTypes = Array.isArray(implType) ? implType : [implType];
+
+  // Check if they have the same length
+  if (baseTypes.length !== implTypes.length) {
+    return false;
+  }
+
+  // Sort both arrays and compare - types are compatible if they contain the same set
+  const baseSorted = [...baseTypes].sort();
+  const implSorted = [...implTypes].sort();
+
+  return baseSorted.every((type, index) => type === implSorted[index]);
+}
+
+/**
  * Checks whether `implSchema` has a different type than `baseSchema`.
+ * Handles both OpenAPI 3.0 string types and OpenAPI 3.1 array types.
  */
 function checkTypeConflict(
   location: string,
@@ -72,9 +110,19 @@ function checkTypeConflict(
   ctx: SchemaContext,
   errors: ErrorCollection
 ): ErrorCollection {
-  if (baseSchema.type && implSchema.type && baseSchema.type !== implSchema.type) {
-    const error = typeConflictError(location, baseSchema.type, implSchema.type, ctx);
-    errors.addError(error);
+  if (baseSchema.type && implSchema.type) {
+    if (!areTypesCompatible(baseSchema.type, implSchema.type)) {
+      // For error reporting, show all types (as array or string)
+      const baseTypeStr = Array.isArray(baseSchema.type)
+        ? baseSchema.type.join(" | ")
+        : baseSchema.type;
+      const implTypeStr = Array.isArray(implSchema.type)
+        ? implSchema.type.join(" | ")
+        : implSchema.type;
+
+      const error = typeConflictError(location, baseTypeStr, implTypeStr, ctx);
+      errors.addError(error);
+    }
   }
   return errors;
 }
