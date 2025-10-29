@@ -1,5 +1,11 @@
 # @common-grants/cli
 
+## 0.2.3
+
+### Patch Changes
+
+- a24bcc0: Fix `type` comparison for OpenAPI spec in `check spec`
+
 ## 0.2.2
 
 ### Patch Changes
