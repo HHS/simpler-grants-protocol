@@ -1,0 +1,69 @@
+openapi: 3.0.0
+info:
+  title: Simple Test API
+  version: 1.0.0
+  description: A minimal CommonGrants-compliant API for testing
+
+paths:
+  /common-grants/opportunities:
+    get:
+      summary: List opportunities
+      description: Get a paginated list of opportunities
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+          required: false
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+          required: false
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Opportunity"
+                  paginationInfo:
+                    type:
+                      - object
+                      - string
+                    # allOf:
+                    #   - $ref: "#/components/schemas/PaginationInfo"
+
+components:
+  schemas:
+    Opportunity:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+        totalRecords:
+          type: integer
