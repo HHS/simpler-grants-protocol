@@ -4,3 +4,6 @@ packages:
   - lib/python-sdk
   - lib/changelog-emitter
   - lib/ts-sdk
+
+overrides:
+  tar@=7.5.1: '>=7.5.2'
