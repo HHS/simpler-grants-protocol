@@ -1,0 +1,45 @@
+name: "CI - TypeScript SDK: Run Checks"
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - lib/ts-sdk/**
+      - .github/workflows/ci-lib-ts-sdk.yml
+
+defaults:
+  run:
+    working-directory: ./lib/ts-sdk
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build SDK library
+        run: pnpm --filter @common-grants/sdk run build
+
+      - name: Lint and format
+        run: pnpm --filter @common-grants/sdk run checks
+
+      - name: Run tests
+        run: pnpm --filter @common-grants/sdk test:coverage
+
+      - name: Audit dependencies
+        run: pnpm audit
