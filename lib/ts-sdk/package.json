@@ -1,0 +1,62 @@
+{
+  "name": "@common-grants/sdk",
+  "version": "0.1.0",
+  "license": "CC0-1.0",
+  "description": "The CommonGrants protocol TypeScript SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HHS/simpler-grants-protocol.git",
+    "directory": "lib/ts-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/HHS/simpler-grants-protocol/issues"
+  },
+  "homepage": "https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme",
+  "keywords": [
+    "sdk",
+    "typescript",
+    "protocol",
+    "grants",
+    "opportunities"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "prepare": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .ts --fix",
+    "format": "prettier --write .",
+    "check:lint": "eslint . --ext .ts",
+    "check:format": "prettier --check .",
+    "checks": "npm run check:lint && npm run check:format"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@eslint/js": "^9.38.0",
+    "@types/node": "^20.19.23",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2",
+    "vitest": "^3.2.4"
+  }
+}

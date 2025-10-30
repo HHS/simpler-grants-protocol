@@ -3,3 +3,4 @@ packages:
   - lib/core
   - lib/python-sdk
   - lib/changelog-emitter
+  - lib/ts-sdk
