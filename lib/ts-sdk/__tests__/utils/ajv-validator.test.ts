@@ -3,9 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { createAjvValidator, validate } from "./ajv-validator";
-
-const ajv = createAjvValidator();
+import { ajv, validate } from "./ajv-validator";
 
 describe("AJV validator utility", () => {
   // #########################################################

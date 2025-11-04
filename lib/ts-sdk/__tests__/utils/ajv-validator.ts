@@ -23,7 +23,10 @@ const schemaIds: string[] = [];
  */
 export function createAjvValidator(schemasPath?: string): Ajv2020 {
   // Default to the bundled schema file
-  const defaultPath = path.resolve(__dirname, "../tsp-output/@typespec/json-schema/schemas.yaml");
+  const defaultPath = path.resolve(
+    __dirname,
+    "../../tsp-output/@typespec/json-schema/schemas.yaml"
+  );
 
   const schemaFile = schemasPath || defaultPath;
 
@@ -122,3 +125,5 @@ export function validate(
 
   return { isValid: false, errors: errorMessages };
 }
+
+export const ajv = createAjvValidator();
