@@ -41,20 +41,26 @@
     "format": "prettier --write .",
     "check:lint": "eslint . --ext .ts",
     "check:format": "prettier --check .",
-    "checks": "npm run check:lint && npm run check:format"
+    "checks": "npm run check:lint && npm run check:format",
+    "typespec": "tsp compile src/main.tsp"
   },
   "dependencies": {
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@common-grants/core": "workspace:*",
     "@eslint/js": "^9.38.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.19.23",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
+    "@typespec/json-schema": "^1.5.0",
     "@vitest/coverage-v8": "^3.2.4",
+    "ajv": "^8.17.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-prettier": "^5.5.4",
+    "js-yaml": "^4.1.0",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",

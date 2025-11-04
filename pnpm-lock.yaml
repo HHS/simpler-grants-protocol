@@ -230,9 +230,15 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@common-grants/core':
+        specifier: workspace:*
+        version: link:../core
       '@eslint/js':
         specifier: ^9.38.0
         version: 9.38.0
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
       '@types/node':
         specifier: ^20.19.23
         version: 20.19.23
@@ -242,9 +248,15 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.46.2
         version: 8.46.2(eslint@9.38.0)(typescript@5.9.3)
+      '@typespec/json-schema':
+        specifier: ^1.5.0
+        version: 1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23))
       '@vitest/coverage-v8':
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/node@20.19.23)(yaml@2.8.1))
+      ajv:
+        specifier: ^8.17.1
+        version: 8.17.1
       eslint:
         specifier: ^9.38.0
         version: 9.38.0
@@ -254,6 +266,9 @@ importers:
       eslint-plugin-prettier:
         specifier: ^5.5.4
         version: 5.5.4(eslint-config-prettier@9.1.2(eslint@9.38.0))(eslint@9.38.0)(prettier@3.6.2)
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.1.0
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
