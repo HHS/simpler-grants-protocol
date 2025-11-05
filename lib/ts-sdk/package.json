@@ -30,7 +30,7 @@
     "opportunities"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run typespec",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "prepare": "tsc",
@@ -42,7 +42,7 @@
     "check:lint": "eslint . --ext .ts",
     "check:format": "prettier --check .",
     "checks": "npm run check:lint && npm run check:format",
-    "typespec": "tsp compile src/main.tsp"
+    "typespec": "tsp compile lib/main.tsp"
   },
   "dependencies": {
     "zod": "^3.25.76"
