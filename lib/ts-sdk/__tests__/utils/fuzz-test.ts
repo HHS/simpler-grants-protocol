@@ -24,19 +24,29 @@ export interface FuzzTestResult {
 }
 
 /**
- * Resolves $ref references in a schema by looking them up in AJV's schema registry.
- * This is needed because json-schema-faker doesn't automatically resolve $ref references.
+ * Resolves $ref references in a schema by looking them up in AJV's schema registry
+ * or in the schema's $defs section. This is needed because json-schema-faker
+ * doesn't automatically resolve $ref references.
  */
-function resolveRefs(schema: unknown, visited = new Set<string>()): unknown {
+function resolveRefs(
+  schema: unknown,
+  visited = new Set<string>(),
+  currentSchema?: Record<string, unknown>
+): unknown {
   if (typeof schema !== "object" || schema === null) {
     return schema;
   }
 
   if (Array.isArray(schema)) {
-    return schema.map(item => resolveRefs(item, visited));
+    return schema.map(item => resolveRefs(item, visited, currentSchema));
   }
 
   const schemaObj = schema as Record<string, unknown>;
+
+  // On first call, use the schema itself as the current schema
+  if (!currentSchema) {
+    currentSchema = schemaObj;
+  }
 
   // If this is a $ref, resolve it
   if ("$ref" in schemaObj && typeof schemaObj.$ref === "string") {
@@ -48,12 +58,28 @@ function resolveRefs(schema: unknown, visited = new Set<string>()): unknown {
 
     visited.add(refId);
 
-    // Look up the referenced schema in AJV
-    const refValidator = ajv.getSchema(refId);
-    if (refValidator && refValidator.schema) {
-      const resolvedSchema = resolveRefs(refValidator.schema, visited);
-      visited.delete(refId);
-      return resolvedSchema;
+    // Check if it's a $defs reference (starts with #/$defs/)
+    if (refId.startsWith("#/$defs/")) {
+      const defName = refId.replace("#/$defs/", "");
+      // Use the current schema's $defs, not the root schema
+      if (currentSchema.$defs && typeof currentSchema.$defs === "object") {
+        const defs = currentSchema.$defs as Record<string, unknown>;
+        if (defName in defs) {
+          const resolvedSchema = resolveRefs(defs[defName], visited, currentSchema);
+          visited.delete(refId);
+          return resolvedSchema;
+        }
+      }
+    } else {
+      // Look up the referenced schema in AJV
+      const refValidator = ajv.getSchema(refId);
+      if (refValidator && refValidator.schema) {
+        // When resolving an external reference, use that schema as the new current schema
+        const referencedSchema = refValidator.schema as Record<string, unknown>;
+        const resolvedSchema = resolveRefs(referencedSchema, visited, referencedSchema);
+        visited.delete(refId);
+        return resolvedSchema;
+      }
     }
 
     visited.delete(refId);
@@ -63,7 +89,12 @@ function resolveRefs(schema: unknown, visited = new Set<string>()): unknown {
   // Recursively resolve all properties
   const resolved: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(schemaObj)) {
-    resolved[key] = resolveRefs(value, visited);
+    // Preserve $defs in the current schema so json-schema-faker can access them if needed
+    if (key === "$defs" && schemaObj === currentSchema) {
+      resolved[key] = value;
+    } else {
+      resolved[key] = resolveRefs(value, visited, currentSchema);
+    }
   }
 
   return resolved;
