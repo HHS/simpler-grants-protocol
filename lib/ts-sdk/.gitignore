@@ -1,7 +1,43 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
-coverage/
-*.log
-.DS_Store
-*.tsbuildinfo
+build/
+.generated/
 tsp-output/
+*.tgz
+
+# Coverage reports
+coverage/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache 

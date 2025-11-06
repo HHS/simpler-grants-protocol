@@ -5,6 +5,16 @@
   "description": "The CommonGrants protocol TypeScript SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/src/schemas/index.d.ts",
+      "default": "./dist/src/schemas/index.js"
+    }
+  },
   "files": [
     "dist",
     "!dist/**/*.test.*",
