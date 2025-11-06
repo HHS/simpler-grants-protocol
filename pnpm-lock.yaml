@@ -248,9 +248,27 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.46.2
         version: 8.46.2(eslint@9.38.0)(typescript@5.9.3)
+      '@typespec/compiler':
+        specifier: ^1.5.0
+        version: 1.5.0(@types/node@20.19.23)
+      '@typespec/http':
+        specifier: ^1.5.0
+        version: 1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23))
       '@typespec/json-schema':
         specifier: ^1.5.0
         version: 1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23))
+      '@typespec/openapi':
+        specifier: ^1.5.0
+        version: 1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23))(@typespec/http@1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23)))
+      '@typespec/openapi3':
+        specifier: ^1.5.0
+        version: 1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23))(@typespec/http@1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23)))(@typespec/json-schema@1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23)))(@typespec/openapi@1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23))(@typespec/http@1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23))))(@typespec/versioning@0.75.0(@typespec/compiler@1.5.0(@types/node@20.19.23)))
+      '@typespec/rest':
+        specifier: ^0.75.0
+        version: 0.75.0(@typespec/compiler@1.5.0(@types/node@20.19.23))(@typespec/http@1.5.0(@typespec/compiler@1.5.0(@types/node@20.19.23)))
+      '@typespec/versioning':
+        specifier: ^0.75.0
+        version: 0.75.0(@typespec/compiler@1.5.0(@types/node@20.19.23))
       '@vitest/coverage-v8':
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/node@20.19.23)(yaml@2.8.1))
