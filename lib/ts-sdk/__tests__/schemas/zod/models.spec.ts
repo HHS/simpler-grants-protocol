@@ -9,7 +9,7 @@ import {
   OppSortingSchema,
   OppDefaultFiltersSchema,
   OppFiltersSchema,
-} from "../../../src/schemas/zod/models";
+} from "@/schemas";
 import { expectZodMatchesJsonSchema } from "../../helper";
 
 // ############################################################################

@@ -13,7 +13,14 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: ["node_modules/**", "dist/**", "**/*.test.ts", "**/*.spec.ts", "**/*.config.*"],
+      exclude: [
+        "node_modules/**",
+        "dist/**",
+        "__tests__/**",
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/*.config.*",
+      ],
       thresholds: {
         lines: 80,
         functions: 80,

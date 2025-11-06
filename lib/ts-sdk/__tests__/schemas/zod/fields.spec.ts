@@ -10,7 +10,7 @@ import {
   CustomFieldTypeEnum,
   CustomFieldSchema,
   SystemMetadataSchema,
-} from "@/schemas/zod/fields";
+} from "@/schemas";
 
 // ############################################################################
 // Event type enum

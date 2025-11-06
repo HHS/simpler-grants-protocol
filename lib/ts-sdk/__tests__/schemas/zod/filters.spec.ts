@@ -17,7 +17,7 @@ import {
   DateRangeFilterSchema,
   MoneyComparisonFilterSchema,
   MoneyRangeFilterSchema,
-} from "@/schemas/zod/filters";
+} from "@/schemas";
 
 // ############################################################################
 // Equivalence operators

@@ -48,11 +48,8 @@ export const UTCDateTimeSchema = z.string().datetime().transform(ensureUTC);
 /** Schema for ISO date format: YYYY-MM-DD (parsed into a Date object at midnight UTC) */
 export const ISODateSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .transform(str => {
-    const [year, month, day] = str.split("-").map(Number);
-    return new Date(Date.UTC(year, month - 1, day));
-  });
+  .date()
+  .transform(str => new Date(str));
 
 /** Schema for ISO time format: HH:MM:SS with optional fractional seconds and timezone (RFC 3339 partial-time) */
 export const ISOTimeSchema = z.preprocess(val => {
@@ -64,4 +61,8 @@ export const ISOTimeSchema = z.preprocess(val => {
   return val;
 }, z.string().time());
 
-export const OffsetDateTimeSchema = z.string().datetime();
+/** Schema for offset datetime fields (ISO 8601 with timezone offset, parsed into a Date object) */
+export const OffsetDateTimeSchema = z
+  .string()
+  .datetime({ offset: true })
+  .transform(str => new Date(str));
