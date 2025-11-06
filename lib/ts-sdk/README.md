@@ -66,30 +66,19 @@ if (!result.success) {
 
 Which should print:
 
-
 ```json
 [
   {
     "validation": "uuid",
     "code": "invalid_string",
     "message": "Invalid uuid",
-    "path": [
-      "id"
-    ]
+    "path": ["id"]
   },
   {
     "received": "invalid-status",
     "code": "invalid_enum_value",
-    "options": [
-      "forecasted",
-      "open",
-      "closed",
-      "custom"
-    ],
-    "path": [
-      "status",
-      "value"
-    ],
+    "options": ["forecasted", "open", "closed", "custom"],
+    "path": ["status", "value"],
     "message": "Invalid enum value. Expected 'forecasted' | 'open' | 'closed' | 'custom', received 'invalid-status'"
   }
 ]
