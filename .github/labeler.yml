@@ -1,0 +1,35 @@
+cli:
+  - changed-files:
+      - any-glob-to-any-file: lib/cli/**
+
+core:
+  - changed-files:
+      - any-glob-to-any-file: lib/core/**
+
+website:
+  - changed-files:
+      - any-glob-to-any-file: website/**
+
+python:
+  - changed-files:
+      - any-glob-to-any-file:
+          - lib/python-sdk/**
+          - templates/fast-api/**
+          - examples/ca-opportunity-example/**
+          - examples/pa-opportunity-example/**
+
+typescript:
+  - changed-files:
+      - any-glob-to-any-file:
+          - lib/ts-sdk/**
+          - lib/core/**
+          - lib/cli/**
+          - templates/express-js/**
+          - templates/quickstart/**
+          - website/**
+
+sdk:
+  - changed-files:
+      - any-glob-to-any-file:
+          - lib/python-sdk/**
+          - lib/ts-sdk/**
