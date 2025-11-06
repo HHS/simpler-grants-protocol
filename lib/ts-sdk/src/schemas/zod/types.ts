@@ -27,8 +27,8 @@ export const DecimalStringSchema = z
 // ############################################################################
 
 /** Transform a date to ensure it's in UTC */
-const ensureUTC = (date: Date | string) => {
-  const d = date instanceof Date ? date : new Date(date);
+const ensureUTC = (date: string) => {
+  const d = new Date(date);
   return new Date(
     Date.UTC(
       d.getUTCFullYear(),

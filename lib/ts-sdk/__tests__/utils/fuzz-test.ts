@@ -5,6 +5,29 @@ import { JSONSchemaFaker as jsf } from "json-schema-faker";
 /** Number of test samples to generate for each schema validation. */
 export const SAMPLE_SIZE = 25;
 
+/** Default seed for repeatable test generation. */
+export const DEFAULT_SEED = 12345;
+
+/**
+ * Creates a seeded random number generator using a Linear Congruential Generator (LCG).
+ * This ensures repeatable test cases when the same seed is used.
+ *
+ * @param seed - The seed value to initialize the generator
+ * @returns A function that returns a random number between 0 and 1
+ */
+function createSeededRandom(seed: number): () => number {
+  // LCG parameters (same as used in glibc)
+  const a = 1103515245;
+  const c = 12345;
+  const m = 2 ** 31;
+  let state = seed;
+
+  return () => {
+    state = (a * state + c) % m;
+    return state / m;
+  };
+}
+
 /** Result of a fuzz test comparison. */
 export interface FuzzTestResult {
   /** Whether all tests passed. */
@@ -101,16 +124,35 @@ function resolveRefs(
 }
 
 /**
+ * Simple hash function to convert a string to a number.
+ * Used to create unique seeds for different schema IDs.
+ *
+ * @param str - The string to hash
+ * @returns A numeric hash value
+ */
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash | 0; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}
+
+/**
  * Validates that a Zod schema matches a JSON schema by ensuring both schemas
  * validate the same fuzz-tested outputs generated from the JSON schema.
  *
  * @param zodSchema - The Zod schema to test
  * @param jsonSchemaId - The JSON schema ID (e.g., "uuid.yaml", "Address.yaml")
+ * @param seed - Optional seed for repeatable test generation. Defaults to DEFAULT_SEED.
  * @returns The result of the fuzz test comparison
  */
 export function checkZodMatchesJsonSchema(
   zodSchema: ZodSchema,
-  jsonSchemaId: string
+  jsonSchemaId: string,
+  seed: number = DEFAULT_SEED
 ): FuzzTestResult {
   // Get the JSON schema from AJV
   const jsonSchemaValidator = ajv.getSchema(jsonSchemaId);
@@ -124,8 +166,11 @@ export function checkZodMatchesJsonSchema(
   // Resolve all $ref references so json-schema-faker can work with it
   jsonSchema = resolveRefs(jsonSchema) as Record<string, unknown>;
 
-  // Reset to default random generator
-  jsf.option("random", Math.random);
+  // Use seeded random generator for repeatable tests
+  // Combine seed with schema ID hash to ensure different schemas get different sequences
+  const schemaSeed = seed + hashString(jsonSchemaId);
+  const seededRandom = createSeededRandom(schemaSeed);
+  jsf.option("random", seededRandom);
 
   const mismatches: FuzzTestResult["mismatches"] = [];
   let successCount = 0;
