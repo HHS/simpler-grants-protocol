@@ -52,9 +52,11 @@ interface Props {
   typeSpec?: CodeBlockConfig;
   /** Python code block to display in the "Python" tab */
   python?: CodeBlockConfig;
+  /** TypeScript code block to display in the "TypeScript" tab */
+  typescript?: CodeBlockConfig;
 }
 
-const { example, jsonSchema, typeSpec, python } = Astro.props;
+const { example, jsonSchema, typeSpec, python, typescript } = Astro.props;
 
 // Validate that at least one tab is provided
 if (!example && !jsonSchema && !typeSpec && !python) {
@@ -92,10 +94,12 @@ const exampleCode = example ? generateCodeFromSchema(example) : null;
 const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
 const typeSpecCode = typeSpec ? extractCode(typeSpec) : null;
 const pythonCode = python ? extractCode(python) : null;
+const typescriptCode = typescript ? extractCode(typescript) : null;
 
 const jsonSchemaUrl = jsonSchema ? extractSchemaUrl(jsonSchema) : null;
 const typeSpecUrl = typeSpec ? extractGithubUrl(typeSpec) : null;
 const pythonUrl = python ? extractGithubUrl(python) : null;
+const typescriptUrl = typescript ? extractGithubUrl(typescript) : null;
 
 /**
  * Constructs a schema URL from file path.
@@ -107,8 +111,7 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
     return null;
   }
 
-  const baseUrl = "https://commongrants.org/";
-  const pathPrefix = `${Paths.PUBLIC_DIR}/`;
+  const pathPrefix = `website/${Paths.PUBLIC_DIR}/`;
   let filePath = props.file.path;
 
   // Trim public directory prefix if present
@@ -116,7 +119,7 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
     filePath = filePath.substring(pathPrefix.length);
   }
 
-  return `${baseUrl}${filePath}`;
+  return `/${filePath}`;
 }
 
 /**
@@ -795,6 +798,20 @@ function generatePrimitiveValue(
           {" for this model."}
         </p>
         <Code code={pythonCode} lang="python" />
+      </TabItem>
+    )
+  }
+  {
+    typescriptCode && (
+      <TabItem label="TypeScript">
+        <p>
+          {"The "}
+          <a href={typescriptUrl} target="_blank" rel="noopener noreferrer">
+            TypeScript code
+          </a>
+          {" for this model."}
+        </p>
+        <Code code={typescriptCode} lang="typescript" />
       </TabItem>
     )
   }

@@ -18,6 +18,11 @@ stringComparisonFilter:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/string.py"
       startLine: 31
       endLine: 49
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 39
+      endLine: 42
 stringArrayFilter:
   example:
     file:
@@ -35,6 +40,11 @@ stringArrayFilter:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/string.py"
       startLine: 13
       endLine: 28
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 44
+      endLine: 47
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -58,6 +68,7 @@ A filter that applies a comparison to a string value.
   jsonSchema={frontmatter.stringComparisonFilter.jsonSchema}
   typeSpec={frontmatter.stringComparisonFilter.typeSpec}
   python={frontmatter.stringComparisonFilter.python}
+  typescript={frontmatter.stringComparisonFilter.typescript}
 />
 
 ### Changelog
@@ -82,6 +93,7 @@ A filter that applies a comparison to an array of string values.
   jsonSchema={frontmatter.stringArrayFilter.jsonSchema}
   typeSpec={frontmatter.stringArrayFilter.typeSpec}
   python={frontmatter.stringArrayFilter.python}
+  typescript={frontmatter.stringArrayFilter.typescript}
 />
 
 ### Changelog

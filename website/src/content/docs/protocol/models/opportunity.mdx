@@ -20,6 +20,11 @@ opportunityBase:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_base.py"
       startLine: 15
       endLine: 42
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/models.ts"
+      startLine: 119
+      endLine: 148
 opportunityDetails:
   example:
     file:
@@ -49,6 +54,11 @@ oppStatus:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_status.py"
       startLine: 30
       endLine: 45
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/models.ts"
+      startLine: 17
+      endLine: 26
 oppStatusOptions:
   example:
     file:
@@ -66,6 +76,11 @@ oppStatusOptions:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_status.py"
       startLine: 11
       endLine: 27
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/models.ts"
+      startLine: 15
+      endLine: 15
 oppFunding:
   example:
     file:
@@ -83,6 +98,11 @@ oppFunding:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_funding.py"
       startLine: 11
       endLine: 47
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/models.ts"
+      startLine: 73
+      endLine: 96
 oppTimeline:
   example:
     file:
@@ -100,6 +120,11 @@ oppTimeline:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_timeline.py"
       startLine: 11
       endLine: 28
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/models.ts"
+      startLine: 102
+      endLine: 113
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -121,6 +146,7 @@ A funding opportunity, such as a grant or loan.
   jsonSchema={frontmatter.opportunityBase.jsonSchema}
   typeSpec={frontmatter.opportunityBase.typeSpec}
   python={frontmatter.opportunityBase.python}
+  typescript={frontmatter.opportunityBase.typescript}
 />
 
 ### Changelog
@@ -163,6 +189,7 @@ The status of an opportunity, such as whether it is accepting applications.
   jsonSchema={frontmatter.oppStatus.jsonSchema}
   typeSpec={frontmatter.oppStatus.typeSpec}
   python={frontmatter.oppStatus.python}
+  typescript={frontmatter.oppStatus.typescript}
 />
 
 ### Changelog
@@ -184,6 +211,7 @@ The set of values accepted for opportunity status.
   jsonSchema={frontmatter.oppStatusOptions.jsonSchema}
   typeSpec={frontmatter.oppStatusOptions.typeSpec}
   python={frontmatter.oppStatusOptions.python}
+  typescript={frontmatter.oppStatusOptions.typescript}
 />
 
 ### Changelog
@@ -205,6 +233,7 @@ Details about the funding available for an opportunity.
   jsonSchema={frontmatter.oppFunding.jsonSchema}
   typeSpec={frontmatter.oppFunding.typeSpec}
   python={frontmatter.oppFunding.python}
+  typescript={frontmatter.oppFunding.typescript}
 />
 
 ### Changelog
@@ -226,6 +255,7 @@ Key dates in the opportunity's timeline, such as when the application opens and 
   jsonSchema={frontmatter.oppTimeline.jsonSchema}
   typeSpec={frontmatter.oppTimeline.typeSpec}
   python={frontmatter.oppTimeline.python}
+  typescript={frontmatter.oppTimeline.typescript}
 />
 
 ### Changelog

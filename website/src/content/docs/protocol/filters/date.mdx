@@ -18,6 +18,11 @@ dateRangeFilter:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/date.py"
       startLine: 37
       endLine: 52
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 85
+      endLine: 91
 dateComparisonFilter:
   example:
     file:
@@ -35,6 +40,11 @@ dateComparisonFilter:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/date.py"
       startLine: 55
       endLine: 78
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 80
+      endLine: 83
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -67,6 +77,7 @@ Filters by comparing a field to a range of date values.
   jsonSchema={frontmatter.dateRangeFilter.jsonSchema}
   typeSpec={frontmatter.dateRangeFilter.typeSpec}
   python={frontmatter.dateRangeFilter.python}
+  typescript={frontmatter.dateRangeFilter.typescript}
 />
 
 ### Changelog
@@ -91,6 +102,7 @@ Filters by comparing a field to a date value.
   jsonSchema={frontmatter.dateComparisonFilter.jsonSchema}
   typeSpec={frontmatter.dateComparisonFilter.typeSpec}
   python={frontmatter.dateComparisonFilter.python}
+  typescript={frontmatter.dateComparisonFilter.typescript}
 />
 
 ### Changelog

@@ -18,6 +18,11 @@ moneyRangeFilter:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/money.py"
       startLine: 43
       endLine: 50
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 102
+      endLine: 108
 moneyComparisonFilter:
   example:
     file:
@@ -35,6 +40,11 @@ moneyComparisonFilter:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/money.py"
       startLine: 72
       endLine: 87
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 97
+      endLine: 100
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -67,6 +77,7 @@ Filters by comparing a field to a range of monetary values.
   jsonSchema={frontmatter.moneyRangeFilter.jsonSchema}
   typeSpec={frontmatter.moneyRangeFilter.typeSpec}
   python={frontmatter.moneyRangeFilter.python}
+  typescript={frontmatter.moneyRangeFilter.typescript}
 />
 
 ### Changelog
@@ -91,6 +102,7 @@ Filters by comparing a field to a monetary value.
   jsonSchema={frontmatter.moneyComparisonFilter.jsonSchema}
   typeSpec={frontmatter.moneyComparisonFilter.typeSpec}
   python={frontmatter.moneyComparisonFilter.python}
+  typescript={frontmatter.moneyComparisonFilter.typescript}
 />
 
 ### Changelog

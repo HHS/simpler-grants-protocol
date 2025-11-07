@@ -18,6 +18,11 @@ customField:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/custom.py"
       startLine: 23
       endLine: 45
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 103
+      endLine: 118
 customFieldType:
   example:
     code: "string"
@@ -34,6 +39,11 @@ customFieldType:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/custom.py"
       startLine: 12
       endLine: 20
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 94
+      endLine: 101
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -60,6 +70,7 @@ A model for defining custom fields on a record.
   jsonSchema={frontmatter.customField.jsonSchema}
   typeSpec={frontmatter.customField.typeSpec}
   python={frontmatter.customField.python}
+  typescript={frontmatter.customField.typescript}
 />
 
 ### Changelog
@@ -88,6 +99,7 @@ The set of JSON schema types supported by a custom field.
   jsonSchema={frontmatter.customFieldType.jsonSchema}
   typeSpec={frontmatter.customFieldType.typeSpec}
   python={frontmatter.customFieldType.python}
+  typescript={frontmatter.customFieldType.typescript}
 />
 
 ### Changelog

@@ -18,6 +18,11 @@ applicantType:
       path: "lib/core/lib/core/models/applicant-type.tsp"
       startLine: 7
       endLine: 20
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/models.ts"
+      startLine: 54
+      endLine: 65
 applicantTypeOptions:
   example:
     code: '"individual"'
@@ -29,6 +34,11 @@ applicantTypeOptions:
       path: "lib/core/lib/core/models/applicant-type.tsp"
       startLine: 26
       endLine: 79
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/models.ts"
+      startLine: 34
+      endLine: 52
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -52,6 +62,7 @@ The type of applicant for a funding opportunity.
   example={frontmatter.applicantType.example}
   jsonSchema={frontmatter.applicantType.jsonSchema}
   typeSpec={frontmatter.applicantType.typeSpec}
+  typescript={frontmatter.applicantType.typescript}
 />
 
 ### Changelog
@@ -88,6 +99,7 @@ The type of applicant for a funding opportunity.
   example={frontmatter.applicantTypeOptions.example}
   jsonSchema={frontmatter.applicantTypeOptions.jsonSchema}
   typeSpec={frontmatter.applicantTypeOptions.typeSpec}
+  typescript={frontmatter.applicantTypeOptions.typescript}
 />
 
 ### Changelog

@@ -53,6 +53,11 @@ decimalString:
       path: "lib/core/lib/core/types.tsp"
       startLine: 62
       endLine: 70
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/types.ts"
+      startLine: 21
+      endLine: 23
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -83,6 +88,7 @@ A decimal number (with variable scale) encoded as a string, to avoid floating po
   example={frontmatter.decimalString.example}
   jsonSchema={frontmatter.decimalString.jsonSchema}
   typeSpec={frontmatter.decimalString.typeSpec}
+  typescript={frontmatter.decimalString.typescript}
 />
 
 ## Other numeric types
