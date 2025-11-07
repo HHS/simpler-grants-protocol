@@ -15,6 +15,11 @@ isoDate:
       path: "lib/core/lib/core/types.tsp"
       startLine: 80
       endLine: 82
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/types.ts"
+      startLine: 49
+      endLine: 52
 isoTime:
   example:
     file:
@@ -27,6 +32,11 @@ isoTime:
       path: "lib/core/lib/core/types.tsp"
       startLine: 76
       endLine: 78
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/types.ts"
+      startLine: 55
+      endLine: 62
 utcDateTime:
   example:
     code: '"2024-02-28T17:00:00Z"'
@@ -37,6 +47,11 @@ utcDateTime:
       type: string
       format: date-time
       description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/types.ts"
+      startLine: 46
+      endLine: 46
 offsetDateTime:
   example:
     code: '"2024-02-28T17:00:00+01:00"'
@@ -47,6 +62,11 @@ offsetDateTime:
       type: string
       format: date-time
       description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/types.ts"
+      startLine: 65
+      endLine: 68
 calendarYear:
   example:
     file:
@@ -71,6 +91,7 @@ A date on a calendar in ISO 8601 format YYYY-MM-DD.
   example={frontmatter.isoDate.example}
   jsonSchema={frontmatter.isoDate.jsonSchema}
   typeSpec={frontmatter.isoDate.typeSpec}
+  typescript={frontmatter.isoDate.typescript}
 />
 
 ## isoTime
@@ -85,6 +106,7 @@ The `isoTime` type does not include timezone information. When representing a ti
   example={frontmatter.isoTime.example}
   jsonSchema={frontmatter.isoTime.jsonSchema}
   typeSpec={frontmatter.isoTime.typeSpec}
+  typescript={frontmatter.isoTime.typescript}
 />
 
 ## utcDateTime
@@ -94,6 +116,7 @@ A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ.
 <SchemaFormatTabs
   example={frontmatter.utcDateTime.example}
   jsonSchema={frontmatter.utcDateTime.jsonSchema}
+  typescript={frontmatter.utcDateTime.typescript}
 />
 
 ## offsetDateTime
@@ -103,6 +126,7 @@ A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm.
 <SchemaFormatTabs
   example={frontmatter.offsetDateTime.example}
   jsonSchema={frontmatter.offsetDateTime.jsonSchema}
+  typescript={frontmatter.offsetDateTime.typescript}
 />
 
 ## calendarYear

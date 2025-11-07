@@ -18,6 +18,11 @@ systemMetadata:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/metadata.py"
       startLine: 10
       endLine: 22
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 124
+      endLine: 130
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -37,6 +42,7 @@ System-managed metadata that is automatically added to records.
   jsonSchema={frontmatter.systemMetadata.jsonSchema}
   typeSpec={frontmatter.systemMetadata.typeSpec}
   python={frontmatter.systemMetadata.python}
+  typescript={frontmatter.systemMetadata.typescript}
 />
 
 ### Changelog

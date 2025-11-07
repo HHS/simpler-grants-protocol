@@ -18,6 +18,11 @@ eventType:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
       startLine: 13
       endLine: 18
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 15
+      endLine: 15
 event:
   example:
     file:
@@ -35,6 +40,11 @@ event:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
       startLine: 104
       endLine: 104
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 72
+      endLine: 76
 eventBase:
   example:
     file:
@@ -52,6 +62,11 @@ eventBase:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
       startLine: 22
       endLine: 38
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 18
+      endLine: 27
 singleDateEvent:
   example:
     file:
@@ -69,6 +84,11 @@ singleDateEvent:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
       startLine: 42
       endLine: 56
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 30
+      endLine: 39
 dateRangeEvent:
   example:
     file:
@@ -86,6 +106,11 @@ dateRangeEvent:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
       startLine: 60
       endLine: 86
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 42
+      endLine: 57
 otherEvent:
   example:
     file:
@@ -103,6 +128,11 @@ otherEvent:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
       startLine: 90
       endLine: 100
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 60
+      endLine: 69
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -129,6 +159,7 @@ Defines the different types of events that can be represented
   jsonSchema={frontmatter.eventType.jsonSchema}
   typeSpec={frontmatter.eventType.typeSpec}
   python={frontmatter.eventType.python}
+  typescript={frontmatter.eventType.typescript}
 />
 
 ### Changelog
@@ -154,6 +185,7 @@ The `Event` union represents all possible event types.
   jsonSchema={frontmatter.event.jsonSchema}
   typeSpec={frontmatter.event.typeSpec}
   python={frontmatter.event.python}
+  typescript={frontmatter.event.typescript}
 />
 
 {/* TODO: Add changelog once unions are supported */}
@@ -177,6 +209,7 @@ Base model for all events with common properties
   jsonSchema={frontmatter.eventBase.jsonSchema}
   typeSpec={frontmatter.eventBase.typeSpec}
   python={frontmatter.eventBase.python}
+  typescript={frontmatter.eventBase.typescript}
 />
 
 ### Changelog
@@ -204,6 +237,7 @@ Represents an event that has a specific date (and optional time) associated with
   jsonSchema={frontmatter.singleDateEvent.jsonSchema}
   typeSpec={frontmatter.singleDateEvent.typeSpec}
   python={frontmatter.singleDateEvent.python}
+  typescript={frontmatter.singleDateEvent.typescript}
 />
 
 ### Changelog
@@ -233,6 +267,7 @@ Represents an event that spans a period of time with start and end dates (and op
   jsonSchema={frontmatter.dateRangeEvent.jsonSchema}
   typeSpec={frontmatter.dateRangeEvent.typeSpec}
   python={frontmatter.dateRangeEvent.python}
+  typescript={frontmatter.dateRangeEvent.typescript}
 />
 
 ### Changelog
@@ -259,6 +294,7 @@ Represents custom events that don't fit the single date or date range patterns.
   jsonSchema={frontmatter.otherEvent.jsonSchema}
   typeSpec={frontmatter.otherEvent.typeSpec}
   python={frontmatter.otherEvent.python}
+  typescript={frontmatter.otherEvent.typescript}
 />
 
 ### Changelog

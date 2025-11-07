@@ -18,6 +18,11 @@ numberComparisonFilter:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/numeric.py"
       startLine: 26
       endLine: 35
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 53
+      endLine: 56
 numberRangeFilter:
   example:
     file:
@@ -35,6 +40,11 @@ numberRangeFilter:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/numeric.py"
       startLine: 46
       endLine: 61
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 58
+      endLine: 64
 numberArrayFilter:
   example:
     file:
@@ -52,6 +62,11 @@ numberArrayFilter:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/numeric.py"
       startLine: 64
       endLine: 81
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 66
+      endLine: 69
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -75,6 +90,7 @@ Filters by comparing a field to a numeric value.
   jsonSchema={frontmatter.numberComparisonFilter.jsonSchema}
   typeSpec={frontmatter.numberComparisonFilter.typeSpec}
   python={frontmatter.numberComparisonFilter.python}
+  typescript={frontmatter.numberComparisonFilter.typescript}
 />
 
 ### Changelog
@@ -108,6 +124,7 @@ Filters by comparing a field to a range of numeric values.
   jsonSchema={frontmatter.numberRangeFilter.jsonSchema}
   typeSpec={frontmatter.numberRangeFilter.typeSpec}
   python={frontmatter.numberRangeFilter.python}
+  typescript={frontmatter.numberRangeFilter.typescript}
 />
 
 ### Changelog
@@ -132,6 +149,7 @@ Filters by comparing a field to an array of numeric values.
   jsonSchema={frontmatter.numberArrayFilter.jsonSchema}
   typeSpec={frontmatter.numberArrayFilter.typeSpec}
   python={frontmatter.numberArrayFilter.python}
+  typescript={frontmatter.numberArrayFilter.typescript}
 />
 
 ### Changelog

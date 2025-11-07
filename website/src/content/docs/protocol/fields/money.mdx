@@ -18,6 +18,11 @@ money:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/money.py"
       startLine: 10
       endLine: 22
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
+      startLine: 82
+      endLine: 88
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -37,6 +42,7 @@ A monetary amount and the currency in which it is denominated.
   jsonSchema={frontmatter.money.jsonSchema}
   typeSpec={frontmatter.money.typeSpec}
   python={frontmatter.money.python}
+  typescript={frontmatter.money.typescript}
 />
 
 ### Changelog
