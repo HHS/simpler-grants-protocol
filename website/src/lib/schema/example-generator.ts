@@ -1,8 +1,14 @@
 import { ajv } from "../validation";
 import * as OpenAPISampler from "openapi-sampler";
 
+/**
+ * Generates a sample example for a given schema path.
+ * @param schemaPath - The path to the schema file.
+ * @returns The generated example.
+ */
 export function generateSchemaExample(schemaPath: string): string {
-  const schemaName = schemaPath.split("/").pop();
+  //
+  const schemaName: string = schemaPath.split("/").pop() ?? "";
   const validator = ajv.getSchema(schemaName);
   if (!validator) {
     throw new Error(`Schema ${schemaPath} not found for ${schemaPath}`);
@@ -14,14 +20,29 @@ export function generateSchemaExample(schemaPath: string): string {
     throw new Error(`Schema object not found for ${schemaPath}`);
   }
 
-  // Resolve $ref references in the schema
+  // Resolve $ref references in the schema, generate example, and validate it
   const resolvedSchema = resolveRefs(schema) as Record<string, unknown>;
+  const example = JSON.stringify(
+    OpenAPISampler.sample(resolvedSchema),
+    null,
+    2,
+  );
+  validateExample(example, schemaName);
 
-  // Generate example using OpenAPISampler
-  const sample = JSON.stringify(OpenAPISampler.sample(resolvedSchema), null, 2);
+  return example;
+}
 
+// #########################################################################
+// Helper functions
+// #########################################################################
+
+function validateExample(example: string, schemaName: string): void {
   // Validate the generated example against the source schema
-  const isValid = validator(JSON.parse(sample));
+  const validator = ajv.getSchema(schemaName);
+  if (!validator) {
+    throw new Error(`Schema ${schemaName} not found for ${schemaName}`);
+  }
+  const isValid = validator(JSON.parse(example));
   if (!isValid) {
     // Convert AJV errors to a readable format
     const errors = (validator.errors || []).map(
@@ -47,8 +68,6 @@ export function generateSchemaExample(schemaPath: string): string {
       console.warn("Validation errors:", errors.slice(0, 3));
     }
   }
-
-  return sample;
 }
 
 /**

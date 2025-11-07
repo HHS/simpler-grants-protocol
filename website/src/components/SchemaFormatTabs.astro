@@ -48,10 +48,10 @@ if (!example && !jsonSchema && !typeSpec && !python) {
   throw new Error("SchemaFormatTabs requires at least one tab to be provided");
 }
 
-const exampleCode = example?.code 
-  ? example.code 
-  : example?.file?.path 
-    ? generateSchemaExample(example.file.path) 
+const exampleCode = example?.code
+  ? example.code
+  : example?.file?.path
+    ? generateSchemaExample(example.file.path)
     : null;
 const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
 const typeSpecCode = typeSpec ? extractCode(typeSpec) : null;
@@ -140,7 +140,6 @@ function extractCode(props: CodeBlockConfig): string {
   }
   throw new Error("Either code or file must be provided");
 }
-
 ---
 
 <Tabs>
