@@ -5,6 +5,16 @@
   "description": "The CommonGrants protocol TypeScript SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/src/schemas/index.d.ts",
+      "default": "./dist/src/schemas/index.js"
+    }
+  },
   "files": [
     "dist",
     "!dist/**/*.test.*",
@@ -30,7 +40,7 @@
     "opportunities"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run typespec",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "prepare": "tsc",
@@ -41,18 +51,34 @@
     "format": "prettier --write .",
     "check:lint": "eslint . --ext .ts",
     "check:format": "prettier --check .",
-    "checks": "npm run check:lint && npm run check:format"
+    "checks": "npm run check:lint && npm run check:format",
+    "typespec": "tsp compile lib/main.tsp"
   },
-  "dependencies": {},
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
   "devDependencies": {
+    "@common-grants/core": "workspace:*",
     "@eslint/js": "^9.38.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.19.23",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
+    "@typespec/compiler": "^1.5.0",
+    "@typespec/http": "^1.5.0",
+    "@typespec/json-schema": "^1.5.0",
+    "@typespec/openapi3": "^1.5.0",
+    "@typespec/openapi": "^1.5.0",
+    "@typespec/rest": "^0.75.0",
+    "@typespec/versioning": "^0.75.0",
     "@vitest/coverage-v8": "^3.2.4",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-prettier": "^5.5.4",
+    "js-yaml": "^4.1.0",
+    "json-schema-faker": "^0.5.9",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
