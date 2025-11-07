@@ -111,7 +111,7 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
     return null;
   }
 
-  const pathPrefix = `${Paths.PUBLIC_DIR}/`;
+  const pathPrefix = `website/${Paths.PUBLIC_DIR}/`;
   let filePath = props.file.path;
 
   // Trim public directory prefix if present
