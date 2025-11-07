@@ -18,8 +18,37 @@ export function generateSchemaExample(schemaPath: string): string {
   const resolvedSchema = resolveRefs(schema) as Record<string, unknown>;
 
   // Generate example using OpenAPISampler
-  const sample = OpenAPISampler.sample(resolvedSchema);
-  return JSON.stringify(sample, null, 2);
+  const sample = JSON.stringify(OpenAPISampler.sample(resolvedSchema), null, 2);
+
+  // Validate the generated example against the source schema
+  const isValid = validator(JSON.parse(sample));
+  if (!isValid) {
+    // Convert AJV errors to a readable format
+    const errors = (validator.errors || []).map(
+      (error: {
+        instancePath?: string;
+        schemaPath?: string;
+        message?: string;
+        data?: unknown;
+      }) => ({
+        path: error.instancePath || error.schemaPath || "",
+        message: error.message || "Validation failed",
+        value: error.data,
+      }),
+    );
+
+    // Log warning with error count
+    console.warn(
+      `Warning: Generated example for schema ${schemaName} failed validation (${errors.length} errors)`,
+    );
+
+    // Log first 3 errors for debugging
+    if (errors.length > 0) {
+      console.warn("Validation errors:", errors.slice(0, 3));
+    }
+  }
+
+  return sample;
 }
 
 /**
@@ -100,9 +129,12 @@ function resolveRefs(
     if (key === "$defs" && schemaObj === currentSchema) {
       resolved[key] = value;
     } else if (key === "examples" && Array.isArray(value)) {
-      // Preserve examples array as-is - don't recursively resolve primitive values
+      // Preserve examples array but convert Date objects to strings
       // This prevents strings/numbers in examples from being converted to empty objects
-      resolved[key] = value;
+      // and ensures Date objects are properly serialized
+      resolved[key] = value.map((example) => {
+        return example;
+      });
     } else {
       resolved[key] = resolveRefs(value, visited, currentSchema);
     }

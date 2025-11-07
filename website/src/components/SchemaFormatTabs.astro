@@ -7,6 +7,7 @@ import yaml from "js-yaml";
 import { createAjvWithSchemas } from "../lib/validation";
 import type { JsonSchema } from "../lib/schema/schema-loader";
 import { Paths } from "../lib/schema/paths";
+import { generateSchemaExample } from "../lib/schema/example-generator";
 
 /**
  * Configuration for a code block to be displayed in a tab.
@@ -90,7 +91,11 @@ const PATTERNS = {
   EMAIL: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
 } as const;
 
-const exampleCode = example ? generateCodeFromSchema(example) : null;
+const exampleCode = example?.code 
+  ? example.code 
+  : example?.file?.path 
+    ? generateSchemaExample(example.file.path) 
+    : null;
 const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
 const typeSpecCode = typeSpec ? extractCode(typeSpec) : null;
 const pythonCode = python ? extractCode(python) : null;
