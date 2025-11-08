@@ -1,7 +1,7 @@
 """Configuration management for the CommonGrants HTTP client."""
 
 import os
-from typing import Optional
+from typing import Optional, cast
 
 
 class Config:
@@ -27,18 +27,22 @@ class Config:
         """
 
         # set base_url value from param or env var
-        env_base_url = os.getenv("CG_API_BASE_URL")
-        self.base_url = base_url if base_url is not None else env_base_url
-        if not self.base_url:
+        base_url_value = (
+            base_url if base_url is not None else os.getenv("CG_API_BASE_URL")
+        )
+        if not base_url_value:
             raise ValueError("base_url is required")
-        if not self.base_url.startswith(("http://", "https://")):
+        if not base_url_value.startswith(("http://", "https://")):
             raise ValueError("base_url must start with http:// or https://")
+        # use type narrowing to avoid mypy type validation errors in client
+        self.base_url: str = cast(str, base_url_value)
 
         # set api_key value from param or env var
-        env_api_key = os.getenv("CG_API_KEY")
-        self.api_key = api_key if api_key is not None else env_api_key
-        if not self.api_key:
+        api_key_value = api_key if api_key is not None else os.getenv("CG_API_KEY")
+        if not api_key_value:
             raise ValueError("api_key is required")
+        # use type narrowing to avoid mypy type validation errors in client
+        self.api_key: str = cast(str, api_key_value)
 
         # set timeout value from param, env var, or default
         self.timeout = timeout or float(
