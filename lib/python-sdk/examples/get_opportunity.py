@@ -7,16 +7,21 @@ Run with: poetry run python get_opportunity.py <oppId>
 import sys
 
 from common_grants_sdk.client import Client
+from common_grants_sdk.client.config import Config
 
 if len(sys.argv) < 2:
     print("Usage: get_opportunity.py <oppId>", file=sys.stderr)
     sys.exit(1)
 
 opp_id = sys.argv[1]
-client = Client()
-opportunity = client.get_opportunity(opp_id)
+config = Config(
+    base_url="http://localhost:8080",
+    api_key="two_orgs_user_key",
+    timeout=5.0,
+)
+client = Client(config)
+opportunity = client.opportunity.get(opp_id)
 
 print(f"Opportunity {opp_id}:")
 print(f"  Title: {opportunity.title}")
 print(f"  ID: {opportunity.id}")
-

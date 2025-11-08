@@ -2,8 +2,10 @@
 
 from .auth import Auth
 from .client import Client
+from .config import Config
 
 __all__ = [
-    "Client",
     "Auth",
+    "Client",
+    "Config",
 ]

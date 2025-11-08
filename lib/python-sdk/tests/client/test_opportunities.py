@@ -1,5 +1,6 @@
-"""Tests for the OpportunitiesResource and iterator."""
+"""Tests for the Opportunity namespace."""
 
+import json
 import pytest
 from datetime import datetime, UTC
 from unittest.mock import Mock
@@ -11,6 +12,7 @@ from pydantic import ValidationError
 from common_grants_sdk.client import Client, Auth
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
+from common_grants_sdk.schemas.pydantic.responses import OpportunitiesListResponse
 
 
 @pytest.fixture
@@ -53,29 +55,33 @@ def sample_list_response(sample_opportunity_data):
     }
 
 
-class TestOpportunitiesResource:
-    """Tests for OpportunitiesResource."""
+@pytest.fixture
+def mock_httpx_client():
+    """Create a mock httpx client."""
+    return Mock(spec=httpx.Client)
 
-    @pytest.fixture
-    def mock_httpx_client(self):
-        """Create a mock httpx client."""
-        return Mock(spec=httpx.Client)
 
-    @pytest.fixture
-    def client(self, mock_httpx_client):
-        """Create a Client instance."""
-        auth = Auth.api_key("test-key")
-        config = Config(base_url="https://api.example.com", timeout=10.0)
-        client = Client(config=config, auth=auth)
-        client._http_client = mock_httpx_client
-        return client
+@pytest.fixture
+def client(mock_httpx_client):
+    """Create a Client instance with mocked HTTP client."""
+    auth = Auth.api_key("test-key")
+    config = Config(
+        base_url="https://api.example.com", api_key="test-key", timeout=10.0
+    )
+    client = Client(config=config, auth=auth)
+    client.http = mock_httpx_client
+    # Update opportunity's http reference
+    client.opportunity.http = mock_httpx_client
+    return client
+
+
+class TestOpportunityGet:
+    """Tests for Opportunity.get()."""
 
     def test_get_opportunity_success(
         self, client, mock_httpx_client, sample_opportunity_response
     ):
         """Test successfully getting an opportunity."""
-        import json
-
         opp_id = uuid4()
         # Update the response with the actual opp_id
         sample_opportunity_response["data"]["id"] = str(opp_id)
@@ -86,7 +92,7 @@ class TestOpportunitiesResource:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        opp = client.get_opportunity(opp_id)
+        opp = client.opportunity.get(opp_id)
         assert isinstance(opp, OpportunityBase)
         assert str(opp.id) == str(opp_id)
 
@@ -97,6 +103,24 @@ class TestOpportunitiesResource:
         assert call_args[0][0] == expected_url
         assert call_args[1]["headers"]["X-API-Key"] == "test-key"
         assert call_args[1]["headers"]["Accept"] == "application/json"
+
+    def test_get_opportunity_with_string_id(
+        self, client, mock_httpx_client, sample_opportunity_response
+    ):
+        """Test getting an opportunity with string ID."""
+        opp_id = uuid4()
+        opp_id_str = str(opp_id)
+        sample_opportunity_response["data"]["id"] = opp_id_str
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_opportunity_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.get = Mock(return_value=mock_response)
+
+        opp = client.opportunity.get(opp_id_str)
+        assert isinstance(opp, OpportunityBase)
+        assert str(opp.id) == opp_id_str
 
     def test_get_opportunity_404(self, client, mock_httpx_client):
         """Test getting an opportunity that doesn't exist."""
@@ -112,7 +136,7 @@ class TestOpportunitiesResource:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(httpx.HTTPStatusError) as exc_info:
-            client.get_opportunity(opp_id)
+            client.opportunity.get(opp_id)
         assert exc_info.value.response.status_code == 404
 
     def test_get_opportunity_401(self, client, mock_httpx_client):
@@ -129,7 +153,7 @@ class TestOpportunitiesResource:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(httpx.HTTPStatusError) as exc_info:
-            client.get_opportunity(opp_id)
+            client.opportunity.get(opp_id)
         assert exc_info.value.response.status_code == 401
 
     def test_get_opportunity_500(self, client, mock_httpx_client):
@@ -146,7 +170,7 @@ class TestOpportunitiesResource:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(httpx.HTTPStatusError) as exc_info:
-            client.get_opportunity(opp_id)
+            client.opportunity.get(opp_id)
         assert exc_info.value.response.status_code == 500
 
     def test_get_opportunity_invalid_response(self, client, mock_httpx_client):
@@ -159,7 +183,7 @@ class TestOpportunitiesResource:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(ValidationError):
-            client.get_opportunity(opp_id)
+            client.opportunity.get(opp_id)
 
     def test_get_opportunity_request_error(self, client, mock_httpx_client):
         """Test getting an opportunity with request error."""
@@ -167,185 +191,109 @@ class TestOpportunitiesResource:
         mock_httpx_client.get = Mock(side_effect=httpx.RequestError("Connection error"))
 
         with pytest.raises(httpx.RequestError):
-            client.get_opportunity(opp_id)
+            client.opportunity.get(opp_id)
 
-    def test_list_page_size_validation(
+
+class TestOpportunityList:
+    """Tests for Opportunity.list()."""
+
+    def test_list_opportunities_success(
         self, client, mock_httpx_client, sample_list_response
     ):
-        """Test that page_size > PAGE_SIZE_MAX is capped to PAGE_SIZE_MAX."""
-        import json
-
+        """Test successfully listing opportunities."""
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.text = json.dumps(sample_list_response)
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        # Should not raise an error, but cap the page_size
-        iterator = client.list_opportunities(page_size=101)
-        list(iterator.iter_items())
+        response = client.opportunity.list(page=1)
+        assert isinstance(response, OpportunitiesListResponse)
+        assert len(response.items) == 2
+        assert all(isinstance(item, OpportunityBase) for item in response.items)
+        assert response.pagination_info.page == 1
+        assert response.pagination_info.total_items == 2
+        assert response.pagination_info.total_pages == 1
 
-        # Verify request was made with capped page_size
+        # Verify request was made correctly
+        expected_url = "https://api.example.com/common-grants/opportunities"
         mock_httpx_client.get.assert_called_once()
         call_args = mock_httpx_client.get.call_args
-        assert call_args[1]["params"]["pageSize"] == Config.PAGE_SIZE_MAX
+        assert call_args[0][0] == expected_url
+        assert call_args[1]["headers"]["X-API-Key"] == "test-key"
+        assert call_args[1]["headers"]["Accept"] == "application/json"
+        assert call_args[1]["params"]["page"] == 1
+        assert call_args[1]["params"]["pageSize"] == 100
 
-
-class TestOpportunitiesListIterator:
-    """Tests for OpportunitiesListIterator."""
-
-    @pytest.fixture
-    def mock_httpx_client(self):
-        """Create a mock httpx client."""
-        return Mock(spec=httpx.Client)
-
-    def test_iter_items_single_page(self, mock_httpx_client, sample_list_response):
-        """Test iterating over a single page of opportunities."""
-        import json
-
+    def test_list_opportunities_different_page(
+        self, client, mock_httpx_client, sample_list_response
+    ):
+        """Test listing opportunities on a different page."""
+        sample_list_response["paginationInfo"]["page"] = 2
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.text = json.dumps(sample_list_response)
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
+        response = client.opportunity.list(page=2)
+        assert response.pagination_info.page == 2
+
+        call_args = mock_httpx_client.get.call_args
+        assert call_args[1]["params"]["page"] == 2
+
+    def test_list_opportunities_custom_page_size(self, mock_httpx_client):
+        """Test listing opportunities with custom page size."""
         auth = Auth.api_key("test-key")
-        config = Config(base_url="https://api.example.com", timeout=10.0)
+        config = Config(
+            base_url="https://api.example.com",
+            api_key="test-key",
+            page_size=50,
+        )
         client = Client(config=config, auth=auth)
-        client._http_client = mock_httpx_client
-        iterator = client.list_opportunities(paginate=False)
-        items = list(iterator.iter_items())
+        client.http = mock_httpx_client
+        client.opportunity.http = mock_httpx_client
 
-        assert len(items) == 2
-        assert all(isinstance(item, OpportunityBase) for item in items)
-
-        # Should only make one request
-        assert mock_httpx_client.get.call_count == 1
-
-    def test_iter_items_pagination(self, mock_httpx_client):
-        """Test iterating with automatic pagination."""
-        import json
-
-        # First page response
-        now = datetime.now(UTC).isoformat()
-        page1_response = {
+        sample_response = {
             "status": 200,
             "message": "Success",
-            "items": [
-                {
-                    "id": str(uuid4()),
-                    "title": "Opp 1",
-                    "description": "Desc 1",
-                    "status": {"value": "open"},
-                    "createdAt": now,
-                    "lastModifiedAt": now,
-                }
-            ],
+            "items": [],
             "paginationInfo": {
                 "page": 1,
-                "pageSize": 1,
-                "totalItems": 2,
-                "totalPages": 2,
-            },
-        }
-
-        # Second page response
-        page2_response = {
-            "status": 200,
-            "message": "Success",
-            "items": [
-                {
-                    "id": str(uuid4()),
-                    "title": "Opp 2",
-                    "description": "Desc 2",
-                    "status": {"value": "open"},
-                    "createdAt": now,
-                    "lastModifiedAt": now,
-                }
-            ],
-            "paginationInfo": {
-                "page": 2,
-                "pageSize": 1,
-                "totalItems": 2,
-                "totalPages": 2,
-            },
-        }
-
-        mock_responses = [
-            Mock(
-                status_code=200,
-                text=json.dumps(page1_response),
-                raise_for_status=Mock(),
-            ),
-            Mock(
-                status_code=200,
-                text=json.dumps(page2_response),
-                raise_for_status=Mock(),
-            ),
-        ]
-        mock_httpx_client.get = Mock(side_effect=mock_responses)
-
-        auth = Auth.api_key("test-key")
-        config = Config(base_url="https://api.example.com", timeout=10.0)
-        client = Client(config=config, auth=auth)
-        client._http_client = mock_httpx_client
-
-        iterator = client.list_opportunities(paginate=True, page_size=1)
-        items = list(iterator.iter_items())
-
-        assert len(items) == 2
-        assert all(isinstance(item, OpportunityBase) for item in items)
-
-        # Should make two requests (one per page)
-        # Note: might be more due to how iterator checks for next page
-        assert mock_httpx_client.get.call_count >= 2
-
-    def test_iter_items_total_limit(self, mock_httpx_client):
-        """Test iterating with total limit."""
-        import json
-
-        now = datetime.now(UTC).isoformat()
-        page_response = {
-            "status": 200,
-            "message": "Success",
-            "items": [
-                {
-                    "id": str(uuid4()),
-                    "title": f"Opp {i}",
-                    "description": f"Desc {i}",
-                    "status": {"value": "open"},
-                    "createdAt": now,
-                    "lastModifiedAt": now,
-                }
-                for i in range(3)
-            ],
-            "paginationInfo": {
-                "page": 1,
-                "pageSize": 3,
-                "totalItems": 10,
-                "totalPages": 4,
+                "pageSize": 50,
+                "totalItems": 0,
+                "totalPages": 1,
             },
         }
 
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.text = json.dumps(page_response)
+        mock_response.text = json.dumps(sample_response)
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        auth = Auth.api_key("test-key")
-        config = Config(base_url="https://api.example.com", timeout=10.0)
-        client = Client(config=config, auth=auth)
-        client._http_client = mock_httpx_client
+        client.opportunity.list(page=1)
+        call_args = mock_httpx_client.get.call_args
+        assert call_args[1]["params"]["pageSize"] == 50
 
-        iterator = client.list_opportunities(paginate=True, total=2)
-        items = list(iterator.iter_items())
+    def test_list_opportunities_404(self, client, mock_httpx_client):
+        """Test listing opportunities with 404 error."""
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_response.text = '{"status": 404, "message": "Not found"}'
+        mock_response.raise_for_status = Mock(
+            side_effect=httpx.HTTPStatusError(
+                "Not found", request=Mock(), response=mock_response
+            )
+        )
+        mock_httpx_client.get = Mock(return_value=mock_response)
 
-        assert len(items) == 2
-        # Should stop after getting 2 items even though there are more available
+        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+            client.opportunity.list(page=1)
+        assert exc_info.value.response.status_code == 404
 
-    def test_iter_items_authentication_error(self, mock_httpx_client):
-        """Test iterator handles authentication errors."""
+    def test_list_opportunities_401(self, client, mock_httpx_client):
+        """Test listing opportunities with authentication error."""
         mock_response = Mock()
         mock_response.status_code = 401
         mock_response.text = '{"status": 401, "message": "Unauthorized"}'
@@ -356,31 +304,24 @@ class TestOpportunitiesListIterator:
         )
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        auth = Auth.api_key("test-key")
-        config = Config(base_url="https://api.example.com", timeout=10.0)
-        client = Client(config=config, auth=auth)
-        client._http_client = mock_httpx_client
-
-        iterator = client.list_opportunities()
-
         with pytest.raises(httpx.HTTPStatusError) as exc_info:
-            list(iterator.iter_items())
+            client.opportunity.list(page=1)
         assert exc_info.value.response.status_code == 401
 
-    def test_iter_items_validation_error(self, mock_httpx_client):
-        """Test iterator handles validation errors."""
+    def test_list_opportunities_validation_error(self, client, mock_httpx_client):
+        """Test listing opportunities with validation error."""
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.text = "invalid json"
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        auth = Auth.api_key("test-key")
-        config = Config(base_url="https://api.example.com", timeout=10.0)
-        client = Client(config=config, auth=auth)
-        client._http_client = mock_httpx_client
-
-        iterator = client.list_opportunities()
-
         with pytest.raises(ValidationError):
-            list(iterator.iter_items())
+            client.opportunity.list(page=1)
+
+    def test_list_opportunities_request_error(self, client, mock_httpx_client):
+        """Test listing opportunities with request error."""
+        mock_httpx_client.get = Mock(side_effect=httpx.RequestError("Connection error"))
+
+        with pytest.raises(httpx.RequestError):
+            client.opportunity.list(page=1)
