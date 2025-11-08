@@ -171,6 +171,30 @@ assert transformed_data == {
 }
 ```
 
+## HTTP Client
+
+The SDK includes a type-safe HTTP client for interacting with CommonGrants Protocol-compliant APIs. The client provides a Pythonic interface with automatic authentication, request/response parsing, and pagination support.
+
+```python
+from common_grants_sdk.client import Client, Auth
+from common_grants_sdk.client.config import Config
+
+# Initialize client
+config = Config(base_url="https://api.example.org")
+client = Client(config=config, auth=Auth.api_key("YOUR_API_KEY"))
+
+# Get a specific opportunity
+opportunity = client.opportunity.get("<opportunity_id>")
+print(opportunity.title)
+
+# List opportunities
+response = client.opportunity.list(page=1)
+for opp in response.items:
+    print(opp.id, opp.title)
+```
+
+For detailed documentation, examples, and configuration options, see the [HTTP Client README](common_grants_sdk/client/README.md).
+
 ## License
 
 See [LICENSE](../../LICENSE.md)
