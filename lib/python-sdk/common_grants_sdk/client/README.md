@@ -151,26 +151,37 @@ while True:
 
 ### Handling Errors
 
+The client raises `APIError` for all API request failures. The `APIError` contains a structured `Error` instance with status, message, and detailed error information.
+
 ```python
-import httpx
 from pydantic import ValidationError
 from common_grants_sdk.client import Client, Auth
 from common_grants_sdk.client.config import Config
+from common_grants_sdk.client.exceptions import APIError
 
 config = Config(base_url="https://api.example.org")
 client = Client(config=config, auth=Auth.api_key("key"))
 
 try:
     opp = client.opportunity.get("invalid-id")
-except httpx.HTTPStatusError as e:
-    if e.response.status_code == 404:
+except APIError as e:
+    # Access structured error information
+    print(f"API error ({e.error.status}): {e.error.message}")
+    
+    # Check specific status codes
+    if e.error.status == 404:
         print("Opportunity not found")
-    elif e.response.status_code == 401:
-        print("Authentication failed - check API key")
-    else:
-        print(f"HTTP error ({e.response.status_code}): {e}")
+    elif e.error.status == 401:
+        print("Authentication failure")
+    elif e.error.status == 0:
+        print("Network error or timeout")
+    
+    # Access detailed error list
+    if e.error.errors:
+        for error_detail in e.error.errors:
+            print(f"  {error_detail}")
 except ValidationError as e:
-    print(f"Invalid response format: {e}")
+    print(f"Response validation failure: {e}")
 ```
 
 ## Best Practices
