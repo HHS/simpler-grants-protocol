@@ -1,6 +1,8 @@
 {
   "name": "simpler-grants-protocol",
+  "version": "",
   "description": "A common standard for sharing data in the grant ecosystem.",
+  "longDescription": "",
   "status": "",
   "permissions": {
     "licenses": [
@@ -9,16 +11,27 @@
         "URL": "https://github.com/HHS/simpler-grants-protocol/blob/main/LICENSE.md"
       }
     ],
-    "usageType": ["openSource"]
+    "usageType": [
+      "openSource"
+    ]
   },
   "organization": "HHS",
   "repositoryURL": "https://github.com/HHS/simpler-grants-protocol",
+  "repositoryHost": "github",
   "repositoryVisibility": "public",
+  "homepageURL": "",
+  "downloadURL": "",
+  "disclaimerURL": "",
+  "disclaimerText": "",
   "vcs": "git",
-  "laborHours": 4176,
+  "laborHours": 12635,
   "reuseFrequency": {
-    "forks": 5
+    "forks": 6,
+    "clones": 0
   },
+  "platforms": [],
+  "categories": [],
+  "softwareType": "",
   "languages": [
     "TypeScript",
     "MDX",
@@ -32,16 +45,34 @@
     "Shell"
   ],
   "maintenance": "contract",
-  "contractNumber": "",
+  "contractNumber": [],
   "SBOM": "https://github.com/HHS/simpler-grants-protocol/network/dependencies",
+  "relatedCode": [],
+  "reusedCode": [],
+  "partners": [],
   "date": {
     "created": "2024-12-19T21:14:35Z",
-    "lastModified": "2025-10-07T15:56:02Z",
-    "metaDataLastUpdated": "2025-10-07T16:00:26.350Z"
+    "lastModified": "2025-11-07T21:58:30Z",
+    "metadataLastUpdated": "2025-11-07T22:01:33.444Z"
   },
-  "tags": ["grants", "standards", "api"],
+  "tags": [
+    "api",
+    "grants",
+    "standards"
+  ],
   "contact": {
     "email": "simpler@grants.gov"
   },
-  "feedbackMechanism": "https://github.com/HHS/simpler-grants-protocol/issues"
+  "feedbackMechanism": "https://github.com/HHS/simpler-grants-protocol/issues",
+  "AIUseCaseID": "0",
+  "localisation": false,
+  "repositoryType": "",
+  "userInput": false,
+  "fismaLevel": "",
+  "group": "",
+  "projects": [],
+  "systems": [],
+  "subsetInHealthcare": [],
+  "userType": [],
+  "maturityModelTier": 0
 }
