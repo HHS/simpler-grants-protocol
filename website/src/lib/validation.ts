@@ -11,7 +11,7 @@ import { Paths } from "./schema/paths";
 // CommonGrants schema and validator
 // #########################################################
 
-const ajv = createAjvWithSchemas();
+export const ajv = createAjvWithSchemas();
 const commonGrantsSchema = ajv.getSchema("ProposalBase.yaml")
   ?.schema as JsonSchema;
 
