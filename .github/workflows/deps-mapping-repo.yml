@@ -39,7 +39,6 @@ jobs:
           python-version: "3.13"
 
       - name: Run script
-        if: github.event_name == 'pull_request'
         run: |
           python run.py \
             --org "${{ github.repository_owner }}" \
