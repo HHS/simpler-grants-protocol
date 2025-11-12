@@ -1,0 +1,39 @@
+name: "CI - TypeScript SDK: Publish to npm (dry run)"
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "lib/ts-sdk/**" # Trigger only if files in the `lib/ts-sdk/` directory are changed
+      - ".github/workflows/ci-lib-ts-sdk-publish.yml"
+
+defaults:
+  run:
+    working-directory: ./lib/ts-sdk
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dry run publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --access public --dry-run --no-git-checks
