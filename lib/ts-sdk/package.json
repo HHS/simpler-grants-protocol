@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/sdk",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "license": "CC0-1.0",
   "description": "The CommonGrants protocol TypeScript SDK",
   "main": "dist/index.js",
