@@ -54,7 +54,7 @@ const invalidOppData = {
   createdAt: "2025-01-01T00:00:00Z",
   lastModifiedAt: "2025-01-01T00:00:00Z",
 };
-const result: Types.OpportunityBase = Schemas.OpportunityBaseSchema.safeParse(invalidOppData);
+const result = Schemas.OpportunityBaseSchema.safeParse(invalidOppData);
 if (!result.success) {
   console.error(result.error.message);
 } else {
