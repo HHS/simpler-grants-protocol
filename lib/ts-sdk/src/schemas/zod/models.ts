@@ -25,8 +25,6 @@ export const OppStatusSchema = z.object({
   description: z.string().optional(),
 });
 
-export type OppStatus = z.infer<typeof OppStatusSchema>;
-
 // ############################################################################
 // Applicant type models
 // ############################################################################
@@ -63,8 +61,6 @@ export const ApplicantTypeSchema = z
     description: z.string().optional(),
   })
   .strict();
-
-export type ApplicantType = z.infer<typeof ApplicantTypeSchema>;
 
 // ############################################################################
 // Funding models
@@ -146,8 +142,6 @@ export const OpportunityBaseSchema = z
     customFields: z.record(CustomFieldSchema).optional(),
   })
   .merge(SystemMetadataSchema);
-
-export type OpportunityBase = z.infer<typeof OpportunityBaseSchema>;
 
 // ############################################################################
 // Search models

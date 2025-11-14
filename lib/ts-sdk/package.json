@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/sdk",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "license": "CC0-1.0",
   "description": "The CommonGrants protocol TypeScript SDK",
   "main": "dist/index.js",
@@ -13,6 +13,14 @@
     "./schemas": {
       "types": "./dist/src/schemas/index.d.ts",
       "default": "./dist/src/schemas/index.js"
+    },
+    "./types": {
+      "types": "./dist/src/types.d.ts",
+      "default": "./dist/src/types.js"
+    },
+    "./constants": {
+      "types": "./dist/src/constants.d.ts",
+      "default": "./dist/src/constants.js"
     }
   },
   "files": [

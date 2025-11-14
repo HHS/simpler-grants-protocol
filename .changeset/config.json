@@ -11,6 +11,7 @@
   "packages": [
     "lib/python-sdk",
     "lib/core",
-    "lib/cli"
+    "lib/cli",
+    "lib/ts-sdk"
   ]
 }
