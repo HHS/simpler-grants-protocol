@@ -259,7 +259,7 @@ class TestOpportunityList:
         assert call_args[1]["params"]["page"] == 2
 
     def test_list_opportunities_custom_page_size(self, mock_httpx_client):
-        """Test listing opportunities with custom page size."""
+        """Test listing opportunities with custom page size from config."""
         auth = Auth.api_key("test-key")
         config = Config(
             base_url="https://api.example.com",
@@ -292,6 +292,71 @@ class TestOpportunityList:
         client.opportunity.list(page=1)
         call_args = mock_httpx_client.get.call_args
         assert call_args[1]["params"]["pageSize"] == 50
+
+    def test_list_opportunities_with_page_size_parameter(
+        self, client, mock_httpx_client, sample_list_response
+    ):
+        """Test listing opportunities with page_size parameter overriding config."""
+        sample_list_response["paginationInfo"]["pageSize"] = 25
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_list_response)
+        mock_response.json = Mock(return_value=sample_list_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.get = Mock(return_value=mock_response)
+
+        client.opportunity.list(page=1, page_size=25)
+        call_args = mock_httpx_client.get.call_args
+        assert call_args[1]["params"]["pageSize"] == 25
+
+    def test_list_opportunities_with_page_size_none(
+        self, client, mock_httpx_client, sample_list_response
+    ):
+        """Test listing opportunities with page_size=None uses config default."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_list_response)
+        mock_response.json = Mock(return_value=sample_list_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.get = Mock(return_value=mock_response)
+
+        client.opportunity.list(page=1, page_size=None)
+        call_args = mock_httpx_client.get.call_args
+        assert call_args[1]["params"]["pageSize"] == 100  # config default
+
+    def test_list_opportunities_with_page_size_zero(
+        self, client, mock_httpx_client, sample_list_response
+    ):
+        """Test listing opportunities with page_size=0 falls back to config."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_list_response)
+        mock_response.json = Mock(return_value=sample_list_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.get = Mock(return_value=mock_response)
+
+        client.opportunity.list(page=1, page_size=0)
+        call_args = mock_httpx_client.get.call_args
+        assert (
+            call_args[1]["params"]["pageSize"] == 100
+        )  # config default (page_size < 1)
+
+    def test_list_opportunities_with_page_size_negative(
+        self, client, mock_httpx_client, sample_list_response
+    ):
+        """Test listing opportunities with negative page_size falls back to config."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_list_response)
+        mock_response.json = Mock(return_value=sample_list_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.get = Mock(return_value=mock_response)
+
+        client.opportunity.list(page=1, page_size=-1)
+        call_args = mock_httpx_client.get.call_args
+        assert (
+            call_args[1]["params"]["pageSize"] == 100
+        )  # config default (page_size < 1)
 
     def test_list_opportunities_404(self, client, mock_httpx_client):
         """Test listing opportunities with 404 error."""

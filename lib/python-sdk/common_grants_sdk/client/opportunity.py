@@ -1,7 +1,7 @@
 """Opportunity namespace for the CommonGrants API."""
 
 import httpx
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from uuid import UUID
 
 from .exceptions import raise_api_error
@@ -27,6 +27,7 @@ class Opportunity:
     def list(
         self,
         page: int,
+        page_size: Optional[int] = None,
     ) -> OpportunitiesListResponse:
         """Fetch a single page of opportunities.
 
@@ -39,11 +40,14 @@ class Opportunity:
         Raises:
             APIError: If the API request fails
         """
+        if page_size is None or page_size < 1:
+            page_size = self.client.config.page_size
+
         try:
-            response = self.client.http.get(
+            response = self.http.get(
                 self.client.url("/common-grants/opportunities"),
                 headers=self.client.auth.get_headers(),
-                params={"page": page, "pageSize": self.client.config.page_size},
+                params={"page": page, "pageSize": page_size},
             )
             response.raise_for_status()
             result = OpportunitiesListResponse.model_validate_json(response.text)
