@@ -30,6 +30,9 @@ jobs:
       - name: Run linting
         run: poetry run ruff check .
 
+      - name: Run formatting
+        run: poetry run black . --check
+
       - name: Run type checking
         run: poetry run mypy .
 
