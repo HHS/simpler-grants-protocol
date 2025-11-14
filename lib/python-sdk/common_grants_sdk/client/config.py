@@ -34,22 +34,26 @@ class Config:
             raise ValueError("base_url is required")
         if not base_url_value.startswith(("http://", "https://")):
             raise ValueError("base_url must start with http:// or https://")
-        # use type narrowing to avoid mypy type validation errors in client
+        # use type narrowing to avoid type validation errors in client
         self.base_url: str = cast(str, base_url_value)
 
         # set api_key value from param or env var
         api_key_value = api_key if api_key is not None else os.getenv("CG_API_KEY")
         if not api_key_value:
             raise ValueError("api_key is required")
-        # use type narrowing to avoid mypy type validation errors in client
+        # use type narrowing to avoid type validation errors in client
         self.api_key: str = cast(str, api_key_value)
 
         # set timeout value from param, env var, or default
-        self.timeout = timeout or float(
+        timeout_value = timeout or float(
             os.getenv("CG_API_TIMEOUT", self.DEFAULT_TIMEOUT)
         )
+        # use type narrowing to avoid type validation errors in client
+        self.timeout: float = cast(float, timeout_value)
 
         # set page_size value from param, env var, or default
-        self.page_size = page_size or int(
+        page_size_value = page_size or int(
             os.getenv("CG_API_PAGE_SIZE", self.DEFAULT_PAGE_SIZE)
         )
+        # use type narrowing to avoid type validation errors in client
+        self.page_size: int = cast(int, page_size_value)
