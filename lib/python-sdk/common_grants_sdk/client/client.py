@@ -25,12 +25,7 @@ class Client:
         self.config = config or Config()
         self.auth = auth or Auth.api_key(self.config.api_key)
         self.http = httpx.Client(timeout=self.config.timeout)
-        self.opportunity = Opportunity(
-            auth=self.auth,
-            config=self.config,
-            http=self.http,
-            url=self.url,
-        )
+        self.opportunity = Opportunity(client=self)
 
     def url(self, path: str) -> str:
         """Construct a full URL from base URL and path.

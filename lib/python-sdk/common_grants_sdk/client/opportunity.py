@@ -1,38 +1,28 @@
 """Opportunity namespace for the CommonGrants API."""
 
 import httpx
-from typing import Callable
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from .auth import Auth
-from .config import Config
 from .exceptions import raise_api_error
 from ..schemas.pydantic.models import OpportunityBase
 from ..schemas.pydantic.responses import OpportunityResponse, OpportunitiesListResponse
 
 
+if TYPE_CHECKING:
+    from .client import Client
+
+
 class Opportunity:
     """Class for fetching opportunity data from CommonGrants API."""
 
-    def __init__(
-        self,
-        auth: Auth,
-        config: Config,
-        http: httpx.Client,
-        url: Callable[[str], str],
-    ):
+    def __init__(self, client: "Client"):
         """Initialize the Opportunity namespace.
 
         Args:
-            auth: Authentication instance
-            config: Configuration instance
-            http: HTTP client for making requests
-            url: Function to build full URLs from paths
+            client: Client instance for making API requests
         """
-        self.auth = auth
-        self.config = config
-        self.http = http
-        self.url = url
+        self.client = client
 
     def list(
         self,
@@ -50,10 +40,10 @@ class Opportunity:
             APIError: If the API request fails
         """
         try:
-            response = self.http.get(
-                self.url("/common-grants/opportunities"),
-                headers=self.auth.get_headers(),
-                params={"page": page, "pageSize": self.config.page_size},
+            response = self.client.http.get(
+                self.client.url("/common-grants/opportunities"),
+                headers=self.client.auth.get_headers(),
+                params={"page": page, "pageSize": self.client.config.page_size},
             )
             response.raise_for_status()
             result = OpportunitiesListResponse.model_validate_json(response.text)
@@ -76,9 +66,9 @@ class Opportunity:
             APIError: If the API request fails
         """
         try:
-            response = self.http.get(
-                self.url(f"/common-grants/opportunities/{opp_id}"),
-                headers=self.auth.get_headers(),
+            response = self.client.http.get(
+                self.client.url(f"/common-grants/opportunities/{opp_id}"),
+                headers=self.client.auth.get_headers(),
             )
             response.raise_for_status()
             opp_response = OpportunityResponse.model_validate_json(response.text)
