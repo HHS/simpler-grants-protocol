@@ -52,16 +52,14 @@ class DateRange(Schema):
     """Range filter for date values."""
 
     # Note: The `min` and `max` field types are `Raw` instead of `Date` because
-    # when they are `Date` type they cause a runtime serialization error in an 
+    # when they are `Date` type they cause a runtime serialization error in an
     # APIFlask api implementation (e.g. simpler-grants-gov/api), and the only
     # currently known workaround is to use the `Raw` type instead
     min = fields.Raw(
-        allow_none=True, 
-        metadata={"description": "The minimum date in the range"}
+        allow_none=True, metadata={"description": "The minimum date in the range"}
     )
     max = fields.Raw(
-        allow_none=True, 
-        metadata={"description": "The maximum date in the range"}
+        allow_none=True, metadata={"description": "The maximum date in the range"}
     )
 
 
@@ -484,9 +482,7 @@ class DateRangeFilter(Schema):
         metadata={"description": "The operator to apply to the filter value"},
     )
     value = fields.Nested(
-        DateRange, 
-        allow_none=True, 
-        metadata={"description": "The date range value"}
+        DateRange, allow_none=True, metadata={"description": "The date range value"}
     )
 
 
@@ -822,10 +818,7 @@ class OpportunitySearchRequest(Schema):
         allow_none=True,
         metadata={"description": "Sorting parameters for opportunities"},
     )
-    pagination = fields.Nested(
-        PaginatedBodyParams, 
-        allow_none=True
-    )
+    pagination = fields.Nested(PaginatedBodyParams, allow_none=True)
 
 
 # =============================================================================
@@ -950,9 +943,7 @@ class OpportunityResponse(Schema):
     )
     message = fields.String(required=True, metadata={"description": "The message"})
     data = fields.Nested(
-        OpportunityBase, 
-        required=True, 
-        metadata={"description": "The opportunity"}
+        OpportunityBase, required=True, metadata={"description": "The opportunity"}
     )
 
 
