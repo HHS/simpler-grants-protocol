@@ -44,7 +44,7 @@ class Opportunity:
             page_size = self.client.config.page_size
 
         try:
-            response = self.http.get(
+            response = self.client.http.get(
                 self.client.url("/common-grants/opportunities"),
                 headers=self.client.auth.get_headers(),
                 params={"page": page, "pageSize": page_size},
