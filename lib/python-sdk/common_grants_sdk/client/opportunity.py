@@ -82,3 +82,40 @@ class Opportunity:
             raise_api_error(e)
 
         return result
+    
+    def search(self, search: str, status: str, paginate: bool) -> OpportunitiesListResponse:
+        """Search for opportunties by a query string
+
+        Args:
+            query: the string to search for
+            status: the status of the opportunities to return
+            paginate: whether to paginate the responses or not
+
+        Returns:
+            OpportunitiesListResponse with items and pagination info
+        
+            Raises:
+                APIError: if the API request fails
+        """
+
+        try:
+            #TODO: update Page size
+
+            response = self.http.post(
+                self.url("/common-grants/opportunities/search"),
+                headers=self.auth.get_headers(),
+                data={ "filters": { "status": { "operator": "in", "value": ["open", "forecasted"] },
+                                    "pagination": { "page": 1, "pageSize": 10 },
+                                      "search": "local",
+                                        "sorting": { "sortBy": "lastModifiedAt", "sortOrder": "desc" } }}
+            )
+
+            
+            response.raise_for_status()
+            result = OpportunitiesListResponse.model_validate_json(response.text)
+
+
+        except httpx.HTTPError as e:
+            raise_api_error(e)
+        
+        return result
