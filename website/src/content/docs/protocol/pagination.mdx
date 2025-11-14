@@ -18,6 +18,11 @@ paginatedQueryParams:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/pagination.py"
       startLine: 28
       endLine: 29
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/pagination.ts"
+      startLine: 16
+      endLine: 22
 paginatedBodyParams:
   example:
     file:
@@ -35,6 +40,11 @@ paginatedBodyParams:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/pagination.py"
       startLine: 24
       endLine: 25
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/pagination.ts"
+      startLine: 29
+      endLine: 35
 paginatedResultsInfo:
   example:
     file:
@@ -52,6 +62,11 @@ paginatedResultsInfo:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/pagination.py"
       startLine: 32
       endLine: 46
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/pagination.ts"
+      startLine: 42
+      endLine: 54
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -75,6 +90,7 @@ Query parameters for paginated routes. These parameters should be used on GET ro
   jsonSchema={frontmatter.paginatedQueryParams.jsonSchema}
   typeSpec={frontmatter.paginatedQueryParams.typeSpec}
   python={frontmatter.paginatedQueryParams.python}
+  typescript={frontmatter.paginatedQueryParams.typescript}
 />
 
 ### Changelog
@@ -99,6 +115,7 @@ Body parameters for paginated routes. These parameters should be used on POST an
   jsonSchema={frontmatter.paginatedBodyParams.jsonSchema}
   typeSpec={frontmatter.paginatedBodyParams.typeSpec}
   python={frontmatter.paginatedBodyParams.python}
+  typescript={frontmatter.paginatedBodyParams.typescript}
 />
 
 ### Changelog
@@ -125,6 +142,7 @@ Details about the paginated results. This model should included in the response 
   jsonSchema={frontmatter.paginatedResultsInfo.jsonSchema}
   typeSpec={frontmatter.paginatedResultsInfo.typeSpec}
   python={frontmatter.paginatedResultsInfo.python}
+  typescript={frontmatter.paginatedResultsInfo.typescript}
 />
 
 ### Changelog

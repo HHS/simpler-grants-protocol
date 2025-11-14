@@ -61,6 +61,11 @@ paginated:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
       startLine: 32
       endLine: 42
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/responses.ts"
+      startLine: 71
+      endLine: 78
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -86,6 +91,7 @@ A 200 response with a paginated list of items.
   jsonSchema={frontmatter.paginated.jsonSchema}
   typeSpec={frontmatter.paginated.typeSpec}
   python={frontmatter.paginated.python}
+  typescript={frontmatter.paginated.typescript}
 />
 
 ### Changelog

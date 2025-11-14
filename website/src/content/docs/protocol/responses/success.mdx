@@ -20,6 +20,11 @@ success:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
       startLine: 17
       endLine: 29
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/responses.ts"
+      startLine: 19
+      endLine: 25
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -44,6 +49,7 @@ A 200 response with data.
   jsonSchema={frontmatter.success.jsonSchema}
   typeSpec={frontmatter.success.typeSpec}
   python={frontmatter.success.python}
+  typescript={frontmatter.success.typescript}
 />
 
 ### Changelog

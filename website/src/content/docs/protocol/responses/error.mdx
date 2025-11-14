@@ -20,6 +20,11 @@ error:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/error.py"
       startLine: 10
       endLine: 26
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/responses.ts"
+      startLine: 170
+      endLine: 179
 applicationSubmissionError:
   example:
     file:
@@ -32,6 +37,11 @@ applicationSubmissionError:
       path: "lib/core/lib/core/responses/error.tsp"
       startLine: 32
       endLine: 42
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/responses.ts"
+      startLine: 192
+      endLine: 194
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -58,6 +68,7 @@ Default response schema for 4xx and 5xx HTTP status codes.
   jsonSchema={frontmatter.error.jsonSchema}
   typeSpec={frontmatter.error.typeSpec}
   python={frontmatter.error.python}
+  typescript={frontmatter.error.typescript}
 />
 
 ### Usage
@@ -99,6 +110,7 @@ A failure to submit an application due to validation errors.
   example={frontmatter.applicationSubmissionError.example}
   jsonSchema={frontmatter.applicationSubmissionError.jsonSchema}
   typeSpec={frontmatter.applicationSubmissionError.typeSpec}
+  typescript={frontmatter.applicationSubmissionError.typescript}
 />
 
 ### Changelog
