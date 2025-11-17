@@ -20,7 +20,7 @@ paginate = sys.argv[3]
 
 config = Config(
     base_url="http://localhost:8080",
-    api_key="two_org_user_key",
+    api_key="two_orgs_user_key",
     timeout=5.0,
     page_size=10,
 )
