@@ -101,12 +101,12 @@ class Opportunity:
         try:
             #TODO: update Page size
 
-            response = self.http.post(
-                self.url("/common-grants/opportunities/search"),
-                headers=self.auth.get_headers(),
-                data={ "filters": { "status": { "operator": "in", "value": ["open", "forecasted"] },
+            response = self.client.http.post(
+                self.client.url("/common-grants/opportunities/search"),
+                headers=self.client.auth.get_headers(),
+                data={ "filters": { "status": { "operator": "in", "value": [ status ] },
                                     "pagination": { "page": 1, "pageSize": 10 },
-                                      "search": "local",
+                                      "search": search,
                                         "sorting": { "sortBy": "lastModifiedAt", "sortOrder": "desc" } }}
             )
 

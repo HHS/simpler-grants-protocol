@@ -55,6 +55,20 @@ def sample_list_response(sample_opportunity_data):
         },
     }
 
+@pytest.fixture
+def sample_search_response(sample_opportunity_data):
+    """Create sample search response."""
+    return {
+        "status": 200,
+        "message": "Success",
+        "items": [sample_opportunity_data, sample_opportunity_data],
+        "paginationInfo": {
+            "page": 1,
+            "pageSize": 100,
+            "totalItems": 2,
+            "totalPages": 1
+        }
+    }
 
 @pytest.fixture
 def mock_httpx_client():
@@ -416,3 +430,32 @@ class TestOpportunityList:
             client.opportunity.list(page=1)
         assert exc_info.value.error.status == 0
         assert "Connection error" in exc_info.value.error.message
+
+class TestOpportunitySearch:
+    """Tests for Opportunity.search()"""
+
+    def test_search_opportuinities_success(
+            self, client, mock_httpx_client, sample_search_response
+    ):
+        """Test successful search of opportunities."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        response = client.opportunity.search(search="Test", status="Open", paginate=True)
+
+
+        assert isinstance(response, OpportunitiesListResponse)
+        assert len(response.items) == 2
+        assert all(isinstance(item, OpportunityBase) for item in response.items)
+
+
+        expected_url = "https://api.example.com/common-grants/opportunities/search"
+        mock_httpx_client.post.assert_called_once()
+        call_args = mock_httpx_client.post.call_args
+        assert call_args[0][0] == expected_url
+        assert call_args[1]["headers"]["X-API-Key"] == "test-key"
+        assert call_args[1]["headers"]["Accept"] == "application/json"
