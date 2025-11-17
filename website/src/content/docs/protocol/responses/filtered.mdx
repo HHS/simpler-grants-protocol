@@ -78,6 +78,11 @@ filtered:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
       startLine: 57
       endLine: 78
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/responses.ts"
+      startLine: 126
+      endLine: 140
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -105,6 +110,7 @@ A 200 response with a paginated list of filtered items.
   jsonSchema={frontmatter.filtered.jsonSchema}
   typeSpec={frontmatter.filtered.typeSpec}
   python={frontmatter.filtered.python}
+  typescript={frontmatter.filtered.typescript}
 />
 
 ### Changelog
