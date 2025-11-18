@@ -26,7 +26,7 @@ config = Config(
 )
 
 client = Client(config)
-response = client.opportunity.search(search="education", status="open", paginate=True)
+response = client.opportunity.search(search=search, status=status, paginate=paginate)
 
 print(f"Found {len(response.items)} opportunities: ")
 

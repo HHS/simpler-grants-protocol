@@ -101,13 +101,17 @@ class Opportunity:
         try:
             #TODO: update Page size
 
+            data_value = { "filters": { "status": { "operator": "in", "value": [ status ] },
+                                      "search": search,
+                                        "sorting": { "sortBy": "lastModifiedAt", "sortOrder": "desc" } }}
+
+            if paginate:
+                data_value["pagination"] = { "page": 1, "pageSize": 10 },
+
             response = self.client.http.post(
                 self.client.url("/common-grants/opportunities/search"),
                 headers=self.client.auth.get_headers(),
-                data={ "filters": { "status": { "operator": "in", "value": [ status ] },
-                                    "pagination": { "page": 1, "pageSize": 10 },
-                                      "search": search,
-                                        "sorting": { "sortBy": "lastModifiedAt", "sortOrder": "desc" } }}
+                data=data_value
             )
 
             
