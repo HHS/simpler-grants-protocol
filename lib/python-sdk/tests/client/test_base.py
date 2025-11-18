@@ -12,7 +12,8 @@ from common_grants_sdk.client.base import BaseResource
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.schemas.pydantic.pagination import PaginatedResultsInfo
-from common_grants_sdk.schemas.pydantic.responses import DefaultResponse
+from common_grants_sdk.schemas.pydantic.responses import Paginated
+from pydantic import ValidationError
 
 
 class MockResource(BaseResource):
@@ -106,14 +107,14 @@ class TestBaseResourceList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, items, pagination = base_resource.list(page=1)
+        response = base_resource.list(page=1)
 
-        assert isinstance(response, DefaultResponse)
+        assert isinstance(response, Paginated)
         assert response.status == 200
         assert response.message == "Success"
-        assert len(items) == 2
-        assert isinstance(pagination, PaginatedResultsInfo)
-        assert pagination.page == 1
+        assert len(response.items) == 2
+        assert isinstance(response.pagination_info, PaginatedResultsInfo)
+        assert response.pagination_info.page == 1
 
     def test_list_without_page_calls_list_all(
         self, base_resource, mock_httpx_client, sample_list_response
@@ -125,14 +126,14 @@ class TestBaseResourceList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, items, pagination = base_resource.list(page=None)
+        response = base_resource.list(page=None)
 
-        assert isinstance(response, DefaultResponse)
-        assert len(items) == 2
-        assert isinstance(pagination, PaginatedResultsInfo)
+        assert isinstance(response, Paginated)
+        assert len(response.items) == 2
+        assert isinstance(response.pagination_info, PaginatedResultsInfo)
         # When fetching all, pagination should be aggregated
-        assert pagination.page == 1
-        assert pagination.total_pages == 1
+        assert response.pagination_info.page == 1
+        assert response.pagination_info.total_pages == 1
 
     def test_list_uses_default_page_size(
         self, base_resource, mock_httpx_client, sample_list_response
@@ -195,23 +196,23 @@ class TestBaseResourceList:
 class TestBaseResourceListSome:
     """Tests for BaseResource._list_some()."""
 
-    def test_list_some_returns_correct_tuple(
+    def test_list_some_returns_paginated(
         self, base_resource, mock_httpx_client, sample_list_response
     ):
-        """Test that _list_some() returns correct tuple structure."""
+        """Test that _list_some() returns Paginated instance."""
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json = Mock(return_value=sample_list_response)
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, items, pagination = base_resource._list_some(page=1)
+        response = base_resource._list_some(page=1)
 
-        assert isinstance(response, DefaultResponse)
-        assert isinstance(items, list)
-        assert isinstance(pagination, PaginatedResultsInfo)
-        assert len(items) == 2
-        assert items[0]["name"] == "Test Item"
+        assert isinstance(response, Paginated)
+        assert isinstance(response.items, list)
+        assert isinstance(response.pagination_info, PaginatedResultsInfo)
+        assert len(response.items) == 2
+        assert response.items[0]["name"] == "Test Item"
 
     def test_list_some_handles_empty_items(self, base_resource, mock_httpx_client):
         """Test that _list_some() handles empty items list."""
@@ -232,13 +233,13 @@ class TestBaseResourceListSome:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, items, pagination = base_resource._list_some(page=1)
+        response = base_resource._list_some(page=1)
 
-        assert len(items) == 0
-        assert pagination.total_items == 0
+        assert len(response.items) == 0
+        assert response.pagination_info.total_items == 0
 
     def test_list_some_handles_missing_items(self, base_resource, mock_httpx_client):
-        """Test that _list_some() handles missing items field."""
+        """Test that _list_some() raises ValidationError when items field is missing."""
         response_without_items = {
             "status": 200,
             "message": "Success",
@@ -255,9 +256,9 @@ class TestBaseResourceListSome:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, items, pagination = base_resource._list_some(page=1)
-
-        assert items == []  # Should default to empty list
+        # Paginated requires items field, so missing items should raise ValidationError
+        with pytest.raises(ValidationError):
+            base_resource._list_some(page=1)
 
     def test_list_some_uses_config_page_size_when_none(
         self, base_resource, mock_httpx_client, sample_list_response
@@ -303,12 +304,12 @@ class TestBaseResourceListAll:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, items, pagination = base_resource._list_all()
+        response = base_resource._list_all()
 
-        assert len(items) == 2
-        assert pagination.page == 1
-        assert pagination.total_pages == 1
-        assert pagination.total_items == 2
+        assert len(response.items) == 2
+        assert response.pagination_info.page == 1
+        assert response.pagination_info.total_pages == 1
+        assert response.pagination_info.total_items == 2
 
     def test_list_all_multiple_pages(
         self, base_resource, mock_httpx_client, sample_item_data
@@ -362,12 +363,12 @@ class TestBaseResourceListAll:
 
         mock_httpx_client.get = Mock(side_effect=mock_get)
 
-        response, items, pagination = base_resource._list_all()
+        response = base_resource._list_all()
 
-        assert len(items) == 5  # 2 + 2 + 1
-        assert pagination.page == 1
-        assert pagination.total_pages == 1
-        assert pagination.total_items == 5
+        assert len(response.items) == 5  # 2 + 2 + 1
+        assert response.pagination_info.page == 1
+        assert response.pagination_info.total_pages == 1
+        assert response.pagination_info.total_items == 5
 
     def test_list_all_empty_result(self, base_resource, mock_httpx_client):
         """Test _list_all() when there are no items."""
@@ -388,11 +389,13 @@ class TestBaseResourceListAll:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, items, pagination = base_resource._list_all()
+        response = base_resource._list_all()
 
-        assert len(items) == 0
-        assert pagination.total_items == 0
-        assert pagination.page_size == 100  # Uses config default when empty
+        assert len(response.items) == 0
+        assert response.pagination_info.total_items == 0
+        assert (
+            response.pagination_info.page_size == 100
+        )  # Uses config default when empty
 
     def test_list_all_handles_error_on_first_page(
         self, base_resource, mock_httpx_client
@@ -463,7 +466,9 @@ class TestBaseResourceGet:
     def test_get_returns_correct_tuple(
         self, base_resource, mock_httpx_client, sample_get_response
     ):
-        """Test that get() returns correct tuple structure."""
+        """Test that get() returns SuccessResponse with correct structure."""
+        from common_grants_sdk.client.base import SuccessResponse
+
         item_id = uuid4()
         sample_get_response["data"]["id"] = str(item_id)
 
@@ -473,14 +478,14 @@ class TestBaseResourceGet:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, data = base_resource.get(item_id)
+        response = base_resource.get(item_id)
 
-        assert isinstance(response, DefaultResponse)
+        assert isinstance(response, SuccessResponse)
         assert response.status == 200
         assert response.message == "Success"
-        assert isinstance(data, dict)
-        assert data["name"] == "Test Item"
-        assert data["id"] == str(item_id)
+        assert isinstance(response.data, dict)
+        assert response.data["name"] == "Test Item"
+        assert response.data["id"] == str(item_id)
 
     def test_get_with_string_id(
         self, base_resource, mock_httpx_client, sample_get_response
@@ -495,9 +500,9 @@ class TestBaseResourceGet:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, data = base_resource.get(item_id)
+        response = base_resource.get(item_id)
 
-        assert data["id"] == item_id
+        assert response.data["id"] == item_id
         # Verify URL construction
         call_args = mock_httpx_client.get.call_args
         assert f"/test-resource/{item_id}" in call_args[0][0]
@@ -514,9 +519,9 @@ class TestBaseResourceGet:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response, data = base_resource.get(uuid4())
+        response = base_resource.get(uuid4())
 
-        assert data == {}  # Should default to empty dict
+        assert response.data == {}  # Should default to empty dict
 
     def test_get_handles_http_error(self, base_resource, mock_httpx_client):
         """Test that get() raises APIError on HTTP errors."""

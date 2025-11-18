@@ -3,18 +3,29 @@
 from __future__ import annotations
 
 import httpx
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic, TypeVar, cast
 from uuid import UUID
+
+from pydantic import Field
 
 from .exceptions import raise_api_error
 from ..schemas.pydantic.pagination import PaginatedResultsInfo
-from ..schemas.pydantic.responses import DefaultResponse
+from ..schemas.pydantic.responses import Paginated, Success
 
 if TYPE_CHECKING:
     from .client import Client
 
+# Type variable for item types in paginated responses
+ItemsT = TypeVar("ItemsT", default=dict)
 
-class BaseResource:
+
+class SuccessResponse(Success):
+    """Success response with data field."""
+
+    data: dict = Field(default_factory=dict, description="The response data")
+
+
+class BaseResource(Generic[ItemsT]):
     """Base class to encapsulate common methods for API resources."""
 
     def __init__(self, client: "Client", path: str):
@@ -31,7 +42,7 @@ class BaseResource:
         self,
         page: int | None = None,
         page_size: int | None = None,
-    ) -> tuple[DefaultResponse, list[dict], PaginatedResultsInfo]:
+    ) -> Paginated[ItemsT]:
         """Fetch a set of items from an endpoint.
 
         Args:
@@ -41,9 +52,9 @@ class BaseResource:
                 client config.
 
         Returns:
-            Tuple of (DefaultResponse, list[dict], PaginatedResultsInfo).
-            When page is None, the response contains all items aggregated from
-            all pages, with pagination_info summarizing the aggregated result.
+            Paginated[ItemsT] instance. When page is None, the response contains
+            all items aggregated from all pages, with pagination_info summarizing
+            the aggregated result.
 
         Raises:
             APIError: If the API request fails
@@ -58,18 +69,17 @@ class BaseResource:
     def _list_all(
         self,
         page_size: int | None = None,
-    ) -> tuple[DefaultResponse, list[dict], PaginatedResultsInfo]:  # type: ignore[valid-type]
+    ) -> Paginated[ItemsT]:
         """Fetch all items across all pages.
 
         Returns:
-            Tuple of (DefaultResponse, list[dict], PaginatedResultsInfo) with
-            all items aggregated
+            Paginated[ItemsT] instance with all items aggregated
 
         Raises:
             APIError: If the API request fails
         """
         items: list[dict] = []
-        latest_response: DefaultResponse | None = None
+        latest_response: Paginated[ItemsT] | None = None
 
         page = 1
         page_size = page_size or self.client.config.page_size
@@ -78,19 +88,27 @@ class BaseResource:
 
         # Iteratively fetch all pages
         while more_pages_available:
-            api_response, page_items, pagination = self._list_some(
-                page=page, page_size=page_size
-            )
-            items.extend(page_items)
-            latest_response = api_response
+            # Get page response (type system sees Paginated[ItemsT], runtime is Paginated[dict])
+            page_response = self._list_some(page=page, page_size=page_size)
+            # Cast items to list[dict] for internal use since we know runtime type
+            items.extend(cast(list[dict], page_response.items))
+            latest_response = page_response
 
-            if pagination.page < pagination.total_pages:
-                page = pagination.page + 1
+            if (
+                page_response.pagination_info.page
+                < page_response.pagination_info.total_pages
+            ):
+                page = page_response.pagination_info.page + 1
                 more_pages_available = True
             else:
                 more_pages_available = False
 
-        response = latest_response or DefaultResponse(status=200, message="Success")
+        # Build aggregated response
+        # Use status/message from latest_response if available, otherwise use defaults
+        status = latest_response.status if latest_response else 200
+        message = latest_response.message if latest_response else "Success"
+
+        # Create pagination info for aggregated result
         pagination = PaginatedResultsInfo(
             page=1,
             pageSize=max(1, len(items)) if len(items) > 0 else page_size,
@@ -98,17 +116,19 @@ class BaseResource:
             totalPages=1,
         )
 
-        return (
-            response,
-            items,
-            pagination,
+        # Create Paginated[ItemsT] with cast items (runtime type is dict, type system sees ItemsT)
+        return Paginated[ItemsT](
+            status=status,
+            message=message,
+            items=cast(list[ItemsT], items),
+            paginationInfo=pagination,
         )
 
     def _list_some(
         self,
         page: int,
         page_size: int | None = None,
-    ) -> tuple[DefaultResponse, list[dict], PaginatedResultsInfo]:  # type: ignore[valid-type]
+    ) -> Paginated[ItemsT]:
         """Fetch a single page of items.
 
         Args:
@@ -116,15 +136,16 @@ class BaseResource:
             page_size: Number of items per page
 
         Returns:
-            Tuple of (DefaultResponse, list[dict], PaginatedResultsInfo)
+            Paginated[ItemsT] instance
 
         Raises:
             APIError: If the API request fails
         """
+        page_size = page_size or self.client.config.page_size
+        if page_size < 1:
+            page_size = self.client.config.page_size
+
         try:
-            page_size = page_size or self.client.config.page_size
-            if page_size < 1:
-                page_size = self.client.config.page_size
             api_response = self.client.http.get(
                 self.client.url(self.path),
                 headers=self.client.auth.get_headers(),
@@ -135,30 +156,24 @@ class BaseResource:
             # Parse the JSON response
             response_data = api_response.json()
 
-            # Hydrate DefaultResponse from response data
-            base_response = DefaultResponse.model_validate(response_data)
-
-            # Extract items as list of dicts from response data
-            items = response_data.get("items", [])
-
-            # Extract pagination info from response data
-            pagination = PaginatedResultsInfo.model_validate(
-                response_data.get("paginationInfo", {})
-            )
+            # Hydrate Paginated[dict] from response data (JSON parsing gives dicts)
+            # Cast to Paginated[ItemsT] for type system
+            result_dict = Paginated[dict].model_validate(response_data)
+            result = cast(Paginated[ItemsT], result_dict)
 
         except httpx.HTTPError as e:
             raise_api_error(e)  # Always raises, never returns
 
-        return (base_response, items, pagination)
+        return result
 
-    def get(self, item_id: str | UUID) -> tuple[DefaultResponse, dict]:
+    def get(self, item_id: str | UUID) -> SuccessResponse:
         """Get a specific item by ID.
 
         Args:
             item_id: The item ID
 
         Returns:
-            Tuple of (DefaultResponse, dict) where dict contains the item data
+            SuccessResponse instance with status, message, and data fields.
 
         Raises:
             APIError: If the API request fails
@@ -173,13 +188,10 @@ class BaseResource:
             # Parse the JSON response
             response_data = api_response.json()
 
-            # Hydrate DefaultResponse from response data
-            base_response = DefaultResponse.model_validate(response_data)
-
-            # Extract item as dict from response data
-            data = response_data.get("data", {})
+            # Hydrate SuccessResponse from response data
+            result = SuccessResponse.model_validate(response_data)
 
         except httpx.HTTPError as e:
             raise_api_error(e)
 
-        return (base_response, data)
+        return result
