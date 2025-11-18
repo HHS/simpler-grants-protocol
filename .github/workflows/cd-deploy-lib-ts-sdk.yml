@@ -28,62 +28,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate tags
-        run: |
-          PREFIX="@common-grants/sdk@"
-          LATEST_TAG="${{ github.event.inputs.release_tag }}"
-          PREVIOUS_TAG="${{ github.event.inputs.previous_tag }}"
-
-          # Validate latest tag starts with prefix
-          if [[ ! "$LATEST_TAG" == "$PREFIX"* ]]; then
-            echo "✗ Latest tag '$LATEST_TAG' must start with '$PREFIX'"
-            exit 1
-          fi
-
-          # Validate latest tag exists
-          if ! git rev-parse "$LATEST_TAG" >/dev/null 2>&1; then
-            echo "✗ Tag '$LATEST_TAG' does not exist"
-            exit 1
-          fi
-
-          echo "✓ Latest tag '$LATEST_TAG' is valid"
-
-      - name: Generate release notes
+      - name: Validate tags and generate release notes
         id: release-notes
         run: |
-          LATEST_TAG="${{ github.event.inputs.release_tag }}"
-          PREVIOUS_TAG="${{ github.event.inputs.previous_tag }}"
-
-          if [ -n "$PREVIOUS_TAG" ]; then
-            echo "Generating release notes between $PREVIOUS_TAG and $LATEST_TAG"
-            NOTES=$(gh api repos/${{ github.repository }}/releases/generate-notes \
-              -f tag_name="$LATEST_TAG" \
-              -f previous_tag_name="$PREVIOUS_TAG" \
-              -f configuration_file=.github/release-config/lib-ts-sdk.yml \
-              -q '.body')
-          else
-            echo "Generating release notes for $LATEST_TAG"
-            NOTES=$(gh api repos/${{ github.repository }}/releases/generate-notes \
-              -f tag_name="$LATEST_TAG" \
-              -f configuration_file=.github/release-config/lib-ts-sdk.yml \
-              -q '.body')
-          fi
-
-          # Output notes using multiline format
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          # Display notes in dry-run mode
+          DRY_RUN_FLAG=""
           if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
-            echo ""
-            echo "=== DRY RUN MODE - Release notes preview ==="
-            echo "Latest tag: $LATEST_TAG"
-            echo "Previous tag: $PREVIOUS_TAG"
-            echo ""
-            echo "$NOTES"
-            echo "=== End of preview ==="
+            DRY_RUN_FLAG="--dry-run"
           fi
+          .github/scripts/validate-and-generate-release-notes.sh \
+            --prefix "@common-grants/sdk@" \
+            --config-file ".github/release-config/lib-ts-sdk.yml" \
+            --release-tag "${{ github.event.inputs.release_tag }}" \
+            --previous-tag "${{ github.event.inputs.previous_tag }}" \
+            --repository "${{ github.repository }}" \
+            $DRY_RUN_FLAG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
