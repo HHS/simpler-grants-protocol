@@ -1,12 +1,3 @@
-export interface ChangelogEntry {
-  version: string;
-  changes: string[];
-}
-
-export interface Changelog {
-  [schemaName: string]: ChangelogEntry[];
-}
-
 /**
  * Target types that mirror the TypeSpec versioning decorators.
  * The values are designed to work directly with message templates.
@@ -22,4 +13,32 @@ export enum TargetType {
   UnionVariant = "variant",
   Scalar = "scalar",
   Interface = "interface",
+}
+
+export enum Action {
+  Added = "added",
+  Removed = "removed",
+  Renamed = "renamed",
+  MadeRequired = "madeRequired",
+  MadeOptional = "madeOptional",
+  TypeChanged = "typeChanged",
+}
+
+export interface ChangeRecord {
+  message: string;
+  action: Action;
+  targetKind: TargetType;
+  currTargetName?: string;
+  prevTargetName?: string;
+  currDataType?: string;
+  prevDataType?: string;
+}
+
+export interface ChangelogEntry {
+  version: string;
+  changes: ChangeRecord[];
+}
+
+export interface Changelog {
+  [schemaName: string]: ChangelogEntry[];
 }
