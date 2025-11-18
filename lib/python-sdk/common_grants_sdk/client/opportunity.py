@@ -1,7 +1,8 @@
 """Opportunity namespace for the CommonGrants API."""
 
 import json
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
+from typing_extensions import override
 from uuid import UUID
 
 from .base import BaseResource
