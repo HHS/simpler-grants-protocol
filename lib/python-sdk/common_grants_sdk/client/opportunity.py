@@ -1,19 +1,19 @@
 """Opportunity namespace for the CommonGrants API."""
 
-import httpx
-from typing import Optional, TYPE_CHECKING
+import json
+from typing import TYPE_CHECKING, override
 from uuid import UUID
 
-from .exceptions import raise_api_error
+from .base import BaseResource
 from ..schemas.pydantic.models import OpportunityBase
-from ..schemas.pydantic.responses import OpportunityResponse, OpportunitiesListResponse
+from ..schemas.pydantic.responses import OpportunitiesListResponse
 
 
 if TYPE_CHECKING:
     from .client import Client
 
 
-class Opportunity:
+class Opportunity(BaseResource):
     """Class for fetching opportunity data from CommonGrants API."""
 
     def __init__(self, client: "Client"):
@@ -22,42 +22,50 @@ class Opportunity:
         Args:
             client: Client instance for making API requests
         """
-        self.client = client
+        super().__init__(client, "/common-grants/opportunities")
 
-    def list(
+    @override
+    def list(  # type: ignore[override]
         self,
-        page: int,
-        page_size: Optional[int] = None,
+        page: int | None = None,
+        page_size: int | None = None,
     ) -> OpportunitiesListResponse:
-        """Fetch a single page of opportunities.
+        """Fetch a set of opportunities.
 
         Args:
-            page: Page number (1-indexed)
+            page: Page number (1-indexed). If None, method will fetch all
+                items across all pages and aggregate them into a single response.
+            page_size: Number of items per page. If None, uses the default from
+                client config.
 
         Returns:
-            OpportunitiesListResponse with items and pagination info
+            OpportunitiesListResponse instance. When page is None, the response
+            contains all items aggregated from all pages, with pagination_info
+            summarizing the aggregated result.
 
         Raises:
             APIError: If the API request fails
         """
-        if page_size is None or page_size < 1:
-            page_size = self.client.config.page_size
+        # Call parent method to get base response
+        base_response, items_dict, pagination = super().list(
+            page=page, page_size=page_size
+        )
 
-        try:
-            response = self.client.http.get(
-                self.client.url("/common-grants/opportunities"),
-                headers=self.client.auth.get_headers(),
-                params={"page": page, "pageSize": page_size},
-            )
-            response.raise_for_status()
-            result = OpportunitiesListResponse.model_validate_json(response.text)
+        # Hydrate OpportunityBase models from items dict
+        items = [
+            OpportunityBase.model_validate_json(json.dumps(item)) for item in items_dict
+        ]
 
-        except httpx.HTTPError as e:
-            raise_api_error(e)  # Always raises, never returns
+        # Build OpportunitiesListResponse
+        return OpportunitiesListResponse(
+            status=base_response.status,
+            message=base_response.message,
+            items=items,
+            paginationInfo=pagination,
+        )
 
-        return result
-
-    def get(self, opp_id: str | UUID) -> OpportunityBase:
+    @override
+    def get(self, opp_id: str | UUID) -> OpportunityBase:  # type: ignore[override]
         """Get a specific opportunity by ID.
 
         Args:
@@ -69,16 +77,8 @@ class Opportunity:
         Raises:
             APIError: If the API request fails
         """
-        try:
-            response = self.client.http.get(
-                self.client.url(f"/common-grants/opportunities/{opp_id}"),
-                headers=self.client.auth.get_headers(),
-            )
-            response.raise_for_status()
-            opp_response = OpportunityResponse.model_validate_json(response.text)
-            result = opp_response.data
+        # Call parent method to get base response
+        base_response, data_dict = super().get(opp_id)
 
-        except httpx.HTTPError as e:
-            raise_api_error(e)
-
-        return result
+        # Hydrate OpportunityBase models from item dict
+        return OpportunityBase.model_validate_json(json.dumps(data_dict))
