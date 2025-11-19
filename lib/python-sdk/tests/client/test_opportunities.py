@@ -55,6 +55,7 @@ def sample_list_response(sample_opportunity_data):
         },
     }
 
+
 @pytest.fixture
 def sample_search_response(sample_opportunity_data):
     """Create sample search response."""
@@ -66,9 +67,10 @@ def sample_search_response(sample_opportunity_data):
             "page": 1,
             "pageSize": 100,
             "totalItems": 2,
-            "totalPages": 1
-        }
+            "totalPages": 1,
+        },
     }
+
 
 @pytest.fixture
 def mock_httpx_client():
@@ -431,11 +433,12 @@ class TestOpportunityList:
         assert exc_info.value.error.status == 0
         assert "Connection error" in exc_info.value.error.message
 
+
 class TestOpportunitySearch:
     """Tests for Opportunity.search()"""
 
     def test_search_opportunities_success(
-            self, client, mock_httpx_client, sample_search_response
+        self, client, mock_httpx_client, sample_search_response
     ):
         """Test successful search of opportunities."""
         mock_response = Mock()
@@ -445,13 +448,13 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        response = client.opportunity.search(search="Test", status="Open", paginate=True)
-
+        response = client.opportunity.search(
+            search="Test", status="Open", paginate=True
+        )
 
         assert isinstance(response, OpportunitiesListResponse)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
-
 
         expected_url = "https://api.example.com/common-grants/opportunities/search"
         mock_httpx_client.post.assert_called_once()
@@ -460,9 +463,7 @@ class TestOpportunitySearch:
         assert call_args[1]["headers"]["X-API-Key"] == "test-key"
         assert call_args[1]["headers"]["Accept"] == "application/json"
 
-    def test_search_opportunities_404(
-            self, client, mock_httpx_client
-    ):
+    def test_search_opportunities_404(self, client, mock_httpx_client):
         """Test searching opportunities with 404 error"""
 
         error_data = {"status": 404, "message": "Not found", "errors": []}
@@ -481,9 +482,7 @@ class TestOpportunitySearch:
             client.opportunity.search(search="Test", status="Open", paginate=True)
         assert exc_info.value.error.status == 404
 
-    def test_search_opportunities_401(
-         self, client, mock_httpx_client
-    ):
+    def test_search_opportunities_401(self, client, mock_httpx_client):
         """Test searching opportunities with authentication error"""
         error_data = {"status": 401, "message": "Unauthorized", "errors": []}
         mock_response = Mock()
@@ -517,7 +516,9 @@ class TestOpportunitySearch:
 
     def test_search_opportunities_request_error(self, client, mock_httpx_client):
         """Test searching opportunities with request error."""
-        mock_httpx_client.post = Mock(side_effect=httpx.RequestError("Connection error"))
+        mock_httpx_client.post = Mock(
+            side_effect=httpx.RequestError("Connection error")
+        )
 
         with pytest.raises(APIError) as exc_info:
             client.opportunity.search(search="Test", status="Open", paginate=True)

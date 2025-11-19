@@ -3,14 +3,15 @@
 Run with: poetry run python search_opportunity.py <search> <status> <paginateBool>
 """
 
-
 import sys
 
 from common_grants_sdk.client import Client
 from common_grants_sdk.client.config import Config
 
 if len(sys.argv) < 3:
-    print("Usage: search_opportunity.py <search> <status> <paginateBool>", file=sys.stderr)
+    print(
+        "Usage: search_opportunity.py <search> <status> <paginateBool>", file=sys.stderr
+    )
     sys.exit(1)
 
 search = sys.argv[1]

@@ -82,8 +82,10 @@ class Opportunity:
             raise_api_error(e)
 
         return result
-    
-    def search(self, search: str, status: str, paginate: bool) -> OpportunitiesListResponse:
+
+    def search(
+        self, search: str, status: str, paginate: bool
+    ) -> OpportunitiesListResponse:
         """Search for opportunties by a query string
 
         Args:
@@ -93,29 +95,31 @@ class Opportunity:
 
         Returns:
             OpportunitiesListResponse with items and pagination info
-        
+
             Raises:
                 APIError: if the API request fails
         """
 
         try:
-            #TODO: Add auto-pagination in a separate PR
-            
+            # TODO: Add auto-pagination in a separate PR
+
             response = self.client.http.post(
                 self.client.url("/common-grants/opportunities/search"),
                 headers=self.client.auth.get_headers(),
-                data={ "filters": { "status": { "operator": "in", "value": [ status ] },
-                                    "pagination": { "page": 1, "pageSize": 10 },
-                                      "search": search,
-                                        "sorting": { "sortBy": "lastModifiedAt", "sortOrder": "desc" } }}
+                data={
+                    "filters": {
+                        "status": {"operator": "in", "value": [status]},
+                        "pagination": {"page": 1, "pageSize": 10},
+                        "search": search,
+                        "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
+                    }
+                },
             )
 
-            
             response.raise_for_status()
             result = OpportunitiesListResponse.model_validate_json(response.text)
 
-
         except httpx.HTTPError as e:
             raise_api_error(e)
-        
+
         return result
