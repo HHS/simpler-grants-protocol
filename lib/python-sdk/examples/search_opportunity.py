@@ -16,7 +16,7 @@ if len(sys.argv) < 3:
 
 search = sys.argv[1]
 status = sys.argv[2]
-paginate = sys.argv[3]
+paginate = eval(sys.argv[3])
 
 
 config = Config(
