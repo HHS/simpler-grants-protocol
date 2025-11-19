@@ -2,10 +2,8 @@
 
 import json
 from typing import TYPE_CHECKING
-from typing_extensions import override
 from uuid import UUID
 
-from .base import BaseResource
 from ..schemas.pydantic.models import OpportunityBase
 from ..schemas.pydantic.responses import OpportunitiesListResponse, OpportunityResponse
 
@@ -14,7 +12,7 @@ if TYPE_CHECKING:
     from .client import Client
 
 
-class Opportunity(BaseResource):
+class Opportunity:
     """Class for fetching opportunity data from CommonGrants API."""
 
     def __init__(self, client: "Client"):
@@ -23,10 +21,14 @@ class Opportunity(BaseResource):
         Args:
             client: Client instance for making API requests
         """
-        super().__init__(client, "/common-grants/opportunities")
+        self.client = client
 
-    @override
-    def list(  # type: ignore[override]
+    @property
+    def path(self) -> str:
+        """Return the API path for opportunities."""
+        return "/common-grants/opportunities"
+
+    def list(
         self,
         page: int | None = None,
         page_size: int | None = None,
@@ -47,8 +49,8 @@ class Opportunity(BaseResource):
         Raises:
             APIError: If the API request fails
         """
-        # Call parent method to get paginated response
-        paginated_response = super().list(page=page, page_size=page_size)
+        # Call client method to get paginated response
+        paginated_response = self.client.list(self.path, page=page, page_size=page_size)
 
         # Hydrate OpportunityBase models from items dict
         items = [
@@ -63,8 +65,7 @@ class Opportunity(BaseResource):
         # Hydrate OpportunitiesListResponse from response data
         return OpportunitiesListResponse.model_validate(response_data)
 
-    @override
-    def get(self, opp_id: str | UUID) -> OpportunityBase:  # type: ignore[override]
+    def get(self, opp_id: str | UUID) -> OpportunityBase:
         """Get a specific opportunity by ID.
 
         Args:
@@ -76,16 +77,12 @@ class Opportunity(BaseResource):
         Raises:
             APIError: If the API request fails
         """
-        # Call parent method to get SuccessResponse
-        success_response = super().get(opp_id)
+        # Call client method to get SuccessResponse
+        success_response = self.client.get_item(self.path, opp_id)
 
-        # Hydrate OpportunityBase from data dict (handles string->type conversions)
-        data_dict: dict = success_response.data or {}
-        opportunity = OpportunityBase.from_dict(data_dict)
-
-        # Convert SuccessResponse to dict and replace data with hydrated OpportunityBase
+        # Hydrate OpportunityBase from response
         response_data = success_response.model_dump(by_alias=True)
-        response_data["data"] = opportunity
+        response_data["data"] = OpportunityBase.from_dict(success_response.data)
 
         # Hydrate OpportunityResponse from response data
         opportunity_response = OpportunityResponse.model_validate(response_data)
