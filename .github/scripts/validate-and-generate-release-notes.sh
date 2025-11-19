@@ -82,13 +82,13 @@ if [[ -n "$PREVIOUS_TAG" ]]; then
   NOTES=$(gh api repos/"$REPOSITORY"/releases/generate-notes \
     -f tag_name="$RELEASE_TAG" \
     -f previous_tag_name="$PREVIOUS_TAG" \
-    -f configuration_file="$CONFIG_FILE" \
+    -f configuration_file_path="$CONFIG_FILE" \
     -q '.body')
 else
   echo "Generating release notes for $RELEASE_TAG"
   NOTES=$(gh api repos/"$REPOSITORY"/releases/generate-notes \
     -f tag_name="$RELEASE_TAG" \
-    -f configuration_file="$CONFIG_FILE" \
+    -f configuration_file_path="$CONFIG_FILE" \
     -q '.body')
 fi
 
