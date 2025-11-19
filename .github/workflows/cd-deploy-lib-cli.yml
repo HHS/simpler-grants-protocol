@@ -3,10 +3,19 @@ name: "CD - Deploy CLI Package to npm"
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Tag to deploy"
+      release_tag:
+        description: "Release tag (e.g., @common-grants/cli@0.2.0)"
         required: true
         type: string
+      previous_tag:
+        description: "Previous tag (e.g., @common-grants/cli@0.1.0) - optional"
+        required: false
+        type: string
+      dry_run:
+        description: "Dry run mode (default: false) - set to true to preview the release notes"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   create-release-from-tag:
@@ -16,17 +25,38 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tags and generate release notes
+        id: release-notes
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          .github/scripts/validate-and-generate-release-notes.sh \
+            --prefix "@common-grants/cli@" \
+            --config-file ".github/release-config/lib-cli.yml" \
+            --release-tag "${{ github.event.inputs.release_tag }}" \
+            --previous-tag "${{ github.event.inputs.previous_tag }}" \
+            --repository "${{ github.repository }}" \
+            $DRY_RUN_FLAG
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create release
+        if: github.event.inputs.dry_run != 'true'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.event.inputs.tag }}
-          generate_release_notes: true
+          tag_name: ${{ github.event.inputs.release_tag }}
+          body: ${{ steps.release-notes.outputs.notes }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
     needs: create-release-from-tag
+    if: github.event.inputs.dry_run != 'true'
     runs-on: ubuntu-latest
     environment:
       name: npm-cli
@@ -42,7 +72,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag }}
+          ref: ${{ github.event.inputs.release_tag }}
 
       # Setup .npmrc file to publish to npm
       - name: Install Node.js
@@ -70,4 +100,4 @@ jobs:
       - name: Notify completion
         run: |
           echo "CLI package deployed to npm"
-          echo "Tag: ${{ github.event.inputs.tag }}"
+          echo "Tag: ${{ github.event.inputs.release_tag }}"

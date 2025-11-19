@@ -9,6 +9,7 @@ class Config:
 
     DEFAULT_PAGE_SIZE = 100
     DEFAULT_TIMEOUT = 10.0
+    LIST_ITEMS_LIMIT = 1000
 
     def __init__(
         self,
@@ -16,6 +17,7 @@ class Config:
         api_key: Optional[str] = None,
         timeout: Optional[float] = None,
         page_size: Optional[int] = None,
+        list_items_limit: Optional[int] = LIST_ITEMS_LIMIT,
     ):
         """Initialize configuration.
 
@@ -57,3 +59,10 @@ class Config:
         )
         # use type narrowing to avoid type validation errors in client
         self.page_size: int = cast(int, page_size_value)
+
+        # set list_items_limit value from param, env var, or default
+        list_items_limit = list_items_limit or int(
+            os.getenv("CG_API_LIST_ITEMS_LIMIT", self.LIST_ITEMS_LIMIT)
+        )
+        # use type narrowing to avoid type validation errors in client
+        self.list_items_limit: int = cast(int, list_items_limit)
