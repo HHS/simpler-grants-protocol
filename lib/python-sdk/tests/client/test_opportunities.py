@@ -57,6 +57,22 @@ def sample_list_response(sample_opportunity_data):
 
 
 @pytest.fixture
+def sample_search_response(sample_opportunity_data):
+    """Create sample search response."""
+    return {
+        "status": 200,
+        "message": "Success",
+        "items": [sample_opportunity_data, sample_opportunity_data],
+        "paginationInfo": {
+            "page": 1,
+            "pageSize": 100,
+            "totalItems": 2,
+            "totalPages": 1,
+        },
+    }
+
+
+@pytest.fixture
 def mock_httpx_client():
     """Create a mock httpx client."""
     return Mock(spec=httpx.Client)
@@ -414,5 +430,97 @@ class TestOpportunityList:
 
         with pytest.raises(APIError) as exc_info:
             client.opportunity.list(page=1)
+        assert exc_info.value.error.status == 0
+        assert "Connection error" in exc_info.value.error.message
+
+
+class TestOpportunitySearch:
+    """Tests for Opportunity.search()"""
+
+    def test_search_opportunities_success(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """Test successful search of opportunities."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        response = client.opportunity.search(
+            search="Test", status="Open", paginate=True
+        )
+
+        assert isinstance(response, OpportunitiesListResponse)
+        assert len(response.items) == 2
+        assert all(isinstance(item, OpportunityBase) for item in response.items)
+
+        expected_url = "https://api.example.com/common-grants/opportunities/search"
+        mock_httpx_client.post.assert_called_once()
+        call_args = mock_httpx_client.post.call_args
+        assert call_args[0][0] == expected_url
+        assert call_args[1]["headers"]["X-API-Key"] == "test-key"
+        assert call_args[1]["headers"]["Accept"] == "application/json"
+
+    def test_search_opportunities_404(self, client, mock_httpx_client):
+        """Test searching opportunities with 404 error"""
+
+        error_data = {"status": 404, "message": "Not found", "errors": []}
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_response.text = json.dumps(error_data)
+        mock_response.json = Mock(return_value=error_data)
+        mock_response.raise_for_status = Mock(
+            side_effect=httpx.HTTPStatusError(
+                "Not found", request=Mock(), response=mock_response
+            )
+        )
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        with pytest.raises(APIError) as exc_info:
+            client.opportunity.search(search="Test", status="Open", paginate=True)
+        assert exc_info.value.error.status == 404
+
+    def test_search_opportunities_401(self, client, mock_httpx_client):
+        """Test searching opportunities with authentication error"""
+        error_data = {"status": 401, "message": "Unauthorized", "errors": []}
+        mock_response = Mock()
+        mock_response.status_code = 401
+        mock_response.text = json.dumps(error_data)
+        mock_response.json = Mock(return_value=error_data)
+        mock_response.raise_for_status = Mock(
+            side_effect=httpx.HTTPStatusError(
+                "Unauthorized", request=Mock(), response=mock_response
+            )
+        )
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        with pytest.raises(APIError) as exc_info:
+            client.opportunity.search(search="Test", status="Open", paginate=True)
+        assert exc_info.value.error.status == 401
+
+    def test_search_opportunities_validation_error(self, client, mock_httpx_client):
+        """Test searching opportunities with validation error."""
+        # Valid JSON but doesn't match OpportunitiesListResponse schema
+        invalid_data = {"invalid": "data"}
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(invalid_data)
+        mock_response.json = Mock(return_value=invalid_data)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        with pytest.raises(ValidationError):
+            client.opportunity.search(search="Test", status="Open", paginate=True)
+
+    def test_search_opportunities_request_error(self, client, mock_httpx_client):
+        """Test searching opportunities with request error."""
+        mock_httpx_client.post = Mock(
+            side_effect=httpx.RequestError("Connection error")
+        )
+
+        with pytest.raises(APIError) as exc_info:
+            client.opportunity.search(search="Test", status="Open", paginate=True)
         assert exc_info.value.error.status == 0
         assert "Connection error" in exc_info.value.error.message
