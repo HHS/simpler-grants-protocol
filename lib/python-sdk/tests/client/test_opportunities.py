@@ -57,6 +57,22 @@ def sample_list_response(sample_opportunity_data):
 
 
 @pytest.fixture
+def sample_search_response(sample_opportunity_data):
+    """Create sample search response."""
+    return {
+        "status": 200,
+        "message": "Success",
+        "items": [sample_opportunity_data, sample_opportunity_data],
+        "paginationInfo": {
+            "page": 1,
+            "pageSize": 100,
+            "totalItems": 2,
+            "totalPages": 1,
+        },
+    }
+
+
+@pytest.fixture
 def mock_httpx_client():
     """Create a mock httpx client."""
     return Mock(spec=httpx.Client)
