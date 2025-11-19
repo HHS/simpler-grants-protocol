@@ -5,7 +5,7 @@ import {
   getRenamedFrom,
   Version,
 } from "@typespec/versioning";
-import { ChangelogEntry } from "../types.js";
+import { Changelog, ChangelogEntry } from "../types.js";
 import {
   getOrCreateEntry,
   getNameAtVersion,
@@ -65,7 +65,7 @@ export function logModelChanges(
   context: EmitContext,
   model: Model,
   allVersions: Version[],
-  changelog: { [schemaName: string]: ChangelogEntry[] },
+  changelog: Changelog,
 ): void {
   const modelName = model.name;
   const modelChangelog: ChangelogEntry[] = [];
@@ -98,7 +98,7 @@ export function logModelChanges(
       return (versionA?.index || 0) - (versionB?.index || 0);
     });
 
-    changelog[modelName] = modelChangelog;
+    changelog.logs[modelName] = modelChangelog;
   }
 }
 

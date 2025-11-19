@@ -4,7 +4,7 @@ import {
   getRemovedOnVersions,
   Version,
 } from "@typespec/versioning";
-import { ChangelogEntry } from "../types.js";
+import { Changelog, ChangelogEntry } from "../types.js";
 import { getOrCreateEntry, getVersionString } from "./index.js";
 import { Log } from "./logging.js";
 import { TargetType } from "../types.js";
@@ -57,7 +57,7 @@ export function logEnumChanges(
   context: EmitContext,
   enumType: Enum,
   allVersions: Version[],
-  changelog: { [schemaName: string]: ChangelogEntry[] },
+  changelog: Changelog,
 ): void {
   // Skip the Versions enum
   if (enumType.name === "Versions") {
@@ -91,7 +91,7 @@ export function logEnumChanges(
       return (versionA?.index || 0) - (versionB?.index || 0);
     });
 
-    changelog[enumName] = enumChangelog;
+    changelog.logs[enumName] = enumChangelog;
   }
 }
 

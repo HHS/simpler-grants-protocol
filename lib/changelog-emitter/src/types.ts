@@ -39,6 +39,11 @@ export interface ChangelogEntry {
   changes: ChangeRecord[];
 }
 
-export interface Changelog {
+export interface Logs {
   [schemaName: string]: ChangelogEntry[];
+}
+
+export interface Changelog {
+  versions: string[];
+  logs: Logs;
 }
