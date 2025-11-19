@@ -5,8 +5,11 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ..schemas.pydantic.models import OpportunityBase
-from ..schemas.pydantic.responses import OpportunitiesListResponse, OpportunityResponse
-
+from ..schemas.pydantic.responses import (
+    OpportunitiesListResponse,
+    OpportunityResponse,
+    Paginated,
+)
 
 if TYPE_CHECKING:
     from .client import Client
@@ -50,7 +53,9 @@ class Opportunity:
             APIError: If the API request fails
         """
         # Call client method to get paginated response
-        paginated_response = self.client.list(self.path, page=page, page_size=page_size)
+        paginated_response: Paginated[dict] = self.client.list(
+            self.path, page=page, page_size=page_size
+        )
 
         # Hydrate OpportunityBase models from items dict
         items = [

@@ -3,4 +3,6 @@
 from typing import TypeVar
 
 # Type variable for item types in paginated responses
-ItemsT = TypeVar("ItemsT", default=dict)
+# Note: default parameter for TypeVar is only available in Python 3.13+
+# For compatibility with older Python versions, we use a bound-less TypeVar
+ItemsT = TypeVar("ItemsT")

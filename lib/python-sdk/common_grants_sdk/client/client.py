@@ -152,7 +152,7 @@ class Client:
         # Iteratively fetch all pages
         while more_pages_available:
             # Fetch page and save items
-            page_response = self.list_some_items(
+            page_response: Paginated[ItemsT] = self.list_some_items(
                 path=path, page=page, page_size=page_size
             )
             items.extend(cast(list[dict], page_response.items))
