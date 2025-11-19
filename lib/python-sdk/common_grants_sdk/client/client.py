@@ -1,7 +1,7 @@
 """Main HTTP client for the CommonGrants API."""
 
 import httpx
-from typing import Optional, cast
+from typing import Any, Optional, cast
 from uuid import UUID
 
 from .auth import Auth
@@ -126,6 +126,7 @@ class Client:
         self,
         path: str,
         page_size: int | None = None,
+        params: dict[str, Any] = {},
     ) -> Paginated[ItemsT]:
         """Fetch all items across all pages from an endpoint.
 
@@ -133,6 +134,7 @@ class Client:
             path: end point path (should start with /)
             page_size: Number of items per page. If None, uses the default from
                 client config.
+            params: Additional parameters to pass to the API
 
         Returns:
             Paginated[ItemsT] instance with all items aggregated from all pages,
@@ -153,7 +155,7 @@ class Client:
         while more_pages_available:
             # Fetch page and save items
             page_response: Paginated[ItemsT] = self.list_some_items(
-                path=path, page=page, page_size=page_size
+                path=path, page=page, page_size=page_size, params=params
             )
             items.extend(cast(list[dict], page_response.items))
             latest_response = page_response
@@ -191,6 +193,7 @@ class Client:
         path: str,
         page: int,
         page_size: int | None = None,
+        params: dict[str, Any] | None = None,
     ) -> Paginated[ItemsT]:
         """Fetch a single page of items from an endpoint.
 
@@ -211,6 +214,8 @@ class Client:
             page_size = self.config.page_size
 
         try:
+            # TODO: if params is not None then post instead of get
+            # see: https://github.com/HHS/simpler-grants-protocol/issues/386
             api_response = self.get(path, params={"page": page, "pageSize": page_size})
             api_response.raise_for_status()
             result_dict = Paginated[dict].model_validate(api_response.json())
