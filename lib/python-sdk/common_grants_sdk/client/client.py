@@ -156,7 +156,7 @@ class Client:
                 path=path, page=page, page_size=page_size
             )
             items.extend(cast(list[dict], page_response.items))
-            latest_response = cast(Paginated[ItemsT], page_response)
+            latest_response = page_response
 
             # Break if max items is reached or no more pages
             if len(items) >= self.config.list_items_limit:

@@ -10,6 +10,8 @@ from ..schemas.pydantic.responses import (
     OpportunityResponse,
     Paginated,
 )
+from .types import ItemsT
+
 
 if TYPE_CHECKING:
     from .client import Client
@@ -53,7 +55,7 @@ class Opportunity:
             APIError: If the API request fails
         """
         # Call client method to get paginated response
-        paginated_response: Paginated[dict] = self.client.list(
+        paginated_response: Paginated[ItemsT] = self.client.list(  # type: ignore[valid-type]
             self.path, page=page, page_size=page_size
         )
 
