@@ -1,7 +1,17 @@
 import { resolvePath } from "@typespec/compiler";
 import { createTester } from "@typespec/compiler/testing";
 import { deepStrictEqual } from "node:assert";
-import { Logs } from "../src/types.js";
+import { Logs, ChangeRecord } from "../src/types.js";
+
+// Legacy format for backwards compatibility
+interface LegacyChangelogEntry {
+  version: string;
+  changes: ChangeRecord[];
+}
+
+type LegacyLogs = {
+  [schemaName: string]: LegacyChangelogEntry[];
+};
 
 export const outputPath = "changelog.json";
 
@@ -51,17 +61,45 @@ export async function emit(
 }
 
 /**
+ * Convert legacy format to new format
+ */
+function convertLegacyLogs(legacy: LegacyLogs): Logs {
+  const logs: Logs = {};
+
+  for (const [schemaName, entries] of Object.entries(legacy)) {
+    logs[schemaName] = {};
+    for (const entry of entries) {
+      logs[schemaName][entry.version] = entry.changes;
+    }
+  }
+
+  return logs;
+}
+
+/**
  * Emit code and validate the changelog output
  * @param code - The TypeSpec code to emit
- * @param expected - The expected changelog structure
+ * @param expected - The expected changelog structure (legacy or new format)
  * @param options - The options to pass to the emitter
  */
 export async function emitAndValidate(
   code: string,
-  expected: Logs,
+  expected: Logs | LegacyLogs,
   options = {},
 ): Promise<void> {
   const outputs = await emit(code, options);
   const changelog = JSON.parse(outputs[outputPath]);
-  deepStrictEqual(changelog.logs, expected);
+
+  // Check if it's the legacy format (array of entries) vs new format (map of versions)
+  let expectedLogs: Logs;
+  const firstSchemaValue = Object.values(expected)[0];
+  if (Array.isArray(firstSchemaValue)) {
+    // Legacy format - convert it
+    expectedLogs = convertLegacyLogs(expected as LegacyLogs);
+  } else {
+    // New format
+    expectedLogs = expected as Logs;
+  }
+
+  deepStrictEqual(changelog.logs, expectedLogs);
 }

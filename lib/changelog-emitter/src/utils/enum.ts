@@ -4,8 +4,8 @@ import {
   getRemovedOnVersions,
   Version,
 } from "@typespec/versioning";
-import { Changelog, ChangelogEntry } from "../types.js";
-import { getOrCreateEntry, getVersionString } from "./index.js";
+import { Changelog, ChangeRecord } from "../types.js";
+import { getOrCreateChanges, getVersionString } from "./index.js";
 import { Log } from "./logging.js";
 import { TargetType } from "../types.js";
 
@@ -65,33 +65,27 @@ export function logEnumChanges(
   }
 
   const enumName = enumType.name;
-  const enumChangelog: ChangelogEntry[] = [];
+
+  // Initialize logs for this schema if not exists
+  if (!changelog.logs[enumName]) {
+    changelog.logs[enumName] = {};
+  }
+  const enumLogs = changelog.logs[enumName];
 
   // Process enum-level changes
-  logEnumAdditions(context, enumType, allVersions, enumChangelog);
-  logEnumRemovals(context, enumType, enumChangelog);
+  logEnumAdditions(context, enumType, allVersions, enumLogs);
+  logEnumRemovals(context, enumType, enumLogs);
 
   // Process enum members
   const members = Array.from(enumType.members.values()) as EnumMember[];
   for (const member of members) {
-    logEnumMemberAdditions(context, member, enumChangelog);
-    logEnumMemberRemovals(context, member, enumChangelog);
+    logEnumMemberAdditions(context, member, enumLogs);
+    logEnumMemberRemovals(context, member, enumLogs);
   }
 
-  // Only include enums that have changes
-  if (enumChangelog.length > 0) {
-    // Sort by version index to maintain order
-    enumChangelog.sort((a, b) => {
-      const versionA = allVersions.find(
-        (v) => getVersionString(v) === a.version,
-      );
-      const versionB = allVersions.find(
-        (v) => getVersionString(v) === b.version,
-      );
-      return (versionA?.index || 0) - (versionB?.index || 0);
-    });
-
-    changelog.logs[enumName] = enumChangelog;
+  // If no changes were logged, remove the empty entry
+  if (Object.keys(enumLogs).length === 0) {
+    delete changelog.logs[enumName];
   }
 }
 
@@ -106,24 +100,24 @@ function logEnumAdditions(
   context: EmitContext,
   enumType: Enum,
   allVersions: Version[],
-  enumChangelog: ChangelogEntry[],
+  enumLogs: { [version: string]: ChangeRecord[] },
 ): void {
   const enumAddedVersions = getAddedOnVersions(context.program, enumType);
 
   if (enumAddedVersions && enumAddedVersions.length > 0) {
     for (const version of enumAddedVersions) {
-      const entry = getOrCreateEntry(enumChangelog, getVersionString(version));
-      entry.changes.push(Log.added(TargetType.Enum, enumType.name));
+      const changes = getOrCreateChanges(enumLogs, getVersionString(version));
+      changes.push(Log.added(TargetType.Enum, enumType.name));
     }
   } else {
     // If no explicit @added, assume it was created in the first version
     const firstVersion = allVersions[0];
     if (firstVersion) {
-      const entry = getOrCreateEntry(
-        enumChangelog,
+      const changes = getOrCreateChanges(
+        enumLogs,
         getVersionString(firstVersion),
       );
-      entry.changes.push(Log.added(TargetType.Enum, enumType.name));
+      changes.push(Log.added(TargetType.Enum, enumType.name));
     }
   }
 }
@@ -134,13 +128,13 @@ function logEnumAdditions(
 function logEnumRemovals(
   context: EmitContext,
   enumType: Enum,
-  enumChangelog: ChangelogEntry[],
+  enumLogs: { [version: string]: ChangeRecord[] },
 ): void {
   const enumRemovedVersions = getRemovedOnVersions(context.program, enumType);
   if (enumRemovedVersions && enumRemovedVersions.length > 0) {
     for (const version of enumRemovedVersions) {
-      const entry = getOrCreateEntry(enumChangelog, getVersionString(version));
-      entry.changes.push(Log.removed(TargetType.Enum, enumType.name));
+      const changes = getOrCreateChanges(enumLogs, getVersionString(version));
+      changes.push(Log.removed(TargetType.Enum, enumType.name));
     }
   }
 }
@@ -155,13 +149,13 @@ function logEnumRemovals(
 function logEnumMemberAdditions(
   context: EmitContext,
   member: EnumMember,
-  enumChangelog: ChangelogEntry[],
+  enumLogs: { [version: string]: ChangeRecord[] },
 ): void {
   const memberAddedVersions = getAddedOnVersions(context.program, member);
   if (memberAddedVersions && memberAddedVersions.length > 0) {
     for (const version of memberAddedVersions) {
-      const entry = getOrCreateEntry(enumChangelog, getVersionString(version));
-      entry.changes.push(Log.added(TargetType.EnumMember, member.name));
+      const changes = getOrCreateChanges(enumLogs, getVersionString(version));
+      changes.push(Log.added(TargetType.EnumMember, member.name));
     }
   }
 }
@@ -172,13 +166,13 @@ function logEnumMemberAdditions(
 function logEnumMemberRemovals(
   context: EmitContext,
   member: EnumMember,
-  enumChangelog: ChangelogEntry[],
+  enumLogs: { [version: string]: ChangeRecord[] },
 ): void {
   const memberRemovedVersions = getRemovedOnVersions(context.program, member);
   if (memberRemovedVersions && memberRemovedVersions.length > 0) {
     for (const version of memberRemovedVersions) {
-      const entry = getOrCreateEntry(enumChangelog, getVersionString(version));
-      entry.changes.push(Log.removed(TargetType.EnumMember, member.name));
+      const changes = getOrCreateChanges(enumLogs, getVersionString(version));
+      changes.push(Log.removed(TargetType.EnumMember, member.name));
     }
   }
 }

@@ -34,14 +34,11 @@ export interface ChangeRecord {
   prevDataType?: string;
 }
 
-export interface ChangelogEntry {
-  version: string;
-  changes: ChangeRecord[];
-}
-
-export interface Logs {
-  [schemaName: string]: ChangelogEntry[];
-}
+export type Logs = {
+  [schemaName: string]: {
+    [version: string]: ChangeRecord[];
+  };
+};
 
 export interface Changelog {
   versions: string[];
