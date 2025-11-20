@@ -5,9 +5,9 @@ import type { JsonSchema } from "@jsonforms/core";
 import { BuildScriptUtils } from "./utils";
 import {
   generateSchemaVersions,
-  type Changelog,
   type VersionGenerationResult,
 } from "../lib/schema/version-generator";
+import type { Changelog } from "typespec-versioning-changelog";
 
 /**
  * Build-time script to generate versioned schemas

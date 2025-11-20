@@ -1,9 +1,11 @@
 import { it, describe, expect, beforeEach } from "vitest";
 import type { JsonSchema } from "@jsonforms/core";
+import { generateSchemaVersions } from "@/lib/schema/version-generator";
 import {
-  generateSchemaVersions,
+  Action,
+  TargetType,
   type Changelog,
-} from "@/lib/schema/version-generator";
+} from "typespec-versioning-changelog";
 
 // Test fixtures
 const createTestSchemas = (): Map<string, JsonSchema> => {
@@ -59,8 +61,8 @@ const createTestChangelog = (): Changelog => ({
       "0.1.0": [
         {
           message: "Added `Person` model",
-          action: "added",
-          targetKind: "model",
+          action: Action.Added,
+          targetKind: TargetType.Model,
           currTargetName: "Person",
         },
       ],
@@ -69,23 +71,23 @@ const createTestChangelog = (): Changelog => ({
       "0.2.0": [
         {
           message: "Added `Form` model",
-          action: "added",
-          targetKind: "model",
+          action: Action.Added,
+          targetKind: TargetType.Model,
           currTargetName: "Form",
         },
       ],
       "0.3.0": [
         {
           message: "Renamed model from `Form` to `FormBase`",
-          action: "renamed",
-          targetKind: "model",
+          action: Action.Renamed,
+          targetKind: TargetType.Model,
           prevTargetName: "Form",
           currTargetName: "FormBase",
         },
         {
           message: "Added `version` field",
-          action: "added",
-          targetKind: "field",
+          action: Action.Added,
+          targetKind: TargetType.ModelProperty,
           currTargetName: "version",
         },
       ],
@@ -94,8 +96,8 @@ const createTestChangelog = (): Changelog => ({
       "0.2.0": [
         {
           message: "Added `Competition` model",
-          action: "added",
-          targetKind: "model",
+          action: Action.Added,
+          targetKind: TargetType.Model,
           currTargetName: "Competition",
         },
       ],
@@ -130,7 +132,7 @@ describe("Version Generator", () => {
       // Form was added in v0.2.0
       const formChangesV2 = changelog.logs["FormBase"]?.["0.2.0"];
       expect(formChangesV2).toBeDefined();
-      expect(formChangesV2?.[0]?.action).toBe("added");
+      expect(formChangesV2?.[0]?.action).toBe(Action.Added);
 
       // Form should exist in v0.2.0+ (but called "Form", not "FormBase" yet)
       const resultV2 = generateSchemaVersions("0.2.0", changelog, schemas);
@@ -176,7 +178,7 @@ describe("Version Generator", () => {
 
       const formBaseChangesV3 = changelog.logs["FormBase"]?.["0.3.0"];
       const hasRename = formBaseChangesV3?.some(
-        (c) => c.action === "renamed" && c.targetKind === "model",
+        (c) => c.action === Action.Renamed && c.targetKind === TargetType.Model,
       );
 
       expect(hasRename).toBe(true);
@@ -209,8 +211,8 @@ describe("Version Generator", () => {
       const formBaseChangesV3 = changelog.logs["FormBase"]?.["0.3.0"];
       const hasVersionField = formBaseChangesV3?.some(
         (c) =>
-          c.action === "added" &&
-          c.targetKind === "field" &&
+          c.action === Action.Added &&
+          c.targetKind === TargetType.ModelProperty &&
           c.currTargetName === "version",
       );
 

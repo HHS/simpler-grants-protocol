@@ -1,43 +1,14 @@
 import type { JsonSchema } from "@jsonforms/core";
+import {
+  Action,
+  TargetType,
+  type ChangeRecord,
+  type Changelog,
+} from "typespec-versioning-changelog";
 
 // #############################################################################
 // # Types
 // #############################################################################
-
-// Structured changelog types (matching changelog-emitter output)
-export interface ChangeRecord {
-  message: string;
-  action:
-    | "added"
-    | "removed"
-    | "renamed"
-    | "madeRequired"
-    | "madeOptional"
-    | "typeChanged";
-  targetKind:
-    | "model"
-    | "field"
-    | "enum"
-    | "member"
-    | "operation"
-    | "union"
-    | "variant"
-    | "scalar"
-    | "interface";
-  currTargetName?: string;
-  prevTargetName?: string;
-  currDataType?: string;
-  prevDataType?: string;
-}
-
-export interface Changelog {
-  versions: string[];
-  logs: {
-    [schemaName: string]: {
-      [version: string]: ChangeRecord[];
-    };
-  };
-}
 
 export interface VersionGenerationResult {
   version: string;
@@ -152,10 +123,16 @@ function getSchemaExistence(
     if (!changes) continue;
 
     for (const change of changes) {
-      if (change.action === "added" && change.targetKind === "model") {
+      if (
+        change.action === Action.Added &&
+        change.targetKind === TargetType.Model
+      ) {
         addedVersion = version;
       }
-      if (change.action === "removed" && change.targetKind === "model") {
+      if (
+        change.action === Action.Removed &&
+        change.targetKind === TargetType.Model
+      ) {
         removedVersion = version;
       }
     }
@@ -206,7 +183,10 @@ function getSchemaNameInVersion(
     if (!changes) continue;
 
     for (const change of changes) {
-      if (change.action === "added" && change.targetKind === "model") {
+      if (
+        change.action === Action.Added &&
+        change.targetKind === TargetType.Model
+      ) {
         wasAdded = true;
         break;
       }
@@ -225,7 +205,10 @@ function getSchemaNameInVersion(
     if (!changes) continue;
 
     for (const change of changes) {
-      if (change.action === "renamed" && change.targetKind === "model") {
+      if (
+        change.action === Action.Renamed &&
+        change.targetKind === TargetType.Model
+      ) {
         renameHistory.push({
           version,
           from: change.prevTargetName || "",
@@ -283,7 +266,10 @@ function generateSchemaForVersion(
       if (compareVersions(version, targetVersion) > 0) {
         const changes = schemaLogs[version];
         for (const change of changes) {
-          if (change.action === "added" && change.targetKind === "field") {
+          if (
+            change.action === Action.Added &&
+            change.targetKind === TargetType.ModelProperty
+          ) {
             fieldsToRemove.add(change.currTargetName || "");
           }
         }
