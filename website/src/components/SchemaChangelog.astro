@@ -33,10 +33,12 @@ if (!schemaLogs || typeof schemaLogs !== "object") {
 }
 
 // Convert the logs object to an array of { version, changes } objects
-const changelogEntries = Object.entries(schemaLogs).map(([version, changes]) => ({
-  version,
-  changes,
-}));
+const changelogEntries = Object.entries(schemaLogs).map(
+  ([version, changes]) => ({
+    version,
+    changes,
+  }),
+);
 
 // Sort changelog entries by version (newest first)
 const sortedChangelog = changelogEntries.sort((a, b) => {
