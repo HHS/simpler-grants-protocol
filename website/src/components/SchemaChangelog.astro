@@ -1,22 +1,10 @@
 ---
 import changelogIndex from "@tsp-output/typespec-versioning-changelog/changelog.json";
+import type { Changelog } from "typespec-versioning-changelog";
 
 // ############################################################################
-// Declare Changelog interfaces
+// Component Props
 // ############################################################################
-
-/** A single changelog entry */
-interface ChangelogEntry {
-  /** Version number (e.g., "1.2.0", "2.0.0") */
-  version: string;
-  /** Array of changes for this version */
-  changes: string[];
-}
-
-/** Interface for the changelog index structure */
-interface ChangelogIndex {
-  [schemaName: string]: ChangelogEntry[];
-}
 
 /** Props for the SchemaChangelog component */
 interface Props {
@@ -36,15 +24,22 @@ if (!schema) {
 }
 
 // Load changelog data for the specified schema
-const changelogData = (changelogIndex as ChangelogIndex)[schema];
+const changelog = changelogIndex as Changelog;
+const schemaLogs = changelog.logs[schema];
 
 // Validate that changelog data exists for this schema
-if (!changelogData || !Array.isArray(changelogData)) {
+if (!schemaLogs || typeof schemaLogs !== "object") {
   throw new Error(`No changelog data found for schema: ${schema}`);
 }
 
+// Convert the logs object to an array of { version, changes } objects
+const changelogEntries = Object.entries(schemaLogs).map(([version, changes]) => ({
+  version,
+  changes,
+}));
+
 // Sort changelog entries by version (newest first)
-const sortedChangelog = [...changelogData].sort((a, b) => {
+const sortedChangelog = changelogEntries.sort((a, b) => {
   // Simple version comparison - assumes semantic versioning
   const aParts = a.version.split(".").map(Number);
   const bParts = b.version.split(".").map(Number);
@@ -85,7 +80,10 @@ const sortedChangelog = [...changelogData].sort((a, b) => {
               {entry.changes.map((change) => (
                 // Convert `propName` --> <code>propName</code>
                 <li
-                  set:html={change.replace(/`([^`]+)`/g, "<code>$1</code>")}
+                  set:html={change.message.replace(
+                    /`([^`]+)`/g,
+                    "<code>$1</code>",
+                  )}
                 />
               ))}
             </ul>
