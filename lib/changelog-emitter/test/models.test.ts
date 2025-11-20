@@ -44,18 +44,12 @@ describe("Models - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-      ],
-      [CAR_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, CAR_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
+      [CAR_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, CAR_MODEL)],
+      },
     });
   });
 
@@ -75,12 +69,9 @@ describe("Models - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
     });
   });
 
@@ -109,18 +100,12 @@ describe("Models - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-      ],
-      [CAR_MODEL]: [
-        {
-          version: V3_VERSION,
-          changes: [Log.added(MODEL_TYPE, CAR_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
+      [CAR_MODEL]: {
+        [V3_VERSION]: [Log.added(MODEL_TYPE, CAR_MODEL)],
+      },
     });
   });
 });
@@ -149,16 +134,10 @@ describe("Models - Log @removed()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.removed(MODEL_TYPE, USER_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [Log.removed(MODEL_TYPE, USER_MODEL)],
+      },
     });
   });
 });
@@ -187,16 +166,10 @@ describe("Models - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, "Person")],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.renamedFrom(MODEL_TYPE, "Person", USER_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, "Person")],
+        [V2_VERSION]: [Log.renamedFrom(MODEL_TYPE, "Person", USER_MODEL)],
+      },
     });
   });
 
@@ -221,20 +194,11 @@ describe("Models - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, "Person")],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.renamedFrom(MODEL_TYPE, "Person", "AccountOwner")],
-        },
-        {
-          version: V3_VERSION,
-          changes: [Log.renamedFrom(MODEL_TYPE, "AccountOwner", USER_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, "Person")],
+        [V2_VERSION]: [Log.renamedFrom(MODEL_TYPE, "Person", "AccountOwner")],
+        [V3_VERSION]: [Log.renamedFrom(MODEL_TYPE, "AccountOwner", USER_MODEL)],
+      },
     });
   });
 });

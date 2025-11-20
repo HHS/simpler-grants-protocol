@@ -47,16 +47,10 @@ describe("Props - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.added(MODEL_PROPERTY_TYPE, NAME_PROPERTY)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [Log.added(MODEL_PROPERTY_TYPE, NAME_PROPERTY)],
+      },
     });
   });
 
@@ -80,19 +74,13 @@ describe("Props - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [
-            Log.added(MODEL_PROPERTY_TYPE, NAME_PROPERTY),
-            Log.added(MODEL_PROPERTY_TYPE, EMAIL_PROPERTY),
-          ],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [
+          Log.added(MODEL_PROPERTY_TYPE, NAME_PROPERTY),
+          Log.added(MODEL_PROPERTY_TYPE, EMAIL_PROPERTY),
+        ],
+      },
     });
   });
 });
@@ -120,16 +108,10 @@ describe("Props - Log @removed()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.removed(MODEL_PROPERTY_TYPE, NAME_PROPERTY)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [Log.removed(MODEL_PROPERTY_TYPE, NAME_PROPERTY)],
+      },
     });
   });
 
@@ -153,19 +135,13 @@ describe("Props - Log @removed()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [
-            Log.removed(MODEL_PROPERTY_TYPE, NAME_PROPERTY),
-            Log.removed(MODEL_PROPERTY_TYPE, EMAIL_PROPERTY),
-          ],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [
+          Log.removed(MODEL_PROPERTY_TYPE, NAME_PROPERTY),
+          Log.removed(MODEL_PROPERTY_TYPE, EMAIL_PROPERTY),
+        ],
+      },
     });
   });
 });
@@ -194,16 +170,10 @@ describe("Props - Log @madeRequired()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.madeRequired(EMAIL_PROPERTY)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [Log.madeRequired(EMAIL_PROPERTY)],
+      },
     });
   });
 });
@@ -232,16 +202,10 @@ describe("Props - Log @madeOptional()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.madeOptional(EMAIL_PROPERTY)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [Log.madeOptional(EMAIL_PROPERTY)],
+      },
     });
   });
 });
@@ -269,18 +233,12 @@ describe("Props - Log @typeChangedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [
-            Log.typeChangedFrom(NAME_PROPERTY, STRING_TYPE, NUMBER_TYPE),
-          ],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [
+          Log.typeChangedFrom(NAME_PROPERTY, STRING_TYPE, NUMBER_TYPE),
+        ],
+      },
     });
   });
 
@@ -304,24 +262,15 @@ describe("Props - Log @typeChangedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [
-            Log.typeChangedFrom(NAME_PROPERTY, STRING_TYPE, NUMBER_TYPE),
-          ],
-        },
-        {
-          version: V3_VERSION,
-          changes: [
-            Log.typeChangedFrom(NAME_PROPERTY, NUMBER_TYPE, BOOLEAN_TYPE),
-          ],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [
+          Log.typeChangedFrom(NAME_PROPERTY, STRING_TYPE, NUMBER_TYPE),
+        ],
+        [V3_VERSION]: [
+          Log.typeChangedFrom(NAME_PROPERTY, NUMBER_TYPE, BOOLEAN_TYPE),
+        ],
+      },
     });
   });
 });
@@ -350,18 +299,12 @@ describe("Props - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [
-            Log.renamedFrom(MODEL_PROPERTY_TYPE, "fullName", NAME_PROPERTY),
-          ],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [
+          Log.renamedFrom(MODEL_PROPERTY_TYPE, "fullName", NAME_PROPERTY),
+        ],
+      },
     });
   });
 
@@ -385,24 +328,15 @@ describe("Props - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [
-            Log.renamedFrom(MODEL_PROPERTY_TYPE, "fullName", "firstName"),
-          ],
-        },
-        {
-          version: V3_VERSION,
-          changes: [
-            Log.renamedFrom(MODEL_PROPERTY_TYPE, "firstName", NAME_PROPERTY),
-          ],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [
+          Log.renamedFrom(MODEL_PROPERTY_TYPE, "fullName", "firstName"),
+        ],
+        [V3_VERSION]: [
+          Log.renamedFrom(MODEL_PROPERTY_TYPE, "firstName", NAME_PROPERTY),
+        ],
+      },
     });
   });
 
@@ -426,22 +360,13 @@ describe("Props - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.added(MODEL_PROPERTY_TYPE, "fullName")],
-        },
-        {
-          version: V3_VERSION,
-          changes: [
-            Log.renamedFrom(MODEL_PROPERTY_TYPE, "fullName", NAME_PROPERTY),
-          ],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [Log.added(MODEL_PROPERTY_TYPE, "fullName")],
+        [V3_VERSION]: [
+          Log.renamedFrom(MODEL_PROPERTY_TYPE, "fullName", NAME_PROPERTY),
+        ],
+      },
     });
   });
 });

@@ -50,16 +50,10 @@ describe("Enum members - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.added(ENUM_MEMBER_TYPE, INACTIVE_MEMBER)],
-        },
-      ],
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+        [V2_VERSION]: [Log.added(ENUM_MEMBER_TYPE, INACTIVE_MEMBER)],
+      },
     });
   });
 
@@ -84,19 +78,13 @@ describe("Enum members - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      [PRIORITY_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [
-            Log.added(ENUM_MEMBER_TYPE, MEDIUM_MEMBER),
-            Log.added(ENUM_MEMBER_TYPE, LOW_MEMBER),
-          ],
-        },
-      ],
+      [PRIORITY_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
+        [V2_VERSION]: [
+          Log.added(ENUM_MEMBER_TYPE, MEDIUM_MEMBER),
+          Log.added(ENUM_MEMBER_TYPE, LOW_MEMBER),
+        ],
+      },
     });
   });
 
@@ -122,20 +110,11 @@ describe("Enum members - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      [CATEGORY_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, CATEGORY_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.added(ENUM_MEMBER_TYPE, CLOTHING_MEMBER)],
-        },
-        {
-          version: V3_VERSION,
-          changes: [Log.added(ENUM_MEMBER_TYPE, BOOKS_MEMBER)],
-        },
-      ],
+      [CATEGORY_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, CATEGORY_ENUM)],
+        [V2_VERSION]: [Log.added(ENUM_MEMBER_TYPE, CLOTHING_MEMBER)],
+        [V3_VERSION]: [Log.added(ENUM_MEMBER_TYPE, BOOKS_MEMBER)],
+      },
     });
   });
 });
@@ -164,16 +143,10 @@ describe("Enum members - Log @removed()", () => {
     `;
 
     await emitAndValidate(code, {
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.removed(ENUM_MEMBER_TYPE, INACTIVE_MEMBER)],
-        },
-      ],
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+        [V2_VERSION]: [Log.removed(ENUM_MEMBER_TYPE, INACTIVE_MEMBER)],
+      },
     });
   });
 
@@ -198,19 +171,13 @@ describe("Enum members - Log @removed()", () => {
     `;
 
     await emitAndValidate(code, {
-      [PRIORITY_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [
-            Log.removed(ENUM_MEMBER_TYPE, MEDIUM_MEMBER),
-            Log.removed(ENUM_MEMBER_TYPE, LOW_MEMBER),
-          ],
-        },
-      ],
+      [PRIORITY_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
+        [V2_VERSION]: [
+          Log.removed(ENUM_MEMBER_TYPE, MEDIUM_MEMBER),
+          Log.removed(ENUM_MEMBER_TYPE, LOW_MEMBER),
+        ],
+      },
     });
   });
 });
@@ -239,18 +206,12 @@ describe("Enum members - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [
-            Log.renamedFrom(ENUM_MEMBER_TYPE, "disabled", INACTIVE_MEMBER),
-          ],
-        },
-      ],
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+        [V2_VERSION]: [
+          Log.renamedFrom(ENUM_MEMBER_TYPE, "disabled", INACTIVE_MEMBER),
+        ],
+      },
     });
   });
 
@@ -275,22 +236,15 @@ describe("Enum members - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.renamedFrom(ENUM_MEMBER_TYPE, "disabled", "offline")],
-        },
-        {
-          version: V3_VERSION,
-          changes: [
-            Log.renamedFrom(ENUM_MEMBER_TYPE, "offline", INACTIVE_MEMBER),
-          ],
-        },
-      ],
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+        [V2_VERSION]: [
+          Log.renamedFrom(ENUM_MEMBER_TYPE, "disabled", "offline"),
+        ],
+        [V3_VERSION]: [
+          Log.renamedFrom(ENUM_MEMBER_TYPE, "offline", INACTIVE_MEMBER),
+        ],
+      },
     });
   });
 });
