@@ -1,6 +1,6 @@
 """Example script demonstrating how to search for opportunities. 
 
-Run with: poetry run python search_opportunity.py <search> <status> <paginateBool>
+Run with: poetry run python search_opportunity.py
 """
 
 import sys
@@ -13,7 +13,7 @@ from common_grants_sdk.schemas.pydantic.requests.opportunity import (
 
 if len(sys.argv) < 3:
     print(
-        "Usage: search_opportunity.py <search> <status> <paginateBool>", file=sys.stderr
+        "Usage: search_opportunity.py ", file=sys.stderr
     )
     sys.exit(1)
 
