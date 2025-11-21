@@ -139,15 +139,3 @@ class Opportunity:
 
         # Hydrate OpportunitiesListResponse from response data
         return OpportunitiesListResponse.model_validate(response_data)
-
-        # request_data = OpportunitySearchRequest.model_validate(search)
-
-        # success_response = self.client.search(f"{self.path}/search",
-        #                                       request_data.model_dump(by_alias=True, exclude_unset=True))
-
-        # response_data = success_response.model_dump(by_alias=True)
-        # response_data["data"] = OpportunityBase.from_dict(success_response.data)
-
-        # result = OpportunitiesListResponse.model_validate_json(response.text)
-
-        # return result
