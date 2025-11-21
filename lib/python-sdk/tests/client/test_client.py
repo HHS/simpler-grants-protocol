@@ -1,6 +1,8 @@
 """Tests for the Client class."""
 
 import json
+from re import search
+from urllib import request
 import pytest
 from unittest.mock import Mock, patch
 from uuid import uuid4
@@ -396,6 +398,47 @@ def sample_get_response(sample_item_data):
         "message": "Success",
         "data": sample_item_data,
     }
+
+
+@pytest.fixture
+def sample_search_response(sample_item_data):
+    """Create sample search response."""
+    return {
+        "status": 200,
+        "message": "Success",
+        "items": [sample_item_data, sample_item_data],
+        "paginationInfo": {
+            "page": 1,
+            "pageSize": 100,
+            "totalItems": 2,
+            "totalPages": 1,
+        },
+    }
+
+
+@pytest.fixture
+def search_request():
+    request = {
+        "filters": {
+            "closeDateRange": {
+                "operator": "between",
+                "value": {"max": "2025-12-31", "min": "2025-01-01"},
+            },
+            "status": {"operator": "in", "value": ["open", "forecasted"]},
+            "totalFundingAvailableRange": {
+                "operator": "between",
+                "value": {
+                    "max": {"amount": "1000000", "currency": "USD"},
+                    "min": {"amount": "10000", "currency": "USD"},
+                },
+            },
+        },
+        "pagination": {"page": 1, "pageSize": 10},
+        "search": "local",
+        "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
+    }
+
+    return request
 
 
 class TestClientList:
@@ -919,3 +962,410 @@ class TestClientGetItem:
             call_args = client.get.call_args
             expected_path = f"/test-path/{item_id}"
             assert call_args[0][0] == expected_path
+
+
+class TestClientSearch:
+    """Tests for Client.search() method."""
+
+    def test_search_with_page_calls_list_some_items(self, sample_search_response):
+        """Test that search(path, search, page=1) calls search()."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=sample_search_response)
+            client.post = Mock(return_value=mock_response)
+
+            response = client.search("/test-path", request_data=search_request, page=1)
+
+            assert isinstance(response, Paginated)
+            assert response.status == 200
+            assert response.message == "Success"
+            assert len(response.items) == 2
+            assert isinstance(response.pagination_info, PaginatedResultsInfo)
+            assert response.pagination_info.page == 1
+
+    def test_search_without_page_calls_list_all_items(self, sample_search_response):
+        """Test that search(path, search, page=None) calls search_all_items()."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=sample_search_response)
+            client.post = Mock(return_value=mock_response)
+
+            response = client.search(
+                "/test-path", request_data=search_request, page=None
+            )
+
+            assert isinstance(response, Paginated)
+            assert len(response.items) == 2
+            assert isinstance(response.pagination_info, PaginatedResultsInfo)
+            # When fetching all, pagination should be aggregated
+            assert response.pagination_info.page == 1
+            assert response.pagination_info.total_pages == 1
+
+    def test_search_uses_default_page_size(self, sample_search_response):
+        """Test that search() uses default page_size from config."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=sample_search_response)
+            client.post = Mock(return_value=mock_response)
+
+            client.search("/test-path", request_data=search_request, page=1)
+
+            call_args = client.post.call_args
+            assert call_args[1]["params"]["pageSize"] == 100  # Default from config
+
+    def test_search_with_custom_page_size(self, sample_search_response):
+        """Test that search() accepts custom page_size."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=sample_search_response)
+            client.post = Mock(return_value=mock_response)
+
+            client.search(
+                "/test-path", request_data=search_request, page=1, page_size=25
+            )
+
+            call_args = client.post.call_args
+            assert call_args[1]["params"]["pageSize"] == 25
+
+    def test_search_handles_http_error(self, search_request):
+        """Test that search() raises APIError on HTTP errors."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            error_data = {"status": 404, "message": "Not found", "errors": []}
+            mock_response = Mock()
+            mock_response.status_code = 404
+            mock_response.text = json.dumps(error_data)
+            mock_response.json = Mock(return_value=error_data)
+            mock_response.raise_for_status = Mock(
+                side_effect=httpx.HTTPStatusError(
+                    "Not found", request=Mock(), response=mock_response
+                )
+            )
+            client.post = Mock(return_value=mock_response)
+
+            with pytest.raises(APIError) as exc_info:
+                client.search("/test-path", request_data=search_request, page=1)
+            assert exc_info.value.error.status == 404
+
+    def test_search_handles_network_error(self, search_request):
+        """Test that search() raises APIError on network errors."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            client.post = Mock(side_effect=httpx.RequestError("Connection error"))
+
+            with pytest.raises(APIError) as exc_info:
+                client.search("/test-path", request_data=search_request, page=1)
+            assert exc_info.value.error.status == 0
+            assert "Connection error" in exc_info.value.error.message
+
+
+class TestClientSearchSomeItems:
+    """Tests for Client.search_some_items() via Client.search()"""
+
+    def test_search_some_returns_paginated(self, sample_search_response):
+        """Test that search(path, request, page=1) returns Paginated instance."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=sample_search_response)
+            client.post = Mock(return_value=mock_response)
+
+            response = client.search("/test-path", request_data=search_request, page=1)
+
+            assert isinstance(response, Paginated)
+            assert isinstance(response.items, list)
+            assert isinstance(response.pagination_info, PaginatedResultsInfo)
+            assert len(response.items) == 2
+            assert response.items[0]["name"] == "Test Item"
+
+    def test_search_some_handles_empty_items(self):
+        """Test that search(path, request, page=1) handles empty items list."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            empty_response = {
+                "status": 200,
+                "message": "Success",
+                "items": [],
+                "paginationInfo": {
+                    "page": 1,
+                    "pageSize": 100,
+                    "totalItems": 0,
+                    "totalPages": 1,
+                },
+            }
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=empty_response)
+            client.post = Mock(return_value=mock_response)
+
+            response = client.search("/test-path", request_data=search_request, page=1)
+
+            assert len(response.items) == 0
+            assert response.pagination_info.total_items == 0
+
+    def test_search_some_handles_missing_items(self):
+        """Test that search(path, request, page=1) raises ValidationError when items field is missing."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            response_without_items = {
+                "status": 200,
+                "message": "Success",
+                "paginationInfo": {
+                    "page": 1,
+                    "pageSize": 100,
+                    "totalItems": 0,
+                    "totalPages": 1,
+                },
+            }
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=response_without_items)
+            client.post = Mock(return_value=mock_response)
+
+            # Paginated requires items field, so missing items should raise ValidationError
+            with pytest.raises(ValidationError):
+                client.search("/test-path", request_data=search_request, page=1)
+
+    def test_search_some_uses_config_page_size_when_none(self, sample_search_response):
+        """Test that search(path, request, page=1) uses config page_size when page_size is None."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=sample_search_response)
+            client.post = Mock(return_value=mock_response)
+
+            client.search(
+                "/test-path", request_data=search_request, page=1, page_size=None
+            )
+
+            call_args = client.post.call_args
+            assert call_args[1]["params"]["pageSize"] == 100  # Default from config
+
+    def test_search_some_falls_back_to_config_for_invalid_page_size(
+        self, sample_search_response
+    ):
+        """Test that search(path, request, page=1) falls back to config for invalid page_size."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=sample_search_response)
+            client.post = Mock(return_value=mock_response)
+
+            client.search(
+                "/test-path", request_data=search_request, page=1, page_size=0
+            )
+
+            call_args = client.post.call_args
+            assert call_args[1]["params"]["pageSize"] == 100  # Falls back to config
+
+
+class TestClientSearchAllItems:
+    """Tests for Client.search_all_items() via Client.search()"""
+
+    def test_search_all_single_page(self, sample_search_response):
+        """Test search(path, request) when there's only one page."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=sample_search_response)
+            client.post = Mock(return_value=mock_response)
+
+            response = client.search("/test-path", request_data=search_request)
+
+            assert len(response.items) == 2
+            assert response.pagination_info.page == 1
+            assert response.pagination_info.total_pages == 1
+            assert response.pagination_info.total_items == 2
+
+    def test_search_all_multiple_pages(self, sample_item_data):
+        """Test search(path, request) when there are multiple pages."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            page1_response = {
+                "status": 200,
+                "message": "Success",
+                "items": [sample_item_data] * 2,
+                "paginationInfo": {
+                    "page": 1,
+                    "pageSize": 2,
+                    "totalItems": 5,
+                    "totalPages": 3,
+                },
+            }
+            page2_response = {
+                "status": 200,
+                "message": "Success",
+                "items": [sample_item_data] * 2,
+                "paginationInfo": {
+                    "page": 2,
+                    "pageSize": 2,
+                    "totalItems": 5,
+                    "totalPages": 3,
+                },
+            }
+            page3_response = {
+                "status": 200,
+                "message": "Success",
+                "items": [sample_item_data],
+                "paginationInfo": {
+                    "page": 3,
+                    "pageSize": 2,
+                    "totalItems": 5,
+                    "totalPages": 3,
+                },
+            }
+
+            def mock_post(*args, **kwargs):
+                page = kwargs.get("params", {}).get("page", 1)
+                mock_resp = Mock()
+                mock_resp.raise_for_status = Mock()
+                if page == 1:
+                    mock_resp.json = Mock(return_value=page1_response)
+                elif page == 2:
+                    mock_resp.json = Mock(return_value=page2_response)
+                else:  # page == 3
+                    mock_resp.json = Mock(return_value=page3_response)
+                return mock_resp
+
+            client.post = Mock(side_effect=mock_post)
+
+            response = client.search("/test-path", search_request)
+
+            assert len(response.items) == 5  # 2 + 2 + 1
+            assert response.pagination_info.page == 1
+            assert response.pagination_info.total_pages == 1
+            assert response.pagination_info.total_items == 5
+
+    def test_search_all_empty_result(self):
+        """Test search(path, request) when there are no items."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            empty_response = {
+                "status": 200,
+                "message": "Success",
+                "items": [],
+                "paginationInfo": {
+                    "page": 1,
+                    "pageSize": 100,
+                    "totalItems": 0,
+                    "totalPages": 1,
+                },
+            }
+            mock_response = Mock()
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value=empty_response)
+            client.post = Mock(return_value=mock_response)
+
+            response = client.search("/test-path", search_request)
+
+            assert len(response.items) == 0
+            assert response.pagination_info.total_items == 0
+            assert (
+                response.pagination_info.page_size == 100
+            )  # Uses config default when empty
+
+    def test_search_all_handles_error_on_first_page(self):
+        """Test search(path, request) error handling on first page."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            error_data = {"status": 500, "message": "Server error", "errors": []}
+            mock_response = Mock()
+            mock_response.status_code = 500
+            mock_response.text = json.dumps(error_data)
+            mock_response.json = Mock(return_value=error_data)
+            mock_response.raise_for_status = Mock(
+                side_effect=httpx.HTTPStatusError(
+                    "Server error", request=Mock(), response=mock_response
+                )
+            )
+            client.post = Mock(return_value=mock_response)
+
+            with pytest.raises(APIError) as exc_info:
+                client.search("/test-path", search_request)
+            assert exc_info.value.error.status == 500
+
+    def test_search_all_handles_error_on_subsequent_page(self, sample_item_data):
+        """Test search(path, request) error handling on subsequent page."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+            client = Client(config=config)
+
+            page1_response = {
+                "status": 200,
+                "message": "Success",
+                "items": [sample_item_data] * 2,
+                "paginationInfo": {
+                    "page": 1,
+                    "pageSize": 2,
+                    "totalItems": 5,
+                    "totalPages": 3,
+                },
+            }
+            error_data = {"status": 500, "message": "Server error", "errors": []}
+            error_response = Mock()
+            error_response.status_code = 500
+            error_response.text = json.dumps(error_data)
+            error_response.json = Mock(return_value=error_data)
+            error_response.raise_for_status = Mock(
+                side_effect=httpx.HTTPStatusError(
+                    "Server error", request=Mock(), response=error_response
+                )
+            )
+
+            def mock_post(*args, **kwargs):
+                page = kwargs.get("params", {}).get("page", 1)
+                if page == 1:
+                    mock_resp = Mock()
+                    mock_resp.raise_for_status = Mock()
+                    mock_resp.json = Mock(return_value=page1_response)
+                    return mock_resp
+                else:
+                    return error_response
+
+            client.post = Mock(side_effect=mock_post)
+
+            with pytest.raises(APIError) as exc_info:
+                client.search("/test-path", search_request)
+            assert exc_info.value.error.status == 500
