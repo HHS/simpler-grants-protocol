@@ -11,17 +11,6 @@ from common_grants_sdk.schemas.pydantic.requests.opportunity import (
     OpportunitySearchRequest,
 )
 
-if len(sys.argv) < 3:
-    print(
-        "Usage: search_opportunity.py ", file=sys.stderr
-    )
-    sys.exit(1)
-
-search = sys.argv[1]
-status = sys.argv[2]
-paginate = eval(sys.argv[3])
-
-
 config = Config(
     base_url="http://localhost:8080",
     api_key="two_org_user_key",
