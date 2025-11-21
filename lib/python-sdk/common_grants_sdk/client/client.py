@@ -343,7 +343,7 @@ class Client:
             page_size = self.config.page_size
 
         try:
-            api_response = self.post(path, data=request_data)
+            api_response = self.post(path, data=request_data, params={"page": page, "pageSize": page_size})
             api_response.raise_for_status()
             result_dict = Paginated[dict].model_validate(api_response.json())
             result = cast(Paginated[ItemsT], result_dict)
