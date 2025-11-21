@@ -43,7 +43,7 @@ request_data = OpportunitySearchRequest.model_validate(request)
 
 
 client = Client(config)
-response = client.opportunity.search(search=request_data)
+response = client.opportunity.search(search=request_data, page=1)
 
 print(f"Found {len(response.items)} opportunities: ")
 
