@@ -1,7 +1,7 @@
 import { resolvePath } from "@typespec/compiler";
 import { createTester } from "@typespec/compiler/testing";
 import { deepStrictEqual } from "node:assert";
-import { Changelog } from "../src/types.js";
+import { Logs } from "../src/types.js";
 
 export const outputPath = "changelog.json";
 
@@ -58,10 +58,10 @@ export async function emit(
  */
 export async function emitAndValidate(
   code: string,
-  expected: Changelog,
+  expected: Logs,
   options = {},
 ): Promise<void> {
   const outputs = await emit(code, options);
   const changelog = JSON.parse(outputs[outputPath]);
-  deepStrictEqual(changelog, expected);
+  deepStrictEqual(changelog.logs, expected);
 }

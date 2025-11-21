@@ -1,4 +1,4 @@
-import { ChangelogEntry } from "../types.js";
+import { ChangeRecord } from "../types.js";
 import { Version } from "@typespec/versioning";
 
 /**
@@ -22,27 +22,22 @@ export function getVersionString(version: Version): string {
 }
 
 /**
- * Get or create a changelog entry for a specific version.
- * If an entry for the version already exists, it returns that entry.
- * Otherwise, it creates a new entry with an empty changes array.
+ * Get or create a changes array for a specific schema and version.
+ * If changes for the version already exist, return that array.
+ * Otherwise, create a new empty array and return it.
  *
- * @param changelog - The changelog array to search or add to
+ * @param schemaLogs - The logs for a specific schema { [version: string]: ChangeRecord[] }
  * @param versionName - The name of the version to find or create
- * @returns The existing or newly created changelog entry
+ * @returns The existing or newly created changes array
  */
-export function getOrCreateEntry(
-  changelog: ChangelogEntry[],
+export function getOrCreateChanges(
+  schemaLogs: { [version: string]: ChangeRecord[] },
   versionName: string,
-): ChangelogEntry {
-  let entry = changelog.find((e) => e.version === versionName);
-  if (!entry) {
-    entry = {
-      version: versionName,
-      changes: [],
-    };
-    changelog.push(entry);
+): ChangeRecord[] {
+  if (!schemaLogs[versionName]) {
+    schemaLogs[versionName] = [];
   }
-  return entry;
+  return schemaLogs[versionName];
 }
 
 /**

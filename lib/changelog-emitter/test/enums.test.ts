@@ -40,12 +40,9 @@ describe("Enums - Log @added()", () => {
         `;
 
     await emitAndValidate(code, {
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-      ],
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+      },
     });
   });
 
@@ -82,24 +79,15 @@ describe("Enums - Log @added()", () => {
     `;
 
     await emitAndValidate(code, {
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-      ],
-      [PRIORITY_ENUM]: [
-        {
-          version: V2_VERSION,
-          changes: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
-        },
-      ],
-      [CATEGORY_ENUM]: [
-        {
-          version: V3_VERSION,
-          changes: [Log.added(ENUM_TYPE, CATEGORY_ENUM)],
-        },
-      ],
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+      },
+      [PRIORITY_ENUM]: {
+        [V2_VERSION]: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
+      },
+      [CATEGORY_ENUM]: {
+        [V3_VERSION]: [Log.added(ENUM_TYPE, CATEGORY_ENUM)],
+      },
     });
   });
 });
@@ -128,16 +116,10 @@ describe("Enums - Log @removed()", () => {
     `;
 
     await emitAndValidate(code, {
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.removed(ENUM_TYPE, STATUS_ENUM)],
-        },
-      ],
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+        [V2_VERSION]: [Log.removed(ENUM_TYPE, STATUS_ENUM)],
+      },
     });
   });
 
@@ -168,26 +150,14 @@ describe("Enums - Log @removed()", () => {
     `;
 
     await emitAndValidate(code, {
-      [PRIORITY_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.removed(ENUM_TYPE, PRIORITY_ENUM)],
-        },
-      ],
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.removed(ENUM_TYPE, STATUS_ENUM)],
-        },
-      ],
+      [PRIORITY_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, PRIORITY_ENUM)],
+        [V2_VERSION]: [Log.removed(ENUM_TYPE, PRIORITY_ENUM)],
+      },
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+        [V2_VERSION]: [Log.removed(ENUM_TYPE, STATUS_ENUM)],
+      },
     });
   });
 });
@@ -216,16 +186,10 @@ describe("Enums - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.renamedFrom(ENUM_TYPE, "State", STATUS_ENUM)],
-        },
-      ],
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+        [V2_VERSION]: [Log.renamedFrom(ENUM_TYPE, "State", STATUS_ENUM)],
+      },
     });
   });
 
@@ -250,20 +214,11 @@ describe("Enums - Log @renamedFrom()", () => {
     `;
 
     await emitAndValidate(code, {
-      [STATUS_ENUM]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-        {
-          version: V2_VERSION,
-          changes: [Log.renamedFrom(ENUM_TYPE, "State", "Condition")],
-        },
-        {
-          version: V3_VERSION,
-          changes: [Log.renamedFrom(ENUM_TYPE, "Condition", STATUS_ENUM)],
-        },
-      ],
+      [STATUS_ENUM]: {
+        [V1_VERSION]: [Log.added(ENUM_TYPE, STATUS_ENUM)],
+        [V2_VERSION]: [Log.renamedFrom(ENUM_TYPE, "State", "Condition")],
+        [V3_VERSION]: [Log.renamedFrom(ENUM_TYPE, "Condition", STATUS_ENUM)],
+      },
     });
   });
 });

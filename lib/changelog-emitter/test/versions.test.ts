@@ -35,12 +35,9 @@ describe("Versions", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
     });
   });
 
@@ -77,36 +74,18 @@ describe("Versions", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: "1.0.0",
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-        {
-          version: "2.0.0",
-          changes: [Log.added(MODEL_PROPERTY_TYPE, NAME_PROPERTY)],
-        },
-      ],
-      [STATUS_ENUM]: [
-        {
-          version: "1.0.0",
-          changes: [Log.added(ENUM_TYPE, STATUS_ENUM)],
-        },
-        {
-          version: "2.0.0",
-          changes: [Log.removed(ENUM_MEMBER_TYPE, PENDING_MEMBER)],
-        },
-      ],
-      [CAR_MODEL]: [
-        {
-          version: "1.0.0",
-          changes: [Log.added(MODEL_TYPE, "Automobile")],
-        },
-        {
-          version: "2.0.0",
-          changes: [Log.renamedFrom(MODEL_TYPE, "Automobile", CAR_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        "1.0.0": [Log.added(MODEL_TYPE, USER_MODEL)],
+        "2.0.0": [Log.added(MODEL_PROPERTY_TYPE, NAME_PROPERTY)],
+      },
+      [STATUS_ENUM]: {
+        "1.0.0": [Log.added(ENUM_TYPE, STATUS_ENUM)],
+        "2.0.0": [Log.removed(ENUM_MEMBER_TYPE, PENDING_MEMBER)],
+      },
+      [CAR_MODEL]: {
+        "1.0.0": [Log.added(MODEL_TYPE, "Automobile")],
+        "2.0.0": [Log.renamedFrom(MODEL_TYPE, "Automobile", CAR_MODEL)],
+      },
     });
   });
 });
