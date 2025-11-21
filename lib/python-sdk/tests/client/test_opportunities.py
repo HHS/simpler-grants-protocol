@@ -1,7 +1,6 @@
 """Tests for the Opportunity namespace."""
 
 import json
-from re import search
 import pytest
 from datetime import datetime, UTC
 from unittest.mock import Mock

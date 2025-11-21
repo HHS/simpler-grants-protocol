@@ -1,8 +1,6 @@
 """Tests for the Client class."""
 
 import json
-from re import search
-from urllib import request
 import pytest
 from unittest.mock import Mock, patch
 from uuid import uuid4

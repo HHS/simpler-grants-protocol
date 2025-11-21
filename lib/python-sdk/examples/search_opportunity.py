@@ -3,8 +3,6 @@
 Run with: poetry run python search_opportunity.py
 """
 
-import sys
-
 from common_grants_sdk.client import Client
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.schemas.pydantic.requests.opportunity import (
