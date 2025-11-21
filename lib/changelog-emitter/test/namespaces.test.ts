@@ -26,12 +26,9 @@ describe("Namespaces", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: "v1",
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
     });
   });
 
@@ -59,18 +56,12 @@ describe("Namespaces", () => {
     `;
 
     await emitAndValidate(code, {
-      [USER_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, USER_MODEL)],
-        },
-      ],
-      [CAR_MODEL]: [
-        {
-          version: V1_VERSION,
-          changes: [Log.added(MODEL_TYPE, CAR_MODEL)],
-        },
-      ],
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
+      [CAR_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, CAR_MODEL)],
+      },
     });
   });
 });

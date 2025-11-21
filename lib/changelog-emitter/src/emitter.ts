@@ -29,7 +29,10 @@ export function generateChangelog(
   namespace: Namespace,
   parentVersions?: Version[],
 ): Changelog {
-  const changelog: Changelog = {};
+  const changelog: Changelog = {
+    versions: [],
+    logs: {},
+  };
 
   // Try to get versions for this namespace, or use parent versions
   let allVersions = getAllVersions(context.program, namespace);
@@ -49,12 +52,13 @@ export function generateChangelog(
         parentVersions,
       );
       // Merge sub-namespace changelog into main changelog
-      for (const [schemaName, entries] of Object.entries(subChangelog)) {
-        changelog[schemaName] = entries;
-      }
+      mergeChangelogs(changelog, subChangelog);
     }
     return changelog;
   }
+
+  // Extract version strings
+  changelog.versions = allVersions.map((v) => getVersionString(v));
 
   // Process models in current namespace
   const models = Array.from(namespace.models.values()) as Model[];
@@ -75,12 +79,41 @@ export function generateChangelog(
   for (const subNamespace of subNamespaces) {
     const subChangelog = generateChangelog(context, subNamespace, allVersions);
     // Merge sub-namespace changelog into main changelog
-    for (const [schemaName, entries] of Object.entries(subChangelog)) {
-      changelog[schemaName] = entries;
-    }
+    mergeChangelogs(changelog, subChangelog);
   }
 
   return changelog;
+}
+
+// #############################################################################
+// # Helper functions
+// #############################################################################
+
+/**
+ * Get the version string from a Version object
+ */
+function getVersionString(version: Version): string {
+  if (
+    version.enumMember?.value &&
+    typeof version.enumMember.value === "string"
+  ) {
+    return version.enumMember.value;
+  }
+  return version.name;
+}
+
+/**
+ * Merge two changelogs together
+ */
+function mergeChangelogs(target: Changelog, source: Changelog): void {
+  // Merge versions (keep unique, sorted)
+  const versionSet = new Set([...target.versions, ...source.versions]);
+  target.versions = Array.from(versionSet).sort();
+
+  // Merge logs
+  for (const [schemaName, entries] of Object.entries(source.logs)) {
+    target.logs[schemaName] = entries;
+  }
 }
 
 export async function $onEmit(context: EmitContext) {
@@ -88,7 +121,10 @@ export async function $onEmit(context: EmitContext) {
   const topLevelNamespaces = Array.from(globalNamespace.namespaces.values());
 
   // Collect changelogs from all namespaces into a single changelog
-  const combinedChangelog: Changelog = {};
+  const combinedChangelog: Changelog = {
+    versions: [],
+    logs: {},
+  };
 
   // Iterate through all top-level namespaces (excluding the global TypeSpec namespace)
   for (const namespace of topLevelNamespaces) {
@@ -101,9 +137,7 @@ export async function $onEmit(context: EmitContext) {
     const changelog = generateChangelog(context, namespace);
 
     // Merge this namespace's changelog into the combined changelog
-    for (const [schemaName, entries] of Object.entries(changelog)) {
-      combinedChangelog[schemaName] = entries;
-    }
+    mergeChangelogs(combinedChangelog, changelog);
   }
 
   // Emit the combined changelog as a single file

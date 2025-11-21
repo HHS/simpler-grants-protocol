@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Log, TargetType } from "../src/index.js";
+import { Log, TargetType, Action } from "../src/index.js";
 
 describe("Logging utils", () => {
   describe("TargetType enum", () => {
@@ -18,169 +18,359 @@ describe("Logging utils", () => {
 
   describe("Log.added", () => {
     it("should generate correct messages each target type", () => {
-      expect(Log.added(TargetType.Model, "User")).toBe("Added `User` model");
-      expect(Log.added(TargetType.Enum, "Status")).toBe("Added `Status` enum");
-      expect(Log.added(TargetType.ModelProperty, "name")).toBe(
-        "Added `name` field",
-      );
-      expect(Log.added(TargetType.EnumMember, "active")).toBe(
-        "Added `active` member",
-      );
-      expect(Log.added(TargetType.Operation, "getUser")).toBe(
-        "Added `getUser` operation",
-      );
-      expect(Log.added(TargetType.Union, "UserOrError")).toBe(
-        "Added `UserOrError` union",
-      );
-      expect(Log.added(TargetType.UnionVariant, "success")).toBe(
-        "Added `success` variant",
-      );
-      expect(Log.added(TargetType.Scalar, "UserId")).toBe(
-        "Added `UserId` scalar",
-      );
-      expect(Log.added(TargetType.Interface, "UserService")).toBe(
-        "Added `UserService` interface",
-      );
+      expect(Log.added(TargetType.Model, "User")).toEqual({
+        message: "Added `User` model",
+        action: Action.Added,
+        targetKind: TargetType.Model,
+        currTargetName: "User",
+      });
+      expect(Log.added(TargetType.Enum, "Status")).toEqual({
+        message: "Added `Status` enum",
+        action: Action.Added,
+        targetKind: TargetType.Enum,
+        currTargetName: "Status",
+      });
+      expect(Log.added(TargetType.ModelProperty, "name")).toEqual({
+        message: "Added `name` field",
+        action: Action.Added,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "name",
+      });
+      expect(Log.added(TargetType.EnumMember, "active")).toEqual({
+        message: "Added `active` member",
+        action: Action.Added,
+        targetKind: TargetType.EnumMember,
+        currTargetName: "active",
+      });
+      expect(Log.added(TargetType.Operation, "getUser")).toEqual({
+        message: "Added `getUser` operation",
+        action: Action.Added,
+        targetKind: TargetType.Operation,
+        currTargetName: "getUser",
+      });
+      expect(Log.added(TargetType.Union, "UserOrError")).toEqual({
+        message: "Added `UserOrError` union",
+        action: Action.Added,
+        targetKind: TargetType.Union,
+        currTargetName: "UserOrError",
+      });
+      expect(Log.added(TargetType.UnionVariant, "success")).toEqual({
+        message: "Added `success` variant",
+        action: Action.Added,
+        targetKind: TargetType.UnionVariant,
+        currTargetName: "success",
+      });
+      expect(Log.added(TargetType.Scalar, "UserId")).toEqual({
+        message: "Added `UserId` scalar",
+        action: Action.Added,
+        targetKind: TargetType.Scalar,
+        currTargetName: "UserId",
+      });
+      expect(Log.added(TargetType.Interface, "UserService")).toEqual({
+        message: "Added `UserService` interface",
+        action: Action.Added,
+        targetKind: TargetType.Interface,
+        currTargetName: "UserService",
+      });
     });
   });
 
   describe("Log.removed", () => {
     it("should generate correct messages each target type", () => {
-      expect(Log.removed(TargetType.Model, "User")).toBe(
-        "Removed `User` model",
-      );
-      expect(Log.removed(TargetType.Enum, "Status")).toBe(
-        "Removed `Status` enum",
-      );
-      expect(Log.removed(TargetType.ModelProperty, "name")).toBe(
-        "Removed `name` field",
-      );
-      expect(Log.removed(TargetType.EnumMember, "active")).toBe(
-        "Removed `active` member",
-      );
-      expect(Log.removed(TargetType.Operation, "getUser")).toBe(
-        "Removed `getUser` operation",
-      );
-      expect(Log.removed(TargetType.Union, "UserOrError")).toBe(
-        "Removed `UserOrError` union",
-      );
-      expect(Log.removed(TargetType.UnionVariant, "success")).toBe(
-        "Removed `success` variant",
-      );
-      expect(Log.removed(TargetType.Scalar, "UserId")).toBe(
-        "Removed `UserId` scalar",
-      );
-      expect(Log.removed(TargetType.Interface, "UserService")).toBe(
-        "Removed `UserService` interface",
-      );
+      expect(Log.removed(TargetType.Model, "User")).toEqual({
+        message: "Removed `User` model",
+        action: Action.Removed,
+        targetKind: TargetType.Model,
+        currTargetName: "User",
+      });
+      expect(Log.removed(TargetType.Enum, "Status")).toEqual({
+        message: "Removed `Status` enum",
+        action: Action.Removed,
+        targetKind: TargetType.Enum,
+        currTargetName: "Status",
+      });
+      expect(Log.removed(TargetType.ModelProperty, "name")).toEqual({
+        message: "Removed `name` field",
+        action: Action.Removed,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "name",
+      });
+      expect(Log.removed(TargetType.EnumMember, "active")).toEqual({
+        message: "Removed `active` member",
+        action: Action.Removed,
+        targetKind: TargetType.EnumMember,
+        currTargetName: "active",
+      });
+      expect(Log.removed(TargetType.Operation, "getUser")).toEqual({
+        message: "Removed `getUser` operation",
+        action: Action.Removed,
+        targetKind: TargetType.Operation,
+        currTargetName: "getUser",
+      });
+      expect(Log.removed(TargetType.Union, "UserOrError")).toEqual({
+        message: "Removed `UserOrError` union",
+        action: Action.Removed,
+        targetKind: TargetType.Union,
+        currTargetName: "UserOrError",
+      });
+      expect(Log.removed(TargetType.UnionVariant, "success")).toEqual({
+        message: "Removed `success` variant",
+        action: Action.Removed,
+        targetKind: TargetType.UnionVariant,
+        currTargetName: "success",
+      });
+      expect(Log.removed(TargetType.Scalar, "UserId")).toEqual({
+        message: "Removed `UserId` scalar",
+        action: Action.Removed,
+        targetKind: TargetType.Scalar,
+        currTargetName: "UserId",
+      });
+      expect(Log.removed(TargetType.Interface, "UserService")).toEqual({
+        message: "Removed `UserService` interface",
+        action: Action.Removed,
+        targetKind: TargetType.Interface,
+        currTargetName: "UserService",
+      });
     });
   });
 
   describe("Log.madeRequired", () => {
     it("should generate correct messages for model properties", () => {
-      expect(Log.madeRequired("email")).toBe("Made `email` field required");
-      expect(Log.madeRequired("id")).toBe("Made `id` field required");
-      expect(Log.madeRequired("name")).toBe("Made `name` field required");
+      expect(Log.madeRequired("email")).toEqual({
+        message: "Made `email` field required",
+        action: Action.MadeRequired,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "email",
+      });
+      expect(Log.madeRequired("id")).toEqual({
+        message: "Made `id` field required",
+        action: Action.MadeRequired,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "id",
+      });
+      expect(Log.madeRequired("name")).toEqual({
+        message: "Made `name` field required",
+        action: Action.MadeRequired,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "name",
+      });
     });
   });
 
   describe("Log.madeOptional", () => {
     it("should generate correct messages for model properties", () => {
-      expect(Log.madeOptional("nickname")).toBe(
-        "Made `nickname` field optional",
-      );
-      expect(Log.madeOptional("description")).toBe(
-        "Made `description` field optional",
-      );
-      expect(Log.madeOptional("avatar")).toBe("Made `avatar` field optional");
+      expect(Log.madeOptional("nickname")).toEqual({
+        message: "Made `nickname` field optional",
+        action: Action.MadeOptional,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "nickname",
+      });
+      expect(Log.madeOptional("description")).toEqual({
+        message: "Made `description` field optional",
+        action: Action.MadeOptional,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "description",
+      });
+      expect(Log.madeOptional("avatar")).toEqual({
+        message: "Made `avatar` field optional",
+        action: Action.MadeOptional,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "avatar",
+      });
     });
   });
 
   describe("Log.renamedFrom", () => {
     it("should generate correct messages for all target types", () => {
-      expect(Log.renamedFrom(TargetType.Model, "OldUser", "NewUser")).toBe(
-        "Renamed model from `OldUser` to `NewUser`",
-      );
-      expect(Log.renamedFrom(TargetType.Enum, "OldStatus", "NewStatus")).toBe(
-        "Renamed enum from `OldStatus` to `NewStatus`",
-      );
+      expect(Log.renamedFrom(TargetType.Model, "OldUser", "NewUser")).toEqual({
+        message: "Renamed model from `OldUser` to `NewUser`",
+        action: Action.Renamed,
+        targetKind: TargetType.Model,
+        prevTargetName: "OldUser",
+        currTargetName: "NewUser",
+      });
+      expect(
+        Log.renamedFrom(TargetType.Enum, "OldStatus", "NewStatus"),
+      ).toEqual({
+        message: "Renamed enum from `OldStatus` to `NewStatus`",
+        action: Action.Renamed,
+        targetKind: TargetType.Enum,
+        prevTargetName: "OldStatus",
+        currTargetName: "NewStatus",
+      });
       expect(
         Log.renamedFrom(TargetType.ModelProperty, "oldName", "newName"),
-      ).toBe("Renamed field from `oldName` to `newName`");
+      ).toEqual({
+        message: "Renamed field from `oldName` to `newName`",
+        action: Action.Renamed,
+        targetKind: TargetType.ModelProperty,
+        prevTargetName: "oldName",
+        currTargetName: "newName",
+      });
       expect(
         Log.renamedFrom(TargetType.EnumMember, "oldActive", "newActive"),
-      ).toBe("Renamed member from `oldActive` to `newActive`");
+      ).toEqual({
+        message: "Renamed member from `oldActive` to `newActive`",
+        action: Action.Renamed,
+        targetKind: TargetType.EnumMember,
+        prevTargetName: "oldActive",
+        currTargetName: "newActive",
+      });
       expect(
         Log.renamedFrom(TargetType.Operation, "oldGetUser", "newGetUser"),
-      ).toBe("Renamed operation from `oldGetUser` to `newGetUser`");
-      expect(Log.renamedFrom(TargetType.Union, "OldUnion", "NewUnion")).toBe(
-        "Renamed union from `OldUnion` to `NewUnion`",
+      ).toEqual({
+        message: "Renamed operation from `oldGetUser` to `newGetUser`",
+        action: Action.Renamed,
+        targetKind: TargetType.Operation,
+        prevTargetName: "oldGetUser",
+        currTargetName: "newGetUser",
+      });
+      expect(Log.renamedFrom(TargetType.Union, "OldUnion", "NewUnion")).toEqual(
+        {
+          message: "Renamed union from `OldUnion` to `NewUnion`",
+          action: Action.Renamed,
+          targetKind: TargetType.Union,
+          prevTargetName: "OldUnion",
+          currTargetName: "NewUnion",
+        },
       );
       expect(
         Log.renamedFrom(TargetType.UnionVariant, "oldVariant", "newVariant"),
-      ).toBe("Renamed variant from `oldVariant` to `newVariant`");
-      expect(Log.renamedFrom(TargetType.Scalar, "OldScalar", "NewScalar")).toBe(
-        "Renamed scalar from `OldScalar` to `NewScalar`",
-      );
+      ).toEqual({
+        message: "Renamed variant from `oldVariant` to `newVariant`",
+        action: Action.Renamed,
+        targetKind: TargetType.UnionVariant,
+        prevTargetName: "oldVariant",
+        currTargetName: "newVariant",
+      });
+      expect(
+        Log.renamedFrom(TargetType.Scalar, "OldScalar", "NewScalar"),
+      ).toEqual({
+        message: "Renamed scalar from `OldScalar` to `NewScalar`",
+        action: Action.Renamed,
+        targetKind: TargetType.Scalar,
+        prevTargetName: "OldScalar",
+        currTargetName: "NewScalar",
+      });
       expect(
         Log.renamedFrom(TargetType.Interface, "OldInterface", "NewInterface"),
-      ).toBe("Renamed interface from `OldInterface` to `NewInterface`");
+      ).toEqual({
+        message: "Renamed interface from `OldInterface` to `NewInterface`",
+        action: Action.Renamed,
+        targetKind: TargetType.Interface,
+        prevTargetName: "OldInterface",
+        currTargetName: "NewInterface",
+      });
     });
   });
 
   describe("Log.typeChangedFrom", () => {
     it("should generate correct messages for model property type changes", () => {
-      expect(Log.typeChangedFrom("age", "string", "int32")).toBe(
-        "Changed `age` field type from `string` to `int32`",
-      );
-      expect(Log.typeChangedFrom("id", "int32", "string")).toBe(
-        "Changed `id` field type from `int32` to `string`",
-      );
-      expect(Log.typeChangedFrom("email", "string", "EmailAddress")).toBe(
-        "Changed `email` field type from `string` to `EmailAddress`",
-      );
+      expect(Log.typeChangedFrom("age", "string", "int32")).toEqual({
+        message: "Changed `age` field type from `string` to `int32`",
+        action: Action.TypeChanged,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "age",
+        prevDataType: "string",
+        currDataType: "int32",
+      });
+      expect(Log.typeChangedFrom("id", "int32", "string")).toEqual({
+        message: "Changed `id` field type from `int32` to `string`",
+        action: Action.TypeChanged,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "id",
+        prevDataType: "int32",
+        currDataType: "string",
+      });
+      expect(Log.typeChangedFrom("email", "string", "EmailAddress")).toEqual({
+        message: "Changed `email` field type from `string` to `EmailAddress`",
+        action: Action.TypeChanged,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "email",
+        prevDataType: "string",
+        currDataType: "EmailAddress",
+      });
     });
   });
 
   describe("Log.returnTypeChangedFrom", () => {
     it("should generate correct messages for operation return type changes", () => {
-      expect(Log.returnTypeChangedFrom("getUser", "User", "UserResponse")).toBe(
-        "Changed `getUser` return type from `User` to `UserResponse`",
-      );
-      expect(Log.returnTypeChangedFrom("createUser", "void", "User")).toBe(
-        "Changed `createUser` return type from `void` to `User`",
-      );
-      expect(Log.returnTypeChangedFrom("deleteUser", "boolean", "void")).toBe(
-        "Changed `deleteUser` return type from `boolean` to `void`",
-      );
+      expect(
+        Log.returnTypeChangedFrom("getUser", "User", "UserResponse"),
+      ).toEqual({
+        message: "Changed `getUser` return type from `User` to `UserResponse`",
+        action: Action.TypeChanged,
+        targetKind: TargetType.Operation,
+        currTargetName: "getUser",
+        prevDataType: "User",
+        currDataType: "UserResponse",
+      });
+      expect(Log.returnTypeChangedFrom("createUser", "void", "User")).toEqual({
+        message: "Changed `createUser` return type from `void` to `User`",
+        action: Action.TypeChanged,
+        targetKind: TargetType.Operation,
+        currTargetName: "createUser",
+        prevDataType: "void",
+        currDataType: "User",
+      });
+      expect(
+        Log.returnTypeChangedFrom("deleteUser", "boolean", "void"),
+      ).toEqual({
+        message: "Changed `deleteUser` return type from `boolean` to `void`",
+        action: Action.TypeChanged,
+        targetKind: TargetType.Operation,
+        currTargetName: "deleteUser",
+        prevDataType: "boolean",
+        currDataType: "void",
+      });
     });
   });
 
   describe("Edge cases and special characters", () => {
     it("should handle names with special characters", () => {
-      expect(Log.added(TargetType.ModelProperty, "user-name")).toBe(
-        "Added `user-name` field",
-      );
-      expect(Log.added(TargetType.ModelProperty, "user_name")).toBe(
-        "Added `user_name` field",
-      );
-      expect(Log.added(TargetType.ModelProperty, "user.name")).toBe(
-        "Added `user.name` field",
-      );
+      expect(Log.added(TargetType.ModelProperty, "user-name")).toEqual({
+        message: "Added `user-name` field",
+        action: Action.Added,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "user-name",
+      });
+      expect(Log.added(TargetType.ModelProperty, "user_name")).toEqual({
+        message: "Added `user_name` field",
+        action: Action.Added,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "user_name",
+      });
+      expect(Log.added(TargetType.ModelProperty, "user.name")).toEqual({
+        message: "Added `user.name` field",
+        action: Action.Added,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "user.name",
+      });
     });
 
     it("should handle empty strings", () => {
-      expect(Log.added(TargetType.ModelProperty, "")).toBe("Added `` field");
-      expect(Log.removed(TargetType.ModelProperty, "")).toBe(
-        "Removed `` field",
-      );
+      expect(Log.added(TargetType.ModelProperty, "")).toEqual({
+        message: "Added `` field",
+        action: Action.Added,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "",
+      });
+      expect(Log.removed(TargetType.ModelProperty, "")).toEqual({
+        message: "Removed `` field",
+        action: Action.Removed,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: "",
+      });
     });
 
     it("should handle very long names", () => {
       const longName = "a".repeat(100);
-      expect(Log.added(TargetType.ModelProperty, longName)).toBe(
-        `Added \`${longName}\` field`,
-      );
+      expect(Log.added(TargetType.ModelProperty, longName)).toEqual({
+        message: `Added \`${longName}\` field`,
+        action: Action.Added,
+        targetKind: TargetType.ModelProperty,
+        currTargetName: longName,
+      });
     });
   });
 });
