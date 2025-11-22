@@ -186,7 +186,7 @@ class TestClient:
             }
 
     def test_list_all_items_respects_limit(self):
-        """Test that list_all_items respects list_items_limit and stops early."""
+        """Test that list respects list_items_limit and stops early when page=None."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             # Set a small limit for testing
             config = Config(
@@ -253,8 +253,8 @@ class TestClient:
 
             client.get = Mock(side_effect=mock_get)
 
-            # Call list_all_items
-            response = client.list_all_items("/test-path")
+            # Call list (without page to fetch all)
+            response = client.list("/test-path", page=None)
 
             # Should only have 5 items (the limit), not 9
             assert len(response.items) == 5
@@ -264,7 +264,7 @@ class TestClient:
             assert call_count == 2
 
     def test_list_all_items_trims_items_to_limit(self):
-        """Test that list_all_items trims items array to the limit."""
+        """Test that list trims items array to the limit when page=None."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             # Set limit to 3
             config = Config(
@@ -294,14 +294,14 @@ class TestClient:
             mock_response.json = Mock(return_value=page_response)
             client.get = Mock(return_value=mock_response)
 
-            response = client.list_all_items("/test-path")
+            response = client.list("/test-path", page=None)
 
             # Should be trimmed to 3 items
             assert len(response.items) == 3
             assert response.pagination_info.total_items == 3
 
     def test_list_all_items_stops_at_exact_limit(self):
-        """Test that list_all_items stops when limit is reached exactly."""
+        """Test that list stops when limit is reached exactly when page=None."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             # Set limit to 4
             config = Config(
@@ -353,7 +353,7 @@ class TestClient:
 
             client.get = Mock(side_effect=mock_get)
 
-            response = client.list_all_items("/test-path")
+            response = client.list("/test-path", page=None)
 
             # Should have exactly 4 items
             assert len(response.items) == 4
@@ -443,7 +443,7 @@ class TestClientList:
     """Tests for Client.list() method."""
 
     def test_list_with_page_calls_list_some_items(self, sample_list_response):
-        """Test that list(path, page=1) calls list_some_items()."""
+        """Test that list(path, page=1) calls list() with page parameter."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
             client = Client(config=config)
@@ -463,7 +463,7 @@ class TestClientList:
             assert response.pagination_info.page == 1
 
     def test_list_without_page_calls_list_all_items(self, sample_list_response):
-        """Test that list(path, page=None) calls list_all_items()."""
+        """Test that list(path, page=None) calls list() without page parameter."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
             client = Client(config=config)
@@ -551,7 +551,7 @@ class TestClientList:
 
 
 class TestClientListSomeItems:
-    """Tests for Client.list_some_items() via Client.list()."""
+    """Tests for Client.list() with page parameter."""
 
     def test_list_some_returns_paginated(self, sample_list_response):
         """Test that list(path, page=1) returns Paginated instance."""
@@ -660,7 +660,7 @@ class TestClientListSomeItems:
 
 
 class TestClientListAllItems:
-    """Tests for Client.list_all_items() via Client.list()."""
+    """Tests for Client.list() without page parameter."""
 
     def test_list_all_single_page(self, sample_list_response):
         """Test list(path) when there's only one page."""
@@ -966,6 +966,7 @@ class TestClientSearch:
     """Tests for Client.search() method."""
 
     def test_search_with_page_calls_list_some_items(self, sample_search_response):
+        """Test that search() with page calls search() with page parameter."""
         """Test that search(path, search, page=1) calls search()."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -986,7 +987,7 @@ class TestClientSearch:
             assert response.pagination_info.page == 1
 
     def test_search_without_page_calls_list_all_items(self, sample_search_response):
-        """Test that search(path, search, page=None) calls search_all_items()."""
+        """Test that search(path, search, page=None) calls search() without page parameter."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
             client = Client(config=config)
@@ -1078,7 +1079,7 @@ class TestClientSearch:
 
 
 class TestClientSearchSomeItems:
-    """Tests for Client.search_some_items() via Client.search()"""
+    """Tests for Client.search() with page parameter."""
 
     def test_search_some_returns_paginated(self, sample_search_response):
         """Test that search(path, request, page=1) returns Paginated instance."""
@@ -1191,7 +1192,7 @@ class TestClientSearchSomeItems:
 
 
 class TestClientSearchAllItems:
-    """Tests for Client.search_all_items() via Client.search()"""
+    """Tests for Client.search() without page parameter."""
 
     def test_search_all_single_page(self, sample_search_response):
         """Test search(path, request) when there's only one page."""
