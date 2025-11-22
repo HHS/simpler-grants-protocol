@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ..schemas.pydantic.models import OpportunityBase
+from ..schemas.pydantic.requests.opportunity import OpportunitySearchRequest
 from ..schemas.pydantic.responses import (
     OpportunitiesListResponse,
     OpportunityResponse,
@@ -96,3 +97,48 @@ class Opportunity:
 
         # Return the OpportunityBase from the response
         return opportunity_response.data
+
+    def search(
+        self,
+        search: OpportunitySearchRequest,
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> OpportunitiesListResponse:
+        """Search for opportunties by a query string
+
+        Args:
+            search: the string to search for
+            page: Page number (1-indexed). If None, method will fetch all
+                items across all pages and aggregate them into a single response.
+            page_size: Number of items per page. If None, uses the default from
+                client config.
+
+
+        Returns:
+            OpportunitiesListResponse with items and pagination info
+
+            Raises:
+                APIError: if the API request fails
+        """
+        request_data = OpportunitySearchRequest.model_validate(search)
+
+        # Call client method to get paginated response
+        paginated_response: Paginated[ItemsT] = self.client.search(  # type: ignore[valid-type]
+            f"{self.path}/search",
+            request_data.model_dump(by_alias=True, exclude_unset=True),
+            page=page,
+            page_size=page_size,
+        )
+
+        # Hydrate OpportunityBase models from items dict
+        items = [
+            OpportunityBase.model_validate_json(json.dumps(item))
+            for item in paginated_response.items
+        ]
+
+        # Convert paginated_response to dict and replace items with hydrated models
+        response_data = paginated_response.model_dump(by_alias=True)
+        response_data["items"] = items
+
+        # Hydrate OpportunitiesListResponse from response data
+        return OpportunitiesListResponse.model_validate(response_data)
