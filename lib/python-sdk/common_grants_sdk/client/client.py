@@ -238,7 +238,7 @@ class Client:
 
         Args:
             path: end point path (should start with /)
-            request_data: search specific request data
+            request_data: Search specific request data
             page: Page number (1-indexed). If None will fetch all items across all pages and aggregate
               them into a singel repsonse.
             page_size: Number of items per page. If None, uses the default from
@@ -264,6 +264,7 @@ class Client:
 
         Args:
             path: end point path (should start with /)
+            request_data: Search specific request data
             page_size: Number of items per page. If None, uses the default from
                 client config.
             params: Additional parameters to pass to the API
@@ -300,7 +301,7 @@ class Client:
                 page_response.pagination_info.page
                 >= page_response.pagination_info.total_pages
             ):
-                more_pages_available = False    
+                more_pages_available = False
             else:
                 page = page_response.pagination_info.page + 1
                 more_pages_available = True
