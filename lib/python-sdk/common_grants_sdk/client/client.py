@@ -300,7 +300,7 @@ class Client:
                 page_response.pagination_info.page
                 >= page_response.pagination_info.total_pages
             ):
-                more_pages_available = False
+                more_pages_available = False    
             else:
                 page = page_response.pagination_info.page + 1
                 more_pages_available = True

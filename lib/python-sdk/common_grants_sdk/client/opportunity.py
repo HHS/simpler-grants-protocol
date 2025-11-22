@@ -107,9 +107,12 @@ class Opportunity:
         """Search for opportunties by a query string
 
         Args:
-            query: the string to search for
-            status: the status of the opportunities to return
-            paginate: whether to paginate the responses or not
+            search: the string to search for
+            page: Page number (1-indexed). If None, method will fetch all
+                items across all pages and aggregate them into a single response.
+            page_size: Number of items per page. If None, uses the default from
+                client config.
+
 
         Returns:
             OpportunitiesListResponse with items and pagination info
