@@ -12,7 +12,9 @@ from ..schemas.pydantic.responses import (
     OpportunityResponse,
     Paginated,
 )
+from ..schemas.pydantic.models.opp_status import OppStatusOptions
 from .types import ItemsT
+from typing import List
 
 
 if TYPE_CHECKING:
@@ -101,14 +103,16 @@ class Opportunity:
 
     def search(
         self,
-        search: OpportunitySearchRequest,
+        search: str,
+        status: List[OppStatusOptions],
         page: int | None = None,
         page_size: int | None = None,
     ) -> OpportunitiesSearchResponse:
         """Search for opportunties by a query string
 
         Args:
-            search: the string to search for
+            search: The string to search for.
+            status: List of statuses to search on.
             page: Page number (1-indexed). If None, method will fetch all
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
@@ -121,7 +125,17 @@ class Opportunity:
             Raises:
                 APIError: if the API request fails
         """
-        request_data = OpportunitySearchRequest.model_validate(search)
+
+        request = {
+            "filters": {
+                "status": {"operator": "in", "value": status},
+            },
+            "pagination": {"page": 1, "pageSize": 10},
+            "search": search,
+            "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
+        }
+
+        request_data = OpportunitySearchRequest.model_validate(request)
 
         # Call client method to get paginated response
         paginated_response: Paginated[ItemsT] = self.client.search(  # type: ignore[valid-type]

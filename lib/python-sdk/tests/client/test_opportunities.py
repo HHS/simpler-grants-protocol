@@ -17,7 +17,7 @@ from common_grants_sdk.schemas.pydantic.responses import (
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
 )
-from common_grants_sdk.schemas.pydantic.requests import OpportunitySearchRequest
+from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
 
 
 @pytest.fixture
@@ -101,33 +101,6 @@ def client(mock_httpx_client):
     # Update opportunity's http reference
     client.opportunity.http = mock_httpx_client
     return client
-
-
-@pytest.fixture
-def search_request():
-    request = {
-        "filters": {
-            "closeDateRange": {
-                "operator": "between",
-                "value": {"max": "2025-12-31", "min": "2025-01-01"},
-            },
-            "status": {"operator": "in", "value": ["open", "forecasted"]},
-            "totalFundingAvailableRange": {
-                "operator": "between",
-                "value": {
-                    "max": {"amount": "1000000", "currency": "USD"},
-                    "min": {"amount": "10000", "currency": "USD"},
-                },
-            },
-        },
-        "pagination": {"page": 1, "pageSize": 10},
-        "search": "local",
-        "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
-    }
-
-    request_data = OpportunitySearchRequest.model_validate(request)
-
-    return request_data
 
 
 class TestOpportunityGet:
@@ -727,7 +700,7 @@ class TestOpportunitySearch:
     """Tests for Opportunity.search()"""
 
     def test_search_opportunities_success(
-        self, client, mock_httpx_client, sample_search_response, search_request
+        self, client, mock_httpx_client, sample_search_response
     ):
         """Test successful search of opportunities."""
         mock_response = Mock()
@@ -737,7 +710,9 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        response = client.opportunity.search(search_request)
+        response = client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN]
+        )
 
         assert isinstance(response, OpportunitiesSearchResponse)
         assert len(response.items) == 2
@@ -753,7 +728,7 @@ class TestOpportunitySearch:
         assert call_args[1]["params"]["pageSize"] == 100
 
     def test_search_opportunities_different_page(
-        self, client, mock_httpx_client, sample_search_response, search_request
+        self, client, mock_httpx_client, sample_search_response
     ):
         """Test searching opportunities on a different page."""
         sample_search_response["paginationInfo"]["page"] = 2
@@ -764,12 +739,12 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        response = client.opportunity.search(search=search_request, page=2)
+        response = client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN], page=2
+        )
         assert response.pagination_info.page == 2
 
-    def test_search_opportunities_custom_page_size(
-        self, mock_httpx_client, search_request
-    ):
+    def test_search_opportunities_custom_page_size(self, mock_httpx_client):
         """Test searching opportunities with custom page size from config."""
         auth = Auth.api_key("test-key")
         config = Config(
@@ -807,12 +782,14 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(search=search_request, page=1)
+        client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN], page=1
+        )
         call_args = mock_httpx_client.post.call_args
         assert call_args[1]["params"]["pageSize"] == 50
 
     def test_search_opportunities_with_page_size_parameter(
-        self, client, mock_httpx_client, sample_search_response, search_request
+        self, client, mock_httpx_client, sample_search_response
     ):
         """Test searching opportunities with page_size parameter overriding config."""
         sample_search_response["paginationInfo"]["pageSize"] = 25
@@ -823,12 +800,14 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(search=search_request, page=1, page_size=25)
+        client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN], page=1, page_size=25
+        )
         call_args = mock_httpx_client.post.call_args
         assert call_args[1]["params"]["pageSize"] == 25
 
     def test_search_opportunities_with_page_size_none(
-        self, client, mock_httpx_client, sample_search_response, search_request
+        self, client, mock_httpx_client, sample_search_response
     ):
         """Test searching opportunities with page_size=None uses config default."""
         mock_response = Mock()
@@ -838,12 +817,14 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(search=search_request, page=1, page_size=None)
+        client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN], page=1, page_size=None
+        )
         call_args = mock_httpx_client.post.call_args
         assert call_args[1]["params"]["pageSize"] == 100
 
     def test_search_opportunities_with_page_size_zero(
-        self, client, mock_httpx_client, sample_search_response, search_request
+        self, client, mock_httpx_client, sample_search_response
     ):
         """Test searching opportunities with page_size=0 falls back to config."""
         mock_response = Mock()
@@ -853,14 +834,16 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(search=search_request, page=1, page_size=0)
+        client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN], page=1, page_size=0
+        )
         call_args = mock_httpx_client.post.call_args
         assert (
             call_args[1]["params"]["pageSize"] == 100
         )  # config default (page_size < 1)
 
     def test_search_opportunities_with_page_size_negative(
-        self, client, mock_httpx_client, sample_search_response, search_request
+        self, client, mock_httpx_client, sample_search_response
     ):
         """Test searching opportunities with negative page_size falls back to config."""
         mock_response = Mock()
@@ -870,13 +853,15 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(search=search_request, page=1, page_size=-1)
+        client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN], page=1, page_size=-1
+        )
         call_args = mock_httpx_client.post.call_args
         assert (
             call_args[1]["params"]["pageSize"] == 100
         )  # config default (page_size < 1)
 
-    def test_search_opportunities_404(self, client, mock_httpx_client, search_request):
+    def test_search_opportunities_404(self, client, mock_httpx_client):
         """Test searching opportunities with 404 error."""
         error_data = {"status": 404, "message": "Not found", "errors": []}
         mock_response = Mock()
@@ -891,10 +876,12 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.search(search=search_request, page=1)
+            client.opportunity.search(
+                search="local", status=[OppStatusOptions.OPEN], page=1
+            )
         assert exc_info.value.error.status == 404
 
-    def test_search_opportunities_401(self, client, mock_httpx_client, search_request):
+    def test_search_opportunities_401(self, client, mock_httpx_client):
         """Test searching opportunities with authentication error."""
         error_data = {"status": 401, "message": "Unauthorized", "errors": []}
         mock_response = Mock()
@@ -909,12 +896,12 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.search(search=search_request, page=1)
+            client.opportunity.search(
+                search="local", status=[OppStatusOptions.OPEN], page=1
+            )
         assert exc_info.value.error.status == 401
 
-    def test_search_opportunities_validation_error(
-        self, client, mock_httpx_client, search_request
-    ):
+    def test_search_opportunities_validation_error(self, client, mock_httpx_client):
         """Test searching opportunities with validation error."""
         # Valid JSON but doesn't match OpportunitiesListResponse schema
         invalid_data = {"invalid": "data"}
@@ -926,23 +913,25 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(return_value=mock_response)
 
         with pytest.raises(ValidationError):
-            client.opportunity.search(search=search_request, page=1)
+            client.opportunity.search(
+                search="local", status=[OppStatusOptions.OPEN], page=1
+            )
 
-    def test_search_opportunities_request_error(
-        self, client, mock_httpx_client, search_request
-    ):
+    def test_search_opportunities_request_error(self, client, mock_httpx_client):
         """Test searching opportunities with request error."""
         mock_httpx_client.post = Mock(
             side_effect=httpx.RequestError("Connection error")
         )
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.search(search=search_request, page=1)
+            client.opportunity.search(
+                search="local", status=[OppStatusOptions.OPEN], page=1
+            )
         assert exc_info.value.error.status == 0
         assert "Connection error" in exc_info.value.error.message
 
     def test_search_all_opportunities_single_page(
-        self, client, mock_httpx_client, sample_search_response, search_request
+        self, client, mock_httpx_client, sample_search_response
     ):
         """Test fetching all opportunities when there's only one page."""
         mock_response = Mock()
@@ -952,7 +941,9 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        response = client.opportunity.search(search=search_request, page=None)
+        response = client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN], page=None
+        )
         assert isinstance(response, OpportunitiesSearchResponse)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
@@ -971,7 +962,7 @@ class TestOpportunitySearch:
         assert call_args[1]["params"]["pageSize"] == 100
 
     def test_list_all_opportunities_multiple_pages(
-        self, client, mock_httpx_client, sample_opportunity_data, search_request
+        self, client, mock_httpx_client, sample_opportunity_data
     ):
         """Test fetching all opportunities across multiple pages."""
         # Create responses for 3 pages
@@ -1050,7 +1041,9 @@ class TestOpportunitySearch:
 
         mock_httpx_client.post = Mock(side_effect=mock_post)
 
-        response = client.opportunity.search(search=search_request, page=None)
+        response = client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN], page=None
+        )
         assert isinstance(response, OpportunitiesSearchResponse)
         # Should have all 5 items from all 3 pages
         assert len(response.items) == 5
@@ -1068,9 +1061,7 @@ class TestOpportunitySearch:
         assert calls[1][1]["params"]["page"] == 2
         assert calls[2][1]["params"]["page"] == 3
 
-    def test_search_all_opportunities_empty_result(
-        self, client, mock_httpx_client, search_request
-    ):
+    def test_search_all_opportunities_empty_result(self, client, mock_httpx_client):
         """Test fetching all opportunities when there are no results."""
         empty_response = {
             "status": 200,
@@ -1098,14 +1089,16 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        response = client.opportunity.search(search=search_request, page=None)
+        response = client.opportunity.search(
+            search="local", status=[OppStatusOptions.OPEN], page=None
+        )
         assert isinstance(response, OpportunitiesSearchResponse)
         assert len(response.items) == 0
         assert response.pagination_info.total_items == 0
         assert response.pagination_info.total_pages == 1
 
     def test_search_all_opportunities_error_on_subsequent_page(
-        self, client, mock_httpx_client, sample_opportunity_data, search_request
+        self, client, mock_httpx_client, sample_opportunity_data
     ):
         """Test error handling when fetching all opportunities fails on a subsequent page."""
         page1_response = {
@@ -1145,5 +1138,7 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(side_effect=mock_post)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.search(search=search_request, page=None)
+            client.opportunity.search(
+                search="local", status=[OppStatusOptions.OPEN], page=None
+            )
         assert exc_info.value.error.status == 500
