@@ -8,6 +8,7 @@ from ..schemas.pydantic.models import OpportunityBase
 from ..schemas.pydantic.requests.opportunity import OpportunitySearchRequest
 from ..schemas.pydantic.responses import (
     OpportunitiesListResponse,
+    OpportunitiesSearchResponse,
     OpportunityResponse,
     Paginated,
 )
@@ -103,7 +104,7 @@ class Opportunity:
         search: OpportunitySearchRequest,
         page: int | None = None,
         page_size: int | None = None,
-    ) -> OpportunitiesListResponse:
+    ) -> OpportunitiesSearchResponse:
         """Search for opportunties by a query string
 
         Args:
@@ -115,7 +116,7 @@ class Opportunity:
 
 
         Returns:
-            OpportunitiesListResponse with items and pagination info
+            OpportunitiesSearchResponse with items and pagination info
 
             Raises:
                 APIError: if the API request fails
@@ -141,4 +142,4 @@ class Opportunity:
         response_data["items"] = items
 
         # Hydrate OpportunitiesListResponse from response data
-        return OpportunitiesListResponse.model_validate(response_data)
+        return OpportunitiesSearchResponse.model_validate(response_data)

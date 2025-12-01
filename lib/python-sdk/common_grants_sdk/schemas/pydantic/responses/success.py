@@ -39,7 +39,7 @@ class Paginated(Success, Generic[ItemsT]):
         alias="paginationInfo",
     )
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
 
 class Sorted(Paginated[ItemsT], Generic[ItemsT]):

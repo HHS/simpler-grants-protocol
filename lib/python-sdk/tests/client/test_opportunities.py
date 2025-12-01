@@ -13,7 +13,10 @@ from common_grants_sdk.client import Client, Auth
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
-from common_grants_sdk.schemas.pydantic.responses import OpportunitiesListResponse
+from common_grants_sdk.schemas.pydantic.responses import (
+    OpportunitiesListResponse,
+    OpportunitiesSearchResponse,
+)
 from common_grants_sdk.schemas.pydantic.requests import OpportunitySearchRequest
 
 
@@ -70,6 +73,13 @@ def sample_search_response(sample_opportunity_data):
             "totalItems": 2,
             "totalPages": 1,
         },
+        "sortInfo": {
+            "sortBy": "lastModifiedAt",
+            "sortOrder": "desc",
+            "customSortBy": None,
+            "errors": [],
+        },
+        "filterInfo": {"filters": {}, "errors": []},
     }
 
 
@@ -729,7 +739,7 @@ class TestOpportunitySearch:
 
         response = client.opportunity.search(search_request)
 
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, OpportunitiesSearchResponse)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
 
@@ -781,6 +791,13 @@ class TestOpportunitySearch:
                 "totalItems": 0,
                 "totalPages": 1,
             },
+            "sortInfo": {
+                "sortBy": "lastModifiedAt",
+                "sortOrder": "desc",
+                "customSortBy": None,
+                "errors": [],
+            },
+            "filterInfo": {"filters": {}, "errors": []},
         }
 
         mock_response = Mock()
@@ -936,7 +953,7 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(return_value=mock_response)
 
         response = client.opportunity.search(search=search_request, page=None)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, OpportunitiesSearchResponse)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         # When fetching all, pagination info should reflect aggregated result
@@ -968,6 +985,13 @@ class TestOpportunitySearch:
                 "totalItems": 5,
                 "totalPages": 3,
             },
+            "sortInfo": {
+                "sortBy": "lastModifiedAt",
+                "sortOrder": "desc",
+                "customSortBy": None,
+                "errors": [],
+            },
+            "filterInfo": {"filters": {}, "errors": []},
         }
         page2_response = {
             "status": 200,
@@ -979,6 +1003,13 @@ class TestOpportunitySearch:
                 "totalItems": 5,
                 "totalPages": 3,
             },
+            "sortInfo": {
+                "sortBy": "lastModifiedAt",
+                "sortOrder": "desc",
+                "customSortBy": None,
+                "errors": [],
+            },
+            "filterInfo": {"filters": {}, "errors": []},
         }
         page3_response = {
             "status": 200,
@@ -990,6 +1021,13 @@ class TestOpportunitySearch:
                 "totalItems": 5,
                 "totalPages": 3,
             },
+            "sortInfo": {
+                "sortBy": "lastModifiedAt",
+                "sortOrder": "desc",
+                "customSortBy": None,
+                "errors": [],
+            },
+            "filterInfo": {"filters": {}, "errors": []},
         }
 
         def mock_post(*args, **kwargs):
@@ -1013,7 +1051,7 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(side_effect=mock_post)
 
         response = client.opportunity.search(search=search_request, page=None)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, OpportunitiesSearchResponse)
         # Should have all 5 items from all 3 pages
         assert len(response.items) == 5
         assert all(isinstance(item, OpportunityBase) for item in response.items)
@@ -1044,6 +1082,13 @@ class TestOpportunitySearch:
                 "totalItems": 0,
                 "totalPages": 1,
             },
+            "sortInfo": {
+                "sortBy": "lastModifiedAt",
+                "sortOrder": "desc",
+                "customSortBy": None,
+                "errors": [],
+            },
+            "filterInfo": {"filters": {}, "errors": []},
         }
 
         mock_response = Mock()
@@ -1054,7 +1099,7 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(return_value=mock_response)
 
         response = client.opportunity.search(search=search_request, page=None)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, OpportunitiesSearchResponse)
         assert len(response.items) == 0
         assert response.pagination_info.total_items == 0
         assert response.pagination_info.total_pages == 1
