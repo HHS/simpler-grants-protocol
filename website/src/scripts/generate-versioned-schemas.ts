@@ -13,6 +13,14 @@ import type { Changelog } from "typespec-versioning-changelog";
  * Build-time script to generate versioned schemas
  */
 class VersionedSchemaGenerator {
+  /** Output directory for versioned schemas (relative to cwd) */
+  private static readonly OUTPUT_DIR = join(
+    "public",
+    "schemas",
+    "yaml",
+    "versions",
+  );
+
   /**
    * Main entry point
    */
@@ -50,7 +58,7 @@ class VersionedSchemaGenerator {
       const duration = Date.now() - startTime;
       console.log(`\n✓ Generated versioned schemas in ${duration}ms`);
       console.log(`  Processed ${changelog.versions.length} versions`);
-      console.log(`  Output written to: tsp-output/schemas/versions/`);
+      console.log(`  Output written to: ${this.OUTPUT_DIR}/`);
     } catch (error) {
       BuildScriptUtils.handleError(error, "versioned schema generation");
     }
@@ -118,7 +126,7 @@ class VersionedSchemaGenerator {
   private static writeVersionedSchemas(
     results: VersionGenerationResult[],
   ): void {
-    const baseDir = join(process.cwd(), "tsp-output", "schemas", "versions");
+    const baseDir = join(process.cwd(), this.OUTPUT_DIR);
 
     for (const result of results) {
       // Create version directory (e.g., tsp-output/schemas/versions/v0.1.0/)
