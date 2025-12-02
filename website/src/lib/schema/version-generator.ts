@@ -167,8 +167,12 @@ function getSchemaExistence(
 
 /**
  * Get the name a schema had in a specific version (handles renames)
+ * @param currentName - The current name of the schema
+ * @param targetVersion - Version string (e.g., "0.1.0")
+ * @param changelog - The changelog data parsed from changelog.json
+ * @returns The name the schema had in the target version, or null if it didn't exist
  */
-function getSchemaNameInVersion(
+export function getSchemaNameInVersion(
   currentName: string,
   targetVersion: string,
   changelog: Changelog,
