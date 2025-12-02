@@ -3,8 +3,8 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "npm run typespec && astro dev",
-    "start": "npm run typespec && astro dev",
+    "dev": "npm run typespec && npm run generate && astro dev",
+    "start": "npm run typespec && npm run generate && astro dev",
     "build": "npm run typespec && npm run generate && astro build",
     "preview": "astro build && astro preview",
     "preview:wrangler": "npm run build && wrangler dev",
