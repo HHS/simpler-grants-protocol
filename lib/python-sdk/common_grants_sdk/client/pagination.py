@@ -103,15 +103,6 @@ def pagination(single_page_func: Callable) -> Callable:
         items = items[: self.config.list_items_limit]
 
         # Build aggregated response
-        # Preserve any extra fields from the latest response (like sortInfo, filterInfo)
-        extra_fields = {}
-        if latest_response:
-            response_dict = latest_response.model_dump(by_alias=True)
-            # Extract fields that aren't part of the base Paginated model
-            for key in response_dict:
-                if key not in {"status", "message", "items", "paginationInfo"}:
-                    extra_fields[key] = response_dict[key]
-
         return Paginated[ItemsT](
             status=latest_response.status if latest_response else 200,
             message=latest_response.message if latest_response else "Success",
@@ -122,7 +113,6 @@ def pagination(single_page_func: Callable) -> Callable:
                 totalItems=len(items),
                 totalPages=1,
             ),
-            **extra_fields,
         )
 
     return wrapper

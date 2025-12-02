@@ -155,5 +155,14 @@ class Opportunity:
         response_data = paginated_response.model_dump(by_alias=True)
         response_data["items"] = items
 
+        response_data["sortInfo"] = {
+            "sortBy": "",
+            "sortOrder": "",
+            "customSortBy": None,
+            "errros": [],
+        }
+
+        response_data["filterInfo"] = {"filters": {}, "errors": []}
+
         # Hydrate OpportunitiesListResponse from response data
         return OpportunitiesSearchResponse.model_validate(response_data)
