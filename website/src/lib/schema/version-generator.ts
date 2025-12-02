@@ -15,6 +15,12 @@ export interface VersionGenerationResult {
   schemas: Map<string, JsonSchema>;
 }
 
+const NEEDS_SCHEMA_FILE: TargetType[] = [
+  TargetType.Model,
+  TargetType.Enum,
+  TargetType.Scalar,
+] as const;
+
 // #############################################################################
 // # Public functions
 // #############################################################################
@@ -125,13 +131,13 @@ function getSchemaExistence(
     for (const change of changes) {
       if (
         change.action === Action.Added &&
-        change.targetKind === TargetType.Model
+        NEEDS_SCHEMA_FILE.includes(change.targetKind)
       ) {
         addedVersion = version;
       }
       if (
         change.action === Action.Removed &&
-        change.targetKind === TargetType.Model
+        NEEDS_SCHEMA_FILE.includes(change.targetKind)
       ) {
         removedVersion = version;
       }
@@ -189,7 +195,7 @@ export function getSchemaNameInVersion(
     for (const change of changes) {
       if (
         change.action === Action.Added &&
-        change.targetKind === TargetType.Model
+        NEEDS_SCHEMA_FILE.includes(change.targetKind)
       ) {
         wasAdded = true;
         break;
@@ -211,7 +217,7 @@ export function getSchemaNameInVersion(
     for (const change of changes) {
       if (
         change.action === Action.Renamed &&
-        change.targetKind === TargetType.Model
+        NEEDS_SCHEMA_FILE.includes(change.targetKind)
       ) {
         renameHistory.push({
           version,
