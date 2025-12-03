@@ -38,7 +38,8 @@ const changelogEntries = Object.entries(schemaLogs).map(
   ([version, changes]) => ({
     version,
     changes,
-    schemaNameInVersion: getSchemaNameInVersion(schema, version, changelog) || schema,
+    schemaNameInVersion:
+      getSchemaNameInVersion(schema, version, changelog) || schema,
   }),
 );
 
