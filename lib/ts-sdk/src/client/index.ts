@@ -10,9 +10,10 @@
  *   auth: Auth.bearer("your-token"),
  * });
  *
- * const opp = await client.opportunities.get("opp-123");
+ * const opp = await client.opportunities.get("00000000-0000-0000-0000-000000000000");
  * ```
  */
 
-export { Client, Auth } from "./client";
-export type { ClientConfig, AuthMethod } from "./client";
+export { Client, type FetchManyOptions } from "./client";
+export { Opportunities } from "./opportunities";
+export { Auth, type ClientConfig, type AuthMethod } from "./types";

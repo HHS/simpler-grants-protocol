@@ -11,9 +11,21 @@ import {
   resolveConfig,
 } from "./types";
 import { Opportunities } from "./opportunities";
+import type { Paginated } from "@/types";
 
-export { Auth };
-export type { ClientConfig, AuthMethod };
+/**
+ * Options for the fetchMany auto-pagination method.
+ */
+export interface FetchManyOptions {
+  /** Starting page number (default: 1) */
+  page?: number;
+  /** Items per page (uses client default if not specified) */
+  pageSize?: number;
+  /** Maximum total items to fetch (uses client default if not specified) */
+  maxItems?: number;
+  /** Abort signal for cancellation */
+  signal?: AbortSignal;
+}
 
 /**
  * HTTP client for interacting with the CommonGrants API.
@@ -78,6 +90,84 @@ export class Client {
     });
 
     return response;
+  }
+
+  /**
+   * Fetches all items from a paginated endpoint with auto-pagination.
+   *
+   * @param path - API path (will be appended to baseUrl)
+   * @param options - Pagination options
+   * @returns All items aggregated from paginated responses
+   *
+   * @example
+   * ```ts
+   * const result = await client.fetchMany<Opportunity>("/common-grants/opportunities");
+   * console.log(result.items); // All opportunities
+   * console.log(result.paginationInfo.totalItems);
+   * ```
+   */
+  async fetchMany<T>(path: string, options?: FetchManyOptions): Promise<Paginated<T>> {
+    const pageSize = options?.pageSize ?? this.config.pageSize;
+    const maxItems = options?.maxItems ?? this.config.maxItems;
+    let currentPage = options?.page ?? 1;
+
+    const allItems: T[] = [];
+    let totalItems: number | undefined;
+    let totalPages: number | undefined;
+
+    while (allItems.length < maxItems) {
+      // Build URL with pagination params
+      const url = new URL(this.url(path));
+      url.searchParams.set("page", String(currentPage));
+      url.searchParams.set("pageSize", String(pageSize));
+
+      const response = await this.fetch(url.pathname + url.search, {
+        signal: options?.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
+      }
+
+      const json = (await response.json()) as Paginated<T>;
+
+      const { items, paginationInfo } = json;
+
+      // Store pagination metadata from first response
+      if (totalItems === undefined) {
+        totalItems = paginationInfo.totalItems;
+        totalPages = paginationInfo.totalPages;
+      }
+
+      // Add items up to maxItems limit
+      const remainingCapacity = maxItems - allItems.length;
+      const itemsToAdd = items.slice(0, remainingCapacity);
+      allItems.push(...itemsToAdd);
+
+      // Stop if we've fetched all available items
+      const isLastPage =
+        items.length < pageSize ||
+        (totalPages !== undefined && currentPage >= totalPages) ||
+        items.length === 0;
+
+      if (isLastPage || allItems.length >= maxItems) {
+        break;
+      }
+
+      currentPage++;
+    }
+
+    return {
+      status: 200,
+      message: "Success",
+      items: allItems,
+      paginationInfo: {
+        page: 1,
+        pageSize: allItems.length,
+        totalItems,
+        totalPages,
+      },
+    };
   }
 
   /**

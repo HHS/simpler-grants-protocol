@@ -2,7 +2,7 @@
  * Opportunities resource namespace for the CommonGrants API.
  */
 
-import type { Client } from "./client";
+import type { Client, FetchManyOptions } from "./client";
 import type { OpportunityBase, OpportunitiesListResponse } from "@/types";
 import { OkSchema, PaginatedSchema, OpportunityBaseSchema } from "@/schemas";
 
@@ -67,36 +67,45 @@ export class Opportunities {
   // ############################################################################
 
   /**
-   * List opportunities with optional pagination.
+   * List opportunities with auto-pagination by default.
    *
-   * @param options - Pagination options
+   * @param options - Pagination options. If `page` is specified, fetches only that page.
+   *                  Otherwise, auto-paginates to fetch all items.
    * @returns Paginated list of opportunities
    * @throws {Error} If the request fails
    *
    * @example
    * ```ts
-   * // Get first page
-   * const page1 = await client.opportunities.list({ page: 1, pageSize: 10 });
-   *
-   * // Get all (auto-paginate)
+   * // Auto-paginate to fetch all opportunities (default)
    * const all = await client.opportunities.list();
+   *
+   * // Auto-paginate with custom limits
+   * const limited = await client.opportunities.list({ maxItems: 500, pageSize: 50 });
+   *
+   * // Get a specific page (disables auto-pagination)
+   * const page2 = await client.opportunities.list({ page: 2, pageSize: 10 });
    * ```
    */
-  async list(options?: { page?: number; pageSize?: number }): Promise<OpportunitiesListResponse> {
-    const params = new URLSearchParams();
-    if (options?.page) params.set("page", String(options.page));
-    if (options?.pageSize) params.set("pageSize", String(options.pageSize));
+  async list(options?: FetchManyOptions): Promise<OpportunitiesListResponse> {
+    // If page is specified, fetch only that page
+    if (options?.page !== undefined) {
+      const params = new URLSearchParams();
+      params.set("page", String(options.page));
+      if (options?.pageSize) params.set("pageSize", String(options.pageSize));
 
-    const queryString = params.toString();
-    const url = queryString ? `${this.basePath}?${queryString}` : this.basePath;
+      const response = await this.client.fetch(`${this.basePath}?${params}`, {
+        signal: options?.signal,
+      });
 
-    const response = await this.client.fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to list opportunities: ${response.status} ${response.statusText}`);
+      }
 
-    if (!response.ok) {
-      throw new Error(`Failed to list opportunities: ${response.status} ${response.statusText}`);
+      const json = await response.json();
+      return OpportunitiesListResponseSchema.parse(json);
     }
 
-    const json = await response.json();
-    return OpportunitiesListResponseSchema.parse(json);
+    // Auto-paginate by default
+    return this.client.fetchMany<OpportunityBase>(this.basePath, options);
   }
 }
