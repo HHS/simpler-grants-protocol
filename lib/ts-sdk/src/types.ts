@@ -49,6 +49,12 @@ import {
   OppStatusOptionsEnum,
   ApplicantTypeOptionsEnum,
   OppSortByEnum,
+  // Responses
+  SuccessSchema,
+  ErrorSchema,
+  // Pagination & Sorting
+  PaginatedResultsInfoSchema,
+  SortedResultsInfoSchema,
 } from "./schemas";
 
 // ############################################################################
@@ -104,3 +110,55 @@ export type OppSorting = z.infer<typeof OppSortingSchema>;
 export type OppSortBy = z.infer<typeof OppSortByEnum>;
 export type OppDefaultFilters = z.infer<typeof OppDefaultFiltersSchema>;
 export type OppFilters = z.infer<typeof OppFiltersSchema>;
+
+// ############################################################################
+// Response types
+// ############################################################################
+
+export type Success = z.infer<typeof SuccessSchema>;
+export type ErrorResponse = z.infer<typeof ErrorSchema>;
+export type PaginatedResultsInfo = z.infer<typeof PaginatedResultsInfoSchema>;
+export type SortedResultsInfo = z.infer<typeof SortedResultsInfoSchema>;
+
+/**
+ * Generic OK response with data.
+ * Use with specific data types, e.g., `Ok<OpportunityBase>`
+ */
+export type Ok<T> = Success & { data: T };
+
+/**
+ * Generic paginated response with items.
+ * Use with specific item types, e.g., `Paginated<OpportunityBase>`
+ */
+export type Paginated<T> = Success & {
+  items: T[];
+  paginationInfo: PaginatedResultsInfo;
+};
+
+/**
+ * Generic sorted response (paginated + sort info).
+ * Use with specific item types, e.g., `Sorted<OpportunityBase>`
+ */
+export type Sorted<T> = Paginated<T> & {
+  sortInfo: SortedResultsInfo;
+};
+
+/**
+ * Generic filtered response (sorted + filter info).
+ * Use with specific item and filter types.
+ */
+export type Filtered<T, F> = Sorted<T> & {
+  filterInfo: {
+    filters: F;
+    errors?: string[];
+  };
+};
+
+// ############################################################################
+// Opportunity-specific response types
+// ############################################################################
+
+export type OpportunityResponse = Ok<OpportunityBase>;
+export type OpportunitiesListResponse = Paginated<OpportunityBase>;
+export type OpportunitiesSortedResponse = Sorted<OpportunityBase>;
+export type OpportunitiesFilteredResponse = Filtered<OpportunityBase, OppFilters>;
