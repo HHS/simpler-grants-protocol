@@ -15,11 +15,12 @@ export interface VersionGenerationResult {
   schemas: Map<string, JsonSchema>;
 }
 
-const NEEDS_SCHEMA_FILE: TargetType[] = [
+/** These TypeSpec types generate a corresponding JSON schema file. */
+const TYPES_WITH_FILE = new Set<TargetType>([
   TargetType.Model,
   TargetType.Enum,
   TargetType.Scalar,
-] as const;
+]);
 
 // #############################################################################
 // # Public functions
@@ -129,16 +130,11 @@ function getSchemaExistence(
     if (!changes) continue;
 
     for (const change of changes) {
-      if (
-        change.action === Action.Added &&
-        NEEDS_SCHEMA_FILE.includes(change.targetKind)
-      ) {
+      const hasFile = TYPES_WITH_FILE.has(change.targetKind);
+      if (change.action === Action.Added && hasFile) {
         addedVersion = version;
       }
-      if (
-        change.action === Action.Removed &&
-        NEEDS_SCHEMA_FILE.includes(change.targetKind)
-      ) {
+      if (change.action === Action.Removed && hasFile) {
         removedVersion = version;
       }
     }
@@ -193,10 +189,8 @@ export function getSchemaNameInVersion(
     if (!changes) continue;
 
     for (const change of changes) {
-      if (
-        change.action === Action.Added &&
-        NEEDS_SCHEMA_FILE.includes(change.targetKind)
-      ) {
+      const hasFile = TYPES_WITH_FILE.has(change.targetKind);
+      if (change.action === Action.Added && hasFile) {
         wasAdded = true;
         break;
       }
@@ -215,10 +209,8 @@ export function getSchemaNameInVersion(
     if (!changes) continue;
 
     for (const change of changes) {
-      if (
-        change.action === Action.Renamed &&
-        NEEDS_SCHEMA_FILE.includes(change.targetKind)
-      ) {
+      const hasFile = TYPES_WITH_FILE.has(change.targetKind);
+      if (change.action === Action.Renamed && hasFile) {
         renameHistory.push({
           version,
           from: change.prevTargetName || "",
