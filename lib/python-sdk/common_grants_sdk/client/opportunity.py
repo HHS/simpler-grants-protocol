@@ -5,12 +5,16 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ..schemas.pydantic.models import OpportunityBase
+from ..schemas.pydantic.requests.opportunity import OpportunitySearchRequest
 from ..schemas.pydantic.responses import (
     OpportunitiesListResponse,
+    OpportunitiesSearchResponse,
     OpportunityResponse,
     Paginated,
 )
+from ..schemas.pydantic.models.opp_status import OppStatusOptions
 from .types import ItemsT
+from typing import List
 
 
 if TYPE_CHECKING:
@@ -96,3 +100,69 @@ class Opportunity:
 
         # Return the OpportunityBase from the response
         return opportunity_response.data
+
+    def search(
+        self,
+        search: str,
+        status: List[OppStatusOptions],
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> OpportunitiesSearchResponse:
+        """Search for opportunties by a query string
+
+        Args:
+            search: The string to search for.
+            status: List of statuses to search on.
+            page: Page number (1-indexed). If None, method will fetch all
+                items across all pages and aggregate them into a single response.
+            page_size: Number of items per page. If None, uses the default from
+                client config.
+
+
+        Returns:
+            OpportunitiesSearchResponse with items and pagination info
+
+            Raises:
+                APIError: if the API request fails
+        """
+
+        request = {
+            "filters": {
+                "status": {"operator": "in", "value": status},
+            },
+            "pagination": {"page": 1, "pageSize": 10},
+            "search": search,
+            "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
+        }
+
+        request_data = OpportunitySearchRequest.model_validate(request)
+
+        # Call client method to get paginated response
+        paginated_response: Paginated[ItemsT] = self.client.search(  # type: ignore[valid-type]
+            f"{self.path}/search",
+            request_data.model_dump(by_alias=True, exclude_unset=True),
+            page=page,
+            page_size=page_size,
+        )
+
+        # Hydrate OpportunityBase models from items dict
+        items = [
+            OpportunityBase.model_validate_json(json.dumps(item))
+            for item in paginated_response.items
+        ]
+
+        # Convert paginated_response to dict and replace items with hydrated models
+        response_data = paginated_response.model_dump(by_alias=True)
+        response_data["items"] = items
+
+        response_data["sortInfo"] = {
+            "sortBy": "",
+            "sortOrder": "",
+            "customSortBy": None,
+            "errros": [],
+        }
+
+        response_data["filterInfo"] = {"filters": {}, "errors": []}
+
+        # Hydrate OpportunitiesListResponse from response data
+        return OpportunitiesSearchResponse.model_validate(response_data)

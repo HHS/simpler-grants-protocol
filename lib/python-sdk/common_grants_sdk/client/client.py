@@ -9,8 +9,8 @@ from .config import Config
 from .response import SuccessResponse
 from .exceptions import raise_api_error
 from .opportunity import Opportunity
+from .pagination import pagination
 from .types import ItemsT
-from ..schemas.pydantic.pagination import PaginatedResultsInfo
 from ..schemas.pydantic.responses import Paginated
 
 
@@ -25,32 +25,19 @@ class Client:
         """Initialize the CommonGrants client.
 
         Args:
-            config: Optional Config instance
-            auth: Optional Auth instance
+            config: Optional Config instance. If None, a default Config is created.
+            auth: Optional Auth instance. If None, API key authentication is used
+                with the key from config.
         """
         self.config = config or Config()
         self.auth = auth or Auth.api_key(self.config.api_key)
         self.http = httpx.Client(timeout=self.config.timeout)
         self.opportunity = Opportunity(client=self)
 
-    def get(self, path: str, **kwargs) -> httpx.Response:
-        """Simple wrapper around self.http.get.
-
-        Args:
-            path: end point path (should start with /)
-            **kwargs: Additional arguments to pass to httpx.get (e.g., params, headers)
-
-        Returns:
-            httpx.Response instance
-        """
-        return self.http.get(
-            self.url(path),
-            headers=self.auth.get_headers(),
-            **kwargs,
-        )
-
     def post(self, path: str, **kwargs) -> httpx.Response:
         """Simple wrapper around self.http.post.
+
+        Automatically adds authentication headers to the request.
 
         Args:
             path: end point path (should start with /)
@@ -65,6 +52,24 @@ class Client:
             **kwargs,
         )
 
+    def get(self, path: str, **kwargs) -> httpx.Response:
+        """Simple wrapper around self.http.get.
+
+        Automatically adds authentication headers to the request.
+
+        Args:
+            path: end point path (should start with /)
+            **kwargs: Additional arguments to pass to httpx.get (e.g., params, headers)
+
+        Returns:
+            httpx.Response instance
+        """
+        return self.http.get(
+            self.url(path),
+            headers=self.auth.get_headers(),
+            **kwargs,
+        )
+
     def get_item(
         self,
         path: str,
@@ -72,9 +77,11 @@ class Client:
     ) -> SuccessResponse:
         """Get a specific item by ID from an endpoint.
 
+        Makes a GET request to {path}/{item_id}.
+
         Args:
             path: end point path (should start with /)
-            item_id: The item ID
+            item_id: The item ID (string or UUID)
 
         Returns:
             SuccessResponse instance with status, message, and data fields.
@@ -92,119 +99,31 @@ class Client:
 
         return result
 
+    @pagination
     def list(
         self,
         path: str,
         page: int | None = None,
         page_size: int | None = None,
+        params: dict[str, Any] | None = None,
     ) -> Paginated[ItemsT]:
-        """Fetch a set of items from an endpoint.
+        """Fetch a set of items from an endpoint using a GET request.
 
         Args:
             path: end point path (should start with /)
             page: Page number (1-indexed). If None, method will fetch all
                 items across all pages and aggregate them into a single response.
+                When fetching all pages, the number of items is limited by
+                config.list_items_limit.
             page_size: Number of items per page. If None, uses the default from
                 client config.
+            params: Additional parameters to pass to the API. These are merged
+                with pagination parameters (page, pageSize).
 
         Returns:
             Paginated[ItemsT] instance. When page is None, the response contains
-            all items aggregated from all pages, with pagination_info summarizing
-            the aggregated result.
-
-        Raises:
-            APIError: If the API request fails
-        """
-        if page:
-            # Fetch SOME if page number is defined
-            return self.list_some_items(path, page=page, page_size=page_size)
-        else:
-            # Fetch ALL if page number is not defined
-            return self.list_all_items(path, page_size=page_size)
-
-    def list_all_items(
-        self,
-        path: str,
-        page_size: int | None = None,
-        params: dict[str, Any] = {},
-    ) -> Paginated[ItemsT]:
-        """Fetch all items across all pages from an endpoint.
-
-        Args:
-            path: end point path (should start with /)
-            page_size: Number of items per page. If None, uses the default from
-                client config.
-            params: Additional parameters to pass to the API
-
-        Returns:
-            Paginated[ItemsT] instance with all items aggregated from all pages,
-            with pagination_info summarizing the aggregated result.
-
-        Raises:
-            APIError: If the API request fails
-        """
-        items: list[dict] = []
-        latest_response: Paginated[ItemsT] | None = None
-
-        page = 1
-        page_size = page_size or self.config.page_size
-
-        more_pages_available = True
-
-        # Iteratively fetch all pages
-        while more_pages_available:
-            # Fetch page and save items
-            page_response: Paginated[ItemsT] = self.list_some_items(
-                path=path, page=page, page_size=page_size, params=params
-            )
-            items.extend(cast(list[dict], page_response.items))
-            latest_response = page_response
-
-            # Break if max items is reached or no more pages
-            if len(items) >= self.config.list_items_limit:
-                more_pages_available = False
-            elif (
-                page_response.pagination_info.page
-                >= page_response.pagination_info.total_pages
-            ):
-                more_pages_available = False
-            else:
-                page = page_response.pagination_info.page + 1
-                more_pages_available = True
-
-        # Trim items array to not exceed max items limit
-        items = items[: self.config.list_items_limit]
-
-        # Build aggregated response
-        return Paginated[ItemsT](
-            status=latest_response.status if latest_response else 200,
-            message=latest_response.message if latest_response else "Success",
-            items=cast(list[ItemsT], items),
-            paginationInfo=PaginatedResultsInfo(
-                page=1,
-                pageSize=len(items) or page_size,
-                totalItems=len(items),
-                totalPages=1,
-            ),
-        )
-
-    def list_some_items(
-        self,
-        path: str,
-        page: int,
-        page_size: int | None = None,
-        params: dict[str, Any] | None = None,
-    ) -> Paginated[ItemsT]:
-        """Fetch a single page of items from an endpoint.
-
-        Args:
-            path: end point path (should start with /)
-            page: Page number (1-indexed)
-            page_size: Number of items per page. If None, uses the default from
-                client config.
-
-        Returns:
-            Paginated[ItemsT] instance with items from the requested page
+            all items aggregated from all pages (up to list_items_limit), with
+            pagination_info summarizing the aggregated result.
 
         Raises:
             APIError: If the API request fails
@@ -214,9 +133,54 @@ class Client:
             page_size = self.config.page_size
 
         try:
-            # TODO: if params is not None then post instead of get
-            # see: https://github.com/HHS/simpler-grants-protocol/issues/386
-            api_response = self.get(path, params={"page": page, "pageSize": page_size})
+            request_params = {"page": page, "pageSize": page_size}
+            if params:
+                request_params.update(params)
+            api_response = self.get(path, params=request_params)
+            api_response.raise_for_status()
+            result_dict = Paginated[dict].model_validate(api_response.json())
+            result = cast(Paginated[ItemsT], result_dict)
+
+        except httpx.HTTPError as e:
+            raise_api_error(e)  # Always raises, never returns
+
+        return result
+
+    @pagination
+    def search(
+        self,
+        path: str,
+        request_data: dict[str, Any],
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> Paginated[ItemsT]:
+        """Fetch a set of items from an endpoint based on request data using a POST request.
+
+        Args:
+            path: end point path (should start with /)
+            request_data: search specific request data (sent in request body as form data)
+            page: Page number (1-indexed). If None, will fetch all items across all pages
+                and aggregate them into a single response. When fetching all pages, the
+                number of items is limited by config.list_items_limit.
+            page_size: Number of items per page. If None, uses the default from
+                client config.
+
+        Returns:
+            Paginated[ItemsT] instance. When page is None, the response contains
+            all items aggregated from all pages (up to list_items_limit), with
+            pagination_info summarizing the aggregated result.
+
+        Raises:
+            APIError: If the API request fails
+        """
+        page_size = page_size or self.config.page_size
+        if page_size < 1:
+            page_size = self.config.page_size
+
+        try:
+            api_response = self.post(
+                path, data=request_data, params={"page": page, "pageSize": page_size}
+            )
             api_response.raise_for_status()
             result_dict = Paginated[dict].model_validate(api_response.json())
             result = cast(Paginated[ItemsT], result_dict)
@@ -228,6 +192,9 @@ class Client:
 
     def url(self, path: str) -> str:
         """Construct a full URL from base URL and path.
+
+        Trailing slashes are automatically stripped from the base URL before
+        concatenation.
 
         Args:
             path: end point path (should start with /)
@@ -243,9 +210,16 @@ class Client:
         self.http.close()
 
     def __enter__(self):
-        """Context manager entry."""
+        """Context manager entry.
+
+        Returns:
+            The Client instance
+        """
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
+        """Context manager exit.
+
+        Automatically closes the HTTP client when exiting the context.
+        """
         self.close()
