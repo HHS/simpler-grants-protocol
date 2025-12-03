@@ -16,4 +16,5 @@
 
 export { Client, type FetchManyOptions } from "./client";
 export { Opportunities } from "./opportunities";
-export { Auth, type ClientConfig, type AuthMethod } from "./types";
+export { Auth, type AuthMethod } from "./auth";
+export { type ClientConfig, type ResolvedConfig } from "./config";

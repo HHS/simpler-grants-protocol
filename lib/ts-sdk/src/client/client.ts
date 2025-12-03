@@ -2,20 +2,15 @@
  * Main HTTP client for the CommonGrants API.
  */
 
-import {
-  type ClientConfig,
-  type ResolvedConfig,
-  type AuthMethod,
-  Auth,
-  buildAuthHeaders,
-  resolveConfig,
-} from "./types";
+import { type ClientConfig, type ResolvedConfig, resolveConfig } from "./config";
+import { Auth, buildAuthHeaders, type AuthMethod } from "./auth";
 import { Opportunities } from "./opportunities";
 import type { Paginated } from "@/types";
 
-/**
- * Options for the fetchMany auto-pagination method.
- */
+// =============================================================================
+// FetchManyOptions interface
+// =============================================================================
+/** Options for the fetchMany auto-pagination method. */
 export interface FetchManyOptions {
   /** Starting page number (default: 1) */
   page?: number;
@@ -26,6 +21,10 @@ export interface FetchManyOptions {
   /** Abort signal for cancellation */
   signal?: AbortSignal;
 }
+
+// =============================================================================
+// Client class
+// =============================================================================
 
 /**
  * HTTP client for interacting with the CommonGrants API.
@@ -54,6 +53,10 @@ export class Client {
   /** Opportunities resource namespace */
   public readonly opportunities: Opportunities;
 
+  // =============================================================================
+  // Client constructor
+  // =============================================================================
+
   constructor(options: ClientConfig & { auth?: AuthMethod }) {
     this.config = resolveConfig(options);
     this.auth = options.auth ?? Auth.none();
@@ -61,6 +64,10 @@ export class Client {
     // Initialize resource namespaces
     this.opportunities = new Opportunities(this);
   }
+
+  // =============================================================================
+  // Client.fetch
+  // =============================================================================
 
   /**
    * Makes an authenticated fetch request to the API.
@@ -91,6 +98,10 @@ export class Client {
 
     return response;
   }
+
+  // =============================================================================
+  // Client.fetchMany
+  // =============================================================================
 
   /**
    * Fetches all items from a paginated endpoint with auto-pagination.
@@ -170,18 +181,18 @@ export class Client {
     };
   }
 
-  /**
-   * Constructs the full URL for an API path.
-   */
+  // =============================================================================
+  // Private helper functions
+  // =============================================================================
+
+  /** Constructs the full URL for an API path. */
   private url(path: string): string {
     // Ensure path starts with /
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
     return `${this.config.baseUrl}${normalizedPath}`;
   }
 
-  /**
-   * Gets the resolved client configuration.
-   */
+  /** Gets the resolved client configuration. */
   getConfig(): ResolvedConfig {
     return { ...this.config };
   }
