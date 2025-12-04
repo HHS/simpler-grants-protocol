@@ -8,6 +8,7 @@ dist/
 tsp-output/
 # generated json cache
 cache/
+public/schemas/yaml/versions/**
 
 # dependencies
 node_modules/

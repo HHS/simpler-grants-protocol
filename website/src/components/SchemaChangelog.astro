@@ -1,6 +1,7 @@
 ---
 import changelogIndex from "@tsp-output/typespec-versioning-changelog/changelog.json";
 import type { Changelog } from "typespec-versioning-changelog";
+import { getSchemaNameInVersion } from "@/lib/schema/version-generator";
 
 // ############################################################################
 // Component Props
@@ -32,11 +33,13 @@ if (!schemaLogs || typeof schemaLogs !== "object") {
   throw new Error(`No changelog data found for schema: ${schema}`);
 }
 
-// Convert the logs object to an array of { version, changes } objects
+// Convert the logs object to an array of { version, changes, schemaNameInVersion } objects
 const changelogEntries = Object.entries(schemaLogs).map(
   ([version, changes]) => ({
     version,
     changes,
+    schemaNameInVersion:
+      getSchemaNameInVersion(schema, version, changelog) || schema,
   }),
 );
 
@@ -68,6 +71,7 @@ const sortedChangelog = changelogEntries.sort((a, b) => {
     <tr>
       <th>Version</th>
       <th>Changes</th>
+      <th>Schema</th>
     </tr>
   </thead>
   <tbody>
@@ -89,6 +93,14 @@ const sortedChangelog = changelogEntries.sort((a, b) => {
                 />
               ))}
             </ul>
+          </td>
+          <td>
+            <a
+              href={`/schemas/yaml/versions/v${entry.version}/${entry.schemaNameInVersion}.yaml`}
+              aria-label={`View ${entry.schemaNameInVersion} schema for version ${entry.version}`}
+            >
+              {`${entry.schemaNameInVersion}.yaml`}
+            </a>
           </td>
         </tr>
       ))

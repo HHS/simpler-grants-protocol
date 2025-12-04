@@ -15,6 +15,13 @@ export interface VersionGenerationResult {
   schemas: Map<string, JsonSchema>;
 }
 
+/** These TypeSpec types generate a corresponding JSON schema file. */
+const TYPES_WITH_FILE = new Set<TargetType>([
+  TargetType.Model,
+  TargetType.Enum,
+  TargetType.Scalar,
+]);
+
 // #############################################################################
 // # Public functions
 // #############################################################################
@@ -123,16 +130,11 @@ function getSchemaExistence(
     if (!changes) continue;
 
     for (const change of changes) {
-      if (
-        change.action === Action.Added &&
-        change.targetKind === TargetType.Model
-      ) {
+      const hasFile = TYPES_WITH_FILE.has(change.targetKind);
+      if (change.action === Action.Added && hasFile) {
         addedVersion = version;
       }
-      if (
-        change.action === Action.Removed &&
-        change.targetKind === TargetType.Model
-      ) {
+      if (change.action === Action.Removed && hasFile) {
         removedVersion = version;
       }
     }
@@ -167,8 +169,12 @@ function getSchemaExistence(
 
 /**
  * Get the name a schema had in a specific version (handles renames)
+ * @param currentName - The current name of the schema
+ * @param targetVersion - Version string (e.g., "0.1.0")
+ * @param changelog - The changelog data parsed from changelog.json
+ * @returns The name the schema had in the target version, or null if it didn't exist
  */
-function getSchemaNameInVersion(
+export function getSchemaNameInVersion(
   currentName: string,
   targetVersion: string,
   changelog: Changelog,
@@ -183,10 +189,8 @@ function getSchemaNameInVersion(
     if (!changes) continue;
 
     for (const change of changes) {
-      if (
-        change.action === Action.Added &&
-        change.targetKind === TargetType.Model
-      ) {
+      const hasFile = TYPES_WITH_FILE.has(change.targetKind);
+      if (change.action === Action.Added && hasFile) {
         wasAdded = true;
         break;
       }
@@ -205,10 +209,8 @@ function getSchemaNameInVersion(
     if (!changes) continue;
 
     for (const change of changes) {
-      if (
-        change.action === Action.Renamed &&
-        change.targetKind === TargetType.Model
-      ) {
+      const hasFile = TYPES_WITH_FILE.has(change.targetKind);
+      if (change.action === Action.Renamed && hasFile) {
         renameHistory.push({
           version,
           from: change.prevTargetName || "",
