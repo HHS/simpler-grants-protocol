@@ -83,6 +83,70 @@ export const HttpResponse = {
 };
 
 // ============================================================================
+// Pagination test helpers
+// ============================================================================
+
+/**
+ * Options for creating a paginated endpoint handler.
+ */
+export interface PaginatedHandlerOptions<T> {
+  /** The items to paginate through */
+  items: T[];
+  /** Default page size if not specified in request (default: 25) */
+  defaultPageSize?: number;
+  /** Optional callback invoked on each request (useful for tracking request count) */
+  onRequest?: () => void;
+}
+
+/**
+ * Creates a handler that returns paginated responses from an array of items.
+ *
+ * Reads `page` and `pageSize` from query parameters and returns the appropriate
+ * slice of items with correct pagination metadata.
+ *
+ * @example
+ * ```ts
+ * const items = [{ id: "1" }, { id: "2" }, { id: "3" }];
+ * let requestCount = 0;
+ *
+ * server.use(
+ *   http.get("/items", createPaginatedHandler({
+ *     items,
+ *     defaultPageSize: 2,
+ *     onRequest: () => requestCount++,
+ *   }))
+ * );
+ * ```
+ */
+export function createPaginatedHandler<T>(options: PaginatedHandlerOptions<T>): RequestHandler {
+  const { items, defaultPageSize = 25, onRequest } = options;
+
+  return ({ url }) => {
+    onRequest?.();
+
+    const urlObj = new URL(url);
+    const page = parseInt(urlObj.searchParams.get("page") || "1");
+    const pageSize = parseInt(urlObj.searchParams.get("pageSize") || String(defaultPageSize));
+
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const pageItems = items.slice(start, end);
+
+    return HttpResponse.json({
+      status: 200,
+      message: "Success",
+      items: pageItems,
+      paginationInfo: {
+        page,
+        pageSize,
+        totalItems: items.length,
+        totalPages: Math.ceil(items.length / pageSize),
+      },
+    });
+  };
+}
+
+// ============================================================================
 // http - Similar to MSW's http namespace
 // ============================================================================
 

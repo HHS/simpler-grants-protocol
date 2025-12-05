@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
-import { http, HttpResponse, setupServer } from "../utils/mock-fetch";
+import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
 import { Client, Auth } from "../../src/client";
 
 // =============================================================================
@@ -20,6 +20,18 @@ const createMockOpportunity = (id: string, title: string, statusValue: string) =
 const OPP_UUID_1 = "550e8400-e29b-41d4-a716-446655440001";
 const OPP_UUID_2 = "550e8400-e29b-41d4-a716-446655440002";
 const NOT_FOUND_UUID = "550e8400-e29b-41d4-a716-446655440404";
+
+// Generate a larger set of mock opportunities for pagination tests
+const generateMockOpportunities = (count: number) => {
+  const opportunities = [];
+  for (let i = 1; i <= count; i++) {
+    const id = `550e8400-e29b-41d4-a716-44665544${String(i).padStart(4, "0")}`;
+    opportunities.push(
+      createMockOpportunity(id, `Grant ${i}`, i % 2 === 0 ? "open" : "forecasted")
+    );
+  }
+  return opportunities;
+};
 
 const server = setupServer(
   // GET /common-grants/opportunities/:id
@@ -124,6 +136,90 @@ describe("Opportunities", () => {
       const result = await client.opportunities.list({ page: 1, pageSize: 10 });
 
       expect(result.items).toHaveLength(2);
+    });
+
+    // =========================================================================
+    // Single page (explicit page parameter)
+    // =========================================================================
+
+    it("fetches a single page when page is explicitly specified", async () => {
+      // Create mock data for 3 pages (5 items total, pageSize 2)
+      const allOpportunities = generateMockOpportunities(5);
+      let requestCount = 0;
+
+      server.use(
+        http.get(
+          "/common-grants/opportunities",
+          createPaginatedHandler({
+            items: allOpportunities,
+            defaultPageSize: 2,
+            onRequest: () => requestCount++,
+          })
+        )
+      );
+
+      // Request page 2 explicitly - should NOT auto-paginate
+      const result = await client.opportunities.list({ page: 2, pageSize: 2 });
+
+      // Should only make 1 request (no auto-pagination)
+      expect(requestCount).toBe(1);
+
+      // Should return only page 2 items
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].id).toBe(allOpportunities[2].id);
+      expect(result.items[1].id).toBe(allOpportunities[3].id);
+      expect(result.paginationInfo.page).toBe(2);
+    });
+
+    // =========================================================================
+    // Auto-pagination
+    // =========================================================================
+
+    it("auto-paginates across multiple pages when no page is specified", async () => {
+      let requestCount = 0;
+
+      server.use(
+        http.get(
+          "/common-grants/opportunities",
+          createPaginatedHandler({
+            items: generateMockOpportunities(5),
+            defaultPageSize: 2,
+            onRequest: () => requestCount++,
+          })
+        )
+      );
+
+      // Request without page - should auto-paginate
+      const result = await client.opportunities.list({ pageSize: 2 });
+
+      // Should make 3 requests (pages 1, 2, 3)
+      expect(requestCount).toBe(3);
+
+      // Should return all 5 items aggregated
+      expect(result.items).toHaveLength(5);
+      expect(result.paginationInfo.totalItems).toBe(5);
+    });
+
+    it("respects maxItems limit during auto-pagination", async () => {
+      let requestCount = 0;
+
+      server.use(
+        http.get(
+          "/common-grants/opportunities",
+          createPaginatedHandler({
+            items: generateMockOpportunities(10),
+            defaultPageSize: 2,
+            onRequest: () => requestCount++,
+          })
+        )
+      );
+
+      // Request with maxItems = 5 and pageSize = 2
+      const result = await client.opportunities.list({ pageSize: 2, maxItems: 5 });
+
+      // Should stop after collecting 5 items (3 pages: 2 + 2 + 1)
+      expect(requestCount).toBe(3);
+      expect(result.items).toHaveLength(5);
     });
   });
 });
