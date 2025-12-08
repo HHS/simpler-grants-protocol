@@ -26,6 +26,9 @@ jobs:
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v8
 
+      - name: Install poetry-audit-plugin
+        run: poetry self add poetry-audit-plugin
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
@@ -36,6 +39,9 @@ jobs:
 
       - name: Install package
         run: make install
+
+      - name: Audit dependencies for vulnerabilities
+        run: poetry audit
 
       - name: Run linting, formatting, and type checking
         run: make checks
