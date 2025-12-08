@@ -5,7 +5,7 @@
 // =============================================================================
 
 /** Supported authentication types. */
-enum AuthType {
+export enum AuthType {
   BEARER = "bearer",
   API_KEY = "apiKey",
   NONE = "none",

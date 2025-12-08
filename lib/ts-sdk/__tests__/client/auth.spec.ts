@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Auth, buildAuthHeaders } from "../../src/client/auth";
+import { Auth, buildAuthHeaders, AuthType } from "../../src/client/auth";
 
 // =============================================================================
 // Auth type
@@ -43,25 +43,25 @@ describe("Auth", () => {
 
 describe("buildAuthHeaders", () => {
   it("builds bearer token header", () => {
-    const headers = buildAuthHeaders({ type: "bearer", token: "my-token" });
+    const headers = buildAuthHeaders({ type: AuthType.BEARER, token: "my-token" });
 
     expect(headers).toEqual({ Authorization: "Bearer my-token" });
   });
 
   it("builds API key header with default name", () => {
-    const headers = buildAuthHeaders({ type: "apiKey", key: "my-key" });
+    const headers = buildAuthHeaders({ type: AuthType.API_KEY, key: "my-key" });
 
     expect(headers).toEqual({ "X-API-Key": "my-key" });
   });
 
   it("builds API key header with custom name", () => {
-    const headers = buildAuthHeaders({ type: "apiKey", key: "my-key", header: "X-Custom" });
+    const headers = buildAuthHeaders({ type: AuthType.API_KEY, key: "my-key", header: "X-Custom" });
 
     expect(headers).toEqual({ "X-Custom": "my-key" });
   });
 
   it("returns empty headers for no auth", () => {
-    const headers = buildAuthHeaders({ type: "none" });
+    const headers = buildAuthHeaders({ type: AuthType.NONE });
 
     expect(headers).toEqual({});
   });
