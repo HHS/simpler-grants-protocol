@@ -20,10 +20,12 @@ const generateMockItems = (count: number) => {
 };
 
 // =============================================================================
-// Mock server setup
+// Mock server and default client setup
 // =============================================================================
 
+const BASE_URL = "https://api.example.org";
 const server = setupServer();
+const defaultClient = new Client({ baseUrl: BASE_URL });
 
 describe("Client", () => {
   // =============================================================================
@@ -32,28 +34,17 @@ describe("Client", () => {
 
   describe("constructor", () => {
     it("creates a client with minimal config", () => {
-      const client = new Client({ baseUrl: "https://api.example.org" });
-
-      expect(client).toBeInstanceOf(Client);
-      expect(client.getConfig().baseUrl).toBe("https://api.example.org");
+      expect(defaultClient).toBeInstanceOf(Client);
+      expect(defaultClient.getConfig().baseUrl).toBe(BASE_URL);
     });
 
     it("exposes opportunities namespace", () => {
-      const client = new Client({ baseUrl: "https://api.example.org" });
-
-      expect(client.opportunities).toBeDefined();
-    });
-
-    it("uses Auth.none() by default", () => {
-      const client = new Client({ baseUrl: "https://api.example.org" });
-
-      // Client should be created without errors when no auth is provided
-      expect(client).toBeInstanceOf(Client);
+      expect(defaultClient.opportunities).toBeDefined();
     });
 
     it("accepts auth configuration", () => {
       const client = new Client({
-        baseUrl: "https://api.example.org",
+        baseUrl: BASE_URL,
         auth: Auth.bearer("test-token"),
       });
 
@@ -68,23 +59,22 @@ describe("Client", () => {
   describe("getConfig", () => {
     it("returns resolved configuration", () => {
       const client = new Client({
-        baseUrl: "https://api.example.org",
+        baseUrl: BASE_URL,
         timeout: 5000,
         pageSize: 50,
         maxItems: 500,
       });
       const config = client.getConfig();
 
-      expect(config.baseUrl).toBe("https://api.example.org");
+      expect(config.baseUrl).toBe(BASE_URL);
       expect(config.timeout).toBe(5000);
       expect(config.pageSize).toBe(50);
       expect(config.maxItems).toBe(500);
     });
 
     it("returns a copy of the config rather a shared reference", () => {
-      const client = new Client({ baseUrl: "https://api.example.org" });
-      const config1 = client.getConfig();
-      const config2 = client.getConfig();
+      const config1 = defaultClient.getConfig();
+      const config2 = defaultClient.getConfig();
 
       expect(config1).not.toBe(config2);
       expect(config1).toEqual(config2);
@@ -114,8 +104,7 @@ describe("Client", () => {
         )
       );
 
-      const client = new Client({ baseUrl: "https://api.example.org" });
-      const result = await client.fetchMany("/test-items", { pageSize: 3 });
+      const result = await defaultClient.fetchMany("/test-items", { pageSize: 3 });
 
       // Should make 3 requests (3 + 3 + 1 = 7 items)
       expect(requestCount).toBe(3);
@@ -137,8 +126,7 @@ describe("Client", () => {
         )
       );
 
-      const client = new Client({ baseUrl: "https://api.example.org" });
-      const result = await client.fetchMany("/test-items", { pageSize: 5, maxItems: 12 });
+      const result = await defaultClient.fetchMany("/test-items", { pageSize: 5, maxItems: 12 });
 
       // Should stop after getting 12 items (3 pages: 5 + 5 + 2)
       expect(requestCount).toBe(3);
@@ -161,7 +149,7 @@ describe("Client", () => {
 
       // Client with maxItems = 8
       const client = new Client({
-        baseUrl: "https://api.example.org",
+        baseUrl: BASE_URL,
         maxItems: 8,
       });
       const result = await client.fetchMany("/test-items", { pageSize: 5 });
@@ -186,8 +174,7 @@ describe("Client", () => {
         )
       );
 
-      const client = new Client({ baseUrl: "https://api.example.org" });
-      const result = await client.fetchMany("/test-items", { pageSize: 3, maxItems: 100 });
+      const result = await defaultClient.fetchMany("/test-items", { pageSize: 3, maxItems: 100 });
 
       // Should stop after 2 pages because there are only 5 items total
       // (not keep requesting pages indefinitely)
@@ -223,8 +210,7 @@ describe("Client", () => {
         })
       );
 
-      const client = new Client({ baseUrl: "https://api.example.org" });
-      const result = await client.fetchMany("/test-items", { pageSize: 5, maxItems: 100 });
+      const result = await defaultClient.fetchMany("/test-items", { pageSize: 5, maxItems: 100 });
 
       // Should stop after page 1 because items.length < pageSize
       expect(requestCount).toBe(1);
@@ -245,8 +231,7 @@ describe("Client", () => {
         )
       );
 
-      const client = new Client({ baseUrl: "https://api.example.org" });
-      const result = await client.fetchMany("/test-items", { pageSize: 3, maxItems: 100 });
+      const result = await defaultClient.fetchMany("/test-items", { pageSize: 3, maxItems: 100 });
 
       // Should stop after 2 pages because totalPages = 2
       expect(requestCount).toBe(2);
@@ -277,9 +262,7 @@ describe("Client", () => {
         })
       );
 
-      const client = new Client({ baseUrl: "https://api.example.org" });
-
-      await expect(client.fetchMany("/test-items", { pageSize: 5 })).rejects.toThrow("500");
+      await expect(defaultClient.fetchMany("/test-items", { pageSize: 5 })).rejects.toThrow("500");
     });
   });
 });

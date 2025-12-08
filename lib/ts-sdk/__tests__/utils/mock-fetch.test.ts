@@ -17,6 +17,7 @@ const handlers = [
 
 // Create server - same pattern as MSW
 const server = setupServer(...handlers);
+const BASE_URL = "https://api.example.org";
 
 describe("mock-fetch (MSW-like API)", () => {
   // Lifecycle - same pattern as MSW
@@ -26,7 +27,7 @@ describe("mock-fetch (MSW-like API)", () => {
 
   describe("http.get", () => {
     it("handles GET with path parameters", async () => {
-      const response = await fetch("https://api.example.org/opportunities/opp-123");
+      const response = await fetch(`${BASE_URL}/opportunities/opp-123`);
       const data = (await response.json()) as { id: string; title: string };
 
       expect(response.status).toBe(200);
@@ -35,7 +36,7 @@ describe("mock-fetch (MSW-like API)", () => {
     });
 
     it("handles GET without parameters", async () => {
-      const response = await fetch("https://api.example.org/opportunities");
+      const response = await fetch(`${BASE_URL}/opportunities`);
       const data = (await response.json()) as { data: Array<{ id: string }> };
 
       expect(response.status).toBe(200);
@@ -45,7 +46,7 @@ describe("mock-fetch (MSW-like API)", () => {
 
   describe("http.post", () => {
     it("handles POST with request body", async () => {
-      const response = await fetch("https://api.example.org/opportunities", {
+      const response = await fetch(`${BASE_URL}/opportunities`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: "New Grant" }),
@@ -67,14 +68,14 @@ describe("mock-fetch (MSW-like API)", () => {
         })
       );
 
-      const response = await fetch("https://api.example.org/opportunities/opp-123");
+      const response = await fetch(`${BASE_URL}/opportunities/opp-123`);
 
       expect(response.status).toBe(500);
     });
 
     it("resets to original handlers after resetHandlers()", async () => {
       // The previous test's override should be gone after resetHandlers()
-      const response = await fetch("https://api.example.org/opportunities/opp-123");
+      const response = await fetch(`${BASE_URL}/opportunities/opp-123`);
       const data = (await response.json()) as { id: string };
 
       expect(response.status).toBe(200);
@@ -84,7 +85,7 @@ describe("mock-fetch (MSW-like API)", () => {
 
   describe("unhandled requests", () => {
     it("returns 404 for unmatched routes", async () => {
-      const response = await fetch("https://api.example.org/unknown-endpoint");
+      const response = await fetch(`${BASE_URL}/unknown-endpoint`);
 
       expect(response.status).toBe(404);
     });
