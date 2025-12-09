@@ -24,8 +24,14 @@ jobs:
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v8
 
+      - name: Install poetry-audit-plugin
+        run: poetry self add poetry-audit-plugin
+
       - name: Install dependencies
         run: poetry install
+
+      - name: Audit dependencies for vulnerabilities
+        run: poetry audit
 
       - name: Run linting
         run: poetry run ruff check .
