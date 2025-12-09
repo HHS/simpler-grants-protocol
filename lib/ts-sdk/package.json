@@ -10,6 +10,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./client": {
+      "types": "./dist/src/client/index.d.ts",
+      "default": "./dist/src/client/index.js"
+    },
     "./schemas": {
       "types": "./dist/src/schemas/index.d.ts",
       "default": "./dist/src/schemas/index.js"
