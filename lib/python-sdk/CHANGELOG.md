@@ -1,5 +1,11 @@
 # common-grants-sdk
 
+## 0.4.0
+
+### Minor Changes
+
+- 984b46c: Introduce client subpackage for making requests to CommonGrants endpoints
+
 ## 0.3.2
 
 ### Patch Changes
@@ -36,14 +42,12 @@
 ### Minor Changes
 
 - 653c227: Migrated schemas from FastAPI template to PySDK:
-
   - Filters: DateComparisonFilter, DateRangeFilter, DefaultFilter, MoneyComparisonFilter, MoneyRangeFilter, StringArrayFilter, StringComparisonFilter, OppDefaultFilters, OppFilters
   - Operators: ArrayOperators, ComparisonOperators, EquivalenceOperators, RangeOperators, StringOperators
   - Pagination: PaginatedBodyParams
   - Sorting: SortedResultsInfo, OppSortBy, OppSorting
 
   Implemented schemas to align with Core v0.2.0:
-
   - Filters: NumberArrayFilter, NumberComparisonFilter, NumberRangeFilter
   - Pagination: PaginatedQueryParams, PaginatedResultsInfo
   - Responses: Error, Filtered, Paginated, Sorted, Success
