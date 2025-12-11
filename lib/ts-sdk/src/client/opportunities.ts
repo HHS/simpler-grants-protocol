@@ -8,6 +8,8 @@ import type {
   OpportunitiesListResponse,
   OpportunitiesFilteredResponse,
   OppStatusOptions,
+  OppFilters,
+  OppSearchRequest,
 } from "@/types";
 import {
   OkSchema,
@@ -16,6 +18,7 @@ import {
   OpportunityBaseSchema,
   OppFiltersSchema,
 } from "@/schemas";
+import { ArrayOperator } from "@/constants";
 
 // Response schemas with validation
 const OpportunityResponseSchema = OkSchema(OpportunityBaseSchema);
@@ -23,11 +26,11 @@ const OpportunitiesListResponseSchema = PaginatedSchema(OpportunityBaseSchema);
 const OpportunitiesFilteredResponseSchema = FilteredSchema(OpportunityBaseSchema, OppFiltersSchema);
 
 // =============================================================================
-// Search options
+// Search types
 // =============================================================================
 
 /** Options for searching opportunities */
-export interface SearchOptions {
+export interface SearchOptions extends FetchManyOptions {
   /** Text query to search for in opportunity titles and descriptions */
   query?: string;
   /** Filter by opportunity statuses */
@@ -140,13 +143,15 @@ export class Opportunities {
   /**
    * Search for opportunities based on query text and filters.
    *
-   * @param options - Search options including query text and status filters
+   * Supports auto-pagination by default. If `page` is specified, only fetches that page.
+   *
+   * @param options - Search options including query text, status filters, and pagination
    * @returns Filtered list of opportunities
    * @throws {Error} If the request fails
    *
    * @example
    * ```ts
-   * // Search with query text
+   * // Search with query text (auto-paginates)
    * const results = await client.opportunities.search({ query: "education" });
    *
    * // Search with status filter
@@ -157,28 +162,99 @@ export class Opportunities {
    *   query: "community",
    *   statuses: ["open", "forecasted"],
    * });
+   *
+   * // Get a specific page (disables auto-pagination)
+   * const page2 = await client.opportunities.search({
+   *   query: "grants",
+   *   page: 2,
+   *   pageSize: 10,
+   * });
+   *
+   * // Auto-paginate with limits
+   * const limited = await client.opportunities.search({
+   *   query: "research",
+   *   maxItems: 100,
+   *   pageSize: 25,
+   * });
    * ```
    */
   async search(options?: SearchOptions): Promise<OpportunitiesFilteredResponse> {
-    // Build request body
-    const body: Record<string, unknown> = {};
+    // Build the base search body (without pagination)
+    const searchBody = this.buildSearchBody(options);
+
+    // If page is specified, fetch only that page
+    if (options?.page !== undefined) {
+      return this.fetchSearchPage(searchBody, options.page, options.pageSize, options.signal);
+    }
+
+    // Auto-paginate by default using fetchMany with POST method
+    const result = await this.client.fetchMany<OpportunityBase>(`${this.basePath}/search`, {
+      method: "POST",
+      body: searchBody as Record<string, unknown>,
+      pageSize: options?.pageSize,
+      maxItems: options?.maxItems,
+      signal: options?.signal,
+    });
+
+    // Fetch first page to get sortInfo and filterInfo metadata
+    const firstPageResponse = await this.fetchSearchPage(searchBody, 1, options?.pageSize);
+
+    // Merge the aggregated items with metadata from first page
+    return {
+      ...result,
+      sortInfo: firstPageResponse.sortInfo,
+      filterInfo: firstPageResponse.filterInfo,
+    };
+  }
+
+  // ############################################################################
+  // Private helpers
+  // ############################################################################
+
+  /** Builds the search request body from options */
+  private buildSearchBody(options?: SearchOptions): OppSearchRequest {
+    const body: OppSearchRequest = {};
 
     if (options?.query) {
       body.search = options.query;
     }
 
-    if (options?.statuses && options.statuses.length > 0) {
-      body.filters = {
-        status: {
-          operator: "in",
+    // Build filters from statuses shorthand and/or explicit filters
+    if (options?.statuses?.length) {
+      const filters: OppFilters = {};
+
+      if (options?.statuses?.length) {
+        filters.status = {
+          operator: ArrayOperator.in,
           value: options.statuses,
-        },
-      };
+        };
+      }
+
+      body.filters = filters;
     }
+
+    return body;
+  }
+
+  /** Fetches a single search page */
+  private async fetchSearchPage(
+    searchBody: OppSearchRequest,
+    page: number,
+    pageSize?: number,
+    signal?: AbortSignal
+  ): Promise<OpportunitiesFilteredResponse> {
+    const requestBody: OppSearchRequest = {
+      ...searchBody,
+      pagination: {
+        page,
+        ...(pageSize && { pageSize }),
+      },
+    };
 
     const response = await this.client.fetch(`${this.basePath}/search`, {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify(requestBody),
+      signal,
     });
 
     if (!response.ok) {

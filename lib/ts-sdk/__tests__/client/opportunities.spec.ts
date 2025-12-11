@@ -268,8 +268,8 @@ describe("Opportunities", () => {
         statuses: ["open", "forecasted"],
       });
 
-      // Verify request body was sent correctly
-      expect(capturedBody).toEqual({
+      // Verify request body includes search and filters (pagination is added automatically)
+      expect(capturedBody).toMatchObject({
         search: "education",
         filters: {
           status: {
@@ -366,6 +366,165 @@ describe("Opportunities", () => {
       );
 
       await expect(client.opportunities.search({ query: "test" })).rejects.toThrow("500");
+    });
+
+    // =========================================================================
+    // Single page (explicit page parameter)
+    // =========================================================================
+
+    it("fetches a single page when page is explicitly specified", async () => {
+      let requestCount = 0;
+      let capturedBody: Record<string, unknown> | undefined;
+
+      server.use(
+        http.post("/common-grants/opportunities/search", async ({ request }) => {
+          requestCount++;
+          capturedBody = (await request.json()) as Record<string, unknown>;
+          const pagination = capturedBody.pagination as { page: number; pageSize?: number };
+          const page = pagination?.page ?? 1;
+          const pageSize = pagination?.pageSize ?? 2;
+
+          // Simulate 5 total items across 3 pages
+          const allOpportunities = generateMockOpportunities(5);
+          const start = (page - 1) * pageSize;
+          const end = start + pageSize;
+          const pageItems = allOpportunities.slice(start, end);
+
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: pageItems,
+            paginationInfo: {
+              page,
+              pageSize,
+              totalItems: 5,
+              totalPages: Math.ceil(5 / pageSize),
+            },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {} },
+          });
+        })
+      );
+
+      // Request page 2 explicitly - should NOT auto-paginate
+      const result = await client.opportunities.search({
+        query: "test",
+        page: 2,
+        pageSize: 2,
+      });
+
+      // Should only make 1 request (no auto-pagination)
+      expect(requestCount).toBe(1);
+
+      // Should return only page 2 items
+      expect(result.items).toHaveLength(2);
+      expect(result.paginationInfo.page).toBe(2);
+
+      // Verify pagination was sent in body
+      expect(capturedBody?.pagination).toEqual({ page: 2, pageSize: 2 });
+    });
+
+    // =========================================================================
+    // Auto-pagination
+    // =========================================================================
+
+    it("auto-paginates across multiple pages when no page is specified", async () => {
+      let requestCount = 0;
+
+      server.use(
+        http.post("/common-grants/opportunities/search", async ({ request }) => {
+          requestCount++;
+          const body = (await request.json()) as Record<string, unknown>;
+          const pagination = body.pagination as { page: number; pageSize?: number } | undefined;
+          const page = pagination?.page ?? 1;
+          const pageSize = pagination?.pageSize ?? 2;
+
+          // Simulate 5 total items
+          const allOpportunities = generateMockOpportunities(5);
+          const start = (page - 1) * pageSize;
+          const end = start + pageSize;
+          const pageItems = allOpportunities.slice(start, end);
+
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: pageItems,
+            paginationInfo: {
+              page,
+              pageSize,
+              totalItems: 5,
+              totalPages: Math.ceil(5 / pageSize),
+            },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: { status: { operator: "in", value: ["open"] } } },
+          });
+        })
+      );
+
+      // Request without page - should auto-paginate
+      const result = await client.opportunities.search({
+        statuses: ["open"],
+        pageSize: 2,
+      });
+
+      // Should make 4 requests: 3 for fetchMany pagination + 1 for metadata
+      expect(requestCount).toBe(4);
+
+      // Should return all 5 items aggregated
+      expect(result.items).toHaveLength(5);
+      expect(result.paginationInfo.totalItems).toBe(5);
+
+      // Should preserve sortInfo and filterInfo from first page
+      expect(result.sortInfo.sortBy).toBe("lastModifiedAt");
+      expect(result.filterInfo.filters.status).toEqual({
+        operator: "in",
+        value: ["open"],
+      });
+    });
+
+    it("respects maxItems limit during auto-pagination", async () => {
+      let requestCount = 0;
+
+      server.use(
+        http.post("/common-grants/opportunities/search", async ({ request }) => {
+          requestCount++;
+          const body = (await request.json()) as Record<string, unknown>;
+          const pagination = body.pagination as { page: number; pageSize?: number } | undefined;
+          const page = pagination?.page ?? 1;
+          const pageSize = pagination?.pageSize ?? 2;
+
+          // Simulate 10 total items
+          const allOpportunities = generateMockOpportunities(10);
+          const start = (page - 1) * pageSize;
+          const end = start + pageSize;
+          const pageItems = allOpportunities.slice(start, end);
+
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: pageItems,
+            paginationInfo: {
+              page,
+              pageSize,
+              totalItems: 10,
+              totalPages: Math.ceil(10 / pageSize),
+            },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {} },
+          });
+        })
+      );
+
+      // Request with maxItems = 5 and pageSize = 2
+      const result = await client.opportunities.search({
+        query: "test",
+        pageSize: 2,
+        maxItems: 5,
+      });
+
+      // Should stop after collecting 5 items (3 pages for fetchMany + 1 for metadata = 4 requests)
+      expect(requestCount).toBe(4);
+      expect(result.items).toHaveLength(5);
     });
   });
 });

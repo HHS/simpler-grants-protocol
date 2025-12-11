@@ -20,6 +20,10 @@ export interface FetchManyOptions {
   maxItems?: number;
   /** Abort signal for cancellation */
   signal?: AbortSignal;
+  /** HTTP method (default: "GET") */
+  method?: "GET" | "POST";
+  /** Request body for POST requests (pagination will be merged in) */
+  body?: Record<string, unknown>;
 }
 
 // =============================================================================
@@ -120,6 +124,7 @@ export class Client {
   async fetchMany<T>(path: string, options?: FetchManyOptions): Promise<Paginated<T>> {
     const pageSize = options?.pageSize ?? this.config.pageSize;
     const maxItems = options?.maxItems ?? this.config.maxItems;
+    const method = options?.method ?? "GET";
     let currentPage = options?.page ?? 1;
 
     const allItems: T[] = [];
@@ -127,14 +132,33 @@ export class Client {
     let totalPages: number | undefined;
 
     while (allItems.length < maxItems) {
-      // Build URL with pagination params
-      const url = new URL(this.url(path));
-      url.searchParams.set("page", String(currentPage));
-      url.searchParams.set("pageSize", String(pageSize));
+      let response: Response;
 
-      const response = await this.fetch(url.pathname + url.search, {
-        signal: options?.signal,
-      });
+      if (method === "POST") {
+        // For POST requests, pagination goes in the request body
+        const requestBody = {
+          ...options?.body,
+          pagination: {
+            page: currentPage,
+            pageSize,
+          },
+        };
+
+        response = await this.fetch(path, {
+          method: "POST",
+          body: JSON.stringify(requestBody),
+          signal: options?.signal,
+        });
+      } else {
+        // For GET requests, pagination goes in query params
+        const url = new URL(this.url(path));
+        url.searchParams.set("page", String(currentPage));
+        url.searchParams.set("pageSize", String(pageSize));
+
+        response = await this.fetch(url.pathname + url.search, {
+          signal: options?.signal,
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
