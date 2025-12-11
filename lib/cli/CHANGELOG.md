@@ -1,5 +1,11 @@
 # @common-grants/cli
 
+## 0.2.4
+
+### Patch Changes
+
+- 7879307: Bumping version to fix release/tags issue
+
 ## 0.2.3
 
 ### Patch Changes
