@@ -81,7 +81,7 @@ flowchart LR
         HHS/simpler-grants-protocol#321["Create a TypeScript SDK ✔️"]:::Done
         HHS/simpler-grants-protocol#323["Create a Go SDK"]
         HHS/simpler-grants-protocol#324["Create a Python API client ✔️"]:::Done
-        HHS/simpler-grants-protocol#328["Create a TypeScript API client"]
+        HHS/simpler-grants-protocol#328["Create a TypeScript API client 🛠️"]:::InProgress
         HHS/simpler-grants-protocol#329["Create a Go API client"]
         HHS/simpler-grants-protocol#342["Create a Python SDK ✔️"]:::Done
     end
