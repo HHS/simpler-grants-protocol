@@ -222,4 +222,150 @@ describe("Opportunities", () => {
       expect(result.items).toHaveLength(5);
     });
   });
+
+  // =============================================================================
+  // Opportunities.search
+  // =============================================================================
+
+  describe("search", () => {
+    it("searches opportunities with query and statuses filter", async () => {
+      let capturedBody: unknown;
+
+      server.use(
+        http.post("/common-grants/opportunities/search", async ({ request }) => {
+          capturedBody = await request.json();
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [
+              createMockOpportunity(OPP_UUID_1, "Education Grant", "open"),
+              createMockOpportunity(OPP_UUID_2, "Research Grant", "forecasted"),
+            ],
+            paginationInfo: {
+              page: 1,
+              pageSize: 25,
+              totalItems: 2,
+              totalPages: 1,
+            },
+            sortInfo: {
+              sortBy: "lastModifiedAt",
+              sortOrder: "desc",
+            },
+            filterInfo: {
+              filters: {
+                status: {
+                  operator: "in",
+                  value: ["open", "forecasted"],
+                },
+              },
+            },
+          });
+        })
+      );
+
+      const result = await client.opportunities.search({
+        query: "education",
+        statuses: ["open", "forecasted"],
+      });
+
+      // Verify request body was sent correctly
+      expect(capturedBody).toEqual({
+        search: "education",
+        filters: {
+          status: {
+            operator: "in",
+            value: ["open", "forecasted"],
+          },
+        },
+      });
+
+      // Verify response structure matches OpportunitiesFilteredResponse
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].title).toBe("Education Grant");
+      expect(result.paginationInfo.totalItems).toBe(2);
+      expect(result.sortInfo.sortBy).toBe("lastModifiedAt");
+      expect(result.filterInfo.filters.status).toEqual({
+        operator: "in",
+        value: ["open", "forecasted"],
+      });
+    });
+
+    it("searches with only query parameter", async () => {
+      server.use(
+        http.post("/common-grants/opportunities/search", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [createMockOpportunity(OPP_UUID_1, "Community Grant", "open")],
+            paginationInfo: {
+              page: 1,
+              pageSize: 25,
+              totalItems: 1,
+              totalPages: 1,
+            },
+            sortInfo: {
+              sortBy: "lastModifiedAt",
+              sortOrder: "desc",
+            },
+            filterInfo: {
+              filters: {},
+            },
+          });
+        })
+      );
+
+      const result = await client.opportunities.search({ query: "community" });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].title).toBe("Community Grant");
+    });
+
+    it("searches with only statuses parameter", async () => {
+      server.use(
+        http.post("/common-grants/opportunities/search", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [createMockOpportunity(OPP_UUID_1, "Open Grant", "open")],
+            paginationInfo: {
+              page: 1,
+              pageSize: 25,
+              totalItems: 1,
+              totalPages: 1,
+            },
+            sortInfo: {
+              sortBy: "lastModifiedAt",
+              sortOrder: "desc",
+            },
+            filterInfo: {
+              filters: {
+                status: {
+                  operator: "in",
+                  value: ["open"],
+                },
+              },
+            },
+          });
+        })
+      );
+
+      const result = await client.opportunities.search({ statuses: ["open"] });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.filterInfo.filters.status).toEqual({
+        operator: "in",
+        value: ["open"],
+      });
+    });
+
+    it("handles server errors", async () => {
+      server.use(
+        http.post("/common-grants/opportunities/search", () => {
+          return HttpResponse.json({ error: "Internal server error" }, { status: 500 });
+        })
+      );
+
+      await expect(client.opportunities.search({ query: "test" })).rejects.toThrow("500");
+    });
+  });
 });

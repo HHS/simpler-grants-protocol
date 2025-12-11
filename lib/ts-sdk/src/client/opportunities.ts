@@ -3,12 +3,36 @@
  */
 
 import type { Client, FetchManyOptions } from "./client";
-import type { OpportunityBase, OpportunitiesListResponse } from "@/types";
-import { OkSchema, PaginatedSchema, OpportunityBaseSchema } from "@/schemas";
+import type {
+  OpportunityBase,
+  OpportunitiesListResponse,
+  OpportunitiesFilteredResponse,
+  OppStatusOptions,
+} from "@/types";
+import {
+  OkSchema,
+  PaginatedSchema,
+  FilteredSchema,
+  OpportunityBaseSchema,
+  OppFiltersSchema,
+} from "@/schemas";
 
 // Response schemas with validation
 const OpportunityResponseSchema = OkSchema(OpportunityBaseSchema);
 const OpportunitiesListResponseSchema = PaginatedSchema(OpportunityBaseSchema);
+const OpportunitiesFilteredResponseSchema = FilteredSchema(OpportunityBaseSchema, OppFiltersSchema);
+
+// =============================================================================
+// Search options
+// =============================================================================
+
+/** Options for searching opportunities */
+export interface SearchOptions {
+  /** Text query to search for in opportunity titles and descriptions */
+  query?: string;
+  /** Filter by opportunity statuses */
+  statuses?: OppStatusOptions[];
+}
 
 /**
  * Opportunities resource - provides methods for interacting with opportunities.
@@ -107,5 +131,61 @@ export class Opportunities {
 
     // Auto-paginate by default
     return this.client.fetchMany<OpportunityBase>(this.basePath, options);
+  }
+
+  // ############################################################################
+  // Search opportunities
+  // ############################################################################
+
+  /**
+   * Search for opportunities based on query text and filters.
+   *
+   * @param options - Search options including query text and status filters
+   * @returns Filtered list of opportunities
+   * @throws {Error} If the request fails
+   *
+   * @example
+   * ```ts
+   * // Search with query text
+   * const results = await client.opportunities.search({ query: "education" });
+   *
+   * // Search with status filter
+   * const openOpps = await client.opportunities.search({ statuses: ["open"] });
+   *
+   * // Search with both query and statuses
+   * const filtered = await client.opportunities.search({
+   *   query: "community",
+   *   statuses: ["open", "forecasted"],
+   * });
+   * ```
+   */
+  async search(options?: SearchOptions): Promise<OpportunitiesFilteredResponse> {
+    // Build request body
+    const body: Record<string, unknown> = {};
+
+    if (options?.query) {
+      body.search = options.query;
+    }
+
+    if (options?.statuses && options.statuses.length > 0) {
+      body.filters = {
+        status: {
+          operator: "in",
+          value: options.statuses,
+        },
+      };
+    }
+
+    const response = await this.client.fetch(`${this.basePath}/search`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to search opportunities: ${response.status} ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    return OpportunitiesFilteredResponseSchema.parse(json);
   }
 }
