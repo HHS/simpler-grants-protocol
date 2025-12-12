@@ -77,7 +77,7 @@ export class Opportunities {
    * ```
    */
   async get(id: string): Promise<OpportunityBase> {
-    const response = await this.client.fetch(`${this.basePath}/${id}`);
+    const response = await this.client.get(`${this.basePath}/${id}`);
 
     if (!response.ok) {
       throw new Error(`Failed to get opportunity ${id}: ${response.status} ${response.statusText}`);
@@ -116,11 +116,11 @@ export class Opportunities {
   async list(options?: FetchManyOptions): Promise<OpportunitiesListResponse> {
     // If page is specified, fetch only that page
     if (options?.page !== undefined) {
-      const params = new URLSearchParams();
-      params.set("page", String(options.page));
-      if (options?.pageSize) params.set("pageSize", String(options.pageSize));
+      const params: Record<string, number> = { page: options.page };
+      if (options?.pageSize) params.pageSize = options.pageSize;
 
-      const response = await this.client.fetch(`${this.basePath}?${params}`, {
+      const response = await this.client.get(this.basePath, {
+        params,
         signal: options?.signal,
       });
 
@@ -251,11 +251,7 @@ export class Opportunities {
       },
     };
 
-    const response = await this.client.fetch(`${this.basePath}/search`, {
-      method: "POST",
-      body: JSON.stringify(requestBody),
-      signal,
-    });
+    const response = await this.client.post(`${this.basePath}/search`, requestBody, { signal });
 
     if (!response.ok) {
       throw new Error(`Failed to search opportunities: ${response.status} ${response.statusText}`);

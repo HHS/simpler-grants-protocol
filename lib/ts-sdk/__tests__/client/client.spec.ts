@@ -82,6 +82,115 @@ describe("Client", () => {
   });
 
   // =============================================================================
+  // Client.get
+  // =============================================================================
+
+  describe("get", () => {
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
+    it("makes a GET request to the specified path", async () => {
+      let capturedMethod: string | undefined;
+
+      server.use(
+        http.get("/test-resource", ({ request }) => {
+          capturedMethod = request.method;
+          return HttpResponse.json({ data: "test" });
+        })
+      );
+
+      const response = await defaultClient.get("/test-resource");
+
+      expect(capturedMethod).toBe("GET");
+      expect(response.ok).toBe(true);
+    });
+
+    it("appends query params to the URL", async () => {
+      let capturedUrl: string | undefined;
+
+      server.use(
+        http.get("/test-resource", ({ request }) => {
+          capturedUrl = request.url;
+          return HttpResponse.json({ data: "test" });
+        })
+      );
+
+      await defaultClient.get("/test-resource", {
+        params: { page: 2, pageSize: 10, active: true },
+      });
+
+      const url = new URL(capturedUrl!);
+      expect(url.searchParams.get("page")).toBe("2");
+      expect(url.searchParams.get("pageSize")).toBe("10");
+      expect(url.searchParams.get("active")).toBe("true");
+    });
+
+    it("works without params", async () => {
+      let capturedUrl: string | undefined;
+
+      server.use(
+        http.get("/test-resource", ({ request }) => {
+          capturedUrl = request.url;
+          return HttpResponse.json({ data: "test" });
+        })
+      );
+
+      await defaultClient.get("/test-resource");
+
+      const url = new URL(capturedUrl!);
+      expect(url.search).toBe("");
+    });
+  });
+
+  // =============================================================================
+  // Client.post
+  // =============================================================================
+
+  describe("post", () => {
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
+    it("makes a POST request with JSON body", async () => {
+      let capturedMethod: string | undefined;
+      let capturedBody: unknown;
+
+      server.use(
+        http.post("/test-resource", async ({ request }) => {
+          capturedMethod = request.method;
+          capturedBody = await request.json();
+          return HttpResponse.json({ data: "created" });
+        })
+      );
+
+      const response = await defaultClient.post("/test-resource", {
+        name: "Test",
+        value: 123,
+      });
+
+      expect(capturedMethod).toBe("POST");
+      expect(capturedBody).toEqual({ name: "Test", value: 123 });
+      expect(response.ok).toBe(true);
+    });
+
+    it("handles empty body", async () => {
+      let capturedBody: unknown;
+
+      server.use(
+        http.post("/test-resource", async ({ request }) => {
+          capturedBody = await request.json();
+          return HttpResponse.json({ data: "created" });
+        })
+      );
+
+      await defaultClient.post("/test-resource", {});
+
+      expect(capturedBody).toEqual({});
+    });
+  });
+
+  // =============================================================================
   // Client.fetchMany (auto-pagination)
   // =============================================================================
 

@@ -8,8 +8,23 @@ import { Opportunities } from "./opportunities";
 import type { Paginated } from "@/types";
 
 // =============================================================================
-// FetchManyOptions interface
+// Options interfaces
 // =============================================================================
+
+/** Options for GET requests */
+export interface GetOptions {
+  /** Query parameters to append to the URL */
+  params?: Record<string, string | number | boolean>;
+  /** Abort signal for cancellation */
+  signal?: AbortSignal;
+}
+
+/** Options for POST requests */
+export interface PostOptions {
+  /** Abort signal for cancellation */
+  signal?: AbortSignal;
+}
+
 /** Options for the fetchMany auto-pagination method. */
 export interface FetchManyOptions {
   /** Starting page number (default: 1) */
@@ -70,11 +85,12 @@ export class Client {
   }
 
   // =============================================================================
-  // Client.fetch
+  // Client.fetch - raw fetch with auth
   // =============================================================================
 
   /**
    * Makes an authenticated fetch request to the API.
+   * This is the lowest-level method - use `get()` or `post()` for convenience.
    *
    * @param path - API path (will be appended to baseUrl)
    * @param init - Fetch init options
@@ -82,8 +98,9 @@ export class Client {
    *
    * @example
    * ```ts
-   * const response = await client.fetch("/common-grants/opportunities");
-   * const data = await response.json();
+   * const response = await client.fetch("/common-grants/opportunities", {
+   *   method: "DELETE",
+   * });
    * ```
    */
   async fetch(path: string, init?: RequestInit): Promise<Response> {
@@ -104,7 +121,73 @@ export class Client {
   }
 
   // =============================================================================
-  // Client.fetchMany
+  // Client.get - GET request helper
+  // =============================================================================
+
+  /**
+   * Makes an authenticated GET request to the API.
+   *
+   * @param path - API path (will be appended to baseUrl)
+   * @param options - GET request options
+   * @returns Fetch Response
+   *
+   * @example
+   * ```ts
+   * const response = await client.get("/common-grants/opportunities", {
+   *   params: { page: 1, pageSize: 10 }
+   * });
+   * const data = await response.json();
+   * ```
+   */
+  async get(path: string, options?: GetOptions): Promise<Response> {
+    let fullPath = path;
+
+    // Append query params if provided
+    if (options?.params && Object.keys(options.params).length > 0) {
+      const url = new URL(this.url(path));
+      for (const [key, value] of Object.entries(options.params)) {
+        url.searchParams.set(key, String(value));
+      }
+      fullPath = url.pathname + url.search;
+    }
+
+    return this.fetch(fullPath, {
+      method: "GET",
+      signal: options?.signal,
+    });
+  }
+
+  // =============================================================================
+  // Client.post - POST request helper
+  // =============================================================================
+
+  /**
+   * Makes an authenticated POST request to the API.
+   *
+   * @param path - API path (will be appended to baseUrl)
+   * @param body - Request body (will be JSON stringified)
+   * @param options - POST request options
+   * @returns Fetch Response
+   *
+   * @example
+   * ```ts
+   * const response = await client.post("/common-grants/opportunities/search", {
+   *   filters: { status: "open" },
+   *   pagination: { page: 1, pageSize: 10 }
+   * });
+   * const data = await response.json();
+   * ```
+   */
+  async post(path: string, body: unknown, options?: PostOptions): Promise<Response> {
+    return this.fetch(path, {
+      method: "POST",
+      body: JSON.stringify(body),
+      signal: options?.signal,
+    });
+  }
+
+  // =============================================================================
+  // Client.fetchMany - auto-pagination
   // =============================================================================
 
   /**
@@ -116,9 +199,14 @@ export class Client {
    *
    * @example
    * ```ts
+   * // GET with auto-pagination
    * const result = await client.fetchMany<Opportunity>("/common-grants/opportunities");
-   * console.log(result.items); // All opportunities
-   * console.log(result.paginationInfo.totalItems);
+   *
+   * // POST with auto-pagination (for search endpoints)
+   * const searched = await client.fetchMany<Opportunity>("/common-grants/opportunities/search", {
+   *   method: "POST",
+   *   body: { filters: { status: "open" } }
+   * });
    * ```
    */
   async fetchMany<T>(path: string, options?: FetchManyOptions): Promise<Paginated<T>> {
@@ -144,18 +232,11 @@ export class Client {
           },
         };
 
-        response = await this.fetch(path, {
-          method: "POST",
-          body: JSON.stringify(requestBody),
-          signal: options?.signal,
-        });
+        response = await this.post(path, requestBody, { signal: options?.signal });
       } else {
         // For GET requests, pagination goes in query params
-        const url = new URL(this.url(path));
-        url.searchParams.set("page", String(currentPage));
-        url.searchParams.set("pageSize", String(pageSize));
-
-        response = await this.fetch(url.pathname + url.search, {
+        response = await this.get(path, {
+          params: { page: currentPage, pageSize },
           signal: options?.signal,
         });
       }
