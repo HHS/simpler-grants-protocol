@@ -133,7 +133,10 @@ export class Opportunities {
     }
 
     // Auto-paginate by default
-    return this.client.fetchMany<OpportunityBase>(this.basePath, options);
+    return this.client.fetchMany<OpportunityBase>(this.basePath, {
+      ...options,
+      parseItem: item => OpportunityBaseSchema.parse(item),
+    });
   }
 
   // ############################################################################
@@ -194,6 +197,7 @@ export class Opportunities {
       pageSize: options?.pageSize,
       maxItems: options?.maxItems,
       signal: options?.signal,
+      parseItem: item => OpportunityBaseSchema.parse(item),
     });
 
     // Fetch first page to get sortInfo and filterInfo metadata

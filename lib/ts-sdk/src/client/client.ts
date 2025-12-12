@@ -26,7 +26,7 @@ export interface PostOptions {
 }
 
 /** Options for the fetchMany auto-pagination method. */
-export interface FetchManyOptions {
+export interface FetchManyOptions<T = unknown> {
   /** Starting page number (default: 1) */
   page?: number;
   /** Items per page (uses client default if not specified) */
@@ -39,6 +39,8 @@ export interface FetchManyOptions {
   method?: "GET" | "POST";
   /** Request body for POST requests (pagination will be merged in) */
   body?: Record<string, unknown>;
+  /** Optional function to parse/validate each item (e.g., using Zod schema.parse) */
+  parseItem?: (item: unknown) => T;
 }
 
 // =============================================================================
@@ -209,7 +211,7 @@ export class Client {
    * });
    * ```
    */
-  async fetchMany<T>(path: string, options?: FetchManyOptions): Promise<Paginated<T>> {
+  async fetchMany<T>(path: string, options?: FetchManyOptions<T>): Promise<Paginated<T>> {
     const pageSize = options?.pageSize ?? this.config.pageSize;
     const maxItems = options?.maxItems ?? this.config.maxItems;
     const method = options?.method ?? "GET";
@@ -245,9 +247,14 @@ export class Client {
         throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
       }
 
-      const json = (await response.json()) as Paginated<T>;
+      const json = (await response.json()) as Paginated<unknown>;
 
-      const { items, paginationInfo } = json;
+      const { items: rawItems, paginationInfo } = json;
+
+      // Parse/validate items if parseItem function is provided
+      const items: T[] = options?.parseItem
+        ? rawItems.map(item => options.parseItem!(item))
+        : (rawItems as T[]);
 
       // Store pagination metadata from first response
       if (totalItems === undefined) {

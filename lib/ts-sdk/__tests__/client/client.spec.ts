@@ -373,5 +373,55 @@ describe("Client", () => {
 
       await expect(defaultClient.fetchMany("/test-items", { pageSize: 5 })).rejects.toThrow("500");
     });
+
+    it("calls parseItem for each item when provided", async () => {
+      const parseItemCalls: unknown[] = [];
+
+      server.use(
+        http.get(
+          "/test-items",
+          createPaginatedHandler({
+            items: generateMockItems(3),
+            defaultPageSize: 10,
+          })
+        )
+      );
+
+      const result = await defaultClient.fetchMany<{ id: string; name: string; parsed: true }>(
+        "/test-items",
+        {
+          parseItem: item => {
+            parseItemCalls.push(item);
+            return { ...(item as { id: string; name: string }), parsed: true };
+          },
+        }
+      );
+
+      expect(parseItemCalls).toHaveLength(3);
+      expect(result.items).toHaveLength(3);
+      expect(result.items[0].parsed).toBe(true);
+      expect(result.items[1].parsed).toBe(true);
+      expect(result.items[2].parsed).toBe(true);
+    });
+
+    it("throws when parseItem throws (validation failure)", async () => {
+      server.use(
+        http.get(
+          "/test-items",
+          createPaginatedHandler({
+            items: generateMockItems(3),
+            defaultPageSize: 10,
+          })
+        )
+      );
+
+      await expect(
+        defaultClient.fetchMany("/test-items", {
+          parseItem: () => {
+            throw new Error("Validation failed");
+          },
+        })
+      ).rejects.toThrow("Validation failed");
+    });
   });
 });
