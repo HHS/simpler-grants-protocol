@@ -258,8 +258,8 @@ export class Client {
 
       // Store pagination metadata from first response
       if (totalItems === undefined) {
-        totalItems = paginationInfo.totalItems;
-        totalPages = paginationInfo.totalPages;
+        totalItems = paginationInfo.totalItems ?? undefined;
+        totalPages = paginationInfo.totalPages ?? undefined;
       }
 
       // Add items up to maxItems limit

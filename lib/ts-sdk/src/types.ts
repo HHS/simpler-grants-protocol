@@ -153,7 +153,7 @@ export type Sorted<T> = Paginated<T> & {
 export type Filtered<T, F> = Sorted<T> & {
   filterInfo: {
     filters: F;
-    errors?: string[];
+    errors?: string[] | null | undefined;
   };
 };
 

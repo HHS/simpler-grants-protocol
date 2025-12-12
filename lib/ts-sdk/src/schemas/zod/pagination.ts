@@ -15,10 +15,10 @@ import { z } from "zod";
 /** Query parameters for paginated routes */
 export const PaginatedQueryParamsSchema = z.object({
   /** The page to return */
-  page: z.number().int().min(1).optional().default(1),
+  page: z.number().int().min(1).nullish().default(1),
 
   /** The number of items to return per page */
-  pageSize: z.number().int().min(1).optional().default(100),
+  pageSize: z.number().int().min(1).nullish().default(100),
 });
 
 // ############################################################################
@@ -28,10 +28,10 @@ export const PaginatedQueryParamsSchema = z.object({
 /** Body parameters for paginated routes */
 export const PaginatedBodyParamsSchema = z.object({
   /** The page to return */
-  page: z.number().int().min(1).optional().default(1),
+  page: z.number().int().min(1).nullish().default(1),
 
   /** The number of items to return per page */
-  pageSize: z.number().int().min(1).optional().default(100),
+  pageSize: z.number().int().min(1).nullish().default(100),
 });
 
 // ############################################################################
@@ -47,8 +47,8 @@ export const PaginatedResultsInfoSchema = z.object({
   pageSize: z.number().int().min(1),
 
   /** Total number of items across all pages */
-  totalItems: z.number().int().optional(),
+  totalItems: z.number().int().nullish(),
 
   /** Total number of pages */
-  totalPages: z.number().int().optional(),
+  totalPages: z.number().int().nullish(),
 });
