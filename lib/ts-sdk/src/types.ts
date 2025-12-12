@@ -53,6 +53,7 @@ import {
   SuccessSchema,
   ErrorSchema,
   // Pagination & Sorting
+  PaginatedBodyParamsSchema,
   PaginatedResultsInfoSchema,
   SortedResultsInfoSchema,
 } from "./schemas";
@@ -110,6 +111,8 @@ export type OppSorting = z.infer<typeof OppSortingSchema>;
 export type OppSortBy = z.infer<typeof OppSortByEnum>;
 export type OppDefaultFilters = z.infer<typeof OppDefaultFiltersSchema>;
 export type OppFilters = z.infer<typeof OppFiltersSchema>;
+/** Input type for pagination body params (fields are optional before parsing) */
+export type PaginatedBodyParams = z.input<typeof PaginatedBodyParamsSchema>;
 
 // ############################################################################
 // Response types
@@ -150,15 +153,26 @@ export type Sorted<T> = Paginated<T> & {
 export type Filtered<T, F> = Sorted<T> & {
   filterInfo: {
     filters: F;
-    errors?: string[];
+    errors?: string[] | null | undefined;
   };
 };
 
 // ############################################################################
-// Opportunity-specific response types
+// Opportunity-specific request and response types
 // ############################################################################
 
 export type OpportunityResponse = Ok<OpportunityBase>;
 export type OpportunitiesListResponse = Paginated<OpportunityBase>;
 export type OpportunitiesSortedResponse = Sorted<OpportunityBase>;
 export type OpportunitiesFilteredResponse = Filtered<OpportunityBase, OppFilters>;
+/** Request body for the search endpoint */
+export interface OppSearchRequest {
+  /** Text query to search opportunity titles and descriptions */
+  search?: string;
+  /** Filters to apply to the search */
+  filters?: OppFilters;
+  /** Sort order for results */
+  sorting?: OppSorting;
+  /** Pagination parameters */
+  pagination?: PaginatedBodyParams;
+}

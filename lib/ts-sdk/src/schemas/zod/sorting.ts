@@ -25,10 +25,10 @@ export const SortQueryParamsSchema = z.object({
   sortBy: z.unknown(),
 
   /** Implementation-defined sort key */
-  customSortBy: z.string().optional(),
+  customSortBy: z.string().nullish(),
 
   /** The order to sort by */
-  sortOrder: SortOrderEnum.optional(),
+  sortOrder: SortOrderEnum.nullish(),
 });
 
 // ############################################################################
@@ -41,10 +41,10 @@ export const SortBodyParamsSchema = z.object({
   sortBy: z.unknown(),
 
   /** Implementation-defined sort key */
-  customSortBy: z.string().optional(),
+  customSortBy: z.string().nullish(),
 
   /** The order to sort by */
-  sortOrder: SortOrderEnum.optional(),
+  sortOrder: SortOrderEnum.nullish(),
 });
 
 // ############################################################################
@@ -57,11 +57,11 @@ export const SortedResultsInfoSchema = z.object({
   sortBy: z.string(),
 
   /** Implementation-defined sort key used to sort the results, if applicable */
-  customSortBy: z.string().optional(),
+  customSortBy: z.string().nullish(),
 
   /** The order in which the results are sorted, e.g. ascending or descending */
   sortOrder: SortOrderEnum,
 
   /** Non-fatal errors that occurred during sorting */
-  errors: z.array(z.string()).optional(),
+  errors: z.array(z.string()).nullish(),
 });

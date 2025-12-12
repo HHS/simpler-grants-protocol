@@ -134,7 +134,7 @@ export const FilteredSchema = <ItemsT extends z.ZodTypeAny, FilterT extends z.Zo
         filters: filterSchema,
 
         /** Non-fatal errors that occurred during filtering */
-        errors: z.array(z.string()).optional(),
+        errors: z.array(z.string()).nullish(),
       })
       .strict(),
   });

@@ -19,10 +19,10 @@ export const OppStatusSchema = z.object({
   value: OppStatusOptionsEnum,
 
   /** A custom status value */
-  customValue: z.string().optional(),
+  customValue: z.string().nullish(),
 
   /** A human-readable description of the status */
-  description: z.string().optional(),
+  description: z.string().nullish(),
 });
 
 // ############################################################################
@@ -55,10 +55,10 @@ export const ApplicantTypeSchema = z
     value: ApplicantTypeOptionsEnum,
 
     /** The custom value for the applicant type */
-    customValue: z.string().optional(),
+    customValue: z.string().nullish(),
 
     /** The description of the applicant type */
-    description: z.string().optional(),
+    description: z.string().nullish(),
   })
   .strict();
 
@@ -69,25 +69,25 @@ export const ApplicantTypeSchema = z
 export const OppFundingSchema = z
   .object({
     /** Details about the funding available for this opportunity that don't fit other fields */
-    details: z.string().optional(),
+    details: z.string().nullish(),
 
     /** Total amount of funding available */
-    totalAmountAvailable: MoneySchema.optional(),
+    totalAmountAvailable: MoneySchema.nullish(),
 
     /** Minimum amount of funding granted per award */
-    minAwardAmount: MoneySchema.optional(),
+    minAwardAmount: MoneySchema.nullish(),
 
     /** Maximum amount of funding granted per award */
-    maxAwardAmount: MoneySchema.optional(),
+    maxAwardAmount: MoneySchema.nullish(),
 
     /** Minimum number of awards granted */
-    minAwardCount: z.number().int().optional(),
+    minAwardCount: z.number().int().nullish(),
 
     /** Maximum number of awards granted */
-    maxAwardCount: z.number().int().optional(),
+    maxAwardCount: z.number().int().nullish(),
 
     /** Estimated number of awards that will be granted */
-    estimatedAwardCount: z.number().int().optional(),
+    estimatedAwardCount: z.number().int().nullish(),
   })
   .strict();
 
@@ -98,13 +98,13 @@ export const OppFundingSchema = z
 export const OppTimelineSchema = z
   .object({
     /** The date (and time) at which the opportunity is posted */
-    postDate: EventSchema.optional(),
+    postDate: EventSchema.nullish(),
 
     /** The date (and time) at which the opportunity closes */
-    closeDate: EventSchema.optional(),
+    closeDate: EventSchema.nullish(),
 
     /** An optional map of other key dates or events in the opportunity timeline */
-    otherDates: z.record(EventSchema).optional(),
+    otherDates: z.record(EventSchema).nullish(),
   })
   .strict();
 
@@ -127,19 +127,19 @@ export const OpportunityBaseSchema = z
     description: z.string(),
 
     /** Details about the funding available */
-    funding: OppFundingSchema.optional(),
+    funding: OppFundingSchema.nullish(),
 
     /** Key dates for the Opportunity */
-    keyDates: OppTimelineSchema.optional(),
+    keyDates: OppTimelineSchema.nullish(),
 
     /** The type of applicant for the opportunity */
-    acceptedApplicantTypes: z.array(ApplicantTypeSchema).optional(),
+    acceptedApplicantTypes: z.array(ApplicantTypeSchema).nullish(),
 
     /** URL for the original source of the Opportunity */
-    source: z.string().url().optional(),
+    source: z.string().url().nullish(),
 
     /** Additional custom fields specific to this Opportunity */
-    customFields: z.record(CustomFieldSchema).optional(),
+    customFields: z.record(CustomFieldSchema).nullish(),
   })
   .merge(SystemMetadataSchema);
 
@@ -165,30 +165,30 @@ export const OppSortingSchema = z.object({
   sortBy: OppSortByEnum,
 
   /** Implementation-defined sort key */
-  customSortBy: z.string().optional(),
+  customSortBy: z.string().nullish(),
 
   /** The direction to sort in */
-  sortOrder: z.enum(["asc", "desc"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).nullish(),
 });
 
 export const OppDefaultFiltersSchema = z.object({
   /** Status filter */
-  status: StringArrayFilterSchema.optional(),
+  status: StringArrayFilterSchema.nullish(),
 
   /** Close date range filter */
-  closeDateRange: DateRangeFilterSchema.optional(),
+  closeDateRange: DateRangeFilterSchema.nullish(),
 
   /** Total funding available range filter */
-  totalFundingAvailableRange: MoneyRangeFilterSchema.optional(),
+  totalFundingAvailableRange: MoneyRangeFilterSchema.nullish(),
 
   /** Min award amount range filter */
-  minAwardAmountRange: MoneyRangeFilterSchema.optional(),
+  minAwardAmountRange: MoneyRangeFilterSchema.nullish(),
 
   /** Max award amount range filter */
-  maxAwardAmountRange: MoneyRangeFilterSchema.optional(),
+  maxAwardAmountRange: MoneyRangeFilterSchema.nullish(),
 });
 
 export const OppFiltersSchema = OppDefaultFiltersSchema.extend({
   /** Additional implementation-defined filters */
-  customFilters: z.record(DefaultFilterSchema).optional(),
+  customFilters: z.record(DefaultFilterSchema).nullish(),
 });

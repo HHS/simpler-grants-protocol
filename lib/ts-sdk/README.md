@@ -10,6 +10,108 @@ npm install @common-grants/sdk
 
 ## Usage
 
+### API Client
+
+The SDK provides an HTTP client for interacting with CommonGrants-compatible APIs:
+
+```ts
+import { Client, Auth } from "@common-grants/sdk/client";
+
+// Create a client with API key authentication
+const client = new Client({
+  baseUrl: "https://api.example.org",
+  auth: Auth.apiKey("your-api-key"),
+});
+
+// List opportunities (auto-paginates by default)
+const allOpportunities = await client.opportunities.list();
+console.log(`Found ${allOpportunities.items.length} opportunities`);
+for (const opp of allOpportunities.items) {
+  console.log(`${opp.id}: ${opp.title}`);
+}
+
+// List a specific page
+const page2 = await client.opportunities.list({ page: 2, pageSize: 10 });
+for (const opp of page2.items) {
+  console.log(`${opp.id}: ${opp.title}`);
+}
+
+// Search opportunities with filters
+const results = await client.opportunities.search({
+  query: "education",
+  statuses: ["open"],
+});
+
+// View details for a single opportunity
+const opportunityId = allOpportunities.items[0].id;
+const opportunity = await client.opportunities.get(opportunityId);
+console.log(opportunity.title);
+```
+
+#### Authentication
+
+The client supports multiple authentication methods:
+
+```ts
+// API Key (default header: X-API-Key)
+Auth.apiKey("your-api-key");
+
+// API Key with custom header
+Auth.apiKey("your-api-key", "X-Custom-Header");
+
+// Bearer token
+Auth.bearer("your-jwt-token");
+
+// No authentication
+Auth.none();
+```
+
+#### Client Configuration
+
+```ts
+const client = new Client({
+  baseUrl: "https://api.example.org", // Required (or set CG_API_BASE_URL env var)
+  auth: Auth.apiKey("key"), // Optional: Authentication method
+  timeout: 30000, // Optional: Request timeout in ms (default: 30000)
+  pageSize: 100, // Optional: Default page size (default: 100)
+  maxItems: 1000, // Optional: Max items for auto-pagination (default: 1000)
+});
+```
+
+Config values can also be set via environment variables:
+
+| Config     | Environment Variable      | Default    |
+| ---------- | ------------------------- | ---------- |
+| `baseUrl`  | `CG_API_BASE_URL`         | _required_ |
+| `timeout`  | `CG_API_TIMEOUT`          | 30000      |
+| `pageSize` | `CG_API_PAGE_SIZE`        | 100        |
+| `maxItems` | `CG_API_LIST_ITEMS_LIMIT` | 1000       |
+
+#### Low-level HTTP Methods
+
+For custom endpoints or advanced use cases, use the low-level methods:
+
+```ts
+// GET request with query params
+const response = await client.get("/custom/endpoint", {
+  params: { filter: "value" },
+});
+const data = await response.json();
+
+// POST request with body
+const response = await client.post("/custom/endpoint", {
+  field: "value",
+});
+
+// Raw fetch for full control
+const response = await client.fetch("/custom/endpoint", {
+  method: "PUT",
+  body: JSON.stringify({ field: "value" }),
+});
+```
+
+> **Note:** For runnable examples, see the [examples folder](./examples/).
+
 ### Validation
 
 Use the SDK schemas to validate JSON data and convert it to a typed object:
