@@ -4,11 +4,15 @@ This folder contains example scripts demonstrating how to use the CommonGrants T
 
 ## Prerequisites
 
-Before running these examples, you need a CommonGrants-compatible API running locally.
+You can run these examples against either a locally hosted API or a remote API.
 
-### 1. Start the Example API
+### Option A: Local API
 
-The easiest way to get started is to run the California Grants Example API. From the repository root, run:
+By default the examples will run against a local API at `http://localhost:8000`. You can follow the instructions below to start a local API server using the California Grants example API.
+
+**1. Start the Example API**
+
+From the repository root, run:
 
 ```bash
 cd examples/ca-opportunity-example
@@ -22,9 +26,24 @@ This starts a local API server at `http://localhost:8000`.
 > The commands above require both Python and Poetry to be installed.
 > For more details, see the [California grants example API README](../../../examples/ca-opportunity-example/README.md).
 
-### 2. Install SDK Dependencies
+**2. Install SDK Dependencies**
 
 From the `lib/ts-sdk` directory:
+
+```bash
+pnpm install
+```
+
+### Option B: Remote API
+
+To connect to a remote CommonGrants-compatible API, set the following environment variables:
+
+```bash
+export CG_BASE_URL="https://your-api-endpoint.com"
+export CG_API_KEY="your-api-key"
+```
+
+Then install the SDK dependencies from the `lib/ts-sdk` directory:
 
 ```bash
 pnpm install
@@ -98,13 +117,17 @@ Found 3 opportunities:
   ...
 ```
 
-## Customizing the Examples
+## Configuration
 
-Each example script connects to `http://localhost:8000` by default. To connect to a different API, edit the `baseUrl` in the example files:
+Each example script connects to `http://localhost:8000` by default. You can configure the API endpoint and authentication using environment variables:
 
-```typescript
-const client = new Client({
-  baseUrl: "https://your-api-endpoint.com",
-  auth: Auth.apiKey("your-api-key"),
-});
+| Variable      | Description                          | Default                 |
+| ------------- | ------------------------------------ | ----------------------- |
+| `CG_BASE_URL` | The base URL of the CommonGrants API | `http://localhost:8000` |
+| `CG_API_KEY`  | Your API key for authentication      | `<your-api-key>`        |
+
+**Example:**
+
+```bash
+CG_BASE_URL="https://api.example.com" CG_API_KEY="my-secret-key" pnpm example:list
 ```

@@ -14,9 +14,12 @@ if (!searchTerm) {
   process.exit(1);
 }
 
+const baseUrl = process.env.CG_BASE_URL ?? "http://localhost:8000";
+const apiKey = process.env.CG_API_KEY ?? "<your-api-key>";
+
 const client = new Client({
-  baseUrl: "http://localhost:8000",
-  auth: Auth.apiKey("two_orgs_user_key"),
+  baseUrl,
+  auth: Auth.apiKey(apiKey),
   timeout: 5000,
   pageSize: 10,
 });
