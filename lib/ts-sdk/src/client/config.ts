@@ -78,7 +78,7 @@ function getEnvInt(name: string): number | undefined {
  * Resolves client config with defaults and environment variable fallbacks.
  *
  * @throws {Error} If baseUrl is not provided and CG_API_BASE_URL is not set
- * @throws {Error} If baseUrl does not start with http:// or https://
+ * @throws {Error} If baseUrl is not a valid URL using http:// or https://
  */
 export function resolveConfig(config: ClientConfig): ResolvedConfig {
   // Resolve baseUrl from config or env var
@@ -88,16 +88,15 @@ export function resolveConfig(config: ClientConfig): ResolvedConfig {
       "baseUrl is required. Set it in config or via CG_API_BASE_URL environment variable."
     );
   }
-  // Validate URL format
+  // Validate URL format and protocol
+  let parsed: URL;
   try {
-    new URL(baseUrl);
+    parsed = new URL(baseUrl);
   } catch {
-    throw new Error(
-      `Invalid baseUrl: "${baseUrl}". Must be a valid URL starting with http:// or https://`
-    );
+    throw new Error(`Invalid baseUrl: "${baseUrl}". Must be a valid URL.`);
   }
-  if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
-    throw new Error("baseUrl must start with http:// or https://");
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("baseUrl must use http:// or https://");
   }
 
   return {

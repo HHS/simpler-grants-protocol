@@ -227,12 +227,10 @@ export class Opportunities {
     if (options?.statuses?.length) {
       const filters: OppFilters = {};
 
-      if (options?.statuses?.length) {
-        filters.status = {
-          operator: ArrayOperator.in,
-          value: options.statuses,
-        };
-      }
+      filters.status = {
+        operator: ArrayOperator.in,
+        value: options.statuses,
+      };
 
       body.filters = filters;
     }

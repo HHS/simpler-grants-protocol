@@ -120,9 +120,9 @@ describe("resolveConfig", () => {
     expect(() => resolveConfig({})).toThrow("baseUrl is required");
   });
 
-  it("throws if baseUrl does not start with http:// or https://", () => {
+  it("throws if baseUrl does not use http:// or https://", () => {
     expect(() => resolveConfig({ baseUrl: "ftp://example.org" })).toThrow(
-      "baseUrl must start with http:// or https://"
+      "baseUrl must use http:// or https://"
     );
   });
 
