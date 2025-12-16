@@ -1,6 +1,13 @@
 #!/bin/bash
 # Script to validate tags and generate release notes
-# Usage: validate-and-generate-release-notes.sh --prefix PREFIX --config-file CONFIG --release-tag TAG [--previous-tag PREV_TAG] [--dry-run] [--repository REPO] [--github-output OUTPUT_FILE]
+# Usage: validate-and-generate-release-notes.sh \
+#  --prefix PREFIX \
+#  --config-file CONFIG \
+#  --release-tag TAG \
+#  [--previous-tag PREV_TAG] \
+#  [--dry-run] \
+#  [--repository REPO] \
+#  [--github-output OUTPUT_FILE]
 
 set -e
 
@@ -28,8 +35,13 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --previous-tag)
-      # Checks if the next argument ($2) exists and is not another option (does not start with --)
-      if [[ -n "$2" ]] && [[ ! "$2" =~ ^-- ]]; then
+      # Optional argument: accepts a value if the next argument exists and isn't another flag
+      # Handles these scenarios:
+      #   --previous-tag "v1.0.0"      → PREVIOUS_TAG="v1.0.0", shift 2
+      #   --previous-tag ""            → PREVIOUS_TAG="", shift 2 (explicit empty string)
+      #   --previous-tag --other-flag  → PREVIOUS_TAG unchanged, shift 1 (next arg is a flag)
+      #   --previous-tag (at end)      → PREVIOUS_TAG unchanged, shift 1 (no more args)
+      if [[ $# -gt 1 ]] && [[ ! "$2" =~ ^-- ]]; then
         PREVIOUS_TAG="$2"
         shift 2
       else
