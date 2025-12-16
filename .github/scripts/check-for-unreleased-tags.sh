@@ -3,30 +3,41 @@
 # check-for-unreleased-tags.sh --days DAYS
 set -e
 
-echo "=== Checking Git tags against GitHub releases (last 7 days) ==="
+echo "=== Checking Git tags against GitHub releases ==="
 echo ""
 
-# Calculate date 7 days ago
-SEVEN_DAYS_AGO=$(date -u -d '7 days ago' '+%Y-%m-%d %H:%M:%S')
-SEVEN_DAYS_AGO_UNIX=$(date -u -d '7 days ago' '+%s')
-echo "Checking tags and releases created since: $SEVEN_DAYS_AGO UTC"
+DAYS="$1"
+
+#Check that Days is a positive integer
+if [[ $DAYS =~ ^-?[0-9]+$ ]]; then
+    echo "$DAYS is an integer, continuing"
+else
+    echo "Bad input for $DAYS, exiting"
+    exit 1
+fi
+
+
+# Calculate date X days ago
+NUMBER_OF_DAYS_AGO=$(date -u -d "$DAYS days ago" '+%Y-%m-%d %H:%M:%S')
+NUMBER_OF_DAYS_AGO_UNIX=$(date -u -d "$DAYS days ago" '+%s')
+echo "Checking tags and releases created since: $NUMBER_OF_DAYS_AGO UTC"
 echo ""
 
-echo "Fetching Git tags from last 7 days..."
+echo "Fetching Git tags"
 git fetch --tags
 ALL_TAGS=$(git tag --sort=-creatordate --format='%(creatordate:unix) %(refname:short)' | \
-awk -v cutoff="$SEVEN_DAYS_AGO_UNIX" '$1 >= cutoff {print $2}')
+awk -v cutoff="$NUMBER_OF_DAYS_AGO_UNIX" '$1 >= cutoff {print $2}')
 TAG_COUNT=$(echo "$ALL_TAGS" | grep -c . || echo 0)
-echo "Found $TAG_COUNT Git tags in the last 7 days"
+echo "Found $TAG_COUNT Git tags"
 echo ""
 
-# Get GitHub releases from the last 7 days
-echo "Fetching GitHub releases from last 7 days..."
+
+echo "Fetching GitHub releases"
 RELEASES=$(gh release list --limit 100 --json tagName,createdAt --jq \
---arg cutoff "$SEVEN_DAYS_AGO" \
+--arg cutoff "$NUMBER_OF_DAYS_AGO" \
 '.[] | select(.createdAt >= $cutoff) | .tagName')
 RELEASE_COUNT=$(echo "$RELEASES" | grep -c . || echo 0)
-echo "Found $RELEASE_COUNT GitHub releases in the last 7 days"
+echo "Found $RELEASE_COUNT GitHub releases"
 echo ""
 
 # Find tags without releases
@@ -64,7 +75,7 @@ fi
 echo ""
 
 # Summary and exit status
-echo "=== Summary (Last 7 Days) ==="
+echo "=== Summary (Last $DAYS Days) ==="
 echo "Git tags created: $TAG_COUNT"
 echo "GitHub releases created: $RELEASE_COUNT"
 echo "Tags without releases: ${#MISSING_RELEASES[@]}"
@@ -73,9 +84,9 @@ echo ""
 
 # Fail if any mismatches found
 if [ ${#MISSING_RELEASES[@]} -gt 0 ] || [ ${#MISSING_TAGS[@]} -gt 0 ]; then
-    echo "❌ FAILURE: Mismatches detected between tags and releases in the last 7 days!"
+    echo "❌ FAILURE: Mismatches detected between tags and releases!"
     exit 1
 else
-    echo "✅ SUCCESS: All tags and releases from the last 7 days are in sync!"
+    echo "✅ SUCCESS: All tags and releases are in sync!"
     exit 0
 fi
