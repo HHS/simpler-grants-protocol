@@ -5,6 +5,12 @@ on:
     # Runs at 6 PM UTC every day
     - cron: '0 18 * * *'
   workflow_dispatch: # Allows manual trigger
+  inputs:
+    days:
+      description: "Number of days to check"
+      required: false
+      type: string
+      default: 30
 
 jobs:
   check-tags-releases:
@@ -12,7 +18,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Fetch all tags and history
       
@@ -20,82 +26,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          #!/bin/bash
-          set -e
-          
-          echo "=== Checking Git tags against GitHub releases (last 7 days) ==="
-          echo ""
-          
-          # Calculate date 7 days ago
-          SEVEN_DAYS_AGO=$(date -u -d '7 days ago' '+%Y-%m-%d %H:%M:%S')
-          SEVEN_DAYS_AGO_UNIX=$(date -u -d '7 days ago' '+%s')
-          echo "Checking tags and releases created since: $SEVEN_DAYS_AGO UTC"
-          echo ""
-          
-          echo "Fetching Git tags from last 7 days..."
-          git fetch --tags
-          ALL_TAGS=$(git tag --sort=-creatordate --format='%(creatordate:unix) %(refname:short)' | \
-            awk -v cutoff="$SEVEN_DAYS_AGO_UNIX" '$1 >= cutoff {print $2}')
-          TAG_COUNT=$(echo "$ALL_TAGS" | grep -c . || echo 0)
-          echo "Found $TAG_COUNT Git tags in the last 7 days"
-          echo ""
-          
-          # Get GitHub releases from the last 7 days
-          echo "Fetching GitHub releases from last 7 days..."
-          RELEASES=$(gh release list --limit 100 --json tagName,createdAt --jq \
-            --arg cutoff "$SEVEN_DAYS_AGO" \
-            '.[] | select(.createdAt >= $cutoff) | .tagName')
-          RELEASE_COUNT=$(echo "$RELEASES" | grep -c . || echo 0)
-          echo "Found $RELEASE_COUNT GitHub releases in the last 7 days"
-          echo ""
-          
-          # Find tags without releases
-          echo "=== Tags without corresponding releases ==="
-          MISSING_RELEASES=()
-          if [ $TAG_COUNT -gt 0 ]; then
-            while IFS= read -r tag; do
-              if [ -n "$tag" ] && ! echo "$RELEASES" | grep -qx "$tag"; then
-                echo "  ❌ Tag '$tag' has no GitHub release"
-                MISSING_RELEASES+=("$tag")
-              fi
-            done <<< "$ALL_TAGS"
-          fi
-          
-          if [ ${#MISSING_RELEASES[@]} -eq 0 ]; then
-            echo "  ✅ All tags have corresponding releases"
-          fi
-          echo ""
-          
-          # Find releases without tags
-          echo "=== Releases without corresponding tags ==="
-          MISSING_TAGS=()
-          if [ $RELEASE_COUNT -gt 0 ]; then
-            while IFS= read -r release; do
-              if [ -n "$release" ] && ! echo "$ALL_TAGS" | grep -qx "$release"; then
-                echo "  ❌ Release '$release' has no corresponding Git tag"
-                MISSING_TAGS+=("$release")
-              fi
-            done <<< "$RELEASES"
-          fi
-          
-          if [ ${#MISSING_TAGS[@]} -eq 0 ]; then
-            echo "  ✅ All releases have corresponding tags"
-          fi
-          echo ""
-          
-          # Summary and exit status
-          echo "=== Summary (Last 7 Days) ==="
-          echo "Git tags created: $TAG_COUNT"
-          echo "GitHub releases created: $RELEASE_COUNT"
-          echo "Tags without releases: ${#MISSING_RELEASES[@]}"
-          echo "Releases without tags: ${#MISSING_TAGS[@]}"
-          echo ""
-          
-          # Fail if any mismatches found
-          if [ ${#MISSING_RELEASES[@]} -gt 0 ] || [ ${#MISSING_TAGS[@]} -gt 0 ]; then
-            echo "❌ FAILURE: Mismatches detected between tags and releases in the last 7 days!"
-            exit 1
-          else
-            echo "✅ SUCCESS: All tags and releases from the last 7 days are in sync!"
-            exit 0
-          fi
+          .github/scripts/check-for-unreleased-tags.sh \
+          --days ${{ github.event.inputs.days}}
