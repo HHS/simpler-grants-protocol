@@ -5,12 +5,12 @@ on:
     # Runs at 6 PM UTC every day
     - cron: '0 18 * * *'
   workflow_dispatch: # Allows manual trigger
-  inputs:
-    days:
-      description: "Number of days to check"
-      required: false
-      type: string
-      default: 30
+    inputs:
+      days:
+        description: "Number of days to check"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   check-tags-releases:
@@ -26,5 +26,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+        DAYS=""
+        if [ "${{github.event.inputs.days }}" == ""]; then
+          DAYS="30"
+        else
+          DAYS="${{ github.event.inputs.days }}"
+        fi
+
           .github/scripts/check-for-unreleased-tags.sh \
-          --days ${{ github.event.inputs.days}}
+          --days $DAYS
