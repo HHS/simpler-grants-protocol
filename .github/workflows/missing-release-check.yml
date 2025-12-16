@@ -26,12 +26,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-        DAYS=""
-        if [ "${{github.event.inputs.days }}" == ""]; then
-          DAYS="30"
-        else
-          DAYS="${{ github.event.inputs.days }}"
-        fi
+          DAYS=""
+          if [ "${{ github.event.inputs.days }}" == "" ]; then
+            DAYS="30"
+          else
+            DAYS="${{ github.event.inputs.days }}"
+          fi
 
           .github/scripts/check-for-unreleased-tags.sh \
-          --days $DAYS
+            --days $DAYS
