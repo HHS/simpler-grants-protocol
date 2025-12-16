@@ -7,9 +7,16 @@
     "typespec": "tsp compile main.tsp",
     "format": "tsp format .",
     "check:format": "tsp format . --check",
-    "checks": "npm run check:format"
+    "checks": "pnpm run check:format"
   },
   "dependencies": {
-    "@common-grants/core": "^0.2.1"
+    "@common-grants/core": "^0.2.3"
+  },
+  "devDependencies": {
+    "@typespec/compiler": "~1.5.0",
+    "@typespec/http": "~1.5.0",
+    "@typespec/json-schema": "~1.5.0",
+    "@typespec/openapi3": "~1.5.0",
+    "@typespec/versioning": "~0.75.0"
   }
 }
