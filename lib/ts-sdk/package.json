@@ -52,7 +52,7 @@
     "opportunities"
   ],
   "scripts": {
-    "build": "tsc && npm run typespec",
+    "build": "tsc && pnpm typespec",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "prepare": "tsc",
@@ -63,7 +63,7 @@
     "format": "prettier --write .",
     "check:lint": "eslint . --ext .ts",
     "check:format": "prettier --check .",
-    "checks": "npm run check:lint && npm run check:format",
+    "checks": "pnpm check:lint && pnpm check:format",
     "typespec": "tsp compile lib/main.tsp",
     "example:list": "tsx examples/list-opportunities.ts",
     "example:get": "tsx examples/get-opportunity.ts",

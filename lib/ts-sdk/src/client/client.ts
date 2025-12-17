@@ -5,7 +5,7 @@
 import { type ClientConfig, type ResolvedConfig, resolveConfig } from "./config";
 import { Auth, buildAuthHeaders, type AuthMethod } from "./auth";
 import { Opportunities } from "./opportunities";
-import type { Paginated } from "@/types";
+import type { Paginated } from "../types";
 
 // =============================================================================
 // Options interfaces
