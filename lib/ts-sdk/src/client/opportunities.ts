@@ -10,15 +10,15 @@ import type {
   OppStatusOptions,
   OppFilters,
   OppSearchRequest,
-} from "@/types";
+} from "../types";
 import {
   OkSchema,
   PaginatedSchema,
   FilteredSchema,
   OpportunityBaseSchema,
   OppFiltersSchema,
-} from "@/schemas";
-import { ArrayOperator } from "@/constants";
+} from "../schemas";
+import { ArrayOperator } from "../constants";
 
 // Response schemas with validation
 const OpportunityResponseSchema = OkSchema(OpportunityBaseSchema);
