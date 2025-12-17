@@ -1,6 +1,7 @@
 #!/bin/bash
 #Script to check tags against releases
-# check-for-unreleased-tags.sh --days DAYS
+# check-for-unreleased-tags.sh 
+# example check-for-unreleased-tags.sh <Number of days>
 set -e
 
 echo "=== Checking Git tags against GitHub releases ==="
@@ -12,7 +13,7 @@ DAYS="$1"
 if [[ $DAYS =~ ^[0-9]+$ ]]; then
     echo "$DAYS is an integer, continuing"
 else
-    echo "Bad input for $DAYS, exiting"
+    echo "Bad input for first argument. It should be a positive integer eg: check-for-unreleased-tags.sh 30"
     exit 1
 fi
 
