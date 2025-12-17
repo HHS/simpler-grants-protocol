@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import swaggerUi from "swagger-ui-express";
 import { DocumentationService } from "../services/documentation.service";
 
-export const docsRouter = Router();
+export const docsRouter: Router = Router();
 
 // Middleware to check if OpenAPI spec exists
 const checkSpecExists = (req: Request, res: Response, next: NextFunction) => {

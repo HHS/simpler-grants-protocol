@@ -4,4 +4,5 @@ A directory of sample projects that demonstrate how to implement and extend the 
 
 ## Example projects
 
-- [Custom API](custom-api): Demonstrates a simple example of an API spec that extends the base CommonGrants protocol.
+- [California Grants Example API](california-grants-example-api): Demonstrates a simple example of an API spec that extends the base CommonGrants protocol.
+- [Pennsylvania Grants Example API](pennsylvania-grants-example-api): Demonstrates a simple example of an API spec that extends the base CommonGrants protocol.

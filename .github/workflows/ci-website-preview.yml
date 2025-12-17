@@ -1,6 +1,7 @@
-name: "CI - Deploy Website Preview to Cloudflare"
+name: "CI - Website: Run Checks and Deploy Preview"
 
 on:
+  workflow_call:
   pull_request:
     paths:
       - website/**
@@ -14,48 +15,47 @@ env:
   CLOUDFLARE_WORKERS_DOMAIN: billy-daly.workers.dev
 
 jobs:
-  deploy-preview:
-    if: github.event.action != 'closed'
+  build-and-deploy-preview:
     runs-on: ubuntu-latest
-    name: Deploy PR preview
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v6
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-
-      - name: Install pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
         with:
-          version: 10.18.3
+          node-version: "20"
+          cache: "pnpm"
 
       - name: Install dependencies
-        # Needs to be run from the root of the repository because
-        # the changelog-emitter dependency is a file: dependency.
         working-directory: .
         run: pnpm install --frozen-lockfile
 
-      - name: Build changelog-emitter dependency
-        # Build the local file: dependency before installing website deps
-        working-directory: .
-        run: pnpm --filter typespec-versioning-changelog run build
+      - name: Build site
+        # This needs to run before running checks because it generates the schema docs and changelogs.
+        run: pnpm run build
 
-      - name: Install website dependencies
-        run: npm ci
+      - name: Run all checks
+        # linting, formatting, spelling, astro checking
+        run: pnpm run checks
 
-      - name: Build Astro site
-        run: npm run build
+      - name: Audit dependencies
+        run: pnpm run audit:high
 
-      - name: Publish to unique PR worker
-        run: |
-          npx wrangler deploy --name cg-pr-${{ github.event.pull_request.number }}
+      # Preview deployment (only on PRs)
+      - name: Deploy PR preview
+        if: github.event_name == 'pull_request'
+        run: pnpm wrangler deploy --name cg-pr-${{ github.event.pull_request.number }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Find existing comment
+        if: github.event_name == 'pull_request'
         id: find-comment
         uses: peter-evans/find-comment@v3
         with:
@@ -64,6 +64,7 @@ jobs:
           body-includes: Website Preview Deployed
 
       - name: Post preview link comment
+        if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}

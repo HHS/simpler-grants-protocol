@@ -5,37 +5,37 @@ A template for a CommonGrants API implemented using Express.js and TypeScript.
 ## Pre-requisites
 
 1. Node.js 18 or greater is installed globally: `node --version`
-2. npm is installed globally: `npm --version`
-3. The TypeSpec compiler and CommonGrants CLI are installed globally: `npm install -g @common-grants/cli @typespec/compiler`
+2. pnpm is installed globally: `pnpm --version`
+3. The CommonGrants CLI is installed globally: `pnpm install -g @common-grants/cli`
 
 ## Quickstart
 
 1. Create a new directory for your project: `mkdir express-api && cd express-api`
 2. Set up the project using this template and follow the instructions: `cg init --template express-js`
-3. Install the project dependencies: `npm install`
-4. Run the checks: `npm run checks`
-5. Run the local development server: `npm run dev`
+3. Install the project dependencies: `pnpm install`
+4. Run the checks: `pnpm run checks`
+5. Run the local development server: `pnpm run dev`
 
 ## Commands
 
-The npm scripts expose the following commands:
+The pnpm scripts expose the following commands:
 
-| Command          | Description                                 |
-| ---------------- | ------------------------------------------- |
-| `npm install`    | Installs the project dependencies           |
-| `npm run format` | Runs formatting with prettier               |
-| `npm run lint`   | Runs linting with eslint                    |
-| `npm run build`  | Compiles TypeScript to JavaScript           |
-| `npm run dev`    | Runs the development server                 |
-| `npm run checks` | Runs linting, formatting, and type checking |
+| Command           | Description                                 |
+| ----------------- | ------------------------------------------- |
+| `pnpm install`    | Installs the project dependencies           |
+| `pnpm run format` | Runs formatting with prettier               |
+| `pnpm run lint`   | Runs linting with eslint                    |
+| `pnpm run build`  | Compiles TypeScript to JavaScript           |
+| `pnpm run dev`    | Runs the development server                 |
+| `pnpm run checks` | Runs linting, formatting, and type checking |
 
 ## Project Structure
 
 ```
 ├── package.json            # Node.js project configuration and dependencies
-├── package-lock.json       # Locked versions of dependencies
+├── pnpm-lock.yaml          # Locked versions of dependencies
 ├── tsconfig.json           # TypeScript configuration
-├── .eslintrc.js            # ESLint configuration
+├── eslint.config.js        # ESLint configuration
 ├── .prettierrc             # Prettier configuration
 ├── README.md               # Project documentation
 │

@@ -21,37 +21,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout your repository using git
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Install Node.js
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "20"
+          cache: "pnpm"
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.18.3
-
-      - name: Install workspace dependencies
-        # Needs to be run from the root of the repository because
-        # the changelog-emitter dependency is a file: dependency.
-        working-directory: .
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build changelog-emitter dependency
-        # Build the local file: dependency before installing website deps
-        working-directory: .
-        run: pnpm --filter typespec-versioning-changelog run build
+      - name: Build website
+        run: pnpm --filter website build
 
-      - name: Install, build, and upload your site
-        uses: withastro/action@v3
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
         with:
-          path: ./website # Path to the root of our Astro project
+          path: ./website/dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Only deploy from main branch
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
