@@ -1,4 +1,4 @@
-name: "Website - Cleanup PR Preview"
+name: "CI - Website: Cleanup PR Preview"
 
 on:
   pull_request:
@@ -12,9 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     name: Cleanup PR preview
     steps:
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Delete Worker for PR
         run: |
-          npx wrangler delete --name cg-pr-${{ github.event.pull_request.number }} --force
+          pnpm dlx wrangler@4.27.0 delete --name cg-pr-${{ github.event.pull_request.number }} --force
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
