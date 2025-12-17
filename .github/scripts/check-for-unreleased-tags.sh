@@ -9,7 +9,7 @@ echo ""
 DAYS="$1"
 
 #Check that Days is a positive integer
-if [[ $DAYS =~ ^-?[0-9]+$ ]]; then
+if [[ $DAYS =~ ^[0-9]+$ ]]; then
     echo "$DAYS is an integer, continuing"
 else
     echo "Bad input for $DAYS, exiting"
@@ -17,9 +17,16 @@ else
 fi
 
 
-# Calculate date X days ago
-NUMBER_OF_DAYS_AGO=$(date -u -d "$DAYS days ago" '+%Y-%m-%d %H:%M:%S')
-NUMBER_OF_DAYS_AGO_UNIX=$(date -u -d "$DAYS days ago" '+%s')
+# Calculate date X days ago (compatible with both Linux and macOS)
+if date -v-1d > /dev/null 2>&1; then
+    # macOS date syntax
+    NUMBER_OF_DAYS_AGO=$(date -u -v-${DAYS}d '+%Y-%m-%d %H:%M:%S')
+    NUMBER_OF_DAYS_AGO_UNIX=$(date -u -v-${DAYS}d '+%s')
+else
+    # GNU date syntax (Linux)
+    NUMBER_OF_DAYS_AGO=$(date -u -d "$DAYS days ago" '+%Y-%m-%d %H:%M:%S')
+    NUMBER_OF_DAYS_AGO_UNIX=$(date -u -d "$DAYS days ago" '+%s')
+fi
 echo "Checking tags and releases created since: $NUMBER_OF_DAYS_AGO UTC"
 echo ""
 
@@ -27,16 +34,15 @@ echo "Fetching Git tags"
 git fetch --tags
 ALL_TAGS=$(git tag --sort=-creatordate --format='%(creatordate:unix) %(refname:short)' | \
 awk -v cutoff="$NUMBER_OF_DAYS_AGO_UNIX" '$1 >= cutoff {print $2}')
-TAG_COUNT=$(echo "$ALL_TAGS" | grep -c . || echo 0)
+TAG_COUNT=$(echo "$ALL_TAGS" | grep -c . || true)
 echo "Found $TAG_COUNT Git tags"
 echo ""
 
 
 echo "Fetching GitHub releases"
-RELEASES=$(gh release list --limit 100 --json tagName,createdAt --jq \
---arg cutoff "$NUMBER_OF_DAYS_AGO" \
-'.[] | select(.createdAt >= $cutoff) | .tagName')
-RELEASE_COUNT=$(echo "$RELEASES" | grep -c . || echo 0)
+RELEASES=$(gh release list --limit 100 --json tagName,createdAt | \
+jq -r --arg cutoff "$NUMBER_OF_DAYS_AGO" '.[] | select(.createdAt >= $cutoff) | .tagName')
+RELEASE_COUNT=$(echo "$RELEASES" | grep -c . || true)
 echo "Found $RELEASE_COUNT GitHub releases"
 echo ""
 
@@ -61,12 +67,12 @@ echo ""
 echo "=== Releases without corresponding tags ==="
 MISSING_TAGS=()
 if [ $RELEASE_COUNT -gt 0 ]; then
-while IFS= read -r release; do
-    if [ -n "$release" ] && ! echo "$ALL_TAGS" | grep -qx "$release"; then
-    echo "  ❌ Release '$release' has no corresponding Git tag"
-    MISSING_TAGS+=("$release")
-    fi
-done <<< "$RELEASES"
+    while IFS= read -r release; do
+        if [ -n "$release" ] && ! echo "$ALL_TAGS" | grep -qx "$release"; then
+            echo "  ❌ Release '$release' has no corresponding Git tag"
+            MISSING_TAGS+=("$release")
+        fi
+    done <<< "$RELEASES"
 fi
 
 if [ ${#MISSING_TAGS[@]} -eq 0 ]; then
