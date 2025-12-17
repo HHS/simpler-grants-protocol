@@ -19,16 +19,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: templates/express-js/pnpm-lock.yaml
+
       - name: Install dependencies
-        # Installs dependencies directly from package.lock
-        # and skips dependency resolution etc.
-        run: npm ci
+        # Installs dependencies directly from pnpm-lock.yaml
+        # and skips dependency resolution. Uses --ignore-workspace
+        # since this template is standalone.
+        run: pnpm install --frozen-lockfile --ignore-workspace
 
       - name: Run checks
-        run: npm run checks
+        run: pnpm run checks
 
       - name: Build library
-        run: npm run build
+        run: pnpm run build
 
       - name: Audit dependencies
-        run: npm audit
+        run: pnpm audit

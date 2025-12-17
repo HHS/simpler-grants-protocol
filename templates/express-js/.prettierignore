@@ -1,4 +1,5 @@
 dist/
-coverage/
 node_modules/
-*.d.ts 
+coverage/
+generated/
+pnpm-lock.yaml

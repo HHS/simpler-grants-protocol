@@ -7,7 +7,7 @@ import { oppSortingSchema, oppDefaultFiltersSchema } from "../schemas/models";
  * Router for handling grant opportunity endpoints.
  * Provides routes for listing, retrieving, and searching grant opportunities.
  */
-export const oppRouter = Router();
+export const oppRouter: Router = Router();
 const oppService = new OpportunitiesService();
 
 /**
