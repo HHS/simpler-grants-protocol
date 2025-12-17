@@ -35,14 +35,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install, build, and upload your site
-        uses: withastro/action@v5
+      - name: Build website
+        run: pnpm --filter website build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
         with:
-          path: ./website # Path to the root of our Astro project
+          path: ./website/dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Only deploy from main branch
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
