@@ -3,12 +3,11 @@
 import yaml
 import json
 import sys
-import os
-from pathlib import Path
-from jsf import JSF
+
+from jsf import JSF  # type: ignore
 
 
-from common_grants_sdk.schemas.pydantic.generated import Address
+# from common_grants_sdk.schemas.pydantic.generated import Address
 
 # Hardcoded directory containing YAML schema files
 YAML_DIRECTORY = "../../../../../../website/public/schemas/yaml/"
@@ -18,7 +17,7 @@ def generate_dummy_data_from_yaml(input_file, output_file=None):
     """Load YAML schema, generate dummy data using jsf, and output as JSON"""
     try:
         # Load the YAML file and convert to JSON Schema
-        with open(input_file, 'r') as f:
+        with open(input_file, "r") as f:
             yaml_content = f.read()
 
         # Convert YAML to JSON Schema format
@@ -31,11 +30,10 @@ def generate_dummy_data_from_yaml(input_file, output_file=None):
 
         # Convert to JSON
         json_output = json.dumps(dummy_data, indent=2)
+        print(json_output)
+        # test = Address.Model.from_json(json_output)
 
-        test = Address.Model.from_json(json_output)
-
-        print(f"test is {isinstance(test, Address.Model)}")
-
+        # print(f"test is {isinstance(test, Address.Model)}")
 
     except Exception as e:
         print(f"Error generating dummy data from {input_file}: {e}", file=sys.stderr)
