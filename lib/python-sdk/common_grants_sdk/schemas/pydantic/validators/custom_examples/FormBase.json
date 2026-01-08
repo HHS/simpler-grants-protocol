@@ -1,0 +1,32 @@
+{
+  "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+  "name": "Sample Form",
+  "description": "A sample form for testing",
+  "jsonSchema": {
+    "$id": "sampleForm.json",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      }
+    }
+  },
+  "uiSchema": {
+    "type": "VerticalLayout",
+    "elements": [
+      {
+        "type": "Control",
+        "scope": "#/properties/name"
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/email"
+      }
+    ]
+  },
+  "createdAt": "2025-01-01T00:00:00Z",
+  "lastModifiedAt": "2025-01-01T00:00:00Z"
+}
