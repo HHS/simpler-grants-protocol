@@ -1,0 +1,15 @@
+{
+  "id": "423e4567-e89b-12d3-a456-426614174001",
+  "applicationId": "523e4567-e89b-12d3-a456-426614174001",
+  "formId": "623e4567-e89b-12d3-a456-426614174001",
+  "response": {
+    "name": "John Doe",
+    "email": "john.doe@example.com"
+  },
+  "status": {
+    "value": "complete",
+    "description": "Form response is complete"
+  },
+  "createdAt": "2025-01-01T00:00:00Z",
+  "lastModifiedAt": "2025-01-01T00:00:00Z"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+  "title": "Small Business Grant Program",
+  "status": {
+    "value": "open",
+    "description": "Opportunity is currently open for applications"
+  },
+  "description": "This program provides funding to small businesses to help them grow and create jobs",
+  "createdAt": "2025-01-01T00:00:00Z",
+  "lastModifiedAt": "2025-01-01T00:00:00Z",
+  "competitions": []
+}

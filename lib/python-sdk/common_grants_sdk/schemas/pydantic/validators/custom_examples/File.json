@@ -1,0 +1,9 @@
+{
+  "downloadUrl": "https://example.com/files/sample-document.pdf",
+  "name": "sample-document.pdf",
+  "description": "A sample PDF document",
+  "sizeInBytes": 1024000,
+  "mimeType": "application/pdf",
+  "createdAt": "2025-01-01T00:00:00Z",
+  "lastModifiedAt": "2025-01-01T00:00:00Z"
+}
