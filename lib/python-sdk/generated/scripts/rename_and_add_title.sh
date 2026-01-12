@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# Script to set the 'title' attribute in each YAML schema file
-# to match the filename (without the .yaml extension)
+# Script to copy the yaml files and add the 'title' attribute in each YAML schema file
+# to match the filename
 
-SCHEMAS_DIR="${1:-$(dirname "$0")/../../public/schemas/yaml}"
+SCHEMAS_DIR="${1}"
+OUTPUT_DIR="${2}"
 
 # Check if the directory exists
 if [ ! -d "$SCHEMAS_DIR" ]; then
@@ -12,7 +13,7 @@ if [ ! -d "$SCHEMAS_DIR" ]; then
 fi
 
 # Create generated directory alongside yaml directory
-GENERATED_DIR="$(dirname "$SCHEMAS_DIR")/generated"
+GENERATED_DIR="$(dirname "$OUTPUT_DIR")/schemas"
 mkdir -p "$GENERATED_DIR"
 echo "Created directory: $GENERATED_DIR"
 
@@ -24,7 +25,7 @@ echo "Copied $(ls -1 "$GENERATED_DIR"/*.yaml 2>/dev/null | wc -l | tr -d ' ') YA
 echo "Processing YAML files in: $SCHEMAS_DIR"
 
 # Find .yaml files only at the root level (not in subdirectories)
-find "$SCHEMAS_DIR" -maxdepth 1 -name "*.yaml" -type f | while read -r file; do
+find "$GENERATED_DIR" -maxdepth 1 -name "*.yaml" -type f | while read -r file; do
   # Get the filename without extension
   filename=$(basename "$file" .yaml)
   
