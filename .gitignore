@@ -16,6 +16,3 @@ node_modules/
 
 # Hypothesis test cache
 .hypothesis/
-
-# Generated schema files
-website/public/schemas/generated/
