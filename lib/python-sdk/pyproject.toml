@@ -23,12 +23,6 @@ tomlkit = "^0.13.3"
 tomlq = "^0.1.0"
 types-pyyaml = "^6.0.12.20250915"
 datamodel-code-generator = "^0.43.1"
-pyyaml = "^6.0.3"
-jsonref = "^1.1.0"
-hypothesis = "^6.0.0"
-hypothesis-jsonschema = "^0.23.1"
-jsf = "^0.11.2"
-email-validator = "^2.3.0"
 
 [build-system]
 requires = ["poetry-core"]
