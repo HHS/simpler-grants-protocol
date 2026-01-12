@@ -13,6 +13,3 @@ node_modules/
 
 # macOS-specific files
 .DS_Store
-
-# Hypothesis test cache
-.hypothesis/
