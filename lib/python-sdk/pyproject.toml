@@ -21,6 +21,8 @@ pytest-cov = "^5.0.0"
 ruff = "^0.11.0"
 tomlkit = "^0.13.3"
 tomlq = "^0.1.0"
+types-pyyaml = "^6.0.12.20250915"
+datamodel-code-generator = "^0.43.1"
 
 [build-system]
 requires = ["poetry-core"]
