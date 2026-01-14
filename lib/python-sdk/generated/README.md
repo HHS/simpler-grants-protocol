@@ -33,27 +33,180 @@ The main entrypoint for creating the schemas is the ./generate_models.sh command
     The following issues are from comparing the generated schemas against the existing hand built schemas. Note this is not an exhaustive list
 
 For more detailed information on the below issues see [this comment](https://github.com/HHS/simpler-grants-protocol/pull/452#discussion_r2683046281) for side-by-side comparison
-- filters.numeric.NumberRange field properties
-- SingleDateEvent eventType comes in as string not a Literal[EventType.SINGLE_DATE] (This applies to all EventType)
-- Event.py union is set under __root__ instead of just Event = Union
-- DefaultFilter value property is Any instead of Union
-- @Field_validator and @classmethod functions are currently missing`
+
+<details>
+<summary> Filters NumberRange Property </summary>
+
+Manual
+```python
+class NumberRange(CommonGrantsBaseModel):
+    """Represents a range between two numeric values."""
+
+    min: Union[int, float] = Field(..., description="The minimum value in the range")
+    max: Union[int, float] = Field(..., description="The maximum value in the range")
+```
+
+Generated
+```python
+class Value(CommonGrantsBaseModel):
+    min: float
+    max: float
 
 
+class NumberRangeFilter(CommonGrantsBaseModel):
+    operator: RangeOperators = Field(
+        ..., description='The operator to apply to the filter value'
+    )
+    value: Value = Field(
+        ...,
+        description='The value to use for the filter operation',
+        examples=[{'min': 1000, 'max': 10000}],
+        json_schema_extra={'unevaluatedProperties': {'not': {}}},
+    )
+
+```
+</details>
+
+<details>
+<summary> SingleDate Event String vs Literal (Applies to all EventType</summary>
+
+Manual
+```python
+# Single Date Event
+class SingleDateEvent(EventBase):
+    """Description of an event that has a date (and possible time) associated with it."""
+
+    event_type: Literal[EventType.SINGLE_DATE] = Field(
+        EventType.SINGLE_DATE,
+        alias="eventType",
+    )
+    date: ISODate = Field(
+        ...,
+        description="Date of the event in ISO 8601 format: YYYY-MM-DD",
+    )
+    time: Optional[ISOTime] = Field(
+        default=None,
+        description="Time of the event in ISO 8601 format: HH:MM:SS",
+    )
+
+```
+
+Generated
+```python
+
+class SingleDateEvent(EventBase):
+    event_type: Literal['singleDate'] = Field(
+        ..., alias='eventType', description='Type of event'
+    )
+    date: isoDate.IsoDate = Field(
+        ..., description='Date of the event in in ISO 8601 format: YYYY-MM-DD'
+    )
+    time: Optional[isoTime.IsoTime] = Field(
+        default=None, description='Time of the event in ISO 8601 format: HH:MM:SS'
+    )
+
+
+```
+</details>
+
+<details>
+<summary>Event.py set under __root__ vs Event = Union </summary>
+
+Manual
+```python
+# Event Union
+Event = Union[SingleDateEvent, DateRangeEvent, OtherEvent]
+
+```
+
+Generated
+```python
+
+class Event(RootModel[Union[SingleDateEvent, DateRangeEvent, OtherEvent]]):
+    root: Union[SingleDateEvent, DateRangeEvent, OtherEvent] = Field(
+        ...,
+        description='Union of all event types',
+        json_schema_extra={'$schema': 'https://json-schema.org/draft/2020-12/schema'},
+        title='Event',
+    )
+
+```
+</details>
+
+<details>
+<summary>DefaultFilter value property is Any instead of Union</summary>
+
+Manual
+```python
+
+class DefaultFilter(CommonGrantsBaseModel):
+    """Base class for all filters that matches Core v0.1.0 DefaultFilter structure."""
+
+    operator: Union[
+        EquivalenceOperator,
+        ComparisonOperator,
+        ArrayOperator,
+        StringOperator,
+        RangeOperator,
+    ] = Field(..., description="The operator to apply to the filter value")
+    value: Union[str, int, float, list, dict] = Field(
+        ...,
+        description="The value to use for the filter operation",
+    )
+
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            # Try to match against each operator type
+            for operator_class in [
+                EquivalenceOperator,
+                ComparisonOperator,
+                ArrayOperator,
+                StringOperator,
+                RangeOperator,
+            ]:
+                try:
+                    return operator_class(v)
+                except ValueError:
+                    continue
+            # If no match found, raise ValueError
+            raise ValueError(f"Invalid operator: {v}")
+        return v
+
+```
+
+Generated
+```python
+class DefaultFilter(CommonGrantsBaseModel):
+    operator: Union[
+        EquivalenceOperators,
+        ComparisonOperators,
+        ArrayOperators,
+        StringOperators,
+        RangeOperators,
+        AllOperators,
+    ] = Field(..., description='The operator to apply to the filter value')
+    value: Any = Field(..., description='The value to use for the filter operation')
+
+```
+
+</details>
 
 ## Future Work/ Next Steps
 
 ### Manual Verification of Pydantic Schemas
 
 ### Steps Taken
-1. Update the `common-grants-sdk` setting in `/templates/fast-api/pyproject.toml` comment line 10 uncomment line 11
+1. Update the `common-grants-sdk` setting in /templates/fast-api/pyproject.toml comment line 10 uncomment line 11
 2. Run the generate_models.sh script
-3. Update the `__init__.py` inside of `lib/python-sdk/common_grants_sdk/schemas/pydantic/generated` to export the generated models
-4.  Update the `__init__.py` inside of `templates/fast-api/src/common_grants/schemas/__init__.py` to point to `common_grants_sdk.schemas.pydantic.generated`
+3. Update the `__init__.py` inside of [`/generated`](../generated/scripts/pydantic/__init__.py) (This assumes you ran the generations script from the scripts directory where this README resides and used an output direcotry of . as the second argument) to export the generated models
+4.  Update the `__init__.py` inside of [`templates/fast-api/src/common_grants/schemas/__init__.py`](../../../templates/fast-api/src/common_grants/schemas/__init__.py) to point to `common_grants_sdk.schemas.pydantic.generated`
 5. Run `make check-types`, this will return an error
 6. Address errors as needed until the `make` command passes
 7. Add the auto-generated schemas to the existing schema objects so that the existing schema objects are wrapping the auto-generated objects
-8. Stand up the fast-api template and verify that things work as
+8. Stand up the fast-api template and verify that things work as expected
 
 
 

@@ -3,6 +3,8 @@
 # Script to copy the yaml files and add the 'title' attribute in each YAML schema file
 # to match the filename
 
+#Usage: rename_and_add_title <PATH TO JSONSCHEMA TAML DIRECTORY> <OUTPUT DIRECTORY FOR MODIFIED YAMLS>
+
 SCHEMAS_DIR="${1}"
 OUTPUT_DIR="${2}"
 

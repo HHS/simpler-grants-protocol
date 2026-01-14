@@ -1,4 +1,6 @@
 #!/bin/bash
+#Script to run the end to end process for auto-generating pydantic schemas
+#Usage: generate_models.sh # <PATH TO JSONSCHEMA YAML> <OUTPUT DIR TO PLACE THE PYDANTIC OBJECTS IN 
 
 # Input Variables
 YAML_DIR="$1"
