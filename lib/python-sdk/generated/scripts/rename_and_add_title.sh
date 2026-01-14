@@ -13,7 +13,7 @@ if [ ! -d "$SCHEMAS_DIR" ]; then
 fi
 
 # Create generated directory alongside yaml directory
-GENERATED_DIR="$(dirname "$OUTPUT_DIR")/schemas"
+GENERATED_DIR="$OUTPUT_DIR/schemas"
 mkdir -p "$GENERATED_DIR"
 echo "Created directory: $GENERATED_DIR"
 
