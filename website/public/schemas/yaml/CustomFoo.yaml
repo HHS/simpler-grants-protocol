@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomFoo.yaml
+type: object
+properties:
+  name:
+    type: string
+    const: foo
+  fieldType:
+    type: string
+    const: string
+  value:
+    type: string
+    examples:
+      - bar
+  description:
+    type: string
+    const: A string field for the foo
+required:
+  - name
+  - fieldType
+  - value
+  - description
+allOf:
+  - $ref: CustomField.yaml
+unevaluatedProperties:
+  not: {}

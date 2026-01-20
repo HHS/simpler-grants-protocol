@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomLegacyId.yaml
+type: object
+properties:
+  name:
+    type: string
+    const: legacyId
+  fieldType:
+    type: string
+    const: number
+  value:
+    type: integer
+    examples:
+      - 12345
+  description:
+    type: string
+    const: An integer ID for the opportunity, needed for compatibility with legacy systems
+required:
+  - name
+  - fieldType
+  - value
+  - description
+allOf:
+  - $ref: CustomField.yaml
+unevaluatedProperties:
+  not: {}
