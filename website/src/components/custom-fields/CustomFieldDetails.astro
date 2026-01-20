@@ -99,8 +99,8 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
 
   <!-- Actions -->
   <div class="actions">
-    <LinkButton href="/custom-fields" variant="secondary">
-      ← Back to Registry
+    <LinkButton href="/custom-fields" variant="secondary" icon="left-arrow" iconPlacement="start">
+      Back to Registry
     </LinkButton>
   </div>
 </div>
@@ -186,31 +186,31 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
 
   .tag {
     padding: 0.375rem 0.75rem;
-    background: var(--sl-color-gray-5);
-    color: var(--sl-color-gray-1);
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-white);
     border-radius: 9999px;
     font-size: 0.875rem;
   }
 
   .schema-link {
-    padding: 0.375rem 0.75rem;
+    padding: 0.5rem 1rem;
     background: var(--sl-color-blue-low);
     color: var(--sl-color-blue-high);
-    border-radius: 0.25rem;
+    border-radius: 0.375rem;
     font-size: 0.875rem;
     text-decoration: none;
     font-family: monospace;
-    transition: background 0.15s ease;
+    font-weight: 600;
+    transition: background 0.15s ease, transform 0.1s ease;
   }
 
   .schema-link:hover {
     background: var(--sl-color-blue);
-    color: var(--sl-color-white);
+    color: white;
+    transform: translateY(-1px);
   }
 
   .actions {
     margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--sl-color-gray-5);
   }
 </style>
