@@ -2,6 +2,7 @@
 import type { CustomField } from "@/lib/custom-fields";
 import { LinkButton } from "@astrojs/starlight/components";
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import { SchemaDocMapper } from "@/lib/schema/schema-doc-mapper";
 
 interface Props {
   field: CustomField;
@@ -20,6 +21,12 @@ function formatDate(dateStr: string): string {
   } catch {
     return dateStr;
   }
+}
+
+// Get documentation path for a schema name
+function getSchemaDocPath(schemaName: string): string {
+  const docPath = SchemaDocMapper.getSchemaDocPath(schemaName);
+  return docPath || `/protocol/models/${schemaName.toLowerCase()}`;
 }
 
 // Build schema file path for SchemaFormatTabs
@@ -71,7 +78,7 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
     </p>
     <div class="tag-list">
       {field.validFor.map((schema) => (
-        <a href={`/protocol/models/${schema.toLowerCase()}`} class="schema-link">
+        <a href={getSchemaDocPath(schema)} class="schema-link">
           {schema}
         </a>
       ))}
