@@ -1,0 +1,27 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomFiscalYear.yaml
+type: object
+properties:
+  name:
+    type: string
+    const: fiscalYear
+  fieldType:
+    type: string
+    const: number
+  value:
+    type: integer
+    examples:
+      - 2026
+  description:
+    type: string
+    const: The fiscal year associated with this opportunity
+required:
+  - name
+  - fieldType
+  - value
+  - description
+allOf:
+  - $ref: CustomField.yaml
+unevaluatedProperties:
+  not: {}
+description: The fiscal year for the opportunity

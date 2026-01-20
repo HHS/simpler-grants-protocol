@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomAgencyContact.yaml
+type: object
+properties:
+  name:
+    type: string
+    const: agencyContact
+  fieldType:
+    type: string
+    const: object
+  value:
+    type: object
+    properties:
+      description:
+        type: string
+      emailAddress:
+        type: string
+      emailDescription:
+        type: string
+    unevaluatedProperties:
+      not: {}
+    examples:
+      - description: For more information, reach out to Jane Smith at agency US-ABC
+        emailAddress: fake_email@grants.gov
+        emailDescription: Click me to email the agency
+  description:
+    type: string
+    const: Contact information for the agency managing this opportunity
+required:
+  - name
+  - fieldType
+  - value
+  - description
+allOf:
+  - $ref: CustomField.yaml
+unevaluatedProperties:
+  not: {}
+description: Agency contact information

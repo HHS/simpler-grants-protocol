@@ -1,0 +1,41 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomAgency.yaml
+type: object
+properties:
+  name:
+    type: string
+    const: agency
+  fieldType:
+    type: string
+    const: object
+  value:
+    type: object
+    properties:
+      agencyCode:
+        type: string
+      agencyName:
+        type: string
+      topLevelAgencyName:
+        type: string
+    required:
+      - agencyCode
+      - agencyName
+    unevaluatedProperties:
+      not: {}
+    examples:
+      - agencyCode: US-ABC
+        agencyName: Department of Examples
+        topLevelAgencyName: Department of Examples
+  description:
+    type: string
+    const: Information about the agency offering this opportunity
+required:
+  - name
+  - fieldType
+  - value
+  - description
+allOf:
+  - $ref: CustomField.yaml
+unevaluatedProperties:
+  not: {}
+description: Agency information including code and name

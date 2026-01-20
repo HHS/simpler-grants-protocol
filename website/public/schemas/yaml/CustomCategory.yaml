@@ -1,0 +1,27 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomCategory.yaml
+type: object
+properties:
+  name:
+    type: string
+    const: category
+  fieldType:
+    type: string
+    const: string
+  value:
+    type: string
+    examples:
+      - discretionary
+  description:
+    type: string
+    const: The category type of the grant opportunity
+required:
+  - name
+  - fieldType
+  - value
+  - description
+allOf:
+  - $ref: CustomField.yaml
+unevaluatedProperties:
+  not: {}
+description: The category of the opportunity (e.g., discretionary, mandatory)

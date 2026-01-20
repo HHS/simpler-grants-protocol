@@ -1,0 +1,230 @@
+---
+import type { CustomField } from "@/lib/custom-fields";
+import { LinkButton } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import { SchemaDocMapper } from "@/lib/schema/schema-doc-mapper";
+
+interface Props {
+  field: CustomField;
+}
+
+const { field } = Astro.props;
+
+// Format date for display
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+// Get documentation path for a schema name
+function getSchemaDocPath(schemaName: string): string {
+  const docPath = SchemaDocMapper.getSchemaDocPath(schemaName);
+  return docPath || `/protocol/models/${schemaName.toLowerCase()}`;
+}
+
+// Build schema file path for SchemaFormatTabs
+const schemaPath = `website/public/schemas/yaml/${field.schema}.yaml`;
+
+// Build example directly from the field's const values and examples
+// (The generic example generator doesn't handle allOf + const values well)
+const exampleValue = field.examples.length > 0 ? field.examples[0] : null;
+const exampleObject = {
+  name: field.name,
+  fieldType: field.fieldType,
+  ...(exampleValue !== null && { value: exampleValue }),
+  description: field.description,
+};
+const exampleCode = JSON.stringify(exampleObject, null, 2);
+---
+
+<div class="custom-field-details">
+  <!-- Summary Section -->
+  <section class="section">
+    <h2>Summary</h2>
+    <p class="description">{field.description}</p>
+
+    <dl class="meta-list">
+      <div class="meta-item">
+        <dt>Field Type</dt>
+        <dd class="type-badge">{field.fieldType}</dd>
+      </div>
+      <div class="meta-item">
+        <dt>Version</dt>
+        <dd>{field.version}</dd>
+      </div>
+      <div class="meta-item">
+        <dt>Author</dt>
+        <dd>{field.author}</dd>
+      </div>
+      <div class="meta-item">
+        <dt>Last Updated</dt>
+        <dd>{formatDate(field.lastModifiedAt)}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- Valid For Section -->
+  <section class="section">
+    <h2>Valid For Schemas</h2>
+    <p class="section-description">
+      This custom field can be used with the following CommonGrants schemas:
+    </p>
+    <div class="tag-list">
+      {
+        field.validFor.map((schema) => (
+          <a href={getSchemaDocPath(schema)} class="schema-link">
+            {schema}
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Tags Section -->
+  <section class="section">
+    <h2>Tags</h2>
+    <div class="tag-list">
+      {field.tags.map((tag) => <span class="tag">{tag}</span>)}
+    </div>
+  </section>
+
+  <!-- Schema Section -->
+  <section class="section">
+    <h2>Schema</h2>
+    <SchemaFormatTabs
+      example={{ code: exampleCode }}
+      jsonSchema={{ file: { path: schemaPath } }}
+    />
+  </section>
+
+  <!-- Actions -->
+  <div class="actions">
+    <LinkButton
+      href="/custom-fields"
+      variant="secondary"
+      icon="left-arrow"
+      iconPlacement="start"
+    >
+      Back to Registry
+    </LinkButton>
+  </div>
+</div>
+
+<style>
+  .custom-field-details {
+    max-width: 800px;
+  }
+
+  .section {
+    margin-bottom: 2.5rem;
+  }
+
+  .section h2 {
+    font-size: 1.6rem;
+    /* margin-bottom: 0.75rem; */
+    color: var(--sl-color-white);
+  }
+
+  .section-description {
+    color: var(--sl-color-gray-2);
+    margin-bottom: 1rem;
+  }
+
+  .description {
+    font-size: 1.1rem;
+    color: var(--sl-color-gray-1);
+    margin-bottom: 1.5rem;
+  }
+
+  dl.meta-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  dl.meta-list > .meta-item {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .meta-item dt {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-gray-3);
+    font-weight: normal;
+    margin: 0 0 0.5rem 0;
+    padding: 0;
+  }
+
+  .meta-item dd {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--sl-color-text);
+    margin: 0;
+    padding: 0;
+  }
+
+  .meta-item dd.type-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-accent-high);
+    border-radius: 0.375rem;
+    font-family: monospace;
+    font-size: 0.875rem;
+    line-height: 1;
+    width: fit-content;
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tag {
+    padding: 0.375rem 0.75rem;
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-white);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+  }
+
+  .schema-link {
+    padding: 0.5rem 1rem;
+    background: var(--sl-color-blue-low);
+    color: var(--sl-color-blue-high);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    text-decoration: none;
+    font-family: monospace;
+    font-weight: 600;
+    transition:
+      background 0.15s ease,
+      transform 0.1s ease;
+  }
+
+  .schema-link:hover {
+    background: var(--sl-color-blue);
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  .actions {
+    margin-top: 3rem;
+  }
+</style>

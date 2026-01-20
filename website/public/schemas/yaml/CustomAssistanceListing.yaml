@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomAssistanceListing.yaml
+type: object
+properties:
+  name:
+    type: string
+    const: assistanceListing
+  fieldType:
+    type: string
+    const: object
+  value:
+    type: object
+    properties:
+      assistanceListingNumber:
+        type: string
+      programTitle:
+        type: string
+    required:
+      - assistanceListingNumber
+      - programTitle
+    unevaluatedProperties:
+      not: {}
+    examples:
+      - assistanceListingNumber: "43.012"
+        programTitle: Space Technology
+  description:
+    type: string
+    const: The assistance listing number and program title for this opportunity
+required:
+  - name
+  - fieldType
+  - value
+  - description
+allOf:
+  - $ref: CustomField.yaml
+unevaluatedProperties:
+  not: {}
+description: Assistance listing information including program title and number

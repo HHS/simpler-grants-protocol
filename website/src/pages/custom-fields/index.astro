@@ -1,0 +1,297 @@
+---
+import { loadAllCustomFields, getFilterOptions } from "@/lib/custom-fields";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+const customFields = loadAllCustomFields();
+const { tags: allTags, schemas: allSchemas } = getFilterOptions();
+---
+
+<StarlightPage
+  frontmatter={{
+    title: "Custom Fields Registry",
+    description:
+      "Browse and search custom field definitions for CommonGrants schemas",
+    tableOfContents: false,
+    prev: false,
+    next: false,
+  }}
+>
+  <div class="custom-fields-page">
+    <p class="intro">
+      Custom fields extend CommonGrants schemas with implementation-specific
+      data. Browse the registry below to find existing custom fields or learn
+      how to define your own.
+    </p>
+
+    <!-- Search and filter section -->
+    <div class="filters">
+      <div class="search-box">
+        <label for="search-input" class="sr-only">Search custom fields</label>
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search by name, description, or tags..."
+          class="search-input"
+        />
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="schema-filter">Valid for</label>
+          <select id="schema-filter" class="filter-select">
+            <option value="">Any schema</option>
+            {
+              allSchemas.map((schema) => (
+                <option value={schema}>{schema}</option>
+              ))
+            }
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="tag-filter">Tag</label>
+          <select id="tag-filter" class="filter-select">
+            <option value="">Any tags</option>
+            {allTags.map((tag) => <option value={tag}>{tag}</option>)}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom fields list -->
+    <div class="fields-list">
+      <CardGrid>
+        {
+          Object.values(customFields).map((field) => (
+            <div
+              class="field-card"
+              data-name={field.name.toLowerCase()}
+              data-description={field.description.toLowerCase()}
+              data-tags={field.tags.join(",").toLowerCase()}
+              data-validfor={field.validFor.join(",").toLowerCase()}
+            >
+              <LinkCard
+                href={`/custom-fields/${field.id}`}
+                title={field.name}
+                description={`${field.fieldType} · ${field.tags.slice(0, 3).join(", ")}`}
+              />
+            </div>
+          ))
+        }
+      </CardGrid>
+    </div>
+
+    <div id="no-results" class="no-results" style="display: none;">
+      <p>No custom fields match your search criteria.</p>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="stats">
+      <span class="stat">
+        <strong>{Object.keys(customFields).length}</strong> custom fields
+      </span>
+      <span class="stat">
+        <strong>{allSchemas.length}</strong> supported schemas
+      </span>
+      <span class="stat">
+        <strong>{allTags.length}</strong> unique tags
+      </span>
+    </div>
+  </div>
+</StarlightPage>
+
+<script>
+  function initFilters() {
+    const searchInput = document.getElementById(
+      "search-input",
+    ) as HTMLInputElement;
+    const schemaFilter = document.getElementById(
+      "schema-filter",
+    ) as HTMLSelectElement;
+    const tagFilter = document.getElementById(
+      "tag-filter",
+    ) as HTMLSelectElement;
+    const fieldCards = document.querySelectorAll<HTMLElement>(".field-card");
+    const noResults = document.getElementById("no-results") as HTMLElement;
+
+    function filterFields() {
+      const searchTerm = searchInput?.value.toLowerCase() || "";
+      const selectedSchema = schemaFilter?.value.toLowerCase() || "";
+      const selectedTag = tagFilter?.value.toLowerCase() || "";
+
+      let visibleCount = 0;
+
+      fieldCards.forEach((card) => {
+        const name = card.dataset.name || "";
+        const description = card.dataset.description || "";
+        const tags = card.dataset.tags || "";
+        const validFor = card.dataset.validfor || "";
+
+        const matchesSearch =
+          !searchTerm ||
+          name.includes(searchTerm) ||
+          description.includes(searchTerm) ||
+          tags.includes(searchTerm);
+
+        const matchesSchema =
+          !selectedSchema || validFor.includes(selectedSchema.toLowerCase());
+        const matchesTag =
+          !selectedTag || tags.includes(selectedTag.toLowerCase());
+
+        const isVisible = matchesSearch && matchesSchema && matchesTag;
+        card.style.display = isVisible ? "" : "none";
+
+        if (isVisible) visibleCount++;
+      });
+
+      if (noResults) {
+        noResults.style.display = visibleCount === 0 ? "block" : "none";
+      }
+    }
+
+    searchInput?.addEventListener("input", filterFields);
+    schemaFilter?.addEventListener("change", filterFields);
+    tagFilter?.addEventListener("change", filterFields);
+  }
+
+  // Initialize on page load and after Astro page transitions
+  document.addEventListener("DOMContentLoaded", initFilters);
+  document.addEventListener("astro:page-load", initFilters);
+</script>
+
+<style>
+  .custom-fields-page {
+    max-width: 1200px;
+    margin: auto;
+  }
+
+  .intro {
+    margin-bottom: 2rem;
+    color: var(--sl-color-gray-2);
+  }
+
+  .filters {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--sl-color-gray-6);
+    border-radius: 0.5rem;
+  }
+
+  .search-box {
+    margin-bottom: 1rem;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid var(--sl-color-gray-4);
+    border-radius: 0.375rem;
+    background: var(--sl-color-bg);
+    color: var(--sl-color-text);
+  }
+
+  .search-input:focus {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+
+  .search-input::placeholder {
+    color: var(--sl-color-gray-3);
+  }
+
+  .filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 1rem;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filter-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--sl-color-gray-2);
+  }
+
+  .filter-select {
+    width: 100%;
+    height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    margin-top: 0;
+    font-size: 0.875rem;
+    border: 1px solid var(--sl-color-gray-4);
+    border-radius: 0.375rem;
+    background: var(--sl-color-bg);
+    color: var(--sl-color-text);
+    box-sizing: border-box;
+  }
+
+  .filter-select:focus {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+
+  .fields-list {
+    margin-bottom: 2rem;
+  }
+
+  /* Let CardGrid control sizing - card wrapper just needs to fill the cell */
+  .field-card {
+    display: contents;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 2rem;
+    color: var(--sl-color-gray-3);
+    background: var(--sl-color-gray-6);
+    border-radius: 0.5rem;
+  }
+
+  .stats {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    padding: 1rem;
+    background: var(--sl-color-gray-6);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--sl-color-gray-2);
+  }
+
+  .stat strong {
+    color: var(--sl-color-text);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 640px) {
+    .filter-row {
+      grid-template-columns: 1fr;
+    }
+
+    .stats {
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: center;
+    }
+  }
+</style>

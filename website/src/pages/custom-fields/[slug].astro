@@ -1,0 +1,37 @@
+---
+import { loadAllCustomFields, getCustomFieldIds } from "@/lib/custom-fields";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import CustomFieldDetails from "@/components/custom-fields/CustomFieldDetails.astro";
+import type { GetStaticPaths } from "astro";
+
+export interface Props {
+  fieldId: string;
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const fieldIds = getCustomFieldIds();
+  const paths = fieldIds.map((fieldId) => ({
+    params: { slug: fieldId },
+    props: { fieldId },
+  }));
+  return paths;
+};
+
+const { fieldId } = Astro.props;
+const customFields = loadAllCustomFields();
+const field = customFields[fieldId];
+
+if (!field) {
+  throw new Error(`Custom field "${fieldId}" not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: field.name,
+    description: field.description,
+    tableOfContents: false,
+  }}
+>
+  <CustomFieldDetails field={field} />
+</StarlightPage>

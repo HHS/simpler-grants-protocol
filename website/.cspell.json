@@ -22,7 +22,8 @@
     "tspconfig",
     "typespec",
     "widal001",
-    "RJSF"
+    "RJSF",
+    "NOFO"
   ],
   "ignoreWords": [
     "opblock",
@@ -63,7 +64,8 @@
     "jsonforms",
     "openxmlformats",
     "officedocument",
-    "spreadsheetml"
+    "spreadsheetml",
+    "validfor"
   ],
   "import": []
 }
