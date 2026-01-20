@@ -88,23 +88,5 @@
     "version": "0.1.0",
     "createdAt": "2026-01-20",
     "lastModifiedAt": "2026-01-20"
-  },
-  "foo": {
-    "schema": "CustomFoo",
-    "validFor": ["OpportunityBase", "FormBase", "ApplicationBase"],
-    "tags": ["example", "demo"],
-    "author": "CommonGrants",
-    "version": "0.1.0",
-    "createdAt": "2026-01-01",
-    "lastModifiedAt": "2026-01-01"
-  },
-  "bar": {
-    "schema": "CustomBar",
-    "validFor": ["OpportunityBase", "FormBase"],
-    "tags": ["example", "demo", "complex"],
-    "author": "CommonGrants",
-    "version": "0.1.0",
-    "createdAt": "2026-01-01",
-    "lastModifiedAt": "2026-01-01"
   }
 }
