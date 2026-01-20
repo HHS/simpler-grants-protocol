@@ -1,43 +1,28 @@
 {
   "legacyId": {
-    "schema": "/schemas/yaml/CustomLegacyId.yaml",
+    "schema": "CustomLegacyId",
     "validFor": ["OpportunityBase", "CompetitionBase"],
     "tags": ["migration", "compatibility", "identifier"],
     "author": "CommonGrants",
     "version": "1.0.0",
-    "plugins": {
-      "python": [],
-      "typescript": [],
-      "java": []
-    },
     "createdAt": "2025-01-01",
     "lastModifiedAt": "2025-01-01"
   },
   "foo": {
-    "schema": "/schemas/yaml/CustomFoo.yaml",
+    "schema": "CustomFoo",
     "validFor": ["OpportunityBase", "FormBase", "ApplicationBase"],
     "tags": ["example", "demo"],
     "author": "CommonGrants",
     "version": "1.0.0",
-    "plugins": {
-      "python": [],
-      "typescript": [],
-      "java": []
-    },
     "createdAt": "2025-01-01",
     "lastModifiedAt": "2025-01-01"
   },
   "bar": {
-    "schema": "/schemas/yaml/CustomBar.yaml",
+    "schema": "CustomBar",
     "validFor": ["OpportunityBase", "FormBase"],
     "tags": ["example", "demo", "complex"],
     "author": "CommonGrants",
     "version": "1.0.0",
-    "plugins": {
-      "python": [],
-      "typescript": [],
-      "java": []
-    },
     "createdAt": "2025-01-01",
     "lastModifiedAt": "2025-01-01"
   }

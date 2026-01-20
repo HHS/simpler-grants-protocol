@@ -1,0 +1,269 @@
+---
+import type { CustomField } from "@/lib/custom-fields";
+import { LinkButton } from "@astrojs/starlight/components";
+
+interface Props {
+  field: CustomField;
+}
+
+const { field } = Astro.props;
+
+// Format date for display
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+---
+
+<div class="custom-field-details">
+  <!-- Summary Section -->
+  <section class="section">
+    <h2>Summary</h2>
+    <p class="description">{field.description}</p>
+    
+    <div class="meta-grid">
+      <div class="meta-item">
+        <span class="meta-label">Field Type</span>
+        <span class="meta-value type-badge">{field.fieldType}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Version</span>
+        <span class="meta-value">{field.version}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Author</span>
+        <span class="meta-value">{field.author}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Last Updated</span>
+        <span class="meta-value">{formatDate(field.lastModifiedAt)}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Valid For Section -->
+  <section class="section">
+    <h2>Valid For Schemas</h2>
+    <p class="section-description">
+      This custom field can be used with the following CommonGrants schemas:
+    </p>
+    <div class="tag-list">
+      {field.validFor.map((schema) => (
+        <a href={`/protocol/models/${schema.toLowerCase()}`} class="schema-link">
+          {schema}
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- Tags Section -->
+  <section class="section">
+    <h2>Tags</h2>
+    <div class="tag-list">
+      {field.tags.map((tag) => (
+        <span class="tag">{tag}</span>
+      ))}
+    </div>
+  </section>
+
+  <!-- Examples Section -->
+  {field.examples.length > 0 && (
+    <section class="section">
+      <h2>Example Values</h2>
+      <div class="examples">
+        {field.examples.map((example, idx) => (
+          <div class="example">
+            <span class="example-label">Example {idx + 1}</span>
+            <pre><code>{JSON.stringify(example, null, 2)}</code></pre>
+          </div>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- Schema Section -->
+  <section class="section">
+    <h2>JSON Schema</h2>
+    <p class="section-description">
+      The full JSON schema definition for this custom field:
+    </p>
+    <div class="schema-block">
+      <pre><code>{JSON.stringify(field.rawSchema, null, 2)}</code></pre>
+    </div>
+    <div class="schema-link-row">
+      <a href={field.schema} target="_blank" class="schema-file-link">
+        View schema file →
+      </a>
+    </div>
+  </section>
+
+  <!-- Actions -->
+  <div class="actions">
+    <LinkButton href="/custom-fields" variant="secondary">
+      ← Back to Registry
+    </LinkButton>
+  </div>
+</div>
+
+<style>
+  .custom-field-details {
+    max-width: 800px;
+  }
+
+  .section {
+    margin-bottom: 2.5rem;
+  }
+
+  .section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: var(--sl-color-white);
+  }
+
+  .section-description {
+    color: var(--sl-color-gray-2);
+    margin-bottom: 1rem;
+  }
+
+  .description {
+    font-size: 1.1rem;
+    color: var(--sl-color-gray-1);
+    margin-bottom: 1.5rem;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .meta-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-gray-3);
+  }
+
+  .meta-value {
+    font-size: 1rem;
+    color: var(--sl-color-text);
+  }
+
+  .type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-accent-high);
+    border-radius: 0.25rem;
+    font-family: monospace;
+    font-size: 0.875rem;
+    width: fit-content;
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tag {
+    padding: 0.375rem 0.75rem;
+    background: var(--sl-color-gray-5);
+    color: var(--sl-color-gray-1);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+  }
+
+  .schema-link {
+    padding: 0.375rem 0.75rem;
+    background: var(--sl-color-blue-low);
+    color: var(--sl-color-blue-high);
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    text-decoration: none;
+    font-family: monospace;
+    transition: background 0.15s ease;
+  }
+
+  .schema-link:hover {
+    background: var(--sl-color-blue);
+    color: var(--sl-color-white);
+  }
+
+  .examples {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .example {
+    background: var(--sl-color-gray-6);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .example-label {
+    display: block;
+    padding: 0.5rem 1rem;
+    background: var(--sl-color-gray-5);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-gray-2);
+  }
+
+  .example pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .example code {
+    font-size: 0.875rem;
+  }
+
+  .schema-block {
+    background: var(--sl-color-gray-6);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .schema-block pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    max-height: 400px;
+  }
+
+  .schema-block code {
+    font-size: 0.8rem;
+  }
+
+  .schema-link-row {
+    margin-top: 0.75rem;
+  }
+
+  .schema-file-link {
+    font-size: 0.875rem;
+    color: var(--sl-color-accent);
+  }
+
+  .actions {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+  }
+</style>
