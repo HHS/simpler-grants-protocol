@@ -1,6 +1,7 @@
 ---
 import type { CustomField } from "@/lib/custom-fields";
 import { LinkButton } from "@astrojs/starlight/components";
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 interface Props {
   field: CustomField;
@@ -20,6 +21,20 @@ function formatDate(dateStr: string): string {
     return dateStr;
   }
 }
+
+// Build schema file path for SchemaFormatTabs
+const schemaPath = `website/public/schemas/yaml/${field.schema}.yaml`;
+
+// Build example directly from the field's const values and examples
+// (The generic example generator doesn't handle allOf + const values well)
+const exampleValue = field.examples.length > 0 ? field.examples[0] : null;
+const exampleObject = {
+  name: field.name,
+  fieldType: field.fieldType,
+  ...(exampleValue !== null && { value: exampleValue }),
+  description: field.description,
+};
+const exampleCode = JSON.stringify(exampleObject, null, 2);
 ---
 
 <div class="custom-field-details">
@@ -28,24 +43,24 @@ function formatDate(dateStr: string): string {
     <h2>Summary</h2>
     <p class="description">{field.description}</p>
     
-    <div class="meta-grid">
+    <dl class="meta-list">
       <div class="meta-item">
-        <span class="meta-label">Field Type</span>
-        <span class="meta-value type-badge">{field.fieldType}</span>
+        <dt>Field Type</dt>
+        <dd class="type-badge">{field.fieldType}</dd>
       </div>
       <div class="meta-item">
-        <span class="meta-label">Version</span>
-        <span class="meta-value">{field.version}</span>
+        <dt>Version</dt>
+        <dd>{field.version}</dd>
       </div>
       <div class="meta-item">
-        <span class="meta-label">Author</span>
-        <span class="meta-value">{field.author}</span>
+        <dt>Author</dt>
+        <dd>{field.author}</dd>
       </div>
       <div class="meta-item">
-        <span class="meta-label">Last Updated</span>
-        <span class="meta-value">{formatDate(field.lastModifiedAt)}</span>
+        <dt>Last Updated</dt>
+        <dd>{formatDate(field.lastModifiedAt)}</dd>
       </div>
-    </div>
+    </dl>
   </section>
 
   <!-- Valid For Section -->
@@ -73,35 +88,13 @@ function formatDate(dateStr: string): string {
     </div>
   </section>
 
-  <!-- Examples Section -->
-  {field.examples.length > 0 && (
-    <section class="section">
-      <h2>Example Values</h2>
-      <div class="examples">
-        {field.examples.map((example, idx) => (
-          <div class="example">
-            <span class="example-label">Example {idx + 1}</span>
-            <pre><code>{JSON.stringify(example, null, 2)}</code></pre>
-          </div>
-        ))}
-      </div>
-    </section>
-  )}
-
   <!-- Schema Section -->
   <section class="section">
-    <h2>JSON Schema</h2>
-    <p class="section-description">
-      The full JSON schema definition for this custom field:
-    </p>
-    <div class="schema-block">
-      <pre><code>{JSON.stringify(field.rawSchema, null, 2)}</code></pre>
-    </div>
-    <div class="schema-link-row">
-      <a href={field.schema} target="_blank" class="schema-file-link">
-        View schema file →
-      </a>
-    </div>
+    <h2>Schema</h2>
+    <SchemaFormatTabs
+      example={{ code: exampleCode }}
+      jsonSchema={{ file: { path: schemaPath } }}
+    />
   </section>
 
   <!-- Actions -->
@@ -122,8 +115,8 @@ function formatDate(dateStr: string): string {
   }
 
   .section h2 {
-    font-size: 1.25rem;
-    margin-bottom: 0.75rem;
+    font-size: 1.6rem;
+    /* margin-bottom: 0.75rem; */
     color: var(--sl-color-white);
   }
 
@@ -138,38 +131,50 @@ function formatDate(dateStr: string): string {
     margin-bottom: 1.5rem;
   }
 
-  .meta-grid {
+  dl.meta-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+    margin: 0;
+    padding: 0;
   }
 
-  .meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+  dl.meta-list > .meta-item {
+    display: block;
+    margin: 0;
+    padding: 0;
   }
 
-  .meta-label {
+  .meta-item dt {
+    display: block;
     font-size: 0.75rem;
+    line-height: 1;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--sl-color-gray-3);
+    font-weight: normal;
+    margin: 0 0 0.5rem 0;
+    padding: 0;
   }
 
-  .meta-value {
+  .meta-item dd {
+    display: block;
     font-size: 1rem;
+    line-height: 1.5;
     color: var(--sl-color-text);
+    margin: 0;
+    padding: 0;
   }
 
-  .type-badge {
+  .meta-item dd.type-badge {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
+    padding: 0.5rem 1rem;
     background: var(--sl-color-accent-low);
     color: var(--sl-color-accent-high);
-    border-radius: 0.25rem;
+    border-radius: 0.375rem;
     font-family: monospace;
     font-size: 0.875rem;
+    line-height: 1;
     width: fit-content;
   }
 
@@ -201,64 +206,6 @@ function formatDate(dateStr: string): string {
   .schema-link:hover {
     background: var(--sl-color-blue);
     color: var(--sl-color-white);
-  }
-
-  .examples {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .example {
-    background: var(--sl-color-gray-6);
-    border-radius: 0.5rem;
-    overflow: hidden;
-  }
-
-  .example-label {
-    display: block;
-    padding: 0.5rem 1rem;
-    background: var(--sl-color-gray-5);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--sl-color-gray-2);
-  }
-
-  .example pre {
-    margin: 0;
-    padding: 1rem;
-    overflow-x: auto;
-  }
-
-  .example code {
-    font-size: 0.875rem;
-  }
-
-  .schema-block {
-    background: var(--sl-color-gray-6);
-    border-radius: 0.5rem;
-    overflow: hidden;
-  }
-
-  .schema-block pre {
-    margin: 0;
-    padding: 1rem;
-    overflow-x: auto;
-    max-height: 400px;
-  }
-
-  .schema-block code {
-    font-size: 0.8rem;
-  }
-
-  .schema-link-row {
-    margin-top: 0.75rem;
-  }
-
-  .schema-file-link {
-    font-size: 0.875rem;
-    color: var(--sl-color-accent);
   }
 
   .actions {
