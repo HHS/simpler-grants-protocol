@@ -4,6 +4,7 @@ import type {
   CustomFieldIndexEntry,
   CustomFieldMap,
   CustomFieldSchemaData,
+  FilterOptions,
 } from "./types";
 
 // Import the custom fields index
@@ -155,13 +156,6 @@ export function getCustomFieldIds(): string[] {
 // Used by: index.astro
 // Functions to populate filter dropdowns in the registry UI
 // =============================================================================
-
-/** Filter dropdown options returned by getFilterOptions() */
-export interface FilterOptions {
-  tags: string[];
-  schemas: string[];
-  authors: string[];
-}
 
 /**
  * Gets all unique filter options for dropdowns

@@ -46,3 +46,10 @@ export interface CustomField extends CustomFieldIndexEntry, CustomFieldSchemaDat
  * Map of custom field ID to custom field data
  */
 export type CustomFieldMap = Record<string, CustomField>;
+
+/** Filter dropdown options returned by getFilterOptions() */
+export interface FilterOptions {
+  tags: string[];
+  schemas: string[];
+  authors: string[];
+}

@@ -4,9 +4,8 @@ export type {
   CustomFieldSchemaData,
   CustomField,
   CustomFieldMap,
+  FilterOptions,
 } from "./types";
-
-export type { FilterOptions } from "./loader";
 
 // Loader functions
 export {
