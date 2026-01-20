@@ -36,7 +36,7 @@ function loadSchema(schemaName: string): Record<string, unknown> | null {
 
 /** Extracts custom field data from a JSON schema */
 function extractSchemaData(
-  schema: Record<string, unknown>
+  schema: Record<string, unknown>,
 ): CustomFieldSchemaData {
   const properties = schema.properties as Record<
     string,
@@ -56,9 +56,7 @@ function extractSchemaData(
   // Extract fieldType from const value
   const fieldTypeProperty = properties?.fieldType;
   const fieldType =
-    typeof fieldTypeProperty?.const === "string"
-      ? fieldTypeProperty.const
-      : "";
+    typeof fieldTypeProperty?.const === "string" ? fieldTypeProperty.const : "";
 
   // Extract examples from value property
   const valueProperty = properties?.value;

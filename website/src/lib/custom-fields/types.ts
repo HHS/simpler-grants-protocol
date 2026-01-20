@@ -37,7 +37,9 @@ export interface CustomFieldSchemaData {
 /**
  * Complete custom field data (index + schema)
  */
-export interface CustomField extends CustomFieldIndexEntry, CustomFieldSchemaData {
+export interface CustomField
+  extends CustomFieldIndexEntry,
+    CustomFieldSchemaData {
   /** The field's unique identifier (key in index.json) */
   id: string;
 }

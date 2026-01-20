@@ -49,7 +49,7 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
   <section class="section">
     <h2>Summary</h2>
     <p class="description">{field.description}</p>
-    
+
     <dl class="meta-list">
       <div class="meta-item">
         <dt>Field Type</dt>
@@ -77,11 +77,13 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
       This custom field can be used with the following CommonGrants schemas:
     </p>
     <div class="tag-list">
-      {field.validFor.map((schema) => (
-        <a href={getSchemaDocPath(schema)} class="schema-link">
-          {schema}
-        </a>
-      ))}
+      {
+        field.validFor.map((schema) => (
+          <a href={getSchemaDocPath(schema)} class="schema-link">
+            {schema}
+          </a>
+        ))
+      }
     </div>
   </section>
 
@@ -89,9 +91,7 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
   <section class="section">
     <h2>Tags</h2>
     <div class="tag-list">
-      {field.tags.map((tag) => (
-        <span class="tag">{tag}</span>
-      ))}
+      {field.tags.map((tag) => <span class="tag">{tag}</span>)}
     </div>
   </section>
 
@@ -106,7 +106,12 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
 
   <!-- Actions -->
   <div class="actions">
-    <LinkButton href="/custom-fields" variant="secondary" icon="left-arrow" iconPlacement="start">
+    <LinkButton
+      href="/custom-fields"
+      variant="secondary"
+      icon="left-arrow"
+      iconPlacement="start"
+    >
       Back to Registry
     </LinkButton>
   </div>
@@ -208,7 +213,9 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
     text-decoration: none;
     font-family: monospace;
     font-weight: 600;
-    transition: background 0.15s ease, transform 0.1s ease;
+    transition:
+      background 0.15s ease,
+      transform 0.1s ease;
   }
 
   .schema-link:hover {

@@ -1,8 +1,5 @@
 ---
-import {
-  loadAllCustomFields,
-  getFilterOptions,
-} from "@/lib/custom-fields";
+import { loadAllCustomFields, getFilterOptions } from "@/lib/custom-fields";
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import { CardGrid, LinkCard } from "@astrojs/starlight/components";
 
@@ -13,7 +10,8 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
 <StarlightPage
   frontmatter={{
     title: "Custom Fields Registry",
-    description: "Browse and search custom field definitions for CommonGrants schemas",
+    description:
+      "Browse and search custom field definitions for CommonGrants schemas",
     tableOfContents: false,
     prev: false,
     next: false,
@@ -21,8 +19,9 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
 >
   <div class="custom-fields-page">
     <p class="intro">
-      Custom fields extend CommonGrants schemas with implementation-specific data.
-      Browse the registry below to find existing custom fields or learn how to define your own.
+      Custom fields extend CommonGrants schemas with implementation-specific
+      data. Browse the registry below to find existing custom fields or learn
+      how to define your own.
     </p>
 
     <!-- Search and filter section -->
@@ -42,9 +41,11 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
           <label for="schema-filter">Valid for</label>
           <select id="schema-filter" class="filter-select">
             <option value="">Any schema</option>
-            {allSchemas.map((schema) => (
-              <option value={schema}>{schema}</option>
-            ))}
+            {
+              allSchemas.map((schema) => (
+                <option value={schema}>{schema}</option>
+              ))
+            }
           </select>
         </div>
 
@@ -52,9 +53,7 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
           <label for="tag-filter">Tag</label>
           <select id="tag-filter" class="filter-select">
             <option value="">Any tags</option>
-            {allTags.map((tag) => (
-              <option value={tag}>{tag}</option>
-            ))}
+            {allTags.map((tag) => <option value={tag}>{tag}</option>)}
           </select>
         </div>
       </div>
@@ -104,9 +103,15 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
 
 <script>
   function initFilters() {
-    const searchInput = document.getElementById("search-input") as HTMLInputElement;
-    const schemaFilter = document.getElementById("schema-filter") as HTMLSelectElement;
-    const tagFilter = document.getElementById("tag-filter") as HTMLSelectElement;
+    const searchInput = document.getElementById(
+      "search-input",
+    ) as HTMLInputElement;
+    const schemaFilter = document.getElementById(
+      "schema-filter",
+    ) as HTMLSelectElement;
+    const tagFilter = document.getElementById(
+      "tag-filter",
+    ) as HTMLSelectElement;
     const fieldCards = document.querySelectorAll<HTMLElement>(".field-card");
     const noResults = document.getElementById("no-results") as HTMLElement;
 
@@ -129,8 +134,10 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
           description.includes(searchTerm) ||
           tags.includes(searchTerm);
 
-        const matchesSchema = !selectedSchema || validFor.includes(selectedSchema.toLowerCase());
-        const matchesTag = !selectedTag || tags.includes(selectedTag.toLowerCase());
+        const matchesSchema =
+          !selectedSchema || validFor.includes(selectedSchema.toLowerCase());
+        const matchesTag =
+          !selectedTag || tags.includes(selectedTag.toLowerCase());
 
         const isVisible = matchesSearch && matchesSchema && matchesTag;
         card.style.display = isVisible ? "" : "none";

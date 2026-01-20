@@ -63,7 +63,8 @@
     "jsonforms",
     "openxmlformats",
     "officedocument",
-    "spreadsheetml"
+    "spreadsheetml",
+    "validfor"
   ],
   "import": []
 }
