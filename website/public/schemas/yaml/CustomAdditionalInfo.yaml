@@ -1,0 +1,37 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomAdditionalInfo.yaml
+type: object
+properties:
+  name:
+    type: string
+    const: additionalInfo
+  fieldType:
+    type: string
+    const: object
+  value:
+    type: object
+    properties:
+      url:
+        type: string
+      description:
+        type: string
+    required:
+      - url
+    unevaluatedProperties:
+      not: {}
+    examples:
+      - url: grants.gov
+        description: Click me for more info
+  description:
+    type: string
+    const: URL and description for additional information about the opportunity
+required:
+  - name
+  - fieldType
+  - value
+  - description
+allOf:
+  - $ref: CustomField.yaml
+unevaluatedProperties:
+  not: {}
+description: Additional information URL and description

@@ -4,26 +4,107 @@
     "validFor": ["OpportunityBase", "CompetitionBase"],
     "tags": ["migration", "compatibility", "identifier"],
     "author": "CommonGrants",
-    "version": "1.0.0",
-    "createdAt": "2025-01-01",
-    "lastModifiedAt": "2025-01-01"
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
+  },
+  "federalOpportunityNumber": {
+    "schema": "CustomFederalOpportunityNumber",
+    "validFor": ["OpportunityBase"],
+    "tags": ["identifier", "federal"],
+    "author": "CommonGrants",
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
+  },
+  "assistanceListing": {
+    "schema": "CustomAssistanceListing",
+    "validFor": ["OpportunityBase"],
+    "tags": ["program", "federal", "catalog"],
+    "author": "CommonGrants",
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
+  },
+  "agency": {
+    "schema": "CustomAgency",
+    "validFor": ["OpportunityBase", "CompetitionBase"],
+    "tags": ["agency", "organization", "federal"],
+    "author": "CommonGrants",
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
+  },
+  "attachments": {
+    "schema": "CustomAttachments",
+    "validFor": ["OpportunityBase", "CompetitionBase"],
+    "tags": ["documents", "files", "attachments"],
+    "author": "CommonGrants",
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
+  },
+  "category": {
+    "schema": "CustomCategory",
+    "validFor": ["OpportunityBase"],
+    "tags": ["classification", "type"],
+    "author": "CommonGrants",
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
+  },
+  "fiscalYear": {
+    "schema": "CustomFiscalYear",
+    "validFor": ["OpportunityBase", "CompetitionBase"],
+    "tags": ["fiscal", "year", "budget"],
+    "author": "CommonGrants",
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
+  },
+  "costSharing": {
+    "schema": "CustomCostSharing",
+    "validFor": ["OpportunityBase", "CompetitionBase"],
+    "tags": ["funding", "cost-sharing", "matching"],
+    "author": "CommonGrants",
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
+  },
+  "additionalInfo": {
+    "schema": "CustomAdditionalInfo",
+    "validFor": ["OpportunityBase", "CompetitionBase"],
+    "tags": ["information", "url", "reference"],
+    "author": "CommonGrants",
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
+  },
+  "agencyContact": {
+    "schema": "CustomAgencyContact",
+    "validFor": ["OpportunityBase", "CompetitionBase"],
+    "tags": ["contact", "agency", "communication"],
+    "author": "CommonGrants",
+    "version": "0.1.0",
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-01-20"
   },
   "foo": {
     "schema": "CustomFoo",
     "validFor": ["OpportunityBase", "FormBase", "ApplicationBase"],
     "tags": ["example", "demo"],
     "author": "CommonGrants",
-    "version": "1.0.0",
-    "createdAt": "2025-01-01",
-    "lastModifiedAt": "2025-01-01"
+    "version": "0.1.0",
+    "createdAt": "2026-01-01",
+    "lastModifiedAt": "2026-01-01"
   },
   "bar": {
     "schema": "CustomBar",
     "validFor": ["OpportunityBase", "FormBase"],
     "tags": ["example", "demo", "complex"],
     "author": "CommonGrants",
-    "version": "1.0.0",
-    "createdAt": "2025-01-01",
-    "lastModifiedAt": "2025-01-01"
+    "version": "0.1.0",
+    "createdAt": "2026-01-01",
+    "lastModifiedAt": "2026-01-01"
   }
 }

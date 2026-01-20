@@ -1,20 +1,20 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: CustomFoo.yaml
+$id: CustomCostSharing.yaml
 type: object
 properties:
   name:
     type: string
-    const: foo
+    const: costSharing
   fieldType:
     type: string
-    const: string
+    const: boolean
   value:
-    type: string
+    type: boolean
     examples:
-      - bar
+      - true
   description:
     type: string
-    const: A string field for the foo
+    const: Whether cost sharing or matching funds are required for this opportunity
 required:
   - name
   - fieldType
@@ -24,3 +24,4 @@ allOf:
   - $ref: CustomField.yaml
 unevaluatedProperties:
   not: {}
+description: Indicates whether cost sharing or matching is required

@@ -1,31 +1,34 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: CustomBar.yaml
+$id: CustomAgency.yaml
 type: object
 properties:
   name:
     type: string
-    const: bar
+    const: agency
   fieldType:
     type: string
     const: object
   value:
     type: object
     properties:
-      foo:
+      agencyCode:
         type: string
-      baz:
+      agencyName:
+        type: string
+      topLevelAgencyName:
         type: string
     required:
-      - foo
-      - baz
+      - agencyCode
+      - agencyName
     unevaluatedProperties:
       not: {}
     examples:
-      - foo: bar
-        baz: qux
+      - agencyCode: US-ABC
+        agencyName: Department of Examples
+        topLevelAgencyName: Department of Examples
   description:
     type: string
-    const: An object field for the bar
+    const: Information about the agency offering this opportunity
 required:
   - name
   - fieldType
@@ -35,3 +38,4 @@ allOf:
   - $ref: CustomField.yaml
 unevaluatedProperties:
   not: {}
+description: Agency information including code and name

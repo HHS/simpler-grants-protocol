@@ -22,7 +22,8 @@
     "tspconfig",
     "typespec",
     "widal001",
-    "RJSF"
+    "RJSF",
+    "NOFO"
   ],
   "ignoreWords": [
     "opblock",

@@ -1,20 +1,20 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: CustomLegacyId.yaml
+$id: CustomCategory.yaml
 type: object
 properties:
   name:
     type: string
-    const: legacyId
+    const: category
   fieldType:
     type: string
-    const: number
+    const: string
   value:
-    type: integer
+    type: string
     examples:
-      - 12345
+      - discretionary
   description:
     type: string
-    const: An integer ID for the opportunity, needed for compatibility with legacy systems
+    const: The category type of the grant opportunity
 required:
   - name
   - fieldType
@@ -24,4 +24,4 @@ allOf:
   - $ref: CustomField.yaml
 unevaluatedProperties:
   not: {}
-description: An integer ID for the opportunity, needed for compatibility with legacy systems
+description: The category of the opportunity (e.g., discretionary, mandatory)

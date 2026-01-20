@@ -1,20 +1,20 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: CustomLegacyId.yaml
+$id: CustomFederalOpportunityNumber.yaml
 type: object
 properties:
   name:
     type: string
-    const: legacyId
+    const: federalOpportunityNumber
   fieldType:
     type: string
-    const: number
+    const: string
   value:
-    type: integer
+    type: string
     examples:
-      - 12345
+      - ABC-123-XYZ-001
   description:
     type: string
-    const: An integer ID for the opportunity, needed for compatibility with legacy systems
+    const: The federal opportunity number assigned to this grant opportunity
 required:
   - name
   - fieldType
@@ -24,4 +24,4 @@ allOf:
   - $ref: CustomField.yaml
 unevaluatedProperties:
   not: {}
-description: An integer ID for the opportunity, needed for compatibility with legacy systems
+description: The federal opportunity number (e.g., ABC-123-XYZ-001)

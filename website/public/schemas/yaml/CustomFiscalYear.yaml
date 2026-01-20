@@ -1,20 +1,20 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: CustomLegacyId.yaml
+$id: CustomFiscalYear.yaml
 type: object
 properties:
   name:
     type: string
-    const: legacyId
+    const: fiscalYear
   fieldType:
     type: string
     const: number
   value:
     type: integer
     examples:
-      - 12345
+      - 2026
   description:
     type: string
-    const: An integer ID for the opportunity, needed for compatibility with legacy systems
+    const: The fiscal year associated with this opportunity
 required:
   - name
   - fieldType
@@ -24,4 +24,4 @@ allOf:
   - $ref: CustomField.yaml
 unevaluatedProperties:
   not: {}
-description: An integer ID for the opportunity, needed for compatibility with legacy systems
+description: The fiscal year for the opportunity
