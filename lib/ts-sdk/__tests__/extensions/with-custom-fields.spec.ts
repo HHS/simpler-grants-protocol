@@ -423,6 +423,19 @@ describe("withCustomFields", () => {
         })
       ).toThrow();
     });
+
+    it("should raise an error if the model doesn't have a customFields property", () => {
+      const SimpleSchemaWithoutCustomFields = z.object({
+        id: z.string(),
+        name: z.string(),
+      });
+
+      expect(() =>
+        withCustomFields(SimpleSchemaWithoutCustomFields, [
+          { key: "category", fieldType: CustomFieldType.string },
+        ] as const)
+      ).toThrow("Cannot register custom fields on a schema that doesn't support them");
+    });
   });
 
   describe("multiple custom fields", () => {

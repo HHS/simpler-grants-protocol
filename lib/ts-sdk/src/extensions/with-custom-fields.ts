@@ -85,6 +85,15 @@ export function withCustomFields<
   TSchema extends z.AnyZodObject,
   const TSpecs extends readonly CustomFieldSpec[],
 >(baseSchema: TSchema, specs: TSpecs): WithCustomFieldsResult<TSchema, TSpecs> {
+  // Validate that the base schema has a customFields property
+  const schemaShape = baseSchema.shape;
+  if (!("customFields" in schemaShape)) {
+    throw new Error(
+      "Cannot register custom fields on a schema that doesn't support them. " +
+        "The base schema must include a 'customFields' property (e.g., customFields: z.record(z.unknown()).nullish())"
+    );
+  }
+
   // Build typed schema for each spec
   const typedFieldSchemas: Record<string, z.ZodTypeAny> = {};
 
