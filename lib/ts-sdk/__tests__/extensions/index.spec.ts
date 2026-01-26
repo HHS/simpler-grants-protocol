@@ -160,9 +160,9 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     }
   });
 
-  it("should return undefined when getCustomFieldValue receives invalid data", () => {
-    // This test demonstrates that getCustomFieldValue safely handles
-    // values that don't match the schema (e.g., from external sources)
+  it("should throw ZodError when getCustomFieldValue receives invalid data", () => {
+    // This test demonstrates that getCustomFieldValue throws an error
+    // when values don't match the schema (e.g., from external sources)
     const customFields = {
       legacyId: {
         name: "legacyId",
@@ -171,9 +171,8 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
       },
     };
 
-    // getCustomFieldValue should return undefined for invalid values
-    const legacyId = getCustomFieldValue(customFields, "legacyId", LegacyIdValueSchema);
-    expect(legacyId).toBeUndefined();
+    // getCustomFieldValue should throw ZodError for invalid values
+    expect(() => getCustomFieldValue(customFields, "legacyId", LegacyIdValueSchema)).toThrow();
   });
 
   it("should work with default value schemas (no valueSchema provided)", () => {

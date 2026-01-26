@@ -11,18 +11,18 @@ import { z } from "zod";
 import type { CustomField } from "../types";
 
 /**
- * Safely extracts and parses a custom field value from a customFields object.
+ * Extracts and parses a custom field value from a customFields object,
  *
- * This function:
- * 1. Checks if the customFields object exists and contains the specified key
- * 2. Extracts the `value` property from the custom field
- * 3. Parses and validates it using the provided Zod schema
- * 4. Returns the parsed value, or `undefined` if the field doesn't exist or parsing fails
+ * 1. If the field is present and matches the key, returns the typed `value`
+ * 2. If the field is present but the value doesn't match the schema, throws a ZodError
+ * 3. If the field is present but the value is null or undefined, returns undefined
+ * 4. If the field is NOT present, returns undefined
  *
  * @param customFields - The customFields object (may be null, undefined, or a record)
  * @param key - The key of the custom field to extract
  * @param valueSchema - Zod schema to parse and validate the value
  * @returns The parsed value if the field exists and is valid, otherwise `undefined`
+ * @throws {ZodError} If the field exists with a non-null value that doesn't match the provided schema
  *
  * @example
  * ```typescript
@@ -48,6 +48,18 @@ import type { CustomField } from "../types";
  * );
  * // legacy: { system: string; id: number } | undefined
  * console.log(legacy?.id); // 12345
+ *
+ * // If value is invalid (but not null/undefined), throws ZodError
+ * const invalid = {
+ *   customFields: {
+ *     legacyId: {
+ *       name: "legacyId",
+ *       fieldType: "object",
+ *       value: { system: "legacy", id: "not-a-number" }, // Invalid!
+ *     },
+ *   },
+ * };
+ * getCustomFieldValue(invalid.customFields, "legacyId", LegacyIdValueSchema); // throws ZodError
  * ```
  */
 export function getCustomFieldValue<T extends z.ZodTypeAny>(
@@ -69,10 +81,12 @@ export function getCustomFieldValue<T extends z.ZodTypeAny>(
   // Extract the value property
   const value = field.value;
 
-  // Parse and validate using the provided schema
-  // Use safeParse to avoid throwing errors
-  const result = valueSchema.safeParse(value);
+  // Return undefined if the value is null or undefined
+  if (value == null) {
+    return undefined;
+  }
 
-  // Return the parsed value if valid, otherwise undefined
-  return result.success ? result.data : undefined;
+  // Parse and validate using the provided schema
+  // This will throw a ZodError if validation fails
+  return valueSchema.parse(value);
 }

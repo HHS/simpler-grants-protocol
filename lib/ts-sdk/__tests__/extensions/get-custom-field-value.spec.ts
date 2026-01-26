@@ -59,7 +59,7 @@ describe("getCustomFieldValue", () => {
       expect(result).toBeUndefined();
     });
 
-    it("should return undefined if the value fails validation", () => {
+    it("should throw ZodError if the value fails validation", () => {
       const customFields = {
         legacyId: {
           name: "legacyId",
@@ -68,8 +68,7 @@ describe("getCustomFieldValue", () => {
         },
       };
 
-      const result = getCustomFieldValue(customFields, "legacyId", LegacyIdValueSchema);
-      expect(result).toBeUndefined();
+      expect(() => getCustomFieldValue(customFields, "legacyId", LegacyIdValueSchema)).toThrow();
     });
   });
 
@@ -140,7 +139,7 @@ describe("getCustomFieldValue", () => {
       expect(result).toBeUndefined();
     });
 
-    it("should handle custom field with null value", () => {
+    it("should return undefined for custom field with null value", () => {
       const customFields = {
         legacyId: {
           name: "legacyId",
@@ -153,7 +152,7 @@ describe("getCustomFieldValue", () => {
       expect(result).toBeUndefined();
     });
 
-    it("should handle custom field with undefined value", () => {
+    it("should return undefined for custom field with undefined value", () => {
       const customFields = {
         legacyId: {
           name: "legacyId",
@@ -166,7 +165,7 @@ describe("getCustomFieldValue", () => {
       expect(result).toBeUndefined();
     });
 
-    it("should handle invalid value type", () => {
+    it("should throw ZodError for invalid value type", () => {
       const customFields = {
         legacyId: {
           name: "legacyId",
@@ -175,8 +174,7 @@ describe("getCustomFieldValue", () => {
         },
       };
 
-      const result = getCustomFieldValue(customFields, "legacyId", LegacyIdValueSchema);
-      expect(result).toBeUndefined();
+      expect(() => getCustomFieldValue(customFields, "legacyId", LegacyIdValueSchema)).toThrow();
     });
   });
 });
