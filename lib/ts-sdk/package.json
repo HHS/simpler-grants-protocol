@@ -71,7 +71,8 @@
     "typespec": "tsp compile lib/main.tsp",
     "example:list": "tsx examples/list-opportunities.ts",
     "example:get": "tsx examples/get-opportunity.ts",
-    "example:search": "tsx examples/search-opportunities.ts"
+    "example:search": "tsx examples/search-opportunities.ts",
+    "example:custom-fields": "tsx examples/custom-fields.ts"
   },
   "dependencies": {
     "zod": "^3.25.76"
