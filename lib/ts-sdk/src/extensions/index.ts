@@ -8,4 +8,8 @@
  * @packageDocumentation
  */
 
-export { withCustomFields, type CustomFieldSpec } from "./with-custom-fields";
+// Types
+export type { CustomFieldSpec, WithCustomFieldsResult } from "./types";
+
+// Functions
+export { withCustomFields } from "./with-custom-fields";

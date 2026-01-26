@@ -1,7 +1,8 @@
 /**
  * Custom Fields Extension
  *
- * Provides utilities for extending CommonGrants schemas with typed custom fields.
+ * Provides the withCustomFields() function for extending CommonGrants schemas
+ * with typed custom fields.
  *
  * @module @common-grants/sdk/extensions
  */
@@ -9,24 +10,7 @@
 import { z } from "zod";
 import type { CustomFieldType } from "../types";
 import { CustomFieldSchema } from "../schemas";
-
-// ############################################################################
-// Types
-// ############################################################################
-
-/**
- * Specification for a custom field to be registered on a schema.
- */
-export interface CustomFieldSpec {
-  /** The key used in the customFields record */
-  key: string;
-  /** The JSON schema type for the field */
-  fieldType: CustomFieldType;
-  /** Optional Zod schema to validate the value property. Defaults based on fieldType */
-  valueSchema?: z.ZodTypeAny;
-  /** Optional description of the custom field */
-  description?: string;
-}
+import type { CustomFieldSpec, WithCustomFieldsResult } from "./types";
 
 // ############################################################################
 // Default Value Schemas
@@ -52,71 +36,6 @@ const DEFAULT_VALUE_SCHEMAS: Record<CustomFieldType, z.ZodTypeAny> = {
 function getValueSchema(spec: CustomFieldSpec): z.ZodTypeAny {
   return spec.valueSchema ?? DEFAULT_VALUE_SCHEMAS[spec.fieldType];
 }
-
-// ############################################################################
-// Type Utilities
-// ############################################################################
-
-/**
- * Maps CustomFieldType to its default TypeScript type.
- */
-type DefaultFieldTypeMap = {
-  string: string;
-  number: number;
-  integer: number;
-  boolean: boolean;
-  object: Record<string, unknown>;
-  array: unknown[];
-};
-
-/**
- * Infers the value type from a CustomFieldSpec.
- * Uses the valueSchema if provided, otherwise derives from fieldType.
- */
-type InferValueType<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodTypeAny
-  ? z.infer<T["valueSchema"]>
-  : T["fieldType"] extends keyof DefaultFieldTypeMap
-    ? DefaultFieldTypeMap[T["fieldType"]]
-    : unknown;
-
-/**
- * Builds the typed custom field object type for a single spec.
- */
-type TypedCustomField<T extends CustomFieldSpec> = {
-  name: string;
-  fieldType: T["fieldType"];
-  value: InferValueType<T>;
-  schema?: string | null;
-  description?: string | null;
-};
-
-/**
- * Builds the customFields object type from an array of specs.
- */
-type TypedCustomFields<TSpecs extends readonly CustomFieldSpec[]> = {
-  [K in TSpecs[number] as K["key"]]?: TypedCustomField<K>;
-} & Record<
-  string,
-  {
-    name: string;
-    fieldType: string;
-    value: unknown;
-    schema?: string | null;
-    description?: string | null;
-  }
->;
-
-/**
- * Result type for withCustomFields - extends base schema with typed customFields.
- */
-type WithCustomFieldsResult<
-  TSchema extends z.AnyZodObject,
-  TSpecs extends readonly CustomFieldSpec[],
-> = z.ZodObject<
-  Omit<TSchema["shape"], "customFields"> & {
-    customFields: z.ZodOptional<z.ZodType<TypedCustomFields<TSpecs>>>;
-  }
->;
 
 // ############################################################################
 // Main Function

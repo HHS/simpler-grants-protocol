@@ -28,12 +28,16 @@ const TagsValueSchema = z.array(z.string());
 // ############################################################################
 
 describe("withCustomFields", () => {
+  // ############################################################################
+  // Basic functionality
+  // ############################################################################
+
   describe("basic functionality", () => {
     it("should extend a schema with typed custom fields", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
         {
           key: "category",
-          fieldType: "string",
+          fieldType: CustomFieldType.string,
           description: "Test category field",
         },
       ] as const);
@@ -58,7 +62,7 @@ describe("withCustomFields", () => {
       const ExtendedOppSchema = withCustomFields(OpportunityBaseSchema, [
         {
           key: "legacyId",
-          fieldType: "object",
+          fieldType: CustomFieldType.object,
           valueSchema: LegacyIdValueSchema,
           description: "Maps to the opportunity_id in the legacy system",
         },
@@ -86,10 +90,14 @@ describe("withCustomFields", () => {
     });
   });
 
+  // ############################################################################
+  // Default value schemas
+  // ############################################################################
+
   describe("default value schemas", () => {
     it("should use default string schema when valueSchema not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "stringField", fieldType: "string" },
+        { key: "stringField", fieldType: CustomFieldType.string },
       ] as const);
 
       const result = ExtendedSchema.parse({
@@ -109,7 +117,7 @@ describe("withCustomFields", () => {
 
     it("should use default number schema when valueSchema not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "numberField", fieldType: "number" },
+        { key: "numberField", fieldType: CustomFieldType.number },
       ] as const);
 
       const result = ExtendedSchema.parse({
@@ -129,7 +137,7 @@ describe("withCustomFields", () => {
 
     it("should use default integer schema when valueSchema not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "integerField", fieldType: "integer" },
+        { key: "integerField", fieldType: CustomFieldType.integer },
       ] as const);
 
       const result = ExtendedSchema.parse({
@@ -164,7 +172,7 @@ describe("withCustomFields", () => {
 
     it("should use default boolean schema when valueSchema not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "boolField", fieldType: "boolean" },
+        { key: "boolField", fieldType: CustomFieldType.boolean },
       ] as const);
 
       const result = ExtendedSchema.parse({
@@ -184,7 +192,7 @@ describe("withCustomFields", () => {
 
     it("should use default object schema when valueSchema not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "objectField", fieldType: "object" },
+        { key: "objectField", fieldType: CustomFieldType.object },
       ] as const);
 
       const result = ExtendedSchema.parse({
@@ -207,7 +215,7 @@ describe("withCustomFields", () => {
 
     it("should use default array schema when valueSchema not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "arrayField", fieldType: "array" },
+        { key: "arrayField", fieldType: CustomFieldType.array },
       ] as const);
 
       const result = ExtendedSchema.parse({
@@ -225,6 +233,10 @@ describe("withCustomFields", () => {
       expect(result.customFields?.arrayField?.value).toEqual([1, "two", { three: 3 }]);
     });
   });
+
+  // ############################################################################
+  // Custom value schemas
+  // ############################################################################
 
   describe("custom value schemas", () => {
     it("should use provided valueSchema for validation", () => {
@@ -272,7 +284,7 @@ describe("withCustomFields", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
         {
           key: "tags",
-          fieldType: "array",
+          fieldType: CustomFieldType.array,
           valueSchema: TagsValueSchema,
         },
       ] as const);
@@ -308,10 +320,14 @@ describe("withCustomFields", () => {
     });
   });
 
+  // ############################################################################
+  // Passthrough for unregistered fields
+  // ############################################################################
+
   describe("passthrough for unregistered fields", () => {
     it("should allow unregistered custom fields to pass through", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "registered", fieldType: "string" },
+        { key: "registered", fieldType: CustomFieldType.string },
       ] as const);
 
       const result = ExtendedSchema.parse({
@@ -337,6 +353,10 @@ describe("withCustomFields", () => {
     });
   });
 
+  // ############################################################################
+  // Edge cases
+  // ############################################################################
+
   describe("edge cases", () => {
     it("should handle empty specs array", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [] as const);
@@ -358,7 +378,7 @@ describe("withCustomFields", () => {
 
     it("should handle missing customFields property", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "category", fieldType: "string" },
+        { key: "category", fieldType: CustomFieldType.string },
       ] as const);
 
       const result = ExtendedSchema.parse({
@@ -371,7 +391,7 @@ describe("withCustomFields", () => {
 
     it("should handle null customFields", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "category", fieldType: "string" },
+        { key: "category", fieldType: CustomFieldType.string },
       ] as const);
 
       const result = ExtendedSchema.parse({
@@ -385,7 +405,7 @@ describe("withCustomFields", () => {
 
     it("should validate fieldType literal on registered fields", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "stringField", fieldType: "string" },
+        { key: "stringField", fieldType: CustomFieldType.string },
       ] as const);
 
       // Should fail if fieldType doesn't match
@@ -408,11 +428,11 @@ describe("withCustomFields", () => {
   describe("multiple custom fields", () => {
     it("should handle multiple custom field specs", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
-        { key: "category", fieldType: "string" },
-        { key: "priority", fieldType: "integer" },
+        { key: "category", fieldType: CustomFieldType.string },
+        { key: "priority", fieldType: CustomFieldType.integer },
         {
           key: "metadata",
-          fieldType: "object",
+          fieldType: CustomFieldType.object,
           valueSchema: z.object({ version: z.number() }),
         },
       ] as const);
@@ -477,6 +497,26 @@ describe("withCustomFields", () => {
       });
 
       expect(result.customFields?.legacyId?.value.id).toBe(42);
+      expect(result.customFields?.category?.value).toBe("grants");
+    });
+
+    it("should work with string literal fieldType", () => {
+      const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, [
+        { key: "category", fieldType: "string" },
+      ] as const);
+
+      const result = ExtendedSchema.parse({
+        id: "123",
+        name: "Test",
+        customFields: {
+          category: {
+            name: "category",
+            fieldType: "string",
+            value: "grants",
+          },
+        },
+      });
+
       expect(result.customFields?.category?.value).toBe("grants");
     });
   });
