@@ -7,6 +7,7 @@ settings:
 overrides:
   diff@<8.0.3: '>=8.0.3'
   glob@>=10.2.0 <10.5.0: '>=10.5.0'
+  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
   qs@<6.14.1: '>=6.14.1'
   tar@=7.5.1: '>=7.5.2'
   undici@>=7.0.0 <7.18.2: '>=7.18.2'
@@ -5028,8 +5029,8 @@ packages:
   lodash.startcase@4.4.0:
     resolution: {integrity: sha512-+WKqsK294HMSc2jEbNgpHpd0JfIBhp7rEV4aqXWqFr6AlXov+SlcgB1Fv01y2kGe3Gc8nMW7VA0SrGuSkRfIEg==}
 
-  lodash@4.17.21:
-    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+  lodash@4.17.23:
+    resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
 
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
@@ -9128,19 +9129,19 @@ snapshots:
       '@types/json-schema': 7.0.15
       ajv: 8.17.1
       ajv-formats: 2.1.1(ajv@8.17.1)
-      lodash: 4.17.21
+      lodash: 4.17.23
 
   '@jsonforms/react@3.7.0(@jsonforms/core@3.7.0)(react@18.3.1)':
     dependencies:
       '@jsonforms/core': 3.7.0
-      lodash: 4.17.21
+      lodash: 4.17.23
       react: 18.3.1
 
   '@jsonforms/vanilla-renderers@3.7.0(@jsonforms/core@3.7.0)(@jsonforms/react@3.7.0(@jsonforms/core@3.7.0)(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@jsonforms/core': 3.7.0
       '@jsonforms/react': 3.7.0(@jsonforms/core@3.7.0)(react@18.3.1)
-      lodash: 4.17.21
+      lodash: 4.17.23
       react: 18.3.1
 
   '@manypkg/find-root@1.1.0':
@@ -12902,7 +12903,7 @@ snapshots:
 
   json-schema-compare@0.2.2:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.17.23
 
   json-schema-faker@0.5.9:
     dependencies:
@@ -12913,7 +12914,7 @@ snapshots:
     dependencies:
       compute-lcm: 1.1.2
       json-schema-compare: 0.2.2
-      lodash: 4.17.21
+      lodash: 4.17.23
 
   json-schema-ref-parser@6.1.0:
     dependencies:
@@ -12978,7 +12979,7 @@ snapshots:
 
   lodash.startcase@4.4.0: {}
 
-  lodash@4.17.21: {}
+  lodash@4.17.23: {}
 
   log-symbols@4.1.0:
     dependencies:
@@ -13545,7 +13546,7 @@ snapshots:
 
   minim@0.23.8:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.17.23
 
   minimatch@10.1.1:
     dependencies:
@@ -14734,7 +14735,7 @@ snapshots:
       immutable: 3.8.2
       js-file-download: 0.4.12
       js-yaml: 4.1.1
-      lodash: 4.17.21
+      lodash: 4.17.23
       prop-types: 15.8.1
       randexp: 0.5.3
       randombytes: 2.1.0
@@ -15581,7 +15582,7 @@ snapshots:
       '@vscode/l10n': 0.0.18
       ajv: 8.17.1
       ajv-draft-04: 1.0.0(ajv@8.17.1)
-      lodash: 4.17.21
+      lodash: 4.17.23
       prettier: 3.8.1
       request-light: 0.5.8
       vscode-json-languageservice: 4.1.8
