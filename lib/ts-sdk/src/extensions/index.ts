@@ -13,3 +13,4 @@ export type { CustomFieldSpec, WithCustomFieldsResult } from "./types";
 
 // Functions
 export { withCustomFields } from "./with-custom-fields";
+export { getCustomFieldValue } from "./get-custom-field-value";
