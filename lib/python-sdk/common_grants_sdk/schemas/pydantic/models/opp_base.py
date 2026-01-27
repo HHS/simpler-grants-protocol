@@ -11,6 +11,7 @@ from .opp_funding import OppFunding
 from .opp_status import OppStatus
 from .opp_timeline import OppTimeline
 from common_grants_sdk.utils.custom_fields import add_custom_fields
+from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 
 class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
@@ -44,7 +45,7 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
 
     @classmethod
     def with_custom_fields(
-        cls, *, custom_fields: list[CustomField], model_name
+        cls, *, custom_fields: list[CustomFieldSpec], model_name
     ) -> Type[Any]:
         """Return a new Opportunity model class with the typed custom fields added"""
 

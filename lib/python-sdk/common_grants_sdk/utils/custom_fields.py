@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, create_model, ConfigDict
 from ..schemas.pydantic.fields import CustomField, CustomFieldType
 from ..schemas.pydantic.base import CommonGrantsBaseModel
 from common_grants_sdk.utils.json import snake
+from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -18,7 +19,7 @@ FIELD_TYPE_MAP: dict[CustomFieldType, type] = {
 
 
 def add_custom_fields(
-    cls: Type[T], model_name: str, fields: list[CustomField]
+    cls: Type[T], model_name: str, fields: list[CustomFieldSpec]
 ) -> Type[T]:
     """Adds custom fields to any pydantic model object.
 
@@ -38,13 +39,13 @@ def add_custom_fields(
     field_defs: dict[str, Any] = {}
 
     for field in fields:
-        py_attr = snake(field.name)
+        py_attr = snake(field.key)
 
         # Build a per-custom-field model so `.value` is typed
         value_type = FIELD_TYPE_MAP.get(field.field_type, Any)
 
         CustomFieldForAttr = create_model(
-            f"{name}{field.name[:1].upper()}{field.name[1:]}Field",
+            f"{name}{field.key[:1].upper()}{field.key[1:]}Field",
             __base__=CustomField,
             # pin expected type (still accepts wire key "type" via alias)
             field_type=(CustomFieldType, Field(default=field.field_type, alias="type")),
@@ -55,7 +56,7 @@ def add_custom_fields(
         # Add this field's definition to the accumulator
         field_defs[py_attr] = (
             Optional[CustomFieldForAttr],
-            Field(default=None, alias=field.name),
+            Field(default=None, alias=field.key),
         )
 
     # Unknown keys ignored for now.
