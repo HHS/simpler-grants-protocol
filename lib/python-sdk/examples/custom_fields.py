@@ -1,4 +1,6 @@
-from common_grants_sdk.schemas.pydantic import OpportunityBase, CustomFieldType
+from datetime import datetime, timezone
+from uuid import uuid4
+from common_grants_sdk.schemas.pydantic import OpportunityBase, CustomFieldType,OppStatus, OppStatusOptions
 from common_grants_sdk.schemas.pydantic.fields import CustomField
 
 field = CustomField(name="legacyId", fieldType=CustomFieldType.INTEGER, value=12345)
@@ -15,25 +17,29 @@ Opportunity = OpportunityBase.with_custom_fields(
 
 
 opp_data = {
-    "id": "573525f2-8e15-4405-83fb-e6523511d893",
+    "id": uuid4(),
     "title": "Foo bar",
-    "status": {"value": "open"},
+    "status": OppStatus(value=OppStatusOptions.OPEN),
     "description": "Example opportunity",
-    "createdAt": "2024-01-01T00:00:00Z",
-    "lastModifiedAt": "2024-01-01T00:00:00Z",
+    "createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
+    "lastModifiedAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
     "customFields": {
         "legacyId": {
             "name": "legacyId",
-            "type": "integer",
+            "fieldType": "integer",
             "value": 12345,
         },
-        "groupName": {"name": "groupName", "type": "string", "value": "TEST_GROUP"},
+        "groupName": {"name": "groupName", "fieldType": "string", "value": "TEST_GROUP"},
         "ignoredForNow": {"type": "string", "value": "noop"},
     },
 }
 
 
-opp = Opportunity.from_dict(opp_data)
+#opp = Opportunity.from_dict(opp_data)
+
+
+opp = Opportunity.model_validate(opp_data)
+
 
 print(opp.custom_fields.legacy_id.value)
 print(opp.custom_fields.group_name.value)
