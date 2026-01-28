@@ -39,6 +39,7 @@ def input_data_fixture():
         },
     }
 
+
 def test_input_validates(input_data):
     """Test that the custom fields convert and get added to pydantic model"""
 
@@ -160,11 +161,9 @@ def test_custom_fields_with_object(input_data_with_object):
 
     opp = Opportunity.model_validate(input_data_with_object)
 
-
     assert opp.custom_fields.legacy_id.value == 12345
     assert opp.custom_fields.group_name.value == "TEST_GROUP"
     assert opp.custom_fields.metadata.value["id"] == 1
-
 
 
 @pytest.fixture(name="array_input_data")
@@ -186,11 +185,12 @@ def array_input_data_fixture():
             "metadata": {
                 "name": "metadata",
                 "fieldType": "array",
-                "value": [9,8,7,6],
+                "value": [9, 8, 7, 6],
             },
             "ignoredForNow": {"type": "string", "value": "noop"},
         },
     }
+
 
 def test_custom_fields_with_array(array_input_data):
     """Test that the model validates with an array field"""
@@ -210,4 +210,4 @@ def test_custom_fields_with_array(array_input_data):
     opp = Opportunity.model_validate(array_input_data)
 
     assert opp.custom_fields.legacy_id.value == 12345
-    assert opp.custom_fields.metadata.value == [9,8,7,6]
+    assert opp.custom_fields.metadata.value == [9, 8, 7, 6]
