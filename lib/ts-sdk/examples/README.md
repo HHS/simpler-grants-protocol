@@ -62,6 +62,9 @@ pnpm example:get <opportunityId>
 
 # Search opportunities by keyword
 pnpm example:search <searchTerm>
+
+# Demonstrate custom fields usage
+pnpm example:custom-fields
 ```
 
 ## Examples
@@ -115,6 +118,46 @@ Found 3 opportunities:
   - abc12345-...: Nature-based Solutions Grant
   - def67890-...: Community Development Grant
   ...
+```
+
+### Custom Fields
+
+Demonstrates how to extend schemas with typed custom fields and extract their values safely.
+
+```bash
+pnpm example:custom-fields
+```
+
+**Output Example:**
+
+```
+=== Custom Fields Example ===
+
+1. Parsing opportunity data with custom fields...
+   ✓ Parsed: STEM Education Grant Program
+
+2. Extracting typed custom field values:
+
+   legacyId:
+     System: legacy-crm
+     ID: 12345 (typed as number)
+   tags: education, STEM, nonprofit, youth (typed as string[])
+   category: Education (typed as string)
+   metadata:
+     Version: 2
+     Source: api-import
+     Imported: 2025-01-01T10:00:00Z
+
+3. Type safety demonstration:
+   ✓ TypeScript knows legacyId.id is a number
+   ✓ TypeScript knows tags is a string[]
+   ✓ TypeScript knows category is a string
+   ✓ TypeScript knows metadata.version is a number
+
+4. Handling missing fields:
+   nonexistent field: undefined (safely handled)
+
+=== Example Complete ===
 ```
 
 ## Configuration

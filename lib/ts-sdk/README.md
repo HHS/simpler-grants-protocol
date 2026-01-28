@@ -294,6 +294,98 @@ Found 2 opportunities
 
 Other generic response schemas include `OkSchema<T>`, `SortedSchema<T>`, `FilteredSchema<ItemsT, FilterT>`, `CreatedSchema<T>`, and error schemas like `ErrorSchema`, `UnauthorizedSchema`, and `NotFoundSchema`.
 
+### Custom Fields Extensions
+
+The SDK provides utilities for extending schemas with typed custom fields, allowing you to add domain-specific fields while maintaining full type safety.
+
+#### Extending Schemas with Custom Fields
+
+Use `withCustomFields()` to create a new schema with typed custom fields:
+
+```ts
+import { z } from "zod";
+import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
+import { CustomFieldType } from "@common-grants/sdk/constants";
+import { withCustomFields } from "@common-grants/sdk/extensions";
+
+// Define a custom value schema for complex types
+const LegacyIdValueSchema = z.object({
+  system: z.string(),
+  id: z.number().int(),
+});
+
+// Extend the base schema with typed custom fields
+const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
+  {
+    key: "legacyId",
+    fieldType: CustomFieldType.object,
+    valueSchema: LegacyIdValueSchema,
+    description: "Maps to the opportunity_id in the legacy system",
+  },
+  {
+    key: "category",
+    fieldType: CustomFieldType.string,
+    description: "Grant category",
+  },
+] as const);
+
+// Parse data with custom fields
+const opportunity = OpportunitySchema.parse({
+  id: "573525f2-8e15-4405-83fb-e6523511d893",
+  title: "Test Opportunity",
+  status: { value: "open" },
+  description: "A test opportunity",
+  createdAt: "2025-01-01T00:00:00Z",
+  lastModifiedAt: "2025-01-01T00:00:00Z",
+  customFields: {
+    legacyId: {
+      name: "legacyId",
+      fieldType: CustomFieldType.object,
+      value: { system: "legacy", id: 12345 },
+    },
+    category: {
+      name: "category",
+      fieldType: CustomFieldType.string,
+      value: "Education",
+    },
+  },
+});
+
+// TypeScript knows the types!
+type Opportunity = z.infer<typeof OpportunitySchema>;
+// opportunity.customFields?.legacyId?.value.id   → typed as number
+// opportunity.customFields?.category?.value      → typed as string
+```
+
+#### Extracting Custom Field Values
+
+Use `getCustomFieldValue()` to safely extract and parse custom field values:
+
+```ts
+import { getCustomFieldValue } from "@common-grants/sdk/extensions";
+
+// Extract and parse a custom field value
+const legacyId = getCustomFieldValue(opportunity.customFields, "legacyId", LegacyIdValueSchema);
+
+// legacyId: { system: string; id: number } | undefined
+console.log(legacyId?.id); // 12345 (typed as number)
+```
+
+The function returns `undefined` if the field doesn't exist or if validation fails, making it safe to use without try-catch blocks.
+
+#### Default Value Schemas
+
+If you don't provide a `valueSchema`, the SDK uses defaults based on `fieldType`:
+
+- `CustomFieldType.string` → `z.string()`
+- `CustomFieldType.number` → `z.number()`
+- `CustomFieldType.integer` → `z.number().int()`
+- `CustomFieldType.boolean` → `z.boolean()`
+- `CustomFieldType.object` → `z.record(z.unknown())`
+- `CustomFieldType.array` → `z.array(z.unknown())`
+
+For more examples, see the [custom fields example](./examples/custom-fields.ts).
+
 ## License
 
 CC0-1.0

@@ -1,5 +1,11 @@
 # common-grants-sdk
 
+## 0.4.1
+
+### Patch Changes
+
+- 25cdc8e: Updates vulnerable dependencies
+
 ## 0.4.0
 
 ### Minor Changes
