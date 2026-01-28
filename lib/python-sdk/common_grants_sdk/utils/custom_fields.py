@@ -25,10 +25,8 @@ def add_custom_fields(
 
     Args:
         cls: The base Pydantic model class to extend
-        key: The custom field key name
-        field_type: The type of the custom field
-        value_model: Optional type for the field's value
         model_name: Optional name for the generated model
+        fields: List of CustomFieldSpec objects to define the shape of the object
 
     Returns:
         A new model class extending cls with the custom field

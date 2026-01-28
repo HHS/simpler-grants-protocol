@@ -1,3 +1,8 @@
+"""Example script to demonstrate how to use and add custom fields to an opportunity object 
+
+Run with poetry run python ./custom_fields.py
+"""
+
 from datetime import datetime
 from uuid import uuid4
 from common_grants_sdk.schemas.pydantic import (
@@ -17,7 +22,6 @@ fields = [field, field2]
 Opportunity = OpportunityBase.with_custom_fields(
     custom_fields=fields, model_name="Opportunity"
 )
-
 
 opp_data = {
     "id": uuid4(),
@@ -40,7 +44,6 @@ opp_data = {
         "ignoredForNow": {"type": "string", "value": "noop"},
     },
 }
-
 
 opp = Opportunity.model_validate(opp_data)
 
