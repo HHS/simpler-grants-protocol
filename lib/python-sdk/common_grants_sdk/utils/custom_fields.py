@@ -41,7 +41,7 @@ def add_custom_fields(
     class _CustomFieldsBase(CommonGrantsBaseModel):
         model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
-    # Create container with ALL accumulated field definitions
+    # Create container with ALL accumulated field definitions, this will be used when we recreate the base pydantic model with the newly added custom fields in the return statement of this function
     CustomFieldsContainer = create_model(
         f"{name}CustomFields",
         __base__=_CustomFieldsBase,
@@ -102,10 +102,15 @@ def create_custom_field_schema(
         py_attr = snake(field.key)
 
         # Build a per-custom-field model so `.value` is typed
-        value_type = FIELD_TYPE_MAP.get(field.field_type, Any)
+        value_type: Any = Any
+
+        if field.value is not None:
+            value_type = field.value
+        else:
+            value_type = FIELD_TYPE_MAP.get(field.field_type, Any)
 
         CustomFieldForAttr = create_model(
-            f"{name}{field.key[:1].upper()}{field.key[1:]}Field",
+            _create_model_name(name=name, key=field.key),
             __base__=CustomField,
             # pin expected type (still accepts wire key "type" via alias)
             field_type=(CustomFieldType, Field(default=field.field_type, alias="type")),
@@ -120,3 +125,8 @@ def create_custom_field_schema(
         )
 
     return field_defs
+
+
+def _create_model_name(name: str, key: str) -> str:
+    """Capitalizes the first letter of key and combines it with the name prefix and the "Field" suffix"""
+    return f"{name}{key[:1].upper()}{key[1:]}Field"

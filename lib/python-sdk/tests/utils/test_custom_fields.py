@@ -10,6 +10,7 @@ from common_grants_sdk.schemas.pydantic import (
     CustomFieldType,
     OppStatus,
     OppStatusOptions,
+    SystemMetadata
 )
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 
@@ -133,8 +134,8 @@ def input_data_fixture_with_object():
             },
             "metadata": {
                 "name": "metadata",
-                "fieldType": "string",
-                "value": {"id": 1, "value": "test"},
+                "fieldType": "object",
+                "value": {"createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"), "lastModifiedAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00")},
             },
             "ignoredForNow": {"type": "string", "value": "noop"},
         },
@@ -142,7 +143,7 @@ def input_data_fixture_with_object():
 
 
 def test_custom_fields_with_object(input_data_with_object):
-    """Test that the model validates with an object type field with object as a custom field value"""
+    """Test that the model validates with an object type field with Pydantic object as a custom field value"""
 
     field = CustomFieldSpec(
         key="legacyId", field_type=CustomFieldType.INTEGER, value=int
@@ -151,7 +152,7 @@ def test_custom_fields_with_object(input_data_with_object):
         key="groupName", field_type=CustomFieldType.STRING, value=str
     )
     field3 = CustomFieldSpec(
-        key="metadata", field_type=CustomFieldType.OBJECT, value=object
+        key="metadata", field_type=CustomFieldType.OBJECT, value=SystemMetadata
     )
     fields = [field, field2, field3]
 
@@ -163,7 +164,7 @@ def test_custom_fields_with_object(input_data_with_object):
 
     assert opp.custom_fields.legacy_id.value == 12345
     assert opp.custom_fields.group_name.value == "TEST_GROUP"
-    assert opp.custom_fields.metadata.value["id"] == 1
+    assert opp.custom_fields.metadata.value.created_at == datetime.fromisoformat("2024-01-01T00:00:00+00:00")
 
 
 @pytest.fixture(name="array_input_data")
@@ -198,7 +199,7 @@ def test_custom_fields_with_array(array_input_data):
         key="legacyId", field_type=CustomFieldType.INTEGER, value=int
     )
     field2 = CustomFieldSpec(
-        key="metadata", field_type=CustomFieldType.ARRAY, value=array
+        key="metadata", field_type=CustomFieldType.ARRAY, value=list
     )
 
     fields = [field, field2]
