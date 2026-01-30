@@ -12,7 +12,6 @@ from common_grants_sdk.schemas.pydantic import (
     OppStatus,
     OppStatusOptions,
 )
-from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 
 class LegacyIdValue(BaseModel):
@@ -59,6 +58,8 @@ missing = opp.get_custom_field_value("missing", str)
 
 print(missing)
 
-wrong_type = opp.get_custom_field_value("groupName", int)
 
-print(wrong_type)
+# Uncomment the below lines to view the error message.
+# wrong_type = opp.get_custom_field_value("groupName", int)
+
+# print(wrong_type)

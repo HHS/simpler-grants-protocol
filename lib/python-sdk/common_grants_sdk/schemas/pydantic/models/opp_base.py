@@ -10,7 +10,10 @@ from ..fields import CustomField, SystemMetadata
 from .opp_funding import OppFunding
 from .opp_status import OppStatus
 from .opp_timeline import OppTimeline
-from common_grants_sdk.utils.custom_fields import add_custom_fields, get_custom_field_value
+from common_grants_sdk.utils.custom_fields import (
+    add_custom_fields,
+    get_custom_field_value,
+)
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 V = TypeVar("V")  # Unbound to support both BaseModel subclasses and primitives
