@@ -131,3 +131,50 @@ def create_custom_field_schema(
 def _create_model_name(name: str, key: str) -> str:
     """Capitalizes the first letter of key and combines it with the name prefix and the "Field" suffix"""
     return f"{name}{key[:1].upper()}{key[1:]}Field"
+def get_custom_field_value(instance: T, key: str, value_type: Type[V]) -> Optional[V]:
+    """Retrieve custom field value from a pydantic model instance.
+
+    Works regardless of whether custom fields were registered via
+    `add_custom_fields` (Pydantic model) or are unregistered (dict).
+
+    Args:
+        instance: The model instance containing custom_fields
+        key: The custom field key to retrieve
+        value_type: The expected type (Pydantic BaseModel subclass or primitive)
+
+    Returns:
+        The typed value, or None if the key is not present
+
+    Raises:
+        ValueError: If the value is present but cannot be converted to value_type
+    """
+    fields = instance.custom_fields
+    if fields is None:
+        return None
+
+    # Handle both dict (unregistered) and Pydantic model (registered) cases
+    if isinstance(fields, dict):
+        # Unregistered: custom_fields is dict[str, CustomField]
+        if key not in fields:
+            return None
+        field = fields[key]
+    else:
+        # Registered: custom_fields is a Pydantic model with snake_case attributes
+        attr_name = snake(key)
+        field = getattr(fields, attr_name, None)
+        if field is None:
+            return None
+
+    value = field.value
+    if value is None:
+        return None
+
+    try:
+        if hasattr(value_type, "model_validate"):
+            return value_type.model_validate(value)
+        return value_type(value)
+    except Exception as e:
+        raise ValueError(
+            f"Custom field '{key}' has value {value!r} which cannot be converted to "
+            f"{value_type.__name__}: {e}"
+        ) from e
