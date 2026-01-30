@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Example script demonstrating basic client usage.
 
-Run with: poetry run python list_opportuntites.py
+Run with: poetry run python list_opportunity.py
 """
 
 from common_grants_sdk.client import Client
