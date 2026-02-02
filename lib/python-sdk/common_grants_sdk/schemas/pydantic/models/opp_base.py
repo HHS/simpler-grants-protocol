@@ -1,6 +1,6 @@
 """Base model for funding opportunities."""
 
-from typing import Optional
+from typing import Optional, Type, Any
 from uuid import UUID
 
 from pydantic import Field, HttpUrl
@@ -10,6 +10,8 @@ from ..fields import CustomField, SystemMetadata
 from .opp_funding import OppFunding
 from .opp_status import OppStatus
 from .opp_timeline import OppTimeline
+from common_grants_sdk.utils.custom_fields import add_custom_fields
+from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 
 class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
@@ -40,3 +42,11 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
         alias="customFields",
         description="Additional custom fields specific to this opportunity",
     )
+
+    @classmethod
+    def with_custom_fields(
+        cls, *, custom_fields: list[CustomFieldSpec], model_name
+    ) -> Type[Any]:
+        """Return a new Opportunity model class with the typed custom fields added"""
+
+        return add_custom_fields(cls, fields=custom_fields, model_name=model_name)
