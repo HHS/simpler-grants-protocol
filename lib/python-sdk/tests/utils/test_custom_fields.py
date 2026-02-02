@@ -278,7 +278,7 @@ def complex_input_data_fixture():
     }
 
 
-def test_custom_field_with_complex_schema(complex_input_data):
+def test_custom_field_with_complex_schema(complex_input_data: dict) -> None:
     """Test new complex pydantic object"""
 
     class ComplexSchema(BaseModel):
@@ -332,7 +332,7 @@ def input_get_data_fixture():
     }
 
 
-def test_get_custom_field_value(input_get_data):
+def test_get_custom_field_value(input_get_data: dict) -> None:
     """Basic functionality test
 
     Validates: Works for value_type that is a Pydantic BaseModel subclass
