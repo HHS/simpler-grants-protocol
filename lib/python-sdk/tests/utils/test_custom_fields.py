@@ -306,6 +306,7 @@ def test_custom_field_with_complex_schema(complex_input_data):
 # Begin tests for custom field getter functions
 ##
 
+
 @pytest.fixture(name="input_get_data")
 def input_get_data_fixture():
     """Basic input data for testing"""
@@ -333,7 +334,7 @@ def input_get_data_fixture():
 
 def test_get_custom_field_value(input_get_data):
     """Basic functionality test
-    
+
     Validates: Works for value_type that is a Pydantic BaseModel subclass
     """
 
@@ -378,8 +379,8 @@ def input_data_primitives():
 
 def test_get_primitives(input_data_primitives):
     """Test that get_custom_field_values can retrieve primitive data types
-    
-    Validates: Works for value_type that is a Pydantic for primitive types 
+
+    Validates: Works for value_type that is a Pydantic for primitive types
     (int, str, etc.)
     """
     opp = OpportunityBase.model_validate(input_data_primitives)
@@ -398,8 +399,8 @@ def test_get_undefined(input_data_primitives):
 
 def test_validation_error(input_data_primitives):
     """Test that a mismatched type will return a validation error
-    
-    Validates: Raises a clear validation error if the value is present but invalid for 
+
+    Validates: Raises a clear validation error if the value is present but invalid for
     value_type
     """
     opp = OpportunityBase.model_validate(input_data_primitives)
