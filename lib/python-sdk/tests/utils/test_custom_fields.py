@@ -300,3 +300,127 @@ def test_custom_field_with_complex_schema(complex_input_data):
     opp = Opportunity.model_validate(complex_input_data)
 
     assert opp.custom_fields.complex_input_data.value.other_ids == [1, 2, 3, 4]
+
+
+####
+# Begin tests for custom field getter functions
+##
+
+@pytest.fixture(name="input_get_data")
+def input_get_data_fixture():
+    """Basic input data for testing"""
+    return {
+        "id": uuid4(),
+        "title": "Foo bar",
+        "status": OppStatus(value=OppStatusOptions.OPEN),
+        "description": "Example opportunity",
+        "createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
+        "lastModifiedAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
+        "customFields": {
+            "legacyId": {
+                "name": "legacyId",
+                "fieldType": CustomFieldType.OBJECT,
+                "value": {"system": "legacy", "id": 123},
+            },
+            "groupName": {
+                "name": "groupName",
+                "fieldType": CustomFieldType.STRING,
+                "value": "test group",
+            },
+        },
+    }
+
+
+def test_get_custom_field_value(input_get_data):
+    """Basic functionality test
+    
+    Validates: Works for value_type that is a Pydantic BaseModel subclass
+    """
+
+    class LegacyIdValue(BaseModel):
+        system: str
+        id: int
+
+    opp = OpportunityBase.model_validate(input_get_data)
+
+    assert opp.get_custom_field_value("legacyId", LegacyIdValue).id == 123
+
+
+@pytest.fixture(name="input_data_primitives")
+def input_data_primitives():
+    """Input containing primitives for retrieval"""
+    return {
+        "id": uuid4(),
+        "title": "Foo bar",
+        "status": OppStatus(value=OppStatusOptions.OPEN),
+        "description": "Example opportunity",
+        "createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
+        "lastModifiedAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
+        "customFields": {
+            "legacyId": {
+                "name": "legacyId",
+                "fieldType": CustomFieldType.INTEGER,
+                "value": 123,
+            },
+            "groupName": {
+                "name": "groupName",
+                "fieldType": CustomFieldType.STRING,
+                "value": "test group",
+            },
+            "testList": {
+                "name": "testList",
+                "fieldType": CustomFieldType.ARRAY,
+                "value": [9, 8, 7, 6],
+            },
+        },
+    }
+
+
+def test_get_primitives(input_data_primitives):
+    """Test that get_custom_field_values can retrieve primitive data types
+    
+    Validates: Works for value_type that is a Pydantic for primitive types 
+    (int, str, etc.)
+    """
+    opp = OpportunityBase.model_validate(input_data_primitives)
+
+    assert opp.get_custom_field_value("legacyId", int) == 123
+    assert opp.get_custom_field_value("groupName", str) == "test group"
+    assert opp.get_custom_field_value("testList", list) == [9, 8, 7, 6]
+
+
+def test_get_undefined(input_data_primitives):
+    """Test that getting a missing key returns None"""
+    opp = OpportunityBase.model_validate(input_data_primitives)
+
+    assert opp.get_custom_field_value("missing_key", str) is None
+
+
+def test_validation_error(input_data_primitives):
+    """Test that a mismatched type will return a validation error
+    
+    Validates: Raises a clear validation error if the value is present but invalid for 
+    value_type
+    """
+    opp = OpportunityBase.model_validate(input_data_primitives)
+
+    with pytest.raises(ValueError):
+        opp.get_custom_field_value("legacyId", str)
+
+
+def test_get_registered_custom_fields(input_data_primitives):
+    """ "Test that get_custom_field_values can retrieve fields that were registered via get_custom_fields"""
+
+    int_field = CustomFieldSpec(
+        key="legacyId", field_type=CustomFieldType.INTEGER, value=int
+    )
+
+    fields = [int_field]
+
+    Opportunity = OpportunityBase.with_custom_fields(
+        custom_fields=fields, model_name="Opportunity"
+    )
+
+    opp = Opportunity.model_validate(input_data_primitives)
+
+    assert opp.custom_fields.legacy_id.value == 123
