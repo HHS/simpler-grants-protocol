@@ -344,7 +344,9 @@ def test_get_custom_field_value(input_get_data: dict) -> None:
 
     opp = OpportunityBase.model_validate(input_get_data)
 
-    assert opp.get_custom_field_value("legacyId", LegacyIdValue).id == 123
+    legacy_id = opp.get_custom_field_value("legacyId", LegacyIdValue)
+    assert legacy_id is not None
+    assert legacy_id.id == 123
 
 
 @pytest.fixture(name="input_data_primitives")

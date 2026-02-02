@@ -42,12 +42,14 @@ opp_data = {
 
 opp = OpportunityBase.model_validate(opp_data)
 
-print(opp.custom_fields["legacyId"])
+if opp.custom_fields is not None:
+    print(opp.custom_fields["legacyId"])
 
 
 legacy = opp.get_custom_field_value("legacyId", LegacyIdValue)
 
-print(legacy.id)
+if legacy is not None:
+    print(legacy.id)
 
 
 group = opp.get_custom_field_value("groupName", str)
