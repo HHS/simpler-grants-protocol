@@ -152,7 +152,11 @@ def _create_model_name(name: str, key: str) -> str:
     return f"{name}{key[:1].upper()}{key[1:]}Field"
 
 
-def get_custom_field_value(instance: T, key: str, value_type: Type[V]) -> Optional[V]:
+def get_custom_field_value(
+    instance: BaseModel,
+    key: str,
+    value_type: Type[V],
+) -> Optional[V]:
     """Retrieve custom field value from a pydantic model instance.
 
     Works regardless of whether custom fields were registered via
@@ -192,13 +196,13 @@ def get_custom_field_value(instance: T, key: str, value_type: Type[V]) -> Option
 
     try:
         if isinstance(value_type, type) and issubclass(value_type, BaseModel):
-            return value_type.model_validate(value)  # type: ignore[return-value]
+            return value_type.model_validate(value)
         # For primitives, validate type strictly instead of coercing
-        if not isinstance(value, value_type):  # type: ignore[arg-type]
+        if not isinstance(value, value_type):
             raise TypeError(
                 f"expected {value_type.__name__}, got {type(value).__name__}"
             )
-        return value  # type: ignore[return-value]
+        return value
     except Exception as e:
         raise ValueError(
             f"Custom field '{key}' has value {value!r} which cannot be converted to "
