@@ -254,7 +254,7 @@ def test_custom_fields_with_array(array_input_data):
 
 @pytest.fixture(name="complex_input_data")
 def complex_input_data_fixture():
-    """Fixture for providing a complex pydantic objec as input data for custom fields tests"""
+    """Fixture for providing a complex pydantic object as input data for custom fields tests"""
     return {
         "id": uuid4(),
         "title": "Foo bar",

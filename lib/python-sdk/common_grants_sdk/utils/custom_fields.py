@@ -41,7 +41,9 @@ def add_custom_fields(
     class _CustomFieldsBase(CommonGrantsBaseModel):
         model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
-    # Create container with ALL accumulated field definitions, this will be used when we recreate the base pydantic model with the newly added custom fields in the return statement of this function
+    # Create container with ALL accumulated field definitions,
+    # this will be used when we recreate the base pydantic model with the
+    # newly added custom fields in the return statement of this function
     CustomFieldsContainer = create_model(
         f"{name}CustomFields",
         __base__=_CustomFieldsBase,
@@ -72,30 +74,47 @@ def create_custom_field_schema(
     For each CustomFieldSpec in the received list the function loops through and performs the following operations
     1. Converts the field key to snake_case to be used as a python attribute name
     2. Creates a typed Pydantic model extending CustomField where:
-        - 'field_type' is pinned to the spec's type(iwth alias 'type' for JSON)
+        - 'field_type' is pinned to the spec's type(with alias 'type' for JSON)
         - 'value' is typed based on FIELD_TYPE_MAP (e.g. STRING -> str)
         - returns a field definition tuple suitable for Pydantic's create_model
 
 
 
     Example:
-    The input below:
+        Given::
 
-    create_custom_field_schema(
-    CustomFieldSpec(
-        key="legacyId",
-        field_type=CustomFieldTypeOptions.INTEGER,
-        value=int,
-        )
-    )
+            from common_grants_sdk.extensions.specs import CustomFieldSpec
+            from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 
+            field_defs = create_custom_field_schema(
+                name="Opportunity",
+                fields=[
+                    CustomFieldSpec(
+                        key="legacyId",
+                        field_type=CustomFieldType.INTEGER,
+                        value=int,
+                    ),
+                ],
+            )
 
-    Should generate the following class that can then be added to a Pydantic model
+        The function creates an internal model per spec (e.g. ``OpportunityLegacyIdField``)
+        and returns a dict like::
 
-    class LegacyIdField(CustomField):
-        field_type: str = CustomFieldTypeOptions.INTEGER,
-        value: int
+            {
+                "legacy_id": (
+                    Optional[OpportunityLegacyIdField], # Type of the field
+                    Field(default=None, alias="legacyId"), # Field definition
+                ),
+            }
 
+        Where the internal model looks like::
+
+            class OpportunityLegacyIdField(CustomField):
+                field_type: CustomFieldType = Field(default=CustomFieldType.INTEGER, alias="type")
+                value: Optional[int] = None
+
+        That dict can then be used with `create_model` to build a container
+        and ultimately attached to a base model via `add_custom_fields`.
     """
     field_defs: dict[str, Any] = {}
     for field in fields:
