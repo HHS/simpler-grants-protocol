@@ -70,7 +70,7 @@ interface Applications {
 
   @summary("Search applications")
   @doc("Search for applications. Note: The search results for a given query will depend on the scopes attached to the API token used to make the request.")
-  @get
+  @post
   @route("/search")
   searchApplications(
     /** The filters to apply to the search */
