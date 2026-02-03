@@ -1,7 +1,6 @@
 """Tests for custom fields functionality"""
 
 from datetime import datetime
-from pickle import GET
 from uuid import uuid4
 import pytest
 
