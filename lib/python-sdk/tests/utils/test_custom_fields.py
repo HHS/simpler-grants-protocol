@@ -1,6 +1,7 @@
 """Tests for custom fields functionality"""
 
 from datetime import datetime
+from pickle import GET
 from uuid import uuid4
 import pytest
 
@@ -18,27 +19,27 @@ from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 BASE_OPP = {
     "id": uuid4(),
-        "title": "Foo bar",
-        "status": OppStatus(value=OppStatusOptions.OPEN),
-        "description": "Example opportunity",
-        "createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
-        "lastModifiedAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00")
-    }
+    "title": "Foo bar",
+    "status": OppStatus(value=OppStatusOptions.OPEN),
+    "description": "Example opportunity",
+    "createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
+    "lastModifiedAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
+}
 
 NONE_INPUT = {
     **BASE_OPP,
-        "customFields": {
-            "legacyId": {
-                "name": "legacyId",
-                "fieldType": "integer",
-                "value": None,
-            },
-            "groupName": {
-                "name": "groupName",
-                "fieldType": "string",
-                "value": "TEST_GROUP",
-            },
-        }
+    "customFields": {
+        "legacyId": {
+            "name": "legacyId",
+            "fieldType": "integer",
+            "value": None,
+        },
+        "groupName": {
+            "name": "groupName",
+            "fieldType": "string",
+            "value": "TEST_GROUP",
+        },
+    },
 }
 
 INPUT_WITH_OBJECT = {
@@ -59,9 +60,7 @@ INPUT_WITH_OBJECT = {
             "fieldType": "object",
             "value": {
                 "createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
-                "lastModifiedAt": datetime.fromisoformat(
-                    "2024-01-01T00:00:00+00:00"
-                ),
+                "lastModifiedAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
             },
         },
     },
@@ -71,73 +70,76 @@ INPUT_WITH_OBJECT = {
 ARRAY_INPUT = {
     **BASE_OPP,
     "customFields": {
-            "legacyId": {
-                "name": "legacyId",
-                "fieldType": "integer",
-                "value": 12345,
-            },
-            "metadata": {
-                "name": "metadata",
-                "fieldType": "array",
-                "value": [9, 8, 7, 6],
-            },
-            "ignoredForNow": {"type": "string", "value": "noop"},
+        "legacyId": {
+            "name": "legacyId",
+            "fieldType": "integer",
+            "value": 12345,
         },
+        "metadata": {
+            "name": "metadata",
+            "fieldType": "array",
+            "value": [9, 8, 7, 6],
+        },
+        "ignoredForNow": {"type": "string", "value": "noop"},
+    },
 }
 
 COMPLEX_OBJECT_INPUT = {
     **BASE_OPP,
     "customFields": {
-            "complexInputData": {
-                "name": "complexInputData",
-                "fieldType": "object",
-                "value": {
-                    "id": 1,
-                    "name": "test",
-                    "otherIds": [1, 2, 3, 4],
-                    "createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
-                },
+        "complexInputData": {
+            "name": "complexInputData",
+            "fieldType": "object",
+            "value": {
+                "id": 1,
+                "name": "test",
+                "otherIds": [1, 2, 3, 4],
+                "createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
             },
-            "ignoredForNow": {"type": "string", "value": "noop"},
         },
+        "ignoredForNow": {"type": "string", "value": "noop"},
+    },
 }
 
 
 PRIMITIVE_INPUT = {
     **BASE_OPP,
     "customFields": {
-            "legacyId": {
-                "name": "legacyId",
-                "fieldType": "integer",
-                "value": 12345,
-            },
-            "groupName": {
-                "name": "groupName",
-                "fieldType": "string",
-                "value": "TEST_GROUP",
-            },
-            "testDict": {
-                "name": "testDict",
-                "fieldType": "string",
-                "value": {"id": "1", "value": "dict"},
-            },
-            "testList": {
-                "name": "testList",
-                "fieldType": "array",
-                "value": ["1", "2", "3"],
-            },
-            "testListOfString": {
-                "name": "testListOfString",
-                "fieldType": "array",
-                "value": ["a", "b", "c"],
-            },
-            "ignoredForNow": {"type": "string", "value": "noop"},
+        "legacyId": {
+            "name": "legacyId",
+            "fieldType": "integer",
+            "value": 12345,
         },
+        "groupName": {
+            "name": "groupName",
+            "fieldType": "string",
+            "value": "TEST_GROUP",
+        },
+        "testDict": {
+            "name": "testDict",
+            "fieldType": "string",
+            "value": {"id": "1", "value": "dict"},
+        },
+        "testList": {
+            "name": "testList",
+            "fieldType": "array",
+            "value": ["1", "2", "3"],
+        },
+        "testListOfString": {
+            "name": "testListOfString",
+            "fieldType": "array",
+            "value": ["a", "b", "c"],
+        },
+        "ignoredForNow": {"type": "string", "value": "noop"},
+    },
 }
 
 
-def test_input_validates(input_data):
-    """Test that the custom fields convert and get added to pydantic model"""
+class TestWithCustomFieldValue:
+    """Class for testing registration of custom fields using hte with_custom_field_value function"""
+
+    def test_input_validates(input_data):
+        """Test that the custom fields convert and get added to pydantic model"""
 
         int_field = CustomFieldSpec(
             key="legacyId", field_type=CustomFieldType.INTEGER, value=int
@@ -172,9 +174,6 @@ def test_input_validates(input_data):
         assert opp.custom_fields.test_list.value == ["1", "2", "3"]
         assert opp.custom_fields.test_list_of_string.value == ["a", "b", "c"]
 
-
-
-
     def test_input_with_none_value(self):
         """Test that the custom fields convert and get added to pydantic mode with None value"""
 
@@ -195,9 +194,6 @@ def test_input_validates(input_data):
 
         assert opp.custom_fields.legacy_id.value is None
         assert opp.custom_fields.group_name.value == "TEST_GROUP"
-
-
-
 
     def test_custom_fields_with_object(self):
         """Test that the model validates with an object type field with Pydantic object as a custom field value"""
@@ -225,10 +221,6 @@ def test_input_validates(input_data):
             "2024-01-01T00:00:00+00:00"
         )
 
-
-
-
-
     def test_custom_fields_with_array(self):
         """Test that the model validates with an array field"""
         field = CustomFieldSpec(
@@ -249,8 +241,6 @@ def test_input_validates(input_data):
         assert opp.custom_fields.legacy_id.value == 12345
         assert opp.custom_fields.metadata.value == [9, 8, 7, 6]
 
-
-
     def test_custom_field_with_complex_schema(self) -> None:
         """Test new complex pydantic object"""
 
@@ -261,7 +251,9 @@ def test_input_validates(input_data):
             created_at: datetime = Field(alias="createdAt")
 
         field = CustomFieldSpec(
-            key="complexInputData", field_type=CustomFieldType.OBJECT, value=ComplexSchema
+            key="complexInputData",
+            field_type=CustomFieldType.OBJECT,
+            value=ComplexSchema,
         )
 
         fields = [field]
@@ -275,15 +267,51 @@ def test_input_validates(input_data):
         assert opp.custom_fields.complex_input_data.value.other_ids == [1, 2, 3, 4]
 
 
-####
-# Begin tests for custom field getter functions
-##
+GET_PRIMITIVE_INPUT = {
+    **BASE_OPP,
+    "customFields": {
+        "legacyId": {
+            "name": "legacyId",
+            "fieldType": CustomFieldType.INTEGER,
+            "value": 12345,
+        },
+        "metadata": {
+            "name": "metadata",
+            "fieldType": CustomFieldType.ARRAY,
+            "value": [9, 8, 7, 6],
+        },
+        "groupName": {
+            "name": "groupName",
+            "fieldType": CustomFieldType.STRING,
+            "value": "test group",
+        },
+    },
+}
+
+GET_OBJECT_INPUT = {
+    **BASE_OPP,
+    "customFields": {
+        "legacyId": {
+            "name": "legacyId",
+            "fieldType": CustomFieldType.OBJECT,
+            "value": {"system": "legacy", "id": 12345},
+        },
+        "metadata": {
+            "name": "metadata",
+            "fieldType": CustomFieldType.ARRAY,
+            "value": [9, 8, 7, 6],
+        },
+        "groupName": {
+            "name": "groupName",
+            "fieldType": CustomFieldType.STRING,
+            "value": "test group",
+        },
+    },
+}
 
 
-
-class TestGetCustomFieldValue():
+class TestGetCustomFieldValue:
     """Tests for retrieving custom fields using getGustomFieldValue"""
-
 
     def test_get_custom_field_value(self) -> None:
         """Basic functionality test
@@ -295,12 +323,11 @@ class TestGetCustomFieldValue():
             system: str
             id: int
 
-        opp = OpportunityBase.model_validate(GET_PRIMITIVE_INPUT)
+        opp = OpportunityBase.model_validate(GET_OBJECT_INPUT)
 
         legacy_id = opp.get_custom_field_value("legacyId", LegacyIdValue)
         assert legacy_id is not None
         assert legacy_id.id == 12345
-
 
     def test_get_primitives(self):
         """Test that get_custom_field_values can retrieve primitive data types
@@ -312,15 +339,13 @@ class TestGetCustomFieldValue():
 
         assert opp.get_custom_field_value("legacyId", int) == 12345
         assert opp.get_custom_field_value("groupName", str) == "test group"
-        assert opp.get_custom_field_value("testList", list) == [9, 8, 7, 6]
-
+        assert opp.get_custom_field_value("metadata", list) == [9, 8, 7, 6]
 
     def test_get_undefined(self):
         """Test that getting a missing key returns None"""
         opp = OpportunityBase.model_validate(GET_PRIMITIVE_INPUT)
 
         assert opp.get_custom_field_value("missing_key", str) is None
-
 
     def test_validation_error(self):
         """Test that a mismatched type will return a validation error
@@ -333,9 +358,8 @@ class TestGetCustomFieldValue():
         with pytest.raises(ValueError):
             opp.get_custom_field_value("legacyId", str)
 
-
-def test_get_registered_custom_fields_with_primitive(input_data_primitives):
-    """ "Test that get_custom_field_values can retrieve fields that were registered via get_custom_fields"""
+    def test_get_registered_custom_fields_with_primitive(self):
+        """ "Test that get_custom_field_values can retrieve fields that were registered via get_custom_fields"""
 
         int_field = CustomFieldSpec(
             key="legacyId", field_type=CustomFieldType.INTEGER, value=int
@@ -347,65 +371,65 @@ def test_get_registered_custom_fields_with_primitive(input_data_primitives):
             custom_fields=fields, model_name="Opportunity"
         )
 
-    opp = Opportunity.model_validate(input_data_primitives)
+        opp = Opportunity.model_validate(GET_PRIMITIVE_INPUT)
 
-    legacy_id = opp.get_custom_field_value("legacyId", int)
-    assert legacy_id is not None
-    assert legacy_id == 123
+        legacy_id = opp.get_custom_field_value("legacyId", int)
+        assert legacy_id is not None
+        assert legacy_id == 12345
 
+    def test_get_registered_custom_fields_with_pydantic_schema(self) -> None:
+        """Test that get_custom_field_value can retrieve fields that were registered via get_custom_fields with a complex schema"""
 
-def test_get_registered_custom_fields_with_pydantic_schema(input_get_data) -> None:
-    """Test that get_custom_field_value can retrieve fields that were registered via get_custom_fields with a complex schema"""
+        class LegacyIdValue(BaseModel):
+            system: str
+            id: int
 
-    class LegacyIdValue(BaseModel):
-        system: str
-        id: int
+        fields = [
+            CustomFieldSpec(
+                key="legacyId",
+                field_type=CustomFieldType.OBJECT,
+                value=LegacyIdValue,
+            )
+        ]
 
-    fields = [
-        CustomFieldSpec(
-            key="legacyId",
-            field_type=CustomFieldType.OBJECT,
-            value=LegacyIdValue,
+        Opportunity = OpportunityBase.with_custom_fields(
+            custom_fields=fields,
+            model_name="Opportunity",
         )
-    ]
 
-    Opportunity = OpportunityBase.with_custom_fields(
-        custom_fields=fields,
-        model_name="Opportunity",
-    )
+        opp = Opportunity.model_validate(GET_OBJECT_INPUT)
 
-    opp = Opportunity.model_validate(input_get_data)
+        legacy_id = opp.get_custom_field_value("legacyId", LegacyIdValue)
+        assert legacy_id is not None
+        assert legacy_id.id == 12345
 
-    legacy_id = opp.get_custom_field_value("legacyId", LegacyIdValue)
-    assert legacy_id is not None
-    assert legacy_id.id == 123
+    def test_get_registered_custom_fields_with_mismatched_type(
+        self,
+    ) -> None:
+        """Test that get_custom_field_value raises a ValueError if the type mismatches"""
 
+        class LegacyIdValue(BaseModel):
+            system: str
+            id: int
 
-def test_get_registered_custom_fields_with_mismatched_type(input_get_data) -> None:
-    """Test that get_custom_field_value raises a ValueError if the type mismatches"""
+        class BadIdValue(BaseModel):
+            foo: str
+            bar: str
 
-    class LegacyIdValue(BaseModel):
-        system: str
-        id: int
+        fields = [
+            CustomFieldSpec(
+                key="legacyId",
+                field_type=CustomFieldType.OBJECT,
+                value=LegacyIdValue,
+            )
+        ]
 
-    class BadIdValue(BaseModel):
-        foo: str
-        bar: str
-
-    fields = [
-        CustomFieldSpec(
-            key="legacyId",
-            field_type=CustomFieldType.OBJECT,
-            value=LegacyIdValue,
+        Opportunity = OpportunityBase.with_custom_fields(
+            custom_fields=fields,
+            model_name="Opportunity",
         )
-    ]
 
-    Opportunity = OpportunityBase.with_custom_fields(
-        custom_fields=fields,
-        model_name="Opportunity",
-    )
+        opp = Opportunity.model_validate(GET_OBJECT_INPUT)
 
-    opp = Opportunity.model_validate(input_get_data)
-
-    with pytest.raises(ValueError):
-        opp.get_custom_field_value("legacyId", BadIdValue)
+        with pytest.raises(ValueError):
+            opp.get_custom_field_value("legacyId", BadIdValue)
