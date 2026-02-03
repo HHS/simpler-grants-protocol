@@ -411,7 +411,7 @@ def test_validation_error(input_data_primitives):
         opp.get_custom_field_value("legacyId", str)
 
 
-def test_get_registered_custom_fields(input_data_primitives):
+def test_get_registered_custom_fields_with_primitive(input_data_primitives):
     """ "Test that get_custom_field_values can retrieve fields that were registered via get_custom_fields"""
 
     int_field = CustomFieldSpec(
@@ -426,4 +426,63 @@ def test_get_registered_custom_fields(input_data_primitives):
 
     opp = Opportunity.model_validate(input_data_primitives)
 
-    assert opp.custom_fields.legacy_id.value == 123
+    legacy_id = opp.get_custom_field_value("legacyId", int)
+    assert legacy_id is not None
+    assert legacy_id == 123
+
+
+def test_get_registered_custom_fields_with_pydantic_schema(input_get_data) -> None:
+    """Test that get_custom_field_value can retrieve fields that were registered via get_custom_fields with a complex schema"""
+
+    class LegacyIdValue(BaseModel):
+        system: str
+        id: int
+
+    fields = [
+        CustomFieldSpec(
+            key="legacyId",
+            field_type=CustomFieldType.OBJECT,
+            value=LegacyIdValue,
+        )
+    ]
+
+    Opportunity = OpportunityBase.with_custom_fields(
+        custom_fields=fields,
+        model_name="Opportunity",
+    )
+
+    opp = Opportunity.model_validate(input_get_data)
+
+    legacy_id = opp.get_custom_field_value("legacyId", LegacyIdValue)
+    assert legacy_id is not None
+    assert legacy_id.id == 123
+
+
+def test_get_registered_custom_fields_with_mismatched_type(input_get_data) -> None:
+    """Test that get_custom_field_value raises a ValueError if the type mismatches"""
+
+    class LegacyIdValue(BaseModel):
+        system: str
+        id: int
+
+    class BadIdValue(BaseModel):
+        foo: str
+        bar: str
+
+    fields = [
+        CustomFieldSpec(
+            key="legacyId",
+            field_type=CustomFieldType.OBJECT,
+            value=LegacyIdValue,
+        )
+    ]
+
+    Opportunity = OpportunityBase.with_custom_fields(
+        custom_fields=fields,
+        model_name="Opportunity",
+    )
+
+    opp = Opportunity.model_validate(input_get_data)
+
+    with pytest.raises(ValueError):
+        opp.get_custom_field_value("legacyId", BadIdValue)
