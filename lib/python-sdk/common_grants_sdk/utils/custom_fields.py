@@ -195,14 +195,14 @@ def get_custom_field_value(
         return None
 
     try:
-        if isinstance(value_type, type) and issubclass(value_type, BaseModel):
+        # if the fetched value already matches value_type, return it
+        if isinstance(value, value_type):
+            return value
+        # if value_type is a Pydantic model: parse dict/other into model
+        if issubclass(value_type, BaseModel):
             return value_type.model_validate(value)
-        # For primitives, validate type strictly instead of coercing
-        if not isinstance(value, value_type):
-            raise TypeError(
-                f"expected {value_type.__name__}, got {type(value).__name__}"
-            )
-        return value
+        # if value_type is a primitive: raise an error (no attempted coercion)
+        raise TypeError(f"expected {value_type.__name__}, got {type(value).__name__}")
     except Exception as e:
         raise ValueError(
             f"Custom field '{key}' has value {value!r} which cannot be converted to "
