@@ -1,6 +1,6 @@
 """Base model for funding opportunities."""
 
-from typing import Optional, Type, Any
+from typing import Optional, Type, Any, TypeVar
 from uuid import UUID
 
 from pydantic import Field, HttpUrl
@@ -10,8 +10,13 @@ from ..fields import CustomField, SystemMetadata
 from .opp_funding import OppFunding
 from .opp_status import OppStatus
 from .opp_timeline import OppTimeline
-from common_grants_sdk.utils.custom_fields import add_custom_fields
+from common_grants_sdk.utils.custom_fields import (
+    add_custom_fields,
+    get_custom_field_value,
+)
 from common_grants_sdk.extensions.specs import CustomFieldSpec
+
+V = TypeVar("V")  # Unbound to support both BaseModel subclasses and primitives
 
 
 class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
@@ -50,3 +55,8 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
         """Return a new Opportunity model class with the typed custom fields added"""
 
         return add_custom_fields(cls, fields=custom_fields, model_name=model_name)
+
+    def get_custom_field_value(self, key: str, value_type: type[V]) -> Optional[V]:
+        """Returns custom field object specified by key"""
+
+        return get_custom_field_value(self, key=key, value_type=value_type)
