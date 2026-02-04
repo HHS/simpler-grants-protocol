@@ -30,6 +30,4 @@ Steps to follow after a new version of the [core library](../../lib/core/README.
 - [ ] A new project has been initialized from the feature branch version of this template using `tsp init <path-to-raw-template.json> --template express-js`
 - [ ] The steps in the [TypeScript user guide](../../website/src/content/docs/guides/using-typescript.mdx) have been successfully completed after initializing a project with the feature branch template
 
-
-
 bump
