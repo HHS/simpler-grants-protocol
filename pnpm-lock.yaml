@@ -4,6 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  diff@<8.0.3: '>=8.0.3'
+  fast-xml-parser@>=4.3.6 <=5.3.3: '>=5.3.4'
+  glob@>=10.2.0 <10.5.0: '>=10.5.0'
+  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
+  qs@<6.14.1: '>=6.14.1'
+  tar@<7.5.7: '>=7.5.7'
+  tar@=7.5.1: '>=7.5.2'
+  undici@>=7.0.0 <7.18.2: '>=7.18.2'
+
 importers:
 
   .:
@@ -104,8 +114,8 @@ importers:
         specifier: ^29.7.0
         version: 29.7.0
       '@types/express':
-        specifier: ^5.0.4
-        version: 5.0.4
+        specifier: ^4.17.2
+        version: 4.17.25
       '@types/inquirer':
         specifier: ^9.0.9
         version: 9.0.9
@@ -2857,14 +2867,8 @@ packages:
   '@types/express-serve-static-core@4.19.8':
     resolution: {integrity: sha512-02S5fmqeoKzVZCHPZid4b8JH2eM5HzQLZWN2FohQEy/0eXTq8VXZfSN6Pcr3F6N9R/vNrj7cpgbhjie6m/1tCA==}
 
-  '@types/express-serve-static-core@5.1.0':
-    resolution: {integrity: sha512-jnHMsrd0Mwa9Cf4IdOzbz543y4XJepXrbia2T4b6+spXC2We3t1y6K44D3mR8XMFSXMCf3/l7rCgddfx7UNVBA==}
-
   '@types/express@4.17.25':
     resolution: {integrity: sha512-dVd04UKsfpINUnK0yBoYHDF3xu7xVH4BuDotC/xGuycx4CgbP48X/KF/586bcObxT0HENHXEU8Nqtu6NR+eKhw==}
-
-  '@types/express@5.0.4':
-    resolution: {integrity: sha512-g64dbryHk7loCIrsa0R3shBnEu5p6LPJ09bu9NG58+jz+cRUjFrc3Bz0kNQ7j9bXeCsrRDvNET1G54P/GJkAyA==}
 
   '@types/graceful-fs@4.1.9':
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
@@ -10125,24 +10129,11 @@ snapshots:
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
 
-  '@types/express-serve-static-core@5.1.0':
-    dependencies:
-      '@types/node': 20.19.23
-      '@types/qs': 6.14.0
-      '@types/range-parser': 1.2.7
-      '@types/send': 1.2.1
-
   '@types/express@4.17.25':
     dependencies:
       '@types/body-parser': 1.19.6
       '@types/express-serve-static-core': 4.19.8
       '@types/qs': 6.14.0
-      '@types/serve-static': 1.15.10
-
-  '@types/express@5.0.4':
-    dependencies:
-      '@types/body-parser': 1.19.6
-      '@types/express-serve-static-core': 5.1.0
       '@types/serve-static': 1.15.10
 
   '@types/graceful-fs@4.1.9':
