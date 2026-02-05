@@ -6,6 +6,7 @@ on:
     paths:
       - lib/ts-sdk/**
       - .github/workflows/ci-lib-ts-sdk.yml
+      - pnpm-lock.yaml
 
 defaults:
   run:
