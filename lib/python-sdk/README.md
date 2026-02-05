@@ -255,3 +255,67 @@ opp = Opportunity.model_validate(opp_data)
 print(opp.custom_fields.legacy_id.value)
 
 ```
+
+
+### Retrieving Custom Field Values
+
+Because retrieving custom field values can be cumbersome there is a `get_custom_field_value` function inside of the [utils folder](common_grants_sdk/utils/custom_fields.py).  Simply add this utility function to any existing pydantic object by using a wrapper function.  
+
+
+```python
+    def get_custom_field_value(self, key: str, value_type: type[V]) -> Optional[V]:
+        """Returns custom field object specified by key"""
+
+        return get_custom_field_value(self, key=key, value_type=value_type)
+```
+
+
+Developers can then call the wrapper function like so. 
+
+```python
+
+from pydantic import BaseModel
+from datetime import datetime
+from uuid import uuid4
+from common_grants_sdk.schemas.pydantic import (
+    OpportunityBase,
+    CustomFieldType,
+    OppStatus,
+    OppStatusOptions,
+)
+
+
+class LegacyIdValue(BaseModel):
+    system: str
+    id: int
+
+
+opp_data = {
+    "id": uuid4(),
+    "title": "Foo bar",
+    "status": OppStatus(value=OppStatusOptions.OPEN),
+    "description": "Example opportunity",
+    "createdAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
+    "lastModifiedAt": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
+    "customFields": {
+        "legacyId": {
+            "name": "legacyId",
+            "fieldType": CustomFieldType.OBJECT,
+            "value": {"system": "legacy", "id": 123},
+        },
+        "groupName": {
+            "name": "groupName",
+            "fieldType": CustomFieldType.STRING,
+            "value": "test group",
+        },
+    },
+}
+
+opp = OpportunityBase.model_validate(opp_data)
+
+print(opp.custom_fields["legacyId"])
+
+legacy = opp.get_custom_field_value("legacyId", LegacyIdValue)
+
+print(legacy.id)
+```
