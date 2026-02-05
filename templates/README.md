@@ -24,9 +24,13 @@ This will walk you through a series of prompts to initialize the your project.
 ## Dependencies
 To fix pnpm based dependencies that are listed in any of the template directories adhere to the following process
 
-1. Cd into the directory where dependencies need to be updated e.g: cd [/templates/express-js](/templates/express-js)
-2. Run `pnpm audit --ignore-workspace` to get a list of dependencies that have vulnerabilities
-3. Run `pnpm audit --fix --ignore-workspace` to make the dependency updates
-4. Run `pnpm install --ignore-workspace` to install the updated dependencies
+1. Run `pnpm audit --fix` at the root of this repository
+2. Check the `pnpm-workspace.yaml` file to ensure that the audit fix command didn't duplicate an override of the same library
+3. Cd into the directory where dependencies need to be updated e.g: cd [/templates/express-js](/templates/express-js)
+4. Run `pnpm audit --ignore-workspace` to get a list of dependencies that have vulnerabilities
+5. Run `pnpm audit --fix --ignore-workspace` to make the dependency updates
+6. Run `pnpm install --ignore-workspace --no-frozen-lockfile` to install the updated dependencies
 
 Repeat the above steps as needed for the templates and examples directories.
+
+
