@@ -6,6 +6,7 @@ on:
     paths:
       - lib/cli/**
       - .github/workflows/ci-lib-cli.yml
+      - pnpm-lock.yaml
 
 defaults:
   run:

@@ -5,6 +5,7 @@ on:
     paths:
       - "lib/python-sdk/**"
       - ".github/workflows/ci-lib-pysdk.yml"
+      - pnpm-lock.yaml
 
 defaults:
   run:

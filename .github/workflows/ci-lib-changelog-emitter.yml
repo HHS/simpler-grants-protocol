@@ -6,6 +6,7 @@ on:
     paths:
       - lib/changelog-emitter/**
       - .github/workflows/ci-lib-changelog.yml
+      - pnpm-lock.yaml
 
 jobs:
   build:

@@ -6,6 +6,7 @@ on:
     paths:
       - website/**
       - .github/workflows/ci-website.yml
+      - pnpm-lock.yaml
 
 defaults:
   run:
