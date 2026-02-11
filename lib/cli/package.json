@@ -52,11 +52,7 @@
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.1",
-    "@common-grants/core": "workspace:*",
-    "@typespec/compiler": "^1.8.0",
-    "@typespec/json-schema": "^1.8.0",
-    "@typespec/openapi3": "^1.8.0",
-    "@typespec/versioning": "^0.78.0",
+    "@typespec/compiler": "catalog:",
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
     "express": "^4.21.2",
@@ -68,6 +64,10 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@common-grants/core": "workspace:*",
+    "@typespec/json-schema": "catalog:",
+    "@typespec/openapi3": "catalog:",
+    "@typespec/versioning": "catalog:",
     "@eslint/js": "^9.38.0",
     "@jest/globals": "^29.7.0",
     "@types/express": "^4.17.2",
