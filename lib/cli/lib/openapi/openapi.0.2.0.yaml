@@ -1241,10 +1241,20 @@ components:
           customValue: custom
           description: Competition is open for applications
         keyDates:
-          openDate: {}
-          closeDate: {}
+          openDate:
+            name: Open Date
+            eventType: singleDate
+            date: '2025-01-01'
+          closeDate:
+            name: Close Date
+            eventType: singleDate
+            date: '2025-01-30'
           otherDates:
-            reviewPeriod: {}
+            reviewPeriod:
+              name: Application Review Period
+              eventType: dateRange
+              startDate: '2025-02-01'
+              endDate: '2025-02-28'
         forms:
           forms:
             formA:
@@ -1281,18 +1291,26 @@ components:
                     scope: '#/properties/phone'
               mappingToCommonGrants:
                 name:
-                  firstName: {}
-                  lastName: {}
+                  firstName:
+                    field: name.first
+                  lastName:
+                    field: name.last
                 emails:
-                  primary: {}
+                  primary:
+                    field: email
                 phones:
-                  primary: {}
+                  primary:
+                    field: phone
               mappingFromCommonGrants:
                 name:
-                  first: {}
-                  last: {}
-                email: {}
-                phone: {}
+                  first:
+                    field: name.firstName
+                  last:
+                    field: name.lastName
+                email:
+                  field: emails.primary
+                phone:
+                  field: phones.primary
             formB:
               id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
               name: Form A
@@ -1327,18 +1345,26 @@ components:
                     scope: '#/properties/phone'
               mappingToCommonGrants:
                 name:
-                  firstName: {}
-                  lastName: {}
+                  firstName:
+                    field: name.first
+                  lastName:
+                    field: name.last
                 emails:
-                  primary: {}
+                  primary:
+                    field: email
                 phones:
-                  primary: {}
+                  primary:
+                    field: phone
               mappingFromCommonGrants:
                 name:
-                  first: {}
-                  last: {}
-                email: {}
-                phone: {}
+                  first:
+                    field: name.firstName
+                  last:
+                    field: name.lastName
+                email:
+                  field: emails.primary
+                phone:
+                  field: phones.primary
           validation:
             required:
               - formA
@@ -1396,18 +1422,26 @@ components:
                   scope: '#/properties/phone'
             mappingToCommonGrants:
               name:
-                firstName: {}
-                lastName: {}
+                firstName:
+                  field: name.first
+                lastName:
+                  field: name.last
               emails:
-                primary: {}
+                primary:
+                  field: email
               phones:
-                primary: {}
+                primary:
+                  field: phone
             mappingFromCommonGrants:
               name:
-                first: {}
-                last: {}
-              email: {}
-              phone: {}
+                first:
+                  field: name.firstName
+                last:
+                  field: name.lastName
+              email:
+                field: emails.primary
+              phone:
+                field: phones.primary
           formB:
             id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
             name: Form A
@@ -1442,18 +1476,26 @@ components:
                   scope: '#/properties/phone'
             mappingToCommonGrants:
               name:
-                firstName: {}
-                lastName: {}
+                firstName:
+                  field: name.first
+                lastName:
+                  field: name.last
               emails:
-                primary: {}
+                primary:
+                  field: email
               phones:
-                primary: {}
+                primary:
+                  field: phone
             mappingFromCommonGrants:
               name:
-                first: {}
-                last: {}
-              email: {}
-              phone: {}
+                first:
+                  field: name.firstName
+                last:
+                  field: name.lastName
+              email:
+                field: emails.primary
+              phone:
+                field: phones.primary
         validation:
           required:
             - formA
@@ -1506,10 +1548,20 @@ components:
             $ref: '#/components/schemas/CommonGrants.Fields.Event'
           description: The date the competition was created
       example:
-        openDate: {}
-        closeDate: {}
+        openDate:
+          name: Open Date
+          eventType: singleDate
+          date: '2025-01-01'
+        closeDate:
+          name: Close Date
+          eventType: singleDate
+          date: '2025-01-30'
         otherDates:
-          reviewPeriod: {}
+          reviewPeriod:
+            name: Application Review Period
+            eventType: dateRange
+            startDate: '2025-02-01'
+            endDate: '2025-02-28'
     CommonGrants.Models.Form:
       type: object
       required:
@@ -1589,18 +1641,26 @@ components:
               scope: '#/properties/phone'
         mappingToCommonGrants:
           name:
-            firstName: {}
-            lastName: {}
+            firstName:
+              field: name.first
+            lastName:
+              field: name.last
           emails:
-            primary: {}
+            primary:
+              field: email
           phones:
-            primary: {}
+            primary:
+              field: phone
         mappingFromCommonGrants:
           name:
-            first: {}
-            last: {}
-          email: {}
-          phone: {}
+            first:
+              field: name.firstName
+            last:
+              field: name.lastName
+          email:
+            field: emails.primary
+          phone:
+            field: phones.primary
     CommonGrants.Models.FormJsonSchema:
       type: object
       additionalProperties: {}
@@ -1749,10 +1809,18 @@ components:
         }
         ```
       example:
-        id: {}
+        id:
+          const: '123'
         opportunity:
-          status: {}
-          amount: {}
+          status:
+            switch:
+              field: summary.opportunity_status
+              case:
+                active: open
+                inactive: closed
+              default: custom
+          amount:
+            field: summary.opportunity_amount
     CommonGrants.Models.MappingSwitchFunction:
       type: object
       required:
@@ -2055,13 +2123,41 @@ components:
             Examples might include a deadline for questions, anticipated award date, etc.
       description: Key dates and events in the opportunity's timeline, such as when the opportunity is posted and closes
       example:
-        postDate: {}
-        closeDate: {}
+        postDate:
+          name: Application posted date
+          eventType: singleDate
+          date: '2024-01-15'
+          description: Opportunity is posted publicly
+        closeDate:
+          name: Opportunity close date
+          eventType: singleDate
+          date: '2024-12-31'
+          time: '17:00:00'
+          description: Opportunity closes for all applications
         otherDates:
-          anticipatedAward: {}
-          applicationPeriod: {}
-          performancePeriod: {}
-          infoSessions: {}
+          anticipatedAward:
+            name: Anticipated award date
+            eventType: singleDate
+            date: '2025-03-15'
+            description: When we expect to announce awards for this opportunity.
+          applicationPeriod:
+            name: Application period
+            eventType: dateRange
+            startDate: '2024-01-01'
+            endDate: '2024-01-31'
+            endTime: '17:00:00'
+            description: Primary application period for the grant opportunity
+          performancePeriod:
+            name: Period of Performance
+            eventType: dateRange
+            startDate: '2024-01-01'
+            endDate: '2024-12-31'
+            description: Period of performance for the grant
+          infoSessions:
+            name: Info sessions
+            eventType: other
+            details: Every other Tuesday
+            description: Info sessions for the opportunity
     CommonGrants.Models.OpportunityBase:
       type: object
       required:
