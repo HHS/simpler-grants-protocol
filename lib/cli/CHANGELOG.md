@@ -1,5 +1,13 @@
 # @common-grants/cli
 
+## 0.2.5
+
+### Patch Changes
+
+- 4ad6c73: Updates dependencies
+  - Updates both `@common-grants/core` and `@common-grants/cli` to use the latest TypeSpec library versions
+  - Updates `@common-grants/cli` to reference `@common-grants/core` as a dev dependency instead of a direct dependency
+
 ## 0.2.4
 
 ### Patch Changes
