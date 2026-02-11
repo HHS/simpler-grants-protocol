@@ -7,13 +7,22 @@ packages:
   - website
 
 overrides:
-  '@isaacs/brace-expansion@<=5.0.0': '>=5.0.1'
-  axios@<=1.13.4: '>=1.13.5'
-  diff@<8.0.3: '>=8.0.3'
-  fast-xml-parser@>=4.3.6 <=5.3.3: '>=5.3.4'
-  glob@>=10.2.0 <10.5.0: '>=10.5.0'
-  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
-  qs@<6.14.1: '>=6.14.1'
-  tar@<7.5.7: '>=7.5.7'
-  tar@=7.5.1: '>=7.5.2'
-  undici@>=7.0.0 <7.18.2: '>=7.18.2'
+  "@isaacs/brace-expansion@<=5.0.0": ">=5.0.1"
+  axios@<=1.13.4: ">=1.13.5"
+  diff@<8.0.3: ">=8.0.3"
+  fast-xml-parser@>=4.3.6 <=5.3.3: ">=5.3.4"
+  glob@>=10.2.0 <10.5.0: ">=10.5.0"
+  lodash@>=4.0.0 <=4.17.22: ">=4.17.23"
+  qs@<6.14.1: ">=6.14.1"
+  tar@<7.5.7: ">=7.5.7"
+  tar@=7.5.1: ">=7.5.2"
+  undici@>=7.0.0 <7.18.2: ">=7.18.2"
+
+catalog:
+  "@typespec/compiler": ^1.9.0
+  "@typespec/http": ^1.9.0
+  "@typespec/json-schema": ^1.9.0
+  "@typespec/openapi": ^1.9.0
+  "@typespec/openapi3": ^1.9.0
+  "@typespec/rest": ^0.79.0
+  "@typespec/versioning": ^0.79.0
