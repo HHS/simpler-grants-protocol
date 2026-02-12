@@ -820,13 +820,41 @@ components:
             Examples might include a deadline for questions, anticipated award date, etc.
       description: Key dates and events in the opportunity's timeline, such as when the opportunity is posted and closes
       example:
-        postDate: {}
-        closeDate: {}
+        postDate:
+          name: Application posted date
+          eventType: singleDate
+          date: '2024-01-15'
+          description: Opportunity is posted publicly
+        closeDate:
+          name: Opportunity close date
+          eventType: singleDate
+          date: '2024-12-31'
+          time: '17:00:00'
+          description: Opportunity closes for all applications
         otherDates:
-          anticipatedAward: {}
-          applicationPeriod: {}
-          performancePeriod: {}
-          infoSessions: {}
+          anticipatedAward:
+            name: Anticipated award date
+            eventType: singleDate
+            date: '2025-03-15'
+            description: When we expect to announce awards for this opportunity.
+          applicationPeriod:
+            name: Application period
+            eventType: dateRange
+            startDate: '2024-01-01'
+            endDate: '2024-01-31'
+            endTime: '17:00:00'
+            description: Primary application period for the grant opportunity
+          performancePeriod:
+            name: Period of Performance
+            eventType: dateRange
+            startDate: '2024-01-01'
+            endDate: '2024-12-31'
+            description: Period of performance for the grant
+          infoSessions:
+            name: Info sessions
+            eventType: other
+            details: Every other Tuesday
+            description: Info sessions for the opportunity
     CommonGrants.Models.OpportunityBase:
       type: object
       required:
