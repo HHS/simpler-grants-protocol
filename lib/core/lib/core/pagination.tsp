@@ -8,6 +8,7 @@ using TypeSpec.JsonSchema;
 namespace CommonGrants.Pagination;
 
 /** Query parameters for paginated routes */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model PaginatedQueryParams {
   /** The page to return */
   @query
@@ -23,6 +24,7 @@ model PaginatedQueryParams {
 }
 
 /** Body parameters for paginated routes */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model PaginatedBodyParams {
   /** The page to return */
   @pageIndex
@@ -36,6 +38,7 @@ model PaginatedBodyParams {
 }
 
 /** Details about the paginated results */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model PaginatedResultsInfo {
   /** Current page number (indexing starts at 1) */
   @example(1)

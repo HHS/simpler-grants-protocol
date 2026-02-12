@@ -65,6 +65,7 @@ model AppStatus {
  * - `rejected`: The application has been rejected
  * - `custom`: A custom status
  */
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum AppStatusOptions {
   inProgress,
   submitted,

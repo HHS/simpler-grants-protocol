@@ -19,6 +19,7 @@ namespace CommonGrants.Fields;
  * ```
  * */
 @example(Examples.Metadata.system)
+@Versioning.added(CommonGrants.Versions.v0_1)
 model SystemMetadata {
   /** The timestamp (in UTC) at which the record was created. */
   @visibility(Lifecycle.Read)

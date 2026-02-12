@@ -40,6 +40,7 @@ using Types;
  * ```
  */
 @doc("A funding opportunity")
+@Versioning.added(CommonGrants.Versions.v0_1)
 model OpportunityBase {
   /** Globally unique id for the opportunity */
   @visibility(Lifecycle.Read)

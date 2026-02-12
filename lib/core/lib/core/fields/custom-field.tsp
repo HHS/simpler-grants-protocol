@@ -5,6 +5,7 @@ namespace CommonGrants.Fields;
 // ########################################
 
 /** The set of JSON schema types supported by a custom field */
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum CustomFieldType {
   string,
   number,
@@ -44,6 +45,7 @@ enum CustomFieldType {
   #{ title: "Array field for eligibility types" }
 )
 @doc("A custom field on a model")
+@Versioning.added(CommonGrants.Versions.v0_1)
 model CustomField {
   /** Name of the custom field */
   name: string;

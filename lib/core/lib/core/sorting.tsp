@@ -18,12 +18,14 @@ using TypeSpec.JsonSchema;
 @jsonSchema
 namespace CommonGrants.Sorting;
 
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum SortOrder {
   asc,
   desc,
 }
 
 /** Query parameters for sorting */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model SortQueryParams {
   /** The field to sort by */
   @query
@@ -42,6 +44,7 @@ model SortQueryParams {
 }
 
 /** Sorting parameters included in the request body */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model SortBodyParams {
   /** The field to sort by */
   @example("lastModifiedAt")
@@ -57,6 +60,7 @@ model SortBodyParams {
 }
 
 /** Information about the sort order of the items returned */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model SortedResultsInfo {
   /** The field results are sorted by, or "custom" if an implementation-defined sort key is used */
   @example("lastModifiedAt")

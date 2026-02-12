@@ -19,6 +19,7 @@ using Fields;
   #{ title: "Total funding limit but no award range" }
 )
 @example(Examples.Funding.allFields, #{ title: "All fields defined" })
+@Versioning.added(CommonGrants.Versions.v0_1)
 model OppFunding {
   /** Details about the funding available for this opportunity that don't fit other fields */
   details?: string;

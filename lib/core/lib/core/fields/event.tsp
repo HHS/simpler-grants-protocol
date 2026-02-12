@@ -14,6 +14,7 @@ using Types;
  * - dateRange: A period of time with a start and end date
  * - other: Other event type (e.g., a recurring event)
  */
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum EventType {
   /** A single date with no time */
   singleDate,
@@ -30,6 +31,7 @@ enum EventType {
 // ########################################
 
 /** Union of all event types */
+@Versioning.added(CommonGrants.Versions.v0_1)
 union Event {
   /** A single date event */
   singleDate: SingleDateEvent,
@@ -47,6 +49,7 @@ union Event {
 
 /** Base model for all events */
 @discriminator("eventType")
+@Versioning.added(CommonGrants.Versions.v0_1)
 model EventBase {
   /** Human-readable name of the event (e.g., 'Application posted', 'Question deadline') */
   name: string;
@@ -65,6 +68,7 @@ model EventBase {
 /** Description of an event that has a date (and possible time) associated with it */
 @example(Examples.Event.postedDate, #{ title: "Opportunity posted date" })
 @example(Examples.Event.closeDate, #{ title: "Opportunity close date" })
+@Versioning.added(CommonGrants.Versions.v0_1)
 model SingleDateEvent extends EventBase {
   /** Type of event */
   eventType: EventType.singleDate;
@@ -83,6 +87,7 @@ model SingleDateEvent extends EventBase {
 /** Description of an event that has a start and end date (and possible time) associated with it */
 @example(Examples.Event.performancePeriod, #{ title: "Period of performance" })
 @example(Examples.Event.applicationPeriod, #{ title: "Application period" })
+@Versioning.added(CommonGrants.Versions.v0_1)
 model DateRangeEvent extends EventBase {
   /** Type of event */
   eventType: EventType.dateRange;
@@ -106,6 +111,7 @@ model DateRangeEvent extends EventBase {
 
 /** Description of an event that is not a single date or date range */
 @example(Examples.Event.infoSessions, #{ title: "Info sessions" })
+@Versioning.added(CommonGrants.Versions.v0_1)
 model OtherEvent extends EventBase {
   /** Type of event */
   eventType: EventType.other;
