@@ -51,7 +51,7 @@ export const StringArrayFilterSchema = z.object({
 // ############################################################################
 
 export const NumberComparisonFilterSchema = z.object({
-  operator: ComparisonOperatorsEnum,
+  operator: z.union([ComparisonOperatorsEnum, EquivalenceOperatorsEnum]),
   value: z.number(),
 });
 

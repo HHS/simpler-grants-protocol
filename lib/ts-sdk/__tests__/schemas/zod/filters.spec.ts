@@ -261,8 +261,8 @@ describe("NumberComparisonFilter Schema", () => {
   });
 
   it("should raise an error for an invalid NumberComparisonFilter", () => {
-    // "eq" is not a comparison operator (only gt, gte, lt, lte are allowed)
-    expect(() => NumberComparisonFilterSchema.parse({ operator: "eq", value: 100 })).toThrow();
+    // "in" is not a comparison operator (only eq, neq, gt, gte, lt, lte are allowed)
+    expect(() => NumberComparisonFilterSchema.parse({ operator: "in", value: 100 })).toThrow();
     // Value must be a number, not a string
     expect(() => NumberComparisonFilterSchema.parse({ operator: "gt", value: "100" })).toThrow();
     // Missing required "value" field
