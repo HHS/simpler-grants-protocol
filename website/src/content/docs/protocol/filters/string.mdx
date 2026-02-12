@@ -12,7 +12,7 @@ stringComparisonFilter:
     file:
       path: "lib/core/lib/core/filters/string.tsp"
       startLine: 9
-      endLine: 17
+      endLine: 18
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/string.py"
@@ -33,8 +33,8 @@ stringArrayFilter:
   typeSpec:
     file:
       path: "lib/core/lib/core/filters/string.tsp"
-      startLine: 23
-      endLine: 31
+      startLine: 24
+      endLine: 33
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/string.py"
@@ -83,7 +83,7 @@ A filter that applies a comparison to an array of string values.
 
 | Property | Type                                                                            | Required | Description                               |
 | -------- | ------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
-| operator | [StringOperators](/protocol/filters/base#stringoperators)                       | Yes      | The operator to apply to the filter value |
+| operator | [ArrayOperators](/protocol/filters/base#arrayoperators)                       | Yes      | The operator to apply to the filter value |
 | value    | [Array](/protocol/types/other#array)\<[string](/protocol/types/string#string)\> | Yes      | The value to use for the filter operation |
 
 ### Formats
