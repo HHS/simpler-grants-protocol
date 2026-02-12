@@ -101,6 +101,7 @@ model Paginated<T> extends Success {
  * alias CustomModelSortedResponse = Responses.Sorted<CustomModel>;
  * ```
  */
+@doc("A paginated list of items with a sort order")
 @Versioning.added(CommonGrants.Versions.v0_1)
 model Sorted<T> {
   // Inherit the properties of the Paginated response
@@ -136,6 +137,7 @@ model Sorted<T> {
  * alias CustomModelFilteredResponse = Responses.Filtered<CustomModel, CustomFilter>;
  * ```
  */
+@doc("A paginated list of items with a filter")
 @Versioning.added(CommonGrants.Versions.v0_1)
 model Filtered<ItemsT, FilterT> extends Success {
   // Inherit the properties of the Sorted response
