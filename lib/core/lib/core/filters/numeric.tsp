@@ -12,7 +12,8 @@ namespace CommonGrants.Filters;
 @Versioning.added(CommonGrants.Versions.v0_1)
 model NumberComparisonFilter {
   /** The comparison operator to apply to the filter value */
-  operator: ComparisonOperators;
+  @Versioning.typeChangedFrom(CommonGrants.Versions.v0_3, ComparisonOperators)
+  operator: ComparisonOperators | EquivalenceOperators;
 
   /** The value to use for the filter operation */
   @example(1000)
