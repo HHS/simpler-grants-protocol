@@ -1591,6 +1591,7 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/CommonGrants.Fields.Event'
           description: The date the competition was created
+      description: Key dates in the competition's timeline.
       example:
         openDate:
           name: Open Date
