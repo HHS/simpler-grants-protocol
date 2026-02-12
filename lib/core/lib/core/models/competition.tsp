@@ -96,6 +96,7 @@ model CompetitionForms {
 // CompetitionTimeline
 // #########################################################
 
+/** Key dates in the competition's timeline. */
 @example(Examples.Competition.keyDates)
 @Versioning.added(CommonGrants.Versions.v0_1)
 model CompetitionTimeline {
