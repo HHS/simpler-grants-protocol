@@ -931,7 +931,9 @@ describe("checkMatchingRoutes", () => {
         type: "ROUTE_CONFLICT",
         subType: "RESPONSE_BODY_CONFLICT",
         endpoint: "GET /foo",
-        message: expect.stringMatching(/Implementation missing schema for expected mime type \[application\/xml\]/),
+        message: expect.stringMatching(
+          /Implementation missing schema for expected mime type \[application\/xml\]/
+        ),
       })
     );
   });
