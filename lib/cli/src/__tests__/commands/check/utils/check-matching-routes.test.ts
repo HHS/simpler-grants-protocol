@@ -940,7 +940,10 @@ describe("checkMatchingRoutes", () => {
   // Query parameter validation - extra params not flagged
   // ############################################################
 
-  it("should not flag extra query parameters in implementation", () => {
+  // TODO: README Query param case 1 says extra query params should produce a
+  // warning. Current impl only iterates over base params, so extras are silently
+  // ignored. Update test to assert a warning when impl is fixed.
+  it("should not flag extra query parameters in implementation (known deviation from README spec)", () => {
     // Arrange - Impl has an extra parameter not in base
     const baseDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -995,7 +998,7 @@ describe("checkMatchingRoutes", () => {
     // Act
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
-    // Assert - No errors; extra params are currently not flagged
+    // Assert
     expect(errors.getErrorCount()).toBe(0);
   });
 
@@ -1003,7 +1006,10 @@ describe("checkMatchingRoutes", () => {
   // Query parameter validation - missing optional param
   // ############################################################
 
-  it("should flag missing optional query parameter", () => {
+  // TODO: README Query param case 2.2 says missing optional params should warn,
+  // not error. Current impl flags all missing params as "Missing required query
+  // parameter" regardless of required status. Update test when impl is fixed.
+  it("should flag missing optional query parameter as error (known deviation from README spec)", () => {
     // Arrange - Base has an optional param, impl doesn't have it
     const baseDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
@@ -1045,7 +1051,7 @@ describe("checkMatchingRoutes", () => {
     // Act
     const errors = checkMatchingRoutes(baseDoc, implDoc);
 
-    // Assert - Current impl flags all missing params (required or optional)
+    // Assert
     expect(errors.getErrorCount()).toBe(1);
     expect(errors.get(0)).toEqual(
       expect.objectContaining({

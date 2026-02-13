@@ -660,15 +660,17 @@ describe("Schema Compatibility Checks", () => {
   // (README: Schema case 1.1 variant - additionalProperties not set)
   // ############################################################
 
-  it("should allow extra properties when additionalProperties is not set (default)", () => {
-    // Arrange - additionalProperties is undefined (defaults to allowing extras)
-    // README: Schema case 1.1 - Additional props allowed -> Ignore
+  // TODO: README Schema case 1.1 says undefined additionalProperties should
+  // allow extras. Current impl treats undefined as disallowed and flags an
+  // error. See TODO in check-schema-compatibility.ts:198. Update test when fixed.
+  it("should flag extra properties when additionalProperties is not set (known deviation from README spec)", () => {
+    // Arrange - additionalProperties is undefined
+    // README says this should allow extras, but current impl flags them
     const baseSchema: OpenAPIV3.SchemaObject = {
       type: "object",
       properties: {
         name: { type: "string" },
       },
-      // additionalProperties is not set (defaults to allowing extras)
     };
 
     const implSchema: OpenAPIV3.SchemaObject = {
@@ -682,9 +684,7 @@ describe("Schema Compatibility Checks", () => {
     // Act
     const errors = checkSchemaCompatibility(location, baseSchema, implSchema, ctx);
 
-    // Assert - Extra props flagged because current impl treats undefined as disallowed
-    // NOTE: The README says undefined should allow extras, but the current code
-    // flags them as errors. This documents the current behavior.
+    // Assert
     expect(errors.getErrorCount()).toBe(1);
     expect(errors.get(0)).toEqual(
       expect.objectContaining({
