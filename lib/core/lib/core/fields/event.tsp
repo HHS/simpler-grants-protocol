@@ -140,7 +140,7 @@ namespace Examples.Event {
 
   /** An example of an opportunity posted date without a specific time */
   const postedDate = #{
-    name: "Application posted date",
+    name: "Opportunity posted date",
     eventType: EventType.singleDate,
     date: isoDate.fromISO("2024-01-15"),
     description: "Opportunity is posted publicly",

@@ -25,7 +25,7 @@ examples:
     date: 2024-12-31
     time: 17:00:00
     description: Opportunity closes for all applications
-  - name: Application posted date
+  - name: Opportunity posted date
     eventType: singleDate
     date: 2024-01-15
     description: Opportunity is posted publicly
