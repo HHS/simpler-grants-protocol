@@ -766,4 +766,294 @@ describe("checkMatchingRoutes", () => {
       })
     );
   });
+
+  // ############################################################
+  // Status code validation - extra status codes are allowed
+  // ############################################################
+
+  it("should ignore extra status codes in implementation", () => {
+    // Arrange - Base has 200 and 400, impl adds 401 and 403
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            responses: {
+              "200": { description: "OK" },
+              "400": { description: "Bad Request" },
+            },
+          },
+        },
+      },
+    };
+
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            responses: {
+              "200": { description: "OK" },
+              "400": { description: "Bad Request" },
+              "401": { description: "Unauthorized" },
+              "403": { description: "Forbidden" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - No errors because extra status codes are allowed
+    expect(errors.getErrorCount()).toBe(0);
+  });
+
+  // ############################################################
+  // MIME type validation - extra mime types are allowed
+  // ############################################################
+
+  it("should ignore extra mime types in implementation response", () => {
+    // Arrange - Base has application/json, impl adds application/xml
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            responses: {
+              "200": {
+                description: "OK",
+                content: {
+                  "application/json": {
+                    schema: { type: "object" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            responses: {
+              "200": {
+                description: "OK",
+                content: {
+                  "application/json": {
+                    schema: { type: "object" },
+                  },
+                  "application/xml": {
+                    schema: { type: "object" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - No errors because extra mime types are allowed
+    expect(errors.getErrorCount()).toBe(0);
+  });
+
+  // ############################################################
+  // MIME type validation - missing mime type is an error
+  // ############################################################
+
+  it("should detect missing mime type in implementation response", () => {
+    // Arrange - Base has json and xml, impl only has json
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            responses: {
+              "200": {
+                description: "OK",
+                content: {
+                  "application/json": {
+                    schema: { type: "object" },
+                  },
+                  "application/xml": {
+                    schema: { type: "object" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            responses: {
+              "200": {
+                description: "OK",
+                content: {
+                  "application/json": {
+                    schema: { type: "object" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "RESPONSE_BODY_CONFLICT",
+        endpoint: "GET /foo",
+        message: expect.stringMatching(/Implementation missing schema for expected mime type \[application\/xml\]/),
+      })
+    );
+  });
+
+  // ############################################################
+  // Query parameter validation - extra params not flagged
+  // ############################################################
+
+  it("should not flag extra query parameters in implementation", () => {
+    // Arrange - Impl has an extra parameter not in base
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "required_param",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "required_param",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+              },
+              {
+                name: "extra_param",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - No errors; extra params are currently not flagged
+    expect(errors.getErrorCount()).toBe(0);
+  });
+
+  // ############################################################
+  // Query parameter validation - missing optional param
+  // ############################################################
+
+  it("should flag missing optional query parameter", () => {
+    // Arrange - Base has an optional param, impl doesn't have it
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [
+              {
+                name: "optional_param",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+              },
+            ],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/search": {
+          get: {
+            parameters: [],
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - Current impl flags all missing params (required or optional)
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(
+      expect.objectContaining({
+        type: "ROUTE_CONFLICT",
+        subType: "QUERY_PARAM_CONFLICT",
+        endpoint: "GET /search",
+        message: expect.stringMatching(/Missing required query parameter \[optional_param\]/),
+      })
+    );
+  });
 });
