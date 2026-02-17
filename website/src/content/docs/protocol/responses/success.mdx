@@ -3,6 +3,44 @@ title: Success
 description: The default response for a successful request.
 sidebar:
   order: 1
+ok:
+  example:
+    code: |
+      {
+        "status": 200,
+        "message": "Success",
+        "data": {
+          "id": "123",
+          "name": "Test 1"
+        }
+      }
+  jsonSchema:
+    code: |
+      $schema: https://json-schema.org/draft/2020-12/schema
+      $id: Ok.yaml
+      type: object
+      properties:
+        status:
+          type: integer
+          minimum: 200
+          default: 200
+          description: The HTTP status code
+        message:
+          type: string
+          default: "Success"
+          description: The message to return
+        data:
+          type: object
+          description: The data to return
+      required:
+        - status
+        - message
+        - data
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/responses/success.tsp"
+      startLine: 40
+      endLine: 48
 success:
   example:
     file:
@@ -14,7 +52,7 @@ success:
     file:
       path: "lib/core/lib/core/responses/success.tsp"
       startLine: 11
-      endLine: 17
+      endLine: 19
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
@@ -32,7 +70,7 @@ import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## Success
 
-A 200 response with data.
+Base model for all successful responses.
 
 ### Table
 
@@ -40,7 +78,6 @@ A 200 response with data.
 | --------- | ------------------------------------------ | --------------------- |
 | status    | [integer](/protocol/types/numeric#integer) | The HTTP status code  |
 | message   | [string](/protocol/types/string#string)    | The message to return |
-| data      | any                                        | The data to return    |
 
 ### Formats
 
@@ -55,6 +92,28 @@ A 200 response with data.
 ### Changelog
 
 <SchemaChangelog schema="Success" />
+
+## Ok
+
+A 200 response with data.
+
+### Table
+
+| Parameter | Type                                       | Description           |
+| --------- | ------------------------------------------ | --------------------- |
+| status    | [integer](/protocol/types/numeric#integer) | The HTTP status code  |
+| message   | [string](/protocol/types/string#string)    | The message to return |
+| data      | any                                        | The data to return    |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.ok.example}
+  jsonSchema={frontmatter.ok.jsonSchema}
+  typeSpec={frontmatter.ok.typeSpec}
+  python={frontmatter.ok.python}
+  typescript={frontmatter.ok.typescript}
+/>
 
 ### Usage
 

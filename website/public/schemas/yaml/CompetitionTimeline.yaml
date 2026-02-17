@@ -28,6 +28,7 @@ examples:
         eventType: dateRange
         startDate: 2025-02-01
         endDate: 2025-02-28
+description: Key dates in the competition's timeline.
 $defs:
   RecordEvent:
     type: object

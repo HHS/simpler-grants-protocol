@@ -16,6 +16,7 @@ properties:
     description: Details about the timeline that don't fit into the other fields.
 unevaluatedProperties:
   not: {}
+description: Key dates for the project.
 $defs:
   RecordEvent:
     type: object

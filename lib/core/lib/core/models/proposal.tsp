@@ -54,6 +54,7 @@ model ProposalOpportunity {
 // ProjectTimeline
 // #########################################################
 
+/** Key dates for the project. */
 @Versioning.added(CommonGrants.Versions.v0_2)
 model ProjectTimeline {
   /** The start date of the period for which the funding is requested. */
@@ -73,6 +74,7 @@ model ProjectTimeline {
 // ProjectContacts
 // #########################################################
 
+/** The points of contact for the proposal. */
 @Versioning.added(CommonGrants.Versions.v0_2)
 model ProposalContacts {
   /** The primary point of contact for the proposal. */
@@ -86,6 +88,7 @@ model ProposalContacts {
 // ProposalOrgs
 // #########################################################
 
+/** The organizations that are requesting funding or supporting the proposal. */
 @Versioning.added(CommonGrants.Versions.v0_2)
 model ProposalOrgs {
   /** The primary organization that is requesting funding. */

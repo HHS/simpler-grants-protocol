@@ -5,6 +5,7 @@ namespace CommonGrants.Filters;
 // ############################################################################
 
 /** Operators that filter a field based on an exact match to a value */
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum EquivalenceOperators {
   /** Equal to a value */
   eq,
@@ -14,6 +15,7 @@ enum EquivalenceOperators {
 }
 
 /** Operators that filter a field based on a comparison to a value */
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum ComparisonOperators {
   /** Greater than a value */
   gt,
@@ -29,6 +31,7 @@ enum ComparisonOperators {
 }
 
 /** Operators that filter a field based on an array of values */
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum ArrayOperators {
   /** In an array of values */
   in,
@@ -38,6 +41,7 @@ enum ArrayOperators {
 }
 
 /** Operators that filter a field based on a string value */
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum StringOperators {
   /** Like */
   like,
@@ -47,6 +51,7 @@ enum StringOperators {
 }
 
 /** Operators that filter a field based on a range of values */
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum RangeOperators {
   /** Between a range of values */
   between,
@@ -55,6 +60,7 @@ enum RangeOperators {
   outside,
 }
 
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum AllOperators {
   ...EquivalenceOperators,
   ...ComparisonOperators,
@@ -68,6 +74,7 @@ enum AllOperators {
 // ############################################################################
 
 /** A base filter model that can be used to create more specific filter models */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model DefaultFilter {
   /** The operator to apply to the filter value */
   operator:

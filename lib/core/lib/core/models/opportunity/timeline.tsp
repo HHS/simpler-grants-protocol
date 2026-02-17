@@ -12,6 +12,7 @@ using Types;
 
 /** Key dates and events in the opportunity's timeline, such as when the opportunity is posted and closes */
 @example(Examples.Timeline.opportunity)
+@Versioning.added(CommonGrants.Versions.v0_1)
 model OppTimeline {
   /** The date (and time) at which the opportunity is posted */
   postDate?: Event;

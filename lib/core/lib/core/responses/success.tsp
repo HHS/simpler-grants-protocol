@@ -8,6 +8,7 @@ namespace CommonGrants.Responses;
 // Default success response
 // ############################################################################
 
+@Versioning.added(CommonGrants.Versions.v0_1)
 model Success {
   @example(200)
   status: int32;
@@ -37,6 +38,7 @@ model Success {
  * ```
  */
 @doc("A 200 response with data")
+@Versioning.added(CommonGrants.Versions.v0_1)
 model Ok<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
@@ -66,6 +68,7 @@ model Ok<T> extends Success {
  * ```
  */
 @doc("A 200 response with a paginated list of items")
+@Versioning.added(CommonGrants.Versions.v0_1)
 model Paginated<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
@@ -98,6 +101,8 @@ model Paginated<T> extends Success {
  * alias CustomModelSortedResponse = Responses.Sorted<CustomModel>;
  * ```
  */
+@doc("A paginated list of items with a sort order")
+@Versioning.added(CommonGrants.Versions.v0_1)
 model Sorted<T> {
   // Inherit the properties of the Paginated response
   ...Paginated<T>;
@@ -132,6 +137,8 @@ model Sorted<T> {
  * alias CustomModelFilteredResponse = Responses.Filtered<CustomModel, CustomFilter>;
  * ```
  */
+@doc("A paginated list of items with a filter")
+@Versioning.added(CommonGrants.Versions.v0_1)
 model Filtered<ItemsT, FilterT> extends Success {
   // Inherit the properties of the Sorted response
   ...Sorted<ItemsT>;
@@ -153,6 +160,7 @@ model Filtered<ItemsT, FilterT> extends Success {
  *
  * @template T The schema for the value of the `"data"` property in this response
  */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model Created<T> extends Success {
   // Inherit the 201 status code
   ...Http.CreatedResponse;

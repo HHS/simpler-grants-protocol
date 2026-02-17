@@ -7,22 +7,50 @@ unevaluatedProperties:
     - $ref: MappingFunction.yaml
     - $ref: MappingSchema.yaml
 examples:
-  - id: {}
+  - id:
+      const: "123"
     opportunity:
-      status: {}
-      amount: {}
+      status:
+        switch:
+          field: summary.opportunity_status
+          case:
+            active: open
+            inactive: closed
+          default: custom
+      amount:
+        field: summary.opportunity_amount
   - opportunity:
-      status: {}
-      amount: {}
-  - opportunityAmount: {}
-    opportunityStatus: {}
-  - id: {}
+      status:
+        switch:
+          field: summary.opportunity_status
+          case:
+            active: open
+            inactive: closed
+          default: custom
+      amount:
+        field: summary.opportunity_amount
+  - opportunityAmount:
+      field: summary.opportunity_amount
+    opportunityStatus:
+      switch:
+        field: summary.opportunity_status
+        case:
+          active: open
+          inactive: closed
+        default: custom
+  - id:
+      const: "123"
     opportunity:
-      status: {}
-      amount: {}
-  - id: {}
-    opportunityStatus: {}
-    opportunityAmount: {}
+      status:
+        field: summary.opportunity_status
+      amount:
+        field: summary.opportunity_amount
+  - id:
+      const: "123"
+    opportunityStatus:
+      field: summary.opportunity_status
+    opportunityAmount:
+      field: summary.opportunity_amount
 description: |-
   A mapping format for translating data from one schema to another.
 

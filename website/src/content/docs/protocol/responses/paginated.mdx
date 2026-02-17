@@ -32,20 +32,13 @@ paginated:
       $id: Paginated.yaml
       type: object
       properties:
-        status:
-          type: integer
-          minimum: 200
-          default: 200
-          description: The HTTP status code
-        message:
-          type: string
-          default: "Success"
-          description: The message to return
         items:
           type: array
           description: Items from the current page
         paginationInfo:
-          $ref: "#/components/schemas/CommonGrants.Pagination.PaginationInfo"
+          $ref: PaginatedResultsInfo.yaml
+      allOf:
+        - $ref: Success.yaml
       required:
         - status
         - message
@@ -54,8 +47,8 @@ paginated:
   typeSpec:
     file:
       path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 68
-      endLine: 79
+      startLine: 70
+      endLine: 82
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
@@ -93,10 +86,6 @@ A 200 response with a paginated list of items.
   python={frontmatter.paginated.python}
   typescript={frontmatter.paginated.typescript}
 />
-
-### Changelog
-
-<SchemaChangelog schema="Paginated" />
 
 ### Usage
 
