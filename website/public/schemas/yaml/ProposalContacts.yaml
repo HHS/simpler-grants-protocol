@@ -12,6 +12,7 @@ required:
   - primary
 unevaluatedProperties:
   not: {}
+description: The points of contact for the proposal.
 $defs:
   RecordPersonBase:
     type: object

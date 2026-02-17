@@ -10,6 +10,7 @@ namespace CommonGrants.Models;
  * - `closed`: The opportunity is no longer accepting applications
  * - `custom`: A custom status
  */
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum OppStatusOptions {
   forecasted,
   open,
@@ -24,6 +25,7 @@ enum OppStatusOptions {
 /** The status of the opportunity */
 @example(Examples.OppStatus.custom)
 @example(Examples.OppStatus.default)
+@Versioning.added(CommonGrants.Versions.v0_1)
 model OppStatus {
   /** The status of the opportunity, from a predefined set of options */
   value: OppStatusOptions;

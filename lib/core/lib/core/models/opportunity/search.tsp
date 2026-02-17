@@ -8,6 +8,7 @@ namespace CommonGrants.Models;
 // ############################################################################
 
 /** Filters to apply when searching for opportunities */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model OppFilters {
   /** The default filters to apply to the search */
   ...OppDefaultFilters;
@@ -17,6 +18,7 @@ model OppFilters {
 }
 
 /** The standard set of filters supported for opportunity searches */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model OppDefaultFilters extends Record<Filters.DefaultFilter> {
   /** `status.value` matches one of the following values */
   @example(#{
@@ -82,6 +84,7 @@ model OppDefaultFilters extends Record<Filters.DefaultFilter> {
 // Sorting models
 // ############################################################################
 
+@Versioning.added(CommonGrants.Versions.v0_1)
 enum OppSortBy {
   lastModifiedAt,
   createdAt,
@@ -95,6 +98,7 @@ enum OppSortBy {
   custom,
 }
 
+@Versioning.added(CommonGrants.Versions.v0_1)
 model OppSorting extends Sorting.SortBodyParams {
   /** The field to sort by */
   @example(OppSortBy.lastModifiedAt)

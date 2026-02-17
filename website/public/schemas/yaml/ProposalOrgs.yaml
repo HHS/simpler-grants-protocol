@@ -12,6 +12,7 @@ required:
   - primary
 unevaluatedProperties:
   not: {}
+description: The organizations that are requesting funding or supporting the proposal.
 $defs:
   RecordOrganizationBase:
     type: object

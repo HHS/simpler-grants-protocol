@@ -30,9 +30,18 @@ filtered:
           "direction": "asc"
         },
         "filterInfo": {
-          "lastModifiedAt": {
-            "operator": "gte",
-            "value": "2024-01-01T00:00:00Z"
+          "filters": {
+            "lastModifiedAt": {
+              "operator": "gte",
+              "value": "2024-01-01T00:00:00Z"
+            },
+            "status": {
+              "operator": "in",
+              "value": [
+                "active",
+                "inactive"
+              ]
+            }
           }
         }
       }
@@ -42,15 +51,6 @@ filtered:
       $id: Filtered.yaml
       type: object
       properties:
-        status:
-          type: integer
-          minimum: 200
-          default: 200
-          description: The HTTP status code
-        message:
-          type: string
-          default: "Success"
-          description: The message to return
         items:
           type: array
           description: Items from the current page
@@ -61,9 +61,18 @@ filtered:
         filterInfo:
           type: object
           description: The filters applied to the response items
+          properties:
+            filters:
+              type: object
+              description: The filters applied to the response items
+            errors:
+              type: array
+              items:
+                type: string
+              description: Non-fatal errors that occurred during filtering
+      allOf:
+        - $ref: Success.yaml
       required:
-        - status
-        - message
         - items
         - paginationInfo
         - sortInfo
@@ -71,8 +80,8 @@ filtered:
   typeSpec:
     file:
       path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 135
-      endLine: 146
+      startLine: 140
+      endLine: 153
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
@@ -112,7 +121,3 @@ A 200 response with a paginated list of filtered items.
   python={frontmatter.filtered.python}
   typescript={frontmatter.filtered.typescript}
 />
-
-### Changelog
-
-<SchemaChangelog schema="Filtered" />

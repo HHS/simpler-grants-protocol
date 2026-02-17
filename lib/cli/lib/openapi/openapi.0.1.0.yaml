@@ -13,7 +13,9 @@ tags:
   - name: Competitions
     description: Endpoints related to competitions, which are distinct application processes for the same funding opportunity
   - name: Applications
-    description: Endpoints related to applications for a given competition
+    description: Endpoints related to submitting applications for a given competition
+  - name: Application Reviews
+    description: Endpoints related to reviewing applications for a given competition
   - name: Forms
     description: Endpoints related to forms
   - name: required
@@ -819,7 +821,7 @@ components:
       description: Key dates and events in the opportunity's timeline, such as when the opportunity is posted and closes
       example:
         postDate:
-          name: Application posted date
+          name: Opportunity posted date
           eventType: singleDate
           date: '2024-01-15'
           description: Opportunity is posted publicly

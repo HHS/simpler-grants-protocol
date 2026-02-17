@@ -18,7 +18,7 @@ unevaluatedProperties:
   not: {}
 examples:
   - postDate:
-      name: Application posted date
+      name: Opportunity posted date
       eventType: singleDate
       date: 2024-01-15
       description: Opportunity is posted publicly

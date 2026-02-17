@@ -3,7 +3,9 @@ $id: NumberComparisonFilter.yaml
 type: object
 properties:
   operator:
-    $ref: ComparisonOperators.yaml
+    anyOf:
+      - $ref: ComparisonOperators.yaml
+      - $ref: EquivalenceOperators.yaml
     description: The comparison operator to apply to the filter value
   value:
     type: number

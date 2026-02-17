@@ -75,7 +75,7 @@
     "@types/jest": "^29.5.14",
     "@types/js-yaml": "^4.0.9",
     "@types/json-schema-merge-allof": "^0.6.5",
-    "@types/node": "^20.19.23",
+    "@types/node": "catalog:",
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.46.2",

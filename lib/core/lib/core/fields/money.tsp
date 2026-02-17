@@ -18,6 +18,7 @@ using Types;
   Examples.Money.usdNegative,
   #{ title: "A negative amount of US dollars and cents" }
 )
+@Versioning.added(CommonGrants.Versions.v0_1)
 model Money {
   /** The amount of money */
   amount: decimalString;

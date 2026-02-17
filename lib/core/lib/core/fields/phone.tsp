@@ -3,6 +3,7 @@ namespace CommonGrants.Fields;
 /** A phone number. */
 @example(Examples.Phone.mobile)
 @example(Examples.Phone.withExtension)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model Phone {
   /** The international country code (e.g., "+1" for US/Canada). */
   @pattern("^\\+[1-9][0-9]{0,3}$")
@@ -25,6 +26,7 @@ model Phone {
 /** A collection of phone numbers for a person. */
 @example(Examples.Phone.personalCollection)
 @example(Examples.Phone.orgCollection)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model PhoneCollection {
   /** The person's primary phone number. */
   primary: Fields.Phone;

@@ -8,6 +8,7 @@ namespace CommonGrants.Filters;
 // ############################################################################
 
 /** Filters by comparing a field to a monetary value */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model MoneyComparisonFilter {
   /** The operator to apply to the filter value */
   operator: ComparisonOperators;
@@ -22,6 +23,7 @@ model MoneyComparisonFilter {
 // ############################################################################
 
 /** Filters by comparing a field to a range of monetary values */
+@Versioning.added(CommonGrants.Versions.v0_1)
 model MoneyRangeFilter {
   /** The operator to apply to the filter value */
   operator: RangeOperators;

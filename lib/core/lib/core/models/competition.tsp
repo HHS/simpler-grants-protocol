@@ -49,6 +49,7 @@ model CompetitionBase {
 
 /** The status of the competition */
 @example(Examples.Competition.status)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model CompetitionStatus {
   /** The status of the competition, from a predefined set of options */
   value: CompetitionStatusOptions;
@@ -69,6 +70,7 @@ model CompetitionStatus {
  * - `closed`: The competition is no longer accepting applications
  * - `custom`: A custom status
  */
+@Versioning.added(CommonGrants.Versions.v0_2)
 enum CompetitionStatusOptions {
   open,
   closed,
@@ -81,9 +83,10 @@ enum CompetitionStatusOptions {
 
 /** Set of forms that need to be completed to apply to the competition. */
 @example(Examples.Competition.forms)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model CompetitionForms {
   /** The forms for the competition */
-  forms: Record<Models.Form>;
+  forms: Record<Models.FormBase>;
 
   /** The validation rules for the competition forms */
   validation?: Record<unknown>;
@@ -93,7 +96,9 @@ model CompetitionForms {
 // CompetitionTimeline
 // #########################################################
 
+/** Key dates in the competition's timeline. */
 @example(Examples.Competition.keyDates)
+@Versioning.added(CommonGrants.Versions.v0_2)
 model CompetitionTimeline {
   /** The start date of the competition */
   openDate?: Fields.Event;
