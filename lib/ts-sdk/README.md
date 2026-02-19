@@ -314,20 +314,18 @@ const LegacyIdValueSchema = z.object({
   id: z.number().int(),
 });
 
-// Extend the base schema with typed custom fields
-const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
-  {
-    key: "legacyId",
+// Extend the base schema with typed custom fields (record: key = field key)
+const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+  legacyId: {
     fieldType: CustomFieldType.object,
     valueSchema: LegacyIdValueSchema,
     description: "Maps to the opportunity_id in the legacy system",
   },
-  {
-    key: "category",
+  category: {
     fieldType: CustomFieldType.string,
     description: "Grant category",
   },
-] as const);
+});
 
 // Parse data with custom fields
 const opportunity = OpportunitySchema.parse({
@@ -356,6 +354,8 @@ type Opportunity = z.infer<typeof OpportunitySchema>;
 // opportunity.customFields?.legacyId?.value.id   → typed as number
 // opportunity.customFields?.category?.value      → typed as string
 ```
+
+Each spec can include optional `name` (used as the default for `CustomField.name`; otherwise the record key is used) and optional `description`.
 
 #### Extracting Custom Field Values
 
