@@ -2,14 +2,15 @@
  * Opportunities resource namespace for the CommonGrants API.
  */
 
+import { z } from "zod";
 import type { Client, FetchManyOptions } from "./client";
 import type {
   OpportunityBase,
-  OpportunitiesListResponse,
-  OpportunitiesFilteredResponse,
   OppStatusOptions,
   OppFilters,
   OppSearchRequest,
+  Paginated,
+  Filtered,
 } from "../types";
 import {
   OkSchema,
@@ -20,10 +21,22 @@ import {
 } from "../schemas";
 import { ArrayOperator } from "../constants";
 
-// Response schemas with validation
-const OpportunityResponseSchema = OkSchema(OpportunityBaseSchema);
-const OpportunitiesListResponseSchema = PaginatedSchema(OpportunityBaseSchema);
-const OpportunitiesFilteredResponseSchema = FilteredSchema(OpportunityBaseSchema, OppFiltersSchema);
+// =============================================================================
+// Schema type constraint
+// =============================================================================
+
+/**
+ * Constrains the schema parameter to any Zod schema whose `.parse()` output
+ * is at least an `OpportunityBase`.
+ *
+ * We intentionally constrain on the OUTPUT type (`OpportunityBase`) rather than
+ * the concrete schema type (`typeof OpportunityBaseSchema`). This is because
+ * `withCustomFields()` returns a schema with a different internal Zod type tree
+ * (e.g. a typed `ZodOptional` for `customFields` instead of `ZodNullable<ZodRecord>`),
+ * even though its parsed output is still a superset of `OpportunityBase`. Constraining
+ * on the output type accepts both the base schema and any extended variant.
+ */
+type OppSchema = z.ZodType<OpportunityBase, z.ZodTypeDef, unknown>;
 
 // =============================================================================
 // Search types
@@ -67,16 +80,29 @@ export class Opportunities {
    * Get a specific opportunity by ID.
    *
    * @param id - The opportunity ID
+   * @param schema - Zod schema to parse and type the response. Defaults to `OpportunityBaseSchema`.
+   *                 Pass a schema from `withCustomFields()` for typed custom field access.
    * @returns The opportunity data
    * @throws {Error} If the request fails
    *
    * @example
    * ```ts
+   * // Default usage
    * const opp = await client.opportunities.get("123e4567-e89b-12d3-a456-426614174000");
    * console.log(opp.title);
+   *
+   * // With a custom-fields schema for typed access
+   * const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
+   *   { key: "legacyId", fieldType: "integer", valueSchema: z.number().int() },
+   * ] as const);
+   * const typed = await client.opportunities.get(id, OpportunitySchema);
+   * console.log(typed.customFields?.legacyId?.value); // typed as number
    * ```
    */
-  async get(id: string): Promise<OpportunityBase> {
+  async get<S extends OppSchema = typeof OpportunityBaseSchema>(
+    id: string,
+    schema: S = OpportunityBaseSchema as unknown as S
+  ): Promise<z.infer<S>> {
     const response = await this.client.get(`${this.basePath}/${id}`);
 
     if (!response.ok) {
@@ -84,9 +110,9 @@ export class Opportunities {
     }
 
     const json = await response.json();
-    const result = OpportunityResponseSchema.parse(json);
+    const result = OkSchema(schema).parse(json);
 
-    return result.data;
+    return result.data as z.infer<S>;
   }
 
   // ############################################################################
@@ -98,6 +124,8 @@ export class Opportunities {
    *
    * @param options - Pagination options. If `page` is specified, fetches only that page.
    *                  Otherwise, auto-paginates to fetch all items.
+   * @param schema - Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`.
+   *                 Pass a schema from `withCustomFields()` for typed custom field access.
    * @returns Paginated list of opportunities
    * @throws {Error} If the request fails
    *
@@ -111,9 +139,15 @@ export class Opportunities {
    *
    * // Get a specific page (disables auto-pagination)
    * const page2 = await client.opportunities.list({ page: 2, pageSize: 10 });
+   *
+   * // With a custom-fields schema
+   * const typed = await client.opportunities.list(undefined, OpportunitySchema);
    * ```
    */
-  async list(options?: FetchManyOptions): Promise<OpportunitiesListResponse> {
+  async list<S extends OppSchema = typeof OpportunityBaseSchema>(
+    options?: FetchManyOptions,
+    schema: S = OpportunityBaseSchema as unknown as S
+  ): Promise<Paginated<z.infer<S>>> {
     // If page is specified, fetch only that page
     if (options?.page !== undefined) {
       const params: Record<string, number> = { page: options.page };
@@ -129,13 +163,13 @@ export class Opportunities {
       }
 
       const json = await response.json();
-      return OpportunitiesListResponseSchema.parse(json);
+      return PaginatedSchema(schema).parse(json) as Paginated<z.infer<S>>;
     }
 
     // Auto-paginate by default
-    return this.client.fetchMany<OpportunityBase>(this.basePath, {
+    return this.client.fetchMany(this.basePath, {
       ...options,
-      parseItem: item => OpportunityBaseSchema.parse(item),
+      parseItem: (item: unknown) => schema.parse(item) as z.infer<S>,
     });
   }
 
@@ -149,6 +183,8 @@ export class Opportunities {
    * Supports auto-pagination by default. If `page` is specified, only fetches that page.
    *
    * @param options - Search options including query text, status filters, and pagination
+   * @param schema - Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`.
+   *                 Pass a schema from `withCustomFields()` for typed custom field access.
    * @returns Filtered list of opportunities
    * @throws {Error} If the request fails
    *
@@ -179,36 +215,54 @@ export class Opportunities {
    *   maxItems: 100,
    *   pageSize: 25,
    * });
+   *
+   * // With a custom-fields schema
+   * const typed = await client.opportunities.search({ query: "test" }, OpportunitySchema);
    * ```
    */
-  async search(options?: SearchOptions): Promise<OpportunitiesFilteredResponse> {
+  async search<S extends OppSchema = typeof OpportunityBaseSchema>(
+    options?: SearchOptions,
+    schema: S = OpportunityBaseSchema as unknown as S
+  ): Promise<Filtered<z.infer<S>, OppFilters>> {
     // Build the base search body (without pagination)
     const searchBody = this.buildSearchBody(options);
 
     // If page is specified, fetch only that page
     if (options?.page !== undefined) {
-      return this.fetchSearchPage(searchBody, options.page, options.pageSize, options.signal);
+      return this.fetchSearchPage(
+        searchBody,
+        options.page,
+        options.pageSize,
+        options.signal,
+        schema
+      );
     }
 
     // Auto-paginate by default using fetchMany with POST method
-    const result = await this.client.fetchMany<OpportunityBase>(`${this.basePath}/search`, {
+    const result = await this.client.fetchMany(this.basePath + "/search", {
       method: "POST",
       body: searchBody as Record<string, unknown>,
       pageSize: options?.pageSize,
       maxItems: options?.maxItems,
       signal: options?.signal,
-      parseItem: item => OpportunityBaseSchema.parse(item),
+      parseItem: (item: unknown) => schema.parse(item) as z.infer<S>,
     });
 
     // Fetch first page to get sortInfo and filterInfo metadata
-    const firstPageResponse = await this.fetchSearchPage(searchBody, 1, options?.pageSize);
+    const firstPageResponse = await this.fetchSearchPage(
+      searchBody,
+      1,
+      options?.pageSize,
+      undefined,
+      schema
+    );
 
     // Merge the aggregated items with metadata from first page
     return {
       ...result,
       sortInfo: firstPageResponse.sortInfo,
       filterInfo: firstPageResponse.filterInfo,
-    };
+    } as Filtered<z.infer<S>, OppFilters>;
   }
 
   // ############################################################################
@@ -239,12 +293,13 @@ export class Opportunities {
   }
 
   /** Fetches a single search page */
-  private async fetchSearchPage(
+  private async fetchSearchPage<S extends OppSchema>(
     searchBody: OppSearchRequest,
     page: number,
     pageSize?: number,
-    signal?: AbortSignal
-  ): Promise<OpportunitiesFilteredResponse> {
+    signal?: AbortSignal,
+    schema: S = OpportunityBaseSchema as unknown as S
+  ): Promise<Filtered<z.infer<S>, OppFilters>> {
     const requestBody: OppSearchRequest = {
       ...searchBody,
       pagination: {
@@ -260,6 +315,6 @@ export class Opportunities {
     }
 
     const json = await response.json();
-    return OpportunitiesFilteredResponseSchema.parse(json);
+    return FilteredSchema(schema, OppFiltersSchema).parse(json) as Filtered<z.infer<S>, OppFilters>;
   }
 }
