@@ -4,15 +4,24 @@ This folder contains example scripts demonstrating how to use the CommonGrants T
 
 ## Prerequisites
 
-You can run these examples against either a locally hosted API or a remote API.
+You can run these examples against a mock API (no backend required), the California Grants FastAPI example, or a remote API.
 
-### Option A: Local API
+### Option A: Mock API (easiest, no Python/FastAPI)
 
-By default the examples will run against a local API at `http://localhost:8000`. You can follow the instructions below to start a local API server using the California Grants example API.
+From the `lib/ts-sdk` directory, start the built-in mock server in one terminal:
 
-**1. Start the Example API**
+```bash
+pnpm install
+pnpm example:server
+```
 
-From the repository root, run:
+Then in another terminal run any example. The mock server listens on `http://localhost:8000` and serves list, get, and search with sample data including custom fields.
+
+### Option B: California Grants FastAPI API
+
+By default the examples use `http://localhost:8000`. To use the California Grants example API instead of the mock server:
+
+From the repository root:
 
 ```bash
 cd examples/ca-opportunity-example
@@ -20,13 +29,9 @@ make install
 make dev
 ```
 
-This starts a local API server at `http://localhost:8000`.
-
 > [!NOTE]
 > The commands above require both Python and Poetry to be installed.
 > For more details, see the [California grants example API README](../../../examples/ca-opportunity-example/README.md).
-
-**2. Install SDK Dependencies**
 
 From the `lib/ts-sdk` directory:
 
@@ -34,9 +39,9 @@ From the `lib/ts-sdk` directory:
 pnpm install
 ```
 
-### Option B: Remote API
+### Option C: Remote API
 
-To connect to a remote CommonGrants-compatible API, set the following environment variables:
+To connect to a remote CommonGrants-compatible API instead of localhost, set the following environment variables:
 
 ```bash
 export CG_BASE_URL="https://your-api-endpoint.com"
@@ -65,6 +70,10 @@ pnpm example:search <searchTerm>
 
 # Demonstrate custom fields usage
 pnpm example:custom-fields
+
+# Parse custom fields (mock response, or fetch by ID from API)
+pnpm example:get-custom-fields
+pnpm example:get-custom-fields <opportunityId>
 ```
 
 ## Examples
@@ -126,6 +135,18 @@ Demonstrates how to extend schemas with typed custom fields and extract their va
 
 ```bash
 pnpm example:custom-fields
+```
+
+### Get Opportunity with Custom Fields
+
+Parses a mock API response (no server) or fetches an opportunity from the API using a schema with typed custom fields.
+
+```bash
+# Parse inline mock response (no API required)
+pnpm example:get-custom-fields
+
+# Fetch from API with typed custom fields
+pnpm example:get-custom-fields <opportunityId>
 ```
 
 **Output Example:**
