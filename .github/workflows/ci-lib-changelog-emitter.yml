@@ -5,7 +5,7 @@ on:
   pull_request:
     paths:
       - lib/changelog-emitter/**
-      - .github/workflows/ci-lib-changelog.yml
+      - .github/workflows/ci-lib-changelog-emitter.yml
       - pnpm-lock.yaml
 
 jobs:
@@ -34,11 +34,11 @@ jobs:
       - name: Build library
         run: pnpm --filter typespec-versioning-changelog run build
 
-      - name: Lint and format
+      - name: Run checks
         run: pnpm --filter typespec-versioning-changelog run checks
 
       - name: Run tests
-        run: pnpm --filter typespec-versioning-changelog test
+        run: pnpm --filter typespec-versioning-changelog run test:coverage
 
       - name: Audit dependencies
-        run: pnpm audit
+        run: pnpm --filter typespec-versioning-changelog run audit

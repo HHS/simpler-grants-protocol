@@ -33,14 +33,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build SDK library
-        run: pnpm --filter @common-grants/sdk run build
-
-      - name: Lint and format
+      - name: Run checks
         run: pnpm --filter @common-grants/sdk run checks
 
       - name: Run tests
-        run: pnpm --filter @common-grants/sdk test:coverage
+        run: pnpm --filter @common-grants/sdk run test:coverage
+
+      - name: Build library
+        run: pnpm --filter @common-grants/sdk run build
 
       - name: Audit dependencies
-        run: pnpm audit
+        run: pnpm --filter @common-grants/sdk run audit

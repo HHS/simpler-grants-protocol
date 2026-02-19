@@ -48,7 +48,10 @@
     "format": "prettier --write .",
     "check:lint": "eslint . --ext .ts",
     "check:format": "prettier --check .",
-    "checks": "npm run check:lint && npm run check:format"
+    "check:types": "tsc --noEmit",
+    "checks": "npm run check:lint && npm run check:format && npm run check:types",
+    "test:coverage": "jest --coverage",
+    "audit": "pnpm audit"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.1",

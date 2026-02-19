@@ -40,7 +40,9 @@
     "format": "prettier --write . && tsp format lib",
     "check:lint": "eslint",
     "check:format": "prettier --check . && tsp format lib --check",
-    "checks": "npm run check:lint && npm run check:format"
+    "check:types": "tsc --noEmit",
+    "checks": "npm run check:lint && npm run check:format && npm run check:types",
+    "audit": "pnpm audit"
   },
   "keywords": [
     "typespec",
