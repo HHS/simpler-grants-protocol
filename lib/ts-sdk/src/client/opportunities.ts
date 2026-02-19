@@ -238,7 +238,9 @@ export class Opportunities {
       );
     }
 
-    // Auto-paginate by default using fetchMany with POST method
+    // Auto-paginate using fetchMany with POST method.
+    // fetchMany preserves the first page's full response envelope, so
+    // sortInfo and filterInfo pass through without an extra request.
     const result = await this.client.fetchMany(this.basePath + "/search", {
       method: "POST",
       body: searchBody as Record<string, unknown>,
@@ -248,21 +250,7 @@ export class Opportunities {
       parseItem: (item: unknown) => schema.parse(item) as z.infer<S>,
     });
 
-    // Fetch first page to get sortInfo and filterInfo metadata
-    const firstPageResponse = await this.fetchSearchPage(
-      searchBody,
-      1,
-      options?.pageSize,
-      undefined,
-      schema
-    );
-
-    // Merge the aggregated items with metadata from first page
-    return {
-      ...result,
-      sortInfo: firstPageResponse.sortInfo,
-      filterInfo: firstPageResponse.filterInfo,
-    } as Filtered<z.infer<S>, OppFilters>;
+    return result as Filtered<z.infer<S>, OppFilters>;
   }
 
   // ############################################################################

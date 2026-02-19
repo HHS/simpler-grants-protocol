@@ -587,8 +587,8 @@ describe("Opportunities", () => {
         pageSize: 2,
       });
 
-      // Should make 4 requests: 3 for fetchMany pagination + 1 for metadata
-      expect(requestCount).toBe(4);
+      // Should make 3 requests (pages 1, 2, 3) — metadata comes from page 1
+      expect(requestCount).toBe(3);
 
       // Should return all 5 items aggregated
       expect(result.items).toHaveLength(5);
@@ -642,8 +642,8 @@ describe("Opportunities", () => {
         maxItems: 5,
       });
 
-      // Should stop after collecting 5 items (3 pages for fetchMany + 1 for metadata = 4 requests)
-      expect(requestCount).toBe(4);
+      // Should stop after collecting 5 items (3 pages: 2 + 2 + 1)
+      expect(requestCount).toBe(3);
       expect(result.items).toHaveLength(5);
     });
   });

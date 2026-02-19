@@ -218,7 +218,7 @@ export class Client {
     let currentPage = options?.page ?? 1;
 
     const allItems: T[] = [];
-    let totalItems: number | undefined;
+    let firstPageJson: Paginated<unknown> | undefined;
     let totalPages: number | undefined;
 
     while (allItems.length < maxItems) {
@@ -249,6 +249,12 @@ export class Client {
 
       const json = (await response.json()) as Paginated<unknown>;
 
+      // Preserve the first page's full response envelope (status, message,
+      // paginationInfo, and any extra fields like sortInfo/filterInfo)
+      if (!firstPageJson) {
+        firstPageJson = json;
+      }
+
       const { items: rawItems, paginationInfo } = json;
 
       // Parse/validate items if parseItem function is provided
@@ -256,9 +262,7 @@ export class Client {
         ? rawItems.map(item => options.parseItem!(item))
         : (rawItems as T[]);
 
-      // Store pagination metadata from first response
-      if (totalItems === undefined) {
-        totalItems = paginationInfo.totalItems ?? undefined;
+      if (totalPages === undefined) {
         totalPages = paginationInfo.totalPages ?? undefined;
       }
 
@@ -280,17 +284,20 @@ export class Client {
       currentPage++;
     }
 
+    // Merge aggregated items into the first page's real response envelope
+    if (!firstPageJson) {
+      throw new Error("No response received from paginated endpoint");
+    }
+
     return {
-      status: 200,
-      message: "Success",
+      ...firstPageJson,
       items: allItems,
       paginationInfo: {
+        ...firstPageJson.paginationInfo,
         page: 1,
         pageSize: allItems.length,
-        totalItems,
-        totalPages,
       },
-    };
+    } as Paginated<T>;
   }
 
   // =============================================================================
