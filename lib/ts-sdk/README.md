@@ -325,7 +325,7 @@ const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
     fieldType: CustomFieldType.string,
     description: "Grant category",
   },
-});
+} as const);
 
 // Parse data with custom fields
 const opportunity = OpportunitySchema.parse({
