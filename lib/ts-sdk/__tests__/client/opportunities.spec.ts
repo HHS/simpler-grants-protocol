@@ -148,7 +148,7 @@ describe("Opportunities", () => {
       await expect(client.opportunities.get(OPP_UUID_1)).rejects.toThrow("500");
     });
 
-    it("parses response with a custom schema", async () => {
+    it("parses get result with a custom schema", async () => {
       server.use(
         http.get("/common-grants/opportunities/:id", ({ params }) => {
           return HttpResponse.json({
@@ -279,7 +279,7 @@ describe("Opportunities", () => {
       expect(result.items).toHaveLength(5);
     });
 
-    it("parses items with a custom schema", async () => {
+    it("parses list results with a custom schema", async () => {
       server.use(
         http.get("/common-grants/opportunities", () => {
           return HttpResponse.json({
@@ -452,7 +452,7 @@ describe("Opportunities", () => {
       await expect(client.opportunities.search({ query: "test" })).rejects.toThrow("500");
     });
 
-    it("parses items with a custom schema", async () => {
+    it("parses search results with a custom schema", async () => {
       server.use(
         http.post("/common-grants/opportunities/search", () => {
           return HttpResponse.json({
