@@ -228,9 +228,11 @@ export class Client {
     while (allItems.length < maxItems && !firstResult.isLastPage) {
       const result = await this.fetchOnePage<T>(path, method, currentPage, pageSize, options);
 
+      // Add items up to maxItems limit.
       const remainingCapacity = maxItems - allItems.length;
       allItems.push(...result.items.slice(0, remainingCapacity));
 
+      // Stop if we've fetched all available items.
       if (result.isLastPage || allItems.length >= maxItems) break;
       currentPage++;
     }
@@ -269,7 +271,7 @@ export class Client {
   }> {
     let response: Response;
 
-    // Fetch the page
+    // Fetch the page.
     if (method === "POST") {
       // Add pagination to the request body if it's a POST request.
       const requestBody = {
@@ -290,7 +292,7 @@ export class Client {
       throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
     }
 
-    // Parse the response.
+    // Parse/validate items if parseItem function is provided
     const json = (await response.json()) as Paginated<unknown>;
     const { items: rawItems, paginationInfo } = json;
     const items: T[] = options?.parseItem
