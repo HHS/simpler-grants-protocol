@@ -10,14 +10,13 @@ import { CustomFieldType } from "../../src/constants";
 // Custom schema for testing withCustomFields support
 // =============================================================================
 
-const OpportunityWithLegacyIdSchema = withCustomFields(OpportunityBaseSchema, [
-  {
-    key: "legacyId",
+const OpportunityWithLegacyIdSchema = withCustomFields(OpportunityBaseSchema, {
+  legacyId: {
     fieldType: CustomFieldType.integer,
     valueSchema: z.number().int(),
     description: "Maps to the opportunity_id in the legacy system",
   },
-] as const);
+} as const);
 
 // =============================================================================
 // Mock API Handlers

@@ -28,25 +28,22 @@ const MetadataValueSchema = z.object({
 describe("withCustomFields + getCustomFieldValue integration", () => {
   it("should work together to create typed schemas and extract values", () => {
     // Step 1: Create an extended schema with typed custom fields
-    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
-      {
-        key: "legacyId",
+    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+      legacyId: {
         fieldType: CustomFieldType.object,
         valueSchema: LegacyIdValueSchema,
         description: "Maps to the opportunity_id in the legacy system",
       },
-      {
-        key: "tags",
+      tags: {
         fieldType: CustomFieldType.array,
         valueSchema: TagsValueSchema,
         description: "Tags for categorizing the opportunity",
       },
-      {
-        key: "category",
+      category: {
         fieldType: CustomFieldType.string,
         description: "Grant category",
       },
-    ] as const);
+    } as const);
 
     // Step 2: Parse data using the extended schema
     const opportunityData = {
@@ -100,13 +97,12 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
   });
 
   it("should handle missing custom fields gracefully", () => {
-    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
-      {
-        key: "legacyId",
+    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+      legacyId: {
         fieldType: CustomFieldType.object,
         valueSchema: LegacyIdValueSchema,
       },
-    ] as const);
+    } as const);
 
     const opportunityData = {
       id: "573525f2-8e15-4405-83fb-e6523511d893",
@@ -126,13 +122,12 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
   });
 
   it("should reject invalid custom field values during parsing", () => {
-    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
-      {
-        key: "legacyId",
+    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+      legacyId: {
         fieldType: CustomFieldType.object,
         valueSchema: LegacyIdValueSchema,
       },
-    ] as const);
+    } as const);
 
     const opportunityData = {
       id: "573525f2-8e15-4405-83fb-e6523511d893",
@@ -176,16 +171,14 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
   });
 
   it("should work with default value schemas (no valueSchema provided)", () => {
-    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
-      {
-        key: "category",
+    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+      category: {
         fieldType: CustomFieldType.string, // No valueSchema - uses default z.string()
       },
-      {
-        key: "priority",
+      priority: {
         fieldType: CustomFieldType.integer, // No valueSchema - uses default z.number().int()
       },
-    ] as const);
+    } as const);
 
     const opportunityData = {
       id: "573525f2-8e15-4405-83fb-e6523511d893",
@@ -219,13 +212,12 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
   });
 
   it("should handle complex nested custom fields", () => {
-    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
-      {
-        key: "metadata",
+    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+      metadata: {
         fieldType: CustomFieldType.object,
         valueSchema: MetadataValueSchema,
       },
-    ] as const);
+    } as const);
 
     const opportunityData = {
       id: "573525f2-8e15-4405-83fb-e6523511d893",
@@ -253,13 +245,12 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
   });
 
   it("should maintain type safety throughout the workflow", () => {
-    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
-      {
-        key: "legacyId",
+    const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+      legacyId: {
         fieldType: CustomFieldType.object,
         valueSchema: LegacyIdValueSchema,
       },
-    ] as const);
+    } as const);
 
     const opportunityData = {
       id: "573525f2-8e15-4405-83fb-e6523511d893",
