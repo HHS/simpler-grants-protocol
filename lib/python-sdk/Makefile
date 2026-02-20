@@ -1,11 +1,8 @@
 RUNTIME_PREFIX := poetry run
-.PHONY: install audit format lint test build check-format check-lint check-types checks
+.PHONY: install format lint test build check-format check-lint check-types checks
 
 install:
 	poetry install
-
-audit:
-	poetry audit
 
 format:
 	$(RUNTIME_PREFIX) black .
