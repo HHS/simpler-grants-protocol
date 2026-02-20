@@ -8,7 +8,7 @@ format:
 	$(RUNTIME_PREFIX) black .
 
 lint:
-	$(RUNTIME_PREFIX) ruff check . --fix
+	$(RUNTIME_PREFIX) ruff check .
 
 test:
 	$(RUNTIME_PREFIX) pytest
