@@ -39,7 +39,7 @@
     "check:lint": "eslint . --report-unused-disable-directives --max-warnings=0",
     "check:types": "tsc --noEmit",
     "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage --coverage.reporter=text",
     "audit": "pnpm audit"
   }
 }
