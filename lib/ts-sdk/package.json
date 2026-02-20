@@ -72,7 +72,9 @@
     "example:list": "tsx examples/list-opportunities.ts",
     "example:get": "tsx examples/get-opportunity.ts",
     "example:search": "tsx examples/search-opportunities.ts",
-    "example:custom-fields": "tsx examples/custom-fields.ts"
+    "example:custom-fields": "tsx examples/custom-fields.ts",
+    "example:get-custom-fields": "tsx examples/get-opportunity-with-custom-fields.ts",
+    "example:server": "tsx examples/mock-api-server.ts"
   },
   "dependencies": {
     "zod": "^3.25.76"

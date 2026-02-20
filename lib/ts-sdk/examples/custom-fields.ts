@@ -29,31 +29,27 @@ const MetadataValueSchema = z.object({
 });
 
 // Create an extended schema with typed custom fields
-const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
-  {
-    key: "legacyId",
+const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+  legacyId: {
     fieldType: CustomFieldType.object,
     valueSchema: LegacyIdValueSchema,
     description: "Maps to the opportunity_id in the legacy system",
   },
-  {
-    key: "tags",
+  tags: {
     fieldType: CustomFieldType.array,
     valueSchema: TagsValueSchema,
     description: "Tags for categorizing the opportunity",
   },
-  {
-    key: "category",
+  category: {
     fieldType: CustomFieldType.string,
     description: "Grant category",
   },
-  {
-    key: "metadata",
+  metadata: {
     fieldType: CustomFieldType.object,
     valueSchema: MetadataValueSchema,
     description: "Import metadata",
   },
-] as const);
+} as const);
 
 // Sample opportunity data with custom fields
 const opportunityData = {

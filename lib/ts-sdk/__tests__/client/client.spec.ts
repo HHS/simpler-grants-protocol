@@ -404,6 +404,39 @@ describe("Client", () => {
       expect(result.items[2].parsed).toBe(true);
     });
 
+    it("preserves response metadata from the first page", async () => {
+      server.use(
+        http.get("/test-items", ({ url }) => {
+          const urlObj = new URL(url);
+          const page = parseInt(urlObj.searchParams.get("page") || "1");
+          const pageSize = parseInt(urlObj.searchParams.get("pageSize") || "5");
+          const allItems = generateMockItems(3);
+          const start = (page - 1) * pageSize;
+          const pageItems = allItems.slice(start, start + pageSize);
+
+          return HttpResponse.json({
+            status: 206,
+            message: "Partial Content",
+            items: pageItems,
+            paginationInfo: {
+              page,
+              pageSize,
+              totalItems: 3,
+              totalPages: 1,
+            },
+            extraField: "preserved",
+          });
+        })
+      );
+
+      const result = await defaultClient.fetchMany("/test-items", { pageSize: 10 });
+
+      expect(result.status).toBe(206);
+      expect(result.message).toBe("Partial Content");
+      expect((result as Record<string, unknown>).extraField).toBe("preserved");
+      expect(result.items).toHaveLength(3);
+    });
+
     it("throws when parseItem throws (validation failure)", async () => {
       server.use(
         http.get(

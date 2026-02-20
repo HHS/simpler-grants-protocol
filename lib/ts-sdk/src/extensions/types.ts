@@ -13,15 +13,17 @@ import type { CustomField, CustomFieldType } from "../types";
 
 /**
  * Specification for a custom field to be registered on a schema.
+ * The key in the Record passed to withCustomFields() is the field key in customFields.
+ * CustomField.name defaults to spec.name when provided, otherwise to the record key.
  */
 export interface CustomFieldSpec {
-  /** The key used in the customFields record */
-  key: string;
+  /** Optional display name; used as the default for CustomField.name when provided, otherwise the record key is used */
+  name?: string;
   /** The JSON schema type for the field */
   fieldType: CustomFieldType;
   /** Optional Zod schema to validate the value property. Defaults based on fieldType */
   valueSchema?: z.ZodTypeAny;
-  /** Optional description of the custom field */
+  /** Optional description; used as the default for CustomField.description when present */
   description?: string;
 }
 
@@ -33,20 +35,19 @@ export interface CustomFieldSpec {
  * WHY THESE UTILITIES EXIST:
  *
  * The `withCustomFields()` function builds Zod schemas dynamically at runtime by
- * looping over a `specs` array. However, TypeScript's type system operates at
- * compile time and cannot "unroll" runtime loops to infer types.
+ * iterating over `Object.entries(specs)`. However, TypeScript's type system
+ * operates at compile time and cannot "unroll" runtime loops to infer types.
  *
  * When we do:
  *   const schemas = {};
- *   for (const spec of specs) { schemas[spec.key] = ... }
+ *   for (const [name, spec] of Object.entries(specs)) { schemas[name] = ... }
  *
  * TypeScript only sees `Record<string, z.ZodTypeAny>`, losing all specific
  * key-value type information.
  *
  * These type utilities bridge that gap by operating at the TYPE level instead
- * of the VALUE level. They use TypeScript's mapped types to iterate over the
- * `specs` array type at compile time, reconstructing what the inferred type
- * should be.
+ * of the VALUE level. They use TypeScript's mapped types over the Record's
+ * keys at compile time, reconstructing what the inferred type should be.
  */
 
 /**
@@ -111,7 +112,6 @@ type InferValueType<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodT
  * @example
  * ```typescript
  * type Field = TypedCustomField<{
- *   key: "legacyId",
  *   fieldType: "object",
  *   valueSchema: z.object({ system: z.string(), id: z.number() })
  * }>;
@@ -133,26 +133,26 @@ type TypedCustomField<T extends CustomFieldSpec> = {
 };
 
 /**
- * Builds the complete `customFields` object type from an array of specs.
+ * Builds the complete `customFields` object type from a Record of specs.
  *
  * This is the core type transformation that makes `withCustomFields()` work.
  * It does two things:
  *
- * 1. **Mapped type iteration**: `[K in TSpecs[number] as K["key"]]` iterates
- *    over each spec in the array at the TYPE level, extracting the `key` from
- *    each spec and creating a typed property for it.
+ * 1. **Mapped type iteration**: `[K in keyof TSpecs]` iterates over each key
+ *    in the specs Record at the TYPE level, creating a typed property for it
+ *    using the spec value type at TSpecs[K].
  *
  * 2. **Passthrough for unknown fields**: `& Record<string, CustomField>` ensures
- *    that unregistered custom fields (not in the specs array) can still pass
+ *    that unregistered custom fields (not in the specs Record) can still pass
  *    through validation, but they'll be typed as the base `CustomField` type
  *    (with `value: unknown`).
  *
  * @example
  * ```typescript
- * type Fields = TypedCustomFields<[
- *   { key: "legacyId", fieldType: "object", valueSchema: ... },
- *   { key: "category", fieldType: "string" }
- * ]>;
+ * type Fields = TypedCustomFields<{
+ *   legacyId: { fieldType: "object", valueSchema: ... },
+ *   category: { fieldType: "string" }
+ * }>;
  * // Fields = {
  * //   legacyId?: { fieldType: "object", value: { system: string; id: number }, ... };
  * //   category?: { fieldType: "string", value: string, ... };
@@ -164,8 +164,8 @@ type TypedCustomField<T extends CustomFieldSpec> = {
  *   - `fields.category?.value` → typed as `string` ✅
  *   - `fields.unknownField?.value` → typed as `unknown` (passthrough)
  */
-type TypedCustomFields<TSpecs extends readonly CustomFieldSpec[]> = {
-  [K in TSpecs[number] as K["key"]]?: TypedCustomField<K>;
+type TypedCustomFields<TSpecs extends Record<string, CustomFieldSpec>> = {
+  [K in keyof TSpecs]?: TypedCustomField<TSpecs[K]>;
 } & Record<string, CustomField>;
 
 // ############################################################################
@@ -188,9 +188,9 @@ type TypedCustomFields<TSpecs extends readonly CustomFieldSpec[]> = {
  *
  * @example
  * ```typescript
- * const Schema = withCustomFields(OpportunityBaseSchema, [
- *   { key: "legacyId", fieldType: "object", valueSchema: ... }
- * ] as const);
+ * const Schema = withCustomFields(OpportunityBaseSchema, {
+ *   legacyId: { fieldType: "object", valueSchema: ... }
+ * } as const);
  *
  * type Opportunity = z.infer<typeof Schema>;
  * // Opportunity.customFields?.legacyId?.value.id → typed as number ✅
@@ -198,7 +198,7 @@ type TypedCustomFields<TSpecs extends readonly CustomFieldSpec[]> = {
  */
 export type WithCustomFieldsResult<
   TSchema extends z.AnyZodObject,
-  TSpecs extends readonly CustomFieldSpec[],
+  TSpecs extends Record<string, CustomFieldSpec>,
 > = z.ZodObject<
   Omit<TSchema["shape"], "customFields"> & {
     customFields: z.ZodOptional<z.ZodType<TypedCustomFields<TSpecs>>>;
