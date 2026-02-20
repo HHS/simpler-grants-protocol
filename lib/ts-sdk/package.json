@@ -68,7 +68,7 @@
     "check:lint": "eslint . --ext .ts",
     "check:format": "prettier --check .",
     "check:types": "tsc --noEmit",
-    "checks": "pnpm check:lint && pnpm check:format && pnpm check:types",
+    "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
     "audit": "pnpm audit",
     "typespec": "tsp compile lib/main.tsp",
     "example:list": "tsx examples/list-opportunities.ts",

@@ -35,10 +35,10 @@
     "opportunities"
   ],
   "scripts": {
-    "build": "npm run typespec && tsc",
+    "build": "pnpm run typespec && tsc",
     "typespec:clean": "rm -rf dist tsp-output && rm -rf lib/openapi/*",
     "typespec:openapi": "tsp compile lib/main.tsp --emit @typespec/openapi3 && cp tsp-output/@typespec/openapi3/** lib/openapi",
-    "typespec": "npm run typespec:clean && npm run typespec:openapi",
+    "typespec": "pnpm run typespec:clean && pnpm run typespec:openapi",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "prepare": "tsc",
@@ -49,7 +49,7 @@
     "check:lint": "eslint . --ext .ts",
     "check:format": "prettier --check .",
     "check:types": "tsc --noEmit",
-    "checks": "npm run check:lint && npm run check:format && npm run check:types",
+    "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
     "test:coverage": "jest --coverage",
     "audit": "pnpm audit"
   },
