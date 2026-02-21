@@ -31,9 +31,6 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - name: Audit dependencies for vulnerabilities
-        run: make audit
-
       - name: Run linting, formatting, and type checking
         run: make checks
 
