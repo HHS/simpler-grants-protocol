@@ -35,12 +35,14 @@
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
     "typespec": "tsp compile lib/main.tsp",
-    "prepare": "npm run build",
+    "prepare": "pnpm run build",
     "lint": "eslint . --fix",
     "format": "prettier --write . && tsp format lib",
     "check:lint": "eslint",
     "check:format": "prettier --check . && tsp format lib --check",
-    "checks": "npm run check:lint && npm run check:format"
+    "check:types": "tsc --noEmit",
+    "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
+    "audit": "pnpm audit"
   },
   "keywords": [
     "typespec",

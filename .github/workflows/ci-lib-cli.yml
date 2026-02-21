@@ -36,14 +36,14 @@ jobs:
       - name: Build core library
         run: pnpm --filter @common-grants/core run build
 
-      - name: Lint and format
+      - name: Run checks
         run: pnpm --filter @common-grants/cli run checks
 
       - name: Run tests
-        run: pnpm --filter @common-grants/cli test
+        run: pnpm --filter @common-grants/cli run test:coverage
 
       - name: Build library
         run: pnpm --filter @common-grants/cli run build
 
       - name: Audit dependencies
-        run: pnpm audit
+        run: pnpm --filter @common-grants/cli run audit
