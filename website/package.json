@@ -26,7 +26,6 @@
     "check:spelling": "cspell .",
     "check:types": "tsc --noEmit",
     "checks": "pnpm check:lint && pnpm check:format && pnpm check:types && pnpm check:astro && pnpm check:spelling",
-    "test:coverage": "vitest run --coverage",
     "audit:moderate": "pnpm audit --audit-level=moderate",
     "audit:high": "pnpm audit --audit-level=high",
     "audit:critical": "pnpm audit --audit-level=critical",
