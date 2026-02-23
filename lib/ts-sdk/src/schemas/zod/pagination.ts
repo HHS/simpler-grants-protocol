@@ -43,8 +43,8 @@ export const PaginatedResultsInfoSchema = z.object({
   /** Current page number (indexing starts at 1) */
   page: z.number().int().min(1),
 
-  /** Number of items per page */
-  pageSize: z.number().int().min(1),
+  /** Number of items per page (0 when the page is empty) */
+  pageSize: z.number().int().min(0),
 
   /** Total number of items across all pages */
   totalItems: z.number().int().nullish(),

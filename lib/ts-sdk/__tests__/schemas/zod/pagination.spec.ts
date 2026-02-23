@@ -165,8 +165,7 @@ describe("PaginatedResultsInfo Schema", () => {
     expect(() => PaginatedResultsInfoSchema.parse({ page: -1, pageSize: 20 })).toThrow();
     // Page must be an integer
     expect(() => PaginatedResultsInfoSchema.parse({ page: 1.5, pageSize: 20 })).toThrow();
-    // PageSize must be at least 1
-    expect(() => PaginatedResultsInfoSchema.parse({ page: 1, pageSize: 0 })).toThrow();
+    // PageSize can't be negative
     expect(() => PaginatedResultsInfoSchema.parse({ page: 1, pageSize: -1 })).toThrow();
     // PageSize must be an integer
     expect(() => PaginatedResultsInfoSchema.parse({ page: 1, pageSize: 20.5 })).toThrow();
