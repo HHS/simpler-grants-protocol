@@ -40,7 +40,7 @@ jobs:
         run: pnpm --filter @common-grants/cli run checks
 
       - name: Run tests
-        run: pnpm --filter @common-grants/cli run test:coverage
+        run: pnpm --filter @common-grants/cli test:coverage
 
       - name: Build library
         run: pnpm --filter @common-grants/cli run build

@@ -212,90 +212,103 @@ export class Client {
    * ```
    */
   async fetchMany<T>(path: string, options?: FetchManyOptions<T>): Promise<Paginated<T>> {
+    // Set defaults.
     const pageSize = options?.pageSize ?? this.config.pageSize;
     const maxItems = options?.maxItems ?? this.config.maxItems;
     const method = options?.method ?? "GET";
-    let currentPage = options?.page ?? 1;
+    const startPage = options?.page ?? 1;
 
-    const allItems: T[] = [];
-    let totalItems: number | undefined;
-    let totalPages: number | undefined;
+    // Fetch first page so we always have firstPageJson.
+    const firstResult = await this.fetchOnePage<T>(path, method, startPage, pageSize, options);
+    const firstPageJson = firstResult.json;
+    const allItems: T[] = [...firstResult.items.slice(0, maxItems)];
 
-    while (allItems.length < maxItems) {
-      let response: Response;
+    // Fetch remaining pages, up to maxItems.
+    let currentPage = startPage + 1;
+    while (allItems.length < maxItems && !firstResult.isLastPage) {
+      const result = await this.fetchOnePage<T>(path, method, currentPage, pageSize, options);
 
-      if (method === "POST") {
-        // For POST requests, pagination goes in the request body
-        const requestBody = {
-          ...options?.body,
-          pagination: {
-            page: currentPage,
-            pageSize,
-          },
-        };
-
-        response = await this.post(path, requestBody, { signal: options?.signal });
-      } else {
-        // For GET requests, pagination goes in query params
-        response = await this.get(path, {
-          params: { page: currentPage, pageSize },
-          signal: options?.signal,
-        });
-      }
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
-      }
-
-      const json = (await response.json()) as Paginated<unknown>;
-
-      const { items: rawItems, paginationInfo } = json;
-
-      // Parse/validate items if parseItem function is provided
-      const items: T[] = options?.parseItem
-        ? rawItems.map(item => options.parseItem!(item))
-        : (rawItems as T[]);
-
-      // Store pagination metadata from first response
-      if (totalItems === undefined) {
-        totalItems = paginationInfo.totalItems ?? undefined;
-        totalPages = paginationInfo.totalPages ?? undefined;
-      }
-
-      // Add items up to maxItems limit
+      // Add items up to maxItems limit.
       const remainingCapacity = maxItems - allItems.length;
-      const itemsToAdd = items.slice(0, remainingCapacity);
-      allItems.push(...itemsToAdd);
+      allItems.push(...result.items.slice(0, remainingCapacity));
 
-      // Stop if we've fetched all available items
-      const isLastPage =
-        items.length < pageSize ||
-        (totalPages !== undefined && currentPage >= totalPages) ||
-        items.length === 0;
-
-      if (isLastPage || allItems.length >= maxItems) {
-        break;
-      }
-
+      // Stop if we've fetched all available items.
+      if (result.isLastPage || allItems.length >= maxItems) break;
       currentPage++;
     }
 
+    // Return the results.
     return {
-      status: 200,
-      message: "Success",
+      ...firstPageJson,
       items: allItems,
       paginationInfo: {
+        ...firstPageJson.paginationInfo,
         page: 1,
         pageSize: allItems.length,
-        totalItems,
-        totalPages,
       },
-    };
+    } as Paginated<T>;
   }
 
   // =============================================================================
   // Private helper functions
   // =============================================================================
+
+  /**
+   * Fetches a single page from a paginated endpoint and returns the parsed
+   * items plus metadata needed to drive fetchMany's aggregation loop.
+   */
+  private async fetchOnePage<T>(
+    path: string,
+    method: "GET" | "POST",
+    currentPage: number,
+    pageSize: number,
+    options?: FetchManyOptions<T>
+  ): Promise<{
+    json: Paginated<unknown>;
+    items: T[];
+    isLastPage: boolean;
+    totalPages: number | undefined;
+  }> {
+    let response: Response;
+
+    // Fetch the page.
+    if (method === "POST") {
+      // Add pagination to the request body if it's a POST request.
+      const requestBody = {
+        ...options?.body,
+        pagination: { page: currentPage, pageSize },
+      };
+      response = await this.post(path, requestBody, { signal: options?.signal });
+    } else {
+      // Add pagination to the request params if it's a GET request.
+      response = await this.get(path, {
+        params: { page: currentPage, pageSize },
+        signal: options?.signal,
+      });
+    }
+
+    // Throw an error if the response is not OK.
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
+    }
+
+    // Parse/validate items if parseItem function is provided
+    const json = (await response.json()) as Paginated<unknown>;
+    const { items: rawItems, paginationInfo } = json;
+    const items: T[] = options?.parseItem
+      ? rawItems.map(item => options.parseItem!(item))
+      : (rawItems as T[]);
+
+    // Determine if this is the last page.
+    const totalPages = paginationInfo.totalPages ?? undefined;
+    const isLastPage =
+      items.length < pageSize ||
+      (totalPages !== undefined && currentPage >= totalPages) ||
+      items.length === 0;
+
+    // Return the results.
+    return { json, items, isLastPage, totalPages };
+  }
 
   /** Constructs the full URL for an API path. */
   private url(path: string): string {

@@ -1,6 +1,22 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { z } from "zod";
 import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
 import { Client, Auth } from "../../src/client";
+import { OpportunityBaseSchema } from "../../src/schemas";
+import { withCustomFields } from "../../src/extensions";
+import { CustomFieldType } from "../../src/constants";
+
+// =============================================================================
+// Custom schema for testing withCustomFields support
+// =============================================================================
+
+const OpportunityWithLegacyIdSchema = withCustomFields(OpportunityBaseSchema, {
+  legacyId: {
+    fieldType: CustomFieldType.integer,
+    valueSchema: z.number().int(),
+    description: "Maps to the opportunity_id in the legacy system",
+  },
+} as const);
 
 // =============================================================================
 // Mock API Handlers
@@ -14,6 +30,23 @@ const createMockOpportunity = (id: string, title: string, statusValue: string) =
   description: "A grant for community development projects",
   createdAt: "2024-01-15T10:30:00Z",
   lastModifiedAt: "2024-06-01T14:22:00Z",
+});
+
+const createMockOpportunityWithCustomFields = (
+  id: string,
+  title: string,
+  statusValue: string,
+  legacyIdValue: number
+) => ({
+  ...createMockOpportunity(id, title, statusValue),
+  customFields: {
+    legacyId: {
+      name: "legacyId",
+      fieldType: "integer",
+      value: legacyIdValue,
+      description: "Maps to the opportunity_id in the legacy system",
+    },
+  },
 });
 
 // Valid UUIDs for testing
@@ -113,6 +146,30 @@ describe("Opportunities", () => {
       );
 
       await expect(client.opportunities.get(OPP_UUID_1)).rejects.toThrow("500");
+    });
+
+    it("parses get result with a custom schema", async () => {
+      server.use(
+        http.get("/common-grants/opportunities/:id", ({ params }) => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            data: createMockOpportunityWithCustomFields(
+              params.id as string,
+              "Custom Fields Grant",
+              "open",
+              42
+            ),
+          });
+        })
+      );
+
+      const opp = await client.opportunities.get(OPP_UUID_1, OpportunityWithLegacyIdSchema);
+
+      expect(opp.id).toBe(OPP_UUID_1);
+      expect(opp.title).toBe("Custom Fields Grant");
+      expect(opp.customFields?.legacyId?.value).toBe(42);
+      expect(opp.customFields?.legacyId?.fieldType).toBe("integer");
     });
   });
 
@@ -220,6 +277,33 @@ describe("Opportunities", () => {
       // Should stop after collecting 5 items (3 pages: 2 + 2 + 1)
       expect(requestCount).toBe(3);
       expect(result.items).toHaveLength(5);
+    });
+
+    it("parses list results with a custom schema", async () => {
+      server.use(
+        http.get("/common-grants/opportunities", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [
+              createMockOpportunityWithCustomFields(OPP_UUID_1, "Grant A", "open", 100),
+              createMockOpportunityWithCustomFields(OPP_UUID_2, "Grant B", "forecasted", 200),
+            ],
+            paginationInfo: {
+              page: 1,
+              pageSize: 25,
+              totalItems: 2,
+              totalPages: 1,
+            },
+          });
+        })
+      );
+
+      const result = await client.opportunities.list({ page: 1 }, OpportunityWithLegacyIdSchema);
+
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].customFields?.legacyId?.value).toBe(100);
+      expect(result.items[1].customFields?.legacyId?.value).toBe(200);
     });
   });
 
@@ -368,6 +452,41 @@ describe("Opportunities", () => {
       await expect(client.opportunities.search({ query: "test" })).rejects.toThrow("500");
     });
 
+    it("parses search results with a custom schema", async () => {
+      server.use(
+        http.post("/common-grants/opportunities/search", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [createMockOpportunityWithCustomFields(OPP_UUID_1, "Custom Grant", "open", 555)],
+            paginationInfo: {
+              page: 1,
+              pageSize: 25,
+              totalItems: 1,
+              totalPages: 1,
+            },
+            sortInfo: {
+              sortBy: "lastModifiedAt",
+              sortOrder: "desc",
+            },
+            filterInfo: {
+              filters: {},
+            },
+          });
+        })
+      );
+
+      const result = await client.opportunities.search(
+        { query: "custom" },
+        OpportunityWithLegacyIdSchema
+      );
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].title).toBe("Custom Grant");
+      expect(result.items[0].customFields?.legacyId?.value).toBe(555);
+      expect(result.items[0].customFields?.legacyId?.fieldType).toBe("integer");
+    });
+
     // =========================================================================
     // Single page (explicit page parameter)
     // =========================================================================
@@ -467,8 +586,8 @@ describe("Opportunities", () => {
         pageSize: 2,
       });
 
-      // Should make 4 requests: 3 for fetchMany pagination + 1 for metadata
-      expect(requestCount).toBe(4);
+      // Should make 3 requests (pages 1, 2, 3) — metadata comes from page 1
+      expect(requestCount).toBe(3);
 
       // Should return all 5 items aggregated
       expect(result.items).toHaveLength(5);
@@ -522,8 +641,8 @@ describe("Opportunities", () => {
         maxItems: 5,
       });
 
-      // Should stop after collecting 5 items (3 pages for fetchMany + 1 for metadata = 4 requests)
-      expect(requestCount).toBe(4);
+      // Should stop after collecting 5 items (3 pages: 2 + 2 + 1)
+      expect(requestCount).toBe(3);
       expect(result.items).toHaveLength(5);
     });
   });

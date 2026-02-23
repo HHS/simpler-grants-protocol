@@ -44,15 +44,17 @@ function getValueSchema(spec: CustomFieldSpec): z.ZodTypeAny {
 /**
  * Extends a schema with typed custom fields.
  *
- * This function takes a base schema (like OpportunityBaseSchema) and an array
- * of custom field specifications, returning a new schema where the customFields
- * property is typed according to the specs.
+ * This function takes a base schema (like OpportunityBaseSchema) and a Record
+ * of custom field specifications keyed by field name, returning a new schema
+ * where the customFields property is typed according to the specs. The record
+ * key is used as the default for each CustomField's `name`; spec.description
+ * is used as the default for CustomField.description when present.
  *
  * Unregistered custom fields will still pass through validation but won't have
  * typed access.
  *
  * @param baseSchema - The base Zod object schema to extend
- * @param specs - Array of custom field specifications
+ * @param specs - Record of custom field specifications (key = field name)
  * @returns A new schema with typed customFields
  *
  * @example
@@ -62,19 +64,17 @@ function getValueSchema(spec: CustomFieldSpec): z.ZodTypeAny {
  *   id: z.number().int(),
  * });
  *
- * const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
- *   {
- *     key: "legacyId",
+ * const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+ *   legacyId: {
  *     fieldType: "object",
  *     valueSchema: LegacyIdValueSchema,
  *     description: "Maps to the opportunity_id in the legacy system",
  *   },
- *   {
- *     key: "category",
+ *   category: {
  *     fieldType: "string",
  *     description: "Grant category",
  *   },
- * ] as const);
+ * } as const);
  *
  * type Opportunity = z.infer<typeof OpportunitySchema>;
  * // opp.customFields?.legacyId?.value.id   → typed as number
@@ -83,7 +83,7 @@ function getValueSchema(spec: CustomFieldSpec): z.ZodTypeAny {
  */
 export function withCustomFields<
   TSchema extends z.AnyZodObject,
-  const TSpecs extends readonly CustomFieldSpec[],
+  const TSpecs extends Record<string, CustomFieldSpec>,
 >(baseSchema: TSchema, specs: TSpecs): WithCustomFieldsResult<TSchema, TSpecs> {
   // Validate that the base schema has a customFields property
   const schemaShape = baseSchema.shape;
@@ -94,14 +94,18 @@ export function withCustomFields<
     );
   }
 
-  // Build typed schema for each spec
+  // Build typed schema for each spec; record key is the field name
   const typedFieldSchemas: Record<string, z.ZodTypeAny> = {};
 
-  for (const spec of specs) {
-    // Extend CustomFieldSchema, overriding only fieldType and value
-    typedFieldSchemas[spec.key] = CustomFieldSchema.extend({
+  for (const [key, spec] of Object.entries(specs)) {
+    typedFieldSchemas[key] = CustomFieldSchema.extend({
       fieldType: z.literal(spec.fieldType),
       value: getValueSchema(spec),
+      name: z.string().default(spec.name ?? key),
+      description:
+        spec.description !== undefined
+          ? z.string().nullish().default(spec.description)
+          : z.string().nullish(),
     }).optional();
   }
 

@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach, afterAll, jest } from "@jest/globals";
+import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import { Command } from "commander";
 import { checkCommand } from "../../../commands/check/check";
 
 // Create mock functions outside
-const mockCheckApi = jest.fn();
-const mockCheckSpec = jest.fn();
+const mockCheckApi = vi.fn();
+const mockCheckSpec = vi.fn();
 
 // Mock the service with consistent implementation
-jest.mock("../../../commands/check/check-service.ts", () => ({
-  DefaultCheckService: jest.fn(() => ({
+vi.mock("../../../commands/check/check-service.ts", () => ({
+  DefaultCheckService: vi.fn(() => ({
     checkApi: mockCheckApi,
     checkSpec: mockCheckSpec,
   })),
@@ -19,10 +19,10 @@ describe("checkCommand", () => {
   let checkCmd: Command;
 
   // Mock process.exit and console.error
-  const mockExit = jest.spyOn(process, "exit").mockImplementation(() => {
+  const mockExit = vi.spyOn(process, "exit").mockImplementation(() => {
     throw new Error("process.exit mock");
   });
-  const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+  const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
   beforeEach(() => {
     // Create fresh Command instances for each test
@@ -129,7 +129,7 @@ describe("checkCommand", () => {
 
     it("should handle spec validation with both base and protocolVersion", async () => {
       // Mock console.warn to capture the warning message
-      const mockWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+      const mockWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       await checkCmd.parseAsync([
         "node",

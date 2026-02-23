@@ -1,31 +1,33 @@
+import { vi } from "vitest";
+import { Mock } from "vitest";
 import { OpenAPIV3 } from "openapi-types";
 import { DefaultCheckService } from "../../../commands/check/check-service";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 
 // Mock dependencies
-jest.mock("fs", () => ({
-  readFileSync: jest.fn(),
-  existsSync: jest.fn(),
-  readdirSync: jest.fn(),
+vi.mock("fs", () => ({
+  readFileSync: vi.fn(),
+  existsSync: vi.fn(),
+  readdirSync: vi.fn(),
 }));
 
-jest.mock("js-yaml", () => ({
-  load: jest.fn(),
+vi.mock("js-yaml", () => ({
+  load: vi.fn(),
 }));
 
 // Mock the availableVersions import
-jest.mock("../../../commands/check/check-args", () => ({
+vi.mock("../../../commands/check/check-args", () => ({
   availableVersions: ["1.0.0", "2.0.0"],
 }));
 
 describe("DefaultCheckService", () => {
   let service: DefaultCheckService;
-  const mockConsoleLog = jest.spyOn(console, "log").mockImplementation(() => {});
+  const mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
 
   beforeEach(() => {
     service = new DefaultCheckService();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(() => {
@@ -102,7 +104,7 @@ describe("DefaultCheckService", () => {
       const implDoc = { ...baseDoc, info: { title: "Impl", version: "1.0.0" } };
 
       // Mock file system operations to simulate the new pattern
-      (fs.existsSync as jest.Mock).mockImplementation((filePath: string) => {
+      (fs.existsSync as Mock).mockImplementation((filePath: string) => {
         // Mock the OpenAPI directory structure
         if (filePath.includes("lib/openapi")) {
           return true; // Directory exists
@@ -116,9 +118,9 @@ describe("DefaultCheckService", () => {
         return false;
       });
 
-      (fs.readdirSync as jest.Mock).mockReturnValue(["openapi.1.0.0.yaml", "openapi.2.0.0.yaml"]);
+      (fs.readdirSync as Mock).mockReturnValue(["openapi.1.0.0.yaml", "openapi.2.0.0.yaml"]);
 
-      (fs.readFileSync as jest.Mock).mockImplementation((filePath: string) => {
+      (fs.readFileSync as Mock).mockImplementation((filePath: string) => {
         if (filePath === "spec.yaml") {
           return "impl yaml content";
         } else if (filePath.includes("openapi.1.0.0.yaml")) {
@@ -128,7 +130,7 @@ describe("DefaultCheckService", () => {
         }
       });
 
-      (yaml.load as jest.Mock).mockImplementation((content: string) => {
+      (yaml.load as Mock).mockImplementation((content: string) => {
         if (content === "impl yaml content") {
           return implDoc;
         } else {
@@ -151,7 +153,7 @@ describe("DefaultCheckService", () => {
     it("should throw error when OpenAPI directory not found", async () => {
       // Arrange
       // Mock file system operations - directory doesn't exist
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      (fs.existsSync as Mock).mockReturnValue(false);
 
       // Act & Assert
       await expect(service.checkSpec("spec.yaml", {})).rejects.toThrow(
@@ -175,8 +177,8 @@ describe("DefaultCheckService", () => {
       const implDoc = { ...baseDoc, info: { title: "Impl", version: "1.0.0" } };
 
       // Mock file system operations
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.readFileSync as jest.Mock).mockImplementation((filePath: string) => {
+      (fs.existsSync as Mock).mockReturnValue(true);
+      (fs.readFileSync as Mock).mockImplementation((filePath: string) => {
         if (filePath === "spec.yaml") {
           return "impl yaml content";
         } else if (filePath === providedBasePath) {
@@ -184,7 +186,7 @@ describe("DefaultCheckService", () => {
         }
         return "default content";
       });
-      (yaml.load as jest.Mock).mockImplementation((content: string) => {
+      (yaml.load as Mock).mockImplementation((content: string) => {
         if (content === "impl yaml content") {
           return implDoc;
         } else {
@@ -240,8 +242,8 @@ describe("DefaultCheckService", () => {
       };
 
       // Mock file system operations
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.readFileSync as jest.Mock).mockImplementation((filePath: string) => {
+      (fs.existsSync as Mock).mockReturnValue(true);
+      (fs.readFileSync as Mock).mockImplementation((filePath: string) => {
         if (filePath === "spec.yaml") {
           return "impl yaml content";
         } else if (filePath.includes("openapi.1.0.0.yaml")) {
@@ -250,7 +252,7 @@ describe("DefaultCheckService", () => {
           return "default content";
         }
       });
-      (yaml.load as jest.Mock).mockImplementation((content: string) => {
+      (yaml.load as Mock).mockImplementation((content: string) => {
         if (content === "impl yaml content") {
           return implDoc;
         } else {
@@ -296,8 +298,8 @@ describe("DefaultCheckService", () => {
       const implDoc = { ...baseDoc, info: { title: "Impl", version: "1.0.0" } };
 
       // Arrange - Mock file system operations
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.readFileSync as jest.Mock).mockImplementation((filePath: string) => {
+      (fs.existsSync as Mock).mockReturnValue(true);
+      (fs.readFileSync as Mock).mockImplementation((filePath: string) => {
         if (filePath === "spec.yaml") {
           return "impl yaml content";
         } else if (filePath.includes("openapi.1.0.0.yaml")) {
@@ -306,7 +308,7 @@ describe("DefaultCheckService", () => {
           return "default content";
         }
       });
-      (yaml.load as jest.Mock).mockImplementation((content: string) => {
+      (yaml.load as Mock).mockImplementation((content: string) => {
         if (content === "impl yaml content") {
           return implDoc;
         } else {

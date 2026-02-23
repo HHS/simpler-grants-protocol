@@ -1,4 +1,5 @@
-import { beforeEach, describe, it, jest, expect } from "@jest/globals";
+import { beforeEach, describe, it, vi, expect } from "vitest";
+import { Mock, MockedFunction } from "vitest";
 import { DefaultInitService } from "../../../commands/init/init-service";
 import { spawn } from "child_process";
 import { EventEmitter } from "events";
@@ -7,21 +8,21 @@ import { Readable } from "stream";
 import { tspBinPath } from "../../../utils/typespec";
 
 // Mock child_process.spawn
-jest.mock("child_process", () => ({
-  spawn: jest.fn(),
+vi.mock("child_process", () => ({
+  spawn: vi.fn(),
 }));
 
 describe("DefaultInitService", () => {
   let service: DefaultInitService;
-  let mockSpawn: jest.Mock;
+  let mockSpawn: Mock;
   let mockChildProcess: Partial<ChildProcess> & EventEmitter;
 
   beforeEach(() => {
     // Reset all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock fetch
-    global.fetch = jest.fn(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () =>
@@ -31,9 +32,9 @@ describe("DefaultInitService", () => {
             "minimal-api": {},
           }),
       } as Response)
-    ) as jest.MockedFunction<typeof fetch>;
+    ) as MockedFunction<typeof fetch>;
 
-    mockSpawn = spawn as jest.Mock;
+    mockSpawn = spawn as Mock;
 
     // Create an EventEmitter to simulate the child process
     mockChildProcess = new EventEmitter() as Partial<ChildProcess> & EventEmitter;
@@ -95,7 +96,7 @@ describe("DefaultInitService", () => {
 
     it("should reject when process encounters an error", async () => {
       // Mock console.error for this test
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       const initPromise = service.init({});
       const error = new Error("Command not found");
