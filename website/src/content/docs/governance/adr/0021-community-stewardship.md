@@ -43,7 +43,7 @@ Specific transition checkpoints, participation metrics, and host selection crite
 
 - **Option 1: Government-led stewardship** - HHS remains the long-term host and final decision-maker, with structured but non-binding community input.
 - **Option 2: Transition to existing grants standards initiative** - Hosting and stewardship transition to an existing organization whose primary mission already includes grants, philanthropy, or funding data standards.
-- **Option 3: Neutral host with participation-based stewardship** - Transition hosting to a neutral nonprofit entity, either newly established or purpose-selected, with governance authority earned through demonstrated participation. *(chosen)*
+- **Option 3: Neutral host with participation-based stewardship** - Transition hosting to a neutral nonprofit entity, either newly established or purpose-selected, with governance authority earned through demonstrated participation. _(chosen)_
 - **Option 4: Established open source foundation hosting** - Transition stewardship and hosting to an established open source foundation (e.g., CNCF, Linux Foundation, Apache Foundation).
 
 ## Evaluation
@@ -65,7 +65,7 @@ Specific transition checkpoints, participation metrics, and host selection crite
 
 HHS remains the long-term host and final decision-maker, with structured but non-binding community input.
 
-*Example: US Core Data for Interoperability (USCDI) - A federal agency owns and evolves the standard, with public comment and advisory input, but final authority remains with the government. This works well for compliance-driven standards but can limit cross-sector ownership.*
+_Example: US Core Data for Interoperability (USCDI) - A federal agency owns and evolves the standard, with public comment and advisory input, but final authority remains with the government. This works well for compliance-driven standards but can limit cross-sector ownership._
 
 - **Pros**
   - Strong alignment with federal priorities
@@ -80,7 +80,7 @@ HHS remains the long-term host and final decision-maker, with structured but non
 
 Hosting and stewardship transition to an existing organization whose primary mission already includes grants, philanthropy, or funding data standards.
 
-*Example: Candid and Philanthropy Data Commons (PDC) - An established grants-adjacent organization that already stewards widely adopted data standards and maintains active relationships with funders, platforms, and intermediaries. Legitimacy flows from existing adoption and institutional trust within the grants and philanthropy ecosystem.*
+_Example: Candid and Philanthropy Data Commons (PDC) - An established grants-adjacent organization that already stewards widely adopted data standards and maintains active relationships with funders, platforms, and intermediaries. Legitimacy flows from existing adoption and institutional trust within the grants and philanthropy ecosystem._
 
 - **Pros**
   - Immediate credibility within the grants and philanthropy ecosystem
@@ -95,7 +95,7 @@ Hosting and stewardship transition to an existing organization whose primary mis
 
 Transition hosting to a neutral nonprofit entity, either newly established or purpose-selected, whose primary mandate is stewardship of the CommonGrants protocol. Governance authority is earned through demonstrated participation in adoption, contribution, and stewardship.
 
-*Example: FHIR (HL7) and OpenID Foundation - A neutral steward maintains the standard while authority is earned through sustained adoption, contribution, and community engagement. Influence scales with real-world impact, supported by clear editorial and tie-breaking authority.*
+_Example: FHIR (HL7) and OpenID Foundation - A neutral steward maintains the standard while authority is earned through sustained adoption, contribution, and community engagement. Influence scales with real-world impact, supported by clear editorial and tie-breaking authority._
 
 - **Pros**
   - Aligns influence with real-world impact and responsibility
@@ -111,7 +111,7 @@ Transition hosting to a neutral nonprofit entity, either newly established or pu
 
 Transition stewardship and hosting to an established open source foundation (e.g., CNCF, Linux Foundation, Apache Foundation), using their standard project lifecycle and governance frameworks.
 
-*Example: Kubernetes (CNCF) / Apache Software Foundation projects - A mature foundation provides legal and operational scaffolding, with stewardship driven by technical contributors. This model excels for software ecosystems but often underrepresents non-technical stakeholders and adoption outcomes.*
+_Example: Kubernetes (CNCF) / Apache Software Foundation projects - A mature foundation provides legal and operational scaffolding, with stewardship driven by technical contributors. This model excels for software ecosystems but often underrepresents non-technical stakeholders and adoption outcomes._
 
 - **Pros**
   - Mature legal and operational infrastructure
