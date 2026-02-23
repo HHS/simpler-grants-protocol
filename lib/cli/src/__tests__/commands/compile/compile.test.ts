@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll, jest } from "@jest/globals";
+import { describe, it, expect, beforeAll, beforeEach, afterAll, vi } from "vitest";
 import { Command } from "commander";
 import { compileCommand } from "../../../commands/compile/compile";
 
-const mockCompile = jest.fn();
+const mockCompile = vi.fn();
 
-jest.mock("../../../commands/compile/compile-service", () => ({
-  DefaultCompileService: jest.fn(() => ({
+vi.mock("../../../commands/compile/compile-service", () => ({
+  DefaultCompileService: vi.fn(() => ({
     compile: mockCompile,
   })),
 }));
@@ -15,10 +15,10 @@ describe("compileCommand", () => {
   let compileCmd: Command;
 
   // Mock process.exit and console.error
-  const mockExit = jest.spyOn(process, "exit").mockImplementation(() => {
+  const mockExit = vi.spyOn(process, "exit").mockImplementation(() => {
     throw new Error("process.exit mock");
   });
-  const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+  const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
   beforeAll(() => {
     program = new Command();

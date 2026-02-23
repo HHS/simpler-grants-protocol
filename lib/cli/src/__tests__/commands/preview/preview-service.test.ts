@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, expect } from "@jest/globals";
+import { beforeEach, describe, it, expect } from "vitest";
 import { DefaultPreviewService } from "../../../commands/preview/preview-service";
 import { join } from "path";
 import request from "supertest";
@@ -32,9 +32,7 @@ describe("DefaultPreviewService", () => {
 
     it("should throw error when file doesn't exist", async () => {
       const nonexistentPath = join(fixturesPath, "nonexistent.yaml");
-      await expect(service.createPreviewApp(nonexistentPath)).rejects.toThrow(
-        /.*ENOENT: no such file or directory/
-      );
+      await expect(service.createPreviewApp(nonexistentPath)).rejects.toThrow(/File not found:/);
     });
 
     it("should throw error when spec is invalid", async () => {

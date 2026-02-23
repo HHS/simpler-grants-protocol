@@ -35,20 +35,21 @@
     "opportunities"
   ],
   "scripts": {
-    "build": "npm run typespec && tsc",
+    "build": "pnpm run typespec && tsc",
     "typespec:clean": "rm -rf dist tsp-output && rm -rf lib/openapi/*",
     "typespec:openapi": "tsp compile lib/main.tsp --emit @typespec/openapi3 && cp tsp-output/@typespec/openapi3/** lib/openapi",
-    "typespec": "npm run typespec:clean && npm run typespec:openapi",
+    "typespec": "pnpm run typespec:clean && pnpm run typespec:openapi",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "prepare": "tsc",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "lint": "eslint . --ext .ts --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --fix",
     "format": "prettier --write .",
-    "check:lint": "eslint . --ext .ts",
+    "check:lint": "eslint .",
     "check:format": "prettier --check .",
-    "checks": "npm run check:lint && npm run check:format"
+    "checks": "pnpm run check:lint && pnpm run check:format"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.1",
@@ -65,14 +66,9 @@
   },
   "devDependencies": {
     "@common-grants/core": "workspace:*",
-    "@typespec/json-schema": "catalog:",
-    "@typespec/openapi3": "catalog:",
-    "@typespec/versioning": "catalog:",
     "@eslint/js": "^9.38.0",
-    "@jest/globals": "^29.7.0",
     "@types/express": "^4.17.2",
     "@types/inquirer": "^9.0.9",
-    "@types/jest": "^29.5.14",
     "@types/js-yaml": "^4.0.9",
     "@types/json-schema-merge-allof": "^0.6.5",
     "@types/node": "catalog:",
@@ -80,16 +76,20 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
+    "@typespec/json-schema": "catalog:",
+    "@typespec/openapi3": "catalog:",
+    "@typespec/versioning": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^9.1.2",
-    "eslint-plugin-jest": "^29.0.1",
     "eslint-plugin-prettier": "^5.5.4",
-    "jest": "^29.7.0",
+    "eslint-plugin-vitest": "catalog:",
     "prettier": "^3.6.2",
+    "prettier-linter-helpers": "^1.0.1",
     "supertest": "^7.1.4",
-    "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.2"
+    "typescript-eslint": "^8.46.2",
+    "vitest": "catalog:"
   }
 }

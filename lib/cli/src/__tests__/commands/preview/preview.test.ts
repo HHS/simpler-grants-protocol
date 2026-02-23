@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeAll, beforeEach, jest } from "@jest/globals";
+import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { Command } from "commander";
 import { previewCommand } from "../../../commands/preview/preview";
 
 // Create mock function outside
-const mockPreviewSpec = jest.fn();
+const mockPreviewSpec = vi.fn();
 
 // Mock the service with consistent implementation
-jest.mock("../../../commands/preview/preview-service", () => ({
-  DefaultPreviewService: jest.fn(() => ({
+vi.mock("../../../commands/preview/preview-service", () => ({
+  DefaultPreviewService: vi.fn(() => ({
     previewSpec: mockPreviewSpec,
   })),
 }));
@@ -17,7 +17,7 @@ describe("previewCommand", () => {
   let previewCmd: Command;
 
   // Mock process.exit before any tests run
-  const mockExit = jest.spyOn(process, "exit").mockImplementation(() => {
+  const mockExit = vi.spyOn(process, "exit").mockImplementation(() => {
     throw new Error("process.exit mock");
   });
 
