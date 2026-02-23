@@ -19,6 +19,10 @@ overrides:
   tar@<7.5.8: ">=7.5.8"
   undici@>=7.0.0 <7.18.2: ">=7.18.2"
 
+auditConfig:
+  ignoreGhsas:
+    - GHSA-2g4f-4pwh-qvx6
+
 catalog:
   "@types/node": ^20.19.23
   "@typespec/compiler": ^1.9.0
