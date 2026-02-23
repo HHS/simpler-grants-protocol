@@ -1,23 +1,24 @@
-import { beforeEach, describe, it, expect, jest } from "@jest/globals";
+import { beforeEach, describe, it, expect, vi } from "vitest";
+import { Mock } from "vitest";
 import { DefaultCompileService } from "../../../commands/compile/compile-service";
 import { spawn } from "child_process";
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
 import { tspBinPath } from "../../../utils/typespec";
 
-jest.mock("child_process", () => ({
-  spawn: jest.fn(),
+vi.mock("child_process", () => ({
+  spawn: vi.fn(),
 }));
 
 describe("DefaultCompileService", () => {
   const service = new DefaultCompileService();
-  let mockSpawn: jest.Mock;
+  let mockSpawn: Mock;
   let mockChildProcess: Partial<ChildProcess> & EventEmitter;
-  const mockConsole = jest.spyOn(console, "error").mockImplementation(() => {});
+  const mockConsole = vi.spyOn(console, "error").mockImplementation(() => {});
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockSpawn = spawn as jest.Mock;
+    vi.clearAllMocks();
+    mockSpawn = spawn as Mock;
     mockChildProcess = new EventEmitter() as Partial<ChildProcess> & EventEmitter;
     mockSpawn.mockReturnValue(mockChildProcess);
   });

@@ -1,12 +1,12 @@
-import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Command } from "commander";
 import { initCommand } from "../../commands/init/init";
 import { previewCommand } from "../../commands/preview/preview";
 import { checkCommand } from "../../commands/check/check";
 
 // Mock console.error and process.exit
-const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
-const mockProcessExit = jest.spyOn(process, "exit").mockImplementation(() => undefined as never);
+const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+const mockProcessExit = vi.spyOn(process, "exit").mockImplementation(() => undefined as never);
 
 describe("Command Error Handling", () => {
   let program: Command;
