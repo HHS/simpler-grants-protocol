@@ -1,16 +1,17 @@
+import { vi } from "vitest";
 import { DefaultCheckService } from "../../../commands/check/check-service";
 import * as path from "path";
 
 // No mocks - we want to test the real behavior
 describe("DefaultCheckService - Circular References", () => {
   let service: DefaultCheckService;
-  const mockConsoleLog = jest.spyOn(console, "log").mockImplementation(() => {});
-  const mockConsoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
-  const mockConsoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+  const mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
+  const mockConsoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
   beforeEach(() => {
     service = new DefaultCheckService();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(() => {

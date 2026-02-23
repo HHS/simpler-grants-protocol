@@ -1,16 +1,17 @@
-import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { Mock } from "vitest";
 import { Command } from "commander";
 import { initCommand } from "../../../commands/init/init";
 import { DefaultInitService } from "../../../commands/init/init-service";
 
-jest.mock("../../../commands/init/init-service");
+vi.mock("../../../commands/init/init-service");
 
 describe("initCommand", () => {
   let program: Command;
 
   beforeEach(() => {
     program = new Command();
-    (DefaultInitService as jest.Mock).mockClear();
+    (DefaultInitService as Mock).mockClear();
   });
 
   it("should register init command", () => {
@@ -23,10 +24,10 @@ describe("initCommand", () => {
   });
 
   it("should handle list option", async () => {
-    const mockListTemplates = jest
+    const mockListTemplates = vi
       .fn<() => Promise<string[]>>()
       .mockResolvedValue(["template1", "template2"]);
-    (DefaultInitService as jest.Mock).mockImplementation(() => ({
+    (DefaultInitService as Mock).mockImplementation(() => ({
       listTemplates: mockListTemplates,
     }));
 
