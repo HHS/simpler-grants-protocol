@@ -32,3 +32,10 @@ catalog:
   "@typespec/openapi3": ^1.9.0
   "@typespec/rest": ^0.79.0
   "@typespec/versioning": ^0.79.0
+  "@vitest/coverage-v8": ^3.2.4
+  eslint-plugin-vitest: ^0.5.4
+  vitest: ^3.2.4
+
+catalogs:
+  website:
+    vitest: ^4.0.17
