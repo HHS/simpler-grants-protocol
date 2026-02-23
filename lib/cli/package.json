@@ -44,6 +44,7 @@
     "prepare": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "check:lint": "eslint .",
