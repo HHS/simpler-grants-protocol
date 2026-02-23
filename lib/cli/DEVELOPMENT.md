@@ -16,8 +16,8 @@ The CommonGrants CLI is a command-line tool that provides a set of commands for 
 | `npm run start`        | Start the CLI application                                           |
 | `npm run dev`          | Start development server with ts-node                               |
 | `npm run prepare`      | Run TypeScript compilation (pre-install hook)                       |
-| `npm run test`         | Run Jest test suite                                                 |
-| `npm run test:watch`   | Run Jest test suite in watch mode                                   |
+| `npm run test`         | Run vi test suite                                                 |
+| `npm run test:watch`   | Run vi test suite in watch mode                                   |
 | `npm run lint`         | Run ESLint with automatic fixes                                     |
 | `npm run format`       | Run automatic formatting and fix issues                             |
 | `npm run check:lint`   | Check linting, fail if issues are found                             |

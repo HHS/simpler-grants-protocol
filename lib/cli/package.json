@@ -51,7 +51,6 @@
     "check:format": "prettier --check .",
     "check:types": "tsc --noEmit",
     "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
-    "test:coverage": "jest --coverage",
     "audit": "pnpm audit"
   },
   "dependencies": {
