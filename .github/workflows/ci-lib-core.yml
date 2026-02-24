@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint and format
+      - name: Run checks
         run: pnpm --filter @common-grants/core run checks
 
       - name: Build library
@@ -43,4 +43,4 @@ jobs:
         run: pnpm --filter @common-grants/core run typespec
 
       - name: Audit dependencies
-        run: pnpm audit
+        run: pnpm --filter @common-grants/core run audit

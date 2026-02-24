@@ -49,7 +49,9 @@
     "format": "prettier --write .",
     "check:lint": "eslint .",
     "check:format": "prettier --check .",
-    "checks": "pnpm run check:lint && pnpm run check:format"
+    "check:types": "tsc --noEmit",
+    "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
+    "audit": "pnpm audit"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.1.1",

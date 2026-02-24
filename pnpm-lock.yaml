@@ -86,6 +86,9 @@ importers:
       '@typespec/prettier-plugin-typespec':
         specifier: ^1.5.0
         version: 1.5.0
+      '@vitest/coverage-v8':
+        specifier: ^3.2.4
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@20.19.31)(tsx@4.21.0)(yaml@2.8.2))
       eslint:
         specifier: ^9.15.0
         version: 9.38.0

@@ -29,22 +29,13 @@ jobs:
         run: poetry self add poetry-audit-plugin
 
       - name: Install dependencies
-        run: poetry install
+        run: make install
 
-      - name: Audit dependencies for vulnerabilities
-        run: poetry audit
-
-      - name: Run linting
-        run: poetry run ruff check .
-
-      - name: Run formatting
-        run: poetry run black . --check
-
-      - name: Run type checking
-        run: poetry run mypy .
+      - name: Run checks
+        run: make checks
 
       - name: Run tests
-        run: poetry run pytest
+        run: make test
 
       - name: Build package
-        run: poetry build
+        run: make build

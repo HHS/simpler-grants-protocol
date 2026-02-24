@@ -10,7 +10,7 @@
 | `npm run typespec`     | Compile and emit TypeSpec outputs (i.e. OpenAPI and JSON schema) |
 | `npm run dev`          | Start development server with hot reload                         |
 | `npm run start`        | Start production server                                          |
-| `npm run test`         | Run Jest test suite                                              |
+| `npm run test`         | Run vi test suite                                                |
 | `npm run prepare`      | Run typespec compilation and build (pre-install hook)            |
 | `npm run lint`         | Run ESLint with automatic fixes                                  |
 | `npm run format`       | Run automatic formatting and fix issues                          |

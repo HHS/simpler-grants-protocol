@@ -24,12 +24,13 @@
     "check:format": "prettier --check .",
     "check:astro": "astro check",
     "check:spelling": "cspell .",
-    "checks": "pnpm check:lint && pnpm check:format && pnpm check:astro && pnpm check:spelling",
+    "check:types": "tsc --noEmit",
+    "checks": "pnpm check:lint && pnpm check:format && pnpm check:types && pnpm check:astro && pnpm check:spelling",
     "audit:moderate": "pnpm audit --audit-level=moderate",
     "audit:high": "pnpm audit --audit-level=high",
     "audit:critical": "pnpm audit --audit-level=critical",
     "validate:schemas": "tsx src/scripts/validate-schemas.ts",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
