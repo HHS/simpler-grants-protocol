@@ -11,6 +11,7 @@
     "FATA",
     "FHIR",
     "frontmatter",
+    "funder",
     "funders",
     "geospatial",
     "namespacing",
@@ -23,7 +24,9 @@
     "typespec",
     "widal001",
     "RJSF",
-    "NOFO"
+    "NOFO",
+    "USCDI",
+    "underrepresents"
   ],
   "ignoreWords": [
     "opblock",
