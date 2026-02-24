@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - name: Run linting, formatting, and type checking
+      - name: Run checks
         run: make checks
 
       - name: Run tests
