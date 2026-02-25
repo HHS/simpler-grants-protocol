@@ -14,7 +14,7 @@ config = Config(
     page_size=10,
 )
 client = Client(config)
-response = client.opportunity.list(page=1)
+response = client.opportunity.list(page=1, opp_base=None)
 
 print(f"Found {len(response.items)} opportunities:")
 for opp in response.items:

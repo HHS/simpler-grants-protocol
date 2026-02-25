@@ -41,6 +41,7 @@ class Opportunity:
         self,
         page: int | None = None,
         page_size: int | None = None,
+        opp_base: OpportunityBase | None = None
     ) -> OpportunitiesListResponse:
         """Fetch a set of opportunities.
 
@@ -65,7 +66,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase models from items dict
         items = [
-            OpportunityBase.model_validate_json(json.dumps(item))
+            get_opp_base(opp_base).model_validate_json(json.dumps(item))
             for item in paginated_response.items
         ]
 
@@ -76,11 +77,14 @@ class Opportunity:
         # Hydrate OpportunitiesListResponse from response data
         return OpportunitiesListResponse.model_validate(response_data)
 
-    def get(self, opp_id: str | UUID) -> OpportunityBase:
+    def get(self,
+            opp_id: str | UUID,
+            opp_base: OpportunityBase | None = None) -> OpportunityBase:
         """Get a specific opportunity by ID.
 
         Args:
             opp_id: The opportunity ID
+            opp_base: OpportunityBase to support custom fields from caller.
 
         Returns:
             OpportunityBase instance
@@ -93,7 +97,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase from response
         response_data = success_response.model_dump(by_alias=True)
-        response_data["data"] = OpportunityBase.from_dict(success_response.data)
+        response_data["data"] = get_opp_base(opp_base).from_dict(success_response.data)
 
         # Hydrate OpportunityResponse from response data
         opportunity_response = OpportunityResponse.model_validate(response_data)
@@ -107,6 +111,7 @@ class Opportunity:
         status: List[OppStatusOptions],
         page: int | None = None,
         page_size: int | None = None,
+        opp_base: OpportunityBase | None = None
     ) -> OpportunitiesSearchResponse:
         """Search for opportunties by a query string
 
@@ -117,6 +122,7 @@ class Opportunity:
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
                 client config.
+            opp_base: OpportunityBase to support custom fields added by the caller.  
 
 
         Returns:
@@ -147,7 +153,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase models from items dict
         items = [
-            OpportunityBase.model_validate_json(json.dumps(item))
+            get_opp_base(opp_base).model_validate_json(json.dumps(item))
             for item in paginated_response.items
         ]
 
@@ -166,3 +172,19 @@ class Opportunity:
 
         # Hydrate OpportunitiesListResponse from response data
         return OpportunitiesSearchResponse.model_validate(response_data)
+
+
+def get_opp_base(opp_base: OpportunityBase | None = None) -> OpportunityBase:
+    """
+    Helper function to return a modified OpportunityBase if the caller has added custom fields or a default OpportunityBase if the param is None.
+
+    Args:
+        opp_base: An OpportunityBase that may have custom fields added.
+
+        Returns:
+            Either a default no custom field OpportunityBase or one that has the custom fields added by a caller.
+    """
+    if opp_base is None:
+        return OpportunityBase
+    else:
+        return opp_base

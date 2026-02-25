@@ -13,11 +13,13 @@ from common_grants_sdk.client import Client, Auth
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
+from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.schemas.pydantic.responses import (
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
 )
 from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
+from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 
 @pytest.fixture
@@ -31,6 +33,13 @@ def sample_opportunity_data():
         "status": {"value": "open", "description": "Open"},
         "createdAt": datetime.now(UTC).isoformat(),
         "lastModifiedAt": datetime.now(UTC).isoformat(),
+        "customFields": {
+            "legacyId": {
+                "name": "legacyId",
+                "fieldType": "integer",
+                "value": 12345
+            }
+        }
     }
 
 
@@ -147,10 +156,16 @@ class TestOpportunityGet:
         mock_response.json = Mock(return_value=sample_opportunity_response)
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
+        
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+        }
 
-        opp = client.opportunity.get(opp_id_str)
+        opp_base = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportuntiy")
+        opp = client.opportunity.get(opp_id_str, opp_base=opp_base)
         assert isinstance(opp, OpportunityBase)
         assert str(opp.id) == opp_id_str
+        assert opp.get_custom_field_value("legacy_id", int) == 12345
 
     def test_get_opportunity_404(self, client, mock_httpx_client):
         """Test getting an opportunity that doesn't exist."""

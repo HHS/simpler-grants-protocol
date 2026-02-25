@@ -16,11 +16,11 @@ if len(sys.argv) < 2:
 opp_id = sys.argv[1]
 config = Config(
     base_url="http://localhost:8080",
-    api_key="two_orgs_user_key",
+    api_key="two_org_user_key",
     timeout=5.0,
 )
 client = Client(config)
-opportunity = client.opportunity.get(opp_id)
+opportunity = client.opportunity.get(opp_id, None)
 
 print(f"Opportunity {opp_id}:")
 print(f"  Title: {opportunity.title}")
