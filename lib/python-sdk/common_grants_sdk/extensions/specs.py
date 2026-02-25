@@ -10,6 +10,5 @@ from ..schemas.pydantic.fields.custom import CustomFieldType
 class CustomFieldSpec:
     """Custom Field spec class to support adding custom fields"""
 
-    key: str
     field_type: CustomFieldType
     value: Optional[Any] = None

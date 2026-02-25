@@ -20,14 +20,14 @@ FIELD_TYPE_MAP: dict[CustomFieldType, type] = {
 
 
 def add_custom_fields(
-    cls: Type[T], model_name: str, fields: list[CustomFieldSpec]
+    cls: Type[T], model_name: str, fields: dict[str, CustomFieldSpec]
 ) -> Type[T]:
     """Adds custom fields to any pydantic model object.
 
     Args:
         cls: The base Pydantic model class to extend
         model_name: Optional name for the generated model
-        fields: List of CustomFieldSpec objects to define the shape of the object
+        fields: Dict mapping field keys to CustomFieldSpec objects defining the shape of each field
 
     Returns:
         A new model class extending cls with the custom field
@@ -63,16 +63,16 @@ def add_custom_fields(
 
 
 def create_custom_field_schema(
-    name: str, fields: list[CustomFieldSpec]
+    name: str, fields: dict[str, CustomFieldSpec]
 ) -> dict[str, Any]:
-    """Generates the needed pydantic classes from a list of their specs that will get added to a new container.
+    """Generates the needed pydantic classes from a dict of their specs that will get added to a new container.
 
     Args:
         name: The base pydantic class that will have custom fields added to it
-        fields: Contains the shapes(schemas) of the custom fields to be added
+        fields: Dict mapping field keys to CustomFieldSpec objects containing the shapes(schemas) of the custom fields to be added
 
 
-    For each CustomFieldSpec in the received list the function loops through and performs the following operations
+    For each entry in the received dict the function loops through and performs the following operations
     1. Converts the field key to snake_case to be used as a python attribute name
     2. Creates a typed Pydantic model extending CustomField where:
         - 'field_type' is pinned to the spec's type(with alias 'type' for JSON)
@@ -89,13 +89,12 @@ def create_custom_field_schema(
 
             field_defs = create_custom_field_schema(
                 name="Opportunity",
-                fields=[
-                    CustomFieldSpec(
-                        key="legacyId",
+                fields={
+                    "legacyId": CustomFieldSpec(
                         field_type=CustomFieldType.INTEGER,
                         value=int,
                     ),
-                ],
+                },
             )
 
         The function creates an internal model per spec (e.g. ``OpportunityLegacyIdField``)
@@ -118,8 +117,8 @@ def create_custom_field_schema(
         and ultimately attached to a base model via `add_custom_fields`.
     """
     field_defs: dict[str, Any] = {}
-    for field in fields:
-        py_attr = snake(field.key)
+    for key, field in fields.items():
+        py_attr = snake(key)
 
         # Build a per-custom-field model so `.value` is typed
         value_type: Any = Any
@@ -130,7 +129,7 @@ def create_custom_field_schema(
             value_type = FIELD_TYPE_MAP.get(field.field_type, Any)
 
         CustomFieldForAttr = create_model(
-            _create_model_name(name=name, key=field.key),
+            _create_model_name(name=name, key=key),
             __base__=CustomField,
             # pin expected type (still accepts wire key "type" via alias)
             field_type=(CustomFieldType, Field(default=field.field_type, alias="type")),
@@ -141,7 +140,7 @@ def create_custom_field_schema(
         # Add this field's definition to the accumulator
         field_defs[py_attr] = (
             Optional[CustomFieldForAttr],
-            Field(default=None, alias=field.key),
+            Field(default=None, alias=key),
         )
 
     return field_defs
