@@ -25,6 +25,7 @@ Opportunity = OpportunityBase.with_custom_fields(
             name="Legacy ID",
             field_type=CustomFieldType.INTEGER,
             value=int,
+            description="An integer ID for the opportunity, needed for compatibility with legacy systems",
         ),
     },
     model_name="Opportunity",
