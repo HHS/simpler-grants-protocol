@@ -264,13 +264,21 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response = client.opportunity.list(page=1)
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+        }
+
+        opp_base = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportuntiy")
+
+        response = client.opportunity.list(page=1, opp_base=opp_base)
+
         assert isinstance(response, OpportunitiesListResponse)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         assert response.pagination_info.page == 1
         assert response.pagination_info.total_items == 2
         assert response.pagination_info.total_pages == 1
+        assert response.items[0].get_custom_field_value("legacy_id", int) == 12345
 
         # Verify request was made correctly
         expected_url = "https://api.example.com/common-grants/opportunities"
@@ -724,14 +732,20 @@ class TestOpportunitySearch:
         mock_response.json = Mock(return_value=sample_search_response)
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
+        fields = {
+                "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+            }
+
+        opp_base = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportuntiy")
 
         response = client.opportunity.search(
-            search="local", status=[OppStatusOptions.OPEN]
+            search="local", status=[OppStatusOptions.OPEN], opp_base=opp_base
         )
 
         assert isinstance(response, OpportunitiesSearchResponse)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
+        assert response.items[0].get_custom_field_value("legacy_id", int) == 12345
 
         expected_url = "https://api.example.com/common-grants/opportunities/search"
         mock_httpx_client.post.assert_called_once()
@@ -1157,3 +1171,24 @@ class TestOpportunitySearch:
                 search="local", status=[OppStatusOptions.OPEN], page=None
             )
         assert exc_info.value.error.status == 500
+
+
+
+class TestGetOppBase:
+    """Test for get_opp_base()"""
+
+    def test_get_opp_base_empty_param(self, client):
+        """Test that get_opp_base returns OpportunityBase when input is none"""
+
+        opp = client.opportunity.get_opp_base()
+
+        assert opp is OpportunityBase
+
+
+    def test_get_opp_base_with_param(self, client):
+        """Test that get_opp_base returns OpporunityBase when input is opp_base"""
+
+        
+        opp = client.opportunity.get_opp_base(opp_base=OpportunityBase)
+
+        assert opp is OpportunityBase

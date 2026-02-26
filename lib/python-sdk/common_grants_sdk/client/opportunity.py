@@ -37,6 +37,22 @@ class Opportunity:
         """Return the API path for opportunities."""
         return "/common-grants/opportunities"
 
+    @staticmethod
+    def get_opp_base(opp_base: OpportunityBase | None = None) -> OpportunityBase:
+        """
+        Helper method to return a modified OpportunityBase if the caller has added custom fields or a default OpportunityBase if the param is None.
+
+        Args:
+            opp_base: An OpportunityBase that may have custom fields added.
+
+        Returns:
+            Either a default no custom field OpportunityBase or one that has the custom fields added by a caller.
+        """
+        if opp_base is None:
+            return OpportunityBase
+        else:
+            return opp_base
+
     def list(
         self,
         page: int | None = None,
@@ -66,7 +82,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase models from items dict
         items = [
-            get_opp_base(opp_base).model_validate_json(json.dumps(item))
+            self.get_opp_base(opp_base).model_validate_json(json.dumps(item))
             for item in paginated_response.items
         ]
 
@@ -97,7 +113,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase from response
         response_data = success_response.model_dump(by_alias=True)
-        response_data["data"] = get_opp_base(opp_base).from_dict(success_response.data)
+        response_data["data"] = self.get_opp_base(opp_base).from_dict(success_response.data)
 
         # Hydrate OpportunityResponse from response data
         opportunity_response = OpportunityResponse.model_validate(response_data)
@@ -153,7 +169,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase models from items dict
         items = [
-            get_opp_base(opp_base).model_validate_json(json.dumps(item))
+            self.get_opp_base(opp_base).model_validate_json(json.dumps(item))
             for item in paginated_response.items
         ]
 
@@ -172,19 +188,3 @@ class Opportunity:
 
         # Hydrate OpportunitiesListResponse from response data
         return OpportunitiesSearchResponse.model_validate(response_data)
-
-
-def get_opp_base(opp_base: OpportunityBase | None = None) -> OpportunityBase:
-    """
-    Helper function to return a modified OpportunityBase if the caller has added custom fields or a default OpportunityBase if the param is None.
-
-    Args:
-        opp_base: An OpportunityBase that may have custom fields added.
-
-        Returns:
-            Either a default no custom field OpportunityBase or one that has the custom fields added by a caller.
-    """
-    if opp_base is None:
-        return OpportunityBase
-    else:
-        return opp_base
