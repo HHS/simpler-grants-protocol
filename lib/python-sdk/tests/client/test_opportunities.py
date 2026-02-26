@@ -34,12 +34,8 @@ def sample_opportunity_data():
         "createdAt": datetime.now(UTC).isoformat(),
         "lastModifiedAt": datetime.now(UTC).isoformat(),
         "customFields": {
-            "legacyId": {
-                "name": "legacyId",
-                "fieldType": "integer",
-                "value": 12345
-            }
-        }
+            "legacyId": {"name": "legacyId", "fieldType": "integer", "value": 12345}
+        },
     }
 
 
@@ -156,12 +152,14 @@ class TestOpportunityGet:
         mock_response.json = Mock(return_value=sample_opportunity_response)
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
-        
+
         fields = {
             "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
         }
 
-        opp_base = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportuntiy")
+        opp_base = OpportunityBase.with_custom_fields(
+            custom_fields=fields, model_name="Opportuntiy"
+        )
         opp = client.opportunity.get(opp_id_str, opp_base=opp_base)
         assert isinstance(opp, OpportunityBase)
         assert str(opp.id) == opp_id_str
@@ -268,7 +266,9 @@ class TestOpportunityList:
             "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
         }
 
-        opp_base = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportuntiy")
+        opp_base = OpportunityBase.with_custom_fields(
+            custom_fields=fields, model_name="Opportuntiy"
+        )
 
         response = client.opportunity.list(page=1, opp_base=opp_base)
 
@@ -733,10 +733,12 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
         fields = {
-                "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
-            }
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+        }
 
-        opp_base = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportuntiy")
+        opp_base = OpportunityBase.with_custom_fields(
+            custom_fields=fields, model_name="Opportuntiy"
+        )
 
         response = client.opportunity.search(
             search="local", status=[OppStatusOptions.OPEN], opp_base=opp_base
@@ -1173,7 +1175,6 @@ class TestOpportunitySearch:
         assert exc_info.value.error.status == 500
 
 
-
 class TestGetOppBase:
     """Test for get_opp_base()"""
 
@@ -1184,11 +1185,9 @@ class TestGetOppBase:
 
         assert opp is OpportunityBase
 
-
     def test_get_opp_base_with_param(self, client):
         """Test that get_opp_base returns OpporunityBase when input is opp_base"""
 
-        
         opp = client.opportunity.get_opp_base(opp_base=OpportunityBase)
 
         assert opp is OpportunityBase

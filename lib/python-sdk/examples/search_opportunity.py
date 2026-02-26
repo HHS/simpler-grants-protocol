@@ -9,10 +9,7 @@ from common_grants_sdk.client import Client
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
 from common_grants_sdk.extensions.specs import CustomFieldSpec
-from common_grants_sdk.schemas.pydantic import (
-    OpportunityBase,
-    CustomFieldType
-)
+from common_grants_sdk.schemas.pydantic import OpportunityBase, CustomFieldType
 
 if len(sys.argv) < 1:
     print("Usage: search_opportunity.py <searchTerm>", file=sys.stderr)
@@ -34,9 +31,7 @@ fields = {
     "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
 }
 
-opp = OpportunityBase.with_custom_fields(
-    custom_fields=fields, model_name="Opportunity"
-)
+opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
 
 
 response = client.opportunity.search(
@@ -45,5 +40,5 @@ response = client.opportunity.search(
 
 print(f"Found {len(response.items)} opportunities: ")
 
-for opp in response.items:
-    print(f" - {opp.id}: {opp.title} : {opp.custom_fields}")
+for item in response.items:
+    print(f" - {item.id}: {item.title} : {item.custom_fields}")

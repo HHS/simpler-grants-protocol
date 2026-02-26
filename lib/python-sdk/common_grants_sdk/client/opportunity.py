@@ -1,7 +1,7 @@
 """Opportunity namespace for the CommonGrants API."""
 
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type
 from uuid import UUID
 
 from ..schemas.pydantic.models import OpportunityBase
@@ -38,7 +38,9 @@ class Opportunity:
         return "/common-grants/opportunities"
 
     @staticmethod
-    def get_opp_base(opp_base: OpportunityBase | None = None) -> OpportunityBase:
+    def get_opp_base(
+        opp_base: Type[OpportunityBase] | None = None,
+    ) -> Type[OpportunityBase]:
         """
         Helper method to return a modified OpportunityBase if the caller has added custom fields or a default OpportunityBase if the param is None.
 
@@ -57,7 +59,7 @@ class Opportunity:
         self,
         page: int | None = None,
         page_size: int | None = None,
-        opp_base: OpportunityBase | None = None
+        opp_base: Type[OpportunityBase] | None = None,
     ) -> OpportunitiesListResponse:
         """Fetch a set of opportunities.
 
@@ -93,9 +95,9 @@ class Opportunity:
         # Hydrate OpportunitiesListResponse from response data
         return OpportunitiesListResponse.model_validate(response_data)
 
-    def get(self,
-            opp_id: str | UUID,
-            opp_base: OpportunityBase | None = None) -> OpportunityBase:
+    def get(
+        self, opp_id: str | UUID, opp_base: Type[OpportunityBase] | None = None
+    ) -> OpportunityBase:
         """Get a specific opportunity by ID.
 
         Args:
@@ -113,7 +115,9 @@ class Opportunity:
 
         # Hydrate OpportunityBase from response
         response_data = success_response.model_dump(by_alias=True)
-        response_data["data"] = self.get_opp_base(opp_base).from_dict(success_response.data)
+        response_data["data"] = self.get_opp_base(opp_base).from_dict(
+            success_response.data
+        )
 
         # Hydrate OpportunityResponse from response data
         opportunity_response = OpportunityResponse.model_validate(response_data)
@@ -127,7 +131,7 @@ class Opportunity:
         status: List[OppStatusOptions],
         page: int | None = None,
         page_size: int | None = None,
-        opp_base: OpportunityBase | None = None
+        opp_base: Type[OpportunityBase] | None = None,
     ) -> OpportunitiesSearchResponse:
         """Search for opportunties by a query string
 
@@ -138,7 +142,7 @@ class Opportunity:
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
                 client config.
-            opp_base: OpportunityBase to support custom fields added by the caller.  
+            opp_base: OpportunityBase to support custom fields added by the caller.
 
 
         Returns:
