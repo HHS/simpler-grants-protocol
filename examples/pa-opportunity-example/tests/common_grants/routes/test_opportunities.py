@@ -147,3 +147,66 @@ class TestSearchOpportunities:
         assert response.status_code == 200
         data = response.json()
         assert data["items"] == []
+
+    def test_search_with_status_filter_open_returns_only_open_opportunities(
+        self,
+        client: TestClient,
+    ):
+        """Test that status filter 'in' ['open'] returns only open opportunities."""
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json={
+                "filters": {
+                    "status": {"operator": "in", "value": ["open"]},
+                },
+                "pagination": {"page": 1, "pageSize": 100},
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        assert data["paginationInfo"]["totalItems"] == 82
+        for item in data["items"]:
+            assert item["status"]["value"] == "open"
+
+    def test_search_with_status_filter_closed_returns_only_closed_opportunities(
+        self,
+        client: TestClient,
+    ):
+        """Test that status filter 'in' ['closed'] returns only closed opportunities."""
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json={
+                "filters": {
+                    "status": {"operator": "in", "value": ["closed"]},
+                },
+                "pagination": {"page": 1, "pageSize": 100},
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        assert data["paginationInfo"]["totalItems"] == 240
+        for item in data["items"]:
+            assert item["status"]["value"] == "closed"
+
+    def test_search_with_status_filter_not_in_excludes_matching_status(
+        self,
+        client: TestClient,
+    ):
+        """Test that status filter 'notIn' ['closed'] excludes closed opportunities."""
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json={
+                "filters": {
+                    "status": {"operator": "notIn", "value": ["closed"]},
+                },
+                "pagination": {"page": 1, "pageSize": 100},
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        assert data["paginationInfo"]["totalItems"] == 82
+        for item in data["items"]:
+            assert item["status"]["value"] != "closed"
