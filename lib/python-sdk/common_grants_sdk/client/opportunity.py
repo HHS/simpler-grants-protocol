@@ -37,29 +37,11 @@ class Opportunity:
         """Return the API path for opportunities."""
         return "/common-grants/opportunities"
 
-    @staticmethod
-    def get_opp_base(
-        opp_base: Type[OpportunityBase] | None = None,
-    ) -> Type[OpportunityBase]:
-        """
-        Helper method to return a modified OpportunityBase if the caller has added custom fields or a default OpportunityBase if the param is None.
-
-        Args:
-            opp_base: An OpportunityBase that may have custom fields added.
-
-        Returns:
-            Either a default no custom field OpportunityBase or one that has the custom fields added by a caller.
-        """
-        if opp_base is None:
-            return OpportunityBase
-        else:
-            return opp_base
-
     def list(
         self,
         page: int | None = None,
         page_size: int | None = None,
-        opp_base: Type[OpportunityBase] | None = None,
+        schema: Type[OpportunityBase] | None = OpportunityBase,
     ) -> OpportunitiesListResponse:
         """Fetch a set of opportunities.
 
@@ -68,6 +50,7 @@ class Opportunity:
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
                 client config.
+            schema: OpportunityBase to support custom fields from caller.
 
         Returns:
             OpportunitiesListResponse instance. When page is None, the response
@@ -84,7 +67,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase models from items dict
         items = [
-            self.get_opp_base(opp_base).model_validate_json(json.dumps(item))
+            schema.model_validate_json(json.dumps(item))  # type: ignore[union-attr]
             for item in paginated_response.items
         ]
 
@@ -96,13 +79,13 @@ class Opportunity:
         return OpportunitiesListResponse.model_validate(response_data)
 
     def get(
-        self, opp_id: str | UUID, opp_base: Type[OpportunityBase] | None = None
+        self, opp_id: str | UUID, schema: Type[OpportunityBase] | None = OpportunityBase
     ) -> OpportunityBase:
         """Get a specific opportunity by ID.
 
         Args:
             opp_id: The opportunity ID
-            opp_base: OpportunityBase to support custom fields from caller.
+            schema: OpportunityBase to support custom fields from caller.
 
         Returns:
             OpportunityBase instance
@@ -115,9 +98,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase from response
         response_data = success_response.model_dump(by_alias=True)
-        response_data["data"] = self.get_opp_base(opp_base).from_dict(
-            success_response.data
-        )
+        response_data["data"] = schema.from_dict(success_response.data)  # type: ignore[union-attr]
 
         # Hydrate OpportunityResponse from response data
         opportunity_response = OpportunityResponse.model_validate(response_data)
@@ -131,7 +112,7 @@ class Opportunity:
         status: List[OppStatusOptions],
         page: int | None = None,
         page_size: int | None = None,
-        opp_base: Type[OpportunityBase] | None = None,
+        schema: Type[OpportunityBase] | None = OpportunityBase,
     ) -> OpportunitiesSearchResponse:
         """Search for opportunties by a query string
 
@@ -142,7 +123,7 @@ class Opportunity:
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
                 client config.
-            opp_base: OpportunityBase to support custom fields added by the caller.
+            schema: OpportunityBase to support custom fields added by the caller.
 
 
         Returns:
@@ -173,7 +154,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase models from items dict
         items = [
-            self.get_opp_base(opp_base).model_validate_json(json.dumps(item))
+            schema.model_validate_json(json.dumps(item))  # type: ignore[union-attr]
             for item in paginated_response.items
         ]
 

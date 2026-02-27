@@ -24,14 +24,19 @@ config = Config(
 client = Client(config)
 
 fields = {
-    "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+    "legacyId": CustomFieldSpec(
+        field_type=CustomFieldType.INTEGER,
+        value=int,
+        name="legacy_id",
+        description="Federal ID Legacy Field",
+    ),
     "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
 }
 
 opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
 
 
-opportunity = client.opportunity.get(opp_id, opp_base=opp)
+opportunity = client.opportunity.get(opp_id, schema=opp)
 
 print(f"Opportunity {opp_id}:")
 print(f"  Title: {opportunity.title}")

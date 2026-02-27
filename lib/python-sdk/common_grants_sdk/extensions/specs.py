@@ -12,3 +12,5 @@ class CustomFieldSpec:
 
     field_type: CustomFieldType
     value: Optional[Any] = None
+    name: str = ""
+    description: str = ""

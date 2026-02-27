@@ -160,10 +160,10 @@ class TestOpportunityGet:
         opp_base = OpportunityBase.with_custom_fields(
             custom_fields=fields, model_name="Opportuntiy"
         )
-        opp = client.opportunity.get(opp_id_str, opp_base=opp_base)
-        assert isinstance(opp, OpportunityBase)
+        opp = client.opportunity.get(opp_id_str, schema=opp_base)
+        assert isinstance(opp, opp_base)
         assert str(opp.id) == opp_id_str
-        assert opp.get_custom_field_value("legacy_id", int) == 12345
+        assert opp.custom_fields.legacy_id.value == 12345
 
     def test_get_opportunity_404(self, client, mock_httpx_client):
         """Test getting an opportunity that doesn't exist."""
@@ -270,7 +270,7 @@ class TestOpportunityList:
             custom_fields=fields, model_name="Opportuntiy"
         )
 
-        response = client.opportunity.list(page=1, opp_base=opp_base)
+        response = client.opportunity.list(page=1, schema=opp_base)
 
         assert isinstance(response, OpportunitiesListResponse)
         assert len(response.items) == 2
@@ -741,7 +741,7 @@ class TestOpportunitySearch:
         )
 
         response = client.opportunity.search(
-            search="local", status=[OppStatusOptions.OPEN], opp_base=opp_base
+            search="local", status=[OppStatusOptions.OPEN], schema=opp_base
         )
 
         assert isinstance(response, OpportunitiesSearchResponse)
@@ -1173,21 +1173,3 @@ class TestOpportunitySearch:
                 search="local", status=[OppStatusOptions.OPEN], page=None
             )
         assert exc_info.value.error.status == 500
-
-
-class TestGetOppBase:
-    """Test for get_opp_base()"""
-
-    def test_get_opp_base_empty_param(self, client):
-        """Test that get_opp_base returns OpportunityBase when input is none"""
-
-        opp = client.opportunity.get_opp_base()
-
-        assert opp is OpportunityBase
-
-    def test_get_opp_base_with_param(self, client):
-        """Test that get_opp_base returns OpporunityBase when input is opp_base"""
-
-        opp = client.opportunity.get_opp_base(opp_base=OpportunityBase)
-
-        assert opp is OpportunityBase

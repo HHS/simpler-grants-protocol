@@ -19,15 +19,22 @@ client = Client(config)
 
 
 fields = {
-    "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+    "legacyId": CustomFieldSpec(
+        field_type=CustomFieldType.INTEGER,
+        value=int,
+        name="Legacy ID",
+        description="Federal id legacy value",
+    ),
     "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
 }
 
 opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
 
 
-response = client.opportunity.list(page=1, opp_base=opp)
+response = client.opportunity.list(page=1, schema=opp)
 
 print(f"Found {len(response.items)} opportunities:")
 for item in response.items:
-    print(f"  - {item.id}: {item.title}: {item.custom_fields}")
+    print(
+        f"  - {item.id}: {item.title}, custom field value: {item.custom_fields.legacy_id.value}, custom field description: {item.custom_fields.legacy_id.description}"  # type: ignore[union-attr]
+    )

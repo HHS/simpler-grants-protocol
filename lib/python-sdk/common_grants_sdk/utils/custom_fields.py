@@ -77,6 +77,8 @@ def create_custom_field_schema(
     2. Creates a typed Pydantic model extending CustomField where:
         - 'field_type' is pinned to the spec's type(with alias 'type' for JSON)
         - 'value' is typed based on FIELD_TYPE_MAP (e.g. STRING -> str)
+        - 'name' is pinned to the specs name or key as a fallback
+        - 'description' is pinned to the specs description
         - returns a field definition tuple suitable for Pydantic's create_model
 
 
@@ -93,6 +95,8 @@ def create_custom_field_schema(
                     "legacyId": CustomFieldSpec(
                         field_type=CustomFieldType.INTEGER,
                         value=int,
+                        name='legacy_id',
+                        description='Federal id legacy value',
                     ),
                 },
             )
@@ -111,6 +115,8 @@ def create_custom_field_schema(
 
             class OpportunityLegacyIdField(CustomField):
                 field_type: CustomFieldType = Field(default=CustomFieldType.INTEGER, alias="type")
+                name: str = Field(default="legacy_id")
+                description: Optional[str] = Field(default="Federal id legacy value")
                 value: Optional[int] = None
 
         That dict can then be used with `create_model` to build a container
@@ -133,6 +139,9 @@ def create_custom_field_schema(
             __base__=CustomField,
             # pin expected type (still accepts wire key "type" via alias)
             field_type=(CustomFieldType, Field(default=field.field_type, alias="type")),
+            # pin name and description from spec
+            name=(str, Field(default=field.name or key)),
+            description=(Optional[str], Field(default=field.description or None)),
             # typed value (Optional[...] to allow missing)
             value=(Optional[value_type], None),
         )

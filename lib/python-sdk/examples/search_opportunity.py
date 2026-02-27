@@ -35,10 +35,12 @@ opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Oppor
 
 
 response = client.opportunity.search(
-    search=search, status=[OppStatusOptions.OPEN], page=1, opp_base=opp
+    search=search, status=[OppStatusOptions.OPEN], page=1, schema=opp
 )
 
 print(f"Found {len(response.items)} opportunities: ")
 
 for item in response.items:
-    print(f" - {item.id}: {item.title} : {item.custom_fields}")
+    print(
+        f" - {item.id}: {item.title} custom field value: {item.custom_fields.legacy_id.value}, custom field description: {item.custom_fields.legacy_id.description}"  # type: ignore[union-attr]
+    )
