@@ -8,6 +8,8 @@ import sys
 
 from common_grants_sdk.client import Client
 from common_grants_sdk.client.config import Config
+from common_grants_sdk.extensions.specs import CustomFieldSpec
+from common_grants_sdk.schemas.pydantic import OpportunityBase, CustomFieldType
 
 if len(sys.argv) < 2:
     print("Usage: get_opportunity.py <oppId>", file=sys.stderr)
@@ -16,12 +18,27 @@ if len(sys.argv) < 2:
 opp_id = sys.argv[1]
 config = Config(
     base_url="http://localhost:8080",
-    api_key="two_orgs_user_key",
+    api_key="two_org_user_key",
     timeout=5.0,
 )
 client = Client(config)
-opportunity = client.opportunity.get(opp_id)
+
+fields = {
+    "legacyId": CustomFieldSpec(
+        field_type=CustomFieldType.INTEGER,
+        value=int,
+        name="legacy_id",
+        description="Federal ID Legacy Field",
+    ),
+    "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
+}
+
+opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
+
+
+opportunity = client.opportunity.get(opp_id, schema=opp)
 
 print(f"Opportunity {opp_id}:")
 print(f"  Title: {opportunity.title}")
 print(f"  ID: {opportunity.id}")
+print(f" Custom Fields: {opportunity.custom_fields}")

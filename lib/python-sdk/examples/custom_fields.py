@@ -13,11 +13,10 @@ from common_grants_sdk.schemas.pydantic import (
 )
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 
-field = CustomFieldSpec(key="legacyId", field_type=CustomFieldType.INTEGER, value=int)
-field2 = CustomFieldSpec(key="groupName", field_type=CustomFieldType.STRING, value=str)
-
-
-fields = [field, field2]
+fields = {
+    "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+    "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
+}
 
 Opportunity = OpportunityBase.with_custom_fields(
     custom_fields=fields, model_name="Opportunity"
