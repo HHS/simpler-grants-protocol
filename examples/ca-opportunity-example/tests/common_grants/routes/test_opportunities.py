@@ -237,15 +237,62 @@ class TestSearchOpportunities:
         data = response.json()
         assert data["items"] == []
 
-    def test_search_no_results(self, client: TestClient):
-        """Test search that should return no results."""
+    def test_search_with_status_filter_open_returns_only_open_opportunities(
+        self,
+        client: TestClient,
+    ):
+        """Test that status filter 'in' ['open'] returns only open opportunities."""
         response = client.post(
             "/common-grants/opportunities/search",
             json={
-                "search": "xyz123nonexistentterm",
-                "pagination": {"page": 1, "pageSize": 10},
+                "filters": {
+                    "status": {"operator": "in", "value": ["open"]},
+                },
+                "pagination": {"page": 1, "pageSize": 100},
             },
         )
         assert response.status_code == 200
         data = response.json()
-        assert len(data["items"]) > 0
+        assert "items" in data
+        for item in data["items"]:
+            assert item["status"]["value"] == "open"
+
+    def test_search_with_status_filter_closed_returns_only_closed_opportunities(
+        self,
+        client: TestClient,
+    ):
+        """Test that status filter 'in' ['closed'] returns only closed opportunities."""
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json={
+                "filters": {
+                    "status": {"operator": "in", "value": ["closed"]},
+                },
+                "pagination": {"page": 1, "pageSize": 100},
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        for item in data["items"]:
+            assert item["status"]["value"] == "closed"
+
+    def test_search_with_status_filter_not_in_excludes_matching_status(
+        self,
+        client: TestClient,
+    ):
+        """Test that status filter 'notIn' ['closed'] excludes closed opportunities."""
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json={
+                "filters": {
+                    "status": {"operator": "notIn", "value": ["closed"]},
+                },
+                "pagination": {"page": 1, "pageSize": 100},
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        for item in data["items"]:
+            assert item["status"]["value"] != "closed"
