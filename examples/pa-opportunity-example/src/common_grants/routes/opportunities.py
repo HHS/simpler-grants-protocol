@@ -86,6 +86,7 @@ async def search_opportunities(
     opportunity_service = OpportunityService()
 
     return await opportunity_service.search_opportunities(
+        search=request.search,
         filters=request.filters,
         sorting=request.sorting,
         pagination=request.pagination,

@@ -4,6 +4,8 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
+from common_grants.services.opportunity import OpportunityService
+
 
 class TestListOpportunities:
     """Test /common-grants/opportunities endpoint."""
@@ -94,3 +96,116 @@ class TestSearchOpportunities:
         assert isinstance(data["items"], list)
         assert data["paginationInfo"]["page"] == 1
         assert data["paginationInfo"]["pageSize"] == 10
+
+    def test_search_with_search_term_filters_results(self, client: TestClient):
+        """Test that search term is passed to the service and used to filter results."""
+        # Arrange: use same mock data as OpportunityService (see opportunity.py)
+        service = OpportunityService()
+        assert (
+            service.opportunity_list
+        ), "mock data must contain at least one opportunity"
+        title = service.opportunity_list[0].title
+        search_term = title.split()[0] if title else "grant"
+        request_body = {
+            "search": search_term,
+            "pagination": {"page": 1, "pageSize": 10},
+        }
+
+        # Act: call search endpoint with that term
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json=request_body,
+        )
+
+        # Assert: response is ok and every item contains the search term (title or description)
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        assert len(data["items"]) >= 1
+        term_lower = search_term.lower()
+        for item in data["items"]:
+            title_match = term_lower in (item.get("title") or "").lower()
+            desc_match = term_lower in (item.get("description") or "").lower()
+            assert title_match or desc_match, (
+                f"Search term {search_term!r} was not used to filter: "
+                f"item {item.get('id')} title={item.get('title')!r} has no match"
+            )
+
+    def test_search_with_nonexistent_term_returns_no_results(self, client: TestClient):
+        """Test that search term is used: nonexistent term returns zero items."""
+        # Arrange: term that does not appear in OpportunityService mock data
+        request_body = {
+            "search": "xyznonexistent123",
+            "pagination": {"page": 1, "pageSize": 10},
+        }
+
+        # Act: call search endpoint
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json=request_body,
+        )
+
+        # Assert: no items returned
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"] == []
+
+    def test_search_with_status_filter_open_returns_only_open_opportunities(
+        self,
+        client: TestClient,
+    ):
+        """Test that status filter 'in' ['open'] returns only open opportunities."""
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json={
+                "filters": {
+                    "status": {"operator": "in", "value": ["open"]},
+                },
+                "pagination": {"page": 1, "pageSize": 100},
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        for item in data["items"]:
+            assert item["status"]["value"] == "open"
+
+    def test_search_with_status_filter_closed_returns_only_closed_opportunities(
+        self,
+        client: TestClient,
+    ):
+        """Test that status filter 'in' ['closed'] returns only closed opportunities."""
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json={
+                "filters": {
+                    "status": {"operator": "in", "value": ["closed"]},
+                },
+                "pagination": {"page": 1, "pageSize": 100},
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        for item in data["items"]:
+            assert item["status"]["value"] == "closed"
+
+    def test_search_with_status_filter_not_in_excludes_matching_status(
+        self,
+        client: TestClient,
+    ):
+        """Test that status filter 'notIn' ['closed'] excludes closed opportunities."""
+        response = client.post(
+            "/common-grants/opportunities/search",
+            json={
+                "filters": {
+                    "status": {"operator": "notIn", "value": ["closed"]},
+                },
+                "pagination": {"page": 1, "pageSize": 100},
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
+        for item in data["items"]:
+            assert item["status"]["value"] != "closed"

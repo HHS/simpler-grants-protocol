@@ -5,6 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from common_grants_sdk.schemas.pydantic import (
+    ArrayOperator,
     FilterInfo,
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
@@ -87,6 +88,23 @@ class OpportunityService:
                 if search_lower in opp.title.lower()
                 or (opp.description and search_lower in opp.description.lower())
             ]
+
+        # Apply status filter
+        if filters.status is not None and filters.status.value:
+            allowed_statuses = set(filters.status.value)
+            match filters.status.operator:
+                case ArrayOperator.IN:
+                    filtered_opportunities = [
+                        opp
+                        for opp in filtered_opportunities
+                        if opp.status.value in allowed_statuses
+                    ]
+                case ArrayOperator.NOT_IN:
+                    filtered_opportunities = [
+                        opp
+                        for opp in filtered_opportunities
+                        if opp.status.value not in allowed_statuses
+                    ]
 
         # Create PaginatedResultsInfo object
         start_idx = (pagination.page - 1) * pagination.page_size
