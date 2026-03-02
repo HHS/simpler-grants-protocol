@@ -364,7 +364,10 @@ console.log(opportunity.customFields?.legacyId?.value.id); // typed as number
 
 // List or search with the same schema
 const list = await client.opportunities.list({ schema: OpportunitySchema });
-const results = await client.opportunities.search({ query: "education", schema: OpportunitySchema });
+const results = await client.opportunities.search({
+  query: "education",
+  schema: OpportunitySchema,
+});
 ```
 
 Each spec can include optional `name` (used as the default for `CustomField.name`; otherwise the record key is used) and optional `description`.
