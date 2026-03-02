@@ -54,7 +54,7 @@ From the `lib/py-sdk` directory run:
 
 ```bash
 
-poetry run python examples/list_opportunity.py
+poetry run python examples/list_opportunities.py
 
 ```
 
@@ -80,7 +80,7 @@ Opportunity 573525f2-8e15-4405-83fb-e6523511d893:
 ```
 
 ```bash
-poetry run python examples/search_opportunity.py <searchTerm>
+poetry run python examples/search_opportunities.py <searchTerm>
 
 ```
 
