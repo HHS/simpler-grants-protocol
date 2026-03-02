@@ -17,7 +17,7 @@ if len(sys.argv) < 2:
 
 opp_id = sys.argv[1]
 config = Config(
-    base_url="http://localhost:8080",
+    base_url="http://localhost:8000",
     api_key="two_org_user_key",
     timeout=5.0,
 )

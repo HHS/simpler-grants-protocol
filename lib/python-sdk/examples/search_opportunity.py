@@ -1,6 +1,6 @@
-"""Example script demonstrating how to search for opportunities. 
+"""Example script demonstrating how to search for opportunities.
 
-Run with: poetry run python search_opportunity.py <searchTerm> 
+Run with: poetry run python search_opportunity.py <searchTerm>
 """
 
 import sys
@@ -16,7 +16,7 @@ if len(sys.argv) < 1:
 
 
 config = Config(
-    base_url="http://localhost:8080",
+    base_url="http://localhost:8000",
     api_key="two_orgs_user_key",
     timeout=5.0,
     page_size=10,
