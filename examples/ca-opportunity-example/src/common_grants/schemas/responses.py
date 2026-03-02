@@ -13,7 +13,7 @@ from common_grants.utils.opp_transform import CAOpportunity
 class CAOpportunitiesListResponse(OpportunitiesListResponse):
     """List response with CA opportunities for correct custom_fields serialization."""
 
-    items: list[CAOpportunity] = Field(
+    items: list[CAOpportunity] = Field(  # type: ignore[reportInvalidTypeForm]
         ...,
         description="The list of opportunities",
     )
@@ -22,7 +22,7 @@ class CAOpportunitiesListResponse(OpportunitiesListResponse):
 class CAOpportunitiesSearchResponse(OpportunitiesSearchResponse):
     """Search response with CA opportunities for correct custom_fields serialization."""
 
-    items: list[CAOpportunity] = Field(
+    items: list[CAOpportunity] = Field(  # type: ignore[reportInvalidTypeForm]
         ...,
         description="The list of opportunities",
     )
@@ -31,7 +31,7 @@ class CAOpportunitiesSearchResponse(OpportunitiesSearchResponse):
 class CAOpportunityResponse(OpportunityResponse):
     """Single opportunity response with CA opportunity for correct custom_fields serialization."""
 
-    data: CAOpportunity = Field(
+    data: CAOpportunity = Field(  # type: ignore[reportInvalidTypeForm]
         ...,
         description="The opportunity",
     )

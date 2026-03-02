@@ -141,9 +141,7 @@ class TestOpportunityTransformer:
         assert key_dates.close_date is not None
         assert key_dates.close_date.name == "Application Deadline"
         assert key_dates.close_date.date == date(2024, 3, 15)
-        assert (
-            key_dates.close_date.description == "Final deadline for all submissions"
-        )
+        assert key_dates.close_date.description == "Final deadline for all submissions"
 
         assert key_dates.other_dates is not None
         assert "expAwardDate" in key_dates.other_dates
