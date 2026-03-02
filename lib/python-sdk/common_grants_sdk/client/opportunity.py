@@ -1,7 +1,7 @@
 """Opportunity namespace for the CommonGrants API."""
 
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type
 from uuid import UUID
 
 from ..schemas.pydantic.models import OpportunityBase
@@ -41,6 +41,7 @@ class Opportunity:
         self,
         page: int | None = None,
         page_size: int | None = None,
+        schema: Type[OpportunityBase] | None = OpportunityBase,
     ) -> OpportunitiesListResponse:
         """Fetch a set of opportunities.
 
@@ -49,6 +50,7 @@ class Opportunity:
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
                 client config.
+            schema: OpportunityBase to support custom fields from caller.
 
         Returns:
             OpportunitiesListResponse instance. When page is None, the response
@@ -65,7 +67,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase models from items dict
         items = [
-            OpportunityBase.model_validate_json(json.dumps(item))
+            schema.model_validate_json(json.dumps(item))  # type: ignore[union-attr]
             for item in paginated_response.items
         ]
 
@@ -76,11 +78,14 @@ class Opportunity:
         # Hydrate OpportunitiesListResponse from response data
         return OpportunitiesListResponse.model_validate(response_data)
 
-    def get(self, opp_id: str | UUID) -> OpportunityBase:
+    def get(
+        self, opp_id: str | UUID, schema: Type[OpportunityBase] | None = OpportunityBase
+    ) -> OpportunityBase:
         """Get a specific opportunity by ID.
 
         Args:
             opp_id: The opportunity ID
+            schema: OpportunityBase to support custom fields from caller.
 
         Returns:
             OpportunityBase instance
@@ -93,7 +98,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase from response
         response_data = success_response.model_dump(by_alias=True)
-        response_data["data"] = OpportunityBase.from_dict(success_response.data)
+        response_data["data"] = schema.from_dict(success_response.data)  # type: ignore[union-attr]
 
         # Hydrate OpportunityResponse from response data
         opportunity_response = OpportunityResponse.model_validate(response_data)
@@ -107,6 +112,7 @@ class Opportunity:
         status: List[OppStatusOptions],
         page: int | None = None,
         page_size: int | None = None,
+        schema: Type[OpportunityBase] | None = OpportunityBase,
     ) -> OpportunitiesSearchResponse:
         """Search for opportunties by a query string
 
@@ -117,6 +123,7 @@ class Opportunity:
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
                 client config.
+            schema: OpportunityBase to support custom fields added by the caller.
 
 
         Returns:
@@ -147,7 +154,7 @@ class Opportunity:
 
         # Hydrate OpportunityBase models from items dict
         items = [
-            OpportunityBase.model_validate_json(json.dumps(item))
+            schema.model_validate_json(json.dumps(item))  # type: ignore[union-attr]
             for item in paginated_response.items
         ]
 
