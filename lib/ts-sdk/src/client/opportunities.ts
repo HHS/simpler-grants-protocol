@@ -48,20 +48,18 @@ export interface GetOptions<S extends OppSchema = typeof OpportunityBaseSchema> 
   schema?: S;
 }
 
-/** Options for listing opportunities (schema replaces parseItem; parseItem is derived internally) */
-export interface ListOptions<S extends OppSchema = typeof OpportunityBaseSchema> extends Omit<
-  FetchManyOptions,
-  "parseItem"
-> {
+/** Options for listing opportunities */
+export interface ListOptions<
+  S extends OppSchema = typeof OpportunityBaseSchema,
+> extends FetchManyOptions<z.infer<S>> {
   /** Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`. */
   schema?: S;
 }
 
 /** Options for searching opportunities */
-export interface SearchOptions<S extends OppSchema = typeof OpportunityBaseSchema> extends Omit<
-  FetchManyOptions,
-  "parseItem"
-> {
+export interface SearchOptions<
+  S extends OppSchema = typeof OpportunityBaseSchema,
+> extends FetchManyOptions<z.infer<S>> {
   /** Text query to search for in opportunity titles and descriptions */
   query?: string;
   /** Filter by opportunity statuses */
@@ -185,10 +183,10 @@ export class Opportunities {
       return PaginatedSchema(schema).parse(json) as Paginated<z.infer<S>>;
     }
 
-    // Auto-paginate by default (parseItem derived from schema; fetchMany ignores extra options like schema)
+    // Auto-paginate by default
     return this.client.fetchMany(this.basePath, {
       ...options,
-      parseItem: (item: unknown) => schema.parse(item) as z.infer<S>,
+      schema,
     });
   }
 
@@ -263,7 +261,7 @@ export class Opportunities {
       ...options,
       method: "POST",
       body: searchBody as Record<string, unknown>,
-      parseItem: (item: unknown) => schema.parse(item) as z.infer<S>,
+      schema,
     });
 
     return result as Filtered<z.infer<S>, OppFilters>;

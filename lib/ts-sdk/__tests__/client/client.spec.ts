@@ -374,8 +374,8 @@ describe("Client", () => {
       await expect(defaultClient.fetchMany("/test-items", { pageSize: 5 })).rejects.toThrow("500");
     });
 
-    it("calls parseItem for each item when provided", async () => {
-      const parseItemCalls: unknown[] = [];
+    it("calls schema.parse for each item when provided", async () => {
+      const parseCalls: unknown[] = [];
 
       server.use(
         http.get(
@@ -390,14 +390,16 @@ describe("Client", () => {
       const result = await defaultClient.fetchMany<{ id: string; name: string; parsed: true }>(
         "/test-items",
         {
-          parseItem: item => {
-            parseItemCalls.push(item);
-            return { ...(item as { id: string; name: string }), parsed: true };
+          schema: {
+            parse: (item: unknown) => {
+              parseCalls.push(item);
+              return { ...(item as { id: string; name: string }), parsed: true as const };
+            },
           },
         }
       );
 
-      expect(parseItemCalls).toHaveLength(3);
+      expect(parseCalls).toHaveLength(3);
       expect(result.items).toHaveLength(3);
       expect(result.items[0].parsed).toBe(true);
       expect(result.items[1].parsed).toBe(true);
@@ -437,7 +439,7 @@ describe("Client", () => {
       expect(result.items).toHaveLength(3);
     });
 
-    it("throws when parseItem throws (validation failure)", async () => {
+    it("throws when schema.parse throws (validation failure)", async () => {
       server.use(
         http.get(
           "/test-items",
@@ -450,8 +452,10 @@ describe("Client", () => {
 
       await expect(
         defaultClient.fetchMany("/test-items", {
-          parseItem: () => {
-            throw new Error("Validation failed");
+          schema: {
+            parse: () => {
+              throw new Error("Validation failed");
+            },
           },
         })
       ).rejects.toThrow("Validation failed");
