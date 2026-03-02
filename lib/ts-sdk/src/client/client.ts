@@ -39,8 +39,8 @@ export interface FetchManyOptions<T = unknown> {
   method?: "GET" | "POST";
   /** Request body for POST requests (pagination will be merged in) */
   body?: Record<string, unknown>;
-  /** Optional function to parse/validate each item (e.g., using Zod schema.parse) */
-  parseItem?: (item: unknown) => T;
+  /** Schema to parse/validate each item (any object with a `.parse()` method, e.g. a Zod schema) */
+  schema?: { parse: (data: unknown) => T };
 }
 
 // =============================================================================
@@ -292,11 +292,11 @@ export class Client {
       throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
     }
 
-    // Parse/validate items if parseItem function is provided
+    // Parse/validate items if schema is provided
     const json = (await response.json()) as Paginated<unknown>;
     const { items: rawItems, paginationInfo } = json;
-    const items: T[] = options?.parseItem
-      ? rawItems.map(item => options.parseItem!(item))
+    const items: T[] = options?.schema
+      ? rawItems.map(item => options.schema!.parse(item))
       : (rawItems as T[]);
 
     // Determine if this is the last page.

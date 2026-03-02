@@ -141,7 +141,7 @@ Test Opportunity
 2025
 ```
 
-You can also gracefully handle errors uisng the `safeParse()` method:
+You can also gracefully handle errors using the `safeParse()` method:
 
 ```ts
 import * as Schemas from "@common-grants/sdk/schemas";
@@ -353,6 +353,21 @@ const opportunity = OpportunitySchema.parse({
 type Opportunity = z.infer<typeof OpportunitySchema>;
 // opportunity.customFields?.legacyId?.value.id   → typed as number
 // opportunity.customFields?.category?.value      → typed as string
+```
+
+You can pass your extended schema to the client for typed custom field access on API responses:
+
+```ts
+// Get a single opportunity with typed custom fields
+const opportunity = await client.opportunities.get(id, { schema: OpportunitySchema });
+console.log(opportunity.customFields?.legacyId?.value.id); // typed as number
+
+// List or search with the same schema
+const list = await client.opportunities.list({ schema: OpportunitySchema });
+const results = await client.opportunities.search({
+  query: "education",
+  schema: OpportunitySchema,
+});
 ```
 
 Each spec can include optional `name` (used as the default for `CustomField.name`; otherwise the record key is used) and optional `description`.

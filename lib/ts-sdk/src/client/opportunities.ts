@@ -39,15 +39,33 @@ import { ArrayOperator } from "../constants";
 type OppSchema = z.ZodType<OpportunityBase, z.ZodTypeDef, unknown>;
 
 // =============================================================================
-// Search types
+// Options types (schema in options for consistent API)
 // =============================================================================
 
+/** Options for getting a single opportunity */
+export interface GetOptions<S extends OppSchema = typeof OpportunityBaseSchema> {
+  /** Zod schema to parse and type the response. Defaults to `OpportunityBaseSchema`. */
+  schema?: S;
+}
+
+/** Options for listing opportunities */
+export interface ListOptions<
+  S extends OppSchema = typeof OpportunityBaseSchema,
+> extends FetchManyOptions<z.infer<S>> {
+  /** Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`. */
+  schema?: S;
+}
+
 /** Options for searching opportunities */
-export interface SearchOptions extends FetchManyOptions {
+export interface SearchOptions<
+  S extends OppSchema = typeof OpportunityBaseSchema,
+> extends FetchManyOptions<z.infer<S>> {
   /** Text query to search for in opportunity titles and descriptions */
   query?: string;
   /** Filter by opportunity statuses */
   statuses?: OppStatusOptions[];
+  /** Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`. */
+  schema?: S;
 }
 
 /**
@@ -80,8 +98,7 @@ export class Opportunities {
    * Get a specific opportunity by ID.
    *
    * @param id - The opportunity ID
-   * @param schema - Zod schema to parse and type the response. Defaults to `OpportunityBaseSchema`.
-   *                 Pass a schema from `withCustomFields()` for typed custom field access.
+   * @param options - Optional settings; use `schema` for typed custom field access.
    * @returns The opportunity data
    * @throws {Error} If the request fails
    *
@@ -95,14 +112,15 @@ export class Opportunities {
    * const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
    *   { key: "legacyId", fieldType: "integer", valueSchema: z.number().int() },
    * ] as const);
-   * const typed = await client.opportunities.get(id, OpportunitySchema);
+   * const typed = await client.opportunities.get(id, { schema: OpportunitySchema });
    * console.log(typed.customFields?.legacyId?.value); // typed as number
    * ```
    */
   async get<S extends OppSchema = typeof OpportunityBaseSchema>(
     id: string,
-    schema: S = OpportunityBaseSchema as unknown as S
+    options?: GetOptions<S>
   ): Promise<z.infer<S>> {
+    const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
     const response = await this.client.get(`${this.basePath}/${id}`);
 
     if (!response.ok) {
@@ -122,10 +140,8 @@ export class Opportunities {
   /**
    * List opportunities with auto-pagination by default.
    *
-   * @param options - Pagination options. If `page` is specified, fetches only that page.
-   *                  Otherwise, auto-paginates to fetch all items.
-   * @param schema - Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`.
-   *                 Pass a schema from `withCustomFields()` for typed custom field access.
+   * @param options - Pagination and schema options. If `page` is specified, fetches only that page.
+   *                  Use `schema` for typed custom field access.
    * @returns Paginated list of opportunities
    * @throws {Error} If the request fails
    *
@@ -141,13 +157,14 @@ export class Opportunities {
    * const page2 = await client.opportunities.list({ page: 2, pageSize: 10 });
    *
    * // With a custom-fields schema
-   * const typed = await client.opportunities.list(undefined, OpportunitySchema);
+   * const typed = await client.opportunities.list({ schema: OpportunitySchema });
    * ```
    */
   async list<S extends OppSchema = typeof OpportunityBaseSchema>(
-    options?: FetchManyOptions,
-    schema: S = OpportunityBaseSchema as unknown as S
+    options?: ListOptions<S>
   ): Promise<Paginated<z.infer<S>>> {
+    const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
+
     // If page is specified, fetch only that page
     if (options?.page !== undefined) {
       const params: Record<string, number> = { page: options.page };
@@ -169,7 +186,7 @@ export class Opportunities {
     // Auto-paginate by default
     return this.client.fetchMany(this.basePath, {
       ...options,
-      parseItem: (item: unknown) => schema.parse(item) as z.infer<S>,
+      schema,
     });
   }
 
@@ -182,9 +199,7 @@ export class Opportunities {
    *
    * Supports auto-pagination by default. If `page` is specified, only fetches that page.
    *
-   * @param options - Search options including query text, status filters, and pagination
-   * @param schema - Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`.
-   *                 Pass a schema from `withCustomFields()` for typed custom field access.
+   * @param options - Search options including query text, status filters, pagination, and schema
    * @returns Filtered list of opportunities
    * @throws {Error} If the request fails
    *
@@ -217,13 +232,14 @@ export class Opportunities {
    * });
    *
    * // With a custom-fields schema
-   * const typed = await client.opportunities.search({ query: "test" }, OpportunitySchema);
+   * const typed = await client.opportunities.search({ query: "test", schema: OpportunitySchema });
    * ```
    */
   async search<S extends OppSchema = typeof OpportunityBaseSchema>(
-    options?: SearchOptions,
-    schema: S = OpportunityBaseSchema as unknown as S
+    options?: SearchOptions<S>
   ): Promise<Filtered<z.infer<S>, OppFilters>> {
+    const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
+
     // Build the base search body (without pagination)
     const searchBody = this.buildSearchBody(options);
 
@@ -242,12 +258,10 @@ export class Opportunities {
     // fetchMany preserves the first page's full response envelope, so
     // sortInfo and filterInfo pass through without an extra request.
     const result = await this.client.fetchMany(this.basePath + "/search", {
+      ...options,
       method: "POST",
       body: searchBody as Record<string, unknown>,
-      pageSize: options?.pageSize,
-      maxItems: options?.maxItems,
-      signal: options?.signal,
-      parseItem: (item: unknown) => schema.parse(item) as z.infer<S>,
+      schema,
     });
 
     return result as Filtered<z.infer<S>, OppFilters>;
@@ -258,7 +272,7 @@ export class Opportunities {
   // ############################################################################
 
   /** Builds the search request body from options */
-  private buildSearchBody(options?: SearchOptions): OppSearchRequest {
+  private buildSearchBody(options?: SearchOptions<OppSchema>): OppSearchRequest {
     const body: OppSearchRequest = {};
 
     if (options?.query) {
