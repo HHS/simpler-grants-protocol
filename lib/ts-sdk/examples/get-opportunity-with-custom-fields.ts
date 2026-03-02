@@ -60,7 +60,7 @@ async function fetchFromApi(oppId: string) {
     timeout: 5000,
   });
 
-  return client.opportunities.get(oppId, OpportunitySchema);
+  return client.opportunities.get(oppId, { schema: OpportunitySchema });
 }
 
 function printOpportunity(opp: z.infer<typeof OpportunitySchema>) {

@@ -29,9 +29,9 @@ const client = new Client({
   auth: Auth.apiKey("your-api-key"),
 });
 
-const opportunities = await client.opportunities.list(OpportunitySchema);
+const opps = await client.opportunities.list({ schema: OpportunitySchema });
 
-for (const opportunity of opportunities) {
-  console.log(opportunity.customFields.legacyId); // typed access
+for (const opp of opps.items) {
+  console.log(opp.customFields.legacyId); // typed access
 }
 ```

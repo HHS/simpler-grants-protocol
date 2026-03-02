@@ -164,7 +164,9 @@ describe("Opportunities", () => {
         })
       );
 
-      const opp = await client.opportunities.get(OPP_UUID_1, OpportunityWithLegacyIdSchema);
+      const opp = await client.opportunities.get(OPP_UUID_1, {
+        schema: OpportunityWithLegacyIdSchema,
+      });
 
       expect(opp.id).toBe(OPP_UUID_1);
       expect(opp.title).toBe("Custom Fields Grant");
@@ -299,7 +301,10 @@ describe("Opportunities", () => {
         })
       );
 
-      const result = await client.opportunities.list({ page: 1 }, OpportunityWithLegacyIdSchema);
+      const result = await client.opportunities.list({
+        page: 1,
+        schema: OpportunityWithLegacyIdSchema,
+      });
 
       expect(result.items).toHaveLength(2);
       expect(result.items[0].customFields?.legacyId?.value).toBe(100);
@@ -476,10 +481,10 @@ describe("Opportunities", () => {
         })
       );
 
-      const result = await client.opportunities.search(
-        { query: "custom" },
-        OpportunityWithLegacyIdSchema
-      );
+      const result = await client.opportunities.search({
+        query: "custom",
+        schema: OpportunityWithLegacyIdSchema,
+      });
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].title).toBe("Custom Grant");
