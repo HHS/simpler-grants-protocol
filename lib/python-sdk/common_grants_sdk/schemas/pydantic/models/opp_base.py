@@ -50,7 +50,7 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
 
     @classmethod
     def with_custom_fields(
-        cls, *, custom_fields: list[CustomFieldSpec], model_name
+        cls, *, custom_fields: dict[str, CustomFieldSpec], model_name
     ) -> Type[Any]:
         """Return a new Opportunity model class with the typed custom fields added"""
 

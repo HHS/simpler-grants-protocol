@@ -26,7 +26,7 @@ class TestClient:
             client = Client(config=config, auth=auth)
             assert client.config.base_url == "https://api.example.com"
             assert client.auth == auth
-            assert isinstance(client.opportunity, type(client.opportunity))
+            assert isinstance(client.opportunities, type(client.opportunities))
 
     def test_client_initialization_defaults_auth(self, monkeypatch):
         """Test client initialization with default auth from config."""
@@ -107,9 +107,9 @@ class TestClient:
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
             client = Client(config=config)
-            assert hasattr(client, "opportunity")
-            assert hasattr(client.opportunity, "get")
-            assert hasattr(client.opportunity, "list")
+            assert hasattr(client, "opportunities")
+            assert hasattr(client.opportunities, "get")
+            assert hasattr(client.opportunities, "list")
 
     def test_client_context_manager(self):
         """Test client as context manager."""

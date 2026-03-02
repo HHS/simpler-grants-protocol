@@ -13,11 +13,13 @@ from common_grants_sdk.client import Client, Auth
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
+from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.schemas.pydantic.responses import (
     OpportunitiesListResponse,
     OpportunitiesSearchResponse,
 )
 from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
+from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 
 @pytest.fixture
@@ -31,6 +33,9 @@ def sample_opportunity_data():
         "status": {"value": "open", "description": "Open"},
         "createdAt": datetime.now(UTC).isoformat(),
         "lastModifiedAt": datetime.now(UTC).isoformat(),
+        "customFields": {
+            "legacyId": {"name": "legacyId", "fieldType": "integer", "value": 12345}
+        },
     }
 
 
@@ -99,7 +104,7 @@ def client(mock_httpx_client):
     client = Client(config=config, auth=auth)
     client.http = mock_httpx_client
     # Update opportunity's http reference
-    client.opportunity.http = mock_httpx_client
+    client.opportunities.http = mock_httpx_client
     return client
 
 
@@ -121,7 +126,7 @@ class TestOpportunityGet:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        opp = client.opportunity.get(opp_id)
+        opp = client.opportunities.get(opp_id)
         assert isinstance(opp, OpportunityBase)
         assert str(opp.id) == str(opp_id)
 
@@ -148,9 +153,17 @@ class TestOpportunityGet:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        opp = client.opportunity.get(opp_id_str)
-        assert isinstance(opp, OpportunityBase)
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+        }
+
+        opp_base = OpportunityBase.with_custom_fields(
+            custom_fields=fields, model_name="Opportuntiy"
+        )
+        opp = client.opportunities.get(opp_id_str, schema=opp_base)
+        assert isinstance(opp, opp_base)
         assert str(opp.id) == opp_id_str
+        assert opp.custom_fields.legacy_id.value == 12345
 
     def test_get_opportunity_404(self, client, mock_httpx_client):
         """Test getting an opportunity that doesn't exist."""
@@ -168,7 +181,7 @@ class TestOpportunityGet:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.get(opp_id)
+            client.opportunities.get(opp_id)
         assert exc_info.value.error.status == 404
 
     def test_get_opportunity_401(self, client, mock_httpx_client):
@@ -187,7 +200,7 @@ class TestOpportunityGet:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.get(opp_id)
+            client.opportunities.get(opp_id)
         assert exc_info.value.error.status == 401
 
     def test_get_opportunity_500(self, client, mock_httpx_client):
@@ -206,7 +219,7 @@ class TestOpportunityGet:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.get(opp_id)
+            client.opportunities.get(opp_id)
         assert exc_info.value.error.status == 500
 
     def test_get_opportunity_invalid_response(self, client, mock_httpx_client):
@@ -222,7 +235,7 @@ class TestOpportunityGet:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(ValidationError):
-            client.opportunity.get(opp_id)
+            client.opportunities.get(opp_id)
 
     def test_get_opportunity_request_error(self, client, mock_httpx_client):
         """Test getting an opportunity with request error."""
@@ -230,7 +243,7 @@ class TestOpportunityGet:
         mock_httpx_client.get = Mock(side_effect=httpx.RequestError("Connection error"))
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.get(opp_id)
+            client.opportunities.get(opp_id)
         assert exc_info.value.error.status == 0
         assert "Connection error" in exc_info.value.error.message
 
@@ -249,13 +262,23 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response = client.opportunity.list(page=1)
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+        }
+
+        opp_base = OpportunityBase.with_custom_fields(
+            custom_fields=fields, model_name="Opportuntiy"
+        )
+
+        response = client.opportunities.list(page=1, schema=opp_base)
+
         assert isinstance(response, OpportunitiesListResponse)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         assert response.pagination_info.page == 1
         assert response.pagination_info.total_items == 2
         assert response.pagination_info.total_pages == 1
+        assert response.items[0].get_custom_field_value("legacy_id", int) == 12345
 
         # Verify request was made correctly
         expected_url = "https://api.example.com/common-grants/opportunities"
@@ -279,7 +302,7 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response = client.opportunity.list(page=2)
+        response = client.opportunities.list(page=2)
         assert response.pagination_info.page == 2
 
         call_args = mock_httpx_client.get.call_args
@@ -295,7 +318,7 @@ class TestOpportunityList:
         )
         client = Client(config=config, auth=auth)
         client.http = mock_httpx_client
-        client.opportunity.http = mock_httpx_client
+        client.opportunities.http = mock_httpx_client
 
         sample_response = {
             "status": 200,
@@ -316,7 +339,7 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        client.opportunity.list(page=1)
+        client.opportunities.list(page=1)
         call_args = mock_httpx_client.get.call_args
         assert call_args[1]["params"]["pageSize"] == 50
 
@@ -332,7 +355,7 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        client.opportunity.list(page=1, page_size=25)
+        client.opportunities.list(page=1, page_size=25)
         call_args = mock_httpx_client.get.call_args
         assert call_args[1]["params"]["pageSize"] == 25
 
@@ -347,7 +370,7 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        client.opportunity.list(page=1, page_size=None)
+        client.opportunities.list(page=1, page_size=None)
         call_args = mock_httpx_client.get.call_args
         assert call_args[1]["params"]["pageSize"] == 100  # config default
 
@@ -362,7 +385,7 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        client.opportunity.list(page=1, page_size=0)
+        client.opportunities.list(page=1, page_size=0)
         call_args = mock_httpx_client.get.call_args
         assert (
             call_args[1]["params"]["pageSize"] == 100
@@ -379,7 +402,7 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        client.opportunity.list(page=1, page_size=-1)
+        client.opportunities.list(page=1, page_size=-1)
         call_args = mock_httpx_client.get.call_args
         assert (
             call_args[1]["params"]["pageSize"] == 100
@@ -400,7 +423,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.list(page=1)
+            client.opportunities.list(page=1)
         assert exc_info.value.error.status == 404
 
     def test_list_opportunities_401(self, client, mock_httpx_client):
@@ -418,7 +441,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.list(page=1)
+            client.opportunities.list(page=1)
         assert exc_info.value.error.status == 401
 
     def test_list_opportunities_validation_error(self, client, mock_httpx_client):
@@ -433,14 +456,14 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(ValidationError):
-            client.opportunity.list(page=1)
+            client.opportunities.list(page=1)
 
     def test_list_opportunities_request_error(self, client, mock_httpx_client):
         """Test listing opportunities with request error."""
         mock_httpx_client.get = Mock(side_effect=httpx.RequestError("Connection error"))
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.list(page=1)
+            client.opportunities.list(page=1)
         assert exc_info.value.error.status == 0
         assert "Connection error" in exc_info.value.error.message
 
@@ -455,7 +478,7 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response = client.opportunity.list(page=None)
+        response = client.opportunities.list(page=None)
         assert isinstance(response, OpportunitiesListResponse)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
@@ -532,7 +555,7 @@ class TestOpportunityList:
 
         mock_httpx_client.get = Mock(side_effect=mock_get)
 
-        response = client.opportunity.list(page=None)
+        response = client.opportunities.list(page=None)
         assert isinstance(response, OpportunitiesListResponse)
         # Should have all 5 items from all 3 pages
         assert len(response.items) == 5
@@ -594,7 +617,7 @@ class TestOpportunityList:
 
         mock_httpx_client.get = Mock(side_effect=mock_get)
 
-        response = client.opportunity.list(page=None, page_size=3)
+        response = client.opportunities.list(page=None, page_size=3)
         assert isinstance(response, OpportunitiesListResponse)
         assert len(response.items) == 4
         assert response.pagination_info.page_size == 4
@@ -625,7 +648,7 @@ class TestOpportunityList:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.get = Mock(return_value=mock_response)
 
-        response = client.opportunity.list(page=None)
+        response = client.opportunities.list(page=None)
         assert isinstance(response, OpportunitiesListResponse)
         assert len(response.items) == 0
         assert response.pagination_info.total_items == 0
@@ -648,7 +671,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.list(page=None)
+            client.opportunities.list(page=None)
         assert exc_info.value.error.status == 500
 
     def test_list_all_opportunities_error_on_subsequent_page(
@@ -692,7 +715,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(side_effect=mock_get)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.list(page=None)
+            client.opportunities.list(page=None)
         assert exc_info.value.error.status == 500
 
 
@@ -709,14 +732,22 @@ class TestOpportunitySearch:
         mock_response.json = Mock(return_value=sample_search_response)
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+        }
 
-        response = client.opportunity.search(
-            search="local", status=[OppStatusOptions.OPEN]
+        opp_base = OpportunityBase.with_custom_fields(
+            custom_fields=fields, model_name="Opportuntiy"
+        )
+
+        response = client.opportunities.search(
+            search="local", status=[OppStatusOptions.OPEN], schema=opp_base
         )
 
         assert isinstance(response, OpportunitiesSearchResponse)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
+        assert response.items[0].get_custom_field_value("legacy_id", int) == 12345
 
         expected_url = "https://api.example.com/common-grants/opportunities/search"
         mock_httpx_client.post.assert_called_once()
@@ -739,7 +770,7 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        response = client.opportunity.search(
+        response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=2
         )
         assert response.pagination_info.page == 2
@@ -754,7 +785,7 @@ class TestOpportunitySearch:
         )
         client = Client(config=config, auth=auth)
         client.http = mock_httpx_client
-        client.opportunity.http = mock_httpx_client
+        client.opportunities.http = mock_httpx_client
 
         sample_response = {
             "status": 200,
@@ -782,7 +813,7 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(
+        client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=1
         )
         call_args = mock_httpx_client.post.call_args
@@ -800,7 +831,7 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(
+        client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=1, page_size=25
         )
         call_args = mock_httpx_client.post.call_args
@@ -817,7 +848,7 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(
+        client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=1, page_size=None
         )
         call_args = mock_httpx_client.post.call_args
@@ -834,7 +865,7 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(
+        client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=1, page_size=0
         )
         call_args = mock_httpx_client.post.call_args
@@ -853,7 +884,7 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        client.opportunity.search(
+        client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=1, page_size=-1
         )
         call_args = mock_httpx_client.post.call_args
@@ -876,7 +907,7 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.search(
+            client.opportunities.search(
                 search="local", status=[OppStatusOptions.OPEN], page=1
             )
         assert exc_info.value.error.status == 404
@@ -896,7 +927,7 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(return_value=mock_response)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.search(
+            client.opportunities.search(
                 search="local", status=[OppStatusOptions.OPEN], page=1
             )
         assert exc_info.value.error.status == 401
@@ -913,7 +944,7 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(return_value=mock_response)
 
         with pytest.raises(ValidationError):
-            client.opportunity.search(
+            client.opportunities.search(
                 search="local", status=[OppStatusOptions.OPEN], page=1
             )
 
@@ -924,7 +955,7 @@ class TestOpportunitySearch:
         )
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.search(
+            client.opportunities.search(
                 search="local", status=[OppStatusOptions.OPEN], page=1
             )
         assert exc_info.value.error.status == 0
@@ -941,7 +972,7 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        response = client.opportunity.search(
+        response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=None
         )
         assert isinstance(response, OpportunitiesSearchResponse)
@@ -1041,7 +1072,7 @@ class TestOpportunitySearch:
 
         mock_httpx_client.post = Mock(side_effect=mock_post)
 
-        response = client.opportunity.search(
+        response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=None
         )
         assert isinstance(response, OpportunitiesSearchResponse)
@@ -1089,7 +1120,7 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        response = client.opportunity.search(
+        response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=None
         )
         assert isinstance(response, OpportunitiesSearchResponse)
@@ -1138,7 +1169,7 @@ class TestOpportunitySearch:
         mock_httpx_client.post = Mock(side_effect=mock_post)
 
         with pytest.raises(APIError) as exc_info:
-            client.opportunity.search(
+            client.opportunities.search(
                 search="local", status=[OppStatusOptions.OPEN], page=None
             )
         assert exc_info.value.error.status == 500

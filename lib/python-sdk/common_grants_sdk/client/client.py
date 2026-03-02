@@ -8,7 +8,7 @@ from .auth import Auth
 from .config import Config
 from .response import SuccessResponse
 from .exceptions import raise_api_error
-from .opportunity import Opportunity
+from .opportunities import Opportunities
 from .pagination import pagination
 from .types import ItemsT
 from ..schemas.pydantic.responses import Paginated
@@ -32,7 +32,7 @@ class Client:
         self.config = config or Config()
         self.auth = auth or Auth.api_key(self.config.api_key)
         self.http = httpx.Client(timeout=self.config.timeout)
-        self.opportunity = Opportunity(client=self)
+        self.opportunities = Opportunities(client=self)
 
     def post(self, path: str, **kwargs) -> httpx.Response:
         """Simple wrapper around self.http.post.
@@ -179,7 +179,7 @@ class Client:
 
         try:
             api_response = self.post(
-                path, data=request_data, params={"page": page, "pageSize": page_size}
+                path, json=request_data, params={"page": page, "pageSize": page_size}
             )
             api_response.raise_for_status()
             result_dict = Paginated[dict].model_validate(api_response.json())

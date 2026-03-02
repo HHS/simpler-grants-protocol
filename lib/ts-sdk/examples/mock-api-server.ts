@@ -166,7 +166,7 @@ const server = createServer((req, res) => {
         items,
         paginationInfo: {
           page: 1,
-          pageSize: items.length,
+          pageSize: items.length > 0 ? items.length : 1,
           totalItems: items.length,
           totalPages: 1,
         },

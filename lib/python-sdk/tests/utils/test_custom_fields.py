@@ -140,26 +140,17 @@ class TestWithCustomFieldValue:
     def test_input_validates(input_data):
         """Test that the custom fields convert and get added to pydantic model"""
 
-        int_field = CustomFieldSpec(
-            key="legacyId", field_type=CustomFieldType.INTEGER, value=int
-        )
-        str_field = CustomFieldSpec(
-            key="groupName", field_type=CustomFieldType.STRING, value=str
-        )
-
-        obj_field = CustomFieldSpec(
-            key="testDict", field_type=CustomFieldType.OBJECT, value=object
-        )
-
-        list_field = CustomFieldSpec(
-            key="testList", field_type=CustomFieldType.ARRAY, value=list
-        )
-
-        list_str_field = CustomFieldSpec(
-            key="testListOfString", field_type=CustomFieldType.ARRAY, value=list[str]
-        )
-
-        fields = [int_field, str_field, obj_field, list_field, list_str_field]
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+            "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
+            "testDict": CustomFieldSpec(
+                field_type=CustomFieldType.OBJECT, value=object
+            ),
+            "testList": CustomFieldSpec(field_type=CustomFieldType.ARRAY, value=list),
+            "testListOfString": CustomFieldSpec(
+                field_type=CustomFieldType.ARRAY, value=list[str]
+            ),
+        }
 
         Opportunity = OpportunityBase.with_custom_fields(
             custom_fields=fields, model_name="Opportunity"
@@ -176,14 +167,10 @@ class TestWithCustomFieldValue:
     def test_input_with_none_value(self):
         """Test that the custom fields convert and get added to pydantic mode with None value"""
 
-        field = CustomFieldSpec(
-            key="legacyId", field_type=CustomFieldType.INTEGER, value=int
-        )
-        field2 = CustomFieldSpec(
-            key="groupName", field_type=CustomFieldType.STRING, value=str
-        )
-
-        fields = [field, field2]
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+            "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
+        }
 
         Opportunity = OpportunityBase.with_custom_fields(
             custom_fields=fields, model_name="Opportunity"
@@ -197,16 +184,13 @@ class TestWithCustomFieldValue:
     def test_custom_fields_with_object(self):
         """Test that the model validates with an object type field with Pydantic object as a custom field value"""
 
-        field = CustomFieldSpec(
-            key="legacyId", field_type=CustomFieldType.INTEGER, value=int
-        )
-        field2 = CustomFieldSpec(
-            key="groupName", field_type=CustomFieldType.STRING, value=str
-        )
-        field3 = CustomFieldSpec(
-            key="metadata", field_type=CustomFieldType.OBJECT, value=SystemMetadata
-        )
-        fields = [field, field2, field3]
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+            "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
+            "metadata": CustomFieldSpec(
+                field_type=CustomFieldType.OBJECT, value=SystemMetadata
+            ),
+        }
 
         Opportunity = OpportunityBase.with_custom_fields(
             custom_fields=fields, model_name="Opportunity"
@@ -222,14 +206,11 @@ class TestWithCustomFieldValue:
 
     def test_custom_fields_with_array(self):
         """Test that the model validates with an array field"""
-        field = CustomFieldSpec(
-            key="legacyId", field_type=CustomFieldType.INTEGER, value=int
-        )
-        field2 = CustomFieldSpec(
-            key="metadata", field_type=CustomFieldType.ARRAY, value=list
-        )
 
-        fields = [field, field2]
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+            "metadata": CustomFieldSpec(field_type=CustomFieldType.ARRAY, value=list),
+        }
 
         Opportunity = OpportunityBase.with_custom_fields(
             custom_fields=fields, model_name="Opportunity"
@@ -249,13 +230,12 @@ class TestWithCustomFieldValue:
             other_ids: list[int] = Field(alias="otherIds")
             created_at: datetime = Field(alias="createdAt")
 
-        field = CustomFieldSpec(
-            key="complexInputData",
-            field_type=CustomFieldType.OBJECT,
-            value=ComplexSchema,
-        )
-
-        fields = [field]
+        fields = {
+            "complexInputData": CustomFieldSpec(
+                field_type=CustomFieldType.OBJECT,
+                value=ComplexSchema,
+            ),
+        }
 
         Opportunity = OpportunityBase.with_custom_fields(
             custom_fields=fields, model_name="Opportunity"
@@ -360,11 +340,9 @@ class TestGetCustomFieldValue:
     def test_get_registered_custom_fields_with_primitive(self):
         """ "Test that get_custom_field_values can retrieve fields that were registered via get_custom_fields"""
 
-        int_field = CustomFieldSpec(
-            key="legacyId", field_type=CustomFieldType.INTEGER, value=int
-        )
-
-        fields = [int_field]
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+        }
 
         Opportunity = OpportunityBase.with_custom_fields(
             custom_fields=fields, model_name="Opportunity"
@@ -383,13 +361,12 @@ class TestGetCustomFieldValue:
             system: str
             id: int
 
-        fields = [
-            CustomFieldSpec(
-                key="legacyId",
+        fields = {
+            "legacyId": CustomFieldSpec(
                 field_type=CustomFieldType.OBJECT,
                 value=LegacyIdValue,
-            )
-        ]
+            ),
+        }
 
         Opportunity = OpportunityBase.with_custom_fields(
             custom_fields=fields,
@@ -415,13 +392,12 @@ class TestGetCustomFieldValue:
             foo: str
             bar: str
 
-        fields = [
-            CustomFieldSpec(
-                key="legacyId",
+        fields = {
+            "legacyId": CustomFieldSpec(
                 field_type=CustomFieldType.OBJECT,
                 value=LegacyIdValue,
-            )
-        ]
+            ),
+        }
 
         Opportunity = OpportunityBase.with_custom_fields(
             custom_fields=fields,
