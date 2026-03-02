@@ -8,7 +8,7 @@ from .auth import Auth
 from .config import Config
 from .response import SuccessResponse
 from .exceptions import raise_api_error
-from .opportunity import Opportunity
+from .opportunities import Opportunities
 from .pagination import pagination
 from .types import ItemsT
 from ..schemas.pydantic.responses import Paginated
@@ -32,7 +32,7 @@ class Client:
         self.config = config or Config()
         self.auth = auth or Auth.api_key(self.config.api_key)
         self.http = httpx.Client(timeout=self.config.timeout)
-        self.opportunity = Opportunity(client=self)
+        self.opportunities = Opportunities(client=self)
 
     def post(self, path: str, **kwargs) -> httpx.Response:
         """Simple wrapper around self.http.post.
