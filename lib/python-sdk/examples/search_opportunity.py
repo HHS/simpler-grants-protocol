@@ -34,7 +34,7 @@ fields = {
 opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
 
 
-response = client.opportunity.search(
+response = client.opportunities.search(
     search=search, status=[OppStatusOptions.OPEN], page=1, schema=opp
 )
 

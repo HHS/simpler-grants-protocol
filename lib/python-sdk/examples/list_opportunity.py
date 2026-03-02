@@ -31,7 +31,7 @@ fields = {
 opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
 
 
-response = client.opportunity.list(page=1, schema=opp)
+response = client.opportunities.list(page=1, schema=opp)
 
 print(f"Found {len(response.items)} opportunities:")
 for item in response.items:

@@ -58,7 +58,7 @@ poetry run python examples/list_opportunity.py
 
 ```
 
-** Output Example: **
+**Output Example:**
 ```
 Found 3 opportunities:
   - 573525f2-8e15-4405-83fb-e6523511d893: STEM Education Grant Program, custom field value: 12345, custom field description: Legacy system opportunity ID
@@ -71,7 +71,7 @@ poetry run python examples/get_opportunity.py <opportunityId>
 
 ```
 
-** Output Example: ** 
+**Output Example:** 
 ```
 Opportunity 573525f2-8e15-4405-83fb-e6523511d893:
   Title: STEM Education Grant Program
@@ -84,7 +84,7 @@ poetry run python examples/search_opportunity.py <searchTerm>
 
 ```
 
-** Output Example: ** 
+**Output Example:** 
 ```
 Found 2 opportunities:
  - 573525f2-8e15-4405-83fb-e6523511d893: STEM Education Grant Program custom field value: 12345, custom field description: Legacy system opportunity ID
@@ -97,7 +97,7 @@ Found 2 opportunities:
 poetry run python examples/custom_fields.py
 ```
 
-** Output Example: **
+**Output Example:**
 ```
 12345
 TEST_GROUP
@@ -109,7 +109,7 @@ TEST_GROUP
 poetry run python examples/get_custom_fields.py
 ```
 
-** Output Example: **
+**Output Example:**
 
 ```
 name='legacyId' field_type=<CustomFieldType.OBJECT: 'object'> schema_url=None value={'system': 'legacy', 'id': 123} description=None

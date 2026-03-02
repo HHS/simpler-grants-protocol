@@ -36,7 +36,7 @@ fields = {
 opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
 
 
-opportunity = client.opportunity.get(opp_id, schema=opp)
+opportunity = client.opportunities.get(opp_id, schema=opp)
 
 print(f"Opportunity {opp_id}:")
 print(f"  Title: {opportunity.title}")

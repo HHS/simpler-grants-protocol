@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from .client import Client
 
 
-class Opportunity:
+class Opportunities:
     """Class for fetching opportunity data from CommonGrants API."""
 
     def __init__(self, client: "Client"):
