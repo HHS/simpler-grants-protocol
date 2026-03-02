@@ -23,9 +23,9 @@
   "disclaimerURL": "",
   "disclaimerText": "",
   "vcs": "git",
-  "laborHours": 13411,
+  "laborHours": 13809,
   "reuseFrequency": {
-    "forks": 6,
+    "forks": 8,
     "clones": 0
   },
   "platforms": [],
@@ -40,8 +40,8 @@
     "JavaScript",
     "CSS",
     "Shell",
-    "Roff",
-    "Makefile"
+    "Makefile",
+    "Roff"
   ],
   "maintenance": "contract",
   "contractNumber": [],
@@ -51,8 +51,8 @@
   "partners": [],
   "date": {
     "created": "2024-12-19T21:14:35Z",
-    "lastModified": "2026-01-27T15:00:45Z",
-    "metadataLastUpdated": "2026-02-01T00:03:36.854Z"
+    "lastModified": "2026-02-24T15:32:14Z",
+    "metadataLastUpdated": "2026-03-01T00:03:50.345Z"
   },
   "tags": [
     "api",
