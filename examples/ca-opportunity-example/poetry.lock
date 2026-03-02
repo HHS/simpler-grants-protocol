@@ -136,19 +136,22 @@ files = [
 
 [[package]]
 name = "common-grants-sdk"
-version = "0.3.2"
+version = "0.5.0"
 description = "Python SDK for the CommonGrants protocol"
 optional = false
-python-versions = "<4.0,>=3.11"
+python-versions = "^3.11"
 groups = ["main"]
-files = [
-    {file = "common_grants_sdk-0.3.2-py3-none-any.whl", hash = "sha256:b8d59367221e0f6b8a401420b1ae06ce24549b9c94db3e9d3faaa13951858515"},
-    {file = "common_grants_sdk-0.3.2.tar.gz", hash = "sha256:0ea62465985ac274fd4dbce991c98d6375a665c09515664499532abb07540e5e"},
-]
+files = []
+develop = true
 
 [package.dependencies]
-marshmallow = ">=3.20.0,<4.0.0"
-pydantic = ">=2.11.0,<3.0.0"
+httpx = "^0.27.0"
+marshmallow = "^3.20.0"
+pydantic = "^2.11.0"
+
+[package.source]
+type = "directory"
+url = "../../lib/python-sdk"
 
 [[package]]
 name = "coverage"
@@ -622,14 +625,14 @@ files = [
 
 [[package]]
 name = "httpx"
-version = "0.28.1"
+version = "0.27.2"
 description = "The next generation HTTP client."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad"},
-    {file = "httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc"},
+    {file = "httpx-0.27.2-py3-none-any.whl", hash = "sha256:7bb2708e112d8fdd7829cd4243970f0c223274051cb35ee80c03301ee29a3df0"},
+    {file = "httpx-0.27.2.tar.gz", hash = "sha256:f7c2be1d2f3c3c3160d441802406b206c2b76f5947b11115e6df10c6c65e66c2"},
 ]
 
 [package.dependencies]
@@ -637,6 +640,7 @@ anyio = "*"
 certifi = "*"
 httpcore = "==1.*"
 idna = "*"
+sniffio = "*"
 
 [package.extras]
 brotli = ["brotli ; platform_python_implementation == \"CPython\"", "brotlicffi ; platform_python_implementation != \"CPython\""]
@@ -1804,6 +1808,18 @@ files = [
 ]
 
 [[package]]
+name = "sniffio"
+version = "1.3.1"
+description = "Sniff out which async library your code is running under"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
+    {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
+]
+
+[[package]]
 name = "starlette"
 version = "0.50.0"
 description = "The little ASGI library that shines."
@@ -2172,4 +2188,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "6dd0eab2eb08e1e8d167caffb5f2dda77aa5e7b80aae2035669c08aecb695774"
+content-hash = "626cbbf75069c9ed8565a06e181b76ab453b2d22d47b79d6babc883a16907ec2"
