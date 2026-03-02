@@ -25,13 +25,19 @@ const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
 } as const);
 
 const client = new Client({
-  baseUrl: "http://localhost:8080",
+  baseUrl: "http://localhost:8000",
   auth: Auth.apiKey("your-api-key"),
 });
 
-const opps = await client.opportunities.list({ schema: OpportunitySchema });
+async function main() {
+  const opportunities = await client.opportunities.list({ schema: OpportunitySchema });
 
-for (const opp of opps.items) {
-  console.log(opp.customFields.legacyId); // typed access
+  for (const opportunity of opportunities.items) {
+    console.log(`${opportunity.id}: ${opportunity.title}`);
+    console.log(`  Status: ${opportunity.status.value}`);
+    console.log(`  Legacy ID: ${opportunity.customFields?.legacyId?.value}`); // typed access
+  }
 }
+
+main().catch(console.error);
 ```
