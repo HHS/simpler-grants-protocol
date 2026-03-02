@@ -6,8 +6,6 @@ from common_grants_sdk.schemas.pydantic import (
     ArrayOperator,
     FilterInfo,
     OppFilters,
-    OpportunitiesListResponse,
-    OpportunitiesSearchResponse,
     OpportunityBase,
     OppSortBy,
     OppSorting,
@@ -17,6 +15,10 @@ from common_grants_sdk.schemas.pydantic import (
 )
 from fastapi import status
 
+from common_grants.schemas import (
+    CAOpportunitiesListResponse,
+    CAOpportunitiesSearchResponse,
+)
 from common_grants.services.utils import build_applied_filters
 from common_grants.utils.opp_data_source import OpportunityDataSource
 from common_grants.utils.opp_transform import OpportunityTransformer
@@ -37,11 +39,8 @@ class OpportunityService:
         # Get normalized data from source
         normalized_data = OpportunityDataSource.get_opportunities()
 
-        # Transform normalized data into CommonGrants format
-        transformed = OpportunityTransformer().transform_opportunities(normalized_data)
-
-        # Build result set
-        return [OpportunityBase.model_validate(opp_data) for opp_data in transformed]
+        # Transform normalized data into CommonGrants format (CAOpportunity instances)
+        return OpportunityTransformer().transform_opportunities(normalized_data)
 
     async def get_opportunity(self, opportunity_id: str) -> OpportunityBase | None:
         """Get a specific opportunity by ID."""
@@ -55,7 +54,7 @@ class OpportunityService:
         self,
         page: int = 1,
         page_size: int = 10,
-    ) -> OpportunitiesListResponse:
+    ) -> CAOpportunitiesListResponse:
         """Get a paginated list of opportunities."""
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
@@ -68,7 +67,7 @@ class OpportunityService:
             totalPages=(len(self.opportunity_list) + page_size - 1) // page_size,
         )
 
-        return OpportunitiesListResponse(
+        return CAOpportunitiesListResponse(
             status=status.HTTP_200_OK,
             message="Opportunities fetched successfully",
             items=items,
@@ -81,7 +80,7 @@ class OpportunityService:
         sorting: OppSorting | None = None,
         pagination: PaginatedBodyParams | None = None,
         search: str | None = None,
-    ) -> OpportunitiesSearchResponse:
+    ) -> CAOpportunitiesSearchResponse:
         """Search for opportunities based on the provided filters."""
         # Use default values if not provided
         if filters is None:
@@ -145,7 +144,7 @@ class OpportunityService:
             errors=[],
         )
 
-        return OpportunitiesSearchResponse(
+        return CAOpportunitiesSearchResponse(
             status=status.HTTP_200_OK,
             message="Opportunities fetched successfully",
             items=items,

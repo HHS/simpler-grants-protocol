@@ -62,8 +62,8 @@ class TestOpportunityTransformer:
 
         assert isinstance(result, list)
         assert len(result) == 1
-        assert result[0]["title"] == "Test Grant Opportunity"
-        assert result[0]["description"] == "A test grant for educational purposes"
+        assert result[0].title == "Test Grant Opportunity"
+        assert result[0].description == "A test grant for educational purposes"
 
     def test_transform_opportunities_empty_list(
         self,
@@ -93,14 +93,14 @@ class TestOpportunityTransformer:
         """Test transformation of basic opportunity fields."""
         result = transformer.transform_opportunity(sample_source_data)
 
-        assert result["title"] == "Test Grant Opportunity"
-        assert result["description"] == "A test grant for educational purposes"
-        assert result["status"]["value"] == OppStatusOptions.OPEN
+        assert result.title == "Test Grant Opportunity"
+        assert result.description == "A test grant for educational purposes"
+        assert result.status.value == OppStatusOptions.OPEN
         assert (
-            result["status"]["description"]
+            result.status.description
             == "Opportunity is actively accepting applications"
         )
-        assert result["source"] == "https://example.com/grant"
+        assert str(result.source) == "https://example.com/grant"
 
     def test_transform_opportunity_funding(
         self,
@@ -110,14 +110,14 @@ class TestOpportunityTransformer:
         """Test transformation of funding information."""
         result = transformer.transform_opportunity(sample_source_data)
 
-        assert "funding" in result
-        funding = result["funding"]
-        assert funding["totalAmountAvailable"]["amount"] == "1000000"
-        assert funding["totalAmountAvailable"]["currency"] == "USD"
-        assert funding["minAwardAmount"]["amount"] == "50000"
-        assert funding["minAwardAmount"]["currency"] == "USD"
-        assert funding["maxAwardAmount"]["amount"] == "50000"
-        assert funding["maxAwardAmount"]["currency"] == "USD"
+        assert result.funding is not None
+        funding = result.funding
+        assert funding.total_amount_available.amount == "1000000"
+        assert funding.total_amount_available.currency == "USD"
+        assert funding.min_award_amount.amount == "50000"
+        assert funding.min_award_amount.currency == "USD"
+        assert funding.max_award_amount.amount == "50000"
+        assert funding.max_award_amount.currency == "USD"
 
     def test_transform_opportunity_key_dates(
         self,
@@ -127,60 +127,59 @@ class TestOpportunityTransformer:
         """Test transformation of key dates."""
         result = transformer.transform_opportunity(sample_source_data)
 
-        assert "keyDates" in result
-        key_dates = result["keyDates"]
+        assert result.key_dates is not None
+        key_dates = result.key_dates
 
-        assert key_dates["appOpens"]["name"] == "Application Opens"
-        assert key_dates["appOpens"]["date"] == date(2024, 1, 15)
+        assert key_dates.post_date is not None
+        assert key_dates.post_date.name == "Application Opens"
+        assert key_dates.post_date.date == date(2024, 1, 15)
         assert (
-            key_dates["appOpens"]["description"]
+            key_dates.post_date.description
             == "Applications accepted beginning this date"
         )
 
-        assert key_dates["appDeadline"]["name"] == "Application Deadline"
-        assert key_dates["appDeadline"]["date"] == date(2024, 3, 15)
+        assert key_dates.close_date is not None
+        assert key_dates.close_date.name == "Application Deadline"
+        assert key_dates.close_date.date == date(2024, 3, 15)
         assert (
-            key_dates["appDeadline"]["description"]
-            == "Final deadline for all submissions"
+            key_dates.close_date.description == "Final deadline for all submissions"
         )
 
-        assert "otherDates" in key_dates
-        assert "expAwardDate" in key_dates["otherDates"]
-        assert key_dates["otherDates"]["expAwardDate"]["name"] == "Expected Award Date"
-        assert key_dates["otherDates"]["expAwardDate"]["date"] == date(2024, 6, 30)
+        assert key_dates.other_dates is not None
+        assert "expAwardDate" in key_dates.other_dates
+        exp_award = key_dates.other_dates["expAwardDate"]
+        assert exp_award.name == "Expected Award Date"
+        assert exp_award.date == date(2024, 6, 30)
 
     def test_transform_opportunity_custom_fields(
         self,
         transformer: OpportunityTransformer,
         sample_source_data: dict[str, Any],
     ) -> None:
-        """Test transformation of custom fields."""
+        """Test transformation of custom fields (serialized via SDK with_custom_fields)."""
         result = transformer.transform_opportunity(sample_source_data)
 
-        assert "customFields" in result
-        custom_fields = result["customFields"]
+        assert result.custom_fields is not None
+        cf = result.custom_fields
 
-        assert custom_fields["portalID"]["name"] == "Portal ID"
-        assert custom_fields["portalID"]["fieldType"] == CustomFieldType.STRING
-        assert custom_fields["portalID"]["value"] == "PORTAL123"
-        assert custom_fields["portalID"]["description"] == "CA Portal ID"
+        assert cf.portal_id.name == "Portal ID"
+        assert cf.portal_id.field_type == CustomFieldType.STRING
+        assert cf.portal_id.value == "PORTAL123"
+        assert cf.portal_id.description == "CA Portal ID"
 
-        assert custom_fields["agencyDept"]["name"] == "Agency Department"
-        assert custom_fields["agencyDept"]["fieldType"] == CustomFieldType.STRING
-        assert custom_fields["agencyDept"]["value"] == "Education Department"
+        assert cf.agency_dept.name == "Agency Department"
+        assert cf.agency_dept.field_type == CustomFieldType.STRING
+        assert cf.agency_dept.value == "Education Department"
 
-        assert custom_fields["categories"]["name"] == "Categories"
-        assert custom_fields["categories"]["value"] == "Education, Technology"
+        assert cf.categories.name == "Categories"
+        assert cf.categories.value == "Education, Technology"
 
-        assert custom_fields["categorySuggestion"]["value"] == "STEM Education"
-        assert custom_fields["purpose"]["value"] == "Support STEM education initiatives"
-        assert custom_fields["agencyURL"]["value"] == "https://education.gov"
-        assert custom_fields["applicantType"]["value"] == "Non-profit organizations"
-        assert (
-            custom_fields["applicantTypeNotes"]["value"]
-            == "Must be registered 501(c)(3)"
-        )
-        assert custom_fields["geography"]["value"] == "California"
+        assert cf.category_suggestion.value == "STEM Education"
+        assert cf.purpose.value == "Support STEM education initiatives"
+        assert cf.agency_url.value == "https://education.gov"
+        assert cf.applicant_type.value == "Non-profit organizations"
+        assert cf.applicant_type_notes.value == "Must be registered 501(c)(3)"
+        assert cf.geography.value == "California"
 
     def test_transform_opportunity_missing_fields(
         self,
@@ -195,10 +194,10 @@ class TestOpportunityTransformer:
 
         result = transformer.transform_opportunity(minimal_data)
 
-        assert result["title"] == "Minimal Grant"
-        assert result["description"] is None
-        assert result["status"]["value"] == OppStatusOptions.OPEN
-        assert result["source"] is None
+        assert result.title == "Minimal Grant"
+        assert result.description == ""
+        assert result.status.value == OppStatusOptions.OPEN
+        assert result.source is None
 
     def test_transform_opportunity_different_statuses(
         self,
@@ -219,7 +218,7 @@ class TestOpportunityTransformer:
                 "PortalID": f"TEST-{status_value.upper()}",
             }
             result = transformer.transform_opportunity(data)
-            assert result["status"]["value"] == expected_status
+            assert result.status.value == expected_status
 
     def test_transform_money_strip_non_digits(
         self,
@@ -267,8 +266,8 @@ class TestOpportunityTransformer:
         result1 = transformer.transform_opportunity(sample_source_data)
         result2 = transformer.transform_opportunity(sample_source_data)
 
-        assert result1["id"] == result2["id"]
-        assert isinstance(result1["id"], uuid.UUID)
+        assert result1.id == result2.id
+        assert isinstance(result1.id, uuid.UUID)
 
     def test_transform_opportunity_timestamps(
         self,
@@ -278,10 +277,10 @@ class TestOpportunityTransformer:
         """Test transformation of timestamps."""
         result = transformer.transform_opportunity(sample_source_data)
 
-        assert "createdAt" in result
-        assert "lastModifiedAt" in result
-        assert isinstance(result["createdAt"], datetime)
-        assert isinstance(result["lastModifiedAt"], datetime)
+        assert result.created_at is not None
+        assert result.last_modified_at is not None
+        assert isinstance(result.created_at, datetime)
+        assert isinstance(result.last_modified_at, datetime)
 
     def test_transform_opportunity_with_tbd_dates(
         self,
@@ -299,10 +298,11 @@ class TestOpportunityTransformer:
 
         result = transformer.transform_opportunity(data_with_tbd)
 
-        assert result["keyDates"]["appOpens"]["date"] == date(2099, 12, 31)
-        assert result["keyDates"]["appDeadline"]["date"] == date(2099, 12, 31)
-        assert result["keyDates"]["otherDates"]["expAwardDate"]["date"] == date(
-            2099,
-            12,
-            31,
-        )
+        assert result.key_dates is not None
+        assert result.key_dates.post_date is not None
+        assert result.key_dates.post_date.date == date(2099, 12, 31)
+        assert result.key_dates.close_date is not None
+        assert result.key_dates.close_date.date == date(2099, 12, 31)
+        assert result.key_dates.other_dates is not None
+        exp_award = result.key_dates.other_dates["expAwardDate"]
+        assert exp_award.date == date(2099, 12, 31)

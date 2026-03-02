@@ -2,15 +2,14 @@
 
 from uuid import UUID
 
-from common_grants_sdk.schemas.pydantic import (
-    Error,
-    OpportunitiesListResponse,
-    OpportunitiesSearchResponse,
-    OpportunityResponse,
-    OpportunitySearchRequest,
-)
+from common_grants_sdk.schemas.pydantic import Error, OpportunitySearchRequest
 from fastapi import APIRouter, HTTPException, Query, status
 
+from common_grants.schemas import (
+    CAOpportunitiesListResponse,
+    CAOpportunitiesSearchResponse,
+    CAOpportunityResponse,
+)
 from common_grants.services.opportunity import OpportunityService
 
 opportunity_router = APIRouter(
@@ -36,7 +35,7 @@ async def list_opportunities(
         ge=1,
         description="The number of items per page",
     ),
-) -> OpportunitiesListResponse:
+) -> CAOpportunitiesListResponse:
     """Get a paginated list of opportunities."""
     opportunity_service = OpportunityService()
     return await opportunity_service.list_opportunities(
@@ -50,13 +49,13 @@ async def list_opportunities(
     summary="View opportunity",
     description="View additional details about an opportunity",
     responses={
-        200: {"model": OpportunityResponse, "description": "Success"},
+        200: {"model": CAOpportunityResponse, "description": "Success"},
         404: {"model": Error, "description": "Opportunity not found"},
     },
 )
 async def get_opportunity(
     oppId: UUID,  # noqa: N803
-) -> OpportunityResponse:
+) -> CAOpportunityResponse:
     """Get a specific opportunity by ID."""
     opportunity_service = OpportunityService()
     opportunity = await opportunity_service.get_opportunity(str(oppId))
@@ -67,7 +66,7 @@ async def get_opportunity(
             detail="Opportunity not found",
         )
 
-    return OpportunityResponse(
+    return CAOpportunityResponse(
         status=status.HTTP_200_OK,
         message="Success",
         data=opportunity,
@@ -81,7 +80,7 @@ async def get_opportunity(
 )
 async def search_opportunities(
     request: OpportunitySearchRequest,
-) -> OpportunitiesSearchResponse:
+) -> CAOpportunitiesSearchResponse:
     """Search for opportunities based on the provided filters."""
     opportunity_service = OpportunityService()
 
