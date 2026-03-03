@@ -164,6 +164,7 @@ export function getFilterOptions(): FilterOptions {
   const tagSet = new Set<string>();
   const schemaSet = new Set<string>();
   const authorSet = new Set<string>();
+  const fieldTypeSet = new Set<string>();
 
   for (const field of Object.values(allFields)) {
     // Collect tags
@@ -176,11 +177,16 @@ export function getFilterOptions(): FilterOptions {
     }
     // Collect authors
     authorSet.add(field.author);
+    // Collect field types
+    if (field.fieldType) {
+      fieldTypeSet.add(field.fieldType);
+    }
   }
 
   return {
     tags: Array.from(tagSet).sort(),
     schemas: Array.from(schemaSet).sort(),
     authors: Array.from(authorSet).sort(),
+    fieldTypes: Array.from(fieldTypeSet).sort(),
   };
 }

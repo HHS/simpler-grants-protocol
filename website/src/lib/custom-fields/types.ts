@@ -54,4 +54,5 @@ export interface FilterOptions {
   tags: string[];
   schemas: string[];
   authors: string[];
+  fieldTypes: string[];
 }
