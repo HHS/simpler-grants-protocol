@@ -11,7 +11,7 @@ class CommonGrantsBaseModel(BaseModel):
 
     model_config = ConfigDict(
         from_attributes=True,
-        strict=True,
+        strict=False,  # Coerces strings to enums, datetimes, etc.
     )
 
     def dump(self) -> dict:
