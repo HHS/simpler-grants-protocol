@@ -33,6 +33,12 @@ function loadSchema(schemaName: string): Record<string, unknown> | null {
   return validator.schema as Record<string, unknown>;
 }
 
+/** Normalizes an array from schema extension (may be string[] from JSON) */
+function parseStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
 /** Extracts custom field data from a JSON schema */
 function extractSchemaData(
   schema: Record<string, unknown>,
@@ -63,12 +69,24 @@ function extractSchemaData(
     ? valueProperty.examples
     : [];
 
+  // Extract x-tags, x-version, x-valid-schemas, x-author from schema (always from schema)
+  const tags = parseStringArray(schema["x-tags"]);
+  const version =
+    typeof schema["x-version"] === "string" ? schema["x-version"] : "";
+  const validFor = parseStringArray(schema["x-valid-schemas"]);
+  const author =
+    typeof schema["x-author"] === "string" ? schema["x-author"] : "";
+
   return {
     name,
     description,
     fieldType,
     examples,
     rawSchema: schema,
+    tags,
+    version,
+    validFor,
+    author,
   };
 }
 
@@ -175,8 +193,8 @@ export function getFilterOptions(): FilterOptions {
     for (const schema of field.validFor) {
       schemaSet.add(schema);
     }
-    // Collect authors
-    authorSet.add(field.author);
+    // Collect authors (skip empty)
+    if (field.author) authorSet.add(field.author);
     // Collect field types
     if (field.fieldType) {
       fieldTypeSet.add(field.fieldType);

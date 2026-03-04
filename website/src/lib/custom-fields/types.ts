@@ -1,17 +1,10 @@
 /**
- * Metadata stored in the custom-fields index.json
+ * Metadata stored in the custom-fields index.json.
+ * Only registry metadata lives here; tags, validFor, version, and author come from the JSON schema.
  */
 export interface CustomFieldIndexEntry {
-  /** Path to the JSON schema file */
+  /** Schema name (used to load the emitted JSON schema) */
   schema: string;
-  /** Schema models this custom field is valid for */
-  validFor: string[];
-  /** Searchable tags */
-  tags: string[];
-  /** Author or maintainer */
-  author: string;
-  /** Semantic version */
-  version: string;
   /** ISO date string when the field was created */
   createdAt: string;
   /** ISO date string when the field was last modified */
@@ -19,23 +12,31 @@ export interface CustomFieldIndexEntry {
 }
 
 /**
- * Data extracted from the JSON schema file
+ * Data extracted from the JSON schema (emitted from TypeSpec).
  */
 export interface CustomFieldSchemaData {
   /** Field name (from schema const) */
   name: string;
   /** Field description */
   description: string;
-  /** JSON schema field type (string, number, object, etc.) */
+  /** JSON schema field type */
   fieldType: string;
   /** Example values */
   examples: unknown[];
   /** Full JSON schema object */
   rawSchema: Record<string, unknown>;
+  /** Tags (x-tags) */
+  tags: string[];
+  /** Version (x-version) */
+  version: string;
+  /** Valid schemas (x-valid-schemas) */
+  validFor: string[];
+  /** Author (x-author) */
+  author: string;
 }
 
 /**
- * Complete custom field data (index + schema)
+ * Complete custom field data: index metadata + schema-derived fields.
  */
 export interface CustomField
   extends CustomFieldIndexEntry,

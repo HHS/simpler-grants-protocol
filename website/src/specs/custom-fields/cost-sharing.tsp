@@ -1,11 +1,20 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
+import "./index.tsp";
 
 using CommonGrants.Fields;
+using JsonSchema;
 
 namespace CustomFields.CostSharing;
 
 /** Cost sharing or matching requirement; NOFO IC defines type, percentage, description, and waiver info */
+@extension("x-tags", #[Tags.funding, Tags.costSharing, Tags.matching])
+@extension("x-author", "CommonGrants")
+@extension("x-version", "0.1.0")
+@extension(
+  "x-valid-schemas",
+  #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase]
+)
 model CustomCostSharing extends CustomField {
   name: "costSharing";
   fieldType: CustomFieldType.object;
@@ -19,10 +28,13 @@ model CustomCostSharing extends CustomField {
   value: {
     /** Type of cost sharing: Matching, Voluntary, Deferred, In-kind, or Exemption */
     type?: string;
+
     /** Required percentage (e.g. 25.0) */
     percentage?: numeric;
+
     /** Human-readable description (e.g. up to 5000 chars in NOFO IC) */
     description?: string;
+
     /** Waiver or exception information */
     waiverInfo?: string;
   };

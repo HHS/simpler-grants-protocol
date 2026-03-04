@@ -30,3 +30,47 @@ import "./legacy-form-id.tsp";
 
 @JsonSchema.jsonSchema
 namespace CustomFields;
+
+/** Central enum for custom field tags; used in x-tags JSON Schema extensions */
+enum Tags {
+  migration,
+  compatibility,
+  identifier,
+  program,
+  federal,
+  catalog,
+  application,
+  organization,
+  contact,
+  communication,
+  agency,
+  documents,
+  files,
+  attachments,
+  classification,
+  type,
+  fiscal,
+  year,
+  budget,
+  funding,
+  costSharing,
+  matching,
+  information,
+  url,
+  reference,
+  eligibility,
+  applicant,
+  instruments,
+  competition,
+  catalogOnly,
+  form,
+  omb,
+  pra,
+}
+
+enum ValidSchemas {
+  OpportunityBase,
+  CompetitionBase,
+  ApplicationBase,
+  FormBase,
+}
