@@ -42,9 +42,7 @@ const { schemas: allSchemas, fieldTypes: allFieldTypes } = getFilterOptions();
           <label for="type-filter">Type</label>
           <select id="type-filter" class="filter-select">
             <option value="">Any type</option>
-            {allFieldTypes.map((type) => (
-              <option value={type}>{type}</option>
-            ))}
+            {allFieldTypes.map((type) => <option value={type}>{type}</option>)}
           </select>
         </div>
 
@@ -126,8 +124,7 @@ const { schemas: allSchemas, fieldTypes: allFieldTypes } = getFilterOptions();
           description.includes(searchTerm) ||
           tags.includes(searchTerm);
 
-        const matchesType =
-          !selectedType || fieldType === selectedType;
+        const matchesType = !selectedType || fieldType === selectedType;
         const matchesSchema =
           !selectedSchema || validFor.includes(selectedSchema.toLowerCase());
 

@@ -68,7 +68,8 @@
     "openxmlformats",
     "officedocument",
     "spreadsheetml",
-    "validfor"
+    "validfor",
+    "fieldType"
   ],
   "import": []
 }
