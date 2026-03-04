@@ -82,15 +82,23 @@ def test_model_validation():
     assert model.field1 == "test"
     assert model.field2 == 123
 
-    # Invalid cases
-    with pytest.raises(ValueError):
-        SampleModel(field1=123, field2=123, field3=datetime.now(UTC))  # Wrong type
+    # With strict=False, numeric string coerces to int; datetime string coerces to datetime
+    model = SampleModel(field1="test", field2="123", field3=datetime.now(UTC))
+    assert model.field1 == "test"
+    assert model.field2 == 123
 
-    with pytest.raises(ValueError):
-        SampleModel(field1="test", field2="123", field3=datetime.now(UTC))  # Wrong type
+    model = SampleModel(field1="test", field2=123, field3="2024-01-01T00:00:00Z")
+    assert model.field1 == "test"
+    assert model.field2 == 123
+    assert model.field3.year == 2024
 
+    # Incompatible types still raise (e.g. int for str field)
     with pytest.raises(ValueError):
-        SampleModel(field1="test", field2=123, field3="2024-01-01")  # Wrong type
+        SampleModel(field1=123, field2=123, field3=datetime.now(UTC))
+    with pytest.raises(ValueError):
+        SampleModel.model_validate(
+            {"field1": "test", "field2": 123, "field3": "bad datetime"}
+        )
 
 
 class TestDumpWithMapping:
