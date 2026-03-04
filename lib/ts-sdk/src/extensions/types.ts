@@ -28,6 +28,37 @@ export interface CustomFieldSpec {
 }
 
 // ############################################################################
+// SchemaExtensions
+// ############################################################################
+
+/**
+ * Base model names that support `customFields` extensions.
+ * Expand this union as more models become extensible.
+ */
+export type ExtensibleSchemaName = "Opportunity";
+
+/**
+ * Maps extensible model names to their custom field specifications.
+ *
+ * Each key is a model name, and the value is a record mapping field names
+ * to their `CustomFieldSpec` definitions. `Partial` so plugins only need
+ * to declare models they actually extend.
+ *
+ * @example
+ * ```typescript
+ * const extensions: SchemaExtensions = {
+ *   Opportunity: {
+ *     legacyId: { fieldType: "string" },
+ *     category: { fieldType: "string", description: "Grant category" },
+ *   },
+ * };
+ * ```
+ */
+export type SchemaExtensions = Partial<
+  Record<ExtensibleSchemaName, Record<string, CustomFieldSpec>>
+>;
+
+// ############################################################################
 // Internal Type Inference Utilities
 // ############################################################################
 
