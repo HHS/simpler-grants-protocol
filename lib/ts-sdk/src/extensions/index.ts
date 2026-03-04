@@ -9,8 +9,15 @@
  */
 
 // Types
-export type { CustomFieldSpec, WithCustomFieldsResult } from "./types";
+export type {
+  CustomFieldSpec,
+  WithCustomFieldsResult,
+  SchemaExtensions,
+  ExtensibleSchemaName,
+} from "./types";
+export type { MergeExtensionsOptions } from "./merge-extensions";
 
 // Functions
 export { withCustomFields } from "./with-custom-fields";
 export { getCustomFieldValue } from "./get-custom-field-value";
+export { mergeExtensions } from "./merge-extensions";
