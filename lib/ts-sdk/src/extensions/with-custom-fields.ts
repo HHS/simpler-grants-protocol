@@ -222,11 +222,20 @@ type DefaultFieldTypeMap = {
  * // T2 = string
  * ```
  */
-type InferValueType<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodTypeAny
+/** Infers the value type from a spec's explicit valueSchema, if one is provided. */
+type InferFromValueSchema<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodTypeAny
   ? z.infer<T["valueSchema"]>
-  : T["fieldType"] extends keyof DefaultFieldTypeMap
-    ? DefaultFieldTypeMap[T["fieldType"]]
-    : unknown;
+  : never;
+
+/** Falls back to DefaultFieldTypeMap based on fieldType. */
+type DefaultValueType<T extends CustomFieldSpec> = T["fieldType"] extends keyof DefaultFieldTypeMap
+  ? DefaultFieldTypeMap[T["fieldType"]]
+  : unknown;
+
+/** Composes the two helpers: use explicit schema if available, else default. */
+type InferValueType<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodTypeAny
+  ? InferFromValueSchema<T>
+  : DefaultValueType<T>;
 
 /**
  * Builds the complete TypeScript type for a single custom field object.

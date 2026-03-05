@@ -9,6 +9,7 @@
 
 import { z } from "zod";
 import type { CustomFieldType } from "../types";
+import { OpportunityBaseSchema } from "../schemas/zod/models";
 
 // ############################################################################
 // Public type - CustomFieldSpec
@@ -58,9 +59,24 @@ export interface CustomFieldSpec {
  * The definitive list of base model names that support `customFields` extensions.
  *
  * @todo Add schemas here if they support `customFields` extensions and
- *       map them to Zod schemas in `BASE_SCHEMAS` in `define-plugin.ts`.
+ *       map them to Zod schemas in `EXTENSIBLE_SCHEMA_MAP`.
  */
 export type ExtensibleSchemaName = "Opportunity";
+
+/**
+ * Maps each `ExtensibleSchemaName` to its base Zod schema constant.
+ *
+ * This is the source of truth for extensible schema type inference.
+ * The `PluginSchemas` type derives from `typeof EXTENSIBLE_SCHEMA_MAP` so that
+ * the two stay in sync automatically.
+ *
+ * @todo Keep this map in sync with `ExtensibleSchemaName`.
+ *
+ * @internal
+ */
+export const EXTENSIBLE_SCHEMA_MAP = {
+  Opportunity: OpportunityBaseSchema,
+} as const satisfies Record<ExtensibleSchemaName, z.AnyZodObject>;
 
 /**
  * Maps extensible model names to their custom field specifications.

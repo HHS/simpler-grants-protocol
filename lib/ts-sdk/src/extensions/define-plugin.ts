@@ -5,8 +5,8 @@
  */
 
 import { z } from "zod";
-import { OpportunityBaseSchema } from "../schemas/zod/models";
 import type { ExtensibleSchemaName, SchemaExtensions, CustomFieldSpec } from "./types";
+import { EXTENSIBLE_SCHEMA_MAP } from "./types";
 import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fields";
 
 // ############################################################################
@@ -72,12 +72,12 @@ export function definePlugin<const T extends SchemaExtensions>(
 
   // Walk every extensible model. If the caller supplied specs for it,
   // produce a schema with typed customFields; otherwise keep the base schema.
-  for (const [name, baseSchema] of Object.entries(BASE_SCHEMAS)) {
+  for (const [name, extensibleSchema] of Object.entries(EXTENSIBLE_SCHEMA_MAP)) {
     const specs = extensions[name as ExtensibleSchemaName];
     if (specs && Object.keys(specs).length > 0) {
-      schemas[name] = withCustomFields(baseSchema, specs);
+      schemas[name] = withCustomFields(extensibleSchema, specs);
     } else {
-      schemas[name] = baseSchema;
+      schemas[name] = extensibleSchema;
     }
   }
 
@@ -89,19 +89,6 @@ export function definePlugin<const T extends SchemaExtensions>(
 // ############################################################################
 // Internal - type inference utilities
 // ############################################################################
-
-/**
- * Maps each `ExtensibleSchemaName` to its base Zod schema constant.
- *
- * This is the source of truth for extensible schema type inference.
- * The `PluginSchemas` type derives from `typeof BASE_SCHEMAS` so that
- * the two stay in sync automatically.
- *
- * @todo Keep this map in sync with `ExtensibleSchemaName`.
- */
-const BASE_SCHEMAS = {
-  Opportunity: OpportunityBaseSchema,
-} satisfies Record<ExtensibleSchemaName, z.AnyZodObject>;
 
 /**
  * Computes the schema type for each extensible schema given extensions `T`.
@@ -126,10 +113,17 @@ const BASE_SCHEMAS = {
  * // { Opportunity: WithCustomFieldsResult<typeof OpportunityBaseSchema, T["Opportunity"]> }
  * ```
  */
+/** Looks up the base Zod schema for an extensible model name. */
+type BaseZodSchema<K extends ExtensibleSchemaName> = (typeof EXTENSIBLE_SCHEMA_MAP)[K];
+
+/** Resolves the schema for a single model: applies extensions if present, else returns base. */
+type ResolveSchema<K extends ExtensibleSchemaName, T extends SchemaExtensions> = K extends keyof T
+  ? T[K] extends Record<string, CustomFieldSpec>
+    ? WithCustomFieldsResult<BaseZodSchema<K>, T[K]>
+    : BaseZodSchema<K>
+  : BaseZodSchema<K>;
+
+/** Maps each extensible model to its resolved schema. */
 type PluginSchemas<T extends SchemaExtensions> = {
-  [K in ExtensibleSchemaName]: K extends keyof T
-    ? T[K] extends Record<string, CustomFieldSpec>
-      ? WithCustomFieldsResult<(typeof BASE_SCHEMAS)[K], T[K]>
-      : (typeof BASE_SCHEMAS)[K]
-    : (typeof BASE_SCHEMAS)[K];
+  [K in ExtensibleSchemaName]: ResolveSchema<K, T>;
 };
