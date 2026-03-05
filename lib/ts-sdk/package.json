@@ -76,6 +76,7 @@
     "example:search": "tsx examples/search-opportunities.ts",
     "example:custom-fields": "tsx examples/custom-fields.ts",
     "example:get-custom-fields": "tsx examples/get-opportunity-with-custom-fields.ts",
+    "example:plugins": "tsx examples/plugins.ts",
     "example:server": "tsx examples/mock-api-server.ts"
   },
   "dependencies": {
