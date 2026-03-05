@@ -1,11 +1,17 @@
 /**
  * Type definitions for the extensions module.
  *
+ * All extension-related interfaces and types live here. The other files
+ * in this module (`with-custom-fields.ts`, `define-config.ts`,
+ * `merge-extensions.ts`, `get-custom-field-value.ts`) each export a
+ * single utility function.
+ *
  * @module @common-grants/sdk/extensions
  */
 
 import { z } from "zod";
 import type { CustomField, CustomFieldType } from "../types";
+import type { OpportunityBaseSchema } from "../schemas/zod/models";
 
 // ############################################################################
 // CustomFieldSpec
@@ -26,6 +32,47 @@ export interface CustomFieldSpec {
   /** Optional description; used as the default for CustomField.description when present */
   description?: string;
 }
+
+// ############################################################################
+// PluginConfig
+// ############################################################################
+
+/**
+ * Configuration object returned by `defineConfig()`.
+ *
+ * - `extensions` — the original `SchemaExtensions` input (preserved by reference)
+ * - `schemas` — extensible schemas with custom fields applied where applicable
+ */
+export interface PluginConfig<T extends SchemaExtensions = SchemaExtensions> {
+  extensions: T;
+  schemas: PluginSchemas<T>;
+}
+
+/**
+ * Computes the schema type for each extensible schema given extensions `T`.
+ *
+ * - If `T[K]` has specs: produces `WithCustomFieldsResult`
+ * - Otherwise: passes through the base schema type unchanged
+ */
+type PluginSchemas<T extends SchemaExtensions> = {
+  [K in ExtensibleSchemaName]: K extends keyof T
+    ? T[K] extends Record<string, CustomFieldSpec>
+      ? WithCustomFieldsResult<BaseSchemaMap[K], T[K]>
+      : BaseSchemaMap[K]
+    : BaseSchemaMap[K];
+};
+
+/**
+ * Maps each `ExtensibleSchemaName` to its corresponding base schema type.
+ *
+ * Used at the type level to compute `PluginSchemas<T>`. This is the
+ * compile-time counterpart to the runtime `BASE_SCHEMAS` constant in
+ * `define-config.ts` — both must stay in sync when new extensible
+ * models are added.
+ */
+type BaseSchemaMap = {
+  Opportunity: typeof OpportunityBaseSchema;
+};
 
 // ############################################################################
 // SchemaExtensions
@@ -59,7 +106,63 @@ export type SchemaExtensions = Partial<
 >;
 
 // ############################################################################
-// Internal Type Inference Utilities
+// MergeExtensionsOptions
+// ############################################################################
+
+/**
+ * Options for controlling how field-name conflicts are resolved
+ * when merging multiple `SchemaExtensions` sources.
+ */
+export interface MergeExtensionsOptions {
+  /**
+   * Strategy for handling duplicate field names within the same model.
+   *
+   * - `"error"` (default) — throw an error on conflict
+   * - `"firstWins"` — keep the first definition encountered
+   * - `"lastWins"` — use the last definition encountered
+   */
+  onConflict?: "error" | "firstWins" | "lastWins";
+}
+
+// ############################################################################
+// WithCustomFieldsResult
+// ############################################################################
+
+/**
+ * The return type of `withCustomFields()` - a Zod schema with typed customFields.
+ *
+ * This type:
+ * 1. Takes the base schema's shape and removes the original `customFields` property
+ * 2. Adds a new `customFields` property typed using `TypedCustomFields<TSpecs>`
+ * 3. Wraps it in `z.ZodObject` to maintain Zod schema compatibility
+ *
+ * The result is that `z.infer<WithCustomFieldsResult<...>>` produces a type where:
+ * - All base schema properties remain unchanged
+ * - `customFields` is optional (via `ZodOptional`)
+ * - Registered custom fields have strongly-typed `value` properties
+ * - Unregistered fields pass through with base `CustomField` type
+ *
+ * @example
+ * ```typescript
+ * const Schema = withCustomFields(OpportunityBaseSchema, {
+ *   legacyId: { fieldType: "object", valueSchema: ... }
+ * } as const);
+ *
+ * type Opportunity = z.infer<typeof Schema>;
+ * // Opportunity.customFields?.legacyId?.value.id → typed as number ✅
+ * ```
+ */
+export type WithCustomFieldsResult<
+  TSchema extends z.AnyZodObject,
+  TSpecs extends Record<string, CustomFieldSpec>,
+> = z.ZodObject<
+  Omit<TSchema["shape"], "customFields"> & {
+    customFields: z.ZodOptional<z.ZodType<TypedCustomFields<TSpecs>>>;
+  }
+>;
+
+// ############################################################################
+// Type Inference Utilities
 // ############################################################################
 
 /**
@@ -198,40 +301,3 @@ type TypedCustomField<T extends CustomFieldSpec> = {
 type TypedCustomFields<TSpecs extends Record<string, CustomFieldSpec>> = {
   [K in keyof TSpecs]?: TypedCustomField<TSpecs[K]>;
 } & Record<string, CustomField>;
-
-// ############################################################################
-// WithCustomFieldsResult
-// ############################################################################
-
-/**
- * The return type of `withCustomFields()` - a Zod schema with typed customFields.
- *
- * This type:
- * 1. Takes the base schema's shape and removes the original `customFields` property
- * 2. Adds a new `customFields` property typed using `TypedCustomFields<TSpecs>`
- * 3. Wraps it in `z.ZodObject` to maintain Zod schema compatibility
- *
- * The result is that `z.infer<WithCustomFieldsResult<...>>` produces a type where:
- * - All base schema properties remain unchanged
- * - `customFields` is optional (via `ZodOptional`)
- * - Registered custom fields have strongly-typed `value` properties
- * - Unregistered fields pass through with base `CustomField` type
- *
- * @example
- * ```typescript
- * const Schema = withCustomFields(OpportunityBaseSchema, {
- *   legacyId: { fieldType: "object", valueSchema: ... }
- * } as const);
- *
- * type Opportunity = z.infer<typeof Schema>;
- * // Opportunity.customFields?.legacyId?.value.id → typed as number ✅
- * ```
- */
-export type WithCustomFieldsResult<
-  TSchema extends z.AnyZodObject,
-  TSpecs extends Record<string, CustomFieldSpec>,
-> = z.ZodObject<
-  Omit<TSchema["shape"], "customFields"> & {
-    customFields: z.ZodOptional<z.ZodType<TypedCustomFields<TSpecs>>>;
-  }
->;

@@ -1,26 +1,15 @@
 /**
- * Utilities for merging multiple SchemaExtensions objects.
+ * Provides the `mergeExtensions()` utility function.
  *
  * @module @common-grants/sdk/extensions
  */
 
-import type { SchemaExtensions, ExtensibleSchemaName } from "./types";
-import type { CustomFieldSpec } from "./types";
-
-/**
- * Options for controlling how field-name conflicts are resolved
- * when merging multiple `SchemaExtensions` sources.
- */
-export interface MergeExtensionsOptions {
-  /**
-   * Strategy for handling duplicate field names within the same model.
-   *
-   * - `"error"` (default) — throw an error on conflict
-   * - `"firstWins"` — keep the first definition encountered
-   * - `"lastWins"` — use the last definition encountered
-   */
-  onConflict?: "error" | "firstWins" | "lastWins";
-}
+import type {
+  SchemaExtensions,
+  ExtensibleSchemaName,
+  CustomFieldSpec,
+  MergeExtensionsOptions,
+} from "./types";
 
 /**
  * Merges multiple `SchemaExtensions` objects into a single combined result.
