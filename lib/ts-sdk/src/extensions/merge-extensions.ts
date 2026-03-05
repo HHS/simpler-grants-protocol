@@ -78,36 +78,51 @@ export function mergeExtensions(
   const result: Record<string, Record<string, CustomFieldSpec>> = {};
 
   for (const source of sources) {
-    for (const [model, fields] of Object.entries(source) as [
-      ExtensibleSchemaName,
-      Record<string, CustomFieldSpec>,
-    ][]) {
-      if (!result[model]) {
-        result[model] = {};
-      }
-
-      for (const [fieldName, spec] of Object.entries(fields)) {
-        if (fieldName in result[model]) {
-          switch (onConflict) {
-            case "error":
-              throw new Error(
-                `mergeExtensions: duplicate field "${fieldName}" on model "${model}"`
-              );
-            case "firstWins":
-              // Keep existing — do nothing
-              break;
-            case "lastWins":
-              result[model][fieldName] = spec;
-              break;
-          }
-        } else {
-          result[model][fieldName] = spec;
-        }
-      }
-    }
+    mergeSource(result, source, onConflict);
   }
 
   return result as SchemaExtensions;
+}
+
+// ############################################################################
+// Internal functions - mergeSource(), mergeFields()
+// ############################################################################
+
+/** Merges all models from a single source into the accumulated result. */
+function mergeSource(
+  result: Record<string, Record<string, CustomFieldSpec>>,
+  source: SchemaExtensions,
+  onConflict: NonNullable<MergeExtensionsOptions["onConflict"]>
+): void {
+  for (const [model, fields] of Object.entries(source) as [
+    ExtensibleSchemaName,
+    Record<string, CustomFieldSpec>,
+  ][]) {
+    result[model] ??= {};
+    mergeFields(result[model], fields, model, onConflict);
+  }
+}
+
+/** Merges fields from a single model into the target, applying conflict resolution. */
+function mergeFields(
+  target: Record<string, CustomFieldSpec>,
+  source: Record<string, CustomFieldSpec>,
+  model: string,
+  onConflict: NonNullable<MergeExtensionsOptions["onConflict"]>
+): void {
+  for (const [fieldName, spec] of Object.entries(source)) {
+    if (fieldName in target) {
+      if (onConflict === "error") {
+        throw new Error(`mergeExtensions: duplicate field "${fieldName}" on model "${model}"`);
+      }
+      if (onConflict === "lastWins") {
+        target[fieldName] = spec;
+      }
+      // "firstWins" — keep existing, do nothing
+    } else {
+      target[fieldName] = spec;
+    }
+  }
 }
 
 // ############################################################################
