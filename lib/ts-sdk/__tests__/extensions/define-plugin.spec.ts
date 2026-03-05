@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { defineConfig, mergeExtensions, type SchemaExtensions } from "@/extensions";
+import { definePlugin, mergeExtensions, type SchemaExtensions } from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas/zod/models";
 import { CustomFieldType } from "@/constants";
 
@@ -23,26 +23,26 @@ const validOpp = {
 };
 
 // ############################################################################
-// defineConfig tests
+// definePlugin tests
 // ############################################################################
 
-describe("defineConfig", () => {
+describe("definePlugin", () => {
   // ############################################################################
   // Basic structure
   // ############################################################################
 
   describe("basic structure", () => {
-    it("should return a PluginConfig with .extensions and .schemas", () => {
+    it("should return a Plugin with .extensions and .schemas", () => {
       const extensions = {
         Opportunity: {
           legacyId: { fieldType: CustomFieldType.string },
         },
       } as const;
 
-      const config = defineConfig(extensions);
+      const plugin = definePlugin({ extensions });
 
-      expect(config).toHaveProperty("extensions");
-      expect(config).toHaveProperty("schemas");
+      expect(plugin).toHaveProperty("extensions");
+      expect(plugin).toHaveProperty("schemas");
     });
 
     it("should preserve extensions input by reference on .extensions", () => {
@@ -52,9 +52,9 @@ describe("defineConfig", () => {
         },
       } as const;
 
-      const config = defineConfig(extensions);
+      const plugin = definePlugin({ extensions });
 
-      expect(config.extensions).toBe(extensions);
+      expect(plugin.extensions).toBe(extensions);
     });
   });
 
@@ -63,21 +63,23 @@ describe("defineConfig", () => {
   // ############################################################################
 
   describe("extensible schemas", () => {
-    it("should parse payloads with custom fields via config.schemas.Opportunity", () => {
-      const config = defineConfig({
-        Opportunity: {
-          legacyId: {
-            fieldType: CustomFieldType.object,
-            valueSchema: LegacyIdValueSchema,
-          },
-          category: {
-            fieldType: CustomFieldType.string,
-            description: "Grant category",
+    it("should parse payloads with custom fields via plugin.schemas.Opportunity", () => {
+      const plugin = definePlugin({
+        extensions: {
+          Opportunity: {
+            legacyId: {
+              fieldType: CustomFieldType.object,
+              valueSchema: LegacyIdValueSchema,
+            },
+            category: {
+              fieldType: CustomFieldType.string,
+              description: "Grant category",
+            },
           },
         },
       } as const);
 
-      const result = config.schemas.Opportunity.parse({
+      const result = plugin.schemas.Opportunity.parse({
         ...validOpp,
         customFields: {
           legacyId: {
@@ -99,16 +101,18 @@ describe("defineConfig", () => {
     });
 
     it("should reject invalid custom field values via safeParse", () => {
-      const config = defineConfig({
-        Opportunity: {
-          legacyId: {
-            fieldType: CustomFieldType.object,
-            valueSchema: LegacyIdValueSchema,
+      const plugin = definePlugin({
+        extensions: {
+          Opportunity: {
+            legacyId: {
+              fieldType: CustomFieldType.object,
+              valueSchema: LegacyIdValueSchema,
+            },
           },
         },
       } as const);
 
-      const result = config.schemas.Opportunity.safeParse({
+      const result = plugin.schemas.Opportunity.safeParse({
         ...validOpp,
         customFields: {
           legacyId: {
@@ -129,15 +133,15 @@ describe("defineConfig", () => {
 
   describe("empty extensions", () => {
     it("should return base schemas when extensions is {}", () => {
-      const config = defineConfig({});
+      const plugin = definePlugin({ extensions: {} });
 
-      expect(config.schemas.Opportunity).toBe(OpportunityBaseSchema);
+      expect(plugin.schemas.Opportunity).toBe(OpportunityBaseSchema);
     });
 
     it("should return base Opportunity schema when specs are empty", () => {
-      const config = defineConfig({ Opportunity: {} });
+      const plugin = definePlugin({ extensions: { Opportunity: {} } });
 
-      expect(config.schemas.Opportunity).toBe(OpportunityBaseSchema);
+      expect(plugin.schemas.Opportunity).toBe(OpportunityBaseSchema);
     });
   });
 
@@ -147,26 +151,30 @@ describe("defineConfig", () => {
 
   describe("plugin composition", () => {
     it("should work with mergeExtensions for multi-plugin composition", () => {
-      const pluginA = defineConfig({
-        Opportunity: {
-          legacyId: {
-            fieldType: CustomFieldType.object,
-            valueSchema: LegacyIdValueSchema,
+      const pluginA = definePlugin({
+        extensions: {
+          Opportunity: {
+            legacyId: {
+              fieldType: CustomFieldType.object,
+              valueSchema: LegacyIdValueSchema,
+            },
           },
         },
       } as const);
 
-      const pluginB = defineConfig({
-        Opportunity: {
-          category: {
-            fieldType: CustomFieldType.string,
-            description: "Grant category",
+      const pluginB = definePlugin({
+        extensions: {
+          Opportunity: {
+            category: {
+              fieldType: CustomFieldType.string,
+              description: "Grant category",
+            },
           },
         },
       } as const);
 
       const merged = mergeExtensions([pluginA.extensions, pluginB.extensions]);
-      const combined = defineConfig(merged);
+      const combined = definePlugin({ extensions: merged });
 
       const result = combined.schemas.Opportunity.parse({
         ...validOpp,
@@ -194,18 +202,20 @@ describe("defineConfig", () => {
   // ############################################################################
 
   describe("type compatibility", () => {
-    it("should have the same shape as base PluginConfig", () => {
-      const config = defineConfig({
-        Opportunity: {
-          legacyId: { fieldType: CustomFieldType.string },
+    it("should have the same shape as base Plugin", () => {
+      const plugin = definePlugin({
+        extensions: {
+          Opportunity: {
+            legacyId: { fieldType: CustomFieldType.string },
+          },
         },
       } as const);
 
-      // Verify PluginConfig<T> has the expected PluginConfig shape at runtime
-      expect(config).toHaveProperty("extensions");
-      expect(config).toHaveProperty("schemas");
-      expect(typeof config.extensions).toBe("object");
-      expect(typeof config.schemas).toBe("object");
+      // Verify Plugin<T> has the expected Plugin shape at runtime
+      expect(plugin).toHaveProperty("extensions");
+      expect(plugin).toHaveProperty("schemas");
+      expect(typeof plugin.extensions).toBe("object");
+      expect(typeof plugin.schemas).toBe("object");
     });
 
     it("should accept SchemaExtensions as input type", () => {
@@ -215,8 +225,8 @@ describe("defineConfig", () => {
         },
       };
 
-      const config = defineConfig(extensions);
-      expect(config.schemas.Opportunity).toBeDefined();
+      const plugin = definePlugin({ extensions });
+      expect(plugin.schemas.Opportunity).toBeDefined();
     });
   });
 });

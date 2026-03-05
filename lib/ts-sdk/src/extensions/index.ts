@@ -8,18 +8,15 @@
  * @packageDocumentation
  */
 
-// Types — all extension-related interfaces and types live in types.ts
-export type {
-  CustomFieldSpec,
-  WithCustomFieldsResult,
-  SchemaExtensions,
-  ExtensibleSchemaName,
-  MergeExtensionsOptions,
-  PluginConfig,
-} from "./types";
+// Plugin creation — define and compose plugins
+export type { Plugin, DefinePluginOptions } from "./define-plugin";
+export type { SchemaExtensions, CustomFieldSpec } from "./types";
+export { definePlugin } from "./define-plugin";
+export { mergeExtensions } from "./merge-extensions";
 
-// Functions — each file exports a single utility function
+// Schema utilities — lower-level tools for working with custom fields
+export type { MergeExtensionsOptions, MergedSchemaExtensions } from "./merge-extensions";
+export type { WithCustomFieldsResult } from "./with-custom-fields";
+export type { ExtensibleSchemaName } from "./types";
 export { withCustomFields } from "./with-custom-fields";
 export { getCustomFieldValue } from "./get-custom-field-value";
-export { mergeExtensions } from "./merge-extensions";
-export { defineConfig } from "./define-config";
