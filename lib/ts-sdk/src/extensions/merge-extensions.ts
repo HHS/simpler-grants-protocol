@@ -57,16 +57,19 @@ export interface MergeExtensionsOptions {
  * // combined.schemas.Opportunity has typed customFields for all fields
  * ```
  */
+// Overload: when onConflict is "error" (the default) - preserve specific field types
 export function mergeExtensions<const T extends readonly SchemaExtensions[]>(
   sources: [...T],
   options?: { onConflict?: "error" }
 ): MergedSchemaExtensions<T>;
 
+// Overload: when onConflict is "firstWins" or "lastWins" - fall back to SchemaExtensions
 export function mergeExtensions(
   sources: SchemaExtensions[],
   options: MergeExtensionsOptions
 ): SchemaExtensions;
 
+// Implementation signature — not visible to callers.
 export function mergeExtensions(
   sources: SchemaExtensions[],
   options: MergeExtensionsOptions = {}
