@@ -160,8 +160,7 @@ function demonstrateValidation() {
   const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
   const combinedPlugin = definePlugin({ extensions: merged });
 
-  // Invalid data: priority should be an integer, not a string
-  const result = combinedPlugin.schemas.Opportunity.safeParse({
+  const oppData = {
     ...baseData,
     customFields: {
       priority: {
@@ -170,13 +169,19 @@ function demonstrateValidation() {
         value: "not-a-number",
       },
     },
-  });
+  };
+
+  console.log("Invalid custom field data:");
+  console.log(JSON.stringify(oppData, null, 2));
+  console.log();
+
+  const result = combinedPlugin.schemas.Opportunity.safeParse(oppData);
 
   if (!result.success) {
     const issue = result.error.issues[0];
-    console.log(`  Validation failed (as expected):`);
-    console.log(`    Path:    ${issue.path.join(".")}`);
-    console.log(`    Message: ${issue.message}`);
+    console.log("Validation failed (as expected):");
+    console.log(`  Path:    ${issue.path.join(".")}`);
+    console.log(`  Message: ${issue.message}`);
   }
 }
 

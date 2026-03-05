@@ -216,9 +216,28 @@ pnpm example:plugins
 
 --- Validation ---
 
-  Validation failed (as expected):
-    Path:    customFields.priority.value
-    Message: Expected number, received string
+Invalid custom field data:
+{
+  "id": "573525f2-8e15-4405-83fb-e6523511d893",
+  "title": "STEM Education Grant Program",
+  "description": "A grant program focused on STEM education in underserved communities",
+  "status": {
+    "value": "open"
+  },
+  "createdAt": "2025-01-01T00:00:00Z",
+  "lastModifiedAt": "2025-01-15T00:00:00Z",
+  "customFields": {
+    "priority": {
+      "name": "priority",
+      "fieldType": "integer",
+      "value": "not-a-number"
+    }
+  }
+}
+
+Validation failed (as expected):
+  Path:    customFields.priority.value
+  Message: Expected number, received string
 
 === Example Complete ===
 ```
