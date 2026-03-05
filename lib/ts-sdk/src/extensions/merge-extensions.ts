@@ -115,13 +115,15 @@ function mergeFields(
 ): void {
   for (const [fieldName, spec] of Object.entries(source)) {
     if (fieldName in target) {
-      if (onConflict === "error") {
-        throw new Error(`mergeExtensions: duplicate field "${fieldName}" on model "${model}"`);
+      switch (onConflict) {
+        case "error":
+          throw new Error(`mergeExtensions: duplicate field "${fieldName}" on model "${model}"`);
+        case "firstWins":
+          break;
+        case "lastWins":
+          target[fieldName] = spec;
+          break;
       }
-      if (onConflict === "lastWins") {
-        target[fieldName] = spec;
-      }
-      // "firstWins" — keep existing, do nothing
     } else {
       target[fieldName] = spec;
     }
