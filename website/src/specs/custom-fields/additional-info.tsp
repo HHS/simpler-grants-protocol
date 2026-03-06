@@ -8,20 +8,23 @@ using JsonSchema;
 namespace CustomFields.AdditionalInfo;
 
 /** Additional information URL and description */
-@extension("x-tags", #[Tags.information, Tags.url, Tags.reference])
+@extension("x-tags", #[Tags.context])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
-@extension(
-  "x-valid-schemas",
-  #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase]
-)
+@extension("x-valid-schemas", #[ValidSchemas.OpportunityBase])
 model CustomAdditionalInfo extends CustomField {
   name: "additionalInfo";
   fieldType: CustomFieldType.object;
 
-  @example(#{ url: "grants.gov", description: "Click me for more info" })
+  @example(#{
+    url: "https://simpler.grants.gov/documents/example",
+    description: "More information about the opportunity requirements",
+  })
   value: {
-    url: string;
+    /** A URL linking to additional information about the opportunity */
+    url?: url;
+
+    /** A human-readable description of the additional information */
     description?: string;
   };
 

@@ -7,37 +7,30 @@ using JsonSchema;
 
 namespace CustomFields.CostSharing;
 
-/** Cost sharing or matching requirement; NOFO IC defines type, percentage, description, and waiver info */
-@extension("x-tags", #[Tags.funding, Tags.costSharing, Tags.matching])
+/** Cost sharing or matching requirement */
+@extension("x-tags", #[Tags.funding])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
-@extension(
-  "x-valid-schemas",
-  #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase]
-)
+@extension("x-valid-schemas", #[ValidSchemas.OpportunityBase])
 model CustomCostSharing extends CustomField {
   name: "costSharing";
   fieldType: CustomFieldType.object;
 
   @example(#{
-    type: "Matching",
+    isRequired: true,
     percentage: 25.0,
-    description: "Recipients must provide 25% matching funds.",
-    waiverInfo: "Waiver may be requested for equipment-only projects.",
+    details: "Recipients must provide 25% matching funds. Waiver may be requested for equipment-only projects.",
   })
   value: {
-    /** Type of cost sharing: Matching, Voluntary, Deferred, In-kind, or Exemption */
-    type?: string;
+    /** Whether cost sharing or matching funds are required */
+    isRequired?: boolean;
 
-    /** Required percentage (e.g. 25.0) */
+    /** Required cost sharing percentage (e.g. 25.0) */
     percentage?: numeric;
 
-    /** Human-readable description (e.g. up to 5000 chars in NOFO IC) */
-    description?: string;
-
-    /** Waiver or exception information */
-    waiverInfo?: string;
+    /** Free-text description of cost sharing requirements, including type, waiver info, or maintenance of effort */
+    details?: string;
   };
 
-  description: "Cost sharing or matching requirement details: type, percentage, description, and waiver information";
+  description: "Cost sharing or matching requirement for the opportunity";
 }

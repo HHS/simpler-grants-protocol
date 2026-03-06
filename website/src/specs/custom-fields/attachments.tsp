@@ -7,13 +7,13 @@ using JsonSchema;
 
 namespace CustomFields.Attachments;
 
-/** List of attachments associated with the opportunity */
-@extension("x-tags", #[Tags.documents, Tags.files, Tags.attachments])
+/** File attachments associated with this resource */
+@extension("x-tags", #[Tags.context])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
 @extension(
   "x-valid-schemas",
-  #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase]
+  #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase, ValidSchemas.ApplicationBase]
 )
 model CustomAttachments extends CustomField {
   name: "attachments";
@@ -22,5 +22,5 @@ model CustomAttachments extends CustomField {
   @example(#[Examples.File.pdfFile])
   value: Array<File>;
 
-  description: "Attachments such as NOFOs and supplemental documents for the opportunity";
+  description: "File attachments associated with this resource";
 }

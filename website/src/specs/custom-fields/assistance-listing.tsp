@@ -5,38 +5,30 @@ import "./index.tsp";
 using CommonGrants.Fields;
 using JsonSchema;
 
-namespace CustomFields.AssistanceListing;
+namespace CustomFields.AssistanceListings;
 
 /** Assistance listing information; a single opportunity can have multiple listings (one primary, plus up to 50 additional) */
-@extension("x-tags", #[Tags.program, Tags.federal, Tags.catalog])
+@extension("x-tags", #[Tags.federal, Tags.funding])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
 @extension(
   "x-valid-schemas",
   #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase]
 )
-model CustomAssistanceListing extends CustomField {
-  name: "assistanceListing";
+model CustomAssistanceListings extends CustomField {
+  name: "assistanceListings";
   fieldType: CustomFieldType.array;
 
   @example(#[
-    #{
-      assistanceListingNumber: "43.012",
-      programTitle: "Space Technology",
-      isPrimary: true,
-    },
-    #{
-      assistanceListingNumber: "43.099",
-      programTitle: "Related Program",
-      isPrimary: false,
-    }
+    #{ identifier: "43.012", programTitle: "Space Technology" },
+    #{ identifier: "43.099", programTitle: "Related Program" }
   ])
   value: Array<{
-    assistanceListingNumber: string;
-    programTitle: string;
+    /** The assistance listing number, e.g. "43.012" */
+    identifier?: string;
 
-    /** True if this is the primary listing for the opportunity */
-    isPrimary?: boolean;
+    /** The title of the federal assistance program */
+    programTitle?: string;
   }>;
 
   description: "Assistance listing number(s) and program title(s) for this opportunity; one primary plus optional additional listings";

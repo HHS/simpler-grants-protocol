@@ -8,7 +8,7 @@ using JsonSchema;
 namespace CustomFields.ApplicantOrganization;
 
 /** Applicant organization (catalog only — not in SDK/API yet) */
-@extension("x-tags", #[Tags.application, Tags.organization, Tags.catalogOnly])
+@extension("x-tags", #[Tags.organization])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
 @extension("x-valid-schemas", #[ValidSchemas.ApplicationBase])
@@ -18,7 +18,10 @@ model CustomApplicantOrganization extends CustomField {
 
   @example(#{ name: "Acme Research Institute", identifier: "DUNS-123456789" })
   value: {
+    /** The legal name of the applicant organization */
     name?: string;
+
+    /** A unique identifier for the organization (e.g. SAM UEI, DUNS, or EIN) */
     identifier?: string;
   };
 

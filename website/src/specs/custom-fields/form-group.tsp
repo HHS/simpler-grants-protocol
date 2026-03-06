@@ -5,19 +5,19 @@ import "./index.tsp";
 using CommonGrants.Fields;
 using JsonSchema;
 
-namespace CustomFields.FormAgencyCode;
+namespace CustomFields.FormGroup;
 
-/** Which agency owns the form (catalog only — not in SDK/API yet) */
-@extension("x-tags", #[Tags.form, Tags.agency, Tags.catalogOnly])
+/** Group label for related forms (e.g. SF424, Budget, Narrative) */
+@extension("x-tags", #[Tags.identifier])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
 @extension("x-valid-schemas", #[ValidSchemas.FormBase])
-model CustomFormAgencyCode extends CustomField {
-  name: "agencyCode";
+model CustomFormGroup extends CustomField {
+  name: "formGroup";
   fieldType: CustomFieldType.string;
 
-  @example("US-ABC")
+  @example("SF424")
   value: string;
 
-  description: "Agency code for the form owner";
+  description: "Group label for related forms (e.g. SF424, Budget, Narrative)";
 }

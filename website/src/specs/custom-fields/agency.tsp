@@ -8,30 +8,39 @@ using JsonSchema;
 namespace CustomFields.Agency;
 
 /** Agency information including code and name */
-@extension("x-tags", #[Tags.agency, Tags.organization, Tags.federal])
+@extension("x-tags", #[Tags.organization])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
 @extension(
   "x-valid-schemas",
-  #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase]
+  #[
+    ValidSchemas.OpportunityBase,
+    ValidSchemas.CompetitionBase,
+    ValidSchemas.FormBase
+  ]
 )
 model CustomAgency extends CustomField {
   name: "agency";
   fieldType: CustomFieldType.object;
 
   @example(#{
-    agencyCode: "US-ABC",
-    agencyName: "Department of Examples",
-    topLevelAgencyName: "Department of Examples",
-    topLevelAgencyCode: "US-ABC",
+    code: "CMS",
+    name: "Centers for Medicare & Medicaid Services",
+    parentCode: "HHS",
+    parentName: "Health and Human Services",
   })
   value: {
-    agencyCode: string;
-    agencyName: string;
-    topLevelAgencyName?: string;
+    /** The agency's acronym or code */
+    code?: string;
 
-    /** Top-level agency code (e.g. federal department code) */
-    topLevelAgencyCode?: string;
+    /** The full name of the agency */
+    name?: string;
+
+    /** The acronym or code of the parent agency */
+    parentCode?: string;
+
+    /** The full name of the parent agency */
+    parentName?: string;
   };
 
   description: "Information about the agency offering this opportunity";
