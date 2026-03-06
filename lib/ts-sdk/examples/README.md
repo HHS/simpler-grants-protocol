@@ -74,6 +74,9 @@ pnpm example:custom-fields
 # Parse custom fields (mock response, or fetch by ID from API)
 pnpm example:get-custom-fields
 pnpm example:get-custom-fields <opportunityId>
+
+# Plugin framework: define, compose, and validate
+pnpm example:plugins
 ```
 
 ## Examples
@@ -177,6 +180,64 @@ pnpm example:get-custom-fields <opportunityId>
 
 4. Handling missing fields:
    nonexistent field: undefined (safely handled)
+
+=== Example Complete ===
+```
+
+### Plugins
+
+Demonstrates the plugin framework: defining standalone plugins with `definePlugin()`, composing them with `mergeExtensions()`, and validating data with the combined schema. No server required.
+
+```bash
+pnpm example:plugins
+```
+
+**Output Example:**
+
+```
+=== Plugins Example ===
+
+--- Standalone plugins ---
+
+  legacyId.system: grants-v1
+  legacyId.id:     42 (typed as number)
+
+  category: STEM Education (typed as string)
+  priority: 1 (typed as number)
+
+--- Composed plugins ---
+
+  STEM Education Grant Program
+
+  legacyId.system: grants-v1
+  legacyId.id:     42
+  category:        STEM Education
+  priority:        1
+
+--- Validation ---
+
+Invalid custom field data:
+{
+  "id": "573525f2-8e15-4405-83fb-e6523511d893",
+  "title": "STEM Education Grant Program",
+  "description": "A grant program focused on STEM education in underserved communities",
+  "status": {
+    "value": "open"
+  },
+  "createdAt": "2025-01-01T00:00:00Z",
+  "lastModifiedAt": "2025-01-15T00:00:00Z",
+  "customFields": {
+    "priority": {
+      "name": "priority",
+      "fieldType": "integer",
+      "value": "not-a-number"
+    }
+  }
+}
+
+Validation failed (as expected):
+  Path:    customFields.priority.value
+  Message: Expected number, received string
 
 === Example Complete ===
 ```

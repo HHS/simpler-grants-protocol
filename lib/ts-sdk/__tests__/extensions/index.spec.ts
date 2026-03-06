@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { withCustomFields, getCustomFieldValue } from "@/extensions";
+import { withCustomFields, getCustomFieldValue, definePlugin, mergeExtensions } from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas";
 import { CustomFieldType } from "@/constants";
 
@@ -289,5 +289,167 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     expect(legacyIdFromHelper).toEqual({ system: "legacy", id: 12345 });
     expect(legacyIdFromHelper?.id).toBe(12345);
     expect(legacyIdFromSchema).toEqual(legacyIdFromHelper);
+  });
+});
+
+// ############################################################################
+// Plugin composition integration tests
+// ############################################################################
+
+describe("plugin composition", () => {
+  // Shared test data
+  const validOpp = {
+    id: "573525f2-8e15-4405-83fb-e6523511d893",
+    title: "Test Opportunity",
+    status: { value: "open" },
+    description: "A test opportunity with custom fields",
+    createdAt: "2025-01-01T00:00:00Z",
+    lastModifiedAt: "2025-01-01T00:00:00Z",
+  };
+
+  // Plugin 1: Legacy System — adds legacyId (object with system + id)
+  const legacyPlugin = definePlugin({
+    extensions: {
+      Opportunity: {
+        legacyId: {
+          fieldType: CustomFieldType.object,
+          valueSchema: LegacyIdValueSchema,
+          description: "Maps to the opportunity_id in the legacy system",
+        },
+      },
+    },
+  } as const);
+
+  // Plugin 2: Classification — adds category (string) and priority (integer)
+  const classificationPlugin = definePlugin({
+    extensions: {
+      Opportunity: {
+        category: {
+          fieldType: CustomFieldType.string,
+          description: "Grant category",
+        },
+        priority: {
+          fieldType: CustomFieldType.integer,
+          description: "Processing priority (1 = highest)",
+        },
+      },
+    },
+  } as const);
+
+  it("should parse custom fields from standalone plugins", () => {
+    // Legacy plugin parses its own field
+    const legacyData = {
+      ...validOpp,
+      customFields: {
+        legacyId: {
+          name: "legacyId",
+          fieldType: CustomFieldType.object,
+          value: { system: "grants-v1", id: 42 },
+        },
+      },
+    };
+    const legacyResult = legacyPlugin.schemas.Opportunity.parse(legacyData);
+    const legacyId = getCustomFieldValue(
+      legacyResult.customFields,
+      "legacyId",
+      LegacyIdValueSchema
+    );
+    expect(legacyId).toEqual({ system: "grants-v1", id: 42 });
+
+    // Classification plugin parses its own fields
+    const classificationData = {
+      ...validOpp,
+      customFields: {
+        category: {
+          name: "category",
+          fieldType: CustomFieldType.string,
+          value: "STEM Education",
+        },
+        priority: {
+          name: "priority",
+          fieldType: CustomFieldType.integer,
+          value: 1,
+        },
+      },
+    };
+    const classResult = classificationPlugin.schemas.Opportunity.parse(classificationData);
+    const category = getCustomFieldValue(classResult.customFields, "category", z.string());
+    const priority = getCustomFieldValue(classResult.customFields, "priority", z.number().int());
+    expect(category).toBe("STEM Education");
+    expect(priority).toBe(1);
+  });
+
+  it("should merge extensions from multiple plugins without conflict", () => {
+    const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+
+    // All three fields should be present under Opportunity
+    expect(merged.Opportunity).toBeDefined();
+    expect(Object.keys(merged.Opportunity!)).toEqual(
+      expect.arrayContaining(["legacyId", "category", "priority"])
+    );
+    expect(Object.keys(merged.Opportunity!)).toHaveLength(3);
+  });
+
+  it("should parse a payload with all custom fields from the combined plugin", () => {
+    const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+    const combinedPlugin = definePlugin({ extensions: merged });
+
+    const fullData = {
+      ...validOpp,
+      customFields: {
+        legacyId: {
+          name: "legacyId",
+          fieldType: CustomFieldType.object,
+          value: { system: "grants-v1", id: 42 },
+        },
+        category: {
+          name: "category",
+          fieldType: CustomFieldType.string,
+          value: "STEM Education",
+        },
+        priority: {
+          name: "priority",
+          fieldType: CustomFieldType.integer,
+          value: 1,
+        },
+      },
+    };
+
+    const parsed = combinedPlugin.schemas.Opportunity.parse(fullData);
+
+    // Extract all custom field values
+    const legacyId = parsed.customFields?.legacyId?.value;
+    const category = parsed.customFields?.category?.value;
+    const priority = parsed.customFields?.priority?.value;
+
+    // Check typed access to values works
+    expect(legacyId?.system).toBe("grants-v1");
+    expect(legacyId?.id).toBe(42);
+    expect(category).toBe("STEM Education");
+    expect(priority).toBe(1);
+  });
+
+  it("should reject invalid data in the combined schema", () => {
+    const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+    const combinedPlugin = definePlugin({ extensions: merged });
+
+    const invalidData = {
+      ...validOpp,
+      customFields: {
+        priority: {
+          name: "priority",
+          fieldType: CustomFieldType.integer,
+          value: "not-a-number", // Should be an integer
+        },
+      },
+    };
+
+    const result = combinedPlugin.schemas.Opportunity.safeParse(invalidData);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].path).toContain("customFields");
+      expect(result.error.issues[0].path).toContain("priority");
+      expect(result.error.issues[0].path).toContain("value");
+    }
   });
 });

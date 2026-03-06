@@ -3,6 +3,8 @@
 import pytest
 from datetime import date, time, datetime, timezone
 
+from pydantic import ValidationError
+
 from common_grants_sdk.schemas.pydantic.fields import (
     Money,
     EventType,
@@ -87,16 +89,17 @@ def test_single_date_event_validation():
     assert event.time is None
     assert event.description is None
 
-    # Invalid cases
-    with pytest.raises(ValueError):
+    # Invalid: empty name fails min_length=1
+    with pytest.raises(ValidationError):
         SingleDateEvent(
             name="", event_type=EventType.SINGLE_DATE, date=date(2024, 1, 1)
-        )  # Empty name
+        )
 
-    with pytest.raises(ValueError):
-        SingleDateEvent(
-            name="Test Event", event_type=EventType.SINGLE_DATE, date="2024-01-01"
-        )  # String instead of date object
+    # With strict=False, date string is coerced to date
+    event = SingleDateEvent(
+        name="Test Event", event_type=EventType.SINGLE_DATE, date="2024-01-01"
+    )
+    assert event.date == date(2024, 1, 1)
 
 
 def test_date_range_event_validation():

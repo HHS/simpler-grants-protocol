@@ -137,8 +137,11 @@ def create_custom_field_schema(
         CustomFieldForAttr = create_model(
             _create_model_name(name=name, key=key),
             __base__=CustomField,
-            # pin expected type (still accepts wire key "type" via alias)
-            field_type=(CustomFieldType, Field(default=field.field_type, alias="type")),
+            # pin expected type (still accepts wire key "fieldType" via alias)
+            field_type=(
+                CustomFieldType,
+                Field(default=field.field_type, alias="fieldType"),
+            ),
             # pin name and description from spec
             name=(str, Field(default=field.name or key)),
             description=(Optional[str], Field(default=field.description or None)),
