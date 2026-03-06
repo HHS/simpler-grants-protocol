@@ -10,6 +10,10 @@
 import { z } from "zod";
 import type { CustomField } from "../types";
 
+// ############################################################################
+// Public function - getCustomFieldValue()
+// ############################################################################
+
 /**
  * Extracts and parses a custom field value from a customFields object,
  *

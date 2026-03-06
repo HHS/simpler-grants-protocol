@@ -1,20 +1,44 @@
 /**
- * Type definitions for the extensions module.
+ * Shared foundation types for the extensions module.
+ *
+ * Only types referenced by multiple files live here. Types specific to a
+ * single utility function are co-located with that function.
  *
  * @module @common-grants/sdk/extensions
  */
 
 import { z } from "zod";
-import type { CustomField, CustomFieldType } from "../types";
+import type { CustomFieldType } from "../types";
+import { OpportunityBaseSchema } from "../schemas/zod/models";
 
 // ############################################################################
-// CustomFieldSpec
+// Public type - CustomFieldSpec
 // ############################################################################
 
 /**
- * Specification for a custom field to be registered on a schema.
- * The key in the Record passed to withCustomFields() is the field key in customFields.
- * CustomField.name defaults to spec.name when provided, otherwise to the record key.
+ * Specification for a custom field to be registered on a schema, with an optional
+ * Zod schema to validate the value property.
+ *
+ * @example
+ * The following `CustomFieldSpec` object:
+ *
+ * ```typescript
+ * const spec: CustomFieldSpec = {
+ *   name: "Legacy ID",
+ *   fieldType: "integer",
+ *   value: z.number().int(),
+ *   description: "An integer ID for the opportunity, needed for compatibility with legacy systems",
+ * };
+ * ```
+ * Corresponds to the following custom field object:
+ * ```json
+ * {
+ *   "name": "Legacy ID",
+ *   "fieldType": "integer",
+ *   "value": 12345,
+ *   "description": "An integer ID for the opportunity, needed for compatibility with legacy systems",
+ * }
+ * ```
  */
 export interface CustomFieldSpec {
   /** Optional display name; used as the default for CustomField.name when provided, otherwise the record key is used */
@@ -28,179 +52,72 @@ export interface CustomFieldSpec {
 }
 
 // ############################################################################
-// Internal Type Inference Utilities
+// Public types - ExtensibleSchemaName, SchemaExtensions
 // ############################################################################
 
 /**
- * WHY THESE UTILITIES EXIST:
+ * The definitive list of base model names that support `customFields` extensions.
  *
- * The `withCustomFields()` function builds Zod schemas dynamically at runtime by
- * iterating over `Object.entries(specs)`. However, TypeScript's type system
- * operates at compile time and cannot "unroll" runtime loops to infer types.
- *
- * When we do:
- *   const schemas = {};
- *   for (const [name, spec] of Object.entries(specs)) { schemas[name] = ... }
- *
- * TypeScript only sees `Record<string, z.ZodTypeAny>`, losing all specific
- * key-value type information.
- *
- * These type utilities bridge that gap by operating at the TYPE level instead
- * of the VALUE level. They use TypeScript's mapped types over the Record's
- * keys at compile time, reconstructing what the inferred type should be.
+ * @todo Add schemas here if they support `customFields` extensions and
+ *       map them to Zod schemas in `EXTENSIBLE_SCHEMA_MAP`.
  */
+export type ExtensibleSchemaName = "Opportunity";
 
 /**
- * Maps each CustomFieldType value to its corresponding default TypeScript type.
+ * Maps each `ExtensibleSchemaName` to its base Zod schema constant.
  *
- * This is used when a CustomFieldSpec doesn't provide a `valueSchema`. Instead
- * of using `z.unknown()`, we infer a more specific type based on the fieldType.
+ * This is the source of truth for extensible schema type inference.
+ * The `PluginSchemas` type derives from `typeof EXTENSIBLE_SCHEMA_MAP` so that
+ * the two stay in sync automatically.
  *
- * Example:
- *   - fieldType: "string" → value type: string
- *   - fieldType: "number" → value type: number
- *   - fieldType: "object" → value type: Record<string, unknown>
+ * @todo Keep this map in sync with `ExtensibleSchemaName`.
  *
- * Note: This map must include all values from the CustomFieldType union.
- * If a new field type is added to CustomFieldTypeEnum, this map must be updated.
+ * @internal
  */
-type DefaultFieldTypeMap = {
-  string: string;
-  number: number;
-  integer: number;
-  boolean: boolean;
-  object: Record<string, unknown>;
-  array: unknown[];
-};
+export const EXTENSIBLE_SCHEMA_MAP = {
+  Opportunity: OpportunityBaseSchema,
+} as const satisfies Record<ExtensibleSchemaName, z.AnyZodObject>;
 
 /**
- * Infers the TypeScript type for a custom field's `value` property.
+ * Maps extensible model names to their custom field specifications.
  *
- * This conditional type works in two steps:
- * 1. If the spec provides a `valueSchema`, use `z.infer<>` to get its TypeScript type
- * 2. Otherwise, look up the default type from `DefaultFieldTypeMap` based on `fieldType`
+ * Each key is the name of a model that supports `customFields`, and the value
+ * is a record mapping custom field keys to their `CustomFieldSpec` definitions.
+ * The `Partial` type is used so plugins only need to declare models they actually extend.
  *
  * @example
+ * The following `SchemaExtensions` object:
+ *
  * ```typescript
- * // With valueSchema:
- * type T1 = InferValueType<{ fieldType: "object", valueSchema: z.object({ id: z.number() }) }>;
- * // T1 = { id: number }
- *
- * // Without valueSchema (uses default):
- * type T2 = InferValueType<{ fieldType: "string" }>;
- * // T2 = string
+ * const extensions: SchemaExtensions = {
+ *   Opportunity: {
+ *     legacyId: { name: "Legacy ID", fieldType: "integer" },
+ *     category: { name: "Category", fieldType: "string", description: "Grant category" },
+ *   },
+ * };
  * ```
- */
-type InferValueType<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodTypeAny
-  ? z.infer<T["valueSchema"]>
-  : T["fieldType"] extends keyof DefaultFieldTypeMap
-    ? DefaultFieldTypeMap[T["fieldType"]]
-    : unknown;
-
-/**
- * Builds the complete TypeScript type for a single custom field object.
- *
- * This represents what a registered custom field looks like at runtime:
+ * Corresponds to the following customFields object on the Opportunity schema:
+ * ```json
  * {
- *   name: string;
- *   fieldType: "string" | "number" | ... (literal type from spec);
- *   value: <inferred from valueSchema or DefaultFieldTypeMap>;
- *   schema?: string | null;
- *   description?: string | null;
+ *   "id": "573525f2-8e15-4405-83fb-e6523511d893",
+ *   "title": "Test Opportunity",
+ *   "status": { "value": "open" },
+ *   "customFields": {
+ *     "legacyId": {
+ *       "name": "Legacy ID",
+ *       "fieldType": "integer",
+ *       "value": 12345,
+ *     },
+ *     "category": {
+ *       "name": "Category",
+ *       "fieldType": "string",
+ *       "value": "Education",
+ *       "description": "Grant category",
+ *     }
+ *   }
  * }
- *
- * @example
- * ```typescript
- * type Field = TypedCustomField<{
- *   fieldType: "object",
- *   valueSchema: z.object({ system: z.string(), id: z.number() })
- * }>;
- * // Field = {
- * //   name: string;
- * //   fieldType: "object";
- * //   value: { system: string; id: number };
- * //   schema?: string | null;
- * //   description?: string | null;
- * // }
  * ```
  */
-type TypedCustomField<T extends CustomFieldSpec> = {
-  name: string;
-  fieldType: T["fieldType"];
-  value: InferValueType<T>;
-  schema?: string | null;
-  description?: string | null;
-};
-
-/**
- * Builds the complete `customFields` object type from a Record of specs.
- *
- * This is the core type transformation that makes `withCustomFields()` work.
- * It does two things:
- *
- * 1. **Mapped type iteration**: `[K in keyof TSpecs]` iterates over each key
- *    in the specs Record at the TYPE level, creating a typed property for it
- *    using the spec value type at TSpecs[K].
- *
- * 2. **Passthrough for unknown fields**: `& Record<string, CustomField>` ensures
- *    that unregistered custom fields (not in the specs Record) can still pass
- *    through validation, but they'll be typed as the base `CustomField` type
- *    (with `value: unknown`).
- *
- * @example
- * ```typescript
- * type Fields = TypedCustomFields<{
- *   legacyId: { fieldType: "object", valueSchema: ... },
- *   category: { fieldType: "string" }
- * }>;
- * // Fields = {
- * //   legacyId?: { fieldType: "object", value: { system: string; id: number }, ... };
- * //   category?: { fieldType: "string", value: string, ... };
- * // } & Record<string, CustomField>
- * ```
- *
- * This allows:
- *   - `fields.legacyId?.value.id` → typed as `number` ✅
- *   - `fields.category?.value` → typed as `string` ✅
- *   - `fields.unknownField?.value` → typed as `unknown` (passthrough)
- */
-type TypedCustomFields<TSpecs extends Record<string, CustomFieldSpec>> = {
-  [K in keyof TSpecs]?: TypedCustomField<TSpecs[K]>;
-} & Record<string, CustomField>;
-
-// ############################################################################
-// WithCustomFieldsResult
-// ############################################################################
-
-/**
- * The return type of `withCustomFields()` - a Zod schema with typed customFields.
- *
- * This type:
- * 1. Takes the base schema's shape and removes the original `customFields` property
- * 2. Adds a new `customFields` property typed using `TypedCustomFields<TSpecs>`
- * 3. Wraps it in `z.ZodObject` to maintain Zod schema compatibility
- *
- * The result is that `z.infer<WithCustomFieldsResult<...>>` produces a type where:
- * - All base schema properties remain unchanged
- * - `customFields` is optional (via `ZodOptional`)
- * - Registered custom fields have strongly-typed `value` properties
- * - Unregistered fields pass through with base `CustomField` type
- *
- * @example
- * ```typescript
- * const Schema = withCustomFields(OpportunityBaseSchema, {
- *   legacyId: { fieldType: "object", valueSchema: ... }
- * } as const);
- *
- * type Opportunity = z.infer<typeof Schema>;
- * // Opportunity.customFields?.legacyId?.value.id → typed as number ✅
- * ```
- */
-export type WithCustomFieldsResult<
-  TSchema extends z.AnyZodObject,
-  TSpecs extends Record<string, CustomFieldSpec>,
-> = z.ZodObject<
-  Omit<TSchema["shape"], "customFields"> & {
-    customFields: z.ZodOptional<z.ZodType<TypedCustomFields<TSpecs>>>;
-  }
+export type SchemaExtensions = Partial<
+  Record<ExtensibleSchemaName, Record<string, CustomFieldSpec>>
 >;

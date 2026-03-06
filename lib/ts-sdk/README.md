@@ -401,6 +401,117 @@ If you don't provide a `valueSchema`, the SDK uses defaults based on `fieldType`
 
 For more examples, see the [custom fields example](./examples/custom-fields.ts).
 
+### Plugins
+
+Plugins wrap `withCustomFields()` into reusable, composable packages. Use `definePlugin()` to create a plugin, then optionally combine plugins with `mergeExtensions()`.
+
+#### Defining a plugin
+
+```ts
+import { z } from "zod";
+import { CustomFieldType } from "@common-grants/sdk/constants";
+import { definePlugin } from "@common-grants/sdk/extensions";
+
+// A plugin for backward compatibility with a legacy grants system
+const LegacyIdValueSchema = z.object({
+  system: z.string(),
+  id: z.number().int(),
+});
+
+const legacyPlugin = definePlugin({
+  extensions: {
+    Opportunity: {
+      legacyId: {
+        fieldType: CustomFieldType.object,
+        valueSchema: LegacyIdValueSchema,
+        description: "Maps to the opportunity_id in the legacy system",
+      },
+    },
+  },
+} as const);
+
+// A plugin for grant categorization
+const classificationPlugin = definePlugin({
+  extensions: {
+    Opportunity: {
+      category: {
+        fieldType: CustomFieldType.string,
+        description: "Grant category",
+      },
+      priority: {
+        fieldType: CustomFieldType.integer,
+        description: "Processing priority (1 = highest)",
+      },
+    },
+  },
+} as const);
+```
+
+Each plugin exposes `.schemas` with typed versions of every extensible model:
+
+```ts
+const opportunity = legacyPlugin.schemas.Opportunity.parse(data);
+opportunity.customFields?.legacyId?.value.id; // typed as number
+```
+
+#### Composing plugins
+
+Use `mergeExtensions()` to combine multiple plugins into one, then pass the result to `definePlugin()`:
+
+```ts
+import { definePlugin, mergeExtensions } from "@common-grants/sdk/extensions";
+
+// Merge extensions from both plugins
+const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+
+// Create a combined plugin with all custom fields
+const combinedPlugin = definePlugin({ extensions: merged });
+
+// Parse data — all custom fields are typed
+const opportunity = combinedPlugin.schemas.Opportunity.parse({
+  id: "573525f2-8e15-4405-83fb-e6523511d893",
+  title: "STEM Research Grant",
+  status: { value: "open" },
+  description: "A grant for STEM research",
+  createdAt: "2025-01-01T00:00:00Z",
+  lastModifiedAt: "2025-01-01T00:00:00Z",
+  customFields: {
+    legacyId: {
+      name: "legacyId",
+      fieldType: "object",
+      value: { system: "grants-v1", id: 42 },
+    },
+    category: {
+      name: "category",
+      fieldType: "string",
+      value: "STEM Education",
+    },
+    priority: {
+      name: "priority",
+      fieldType: "integer",
+      value: 1,
+    },
+  },
+});
+
+// Direct typed access to all custom fields
+opportunity.customFields?.legacyId?.value.system; // string
+opportunity.customFields?.legacyId?.value.id; // number
+opportunity.customFields?.category?.value; // string
+opportunity.customFields?.priority?.value; // number
+```
+
+By default, `mergeExtensions()` throws if two plugins declare the same field name on the same model. You can change this with the `onConflict` option:
+
+```ts
+// Keep the last definition when fields overlap
+const merged = mergeExtensions([pluginA.extensions, pluginB.extensions], {
+  onConflict: "lastWins",
+});
+```
+
+> **Note:** The `"firstWins"` and `"lastWins"` strategies resolve conflicts at runtime but cannot preserve specific field types statically. For full type safety, use the default `"error"` strategy with non-overlapping field names.
+
 ## License
 
 CC0-1.0

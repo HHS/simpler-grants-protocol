@@ -8,9 +8,15 @@
  * @packageDocumentation
  */
 
-// Types
-export type { CustomFieldSpec, WithCustomFieldsResult } from "./types";
+// Plugin creation — define and compose plugins
+export type { Plugin, DefinePluginOptions } from "./define-plugin";
+export type { SchemaExtensions, CustomFieldSpec } from "./types";
+export { definePlugin } from "./define-plugin";
+export { mergeExtensions } from "./merge-extensions";
 
-// Functions
+// Schema utilities — lower-level tools for working with custom fields
+export type { MergeExtensionsOptions, MergedSchemaExtensions } from "./merge-extensions";
+export type { WithCustomFieldsResult } from "./with-custom-fields";
+export type { ExtensibleSchemaName } from "./types";
 export { withCustomFields } from "./with-custom-fields";
 export { getCustomFieldValue } from "./get-custom-field-value";
