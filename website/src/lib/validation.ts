@@ -11,9 +11,14 @@ import { Paths } from "./schema/paths";
 // CommonGrants schema and validator
 // #########################################################
 
+/** Ajv instance loaded from Paths.SCHEMAS_DIR (base protocol schemas only) */
 export const ajv = createAjvWithSchemas();
 const commonGrantsSchema = ajv.getSchema("ProposalBase.yaml")
   ?.schema as JsonSchema;
+/** Ajv instance loaded from Paths.CUSTOM_FIELD_SCHEMAS_DIR (custom field schemas only) */
+export const customFieldsAjv = createAjvWithSchemas({
+  schemaDir: Paths.CUSTOM_FIELD_SCHEMAS_DIR,
+});
 
 // #########################################################
 // Validation types
@@ -49,10 +54,22 @@ interface CommonGrantsValidationProps {
 // #########################################################
 
 /**
- * Loads all YAML schema files and creates an Ajv instance ready for validation
- * This is the main function to use for schema validation
+ * Options for createAjvWithSchemas. When schemaDir is provided, load from that
+ * directory only. Otherwise load from Paths.SCHEMAS_DIR.
  */
-export function createAjvWithSchemas(): Ajv2020 {
+export interface CreateAjvWithSchemasOptions {
+  /** Single directory to load YAML schemas from (relative to process.cwd()). */
+  schemaDir?: string;
+}
+
+/**
+ * Loads all YAML schema files from one directory and creates an Ajv instance.
+ * Use the default (no options) for base protocol schemas; pass schemaDir for
+ * custom field schemas or another single directory.
+ */
+export function createAjvWithSchemas(
+  options?: CreateAjvWithSchemasOptions,
+): Ajv2020 {
   const ajv = new Ajv2020({
     allErrors: true,
     verbose: true,
@@ -68,11 +85,18 @@ export function createAjvWithSchemas(): Ajv2020 {
     },
   });
 
-  // Load all YAML schema files from the yaml directory
-  const yamlDir = path.resolve(process.cwd(), Paths.SCHEMAS_DIR);
-  const files = fs
-    .readdirSync(yamlDir)
-    .filter((file) => file.endsWith(".yaml"));
+  const dir =
+    options?.schemaDir !== undefined ? options.schemaDir : Paths.SCHEMAS_DIR;
+  const yamlDir = path.resolve(process.cwd(), dir);
+
+  if (!fs.existsSync(yamlDir)) {
+    return ajv;
+  }
+
+  const entries = fs.readdirSync(yamlDir, { withFileTypes: true });
+  const files = entries
+    .filter((e) => e.isFile() && e.name.endsWith(".yaml"))
+    .map((e) => e.name);
 
   for (const file of files) {
     const filePath = path.join(yamlDir, file);

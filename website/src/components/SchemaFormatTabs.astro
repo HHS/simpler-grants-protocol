@@ -72,6 +72,10 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
   if (!props.file) {
     return null;
   }
+  // Custom field schemas live in .custom-field-schemas (gitignored); no hosted link
+  if (props.file.path.includes(Paths.CUSTOM_FIELD_SCHEMAS_PATH_PREFIX)) {
+    return null;
+  }
 
   const pathPrefix = `website/${Paths.PUBLIC_DIR}/`;
   let filePath = props.file.path;
@@ -155,11 +159,17 @@ function extractCode(props: CodeBlockConfig): string {
     jsonSchemaCode && (
       <TabItem label="JSON Schema">
         <p>
-          {"The "}
-          <a href={jsonSchemaUrl} target="_blank" rel="noopener noreferrer">
-            JSON Schema
-          </a>
-          {" for this model."}
+          {jsonSchemaUrl ? (
+            <>
+              {"The "}
+              <a href={jsonSchemaUrl} target="_blank" rel="noopener noreferrer">
+                JSON Schema
+              </a>
+              {" for this model."}
+            </>
+          ) : (
+            "The JSON Schema for this model."
+          )}
         </p>
         <Code code={jsonSchemaCode} lang="yaml" />
       </TabItem>

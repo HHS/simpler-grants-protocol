@@ -1,4 +1,4 @@
-import { ajv } from "../validation";
+import { customFieldsAjv } from "../validation";
 import type {
   CustomField,
   CustomFieldIndexEntry,
@@ -18,13 +18,12 @@ import customFieldsIndex from "@/content/custom-fields/index.json";
 /** Cache for loaded custom fields */
 let customFieldsCache: CustomFieldMap | null = null;
 
-/** Loads a schema using AJV's schema registry */
+/** Loads a schema using the custom-field schemas AJV registry */
 function loadSchema(schemaName: string): Record<string, unknown> | null {
-  // AJV schemas are registered with .yaml suffix
   const schemaId = schemaName.endsWith(".yaml")
     ? schemaName
     : `${schemaName}.yaml`;
-  const validator = ajv.getSchema(schemaId);
+  const validator = customFieldsAjv.getSchema(schemaId);
 
   if (!validator?.schema) {
     console.warn(`Schema ${schemaId} not found in AJV registry`);
@@ -32,6 +31,12 @@ function loadSchema(schemaName: string): Record<string, unknown> | null {
   }
 
   return validator.schema as Record<string, unknown>;
+}
+
+/** Normalizes an array from schema extension (may be string[] from JSON) */
+function parseStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
 }
 
 /** Extracts custom field data from a JSON schema */
@@ -64,12 +69,24 @@ function extractSchemaData(
     ? valueProperty.examples
     : [];
 
+  // Extract x-tags, x-version, x-valid-schemas, x-author from schema (always from schema)
+  const tags = parseStringArray(schema["x-tags"]);
+  const version =
+    typeof schema["x-version"] === "string" ? schema["x-version"] : "";
+  const validFor = parseStringArray(schema["x-valid-schemas"]);
+  const author =
+    typeof schema["x-author"] === "string" ? schema["x-author"] : "";
+
   return {
     name,
     description,
     fieldType,
     examples,
     rawSchema: schema,
+    tags,
+    version,
+    validFor,
+    author,
   };
 }
 
@@ -165,6 +182,7 @@ export function getFilterOptions(): FilterOptions {
   const tagSet = new Set<string>();
   const schemaSet = new Set<string>();
   const authorSet = new Set<string>();
+  const fieldTypeSet = new Set<string>();
 
   for (const field of Object.values(allFields)) {
     // Collect tags
@@ -175,13 +193,18 @@ export function getFilterOptions(): FilterOptions {
     for (const schema of field.validFor) {
       schemaSet.add(schema);
     }
-    // Collect authors
-    authorSet.add(field.author);
+    // Collect authors (skip empty)
+    if (field.author) authorSet.add(field.author);
+    // Collect field types
+    if (field.fieldType) {
+      fieldTypeSet.add(field.fieldType);
+    }
   }
 
   return {
     tags: Array.from(tagSet).sort(),
     schemas: Array.from(schemaSet).sort(),
     authors: Array.from(authorSet).sort(),
+    fieldTypes: Array.from(fieldTypeSet).sort(),
   };
 }
