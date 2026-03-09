@@ -1,0 +1,7 @@
+{
+  "orgAddress": { "schema": "QuestionPrimaryOrgAddress" },
+  "pocAddress": { "schema": "QuestionPocAddress" },
+  "pocName": { "schema": "QuestionPrimaryContactName" },
+  "orgEin": { "schema": "QuestionOrgEin" },
+  "orgPhone": { "schema": "QuestionOrgPhone" }
+}
