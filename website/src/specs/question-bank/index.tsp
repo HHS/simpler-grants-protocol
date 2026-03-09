@@ -6,6 +6,23 @@ import "./poc-address.tsp";
 import "./poc-name.tsp";
 import "./org-ein.tsp";
 import "./org-phone.tsp";
+import "./org-name.tsp";
+import "./org-uei.tsp";
+import "./poc-email.tsp";
+import "./poc-phone.tsp";
+import "./poc-title.tsp";
 
 @JsonSchema.jsonSchema
 namespace QuestionBank;
+
+/** Tags for categorizing question bank items */
+enum Tags {
+  organization,
+  contact,
+  address,
+  phone,
+  email,
+  identifier,
+  name,
+  proposal,
+}

@@ -5,14 +5,14 @@ import "./index.tsp";
 using CommonGrants.Types;
 using JsonSchema;
 
-namespace QuestionBank.OrgEin;
+namespace QuestionBank.OrgUei;
 
-/** The Employer Identification Number (EIN) for the applicant organization */
+/** The Unique Entity Identifier (UEI) for the applicant organization */
 @extension("x-tags", #[Tags.organization, Tags.identifier])
 @extension(
   "x-mapping-from-cg",
   #{
-    ein: "organizations.primary.ein",
+    uei: "organizations.primary.uei",
   }
 )
 @extension(
@@ -20,7 +20,7 @@ namespace QuestionBank.OrgEin;
   #{
     organizations: #{
       primary: #{
-        ein: "ein",
+        uei: "uei",
       },
     },
   }
@@ -30,12 +30,12 @@ namespace QuestionBank.OrgEin;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/ein" }
+      #{ type: "Control", scope: "#/properties/uei" }
     ],
   }
 )
-@example(#{ ein: "12-3456789" })
-model QuestionOrgEin {
-  /** The organization's Employer Identification Number */
-  ein: employerTaxId;
+@example(#{ uei: "ABC1234567890" })
+model QuestionOrgUei {
+  /** The organization's Unique Entity Identifier from SAM.gov */
+  uei: samUEI;
 }

@@ -13,7 +13,7 @@ const detailHref = `/question-bank/${item.id}`;
   class="field-card question-card"
   data-name={item.name.toLowerCase()}
   data-description={item.description.toLowerCase()}
-  data-fieldtype={item.fieldType.toLowerCase()}
+  data-tags={item.tags.join(",").toLowerCase()}
 >
   <a href={detailHref} class="card-link">
     <header class="card-header">
@@ -26,9 +26,11 @@ const detailHref = `/question-bank/${item.id}`;
       {item.description}
     </p>
 
-    <div class="card-type">
-      <span class="sr-only">Data type</span>
-      <span class="type-badge">{item.fieldType}</span>
+    <div class="card-tags">
+      <span class="sr-only">Tags</span>
+      <div class="tag-pill-list">
+        {item.tags.map((tag) => <span class="tag-pill">{tag}</span>)}
+      </div>
     </div>
   </a>
 </div>
@@ -78,22 +80,6 @@ const detailHref = `/question-bank/${item.id}`;
     color: var(--sl-color-gray-2);
   }
 
-  .card-type {
-    margin-bottom: 0.5rem;
-  }
-
-  .type-badge {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    background: var(--sl-color-accent-low);
-    color: var(--sl-color-accent-high);
-    border-radius: 0.375rem;
-    font-family: monospace;
-    font-size: 0.875rem;
-    line-height: 1;
-    width: fit-content;
-  }
-
   .card-description {
     font-size: 0.9375rem;
     color: var(--sl-color-gray-1);
@@ -107,8 +93,28 @@ const detailHref = `/question-bank/${item.id}`;
   }
 
   .card-link > .card-description,
-  .card-link > .card-type {
+  .card-link > .card-tags {
     margin-top: 0;
+  }
+
+  .card-tags {
+    margin-bottom: 0;
+  }
+
+  .tag-pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .tag-pill {
+    padding: 0.375rem 0.75rem;
+    background: var(--sl-color-blue-low);
+    color: var(--sl-color-blue-high);
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-family: monospace;
+    font-weight: 500;
   }
 
   .sr-only {

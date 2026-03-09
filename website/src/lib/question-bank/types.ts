@@ -14,8 +14,8 @@ export interface QuestionBankSchemaData {
   name: string;
   /** Question description */
   description: string;
-  /** JSON schema type (object, string, etc.) */
-  fieldType: string;
+  /** Tags (x-tags) for categorization */
+  tags: string[];
   /** Schema properties */
   properties: Record<string, unknown>;
   /** Example values */
@@ -28,6 +28,11 @@ export interface QuestionBankSchemaData {
   uiSchema: Record<string, unknown>;
   /** Full JSON schema object */
   rawSchema: Record<string, unknown>;
+}
+
+/** Filter dropdown options returned by getFilterOptions() */
+export interface QuestionBankFilterOptions {
+  tags: string[];
 }
 
 /**

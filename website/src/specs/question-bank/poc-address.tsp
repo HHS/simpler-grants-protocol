@@ -1,12 +1,14 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
+import "./index.tsp";
 
 using CommonGrants.Fields;
 using JsonSchema;
 
 namespace QuestionBank.PocAddress;
 
-/** An address for an organization */
+/** A mailing address for the primary point of contact */
+@extension("x-tags", #[Tags.contact, Tags.address])
 @extension(
   "x-mapping-from-cg",
   #{

@@ -1,5 +1,6 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
+import "./index.tsp";
 
 using CommonGrants.Fields;
 using JsonSchema;
@@ -7,6 +8,7 @@ using JsonSchema;
 namespace QuestionBank.OrgAddress;
 
 /** An address for an organization */
+@extension("x-tags", #[Tags.organization, Tags.address])
 @extension(
   "x-mapping-from-cg",
   #{

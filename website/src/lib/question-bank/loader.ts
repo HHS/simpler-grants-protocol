@@ -4,6 +4,7 @@ import type {
   QuestionBankIndexEntry,
   QuestionBankMap,
   QuestionBankSchemaData,
+  QuestionBankFilterOptions,
 } from "./types";
 
 // Import the question bank index
@@ -15,6 +16,12 @@ import questionBankIndex from "@/content/question-bank/index.json";
 
 /** Cache for loaded question bank items */
 let questionBankCache: QuestionBankMap | null = null;
+
+/** Normalizes an array from schema extension (may be string[] from JSON) */
+function parseStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
 
 /** Loads a raw schema by name from the AJV registry */
 function loadRawSchema(schemaName: string): Record<string, unknown> | null {
@@ -162,7 +169,7 @@ function extractSchemaData(
   const name = typeof schema.title === "string" ? schema.title : "";
   const description =
     typeof schema.description === "string" ? schema.description : "";
-  const fieldType = typeof schema.type === "string" ? schema.type : "object";
+  const tags = parseStringArray(schema["x-tags"]);
   const properties = (schema.properties as Record<string, unknown>) ?? {};
   const examples = Array.isArray(schema.examples) ? schema.examples : [];
   const mappingFromCg =
@@ -175,7 +182,7 @@ function extractSchemaData(
   return {
     name,
     description,
-    fieldType,
+    tags,
     properties,
     examples,
     mappingFromCg,
@@ -253,4 +260,26 @@ export function loadAllQuestionBankItems(): QuestionBankMap {
  */
 export function getQuestionBankIds(): string[] {
   return Object.keys(questionBankIndex);
+}
+
+// =============================================================================
+// FILTER OPTIONS
+// =============================================================================
+
+/**
+ * Gets all unique filter options for dropdowns
+ */
+export function getFilterOptions(): QuestionBankFilterOptions {
+  const allItems = loadAllQuestionBankItems();
+  const tagSet = new Set<string>();
+
+  for (const item of Object.values(allItems)) {
+    for (const tag of item.tags) {
+      tagSet.add(tag);
+    }
+  }
+
+  return {
+    tags: Array.from(tagSet).sort(),
+  };
 }

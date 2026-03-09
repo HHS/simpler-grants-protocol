@@ -36,5 +36,20 @@ if (!item) {
     tableOfContents: false,
   }}
 >
+  <a href="/question-bank" class="back-link">&larr; Back to Question Bank</a>
   <QuestionDetails item={item} />
 </StarlightPage>
+
+<style>
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+    color: var(--sl-color-accent);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>

@@ -5,23 +5,23 @@ import "./index.tsp";
 using CommonGrants.Fields;
 using JsonSchema;
 
-namespace QuestionBank.OrgPhone;
+namespace QuestionBank.PocPhone;
 
-/** A phone number for the applicant organization */
-@extension("x-tags", #[Tags.organization, Tags.phone])
+/** A phone number for the primary point of contact */
+@extension("x-tags", #[Tags.contact, Tags.phone])
 @extension(
   "x-mapping-from-cg",
   #{
-    countryCode: "organizations.primary.phones.primary.countryCode",
-    number: "organizations.primary.phones.primary.number",
-    extension: "organizations.primary.phones.primary.extension",
-    isMobile: "organizations.primary.phones.primary.isMobile",
+    countryCode: "contacts.primary.phones.primary.countryCode",
+    number: "contacts.primary.phones.primary.number",
+    extension: "contacts.primary.phones.primary.extension",
+    isMobile: "contacts.primary.phones.primary.isMobile",
   }
 )
 @extension(
   "x-mapping-to-cg",
   #{
-    organizations: #{
+    contacts: #{
       primary: #{
         phones: #{
           primary: #{
@@ -48,4 +48,4 @@ namespace QuestionBank.OrgPhone;
   }
 )
 @example(Examples.Phone.mobile)
-model QuestionOrgPhone extends Phone {}
+model QuestionPocPhone extends Phone {}
