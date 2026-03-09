@@ -51,7 +51,7 @@ if (!example && !jsonSchema && !typeSpec && !python) {
 const exampleCode = example?.code
   ? example.code
   : example?.file?.path
-    ? generateSchemaExample(example.file.path)
+    ? await generateSchemaExample(example.file.path)
     : null;
 const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
 const typeSpecCode = typeSpec ? extractCode(typeSpec) : null;

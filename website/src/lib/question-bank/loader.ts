@@ -1,4 +1,5 @@
 import { questionBankAjv } from "../validation";
+import { createAjvLookup, flattenSchema } from "../schema/ref-resolver";
 import type {
   QuestionBankItem,
   QuestionBankIndexEntry,
@@ -17,6 +18,8 @@ import questionBankIndex from "@/content/question-bank/index.json";
 /** Cache for loaded question bank items */
 let questionBankCache: QuestionBankMap | null = null;
 
+const lookup = createAjvLookup(questionBankAjv);
+
 /** Normalizes an array from schema extension (may be string[] from JSON) */
 function parseStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -24,141 +27,22 @@ function parseStringArray(value: unknown): string[] {
 }
 
 /** Loads a raw schema by name from the AJV registry */
-function loadRawSchema(schemaName: string): Record<string, unknown> | null {
+async function loadRawSchema(
+  schemaName: string,
+): Promise<Record<string, unknown> | null> {
   const schemaId = schemaName.endsWith(".yaml")
     ? schemaName
     : `${schemaName}.yaml`;
-  const validator = questionBankAjv.getSchema(schemaId);
-
-  if (!validator?.schema) {
-    console.warn(`Schema ${schemaId} not found in AJV registry`);
-    return null;
-  }
-
-  return validator.schema as Record<string, unknown>;
+  return lookup(schemaId);
 }
 
-/**
- * Resolves a local $ref (e.g., "#/$defs/RecordUnknown") against the schema's $defs.
- */
-function resolveLocalRef(
-  ref: string,
-  defs: Record<string, unknown> | undefined,
-): Record<string, unknown> | null {
-  if (!ref.startsWith("#/$defs/") || !defs) return null;
-  const defName = ref.slice("#/$defs/".length);
-  return (defs[defName] as Record<string, unknown>) ?? null;
-}
-
-/**
- * Resolves $ref in a single property value, handling both external and local refs.
- */
-function resolvePropertyRef(
-  prop: Record<string, unknown>,
-  defs: Record<string, unknown> | undefined,
-): Record<string, unknown> {
-  if (typeof prop.$ref !== "string") return prop;
-
-  const ref = prop.$ref as string;
-  const { $ref: _ref, ...rest } = prop;
-  void _ref;
-
-  // Try local ref first
-  const localDef = resolveLocalRef(ref, defs);
-  if (localDef) {
-    return { ...stripMetaProps(localDef), ...rest };
-  }
-
-  // Try external ref from AJV registry
-  const refSchema = loadRawSchema(ref);
-  if (refSchema) {
-    return { ...stripMetaProps(refSchema), ...rest };
-  }
-
-  // Can't resolve - return without $ref to avoid JSON Forms errors
-  return { type: "object", ...rest };
-}
-
-/**
- * Strips $schema, $id, and $defs from a schema to make it safe for JSON Forms.
- */
-function stripMetaProps(
-  schema: Record<string, unknown>,
-): Record<string, unknown> {
-  const result = { ...schema };
-  delete result.$schema;
-  delete result.$id;
-  delete result.$defs;
-  return result;
-}
-
-/**
- * Resolves a schema by inlining $ref references from allOf and property $refs.
- * Strips $schema/$id/$defs so JSON Forms can render without external refs.
- */
-function resolveSchema(
-  schema: Record<string, unknown>,
-): Record<string, unknown> {
-  const defs = schema.$defs as Record<string, unknown> | undefined;
-  const resolved = stripMetaProps(schema);
-
-  // Resolve allOf with $ref (e.g., extends patterns)
-  if (Array.isArray(resolved.allOf)) {
-    const mergedProperties: Record<string, unknown> = {
-      ...((resolved.properties as Record<string, unknown>) ?? {}),
-    };
-    const mergedRequired: string[] = [
-      ...((resolved.required as string[]) ?? []),
-    ];
-
-    for (const entry of resolved.allOf as Record<string, unknown>[]) {
-      if (typeof entry.$ref === "string") {
-        const refSchema = loadRawSchema(entry.$ref as string);
-        if (refSchema) {
-          const refDefs = refSchema.$defs as
-            | Record<string, unknown>
-            | undefined;
-          const refProps =
-            (refSchema.properties as Record<string, Record<string, unknown>>) ??
-            {};
-          // Resolve $refs within the referenced schema's properties
-          for (const [key, prop] of Object.entries(refProps)) {
-            mergedProperties[key] = resolvePropertyRef(prop, refDefs ?? defs);
-          }
-          if (Array.isArray(refSchema.required)) {
-            mergedRequired.push(...(refSchema.required as string[]));
-          }
-        }
-      }
-    }
-
-    resolved.properties = mergedProperties;
-    if (mergedRequired.length > 0) {
-      resolved.required = [...new Set(mergedRequired)];
-    }
-    delete resolved.allOf;
-    delete resolved.unevaluatedProperties;
-  }
-
-  // Resolve $ref in individual properties
-  const properties = resolved.properties as
-    | Record<string, Record<string, unknown>>
-    | undefined;
-  if (properties) {
-    for (const [key, prop] of Object.entries(properties)) {
-      properties[key] = resolvePropertyRef(prop, defs);
-    }
-    resolved.properties = properties;
-  }
-
-  return resolved;
-}
-
-/** Loads and resolves a schema using the question-bank schemas AJV registry */
-function loadSchema(schemaName: string): Record<string, unknown> | null {
-  const raw = loadRawSchema(schemaName);
+/** Loads and resolves a schema, flattening allOf and resolving $ref */
+async function loadSchema(
+  schemaName: string,
+): Promise<Record<string, unknown> | null> {
+  const raw = await loadRawSchema(schemaName);
   if (!raw) return null;
-  return resolveSchema(raw);
+  return flattenSchema(raw, lookup);
 }
 
 /** Extracts question bank data from a resolved JSON schema */
@@ -197,7 +81,9 @@ function extractSchemaData(
 /**
  * Loads a single question bank item by ID
  */
-export function loadQuestionBankItem(itemId: string): QuestionBankItem | null {
+export async function loadQuestionBankItem(
+  itemId: string,
+): Promise<QuestionBankItem | null> {
   const indexEntry = (
     questionBankIndex as Record<string, QuestionBankIndexEntry>
   )[itemId];
@@ -207,7 +93,7 @@ export function loadQuestionBankItem(itemId: string): QuestionBankItem | null {
   }
 
   try {
-    const schema = loadSchema(indexEntry.schema);
+    const schema = await loadSchema(indexEntry.schema);
     if (!schema) {
       return null;
     }
@@ -228,7 +114,7 @@ export function loadQuestionBankItem(itemId: string): QuestionBankItem | null {
 /**
  * Loads all question bank items from the index (with caching)
  */
-export function loadAllQuestionBankItems(): QuestionBankMap {
+export async function loadAllQuestionBankItems(): Promise<QuestionBankMap> {
   if (questionBankCache) {
     return questionBankCache;
   }
@@ -237,7 +123,7 @@ export function loadAllQuestionBankItems(): QuestionBankMap {
   const index = questionBankIndex as Record<string, QuestionBankIndexEntry>;
 
   for (const itemId of Object.keys(index)) {
-    const item = loadQuestionBankItem(itemId);
+    const item = await loadQuestionBankItem(itemId);
     if (item) {
       items[itemId] = item;
     }
@@ -265,8 +151,8 @@ export function getQuestionBankIds(): string[] {
 /**
  * Gets all unique filter options for dropdowns
  */
-export function getFilterOptions(): QuestionBankFilterOptions {
-  const allItems = loadAllQuestionBankItems();
+export async function getFilterOptions(): Promise<QuestionBankFilterOptions> {
+  const allItems = await loadAllQuestionBankItems();
   const tagSet = new Set<string>();
 
   for (const item of Object.values(allItems)) {

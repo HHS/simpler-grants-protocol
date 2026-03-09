@@ -21,7 +21,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 const { itemId } = Astro.props;
-const questions = loadAllQuestionBankItems();
+const questions = await loadAllQuestionBankItems();
 const item = questions[itemId];
 
 if (!item) {

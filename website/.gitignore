@@ -8,9 +8,12 @@ dist/
 tsp-output/
 # custom field schemas (generated, not committed)
 .custom-field-schemas/
+# question bank schemas (generated, not committed)
+.question-bank-schemas/
 # generated json cache
 cache/
 public/schemas/yaml/versions/**
+docs/*
 
 # dependencies
 node_modules/
