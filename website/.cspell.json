@@ -69,7 +69,10 @@
     "officedocument",
     "spreadsheetml",
     "validfor",
-    "fieldType"
+    "fieldType",
+    "proposalbase",
+    "fieldtype",
+    "browsable"
   ],
   "import": []
 }

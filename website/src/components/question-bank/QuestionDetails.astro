@@ -4,6 +4,7 @@ import { Code } from "@astrojs/starlight/components";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 import { JsonFormRenderer } from "@/components/forms/JsonFormRenderer";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
+import type { FormData } from "@/lib/types";
 import * as yaml from "js-yaml";
 
 interface Props {
@@ -19,7 +20,7 @@ const toYaml = (data: Record<string, unknown>) =>
   yaml.dump(data, { noRefs: true, lineWidth: -1 }) as string;
 
 // Use the first example as default data, or an empty object
-const exampleData = (item.examples[0] as Record<string, unknown>) ?? {};
+const exampleData = (item.examples[0] as FormData) ?? {};
 ---
 
 <h2 class="details-title">Details</h2>
@@ -53,12 +54,20 @@ const exampleData = (item.examples[0] as Record<string, unknown>) ?? {};
   <TabItem label="Mappings">
     <details>
       <summary>Mapping to CommonGrants</summary>
-      <p>How to translate this question into the CommonGrants <a href="/protocol/models/proposal#proposalbase">ProposalBase</a> data model.</p>
+      <p>
+        How to translate this question into the CommonGrants <a
+          href="/protocol/models/proposal#proposalbase">ProposalBase</a
+        > data model.
+      </p>
       <Code lang="json" code={toJson(item.mappingToCg)} />
     </details>
     <details>
       <summary>Mapping from CommonGrants</summary>
-      <p>How to pre-fill this question with data from the <a href="/protocol/models/proposal#proposalbase">ProposalBase</a> data model.</p>
+      <p>
+        How to pre-fill this question with data from the <a
+          href="/protocol/models/proposal#proposalbase">ProposalBase</a
+        > data model.
+      </p>
       <Code lang="json" code={toJson(item.mappingFromCg)} />
     </details>
   </TabItem>

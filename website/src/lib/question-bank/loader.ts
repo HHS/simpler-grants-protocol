@@ -60,7 +60,8 @@ function resolvePropertyRef(
   if (typeof prop.$ref !== "string") return prop;
 
   const ref = prop.$ref as string;
-  const { $ref: _, ...rest } = prop;
+  const { $ref: _ref, ...rest } = prop;
+  void _ref;
 
   // Try local ref first
   const localDef = resolveLocalRef(ref, defs);
@@ -84,8 +85,11 @@ function resolvePropertyRef(
 function stripMetaProps(
   schema: Record<string, unknown>,
 ): Record<string, unknown> {
-  const { $schema: _, $id: _id, $defs: _defs, ...rest } = schema;
-  return rest;
+  const result = { ...schema };
+  delete result.$schema;
+  delete result.$id;
+  delete result.$defs;
+  return result;
 }
 
 /**
@@ -115,16 +119,11 @@ function resolveSchema(
             | Record<string, unknown>
             | undefined;
           const refProps =
-            (refSchema.properties as Record<
-              string,
-              Record<string, unknown>
-            >) ?? {};
+            (refSchema.properties as Record<string, Record<string, unknown>>) ??
+            {};
           // Resolve $refs within the referenced schema's properties
           for (const [key, prop] of Object.entries(refProps)) {
-            mergedProperties[key] = resolvePropertyRef(
-              prop,
-              refDefs ?? defs,
-            );
+            mergedProperties[key] = resolvePropertyRef(prop, refDefs ?? defs);
           }
           if (Array.isArray(refSchema.required)) {
             mergedRequired.push(...(refSchema.required as string[]));
@@ -176,8 +175,7 @@ function extractSchemaData(
     (schema["x-mapping-from-cg"] as Record<string, unknown>) ?? {};
   const mappingToCg =
     (schema["x-mapping-to-cg"] as Record<string, unknown>) ?? {};
-  const uiSchema =
-    (schema["x-ui-schema"] as Record<string, unknown>) ?? {};
+  const uiSchema = (schema["x-ui-schema"] as Record<string, unknown>) ?? {};
 
   return {
     name,
@@ -199,9 +197,7 @@ function extractSchemaData(
 /**
  * Loads a single question bank item by ID
  */
-export function loadQuestionBankItem(
-  itemId: string,
-): QuestionBankItem | null {
+export function loadQuestionBankItem(itemId: string): QuestionBankItem | null {
   const indexEntry = (
     questionBankIndex as Record<string, QuestionBankIndexEntry>
   )[itemId];

@@ -1,5 +1,8 @@
 ---
-import { loadAllQuestionBankItems, getFilterOptions } from "@/lib/question-bank";
+import {
+  loadAllQuestionBankItems,
+  getFilterOptions,
+} from "@/lib/question-bank";
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import { CardGrid } from "@astrojs/starlight/components";
 import QuestionCard from "@/components/question-bank/QuestionCard.astro";
@@ -103,8 +106,7 @@ const { tags: allTags } = getFilterOptions();
           description.includes(searchTerm) ||
           tags.includes(searchTerm);
 
-        const matchesTag =
-          !selectedTag || tags.includes(selectedTag);
+        const matchesTag = !selectedTag || tags.includes(selectedTag);
 
         const isVisible = matchesSearch && matchesTag;
         card.style.display = isVisible ? "" : "none";
