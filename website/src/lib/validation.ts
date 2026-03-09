@@ -19,6 +19,10 @@ const commonGrantsSchema = ajv.getSchema("ProposalBase.yaml")
 export const customFieldsAjv = createAjvWithSchemas({
   schemaDir: Paths.CUSTOM_FIELD_SCHEMAS_DIR,
 });
+/** Ajv instance loaded from Paths.QUESTION_BANK_SCHEMAS_DIR (question bank schemas only) */
+export const questionBankAjv = createAjvWithSchemas({
+  schemaDir: Paths.QUESTION_BANK_SCHEMAS_DIR,
+});
 
 // #########################################################
 // Validation types

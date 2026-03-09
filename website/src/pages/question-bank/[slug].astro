@@ -1,0 +1,40 @@
+---
+import {
+  loadAllQuestionBankItems,
+  getQuestionBankIds,
+} from "@/lib/question-bank";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import QuestionDetails from "@/components/question-bank/QuestionDetails.astro";
+import type { GetStaticPaths } from "astro";
+
+export interface Props {
+  itemId: string;
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const itemIds = getQuestionBankIds();
+  const paths = itemIds.map((itemId) => ({
+    params: { slug: itemId },
+    props: { itemId },
+  }));
+  return paths;
+};
+
+const { itemId } = Astro.props;
+const questions = loadAllQuestionBankItems();
+const item = questions[itemId];
+
+if (!item) {
+  throw new Error(`Question bank item "${itemId}" not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: item.name || item.id,
+    description: item.description,
+    tableOfContents: false,
+  }}
+>
+  <QuestionDetails item={item} />
+</StarlightPage>
