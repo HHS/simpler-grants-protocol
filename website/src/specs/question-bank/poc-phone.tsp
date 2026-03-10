@@ -12,10 +12,10 @@ namespace QuestionBank.PocPhone;
 @extension(
   "x-mapping-from-cg",
   #{
-    countryCode: "contacts.primary.phones.primary.countryCode",
-    number: "contacts.primary.phones.primary.number",
-    extension: "contacts.primary.phones.primary.extension",
-    isMobile: "contacts.primary.phones.primary.isMobile",
+    countryCode: #{ field: "contacts.primary.phones.primary.countryCode" },
+    number: #{ field: "contacts.primary.phones.primary.number" },
+    extension: #{ field: "contacts.primary.phones.primary.extension" },
+    isMobile: #{ field: "contacts.primary.phones.primary.isMobile" },
   }
 )
 @extension(
@@ -25,10 +25,10 @@ namespace QuestionBank.PocPhone;
       primary: #{
         phones: #{
           primary: #{
-            countryCode: "countryCode",
-            number: "number",
-            extension: "extension",
-            isMobile: "isMobile",
+            countryCode: #{ field: "countryCode" },
+            number: #{ field: "number" },
+            extension: #{ field: "extension" },
+            isMobile: #{ field: "isMobile" },
           },
         },
       },
@@ -38,12 +38,13 @@ namespace QuestionBank.PocPhone;
 @extension(
   "x-ui-schema",
   #{
-    type: "VerticalLayout",
+    type: "Group",
+    label: "Primary Point of Contact Phone Number",
     elements: #[
-      #{ type: "Control", scope: "#/properties/countryCode" },
-      #{ type: "Control", scope: "#/properties/number" },
-      #{ type: "Control", scope: "#/properties/extension" },
-      #{ type: "Control", scope: "#/properties/isMobile" }
+      #{ type: "Control", scope: "#/properties/countryCode", label: "Country Code" },
+      #{ type: "Control", scope: "#/properties/number", label: "Phone Number" },
+      #{ type: "Control", scope: "#/properties/extension", label: "Extension" },
+      #{ type: "Control", scope: "#/properties/isMobile", label: "Is Mobile?" }
     ],
   }
 )

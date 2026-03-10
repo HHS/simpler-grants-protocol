@@ -4,7 +4,8 @@ import { Code } from "@astrojs/starlight/components";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 import { JsonFormRenderer } from "@/components/forms/JsonFormRenderer";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
-import type { FormData } from "@/lib/types";
+import type { FormData, JsonValue } from "@/lib/types";
+import { transformWithMapping } from "@/lib/transformation";
 import * as yaml from "js-yaml";
 
 interface Props {
@@ -21,6 +22,12 @@ const toYaml = (data: Record<string, unknown>) =>
 
 // Use the first example as default data, or an empty object
 const exampleData = (item.examples[0] as FormData) ?? {};
+
+// Transform example data to CommonGrants format using the mapping
+const commonGrantsData = transformWithMapping(
+  exampleData as Record<string, JsonValue>,
+  item.mappingToCg as Record<string, JsonValue>,
+);
 ---
 
 <h2 class="details-title">Details</h2>
@@ -36,8 +43,19 @@ const exampleData = (item.examples[0] as FormData) ?? {};
     />
   </TabItem>
   <TabItem label="Data">
-    <p>What the form data looks like when it is submitted.</p>
-    <Code lang="json" code={toJson(exampleData)} />
+    <details open>
+      <summary>Form Data</summary>
+      <p>What the form data looks like when it is submitted.</p>
+      <Code lang="json" code={toJson(exampleData)} />
+    </details>
+    <details>
+      <summary>CommonGrants Data</summary>
+      <p>
+        What the data looks like translated to the CommonGrants data model using
+        the mapping-to-cg.
+      </p>
+      <Code lang="json" code={toJson(commonGrantsData)} />
+    </details>
   </TabItem>
   <TabItem label="Schemas">
     <details>

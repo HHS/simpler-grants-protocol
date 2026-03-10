@@ -12,10 +12,10 @@ namespace QuestionBank.OrgPhone;
 @extension(
   "x-mapping-from-cg",
   #{
-    countryCode: "organizations.primary.phones.primary.countryCode",
-    number: "organizations.primary.phones.primary.number",
-    extension: "organizations.primary.phones.primary.extension",
-    isMobile: "organizations.primary.phones.primary.isMobile",
+    countryCode: #{ field: "organizations.primary.phones.primary.countryCode" },
+    number: #{ field: "organizations.primary.phones.primary.number" },
+    extension: #{ field: "organizations.primary.phones.primary.extension" },
+    isMobile: #{ field: "organizations.primary.phones.primary.isMobile" },
   }
 )
 @extension(
@@ -25,10 +25,10 @@ namespace QuestionBank.OrgPhone;
       primary: #{
         phones: #{
           primary: #{
-            countryCode: "countryCode",
-            number: "number",
-            extension: "extension",
-            isMobile: "isMobile",
+            countryCode: #{ field: "countryCode" },
+            number: #{ field: "number" },
+            extension: #{ field: "extension" },
+            isMobile: #{ field: "isMobile" },
           },
         },
       },
@@ -38,12 +38,13 @@ namespace QuestionBank.OrgPhone;
 @extension(
   "x-ui-schema",
   #{
-    type: "VerticalLayout",
+    type: "Group",
+    label: "Applicant Organization Phone Number",
     elements: #[
-      #{ type: "Control", scope: "#/properties/countryCode" },
-      #{ type: "Control", scope: "#/properties/number" },
-      #{ type: "Control", scope: "#/properties/extension" },
-      #{ type: "Control", scope: "#/properties/isMobile" }
+      #{ type: "Control", scope: "#/properties/countryCode", label: "Country Code" },
+      #{ type: "Control", scope: "#/properties/number", label: "Phone Number" },
+      #{ type: "Control", scope: "#/properties/extension", label: "Extension" },
+      #{ type: "Control", scope: "#/properties/isMobile", label: "Is Mobile?" }
     ],
   }
 )

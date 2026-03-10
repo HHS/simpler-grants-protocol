@@ -12,7 +12,7 @@ namespace QuestionBank.PocEmail;
 @extension(
   "x-mapping-from-cg",
   #{
-    email: "contacts.primary.emails.primary",
+    email: #{ field: "contacts.primary.emails.primary" },
   }
 )
 @extension(
@@ -21,7 +21,7 @@ namespace QuestionBank.PocEmail;
     contacts: #{
       primary: #{
         emails: #{
-          primary: "email",
+          primary: #{ field: "email" },
         },
       },
     },
@@ -32,7 +32,7 @@ namespace QuestionBank.PocEmail;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/email" }
+      #{ type: "Control", scope: "#/properties/email", label: "Email Address" }
     ],
   }
 )

@@ -4,6 +4,8 @@
 export interface QuestionBankIndexEntry {
   /** Schema name (used to load the emitted JSON schema) */
   schema: string;
+  /** Human-readable label for display in cards and page titles */
+  label: string;
 }
 
 /**

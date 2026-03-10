@@ -1,4 +1,3 @@
-import "@common-grants/core";
 import "@typespec/json-schema";
 import "./index.tsp";
 
@@ -11,7 +10,7 @@ namespace QuestionBank.PocTitle;
 @extension(
   "x-mapping-from-cg",
   #{
-    title: "contacts.primary.title",
+    title: #{ field: "contacts.primary.title" },
   }
 )
 @extension(
@@ -19,7 +18,7 @@ namespace QuestionBank.PocTitle;
   #{
     contacts: #{
       primary: #{
-        title: "title",
+        title: #{ field: "title" },
       },
     },
   }
@@ -29,7 +28,7 @@ namespace QuestionBank.PocTitle;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/title" }
+      #{ type: "Control", scope: "#/properties/title", label: "Job Title" }
     ],
   }
 )

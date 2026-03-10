@@ -1,8 +1,7 @@
-import "@common-grants/core";
 import "@typespec/json-schema";
 import "./index.tsp";
+import "./question-name.tsp";
 
-using CommonGrants.Fields;
 using JsonSchema;
 
 namespace QuestionBank.PocName;
@@ -12,11 +11,11 @@ namespace QuestionBank.PocName;
 @extension(
   "x-mapping-from-cg",
   #{
-    prefix: "contacts.primary.name.prefix",
-    firstName: "contacts.primary.name.firstName",
-    middleName: "contacts.primary.name.middleName",
-    lastName: "contacts.primary.name.lastName",
-    suffix: "contacts.primary.name.suffix",
+    prefix: #{ field: "contacts.primary.name.prefix" },
+    firstName: #{ field: "contacts.primary.name.firstName" },
+    middleName: #{ field: "contacts.primary.name.middleName" },
+    lastName: #{ field: "contacts.primary.name.lastName" },
+    suffix: #{ field: "contacts.primary.name.suffix" },
   }
 )
 @extension(
@@ -25,11 +24,11 @@ namespace QuestionBank.PocName;
     contacts: #{
       primary: #{
         name: #{
-          prefix: "prefix",
-          firstName: "firstName",
-          middleName: "middleName",
-          lastName: "lastName",
-          suffix: "suffix",
+          prefix: #{ field: "prefix" },
+          firstName: #{ field: "firstName" },
+          middleName: #{ field: "middleName" },
+          lastName: #{ field: "lastName" },
+          suffix: #{ field: "suffix" },
         },
       },
     },
@@ -38,15 +37,22 @@ namespace QuestionBank.PocName;
 @extension(
   "x-ui-schema",
   #{
-    type: "VerticalLayout",
+    type: "Group",
+    label: "Primary Point of Contact Name",
     elements: #[
-      #{ type: "Control", scope: "#/properties/prefix" },
-      #{ type: "Control", scope: "#/properties/firstName" },
-      #{ type: "Control", scope: "#/properties/middleName" },
-      #{ type: "Control", scope: "#/properties/lastName" },
-      #{ type: "Control", scope: "#/properties/suffix" }
+      #{ type: "Control", scope: "#/properties/prefix", label: "Prefix" },
+      #{ type: "Control", scope: "#/properties/firstName", label: "First Name" },
+      #{ type: "Control", scope: "#/properties/middleName", label: "Middle Name" },
+      #{ type: "Control", scope: "#/properties/lastName", label: "Last Name" },
+      #{ type: "Control", scope: "#/properties/suffix", label: "Suffix" }
     ],
   }
 )
-@example(Examples.Name.janeDoe)
-model QuestionPrimaryContactName extends Name {}
+@example(#{
+  prefix: QuestionName.NamePrefix.Dr,
+  firstName: "Jane",
+  middleName: "Edward",
+  lastName: "Doe",
+  suffix: QuestionName.NameSuffix.Jr,
+})
+model QuestionPrimaryContactName extends QuestionName.QuestionName {}

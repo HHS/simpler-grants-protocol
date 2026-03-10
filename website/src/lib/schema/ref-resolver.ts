@@ -22,7 +22,14 @@ export async function dereferenceSchema(
   schemaPath: string,
 ): Promise<Record<string, unknown>> {
   const resolved = await resolveSchemaRefs(schemaPath);
-  const merged = mergeAllOf(resolved) as Record<string, unknown>;
+  // For allOf merges, the base schema (child) comes first and allOf entries
+  // (parent) come after. For custom extension keys (x-tags, x-ui-schema,
+  // x-mapping-*), the child's values should override the parent's.
+  const merged = mergeAllOf(resolved, {
+    resolvers: {
+      defaultResolver: (values) => values[0],
+    },
+  }) as Record<string, unknown>;
   delete merged.$schema;
   return merged;
 }

@@ -12,7 +12,7 @@ namespace QuestionBank.OrgUei;
 @extension(
   "x-mapping-from-cg",
   #{
-    uei: "organizations.primary.uei",
+    uei: #{ field: "organizations.primary.uei" },
   }
 )
 @extension(
@@ -20,7 +20,7 @@ namespace QuestionBank.OrgUei;
   #{
     organizations: #{
       primary: #{
-        uei: "uei",
+        uei: #{ field: "uei" },
       },
     },
   }
@@ -30,7 +30,7 @@ namespace QuestionBank.OrgUei;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/uei" }
+      #{ type: "Control", scope: "#/properties/uei", label: "Unique Entity Identifier (UEI)" }
     ],
   }
 )

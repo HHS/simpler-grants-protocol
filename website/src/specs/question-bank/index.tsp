@@ -1,6 +1,8 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
 
+import "./question-address.tsp";
+import "./question-name.tsp";
 import "./org-address.tsp";
 import "./poc-address.tsp";
 import "./poc-name.tsp";

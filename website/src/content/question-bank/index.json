@@ -1,12 +1,47 @@
 {
-  "orgAddress": { "schema": "QuestionPrimaryOrgAddress" },
-  "orgEin": { "schema": "QuestionOrgEin" },
-  "orgName": { "schema": "QuestionOrgName" },
-  "orgPhone": { "schema": "QuestionOrgPhone" },
-  "orgUei": { "schema": "QuestionOrgUei" },
-  "pocAddress": { "schema": "QuestionPocAddress" },
-  "pocEmail": { "schema": "QuestionPocEmail" },
-  "pocName": { "schema": "QuestionPrimaryContactName" },
-  "pocPhone": { "schema": "QuestionPocPhone" },
-  "pocTitle": { "schema": "QuestionPocTitle" }
+  "generic-address": {
+    "schema": "QuestionAddress",
+    "label": "Generic Address"
+  },
+  "generic-name": { "schema": "QuestionName", "label": "Generic Name" },
+  "org-address": {
+    "schema": "QuestionPrimaryOrgAddress",
+    "label": "Organization Address"
+  },
+  "org-ein": {
+    "schema": "QuestionOrgEin",
+    "label": "Organization EIN"
+  },
+  "org-name": {
+    "schema": "QuestionOrgName",
+    "label": "Organization Name"
+  },
+  "org-phone": {
+    "schema": "QuestionOrgPhone",
+    "label": "Organization Phone"
+  },
+  "org-uei": {
+    "schema": "QuestionOrgUei",
+    "label": "Organization UEI"
+  },
+  "poc-address": {
+    "schema": "QuestionPocAddress",
+    "label": "Primary Contact Address"
+  },
+  "poc-email": {
+    "schema": "QuestionPocEmail",
+    "label": "Primary Contact Email"
+  },
+  "poc-name": {
+    "schema": "QuestionPrimaryContactName",
+    "label": "Primary Contact Name"
+  },
+  "poc-phone": {
+    "schema": "QuestionPocPhone",
+    "label": "Primary Contact Phone"
+  },
+  "poc-title": {
+    "schema": "QuestionPocTitle",
+    "label": "Primary Contact Title"
+  }
 }

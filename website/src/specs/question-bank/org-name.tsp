@@ -12,7 +12,7 @@ namespace QuestionBank.OrgName;
 @extension(
   "x-mapping-from-cg",
   #{
-    name: "organizations.primary.name",
+    name: #{ field: "organizations.primary.name" },
   }
 )
 @extension(
@@ -20,7 +20,7 @@ namespace QuestionBank.OrgName;
   #{
     organizations: #{
       primary: #{
-        name: "name",
+        name: #{ field: "name" },
       },
     },
   }
@@ -30,7 +30,7 @@ namespace QuestionBank.OrgName;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/name" }
+      #{ type: "Control", scope: "#/properties/name", label: "Organization Legal Name" }
     ],
   }
 )

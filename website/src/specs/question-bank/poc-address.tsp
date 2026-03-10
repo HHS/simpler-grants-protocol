@@ -1,8 +1,7 @@
-import "@common-grants/core";
 import "@typespec/json-schema";
 import "./index.tsp";
+import "./question-address.tsp";
 
-using CommonGrants.Fields;
 using JsonSchema;
 
 namespace QuestionBank.PocAddress;
@@ -12,12 +11,12 @@ namespace QuestionBank.PocAddress;
 @extension(
   "x-mapping-from-cg",
   #{
-    street1: "contacts.primary.addresses.primary.street1",
-    street2: "contacts.primary.addresses.primary.street2",
-    city: "contacts.primary.addresses.primary.city",
-    stateOrProvince: "contacts.primary.addresses.primary.state",
-    country: "contacts.primary.addresses.primary.country",
-    postalCode: "contacts.primary.addresses.primary.zipPostalCode",
+    street1: #{ field: "contacts.primary.addresses.primary.street1" },
+    street2: #{ field: "contacts.primary.addresses.primary.street2" },
+    city: #{ field: "contacts.primary.addresses.primary.city" },
+    state: #{ field: "contacts.primary.addresses.primary.state" },
+    country: #{ field: "contacts.primary.addresses.primary.country" },
+    postalCode: #{ field: "contacts.primary.addresses.primary.zipPostalCode" },
   }
 )
 @extension(
@@ -27,12 +26,12 @@ namespace QuestionBank.PocAddress;
       primary: #{
         addresses: #{
           primary: #{
-            street1: "street1",
-            street2: "street2",
-            city: "city",
-            stateOrProvince: "stateOrProvince",
-            country: "country",
-            postalCode: "postalCode",
+            street1: #{ field: "street1" },
+            street2: #{ field: "street2" },
+            city: #{ field: "city" },
+            stateOrProvince: #{ field: "state" },
+            country: #{ field: "country" },
+            postalCode: #{ field: "postalCode" },
           },
         },
       },
@@ -42,16 +41,35 @@ namespace QuestionBank.PocAddress;
 @extension(
   "x-ui-schema",
   #{
-    type: "VerticalLayout",
+    type: "Group",
+    label: "Primary Point of Contact Mailing Address",
     elements: #[
-      #{ type: "Control", scope: "#/properties/street1" },
-      #{ type: "Control", scope: "#/properties/street2" },
-      #{ type: "Control", scope: "#/properties/city" },
-      #{ type: "Control", scope: "#/properties/stateOrProvince" },
-      #{ type: "Control", scope: "#/properties/country" },
-      #{ type: "Control", scope: "#/properties/postalCode" }
+      #{ type: "Control", scope: "#/properties/street1", label: "Street Address (Line 1)" },
+      #{ type: "Control", scope: "#/properties/street2", label: "Street Address (Line 2)" },
+      #{ type: "Control", scope: "#/properties/city", label: "City" },
+      #{ type: "Control", scope: "#/properties/state", label: "State" },
+      #{
+        type: "Control",
+        scope: "#/properties/stateOrProvince",
+        label: "State or Province",
+        rule: #{
+          effect: "SHOW",
+          condition: #{
+            scope: "#/properties/state",
+            schema: #{ pattern: "^Outside the US$" },
+          },
+        },
+      },
+      #{ type: "Control", scope: "#/properties/country", label: "Country" },
+      #{ type: "Control", scope: "#/properties/postalCode", label: "Postal Code" }
     ],
   }
 )
-@example(Examples.Address.apartment)
-model QuestionPocAddress extends Address {}
+@example(#{
+  street1: "123 Main St",
+  city: "Anytown",
+  state: QuestionAddress.USState.CA,
+  country: "US",
+  postalCode: "12345",
+})
+model QuestionPocAddress extends QuestionAddress.QuestionAddress {}

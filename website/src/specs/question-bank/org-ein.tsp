@@ -12,7 +12,7 @@ namespace QuestionBank.OrgEin;
 @extension(
   "x-mapping-from-cg",
   #{
-    ein: "organizations.primary.ein",
+    ein: #{ field: "organizations.primary.ein" },
   }
 )
 @extension(
@@ -20,7 +20,7 @@ namespace QuestionBank.OrgEin;
   #{
     organizations: #{
       primary: #{
-        ein: "ein",
+        ein: #{ field: "ein" },
       },
     },
   }
@@ -30,7 +30,7 @@ namespace QuestionBank.OrgEin;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/ein" }
+      #{ type: "Control", scope: "#/properties/ein", label: "Employer Identification Number (EIN)" }
     ],
   }
 )
