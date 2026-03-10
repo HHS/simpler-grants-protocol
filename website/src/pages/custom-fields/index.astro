@@ -1,17 +1,18 @@
 ---
 import { loadAllCustomFields, getFilterOptions } from "@/lib/custom-fields";
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
-import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+import { CardGrid } from "@astrojs/starlight/components";
+import CustomFieldCard from "@/components/custom-fields/CustomFieldCard.astro";
 
 const customFields = loadAllCustomFields();
-const { tags: allTags, schemas: allSchemas } = getFilterOptions();
+const { schemas: allSchemas, fieldTypes: allFieldTypes } = getFilterOptions();
 ---
 
 <StarlightPage
   frontmatter={{
-    title: "Custom Fields Registry",
+    title: "Custom Field Catalog",
     description:
-      "Browse and search custom field definitions for CommonGrants schemas",
+      "A searchable index of custom fields that extend CommonGrants base schemas",
     tableOfContents: false,
     prev: false,
     next: false,
@@ -38,6 +39,14 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
 
       <div class="filter-row">
         <div class="filter-group">
+          <label for="type-filter">Type</label>
+          <select id="type-filter" class="filter-select">
+            <option value="">Any type</option>
+            {allFieldTypes.map((type) => <option value={type}>{type}</option>)}
+          </select>
+        </div>
+
+        <div class="filter-group">
           <label for="schema-filter">Valid for</label>
           <select id="schema-filter" class="filter-select">
             <option value="">Any schema</option>
@@ -48,14 +57,6 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
             }
           </select>
         </div>
-
-        <div class="filter-group">
-          <label for="tag-filter">Tag</label>
-          <select id="tag-filter" class="filter-select">
-            <option value="">Any tags</option>
-            {allTags.map((tag) => <option value={tag}>{tag}</option>)}
-          </select>
-        </div>
       </div>
     </div>
 
@@ -63,21 +64,9 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
     <div class="fields-list">
       <CardGrid>
         {
-          Object.values(customFields).map((field) => (
-            <div
-              class="field-card"
-              data-name={field.name.toLowerCase()}
-              data-description={field.description.toLowerCase()}
-              data-tags={field.tags.join(",").toLowerCase()}
-              data-validfor={field.validFor.join(",").toLowerCase()}
-            >
-              <LinkCard
-                href={`/custom-fields/${field.id}`}
-                title={field.name}
-                description={`${field.fieldType} · ${field.tags.slice(0, 3).join(", ")}`}
-              />
-            </div>
-          ))
+          Object.entries(customFields)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([, field]) => <CustomFieldCard field={field} />)
         }
       </CardGrid>
     </div>
@@ -95,7 +84,7 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
         <strong>{allSchemas.length}</strong> supported schemas
       </span>
       <span class="stat">
-        <strong>{allTags.length}</strong> unique tags
+        <strong>{allFieldTypes.length}</strong> field types
       </span>
     </div>
   </div>
@@ -106,19 +95,19 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
     const searchInput = document.getElementById(
       "search-input",
     ) as HTMLInputElement;
+    const typeFilter = document.getElementById(
+      "type-filter",
+    ) as HTMLSelectElement;
     const schemaFilter = document.getElementById(
       "schema-filter",
-    ) as HTMLSelectElement;
-    const tagFilter = document.getElementById(
-      "tag-filter",
     ) as HTMLSelectElement;
     const fieldCards = document.querySelectorAll<HTMLElement>(".field-card");
     const noResults = document.getElementById("no-results") as HTMLElement;
 
     function filterFields() {
       const searchTerm = searchInput?.value.toLowerCase() || "";
+      const selectedType = typeFilter?.value.toLowerCase() || "";
       const selectedSchema = schemaFilter?.value.toLowerCase() || "";
-      const selectedTag = tagFilter?.value.toLowerCase() || "";
 
       let visibleCount = 0;
 
@@ -127,6 +116,7 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
         const description = card.dataset.description || "";
         const tags = card.dataset.tags || "";
         const validFor = card.dataset.validfor || "";
+        const fieldType = card.dataset.fieldtype || "";
 
         const matchesSearch =
           !searchTerm ||
@@ -134,12 +124,11 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
           description.includes(searchTerm) ||
           tags.includes(searchTerm);
 
+        const matchesType = !selectedType || fieldType === selectedType;
         const matchesSchema =
           !selectedSchema || validFor.includes(selectedSchema.toLowerCase());
-        const matchesTag =
-          !selectedTag || tags.includes(selectedTag.toLowerCase());
 
-        const isVisible = matchesSearch && matchesSchema && matchesTag;
+        const isVisible = matchesSearch && matchesType && matchesSchema;
         card.style.display = isVisible ? "" : "none";
 
         if (isVisible) visibleCount++;
@@ -151,8 +140,8 @@ const { tags: allTags, schemas: allSchemas } = getFilterOptions();
     }
 
     searchInput?.addEventListener("input", filterFields);
+    typeFilter?.addEventListener("change", filterFields);
     schemaFilter?.addEventListener("change", filterFields);
-    tagFilter?.addEventListener("change", filterFields);
   }
 
   // Initialize on page load and after Astro page transitions

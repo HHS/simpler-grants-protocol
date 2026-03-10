@@ -98,6 +98,10 @@ export default defineConfig({
               link: "protocol/api-docs",
             },
             {
+              label: "Custom field catalog",
+              link: "custom-fields",
+            },
+            {
               label: "Types",
               collapsed: true,
               autogenerate: { directory: "protocol/types" },
