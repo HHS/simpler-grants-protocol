@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
-import { join, dirname } from "path";
+import { join } from "path";
+import { Paths } from "./paths";
 import yaml from "js-yaml";
 import { createAjvWithSchemas } from "../validation";
 import { HashUtils } from "./hash-utils";
@@ -79,9 +80,7 @@ export class SchemaLoader {
     }
 
     try {
-      const websiteRoot = process.cwd();
-      const repoRoot = dirname(websiteRoot);
-      const filePath = join(repoRoot, schemaPath);
+      const filePath = join(Paths.REPO_ROOT, schemaPath);
       const content = readFileSync(filePath, "utf-8");
 
       const schemaData = yaml.load(content, {

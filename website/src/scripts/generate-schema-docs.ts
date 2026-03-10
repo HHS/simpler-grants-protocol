@@ -1,5 +1,4 @@
 import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
 import yaml from "js-yaml";
 import { BuildScriptUtils } from "./utils";
 import { Paths } from "../lib/schema/paths";
@@ -37,7 +36,7 @@ class SchemaDocGenerator {
     const mapping = new Map<string, string>();
 
     try {
-      const docsDir = join(process.cwd(), Paths.PROTOCOL_DOCS_DIR);
+      const docsDir = Paths.PROTOCOL_DOCS_DIR;
       const mdxFiles = BuildScriptUtils.findFilesByExtension(docsDir, ".mdx");
 
       console.log(`Found ${mdxFiles.length} MDX files to process`);
@@ -53,7 +52,7 @@ class SchemaDocGenerator {
       const mappingObject = Object.fromEntries(mapping);
 
       // Write to output file
-      const outputPath = join(process.cwd(), Paths.SCHEMA_DOCS_MAPPING);
+      const outputPath = Paths.SCHEMA_DOCS_MAPPING;
       writeFileSync(outputPath, JSON.stringify(mappingObject, null, 2));
 
       const duration = Date.now() - startTime;
@@ -87,7 +86,7 @@ class SchemaDocGenerator {
 
       // Convert file path to documentation URL
       const relativePath = filePath.replace(
-        process.cwd() + "/" + Paths.CONTENT_DOCS_DIR + "/",
+        Paths.CONTENT_DOCS_DIR + "/",
         "",
       );
       const docPath = "/" + relativePath.replace(/\.mdx$/, "");

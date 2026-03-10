@@ -1,5 +1,4 @@
 import { readFileSync, writeFileSync, statSync } from "fs";
-import { join } from "path";
 import yaml from "js-yaml";
 import { BuildScriptUtils } from "./utils";
 import { HashUtils } from "../lib/schema/hash-utils";
@@ -50,7 +49,7 @@ class SchemaMetadataGenerator {
     const schemas: Record<string, SchemaMetadata> = {};
 
     try {
-      const schemasDir = join(process.cwd(), Paths.SCHEMAS_DIR);
+      const schemasDir = Paths.SCHEMAS_DIR;
       const yamlFiles = BuildScriptUtils.findFilesByExtension(
         schemasDir,
         ".yaml",
@@ -72,7 +71,7 @@ class SchemaMetadataGenerator {
       };
 
       // Write to output file
-      const outputPath = join(process.cwd(), Paths.SCHEMA_METADATA);
+      const outputPath = Paths.SCHEMA_METADATA;
       writeFileSync(outputPath, JSON.stringify(collection, null, 2));
 
       const duration = Date.now() - startTime;
@@ -103,7 +102,7 @@ class SchemaMetadataGenerator {
 
       const metadata: SchemaMetadata = {
         schemaName,
-        filePath: filePath.replace(process.cwd() + "/", ""),
+        filePath: filePath.replace(Paths.WEBSITE_ROOT + "/", ""),
         type: this.determineSchemaType(schema),
         isEnum: this.isEnumSchema(schema),
         isObject: this.isObjectSchema(schema),
