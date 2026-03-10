@@ -104,10 +104,6 @@ export default defineConfig({
               link: "custom-fields",
             },
             {
-              label: "Question bank",
-              link: "question-bank",
-            },
-            {
               label: "Types",
               collapsed: true,
               autogenerate: { directory: "protocol/types" },
@@ -148,6 +144,10 @@ export default defineConfig({
             {
               label: "Form library",
               link: "forms/library",
+            },
+            {
+              label: "Form question bank",
+              link: "question-bank",
             },
             {
               label: "Pre-fill playground",
