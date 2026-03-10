@@ -1,4 +1,4 @@
-import { customFieldsAjv } from "../validation";
+import { extensionsAjv } from "../validation";
 import type {
   CustomField,
   CustomFieldIndexEntry,
@@ -23,7 +23,7 @@ function loadSchema(schemaName: string): Record<string, unknown> | null {
   const schemaId = schemaName.endsWith(".yaml")
     ? schemaName
     : `${schemaName}.yaml`;
-  const validator = customFieldsAjv.getSchema(schemaId);
+  const validator = extensionsAjv.getSchema(schemaId);
 
   if (!validator?.schema) {
     console.warn(`Schema ${schemaId} not found in AJV registry`);

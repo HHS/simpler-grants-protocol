@@ -15,13 +15,9 @@ import { Paths } from "./schema/paths";
 export const ajv = createAjvWithSchemas();
 const commonGrantsSchema = ajv.getSchema("ProposalBase.yaml")
   ?.schema as JsonSchema;
-/** Ajv instance loaded from Paths.CUSTOM_FIELD_SCHEMAS_DIR (custom field schemas only) */
-export const customFieldsAjv = createAjvWithSchemas({
-  schemaDir: Paths.CUSTOM_FIELD_SCHEMAS_DIR,
-});
-/** Ajv instance loaded from Paths.QUESTION_BANK_SCHEMAS_DIR (question bank schemas only) */
-export const questionBankAjv = createAjvWithSchemas({
-  schemaDir: Paths.QUESTION_BANK_SCHEMAS_DIR,
+/** Ajv instance loaded from Paths.EXTENSION_SCHEMAS_DIR (custom fields + question bank) */
+export const extensionsAjv = createAjvWithSchemas({
+  schemaDir: Paths.EXTENSION_SCHEMAS_DIR,
 });
 
 // #########################################################

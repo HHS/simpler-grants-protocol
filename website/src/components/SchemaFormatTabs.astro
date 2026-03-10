@@ -72,8 +72,8 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
   if (!props.file) {
     return null;
   }
-  // Custom field schemas live in .custom-field-schemas (gitignored); no hosted link
-  if (props.file.path.includes(Paths.CUSTOM_FIELD_SCHEMAS_PATH_PREFIX)) {
+  // Extension schemas live in .extension-schemas (gitignored); no hosted link
+  if (props.file.path.includes(Paths.EXTENSION_SCHEMAS_PATH_PREFIX)) {
     return null;
   }
 

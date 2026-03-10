@@ -1,5 +1,5 @@
-import { questionBankAjv } from "../validation";
-import { createAjvLookup, flattenSchema } from "../schema/ref-resolver";
+import { extensionsAjv } from "../validation";
+import { createAjvLookup, dereferenceSchema } from "../schema/ref-resolver";
 import type {
   QuestionBankItem,
   QuestionBankIndexEntry,
@@ -18,7 +18,7 @@ import questionBankIndex from "@/content/question-bank/index.json";
 /** Cache for loaded question bank items */
 let questionBankCache: QuestionBankMap | null = null;
 
-const lookup = createAjvLookup(questionBankAjv);
+const lookup = createAjvLookup(extensionsAjv);
 
 /** Normalizes an array from schema extension (may be string[] from JSON) */
 function parseStringArray(value: unknown): string[] {
@@ -26,23 +26,16 @@ function parseStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === "string");
 }
 
-/** Loads a raw schema by name from the AJV registry */
-async function loadRawSchema(
+/** Loads and fully dereferences a schema by name from the AJV registry */
+async function loadSchema(
   schemaName: string,
 ): Promise<Record<string, unknown> | null> {
   const schemaId = schemaName.endsWith(".yaml")
     ? schemaName
     : `${schemaName}.yaml`;
-  return lookup(schemaId);
-}
-
-/** Loads and resolves a schema, flattening allOf and resolving $ref */
-async function loadSchema(
-  schemaName: string,
-): Promise<Record<string, unknown> | null> {
-  const raw = await loadRawSchema(schemaName);
+  const raw = await lookup(schemaId);
   if (!raw) return null;
-  return flattenSchema(raw, lookup);
+  return dereferenceSchema(raw, lookup);
 }
 
 /** Extracts question bank data from a resolved JSON schema */

@@ -42,28 +42,6 @@ export function createAjvLookup(ajv: Ajv2020): SchemaLookup {
 }
 
 /**
- * Resolves a single $ref string against local $defs first, then external lookup.
- * Returns the resolved schema or null if unresolvable.
- */
-export async function resolveRef(
-  ref: string,
-  lookup: SchemaLookup,
-  defs?: Record<string, unknown>,
-): Promise<Record<string, unknown> | null> {
-  // Try local $defs first
-  if (ref.startsWith("#/$defs/") && defs) {
-    const defName = ref.slice("#/$defs/".length);
-    const def = defs[defName];
-    if (def && typeof def === "object") {
-      return def as Record<string, unknown>;
-    }
-  }
-
-  // Try external lookup
-  return lookup(ref);
-}
-
-/**
  * Deeply resolves all $ref references in a schema tree.
  *
  * Handles both local $defs and external references via the lookup function.
@@ -145,96 +123,87 @@ export async function resolveSchemaRefs(
 }
 
 /**
- * Flattens a schema that uses allOf with $ref (TypeSpec "extends" pattern)
- * into a single schema with merged properties and required arrays.
- * Also resolves $ref in individual properties.
+ * Merges allOf entries into a single schema with combined properties and
+ * required arrays. Expects all $ref values to already be resolved (i.e.
+ * call resolveSchemaRefs first).
  *
- * Returns a self-contained schema suitable for JSON Forms rendering.
+ * Also removes `unevaluatedProperties` which is a leftover from the
+ * TypeSpec "extends" pattern that isn't needed after flattening.
  */
-export async function flattenSchema(
+export function mergeAllOf(
   schema: Record<string, unknown>,
-  lookup: SchemaLookup,
-): Promise<Record<string, unknown>> {
-  const defs = schema.$defs as Record<string, unknown> | undefined;
-  const resolved = { ...schema };
-
-  // Flatten allOf with $ref
-  if (Array.isArray(resolved.allOf)) {
-    const mergedProperties: Record<string, Record<string, unknown>> = {
-      ...((resolved.properties as Record<string, Record<string, unknown>>) ??
-        {}),
-    };
-    const mergedRequired: string[] = [
-      ...((resolved.required as string[]) ?? []),
-    ];
-
-    for (const entry of resolved.allOf as Record<string, unknown>[]) {
-      if (typeof entry.$ref === "string") {
-        const refSchema = await lookup(entry.$ref as string);
-        if (refSchema) {
-          const refDefs = refSchema.$defs as
-            | Record<string, unknown>
-            | undefined;
-          const refProps =
-            (refSchema.properties as Record<string, Record<string, unknown>>) ??
-            {};
-          for (const [key, prop] of Object.entries(refProps)) {
-            mergedProperties[key] = await resolvePropertyRef(
-              prop,
-              lookup,
-              refDefs ?? defs,
-            );
-          }
-          if (Array.isArray(refSchema.required)) {
-            mergedRequired.push(...(refSchema.required as string[]));
-          }
-        }
-      }
-    }
-
-    resolved.properties = mergedProperties;
-    if (mergedRequired.length > 0) {
-      resolved.required = [...new Set(mergedRequired)];
-    }
-    delete resolved.allOf;
-    delete resolved.unevaluatedProperties;
+): Record<string, unknown> {
+  if (!Array.isArray(schema.allOf)) {
+    return schema;
   }
 
-  // Resolve $ref in top-level properties
-  const properties = resolved.properties as
-    | Record<string, Record<string, unknown>>
-    | undefined;
-  if (properties) {
-    for (const [key, prop] of Object.entries(properties)) {
-      properties[key] = await resolvePropertyRef(prop, lookup, defs);
+  const result = { ...schema };
+  const mergedProperties: Record<string, unknown> = {
+    ...((result.properties as Record<string, unknown>) ?? {}),
+  };
+  const mergedRequired: string[] = [...((result.required as string[]) ?? [])];
+
+  for (const entry of result.allOf as Record<string, unknown>[]) {
+    const entryProps = entry.properties as Record<string, unknown> | undefined;
+    if (entryProps) {
+      Object.assign(mergedProperties, entryProps);
     }
-    resolved.properties = properties;
+    if (Array.isArray(entry.required)) {
+      mergedRequired.push(...(entry.required as string[]));
+    }
   }
 
-  return resolved;
+  result.properties = mergedProperties;
+  if (mergedRequired.length > 0) {
+    result.required = [...new Set(mergedRequired)];
+  }
+  delete result.allOf;
+  delete result.unevaluatedProperties;
+
+  return result;
 }
 
 /**
- * Resolves a $ref in a single property value.
- * Returns the property with the $ref replaced by the resolved schema content.
+ * Fully dereferences a schema: resolves all $ref references, merges allOf
+ * entries, and strips $schema (which can confuse downstream AJV consumers
+ * like JSON Forms).
+ *
+ * This is the main entry point for preparing a schema for rendering.
  */
-async function resolvePropertyRef(
-  prop: Record<string, unknown>,
+export async function dereferenceSchema(
+  schema: Record<string, unknown>,
   lookup: SchemaLookup,
-  defs: Record<string, unknown> | undefined,
 ): Promise<Record<string, unknown>> {
-  if (typeof prop.$ref !== "string") return prop;
+  const resolved = (await resolveSchemaRefs(schema, lookup)) as Record<
+    string,
+    unknown
+  >;
+  const merged = mergeAllOf(resolved);
+  delete merged.$schema;
+  return merged;
+}
 
-  const ref = prop.$ref as string;
-  const rest = Object.fromEntries(
-    Object.entries(prop).filter(([k]) => k !== "$ref"),
-  );
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
 
-  const resolved = await resolveRef(ref, lookup, defs);
-  if (resolved) {
-    return { ...resolved, ...rest };
+/**
+ * Resolves a single $ref string against local $defs first, then external lookup.
+ */
+async function resolveRef(
+  ref: string,
+  lookup: SchemaLookup,
+  defs?: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  // Try local $defs first
+  if (ref.startsWith("#/$defs/") && defs) {
+    const defName = ref.slice("#/$defs/".length);
+    const def = defs[defName];
+    if (def && typeof def === "object") {
+      return def as Record<string, unknown>;
+    }
   }
 
-  // Can't resolve - return without $ref to avoid downstream errors
-  return { type: "object", ...rest };
+  // Try external lookup
+  return lookup(ref);
 }

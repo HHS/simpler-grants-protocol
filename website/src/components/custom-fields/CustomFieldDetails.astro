@@ -30,8 +30,8 @@ function getSchemaDocPath(schemaName: string): string {
   return docPath || `/protocol/models/${schemaName.toLowerCase()}`;
 }
 
-// Build schema file path for SchemaFormatTabs (repo-root-relative; reads from .custom-field-schemas; no hosted link)
-const schemaPath = `${Paths.CUSTOM_FIELD_SCHEMAS_PATH_PREFIX}/${field.schema}.yaml`;
+// Build schema file path for SchemaFormatTabs (repo-root-relative; reads from .extension-schemas; no hosted link)
+const schemaPath = `${Paths.EXTENSION_SCHEMAS_PATH_PREFIX}/${field.schema}.yaml`;
 
 // Build example directly from the field's const values and examples
 // (The generic example generator doesn't handle allOf + const values well)

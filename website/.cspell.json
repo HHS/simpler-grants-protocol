@@ -1,6 +1,13 @@
 {
   "version": "0.2",
-  "ignorePaths": ["dist/", "astro/", "*.svg", "src/content/forms/", "cache/"],
+  "ignorePaths": [
+    "dist/",
+    "astro/",
+    "*.svg",
+    "src/content/forms/",
+    "cache/",
+    ".docs/"
+  ],
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [
@@ -72,7 +79,8 @@
     "fieldType",
     "proposalbase",
     "fieldtype",
-    "browsable"
+    "browsable",
+    "apidevtools"
   ],
   "import": []
 }

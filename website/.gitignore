@@ -6,14 +6,12 @@ dist/
 */.generated/
 # TypeSpec output
 tsp-output/
-# custom field schemas (generated, not committed)
-.custom-field-schemas/
-# question bank schemas (generated, not committed)
-.question-bank-schemas/
+# extension schemas (custom fields + question bank, generated, not committed)
+.extension-schemas/
 # generated json cache
 cache/
 public/schemas/yaml/versions/**
-docs/*
+.docs/*
 
 # dependencies
 node_modules/

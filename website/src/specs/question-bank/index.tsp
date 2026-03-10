@@ -16,6 +16,7 @@ import "./poc-title.tsp";
 namespace QuestionBank;
 
 /** Tags for categorizing question bank items */
+@JsonSchema.id("QuestionBank.Tags")
 enum Tags {
   organization,
   contact,
