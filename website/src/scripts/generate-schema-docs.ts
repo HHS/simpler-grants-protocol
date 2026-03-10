@@ -85,10 +85,7 @@ class SchemaDocGenerator {
       const frontmatter = yaml.load(frontmatterYaml) as Frontmatter;
 
       // Convert file path to documentation URL
-      const relativePath = filePath.replace(
-        Paths.CONTENT_DOCS_DIR + "/",
-        "",
-      );
+      const relativePath = filePath.replace(Paths.CONTENT_DOCS_DIR + "/", "");
       const docPath = "/" + relativePath.replace(/\.mdx$/, "");
 
       // Extract schema paths from each schema definition

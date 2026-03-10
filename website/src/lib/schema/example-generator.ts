@@ -1,35 +1,23 @@
 import { ajv } from "../validation";
-import { resolveSchemaRefs, createAjvLookup } from "./ref-resolver";
+import { resolveSchemaRefs } from "./ref-resolver";
+import { Paths } from "./paths";
+import * as path from "path";
 import * as OpenAPISampler from "openapi-sampler";
-
-const lookup = createAjvLookup(ajv);
 
 /**
  * Generates a sample example for a given schema path.
- * @param schemaPath - The path to the schema file.
- * @returns The generated example.
+ * @param schemaPath - Path to the schema file, relative to the repo root
+ *   (e.g. "website/public/schemas/yaml/OpportunityBase.yaml").
+ * @returns The generated example as a JSON string.
  */
 export async function generateSchemaExample(
   schemaPath: string,
 ): Promise<string> {
-  //
-  const schemaName: string = schemaPath.split("/").pop() ?? "";
-  const validator = ajv.getSchema(schemaName);
-  if (!validator) {
-    throw new Error(`Schema ${schemaPath} not found for ${schemaPath}`);
-  }
-
-  // Get the actual schema object from the validator
-  const schema = validator.schema;
-  if (!schema) {
-    throw new Error(`Schema object not found for ${schemaPath}`);
-  }
+  const filePath = path.resolve(Paths.REPO_ROOT, schemaPath);
+  const schemaName = path.basename(filePath);
 
   // Resolve $ref references in the schema, generate example, and validate it
-  const resolvedSchema = (await resolveSchemaRefs(schema, lookup)) as Record<
-    string,
-    unknown
-  >;
+  const resolvedSchema = await resolveSchemaRefs(filePath);
   const example = JSON.stringify(
     OpenAPISampler.sample(resolvedSchema),
     null,

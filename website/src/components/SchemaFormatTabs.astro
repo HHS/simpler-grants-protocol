@@ -2,7 +2,7 @@
 import { Code } from "@astrojs/starlight/components";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 import { readFileSync } from "fs";
-import { join, dirname } from "path";
+import { join } from "path";
 import { Paths } from "../lib/schema/paths";
 import { generateSchemaExample } from "../lib/schema/example-generator";
 
@@ -125,9 +125,7 @@ function extractCode(props: CodeBlockConfig): string {
   }
   if (props.file) {
     try {
-      const websiteRoot = process.cwd();
-      const repoRoot = dirname(websiteRoot);
-      const filePath = join(repoRoot, props.file.path);
+      const filePath = join(Paths.REPO_ROOT, props.file.path);
       const content = readFileSync(filePath, "utf-8");
 
       if (props.file.startLine || props.file.endLine) {

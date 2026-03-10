@@ -80,7 +80,8 @@
     "proposalbase",
     "fieldtype",
     "browsable",
-    "apidevtools"
+    "apidevtools",
+    "allof"
   ],
   "import": []
 }
