@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "fs";
+import * as path from "path";
 import yaml from "js-yaml";
 import { BuildScriptUtils } from "./utils";
 import { Paths } from "../lib/schema/paths";
@@ -101,7 +102,11 @@ class SchemaDocGenerator {
             typeof jsonSchema.file.path === "string"
           ) {
             const schemaPath = jsonSchema.file.path;
-            if (schemaPath.includes(Paths.SCHEMAS_DIR + "/")) {
+            // Frontmatter paths are relative to repo root; convert
+            // SCHEMAS_DIR to repo-relative so the comparison works.
+            const relativeSchemaDir =
+              path.relative(Paths.REPO_ROOT, Paths.SCHEMAS_DIR) + "/";
+            if (schemaPath.includes(relativeSchemaDir)) {
               // Extract schema name from path
               const schemaFileName = schemaPath
                 .split("/")
