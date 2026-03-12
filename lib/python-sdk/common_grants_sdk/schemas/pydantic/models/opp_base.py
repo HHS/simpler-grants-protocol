@@ -27,6 +27,9 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
 
     # Class-level registry slot for a registered plugin
     _plugin: ClassVar[Optional["Plugin"]] = None
+    # Name used as the key in SchemaExtensions and on plugin.schemas (the generator
+    # emits schemas under this name, which differs from cls.__name__ = "OpportunityBase")
+    _schema_extension_name: ClassVar[str] = "Opportunity"
 
     id: UUID = Field(..., description="Globally unique id for the opportunity")
     title: str = Field(..., description="Title or name of the funding opportunity")
@@ -82,11 +85,11 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
             opp = Opportunity.model_validate(payload)
             opp.custom_fields.program_area.value  # typed
         """
-        model = getattr(plugin.schemas, cls.__name__, None)
+        model = getattr(plugin.schemas, cls._schema_extension_name, None)
         if model is None:
             raise ValueError(
-                f"Plugin does not define a schema for '{cls.__name__}'. "
-                f"Run the generator and ensure '{cls.__name__}' is present "
+                f"Plugin does not define a schema for '{cls._schema_extension_name}'. "
+                f"Run the generator and ensure '{cls._schema_extension_name}' is present "
                 f"in the plugin's extensions."
             )
         cls._plugin = plugin
@@ -106,7 +109,7 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
         """
         if cls._plugin is None:
             return cls
-        model = getattr(cls._plugin.schemas, cls.__name__, None)
+        model = getattr(cls._plugin.schemas, cls._schema_extension_name, None)
         return model if model is not None else cls
 
     @classmethod
