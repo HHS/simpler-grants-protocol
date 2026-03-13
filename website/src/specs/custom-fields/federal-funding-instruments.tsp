@@ -12,7 +12,6 @@ enum FederalFundingInstrumentOptions {
   grant,
   cooperativeAgreement,
   procurementContract,
-  other,
   custom,
 }
 
@@ -28,17 +27,22 @@ model CustomFederalFundingInstruments extends CustomField {
   @example(#[
     #{
       type: FederalFundingInstrumentOptions.grant,
+      description: "Grant funding",
     },
     #{
       type: FederalFundingInstrumentOptions.cooperativeAgreement,
+      description: "Cooperative agreement funding",
     }
   ])
   value: Array<{
     /** The funding instrument type, from a predefined set of options */
     type: FederalFundingInstrumentOptions;
 
-    /** A custom value when type is 'custom' */
-    customValue?: string;
+    /** A custom type when type is 'custom' */
+    customType?: string;
+
+    /** A human-readable description of the funding instrument */
+    description?: string;
   }>;
 
   description: "Funding instrument types for this opportunity (federal-specific extensible set)";
