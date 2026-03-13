@@ -21,7 +21,9 @@ class _Schemas:
             setattr(self, name, model)
 
 
-def _make_plugin(field_specs: dict[str, CustomFieldSpec], model_name: str = "Opportunity") -> Plugin:
+def _make_plugin(
+    field_specs: dict[str, CustomFieldSpec], model_name: str = "Opportunity"
+) -> Plugin:
     """Build a Plugin whose schemas.Opportunity is produced by with_custom_fields()."""
     extended = OpportunityBase.with_custom_fields(
         custom_fields=field_specs,
@@ -76,7 +78,10 @@ def sample_payload() -> dict:
         "lastModifiedAt": "2025-01-01T00:00:00Z",
         "customFields": {
             "program_area": {"fieldType": "string", "value": "Health"},
-            "eligibility_types": {"fieldType": "array", "value": ["nonprofit", "tribal"]},
+            "eligibility_types": {
+                "fieldType": "array",
+                "value": ["nonprofit", "tribal"],
+            },
         },
     }
 

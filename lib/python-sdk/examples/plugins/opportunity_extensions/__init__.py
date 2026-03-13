@@ -15,9 +15,10 @@ def _load_config():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     config = getattr(module, "config", None)
-    if config is None or not hasattr(config, 'extensions'):
+    if config is None or not hasattr(config, "extensions"):
         raise RuntimeError('Plugin config must define "config = define_plugin(...)"')
     return config
+
 
 opportunity_extensions = Plugin(
     extensions=_load_config().extensions,

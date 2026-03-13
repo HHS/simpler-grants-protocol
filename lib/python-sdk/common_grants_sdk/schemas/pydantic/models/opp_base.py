@@ -26,7 +26,7 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
     """Base model for a funding opportunity with all core fields."""
 
     # Class-level registry slot for a registered plugin
-    _plugin: ClassVar[Optional["Plugin"]] = None
+    _plugin: ClassVar[Any] = None
     # Name used as the key in SchemaExtensions and on plugin.schemas (the generator
     # emits schemas under this name, which differs from cls.__name__ = "OpportunityBase")
     _schema_extension_name: ClassVar[str] = "Opportunity"
@@ -76,7 +76,7 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
         Raises:
             ValueError: If the plugin does not define a schema for this model.
 
-        Example::
+        Example:
 
             from common_grants_sdk.schemas.pydantic.models import OpportunityBase
             from plugins.opportunity_extensions import opportunity_extensions

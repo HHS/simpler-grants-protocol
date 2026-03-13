@@ -50,7 +50,9 @@ def merge_extensions(
     result: dict[str, dict[str, CustomFieldSpec]] = {}
 
     for source in sources:
-        for model_name, source_fields in source.items():
+        for model_name, source_fields in cast(
+            dict[str, dict[str, CustomFieldSpec]], source
+        ).items():
             model_fields = result.setdefault(model_name, {})
             for field_name, spec in source_fields.items():
                 if field_name in model_fields:

@@ -7,17 +7,22 @@ import importlib.util
 import keyword
 import re
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, cast
 
 from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
 from common_grants_sdk.plugin import PluginConfig
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.utils.json import snake
 
+# Maps extensible model names to the SDK base class they extend in generated code.
+# Add an entry here (and to SchemaExtensions) when a new model gains customFields support.
 MODEL_BASE_CLASS: dict[str, str] = {
     "Opportunity": "OpportunityBase",
 }
 
+# Default Python type annotation strings written into generated source for each field type.
+# ARRAY and OBJECT use parameterized forms (list[str], dict[str, Any]) as practical defaults;
+# callers can override these by setting spec.value to a more specific type.
 FIELD_TYPE_DEFAULT_ANNOTATION: dict[CustomFieldType, str] = {
     CustomFieldType.STRING: "str",
     CustomFieldType.NUMBER: "float",
@@ -29,6 +34,21 @@ FIELD_TYPE_DEFAULT_ANNOTATION: dict[CustomFieldType, str] = {
 
 
 def _load_config(config_path: Path) -> PluginConfig:
+    """Load and validate a plugin config file, returning the PluginConfig object.
+
+    Uses importlib to load cg.config.py as an isolated module so it doesn't
+    pollute sys.modules and can be loaded from any directory at runtime.
+
+    Args:
+        config_path: Absolute path to the cg.config.py file.
+
+    Returns:
+        The ``PluginConfig`` bound to the module-level ``config`` variable.
+
+    Raises:
+        RuntimeError: If the file cannot be loaded or does not expose a valid
+            ``config`` variable created by ``define_plugin()``.
+    """
     spec = importlib.util.spec_from_file_location(
         f"cg_plugin_config_{config_path.parent.name}", config_path
     )
@@ -47,40 +67,105 @@ def _load_config(config_path: Path) -> PluginConfig:
 
 
 def _normalize_identifier(name: str) -> str:
+    """Convert an arbitrary string into a valid Python identifier.
+
+    Args:
+        name: The raw string to normalise (e.g. a directory name or field key).
+
+    Returns:
+        A non-empty string that is a legal Python identifier and not a keyword.
+
+    Example::
+
+        _normalize_identifier("my-plugin")   # "my_plugin"
+        _normalize_identifier("123abc")       # "plugin_123abc"
+        _normalize_identifier("class")        # "class_plugin"
+    """
+    # Replace any non-word characters with underscores to produce a valid Python identifier.
     ident = re.sub(r"\W+", "_", name.strip())
     if not ident:
-        ident = "plugin"
+        ident = "plugin"  # empty string edge case
     if ident[0].isdigit():
-        ident = f"plugin_{ident}"
+        ident = f"plugin_{ident}"  # identifiers can't start with a digit
     if keyword.iskeyword(ident):
-        ident = f"{ident}_plugin"
+        ident = f"{ident}_plugin"  # e.g. "class" -> "class_plugin"
     return ident
 
 
 def _to_pascal(value: str) -> str:
+    """Convert a snake_case or kebab-case string to PascalCase.
+
+    Args:
+        value: The string to convert (e.g. ``"eligibility_type"``).
+
+    Returns:
+        PascalCase string (e.g. ``"EligibilityType"``). Falls back to
+        ``"Field"`` if the input contains no alphanumeric characters.
+    """
     parts = re.split(r"[^A-Za-z0-9]+", value)
     return "".join(p[:1].upper() + p[1:] for p in parts if p) or "Field"
 
 
 def _resolve_field_type(field_type: CustomFieldType | str) -> CustomFieldType:
+    """Normalise a field type value to a ``CustomFieldType`` enum member.
+
+    Accepts either an already-resolved enum member or a plain string (e.g.
+    ``"string"``, ``"array"``) as used in ``cg.config.py`` shorthand.
+
+    Args:
+        field_type: A ``CustomFieldType`` member or its string value.
+
+    Returns:
+        The corresponding ``CustomFieldType`` enum member.
+
+    Raises:
+        ValueError: If the string does not match any ``CustomFieldType`` value.
+    """
     if isinstance(field_type, CustomFieldType):
         return field_type
     return CustomFieldType(field_type)
 
 
 def _annotation_for_spec(spec: CustomFieldSpec, resolved_type: CustomFieldType) -> str:
+    """Determine the Python type annotation string for a custom field's ``value`` property.
+
+    Handles three cases based on what ``spec.value`` contains:
+
+    - ``None``: looks up a default annotation from ``FIELD_TYPE_DEFAULT_ANNOTATION``
+      (e.g. ``field_type="array"`` → ``"list[str]"``).
+    - A plain ``type`` object (e.g. ``int``, ``MyModel``): uses ``__name__`` if the
+      type is a builtin or an SDK type; falls back to ``"Any"`` for third-party types
+      that would not be importable in the generated file.
+    - A generic alias or complex type (e.g. ``list[str]``, ``Optional[int]``): converts
+      to string, strips the ``typing.`` prefix added by older Python versions, and unwraps
+      ``<class 'str'>``-style repr strings produced by ``str()`` in some contexts.
+
+    Args:
+        spec: The ``CustomFieldSpec`` for the field being generated.
+        resolved_type: The normalised ``CustomFieldType`` for the field.
+
+    Returns:
+        A string suitable for use as a type annotation in generated Python source,
+        e.g. ``"str"``, ``"list[str]"``, ``"dict[str, Any]"``, or ``"Any"``.
+    """
     if spec.value is None:
         return FIELD_TYPE_DEFAULT_ANNOTATION[resolved_type]
 
     value = spec.value
     if isinstance(value, type):
+        # Builtin types (str, int, list, ...) and SDK types can be referenced by name.
+        # Anything else (third-party types) falls back to Any to stay importable.
         if value.__module__ == "builtins":
             return value.__name__
         if value.__module__.startswith("common_grants_sdk"):
             return value.__name__
         return "Any"
 
+    # spec.value is a generic alias or other non-type (e.g. list[str], Optional[int]).
+    # Strip the "typing." prefix so the annotation is valid in generated source that
+    # uses `from __future__ import annotations`.
     rendered = str(value).replace("typing.", "")
+    # str(type_obj) for builtins renders as "<class 'str'>" rather than "str" — unwrap it.
     if rendered in {
         "<class 'str'>",
         "<class 'int'>",
@@ -92,7 +177,27 @@ def _annotation_for_spec(spec: CustomFieldSpec, resolved_type: CustomFieldType) 
 
 
 def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
-    for model_name, fields in extensions.items():
+    """Yield source-code blocks for every model defined in the extensions mapping.
+
+    For each model, yields three blocks in dependency order:
+
+    1. One ``CustomField`` subclass per field key (typed ``value`` property).
+    2. A ``CustomFields`` container model grouping all fields for the model.
+    3. The extended model class that adds a ``custom_fields`` attribute typed to
+       the container.
+
+    Args:
+        extensions: The merged ``SchemaExtensions`` from the plugin config.
+
+    Yields:
+        Source-code strings to be joined and written into ``schemas.py``.
+
+    Raises:
+        ValueError: If a model name is not present in ``MODEL_BASE_CLASS``.
+    """
+    for model_name, fields in cast(
+        dict[str, dict[str, CustomFieldSpec]], extensions
+    ).items():
         if model_name not in MODEL_BASE_CLASS:
             raise ValueError(
                 f'Generator does not support model "{model_name}". '
@@ -104,12 +209,16 @@ def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
 
         for field_key, spec in fields.items():
             resolved_type = _resolve_field_type(spec.field_type)
+            # Derive generated class names and the snake_case attribute name for this field.
             field_cls_name = f"{model_name}{_to_pascal(field_key)}CustomField"
             attr_name = _normalize_identifier(snake(field_key))
             value_annotation = _annotation_for_spec(
                 spec=spec, resolved_type=resolved_type
             )
+            # Use spec.name as the runtime display name if provided, otherwise fall back
+            # to the field key (the dict key in SchemaExtensions).
             field_name_default = spec.name or field_key
+            # repr() produces a quoted string literal safe to embed directly in source code.
             description_default = repr(spec.description) if spec.description else "None"
 
             custom_field_classes.append(
@@ -142,6 +251,10 @@ def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
         model_name_with_extensions = model_name
         base_class = MODEL_BASE_CLASS[model_name]
 
+        # Yield three source blocks per model in dependency order:
+        # 1. Individual CustomField subclasses (one per field key)
+        # 2. A CustomFields container model grouping all fields for this model
+        # 3. The extended model class that wires in the CustomFields container
         yield "\n\n".join(custom_field_classes)
         yield "\n".join(
             [
@@ -163,6 +276,23 @@ def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
 
 
 def _render_schemas_py(extensions: SchemaExtensions) -> str:
+    """Render the full source of the generated ``schemas.py`` file.
+
+    Produces a self-contained module containing typed ``CustomField`` subclasses,
+    a ``CustomFields`` container, and an extended model class for each entry in
+    ``extensions``. Also emits a ``_Schemas`` container object (attribute access
+    rather than dict lookup) and a module-level ``schemas`` instance.
+
+    Args:
+        extensions: The merged ``SchemaExtensions`` from the plugin config.
+
+    Returns:
+        A string of valid Python source code ready to be written to disk.
+    """
+    # _Schemas is a plain object (not a dict) so callers get attribute access:
+    # plugin.schemas.Opportunity rather than plugin.schemas["Opportunity"].
+    # The dynamic __init__ assignment is necessary because model names aren't
+    # known until generation time, so a static class body can't be used.
     model_names = list(extensions.keys())
     blocks = "\n\n\n".join(_model_blocks(extensions))
     schema_assignments = "\n".join(
@@ -197,6 +327,14 @@ def _render_schemas_py(extensions: SchemaExtensions) -> str:
 
 
 def _render_generated_init_py() -> str:
+    """Render the source of the ``generated/__init__.py`` file.
+
+    This file re-exports the ``schemas`` instance from ``schemas.py`` so that
+    the generated package can be imported as ``from .generated import schemas``.
+
+    Returns:
+        A string of valid Python source code ready to be written to disk.
+    """
     return "\n".join(
         [
             "from .schemas import schemas",
@@ -208,6 +346,24 @@ def _render_generated_init_py() -> str:
 
 
 def _render_plugin_init_py(plugin_variable_name: str) -> str:
+    """Render the source of the plugin directory's root ``__init__.py`` file.
+
+    The generated file re-loads ``cg.config.py`` at import time so the
+    ``Plugin`` instance always reflects the extensions as defined in the config,
+    even if the config is updated without re-running the generator. It exports a
+    ``Plugin`` instance named after the plugin directory alongside the ``schemas``
+    object.
+
+    Args:
+        plugin_variable_name: A valid Python identifier derived from the plugin
+            directory name (e.g. ``"opportunity_extensions"``).
+
+    Returns:
+        A string of valid Python source code ready to be written to disk.
+    """
+    # The generated __init__.py re-loads cg.config.py at import time so the
+    # Plugin instance always reflects the extensions as defined in the config,
+    # even if the config is updated without re-running the generator.
     return "\n".join(
         [
             "from __future__ import annotations",
@@ -243,6 +399,23 @@ def _render_plugin_init_py(plugin_variable_name: str) -> str:
 
 
 def generate_plugin(plugin_dir: Path) -> Path:
+    """Run the full code generation pipeline for a single plugin directory.
+
+    Loads ``cg.config.py``, creates the ``generated/`` subdirectory, and writes
+    three files: ``generated/schemas.py``, ``generated/__init__.py``, and the
+    root ``__init__.py`` that exports the ``Plugin`` instance.
+
+    Args:
+        plugin_dir: Path to the plugin directory containing ``cg.config.py``.
+
+    Returns:
+        The path to the ``generated/`` directory that was created.
+
+    Raises:
+        FileNotFoundError: If ``cg.config.py`` does not exist in ``plugin_dir``.
+        RuntimeError: If the config file cannot be loaded or is invalid.
+        ValueError: If the config references an unsupported model name.
+    """
     plugin_dir = plugin_dir.resolve()
     config_path = plugin_dir / "cg.config.py"
     if not config_path.exists():
@@ -268,6 +441,16 @@ def generate_plugin(plugin_dir: Path) -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI entry point for ``python -m common_grants_sdk.generate``.
+
+    Parses command-line arguments and delegates to ``generate_plugin()``.
+
+    Args:
+        argv: Argument list to parse. Defaults to ``sys.argv[1:]`` when ``None``.
+
+    Returns:
+        Exit code (``0`` on success).
+    """
     parser = argparse.ArgumentParser(
         prog="python -m common_grants_sdk.generate",
         description="Generate typed plugin schemas from cg.config.py",
