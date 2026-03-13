@@ -3,7 +3,10 @@
     "schema": "QuestionAddress",
     "label": "Generic Address"
   },
-  "generic-name": { "schema": "QuestionName", "label": "Generic Name" },
+  "generic-name": {
+    "schema": "QuestionName",
+    "label": "Generic Name"
+  },
   "org-address": {
     "schema": "QuestionPrimaryOrgAddress",
     "label": "Organization Address"

@@ -96,7 +96,14 @@ export async function loadQuestionBankItem(
 }
 
 /**
- * Loads all question bank items from the index (with caching)
+ * Loads all question bank items from the index.
+ *
+ * Results are cached in module scope because this function is called by
+ * multiple Astro pages during the static build (the index page, each detail
+ * page, and the filter options helper). The cache avoids redundant schema
+ * dereferencing and YAML parsing across those pages. Since schemas are
+ * generated before the Astro build starts and nothing changes mid-build,
+ * the cache cannot get out of sync.
  */
 export async function loadAllQuestionBankItems(): Promise<QuestionBankMap> {
   if (questionBankCache) {
