@@ -5,7 +5,7 @@ with the CommonGrants SDK plugin framework.
 
 To generate the typed Pydantic models, run this command from this directory:
 
-    python -m common_grants_sdk.generate
+    poetry run python -m common_grants_sdk.generate
 
 This will emit generated/ and __init__.py alongside this file.
 """
