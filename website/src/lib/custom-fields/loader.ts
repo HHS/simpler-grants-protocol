@@ -1,4 +1,7 @@
-import { customFieldsAjv } from "../validation";
+import { Paths } from "../schema/paths";
+import * as fs from "fs";
+import * as path from "path";
+import * as yaml from "js-yaml";
 import type {
   CustomField,
   CustomFieldIndexEntry,
@@ -18,19 +21,22 @@ import customFieldsIndex from "@/content/custom-fields/index.json";
 /** Cache for loaded custom fields */
 let customFieldsCache: CustomFieldMap | null = null;
 
-/** Loads a schema using the custom-field schemas AJV registry */
+/** Loads a raw schema by name from the extension schemas directory */
 function loadSchema(schemaName: string): Record<string, unknown> | null {
-  const schemaId = schemaName.endsWith(".yaml")
+  const fileName = schemaName.endsWith(".yaml")
     ? schemaName
     : `${schemaName}.yaml`;
-  const validator = customFieldsAjv.getSchema(schemaId);
+  const filePath = path.join(Paths.EXTENSION_SCHEMAS_DIR, fileName);
 
-  if (!validator?.schema) {
-    console.warn(`Schema ${schemaId} not found in AJV registry`);
+  if (!fs.existsSync(filePath)) {
+    console.warn(
+      `Schema ${fileName} not found in ${Paths.EXTENSION_SCHEMAS_DIR}`,
+    );
     return null;
   }
 
-  return validator.schema as Record<string, unknown>;
+  const content = fs.readFileSync(filePath, "utf-8");
+  return yaml.load(content) as Record<string, unknown>;
 }
 
 /** Normalizes an array from schema extension (may be string[] from JSON) */

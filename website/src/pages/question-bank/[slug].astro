@@ -1,0 +1,55 @@
+---
+import {
+  loadAllQuestionBankItems,
+  getQuestionBankIds,
+} from "@/lib/question-bank";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import QuestionDetails from "@/components/question-bank/QuestionDetails.astro";
+import type { GetStaticPaths } from "astro";
+
+export interface Props {
+  itemId: string;
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const itemIds = getQuestionBankIds();
+  const paths = itemIds.map((itemId) => ({
+    params: { slug: itemId },
+    props: { itemId },
+  }));
+  return paths;
+};
+
+const { itemId } = Astro.props;
+const questions = await loadAllQuestionBankItems();
+const item = questions[itemId];
+
+if (!item) {
+  throw new Error(`Question bank item "${itemId}" not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: item.label,
+    description: item.description,
+    tableOfContents: false,
+  }}
+>
+  <a href="/question-bank" class="back-link">&larr; Back to Question Bank</a>
+  <QuestionDetails item={item} />
+</StarlightPage>
+
+<style>
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+    color: var(--sl-color-accent);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>

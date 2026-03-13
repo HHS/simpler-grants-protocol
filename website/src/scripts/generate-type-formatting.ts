@@ -1,5 +1,4 @@
 import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
 import yaml from "js-yaml";
 import { TypeFormatter } from "../lib/schema/type-formatter";
 import { SchemaDocMapper } from "../lib/schema/schema-doc-mapper";
@@ -44,7 +43,7 @@ class TypeFormattingGenerator {
       const docMap = SchemaDocMapper.getSchemaDocMap();
       const getSchemaDocPath = (schemaName: string) => docMap.get(schemaName);
 
-      const schemasDir = join(process.cwd(), Paths.SCHEMAS_DIR);
+      const schemasDir = Paths.SCHEMAS_DIR;
       const yamlFiles = BuildScriptUtils.findFilesByExtension(
         schemasDir,
         ".yaml",
@@ -67,7 +66,7 @@ class TypeFormattingGenerator {
       };
 
       // Write to output file
-      const outputPath = join(process.cwd(), Paths.TYPE_FORMATTING_CACHE);
+      const outputPath = Paths.TYPE_FORMATTING_CACHE;
       writeFileSync(outputPath, JSON.stringify(collection, null, 2));
 
       const duration = Date.now() - startTime;

@@ -27,6 +27,7 @@ import "./omb-number.tsp";
 namespace CustomFields;
 
 /** Central enum for custom field tags; used in x-tags JSON Schema extensions */
+@JsonSchema.id("CustomFields.Tags")
 enum Tags {
   identifier,
   federal,
@@ -36,6 +37,7 @@ enum Tags {
   context,
 }
 
+@JsonSchema.id("CustomFields.ValidSchemas")
 enum ValidSchemas {
   OpportunityBase,
   CompetitionBase,

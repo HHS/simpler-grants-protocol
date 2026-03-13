@@ -1,5 +1,4 @@
 import { readFileSync } from "fs";
-import { join } from "path";
 import { Paths } from "./paths";
 
 /**
@@ -17,7 +16,7 @@ export class SchemaDocMapper {
       return this.cache;
     }
 
-    const mappingPath = join(process.cwd(), Paths.SCHEMA_DOCS_MAPPING);
+    const mappingPath = Paths.SCHEMA_DOCS_MAPPING;
 
     try {
       const mappingContent = readFileSync(mappingPath, "utf-8");

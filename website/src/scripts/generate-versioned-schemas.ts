@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import yaml from "js-yaml";
 import type { JsonSchema } from "@jsonforms/core";
+import { Paths } from "../lib/schema/paths";
 import { BuildScriptUtils } from "./utils";
 import {
   generateSchemaVersions,
@@ -69,7 +70,7 @@ class VersionedSchemaGenerator {
    */
   private static loadChangelog(): Changelog {
     const changelogPath = join(
-      process.cwd(),
+      Paths.WEBSITE_ROOT,
       "tsp-output",
       "typespec-versioning-changelog",
       "changelog.json",
@@ -88,7 +89,7 @@ class VersionedSchemaGenerator {
    */
   private static loadSchemas(): Map<string, JsonSchema> {
     const schemasDir = join(
-      process.cwd(),
+      Paths.WEBSITE_ROOT,
       "tsp-output",
       "@typespec",
       "json-schema",
@@ -126,7 +127,7 @@ class VersionedSchemaGenerator {
   private static writeVersionedSchemas(
     results: VersionGenerationResult[],
   ): void {
-    const baseDir = join(process.cwd(), this.OUTPUT_DIR);
+    const baseDir = join(Paths.WEBSITE_ROOT, this.OUTPUT_DIR);
 
     for (const result of results) {
       // Create version directory (e.g., tsp-output/schemas/versions/v0.1.0/)

@@ -2,7 +2,7 @@
 import { Code } from "@astrojs/starlight/components";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 import { readFileSync } from "fs";
-import { join, dirname } from "path";
+import { join } from "path";
 import { Paths } from "../lib/schema/paths";
 import { generateSchemaExample } from "../lib/schema/example-generator";
 
@@ -51,7 +51,7 @@ if (!example && !jsonSchema && !typeSpec && !python) {
 const exampleCode = example?.code
   ? example.code
   : example?.file?.path
-    ? generateSchemaExample(example.file.path)
+    ? await generateSchemaExample(example.file.path)
     : null;
 const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
 const typeSpecCode = typeSpec ? extractCode(typeSpec) : null;
@@ -72,8 +72,8 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
   if (!props.file) {
     return null;
   }
-  // Custom field schemas live in .custom-field-schemas (gitignored); no hosted link
-  if (props.file.path.includes(Paths.CUSTOM_FIELD_SCHEMAS_PATH_PREFIX)) {
+  // Extension schemas live in .extension-schemas (gitignored); no hosted link
+  if (props.file.path.includes(Paths.EXTENSION_SCHEMAS_PATH_PREFIX)) {
     return null;
   }
 
@@ -125,9 +125,7 @@ function extractCode(props: CodeBlockConfig): string {
   }
   if (props.file) {
     try {
-      const websiteRoot = process.cwd();
-      const repoRoot = dirname(websiteRoot);
-      const filePath = join(repoRoot, props.file.path);
+      const filePath = join(Paths.REPO_ROOT, props.file.path);
       const content = readFileSync(filePath, "utf-8");
 
       if (props.file.startLine || props.file.endLine) {
