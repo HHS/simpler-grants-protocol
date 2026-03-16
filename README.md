@@ -57,6 +57,7 @@ flowchart LR
   style website fill:#F7F7F4,stroke:#171716
   style cli fill:#F7F7F4,stroke:#171716
   style template fill:#F7F7F4,stroke:#171716
+  style forms fill:#F7F7F4,stroke:#171716
 
   %% ─────────────────────────────
   %% Legend
@@ -107,6 +108,13 @@ flowchart LR
         HHS/simpler-grants-protocol#332["Create an Express.js API template"]
         HHS/simpler-grants-protocol#333["Create a Go API template"]
         HHS/simpler-grants-protocol#343["Create a FastAPI template ✔️"]:::Done
+    end
+
+
+    subgraph forms["Forms"]
+    direction LR
+        HHS/simpler-grants-protocol#604["Create an interactive form builder"]
+        HHS/simpler-grants-protocol#605["Create a forms SDK"]
     end
 
 
