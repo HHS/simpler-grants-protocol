@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from .extensions import ConflictStrategy, SchemaExtensions, merge_extensions
+from .extensions import SchemaExtensions
 
 
 @dataclass(frozen=True)
@@ -24,10 +24,3 @@ class Plugin:
 def define_plugin(extensions: SchemaExtensions) -> PluginConfig:
     """Create a plugin config object consumed by the code generator."""
     return PluginConfig(extensions=extensions)
-
-
-def compose(
-    sources: list[SchemaExtensions], on_conflict: ConflictStrategy = "error"
-) -> SchemaExtensions:
-    """Merge extension sources into one extension mapping."""
-    return merge_extensions(sources=sources, on_conflict=on_conflict)

@@ -17,7 +17,7 @@ from common_grants_sdk.utils.custom_fields import (
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 if TYPE_CHECKING:
-    from common_grants_sdk.plugin import Plugin
+    pass
 
 V = TypeVar("V")  # Unbound to support both BaseModel subclasses and primitives
 
@@ -58,44 +58,6 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
     )
 
     @classmethod
-    def register_plugin(cls, plugin: "Plugin") -> "Type[Any]":
-        """Register a plugin against this model and return the plugin's extended schema.
-
-        Stores the plugin on the class so it can be retrieved later via
-        ``registered_schema()``. Also returns the extended model immediately
-        for convenience.
-
-        Args:
-            plugin: A ``Plugin`` instance produced by ``define_plugin()`` and
-                the code generator. Must include a schema for ``"Opportunity"``
-                in its ``.schemas`` attribute.
-
-        Returns:
-            The generated Pydantic model class for this model from the plugin.
-
-        Raises:
-            ValueError: If the plugin does not define a schema for this model.
-
-        Example:
-
-            from common_grants_sdk.schemas.pydantic.models import OpportunityBase
-            from plugins.opportunity_extensions import opportunity_extensions
-
-            Opportunity = OpportunityBase.register_plugin(opportunity_extensions)
-            opp = Opportunity.model_validate(payload)
-            opp.custom_fields.program_area.value  # typed
-        """
-        model = getattr(plugin.schemas, cls._schema_extension_name, None)
-        if model is None:
-            raise ValueError(
-                f"Plugin does not define a schema for '{cls._schema_extension_name}'. "
-                f"Run the generator and ensure '{cls._schema_extension_name}' is present "
-                f"in the plugin's extensions."
-            )
-        cls._plugin = plugin
-        return model
-
-    @classmethod
     def registered_schema(cls) -> "Type[Any]":
         """Return the extended model class from the registered plugin.
 
@@ -103,8 +65,7 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
 
         Example::
 
-            OpportunityBase.register_plugin(opportunity_extensions)
-            Opportunity = OpportunityBase.registered_schema()
+            Opportunity = opportunity_extensions.schemas.Opportunity
             opp = Opportunity.model_validate(payload)
         """
         if cls._plugin is None:

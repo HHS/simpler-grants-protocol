@@ -10,7 +10,7 @@ from typing import get_type_hints
 
 import pytest
 
-from common_grants_sdk import compose, define_plugin
+from common_grants_sdk import merge_extensions, define_plugin
 from common_grants_sdk.extensions import CustomFieldSpec
 from common_grants_sdk.plugin import PluginConfig
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
@@ -43,11 +43,11 @@ def test_define_plugin_returns_config_with_extensions():
     assert config.extensions == extensions
 
 
-def test_compose_merges_extensions():
+def test_merge_extensions_merges_extensions():
     one = {"Opportunity": {"program_area": CustomFieldSpec(field_type="string")}}
     two = {"Opportunity": {"eligibility_type": CustomFieldSpec(field_type="array")}}
 
-    merged = compose([one, two], on_conflict="error")
+    merged = merge_extensions([one, two], on_conflict="error")
 
     assert set(merged["Opportunity"].keys()) == {"program_area", "eligibility_type"}
 
@@ -62,7 +62,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
     (plugin_dir / "cg.config.py").write_text(
         "\n".join(
             [
-                "from common_grants_sdk import compose, define_plugin",
+                "from common_grants_sdk import merge_extensions, define_plugin",
                 "from common_grants_sdk.types import SchemaExtensions, CustomFieldSpec",
                 "",
                 "local_extensions: SchemaExtensions = {",
@@ -78,7 +78,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
                 "    },",
                 "}",
                 "",
-                "config = define_plugin(compose([local_extensions], on_conflict='error'))",
+                "config = define_plugin(merge_extensions([local_extensions], on_conflict='error'))",
                 "",
             ]
         ),

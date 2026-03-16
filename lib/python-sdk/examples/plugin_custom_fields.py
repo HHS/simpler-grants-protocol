@@ -22,15 +22,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase  # noqa: E402
 from plugins.opportunity_extensions import opportunity_extensions  # noqa: E402
 
-# ---------------------------------------------------------------------------
-# Register the plugin with OpportunityBase.
-#
-# After this call, OpportunityBase knows about the plugin and its extended
-# schema can be retrieved at any point via OpportunityBase.registered_schema().
-# register_plugin() also returns the extended model directly for convenience.
-# ---------------------------------------------------------------------------
-
-Opportunity = OpportunityBase.register_plugin(opportunity_extensions)
 
 # ---------------------------------------------------------------------------
 # Sample API payload containing our four custom fields
@@ -64,12 +55,14 @@ api_response = {
 }
 
 # ---------------------------------------------------------------------------
-# Option A: use the model returned directly by register_plugin()
+# Option A: use the model returned via opportunity_extensions
 # ---------------------------------------------------------------------------
 
-opp = Opportunity.model_validate(api_response)
+opp = opportunity_extensions.schemas.Opportunity.model_validate(api_response)
 
-print("--- Option A: via register_plugin() return value ---")
+print(
+    "--- Option A: via opportunity_extensions.scehmas.Opportunity.model_validate() return value ---"
+)
 print(f"Title:            {opp.title}")
 print(f"Status:           {opp.status.value}")
 print(f"program_area:     {opp.custom_fields.program_area.value}")

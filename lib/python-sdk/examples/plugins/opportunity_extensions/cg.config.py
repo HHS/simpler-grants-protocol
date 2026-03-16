@@ -10,7 +10,7 @@ To generate the typed Pydantic models, run this command from this directory:
 This will emit generated/ and __init__.py alongside this file.
 """
 
-from common_grants_sdk import define_plugin, compose
+from common_grants_sdk import define_plugin, merge_extensions
 from common_grants_sdk.types import CustomFieldSpec, SchemaExtensions
 
 # Extensions that might come from a shared HHS package
@@ -42,5 +42,5 @@ local_extensions: SchemaExtensions = {
 }
 
 config = define_plugin(
-    compose([hhs_extensions, local_extensions], on_conflict="error"),
+    merge_extensions([hhs_extensions, local_extensions], on_conflict="error"),
 )
