@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import * as path from "path";
 import yaml from "js-yaml";
 import { BuildScriptUtils } from "./utils";
 import { Paths } from "../lib/schema/paths";
@@ -37,7 +37,7 @@ class SchemaDocGenerator {
     const mapping = new Map<string, string>();
 
     try {
-      const docsDir = join(process.cwd(), Paths.PROTOCOL_DOCS_DIR);
+      const docsDir = Paths.PROTOCOL_DOCS_DIR;
       const mdxFiles = BuildScriptUtils.findFilesByExtension(docsDir, ".mdx");
 
       console.log(`Found ${mdxFiles.length} MDX files to process`);
@@ -53,7 +53,7 @@ class SchemaDocGenerator {
       const mappingObject = Object.fromEntries(mapping);
 
       // Write to output file
-      const outputPath = join(process.cwd(), Paths.SCHEMA_DOCS_MAPPING);
+      const outputPath = Paths.SCHEMA_DOCS_MAPPING;
       writeFileSync(outputPath, JSON.stringify(mappingObject, null, 2));
 
       const duration = Date.now() - startTime;
@@ -86,10 +86,7 @@ class SchemaDocGenerator {
       const frontmatter = yaml.load(frontmatterYaml) as Frontmatter;
 
       // Convert file path to documentation URL
-      const relativePath = filePath.replace(
-        process.cwd() + "/" + Paths.CONTENT_DOCS_DIR + "/",
-        "",
-      );
+      const relativePath = filePath.replace(Paths.CONTENT_DOCS_DIR + "/", "");
       const docPath = "/" + relativePath.replace(/\.mdx$/, "");
 
       // Extract schema paths from each schema definition
@@ -105,7 +102,11 @@ class SchemaDocGenerator {
             typeof jsonSchema.file.path === "string"
           ) {
             const schemaPath = jsonSchema.file.path;
-            if (schemaPath.includes(Paths.SCHEMAS_DIR + "/")) {
+            // Frontmatter paths are relative to repo root; convert
+            // SCHEMAS_DIR to repo-relative so the comparison works.
+            const relativeSchemaDir =
+              path.relative(Paths.REPO_ROOT, Paths.SCHEMAS_DIR) + "/";
+            if (schemaPath.includes(relativeSchemaDir)) {
               // Extract schema name from path
               const schemaFileName = schemaPath
                 .split("/")

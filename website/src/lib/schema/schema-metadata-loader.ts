@@ -1,5 +1,4 @@
 import { readFileSync } from "fs";
-import { join } from "path";
 import { Paths } from "./paths";
 
 /**
@@ -48,7 +47,7 @@ export class SchemaMetadataLoader {
     }
 
     try {
-      const metadataPath = join(process.cwd(), Paths.SCHEMA_METADATA);
+      const metadataPath = Paths.SCHEMA_METADATA;
       const metadataContent = readFileSync(metadataPath, "utf-8");
       const metadata = JSON.parse(metadataContent) as SchemaMetadataCollection;
 

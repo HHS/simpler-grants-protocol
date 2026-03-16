@@ -13,12 +13,12 @@ import { Paths } from "./schema/paths";
 
 /** Ajv instance loaded from Paths.SCHEMAS_DIR (base protocol schemas only) */
 export const ajv = createAjvWithSchemas();
+/** Ajv instance loaded from Paths.EXTENSION_SCHEMAS_DIR (custom fields + question bank), used for validation only */
+export const extensionsAjv = createAjvWithSchemas({
+  schemaDir: Paths.EXTENSION_SCHEMAS_DIR,
+});
 const commonGrantsSchema = ajv.getSchema("ProposalBase.yaml")
   ?.schema as JsonSchema;
-/** Ajv instance loaded from Paths.CUSTOM_FIELD_SCHEMAS_DIR (custom field schemas only) */
-export const customFieldsAjv = createAjvWithSchemas({
-  schemaDir: Paths.CUSTOM_FIELD_SCHEMAS_DIR,
-});
 
 // #########################################################
 // Validation types
@@ -58,7 +58,7 @@ interface CommonGrantsValidationProps {
  * directory only. Otherwise load from Paths.SCHEMAS_DIR.
  */
 export interface CreateAjvWithSchemasOptions {
-  /** Single directory to load YAML schemas from (relative to process.cwd()). */
+  /** Absolute path to a directory of YAML schemas to load. */
   schemaDir?: string;
 }
 
@@ -85,9 +85,8 @@ export function createAjvWithSchemas(
     },
   });
 
-  const dir =
+  const yamlDir =
     options?.schemaDir !== undefined ? options.schemaDir : Paths.SCHEMAS_DIR;
-  const yamlDir = path.resolve(process.cwd(), dir);
 
   if (!fs.existsSync(yamlDir)) {
     return ajv;

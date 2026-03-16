@@ -45,6 +45,8 @@ export default defineConfig({
             "/forms/library",
             "/forms/library/**",
             "/forms/playground",
+            "/question-bank",
+            "/question-bank/**",
           ],
         }),
       ],
@@ -142,6 +144,10 @@ export default defineConfig({
             {
               label: "Form library",
               link: "forms/library",
+            },
+            {
+              label: "Form question bank",
+              link: "question-bank",
             },
             {
               label: "Pre-fill playground",
