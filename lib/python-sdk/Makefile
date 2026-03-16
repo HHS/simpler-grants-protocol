@@ -26,6 +26,3 @@ check-types:
 	$(RUNTIME_PREFIX) mypy .
 
 checks: check-format check-lint check-types
-
-plugins:
-	$(RUNTIME_PREFIX) python -m common_grants_sdk.generate --plugin examples/plugins/opportunity_extensions
