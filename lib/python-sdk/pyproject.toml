@@ -25,7 +25,7 @@ types-pyyaml = "^6.0.12.20250915"
 datamodel-code-generator = "^0.43.1"
 
 [tool.mypy]
-exclude = ["^examples/"]
+exclude = ["examples/"]
 
 [build-system]
 requires = ["poetry-core"]

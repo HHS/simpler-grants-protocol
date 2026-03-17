@@ -126,8 +126,8 @@ This example uses the plugin framework to define four typed custom fields, gener
 **Step 1:** Generate the typed models (only needed once, or after changing `cg.config.py`):
 
 ```bash
-cd examples/plugins/opportunity_extensions
-poetry run python -m common_grants_sdk.generate
+cd lib/python-sdk
+poetry run python -m common_grants_sdk.extensions.generate --plugin examples/plugins/opportunity_extensions
 cd ../../..
 ```
 

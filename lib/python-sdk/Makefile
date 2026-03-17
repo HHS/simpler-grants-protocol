@@ -22,10 +22,10 @@ check-format:
 check-lint:
 	$(RUNTIME_PREFIX) ruff check .
 
-check-types:
+check-types: plugins
 	$(RUNTIME_PREFIX) mypy .
 
 checks: check-format check-lint check-types
 
 plugins:
-	$(RUNTIME_PREFIX) python -m common_grants_sdk.generate --plugin examples/plugins/opportunity_extensions
+	$(RUNTIME_PREFIX) python -m common_grants_sdk.extensions.generate --plugin examples/plugins/opportunity_extensions

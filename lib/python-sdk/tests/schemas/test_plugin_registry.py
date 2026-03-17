@@ -1,9 +1,9 @@
-"""Tests for OpportunityBase.with_custom_fields() and registered_schema()."""
+"""Tests for OpportunityBase.with_custom_fields()."""
 
 import pytest
 
 from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
-from common_grants_sdk.plugin import Plugin
+from common_grants_sdk.extensions import Plugin
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.schemas.pydantic.models.opp_base import OpportunityBase
 
@@ -77,17 +77,6 @@ def sample_payload() -> dict:
             },
         },
     }
-
-
-# ---------------------------------------------------------------------------
-# registered_schema() tests
-# ---------------------------------------------------------------------------
-
-
-def test_registered_schema_returns_base_class_when_no_plugin_registered():
-    result = OpportunityBase.registered_schema()
-
-    assert result is OpportunityBase
 
 
 # ---------------------------------------------------------------------------

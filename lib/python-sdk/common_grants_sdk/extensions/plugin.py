@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from .extensions import SchemaExtensions
+from .specs import SchemaExtensions
 
 
 @dataclass(frozen=True)

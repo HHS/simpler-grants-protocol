@@ -9,10 +9,10 @@ import re
 from pathlib import Path
 from typing import Iterable, cast
 
-from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
-from common_grants_sdk.plugin import PluginConfig
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.utils.json import snake
+from .plugin import PluginConfig
+from .specs import CustomFieldSpec, SchemaExtensions
 
 # Maps extensible model names to the SDK base class they extend in generated code.
 # Add an entry here (and to SchemaExtensions) when a new model gains customFields support.
@@ -371,7 +371,7 @@ def _render_plugin_init_py(plugin_variable_name: str) -> str:
             "import importlib.util",
             "from pathlib import Path",
             "",
-            "from common_grants_sdk.plugin import Plugin",
+            "from common_grants_sdk.extensions import Plugin",
             "from .generated import schemas",
             "",
             "",
@@ -442,7 +442,7 @@ def generate_plugin(plugin_dir: Path) -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry point for ``python -m common_grants_sdk.generate``.
+    """CLI entry point for ``python -m common_grants_sdk.extensions.generate``.
 
     Parses command-line arguments and delegates to ``generate_plugin()``.
 
@@ -453,7 +453,7 @@ def main(argv: list[str] | None = None) -> int:
         Exit code (``0`` on success).
     """
     parser = argparse.ArgumentParser(
-        prog="python -m common_grants_sdk.generate",
+        prog="python -m common_grants_sdk.extensions.generate",
         description="Generate typed plugin schemas from cg.config.py",
     )
     parser.add_argument(

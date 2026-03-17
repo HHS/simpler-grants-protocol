@@ -12,7 +12,7 @@ import pytest
 
 from common_grants_sdk import merge_extensions, define_plugin
 from common_grants_sdk.extensions import CustomFieldSpec
-from common_grants_sdk.plugin import PluginConfig
+from common_grants_sdk.extensions import PluginConfig
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 
 
@@ -63,7 +63,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
         "\n".join(
             [
                 "from common_grants_sdk import merge_extensions, define_plugin",
-                "from common_grants_sdk.types import SchemaExtensions, CustomFieldSpec",
+                "from common_grants_sdk.extensions import SchemaExtensions, CustomFieldSpec",
                 "",
                 "local_extensions: SchemaExtensions = {",
                 '    "Opportunity": {',
@@ -86,7 +86,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
     )
 
     env = _env_with_sdk_pythonpath()
-    cmd = [sys.executable, "-m", "common_grants_sdk.generate"]
+    cmd = [sys.executable, "-m", "common_grants_sdk.extensions.generate"]
     run = subprocess.run(
         cmd,
         cwd=plugin_dir,
@@ -156,7 +156,7 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
         "\n".join(
             [
                 "from common_grants_sdk import define_plugin",
-                "from common_grants_sdk.types import SchemaExtensions, CustomFieldSpec",
+                "from common_grants_sdk.extensions import SchemaExtensions, CustomFieldSpec",
                 "",
                 "extensions: SchemaExtensions = {",
                 '    "Opportunity": {',
@@ -172,7 +172,7 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
 
     env = _env_with_sdk_pythonpath()
     run = subprocess.run(
-        [sys.executable, "-m", "common_grants_sdk.generate"],
+        [sys.executable, "-m", "common_grants_sdk.extensions.generate"],
         cwd=plugin_dir,
         env=env,
         capture_output=True,

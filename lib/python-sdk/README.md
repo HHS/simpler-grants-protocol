@@ -206,7 +206,7 @@ The SDK includes a plugin framework for defining typed custom fields, combining 
 
 ```python
 from common_grants_sdk import define_plugin, compose
-from common_grants_sdk.types import SchemaExtensions, CustomFieldSpec
+from common_grants_sdk.extensions import SchemaExtensions, CustomFieldSpec
 
 local_extensions: SchemaExtensions = {
     "Opportunity": {
@@ -224,7 +224,7 @@ config = define_plugin(
 Place this in a `cg.config.py` file and run the generator to emit typed Pydantic models:
 
 ```bash
-python -m common_grants_sdk.generate --plugin ./plugins/my_plugin
+python -m common_grants_sdk.extensions.generate --plugin ./plugins/my_plugin
 ```
 
 After generation, import the plugin and validate payloads with full type safety:

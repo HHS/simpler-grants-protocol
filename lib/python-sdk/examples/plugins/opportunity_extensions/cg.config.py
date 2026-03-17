@@ -3,15 +3,15 @@
 Defines four custom fields for the Opportunity model and registers them
 with the CommonGrants SDK plugin framework.
 
-To generate the typed Pydantic models, run this command from this directory:
+To generate the typed Pydantic models, run this command from the lib/python-sdk directory:
 
-    poetry run python -m common_grants_sdk.generate
+    poetry run python -m common_grants_sdk.extensions.generate --plugin examples/plugins/opportunity_extensions
 
 This will emit generated/ and __init__.py alongside this file.
 """
 
 from common_grants_sdk import define_plugin, merge_extensions
-from common_grants_sdk.types import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
 
 # Extensions that might come from a shared HHS package
 hhs_extensions: SchemaExtensions = {
