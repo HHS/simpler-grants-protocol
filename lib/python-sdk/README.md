@@ -217,8 +217,7 @@ local_extensions: SchemaExtensions = {
 
 # Wrap extensions in a plugin config for the generator
 config = define_plugin(
-    compose([local_extensions], on_conflict="error"),
-)
+    [local_extensions], on_conflict="error")
 ```
 
 Place this in a `cg.config.py` file and run the generator to emit typed Pydantic models:
