@@ -36,11 +36,11 @@ FIELD_TYPE_DEFAULT_ANNOTATION: dict[CustomFieldType, str] = {
 def _load_config(config_path: Path) -> PluginConfig:
     """Load and validate a plugin config file, returning the PluginConfig object.
 
-    Uses importlib to load cg.config.py as an isolated module so it doesn't
+    Uses importlib to load cg_config.py as an isolated module so it doesn't
     pollute sys.modules and can be loaded from any directory at runtime.
 
     Args:
-        config_path: Absolute path to the cg.config.py file.
+        config_path: Absolute path to the cg_config.py file.
 
     Returns:
         The ``PluginConfig`` bound to the module-level ``config`` variable.
@@ -110,7 +110,7 @@ def _resolve_field_type(field_type: CustomFieldType | str) -> CustomFieldType:
     """Normalise a field type value to a ``CustomFieldType`` enum member.
 
     Accepts either an already-resolved enum member or a plain string (e.g.
-    ``"string"``, ``"array"``) as used in ``cg.config.py`` shorthand.
+    ``"string"``, ``"array"``) as used in ``cg_config.py`` shorthand.
 
     Args:
         field_type: A ``CustomFieldType`` member or its string value.
@@ -348,11 +348,9 @@ def _render_generated_init_py() -> str:
 def _render_plugin_init_py(plugin_variable_name: str) -> str:
     """Render the source of the plugin directory's root ``__init__.py`` file.
 
-    The generated file re-loads ``cg.config.py`` at import time so the
-    ``Plugin`` instance always reflects the extensions as defined in the config,
-    even if the config is updated without re-running the generator. It exports a
-    ``Plugin`` instance named after the plugin directory alongside the ``schemas``
-    object.
+    The generated file imports ``config`` directly from ``cg_config.py`` and
+    exports a ``Plugin`` instance named after the plugin directory alongside the
+    ``schemas`` object.
 
     Args:
         plugin_variable_name: A valid Python identifier derived from the plugin
@@ -361,35 +359,17 @@ def _render_plugin_init_py(plugin_variable_name: str) -> str:
     Returns:
         A string of valid Python source code ready to be written to disk.
     """
-    # The generated __init__.py re-loads cg.config.py at import time so the
-    # Plugin instance always reflects the extensions as defined in the config,
-    # even if the config is updated without re-running the generator.
     return "\n".join(
         [
             "from __future__ import annotations",
             "",
-            "import importlib.util",
-            "from pathlib import Path",
-            "",
             "from common_grants_sdk.extensions import Plugin",
+            "from .cg_config import config",
             "from .generated import schemas",
             "",
             "",
-            "def _load_config():",
-            '    config_path = Path(__file__).with_name("cg.config.py")',
-            '    spec = importlib.util.spec_from_file_location(f"{__name__}.cg_config", config_path)',
-            "    if spec is None or spec.loader is None:",
-            '        raise RuntimeError(f"Unable to load plugin config from {config_path}")',
-            "    module = importlib.util.module_from_spec(spec)",
-            "    spec.loader.exec_module(module)",
-            '    config = getattr(module, "config", None)',
-            '    if config is None or not hasattr(config, "extensions"):',
-            "        raise RuntimeError('Plugin config must define \"config = define_plugin(...)\"')",
-            "    return config",
-            "",
-            "",
             f"{plugin_variable_name} = Plugin(",
-            "    extensions=_load_config().extensions,",
+            "    extensions=config.extensions,",
             "    schemas=schemas,",
             ")",
             "",
@@ -402,23 +382,23 @@ def _render_plugin_init_py(plugin_variable_name: str) -> str:
 def generate_plugin(plugin_dir: Path) -> Path:
     """Run the full code generation pipeline for a single plugin directory.
 
-    Loads ``cg.config.py``, creates the ``generated/`` subdirectory, and writes
+    Loads ``cg_config.py``, creates the ``generated/`` subdirectory, and writes
     three files: ``generated/schemas.py``, ``generated/__init__.py``, and the
     root ``__init__.py`` that exports the ``Plugin`` instance.
 
     Args:
-        plugin_dir: Path to the plugin directory containing ``cg.config.py``.
+        plugin_dir: Path to the plugin directory containing ``cg_config.py``.
 
     Returns:
         The path to the ``generated/`` directory that was created.
 
     Raises:
-        FileNotFoundError: If ``cg.config.py`` does not exist in ``plugin_dir``.
+        FileNotFoundError: If ``cg_config.py`` does not exist in ``plugin_dir``.
         RuntimeError: If the config file cannot be loaded or is invalid.
         ValueError: If the config references an unsupported model name.
     """
     plugin_dir = plugin_dir.resolve()
-    config_path = plugin_dir / "cg.config.py"
+    config_path = plugin_dir / "cg_config.py"
     if not config_path.exists():
         raise FileNotFoundError(f"Could not find config file: {config_path}")
 
@@ -454,12 +434,12 @@ def main(argv: list[str] | None = None) -> int:
     """
     parser = argparse.ArgumentParser(
         prog="python -m common_grants_sdk.extensions.generate",
-        description="Generate typed plugin schemas from cg.config.py",
+        description="Generate typed plugin schemas from cg_config.py",
     )
     parser.add_argument(
         "--plugin",
         default=".",
-        help="Path to plugin directory containing cg.config.py (default: current directory)",
+        help="Path to plugin directory containing cg_config.py (default: current directory)",
     )
     args = parser.parse_args(argv)
 

@@ -59,7 +59,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
 
     plugin_dir = plugins_dir / "combined"
     plugin_dir.mkdir()
-    (plugin_dir / "cg.config.py").write_text(
+    (plugin_dir / "cg_config.py").write_text(
         "\n".join(
             [
                 "from common_grants_sdk import merge_extensions, define_plugin",
@@ -152,7 +152,7 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
 
     plugin_dir = plugins_dir / "combined"
     plugin_dir.mkdir()
-    (plugin_dir / "cg.config.py").write_text(
+    (plugin_dir / "cg_config.py").write_text(
         "\n".join(
             [
                 "from common_grants_sdk import define_plugin",

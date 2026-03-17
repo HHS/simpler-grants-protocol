@@ -220,7 +220,7 @@ config = define_plugin(
     [local_extensions], on_conflict="error")
 ```
 
-Place this in a `cg.config.py` file and run the generator to emit typed Pydantic models:
+Place this in a `cg_config.py` file and run the generator to emit typed Pydantic models:
 
 ```bash
 python -m common_grants_sdk.extensions.generate --plugin ./plugins/my_plugin

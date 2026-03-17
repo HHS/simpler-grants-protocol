@@ -123,7 +123,7 @@ None
 
 This example uses the plugin framework to define four typed custom fields, generate static Pydantic models, and validate an API payload.
 
-**Step 1:** Generate the typed models (only needed once, or after changing `cg.config.py`):
+**Step 1:** Generate the typed models (only needed once, or after changing `cg_config.py`):
 
 ```bash
 cd lib/python-sdk
