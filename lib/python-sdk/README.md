@@ -236,8 +236,6 @@ opp.custom_fields.program_area.value     # str
 opp.custom_fields.eligibility_type.value # list[str]
 ```
 
-For full documentation including multi-source composition and conflict resolution, see the [Python Plugin Framework guide](../../website/src/content/docs/guides/python-plugin-framework.mdx).
-
 ## Custom Fields Extensions
 
 The SDK provides utilities for extending schemas with typed custom fields, allowing developers to add domain-specific fields while maintaining type safety.
