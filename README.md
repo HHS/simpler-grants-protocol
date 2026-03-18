@@ -58,6 +58,7 @@ flowchart LR
   style cli fill:#F7F7F4,stroke:#171716
   style template fill:#F7F7F4,stroke:#171716
   style forms fill:#F7F7F4,stroke:#171716
+  style ai fill:#F7F7F4,stroke:#171716
 
   %% ─────────────────────────────
   %% Legend
@@ -115,6 +116,13 @@ flowchart LR
     direction LR
         HHS/simpler-grants-protocol#604["Create an interactive form builder"]
         HHS/simpler-grants-protocol#605["Create a forms SDK"]
+    end
+
+
+    subgraph ai["AI"]
+    direction LR
+        HHS/simpler-grants-protocol#615["AI tooling for CommonGrants developers"]
+        HHS/simpler-grants-protocol#616["AI tooling for CommonGrants users"]
     end
 
 
