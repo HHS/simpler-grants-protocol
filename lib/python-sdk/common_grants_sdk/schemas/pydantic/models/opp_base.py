@@ -1,6 +1,6 @@
 """Base model for funding opportunities."""
 
-from typing import Optional, Type, Any, TypeVar
+from typing import Any, Optional, Type, TypeVar
 from uuid import UUID
 
 from pydantic import Field, HttpUrl

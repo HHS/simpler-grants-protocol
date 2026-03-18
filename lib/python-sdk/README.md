@@ -200,6 +200,42 @@ For detailed documentation, examples, and configuration options, see the [HTTP C
 See [LICENSE](../../LICENSE.md)
 
 
+## Plugin Framework
+
+The SDK includes a plugin framework for defining typed custom fields, combining extensions from multiple sources, and generating static Pydantic models.
+
+```python
+from common_grants_sdk import define_plugin, compose
+from common_grants_sdk.extensions import SchemaExtensions, CustomFieldSpec
+
+local_extensions: SchemaExtensions = {
+    "Opportunity": {
+        "program_area": CustomFieldSpec(field_type="string", description="Grant program area"),
+        "eligibility_type": CustomFieldSpec(field_type="array", description="Eligible org types"),
+    },
+}
+
+# Wrap extensions in a plugin config for the generator
+config = define_plugin(
+    [local_extensions], on_conflict="error")
+```
+
+Place this in a `cg_config.py` file and run the generator to emit typed Pydantic models:
+
+```bash
+python -m common_grants_sdk.extensions.generate --plugin ./plugins/my_plugin
+```
+
+After generation, import the plugin and validate payloads with full type safety:
+
+```python
+from plugins.my_plugin import my_plugin
+
+opp = my_plugin.schemas.Opportunity.model_validate(api_response)
+opp.custom_fields.program_area.value     # str
+opp.custom_fields.eligibility_type.value # list[str]
+```
+
 ## Custom Fields Extensions
 
 The SDK provides utilities for extending schemas with typed custom fields, allowing developers to add domain-specific fields while maintaining type safety.

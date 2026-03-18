@@ -119,6 +119,44 @@ None
 ```
 
 
+# Plugin framework example
+
+This example uses the plugin framework to define four typed custom fields, generate static Pydantic models, and validate an API payload.
+
+**Step 1:** Generate the typed models (only needed once, or after changing `cg_config.py`):
+
+```bash
+cd lib/python-sdk
+poetry run python -m common_grants_sdk.extensions.generate --plugin examples/plugins/opportunity_extensions
+cd ../../..
+```
+
+**Step 2:** Run the example:
+
+```bash
+poetry run python examples/plugin_custom_fields.py
+```
+
+**Output Example:**
+
+```
+Title:           Community Health Innovation Grant
+Status:          open
+
+Custom fields:
+  program_area:     CFDA-93.243
+  legacy_grant_id:  98765
+  eligibility_types:['nonprofit', 'tribal', 'city_government']
+  award_ceiling:    250000.0
+
+Registered extensions:
+  program_area: string — HHS program area code (e.g. 'CFDA-93.243')
+  legacy_grant_id: integer — Numeric ID from the legacy grants management system
+  eligibility_types: array — Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')
+  award_ceiling: number — Maximum award amount in USD
+```
+
+
 ## Configuration
 
 Each example script connects to `http://localhost:8000` by default. You can configure the API endpoint and authentication using environment variables:
