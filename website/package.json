@@ -45,11 +45,11 @@
     "astro": "^5.16.11",
     "js-yaml": "^4.1.1",
     "json-schema-merge-allof": "^0.8.1",
-    "openapi-sampler": "^1.6.2",
+    "openapi-sampler": "^1.7.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.33.5",
-    "swagger-ui-react": "^5.31.0",
+    "swagger-ui-react": "^5.32.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typespec-versioning-changelog": "workspace:*"
@@ -79,7 +79,7 @@
     "starlight-links-validator": "^0.14.3",
     "typescript-eslint": "^8.53.1",
     "vitest": "catalog:website",
-    "wrangler": "^4.59.2"
+    "wrangler": "^4.75.0"
   },
   "overrides": {
     "js-yaml": "^4.1.1"
