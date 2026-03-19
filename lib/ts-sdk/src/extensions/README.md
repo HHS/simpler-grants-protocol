@@ -4,8 +4,8 @@ The CommonGrants protocol defines a standard set of fields for grants data, but 
 
 For background, see:
 
-- [Custom Fields catalog](https://commongrants.org/custom-fields/) -- the published set of recommended custom fields
-- [Extensions section of the CommonGrants specification](https://commongrants.org/protocol/specification/#extensions) -- how extensions fit into the protocol
+- [Custom Fields catalog](https://commongrants.org/custom-fields/): The published set of recommended custom fields
+- [Extensions section of the CommonGrants specification](https://commongrants.org/protocol/specification/#extensions): How extensions fit into the protocol
 
 The `@common-grants/sdk/extensions` module provides TypeScript utilities for working with extensions: registering custom fields on base schemas, bundling them into reusable plugins, and composing plugins together.
 
@@ -67,7 +67,7 @@ const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
   },
 } as const);
 
-// Parse data -- customFields are now fully typed
+// Parse data: customFields are now fully typed
 const opportunity = OpportunitySchema.parse(data);
 
 opportunity.customFields?.legacyId?.value.id; // number
@@ -119,7 +119,7 @@ interface Plugin<T extends SchemaExtensions = SchemaExtensions> {
 }
 ```
 
-The `Plugin` interface uses [structural typing](https://www.typescriptlang.org/docs/handbook/type-compatibility.html) -- any object with the right shape qualifies as a plugin, whether it comes from a local file, a monorepo package, or an installed npm package. There is no base class to extend or registry to sign up for. In practice, you'll almost always create plugins with `definePlugin()`, which handles building the `.schemas` from your `.extensions` automatically.
+The `Plugin` interface uses [structural typing](https://www.typescriptlang.org/docs/handbook/type-compatibility.html), so any object with the right shape qualifies as a plugin, whether it comes from a local file, a monorepo package, or an installed npm package. There is no base class to extend or registry to sign up for. In practice, you'll almost always create plugins with `definePlugin()`, which handles building the `.schemas` from your `.extensions` automatically.
 
 For the full interface definition, see [define-plugin.ts](./define-plugin.ts).
 
@@ -160,8 +160,8 @@ const myPlugin = definePlugin({
 
 The returned `Plugin` object has two main properties:
 
-- **`myPlugin.extensions`** -- the raw `SchemaExtensions` you passed in, preserved by reference. Useful for introspection or for passing to `mergeExtensions()`.
-- **`myPlugin.schemas`** -- a record of Zod schemas, one per extensible model. Each schema has typed `customFields` based on the specs you provided. Models without extensions pass through with their base schema.
+- **`myPlugin.extensions`**: the raw `SchemaExtensions` you passed in, preserved by reference. Useful for introspection or for passing to `mergeExtensions()`.
+- **`myPlugin.schemas`**: a record of Zod schemas, one per extensible model. Each schema has typed `customFields` based on the specs you provided. Models without extensions pass through with their base schema.
 
 ### Combining plugins
 
@@ -244,11 +244,11 @@ Declare `@common-grants/sdk` as a `peerDependency` in your plugin's `package.jso
 
 #### Keep plugins focused
 
-A plugin should represent a single logical concern -- one agency's fields, one integration's needs, or one domain concept. If you need fields from multiple concerns, use `mergeExtensions()` to compose separate plugins rather than bundling everything into one.
+A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, use `mergeExtensions()` to compose separate plugins rather than bundling everything into one.
 
 #### Verify type inference before publishing
 
-After building your package, import the plugin in a test file and confirm that `.extensions` keys and `.schemas` parse types resolve correctly. Hover over the types in your editor -- they should not be `any`:
+After building your package, import the plugin in a test file and confirm that `.extensions` keys and `.schemas` parse types resolve correctly. Hover over the types in your editor to confirm they are not `any`:
 
 ```typescript
 import plugin from "./";
@@ -269,7 +269,7 @@ my-plugin/
   package.json      # Declares @common-grants/sdk as a peer dependency
 ```
 
-**`src/index.ts`** -- defines and exports the plugin:
+**`src/index.ts`** defines and exports the plugin:
 
 ```typescript
 import { z } from "zod";
@@ -299,7 +299,7 @@ const plugin = definePlugin({
 export default plugin;
 ```
 
-**`tsconfig.json`** -- must emit declaration files so consumers get type inference:
+**`tsconfig.json`** must emit declaration files so consumers get type inference:
 
 ```json
 {
@@ -349,7 +349,7 @@ export default plugin;
 **Pre-publish checklist:**
 
 1. **Build** the package to generate `.js` and `.d.ts` files in `dist/`.
-2. **Verify type inference** -- see [Verify type inference before publishing](#verify-type-inference-before-publishing) above.
+2. **Verify type inference**: see [Verify type inference before publishing](#verify-type-inference-before-publishing) above.
 3. **Publish** with `npm publish` (or your preferred registry workflow).
 
 **Consumer usage** after install:
@@ -469,7 +469,7 @@ type ExtensibleSchemaName = "Opportunity";
 
 #### `WithCustomFieldsResult<TSchema, TSpecs>`
 
-The return type of `withCustomFields()` -- a Zod object schema where `customFields` is replaced with a typed version based on the provided specs.
+The return type of `withCustomFields()`. A Zod object schema where `customFields` is replaced with a typed version based on the provided specs.
 
 #### `MergeExtensionsOptions`
 

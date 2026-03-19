@@ -2,6 +2,17 @@
 
 The CommonGrants protocol TypeScript SDK.
 
+## Table of contents <!-- omit in toc -->
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [API Client](#api-client)
+  - [Validation](#validation)
+  - [Type-safe code](#type-safe-code)
+  - [Generic response schemas](#generic-response-schemas)
+  - [Extensions and Plugins](#extensions-and-plugins)
+- [License](#license)
+
 ## Installation
 
 ```bash
@@ -294,223 +305,38 @@ Found 2 opportunities
 
 Other generic response schemas include `OkSchema<T>`, `SortedSchema<T>`, `FilteredSchema<ItemsT, FilterT>`, `CreatedSchema<T>`, and error schemas like `ErrorSchema`, `UnauthorizedSchema`, and `NotFoundSchema`.
 
-### Custom Fields Extensions
+### Extensions and Plugins
 
-The SDK provides utilities for extending schemas with typed custom fields, allowing you to add domain-specific fields while maintaining full type safety.
-
-#### Extending Schemas with Custom Fields
-
-Use `withCustomFields()` to create a new schema with typed custom fields:
+The SDK provides an extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc with `withCustomFields()` or as reusable plugins with `definePlugin()`.
 
 ```ts
 import { z } from "zod";
 import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
-import { CustomFieldType } from "@common-grants/sdk/constants";
 import { withCustomFields } from "@common-grants/sdk/extensions";
 
-// Define a custom value schema for complex types
-const LegacyIdValueSchema = z.object({
-  system: z.string(),
-  id: z.number().int(),
-});
-
-// Extend the base schema with typed custom fields (record: key = field key)
 const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
   legacyId: {
-    fieldType: CustomFieldType.object,
-    valueSchema: LegacyIdValueSchema,
-    description: "Maps to the opportunity_id in the legacy system",
+    fieldType: "object",
+    valueSchema: z.object({ system: z.string(), id: z.number().int() }),
   },
-  category: {
-    fieldType: CustomFieldType.string,
-    description: "Grant category",
-  },
+  category: { fieldType: "string" },
 } as const);
 
-// Parse data with custom fields
-const opportunity = OpportunitySchema.parse({
-  id: "573525f2-8e15-4405-83fb-e6523511d893",
-  title: "Test Opportunity",
-  status: { value: "open" },
-  description: "A test opportunity",
-  createdAt: "2025-01-01T00:00:00Z",
-  lastModifiedAt: "2025-01-01T00:00:00Z",
-  customFields: {
-    legacyId: {
-      name: "legacyId",
-      fieldType: CustomFieldType.object,
-      value: { system: "legacy", id: 12345 },
-    },
-    category: {
-      name: "category",
-      fieldType: CustomFieldType.string,
-      value: "Education",
-    },
-  },
-});
-
-// TypeScript knows the types!
-type Opportunity = z.infer<typeof OpportunitySchema>;
-// opportunity.customFields?.legacyId?.value.id   → typed as number
-// opportunity.customFields?.category?.value      → typed as string
-```
-
-You can pass your extended schema to the client for typed custom field access on API responses:
-
-```ts
-// Get a single opportunity with typed custom fields
-const opportunity = await client.opportunities.get(id, { schema: OpportunitySchema });
-console.log(opportunity.customFields?.legacyId?.value.id); // typed as number
-
-// List or search with the same schema
-const list = await client.opportunities.list({ schema: OpportunitySchema });
-const results = await client.opportunities.search({
-  query: "education",
-  schema: OpportunitySchema,
-});
-```
-
-Each spec can include optional `name` (used as the default for `CustomField.name`; otherwise the record key is used) and optional `description`.
-
-#### Extracting Custom Field Values
-
-Use `getCustomFieldValue()` to safely extract and parse custom field values:
-
-```ts
-import { getCustomFieldValue } from "@common-grants/sdk/extensions";
-
-// Extract and parse a custom field value
-const legacyId = getCustomFieldValue(opportunity.customFields, "legacyId", LegacyIdValueSchema);
-
-// legacyId: { system: string; id: number } | undefined
-console.log(legacyId?.id); // 12345 (typed as number)
-```
-
-The function returns `undefined` if the field doesn't exist or if validation fails, making it safe to use without try-catch blocks.
-
-#### Default Value Schemas
-
-If you don't provide a `valueSchema`, the SDK uses defaults based on `fieldType`:
-
-- `CustomFieldType.string` → `z.string()`
-- `CustomFieldType.number` → `z.number()`
-- `CustomFieldType.integer` → `z.number().int()`
-- `CustomFieldType.boolean` → `z.boolean()`
-- `CustomFieldType.object` → `z.record(z.unknown())`
-- `CustomFieldType.array` → `z.array(z.unknown())`
-
-For more examples, see the [custom fields example](./examples/custom-fields.ts).
-
-### Plugins
-
-Plugins wrap `withCustomFields()` into reusable, composable packages. Use `definePlugin()` to create a plugin, then optionally combine plugins with `mergeExtensions()`.
-
-#### Defining a plugin
-
-```ts
-import { z } from "zod";
-import { CustomFieldType } from "@common-grants/sdk/constants";
-import { definePlugin } from "@common-grants/sdk/extensions";
-
-// A plugin for backward compatibility with a legacy grants system
-const LegacyIdValueSchema = z.object({
-  system: z.string(),
-  id: z.number().int(),
-});
-
-const legacyPlugin = definePlugin({
-  extensions: {
-    Opportunity: {
-      legacyId: {
-        fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
-        description: "Maps to the opportunity_id in the legacy system",
-      },
-    },
-  },
-} as const);
-
-// A plugin for grant categorization
-const classificationPlugin = definePlugin({
-  extensions: {
-    Opportunity: {
-      category: {
-        fieldType: CustomFieldType.string,
-        description: "Grant category",
-      },
-      priority: {
-        fieldType: CustomFieldType.integer,
-        description: "Processing priority (1 = highest)",
-      },
-    },
-  },
-} as const);
-```
-
-Each plugin exposes `.schemas` with typed versions of every extensible model:
-
-```ts
-const opportunity = legacyPlugin.schemas.Opportunity.parse(data);
-opportunity.customFields?.legacyId?.value.id; // typed as number
-```
-
-#### Composing plugins
-
-Use `mergeExtensions()` to combine multiple plugins into one, then pass the result to `definePlugin()`:
-
-```ts
-import { definePlugin, mergeExtensions } from "@common-grants/sdk/extensions";
-
-// Merge extensions from both plugins
-const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
-
-// Create a combined plugin with all custom fields
-const combinedPlugin = definePlugin({ extensions: merged });
-
-// Parse data — all custom fields are typed
-const opportunity = combinedPlugin.schemas.Opportunity.parse({
-  id: "573525f2-8e15-4405-83fb-e6523511d893",
-  title: "STEM Research Grant",
-  status: { value: "open" },
-  description: "A grant for STEM research",
-  createdAt: "2025-01-01T00:00:00Z",
-  lastModifiedAt: "2025-01-01T00:00:00Z",
-  customFields: {
-    legacyId: {
-      name: "legacyId",
-      fieldType: "object",
-      value: { system: "grants-v1", id: 42 },
-    },
-    category: {
-      name: "category",
-      fieldType: "string",
-      value: "STEM Education",
-    },
-    priority: {
-      name: "priority",
-      fieldType: "integer",
-      value: 1,
-    },
-  },
-});
-
-// Direct typed access to all custom fields
-opportunity.customFields?.legacyId?.value.system; // string
+const opportunity = OpportunitySchema.parse(data);
 opportunity.customFields?.legacyId?.value.id; // number
 opportunity.customFields?.category?.value; // string
-opportunity.customFields?.priority?.value; // number
 ```
 
-By default, `mergeExtensions()` throws if two plugins declare the same field name on the same model. You can change this with the `onConflict` option:
+You can pass extended schemas to the client for typed custom field access on API responses:
 
 ```ts
-// Keep the last definition when fields overlap
-const merged = mergeExtensions([pluginA.extensions, pluginB.extensions], {
-  onConflict: "lastWins",
-});
+const opportunity = await client.opportunities.get(id, { schema: OpportunitySchema });
+const list = await client.opportunities.list({ schema: OpportunitySchema });
 ```
 
-> **Note:** The `"firstWins"` and `"lastWins"` strategies resolve conflicts at runtime but cannot preserve specific field types statically. For full type safety, use the default `"error"` strategy with non-overlapping field names.
+For the full guide (plugins, composing extensions, best practices for publishing plugin packages, and the complete API reference) see the [Extensions documentation](./src/extensions/README.md).
+
+For runnable examples, see [custom-fields.ts](./examples/custom-fields.ts) and [plugins.ts](./examples/plugins.ts).
 
 ## License
 
