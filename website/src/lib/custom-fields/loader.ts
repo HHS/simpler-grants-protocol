@@ -161,7 +161,9 @@ export function getFilterOptions(): FilterOptions {
   return {
     tags: collectUniqueValues(allFields, (f) => f.tags),
     schemas: collectUniqueValues(allFields, (f) => f.validFor),
-    authors: collectUniqueValues(allFields, (f) => (f.author ? [f.author] : [])),
+    authors: collectUniqueValues(allFields, (f) =>
+      f.author ? [f.author] : [],
+    ),
     fieldTypes: collectUniqueValues(allFields, (f) =>
       f.fieldType ? [f.fieldType] : [],
     ),

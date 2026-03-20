@@ -109,9 +109,10 @@ export function getObject(
 ): SchemaExtractor<Record<string, unknown>> {
   return (schema) => {
     const value = schema[key];
-    return (typeof value === "object" && value !== null
-      ? value
-      : {}) as Record<string, unknown>;
+    return (typeof value === "object" && value !== null ? value : {}) as Record<
+      string,
+      unknown
+    >;
   };
 }
 
