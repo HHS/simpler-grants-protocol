@@ -54,7 +54,7 @@ api_response = {
 }
 
 # ---------------------------------------------------------------------------
-# Option A: use the model returned via opportunity_extensions
+# Use the model returned via opportunity_extensions
 # ---------------------------------------------------------------------------
 
 opp = opportunity_extensions.schemas.Opportunity.model_validate(api_response)

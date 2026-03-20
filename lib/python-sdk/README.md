@@ -240,6 +240,8 @@ opp.custom_fields.eligibility_type.value # list[str]
 
 The SDK provides utilities for extending schemas with typed custom fields, allowing developers to add domain-specific fields while maintaining type safety.
 
+For guidance on packaging and publishing these extensions as reusable, distributable plugins, see [PLUGIN.md](common_grants_sdk/extensions/README.md).
+
 ### Extending Schemas with Custom Fields
 
 ```python
