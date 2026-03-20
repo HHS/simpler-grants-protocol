@@ -307,34 +307,7 @@ Other generic response schemas include `OkSchema<T>`, `SortedSchema<T>`, `Filter
 
 ### Extensions and Plugins
 
-The SDK provides an extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc with `withCustomFields()` or as reusable plugins with `definePlugin()`.
-
-```ts
-import { z } from "zod";
-import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
-import { withCustomFields } from "@common-grants/sdk/extensions";
-
-const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
-  legacyId: {
-    fieldType: "object",
-    valueSchema: z.object({ system: z.string(), id: z.number().int() }),
-  },
-  category: { fieldType: "string" },
-} as const);
-
-const opportunity = OpportunitySchema.parse(data);
-opportunity.customFields?.legacyId?.value.id; // number
-opportunity.customFields?.category?.value; // string
-```
-
-You can pass extended schemas to the client for typed custom field access on API responses:
-
-```ts
-const opportunity = await client.opportunities.get(id, { schema: OpportunitySchema });
-const list = await client.opportunities.list({ schema: OpportunitySchema });
-```
-
-For the full guide (plugins, composing extensions, best practices for publishing plugin packages, and the complete API reference) see the [Extensions documentation](./src/extensions/README.md).
+The SDK provides an extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc with `withCustomFields()` or as reusable plugins with `definePlugin()`. See the [Extensions documentation](./src/extensions/README.md) for the full guide, including best practices for publishing plugin packages and a complete API reference.
 
 For runnable examples, see [custom-fields.ts](./examples/custom-fields.ts) and [plugins.ts](./examples/plugins.ts).
 
