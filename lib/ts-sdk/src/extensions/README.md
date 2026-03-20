@@ -362,6 +362,12 @@ Declare `@common-grants/sdk` as a `peerDependency` in your plugin's `package.jso
 
 A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, use `mergeExtensions()` to combine separate plugins rather than bundling everything into one.
 
+#### Avoid `"firstWins"` / `"lastWins"` in published plugins
+
+When calling `mergeExtensions()` with `"firstWins"` or `"lastWins"`, the return type widens to `SchemaExtensions`, losing specific field-level type inference. This is fine for local or ad hoc usage, but if you publish a package that uses one of these strategies internally, the widened type propagates to your consumers. They'll see `SchemaExtensions` instead of the precise field types, with no indication of why.
+
+Prefer the default `"error"` strategy in published plugins. If your extensions genuinely overlap with another plugin, resolve the conflicts explicitly before publishing rather than deferring the resolution to a lossy merge strategy.
+
 ## API reference
 
 For the full list of public exports, see the [module index](./index.ts).
