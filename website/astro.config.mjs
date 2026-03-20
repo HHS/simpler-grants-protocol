@@ -42,6 +42,8 @@ export default defineConfig({
             "/protocol/api-docs",
             "/protocol/api-docs/**",
             "/protocol/api-docs**", // Catches ?version=v0.2.0
+            "/custom-fields",
+            "/custom-fields/**",
             "/forms/library",
             "/forms/library/**",
             "/forms/playground",

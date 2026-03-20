@@ -21,6 +21,13 @@ export interface MergeExtensionsOptions {
    * - `"error"` (default) — throw an error on conflict
    * - `"firstWins"` — keep the first definition encountered
    * - `"lastWins"` — use the last definition encountered
+   *
+   * @remarks
+   * WARNING: Using `"firstWins"` or `"lastWins"` causes the return type to fall back to
+   * `SchemaExtensions`, losing specific field-level type inference. If you publish
+   * a package that calls `mergeExtensions()` with one of these strategies, the
+   * widened type will propagate to your consumers. Prefer the default `"error"`
+   * strategy in published plugins to preserve full type safety for downstream users.
    */
   onConflict?: "error" | "firstWins" | "lastWins";
 }
@@ -63,7 +70,16 @@ export function mergeExtensions<const T extends readonly SchemaExtensions[]>(
   options?: { onConflict?: "error" }
 ): MergedSchemaExtensions<T>;
 
-// Overload: when onConflict is "firstWins" or "lastWins" - fall back to SchemaExtensions
+/**
+ * Overload for `"firstWins"` or `"lastWins"` conflict strategies.
+ *
+ * @remarks
+ * WARNING: Using `"firstWins"` or `"lastWins"` causes the return type to fall back to
+ * `SchemaExtensions`, losing specific field-level type inference. If you publish
+ * a package that calls `mergeExtensions()` with one of these strategies, the
+ * widened type will propagate to your consumers. Prefer the default `"error"`
+ * strategy in published plugins to preserve full type safety for downstream users.
+ */
 export function mergeExtensions(
   sources: SchemaExtensions[],
   options: MergeExtensionsOptions
