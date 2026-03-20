@@ -18,15 +18,16 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
 - [Plugins](#plugins)
   - [What is a plugin?](#what-is-a-plugin)
   - [Defining a plugin](#defining-a-plugin)
+  - [Publishing a plugin](#publishing-a-plugin)
   - [Combining plugins](#combining-plugins)
   - [Best practices](#best-practices)
-  - [Structuring a plugin package](#structuring-a-plugin-package)
-  - [Publishing a plugin](#publishing-a-plugin)
 - [API reference](#api-reference)
   - [Functions](#functions)
   - [Types and interfaces](#types-and-interfaces)
 
 ## Key concepts
+
+Here are some key concepts that are used to define custom fields and plugins that extend base schemas from the CommonGrants protocol.
 
 | Concept                | Description                                                                                                                                                                  |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -163,101 +164,9 @@ The returned `Plugin` object has two main properties:
 - **`myPlugin.extensions`**: the raw `SchemaExtensions` you passed in, preserved by reference. Useful for introspection or for passing to `mergeExtensions()`.
 - **`myPlugin.schemas`**: a record of Zod schemas, one per extensible model. Each schema has typed `customFields` based on the specs you provided. Models without extensions pass through with their base schema.
 
-### Combining plugins
+### Publishing a plugin
 
-Use `mergeExtensions()` to combine extensions from multiple plugins into a single set, then pass the result to `definePlugin()`:
-
-```typescript
-import { definePlugin, mergeExtensions } from "@common-grants/sdk/extensions";
-
-const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
-
-const combinedPlugin = definePlugin({ extensions: merged });
-
-// All custom fields from both plugins are available with full type safety
-const opp = combinedPlugin.schemas.Opportunity.parse(data);
-opp.customFields?.legacyId?.value.id; // number (from legacyPlugin)
-opp.customFields?.category?.value; // string (from classificationPlugin)
-```
-
-**Conflict resolution:** By default, `mergeExtensions()` throws an error if two sources define the same field name on the same model. You can change this behavior with the `onConflict` option:
-
-```typescript
-// Keep the first definition encountered
-mergeExtensions([a.extensions, b.extensions], { onConflict: "firstWins" });
-
-// Keep the last definition encountered
-mergeExtensions([a.extensions, b.extensions], { onConflict: "lastWins" });
-```
-
-> [!WARNING]
-> When using `"firstWins"` or `"lastWins"`, the return type falls back to the base `SchemaExtensions` type because conflict resolution makes static typing unreliable for overlapping field names. The default `"error"` strategy preserves full type inference via intersection types.
-
-### Best practices
-
-#### Export value schemas alongside your plugin
-
-When you define Zod schemas for complex `valueSchema` fields, export them as named exports from your package. Downstream consumers may need these schemas for use with utilities like `getCustomFieldValue()`:
-
-```typescript
-// index.ts of a plugin package
-import { z } from "zod";
-import { definePlugin } from "@common-grants/sdk/extensions";
-
-// Export value schemas so consumers can reference them directly
-export const ProgramAreaValueSchema = z.object({
-  code: z.string(),
-  name: z.string(),
-});
-
-const plugin = definePlugin({
-  extensions: {
-    Opportunity: {
-      programArea: {
-        fieldType: "object",
-        valueSchema: ProgramAreaValueSchema,
-        description: "The HHS program area for this opportunity",
-      },
-    },
-  },
-} as const);
-
-export default plugin;
-```
-
-This allows consumers to use `getCustomFieldValue()` with the same schema the plugin uses for validation:
-
-```typescript
-import hhs, { ProgramAreaValueSchema } from "@commongrants/hhs-plugin";
-import { getCustomFieldValue } from "@common-grants/sdk/extensions";
-
-const opp = hhs.schemas.Opportunity.parse(data);
-
-// Extract the value with full type safety using the exported schema
-const area = getCustomFieldValue(opp.customFields, "programArea", ProgramAreaValueSchema);
-area?.code; // string
-```
-
-#### Use `peerDependencies` for `@common-grants/sdk`
-
-Declare `@common-grants/sdk` as a `peerDependency` in your plugin's `package.json` rather than a direct `dependency`. This ensures that consumers who install multiple plugins all share a single copy of the SDK, avoiding version conflicts and duplicate type definitions. See [Structuring a plugin package](#structuring-a-plugin-package) for a full `package.json` example.
-
-#### Keep plugins focused
-
-A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, use `mergeExtensions()` to compose separate plugins rather than bundling everything into one.
-
-#### Verify type inference before publishing
-
-After building your package, import the plugin in a test file and confirm that `.extensions` keys and `.schemas` parse types resolve correctly. Hover over the types in your editor to confirm they are not `any`:
-
-```typescript
-import plugin from "./";
-
-plugin.extensions.Opportunity.programArea; // CustomFieldSpec
-plugin.schemas.Opportunity.parse({} as any); // fully typed result
-```
-
-### Structuring a plugin package
+#### Package structure
 
 A minimal plugin package has one source file and two config files:
 
@@ -344,15 +253,23 @@ export default plugin;
 }
 ```
 
-### Publishing a plugin
-
-**Pre-publish checklist:**
+#### Pre-publish checklist
 
 1. **Build** the package to generate `.js` and `.d.ts` files in `dist/`.
-2. **Verify type inference**: see [Verify type inference before publishing](#verify-type-inference-before-publishing) above.
+2. **Verify type inference**: import your plugin in a test file and confirm that `.extensions` keys and `.schemas` parse types resolve correctly. Hover over the types in your editor to confirm they are not `any`:
+
+   ```typescript
+   import plugin from "./";
+
+   plugin.extensions.Opportunity.programArea; // CustomFieldSpec
+   plugin.schemas.Opportunity.parse({} as any); // fully typed result
+   ```
+
 3. **Publish** with `npm publish` (or your preferred registry workflow).
 
-**Consumer usage** after install:
+#### Consumer usage
+
+After installing the plugin (e.g. `npm install @commongrants/hhs-plugin`):
 
 ```typescript
 import hhs from "@commongrants/hhs-plugin";
@@ -361,6 +278,89 @@ const opp = hhs.schemas.Opportunity.parse(data);
 opp.customFields?.programArea?.value.code; // string
 opp.customFields?.cfda?.value; // string
 ```
+
+### Combining plugins
+
+Use `mergeExtensions()` to combine extensions from multiple plugins into a single set, then pass the result to `definePlugin()`:
+
+```typescript
+import { definePlugin, mergeExtensions } from "@common-grants/sdk/extensions";
+
+const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+
+const combinedPlugin = definePlugin({ extensions: merged });
+
+// All custom fields from both plugins are available with full type safety
+const opp = combinedPlugin.schemas.Opportunity.parse(data);
+opp.customFields?.legacyId?.value.id; // number (from legacyPlugin)
+opp.customFields?.category?.value; // string (from classificationPlugin)
+```
+
+**Conflict resolution:** By default, `mergeExtensions()` throws an error if two sources define the same field name on the same model. You can change this behavior with the `onConflict` option:
+
+```typescript
+// Keep the first definition encountered
+mergeExtensions([a.extensions, b.extensions], { onConflict: "firstWins" });
+
+// Keep the last definition encountered
+mergeExtensions([a.extensions, b.extensions], { onConflict: "lastWins" });
+```
+
+> [!WARNING]
+> When using `"firstWins"` or `"lastWins"`, the return type falls back to the base `SchemaExtensions` type because conflict resolution makes static typing unreliable for overlapping field names. The default `"error"` strategy preserves full type inference via intersection types.
+
+### Best practices
+
+#### Export value schemas alongside your plugin
+
+When you define Zod schemas for complex `valueSchema` fields, export them as named exports from your package. Downstream consumers may need these schemas for use with utilities like `getCustomFieldValue()`:
+
+```typescript
+// index.ts of a plugin package
+import { z } from "zod";
+import { definePlugin } from "@common-grants/sdk/extensions";
+
+// Export value schemas so consumers can reference them directly
+export const ProgramAreaValueSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+});
+
+const plugin = definePlugin({
+  extensions: {
+    Opportunity: {
+      programArea: {
+        fieldType: "object",
+        valueSchema: ProgramAreaValueSchema,
+        description: "The HHS program area for this opportunity",
+      },
+    },
+  },
+} as const);
+
+export default plugin;
+```
+
+This allows consumers to use `getCustomFieldValue()` with the same schema the plugin uses for validation:
+
+```typescript
+import hhs, { ProgramAreaValueSchema } from "@commongrants/hhs-plugin";
+import { getCustomFieldValue } from "@common-grants/sdk/extensions";
+
+const opp = hhs.schemas.Opportunity.parse(data);
+
+// Extract the value with full type safety using the exported schema
+const area = getCustomFieldValue(opp.customFields, "programArea", ProgramAreaValueSchema);
+area?.code; // string
+```
+
+#### Use `peerDependencies` for `@common-grants/sdk`
+
+Declare `@common-grants/sdk` as a `peerDependency` in your plugin's `package.json` rather than a direct `dependency`. This ensures that consumers who install multiple plugins all share a single copy of the SDK, avoiding version conflicts and duplicate type definitions. See [Publishing a plugin](#publishing-a-plugin) for a full `package.json` example.
+
+#### Keep plugins focused
+
+A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, use `mergeExtensions()` to combine separate plugins rather than bundling everything into one.
 
 ## API reference
 
