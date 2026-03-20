@@ -1,6 +1,5 @@
 import { dereferenceSchema } from "../schema/ref-resolver";
-import { Paths } from "../schema/paths";
-import * as path from "path";
+import { parseStringArray, schemaFilePath, collectUniqueValues } from "../catalog";
 import type {
   QuestionBankItem,
   QuestionBankIndexEntry,
@@ -18,20 +17,6 @@ import questionBankIndex from "@/content/question-bank/index.json";
 
 /** Cache for loaded question bank items */
 let questionBankCache: QuestionBankMap | null = null;
-
-/** Normalizes an array from schema extension (may be string[] from JSON) */
-function parseStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string");
-}
-
-/** Builds the absolute file path for a schema name */
-function schemaFilePath(schemaName: string): string {
-  const fileName = schemaName.endsWith(".yaml")
-    ? schemaName
-    : `${schemaName}.yaml`;
-  return path.join(Paths.EXTENSION_SCHEMAS_DIR, fileName);
-}
 
 /** Extracts question bank data from a resolved JSON schema */
 function extractSchemaData(
@@ -144,15 +129,8 @@ export function getQuestionBankIds(): string[] {
  */
 export async function getFilterOptions(): Promise<QuestionBankFilterOptions> {
   const allItems = await loadAllQuestionBankItems();
-  const tagSet = new Set<string>();
-
-  for (const item of Object.values(allItems)) {
-    for (const tag of item.tags) {
-      tagSet.add(tag);
-    }
-  }
 
   return {
-    tags: Array.from(tagSet).sort(),
+    tags: collectUniqueValues(allItems, (item) => item.tags),
   };
 }

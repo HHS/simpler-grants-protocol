@@ -1,3 +1,5 @@
+import type { CatalogItem } from "../catalog";
+
 /**
  * Metadata stored in the question-bank index.json.
  */
@@ -42,7 +44,8 @@ export interface QuestionBankFilterOptions {
  */
 export interface QuestionBankItem
   extends QuestionBankIndexEntry,
-    QuestionBankSchemaData {
+    QuestionBankSchemaData,
+    CatalogItem {
   /** The question's unique identifier (key in index.json) */
   id: string;
 }
