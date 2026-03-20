@@ -9,7 +9,9 @@ import { Tabs, TabItem, Steps, LinkCard } from "@astrojs/starlight/components";
 
 The CommonGrants protocol defines a core set of fields that are widely applicable across federal, state, local, and private grant opportunities. However, many implementations need fields that are relevant to their specific context but aren't universal enough to belong in the core protocol.
 
-[Custom fields](/protocol/fields/custom-field/) solve this problem by providing a structured way to extend CommonGrants models with additional data. Each custom field includes:
+[Custom fields](/protocol/fields/custom-field/) solve this problem by providing a structured way to extend CommonGrants models with additional data. For the formal rules governing how custom fields work (e.g., which models support them, what implementations MUST and SHALL NOT do), see the [custom fields section of the specification](/protocol/specification/#custom-fields).
+
+Each custom field includes:
 
 | Property      | Description                                             |
 | ------------- | ------------------------------------------------------- |
@@ -43,7 +45,7 @@ Both the TypeScript and Python SDKs provide helper functions for extending base 
 
 Before adding custom fields to a model, you define a spec for each field that describes its type and (optionally) a schema for validating its value.
 
-<Tabs>
+<Tabs syncKey="sdk-lang">
 <TabItem label="TypeScript">
 
 ```typescript
@@ -52,12 +54,10 @@ import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
 import { CustomFieldType } from "@common-grants/sdk/constants";
 import { withCustomFields } from "@common-grants/sdk/extensions";
 
-// Define a value schema for complex types
+// Define a value schema for structured types
 const AgencyValueSchema = z.object({
   code: z.string().optional(),
   name: z.string().optional(),
-  parentCode: z.string().optional(),
-  parentName: z.string().optional(),
 });
 
 // Extend the base schema with typed custom fields
@@ -65,45 +65,47 @@ const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
   agency: {
     fieldType: CustomFieldType.object,
     valueSchema: AgencyValueSchema,
-    description: "Information about the agency offering this opportunity",
+    description: "The agency offering this opportunity",
   },
   category: {
     fieldType: CustomFieldType.string,
     description: "Grant category",
   },
 } as const);
-
-// TypeScript infers the types automatically
-type Opportunity = z.infer<typeof OpportunitySchema>;
-// opportunity.customFields?.agency?.value.code  → string | undefined
-// opportunity.customFields?.category?.value     → string | undefined
 ```
 
 </TabItem>
 <TabItem label="Python">
 
 ```python
+from pydantic import BaseModel
 from common_grants_sdk.schemas.pydantic import (
     OpportunityBase,
     CustomFieldType,
 )
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 
-# Define specs for each custom field
-fields = {
-    "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
-    "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
-}
+# Define a value type for structured types
+class AgencyValue(BaseModel):
+    code: str | None = None
+    name: str | None = None
 
-# Create a new model class with typed custom fields
+# Extend the base model with typed custom fields
 Opportunity = OpportunityBase.with_custom_fields(
-    custom_fields=fields, model_name="Opportunity"
+    custom_fields={
+        "agency": CustomFieldSpec(
+            field_type=CustomFieldType.OBJECT,
+            value=AgencyValue,
+            description="The agency offering this opportunity",
+        ),
+        "category": CustomFieldSpec(
+            field_type=CustomFieldType.STRING,
+            value=str,
+            description="Grant category",
+        ),
+    },
+    model_name="Opportunity",
 )
-
-# Access typed custom field values
-opp = Opportunity.model_validate(opp_data)
-print(opp.custom_fields.legacy_id.value)   # typed as int
-print(opp.custom_fields.group_name.value)   # typed as str
 ```
 
 </TabItem>
@@ -113,7 +115,7 @@ print(opp.custom_fields.group_name.value)   # typed as str
 
 Once you've defined your extended schema, use it to parse and validate incoming data. Registered custom fields get full type safety, while unregistered fields pass through validation with the base `CustomField` type.
 
-<Tabs>
+<Tabs syncKey="sdk-lang">
 <TabItem label="TypeScript">
 
 ```typescript
@@ -122,28 +124,45 @@ import { getCustomFieldValue } from "@common-grants/sdk/extensions";
 // Parse incoming data
 const opportunity = OpportunitySchema.parse(responseData);
 
-// Extract typed values from custom fields
+// Access custom fields directly on the parsed object
+const agencyField = opportunity.customFields?.agency;
+console.log(agencyField?.value.code); // typed as string | undefined
+console.log(agencyField?.value.name); // typed as string | undefined
+
+// Or use getCustomFieldValue() to extract just the value
 const agency = getCustomFieldValue(
   opportunity.customFields,
   "agency",
   AgencyValueSchema,
 );
+console.log(agency?.code); // typed as string | undefined
 
-if (agency) {
-  console.log(agency.code); // typed as string | undefined
-  console.log(agency.name); // typed as string | undefined
-}
+const category = getCustomFieldValue(
+  opportunity.customFields,
+  "category",
+  z.string(),
+);
+console.log(category); // typed as string | undefined
 ```
 
 </TabItem>
 <TabItem label="Python">
 
 ```python
+# Parse incoming data
 opp = Opportunity.model_validate(response_data)
 
-# Access custom fields directly as typed attributes
-print(opp.custom_fields.legacy_id.value)    # typed as int
-print(opp.custom_fields.group_name.value)   # typed as str
+# Access custom fields directly on the parsed object
+agency_field = opp.custom_fields.agency
+print(agency_field.value.code)  # typed as str | None
+print(agency_field.value.name)  # typed as str | None
+
+# Or use get_custom_field_value() to extract just the value
+agency = opp.get_custom_field_value("agency", AgencyValue)
+print(agency.code)  # typed as str | None
+
+category = opp.get_custom_field_value("category", str)
+print(category)  # typed as str | None
 ```
 
 </TabItem>
