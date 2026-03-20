@@ -22,8 +22,10 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [Combining plugins](#combining-plugins)
   - [Best practices](#best-practices)
 - [API reference](#api-reference)
-  - [Functions](#functions)
-  - [Types and interfaces](#types-and-interfaces)
+  - [Plugin creation](#plugin-creation)
+  - [Schema utilities](#schema-utilities)
+  - [Merging and composition](#merging-and-composition)
+  - [Shared types](#shared-types)
 
 ## Key concepts
 
@@ -370,123 +372,36 @@ Prefer the default `"error"` strategy in published plugins. If your extensions g
 
 ## API reference
 
-For the full list of public exports, see the [module index](./index.ts).
+The tables below list everything exported from `@common-grants/sdk/extensions`, grouped by how they're used. Each entry links to the source definition and (where applicable) the section of this guide where it's demonstrated.
 
-### Functions
+### Plugin creation
 
-#### `definePlugin(options)`
+| Export                                      | Kind      | Description                                                                                                                                                       | Demonstrated in                         |
+| ------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| [`definePlugin()`](./define-plugin.ts)      | function  | Creates a `Plugin` from a `SchemaExtensions` config. Returns an object with `.extensions` (the raw input) and `.schemas` (Zod schemas with typed `customFields`). | [Defining a plugin](#defining-a-plugin) |
+| [`Plugin`](./define-plugin.ts)              | interface | The object returned by `definePlugin()`.                                                                                                                          | [What is a plugin?](#what-is-a-plugin)  |
+| [`DefinePluginOptions`](./define-plugin.ts) | interface | Options accepted by `definePlugin()`. Contains the `extensions` property.                                                                                         | [Defining a plugin](#defining-a-plugin) |
 
-Creates a `Plugin` from an options object containing `SchemaExtensions`. Iterates over all extensible base schemas, applying `withCustomFields()` where the caller supplied specs. Returns a `Plugin` with `.extensions` and `.schemas`.
+### Schema utilities
 
-```typescript
-function definePlugin<const T extends SchemaExtensions>(options: DefinePluginOptions<T>): Plugin<T>;
-```
+| Export                                                 | Kind     | Description                                                                                                                            | Demonstrated in                                                            |
+| ------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [`withCustomFields()`](./with-custom-fields.ts)        | function | Extends a single Zod object schema with typed custom fields. Unregistered fields pass through but are typed as the base `CustomField`. | [Ad hoc with `withCustomFields()`](#option-1-ad-hoc-with-withcustomfields) |
+| [`WithCustomFieldsResult`](./with-custom-fields.ts)    | type     | The return type of `withCustomFields()`. A Zod object schema where `customFields` is replaced with a typed version.                    |                                                                            |
+| [`getCustomFieldValue()`](./get-custom-field-value.ts) | function | Safely extracts and parses a custom field value. Returns the parsed value, `undefined` if missing, or throws `ZodError` if invalid.    | [Export value schemas](#export-value-schemas-alongside-your-plugin)        |
 
-#### `withCustomFields(baseSchema, specs)`
+### Merging and composition
 
-Extends a single Zod object schema with typed custom fields. Returns a new schema where the `customFields` property is typed according to the provided specs. Unregistered fields pass through validation but are typed as the base `CustomField` type.
+| Export                                            | Kind      | Description                                                                                                                                           | Demonstrated in                         |
+| ------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| [`mergeExtensions()`](./merge-extensions.ts)      | function  | Combines multiple `SchemaExtensions` objects into one. Throws on field name conflicts by default; supports `"firstWins"` and `"lastWins"` strategies. | [Combining plugins](#combining-plugins) |
+| [`MergeExtensionsOptions`](./merge-extensions.ts) | interface | Controls conflict resolution for `mergeExtensions()`.                                                                                                 | [Combining plugins](#combining-plugins) |
+| [`MergedSchemaExtensions`](./merge-extensions.ts) | type      | The return type of `mergeExtensions()` with the default `"error"` strategy. Intersects field specs from each source.                                  |                                         |
 
-```typescript
-function withCustomFields<
-  TSchema extends z.AnyZodObject,
-  const TSpecs extends Record<string, CustomFieldSpec>,
->(baseSchema: TSchema, specs: TSpecs): WithCustomFieldsResult<TSchema, TSpecs>;
-```
+### Shared types
 
-#### `mergeExtensions(sources, options?)`
-
-Merges multiple `SchemaExtensions` objects into one. With the default `onConflict: "error"` strategy, the return type preserves specific field names and specs via intersection types. With `"firstWins"` or `"lastWins"`, the return type falls back to `SchemaExtensions`.
-
-```typescript
-function mergeExtensions<const T extends readonly SchemaExtensions[]>(
-  sources: [...T],
-  options?: { onConflict?: "error" }
-): MergedSchemaExtensions<T>;
-
-function mergeExtensions(
-  sources: SchemaExtensions[],
-  options: MergeExtensionsOptions
-): SchemaExtensions;
-```
-
-#### `getCustomFieldValue(customFields, key, valueSchema)`
-
-Safely extracts and parses a custom field value from a `customFields` object. Returns the parsed value if the field exists and is valid, `undefined` if the field or value is missing, or throws a `ZodError` if the value doesn't match the schema.
-
-```typescript
-function getCustomFieldValue<T extends z.ZodTypeAny>(
-  customFields: Record<string, CustomField> | null | undefined,
-  key: string,
-  valueSchema: T
-): z.infer<T> | undefined;
-```
-
-### Types and interfaces
-
-#### `Plugin<T>`
-
-The object returned by `definePlugin()`. See [What is a plugin?](#what-is-a-plugin) for details and [define-plugin.ts](./define-plugin.ts) for the source definition.
-
-```typescript
-interface Plugin<T extends SchemaExtensions = SchemaExtensions> {
-  extensions: T;
-  schemas: PluginSchemas<T>;
-}
-```
-
-#### `DefinePluginOptions<T>`
-
-Options object accepted by `definePlugin()`.
-
-```typescript
-interface DefinePluginOptions<T extends SchemaExtensions = SchemaExtensions> {
-  extensions: T;
-}
-```
-
-#### `CustomFieldSpec`
-
-Describes a single custom field: its JSON schema type, optional Zod value schema, and optional name/description.
-
-```typescript
-interface CustomFieldSpec {
-  name?: string;
-  fieldType: CustomFieldType;
-  valueSchema?: z.ZodTypeAny;
-  description?: string;
-}
-```
-
-#### `SchemaExtensions`
-
-Maps extensible model names to records of `CustomFieldSpec` objects. Each key is optional (via `Partial`), so plugins only need to declare models they actually extend.
-
-```typescript
-type SchemaExtensions = Partial<Record<ExtensibleSchemaName, Record<string, CustomFieldSpec>>>;
-```
-
-#### `ExtensibleSchemaName`
-
-Union of model names that support `customFields` extensions. Currently: `"Opportunity"`.
-
-```typescript
-type ExtensibleSchemaName = "Opportunity";
-```
-
-#### `WithCustomFieldsResult<TSchema, TSpecs>`
-
-The return type of `withCustomFields()`. A Zod object schema where `customFields` is replaced with a typed version based on the provided specs.
-
-#### `MergeExtensionsOptions`
-
-Options for `mergeExtensions()` controlling conflict resolution.
-
-```typescript
-interface MergeExtensionsOptions {
-  onConflict?: "error" | "firstWins" | "lastWins";
-}
-```
-
-#### `MergedSchemaExtensions<T>`
-
-The return type of `mergeExtensions()` when using the default `"error"` strategy. Intersects the field-spec records from each source to preserve full type information.
+| Export                               | Kind      | Description                                                                                                                    | Demonstrated in               |
+| ------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| [`CustomFieldSpec`](./types.ts)      | interface | Describes a single custom field: its `fieldType`, optional `valueSchema`, and optional `name`/`description`.                   | [Key concepts](#key-concepts) |
+| [`SchemaExtensions`](./types.ts)     | type      | Maps extensible model names to records of `CustomFieldSpec` objects. Plugins only need to declare models they actually extend. | [Key concepts](#key-concepts) |
+| [`ExtensibleSchemaName`](./types.ts) | type      | Union of model names that support `customFields` extensions. Currently: `"Opportunity"`.                                       |                               |
