@@ -1,5 +1,5 @@
 RUNTIME_PREFIX := poetry run
-.PHONY: install format lint test build check-format check-lint check-types checks
+.PHONY: install format lint test build publish check-format check-lint check-types checks
 
 install:
 	poetry install
@@ -15,6 +15,9 @@ test:
 
 build:
 	poetry build
+
+publish: plugins build
+	poetry publish
 
 check-format:
 	$(RUNTIME_PREFIX) black . --check
