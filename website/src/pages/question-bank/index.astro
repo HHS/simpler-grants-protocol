@@ -3,257 +3,48 @@ import {
   loadAllQuestionBankItems,
   getFilterOptions,
 } from "@/lib/question-bank";
-import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
-import { CardGrid } from "@astrojs/starlight/components";
+import CatalogPage from "@/layouts/CatalogPage.astro";
 import QuestionCard from "@/components/question-bank/QuestionCard.astro";
 
 const questions = await loadAllQuestionBankItems();
 const { tags: allTags } = await getFilterOptions();
 ---
 
-<StarlightPage
-  frontmatter={{
-    title: "Form question bank",
-    description:
-      "A browsable index of reusable grant application questions with CommonGrants mappings",
-    tableOfContents: false,
-    prev: false,
-    next: false,
-  }}
+<CatalogPage
+  title="Form question bank"
+  description="A browsable index of reusable grant application questions with CommonGrants mappings"
+  searchLabel="Search questions"
+  searchPlaceholder="Search by name, description, or tags..."
+  filters={[
+    {
+      id: "tag-filter",
+      label: "Tag",
+      options: allTags,
+      dataAttribute: "tags",
+      placeholder: "Any tag",
+    },
+  ]}
+  noResultsMessage="No questions match your search criteria."
+  stats={[
+    { count: Object.keys(questions).length, label: "questions" },
+    { count: allTags.length, label: "tags" },
+  ]}
 >
-  <div class="question-bank-page">
-    <p class="intro">
-      Reusable grant application questions with built-in mappings to the
-      CommonGrants data model. Browse the catalog below to find existing
-      questions or learn how to define your own.
-    </p>
-
-    <!-- Search and filter section -->
-    <div class="filters">
-      <div class="search-box">
-        <label for="search-input" class="sr-only">Search questions</label>
-        <input
-          type="text"
-          id="search-input"
-          placeholder="Search by name, description, or tags..."
-          class="search-input"
-        />
-      </div>
-
-      <div class="filter-row">
-        <div class="filter-group">
-          <label for="tag-filter">Tag</label>
-          <select id="tag-filter" class="filter-select">
-            <option value="">Any tag</option>
-            {allTags.map((tag) => <option value={tag}>{tag}</option>)}
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Questions list -->
-    <div class="fields-list">
-      <CardGrid>
-        {
-          Object.entries(questions)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([, item]) => <QuestionCard item={item} />)
-        }
-      </CardGrid>
-    </div>
-
-    <div id="no-results" class="no-results" style="display: none;">
-      <p>No questions match your search criteria.</p>
-    </div>
-
-    <!-- Summary stats -->
-    <div class="stats">
-      <span class="stat">
-        <strong>{Object.keys(questions).length}</strong> questions
-      </span>
-      <span class="stat">
-        <strong>{allTags.length}</strong> tags
-      </span>
-    </div>
-  </div>
-</StarlightPage>
-
-<script>
-  function initFilters() {
-    const searchInput = document.getElementById(
-      "search-input",
-    ) as HTMLInputElement;
-    const tagFilter = document.getElementById(
-      "tag-filter",
-    ) as HTMLSelectElement;
-    const fieldCards = document.querySelectorAll<HTMLElement>(".field-card");
-    const noResults = document.getElementById("no-results") as HTMLElement;
-
-    function filterFields() {
-      const searchTerm = searchInput?.value.toLowerCase() || "";
-      const selectedTag = tagFilter?.value.toLowerCase() || "";
-
-      let visibleCount = 0;
-
-      fieldCards.forEach((card) => {
-        const name = card.dataset.name || "";
-        const description = card.dataset.description || "";
-        const tags = card.dataset.tags || "";
-
-        const matchesSearch =
-          !searchTerm ||
-          name.includes(searchTerm) ||
-          description.includes(searchTerm) ||
-          tags.includes(searchTerm);
-
-        const matchesTag = !selectedTag || tags.includes(selectedTag);
-
-        const isVisible = matchesSearch && matchesTag;
-        card.style.display = isVisible ? "" : "none";
-
-        if (isVisible) visibleCount++;
-      });
-
-      if (noResults) {
-        noResults.style.display = visibleCount === 0 ? "block" : "none";
-      }
-    }
-
-    searchInput?.addEventListener("input", filterFields);
-    tagFilter?.addEventListener("change", filterFields);
+  <p slot="intro" class="intro">
+    Reusable grant application questions with built-in mappings to the
+    CommonGrants data model. Browse the catalog below to find existing questions
+    or learn how to define your own.
+  </p>
+  {
+    Object.entries(questions)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, item]) => <QuestionCard item={item} />)
   }
-
-  document.addEventListener("DOMContentLoaded", initFilters);
-  document.addEventListener("astro:page-load", initFilters);
-</script>
+</CatalogPage>
 
 <style>
-  .question-bank-page {
-    max-width: 1200px;
-    margin: auto;
-  }
-
   .intro {
     margin-bottom: 2rem;
     color: var(--sl-color-gray-2);
-  }
-
-  .filters {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background: var(--sl-color-gray-6);
-    border-radius: 0.5rem;
-  }
-
-  .search-box {
-    margin-bottom: 1rem;
-  }
-
-  .search-input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border: 1px solid var(--sl-color-gray-4);
-    border-radius: 0.375rem;
-    background: var(--sl-color-bg);
-    color: var(--sl-color-text);
-  }
-
-  .search-input:focus {
-    outline: 2px solid var(--sl-color-accent);
-    outline-offset: 2px;
-  }
-
-  .search-input::placeholder {
-    color: var(--sl-color-gray-3);
-  }
-
-  .filter-row {
-    display: grid;
-    grid-template-columns: 1fr;
-    align-items: end;
-    gap: 1rem;
-  }
-
-  .filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .filter-group label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    line-height: 1;
-    color: var(--sl-color-gray-2);
-  }
-
-  .filter-select {
-    width: 100%;
-    height: 2.5rem;
-    padding: 0.5rem 0.75rem;
-    margin-top: 0;
-    font-size: 0.875rem;
-    border: 1px solid var(--sl-color-gray-4);
-    border-radius: 0.375rem;
-    background: var(--sl-color-bg);
-    color: var(--sl-color-text);
-    box-sizing: border-box;
-  }
-
-  .filter-select:focus {
-    outline: 2px solid var(--sl-color-accent);
-    outline-offset: 2px;
-  }
-
-  .fields-list {
-    margin-bottom: 2rem;
-  }
-
-  .field-card {
-    display: contents;
-  }
-
-  .no-results {
-    text-align: center;
-    padding: 2rem;
-    color: var(--sl-color-gray-3);
-    background: var(--sl-color-gray-6);
-    border-radius: 0.5rem;
-  }
-
-  .stats {
-    display: flex;
-    gap: 2rem;
-    justify-content: center;
-    padding: 1rem;
-    background: var(--sl-color-gray-6);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--sl-color-gray-2);
-  }
-
-  .stat strong {
-    color: var(--sl-color-text);
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  @media (max-width: 640px) {
-    .stats {
-      flex-direction: column;
-      gap: 0.5rem;
-      text-align: center;
-    }
   }
 </style>

@@ -1,0 +1,115 @@
+---
+interface Props {
+  /** URL path for the detail page */
+  href: string;
+  /** Display name shown in the card header */
+  title: string;
+  /** Card description text */
+  description: string;
+  /** data-* attributes for client-side filtering */
+  dataAttributes: Record<string, string>;
+}
+
+const { href, title, description, dataAttributes } = Astro.props;
+
+// Convert dataAttributes to data-* attributes for the wrapper div
+const dataAttrs = Object.fromEntries(
+  Object.entries(dataAttributes).map(([key, value]) => [
+    `data-${key}`,
+    value.toLowerCase(),
+  ]),
+);
+---
+
+<div class="catalog-card" {...dataAttrs}>
+  <a href={href} class="card-link">
+    <header class="card-header">
+      <span class="card-key">{title}</span>
+      <span class="card-arrow" aria-hidden="true">&rarr;</span>
+    </header>
+
+    <p class="card-description">
+      <span class="sr-only">Description</span>
+      {description}
+    </p>
+
+    <slot />
+  </a>
+</div>
+
+<style>
+  .catalog-card {
+    height: 100%;
+  }
+
+  .card-link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    box-shadow: var(--sl-shadow-sm);
+    text-decoration: none;
+    color: inherit;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .card-link:hover {
+    background: var(--sl-color-gray-7, var(--sl-color-gray-6));
+    border-color: var(--sl-color-gray-2);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-key {
+    font-size: 1.125rem;
+    font-weight: 600;
+    font-family: monospace;
+    color: var(--sl-color-white);
+  }
+
+  .card-arrow {
+    font-size: 1.25rem;
+    color: var(--sl-color-gray-2);
+  }
+
+  .card-description {
+    font-size: 0.9375rem;
+    color: var(--sl-color-gray-1);
+    line-height: 1.5;
+    margin: 0 0 0.75rem 0;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-link > .card-description,
+  .card-link > :global(.card-type),
+  .card-link > :global(.card-schemas),
+  .card-link > :global(.card-tags) {
+    margin-top: 0;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
