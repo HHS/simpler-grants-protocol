@@ -18,6 +18,7 @@ The `common-grants/sdk/extensions` module contains the utilities for working wit
 - [Extending base models using custom fields](#extending-base-models-using-custom-fields)
   - [Option 1: Ad hoc with `with_custom_fields()`](#option-1-ad-hoc-with-with_custom_fields)
   - [Option 2: Build-time with plugins](#option-2-build-time-with-plugins)
+- [Extracting Custom Field Values](#extracting-custom-field-values)
 - [Plugins](#plugins)
   - [What is a plugin?](#what-is-a-plugin)
   - [Defining a plugin](#defining-a-plugin)
@@ -27,6 +28,7 @@ The `common-grants/sdk/extensions` module contains the utilities for working wit
   - [Combining plugins](#combining-plugins)
     - [Keep plugins focused](#keep-plugins-focused)
     - [Verify type inference before publishing](#verify-type-inference-before-publishing)
+- [Using plugins with the API client](#using-plugins-with-the-api-client)
 - [Best practices](#best-practices)
   - [Field naming](#field-naming)
   - [Type safety](#type-safety)
@@ -215,6 +217,37 @@ opp = opportunity_extensions.schemas.Opportunity.model_validate(api_response)
 
 ```
 
+## Extracting Custom Field Values
+
+Once you have a validated opportunity instance, use `get_custom_field_value()` to safely retrieve typed values from `custom_fields`. The helper returns `None` if the key is absent (no `try/except` needed by the caller) and raises `ValueError` if the value is present but cannot be converted to the requested type.
+
+The idiomatic form is the instance method on any `OpportunityBase` subclass:
+
+```python
+from pydantic import BaseModel
+from common_grants_sdk.schemas.pydantic import OpportunityBase, CustomFieldType
+
+class LegacyIdValue(BaseModel):
+    system: str
+    id: int
+
+opp = OpportunityBase.model_validate(opp_data)
+
+# Returns Optional[LegacyIdValue], or None if key is absent
+legacy = opp.get_custom_field_value("legacyId", LegacyIdValue)
+if legacy is not None:
+    print(legacy.id)  # typed as int
+
+# Returns Optional[str]
+group = opp.get_custom_field_value("groupName", str)
+
+# Returns None — no KeyError
+missing = opp.get_custom_field_value("missing", str)
+```
+
+`get_custom_field_value()` works with both ad hoc (unregistered) and plugin-based (registered) custom fields.
+
+
 ## Plugins
 
 ### What is a plugin?
@@ -329,6 +362,7 @@ config = define_plugin(
 
 Prefer unique, namespaced field names so `"error"` is never triggered.
 
+> **Note:** The `"first_wins"` and `"last_wins"` strategies resolve conflicts at runtime but the merged result loses the specific field types of the overridden definitions. For full static type safety, use the default `"error"` strategy with non-overlapping, namespaced field names.
 
 #### Keep plugins focused
 
@@ -337,6 +371,34 @@ A plugin should represent a single logical concern (one agency's fields, one int
 #### Verify type inference before publishing
 
 After building your package, import the plugin in a test file and confirm that `.extensions` keys and `.schemas` parse types resolve correctly. Hover over the types in your editor to confirm they are not `any`.
+
+## Using plugins with the API client
+
+Pass a plugin's extended schema to the API client via the `schema` parameter. The client uses it to hydrate API responses into fully typed models. The `schema` parameter accepts any `Type[OpportunityBase]` subclass.
+
+```python
+from common_grants_sdk import Client
+from plugins.opportunity_extensions import opportunity_extensions
+
+client = Client(base_url="https://api.example.gov")
+
+# Get a single opportunity with typed custom fields
+opp = client.opportunities.get(opp_id, schema=opportunity_extensions.schemas.Opportunity)
+print(opp.custom_fields.program_area.value)  # typed as str
+
+# List with the same schema
+response = client.opportunities.list(schema=opportunity_extensions.schemas.Opportunity)
+for opp in response.items:
+    print(opp.custom_fields.legacy_grant_id.value)  # typed as int
+
+# Search with the same schema
+results = client.opportunities.search(
+    search="health",
+    status=["open"],
+    schema=opportunity_extensions.schemas.Opportunity,
+)
+```
+
 
 ## Best practices
 
