@@ -1,0 +1,226 @@
+---
+title: Custom fields overview
+description: Learn about custom fields, the custom field catalog, and how to contribute new fields to the catalog.
+---
+
+import { Tabs, TabItem, Steps, LinkCard } from "@astrojs/starlight/components";
+
+## What are custom fields?
+
+The CommonGrants protocol defines a core set of fields that are widely applicable across federal, state, local, and private grant opportunities. However, many implementations need fields that are relevant to their specific context but aren't universal enough to belong in the core protocol.
+
+[Custom fields](/protocol/fields/custom-field/) solve this problem by providing a structured way to extend CommonGrants models with additional data. Each custom field includes:
+
+| Property      | Description                                             |
+| ------------- | ------------------------------------------------------- |
+| `name`        | Name of the custom field                                |
+| `fieldType`   | The JSON schema type used when de-serializing the value |
+| `schema`      | (Optional) Link to the full JSON schema for the field   |
+| `value`       | The field's value                                       |
+| `description` | (Optional) Description of the custom field's purpose    |
+
+Custom fields live in the `customFields` property of any CommonGrants model, allowing implementations to carry additional data while staying compatible with the base protocol.
+
+## About the custom field catalog
+
+The [custom field catalog](/custom-fields/) is a shared repository of pre-defined custom fields that are not part of the core CommonGrants library but are reused across implementations.
+
+The catalog has two primary goals:
+
+1. **Standardize semantically equivalent fields.** Without a shared catalog, two different teams might define fields like "agency" with slightly different names, types, or structures. This makes interoperability harder and increases integration costs. The catalog gives implementers a single place to find and reuse existing field definitions before creating their own.
+
+2. **Create a path for promoting fields into the core protocol.** As custom fields gain adoption across implementations, they become candidates for inclusion in the base protocol. The catalog provides visibility into which fields are widely used, creating a foundation for a "field promotion" pipeline where popular custom fields can move from the catalog into `@common-grants/core`.
+
+:::note
+The field promotion pipeline is aspirational. The catalog lays the groundwork for this process, but the governance details for promoting fields into the core protocol are still being developed.
+:::
+
+## Using custom fields
+
+Both the TypeScript and Python SDKs provide helper functions for extending base models with typed custom fields.
+
+### Defining custom field specs
+
+Before adding custom fields to a model, you define a spec for each field that describes its type and (optionally) a schema for validating its value.
+
+<Tabs>
+<TabItem label="TypeScript">
+
+```typescript
+import { z } from "zod";
+import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
+import { CustomFieldType } from "@common-grants/sdk/constants";
+import { withCustomFields } from "@common-grants/sdk/extensions";
+
+// Define a value schema for complex types
+const AgencyValueSchema = z.object({
+  code: z.string().optional(),
+  name: z.string().optional(),
+  parentCode: z.string().optional(),
+  parentName: z.string().optional(),
+});
+
+// Extend the base schema with typed custom fields
+const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+  agency: {
+    fieldType: CustomFieldType.object,
+    valueSchema: AgencyValueSchema,
+    description: "Information about the agency offering this opportunity",
+  },
+  category: {
+    fieldType: CustomFieldType.string,
+    description: "Grant category",
+  },
+} as const);
+
+// TypeScript infers the types automatically
+type Opportunity = z.infer<typeof OpportunitySchema>;
+// opportunity.customFields?.agency?.value.code  → string | undefined
+// opportunity.customFields?.category?.value     → string | undefined
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+from common_grants_sdk.schemas.pydantic import (
+    OpportunityBase,
+    CustomFieldType,
+)
+from common_grants_sdk.extensions.specs import CustomFieldSpec
+
+# Define specs for each custom field
+fields = {
+    "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+    "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
+}
+
+# Create a new model class with typed custom fields
+Opportunity = OpportunityBase.with_custom_fields(
+    custom_fields=fields, model_name="Opportunity"
+)
+
+# Access typed custom field values
+opp = Opportunity.model_validate(opp_data)
+print(opp.custom_fields.legacy_id.value)   # typed as int
+print(opp.custom_fields.group_name.value)   # typed as str
+```
+
+</TabItem>
+</Tabs>
+
+### Parsing data with custom fields
+
+Once you've defined your extended schema, use it to parse and validate incoming data. Registered custom fields get full type safety, while unregistered fields pass through validation with the base `CustomField` type.
+
+<Tabs>
+<TabItem label="TypeScript">
+
+```typescript
+import { getCustomFieldValue } from "@common-grants/sdk/extensions";
+
+// Parse incoming data
+const opportunity = OpportunitySchema.parse(responseData);
+
+// Extract typed values from custom fields
+const agency = getCustomFieldValue(
+  opportunity.customFields,
+  "agency",
+  AgencyValueSchema,
+);
+
+if (agency) {
+  console.log(agency.code); // typed as string | undefined
+  console.log(agency.name); // typed as string | undefined
+}
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+opp = Opportunity.model_validate(response_data)
+
+# Access custom fields directly as typed attributes
+print(opp.custom_fields.legacy_id.value)    # typed as int
+print(opp.custom_fields.group_name.value)   # typed as str
+```
+
+</TabItem>
+</Tabs>
+
+## Contributing custom fields
+
+The custom field catalog is open to contributions. If you have a field that could be useful across multiple CommonGrants implementations, we encourage you to propose it.
+
+### When to contribute
+
+Consider contributing a custom field when:
+
+- You've defined a field that other implementers are likely to need
+- An existing field in the catalog doesn't quite fit your use case (propose a modification)
+- You want to help standardize a field that multiple implementations are already defining independently
+
+### How to contribute
+
+New custom fields are proposed by opening a pull request against the [CommonGrants repository](https://github.com/HHS/simpler-grants-protocol). At a high level, the process involves:
+
+<Steps>
+
+1. **Define the field in TypeSpec.** Create a new `.tsp` file in `website/src/specs/custom-fields/` that extends `CustomField` with your field's metadata.
+
+   Here's an example based on the `agency` field:
+
+   ```tsp
+   import "@common-grants/core";
+   import "@typespec/json-schema";
+   import "./index.tsp";
+
+   using CommonGrants.Fields;
+   using JsonSchema;
+
+   namespace CustomFields.Agency;
+
+   @extension("x-tags", #[Tags.organization])
+   @extension("x-author", "CommonGrants")
+   @extension("x-version", "0.1.0")
+   @extension(
+     "x-valid-schemas",
+     #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase]
+   )
+   model CustomAgency extends CustomField {
+     name: "agency";
+     fieldType: CustomFieldType.object;
+
+     @example(#{
+       code: "CMS",
+       name: "Centers for Medicare & Medicaid Services",
+     })
+     value: {
+       /** The agency's acronym or code */
+       code?: string;
+
+       /** The full name of the agency */
+       name?: string;
+     };
+
+     description: "Information about the agency offering this opportunity";
+   }
+   ```
+
+2. **Register the field.** Add an import for your new file in `website/src/specs/custom-fields/index.tsp` and add an entry to `website/src/content/custom-fields/index.json` with a schema reference and timestamps.
+
+3. **Open a pull request.** Submit your PR following the [contributing guidelines](https://github.com/HHS/simpler-grants-protocol/blob/main/CONTRIBUTING.md). Include context about why the field is useful and which implementations could benefit from it.
+
+</Steps>
+
+For detailed instructions on building and testing the website locally (including compiling TypeSpec and previewing your changes), see the website's [DEVELOPMENT.md](https://github.com/HHS/simpler-grants-protocol/blob/main/website/README.md).
+
+### Best practices
+
+- **Check the catalog first.** Before defining a new field, browse the [custom field catalog](/custom-fields/) to see if a similar field already exists. If one is close but not quite right, consider proposing a modification instead.
+- **Use descriptive names.** Field names should clearly convey their purpose. Prefer specific names like `federalOpportunityNumber` over generic ones like `refNumber`.
+- **Choose the right type.** Use the most specific `CustomFieldType` for your field's value. For structured data, use `object` with well-documented properties.
+- **Tag appropriately.** Use the tags defined in `index.tsp` (e.g., `identifier`, `federal`, `organization`) to help users discover your field through search and filtering.
+- **Specify valid schemas.** Indicate which base models your field applies to (e.g., `OpportunityBase`, `CompetitionBase`) using the `x-valid-schemas` extension.
+- **Include examples.** Add `@example` decorators so that users can see realistic sample values in the catalog and generated documentation.
