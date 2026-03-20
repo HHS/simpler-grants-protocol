@@ -1,6 +1,6 @@
 import { Paths } from "../schema/paths";
+import { parseStringArray, schemaFilePath, collectUniqueValues } from "../catalog";
 import * as fs from "fs";
-import * as path from "path";
 import * as yaml from "js-yaml";
 import type {
   CustomField,
@@ -23,26 +23,17 @@ let customFieldsCache: CustomFieldMap | null = null;
 
 /** Loads a raw schema by name from the extension schemas directory */
 function loadSchema(schemaName: string): Record<string, unknown> | null {
-  const fileName = schemaName.endsWith(".yaml")
-    ? schemaName
-    : `${schemaName}.yaml`;
-  const filePath = path.join(Paths.EXTENSION_SCHEMAS_DIR, fileName);
+  const filePath = schemaFilePath(schemaName);
 
   if (!fs.existsSync(filePath)) {
     console.warn(
-      `Schema ${fileName} not found in ${Paths.EXTENSION_SCHEMAS_DIR}`,
+      `Schema ${schemaName} not found in ${Paths.EXTENSION_SCHEMAS_DIR}`,
     );
     return null;
   }
 
   const content = fs.readFileSync(filePath, "utf-8");
   return yaml.load(content) as Record<string, unknown>;
-}
-
-/** Normalizes an array from schema extension (may be string[] from JSON) */
-function parseStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string");
 }
 
 /** Extracts custom field data from a JSON schema */
@@ -185,32 +176,12 @@ export function getCustomFieldIds(): string[] {
 export function getFilterOptions(): FilterOptions {
   const allFields = loadAllCustomFields();
 
-  const tagSet = new Set<string>();
-  const schemaSet = new Set<string>();
-  const authorSet = new Set<string>();
-  const fieldTypeSet = new Set<string>();
-
-  for (const field of Object.values(allFields)) {
-    // Collect tags
-    for (const tag of field.tags) {
-      tagSet.add(tag);
-    }
-    // Collect validFor schemas
-    for (const schema of field.validFor) {
-      schemaSet.add(schema);
-    }
-    // Collect authors (skip empty)
-    if (field.author) authorSet.add(field.author);
-    // Collect field types
-    if (field.fieldType) {
-      fieldTypeSet.add(field.fieldType);
-    }
-  }
-
   return {
-    tags: Array.from(tagSet).sort(),
-    schemas: Array.from(schemaSet).sort(),
-    authors: Array.from(authorSet).sort(),
-    fieldTypes: Array.from(fieldTypeSet).sort(),
+    tags: collectUniqueValues(allFields, (f) => f.tags),
+    schemas: collectUniqueValues(allFields, (f) => f.validFor),
+    authors: collectUniqueValues(allFields, (f) => (f.author ? [f.author] : [])),
+    fieldTypes: collectUniqueValues(allFields, (f) =>
+      f.fieldType ? [f.fieldType] : [],
+    ),
   };
 }

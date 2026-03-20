@@ -1,3 +1,5 @@
+import type { CatalogItem } from "../catalog";
+
 /**
  * Metadata stored in the custom-fields index.json.
  * Only registry metadata lives here; tags, validFor, version, and author come from the JSON schema.
@@ -40,7 +42,8 @@ export interface CustomFieldSchemaData {
  */
 export interface CustomField
   extends CustomFieldIndexEntry,
-    CustomFieldSchemaData {
+    CustomFieldSchemaData,
+    CatalogItem {
   /** The field's unique identifier (key in index.json) */
   id: string;
 }
