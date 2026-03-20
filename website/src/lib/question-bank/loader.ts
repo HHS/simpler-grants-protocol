@@ -1,5 +1,13 @@
 import { dereferenceSchema } from "../schema/ref-resolver";
-import { parseStringArray, schemaFilePath, collectUniqueValues } from "../catalog";
+import {
+  schemaFilePath,
+  collectUniqueValues,
+  extractFromSchema,
+  getString,
+  getStringArray,
+  getObject,
+  getArray,
+} from "../catalog";
 import type {
   QuestionBankItem,
   QuestionBankIndexEntry,
@@ -18,31 +26,27 @@ import questionBankIndex from "@/content/question-bank/index.json";
 /** Cache for loaded question bank items */
 let questionBankCache: QuestionBankMap | null = null;
 
-/** Extracts question bank data from a resolved JSON schema */
+/**
+ * Extracts question bank data from a resolved JSON schema.
+ *
+ * Question bank schemas use standard JSON Schema properties (title,
+ * description, properties, examples) plus custom x-* extensions for
+ * mappings and UI schema.
+ */
 function extractSchemaData(
   schema: Record<string, unknown>,
 ): QuestionBankSchemaData {
-  const name = typeof schema.title === "string" ? schema.title : "";
-  const description =
-    typeof schema.description === "string" ? schema.description : "";
-  const tags = parseStringArray(schema["x-tags"]);
-  const properties = (schema.properties as Record<string, unknown>) ?? {};
-  const examples = Array.isArray(schema.examples) ? schema.examples : [];
-  const mappingFromCg =
-    (schema["x-mapping-from-cg"] as Record<string, unknown>) ?? {};
-  const mappingToCg =
-    (schema["x-mapping-to-cg"] as Record<string, unknown>) ?? {};
-  const uiSchema = (schema["x-ui-schema"] as Record<string, unknown>) ?? {};
-
   return {
-    name,
-    description,
-    tags,
-    properties,
-    examples,
-    mappingFromCg,
-    mappingToCg,
-    uiSchema,
+    ...extractFromSchema(schema, {
+      name: getString("title"),
+      description: getString("description"),
+      tags: getStringArray("x-tags"),
+      properties: getObject("properties"),
+      examples: getArray("examples"),
+      mappingFromCg: getObject("x-mapping-from-cg"),
+      mappingToCg: getObject("x-mapping-to-cg"),
+      uiSchema: getObject("x-ui-schema"),
+    }),
     rawSchema: schema,
   };
 }

@@ -1,5 +1,13 @@
 import { Paths } from "../schema/paths";
-import { parseStringArray, schemaFilePath, collectUniqueValues } from "../catalog";
+import {
+  schemaFilePath,
+  collectUniqueValues,
+  extractFromSchema,
+  getString,
+  getStringArray,
+  getPropertyConst,
+  getPropertyExamples,
+} from "../catalog";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import type {
@@ -36,54 +44,28 @@ function loadSchema(schemaName: string): Record<string, unknown> | null {
   return yaml.load(content) as Record<string, unknown>;
 }
 
-/** Extracts custom field data from a JSON schema */
+/**
+ * Extracts custom field data from a JSON schema.
+ *
+ * Custom field schemas store name, description, and fieldType as `const`
+ * values in nested properties, while metadata like tags, version, and
+ * valid schemas are top-level x-* extensions.
+ */
 function extractSchemaData(
   schema: Record<string, unknown>,
 ): CustomFieldSchemaData {
-  const properties = schema.properties as Record<
-    string,
-    Record<string, unknown>
-  >;
-
-  // Extract name from const value
-  const nameProperty = properties?.name;
-  const name =
-    typeof nameProperty?.const === "string" ? nameProperty.const : "";
-
-  // Extract description from const value
-  const descProperty = properties?.description;
-  const description =
-    typeof descProperty?.const === "string" ? descProperty.const : "";
-
-  // Extract fieldType from const value
-  const fieldTypeProperty = properties?.fieldType;
-  const fieldType =
-    typeof fieldTypeProperty?.const === "string" ? fieldTypeProperty.const : "";
-
-  // Extract examples from value property
-  const valueProperty = properties?.value;
-  const examples = Array.isArray(valueProperty?.examples)
-    ? valueProperty.examples
-    : [];
-
-  // Extract x-tags, x-version, x-valid-schemas, x-author from schema (always from schema)
-  const tags = parseStringArray(schema["x-tags"]);
-  const version =
-    typeof schema["x-version"] === "string" ? schema["x-version"] : "";
-  const validFor = parseStringArray(schema["x-valid-schemas"]);
-  const author =
-    typeof schema["x-author"] === "string" ? schema["x-author"] : "";
-
   return {
-    name,
-    description,
-    fieldType,
-    examples,
+    ...extractFromSchema(schema, {
+      name: getPropertyConst("name"),
+      description: getPropertyConst("description"),
+      fieldType: getPropertyConst("fieldType"),
+      examples: getPropertyExamples("value"),
+      tags: getStringArray("x-tags"),
+      version: getString("x-version"),
+      validFor: getStringArray("x-valid-schemas"),
+      author: getString("x-author"),
+    }),
     rawSchema: schema,
-    tags,
-    version,
-    validFor,
-    author,
   };
 }
 

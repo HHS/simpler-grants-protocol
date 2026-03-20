@@ -7,4 +7,15 @@ export type {
 } from "./types";
 
 // Loader utilities
-export { parseStringArray, schemaFilePath, collectUniqueValues } from "./loader";
+export {
+  parseStringArray,
+  schemaFilePath,
+  collectUniqueValues,
+  extractFromSchema,
+  getString,
+  getStringArray,
+  getObject,
+  getArray,
+  getPropertyConst,
+  getPropertyExamples,
+} from "./loader";
