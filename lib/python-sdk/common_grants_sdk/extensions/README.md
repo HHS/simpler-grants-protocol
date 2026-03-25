@@ -117,16 +117,17 @@ The following is an example `cg_config.py` file, which you pass to the build ste
 ```python
 from common_grants_sdk import define_plugin, merge_extensions
 from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk.schemas.pydantic import CustomFieldType
 
 # Extensions that might come from a shared HHS package
 hhs_extensions: SchemaExtensions = {
     "Opportunity": {
-        "program_area": CustomFieldSpec(
-            field_type="string",
+        "programArea": CustomFieldSpec(
+            field_type=CustomFieldType.STRING,
             description="HHS program area code (e.g. 'CFDA-93.243')",
         ),
-        "legacy_grant_id": CustomFieldSpec(
-            field_type="integer",
+        "legacyGrantId": CustomFieldSpec(
+            field_type=CustomFieldType.INTEGER,
             description="Numeric ID from the legacy grants management system",
         ),
     },
@@ -135,12 +136,12 @@ hhs_extensions: SchemaExtensions = {
 # Extensions specific to this project
 local_extensions: SchemaExtensions = {
     "Opportunity": {
-        "eligibility_types": CustomFieldSpec(
-            field_type="array",
+        "eligibilityTypes": CustomFieldSpec(
+            field_type=CustomFieldType.ARRAY,
             description="Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')",
         ),
-        "award_ceiling": CustomFieldSpec(
-            field_type="number",
+        "awardCeiling": CustomFieldSpec(
+            field_type=CustomFieldType.NUMBER,
             description="Maximum award amount in USD",
         ),
     },
@@ -183,19 +184,19 @@ api_response = {
     "createdAt": "2025-03-01T00:00:00Z",
     "lastModifiedAt": "2025-03-15T00:00:00Z",
     "customFields": {
-        "program_area": {
+        "programArea": {
             "fieldType": "string",
             "value": "CFDA-93.243",
         },
-        "legacy_grant_id": {
+        "legacyGrantId": {
             "fieldType": "integer",
             "value": 98765,
         },
-        "eligibility_types": {
+        "eligibilityTypes": {
             "fieldType": "array",
             "value": ["nonprofit", "tribal", "city_government"],
         },
-        "award_ceiling": {
+        "awardCeiling": {
             "fieldType": "number",
             "value": 250000.00,
         },
@@ -281,7 +282,7 @@ local_extensions: SchemaExtensions = {
             description="Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')",
         ),
         "awardCeiling": CustomFieldSpec(
-            field_type="number",
+            field_type=CustomFieldType.NUMBER,
             description="Maximum award amount in USD",
         ),
     },
@@ -468,10 +469,13 @@ The generator converts `camelCase` keys to `snake_case` Python attribute names a
 
 ```python
 # cg_config.py
+from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk.schemas.pydantic import CustomFieldType
+
 extensions: SchemaExtensions = {
     "Opportunity": {
         "legacyGrantId": CustomFieldSpec(   # camelCase key — matches the JSON
-            field_type="integer",
+            field_type=CustomFieldType.INTEGER,
             description="Numeric ID from the legacy grants management system",
         ),
     },
@@ -506,7 +510,8 @@ A plugin should represent a single logical concern (one agency's fields, one int
 
   ```python
   from pydantic import BaseModel
-  from common_grants_sdk.extensions import CustomFieldSpec
+  from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+  from common_grants_sdk.schemas.pydantic import CustomFieldType
 
   class LegacyRef(BaseModel):
       system: str
@@ -514,8 +519,8 @@ A plugin should represent a single logical concern (one agency's fields, one int
 
   extensions: SchemaExtensions = {
       "Opportunity": {
-          "legacy_ref": CustomFieldSpec(
-              field_type="object",
+          "legacyRef": CustomFieldSpec(
+              field_type=CustomFieldType.OBJECT,
               value=LegacyRef,
               description="Reference to the opportunity in the legacy system",
           ),
@@ -534,6 +539,7 @@ When you define Pydantic models for complex `value` fields, export them as named
 # __init__.py of a plugin package
 from pydantic import BaseModel
 from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk.schemas.pydantic import CustomFieldType
 
 # Export value types so consumers can reference them directly
 class ProgramAreaValue(BaseModel):
@@ -542,8 +548,8 @@ class ProgramAreaValue(BaseModel):
 
 extensions: SchemaExtensions = {
     "Opportunity": {
-        "program_area": CustomFieldSpec(
-            field_type="object",
+        "programArea": CustomFieldSpec(
+            field_type=CustomFieldType.OBJECT,
             value=ProgramAreaValue,
             description="The HHS program area for this opportunity",
         ),
@@ -559,7 +565,7 @@ from commongrants_hhs_plugin import hhs_plugin, ProgramAreaValue
 opp = hhs_plugin.schemas.Opportunity.model_validate(api_response)
 
 # Extract the value with full type safety using the exported type
-area = opp.get_custom_field_value("program_area", ProgramAreaValue)
+area = opp.get_custom_field_value("programArea", ProgramAreaValue)
 print(area.code)  # typed as str
 ```
 

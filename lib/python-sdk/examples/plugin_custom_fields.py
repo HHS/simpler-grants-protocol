@@ -34,19 +34,19 @@ api_response = {
     "createdAt": "2025-03-01T00:00:00Z",
     "lastModifiedAt": "2025-03-15T00:00:00Z",
     "customFields": {
-        "program_area": {
+        "programArea": {
             "fieldType": "string",
             "value": "CFDA-93.243",
         },
-        "legacy_grant_id": {
+        "legacyGrantId": {
             "fieldType": "integer",
             "value": 98765,
         },
-        "eligibility_types": {
+        "eligibilityTypes": {
             "fieldType": "array",
             "value": ["nonprofit", "tribal", "city_government"],
         },
-        "award_ceiling": {
+        "awardCeiling": {
             "fieldType": "number",
             "value": 250000.00,
         },
