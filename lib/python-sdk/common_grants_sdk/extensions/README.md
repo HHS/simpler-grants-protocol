@@ -289,7 +289,7 @@ local_extensions: SchemaExtensions = {
     },
 }
 
-config = define_plugin([local_extensions], on_conflict="error")
+config = define_plugin(local_extensions)
 
 ```
 
