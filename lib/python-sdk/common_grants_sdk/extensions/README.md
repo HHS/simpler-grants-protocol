@@ -272,14 +272,15 @@ class Plugin:
 
 ```python
 from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk.schemas.pydantic import CustomFieldType
 # Extensions specific to this project
 local_extensions: SchemaExtensions = {
     "Opportunity": {
-        "eligibility_types": CustomFieldSpec(
-            field_type="array",
+        "eligibilityTypes": CustomFieldSpec(
+            field_type=CustomFieldType.ARRAY,
             description="Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')",
         ),
-        "award_ceiling": CustomFieldSpec(
+        "awardCeiling": CustomFieldSpec(
             field_type="number",
             description="Maximum award amount in USD",
         ),
