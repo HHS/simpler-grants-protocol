@@ -409,7 +409,8 @@ config = define_plugin(
 
 Prefer unique, namespaced field names so `"error"` is never triggered.
 
-> [!Note] The `"first_wins"` and `"last_wins"` strategies resolve conflicts at runtime but the merged result loses the specific field types of the overridden definitions. For full static type safety, use the default `"error"` strategy with non-overlapping, namespaced field names.
+> [!Note]
+>  The `"first_wins"` and `"last_wins"` strategies resolve conflicts at runtime but the merged result loses the specific field types of the overridden definitions. For full static type safety, use the default `"error"` strategy with non-overlapping, namespaced field names.
 
 #### Verify type inference before publishing
 
@@ -509,7 +510,8 @@ A plugin should represent a single logical concern (one agency's fields, one int
   }
   ```
 
-  > **Note:** The generator only embeds the class name in the generated annotation. If `LegacyRef` lives in a third-party package, the generator falls back to `Any`. Define such types inside the SDK or in your plugin's own module and use `from common_grants_sdk...` imports where possible.
+> [!NOTE]
+> The generator only embeds the class name for builtins and SDK types. If a type lives in a third-party package **or your plugin's own module**, the generator falls back to `Any`. Define such types inside `common_grants_sdk` and use `from common_grants_sdk...` imports.
 
 ### Export value types alongside your plugin
 
