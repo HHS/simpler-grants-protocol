@@ -61,6 +61,7 @@ There are two ways to register custom fields on a base schema: at runtime (ad ho
 Use `with_custom_fields()` when you want to extend a single schema directly, without creating a reusable plugin. This is useful for one-off scripts, tests, or quick prototyping.
 
 ```python
+from pydantic import BaseModel
 from datetime import datetime
 from uuid import uuid4
 from common_grants_sdk.schemas.pydantic import (
