@@ -1,6 +1,14 @@
 import { Paths } from "../schema/paths";
+import {
+  schemaFilePath,
+  collectUniqueValues,
+  extractFromSchema,
+  getString,
+  getStringArray,
+  getPropertyConst,
+  getPropertyExamples,
+} from "../catalog";
 import * as fs from "fs";
-import * as path from "path";
 import * as yaml from "js-yaml";
 import type {
   CustomField,
@@ -23,14 +31,11 @@ let customFieldsCache: CustomFieldMap | null = null;
 
 /** Loads a raw schema by name from the extension schemas directory */
 function loadSchema(schemaName: string): Record<string, unknown> | null {
-  const fileName = schemaName.endsWith(".yaml")
-    ? schemaName
-    : `${schemaName}.yaml`;
-  const filePath = path.join(Paths.EXTENSION_SCHEMAS_DIR, fileName);
+  const filePath = schemaFilePath(schemaName);
 
   if (!fs.existsSync(filePath)) {
     console.warn(
-      `Schema ${fileName} not found in ${Paths.EXTENSION_SCHEMAS_DIR}`,
+      `Schema ${schemaName} not found in ${Paths.EXTENSION_SCHEMAS_DIR}`,
     );
     return null;
   }
@@ -39,60 +44,28 @@ function loadSchema(schemaName: string): Record<string, unknown> | null {
   return yaml.load(content) as Record<string, unknown>;
 }
 
-/** Normalizes an array from schema extension (may be string[] from JSON) */
-function parseStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string");
-}
-
-/** Extracts custom field data from a JSON schema */
+/**
+ * Extracts custom field data from a JSON schema.
+ *
+ * Custom field schemas store name, description, and fieldType as `const`
+ * values in nested properties, while metadata like tags, version, and
+ * valid schemas are top-level x-* extensions.
+ */
 function extractSchemaData(
   schema: Record<string, unknown>,
 ): CustomFieldSchemaData {
-  const properties = schema.properties as Record<
-    string,
-    Record<string, unknown>
-  >;
-
-  // Extract name from const value
-  const nameProperty = properties?.name;
-  const name =
-    typeof nameProperty?.const === "string" ? nameProperty.const : "";
-
-  // Extract description from const value
-  const descProperty = properties?.description;
-  const description =
-    typeof descProperty?.const === "string" ? descProperty.const : "";
-
-  // Extract fieldType from const value
-  const fieldTypeProperty = properties?.fieldType;
-  const fieldType =
-    typeof fieldTypeProperty?.const === "string" ? fieldTypeProperty.const : "";
-
-  // Extract examples from value property
-  const valueProperty = properties?.value;
-  const examples = Array.isArray(valueProperty?.examples)
-    ? valueProperty.examples
-    : [];
-
-  // Extract x-tags, x-version, x-valid-schemas, x-author from schema (always from schema)
-  const tags = parseStringArray(schema["x-tags"]);
-  const version =
-    typeof schema["x-version"] === "string" ? schema["x-version"] : "";
-  const validFor = parseStringArray(schema["x-valid-schemas"]);
-  const author =
-    typeof schema["x-author"] === "string" ? schema["x-author"] : "";
-
   return {
-    name,
-    description,
-    fieldType,
-    examples,
+    ...extractFromSchema(schema, {
+      name: getPropertyConst("name"),
+      description: getPropertyConst("description"),
+      fieldType: getPropertyConst("fieldType"),
+      examples: getPropertyExamples("value"),
+      tags: getStringArray("x-tags"),
+      version: getString("x-version"),
+      validFor: getStringArray("x-valid-schemas"),
+      author: getString("x-author"),
+    }),
     rawSchema: schema,
-    tags,
-    version,
-    validFor,
-    author,
   };
 }
 
@@ -185,32 +158,14 @@ export function getCustomFieldIds(): string[] {
 export function getFilterOptions(): FilterOptions {
   const allFields = loadAllCustomFields();
 
-  const tagSet = new Set<string>();
-  const schemaSet = new Set<string>();
-  const authorSet = new Set<string>();
-  const fieldTypeSet = new Set<string>();
-
-  for (const field of Object.values(allFields)) {
-    // Collect tags
-    for (const tag of field.tags) {
-      tagSet.add(tag);
-    }
-    // Collect validFor schemas
-    for (const schema of field.validFor) {
-      schemaSet.add(schema);
-    }
-    // Collect authors (skip empty)
-    if (field.author) authorSet.add(field.author);
-    // Collect field types
-    if (field.fieldType) {
-      fieldTypeSet.add(field.fieldType);
-    }
-  }
-
   return {
-    tags: Array.from(tagSet).sort(),
-    schemas: Array.from(schemaSet).sort(),
-    authors: Array.from(authorSet).sort(),
-    fieldTypes: Array.from(fieldTypeSet).sort(),
+    tags: collectUniqueValues(allFields, (f) => f.tags),
+    schemas: collectUniqueValues(allFields, (f) => f.validFor),
+    authors: collectUniqueValues(allFields, (f) =>
+      f.author ? [f.author] : [],
+    ),
+    fieldTypes: collectUniqueValues(allFields, (f) =>
+      f.fieldType ? [f.fieldType] : [],
+    ),
   };
 }
