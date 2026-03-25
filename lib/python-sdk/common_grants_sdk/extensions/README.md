@@ -299,21 +299,33 @@ After running the build step the imported extension object will have 2 fields to
 
 #### Package structure
 
-A minimal plugin package has 2 user-defined files `cg_config.py` and `pyproject.toml` for export
+A minimal plugin package has 2 user-defined files `cg_config.py` and `pyproject.toml` for export.
+
+For Poetry (and most `pyproject.toml`-based build systems), `pyproject.toml` lives at the **project root**, while `cg_config.py` and the generated files live inside the **Python package subdirectory**:
 
 ```
-my_plugin/
-├── cg_config.py        # Field specs (source of truth — you write this)
-├── generated/          # Emitted by the generator — commit to the repo
-│   ├── __init__.py
-│   └── schemas.py
-├── __init__.py         # Also emitted by the generator — commit to the repo
-└── pyproject.toml      # Package metadata (you write this)
+opportunity-extensions/        # Project root (outer folder — name it anything)
+├── pyproject.toml             # Package metadata (you write this)
+└── opportunity_extensions/    # Python package (inner folder — must match packages config)
+    ├── __init__.py            # Emitted by the generator — commit to the repo
+    ├── cg_config.py           # Field specs (source of truth — you write this)
+    └── generated/             # Emitted by the generator — commit to the repo
+        ├── __init__.py
+        └── schemas.py
 ```
 
-The generator writes `generated/` and the root `__init__.py`. Only `cg_config.py` and `pyproject.toml` are hand-authored.
+The generator writes `generated/` and the package-level `__init__.py`. Only `cg_config.py` and `pyproject.toml` are hand-authored.
 
-`my_plugin/pyproject.toml` defines the package metadata for export. 
+> [!IMPORTANT]
+> `cg_config.py` must be **inside** the Python package directory (alongside `__init__.py`), not at the project root next to `pyproject.toml`. Placing it at the project root will cause import errors when Poetry resolves the package.
+
+Run the generator from the **project root**, pointing `--plugin` at the inner package directory:
+
+```bash
+poetry run python -m common_grants_sdk.extensions.generate --plugin opportunity_extensions
+```
+
+`pyproject.toml` (at the project root) defines the package metadata for export.
 
 ```toml
   [tool.poetry]
