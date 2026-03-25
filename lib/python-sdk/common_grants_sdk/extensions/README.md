@@ -13,43 +13,35 @@ The `common-grants/sdk/extensions` module contains the utilities for working wit
 ## Table of contents <!-- omit in toc -->
 
 - [Key Concepts](#key-concepts)
-  - [`CustomField`](#customfield)
-  - [`CustomFieldSpec` fields](#customfieldspec-fields)
-- [Extending base models using custom fields](#extending-base-models-using-custom-fields)
+- [Extending base models using Custom Fields](#extending-base-models-using-custom-fields)
   - [Option 1: Ad hoc with `with_custom_fields()`](#option-1-ad-hoc-with-with_custom_fields)
   - [Option 2: Build-time with plugins](#option-2-build-time-with-plugins)
 - [Extracting Custom Field Values](#extracting-custom-field-values)
 - [Plugins](#plugins)
   - [What is a plugin?](#what-is-a-plugin)
   - [Defining a plugin](#defining-a-plugin)
-  - [Example](#example)
   - [Publishing a plugin](#publishing-a-plugin)
-    - [Package structure](#package-structure)
-  - [Combining plugins](#combining-plugins)
-    - [Keep plugins focused](#keep-plugins-focused)
-    - [Verify type inference before publishing](#verify-type-inference-before-publishing)
+  - [Combining Plugins](#combining-plugins)
 - [Using plugins with the API client](#using-plugins-with-the-api-client)
 - [Best practices](#best-practices)
   - [Field naming](#field-naming)
+  - [Keep plugins focused](#keep-plugins-focused)
   - [Type safety](#type-safety)
-- [Packaging for distribution](#packaging-for-distribution)
-  - [Shipping pre-built schemas](#shipping-pre-built-schemas)
-- [End-to-end validation checklist](#end-to-end-validation-checklist)
+  - [Export value types alongside your plugin](#export-value-types-alongside-your-plugin)
+  - [Declare `common-grants-sdk` as a dependency](#declare-common-grants-sdk-as-a-dependency)
+  - [Avoid `"first_wins"` / `"last_wins"` in published plugins](#avoid-first_wins--last_wins-in-published-plugins)
 
 
 ## Key Concepts
 
-### `CustomField` 
-A key-value pair attached to a resource's `customFields` property each field has a `name`, `fieldType`, `value` and optional `description`
+Here are some key concepts that are used to define custom fields and plugins that extend base schemas from the CommonGrants protocol.
 
-### `CustomFieldSpec` fields
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `field_type` | `CustomFieldType` or `str` | Yes | JSON schema type: `"string"`, `"integer"`, `"number"`, `"boolean"`, `"array"`, `"object"` |
-| `value` | `type` or generic alias | No | Python type for the `value` attribute. Defaults to `list[str]` for `array`, `dict[str, Any]` for `object`, or the equivalent primitive type. |
-| `name` | `str` | No | Display name. Defaults to the field key. |
-| `description` | `str` | No | Human-readable description written into the generated class. |
+| Concept | Description |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Custom field**       | A key-value pair attached to a resource's `customFields` property. Each field has a `name`, `fieldType`, `value`, and optional `description`.                                                               |
+| **`CustomFieldSpec`**  | A Python dataclass that _describes_ a custom field: its `field_type`, optional `value` (a Python type for the `value` property), and optional `name` and `description`.                                     |
+| **`SchemaExtensions`** | A mapping of extensible model names (e.g. `"Opportunity"`) to dicts of `CustomFieldSpec` objects. This is the shape that `define_plugin()` and `with_custom_fields()` accept.                               |
+| **`Plugin`**           | A dataclass with `.extensions` (the raw `SchemaExtensions`) and `.schemas` (Pydantic models with typed `customFields` applied). Created by `define_plugin()`.                                               |
 
 
 
@@ -220,7 +212,13 @@ opp = opportunity_extensions.schemas.Opportunity.model_validate(api_response)
 
 ## Extracting Custom Field Values
 
-Once you have a validated opportunity instance, use `get_custom_field_value()` to safely retrieve typed values from `custom_fields`. The helper returns `None` if the key is absent (no `try/except` needed by the caller) and raises `ValueError` if the value is present but cannot be converted to the requested type.
+Use `get_custom_field_value()` to safely retrieve typed values from `custom_fields`. It is useful in three main situations:
+
+1. **Unregistered fields** — you didn't use `with_custom_fields()` or a plugin to register a custom field and want to validate its value at runtime.
+2. **Ad hoc fields** — you registered a field with `with_custom_fields()` for initial validation, but want type inference on the value after accessing it.
+3. **Programmatic access** — you registered a field via a plugin (which provides type inference through dot-delimited access like `opp.custom_fields.foo.value`), but need to access fields by variable name, such as in a loop.
+
+The helper returns `None` if the key is absent (no `try/except` needed) and raises `ValueError` if the value is present but cannot be converted to the requested type.
 
 The idiomatic form is the instance method on any `OpportunityBase` subclass:
 
@@ -271,8 +269,6 @@ class Plugin:
     schemas: Any
 ```
 
-
-### Example
 
 ```python
 from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
@@ -341,6 +337,56 @@ The generator writes `generated/` and the root `__init__.py`. Only `cg_config.py
 
 ```
 
+#### Shipping pre-built schemas
+
+Publishing steps:
+1. Add an empty `py.typed` file so Pyright and mypy recognize your package as typed:
+
+```
+my_plugin/
+└── py.typed
+```
+
+2. Declare it in `pyproject.toml`:
+
+```toml
+[tool.poetry]
+include = ["my_plugin/py.typed"]
+```
+
+3. Build and verify the distribution:
+
+```bash
+poetry build
+poetry publish
+```
+
+#### Consumer usage
+
+After installing the plugin (e.g. `poetry add commongrants-hhs-plugin`):
+
+```python
+from commongrants_hhs_plugin import hhs_plugin
+
+opp = hhs_plugin.schemas.Opportunity.model_validate(api_response)
+print(opp.custom_fields.program_area.value)    # typed as str
+print(opp.custom_fields.legacy_grant_id.value) # typed as int
+```
+
+#### Pre-publish checklist
+
+Before publishing a new version of your plugin:
+
+- [ ] `cg_config.py` field specs are up to date
+- [ ] Generator has been re-run and the output is committed (`generated/schemas.py`, `generated/__init__.py`, `__init__.py`)
+- [ ] All custom fields have the intended types (no unintended `Any` annotations in `generated/schemas.py`)
+- [ ] `py.typed` marker is present and included in the package
+- [ ] Package installs cleanly in a fresh virtual environment: `pip install dist/commongrants_my_plugin-*.whl`
+- [ ] Imports resolve without errors: `from my_plugin import my_plugin`
+- [ ] Custom field attributes are accessible and typed in the IDE after install
+- [ ] A type checker passes with no errors: `pyright my_plugin` or `mypy my_plugin`
+- [ ] A [changeset](../../lib/README.md) has been created with the correct revision type
+
 ### Combining Plugins
 
 Use `merge_extensions()` to combine field specs from multiple sources before passing them to `define_plugin()`:
@@ -363,11 +409,7 @@ config = define_plugin(
 
 Prefer unique, namespaced field names so `"error"` is never triggered.
 
-> **Note:** The `"first_wins"` and `"last_wins"` strategies resolve conflicts at runtime but the merged result loses the specific field types of the overridden definitions. For full static type safety, use the default `"error"` strategy with non-overlapping, namespaced field names.
-
-#### Keep plugins focused
-
-A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, use `merge_extensions()` to compose separate plugins rather than bundling everything into one.
+> [!Note] The `"first_wins"` and `"last_wins"` strategies resolve conflicts at runtime but the merged result loses the specific field types of the overridden definitions. For full static type safety, use the default `"error"` strategy with non-overlapping, namespaced field names.
 
 #### Verify type inference before publishing
 
@@ -405,9 +447,43 @@ results = client.opportunities.search(
 
 ### Field naming
 
-- Use `snake_case` field keys in `cg_config.py` (e.g. `legacy_grant_id`). The generator preserves these as Python attribute names on the generated model.
+> [!IMPORTANT]
+> The field key you define in `cg_config.py` **must match the key in the JSON data** you're parsing in order to validate your custom fields correctly. Because the CommonGrants standard uses `camelCase` for core attributes, you **should** use `camelCase` for custom field keys.
+
+The generator converts `camelCase` keys to `snake_case` Python attribute names automatically, using a Pydantic `alias` under the hood. For example, a field key of `"legacyGrantId"` becomes `opp.custom_fields.legacy_grant_id` in Python, while still mapping to `"legacyGrantId"` in JSON:
+
+```python
+# cg_config.py
+extensions: SchemaExtensions = {
+    "Opportunity": {
+        "legacyGrantId": CustomFieldSpec(   # camelCase key — matches the JSON
+            field_type="integer",
+            description="Numeric ID from the legacy grants management system",
+        ),
+    },
+}
+```
+
+```python
+# JSON parsed correctly because the alias matches
+api_response = {
+    "customFields": {
+        "legacyGrantId": {"fieldType": "integer", "value": 98765},
+    },
+}
+
+opp = my_plugin.schemas.Opportunity.model_validate(api_response)
+opp.custom_fields.legacy_grant_id.value  # 98765, typed as int
+```
+
+Additional field naming guidelines:
+
 - Use descriptive, stable names. Renaming a published field is a breaking change.
-- Prefix ambiguous names with your organization or system context (e.g. `hhs_program_area` rather than `program_area`) when there is risk of collision with other plugins.
+- Prefix ambiguous names with your organization or system context (e.g. `hhsProgramArea` rather than `programArea`) when there is risk of collision with other plugins.
+
+### Keep plugins focused
+
+A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, use `merge_extensions()` to compose separate plugins rather than bundling everything into one.
 
 ### Type safety
 
@@ -435,46 +511,50 @@ results = client.opportunities.search(
 
   > **Note:** The generator only embeds the class name in the generated annotation. If `LegacyRef` lives in a third-party package, the generator falls back to `Any`. Define such types inside the SDK or in your plugin's own module and use `from common_grants_sdk...` imports where possible.
 
+### Export value types alongside your plugin
 
+When you define Pydantic models for complex `value` fields, export them as named exports from your package. Downstream consumers may need these types for use with `get_custom_field_value()`:
 
-## Packaging for distribution
+```python
+# __init__.py of a plugin package
+from pydantic import BaseModel
+from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
 
-### Shipping pre-built schemas
+# Export value types so consumers can reference them directly
+class ProgramAreaValue(BaseModel):
+    code: str
+    name: str
 
-Publishing steps:
-1. Add an empty `py.typed` file so Pyright and mypy recognize your package as typed:
-
-```
-my_plugin/
-└── py.typed
-```
-
-2. Declare it in `pyproject.toml`:
-
-```toml
-[tool.poetry]
-include = ["my_plugin/py.typed"]
-```
-
-3. Build and verify the distribution:
-
-```bash
-poetry build
-poetry publish
+extensions: SchemaExtensions = {
+    "Opportunity": {
+        "program_area": CustomFieldSpec(
+            field_type="object",
+            value=ProgramAreaValue,
+            description="The HHS program area for this opportunity",
+        ),
+    },
+}
 ```
 
+This allows consumers to use `get_custom_field_value()` with the same type the plugin uses for validation:
 
+```python
+from commongrants_hhs_plugin import hhs_plugin, ProgramAreaValue
 
-## End-to-end validation checklist
+opp = hhs_plugin.schemas.Opportunity.model_validate(api_response)
 
-Before publishing a new version of your plugin:
+# Extract the value with full type safety using the exported type
+area = opp.get_custom_field_value("program_area", ProgramAreaValue)
+print(area.code)  # typed as str
+```
 
-- [ ] `cg_config.py` field specs are up to date
-- [ ] Generator has been re-run and the output is committed (`generated/schemas.py`, `generated/__init__.py`, `__init__.py`)
-- [ ] All custom fields have the intended types (no unintended `Any` annotations in `generated/schemas.py`)
-- [ ] `py.typed` marker is present and included in the package
-- [ ] Package installs cleanly in a fresh virtual environment: `pip install dist/commongrants_my_plugin-*.whl`
-- [ ] Imports resolve without errors: `from my_plugin import my_plugin`
-- [ ] Custom field attributes are accessible and typed in the IDE after install
-- [ ] A type checker passes with no errors: `pyright my_plugin` or `mypy my_plugin`
-- [ ] A [changeset](../../lib/README.md) has been created with the correct revision type
+### Declare `common-grants-sdk` as a dependency
+
+Declare `common-grants-sdk` as a dependency in your plugin's `pyproject.toml` rather than expecting consumers to install it separately. This ensures the correct version of the SDK is always present when your plugin is installed. See [Publishing a plugin](#publishing-a-plugin) for a full `pyproject.toml` example.
+
+### Avoid `"first_wins"` / `"last_wins"` in published plugins
+
+When calling `merge_extensions()` with `"first_wins"` or `"last_wins"`, conflicts are resolved at runtime but the overridden field definitions are silently dropped. This is fine for local or ad hoc usage, but if you publish a package that uses one of these strategies internally, consumers have no indication that fields may have been overridden.
+
+Prefer the default `"error"` strategy in published plugins. If your extensions genuinely overlap with another plugin, resolve the conflicts explicitly before publishing rather than deferring to a lossy merge strategy.
+
