@@ -1,5 +1,11 @@
 # common-grants-sdk
 
+## 0.6.0
+
+### Minor Changes
+
+- 6cbaed6: Adding support for plugin frmaework
+
 ## 0.5.1
 
 ### Patch Changes
