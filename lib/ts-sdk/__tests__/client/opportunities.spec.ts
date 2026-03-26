@@ -13,7 +13,7 @@ import { CustomFieldType } from "../../src/constants";
 const OpportunityWithLegacyIdSchema = withCustomFields(OpportunityBaseSchema, {
   legacyId: {
     fieldType: CustomFieldType.integer,
-    valueSchema: z.number().int(),
+    value: z.number().int(),
     description: "Maps to the opportunity_id in the legacy system",
   },
 } as const);

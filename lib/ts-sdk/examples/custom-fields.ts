@@ -32,12 +32,12 @@ const MetadataValueSchema = z.object({
 const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
   legacyId: {
     fieldType: CustomFieldType.object,
-    valueSchema: LegacyIdValueSchema,
+    value: LegacyIdValueSchema,
     description: "Maps to the opportunity_id in the legacy system",
   },
   tags: {
     fieldType: CustomFieldType.array,
-    valueSchema: TagsValueSchema,
+    value: TagsValueSchema,
     description: "Tags for categorizing the opportunity",
   },
   category: {
@@ -46,7 +46,7 @@ const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
   },
   metadata: {
     fieldType: CustomFieldType.object,
-    valueSchema: MetadataValueSchema,
+    value: MetadataValueSchema,
     description: "Import metadata",
   },
 } as const);

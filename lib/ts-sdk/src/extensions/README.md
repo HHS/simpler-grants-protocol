@@ -31,12 +31,12 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
 
 Here are some key concepts that are used to define custom fields and plugins that extend base schemas from the CommonGrants protocol.
 
-| Concept                | Description                                                                                                                                                                  |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Custom field**       | A key-value pair attached to a resource's `customFields` property. Each field has a `name`, `fieldType`, `value`, and optional `description`.                                |
-| **`CustomFieldSpec`**  | A TypeScript object that _describes_ a custom field: its `fieldType`, optional `valueSchema` (a Zod schema for the `value` property), and optional `name` and `description`. |
-| **`SchemaExtensions`** | A mapping of extensible model names (e.g. `"Opportunity"`) to records of `CustomFieldSpec` objects. This is the shape that `definePlugin()` and `withCustomFields()` accept. |
-| **`Plugin`**           | An object with `.extensions` (the raw `SchemaExtensions`) and `.schemas` (Zod schemas with typed `customFields` applied). Created by `definePlugin()`.                       |
+| Concept                | Description                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Custom field**       | A key-value pair attached to a resource's `customFields` property. Each field has a `name`, `fieldType`, `value`, and optional `description`.                                         |
+| **`CustomFieldSpec`**  | A TypeScript object that _describes_ a custom field: its `fieldType`, optional `value` (a Zod schema for validating the custom field's value), and optional `name` and `description`. |
+| **`SchemaExtensions`** | A mapping of extensible model names (e.g. `"Opportunity"`) to records of `CustomFieldSpec` objects. This is the shape that `definePlugin()` and `withCustomFields()` accept.          |
+| **`Plugin`**           | An object with `.extensions` (the raw `SchemaExtensions`) and `.schemas` (Zod schemas with typed `customFields` applied). Created by `definePlugin()`.                                |
 
 ## Extending base models with custom fields
 
@@ -61,7 +61,7 @@ const LegacyIdValueSchema = z.object({
 const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
   legacyId: {
     fieldType: "object",
-    valueSchema: LegacyIdValueSchema,
+    value: LegacyIdValueSchema,
     description: "Maps to the opportunity_id in the legacy system",
   },
   category: {
@@ -80,7 +80,7 @@ opportunity.customFields?.category?.value; // string
 **Key points:**
 
 - Pass `as const` to the specs object so TypeScript can infer literal `fieldType` values and preserve the specific keys.
-- If a `valueSchema` is provided, the `value` property is typed according to that schema. Otherwise, a default type is inferred from `fieldType` (e.g. `"string"` -> `string`, `"integer"` -> `number`).
+- If a `value` Zod schema is provided in the spec, the custom field's `value` property is typed according to that schema. Otherwise, a default type is inferred from `fieldType` (e.g. `"string"` -> `string`, `"integer"` -> `number`).
 - Unregistered custom fields still pass through validation but are typed as the base `CustomField` type (with `value: unknown`).
 
 ### Option 2: Build-time with plugins
@@ -95,7 +95,7 @@ const legacyPlugin = definePlugin({
     Opportunity: {
       legacyId: {
         fieldType: "object",
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
         description: "Maps to the opportunity_id in the legacy system",
       },
     },
@@ -142,7 +142,7 @@ const myPlugin = definePlugin({
     Opportunity: {
       legacyId: {
         fieldType: "object",
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
         description: "Maps to the opportunity_id in the legacy system",
       },
       category: {
@@ -196,7 +196,7 @@ const plugin = definePlugin({
     Opportunity: {
       programArea: {
         fieldType: "object",
-        valueSchema: ProgramAreaValueSchema,
+        value: ProgramAreaValueSchema,
         description: "The HHS program area for this opportunity",
       },
       cfda: {
@@ -315,7 +315,7 @@ mergeExtensions([a.extensions, b.extensions], { onConflict: "lastWins" });
 
 #### Export value schemas alongside your plugin
 
-When you define Zod schemas for complex `valueSchema` fields, export them as named exports from your package. Downstream consumers may need these schemas for use with utilities like `getCustomFieldValue()`:
+When you define Zod schemas for complex `value` fields, export them as named exports from your package. Downstream consumers may need these schemas for use with utilities like `getCustomFieldValue()`:
 
 ```typescript
 // index.ts of a plugin package
@@ -333,7 +333,7 @@ const plugin = definePlugin({
     Opportunity: {
       programArea: {
         fieldType: "object",
-        valueSchema: ProgramAreaValueSchema,
+        value: ProgramAreaValueSchema,
         description: "The HHS program area for this opportunity",
       },
     },
@@ -402,6 +402,6 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 | Export                               | Kind      | Description                                                                                                                    | Demonstrated in               |
 | ------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| [`CustomFieldSpec`](./types.ts)      | interface | Describes a single custom field: its `fieldType`, optional `valueSchema`, and optional `name`/`description`.                   | [Key concepts](#key-concepts) |
+| [`CustomFieldSpec`](./types.ts)      | interface | Describes a single custom field: its `fieldType`, optional `value`, and optional `name`/`description`.                         | [Key concepts](#key-concepts) |
 | [`SchemaExtensions`](./types.ts)     | type      | Maps extensible model names to records of `CustomFieldSpec` objects. Plugins only need to declare models they actually extend. | [Key concepts](#key-concepts) |
 | [`ExtensibleSchemaName`](./types.ts) | type      | Union of model names that support `customFields` extensions. Currently: `"Opportunity"`.                                       |                               |

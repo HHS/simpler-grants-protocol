@@ -61,7 +61,7 @@ describe("withCustomFields", () => {
       const ExtendedOppSchema = withCustomFields(OpportunityBaseSchema, {
         legacyId: {
           fieldType: CustomFieldType.object,
-          valueSchema: LegacyIdValueSchema,
+          value: LegacyIdValueSchema,
           description: "Maps to the opportunity_id in the legacy system",
         },
       } as const);
@@ -93,7 +93,7 @@ describe("withCustomFields", () => {
   // ############################################################################
 
   describe("default value schemas", () => {
-    it("should use default string schema when valueSchema not provided", () => {
+    it("should use default string schema when value not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         stringField: { fieldType: CustomFieldType.string },
       } as const);
@@ -113,7 +113,7 @@ describe("withCustomFields", () => {
       expect(result.customFields?.stringField?.value).toBe("hello");
     });
 
-    it("should use default number schema when valueSchema not provided", () => {
+    it("should use default number schema when value not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         numberField: { fieldType: CustomFieldType.number },
       } as const);
@@ -133,7 +133,7 @@ describe("withCustomFields", () => {
       expect(result.customFields?.numberField?.value).toBe(42.5);
     });
 
-    it("should use default integer schema when valueSchema not provided", () => {
+    it("should use default integer schema when value not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         integerField: { fieldType: CustomFieldType.integer },
       } as const);
@@ -168,7 +168,7 @@ describe("withCustomFields", () => {
       ).toThrow();
     });
 
-    it("should use default boolean schema when valueSchema not provided", () => {
+    it("should use default boolean schema when value not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         boolField: { fieldType: CustomFieldType.boolean },
       } as const);
@@ -188,7 +188,7 @@ describe("withCustomFields", () => {
       expect(result.customFields?.boolField?.value).toBe(true);
     });
 
-    it("should use default object schema when valueSchema not provided", () => {
+    it("should use default object schema when value not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         objectField: { fieldType: CustomFieldType.object },
       } as const);
@@ -211,7 +211,7 @@ describe("withCustomFields", () => {
       });
     });
 
-    it("should use default array schema when valueSchema not provided", () => {
+    it("should use default array schema when value not provided", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         arrayField: { fieldType: CustomFieldType.array },
       } as const);
@@ -237,11 +237,11 @@ describe("withCustomFields", () => {
   // ############################################################################
 
   describe("custom value schemas", () => {
-    it("should use provided valueSchema for validation", () => {
+    it("should use provided value for validation", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         legacyId: {
           fieldType: "object",
-          valueSchema: LegacyIdValueSchema,
+          value: LegacyIdValueSchema,
         },
       } as const);
 
@@ -281,7 +281,7 @@ describe("withCustomFields", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         tags: {
           fieldType: CustomFieldType.array,
-          valueSchema: TagsValueSchema,
+          value: TagsValueSchema,
         },
       } as const);
 
@@ -441,7 +441,7 @@ describe("withCustomFields", () => {
         priority: { fieldType: CustomFieldType.integer },
         metadata: {
           fieldType: CustomFieldType.object,
-          valueSchema: z.object({ version: z.number() }),
+          value: z.object({ version: z.number() }),
         },
       } as const);
 
@@ -478,7 +478,7 @@ describe("withCustomFields", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         legacyId: {
           fieldType: CustomFieldType.object,
-          valueSchema: LegacyIdValueSchema,
+          value: LegacyIdValueSchema,
         },
         category: { fieldType: CustomFieldType.string },
       } as const);

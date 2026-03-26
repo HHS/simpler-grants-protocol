@@ -46,7 +46,7 @@ export interface CustomFieldSpec {
   /** The JSON schema type for the field */
   fieldType: CustomFieldType;
   /** Optional Zod schema to validate the value property. Defaults based on fieldType */
-  valueSchema?: z.ZodTypeAny;
+  value?: z.ZodTypeAny;
   /** Optional description; used as the default for CustomField.description when present */
   description?: string;
 }

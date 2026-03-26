@@ -31,12 +31,12 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       legacyId: {
         fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
         description: "Maps to the opportunity_id in the legacy system",
       },
       tags: {
         fieldType: CustomFieldType.array,
-        valueSchema: TagsValueSchema,
+        value: TagsValueSchema,
         description: "Tags for categorizing the opportunity",
       },
       category: {
@@ -100,7 +100,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       legacyId: {
         fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
       },
     } as const);
 
@@ -125,7 +125,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       legacyId: {
         fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
       },
     } as const);
 
@@ -170,13 +170,13 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     expect(() => getCustomFieldValue(customFields, "legacyId", LegacyIdValueSchema)).toThrow();
   });
 
-  it("should work with default value schemas (no valueSchema provided)", () => {
+  it("should work with default value schemas (no value provided)", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       category: {
-        fieldType: CustomFieldType.string, // No valueSchema - uses default z.string()
+        fieldType: CustomFieldType.string, // No value - uses default z.string()
       },
       priority: {
-        fieldType: CustomFieldType.integer, // No valueSchema - uses default z.number().int()
+        fieldType: CustomFieldType.integer, // No value - uses default z.number().int()
       },
     } as const);
 
@@ -215,7 +215,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       metadata: {
         fieldType: CustomFieldType.object,
-        valueSchema: MetadataValueSchema,
+        value: MetadataValueSchema,
       },
     } as const);
 
@@ -248,7 +248,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       legacyId: {
         fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
       },
     } as const);
 
@@ -313,7 +313,7 @@ describe("plugin composition", () => {
       Opportunity: {
         legacyId: {
           fieldType: CustomFieldType.object,
-          valueSchema: LegacyIdValueSchema,
+          value: LegacyIdValueSchema,
           description: "Maps to the opportunity_id in the legacy system",
         },
       },

@@ -33,7 +33,7 @@ import type { CustomFieldSpec } from "./types";
  * @example
  * ```typescript
  * const Schema = withCustomFields(OpportunityBaseSchema, {
- *   legacyId: { fieldType: "object", valueSchema: ... }
+ *   legacyId: { fieldType: "object", value: ... }
  * } as const);
  *
  * type Opportunity = z.infer<typeof Schema>;
@@ -79,7 +79,7 @@ export type WithCustomFieldsResult<
  * const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
  *   legacyId: {
  *     fieldType: "object",
- *     valueSchema: LegacyIdValueSchema,
+ *     value: LegacyIdValueSchema,
  *     description: "Maps to the opportunity_id in the legacy system",
  *   },
  *   category: {
@@ -139,7 +139,7 @@ export function withCustomFields<
 
 /**
  * Default Zod schemas for each CustomFieldType.
- * Used when valueSchema is not provided in a CustomFieldSpec.
+ * Used when a value schema is not provided in a CustomFieldSpec.
  */
 const DEFAULT_VALUE_SCHEMAS: Record<CustomFieldType, z.ZodTypeAny> = {
   string: z.string(),
@@ -152,10 +152,10 @@ const DEFAULT_VALUE_SCHEMAS: Record<CustomFieldType, z.ZodTypeAny> = {
 
 /**
  * Gets the value schema for a custom field spec.
- * Returns the provided valueSchema or a default based on fieldType.
+ * Returns the provided value schema or a default based on fieldType.
  */
 function getValueSchema(spec: CustomFieldSpec): z.ZodTypeAny {
-  return spec.valueSchema ?? DEFAULT_VALUE_SCHEMAS[spec.fieldType];
+  return spec.value ?? DEFAULT_VALUE_SCHEMAS[spec.fieldType];
 }
 
 // ############################################################################
@@ -184,7 +184,7 @@ function getValueSchema(spec: CustomFieldSpec): z.ZodTypeAny {
 /**
  * Maps each CustomFieldType value to its corresponding default TypeScript type.
  *
- * This is used when a CustomFieldSpec doesn't provide a `valueSchema`. Instead
+ * This is used when a CustomFieldSpec doesn't provide a `value` schema. Instead
  * of using `z.unknown()`, we infer a more specific type based on the fieldType.
  *
  * Example:
@@ -208,23 +208,23 @@ type DefaultFieldTypeMap = {
  * Infers the TypeScript type for a custom field's `value` property.
  *
  * This conditional type works in two steps:
- * 1. If the spec provides a `valueSchema`, use `z.infer<>` to get its TypeScript type
+ * 1. If the spec provides a `value` schema, use `z.infer<>` to get its TypeScript type
  * 2. Otherwise, look up the default type from `DefaultFieldTypeMap` based on `fieldType`
  *
  * @example
  * ```typescript
- * // With valueSchema:
- * type T1 = InferValueType<{ fieldType: "object", valueSchema: z.object({ id: z.number() }) }>;
+ * // With value schema:
+ * type T1 = InferValueType<{ fieldType: "object", value: z.object({ id: z.number() }) }>;
  * // T1 = { id: number }
  *
- * // Without valueSchema (uses default):
+ * // Without value schema (uses default):
  * type T2 = InferValueType<{ fieldType: "string" }>;
  * // T2 = string
  * ```
  */
-/** Infers the value type from a spec's explicit valueSchema, if one is provided. */
-type InferFromValueSchema<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodTypeAny
-  ? z.infer<T["valueSchema"]>
+/** Infers the value type from a spec's explicit value schema, if one is provided. */
+type InferFromValueSchema<T extends CustomFieldSpec> = T["value"] extends z.ZodTypeAny
+  ? z.infer<T["value"]>
   : never;
 
 /** Falls back to DefaultFieldTypeMap based on fieldType. */
@@ -233,7 +233,7 @@ type DefaultValueType<T extends CustomFieldSpec> = T["fieldType"] extends keyof 
   : unknown;
 
 /** Composes the two helpers: use explicit schema if available, else default. */
-type InferValueType<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodTypeAny
+type InferValueType<T extends CustomFieldSpec> = T["value"] extends z.ZodTypeAny
   ? InferFromValueSchema<T>
   : DefaultValueType<T>;
 
@@ -244,7 +244,7 @@ type InferValueType<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodT
  * {
  *   name: string;
  *   fieldType: "string" | "number" | ... (literal type from spec);
- *   value: <inferred from valueSchema or DefaultFieldTypeMap>;
+ *   value: <inferred from value schema or DefaultFieldTypeMap>;
  *   schema?: string | null;
  *   description?: string | null;
  * }
@@ -253,7 +253,7 @@ type InferValueType<T extends CustomFieldSpec> = T["valueSchema"] extends z.ZodT
  * ```typescript
  * type Field = TypedCustomField<{
  *   fieldType: "object",
- *   valueSchema: z.object({ system: z.string(), id: z.number() })
+ *   value: z.object({ system: z.string(), id: z.number() })
  * }>;
  * // Field = {
  * //   name: string;
@@ -290,7 +290,7 @@ type TypedCustomField<T extends CustomFieldSpec> = {
  * @example
  * ```typescript
  * type Fields = TypedCustomFields<{
- *   legacyId: { fieldType: "object", valueSchema: ... },
+ *   legacyId: { fieldType: "object", value: ... },
  *   category: { fieldType: "string" }
  * }>;
  * // Fields = {

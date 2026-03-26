@@ -16,7 +16,7 @@ import { Client, Auth } from "../src/client";
 const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
   legacyId: {
     fieldType: CustomFieldType.integer,
-    valueSchema: z.number().int(),
+    value: z.number().int(),
     description: "Legacy system opportunity ID",
   },
 } as const);
