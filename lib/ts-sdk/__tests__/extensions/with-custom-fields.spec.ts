@@ -434,6 +434,10 @@ describe("withCustomFields", () => {
     });
   });
 
+  // ############################################################################
+  // Multiple custom fields
+  // ############################################################################
+
   describe("multiple custom fields", () => {
     it("should handle multiple custom field specs", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
@@ -472,6 +476,144 @@ describe("withCustomFields", () => {
       expect(result.customFields?.metadata?.value.version).toBe(2);
     });
   });
+
+  // ############################################################################
+  // Spec name and description defaults
+  // ############################################################################
+
+  describe("spec name and description defaults", () => {
+    it("should use the record key as the default name when spec.name is not provided", () => {
+      const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
+        category: { fieldType: CustomFieldType.string },
+      } as const);
+
+      const result = ExtendedSchema.parse({
+        id: "123",
+        name: "Test",
+        customFields: {
+          category: {
+            fieldType: "string",
+            value: "grants",
+          },
+        },
+      });
+
+      expect(result.customFields?.category?.name).toBe("category");
+    });
+
+    it("should use spec.name as the default name when provided", () => {
+      const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
+        category: {
+          fieldType: CustomFieldType.string,
+          name: "Grant Category",
+        },
+      } as const);
+
+      const result = ExtendedSchema.parse({
+        id: "123",
+        name: "Test",
+        customFields: {
+          category: {
+            fieldType: "string",
+            value: "grants",
+          },
+        },
+      });
+
+      expect(result.customFields?.category?.name).toBe("Grant Category");
+    });
+
+    it("should allow input data to override the default name", () => {
+      const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
+        category: {
+          fieldType: CustomFieldType.string,
+          name: "Grant Category",
+        },
+      } as const);
+
+      const result = ExtendedSchema.parse({
+        id: "123",
+        name: "Test",
+        customFields: {
+          category: {
+            name: "Custom Name Override",
+            fieldType: "string",
+            value: "grants",
+          },
+        },
+      });
+
+      expect(result.customFields?.category?.name).toBe("Custom Name Override");
+    });
+
+    it("should leave description as nullish when spec.description is not provided", () => {
+      const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
+        category: { fieldType: CustomFieldType.string },
+      } as const);
+
+      const result = ExtendedSchema.parse({
+        id: "123",
+        name: "Test",
+        customFields: {
+          category: {
+            fieldType: "string",
+            value: "grants",
+          },
+        },
+      });
+
+      expect(result.customFields?.category?.description).toBeUndefined();
+    });
+
+    it("should use spec.description as the default when provided", () => {
+      const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
+        category: {
+          fieldType: CustomFieldType.string,
+          description: "Grant category",
+        },
+      } as const);
+
+      const result = ExtendedSchema.parse({
+        id: "123",
+        name: "Test",
+        customFields: {
+          category: {
+            fieldType: "string",
+            value: "grants",
+          },
+        },
+      });
+
+      expect(result.customFields?.category?.description).toBe("Grant category");
+    });
+
+    it("should allow input data to override the default description", () => {
+      const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
+        category: {
+          fieldType: CustomFieldType.string,
+          description: "Grant category",
+        },
+      } as const);
+
+      const result = ExtendedSchema.parse({
+        id: "123",
+        name: "Test",
+        customFields: {
+          category: {
+            fieldType: "string",
+            value: "grants",
+            description: "Custom description override",
+          },
+        },
+      });
+
+      expect(result.customFields?.category?.description).toBe("Custom description override");
+    });
+  });
+
+  // ############################################################################
+  // Using CustomFieldType constant
+  // ############################################################################
 
   describe("using CustomFieldType constant", () => {
     it("should work with CustomFieldType enum constant", () => {
