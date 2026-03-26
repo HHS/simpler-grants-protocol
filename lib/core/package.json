@@ -56,20 +56,20 @@
     "@typespec/compiler": "catalog:",
     "@typespec/http": "catalog:",
     "@typespec/json-schema": "catalog:",
-    "@typespec/openapi3": "catalog:",
     "@typespec/openapi": "catalog:",
+    "@typespec/openapi3": "catalog:",
     "@typespec/rest": "catalog:",
     "@typespec/versioning": "catalog:"
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^9.39.4",
     "@types/node": "catalog:",
-    "eslint": "^9.18.0",
-    "globals": "^15.14.0",
-    "prettier": "^3.4.2",
-    "rimraf": "^5.0.5",
+    "eslint": "^9.39.4",
+    "globals": "^15.15.0",
+    "prettier": "^3.8.1",
+    "rimraf": "^5.0.10",
     "source-map-support": "^0.5.21",
-    "typescript": "^5.3.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.2"
   }
 }
