@@ -133,9 +133,10 @@ def _annotation_for_spec(spec: CustomFieldSpec, resolved_type: CustomFieldType) 
 
     - ``None``: looks up a default annotation from ``FIELD_TYPE_DEFAULT_ANNOTATION``
       (e.g. ``field_type="array"`` → ``"list[str]"``).
-    - A plain ``type`` object (e.g. ``int``, ``MyModel``): uses ``__name__`` if the
-      type is a builtin or an SDK type; falls back to ``"Any"`` for third-party types
-      that would not be importable in the generated file.
+    - A plain ``type`` object (e.g. ``int``, ``MyModel``): uses ``__name__``. Builtin
+      and SDK types are already importable in the generated file; external types (e.g.
+      Pydantic models from ``cg_config.py`` or third-party packages) will have their
+      import emitted by :func:`_collect_extra_imports`.
     - A generic alias or complex type (e.g. ``list[str]``, ``Optional[int]``): converts
       to string, strips the ``typing.`` prefix added by older Python versions, and unwraps
       ``<class 'str'>``-style repr strings produced by ``str()`` in some contexts.
@@ -146,20 +147,16 @@ def _annotation_for_spec(spec: CustomFieldSpec, resolved_type: CustomFieldType) 
 
     Returns:
         A string suitable for use as a type annotation in generated Python source,
-        e.g. ``"str"``, ``"list[str]"``, ``"dict[str, Any]"``, or ``"Any"``.
+        e.g. ``"str"``, ``"list[str]"``, ``"dict[str, Any]"``, or ``"MyModel"``.
     """
     if spec.value is None:
         return FIELD_TYPE_DEFAULT_ANNOTATION[resolved_type]
 
     value = spec.value
     if isinstance(value, type):
-        # Builtin types (str, int, list, ...) and SDK types can be referenced by name.
-        # Anything else (third-party types) falls back to Any to stay importable.
-        if value.__module__ == "builtins":
-            return value.__name__
-        if value.__module__.startswith("common_grants_sdk"):
-            return value.__name__
-        return "Any"
+        # Always use the bare name; _collect_extra_imports handles the import
+        # statement for any type that isn't already available in the generated file.
+        return value.__name__
 
     # spec.value is a generic alias or other non-type (e.g. list[str], Optional[int]).
     # Strip the "typing." prefix so the annotation is valid in generated source that
@@ -174,6 +171,50 @@ def _annotation_for_spec(spec: CustomFieldSpec, resolved_type: CustomFieldType) 
     }:
         return rendered.split("'")[1]
     return rendered or "Any"
+
+
+def _collect_extra_imports(extensions: SchemaExtensions) -> list[str]:
+    """Collect import lines needed for external types used as ``spec.value``.
+
+    Walks all specs and returns one ``import`` line per distinct external type.
+    Types from ``builtins`` or ``common_grants_sdk`` are skipped because they
+    are already available in the generated file without an explicit import.
+
+    Types loaded from a ``cg_config.py`` module (identified by the synthetic
+    ``cg_plugin_config_*`` module name that :func:`_load_config` assigns) are
+    imported via a relative ``from ..cg_config import`` statement.  All other
+    types are imported using their ``__module__`` path directly.
+
+    Args:
+        extensions: The merged ``SchemaExtensions`` from the plugin config.
+
+    Returns:
+        A deduplicated list of import-statement strings in the order they were
+        first encountered, ready to be inserted into the generated source file.
+    """
+    seen: set[tuple[str, str]] = set()
+    imports: list[str] = []
+
+    for fields in cast(dict[str, dict[str, CustomFieldSpec]], extensions).values():
+        for spec in fields.values():
+            if not isinstance(spec.value, type):
+                continue
+            module = spec.value.__module__
+            name = spec.value.__name__
+            if module == "builtins" or module.startswith("common_grants_sdk"):
+                continue
+            key = (module, name)
+            if key in seen:
+                continue
+            seen.add(key)
+            if module.startswith("cg_plugin_config_"):
+                # Type was defined in cg_config.py, loaded via importlib with a
+                # synthetic module name — import it relative to the generated/ dir.
+                imports.append(f"from ..cg_config import {name}")
+            else:
+                imports.append(f"from {module} import {name}")
+
+    return imports
 
 
 def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
@@ -267,7 +308,7 @@ def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
             [
                 f"class {model_name_with_extensions}({base_class}):",
                 "    model_config = ConfigDict(populate_by_name=True)",
-                f"    custom_fields: Optional[{custom_fields_model_name}] = Field(",
+                f"    custom_fields: Optional[{custom_fields_model_name}] = Field(  # type: ignore[assignment]",
                 "        default=None,",
                 '        alias="customFields",',
                 "    )",
@@ -299,9 +340,13 @@ def _render_schemas_py(extensions: SchemaExtensions) -> str:
         [f"        self.{name} = {name}" for name in model_names] or ["        pass"]
     )
     all_exports = ", ".join([f'"{name}"' for name in model_names] + ['"schemas"'])
+    extra_imports = _collect_extra_imports(extensions)
+    extra_import_lines = ["", *extra_imports] if extra_imports else []
 
     return "\n".join(
         [
+            "# This file is auto-generated. Do not edit it manually — it will be overwritten",
+            "# the next time `python -m common_grants_sdk.extensions.generate` is run.",
             "from __future__ import annotations",
             "",
             "from typing import Any, Optional",
@@ -311,6 +356,7 @@ def _render_schemas_py(extensions: SchemaExtensions) -> str:
             "from common_grants_sdk.schemas.pydantic.base import CommonGrantsBaseModel",
             "from common_grants_sdk.schemas.pydantic.fields import CustomField, CustomFieldType",
             "from common_grants_sdk.schemas.pydantic.models import OpportunityBase",
+            *extra_import_lines,
             "",
             blocks,
             "",
@@ -337,6 +383,8 @@ def _render_generated_init_py() -> str:
     """
     return "\n".join(
         [
+            "# This file is auto-generated. Do not edit it manually — it will be overwritten",
+            "# the next time `python -m common_grants_sdk.extensions.generate` is run.",
             "from .schemas import schemas",
             "",
             '__all__ = ["schemas"]',
@@ -361,6 +409,8 @@ def _render_plugin_init_py(plugin_variable_name: str) -> str:
     """
     return "\n".join(
         [
+            "# This file is auto-generated. Do not edit it manually — it will be overwritten",
+            "# the next time `python -m common_grants_sdk.extensions.generate` is run.",
             "from __future__ import annotations",
             "",
             "from common_grants_sdk.extensions import Plugin",

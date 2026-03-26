@@ -59,6 +59,11 @@ api_response = {
 
 opp = opportunity_extensions.schemas.Opportunity.model_validate(api_response)
 
+assert opp.custom_fields is not None
+assert opp.custom_fields.program_area is not None
+assert opp.custom_fields.legacy_grant_id is not None
+assert opp.custom_fields.eligibility_types is not None
+assert opp.custom_fields.award_ceiling is not None
 
 print(f"Title:            {opp.title}")
 print(f"Status:           {opp.status.value}")

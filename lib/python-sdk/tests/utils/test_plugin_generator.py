@@ -144,6 +144,94 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
         sys.path.remove(str(tmp_path))
 
 
+def test_generate_emits_import_for_pydantic_model_in_cg_config(tmp_path: Path):
+    """spec.value set to a Pydantic model defined in cg_config.py should produce
+    a ``from ..cg_config import <Model>`` line in the generated schemas.py."""
+    plugin_dir = tmp_path / "my_plugin"
+    plugin_dir.mkdir()
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from pydantic import BaseModel",
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions import CustomFieldSpec",
+                "",
+                "class AgentInfo(BaseModel):",
+                "    name: str",
+                "    email: str",
+                "",
+                "config = define_plugin({",
+                '    "Opportunity": {',
+                '        "point_of_contact": CustomFieldSpec(',
+                '            field_type="object",',
+                "            value=AgentInfo,",
+                "        ),",
+                "    },",
+                "})",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    env = _env_with_sdk_pythonpath()
+    run = subprocess.run(
+        [sys.executable, "-m", "common_grants_sdk.extensions.generate"],
+        cwd=plugin_dir,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert run.returncode == 0, run.stderr
+
+    schemas_src = (plugin_dir / "generated" / "schemas.py").read_text(encoding="utf-8")
+    assert "from ..cg_config import AgentInfo" in schemas_src
+    assert "value: Optional[AgentInfo]" in schemas_src
+
+
+def test_generate_emits_import_for_external_module_type(tmp_path: Path):
+    """spec.value set to a type from a real importable module should produce
+    a ``from <module> import <Type>`` line in the generated schemas.py."""
+    plugin_dir = tmp_path / "my_plugin"
+    plugin_dir.mkdir()
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from datetime import datetime",
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions import CustomFieldSpec",
+                "",
+                "config = define_plugin({",
+                '    "Opportunity": {',
+                '        "deadline": CustomFieldSpec(',
+                '            field_type="string",',
+                "            value=datetime,",
+                "        ),",
+                "    },",
+                "})",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    env = _env_with_sdk_pythonpath()
+    run = subprocess.run(
+        [sys.executable, "-m", "common_grants_sdk.extensions.generate"],
+        cwd=plugin_dir,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert run.returncode == 0, run.stderr
+
+    schemas_src = (plugin_dir / "generated" / "schemas.py").read_text(encoding="utf-8")
+    assert "from datetime import datetime" in schemas_src
+    assert "value: Optional[datetime]" in schemas_src
+
+
 @pytest.mark.skipif(shutil.which("pyright") is None, reason="pyright is not installed")
 def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
     plugins_dir = tmp_path / "plugins"

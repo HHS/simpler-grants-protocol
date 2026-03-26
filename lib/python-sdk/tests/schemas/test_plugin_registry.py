@@ -23,7 +23,7 @@ class _Schemas:
 
 def _make_plugin(
     field_specs: dict[str, CustomFieldSpec], model_name: str = "Opportunity"
-) -> Plugin:
+) -> "Plugin[_Schemas]":
     """Build a Plugin whose schemas.Opportunity is produced by with_custom_fields()."""
     extended = OpportunityBase.with_custom_fields(
         custom_fields=field_specs,
@@ -33,7 +33,7 @@ def _make_plugin(
     return Plugin(extensions=extensions, schemas=_Schemas(Opportunity=extended))
 
 
-def _make_plugin_without_opportunity() -> Plugin:
+def _make_plugin_without_opportunity() -> "Plugin[_Schemas]":
     """Build a Plugin that has no Opportunity schema (only Application)."""
     extensions: SchemaExtensions = {}
     return Plugin(extensions=extensions, schemas=_Schemas())
@@ -45,7 +45,7 @@ def _make_plugin_without_opportunity() -> Plugin:
 
 
 @pytest.fixture
-def simple_plugin() -> Plugin:
+def simple_plugin() -> "Plugin[_Schemas]":
     return _make_plugin(
         {
             "program_area": CustomFieldSpec(
