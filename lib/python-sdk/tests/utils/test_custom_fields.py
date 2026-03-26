@@ -408,3 +408,66 @@ class TestGetCustomFieldValue:
 
         with pytest.raises(ValueError):
             opp.get_custom_field_value("legacyId", BadIdValue)
+
+
+class TestCustomFieldSpecEmptyStrings:
+    """Tests for empty string name/description handling in CustomFieldSpec"""
+
+    def test_empty_name_falls_back_to_field_key(self):
+        """Test that empty string name in CustomFieldSpec falls back to the field key
+
+        Because create_custom_field_schema uses `field.name or key`, an empty
+        string name is falsy and the key is used as the default instead.
+        """
+        fields = {
+            "legacyId": CustomFieldSpec(
+                field_type=CustomFieldType.INTEGER,
+                value=int,
+                name="",
+            ),
+        }
+        Opportunity = OpportunityBase.with_custom_fields(
+            custom_fields=fields, model_name="Opportunity"
+        )
+        opp = Opportunity.model_validate(
+            {
+                **BASE_OPP,
+                "customFields": {
+                    "legacyId": {
+                        "fieldType": "integer",
+                        "value": 1,
+                    },
+                },
+            }
+        )
+        assert opp.custom_fields.legacy_id.name == "legacyId"
+
+    def test_empty_description_becomes_none(self):
+        """Test that empty string description in CustomFieldSpec becomes None
+
+        Because create_custom_field_schema uses `field.description or None`, an
+        empty string description is falsy and None is used as the default instead.
+        """
+        fields = {
+            "legacyId": CustomFieldSpec(
+                field_type=CustomFieldType.INTEGER,
+                value=int,
+                description="",
+            ),
+        }
+        Opportunity = OpportunityBase.with_custom_fields(
+            custom_fields=fields, model_name="Opportunity"
+        )
+        opp = Opportunity.model_validate(
+            {
+                **BASE_OPP,
+                "customFields": {
+                    "legacyId": {
+                        "name": "legacyId",
+                        "fieldType": "integer",
+                        "value": 1,
+                    },
+                },
+            }
+        )
+        assert opp.custom_fields.legacy_id.description is None
