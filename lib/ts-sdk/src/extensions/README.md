@@ -15,12 +15,20 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
 - [Extending base models with custom fields](#extending-base-models-with-custom-fields)
   - [Option 1: Ad hoc with `withCustomFields()`](#option-1-ad-hoc-with-withcustomfields)
   - [Option 2: Build-time with plugins](#option-2-build-time-with-plugins)
+- [Extracting custom field values](#extracting-custom-field-values)
+  - [Direct dot notation](#direct-dot-notation)
+  - [Using `getCustomFieldValue()`](#using-getcustomfieldvalue)
 - [Plugins](#plugins)
   - [What is a plugin?](#what-is-a-plugin)
   - [Defining a plugin](#defining-a-plugin)
   - [Publishing a plugin](#publishing-a-plugin)
   - [Combining plugins](#combining-plugins)
-  - [Best practices](#best-practices)
+- [Using plugins with the API client](#using-plugins-with-the-api-client)
+- [Best practices](#best-practices)
+  - [Export value schemas alongside your plugin](#export-value-schemas-alongside-your-plugin)
+  - [Use `peerDependencies` for `@common-grants/sdk`](#use-peerdependencies-for-common-grantssdk)
+  - [Keep plugins focused](#keep-plugins-focused)
+  - [Avoid `"firstWins"` / `"lastWins"` in published plugins](#avoid-firstwins--lastwins-in-published-plugins)
 - [API reference](#api-reference)
   - [Plugin creation](#plugin-creation)
   - [Schema utilities](#schema-utilities)
@@ -108,6 +116,54 @@ opportunity.customFields?.legacyId?.value.id; // number
 ```
 
 See the [Plugins](#plugins) section below for full details on defining, composing, and publishing plugins.
+
+## Extracting custom field values
+
+There are two ways to access custom field values: direct dot notation and the `getCustomFieldValue()` helper.
+
+### Direct dot notation
+
+When data has been parsed through an extended schema (via `withCustomFields()` or a plugin), custom field values are fully typed and can be accessed directly:
+
+```typescript
+const opp = OpportunitySchema.parse(data);
+
+// Typed access — no helper needed
+opp.customFields?.legacyId?.value.id; // number
+opp.customFields?.category?.value; // string
+```
+
+This is the simplest approach when you've already validated the data through the extended schema.
+
+### Using `getCustomFieldValue()`
+
+Use `getCustomFieldValue()` when you need to validate a custom field value against a Zod schema at runtime. This is useful in three main situations:
+
+1. **Unregistered fields**: you didn't use `withCustomFields()` or a plugin to register a custom field, and want to validate its value at runtime.
+2. **External data**: the data came from an external source and may not have been parsed through the extended schema.
+3. **Programmatic access**: you need to access fields by variable name, such as in a loop.
+
+The helper returns `undefined` if the key is absent (no `try`/`catch` needed) and throws a `ZodError` if the value is present but doesn't match the schema.
+
+```typescript
+import { getCustomFieldValue } from "@common-grants/sdk/extensions";
+
+const opp = OpportunitySchema.parse(data);
+
+// Returns { system: string; id: number } | undefined
+const legacyId = getCustomFieldValue(opp, "legacyId", LegacyIdValueSchema);
+if (legacyId) {
+  console.log(legacyId.id); // typed as number
+}
+
+// Returns string | undefined
+const category = getCustomFieldValue(opp, "category", z.string());
+
+// Returns undefined — no error thrown
+const missing = getCustomFieldValue(opp, "nonexistent", z.string());
+```
+
+`getCustomFieldValue()` works with both ad hoc (unregistered) and plugin-based (registered) custom fields.
 
 ## Plugins
 
@@ -311,9 +367,56 @@ mergeExtensions([a.extensions, b.extensions], { onConflict: "lastWins" });
 > [!WARNING]
 > When using `"firstWins"` or `"lastWins"`, the return type falls back to the base `SchemaExtensions` type because conflict resolution makes static typing unreliable for overlapping field names. The default `"error"` strategy preserves full type inference via intersection types.
 
-### Best practices
+## Using plugins with the API client
 
-#### Export value schemas alongside your plugin
+Pass a plugin's extended schema to the API client via the `schema` option. The client uses it to parse API responses into fully typed objects:
+
+```typescript
+import { Client, Auth } from "@common-grants/sdk/client";
+import { definePlugin } from "@common-grants/sdk/extensions";
+
+const myPlugin = definePlugin({
+  extensions: {
+    Opportunity: {
+      legacyId: { fieldType: "integer", description: "Legacy system ID" },
+      category: { fieldType: "string", description: "Grant category" },
+    },
+  },
+} as const);
+
+const client = new Client({
+  baseUrl: "https://api.example.gov",
+  auth: Auth.apiKey("your-api-key"),
+});
+
+// Get a single opportunity with typed custom fields
+const opp = await client.opportunities.get(oppId, {
+  schema: myPlugin.schemas.Opportunity,
+});
+opp.customFields?.legacyId?.value; // typed as number
+opp.customFields?.category?.value; // typed as string
+
+// List with the same schema
+const response = await client.opportunities.list({
+  schema: myPlugin.schemas.Opportunity,
+});
+for (const opp of response.items) {
+  console.log(opp.customFields?.category?.value);
+}
+
+// Search with the same schema
+const results = await client.opportunities.search({
+  query: "health",
+  statuses: ["open"],
+  schema: myPlugin.schemas.Opportunity,
+});
+```
+
+The `schema` option is accepted by `get()`, `list()`, and `search()`. When omitted, the client falls back to `OpportunityBaseSchema` (with untyped `customFields`).
+
+## Best practices
+
+### Export value schemas alongside your plugin
 
 When you define Zod schemas for complex `value` fields, export them as named exports from your package. Downstream consumers may need these schemas for use with utilities like `getCustomFieldValue()`:
 
@@ -356,15 +459,15 @@ const area = getCustomFieldValue(opp, "programArea", ProgramAreaValueSchema);
 area?.code; // string
 ```
 
-#### Use `peerDependencies` for `@common-grants/sdk`
+### Use `peerDependencies` for `@common-grants/sdk`
 
 Declare `@common-grants/sdk` as a `peerDependency` in your plugin's `package.json` rather than a direct `dependency`. This ensures that consumers who install multiple plugins all share a single copy of the SDK, avoiding version conflicts and duplicate type definitions. See [Publishing a plugin](#publishing-a-plugin) for a full `package.json` example.
 
-#### Keep plugins focused
+### Keep plugins focused
 
 A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, use `mergeExtensions()` to combine separate plugins rather than bundling everything into one.
 
-#### Avoid `"firstWins"` / `"lastWins"` in published plugins
+### Avoid `"firstWins"` / `"lastWins"` in published plugins
 
 When calling `mergeExtensions()` with `"firstWins"` or `"lastWins"`, the return type widens to `SchemaExtensions`, losing specific field-level type inference. This is fine for local or ad hoc usage, but if you publish a package that uses one of these strategies internally, the widened type propagates to your consumers. They'll see `SchemaExtensions` instead of the precise field types, with no indication of why.
 
@@ -388,7 +491,7 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 | ------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | [`withCustomFields()`](./with-custom-fields.ts)        | function | Extends a single Zod object schema with typed custom fields. Unregistered fields pass through but are typed as the base `CustomField`.                         | [Ad hoc with `withCustomFields()`](#option-1-ad-hoc-with-withcustomfields) |
 | [`WithCustomFieldsResult`](./with-custom-fields.ts)    | type     | The return type of `withCustomFields()`. A Zod object schema where `customFields` is replaced with a typed version.                                            |                                                                            |
-| [`getCustomFieldValue()`](./get-custom-field-value.ts) | function | Safely extracts and parses a custom field value from an `ExtensibleObject`. Returns the parsed value, `undefined` if missing, or throws `ZodError` if invalid. | [Export value schemas](#export-value-schemas-alongside-your-plugin)        |
+| [`getCustomFieldValue()`](./get-custom-field-value.ts) | function | Safely extracts and parses a custom field value from an `ExtensibleObject`. Returns the parsed value, `undefined` if missing, or throws `ZodError` if invalid. | [Extracting custom field values](#extracting-custom-field-values)          |
 
 ### Merging and composition
 
