@@ -434,7 +434,7 @@ class TestCustomFieldSpecEmptyStrings:
                 **BASE_OPP,
                 "customFields": {
                     "legacyId": {
-                        "fieldType": "integer",
+                        "fieldType": CustomFieldType.INTEGER,
                         "value": 1,
                     },
                 },
@@ -464,7 +464,7 @@ class TestCustomFieldSpecEmptyStrings:
                 "customFields": {
                     "legacyId": {
                         "name": "legacyId",
-                        "fieldType": "integer",
+                        "fieldType": CustomFieldType.INTEGER,
                         "value": 1,
                     },
                 },
