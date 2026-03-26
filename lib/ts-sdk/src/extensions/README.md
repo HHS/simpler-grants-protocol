@@ -352,7 +352,7 @@ import { getCustomFieldValue } from "@common-grants/sdk/extensions";
 const opp = hhs.schemas.Opportunity.parse(data);
 
 // Extract the value with full type safety using the exported schema
-const area = getCustomFieldValue(opp.customFields, "programArea", ProgramAreaValueSchema);
+const area = getCustomFieldValue(opp, "programArea", ProgramAreaValueSchema);
 area?.code; // string
 ```
 
@@ -384,11 +384,11 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 ### Schema utilities
 
-| Export                                                 | Kind     | Description                                                                                                                            | Demonstrated in                                                            |
-| ------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [`withCustomFields()`](./with-custom-fields.ts)        | function | Extends a single Zod object schema with typed custom fields. Unregistered fields pass through but are typed as the base `CustomField`. | [Ad hoc with `withCustomFields()`](#option-1-ad-hoc-with-withcustomfields) |
-| [`WithCustomFieldsResult`](./with-custom-fields.ts)    | type     | The return type of `withCustomFields()`. A Zod object schema where `customFields` is replaced with a typed version.                    |                                                                            |
-| [`getCustomFieldValue()`](./get-custom-field-value.ts) | function | Safely extracts and parses a custom field value. Returns the parsed value, `undefined` if missing, or throws `ZodError` if invalid.    | [Export value schemas](#export-value-schemas-alongside-your-plugin)        |
+| Export                                                 | Kind     | Description                                                                                                                                                    | Demonstrated in                                                            |
+| ------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [`withCustomFields()`](./with-custom-fields.ts)        | function | Extends a single Zod object schema with typed custom fields. Unregistered fields pass through but are typed as the base `CustomField`.                         | [Ad hoc with `withCustomFields()`](#option-1-ad-hoc-with-withcustomfields) |
+| [`WithCustomFieldsResult`](./with-custom-fields.ts)    | type     | The return type of `withCustomFields()`. A Zod object schema where `customFields` is replaced with a typed version.                                            |                                                                            |
+| [`getCustomFieldValue()`](./get-custom-field-value.ts) | function | Safely extracts and parses a custom field value from an `ExtensibleObject`. Returns the parsed value, `undefined` if missing, or throws `ZodError` if invalid. | [Export value schemas](#export-value-schemas-alongside-your-plugin)        |
 
 ### Merging and composition
 
@@ -405,3 +405,5 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 | [`CustomFieldSpec`](./types.ts)      | interface | Describes a single custom field: its `fieldType`, optional `value`, and optional `name`/`description`.                         | [Key concepts](#key-concepts) |
 | [`SchemaExtensions`](./types.ts)     | type      | Maps extensible model names to records of `CustomFieldSpec` objects. Plugins only need to declare models they actually extend. | [Key concepts](#key-concepts) |
 | [`ExtensibleSchemaName`](./types.ts) | type      | Union of model names that support `customFields` extensions. Currently: `"Opportunity"`.                                       |                               |
+| [`HasCustomFields`](./types.ts)      | type      | A Zod object schema whose shape includes a `customFields` property. Constrains `withCustomFields()` inputs at compile time.    |                               |
+| [`ExtensibleObject`](./types.ts)     | interface | An object with an optional `customFields` property. Constrains `getCustomFieldValue()` inputs at compile time.                 |                               |

@@ -10,7 +10,7 @@
 import { z } from "zod";
 import type { CustomField, CustomFieldType } from "../types";
 import { CustomFieldSchema } from "../schemas";
-import type { CustomFieldSpec } from "./types";
+import type { CustomFieldSpec, HasCustomFields } from "./types";
 
 // ############################################################################
 // Public type - WithCustomFieldsResult
@@ -41,7 +41,7 @@ import type { CustomFieldSpec } from "./types";
  * ```
  */
 export type WithCustomFieldsResult<
-  TSchema extends z.AnyZodObject,
+  TSchema extends HasCustomFields,
   TSpecs extends Record<string, CustomFieldSpec>,
 > = z.ZodObject<
   Omit<TSchema["shape"], "customFields"> & {
@@ -94,7 +94,7 @@ export type WithCustomFieldsResult<
  * ```
  */
 export function withCustomFields<
-  TSchema extends z.AnyZodObject,
+  TSchema extends HasCustomFields,
   const TSpecs extends Record<string, CustomFieldSpec>,
 >(baseSchema: TSchema, specs: TSpecs): WithCustomFieldsResult<TSchema, TSpecs> {
   // Validate that the base schema has a customFields property

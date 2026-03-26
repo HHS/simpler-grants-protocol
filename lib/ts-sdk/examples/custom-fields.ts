@@ -4,7 +4,8 @@
  * This example shows how to:
  * 1. Extend a base schema with typed custom fields using withCustomFields()
  * 2. Parse data with custom fields
- * 3. Extract and use typed custom field values with getCustomFieldValue()
+ * 3. Access typed custom field values via dot notation
+ * 4. Extract and validate custom field values with getCustomFieldValue()
  *
  * Run with: pnpm example:custom-fields
  */
@@ -101,48 +102,46 @@ function main() {
   const opportunity = OpportunitySchema.parse(opportunityData);
   console.log(`   ✓ Parsed: ${opportunity.title}\n`);
 
-  // Step 2: Extract typed custom field values
-  console.log("2. Extracting typed custom field values:\n");
+  // Step 2: Access typed values directly via dot notation
+  // When you've already parsed data through the extended schema, custom field
+  // values are fully typed and can be accessed directly.
+  console.log("2. Direct access via dot notation:\n");
 
-  // Extract legacyId - typed as { system: string; id: number } | undefined
-  const legacyId = getCustomFieldValue(opportunity.customFields, "legacyId", LegacyIdValueSchema);
+  const legacyId = opportunity.customFields?.legacyId?.value;
   if (legacyId) {
-    console.log(`   legacyId:`);
-    console.log(`     System: ${legacyId.system}`);
-    console.log(`     ID: ${legacyId.id} (typed as number)`);
+    console.log(`   legacyId.system: ${legacyId.system} (typed as string)`);
+    console.log(`   legacyId.id:     ${legacyId.id} (typed as number)`);
   }
 
-  // Extract tags - typed as string[] | undefined
-  const tags = getCustomFieldValue(opportunity.customFields, "tags", TagsValueSchema);
+  const tags = opportunity.customFields?.tags?.value;
   if (tags) {
     console.log(`   tags: ${tags.join(", ")} (typed as string[])`);
   }
 
-  // Extract category - typed as string | undefined
-  const category = getCustomFieldValue(opportunity.customFields, "category", z.string());
-  if (category) {
-    console.log(`   category: ${category} (typed as string)`);
-  }
+  const category = opportunity.customFields?.category?.value;
+  console.log(`   category: ${category} (typed as string)`);
 
-  // Extract metadata - typed as MetadataValueSchema | undefined
-  const metadata = getCustomFieldValue(opportunity.customFields, "metadata", MetadataValueSchema);
+  const metadata = opportunity.customFields?.metadata?.value;
   if (metadata) {
-    console.log(`   metadata:`);
-    console.log(`     Version: ${metadata.version}`);
-    console.log(`     Source: ${metadata.source}`);
-    console.log(`     Imported: ${metadata.importedAt}`);
+    console.log(`   metadata.version:    ${metadata.version}`);
+    console.log(`   metadata.source:     ${metadata.source}`);
+    console.log(`   metadata.importedAt: ${metadata.importedAt}`);
   }
 
-  // Step 3: Demonstrate type safety
-  console.log("\n3. Type safety demonstration:");
-  console.log("   ✓ TypeScript knows legacyId.id is a number");
-  console.log("   ✓ TypeScript knows tags is a string[]");
-  console.log("   ✓ TypeScript knows category is a string");
-  console.log("   ✓ TypeScript knows metadata.version is a number");
+  // Step 3: Extract values with getCustomFieldValue()
+  // Use this when you need to validate a value against a schema at runtime,
+  // for example when working with data from external sources that may not
+  // have been parsed through the extended schema.
+  console.log("\n3. Extracting values with getCustomFieldValue():\n");
 
-  // Step 4: Handle missing fields
-  console.log("\n4. Handling missing fields:");
-  const missingField = getCustomFieldValue(opportunity.customFields, "nonexistent", z.string());
+  const extractedLegacyId = getCustomFieldValue(opportunity, "legacyId", LegacyIdValueSchema);
+  console.log(`   legacyId: ${JSON.stringify(extractedLegacyId)}`);
+
+  const extractedTags = getCustomFieldValue(opportunity, "tags", TagsValueSchema);
+  console.log(`   tags: ${extractedTags?.join(", ")}`);
+
+  // Returns undefined for missing fields instead of throwing
+  const missingField = getCustomFieldValue(opportunity, "nonexistent", z.string());
   console.log(`   nonexistent field: ${missingField ?? "undefined (safely handled)"}`);
 
   console.log("\n=== Example Complete ===");

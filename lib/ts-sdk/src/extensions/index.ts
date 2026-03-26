@@ -10,7 +10,7 @@
 
 // Plugin creation — define and compose plugins
 export type { Plugin, DefinePluginOptions } from "./define-plugin";
-export type { SchemaExtensions, CustomFieldSpec } from "./types";
+export type { SchemaExtensions, CustomFieldSpec, HasCustomFields, ExtensibleObject } from "./types";
 export { definePlugin } from "./define-plugin";
 export { mergeExtensions } from "./merge-extensions";
 

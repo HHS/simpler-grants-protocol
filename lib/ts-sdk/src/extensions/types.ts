@@ -8,7 +8,7 @@
  */
 
 import { z } from "zod";
-import type { CustomFieldType } from "../types";
+import type { CustomField, CustomFieldType } from "../types";
 import { OpportunityBaseSchema } from "../schemas/zod/models";
 
 // ############################################################################
@@ -52,6 +52,45 @@ export interface CustomFieldSpec {
 }
 
 // ############################################################################
+// Public types - HasCustomFields, ExtensibleObject
+// ############################################################################
+
+/**
+ * The expected Zod type for a `customFields` property on an extensible schema.
+ *
+ * Matches `z.record(CustomFieldSchema).nullish()`, which is the pattern used
+ * by all base schemas in the SDK. The type is intentionally permissive about
+ * the wrapping order (e.g. `.nullish()` vs `.optional().nullable()`) by
+ * constraining only the output type.
+ *
+ * @internal
+ */
+type CustomFieldsZodType = z.ZodType<Record<string, CustomField> | null | undefined>;
+
+/**
+ * A Zod object schema whose shape includes a `customFields` property
+ * typed as a record of `CustomField` values.
+ *
+ * Used to constrain the `baseSchema` parameter of `withCustomFields()` so that
+ * schemas without a properly typed `customFields` are rejected at compile time.
+ */
+export type HasCustomFields = z.ZodObject<
+  { customFields: CustomFieldsZodType } & z.ZodRawShape,
+  z.UnknownKeysParam,
+  z.ZodTypeAny
+>;
+
+/**
+ * An object with an optional `customFields` property.
+ *
+ * Used to constrain the first parameter of `getCustomFieldValue()` so that
+ * only objects with a `customFields` property are accepted.
+ */
+export interface ExtensibleObject {
+  customFields?: Record<string, CustomField> | null;
+}
+
+// ############################################################################
 // Public types - ExtensibleSchemaName, SchemaExtensions
 // ############################################################################
 
@@ -76,7 +115,7 @@ export type ExtensibleSchemaName = "Opportunity";
  */
 export const EXTENSIBLE_SCHEMA_MAP = {
   Opportunity: OpportunityBaseSchema,
-} as const satisfies Record<ExtensibleSchemaName, z.AnyZodObject>;
+} as const satisfies Record<ExtensibleSchemaName, HasCustomFields>;
 
 /**
  * Maps extensible model names to their custom field specifications.

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { withCustomFields } from "@/extensions";
-import { OpportunityBaseSchema } from "@/schemas";
+import { OpportunityBaseSchema, CustomFieldSchema } from "@/schemas";
 import { CustomFieldType } from "@/constants";
 
 // ############################################################################
@@ -12,7 +12,7 @@ import { CustomFieldType } from "@/constants";
 const SimpleSchemaWithCustomFields = z.object({
   id: z.string(),
   name: z.string(),
-  customFields: z.record(z.unknown()).nullish(),
+  customFields: z.record(CustomFieldSchema).nullish(),
 });
 
 // Custom value schemas for testing
@@ -420,13 +420,14 @@ describe("withCustomFields", () => {
       ).toThrow();
     });
 
-    it("should raise an error if the model doesn't have a customFields property", () => {
+    it("should reject schemas without customFields at compile time", () => {
       const SimpleSchemaWithoutCustomFields = z.object({
         id: z.string(),
         name: z.string(),
       });
 
       expect(() =>
+        // @ts-expect-error -- schema without customFields should not be accepted
         withCustomFields(SimpleSchemaWithoutCustomFields, {
           category: { fieldType: CustomFieldType.string },
         } as const)
