@@ -24,7 +24,7 @@ import type { ExtensibleObject } from "./types";
  *
  * @param obj - An object with a `customFields` property (may be null or undefined)
  * @param key - The key of the custom field to extract
- * @param valueSchema - Zod schema to parse and validate the value
+ * @param valueType - Zod schema to parse and validate the value
  * @returns The parsed value if the field exists and is valid, otherwise `undefined`
  * @throws {ZodError} If the field exists with a non-null value that doesn't match the provided schema
  *
@@ -69,7 +69,7 @@ import type { ExtensibleObject } from "./types";
 export function getCustomFieldValue<T extends z.ZodTypeAny>(
   obj: ExtensibleObject,
   key: string,
-  valueSchema: T
+  valueType: T
 ): z.infer<T> | undefined {
   // Return undefined if customFields doesn't exist
   const customFields = obj.customFields;
@@ -93,5 +93,5 @@ export function getCustomFieldValue<T extends z.ZodTypeAny>(
 
   // Parse and validate using the provided schema
   // This will throw a ZodError if validation fails
-  return valueSchema.parse(value);
+  return valueType.parse(value);
 }
