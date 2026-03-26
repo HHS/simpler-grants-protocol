@@ -16,12 +16,12 @@ from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
 # Extensions that might come from a shared HHS package
 hhs_extensions: SchemaExtensions = {
     "Opportunity": {
-        "program_area": CustomFieldSpec(
-            field_type="string",  # type: ignore[arg-type]
+        "programArea": CustomFieldSpec(
+            field_type="string",
             description="HHS program area code (e.g. 'CFDA-93.243')",
         ),
-        "legacy_grant_id": CustomFieldSpec(
-            field_type="integer",  # type: ignore[arg-type]
+        "legacyGrantId": CustomFieldSpec(
+            field_type="integer",
             description="Numeric ID from the legacy grants management system",
         ),
     },
@@ -30,12 +30,12 @@ hhs_extensions: SchemaExtensions = {
 # Extensions specific to this project
 local_extensions: SchemaExtensions = {
     "Opportunity": {
-        "eligibility_types": CustomFieldSpec(
-            field_type="array",  # type: ignore[arg-type]
+        "eligibilityTypes": CustomFieldSpec(
+            field_type="array",
             description="Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')",
         ),
-        "award_ceiling": CustomFieldSpec(
-            field_type="number",  # type: ignore[arg-type]
+        "awardCeiling": CustomFieldSpec(
+            field_type="number",
             description="Maximum award amount in USD",
         ),
     },
