@@ -12,16 +12,17 @@ This will emit generated/ and __init__.py alongside this file.
 
 from common_grants_sdk import define_plugin, merge_extensions
 from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk.schemas.pydantic.fields.custom import CustomFieldType
 
 # Extensions that might come from a shared HHS package
 hhs_extensions: SchemaExtensions = {
     "Opportunity": {
         "programArea": CustomFieldSpec(
-            field_type="string",
+            field_type=CustomFieldType.STRING,
             description="HHS program area code (e.g. 'CFDA-93.243')",
         ),
         "legacyGrantId": CustomFieldSpec(
-            field_type="integer",
+            field_type=CustomFieldType.INTEGER,
             description="Numeric ID from the legacy grants management system",
         ),
     },
@@ -31,11 +32,11 @@ hhs_extensions: SchemaExtensions = {
 local_extensions: SchemaExtensions = {
     "Opportunity": {
         "eligibilityTypes": CustomFieldSpec(
-            field_type="array",
+            field_type=CustomFieldType.ARRAY,
             description="Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')",
         ),
         "awardCeiling": CustomFieldSpec(
-            field_type="number",
+            field_type=CustomFieldType.NUMBER,
             description="Maximum award amount in USD",
         ),
     },

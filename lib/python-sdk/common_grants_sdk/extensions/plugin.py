@@ -1,9 +1,11 @@
 """Plugin configuration and composition APIs."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Generic, TypeVar
 
 from .specs import SchemaExtensions
+
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -14,11 +16,11 @@ class PluginConfig:
 
 
 @dataclass(frozen=True)
-class Plugin:
+class Plugin(Generic[T]):
     """Runtime plugin container with both extension specs and generated schemas."""
 
     extensions: SchemaExtensions
-    schemas: Any
+    schemas: T
 
 
 def define_plugin(extensions: SchemaExtensions) -> PluginConfig:

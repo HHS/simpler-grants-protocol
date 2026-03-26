@@ -262,12 +262,14 @@ A plugin is a Python class that contains extension specs and generated schemas
 
 
 ```python
+T = TypeVar("T")
+
 @dataclass(frozen=True)
-class Plugin:
+class Plugin(Generic[T]):
     """Runtime plugin container with both extension specs and generated schemas."""
 
     extensions: SchemaExtensions
-    schemas: Any
+    schemas: T
 ```
 
 
@@ -311,6 +313,7 @@ opportunity-extensions/        # Project root (outer folder — name it anything
 └── opportunity_extensions/    # Python package (inner folder — must match packages config)
     ├── __init__.py            # Emitted by the generator — commit to the repo
     ├── cg_config.py           # Field specs (source of truth — you write this)
+    ├── py.typed               # Marks the package as typed — you write this
     └── generated/             # Emitted by the generator — commit to the repo
         ├── __init__.py
         └── schemas.py
@@ -357,7 +360,7 @@ Publishing steps:
 1. Add an empty `py.typed` file so Pyright and mypy recognize your package as typed:
 
 ```
-my_plugin/
+opportunity_extensions/
 └── py.typed
 ```
 
@@ -365,7 +368,7 @@ my_plugin/
 
 ```toml
 [tool.poetry]
-include = ["my_plugin/py.typed"]
+include = ["opportunity_extensions/py.typed"]
 ```
 
 3. Build and verify the distribution:
@@ -377,12 +380,12 @@ poetry publish
 
 #### Consumer usage
 
-After installing the plugin (e.g. `poetry add commongrants-hhs-plugin`):
+After installing the plugin (e.g. `poetry add opportunity-extensions`):
 
 ```python
-from commongrants_hhs_plugin import hhs_plugin
+from opportunity_extensions import opportunity_extensions
 
-opp = hhs_plugin.schemas.Opportunity.model_validate(api_response)
+opp = opportunity_extensions.schemas.Opportunity.model_validate(api_response)
 print(opp.custom_fields.program_area.value)    # typed as str
 print(opp.custom_fields.legacy_grant_id.value) # typed as int
 ```
