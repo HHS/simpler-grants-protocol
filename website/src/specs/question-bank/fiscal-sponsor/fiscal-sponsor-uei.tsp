@@ -9,7 +9,7 @@ using JsonSchema;
 namespace QuestionBank.FiscalSponsorUei;
 
 /** The Unique Entity Identifier (UEI) for the fiscal sponsor */
-@extension("x-tags", #[Tags.identifier])
+@extension("x-tags", #[Tags.organization, Tags.identifier])
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",
@@ -36,5 +36,5 @@ namespace QuestionBank.FiscalSponsorUei;
     ],
   }
 )
-@example(#{ uei: "XYZ9876543210" })
+@example(#{ uei: "XY9876543210" })
 model QuestionFiscalSponsorUei extends QuestionUei.QuestionUei {}

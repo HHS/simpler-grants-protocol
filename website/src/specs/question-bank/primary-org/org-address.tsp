@@ -7,7 +7,7 @@ using JsonSchema;
 namespace QuestionBank.OrgAddress;
 
 /** An address for an organization */
-@extension("x-tags", #[Tags.address])
+@extension("x-tags", #[Tags.organization, Tags.address])
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",

@@ -6,7 +6,7 @@ using JsonSchema;
 namespace QuestionBank.AorTitle;
 
 /** The job title of the Authorized Organization Representative (AOR) */
-@extension("x-tags", #[Tags.title])
+@extension("x-tags", #[Tags.person, Tags.title])
 @extension("x-entity", #[Entities.authorizedRepresentative])
 @extension(
   "x-mapping-from-cg",

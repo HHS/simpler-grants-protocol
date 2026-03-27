@@ -9,7 +9,7 @@ using JsonSchema;
 namespace QuestionBank.FiscalSponsorEin;
 
 /** The Employer Identification Number (EIN) for the fiscal sponsor */
-@extension("x-tags", #[Tags.identifier])
+@extension("x-tags", #[Tags.organization, Tags.identifier])
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",

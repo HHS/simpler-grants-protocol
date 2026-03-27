@@ -8,7 +8,7 @@ using JsonSchema;
 namespace QuestionBank.OrgPhone;
 
 /** A phone number for the applicant organization */
-@extension("x-tags", #[Tags.phone])
+@extension("x-tags", #[Tags.organization, Tags.phone])
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",

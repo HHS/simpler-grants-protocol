@@ -8,7 +8,7 @@ using JsonSchema;
 namespace QuestionBank.OrgDuns;
 
 /** The DUNS number for the applicant organization */
-@extension("x-tags", #[Tags.identifier])
+@extension("x-tags", #[Tags.organization, Tags.identifier])
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",

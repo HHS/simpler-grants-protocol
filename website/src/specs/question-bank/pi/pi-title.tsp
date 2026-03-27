@@ -6,7 +6,7 @@ using JsonSchema;
 namespace QuestionBank.PiTitle;
 
 /** The job title of the principal investigator */
-@extension("x-tags", #[Tags.title])
+@extension("x-tags", #[Tags.person, Tags.title])
 @extension("x-entity", #[Entities.principalInvestigator])
 @extension(
   "x-mapping-from-cg",

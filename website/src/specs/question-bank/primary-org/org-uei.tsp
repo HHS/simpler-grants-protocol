@@ -8,7 +8,7 @@ using JsonSchema;
 namespace QuestionBank.OrgUei;
 
 /** The Unique Entity Identifier (UEI) for the applicant organization */
-@extension("x-tags", #[Tags.identifier])
+@extension("x-tags", #[Tags.organization, Tags.identifier])
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
@@ -31,7 +31,7 @@ namespace QuestionBank.OrgUei;
     ],
   }
 )
-@example(#{ uei: "ABC1234567890" })
+@example(#{ uei: "AB1234567890" })
 model QuestionOrgUei {
   /** The organization's Unique Entity Identifier from SAM.gov */
   uei: samUEI;

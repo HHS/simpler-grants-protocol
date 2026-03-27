@@ -67,7 +67,7 @@ enum USState {
 }
 
 /** A generic address question with US state dropdown and conditional state/province */
-@extension("x-tags", #[Tags.address])
+@extension("x-tags", #[Tags.generic, Tags.address])
 @extension(
   "x-mapping-from-cg",
   #{

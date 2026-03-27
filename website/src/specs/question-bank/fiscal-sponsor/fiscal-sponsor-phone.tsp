@@ -9,7 +9,7 @@ using JsonSchema;
 namespace QuestionBank.FiscalSponsorPhone;
 
 /** A phone number for the fiscal sponsor organization */
-@extension("x-tags", #[Tags.phone])
+@extension("x-tags", #[Tags.organization, Tags.phone])
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",

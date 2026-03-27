@@ -69,7 +69,10 @@ enum Tags {
   name,
   title,
   proposal,
-  group,
+  details,
+  person,
+  organization,
+  generic,
 }
 
 /** Entity roles for categorizing question bank items by their semantic context */
@@ -80,4 +83,5 @@ enum Entities {
   poc,
   principalInvestigator,
   authorizedRepresentative,
+  project,
 }

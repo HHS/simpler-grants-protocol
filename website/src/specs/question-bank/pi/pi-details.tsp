@@ -11,7 +11,7 @@ using JsonSchema;
 namespace QuestionBank.PiDetails;
 
 /** A composite question capturing key details about the principal investigator */
-@extension("x-tags", #[Tags.group])
+@extension("x-tags", #[Tags.person, Tags.details])
 @extension("x-entity", #[Entities.principalInvestigator])
 @extension(
   "x-mapping-from-cg",

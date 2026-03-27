@@ -11,7 +11,7 @@ using JsonSchema;
 namespace QuestionBank.OrgDetails;
 
 /** A composite question capturing key details about the primary applicant organization */
-@extension("x-tags", #[Tags.group])
+@extension("x-tags", #[Tags.organization, Tags.details])
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",

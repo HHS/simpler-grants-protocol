@@ -11,7 +11,7 @@ using JsonSchema;
 namespace QuestionBank.PocDetails;
 
 /** A composite question capturing key details about the primary point of contact */
-@extension("x-tags", #[Tags.group])
+@extension("x-tags", #[Tags.person, Tags.details])
 @extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",

@@ -8,7 +8,7 @@ using JsonSchema;
 namespace QuestionBank.QuestionEin;
 
 /** A generic Employer Identification Number (EIN) question */
-@extension("x-tags", #[Tags.identifier])
+@extension("x-tags", #[Tags.generic, Tags.identifier])
 @extension("x-mapping-from-cg", #{ ein: #{ field: "ein" } })
 @extension("x-mapping-to-cg", #{ ein: #{ field: "ein" } })
 @extension(

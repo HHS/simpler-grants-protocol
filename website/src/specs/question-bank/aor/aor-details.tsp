@@ -11,7 +11,7 @@ using JsonSchema;
 namespace QuestionBank.AorDetails;
 
 /** A composite question capturing key details about the Authorized Organization Representative */
-@extension("x-tags", #[Tags.group])
+@extension("x-tags", #[Tags.person, Tags.details])
 @extension("x-entity", #[Entities.authorizedRepresentative])
 @extension(
   "x-mapping-from-cg",

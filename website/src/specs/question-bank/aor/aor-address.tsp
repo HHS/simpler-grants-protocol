@@ -7,7 +7,7 @@ using JsonSchema;
 namespace QuestionBank.AorAddress;
 
 /** A mailing address for the Authorized Organization Representative (AOR) */
-@extension("x-tags", #[Tags.address])
+@extension("x-tags", #[Tags.person, Tags.address])
 @extension("x-entity", #[Entities.authorizedRepresentative])
 @extension(
   "x-mapping-from-cg",

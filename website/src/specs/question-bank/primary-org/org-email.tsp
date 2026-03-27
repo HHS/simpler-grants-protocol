@@ -8,7 +8,7 @@ using JsonSchema;
 namespace QuestionBank.OrgEmail;
 
 /** The email address of the applicant organization */
-@extension("x-tags", #[Tags.email])
+@extension("x-tags", #[Tags.organization, Tags.email])
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",

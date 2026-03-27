@@ -7,7 +7,7 @@ using JsonSchema;
 namespace QuestionBank.PiAddress;
 
 /** A mailing address for the principal investigator */
-@extension("x-tags", #[Tags.address])
+@extension("x-tags", #[Tags.person, Tags.address])
 @extension("x-entity", #[Entities.principalInvestigator])
 @extension(
   "x-mapping-from-cg",

@@ -8,7 +8,7 @@ using JsonSchema;
 namespace QuestionBank.QuestionEmail;
 
 /** A generic email address question */
-@extension("x-tags", #[Tags.email])
+@extension("x-tags", #[Tags.generic, Tags.email])
 @extension("x-mapping-from-cg", #{ email: #{ field: "email" } })
 @extension("x-mapping-to-cg", #{ email: #{ field: "email" } })
 @extension(

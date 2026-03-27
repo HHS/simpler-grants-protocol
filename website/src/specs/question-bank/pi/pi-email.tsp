@@ -9,7 +9,7 @@ using JsonSchema;
 namespace QuestionBank.PiEmail;
 
 /** The email address of the principal investigator */
-@extension("x-tags", #[Tags.email])
+@extension("x-tags", #[Tags.person, Tags.email])
 @extension("x-entity", #[Entities.principalInvestigator])
 @extension(
   "x-mapping-from-cg",

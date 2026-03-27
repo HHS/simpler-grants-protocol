@@ -27,7 +27,7 @@ enum NameSuffix {
 }
 
 /** A generic name question with structured prefix and suffix enums */
-@extension("x-tags", #[Tags.name])
+@extension("x-tags", #[Tags.generic, Tags.name])
 @extension(
   "x-mapping-from-cg",
   #{

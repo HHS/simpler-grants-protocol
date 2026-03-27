@@ -8,7 +8,7 @@ using JsonSchema;
 namespace QuestionBank.QuestionDuns;
 
 /** A generic DUNS number question */
-@extension("x-tags", #[Tags.identifier])
+@extension("x-tags", #[Tags.generic, Tags.identifier])
 @extension("x-mapping-from-cg", #{ duns: #{ field: "duns" } })
 @extension("x-mapping-to-cg", #{ duns: #{ field: "duns" } })
 @extension(

@@ -9,7 +9,7 @@ using JsonSchema;
 namespace QuestionBank.AorEmail;
 
 /** The email address of the Authorized Organization Representative (AOR) */
-@extension("x-tags", #[Tags.email])
+@extension("x-tags", #[Tags.person, Tags.email])
 @extension("x-entity", #[Entities.authorizedRepresentative])
 @extension(
   "x-mapping-from-cg",

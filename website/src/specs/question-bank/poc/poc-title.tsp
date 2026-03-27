@@ -6,7 +6,7 @@ using JsonSchema;
 namespace QuestionBank.PocTitle;
 
 /** The job title of the primary point of contact */
-@extension("x-tags", #[Tags.title])
+@extension("x-tags", #[Tags.person, Tags.title])
 @extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",

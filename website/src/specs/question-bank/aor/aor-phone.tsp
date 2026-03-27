@@ -9,7 +9,7 @@ using JsonSchema;
 namespace QuestionBank.AorPhone;
 
 /** A phone number for the Authorized Organization Representative (AOR) */
-@extension("x-tags", #[Tags.phone])
+@extension("x-tags", #[Tags.person, Tags.phone])
 @extension("x-entity", #[Entities.authorizedRepresentative])
 @extension(
   "x-mapping-from-cg",

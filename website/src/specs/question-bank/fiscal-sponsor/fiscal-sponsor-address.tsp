@@ -7,7 +7,7 @@ using JsonSchema;
 namespace QuestionBank.FiscalSponsorAddress;
 
 /** An address for the fiscal sponsor organization */
-@extension("x-tags", #[Tags.address])
+@extension("x-tags", #[Tags.organization, Tags.address])
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",

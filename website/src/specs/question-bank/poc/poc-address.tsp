@@ -7,7 +7,7 @@ using JsonSchema;
 namespace QuestionBank.PocAddress;
 
 /** A mailing address for the primary point of contact */
-@extension("x-tags", #[Tags.address])
+@extension("x-tags", #[Tags.person, Tags.address])
 @extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",

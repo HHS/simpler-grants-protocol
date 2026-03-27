@@ -10,7 +10,7 @@ using JsonSchema;
 namespace QuestionBank.FiscalSponsorDetails;
 
 /** A composite question capturing key details about the fiscal sponsor organization */
-@extension("x-tags", #[Tags.group])
+@extension("x-tags", #[Tags.organization, Tags.details])
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",

@@ -9,7 +9,7 @@ using JsonSchema;
 namespace QuestionBank.PiPhone;
 
 /** A phone number for the principal investigator */
-@extension("x-tags", #[Tags.phone])
+@extension("x-tags", #[Tags.person, Tags.phone])
 @extension("x-entity", #[Entities.principalInvestigator])
 @extension(
   "x-mapping-from-cg",

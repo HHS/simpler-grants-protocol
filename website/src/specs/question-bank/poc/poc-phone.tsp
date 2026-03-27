@@ -8,7 +8,7 @@ using JsonSchema;
 namespace QuestionBank.PocPhone;
 
 /** A phone number for the primary point of contact */
-@extension("x-tags", #[Tags.phone])
+@extension("x-tags", #[Tags.person, Tags.phone])
 @extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",

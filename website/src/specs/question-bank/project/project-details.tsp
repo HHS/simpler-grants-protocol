@@ -9,7 +9,8 @@ using JsonSchema;
 namespace QuestionBank.ProjectDetails;
 
 /** A composite question capturing key project details for a proposal */
-@extension("x-tags", #[Tags.group, Tags.proposal])
+@extension("x-tags", #[Tags.details, Tags.proposal])
+@extension("x-entity", #[Entities.project])
 @extension(
   "x-mapping-from-cg",
   #{

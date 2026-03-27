@@ -9,7 +9,7 @@ using JsonSchema;
 namespace QuestionBank.FiscalSponsorEmail;
 
 /** The email address of the fiscal sponsor organization */
-@extension("x-tags", #[Tags.email])
+@extension("x-tags", #[Tags.organization, Tags.email])
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",

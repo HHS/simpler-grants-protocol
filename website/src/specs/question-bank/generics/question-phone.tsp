@@ -8,7 +8,7 @@ using JsonSchema;
 namespace QuestionBank.QuestionPhone;
 
 /** A generic phone number question */
-@extension("x-tags", #[Tags.phone])
+@extension("x-tags", #[Tags.generic, Tags.phone])
 @extension(
   "x-mapping-from-cg",
   #{
