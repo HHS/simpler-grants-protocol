@@ -13,19 +13,13 @@ namespace QuestionBank.FiscalSponsorEin;
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",
-  #{
-    ein: #{ field: "organizations.otherOrgs.fiscalSponsor.ein" },
-  }
+  #{ ein: #{ field: "organizations.otherOrgs.fiscalSponsor.ein" } }
 )
 @extension(
   "x-mapping-to-cg",
   #{
     organizations: #{
-      otherOrgs: #{
-        fiscalSponsor: #{
-          ein: #{ field: "ein" },
-        },
-      },
+      otherOrgs: #{ fiscalSponsor: #{ ein: #{ field: "ein" } } },
     },
   }
 )
@@ -34,7 +28,11 @@ namespace QuestionBank.FiscalSponsorEin;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/ein", label: "Fiscal Sponsor EIN" }
+      #{
+        type: "Control",
+        scope: "#/properties/ein",
+        label: "Fiscal Sponsor EIN",
+      }
     ],
   }
 )

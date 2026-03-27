@@ -14,7 +14,9 @@ namespace QuestionBank.PiEmail;
 @extension(
   "x-mapping-from-cg",
   #{
-    email: #{ field: "contacts.otherContacts.principalInvestigator.emails.primary" },
+    email: #{
+      field: "contacts.otherContacts.principalInvestigator.emails.primary",
+    },
   }
 )
 @extension(
@@ -22,11 +24,7 @@ namespace QuestionBank.PiEmail;
   #{
     contacts: #{
       otherContacts: #{
-        principalInvestigator: #{
-          emails: #{
-            primary: #{ field: "email" },
-          },
-        },
+        principalInvestigator: #{ emails: #{ primary: #{ field: "email" } } },
       },
     },
   }
@@ -36,7 +34,11 @@ namespace QuestionBank.PiEmail;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/email", label: "PI Email Address" }
+      #{
+        type: "Control",
+        scope: "#/properties/email",
+        label: "PI Email Address",
+      }
     ],
   }
 )

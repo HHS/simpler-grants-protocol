@@ -33,12 +33,8 @@ namespace QuestionBank.ProjectDetails;
       currency: #{ field: "amountRequested.currency" },
     },
     projectTimeline: #{
-      startDate: #{
-        date: #{ field: "startDate" },
-      },
-      endDate: #{
-        date: #{ field: "endDate" },
-      },
+      startDate: #{ date: #{ field: "startDate" } },
+      endDate: #{ date: #{ field: "endDate" } },
     },
   }
 )
@@ -48,18 +44,43 @@ namespace QuestionBank.ProjectDetails;
     type: "Group",
     label: "Project Details",
     elements: #[
-      #{ type: "Control", scope: "#/properties/title", label: "Project Title" },
-      #{ type: "Control", scope: "#/properties/description", label: "Project Description", options: #{ multi: true } },
+      #{
+        type: "Control",
+        scope: "#/properties/title",
+        label: "Project Title",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/description",
+        label: "Project Description",
+        options: #{ multi: true },
+      },
       #{
         type: "Group",
         label: "Amount Requested",
         elements: #[
-          #{ type: "Control", scope: "#/properties/amountRequested/properties/amount", label: "Amount" },
-          #{ type: "Control", scope: "#/properties/amountRequested/properties/currency", label: "Currency Code" }
+          #{
+            type: "Control",
+            scope: "#/properties/amountRequested/properties/amount",
+            label: "Amount",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/amountRequested/properties/currency",
+            label: "Currency Code",
+          }
         ],
       },
-      #{ type: "Control", scope: "#/properties/startDate", label: "Project Start Date" },
-      #{ type: "Control", scope: "#/properties/endDate", label: "Project End Date" }
+      #{
+        type: "Control",
+        scope: "#/properties/startDate",
+        label: "Project Start Date",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/endDate",
+        label: "Project End Date",
+      }
     ],
   }
 )
@@ -69,7 +90,7 @@ model QuestionProjectDetails {
   title?: string;
 
   /** A description of the project */
-  @example("A project to improve health outcomes in underserved communities.")
+  @example("A project to improve health outcomes in rural communities.")
   description?: string;
 
   /** The amount of funding requested */

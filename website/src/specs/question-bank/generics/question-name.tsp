@@ -55,8 +55,16 @@ enum NameSuffix {
     label: "Name",
     elements: #[
       #{ type: "Control", scope: "#/properties/prefix", label: "Prefix" },
-      #{ type: "Control", scope: "#/properties/firstName", label: "First Name" },
-      #{ type: "Control", scope: "#/properties/middleName", label: "Middle Name" },
+      #{
+        type: "Control",
+        scope: "#/properties/firstName",
+        label: "First Name",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/middleName",
+        label: "Middle Name",
+      },
       #{ type: "Control", scope: "#/properties/lastName", label: "Last Name" },
       #{ type: "Control", scope: "#/properties/suffix", label: "Suffix" }
     ],

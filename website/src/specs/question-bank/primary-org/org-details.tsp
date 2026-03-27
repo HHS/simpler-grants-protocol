@@ -26,12 +26,18 @@ namespace QuestionBank.OrgDetails;
       street1: #{ field: "organizations.primary.addresses.primary.street1" },
       street2: #{ field: "organizations.primary.addresses.primary.street2" },
       city: #{ field: "organizations.primary.addresses.primary.city" },
-      state: #{ field: "organizations.primary.addresses.primary.stateOrProvince" },
+      state: #{
+        field: "organizations.primary.addresses.primary.stateOrProvince",
+      },
       country: #{ field: "organizations.primary.addresses.primary.country" },
-      postalCode: #{ field: "organizations.primary.addresses.primary.postalCode" },
+      postalCode: #{
+        field: "organizations.primary.addresses.primary.postalCode",
+      },
     },
     phone: #{
-      countryCode: #{ field: "organizations.primary.phones.primary.countryCode" },
+      countryCode: #{
+        field: "organizations.primary.phones.primary.countryCode",
+      },
       number: #{ field: "organizations.primary.phones.primary.number" },
       extension: #{ field: "organizations.primary.phones.primary.extension" },
       isMobile: #{ field: "organizations.primary.phones.primary.isMobile" },
@@ -68,9 +74,7 @@ namespace QuestionBank.OrgDetails;
             isMobile: #{ field: "phone.isMobile" },
           },
         },
-        emails: #{
-          primary: #{ field: "email" },
-        },
+        emails: #{ primary: #{ field: "email" } },
       },
     },
   }
@@ -81,35 +85,99 @@ namespace QuestionBank.OrgDetails;
     type: "Group",
     label: "Primary Applicant Organization Details",
     elements: #[
-      #{ type: "Control", scope: "#/properties/name", label: "Organization Legal Name" },
-      #{ type: "Control", scope: "#/properties/ein", label: "Employer Identification Number (EIN)" },
-      #{ type: "Control", scope: "#/properties/uei", label: "Unique Entity Identifier (UEI)" },
+      #{
+        type: "Control",
+        scope: "#/properties/name",
+        label: "Organization Legal Name",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/ein",
+        label: "Employer Identification Number (EIN)",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/uei",
+        label: "Unique Entity Identifier (UEI)",
+      },
       #{ type: "Control", scope: "#/properties/duns", label: "DUNS Number" },
-      #{ type: "Control", scope: "#/properties/mission", label: "Mission Statement" },
-      #{ type: "Control", scope: "#/properties/yearFounded", label: "Year Founded" },
+      #{
+        type: "Control",
+        scope: "#/properties/mission",
+        label: "Mission Statement",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/yearFounded",
+        label: "Year Founded",
+      },
       #{
         type: "Group",
         label: "Address",
         elements: #[
-          #{ type: "Control", scope: "#/properties/address/properties/street1", label: "Street Address (Line 1)" },
-          #{ type: "Control", scope: "#/properties/address/properties/street2", label: "Street Address (Line 2)" },
-          #{ type: "Control", scope: "#/properties/address/properties/city", label: "City" },
-          #{ type: "Control", scope: "#/properties/address/properties/state", label: "State" },
-          #{ type: "Control", scope: "#/properties/address/properties/country", label: "Country" },
-          #{ type: "Control", scope: "#/properties/address/properties/postalCode", label: "Postal Code" }
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/street1",
+            label: "Street Address (Line 1)",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/street2",
+            label: "Street Address (Line 2)",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/city",
+            label: "City",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/state",
+            label: "State",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/country",
+            label: "Country",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/postalCode",
+            label: "Postal Code",
+          }
         ],
       },
       #{
         type: "Group",
         label: "Phone Number",
         elements: #[
-          #{ type: "Control", scope: "#/properties/phone/properties/countryCode", label: "Country Code" },
-          #{ type: "Control", scope: "#/properties/phone/properties/number", label: "Phone Number" },
-          #{ type: "Control", scope: "#/properties/phone/properties/extension", label: "Extension" },
-          #{ type: "Control", scope: "#/properties/phone/properties/isMobile", label: "Is Mobile?" }
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/countryCode",
+            label: "Country Code",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/number",
+            label: "Phone Number",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/extension",
+            label: "Extension",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/isMobile",
+            label: "Is Mobile?",
+          }
         ],
       },
-      #{ type: "Control", scope: "#/properties/email", label: "Organization Email Address" }
+      #{
+        type: "Control",
+        scope: "#/properties/email",
+        label: "Organization Email Address",
+      }
     ],
   }
 )

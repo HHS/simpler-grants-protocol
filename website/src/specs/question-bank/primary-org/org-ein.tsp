@@ -12,26 +12,22 @@ namespace QuestionBank.OrgEin;
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
-  #{
-    ein: #{ field: "organizations.primary.ein" },
-  }
+  #{ ein: #{ field: "organizations.primary.ein" } }
 )
 @extension(
   "x-mapping-to-cg",
-  #{
-    organizations: #{
-      primary: #{
-        ein: #{ field: "ein" },
-      },
-    },
-  }
+  #{ organizations: #{ primary: #{ ein: #{ field: "ein" } } } }
 )
 @extension(
   "x-ui-schema",
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/ein", label: "Employer Identification Number (EIN)" }
+      #{
+        type: "Control",
+        scope: "#/properties/ein",
+        label: "Employer Identification Number (EIN)",
+      }
     ],
   }
 )

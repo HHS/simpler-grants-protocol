@@ -14,10 +14,18 @@ namespace QuestionBank.FiscalSponsorPhone;
 @extension(
   "x-mapping-from-cg",
   #{
-    countryCode: #{ field: "organizations.otherOrgs.fiscalSponsor.phones.primary.countryCode" },
-    number: #{ field: "organizations.otherOrgs.fiscalSponsor.phones.primary.number" },
-    extension: #{ field: "organizations.otherOrgs.fiscalSponsor.phones.primary.extension" },
-    isMobile: #{ field: "organizations.otherOrgs.fiscalSponsor.phones.primary.isMobile" },
+    countryCode: #{
+      field: "organizations.otherOrgs.fiscalSponsor.phones.primary.countryCode",
+    },
+    number: #{
+      field: "organizations.otherOrgs.fiscalSponsor.phones.primary.number",
+    },
+    extension: #{
+      field: "organizations.otherOrgs.fiscalSponsor.phones.primary.extension",
+    },
+    isMobile: #{
+      field: "organizations.otherOrgs.fiscalSponsor.phones.primary.isMobile",
+    },
   }
 )
 @extension(
@@ -45,9 +53,21 @@ namespace QuestionBank.FiscalSponsorPhone;
     type: "Group",
     label: "Fiscal Sponsor Phone Number",
     elements: #[
-      #{ type: "Control", scope: "#/properties/countryCode", label: "Country Code" },
-      #{ type: "Control", scope: "#/properties/number", label: "Phone Number" },
-      #{ type: "Control", scope: "#/properties/extension", label: "Extension" },
+      #{
+        type: "Control",
+        scope: "#/properties/countryCode",
+        label: "Country Code",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/number",
+        label: "Phone Number",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/extension",
+        label: "Extension",
+      },
       #{ type: "Control", scope: "#/properties/isMobile", label: "Is Mobile?" }
     ],
   }

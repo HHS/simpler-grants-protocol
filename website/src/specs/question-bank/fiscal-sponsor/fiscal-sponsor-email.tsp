@@ -13,20 +13,14 @@ namespace QuestionBank.FiscalSponsorEmail;
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",
-  #{
-    email: #{ field: "organizations.otherOrgs.fiscalSponsor.emails.primary" },
-  }
+  #{ email: #{ field: "organizations.otherOrgs.fiscalSponsor.emails.primary" } }
 )
 @extension(
   "x-mapping-to-cg",
   #{
     organizations: #{
       otherOrgs: #{
-        fiscalSponsor: #{
-          emails: #{
-            primary: #{ field: "email" },
-          },
-        },
+        fiscalSponsor: #{ emails: #{ primary: #{ field: "email" } } },
       },
     },
   }
@@ -36,7 +30,11 @@ namespace QuestionBank.FiscalSponsorEmail;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/email", label: "Fiscal Sponsor Email Address" }
+      #{
+        type: "Control",
+        scope: "#/properties/email",
+        label: "Fiscal Sponsor Email Address",
+      }
     ],
   }
 )

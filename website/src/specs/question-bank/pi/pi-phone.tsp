@@ -14,10 +14,18 @@ namespace QuestionBank.PiPhone;
 @extension(
   "x-mapping-from-cg",
   #{
-    countryCode: #{ field: "contacts.otherContacts.principalInvestigator.phones.primary.countryCode" },
-    number: #{ field: "contacts.otherContacts.principalInvestigator.phones.primary.number" },
-    extension: #{ field: "contacts.otherContacts.principalInvestigator.phones.primary.extension" },
-    isMobile: #{ field: "contacts.otherContacts.principalInvestigator.phones.primary.isMobile" },
+    countryCode: #{
+      field: "contacts.otherContacts.principalInvestigator.phones.primary.countryCode",
+    },
+    number: #{
+      field: "contacts.otherContacts.principalInvestigator.phones.primary.number",
+    },
+    extension: #{
+      field: "contacts.otherContacts.principalInvestigator.phones.primary.extension",
+    },
+    isMobile: #{
+      field: "contacts.otherContacts.principalInvestigator.phones.primary.isMobile",
+    },
   }
 )
 @extension(
@@ -45,9 +53,21 @@ namespace QuestionBank.PiPhone;
     type: "Group",
     label: "Principal Investigator Phone Number",
     elements: #[
-      #{ type: "Control", scope: "#/properties/countryCode", label: "Country Code" },
-      #{ type: "Control", scope: "#/properties/number", label: "Phone Number" },
-      #{ type: "Control", scope: "#/properties/extension", label: "Extension" },
+      #{
+        type: "Control",
+        scope: "#/properties/countryCode",
+        label: "Country Code",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/number",
+        label: "Phone Number",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/extension",
+        label: "Extension",
+      },
       #{ type: "Control", scope: "#/properties/isMobile", label: "Is Mobile?" }
     ],
   }

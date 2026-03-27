@@ -14,7 +14,9 @@ namespace QuestionBank.AorEmail;
 @extension(
   "x-mapping-from-cg",
   #{
-    email: #{ field: "contacts.otherContacts.authorizedRepresentative.emails.primary" },
+    email: #{
+      field: "contacts.otherContacts.authorizedRepresentative.emails.primary",
+    },
   }
 )
 @extension(
@@ -23,9 +25,7 @@ namespace QuestionBank.AorEmail;
     contacts: #{
       otherContacts: #{
         authorizedRepresentative: #{
-          emails: #{
-            primary: #{ field: "email" },
-          },
+          emails: #{ primary: #{ field: "email" } },
         },
       },
     },
@@ -36,7 +36,11 @@ namespace QuestionBank.AorEmail;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/email", label: "AOR Email Address" }
+      #{
+        type: "Control",
+        scope: "#/properties/email",
+        label: "AOR Email Address",
+      }
     ],
   }
 )

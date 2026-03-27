@@ -10,18 +10,14 @@ namespace QuestionBank.PiTitle;
 @extension("x-entity", #[Entities.principalInvestigator])
 @extension(
   "x-mapping-from-cg",
-  #{
-    title: #{ field: "contacts.otherContacts.principalInvestigator.title" },
-  }
+  #{ title: #{ field: "contacts.otherContacts.principalInvestigator.title" } }
 )
 @extension(
   "x-mapping-to-cg",
   #{
     contacts: #{
       otherContacts: #{
-        principalInvestigator: #{
-          title: #{ field: "title" },
-        },
+        principalInvestigator: #{ title: #{ field: "title" } },
       },
     },
   }

@@ -15,9 +15,13 @@ namespace QuestionBank.OrgAddress;
     street1: #{ field: "organizations.primary.addresses.primary.street1" },
     street2: #{ field: "organizations.primary.addresses.primary.street2" },
     city: #{ field: "organizations.primary.addresses.primary.city" },
-    state: #{ field: "organizations.primary.addresses.primary.stateOrProvince" },
+    state: #{
+      field: "organizations.primary.addresses.primary.stateOrProvince",
+    },
     country: #{ field: "organizations.primary.addresses.primary.country" },
-    postalCode: #{ field: "organizations.primary.addresses.primary.postalCode" },
+    postalCode: #{
+      field: "organizations.primary.addresses.primary.postalCode",
+    },
   }
 )
 @extension(
@@ -45,8 +49,16 @@ namespace QuestionBank.OrgAddress;
     type: "Group",
     label: "Primary Applicant Organization Address",
     elements: #[
-      #{ type: "Control", scope: "#/properties/street1", label: "Street Address (Line 1)" },
-      #{ type: "Control", scope: "#/properties/street2", label: "Street Address (Line 2)" },
+      #{
+        type: "Control",
+        scope: "#/properties/street1",
+        label: "Street Address (Line 1)",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/street2",
+        label: "Street Address (Line 2)",
+      },
       #{ type: "Control", scope: "#/properties/city", label: "City" },
       #{ type: "Control", scope: "#/properties/state", label: "State" },
       #{
@@ -62,7 +74,11 @@ namespace QuestionBank.OrgAddress;
         },
       },
       #{ type: "Control", scope: "#/properties/country", label: "Country" },
-      #{ type: "Control", scope: "#/properties/postalCode", label: "Postal Code" }
+      #{
+        type: "Control",
+        scope: "#/properties/postalCode",
+        label: "Postal Code",
+      }
     ],
   }
 )

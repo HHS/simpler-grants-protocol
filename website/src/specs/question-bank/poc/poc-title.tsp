@@ -10,19 +10,11 @@ namespace QuestionBank.PocTitle;
 @extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",
-  #{
-    title: #{ field: "contacts.primary.title" },
-  }
+  #{ title: #{ field: "contacts.primary.title" } }
 )
 @extension(
   "x-mapping-to-cg",
-  #{
-    contacts: #{
-      primary: #{
-        title: #{ field: "title" },
-      },
-    },
-  }
+  #{ contacts: #{ primary: #{ title: #{ field: "title" } } } }
 )
 @extension(
   "x-ui-schema",

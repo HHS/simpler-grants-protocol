@@ -14,10 +14,18 @@ namespace QuestionBank.AorPhone;
 @extension(
   "x-mapping-from-cg",
   #{
-    countryCode: #{ field: "contacts.otherContacts.authorizedRepresentative.phones.primary.countryCode" },
-    number: #{ field: "contacts.otherContacts.authorizedRepresentative.phones.primary.number" },
-    extension: #{ field: "contacts.otherContacts.authorizedRepresentative.phones.primary.extension" },
-    isMobile: #{ field: "contacts.otherContacts.authorizedRepresentative.phones.primary.isMobile" },
+    countryCode: #{
+      field: "contacts.otherContacts.authorizedRepresentative.phones.primary.countryCode",
+    },
+    number: #{
+      field: "contacts.otherContacts.authorizedRepresentative.phones.primary.number",
+    },
+    extension: #{
+      field: "contacts.otherContacts.authorizedRepresentative.phones.primary.extension",
+    },
+    isMobile: #{
+      field: "contacts.otherContacts.authorizedRepresentative.phones.primary.isMobile",
+    },
   }
 )
 @extension(
@@ -45,9 +53,21 @@ namespace QuestionBank.AorPhone;
     type: "Group",
     label: "Authorized Organization Representative Phone Number",
     elements: #[
-      #{ type: "Control", scope: "#/properties/countryCode", label: "Country Code" },
-      #{ type: "Control", scope: "#/properties/number", label: "Phone Number" },
-      #{ type: "Control", scope: "#/properties/extension", label: "Extension" },
+      #{
+        type: "Control",
+        scope: "#/properties/countryCode",
+        label: "Country Code",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/number",
+        label: "Phone Number",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/extension",
+        label: "Extension",
+      },
       #{ type: "Control", scope: "#/properties/isMobile", label: "Is Mobile?" }
     ],
   }

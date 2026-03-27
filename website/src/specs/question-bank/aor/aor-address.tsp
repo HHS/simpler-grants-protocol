@@ -12,12 +12,24 @@ namespace QuestionBank.AorAddress;
 @extension(
   "x-mapping-from-cg",
   #{
-    street1: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.street1" },
-    street2: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.street2" },
-    city: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.city" },
-    state: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.stateOrProvince" },
-    country: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.country" },
-    postalCode: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.postalCode" },
+    street1: #{
+      field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.street1",
+    },
+    street2: #{
+      field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.street2",
+    },
+    city: #{
+      field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.city",
+    },
+    state: #{
+      field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.stateOrProvince",
+    },
+    country: #{
+      field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.country",
+    },
+    postalCode: #{
+      field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.postalCode",
+    },
   }
 )
 @extension(
@@ -47,8 +59,16 @@ namespace QuestionBank.AorAddress;
     type: "Group",
     label: "Authorized Organization Representative Address",
     elements: #[
-      #{ type: "Control", scope: "#/properties/street1", label: "Street Address (Line 1)" },
-      #{ type: "Control", scope: "#/properties/street2", label: "Street Address (Line 2)" },
+      #{
+        type: "Control",
+        scope: "#/properties/street1",
+        label: "Street Address (Line 1)",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/street2",
+        label: "Street Address (Line 2)",
+      },
       #{ type: "Control", scope: "#/properties/city", label: "City" },
       #{ type: "Control", scope: "#/properties/state", label: "State" },
       #{
@@ -64,7 +84,11 @@ namespace QuestionBank.AorAddress;
         },
       },
       #{ type: "Control", scope: "#/properties/country", label: "Country" },
-      #{ type: "Control", scope: "#/properties/postalCode", label: "Postal Code" }
+      #{
+        type: "Control",
+        scope: "#/properties/postalCode",
+        label: "Postal Code",
+      }
     ],
   }
 )

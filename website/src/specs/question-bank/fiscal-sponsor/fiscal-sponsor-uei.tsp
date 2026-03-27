@@ -13,19 +13,13 @@ namespace QuestionBank.FiscalSponsorUei;
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",
-  #{
-    uei: #{ field: "organizations.otherOrgs.fiscalSponsor.uei" },
-  }
+  #{ uei: #{ field: "organizations.otherOrgs.fiscalSponsor.uei" } }
 )
 @extension(
   "x-mapping-to-cg",
   #{
     organizations: #{
-      otherOrgs: #{
-        fiscalSponsor: #{
-          uei: #{ field: "uei" },
-        },
-      },
+      otherOrgs: #{ fiscalSponsor: #{ uei: #{ field: "uei" } } },
     },
   }
 )
@@ -34,7 +28,11 @@ namespace QuestionBank.FiscalSponsorUei;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/uei", label: "Fiscal Sponsor UEI" }
+      #{
+        type: "Control",
+        scope: "#/properties/uei",
+        label: "Fiscal Sponsor UEI",
+      }
     ],
   }
 )

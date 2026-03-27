@@ -17,28 +17,60 @@ namespace QuestionBank.AorDetails;
   "x-mapping-from-cg",
   #{
     name: #{
-      prefix: #{ field: "contacts.otherContacts.authorizedRepresentative.name.prefix" },
-      firstName: #{ field: "contacts.otherContacts.authorizedRepresentative.name.firstName" },
-      middleName: #{ field: "contacts.otherContacts.authorizedRepresentative.name.middleName" },
-      lastName: #{ field: "contacts.otherContacts.authorizedRepresentative.name.lastName" },
-      suffix: #{ field: "contacts.otherContacts.authorizedRepresentative.name.suffix" },
+      prefix: #{
+        field: "contacts.otherContacts.authorizedRepresentative.name.prefix",
+      },
+      firstName: #{
+        field: "contacts.otherContacts.authorizedRepresentative.name.firstName",
+      },
+      middleName: #{
+        field: "contacts.otherContacts.authorizedRepresentative.name.middleName",
+      },
+      lastName: #{
+        field: "contacts.otherContacts.authorizedRepresentative.name.lastName",
+      },
+      suffix: #{
+        field: "contacts.otherContacts.authorizedRepresentative.name.suffix",
+      },
     },
     title: #{ field: "contacts.otherContacts.authorizedRepresentative.title" },
     address: #{
-      street1: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.street1" },
-      street2: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.street2" },
-      city: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.city" },
-      state: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.stateOrProvince" },
-      country: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.country" },
-      postalCode: #{ field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.postalCode" },
+      street1: #{
+        field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.street1",
+      },
+      street2: #{
+        field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.street2",
+      },
+      city: #{
+        field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.city",
+      },
+      state: #{
+        field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.stateOrProvince",
+      },
+      country: #{
+        field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.country",
+      },
+      postalCode: #{
+        field: "contacts.otherContacts.authorizedRepresentative.addresses.primary.postalCode",
+      },
     },
     phone: #{
-      countryCode: #{ field: "contacts.otherContacts.authorizedRepresentative.phones.primary.countryCode" },
-      number: #{ field: "contacts.otherContacts.authorizedRepresentative.phones.primary.number" },
-      extension: #{ field: "contacts.otherContacts.authorizedRepresentative.phones.primary.extension" },
-      isMobile: #{ field: "contacts.otherContacts.authorizedRepresentative.phones.primary.isMobile" },
+      countryCode: #{
+        field: "contacts.otherContacts.authorizedRepresentative.phones.primary.countryCode",
+      },
+      number: #{
+        field: "contacts.otherContacts.authorizedRepresentative.phones.primary.number",
+      },
+      extension: #{
+        field: "contacts.otherContacts.authorizedRepresentative.phones.primary.extension",
+      },
+      isMobile: #{
+        field: "contacts.otherContacts.authorizedRepresentative.phones.primary.isMobile",
+      },
     },
-    email: #{ field: "contacts.otherContacts.authorizedRepresentative.emails.primary" },
+    email: #{
+      field: "contacts.otherContacts.authorizedRepresentative.emails.primary",
+    },
   }
 )
 @extension(
@@ -73,9 +105,7 @@ namespace QuestionBank.AorDetails;
               isMobile: #{ field: "phone.isMobile" },
             },
           },
-          emails: #{
-            primary: #{ field: "email" },
-          },
+          emails: #{ primary: #{ field: "email" } },
         },
       },
     },
@@ -91,11 +121,31 @@ namespace QuestionBank.AorDetails;
         type: "Group",
         label: "Name",
         elements: #[
-          #{ type: "Control", scope: "#/properties/name/properties/prefix", label: "Prefix" },
-          #{ type: "Control", scope: "#/properties/name/properties/firstName", label: "First Name" },
-          #{ type: "Control", scope: "#/properties/name/properties/middleName", label: "Middle Name" },
-          #{ type: "Control", scope: "#/properties/name/properties/lastName", label: "Last Name" },
-          #{ type: "Control", scope: "#/properties/name/properties/suffix", label: "Suffix" }
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/prefix",
+            label: "Prefix",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/firstName",
+            label: "First Name",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/middleName",
+            label: "Middle Name",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/lastName",
+            label: "Last Name",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/suffix",
+            label: "Suffix",
+          }
         ],
       },
       #{ type: "Control", scope: "#/properties/title", label: "Job Title" },
@@ -103,22 +153,62 @@ namespace QuestionBank.AorDetails;
         type: "Group",
         label: "Mailing Address",
         elements: #[
-          #{ type: "Control", scope: "#/properties/address/properties/street1", label: "Street Address (Line 1)" },
-          #{ type: "Control", scope: "#/properties/address/properties/street2", label: "Street Address (Line 2)" },
-          #{ type: "Control", scope: "#/properties/address/properties/city", label: "City" },
-          #{ type: "Control", scope: "#/properties/address/properties/state", label: "State" },
-          #{ type: "Control", scope: "#/properties/address/properties/country", label: "Country" },
-          #{ type: "Control", scope: "#/properties/address/properties/postalCode", label: "Postal Code" }
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/street1",
+            label: "Street Address (Line 1)",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/street2",
+            label: "Street Address (Line 2)",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/city",
+            label: "City",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/state",
+            label: "State",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/country",
+            label: "Country",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/postalCode",
+            label: "Postal Code",
+          }
         ],
       },
       #{
         type: "Group",
         label: "Phone Number",
         elements: #[
-          #{ type: "Control", scope: "#/properties/phone/properties/countryCode", label: "Country Code" },
-          #{ type: "Control", scope: "#/properties/phone/properties/number", label: "Phone Number" },
-          #{ type: "Control", scope: "#/properties/phone/properties/extension", label: "Extension" },
-          #{ type: "Control", scope: "#/properties/phone/properties/isMobile", label: "Is Mobile?" }
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/countryCode",
+            label: "Country Code",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/number",
+            label: "Phone Number",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/extension",
+            label: "Extension",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/isMobile",
+            label: "Is Mobile?",
+          }
         ],
       },
       #{ type: "Control", scope: "#/properties/email", label: "Email Address" }

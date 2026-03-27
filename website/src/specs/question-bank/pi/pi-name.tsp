@@ -12,11 +12,21 @@ namespace QuestionBank.PiName;
 @extension(
   "x-mapping-from-cg",
   #{
-    prefix: #{ field: "contacts.otherContacts.principalInvestigator.name.prefix" },
-    firstName: #{ field: "contacts.otherContacts.principalInvestigator.name.firstName" },
-    middleName: #{ field: "contacts.otherContacts.principalInvestigator.name.middleName" },
-    lastName: #{ field: "contacts.otherContacts.principalInvestigator.name.lastName" },
-    suffix: #{ field: "contacts.otherContacts.principalInvestigator.name.suffix" },
+    prefix: #{
+      field: "contacts.otherContacts.principalInvestigator.name.prefix",
+    },
+    firstName: #{
+      field: "contacts.otherContacts.principalInvestigator.name.firstName",
+    },
+    middleName: #{
+      field: "contacts.otherContacts.principalInvestigator.name.middleName",
+    },
+    lastName: #{
+      field: "contacts.otherContacts.principalInvestigator.name.lastName",
+    },
+    suffix: #{
+      field: "contacts.otherContacts.principalInvestigator.name.suffix",
+    },
   }
 )
 @extension(
@@ -44,8 +54,16 @@ namespace QuestionBank.PiName;
     label: "Principal Investigator Name",
     elements: #[
       #{ type: "Control", scope: "#/properties/prefix", label: "Prefix" },
-      #{ type: "Control", scope: "#/properties/firstName", label: "First Name" },
-      #{ type: "Control", scope: "#/properties/middleName", label: "Middle Name" },
+      #{
+        type: "Control",
+        scope: "#/properties/firstName",
+        label: "First Name",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/middleName",
+        label: "Middle Name",
+      },
       #{ type: "Control", scope: "#/properties/lastName", label: "Last Name" },
       #{ type: "Control", scope: "#/properties/suffix", label: "Suffix" }
     ],

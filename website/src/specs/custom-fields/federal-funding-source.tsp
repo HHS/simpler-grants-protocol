@@ -26,12 +26,8 @@ model CustomFederalFundingSources extends CustomField {
   fieldType: CustomFieldType.array;
 
   @example(#[
-    #{
-      type: FederalFundingSourceOptions.discretionary,
-    },
-    #{
-      type: FederalFundingSourceOptions.mandatory,
-    }
+    #{ type: FederalFundingSourceOptions.discretionary },
+    #{ type: FederalFundingSourceOptions.mandatory }
   ])
   value: Array<{
     /** The funding source type, from a predefined set of options */

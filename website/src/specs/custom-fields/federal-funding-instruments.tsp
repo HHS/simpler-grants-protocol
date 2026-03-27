@@ -26,12 +26,8 @@ model CustomFederalFundingInstruments extends CustomField {
   fieldType: CustomFieldType.array;
 
   @example(#[
-    #{
-      type: FederalFundingInstrumentOptions.grant,
-    },
-    #{
-      type: FederalFundingInstrumentOptions.cooperativeAgreement,
-    }
+    #{ type: FederalFundingInstrumentOptions.grant },
+    #{ type: FederalFundingInstrumentOptions.cooperativeAgreement }
   ])
   value: Array<{
     /** The funding instrument type, from a predefined set of options */

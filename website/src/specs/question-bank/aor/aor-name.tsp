@@ -12,11 +12,21 @@ namespace QuestionBank.AorName;
 @extension(
   "x-mapping-from-cg",
   #{
-    prefix: #{ field: "contacts.otherContacts.authorizedRepresentative.name.prefix" },
-    firstName: #{ field: "contacts.otherContacts.authorizedRepresentative.name.firstName" },
-    middleName: #{ field: "contacts.otherContacts.authorizedRepresentative.name.middleName" },
-    lastName: #{ field: "contacts.otherContacts.authorizedRepresentative.name.lastName" },
-    suffix: #{ field: "contacts.otherContacts.authorizedRepresentative.name.suffix" },
+    prefix: #{
+      field: "contacts.otherContacts.authorizedRepresentative.name.prefix",
+    },
+    firstName: #{
+      field: "contacts.otherContacts.authorizedRepresentative.name.firstName",
+    },
+    middleName: #{
+      field: "contacts.otherContacts.authorizedRepresentative.name.middleName",
+    },
+    lastName: #{
+      field: "contacts.otherContacts.authorizedRepresentative.name.lastName",
+    },
+    suffix: #{
+      field: "contacts.otherContacts.authorizedRepresentative.name.suffix",
+    },
   }
 )
 @extension(
@@ -44,15 +54,20 @@ namespace QuestionBank.AorName;
     label: "Authorized Organization Representative Name",
     elements: #[
       #{ type: "Control", scope: "#/properties/prefix", label: "Prefix" },
-      #{ type: "Control", scope: "#/properties/firstName", label: "First Name" },
-      #{ type: "Control", scope: "#/properties/middleName", label: "Middle Name" },
+      #{
+        type: "Control",
+        scope: "#/properties/firstName",
+        label: "First Name",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/middleName",
+        label: "Middle Name",
+      },
       #{ type: "Control", scope: "#/properties/lastName", label: "Last Name" },
       #{ type: "Control", scope: "#/properties/suffix", label: "Suffix" }
     ],
   }
 )
-@example(#{
-  firstName: "Sarah",
-  lastName: "Johnson",
-})
+@example(#{ firstName: "Sarah", lastName: "Johnson" })
 model QuestionAorName extends QuestionName.QuestionName {}

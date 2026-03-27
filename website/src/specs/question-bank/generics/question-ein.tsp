@@ -9,24 +9,18 @@ namespace QuestionBank.QuestionEin;
 
 /** A generic Employer Identification Number (EIN) question */
 @extension("x-tags", #[Tags.identifier])
-@extension(
-  "x-mapping-from-cg",
-  #{
-    ein: #{ field: "ein" },
-  }
-)
-@extension(
-  "x-mapping-to-cg",
-  #{
-    ein: #{ field: "ein" },
-  }
-)
+@extension("x-mapping-from-cg", #{ ein: #{ field: "ein" } })
+@extension("x-mapping-to-cg", #{ ein: #{ field: "ein" } })
 @extension(
   "x-ui-schema",
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/ein", label: "Employer Identification Number (EIN)" }
+      #{
+        type: "Control",
+        scope: "#/properties/ein",
+        label: "Employer Identification Number (EIN)",
+      }
     ],
   }
 )

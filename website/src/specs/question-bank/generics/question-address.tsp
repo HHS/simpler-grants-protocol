@@ -96,8 +96,16 @@ enum USState {
     type: "Group",
     label: "Address",
     elements: #[
-      #{ type: "Control", scope: "#/properties/street1", label: "Street Address (Line 1)" },
-      #{ type: "Control", scope: "#/properties/street2", label: "Street Address (Line 2)" },
+      #{
+        type: "Control",
+        scope: "#/properties/street1",
+        label: "Street Address (Line 1)",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/street2",
+        label: "Street Address (Line 2)",
+      },
       #{ type: "Control", scope: "#/properties/city", label: "City" },
       #{ type: "Control", scope: "#/properties/state", label: "State" },
       #{
@@ -113,7 +121,11 @@ enum USState {
         },
       },
       #{ type: "Control", scope: "#/properties/country", label: "Country" },
-      #{ type: "Control", scope: "#/properties/postalCode", label: "Postal Code" }
+      #{
+        type: "Control",
+        scope: "#/properties/postalCode",
+        label: "Postal Code",
+      }
     ],
   }
 )

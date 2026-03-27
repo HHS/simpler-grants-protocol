@@ -72,9 +72,7 @@ namespace QuestionBank.PocDetails;
             isMobile: #{ field: "phone.isMobile" },
           },
         },
-        emails: #{
-          primary: #{ field: "email" },
-        },
+        emails: #{ primary: #{ field: "email" } },
       },
     },
   }
@@ -89,11 +87,31 @@ namespace QuestionBank.PocDetails;
         type: "Group",
         label: "Name",
         elements: #[
-          #{ type: "Control", scope: "#/properties/name/properties/prefix", label: "Prefix" },
-          #{ type: "Control", scope: "#/properties/name/properties/firstName", label: "First Name" },
-          #{ type: "Control", scope: "#/properties/name/properties/middleName", label: "Middle Name" },
-          #{ type: "Control", scope: "#/properties/name/properties/lastName", label: "Last Name" },
-          #{ type: "Control", scope: "#/properties/name/properties/suffix", label: "Suffix" }
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/prefix",
+            label: "Prefix",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/firstName",
+            label: "First Name",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/middleName",
+            label: "Middle Name",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/lastName",
+            label: "Last Name",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/name/properties/suffix",
+            label: "Suffix",
+          }
         ],
       },
       #{ type: "Control", scope: "#/properties/title", label: "Job Title" },
@@ -101,22 +119,62 @@ namespace QuestionBank.PocDetails;
         type: "Group",
         label: "Mailing Address",
         elements: #[
-          #{ type: "Control", scope: "#/properties/address/properties/street1", label: "Street Address (Line 1)" },
-          #{ type: "Control", scope: "#/properties/address/properties/street2", label: "Street Address (Line 2)" },
-          #{ type: "Control", scope: "#/properties/address/properties/city", label: "City" },
-          #{ type: "Control", scope: "#/properties/address/properties/state", label: "State" },
-          #{ type: "Control", scope: "#/properties/address/properties/country", label: "Country" },
-          #{ type: "Control", scope: "#/properties/address/properties/postalCode", label: "Postal Code" }
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/street1",
+            label: "Street Address (Line 1)",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/street2",
+            label: "Street Address (Line 2)",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/city",
+            label: "City",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/state",
+            label: "State",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/country",
+            label: "Country",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/address/properties/postalCode",
+            label: "Postal Code",
+          }
         ],
       },
       #{
         type: "Group",
         label: "Phone Number",
         elements: #[
-          #{ type: "Control", scope: "#/properties/phone/properties/countryCode", label: "Country Code" },
-          #{ type: "Control", scope: "#/properties/phone/properties/number", label: "Phone Number" },
-          #{ type: "Control", scope: "#/properties/phone/properties/extension", label: "Extension" },
-          #{ type: "Control", scope: "#/properties/phone/properties/isMobile", label: "Is Mobile?" }
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/countryCode",
+            label: "Country Code",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/number",
+            label: "Phone Number",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/extension",
+            label: "Extension",
+          },
+          #{
+            type: "Control",
+            scope: "#/properties/phone/properties/isMobile",
+            label: "Is Mobile?",
+          }
         ],
       },
       #{ type: "Control", scope: "#/properties/email", label: "Email Address" }

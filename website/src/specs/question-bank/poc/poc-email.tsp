@@ -12,21 +12,11 @@ namespace QuestionBank.PocEmail;
 @extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",
-  #{
-    email: #{ field: "contacts.primary.emails.primary" },
-  }
+  #{ email: #{ field: "contacts.primary.emails.primary" } }
 )
 @extension(
   "x-mapping-to-cg",
-  #{
-    contacts: #{
-      primary: #{
-        emails: #{
-          primary: #{ field: "email" },
-        },
-      },
-    },
-  }
+  #{ contacts: #{ primary: #{ emails: #{ primary: #{ field: "email" } } } } }
 )
 @extension(
   "x-ui-schema",

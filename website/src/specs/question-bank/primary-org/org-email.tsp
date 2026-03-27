@@ -12,20 +12,12 @@ namespace QuestionBank.OrgEmail;
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
-  #{
-    email: #{ field: "organizations.primary.emails.primary" },
-  }
+  #{ email: #{ field: "organizations.primary.emails.primary" } }
 )
 @extension(
   "x-mapping-to-cg",
   #{
-    organizations: #{
-      primary: #{
-        emails: #{
-          primary: #{ field: "email" },
-        },
-      },
-    },
+    organizations: #{ primary: #{ emails: #{ primary: #{ field: "email" } } } },
   }
 )
 @extension(
@@ -33,7 +25,11 @@ namespace QuestionBank.OrgEmail;
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/email", label: "Organization Email Address" }
+      #{
+        type: "Control",
+        scope: "#/properties/email",
+        label: "Organization Email Address",
+      }
     ],
   }
 )

@@ -56,7 +56,7 @@ const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
 const opportunityData = {
   id: "573525f2-8e15-4405-83fb-e6523511d893",
   title: "STEM Education Grant Program",
-  description: "A grant program focused on improving STEM education in underserved communities",
+  description: "A grant program focused on improving STEM education in rural communities",
   status: { value: "open" },
   createdAt: "2025-01-01T00:00:00Z",
   lastModifiedAt: "2025-01-15T00:00:00Z",

@@ -19,9 +19,7 @@ namespace QuestionBank.AorTitle;
   #{
     contacts: #{
       otherContacts: #{
-        authorizedRepresentative: #{
-          title: #{ field: "title" },
-        },
+        authorizedRepresentative: #{ title: #{ field: "title" } },
       },
     },
   }

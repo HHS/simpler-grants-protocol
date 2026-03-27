@@ -12,26 +12,22 @@ namespace QuestionBank.OrgName;
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
-  #{
-    name: #{ field: "organizations.primary.name" },
-  }
+  #{ name: #{ field: "organizations.primary.name" } }
 )
 @extension(
   "x-mapping-to-cg",
-  #{
-    organizations: #{
-      primary: #{
-        name: #{ field: "name" },
-      },
-    },
-  }
+  #{ organizations: #{ primary: #{ name: #{ field: "name" } } } }
 )
 @extension(
   "x-ui-schema",
   #{
     type: "VerticalLayout",
     elements: #[
-      #{ type: "Control", scope: "#/properties/name", label: "Organization Legal Name" }
+      #{
+        type: "Control",
+        scope: "#/properties/name",
+        label: "Organization Legal Name",
+      }
     ],
   }
 )
