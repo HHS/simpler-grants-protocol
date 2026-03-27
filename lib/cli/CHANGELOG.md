@@ -1,5 +1,11 @@
 # @common-grants/cli
 
+## 0.3.1
+
+### Patch Changes
+
+- c2b9145: Updates dependencies
+
 ## 0.3.0
 
 ### Minor Changes
