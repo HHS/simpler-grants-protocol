@@ -6,6 +6,9 @@ import { JsonFormRenderer } from "@/components/forms/JsonFormRenderer";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
 import type { FormData, JsonValue } from "@/lib/types";
 import { transformWithMapping } from "@/lib/transformation";
+import { generateSchemaExample } from "@/lib/schema/example-generator";
+import { Paths } from "@/lib/schema/paths";
+import { extensionsAjv } from "@/lib/validation";
 import * as yaml from "js-yaml";
 
 interface Props {
@@ -20,8 +23,13 @@ const toJson = (data: Record<string, unknown>) =>
 const toYaml = (data: Record<string, unknown>) =>
   yaml.dump(data, { noRefs: true, lineWidth: -1 }) as string;
 
-// Use the first example as default data, or an empty object
-const exampleData = (item.examples[0] as FormData) ?? {};
+// Generate example data from the schema using openapi-sampler, which
+// composes examples from nested $ref schemas automatically
+const schemaRelPath = `${Paths.EXTENSION_SCHEMAS_PATH_PREFIX}/${item.schema}.yaml`;
+const exampleJson = await generateSchemaExample(schemaRelPath, {
+  validator: extensionsAjv,
+});
+const exampleData = JSON.parse(exampleJson) as FormData;
 
 // Transform example data to CommonGrants format using the mapping
 const commonGrantsData = transformWithMapping(
