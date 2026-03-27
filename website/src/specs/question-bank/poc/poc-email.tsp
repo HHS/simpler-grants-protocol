@@ -1,6 +1,6 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using CommonGrants.Types;
 using JsonSchema;
@@ -8,7 +8,8 @@ using JsonSchema;
 namespace QuestionBank.PocEmail;
 
 /** The email address of the primary point of contact */
-@extension("x-tags", #[Tags.contact, Tags.email])
+@extension("x-tags", #[Tags.email])
+@extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",
   #{

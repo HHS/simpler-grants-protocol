@@ -1,13 +1,14 @@
 import "@typespec/json-schema";
-import "./index.tsp";
-import "./question-name.tsp";
+import "../index.tsp";
+import "../generics/question-name.tsp";
 
 using JsonSchema;
 
 namespace QuestionBank.PocName;
 
 /** The name of the primary point of contact */
-@extension("x-tags", #[Tags.contact, Tags.name])
+@extension("x-tags", #[Tags.name])
+@extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",
   #{

@@ -1,6 +1,6 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using CommonGrants.Types;
 using JsonSchema;
@@ -8,7 +8,8 @@ using JsonSchema;
 namespace QuestionBank.OrgName;
 
 /** The legal name of the applicant organization */
-@extension("x-tags", #[Tags.organization, Tags.name])
+@extension("x-tags", #[Tags.name])
+@extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
   #{

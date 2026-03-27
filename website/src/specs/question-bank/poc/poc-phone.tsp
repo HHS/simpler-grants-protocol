@@ -1,6 +1,6 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using CommonGrants.Fields;
 using JsonSchema;
@@ -8,7 +8,8 @@ using JsonSchema;
 namespace QuestionBank.PocPhone;
 
 /** A phone number for the primary point of contact */
-@extension("x-tags", #[Tags.contact, Tags.phone])
+@extension("x-tags", #[Tags.phone])
+@extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",
   #{

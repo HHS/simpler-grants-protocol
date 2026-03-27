@@ -1,6 +1,6 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using CommonGrants.Types;
 using JsonSchema;
@@ -8,7 +8,8 @@ using JsonSchema;
 namespace QuestionBank.OrgUei;
 
 /** The Unique Entity Identifier (UEI) for the applicant organization */
-@extension("x-tags", #[Tags.organization, Tags.identifier])
+@extension("x-tags", #[Tags.identifier])
+@extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
   #{

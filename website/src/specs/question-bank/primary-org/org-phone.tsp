@@ -1,6 +1,6 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using CommonGrants.Fields;
 using JsonSchema;
@@ -8,7 +8,8 @@ using JsonSchema;
 namespace QuestionBank.OrgPhone;
 
 /** A phone number for the applicant organization */
-@extension("x-tags", #[Tags.organization, Tags.phone])
+@extension("x-tags", #[Tags.phone])
+@extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
   #{
