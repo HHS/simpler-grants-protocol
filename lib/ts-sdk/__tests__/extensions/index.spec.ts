@@ -31,12 +31,12 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       legacyId: {
         fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
         description: "Maps to the opportunity_id in the legacy system",
       },
       tags: {
         fieldType: CustomFieldType.array,
-        valueSchema: TagsValueSchema,
+        value: TagsValueSchema,
         description: "Tags for categorizing the opportunity",
       },
       category: {
@@ -81,9 +81,9 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const parsed = OpportunitySchema.parse(opportunityData);
 
     // Step 3: Extract and use typed custom field values
-    const legacyId = getCustomFieldValue(parsed.customFields, "legacyId", LegacyIdValueSchema);
-    const tags = getCustomFieldValue(parsed.customFields, "tags", TagsValueSchema);
-    const category = getCustomFieldValue(parsed.customFields, "category", z.string());
+    const legacyId = getCustomFieldValue(parsed, "legacyId", LegacyIdValueSchema);
+    const tags = getCustomFieldValue(parsed, "tags", TagsValueSchema);
+    const category = getCustomFieldValue(parsed, "category", z.string());
 
     // Verify typed access works
     expect(legacyId).toEqual({ system: "legacy", id: 12345 });
@@ -100,7 +100,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       legacyId: {
         fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
       },
     } as const);
 
@@ -117,7 +117,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const parsed = OpportunitySchema.parse(opportunityData);
 
     // Should return undefined for missing field
-    const legacyId = getCustomFieldValue(parsed.customFields, "legacyId", LegacyIdValueSchema);
+    const legacyId = getCustomFieldValue(parsed, "legacyId", LegacyIdValueSchema);
     expect(legacyId).toBeUndefined();
   });
 
@@ -125,7 +125,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       legacyId: {
         fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
       },
     } as const);
 
@@ -167,16 +167,16 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     };
 
     // getCustomFieldValue should throw ZodError for invalid values
-    expect(() => getCustomFieldValue(customFields, "legacyId", LegacyIdValueSchema)).toThrow();
+    expect(() => getCustomFieldValue({ customFields }, "legacyId", LegacyIdValueSchema)).toThrow();
   });
 
-  it("should work with default value schemas (no valueSchema provided)", () => {
+  it("should work with default value schemas (no value provided)", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       category: {
-        fieldType: CustomFieldType.string, // No valueSchema - uses default z.string()
+        fieldType: CustomFieldType.string, // No value - uses default z.string()
       },
       priority: {
-        fieldType: CustomFieldType.integer, // No valueSchema - uses default z.number().int()
+        fieldType: CustomFieldType.integer, // No value - uses default z.number().int()
       },
     } as const);
 
@@ -204,8 +204,8 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const parsed = OpportunitySchema.parse(opportunityData);
 
     // Extract using the default schemas
-    const category = getCustomFieldValue(parsed.customFields, "category", z.string());
-    const priority = getCustomFieldValue(parsed.customFields, "priority", z.number().int());
+    const category = getCustomFieldValue(parsed, "category", z.string());
+    const priority = getCustomFieldValue(parsed, "priority", z.number().int());
 
     expect(category).toBe("STEM");
     expect(priority).toBe(5);
@@ -215,7 +215,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       metadata: {
         fieldType: CustomFieldType.object,
-        valueSchema: MetadataValueSchema,
+        value: MetadataValueSchema,
       },
     } as const);
 
@@ -237,7 +237,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
 
     const parsed = OpportunitySchema.parse(opportunityData);
 
-    const metadata = getCustomFieldValue(parsed.customFields, "metadata", MetadataValueSchema);
+    const metadata = getCustomFieldValue(parsed, "metadata", MetadataValueSchema);
 
     expect(metadata).toEqual({ version: 2, source: "api" });
     expect(metadata?.version).toBe(2); // Typed as number
@@ -248,7 +248,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
       legacyId: {
         fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
       },
     } as const);
 
@@ -279,11 +279,7 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
     // legacyIdFromSchema is typed based on the schema definition
 
     // Typed access through getCustomFieldValue
-    const legacyIdFromHelper = getCustomFieldValue(
-      opp.customFields,
-      "legacyId",
-      LegacyIdValueSchema
-    );
+    const legacyIdFromHelper = getCustomFieldValue(opp, "legacyId", LegacyIdValueSchema);
     // legacyIdFromHelper: { system: string; id: number } | undefined
 
     expect(legacyIdFromHelper).toEqual({ system: "legacy", id: 12345 });
@@ -313,7 +309,7 @@ describe("plugin composition", () => {
       Opportunity: {
         legacyId: {
           fieldType: CustomFieldType.object,
-          valueSchema: LegacyIdValueSchema,
+          value: LegacyIdValueSchema,
           description: "Maps to the opportunity_id in the legacy system",
         },
       },
@@ -349,11 +345,7 @@ describe("plugin composition", () => {
       },
     };
     const legacyResult = legacyPlugin.schemas.Opportunity.parse(legacyData);
-    const legacyId = getCustomFieldValue(
-      legacyResult.customFields,
-      "legacyId",
-      LegacyIdValueSchema
-    );
+    const legacyId = getCustomFieldValue(legacyResult, "legacyId", LegacyIdValueSchema);
     expect(legacyId).toEqual({ system: "grants-v1", id: 42 });
 
     // Classification plugin parses its own fields
@@ -373,8 +365,8 @@ describe("plugin composition", () => {
       },
     };
     const classResult = classificationPlugin.schemas.Opportunity.parse(classificationData);
-    const category = getCustomFieldValue(classResult.customFields, "category", z.string());
-    const priority = getCustomFieldValue(classResult.customFields, "priority", z.number().int());
+    const category = getCustomFieldValue(classResult, "category", z.string());
+    const priority = getCustomFieldValue(classResult, "priority", z.number().int());
     expect(category).toBe("STEM Education");
     expect(priority).toBe(1);
   });

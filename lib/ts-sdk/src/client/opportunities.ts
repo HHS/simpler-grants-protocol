@@ -110,7 +110,7 @@ export class Opportunities {
    *
    * // With a custom-fields schema for typed access
    * const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
-   *   { key: "legacyId", fieldType: "integer", valueSchema: z.number().int() },
+   *   { key: "legacyId", fieldType: "integer", value: z.number().int() },
    * ] as const);
    * const typed = await client.opportunities.get(id, { schema: OpportunitySchema });
    * console.log(typed.customFields?.legacyId?.value); // typed as number

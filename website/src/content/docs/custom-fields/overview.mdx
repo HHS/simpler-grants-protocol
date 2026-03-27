@@ -64,7 +64,7 @@ const AgencyValueSchema = z.object({
 const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
   agency: {
     fieldType: CustomFieldType.object,
-    valueSchema: AgencyValueSchema,
+    value: AgencyValueSchema,
     description: "The agency offering this opportunity",
   },
   category: {

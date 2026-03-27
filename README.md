@@ -15,7 +15,9 @@ CommonGrants is an open standard for sharing data about funding opportunities, a
   - [Models](https://commongrants.org/protocol/models): The models for the CommonGrants protocol.
 - Published packages:
   - [@common-grants/core](https://www.npmjs.com/package/@common-grants/core): TypeSpec library with the CommonGrants specification.
-  - [@common-grants/cli](https://www.npmjs.com/package/@common-grants/cli): Command-line tool for working with the CommonGrants specification.  
+  - [@common-grants/cli](https://www.npmjs.com/package/@common-grants/cli): Command-line tool for working with the CommonGrants specification. 
+  - [@common-grants/sdk](https://www.npmjs.com/package/@common-grants/sdk): TypeScript SDK to streamline adoption of CommonGrants in TypeScript applications.
+  - [common-grants-sdk](https://pypi.org/project/common-grants-sdk/): Python SDK to streamline adoption of CommonGrants in Python applications.
 - Repository sections:
   - [Website](website): The code for our public website and docs.
   - [Libraries](lib): The code for the CommonGrants public packages and libraries:

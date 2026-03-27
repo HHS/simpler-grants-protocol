@@ -29,7 +29,7 @@ const legacyPlugin = definePlugin({
     Opportunity: {
       legacyId: {
         fieldType: CustomFieldType.object,
-        valueSchema: LegacyIdValueSchema,
+        value: LegacyIdValueSchema,
         description: "Maps to the opportunity_id in the legacy system",
       },
     },

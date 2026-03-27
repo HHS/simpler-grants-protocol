@@ -18,15 +18,15 @@
     "@typespec/versioning": "catalog:"
   },
   "devDependencies": {
-    "@eslint/js": "^9.15.0",
+    "@eslint/js": "^9.39.4",
     "@types/node": "catalog:",
-    "@typespec/prettier-plugin-typespec": "^1.5.0",
-    "eslint": "^9.15.0",
-    "prettier": "^3.3.3",
-    "typescript": "^5.3.3",
-    "typescript-eslint": "^8.15.0",
-    "vitest": "catalog:",
-    "@vitest/coverage-v8": "^3.2.4"
+    "@typespec/prettier-plugin-typespec": "^1.10.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.2",
+    "vitest": "catalog:"
   },
   "scripts": {
     "build": "tsc",

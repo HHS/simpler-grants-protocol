@@ -69,7 +69,7 @@ describe("definePlugin", () => {
           Opportunity: {
             legacyId: {
               fieldType: CustomFieldType.object,
-              valueSchema: LegacyIdValueSchema,
+              value: LegacyIdValueSchema,
             },
             category: {
               fieldType: CustomFieldType.string,
@@ -106,7 +106,7 @@ describe("definePlugin", () => {
           Opportunity: {
             legacyId: {
               fieldType: CustomFieldType.object,
-              valueSchema: LegacyIdValueSchema,
+              value: LegacyIdValueSchema,
             },
           },
         },
@@ -156,7 +156,7 @@ describe("definePlugin", () => {
           Opportunity: {
             legacyId: {
               fieldType: CustomFieldType.object,
-              valueSchema: LegacyIdValueSchema,
+              value: LegacyIdValueSchema,
             },
           },
         },

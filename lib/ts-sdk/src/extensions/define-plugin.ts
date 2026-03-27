@@ -5,7 +5,12 @@
  */
 
 import { z } from "zod";
-import type { ExtensibleSchemaName, SchemaExtensions, CustomFieldSpec } from "./types";
+import type {
+  ExtensibleSchemaName,
+  HasCustomFields,
+  SchemaExtensions,
+  CustomFieldSpec,
+} from "./types";
 import { EXTENSIBLE_SCHEMA_MAP } from "./types";
 import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fields";
 
@@ -72,7 +77,10 @@ export function definePlugin<const T extends SchemaExtensions>(
 
   // Walk every extensible model. If the caller supplied specs for it,
   // produce a schema with typed customFields; otherwise keep the base schema.
-  for (const [name, extensibleSchema] of Object.entries(EXTENSIBLE_SCHEMA_MAP)) {
+  for (const [name, extensibleSchema] of Object.entries(EXTENSIBLE_SCHEMA_MAP) as [
+    ExtensibleSchemaName,
+    HasCustomFields,
+  ][]) {
     const specs = extensions[name as ExtensibleSchemaName];
     if (specs && Object.keys(specs).length > 0) {
       schemas[name] = withCustomFields(extensibleSchema, specs);
