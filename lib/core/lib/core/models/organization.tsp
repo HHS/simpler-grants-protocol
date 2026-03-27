@@ -86,7 +86,7 @@ namespace Examples.Organization {
     name: "Example Organization",
     orgType: Fields.Examples.PCS.orgTypeTerm,
     ein: "12-3456789",
-    uei: "ABC1234567890",
+    uei: "AB1234567890",
     duns: "123456789012",
     addresses: Fields.Examples.Address.orgCollection,
     phones: Fields.Examples.Phone.orgCollection,
