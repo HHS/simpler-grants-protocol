@@ -48,7 +48,7 @@ How to propose a question:
 Adopting the protocol is one of the most valuable contributions to the community. There are several levels of adoption, and each one builds on the last. You do not have to start at the top.
 
 1. **Cross-walk your data.** Map your grant data elements to CommonGrants fields. Where your data does not map to the core models or existing custom fields, propose new ones for the catalog. This is a useful exercise even if you go no further, because it surfaces gaps in the protocol and helps us understand what real-world data looks like.
-2. **Build an adapter.** Package the custom fields, search filters, and transformation logic needed to translate data between your format and CommonGrants. For example, a state could publish a common-grants-california package that handles the mapping for their grant listings.
+2. **Build an adapter.** Package the transformation logic needed to translate data between your format and CommonGrants. See [Build a plugin or adapter](#build-a-plugin-or-adapter) for details.
 3. **Stand up an API proxy.** Create a CommonGrants-compliant wrapper around your existing API using one of the SDK templates and your adapter. The proxy forwards requests to your existing system and translates responses into CommonGrants format. This works especially well when your data or API is already publicly available.
 4. **Implement directly.** Build CommonGrants routes natively into your platform or API.
 
@@ -75,7 +75,7 @@ CommonGrants is transitioning toward community-led governance. The long-term vis
 - **Share governance experience.** If your organization has navigated a similar transition, such as building community governance around an open standard or shared infrastructure, we want to learn from you. What worked, what didn't, and what you would do differently.
 - **Connect us with others.** If you know organizations that should be part of this conversation, whether they are funders, platforms, government agencies, or data standards groups, we would love to get in touch with them.
 
-For more context on the stewardship model and roadmap, see the [community stewardship ADR](https://commongrants.org) on the CommonGrants website.
+For more context on the stewardship model and roadmap, see the [community stewardship ADR](https://commongrants.org/governance/adr/0021-community-stewardship/) on the CommonGrants website.
 
 ## Report a bug
 
@@ -100,7 +100,7 @@ If you don't have specific language or code to submit but would like to suggest 
 
 If you've implemented a new feature, fixed a bug, or made some documentation clearer, we'd love to consider your contribution. Good documentation is just as valuable as code, so if you notice gaps or unclear explanations, a pull request is welcome.
 
-1. **Fork the repo:** Create a copy of this repo where you can make your proposed changes by [following the Github forking methodology](https://docs.github.com/en/github/getting-started-with-github/quickstart/fork-a-repo).
+1. **Fork the repo:** Create a copy of this repo where you can make your proposed changes by [following the GitHub forking methodology](https://docs.github.com/en/github/getting-started-with-github/quickstart/fork-a-repo).
 2. **Find or create an issue:** Before proposing a change, make sure there is a corresponding issue (i.e. Bug Fix, Task, Feature Request) that describes the contribution you'll be making. If there isn't an existing issue, create a new one by selecting and filling out a template from the issue tab.
 3. **Create a feature branch:** Create a feature branch on your forked repository with a descriptive name, ideally one that references the issue number that your contribution is related to (e.g., `issue-10-unit-testing`).
 4. **Make changes and test them:** Add your code or documentation and commit those changes to the feature branch. If your contribution includes code, make sure you've written tests for it and that all of the tests are passing.
