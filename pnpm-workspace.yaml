@@ -31,7 +31,7 @@ catalogs:
 
 overrides:
   # TODO: Remove once vitest + @vitest/coverage-v8 are bumped to v4
-  brace-expansion@>=2.0.0 <2.0.3: '>=2.0.3'
+  brace-expansion@>=2.0.0 <2.0.3: 2.0.3
   lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
   qs@<6.14.2: '>=6.14.2'
   yaml@>=2.0.0 <2.8.3: '>=2.8.3'
