@@ -21,7 +21,8 @@ catalog:
   '@typespec/rest': ^0.80.0
   '@typespec/versioning': ^0.80.0
   '@vitest/coverage-v8': ^3.2.4
-  eslint-plugin-vitest: ^0.5.4
+  eslint: ^10.1.0
+  '@vitest/eslint-plugin': ^1.6.13
   vitest: ^3.2.4
 
 catalogs:
@@ -29,6 +30,8 @@ catalogs:
     vitest: ^4.1.2
 
 overrides:
+  # TODO: Remove once vitest + @vitest/coverage-v8 are bumped to v4
+  brace-expansion@>=2.0.0 <2.0.3: '>=2.0.3'
   lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
   qs@<6.14.2: '>=6.14.2'
   yaml@>=2.0.0 <2.8.3: '>=2.8.3'
