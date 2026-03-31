@@ -2,7 +2,7 @@ name: "Deps: Check Catalog Updates"
 
 on:
   schedule:
-    # Weekly Monday at 7am PT (15:00 UTC during PDT, 16:00 UTC during PST)
+    # Weekly Monday at ~7-8am PT (15:00 UTC = 8am PDT / 7am PST)
     - cron: "0 15 * * 1"
   workflow_dispatch: # Allow manual trigger
 
