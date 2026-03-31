@@ -24,6 +24,8 @@ fi
 echo "=== Checking for catalog dependency updates ==="
 
 # Define catalog-managed packages
+# IMPORTANT: Must match the `catalog:` section in pnpm-workspace.yaml.
+# The validation below will fail if they drift apart.
 DEFAULT_CATALOG_DEPS=(
   "@types/node"
   "@typespec/compiler"
@@ -38,19 +40,42 @@ DEFAULT_CATALOG_DEPS=(
   "vitest"
 )
 
+WORKSPACE_FILE="pnpm-workspace.yaml"
+if [[ -f "$WORKSPACE_FILE" ]]; then
+  YAML_DEPS=$(awk '/^catalog:/{found=1; next} /^[^ ]/{if(found) exit} found && /^  /' "$WORKSPACE_FILE" | sed "s/^  //; s/^'//; s/':.*//" | sed "s/:.*//" | sort)
+  SCRIPT_DEPS=$(printf '%s\n' "${DEFAULT_CATALOG_DEPS[@]}" | sort)
+  if [[ "$YAML_DEPS" != "$SCRIPT_DEPS" ]]; then
+    echo "ERROR: DEFAULT_CATALOG_DEPS does not match catalog: in $WORKSPACE_FILE"
+    echo ""
+    echo "In pnpm-workspace.yaml but not in script:"
+    comm -23 <(echo "$YAML_DEPS") <(echo "$SCRIPT_DEPS") | sed 's/^/  /'
+    echo "In script but not in pnpm-workspace.yaml:"
+    comm -13 <(echo "$YAML_DEPS") <(echo "$SCRIPT_DEPS") | sed 's/^/  /'
+    echo ""
+    echo "Update DEFAULT_CATALOG_DEPS in this script to match pnpm-workspace.yaml."
+    exit 1
+  fi
+fi
+
 echo ""
-echo "--- Checking outdated packages ---"
+echo "--- Checking outdated packages (default catalog) ---"
 
-# pnpm outdated exits 0 when up to date, 1 when outdated
-HAS_UPDATES=false
-OUTDATED_OUTPUT=$(pnpm outdated "${DEFAULT_CATALOG_DEPS[@]}" 2>&1) && true || HAS_UPDATES=true
+HAS_DEFAULT_UPDATES=false
+DEFAULT_OUTDATED=$(pnpm outdated "${DEFAULT_CATALOG_DEPS[@]}" 2>&1) && true || HAS_DEFAULT_UPDATES=true
 
-if [[ "$HAS_UPDATES" == "false" ]]; then
+echo ""
+echo "--- Checking outdated packages (website catalog) ---"
+
+HAS_WEBSITE_UPDATES=false
+WEBSITE_OUTDATED=$(pnpm outdated vitest --filter website 2>&1) && true || HAS_WEBSITE_UPDATES=true
+
+if [[ "$HAS_DEFAULT_UPDATES" == "false" && "$HAS_WEBSITE_UPDATES" == "false" ]]; then
   echo "All catalog dependencies are up to date."
   exit 0
 fi
 
-echo "$OUTDATED_OUTPUT"
+[[ "$HAS_DEFAULT_UPDATES" == "true" ]] && echo "$DEFAULT_OUTDATED"
+[[ "$HAS_WEBSITE_UPDATES" == "true" ]] && echo "$WEBSITE_OUTDATED"
 
 if [[ "$DRY_RUN" == "true" ]]; then
   echo ""
