@@ -12,6 +12,7 @@
     "lib/python-sdk",
     "lib/core",
     "lib/cli",
-    "lib/ts-sdk"
+    "lib/ts-sdk",
+    "lib/changelog-emitter"
   ]
 }
