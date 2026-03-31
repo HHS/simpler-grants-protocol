@@ -1,0 +1,77 @@
+name: "Deps: Check Catalog Updates"
+
+on:
+  schedule:
+    # Weekly Monday at 7am PT (15:00 UTC during PDT, 16:00 UTC during PST)
+    - cron: "0 15 * * 1"
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Check for outdated catalog deps
+        id: check
+        run: |
+          OUTPUT=$(./.github/scripts/update-catalog-deps.sh --dry-run 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -q "All catalog dependencies are up to date"; then
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run catalog update script
+        if: steps.check.outputs.has_updates == 'true'
+        run: ./.github/scripts/update-catalog-deps.sh
+
+      - name: Create pull request
+        if: steps.check.outputs.has_updates == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/update-catalog-deps
+          title: "chore(deps): update catalog dependencies"
+          body: |
+            ## Automated catalog dependency update
+
+            This PR was created by the weekly `deps-catalog-check` workflow.
+
+            ### What changed
+            Updates to dependencies managed via `pnpm-workspace.yaml` catalog:
+            - TypeSpec packages (`@typespec/*`)
+            - Testing packages (`vitest`, `@vitest/*`, `eslint-plugin-vitest`)
+            - Type definitions (`@types/node`)
+
+            ### Why a separate workflow?
+            Dependabot has [known bugs](https://github.com/dependabot/dependabot-core/issues/14339) with pnpm workspace catalogs that corrupt the lockfile. This workflow runs `pnpm update` + `pnpm install` to produce a clean, valid lockfile.
+
+            ### Reviewer checklist
+            - [ ] CI passes (catalog validation runs all workspace package checks)
+            - [ ] If TypeSpec packages updated: verify `pnpm run typespec` output is sensible
+            - [ ] If this is a **major** version bump: review changelog of updated packages
+            - [ ] Add changeset if peerDep ranges changed for `@common-grants/core` or `typespec-versioning-changelog`
+          labels: |
+            dependencies
+          commit-message: "chore(deps): update catalog dependencies"
+          delete-branch: true
