@@ -1,0 +1,156 @@
+# Automated dependency updates for the CommonGrants monorepo.
+#
+# Split strategy:
+#   - Dependabot handles non-catalog deps (templates, examples, Python, Actions, non-catalog workspace deps)
+#   - A scheduled GitHub Action (deps-catalog-check.yml) handles catalog-managed deps
+#     (avoids dependabot-core pnpm catalog bugs: #14339, #13347, #12244, #12445, #13000)
+#
+# See DEPENDENCY_MANAGEMENT.md for full strategy documentation.
+
+version: 2
+updates:
+  # ── World A: Root pnpm workspace (shared lockfile) ──
+  # Handles only non-catalog deps. Catalog deps (@typespec/*, vitest, etc.)
+  # are ignored here and managed by the deps-catalog-check workflow instead.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    groups:
+      website-framework:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+          - "@starlight/*"
+      minor-patch:
+        exclude-patterns:
+          - "astro"
+          - "@astrojs/*"
+          - "@starlight/*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Internal workspace deps
+      - dependency-name: "@common-grants/*"
+      # Catalog-managed deps — handled by scheduled workflow instead
+      # (avoids dependabot-core pnpm catalog bugs #14339, #13347, #12244, #12445, #13000)
+      - dependency-name: "@typespec/*"
+      - dependency-name: "vitest"
+      - dependency-name: "@vitest/*"
+      - dependency-name: "eslint-plugin-vitest"
+      - dependency-name: "@types/node"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 10
+
+  # ── World B: Isolated lockfile directories ──
+
+  # templates/express-js (npm, weekly)
+  - package-ecosystem: "npm"
+    directory: "/templates/express-js"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+    groups:
+      all-deps:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "@common-grants/*"
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # templates/quickstart (npm, weekly)
+  - package-ecosystem: "npm"
+    directory: "/templates/quickstart"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+    groups:
+      all-deps:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "@common-grants/*"
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # lib/python-sdk (pip/Poetry, weekly)
+  - package-ecosystem: "pip"
+    directory: "/lib/python-sdk"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    labels: ["dependencies", "python"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # templates/fast-api (pip/Poetry, monthly)
+  - package-ecosystem: "pip"
+    directory: "/templates/fast-api"
+    schedule:
+      interval: "monthly"
+    groups:
+      all-deps:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "common-grants-sdk"
+    labels: ["dependencies", "python"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # examples/pa-opportunity-example (pip/Poetry, monthly)
+  - package-ecosystem: "pip"
+    directory: "/examples/pa-opportunity-example"
+    schedule:
+      interval: "monthly"
+    groups:
+      all-deps:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "common-grants-sdk"
+    labels: ["dependencies", "python"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # examples/ca-opportunity-example (pip/Poetry, monthly)
+  - package-ecosystem: "pip"
+    directory: "/examples/ca-opportunity-example"
+    schedule:
+      interval: "monthly"
+    groups:
+      all-deps:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "common-grants-sdk"
+    labels: ["dependencies", "python"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # ── World C: GitHub Actions ──
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      actions:
+        patterns: ["*"]
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
