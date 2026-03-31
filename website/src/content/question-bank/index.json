@@ -3,17 +3,45 @@
     "schema": "QuestionAddress",
     "label": "Generic Address"
   },
+  "generic-duns": {
+    "schema": "QuestionDuns",
+    "label": "Generic DUNS"
+  },
+  "generic-ein": {
+    "schema": "QuestionEin",
+    "label": "Generic EIN"
+  },
+  "generic-email": {
+    "schema": "QuestionEmail",
+    "label": "Generic Email"
+  },
   "generic-name": {
     "schema": "QuestionName",
     "label": "Generic Name"
+  },
+  "generic-phone": {
+    "schema": "QuestionPhone",
+    "label": "Generic Phone"
+  },
+  "generic-uei": {
+    "schema": "QuestionUei",
+    "label": "Generic UEI"
   },
   "org-address": {
     "schema": "QuestionPrimaryOrgAddress",
     "label": "Organization Address"
   },
+  "org-duns": {
+    "schema": "QuestionOrgDuns",
+    "label": "Organization DUNS"
+  },
   "org-ein": {
     "schema": "QuestionOrgEin",
     "label": "Organization EIN"
+  },
+  "org-email": {
+    "schema": "QuestionOrgEmail",
+    "label": "Organization Email"
   },
   "org-name": {
     "schema": "QuestionOrgName",
@@ -26,6 +54,38 @@
   "org-uei": {
     "schema": "QuestionOrgUei",
     "label": "Organization UEI"
+  },
+  "org-details": {
+    "schema": "QuestionOrgDetails",
+    "label": "Organization Details"
+  },
+  "fiscal-sponsor-address": {
+    "schema": "QuestionFiscalSponsorAddress",
+    "label": "Fiscal Sponsor Address"
+  },
+  "fiscal-sponsor-ein": {
+    "schema": "QuestionFiscalSponsorEin",
+    "label": "Fiscal Sponsor EIN"
+  },
+  "fiscal-sponsor-email": {
+    "schema": "QuestionFiscalSponsorEmail",
+    "label": "Fiscal Sponsor Email"
+  },
+  "fiscal-sponsor-name": {
+    "schema": "QuestionFiscalSponsorName",
+    "label": "Fiscal Sponsor Name"
+  },
+  "fiscal-sponsor-phone": {
+    "schema": "QuestionFiscalSponsorPhone",
+    "label": "Fiscal Sponsor Phone"
+  },
+  "fiscal-sponsor-uei": {
+    "schema": "QuestionFiscalSponsorUei",
+    "label": "Fiscal Sponsor UEI"
+  },
+  "fiscal-sponsor-details": {
+    "schema": "QuestionFiscalSponsorDetails",
+    "label": "Fiscal Sponsor Details"
   },
   "poc-address": {
     "schema": "QuestionPocAddress",
@@ -46,5 +106,61 @@
   "poc-title": {
     "schema": "QuestionPocTitle",
     "label": "Primary Contact Title"
+  },
+  "poc-details": {
+    "schema": "QuestionPocDetails",
+    "label": "Primary Contact Details"
+  },
+  "pi-address": {
+    "schema": "QuestionPiAddress",
+    "label": "Principal Investigator Address"
+  },
+  "pi-email": {
+    "schema": "QuestionPiEmail",
+    "label": "Principal Investigator Email"
+  },
+  "pi-name": {
+    "schema": "QuestionPiName",
+    "label": "Principal Investigator Name"
+  },
+  "pi-phone": {
+    "schema": "QuestionPiPhone",
+    "label": "Principal Investigator Phone"
+  },
+  "pi-title": {
+    "schema": "QuestionPiTitle",
+    "label": "Principal Investigator Title"
+  },
+  "pi-details": {
+    "schema": "QuestionPiDetails",
+    "label": "Principal Investigator Details"
+  },
+  "aor-address": {
+    "schema": "QuestionAorAddress",
+    "label": "AOR Address"
+  },
+  "aor-email": {
+    "schema": "QuestionAorEmail",
+    "label": "AOR Email"
+  },
+  "aor-name": {
+    "schema": "QuestionAorName",
+    "label": "AOR Name"
+  },
+  "aor-phone": {
+    "schema": "QuestionAorPhone",
+    "label": "AOR Phone"
+  },
+  "aor-title": {
+    "schema": "QuestionAorTitle",
+    "label": "AOR Title"
+  },
+  "aor-details": {
+    "schema": "QuestionAorDetails",
+    "label": "AOR Details"
+  },
+  "project-details": {
+    "schema": "QuestionProjectDetails",
+    "label": "Project Details"
   }
 }

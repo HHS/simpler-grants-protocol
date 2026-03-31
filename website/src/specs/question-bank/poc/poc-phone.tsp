@@ -1,6 +1,6 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using CommonGrants.Fields;
 using JsonSchema;
@@ -8,7 +8,8 @@ using JsonSchema;
 namespace QuestionBank.PocPhone;
 
 /** A phone number for the primary point of contact */
-@extension("x-tags", #[Tags.contact, Tags.phone])
+@extension("x-tags", #[Tags.person, Tags.phone])
+@extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",
   #{
@@ -41,9 +42,21 @@ namespace QuestionBank.PocPhone;
     type: "Group",
     label: "Primary Point of Contact Phone Number",
     elements: #[
-      #{ type: "Control", scope: "#/properties/countryCode", label: "Country Code" },
-      #{ type: "Control", scope: "#/properties/number", label: "Phone Number" },
-      #{ type: "Control", scope: "#/properties/extension", label: "Extension" },
+      #{
+        type: "Control",
+        scope: "#/properties/countryCode",
+        label: "Country Code",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/number",
+        label: "Phone Number",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/extension",
+        label: "Extension",
+      },
       #{ type: "Control", scope: "#/properties/isMobile", label: "Is Mobile?" }
     ],
   }

@@ -19,7 +19,7 @@ model CustomEligibilityCriteria extends CustomField {
   @example(#{
     beneficiaryTypes: #[
       #{ code: "EL020000", name: "Youth" },
-      #{ code: "EL050000", name: "Veterans" },
+      #{ code: "EL050000", name: "Veterans" }
     ],
     details: "Applicants must serve communities in rural areas with populations under 50,000.",
   })

@@ -13,7 +13,11 @@ namespace CustomFields.Attachments;
 @extension("x-version", "0.1.0")
 @extension(
   "x-valid-schemas",
-  #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase, ValidSchemas.ApplicationBase]
+  #[
+    ValidSchemas.OpportunityBase,
+    ValidSchemas.CompetitionBase,
+    ValidSchemas.ApplicationBase
+  ]
 )
 model CustomAttachments extends CustomField {
   name: "attachments";
