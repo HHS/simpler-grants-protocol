@@ -40,9 +40,12 @@ DEFAULT_CATALOG_DEPS=(
 
 echo ""
 echo "--- Checking outdated packages ---"
-OUTDATED_OUTPUT=$(pnpm outdated "${DEFAULT_CATALOG_DEPS[@]}" 2>&1 || true)
 
-if [[ -z "$OUTDATED_OUTPUT" ]] || echo "$OUTDATED_OUTPUT" | grep -q "All packages are up to date"; then
+# pnpm outdated exits 0 when up to date, 1 when outdated
+HAS_UPDATES=false
+OUTDATED_OUTPUT=$(pnpm outdated "${DEFAULT_CATALOG_DEPS[@]}" 2>&1) && true || HAS_UPDATES=true
+
+if [[ "$HAS_UPDATES" == "false" ]]; then
   echo "All catalog dependencies are up to date."
   exit 0
 fi
@@ -58,6 +61,13 @@ fi
 echo ""
 echo "--- Updating default catalog dependencies ---"
 pnpm update "${DEFAULT_CATALOG_DEPS[@]}" --recursive
+
+# The website uses a separate vitest version via the "website" named catalog.
+# pnpm update --recursive above should handle it, but ensure the website
+# workspace gets its vitest updated too.
+echo ""
+echo "--- Updating website catalog dependencies ---"
+pnpm update vitest --filter website
 
 echo ""
 echo "--- Regenerating lockfile ---"

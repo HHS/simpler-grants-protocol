@@ -23,6 +23,7 @@ Dependabot runs on three "worlds":
 - Updates non-catalog deps across all workspace packages
 - Groups Astro/Starlight packages together (`website-framework` group)
 - Groups all other minor/patch updates together (`minor-patch` group)
+- Major version bumps get individual PRs (not grouped) for careful review
 - Ignores `@common-grants/*` (internal workspace deps) and all catalog-managed deps
 
 **World B: Isolated lockfile directories** (weekly or monthly)
@@ -48,7 +49,7 @@ The `deps-catalog-check` workflow (`.github/workflows/deps-catalog-check.yml`) r
 - `vitest`, `@vitest/coverage-v8`, `eslint-plugin-vitest`
 - `@types/node`
 
-Note: the `website` catalog has its own `vitest` version (`^4.x`) that is also updated by this workflow.
+The `website` catalog has its own `vitest` version (`^4.x`). The update script includes an explicit `pnpm update vitest --filter website` step to ensure it stays current alongside the default catalog.
 
 **How it works:**
 1. Runs `.github/scripts/update-catalog-deps.sh --dry-run` to check for outdated packages
