@@ -7,16 +7,7 @@ using JsonSchema;
 
 namespace CustomFields.FederalFundingInstruments;
 
-/** The set of known federal funding instrument types */
-enum FederalFundingInstrumentOptions {
-  grant,
-  cooperativeAgreement,
-  procurementContract,
-  other,
-  custom,
-}
-
-/** Federal funding instrument types (federal-specific; NOFO IC defines 17 types) */
+/** Federal funding instrument types for this opportunity */
 @extension("x-tags", #[Tags.federal, Tags.funding])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
@@ -25,6 +16,7 @@ model CustomFederalFundingInstruments extends CustomField {
   name: "federalFundingInstruments";
   fieldType: CustomFieldType.array;
 
+<<<<<<< 591-update-question-bank
   @example(#[
     #{ type: FederalFundingInstrumentOptions.grant },
     #{ type: FederalFundingInstrumentOptions.cooperativeAgreement }
@@ -36,6 +28,10 @@ model CustomFederalFundingInstruments extends CustomField {
     /** A custom value when type is 'custom' */
     customValue?: string;
   }>;
+=======
+  @example(#["grant", "cooperativeAgreement"])
+  value: Array<string>;
+>>>>>>> main
 
-  description: "Funding instrument types for this opportunity (federal-specific extensible set)";
+  description: "Federal funding instrument types for this opportunity";
 }

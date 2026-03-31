@@ -5,37 +5,19 @@ import "./index.tsp";
 using CommonGrants.Fields;
 using JsonSchema;
 
-namespace CustomFields.FederalFundingSources;
-
-/** The set of known federal funding source types */
-enum FederalFundingSourceOptions {
-  discretionary,
-  mandatory,
-  continuation,
-  earmark,
-  custom,
-}
+namespace CustomFields.FederalFundingSource;
 
 /** The legislative funding sources for a federal grant opportunity (e.g. discretionary, mandatory) */
 @extension("x-tags", #[Tags.federal, Tags.funding])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
 @extension("x-valid-schemas", #[ValidSchemas.OpportunityBase])
-model CustomFederalFundingSources extends CustomField {
-  name: "federalFundingSources";
-  fieldType: CustomFieldType.array;
+model CustomFederalFundingSource extends CustomField {
+  name: "federalFundingSource";
+  fieldType: CustomFieldType.string;
 
-  @example(#[
-    #{ type: FederalFundingSourceOptions.discretionary },
-    #{ type: FederalFundingSourceOptions.mandatory }
-  ])
-  value: Array<{
-    /** The funding source type, from a predefined set of options */
-    type: FederalFundingSourceOptions;
+  @example("discretionary")
+  value: string;
 
-    /** A custom value when type is 'custom' */
-    customValue?: string;
-  }>;
-
-  description: "The legislative funding sources for a federal grant opportunity (e.g. discretionary, mandatory)";
+  description: "The legislative funding source for a federal grant opportunity (e.g. discretionary, mandatory)";
 }

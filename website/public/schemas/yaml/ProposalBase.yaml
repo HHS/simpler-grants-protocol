@@ -128,7 +128,7 @@ examples:
           description: Institutions with the primary purpose of providing in-patient physical and mental health services...
           code: EO000000
         ein: 12-3456789
-        uei: ABC1234567890
+        uei: AB1234567890
         duns: "123456789012"
         addresses:
           primary:
@@ -196,7 +196,7 @@ examples:
             description: Institutions with the primary purpose of providing in-patient physical and mental health services...
             code: EO000000
           ein: 12-3456789
-          uei: ABC1234567890
+          uei: AB1234567890
           duns: "123456789012"
           addresses:
             primary:
@@ -263,7 +263,7 @@ examples:
             description: Institutions with the primary purpose of providing in-patient physical and mental health services...
             code: EO000000
           ein: 12-3456789
-          uei: ABC1234567890
+          uei: AB1234567890
           duns: "123456789012"
           addresses:
             primary:
