@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - pnpm-workspace.yaml
+      - pnpm-lock.yaml
       - .github/workflows/ci-catalog-validation.yml
   workflow_dispatch:
 
