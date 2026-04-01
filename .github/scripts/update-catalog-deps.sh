@@ -9,6 +9,8 @@ set -euo pipefail
 #   ./.github/scripts/update-catalog-deps.sh           # Update and regenerate lockfile
 #   ./.github/scripts/update-catalog-deps.sh --dry-run  # Check only, no changes
 #
+# Exit codes: 0 = updates applied, 1 = error, 2 = no updates available
+#
 # Catalog deps (from pnpm-workspace.yaml):
 #   Default catalog: @types/node, @typespec/compiler, @typespec/http,
 #     @typespec/json-schema, @typespec/openapi, @typespec/openapi3,
@@ -42,6 +44,8 @@ DEFAULT_CATALOG_DEPS=(
 
 WORKSPACE_FILE="pnpm-workspace.yaml"
 if [[ -f "$WORKSPACE_FILE" ]]; then
+  # Simple parser: expects 2-space indented entries under `catalog:` with no inline comments.
+  # If parsing drifts, the comparison below will catch it and fail loudly.
   YAML_DEPS=$(awk '/^catalog:/{found=1; next} /^[^ ]/{if(found) exit} found && /^  /' "$WORKSPACE_FILE" | sed "s/^  //; s/^'//; s/':.*//" | sed "s/:.*//" | sort)
   SCRIPT_DEPS=$(printf '%s\n' "${DEFAULT_CATALOG_DEPS[@]}" | sort)
   if [[ "$YAML_DEPS" != "$SCRIPT_DEPS" ]]; then
@@ -71,7 +75,7 @@ WEBSITE_OUTDATED=$(pnpm outdated vitest --filter website 2>&1) && true || HAS_WE
 
 if [[ "$HAS_DEFAULT_UPDATES" == "false" && "$HAS_WEBSITE_UPDATES" == "false" ]]; then
   echo "All catalog dependencies are up to date."
-  exit 0
+  exit 2
 fi
 
 [[ "$HAS_DEFAULT_UPDATES" == "true" ]] && echo "$DEFAULT_OUTDATED"

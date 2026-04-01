@@ -33,12 +33,17 @@ jobs:
       - name: Check for outdated catalog deps
         id: check
         run: |
-          OUTPUT=$(./.github/scripts/update-catalog-deps.sh --dry-run 2>&1)
-          echo "$OUTPUT"
-          if echo "$OUTPUT" | grep -q "All catalog dependencies are up to date"; then
+          set +e
+          ./.github/scripts/update-catalog-deps.sh --dry-run
+          EXIT_CODE=$?
+          set -e
+          if [[ "$EXIT_CODE" -eq 2 ]]; then
             echo "has_updates=false" >> $GITHUB_OUTPUT
-          else
+          elif [[ "$EXIT_CODE" -eq 0 ]]; then
             echo "has_updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Catalog dep check failed with exit code $EXIT_CODE"
+            exit 1
           fi
 
       - name: Run catalog update script

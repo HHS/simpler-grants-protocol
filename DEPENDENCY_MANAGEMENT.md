@@ -90,7 +90,7 @@ Any PR that touches `pnpm-workspace.yaml` triggers `ci-catalog-validation.yml`. 
 2. `typespec-versioning-changelog` (checks + build)
 3. `@common-grants/cli` (checks + build + test)
 4. `@common-grants/sdk` (checks + build + test)
-5. `website` (checks + build)
+5. `website` (checks + build + test)
 
 This catches breakage that individual package CI workflows would miss, since a TypeSpec version bump can affect every downstream package simultaneously.
 
@@ -110,6 +110,8 @@ Three places must stay in sync:
 3. **`.github/dependabot.yml`** — add the package to the `ignore:` list under the root workspace entry (World A)
 
 If you skip step 3, Dependabot will try to update the dep and corrupt the lockfile. If you skip step 2, the catalog workflow won't check it for updates.
+
+When **removing** a catalog dep, update the same three places in reverse. If you forget to remove it from the `ignore:` list, Dependabot will silently skip it even after it's no longer catalog-managed.
 
 ## Troubleshooting
 
