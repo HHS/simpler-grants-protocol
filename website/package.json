@@ -26,7 +26,7 @@
     "check:spelling": "cspell .",
     "check:types": "tsc --noEmit",
     "checks": "pnpm check:lint && pnpm check:format && pnpm check:types && pnpm check:astro && pnpm check:spelling",
-    "ci": "pnpm run checks && pnpm run build && pnpm run test",
+    "ci": "pnpm run build && pnpm run checks && pnpm run test",
     "audit:moderate": "pnpm audit --audit-level=moderate",
     "audit:high": "pnpm audit --audit-level=high",
     "audit:critical": "pnpm audit --audit-level=critical",
