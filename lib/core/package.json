@@ -42,6 +42,7 @@
     "check:format": "prettier --check . && tsp format lib --check",
     "check:types": "tsc --noEmit",
     "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
+    "ci": "pnpm run checks && pnpm run build && pnpm run typespec",
     "audit": "pnpm audit"
   },
   "keywords": [
