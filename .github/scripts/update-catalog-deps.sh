@@ -44,8 +44,12 @@ DEFAULT_CATALOG_DEPS=(
 
 WORKSPACE_FILE="pnpm-workspace.yaml"
 if [[ -f "$WORKSPACE_FILE" ]]; then
-  # Simple parser: expects 2-space indented entries under `catalog:` with no inline comments.
-  # If parsing drifts, the comparison below will catch it and fail loudly.
+  # Simple YAML parser — assumes the following format in pnpm-workspace.yaml:
+  #   - Entries under `catalog:` are indented with exactly 2 spaces
+  #   - No inline comments on dependency lines
+  #   - Scoped package names may be single-quoted (e.g. '@typespec/compiler': ...)
+  # If the format changes and parsing drifts, the comparison below will catch it
+  # and fail loudly with a diff of what's missing.
   YAML_DEPS=$(awk '/^catalog:/{found=1; next} /^[^ ]/{if(found) exit} found && /^  /' "$WORKSPACE_FILE" | sed "s/^  //; s/^'//; s/':.*//" | sed "s/:.*//" | sort)
   SCRIPT_DEPS=$(printf '%s\n' "${DEFAULT_CATALOG_DEPS[@]}" | sort)
   if [[ "$YAML_DEPS" != "$SCRIPT_DEPS" ]]; then
