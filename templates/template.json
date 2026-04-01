@@ -108,8 +108,8 @@
     "compilerVersion": "1.1.0",
     "files": [
       {
-        "path": "./express-js/.eslintrc.js",
-        "destination": ".eslintrc.js"
+        "path": "./express-js/eslint.config.js",
+        "destination": "eslint.config.js"
       },
       {
         "path": "./express-js/.prettierignore",
@@ -120,8 +120,8 @@
         "destination": ".prettierrc"
       },
       {
-        "path": "./express-js/package-lock.json",
-        "destination": "package-lock.json"
+        "path": "./express-js/pnpm-lock.yaml",
+        "destination": "pnpm-lock.yaml"
       },
       {
         "path": "./express-js/package.json",
