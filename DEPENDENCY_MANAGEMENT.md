@@ -42,7 +42,7 @@ Dependabot runs on three "worlds":
 
 ## Catalog workflow scope
 
-The `deps-catalog-check` workflow (`.github/workflows/deps-catalog-check.yml`) runs weekly on Mondays at 7am PT. It can also be triggered manually via `workflow_dispatch` from the Actions tab.
+The `deps-catalog-check` workflow (`.github/workflows/deps-catalog-check.yml`) runs weekly on Mondays at ~7-8am PT (15:00 UTC). It can also be triggered manually via `workflow_dispatch` from the Actions tab.
 
 **What it manages** (defined in `pnpm-workspace.yaml` under `catalog:`):
 - `@typespec/compiler`, `@typespec/http`, `@typespec/json-schema`, `@typespec/openapi`, `@typespec/openapi3`, `@typespec/rest`, `@typespec/versioning`
