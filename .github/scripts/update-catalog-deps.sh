@@ -9,7 +9,10 @@ set -euo pipefail
 #   ./.github/scripts/update-catalog-deps.sh           # Update and regenerate lockfile
 #   ./.github/scripts/update-catalog-deps.sh --dry-run  # Check only, no changes
 #
-# Exit codes: 0 = updates applied, 1 = error, 2 = no updates available
+# Exit codes:
+#   0 = updates available (applied unless --dry-run)
+#   1 = error
+#   2 = no updates available
 #
 # Catalog deps (from pnpm-workspace.yaml):
 #   Default catalog: @types/node, @typespec/compiler, @typespec/http,
