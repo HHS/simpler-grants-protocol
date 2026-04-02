@@ -5,7 +5,7 @@ on:
   pull_request:
     paths:
       - lib/changelog-emitter/**
-      - .github/workflows/ci-lib-changelog.yml
+      - .github/workflows/ci-lib-changelog-emitter.yml
 
 jobs:
   build:
