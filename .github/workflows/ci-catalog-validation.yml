@@ -1,0 +1,50 @@
+name: "CI - Catalog: Validate All Workspace Packages"
+
+on:
+  pull_request:
+    paths:
+      - pnpm-workspace.yaml
+      - pnpm-lock.yaml
+      - .github/workflows/ci-catalog-validation.yml
+  workflow_dispatch:
+
+jobs:
+  validate-workspace:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies
+        # auditConfig.ignoreGhsas in pnpm-workspace.yaml excludes known advisories;
+        # --audit-level=moderate keeps low-severity findings from blocking CI.
+        run: pnpm audit --audit-level=moderate
+
+      - name: CI — core
+        run: pnpm run ci:core
+
+      - name: CI — changelog-emitter
+        run: pnpm run ci:changelog-emitter
+
+      - name: CI — cli
+        run: pnpm run ci:cli
+
+      - name: CI — sdk
+        run: pnpm run ci:sdk
+
+      - name: CI — website
+        run: pnpm run ci:website

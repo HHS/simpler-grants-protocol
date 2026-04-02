@@ -8,7 +8,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "ci:core": "pnpm --filter @common-grants/core run ci",
+    "ci:changelog-emitter": "pnpm --filter typespec-versioning-changelog run ci",
+    "ci:cli": "pnpm --filter @common-grants/cli run ci",
+    "ci:sdk": "pnpm --filter @common-grants/sdk run ci",
+    "ci:website": "pnpm --filter website run ci",
+    "ci": "pnpm run ci:core && pnpm run ci:changelog-emitter && pnpm run ci:cli && pnpm run ci:sdk && pnpm run ci:website"
   },
   "keywords": [],
   "author": "",

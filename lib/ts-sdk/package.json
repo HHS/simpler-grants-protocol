@@ -69,6 +69,7 @@
     "check:format": "prettier --check .",
     "check:types": "tsc --noEmit",
     "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
+    "ci": "pnpm run checks && pnpm run build && pnpm run test",
     "audit": "pnpm audit",
     "typespec": "tsp compile lib/main.tsp",
     "example:list": "tsx examples/list-opportunities.ts",
