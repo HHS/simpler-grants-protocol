@@ -8,7 +8,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "ci:core": "pnpm --filter @common-grants/core run ci",
     "ci:changelog-emitter": "pnpm --filter typespec-versioning-changelog run ci",
     "ci:cli": "pnpm --filter @common-grants/cli run ci",
