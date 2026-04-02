@@ -72,13 +72,29 @@ echo ""
 echo "--- Checking outdated packages (default catalog) ---"
 
 HAS_DEFAULT_UPDATES=false
-DEFAULT_OUTDATED=$(pnpm outdated "${DEFAULT_CATALOG_DEPS[@]}" 2>&1) && true || HAS_DEFAULT_UPDATES=true
+DEFAULT_OUTDATED=$(pnpm outdated "${DEFAULT_CATALOG_DEPS[@]}" 2>&1) || EXIT_CODE=$?
+EXIT_CODE=${EXIT_CODE:-0}
+if [[ $EXIT_CODE -eq 1 ]]; then
+  HAS_DEFAULT_UPDATES=true
+elif [[ $EXIT_CODE -ne 0 ]]; then
+  echo "ERROR: pnpm outdated failed (exit code $EXIT_CODE):"
+  echo "$DEFAULT_OUTDATED"
+  exit 1
+fi
 
 echo ""
 echo "--- Checking outdated packages (website catalog) ---"
 
 HAS_WEBSITE_UPDATES=false
-WEBSITE_OUTDATED=$(pnpm outdated vitest --filter website 2>&1) && true || HAS_WEBSITE_UPDATES=true
+WEBSITE_OUTDATED=$(pnpm outdated vitest --filter website 2>&1) || EXIT_CODE=$?
+EXIT_CODE=${EXIT_CODE:-0}
+if [[ $EXIT_CODE -eq 1 ]]; then
+  HAS_WEBSITE_UPDATES=true
+elif [[ $EXIT_CODE -ne 0 ]]; then
+  echo "ERROR: pnpm outdated failed for website catalog (exit code $EXIT_CODE):"
+  echo "$WEBSITE_OUTDATED"
+  exit 1
+fi
 
 if [[ "$HAS_DEFAULT_UPDATES" == "false" && "$HAS_WEBSITE_UPDATES" == "false" ]]; then
   echo "All catalog dependencies are up to date."
