@@ -14,8 +14,7 @@ set -euo pipefail
 #   1 = error
 #   2 = no updates available
 #
-# Catalog deps are parsed dynamically from the `catalog:` section of
-# pnpm-workspace.yaml. Website catalog (vitest ^4.x) is handled separately.
+# Catalog deps are parsed from the `catalog:` section of pnpm-workspace.yaml.
 
 DRY_RUN=false
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -24,13 +23,6 @@ fi
 
 echo "=== Checking for catalog dependency updates ==="
 
-# Parse catalog-managed packages directly from pnpm-workspace.yaml.
-# The catalog: section is the single source of truth — no hardcoded list to maintain.
-#
-# Parser assumptions (if the format changes, the script will fail loudly):
-#   - Entries under `catalog:` are indented with exactly 2 spaces
-#   - No inline comments on dependency lines
-#   - Scoped package names may be single-quoted (e.g. '@typespec/compiler': ...)
 WORKSPACE_FILE="pnpm-workspace.yaml"
 if [[ ! -f "$WORKSPACE_FILE" ]]; then
   echo "ERROR: $WORKSPACE_FILE not found"
