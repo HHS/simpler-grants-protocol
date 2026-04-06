@@ -19,7 +19,7 @@ Config lives in `.github/dependabot.yml` and `.github/workflows/deps-catalog-che
 
 Dependabot runs on three "worlds":
 
-**World A: Root pnpm workspace** (weekly, Mondays)
+**World A: Root pnpm workspace** (daily)
 - Updates non-catalog deps across all workspace packages
 - Groups Astro/Starlight packages together (`website-framework` group)
 - Groups all other minor/patch updates together (`minor-patch` group)
@@ -103,20 +103,17 @@ This catches breakage that individual package CI workflows would miss, since a T
 
 ## Adding a new catalog dep
 
-Three places must stay in sync:
+1. Add the dep to `pnpm-workspace.yaml` under `catalog:` (or `catalogs: website:` for website-only deps)
+2. Add the package to the `ignore:` list in `.github/dependabot.yml` under the root workspace entry (World A)
 
-1. **`pnpm-workspace.yaml`** — add the dep under `catalog:` (or `catalogs: website:` for website-only deps)
-2. **`.github/scripts/update-catalog-deps.sh`** — add the package name to the `DEFAULT_CATALOG_DEPS` array
-3. **`.github/dependabot.yml`** — add the package to the `ignore:` list under the root workspace entry (World A)
+CI validates that every catalog dep has a matching Dependabot ignore entry — it will fail if you forget step 2.
 
-If you skip step 3, Dependabot will try to update the dep and corrupt the lockfile. If you skip step 2, the catalog workflow won't check it for updates.
-
-When **removing** a catalog dep, update the same three places in reverse. If you forget to remove it from the `ignore:` list, Dependabot will silently skip it even after it's no longer catalog-managed.
+When **removing** a catalog dep, update the same two files in reverse. If you forget to remove it from the `ignore:` list, Dependabot will silently skip it even after it's no longer catalog-managed.
 
 ## Troubleshooting
 
 **Dependabot PR fails CI with lockfile errors**
-The dep is probably catalog-managed but missing from the ignore list in `.github/dependabot.yml`. Close the PR, add the dep to the ignore list and to the `DEFAULT_CATALOG_DEPS` array in the update script, then let the catalog workflow handle it.
+The dep is probably catalog-managed but missing from the ignore list in `.github/dependabot.yml`. Close the PR, add the dep to the ignore list, then let the catalog workflow handle it.
 
 **Catalog workflow PR fails CI**
 Check the `ci-catalog-validation` job logs. A TypeSpec major version bump is the most common cause — review the TypeSpec changelog and update any breaking API usage before merging.

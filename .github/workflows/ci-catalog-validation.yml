@@ -5,6 +5,7 @@ on:
     paths:
       - pnpm-workspace.yaml
       - pnpm-lock.yaml
+      - .github/dependabot.yml
       - .github/workflows/ci-catalog-validation.yml
   workflow_dispatch:
 
@@ -25,6 +26,34 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 10.18.3
+
+      - name: Validate catalog deps in Dependabot ignore list
+        run: |
+          CATALOG_DEPS=$(awk '/^catalog:/{found=1; next} /^[^ ]/{if(found) exit} found && /^  /' pnpm-workspace.yaml \
+            | sed "s/^  //; s/^'//; s/':.*//" | sed "s/:.*//" | sort)
+          IGNORE_PATTERNS=$(grep 'dependency-name:' .github/dependabot.yml \
+            | sed 's/.*dependency-name: *//; s/"//g; s/'"'"'//g' | sort -u)
+
+          uncovered=()
+          while IFS= read -r dep; do
+            covered=false
+            while IFS= read -r pattern; do
+              if [[ "$dep" == $pattern ]]; then
+                covered=true
+                break
+              fi
+            done <<< "$IGNORE_PATTERNS"
+            if [[ "$covered" == "false" ]]; then
+              uncovered+=("$dep")
+            fi
+          done <<< "$CATALOG_DEPS"
+
+          if [[ ${#uncovered[@]} -gt 0 ]]; then
+            echo "::error::Catalog deps not in Dependabot ignore list: ${uncovered[*]}"
+            echo "Add them to the ignore: section in .github/dependabot.yml"
+            exit 1
+          fi
+          echo "All catalog deps covered by Dependabot ignore list"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
