@@ -75,6 +75,8 @@ jobs:
             ### Reviewer checklist
             - [ ] CI passes (catalog validation runs all workspace package checks)
             - [ ] If TypeSpec packages updated: verify `pnpm run typespec` output is sensible
+            - [ ] If website deps updated: spot-check key pages render correctly
+            - [ ] If SDK-affecting deps updated: verify SDK examples still work
             - [ ] If this is a **major** version bump: review changelog of updated packages
             - [ ] Add changeset if peerDep ranges changed for `@common-grants/core` or `typespec-versioning-changelog`
           labels: |

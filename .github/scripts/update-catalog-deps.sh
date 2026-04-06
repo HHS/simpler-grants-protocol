@@ -14,12 +14,8 @@ set -euo pipefail
 #   1 = error
 #   2 = no updates available
 #
-# Catalog deps (from pnpm-workspace.yaml):
-#   Default catalog: @types/node, @typespec/compiler, @typespec/http,
-#     @typespec/json-schema, @typespec/openapi, @typespec/openapi3,
-#     @typespec/rest, @typespec/versioning, @vitest/coverage-v8,
-#     eslint-plugin-vitest, vitest
-#   Website catalog: vitest (separate version ^4.x)
+# Catalog deps are parsed dynamically from the `catalog:` section of
+# pnpm-workspace.yaml. Website catalog (vitest ^4.x) is handled separately.
 
 DRY_RUN=false
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -28,45 +24,35 @@ fi
 
 echo "=== Checking for catalog dependency updates ==="
 
-# Define catalog-managed packages
-# IMPORTANT: Must match the `catalog:` section in pnpm-workspace.yaml.
-# The validation below will fail if they drift apart.
-DEFAULT_CATALOG_DEPS=(
-  "@types/node"
-  "@typespec/compiler"
-  "@typespec/http"
-  "@typespec/json-schema"
-  "@typespec/openapi"
-  "@typespec/openapi3"
-  "@typespec/rest"
-  "@typespec/versioning"
-  "@vitest/coverage-v8"
-  "eslint-plugin-vitest"
-  "vitest"
+# Parse catalog-managed packages directly from pnpm-workspace.yaml.
+# The catalog: section is the single source of truth — no hardcoded list to maintain.
+#
+# Parser assumptions (if the format changes, the script will fail loudly):
+#   - Entries under `catalog:` are indented with exactly 2 spaces
+#   - No inline comments on dependency lines
+#   - Scoped package names may be single-quoted (e.g. '@typespec/compiler': ...)
+WORKSPACE_FILE="pnpm-workspace.yaml"
+if [[ ! -f "$WORKSPACE_FILE" ]]; then
+  echo "ERROR: $WORKSPACE_FILE not found"
+  exit 1
+fi
+
+DEFAULT_CATALOG_DEPS=()
+while IFS= read -r dep; do
+  DEFAULT_CATALOG_DEPS+=("$dep")
+done < <(
+  awk '/^catalog:/{found=1; next} /^[^ ]/{if(found) exit} found && /^  /' "$WORKSPACE_FILE" \
+    | sed "s/^  //; s/^'//; s/':.*//" \
+    | sed "s/:.*//" \
+    | sort
 )
 
-WORKSPACE_FILE="pnpm-workspace.yaml"
-if [[ -f "$WORKSPACE_FILE" ]]; then
-  # Simple YAML parser — assumes the following format in pnpm-workspace.yaml:
-  #   - Entries under `catalog:` are indented with exactly 2 spaces
-  #   - No inline comments on dependency lines
-  #   - Scoped package names may be single-quoted (e.g. '@typespec/compiler': ...)
-  # If the format changes and parsing drifts, the comparison below will catch it
-  # and fail loudly with a diff of what's missing.
-  YAML_DEPS=$(awk '/^catalog:/{found=1; next} /^[^ ]/{if(found) exit} found && /^  /' "$WORKSPACE_FILE" | sed "s/^  //; s/^'//; s/':.*//" | sed "s/:.*//" | sort)
-  SCRIPT_DEPS=$(printf '%s\n' "${DEFAULT_CATALOG_DEPS[@]}" | sort)
-  if [[ "$YAML_DEPS" != "$SCRIPT_DEPS" ]]; then
-    echo "ERROR: DEFAULT_CATALOG_DEPS does not match catalog: in $WORKSPACE_FILE"
-    echo ""
-    echo "In pnpm-workspace.yaml but not in script:"
-    comm -23 <(echo "$YAML_DEPS") <(echo "$SCRIPT_DEPS") | sed 's/^/  /'
-    echo "In script but not in pnpm-workspace.yaml:"
-    comm -13 <(echo "$YAML_DEPS") <(echo "$SCRIPT_DEPS") | sed 's/^/  /'
-    echo ""
-    echo "Update DEFAULT_CATALOG_DEPS in this script to match pnpm-workspace.yaml."
-    exit 1
-  fi
+if [[ ${#DEFAULT_CATALOG_DEPS[@]} -eq 0 ]]; then
+  echo "ERROR: No dependencies found in catalog: section of $WORKSPACE_FILE"
+  exit 1
 fi
+
+echo "Found ${#DEFAULT_CATALOG_DEPS[@]} catalog deps: ${DEFAULT_CATALOG_DEPS[*]}"
 
 echo ""
 echo "--- Checking outdated packages (default catalog) ---"
