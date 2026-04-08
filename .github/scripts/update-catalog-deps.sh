@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Update catalog-managed dependencies to latest compatible versions.
-# These deps are managed via pnpm-workspace.yaml catalogs and are excluded
-# from Dependabot to avoid lockfile corruption (dependabot-core #14339).
+# Update catalog-managed dependencies to latest versions by modifying
+# pnpm-workspace.yaml version ranges and regenerating the lockfile.
+# These deps are excluded from Dependabot to avoid lockfile corruption
+# (dependabot-core #14339).
 #
 # Usage:
 #   ./.github/scripts/update-catalog-deps.sh           # Update and regenerate lockfile
@@ -14,7 +15,8 @@ set -euo pipefail
 #   1 = error
 #   2 = no updates available
 #
-# Catalog deps are parsed from the `catalog:` section of pnpm-workspace.yaml.
+# Catalog deps are parsed from pnpm-workspace.yaml (both `catalog:` and
+# `catalogs: <name>:` sections).
 
 DRY_RUN=false
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -29,75 +31,110 @@ if [[ ! -f "$WORKSPACE_FILE" ]]; then
   exit 1
 fi
 
-DEFAULT_CATALOG_DEPS=()
-while IFS= read -r dep; do
-  DEFAULT_CATALOG_DEPS+=("$dep")
+UPDATED_COUNT=0
+
+# check_and_update_dep <dep_name> <current_range> <catalog_label>
+#
+# Queries npm for the latest version, compares against the current range,
+# and updates pnpm-workspace.yaml if a newer version is available.
+check_and_update_dep() {
+  local dep_name="$1"
+  local current_range="$2"
+  local catalog_label="$3"
+
+  # Extract prefix (^, ~, or empty) and base version
+  local prefix=""
+  local base_version="$current_range"
+  if [[ "$current_range" == "^"* ]]; then
+    prefix="^"
+    base_version="${current_range:1}"
+  elif [[ "$current_range" == "~"* ]]; then
+    prefix="~"
+    base_version="${current_range:1}"
+  fi
+
+  # Query npm registry for latest version
+  local latest
+  latest=$(npm view "$dep_name" version 2>/dev/null) || {
+    echo "  WARNING: Could not fetch latest version for $dep_name, skipping"
+    return
+  }
+
+  # Compare versions: is latest newer than base_version?
+  local newer
+  newer=$(printf '%s\n%s\n' "$base_version" "$latest" | sort -V | tail -1)
+
+  if [[ "$latest" != "$base_version" && "$newer" == "$latest" ]]; then
+    local new_range="${prefix}${latest}"
+    echo "  UPDATE ($catalog_label): $dep_name $current_range -> $new_range"
+
+    if [[ "$DRY_RUN" == "false" ]]; then
+      # Build sed pattern that matches both quoted and unquoted dep names.
+      # Use | as delimiter since dep names contain /
+      # Match: '  <dep_name>: <range>' or '  '<dep_name>': <range>'
+      # Also handle 4-space indent for named catalogs
+      sed -i.bak "s|\\([ ]*\\)\\(['\"]\\{0,1\\}${dep_name}['\"]\\{0,1\\}\\): *${current_range}|\\1\\2: ${new_range}|" "$WORKSPACE_FILE"
+    fi
+
+    UPDATED_COUNT=$((UPDATED_COUNT + 1))
+  else
+    echo "  OK ($catalog_label): $dep_name ${current_range} (latest: $latest)"
+  fi
+}
+
+# --- Process default catalog ---
+echo ""
+echo "--- Checking default catalog deps ---"
+
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  # Parse dep name: strip leading spaces and quotes, extract up to the colon
+  dep_name=$(echo "$line" | sed "s/^  //; s/^['\"]//; s/['\"] *:.*//; s/ *:.*//")
+  # Parse version range: everything after the colon+space
+  current_range=$(echo "$line" | sed "s/^[^:]*: *//")
+
+  check_and_update_dep "$dep_name" "$current_range" "default"
 done < <(
-  awk '/^catalog:/{found=1; next} /^[^ ]/{if(found) exit} found && /^  /' "$WORKSPACE_FILE" \
-    | sed "s/^  //; s/^'//; s/':.*//" \
-    | sed "s/:.*//" \
-    | sort
+  awk '/^catalog:/{found=1; next} /^[^ ]/{if(found) exit} found && /^  [^ ]/' "$WORKSPACE_FILE"
 )
 
-if [[ ${#DEFAULT_CATALOG_DEPS[@]} -eq 0 ]]; then
-  echo "ERROR: No dependencies found in catalog: section of $WORKSPACE_FILE"
-  exit 1
-fi
+# --- Process named catalogs (e.g. catalogs: website:) ---
+# Extract named catalog sections: lines indented with 4 spaces under a named catalog
+echo ""
+echo "--- Checking named catalog deps ---"
 
-echo "Found ${#DEFAULT_CATALOG_DEPS[@]} catalog deps: ${DEFAULT_CATALOG_DEPS[*]}"
+current_catalog=""
+while IFS= read -r line; do
+  # Detect catalog name lines (2-space indent, ends with colon)
+  if echo "$line" | grep -qE '^  [a-zA-Z].*:$'; then
+    current_catalog=$(echo "$line" | sed 's/^ *//; s/:$//')
+    continue
+  fi
+  # Dep lines are indented with 4 spaces
+  if [[ -n "$current_catalog" ]] && echo "$line" | grep -qE '^    [^ ]'; then
+    dep_name=$(echo "$line" | sed "s/^    //; s/^['\"]//; s/['\"] *:.*//; s/ *:.*//")
+    current_range=$(echo "$line" | sed "s/^[^:]*: *//")
+    check_and_update_dep "$dep_name" "$current_range" "$current_catalog"
+  fi
+done < <(
+  awk '/^catalogs:/{found=1; next} /^[^ ]/{if(found) exit} found' "$WORKSPACE_FILE"
+)
+
+# Clean up sed backup files
+rm -f "${WORKSPACE_FILE}.bak"
 
 echo ""
-echo "--- Checking outdated packages (default catalog) ---"
-
-HAS_DEFAULT_UPDATES=false
-DEFAULT_OUTDATED=$(pnpm outdated "${DEFAULT_CATALOG_DEPS[@]}" 2>&1) || EXIT_CODE=$?
-EXIT_CODE=${EXIT_CODE:-0}
-if [[ $EXIT_CODE -eq 1 ]]; then
-  HAS_DEFAULT_UPDATES=true
-elif [[ $EXIT_CODE -ne 0 ]]; then
-  echo "ERROR: pnpm outdated failed (exit code $EXIT_CODE):"
-  echo "$DEFAULT_OUTDATED"
-  exit 1
-fi
-
-echo ""
-echo "--- Checking outdated packages (website catalog) ---"
-
-HAS_WEBSITE_UPDATES=false
-WEBSITE_OUTDATED=$(pnpm outdated vitest --filter website 2>&1) || EXIT_CODE=$?
-EXIT_CODE=${EXIT_CODE:-0}
-if [[ $EXIT_CODE -eq 1 ]]; then
-  HAS_WEBSITE_UPDATES=true
-elif [[ $EXIT_CODE -ne 0 ]]; then
-  echo "ERROR: pnpm outdated failed for website catalog (exit code $EXIT_CODE):"
-  echo "$WEBSITE_OUTDATED"
-  exit 1
-fi
-
-if [[ "$HAS_DEFAULT_UPDATES" == "false" && "$HAS_WEBSITE_UPDATES" == "false" ]]; then
+if [[ $UPDATED_COUNT -eq 0 ]]; then
   echo "All catalog dependencies are up to date."
   exit 2
 fi
 
-[[ "$HAS_DEFAULT_UPDATES" == "true" ]] && echo "$DEFAULT_OUTDATED"
-[[ "$HAS_WEBSITE_UPDATES" == "true" ]] && echo "$WEBSITE_OUTDATED"
+echo "$UPDATED_COUNT catalog dep(s) have updates."
 
 if [[ "$DRY_RUN" == "true" ]]; then
-  echo ""
-  echo "--- Dry run: would update the above packages ---"
+  echo "Dry run: no changes applied."
   exit 0
 fi
-
-echo ""
-echo "--- Updating default catalog dependencies ---"
-pnpm update "${DEFAULT_CATALOG_DEPS[@]}" --recursive
-
-# The website uses a separate vitest version via the "website" named catalog.
-# pnpm update --recursive above should handle it, but ensure the website
-# workspace gets its vitest updated too.
-echo ""
-echo "--- Updating website catalog dependencies ---"
-pnpm update vitest --filter website
 
 echo ""
 echo "--- Regenerating lockfile ---"

@@ -7,7 +7,9 @@
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [],
+  "ignore": [
+    "lib/changelog-emitter"
+  ],
   "packages": [
     "lib/python-sdk",
     "lib/core",

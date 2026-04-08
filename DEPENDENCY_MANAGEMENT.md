@@ -76,7 +76,6 @@ Most dependency PRs don't need a changeset. You only need one when a **productio
 | `lib/cli` (`@common-grants/cli`) | npm | Runtime dep versions change |
 | `lib/ts-sdk` (`@common-grants/sdk`) | npm | Runtime dep versions change |
 | `lib/python-sdk` (`common-grants-sdk`) | PyPI | Runtime dep versions change |
-| `lib/changelog-emitter` (`typespec-versioning-changelog`) | npm | TypeSpec peer dep ranges change |
 
 Dev-only dep bumps (vitest, eslint, type definitions, etc.) don't need changesets. When in doubt: if the dep appears in `dependencies` or `peerDependencies` in the package's `package.json`, add a changeset. If it's in `devDependencies`, skip it.
 
