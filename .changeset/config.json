@@ -8,13 +8,12 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "lib/changelog-emitter"
+    "typespec-versioning-changelog"
   ],
   "packages": [
     "lib/python-sdk",
     "lib/core",
     "lib/cli",
-    "lib/ts-sdk",
-    "lib/changelog-emitter"
+    "lib/ts-sdk"
   ]
 }
