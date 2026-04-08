@@ -6,10 +6,11 @@ The CommonGrants protocol TypeScript SDK.
 
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Quick start](#quick-start)
+  - [Kitchen sink example](#kitchen-sink-example)
+- [Modules](#modules)
   - [API Client](#api-client)
-  - [Validation](#validation)
-  - [Type-safe code](#type-safe-code)
-  - [Generic response schemas](#generic-response-schemas)
+  - [Schemas and Validation](#schemas-and-validation)
   - [Extensions and Plugins](#extensions-and-plugins)
 - [License](#license)
 
@@ -21,295 +22,94 @@ npm install @common-grants/sdk
 
 ## Usage
 
-### API Client
-
-The SDK provides an HTTP client for interacting with CommonGrants-compatible APIs:
+### Quick start
 
 ```ts
 import { Client, Auth } from "@common-grants/sdk/client";
 
-// Create a client with API key authentication
+// 1. Create a client
 const client = new Client({
   baseUrl: "https://api.example.org",
   auth: Auth.apiKey("your-api-key"),
 });
 
-// List opportunities (auto-paginates by default)
-const allOpportunities = await client.opportunities.list();
-console.log(`Found ${allOpportunities.items.length} opportunities`);
-for (const opp of allOpportunities.items) {
-  console.log(`${opp.id}: ${opp.title}`);
+// 2. Fetch opportunities
+const opportunities = await client.opportunities.list();
+for (const opp of opportunities.items) {
+  console.log(`${opp.title} (${opp.status.value})`);
 }
+```
 
-// List a specific page
-const page2 = await client.opportunities.list({ page: 2, pageSize: 10 });
-for (const opp of page2.items) {
-  console.log(`${opp.id}: ${opp.title}`);
-}
+### Kitchen sink example
 
-// Search opportunities with filters
+This example shows how the SDK's modules work together: fetching data with the client, validating it with schemas, using type-safe constants, and accessing typed custom fields via a plugin.
+
+```ts
+import { Client, Auth } from "@common-grants/sdk/client";
+import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
+import type { OpportunityBase } from "@common-grants/sdk/types";
+import { OppStatusOptions } from "@common-grants/sdk/constants";
+import { definePlugin } from "@common-grants/sdk/extensions";
+
+// Define a plugin with typed custom fields
+const myPlugin = definePlugin({
+  extensions: {
+    Opportunity: {
+      category: { fieldType: "string", description: "Grant category" },
+      legacyId: { fieldType: "integer", description: "Legacy system ID" },
+    },
+  },
+} as const);
+
+// Create a client
+const client = new Client({
+  baseUrl: "https://api.example.org",
+  auth: Auth.bearer("your-jwt-token"),
+});
+
+// Fetch opportunities with typed custom fields
 const results = await client.opportunities.search({
   query: "education",
-  statuses: ["open"],
+  statuses: [OppStatusOptions.open],
+  schema: myPlugin.schemas.Opportunity,
 });
 
-// View details for a single opportunity
-const opportunityId = allOpportunities.items[0].id;
-const opportunity = await client.opportunities.get(opportunityId);
-console.log(opportunity.title);
-```
+for (const opp of results.items) {
+  console.log(`${opp.title} (${opp.status.value})`);
 
-#### Authentication
-
-The client supports multiple authentication methods:
-
-```ts
-// API Key (default header: X-API-Key)
-Auth.apiKey("your-api-key");
-
-// API Key with custom header
-Auth.apiKey("your-api-key", "X-Custom-Header");
-
-// Bearer token
-Auth.bearer("your-jwt-token");
-
-// No authentication
-Auth.none();
-```
-
-#### Client Configuration
-
-```ts
-const client = new Client({
-  baseUrl: "https://api.example.org", // Required (or set CG_API_BASE_URL env var)
-  auth: Auth.apiKey("key"), // Optional: Authentication method
-  timeout: 30000, // Optional: Request timeout in ms (default: 30000)
-  pageSize: 100, // Optional: Default page size (default: 100)
-  maxItems: 1000, // Optional: Max items for auto-pagination (default: 1000)
-});
-```
-
-Config values can also be set via environment variables:
-
-| Config     | Environment Variable      | Default    |
-| ---------- | ------------------------- | ---------- |
-| `baseUrl`  | `CG_API_BASE_URL`         | _required_ |
-| `timeout`  | `CG_API_TIMEOUT`          | 30000      |
-| `pageSize` | `CG_API_PAGE_SIZE`        | 100        |
-| `maxItems` | `CG_API_LIST_ITEMS_LIMIT` | 1000       |
-
-#### Low-level HTTP Methods
-
-For custom endpoints or advanced use cases, use the low-level methods:
-
-```ts
-// GET request with query params
-const response = await client.get("/custom/endpoint", {
-  params: { filter: "value" },
-});
-const data = await response.json();
-
-// POST request with body
-const response = await client.post("/custom/endpoint", {
-  field: "value",
-});
-
-// Raw fetch for full control
-const response = await client.fetch("/custom/endpoint", {
-  method: "PUT",
-  body: JSON.stringify({ field: "value" }),
-});
-```
-
-> **Note:** For runnable examples, see the [examples folder](./examples/).
-
-### Validation
-
-Use the SDK schemas to validate JSON data and convert it to a typed object:
-
-```ts
-import * as Schemas from "@common-grants/sdk/schemas";
-import * as Types from "@common-grants/sdk/types";
-
-// Successful validation
-const oppData = {
-  id: "ac201443-5480-4e36-9799-a39765225153",
-  title: "Test Opportunity",
-  description: "This is a test opportunity",
-  status: { value: "open" },
-  createdAt: "2025-01-01T00:00:00Z",
-  lastModifiedAt: "2025-01-01T00:00:00Z",
-};
-const opportunity: Types.OpportunityBase = Schemas.OpportunityBaseSchema.parse(oppData);
-console.log(opportunity.title);
-console.log(opportunity.createdAt.getFullYear());
-```
-
-Which should print:
-
-```
-Test Opportunity
-2025
-```
-
-You can also gracefully handle errors using the `safeParse()` method:
-
-```ts
-import * as Schemas from "@common-grants/sdk/schemas";
-import * as Types from "@common-grants/sdk/types";
-
-// Validation error
-const invalidOppData = {
-  id: "invalid-id",
-  title: "Test Opportunity",
-  description: "This is a test opportunity",
-  status: { value: "invalid-status" },
-  createdAt: "2025-01-01T00:00:00Z",
-  lastModifiedAt: "2025-01-01T00:00:00Z",
-};
-const result = Schemas.OpportunityBaseSchema.safeParse(invalidOppData);
-if (!result.success) {
-  console.error(result.error.message);
-} else {
-  console.log("Validation successful");
-}
-```
-
-Which should print:
-
-```json
-[
-  {
-    "validation": "uuid",
-    "code": "invalid_string",
-    "message": "Invalid uuid",
-    "path": ["id"]
-  },
-  {
-    "received": "invalid-status",
-    "code": "invalid_enum_value",
-    "options": ["forecasted", "open", "closed", "custom"],
-    "path": ["status", "value"],
-    "message": "Invalid enum value. Expected 'forecasted' | 'open' | 'closed' | 'custom', received 'invalid-status'"
-  }
-]
-```
-
-### Type-safe code
-
-Import TypeScript types and runtime constants for consistent, type-safe operations:
-
-```ts
-import type { OpportunityBase, OppStatus } from "@common-grants/sdk/types";
-import { OppStatusOptions } from "@common-grants/sdk/constants";
-
-function processOpportunity(opp: OpportunityBase): void {
-  console.log(opp.title);
-
-  // Use constants instead of magic strings for better type safety
-  if (opp.status.value === OppStatusOptions.open) {
-    console.log("Opportunity is open");
-  }
-
-  // Type-safe status handling
-  const statusLabel = getStatusLabel(opp.status);
-  console.log(statusLabel);
+  // Custom fields are fully typed
+  console.log(`  Category: ${opp.customFields?.category?.value}`);
+  console.log(`  Legacy ID: ${opp.customFields?.legacyId?.value}`);
 }
 
-function getStatusLabel(status: OppStatus): string {
-  switch (status.value) {
-    case OppStatusOptions.open:
-      return "Currently accepting applications";
-    case OppStatusOptions.closed:
-      return "Not accepting applications";
-    case OppStatusOptions.forecasted:
-      return "Coming soon";
-    default:
-      return "Unknown status";
-  }
-}
-
-// Example usage
-const opp: OpportunityBase = {
-  id: "123",
-  title: "Test Opportunity",
-  description: "This is a test opportunity",
-  status: { value: OppStatusOptions.open },
-  createdAt: new Date(),
-  lastModifiedAt: new Date(),
-};
-processOpportunity(opp);
+// Validate standalone JSON data
+const rawJson = await fetch("https://api.example.org/data.json").then(r => r.json());
+const validated: OpportunityBase = OpportunityBaseSchema.parse(rawJson);
 ```
 
-Which should print:
+## Modules
 
-```
-Test Opportunity
-Opportunity is open
-Currently accepting applications
-```
+The SDK is organized into modules, each available as a separate import path:
 
-### Generic response schemas
+| Module                                         | Import path                     | Description                                   |
+| ---------------------------------------------- | ------------------------------- | --------------------------------------------- |
+| [Client](./src/client/README.md)               | `@common-grants/sdk/client`     | HTTP client with auth, pagination, and search |
+| [Schemas](./src/schemas/README.md)             | `@common-grants/sdk/schemas`    | Zod schemas for data validation               |
+| [Types](./src/schemas/README.md#types)         | `@common-grants/sdk/types`      | Inferred TypeScript types                     |
+| [Constants](./src/schemas/README.md#constants) | `@common-grants/sdk/constants`  | Runtime enum constants                        |
+| [Extensions](./src/extensions/README.md)       | `@common-grants/sdk/extensions` | Custom field and plugin framework             |
 
-The SDK provides generic response schemas that allow you to flexibly validate API responses for different resource types:
+### API Client
 
-```ts
-import { PaginatedSchema, OpportunityBaseSchema } from "@common-grants/sdk/schemas";
+HTTP client with built-in authentication, auto-pagination, and environment variable configuration. See the [Client guide](./src/client/README.md) for setup, authentication, and usage examples. For runnable scripts, see [list-opportunities.ts](./examples/list-opportunities.ts), [get-opportunity.ts](./examples/get-opportunity.ts), and [search-opportunities.ts](./examples/search-opportunities.ts).
 
-// Create a paginated response schema for opportunities
-const PaginatedOpportunitiesSchema = PaginatedSchema(OpportunityBaseSchema);
+### Schemas and Validation
 
-// Validate a paginated API response
-const paginatedResponse = PaginatedOpportunitiesSchema.parse({
-  status: 200,
-  message: "Success",
-  items: [
-    {
-      id: "ac201443-5480-4e36-9799-a39765225153",
-      title: "Test Opportunity 1",
-      description: "This is a test opportunity",
-      status: { value: "open" },
-      createdAt: "2025-01-01T00:00:00Z",
-      lastModifiedAt: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: "bc201443-5480-4e36-9799-a39765225154",
-      title: "Test Opportunity 2",
-      description: "Another test opportunity",
-      status: { value: "open" },
-      createdAt: "2025-01-02T00:00:00Z",
-      lastModifiedAt: "2025-01-02T00:00:00Z",
-    },
-  ],
-  paginationInfo: {
-    page: 1,
-    pageSize: 20,
-    totalItems: 100,
-    totalPages: 5,
-  },
-});
-
-// Access the validated data
-console.log(
-  `Page ${paginatedResponse.paginationInfo.page} of ${paginatedResponse.paginationInfo.totalPages}`
-);
-console.log(`Found ${paginatedResponse.items.length} opportunities`);
-```
-
-Which should print:
-
-```
-Page 1 of 5
-Found 2 opportunities
-```
-
-Other generic response schemas include `OkSchema<T>`, `SortedSchema<T>`, `FilteredSchema<ItemsT, FilterT>`, `CreatedSchema<T>`, and error schemas like `ErrorSchema`, `UnauthorizedSchema`, and `NotFoundSchema`.
+[Zod](https://zod.dev/) schemas for validating and parsing CommonGrants data, along with inferred TypeScript types (`@common-grants/sdk/types`) and runtime enum constants (`@common-grants/sdk/constants`). See the [Schemas guide](./src/schemas/README.md) for validation examples, type safety patterns, and the full API reference.
 
 ### Extensions and Plugins
 
-The SDK provides an extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc with `withCustomFields()` or as reusable plugins with `definePlugin()`. See the [Extensions documentation](./src/extensions/README.md) for the full guide, including best practices for publishing plugin packages and a complete API reference.
-
-For runnable examples, see [custom-fields.ts](./examples/custom-fields.ts) and [plugins.ts](./examples/plugins.ts).
+Extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc or as reusable plugins. See the [Extensions guide](./src/extensions/README.md) for the full guide. For runnable scripts, see [custom-fields.ts](./examples/custom-fields.ts) and [plugins.ts](./examples/plugins.ts).
 
 ## License
 
