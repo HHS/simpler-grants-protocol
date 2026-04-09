@@ -1,12 +1,19 @@
 ---
 import type { Plugin } from "@/lib/plugins";
 import { LinkButton } from "@astrojs/starlight/components";
+import { loadAllCustomFields } from "@/lib/custom-fields";
+import CustomFieldCard from "@/components/custom-fields/CustomFieldCard.astro";
 
 interface Props {
   plugin: Plugin;
 }
 
 const { plugin } = Astro.props;
+
+const allCustomFields = loadAllCustomFields();
+const pluginFields = plugin.resolvedFields
+  .map((f) => allCustomFields[f.id])
+  .filter(Boolean);
 ---
 
 <div class="plugin-details">
@@ -49,39 +56,12 @@ const { plugin } = Astro.props;
   <section class="section">
     <h2>Custom Fields</h2>
     <p class="section-description">
-      This plugin exposes {plugin.resolvedFields.length} custom fields beyond the
-      CommonGrants base schema:
+      This plugin exposes {pluginFields.length} custom fields beyond the CommonGrants
+      base schema:
     </p>
-    <table class="fields-table">
-      <thead>
-        <tr>
-          <th>Field</th>
-          <th>Type</th>
-          <th>Supports</th>
-        </tr>
-      </thead>
-      <tbody>
-        {
-          plugin.resolvedFields.map((field) => (
-            <tr>
-              <td>
-                <a href={`/custom-fields/${field.id}`} class="field-link">
-                  <code>{field.id}</code>
-                </a>
-              </td>
-              <td>
-                <span class="type-badge">{field.fieldType}</span>
-              </td>
-              <td>
-                {field.validFor.map((schema) => (
-                  <span class="object-pill">{schema}</span>
-                ))}
-              </td>
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
+    <div class="fields-grid">
+      {pluginFields.map((field) => <CustomFieldCard field={field} />)}
+    </div>
   </section>
 
   <!-- Actions -->
@@ -93,14 +73,6 @@ const { plugin } = Astro.props;
       iconPlacement="start"
     >
       Back to Plugins
-    </LinkButton>
-    <LinkButton
-      href="/custom-fields"
-      variant="secondary"
-      icon="external"
-      iconPlacement="end"
-    >
-      View Custom Fields
     </LinkButton>
   </div>
 </div>
@@ -186,60 +158,10 @@ const { plugin } = Astro.props;
     text-decoration: underline;
   }
 
-  .fields-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-  }
-
-  .fields-table th {
-    text-align: left;
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid var(--sl-color-gray-5);
-    color: var(--sl-color-gray-2);
-    font-weight: 600;
-    font-size: 0.8125rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .fields-table td {
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid var(--sl-color-gray-6);
-    vertical-align: middle;
-  }
-
-  .fields-table tr:last-child td {
-    border-bottom: none;
-  }
-
-  .field-link {
-    text-decoration: none;
-    color: var(--sl-color-accent);
-  }
-
-  .field-link:hover {
-    text-decoration: underline;
-  }
-
-  .type-badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    background: var(--sl-color-blue-low);
-    color: var(--sl-color-blue-high);
-    border-radius: 0.25rem;
-    font-family: monospace;
-    font-size: 0.8125rem;
-  }
-
-  .object-pill {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    background: var(--sl-color-green-low);
-    color: var(--sl-color-green-high);
-    border-radius: 0.25rem;
-    font-size: 0.8125rem;
-    font-family: monospace;
+  .fields-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
   }
 
   .actions {

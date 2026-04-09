@@ -6,18 +6,20 @@
     "url": "https://github.com/common-grants/ts-cg-grants-gov",
     "language": "TypeScript",
     "version": "0.1.0",
-    "fields": [
-      "legacySerialId",
-      "federalOpportunityNumber",
-      "assistanceListings",
-      "agency",
-      "attachments",
-      "federalFundingSource",
-      "contactInfo",
-      "additionalInfo",
-      "fiscalYear",
-      "costSharing"
-    ],
+    "fields": {
+      "Opportunity": [
+        "legacySerialId",
+        "federalOpportunityNumber",
+        "assistanceListings",
+        "agency",
+        "attachments",
+        "federalFundingSource",
+        "contactInfo",
+        "additionalInfo",
+        "fiscalYear",
+        "costSharing"
+      ]
+    },
     "createdAt": "2026-01-20",
     "lastModifiedAt": "2026-04-09"
   },
@@ -28,18 +30,20 @@
     "url": "https://github.com/common-grants/py-cg-grants-gov",
     "language": "Python",
     "version": "0.1.0",
-    "fields": [
-      "legacySerialId",
-      "federalOpportunityNumber",
-      "assistanceListings",
-      "agency",
-      "attachments",
-      "federalFundingSource",
-      "contactInfo",
-      "additionalInfo",
-      "fiscalYear",
-      "costSharing"
-    ],
+    "fields": {
+      "Opportunity": [
+        "legacySerialId",
+        "federalOpportunityNumber",
+        "assistanceListings",
+        "agency",
+        "attachments",
+        "federalFundingSource",
+        "contactInfo",
+        "additionalInfo",
+        "fiscalYear",
+        "costSharing"
+      ]
+    },
     "createdAt": "2026-01-20",
     "lastModifiedAt": "2026-04-09"
   }

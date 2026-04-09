@@ -25,24 +25,30 @@ export function loadAllPlugins(): Plugin[] {
   const customFields = loadAllCustomFields();
   const index = pluginsIndex as Record<string, PluginIndexEntry>;
 
-  pluginsCache = Object.entries(index).map(([id, entry]) => ({
-    id,
-    ...entry,
-    resolvedFields: entry.fields.reduce<ResolvedPluginField[]>(
+  pluginsCache = Object.entries(index).map(([id, entry]) => {
+    const allFieldIds = Object.values(entry.fields).flat();
+    const resolvedFields = allFieldIds.reduce<ResolvedPluginField[]>(
       (acc, fieldId) => {
         const field = customFields[fieldId];
-        if (field) {
-          acc.push({
-            id: fieldId,
-            fieldType: field.fieldType ?? "",
-            validFor: field.validFor ?? [],
-          });
+        if (!field) {
+          console.error(
+            `Plugin "${id}" references unknown custom field "${fieldId}". ` +
+              `Field must be defined in src/content/custom-fields/index.json.`,
+          );
+          return acc;
         }
+        acc.push({
+          id: fieldId,
+          fieldType: field.fieldType ?? "",
+          validFor: field.validFor ?? [],
+        });
         return acc;
       },
       [],
-    ),
-  }));
+    );
+
+    return { id, ...entry, resolvedFields };
+  });
 
   return pluginsCache;
 }

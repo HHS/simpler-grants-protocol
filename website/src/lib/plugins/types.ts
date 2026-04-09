@@ -8,7 +8,7 @@ export interface PluginIndexEntry {
   url: string;
   language: string;
   version: string;
-  fields: string[];
+  fields: Record<string, string[]>;
   createdAt: string;
   lastModifiedAt: string;
 }
