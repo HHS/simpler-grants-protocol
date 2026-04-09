@@ -43,3 +43,12 @@ sdk:
       - any-glob-to-any-file:
           - lib/python-sdk/**
           - lib/ts-sdk/**
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - pnpm-lock.yaml
+          - pnpm-workspace.yaml
+          - "**/package.json"
+          - "**/pyproject.toml"
+          - "**/poetry.lock"
