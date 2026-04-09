@@ -5,6 +5,7 @@ on:
     paths:
       - pnpm-workspace.yaml
       - pnpm-lock.yaml
+      - .github/dependabot.yml
       - .github/workflows/ci-catalog-validation.yml
   workflow_dispatch:
 
@@ -25,6 +26,9 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 10.18.3
+
+      - name: Validate catalog deps in Dependabot ignore list
+        run: ./.github/scripts/validate-catalog-deps.sh
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
