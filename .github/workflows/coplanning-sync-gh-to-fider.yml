@@ -33,7 +33,7 @@ jobs:
           python-version: "3.13"
 
       - name: Run script (dry run)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && env.FIDER_API_TOKEN != ''
         run: |
           python run.py \
             --org "${{ github.repository_owner }}" \
