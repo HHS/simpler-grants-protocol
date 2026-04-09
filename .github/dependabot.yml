@@ -33,6 +33,9 @@ updates:
           - "minor"
           - "patch"
     ignore:
+      # Major bumps handled manually to control breaking changes
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
       # Internal workspace deps
       - dependency-name: "@common-grants/*"
       # Catalog-managed deps — handled by scheduled workflow instead
@@ -61,6 +64,8 @@ updates:
       all-deps:
         patterns: ["*"]
     ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "@common-grants/*"
     labels: ["dependencies"]
     commit-message:
@@ -77,6 +82,8 @@ updates:
       all-deps:
         patterns: ["*"]
     ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "@common-grants/*"
     labels: ["dependencies"]
     commit-message:
@@ -89,6 +96,12 @@ updates:
     schedule:
       interval: "weekly"
       day: "wednesday"
+    groups:
+      all-deps:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels: ["dependencies", "python"]
     commit-message:
       prefix: "chore"
@@ -103,6 +116,8 @@ updates:
       all-deps:
         patterns: ["*"]
     ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "common-grants-sdk"
     labels: ["dependencies", "python"]
     commit-message:
@@ -118,6 +133,8 @@ updates:
       all-deps:
         patterns: ["*"]
     ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "common-grants-sdk"
     labels: ["dependencies", "python"]
     commit-message:
@@ -133,6 +150,8 @@ updates:
       all-deps:
         patterns: ["*"]
     ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "common-grants-sdk"
     labels: ["dependencies", "python"]
     commit-message:
@@ -149,6 +168,9 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels: ["dependencies"]
     commit-message:
       prefix: "chore"
