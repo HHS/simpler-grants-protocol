@@ -168,7 +168,7 @@ def transform_seasonal(value: str, output_format: DateFormat) -> datetime:
 
     """
     # Extract the first season and year if there's a range
-    season_year = value.split("-")[0].strip()
+    season_year = value.split("-", maxsplit=1)[0].strip()
 
     # Parse season and year, ignoring modifiers like "Late", "Early", etc.
     season_match = re.match(

@@ -39,9 +39,13 @@ extend-safe-fixes = [
 ignore = [
   "ARG002", # argument unused
   "ANN204", # missing type annotation for special method
+  "B905", # zip-without-explicit-strict: zip() without explicit strict= parameter
   "D203", # no blank line before class
   "D212", # multi-line summary first line
   "FA", # flake8-future-annotations ruleset
   "FAST002", # missing type annotation for dependency
+  "PLC0415", # import-outside-top-level: import not at top of file
+  "RUF043", # pytest-raises-ambiguous-pattern: match= pattern with unescaped metacharacters
+  "RUF059", # unused-unpacked-variable: unpacked variable never used
 ]
 select = ["ALL"]

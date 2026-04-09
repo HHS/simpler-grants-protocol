@@ -3,7 +3,6 @@
 from datetime import datetime
 
 import pytest
-
 from common_grants.utils.date_transform import (
     DateFormat,
     transform_date,
