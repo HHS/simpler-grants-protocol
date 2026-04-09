@@ -34,6 +34,11 @@
     "createdAt": "2026-01-20",
     "lastModifiedAt": "2026-03-06"
   },
+  "fiscalYear": {
+    "schema": "CustomFiscalYear",
+    "createdAt": "2026-04-09",
+    "lastModifiedAt": "2026-04-09"
+  },
   "additionalInfo": {
     "schema": "CustomAdditionalInfo",
     "createdAt": "2026-01-20",
