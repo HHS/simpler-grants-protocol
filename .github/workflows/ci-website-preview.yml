@@ -49,14 +49,14 @@ jobs:
 
       # Preview deployment (only on PRs)
       - name: Deploy PR preview
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         run: pnpm wrangler deploy --name cg-pr-${{ github.event.pull_request.number }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Find existing comment
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         id: find-comment
         uses: peter-evans/find-comment@v3
         with:
@@ -65,7 +65,7 @@ jobs:
           body-includes: Website Preview Deployed
 
       - name: Post preview link comment
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}

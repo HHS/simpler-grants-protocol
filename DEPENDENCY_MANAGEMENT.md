@@ -1,5 +1,12 @@
 # Dependency Management
 
+## Strategy
+
+- Group GitHub Actions major bumps into a single PR
+- Group minor/patch updates by manifest (e.g. `pnpm-lock.yaml` or `poetry.lock`) into a single PR
+- Ignore major bumps for packages — these are handled manually to control breaking changes
+- Catalog-managed deps (TypeSpec, vitest, etc.) bypass Dependabot entirely due to pnpm catalog bugs
+
 This repo uses a split strategy for automated dependency updates: Dependabot handles most things, and a scheduled GitHub Actions workflow handles the rest. Expect roughly 3-5 dependency PRs per week in normal operation.
 
 ## Why two systems?
@@ -23,7 +30,7 @@ Dependabot runs on three "worlds":
 - Updates non-catalog deps across all workspace packages
 - Groups Astro/Starlight packages together (`website-framework` group)
 - Groups all other minor/patch updates together (`minor-patch` group)
-- Major version bumps get individual PRs (not grouped) for careful review
+- Major version bumps are ignored (handled manually)
 - Ignores `@common-grants/*` (internal workspace deps) and all catalog-managed deps
 
 **World B: Isolated lockfile directories** (weekly or monthly)
@@ -32,7 +39,7 @@ Dependabot runs on three "worlds":
 |-----------|----------|-------|
 | `templates/express-js` | Weekly, Tuesdays | All deps grouped |
 | `templates/quickstart` | Weekly, Tuesdays | All deps grouped |
-| `lib/python-sdk` | Weekly, Wednesdays | pip/Poetry |
+| `lib/python-sdk` | Weekly, Wednesdays | pip/Poetry, all deps grouped |
 | `templates/fast-api` | Monthly | pip/Poetry, ignores `common-grants-sdk` |
 | `examples/pa-opportunity-example` | Monthly | pip/Poetry, ignores `common-grants-sdk` |
 | `examples/ca-opportunity-example` | Monthly | pip/Poetry, ignores `common-grants-sdk` |
