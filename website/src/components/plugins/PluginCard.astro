@@ -10,7 +10,12 @@ const { plugin } = Astro.props;
 
 <div class="plugin-card">
   <div class="plugin-header">
-    <a href={plugin.url} target="_blank" rel="noopener noreferrer" class="plugin-title">
+    <a
+      href={plugin.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="plugin-title"
+    >
       {plugin.label}
       <span class="external-icon" aria-hidden="true">↗</span>
     </a>
@@ -29,8 +34,12 @@ const { plugin } = Astro.props;
       {
         plugin.resolvedFields.map((field) => (
           <tr>
-            <td><code>{field.name}</code></td>
-            <td><span class="type-badge">{field.fieldType}</span></td>
+            <td>
+              <code>{field.name}</code>
+            </td>
+            <td>
+              <span class="type-badge">{field.fieldType}</span>
+            </td>
             <td>
               {field.supportedObjects.map((obj) => (
                 <span class="object-pill">{obj}</span>

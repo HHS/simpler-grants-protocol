@@ -4,25 +4,74 @@
       "label": "TypeScript Common-Grants Plugin",
       "url": "https://github.com/common-grants/ts-cg-grants-gov",
       "language": "TypeScript",
-      "fields": ["legacySerialId", "federalOpportunityNumber", "assistanceListings", "agency", "attachments", "federalFundingSource", "contactInfo", "additionalInfo", "fiscalYear", "costSharing"]
+      "fields": [
+        "legacySerialId",
+        "federalOpportunityNumber",
+        "assistanceListings",
+        "agency",
+        "attachments",
+        "federalFundingSource",
+        "contactInfo",
+        "additionalInfo",
+        "fiscalYear",
+        "costSharing"
+      ]
     },
     "py-cg-grants-gov": {
       "label": "Python Common-Grants Plugin",
       "url": "https://github.com/common-grants/py-cg-grants-gov",
       "language": "Python",
-      "fields": ["legacySerialId", "federalOpportunityNumber", "assistanceListings", "agency", "attachments", "federalFundingSource", "contactInfo", "additionalInfo", "fiscalYear", "costSharing"]
+      "fields": [
+        "legacySerialId",
+        "federalOpportunityNumber",
+        "assistanceListings",
+        "agency",
+        "attachments",
+        "federalFundingSource",
+        "contactInfo",
+        "additionalInfo",
+        "fiscalYear",
+        "costSharing"
+      ]
     }
   },
   "fields": {
-    "legacySerialId":           { "fieldType": "integer", "supportedObjects": ["Opportunity"] },
-    "federalOpportunityNumber": { "fieldType": "string",  "supportedObjects": ["Opportunity"] },
-    "assistanceListings":       { "fieldType": "array",   "supportedObjects": ["Opportunity"] },
-    "agency":                   { "fieldType": "object",  "supportedObjects": ["Opportunity"] },
-    "attachments":              { "fieldType": "array",   "supportedObjects": ["Opportunity"] },
-    "federalFundingSource":     { "fieldType": "string",  "supportedObjects": ["Opportunity"] },
-    "contactInfo":              { "fieldType": "object",  "supportedObjects": ["Opportunity"] },
-    "additionalInfo":           { "fieldType": "object",  "supportedObjects": ["Opportunity"] },
-    "fiscalYear":               { "fieldType": "integer", "supportedObjects": ["Opportunity"] },
-    "costSharing":              { "fieldType": "object",  "supportedObjects": ["Opportunity"] }
+    "legacySerialId": {
+      "fieldType": "integer",
+      "supportedObjects": ["Opportunity"]
+    },
+    "federalOpportunityNumber": {
+      "fieldType": "string",
+      "supportedObjects": ["Opportunity"]
+    },
+    "assistanceListings": {
+      "fieldType": "array",
+      "supportedObjects": ["Opportunity"]
+    },
+    "agency": { "fieldType": "object", "supportedObjects": ["Opportunity"] },
+    "attachments": {
+      "fieldType": "array",
+      "supportedObjects": ["Opportunity"]
+    },
+    "federalFundingSource": {
+      "fieldType": "string",
+      "supportedObjects": ["Opportunity"]
+    },
+    "contactInfo": {
+      "fieldType": "object",
+      "supportedObjects": ["Opportunity"]
+    },
+    "additionalInfo": {
+      "fieldType": "object",
+      "supportedObjects": ["Opportunity"]
+    },
+    "fiscalYear": {
+      "fieldType": "integer",
+      "supportedObjects": ["Opportunity"]
+    },
+    "costSharing": {
+      "fieldType": "object",
+      "supportedObjects": ["Opportunity"]
+    }
   }
 }

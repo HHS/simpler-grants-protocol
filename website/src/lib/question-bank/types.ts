@@ -46,9 +46,7 @@ export interface QuestionBankFilterOptions {
  * Complete question bank item: index metadata + schema-derived fields.
  */
 export interface QuestionBankItem
-  extends QuestionBankIndexEntry,
-    QuestionBankSchemaData,
-    CatalogItem {
+  extends QuestionBankIndexEntry, QuestionBankSchemaData, CatalogItem {
   /** The question's unique identifier (key in index.json) */
   id: string;
 }
