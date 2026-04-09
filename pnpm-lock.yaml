@@ -130,8 +130,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(express@4.22.1)
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@common-grants/core':
         specifier: workspace:*
@@ -269,8 +269,8 @@ importers:
   lib/ts-sdk:
     dependencies:
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@common-grants/core':
         specifier: workspace:*
