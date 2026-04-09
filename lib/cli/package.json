@@ -58,7 +58,7 @@
     "@apidevtools/swagger-parser": "^10.1.1",
     "@typespec/compiler": "catalog:",
     "chalk": "^4.1.2",
-    "commander": "^12.1.0",
+    "commander": "^14.0.3",
     "express": "^4.22.1",
     "inquirer": "^9.3.8",
     "js-yaml": "^4.1.1",
