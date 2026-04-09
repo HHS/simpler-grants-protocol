@@ -83,7 +83,7 @@
     "@typespec/openapi3": "catalog:",
     "@typespec/versioning": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "^9.39.4",
+    "eslint": "^10.2.0",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-vitest": "catalog:",

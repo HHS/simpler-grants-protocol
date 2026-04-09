@@ -100,7 +100,7 @@
     "@vitest/coverage-v8": "catalog:",
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
-    "eslint": "^9.39.4",
+    "eslint": "^10.2.0",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-prettier": "^5.5.5",
     "js-yaml": "^4.1.1",

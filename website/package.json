@@ -72,7 +72,7 @@
     "@typespec/rest": "catalog:",
     "@typespec/versioning": "catalog:",
     "cspell": "^8.19.4",
-    "eslint": "^9.39.4",
+    "eslint": "^10.2.0",
     "eslint-plugin-astro": "^1.6.0",
     "globals": "^15.15.0",
     "prettier": "3.4.2",
