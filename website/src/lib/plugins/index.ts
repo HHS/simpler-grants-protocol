@@ -1,10 +1,9 @@
 // Types
 export type {
-  PluginFieldEntry,
-  PluginFieldMap,
   PluginIndexEntry,
+  ResolvedPluginField,
   Plugin,
 } from "./types";
 
 // Loader functions
-export { loadAllPlugins } from "./loader";
+export { loadAllPlugins, getPluginIds, getFilterOptions } from "./loader";

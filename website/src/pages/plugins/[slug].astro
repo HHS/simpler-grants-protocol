@@ -1,0 +1,36 @@
+---
+import { loadAllPlugins, getPluginIds } from "@/lib/plugins";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PluginDetails from "@/components/plugins/PluginDetails.astro";
+import type { GetStaticPaths } from "astro";
+
+export interface Props {
+  pluginId: string;
+}
+
+export const getStaticPaths: GetStaticPaths = () => {
+  const pluginIds = getPluginIds();
+  return pluginIds.map((pluginId) => ({
+    params: { slug: pluginId },
+    props: { pluginId },
+  }));
+};
+
+const { pluginId } = Astro.props;
+const plugins = loadAllPlugins();
+const plugin = plugins.find((p) => p.id === pluginId);
+
+if (!plugin) {
+  throw new Error(`Plugin "${pluginId}" not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: plugin.label,
+    description: plugin.description,
+    tableOfContents: false,
+  }}
+>
+  <PluginDetails plugin={plugin} />
+</StarlightPage>

@@ -1,38 +1,51 @@
 ---
-import { loadAllPlugins } from "@/lib/plugins";
-import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
-import PluginCard from "@/components/plugins/PluginCard.astro";
+import { loadAllPlugins, getFilterOptions } from "@/lib/plugins";
+import CatalogPage from "@/layouts/CatalogPage.astro";
+import PluginCatalogCard from "@/components/plugins/PluginCatalogCard.astro";
 
 const plugins = loadAllPlugins();
+const { languages: allLanguages, systems: allSystems } = getFilterOptions();
 ---
 
-<StarlightPage
-  frontmatter={{
-    title: "External Plugins",
-    description: "External plugins that extend the CommonGrants protocol.",
-    tableOfContents: false,
-    prev: false,
-    next: false,
-  }}
+<CatalogPage
+  title="External Plugins"
+  description="External plugins that extend the CommonGrants protocol with custom fields"
+  searchLabel="Search plugins"
+  searchPlaceholder="Search by name, system, or language..."
+  filters={[
+    {
+      id: "system-filter",
+      label: "System",
+      options: allSystems,
+      dataAttribute: "system",
+      placeholder: "Any system",
+    },
+    {
+      id: "language-filter",
+      label: "Language",
+      options: allLanguages,
+      dataAttribute: "language",
+      placeholder: "Any language",
+    },
+  ]}
+  noResultsMessage="No plugins match your search criteria."
+  stats={[
+    { count: plugins.length, label: "plugins" },
+    { count: allSystems.length, label: "systems" },
+    { count: allLanguages.length, label: "languages" },
+  ]}
 >
-  <p class="intro">
-    External plugins extend CommonGrants with implementation-specific custom
-    fields. Each plugin below lists the fields it exposes and the protocol
-    objects they support.
+  <p slot="intro" class="intro">
+    External plugins adapt third-party grant systems to the CommonGrants
+    protocol. Each plugin maps system-specific data to CommonGrants objects and
+    exposes custom fields for data that falls outside the base schema.
   </p>
-  <div class="plugin-grid">
-    {plugins.map((plugin) => <PluginCard plugin={plugin} />)}
-  </div>
-</StarlightPage>
+  {plugins.map((plugin) => <PluginCatalogCard plugin={plugin} />)}
+</CatalogPage>
 
 <style>
   .intro {
     margin-bottom: 2rem;
     color: var(--sl-color-gray-2);
-  }
-
-  .plugin-grid {
-    display: grid;
-    gap: 1.5rem;
   }
 </style>

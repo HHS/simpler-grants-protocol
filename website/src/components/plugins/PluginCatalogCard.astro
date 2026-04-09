@@ -1,0 +1,53 @@
+---
+import type { Plugin } from "@/lib/plugins";
+import CatalogCard from "@/components/catalog/CatalogCard.astro";
+
+interface Props {
+  plugin: Plugin;
+}
+
+const { plugin } = Astro.props;
+const detailHref = `/plugins/${plugin.id}`;
+---
+
+<CatalogCard
+  href={detailHref}
+  title={plugin.id}
+  description={plugin.description}
+  dataAttributes={{
+    name: plugin.label,
+    description: plugin.description,
+    tags: [plugin.language, plugin.system].join(","),
+    language: plugin.language,
+    system: plugin.system,
+  }}
+>
+  <div class="card-meta">
+    <span class="language-badge">{plugin.language}</span>
+    <span class="field-count">{plugin.resolvedFields.length} fields</span>
+  </div>
+</CatalogCard>
+
+<style>
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .language-badge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-accent-high);
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  .field-count {
+    font-size: 0.8125rem;
+    color: var(--sl-color-gray-3);
+  }
+</style>

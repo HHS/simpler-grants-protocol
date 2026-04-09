@@ -1,77 +1,46 @@
 {
-  "plugins": {
-    "ts-cg-grants-gov": {
-      "label": "TypeScript Common-Grants Plugin",
-      "url": "https://github.com/common-grants/ts-cg-grants-gov",
-      "language": "TypeScript",
-      "fields": [
-        "legacySerialId",
-        "federalOpportunityNumber",
-        "assistanceListings",
-        "agency",
-        "attachments",
-        "federalFundingSource",
-        "contactInfo",
-        "additionalInfo",
-        "fiscalYear",
-        "costSharing"
-      ]
-    },
-    "py-cg-grants-gov": {
-      "label": "Python Common-Grants Plugin",
-      "url": "https://github.com/common-grants/py-cg-grants-gov",
-      "language": "Python",
-      "fields": [
-        "legacySerialId",
-        "federalOpportunityNumber",
-        "assistanceListings",
-        "agency",
-        "attachments",
-        "federalFundingSource",
-        "contactInfo",
-        "additionalInfo",
-        "fiscalYear",
-        "costSharing"
-      ]
-    }
+  "ts-cg-grants-gov": {
+    "label": "TypeScript Common-Grants Plugin",
+    "description": "A TypeScript adapter that maps Grants.gov opportunity data to the CommonGrants protocol.",
+    "system": "Grants.gov",
+    "url": "https://github.com/common-grants/ts-cg-grants-gov",
+    "language": "TypeScript",
+    "version": "0.1.0",
+    "fields": [
+      "legacySerialId",
+      "federalOpportunityNumber",
+      "assistanceListings",
+      "agency",
+      "attachments",
+      "federalFundingSource",
+      "contactInfo",
+      "additionalInfo",
+      "fiscalYear",
+      "costSharing"
+    ],
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-04-09"
   },
-  "fields": {
-    "legacySerialId": {
-      "fieldType": "integer",
-      "supportedObjects": ["Opportunity"]
-    },
-    "federalOpportunityNumber": {
-      "fieldType": "string",
-      "supportedObjects": ["Opportunity"]
-    },
-    "assistanceListings": {
-      "fieldType": "array",
-      "supportedObjects": ["Opportunity"]
-    },
-    "agency": { "fieldType": "object", "supportedObjects": ["Opportunity"] },
-    "attachments": {
-      "fieldType": "array",
-      "supportedObjects": ["Opportunity"]
-    },
-    "federalFundingSource": {
-      "fieldType": "string",
-      "supportedObjects": ["Opportunity"]
-    },
-    "contactInfo": {
-      "fieldType": "object",
-      "supportedObjects": ["Opportunity"]
-    },
-    "additionalInfo": {
-      "fieldType": "object",
-      "supportedObjects": ["Opportunity"]
-    },
-    "fiscalYear": {
-      "fieldType": "integer",
-      "supportedObjects": ["Opportunity"]
-    },
-    "costSharing": {
-      "fieldType": "object",
-      "supportedObjects": ["Opportunity"]
-    }
+  "py-cg-grants-gov": {
+    "label": "Python Common-Grants Plugin",
+    "description": "A Python adapter that maps Grants.gov opportunity data to the CommonGrants protocol.",
+    "system": "Grants.gov",
+    "url": "https://github.com/common-grants/py-cg-grants-gov",
+    "language": "Python",
+    "version": "0.1.0",
+    "fields": [
+      "legacySerialId",
+      "federalOpportunityNumber",
+      "assistanceListings",
+      "agency",
+      "attachments",
+      "federalFundingSource",
+      "contactInfo",
+      "additionalInfo",
+      "fiscalYear",
+      "costSharing"
+    ],
+    "createdAt": "2026-01-20",
+    "lastModifiedAt": "2026-04-09"
   }
 }
