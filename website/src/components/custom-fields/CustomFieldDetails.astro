@@ -115,6 +115,14 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
     >
       Back to Registry
     </LinkButton>
+    <LinkButton
+      href="/plugins"
+      variant="secondary"
+      icon="external"
+      iconPlacement="end"
+    >
+      View Plugins
+    </LinkButton>
   </div>
 </div>
 
@@ -227,5 +235,8 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
 
   .actions {
     margin-top: 3rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 </style>

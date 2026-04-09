@@ -1,0 +1,38 @@
+---
+import { loadAllPlugins } from "@/lib/plugins";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PluginCard from "@/components/plugins/PluginCard.astro";
+
+const plugins = loadAllPlugins();
+---
+
+<StarlightPage
+  frontmatter={{
+    title: "External Plugins",
+    description: "External plugins that extend the CommonGrants protocol.",
+    tableOfContents: false,
+    prev: false,
+    next: false,
+  }}
+>
+  <p class="intro">
+    External plugins extend CommonGrants with implementation-specific custom
+    fields. Each plugin below lists the fields it exposes and the protocol
+    objects they support.
+  </p>
+  <div class="plugin-grid">
+    {plugins.map((plugin) => <PluginCard plugin={plugin} />)}
+  </div>
+</StarlightPage>
+
+<style>
+  .intro {
+    margin-bottom: 2rem;
+    color: var(--sl-color-gray-2);
+  }
+
+  .plugin-grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+</style>

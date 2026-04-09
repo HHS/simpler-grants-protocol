@@ -49,6 +49,8 @@ export default defineConfig({
             "/forms/playground",
             "/question-bank",
             "/question-bank/**",
+            "/plugins",
+            "/plugins/**",
           ],
         }),
       ],
@@ -129,6 +131,10 @@ export default defineConfig({
               label: "Responses",
               collapsed: true,
               autogenerate: { directory: "protocol/responses" },
+            },
+            {
+              label: "Plugins",
+              link: "plugins",
             },
             {
               label: "Pagination",
