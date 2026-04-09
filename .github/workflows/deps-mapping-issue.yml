@@ -18,6 +18,9 @@ defaults:
 
 jobs:
   sync:
+    # Skip Dependabot PRs — they can't access GH_PROJECT_ACCESS_TOKEN
+    # (GitHub doesn't expose repo secrets to Dependabot-triggered runs)
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
 
     env:
