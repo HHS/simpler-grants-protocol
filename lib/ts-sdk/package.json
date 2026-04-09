@@ -85,7 +85,7 @@
   },
   "devDependencies": {
     "@common-grants/core": "workspace:*",
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^10.0.1",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
     "@typescript-eslint/eslint-plugin": "^8.57.2",

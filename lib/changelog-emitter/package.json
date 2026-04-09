@@ -18,7 +18,7 @@
     "@typespec/versioning": "catalog:"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^10.0.1",
     "@types/node": "catalog:",
     "@typespec/prettier-plugin-typespec": "^1.10.0",
     "@vitest/coverage-v8": "^3.2.4",

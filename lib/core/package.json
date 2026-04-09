@@ -63,7 +63,7 @@
     "@typespec/versioning": "catalog:"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^10.0.1",
     "@types/node": "catalog:",
     "eslint": "^9.39.4",
     "globals": "^15.15.0",
