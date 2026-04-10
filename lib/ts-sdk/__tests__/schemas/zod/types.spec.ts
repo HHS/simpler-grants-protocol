@@ -21,8 +21,8 @@ describe("UUID Schema", () => {
     expect(UuidSchema.parse(validUuid)).toBe(validUuid);
   });
 
-  it("should match uuid.yaml", () => {
-    expectZodMatchesJsonSchema(UuidSchema, jsonSchemaId);
+  it("should match uuid.yaml", async () => {
+    await expectZodMatchesJsonSchema(UuidSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid UUID", () => {
@@ -59,8 +59,8 @@ describe("DecimalString Schema", () => {
     expect(DecimalStringSchema.parse("123")).toBe("123");
   });
 
-  it("should match decimalString.yaml", () => {
-    expectZodMatchesJsonSchema(DecimalStringSchema, jsonSchemaId);
+  it("should match decimalString.yaml", async () => {
+    await expectZodMatchesJsonSchema(DecimalStringSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid DecimalString", () => {
@@ -159,8 +159,8 @@ describe("ISODate Schema", () => {
     expect(parsedMax.getUTCDate()).toBe(31);
   });
 
-  it("should match isoDate.yaml", () => {
-    expectZodMatchesJsonSchema(ISODateSchema, jsonSchemaId);
+  it("should match isoDate.yaml", async () => {
+    await expectZodMatchesJsonSchema(ISODateSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid ISODate", () => {
@@ -230,8 +230,8 @@ describe("ISOTime Schema", () => {
     expect(() => ISOTimeSchema.parse(undefined)).toThrow();
   });
 
-  it("should match isoTime.yaml", () => {
-    expectZodMatchesJsonSchema(ISOTimeSchema, jsonSchemaId);
+  it("should match isoTime.yaml", async () => {
+    await expectZodMatchesJsonSchema(ISOTimeSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid ISOTime", () => {

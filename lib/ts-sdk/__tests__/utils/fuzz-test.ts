@@ -1,32 +1,12 @@
 import { ZodSchema } from "zod";
 import { ajv, validate as validateWithAjv } from "./ajv-validator";
-import { JSONSchemaFaker as jsf } from "json-schema-faker";
+import { createGenerator } from "json-schema-faker";
 
 /** Number of test samples to generate for each schema validation. */
 export const SAMPLE_SIZE = 25;
 
 /** Default seed for repeatable test generation. */
 export const DEFAULT_SEED = 12345;
-
-/**
- * Creates a seeded random number generator using a Linear Congruential Generator (LCG).
- * This ensures repeatable test cases when the same seed is used.
- *
- * @param seed - The seed value to initialize the generator
- * @returns A function that returns a random number between 0 and 1
- */
-function createSeededRandom(seed: number): () => number {
-  // LCG parameters (same as used in glibc)
-  const a = 1103515245;
-  const c = 12345;
-  const m = 2 ** 31;
-  let state = seed;
-
-  return () => {
-    state = (a * state + c) % m;
-    return state / m;
-  };
-}
 
 /** Result of a fuzz test comparison. */
 export interface FuzzTestResult {
@@ -149,11 +129,11 @@ function hashString(str: string): number {
  * @param seed - Optional seed for repeatable test generation. Defaults to DEFAULT_SEED.
  * @returns The result of the fuzz test comparison
  */
-export function checkZodMatchesJsonSchema(
+export async function checkZodMatchesJsonSchema(
   zodSchema: ZodSchema,
   jsonSchemaId: string,
   seed: number = DEFAULT_SEED
-): FuzzTestResult {
+): Promise<FuzzTestResult> {
   // Get the JSON schema from AJV
   const jsonSchemaValidator = ajv.getSchema(jsonSchemaId);
   if (!jsonSchemaValidator) {
@@ -169,8 +149,7 @@ export function checkZodMatchesJsonSchema(
   // Use seeded random generator for repeatable tests
   // Combine seed with schema ID hash to ensure different schemas get different sequences
   const schemaSeed = seed + hashString(jsonSchemaId);
-  const seededRandom = createSeededRandom(schemaSeed);
-  jsf.option("random", seededRandom);
+  const jsf = createGenerator({ seed: schemaSeed });
 
   const mismatches: FuzzTestResult["mismatches"] = [];
   let successCount = 0;
@@ -180,7 +159,7 @@ export function checkZodMatchesJsonSchema(
     let sampleData: unknown;
     try {
       // json-schema-faker generates data that should match the schema
-      sampleData = jsf.generate(jsonSchema);
+      sampleData = await jsf.generate(jsonSchema);
     } catch (error) {
       // If we can't generate data, skip this iteration
       console.warn(`Failed to generate sample data for ${jsonSchemaId}:`, error);
