@@ -17,10 +17,22 @@ Dependabot has [multiple open bugs](https://github.com/dependabot/dependabot-cor
 
 | Tier | Tool | What it covers |
 |------|------|----------------|
-| Tier 1 | Dependabot | Templates, examples, Python SDK, GitHub Actions, non-catalog workspace deps |
+| Tier 1 | Dependabot | Python SDK, GitHub Actions, non-catalog workspace deps |
 | Tier 2 | `deps-catalog-check` workflow | Catalog-managed deps: `@typespec/*`, `vitest`, `@vitest/*`, `eslint-plugin-vitest`, `@types/node` |
 
 Config lives in `.github/dependabot.yml` and `.github/workflows/deps-catalog-check.yml`.
+
+---
+
+## Maintenance tiers
+
+Dependencies are maintained at different cadences depending on whether they are core tooling or supporting assets.
+
+| Tier | Scope | Cadence |
+|------|-------|---------|
+| **Core** | `lib/*`, `website`, root workspace | Automated — Dependabot + catalog workflow. Merge promptly. |
+| **Templates and examples** | `templates/*`, `examples/*` | Manual — no automated PRs. Refreshed deliberately when a maintainer chooses to. |
+| **GitHub Actions** | `.github/workflows` | Automated — Dependabot weekly. Merge when green. |
 
 ## Dependabot scope
 
@@ -37,12 +49,9 @@ Dependabot runs on three "worlds":
 
 | Directory | Schedule | Notes |
 |-----------|----------|-------|
-| `templates/express-js` | Weekly, Tuesdays | All deps grouped |
-| `templates/quickstart` | Weekly, Tuesdays | All deps grouped |
 | `lib/python-sdk` | Weekly, Wednesdays | pip/Poetry, all deps grouped |
-| `templates/fast-api` | Monthly | pip/Poetry, ignores `common-grants-sdk` |
-| `examples/pa-opportunity-example` | Monthly | pip/Poetry, ignores `common-grants-sdk` |
-| `examples/ca-opportunity-example` | Monthly | pip/Poetry, ignores `common-grants-sdk` |
+
+Templates and examples are now manually maintained and do not have Dependabot entries.
 
 **World C: GitHub Actions** (weekly, Mondays)
 - All Actions grouped into a single PR
@@ -105,7 +114,8 @@ This catches breakage that individual package CI workflows would miss, since a T
 1. Add the package directory to `pnpm-workspace.yaml` under `packages:`
 2. If the package uses catalog deps, no extra steps needed — it inherits from the catalog automatically
 3. If the package has non-catalog deps that Dependabot should track, they'll be picked up automatically by the root workspace entry
-4. If the package has its own isolated lockfile (like templates), add a new entry to `.github/dependabot.yml` under World B
+4. If the package has its own isolated lockfile (like `lib/python-sdk`), add a new entry to `.github/dependabot.yml` under World B
+5. New templates and examples should not be added to Dependabot; they follow the manual maintenance tier
 
 ## Adding a new catalog dep
 
