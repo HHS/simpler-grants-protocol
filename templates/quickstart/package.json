@@ -23,6 +23,13 @@
   },
   "pnpm": {
     "auditConfig": {
+      "//ignoreGhsas": [
+        "Transitive vulnerabilities in @typespec/compiler — unfixable until TypeSpec releases patched versions.",
+        "GHSA-c2c7-rcm5-vvqj: picomatch ReDoS (moderate) — via @typespec/compiler > globby > fast-glob > micromatch > picomatch",
+        "GHSA-3v7f-55p6-f55p: picomatch ReDoS (moderate) — same dependency path as above",
+        "GHSA-48c2-rrv3-qjmp: yaml code execution (high) — via @typespec/compiler > yaml",
+        "TODO: Remove when @typespec/compiler updates picomatch (>=2.3.2) and yaml (>=2.8.3)"
+      ],
       "ignoreGhsas": [
         "GHSA-c2c7-rcm5-vvqj",
         "GHSA-3v7f-55p6-f55p",
