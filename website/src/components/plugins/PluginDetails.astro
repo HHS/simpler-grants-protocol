@@ -1,6 +1,6 @@
 ---
 import type { Plugin } from "@/lib/plugins";
-import { LinkButton } from "@astrojs/starlight/components";
+import { LinkButton, CardGrid } from "@astrojs/starlight/components";
 import { loadAllCustomFields } from "@/lib/custom-fields";
 import CustomFieldCard from "@/components/custom-fields/CustomFieldCard.astro";
 
@@ -59,9 +59,9 @@ const pluginFields = plugin.resolvedFields
       This plugin exposes {pluginFields.length} custom fields beyond the CommonGrants
       base schema:
     </p>
-    <div class="fields-grid">
+    <CardGrid>
       {pluginFields.map((field) => <CustomFieldCard field={field} />)}
-    </div>
+    </CardGrid>
   </section>
 
   <!-- Actions -->
@@ -168,12 +168,6 @@ const pluginFields = plugin.resolvedFields
 
   .repo-link:hover {
     text-decoration: underline;
-  }
-
-  .fields-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
   }
 
   .actions {

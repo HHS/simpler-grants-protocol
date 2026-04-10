@@ -1,6 +1,6 @@
 ---
 import type { CustomField } from "@/lib/custom-fields";
-import { LinkButton } from "@astrojs/starlight/components";
+import { LinkButton, CardGrid } from "@astrojs/starlight/components";
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import { SchemaDocMapper } from "@/lib/schema/schema-doc-mapper";
 import { Paths } from "@/lib/schema/paths";
@@ -119,11 +119,11 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
         <p class="section-description">
           The following plugins include this custom field:
         </p>
-        <div class="plugins-grid">
+        <CardGrid>
           {pluginsWithField.map((plugin) => (
             <PluginCatalogCard plugin={plugin} />
           ))}
-        </div>
+        </CardGrid>
       </section>
     )
   }
@@ -246,12 +246,6 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
     background: var(--sl-color-blue);
     color: white;
     transform: translateY(-1px);
-  }
-
-  .plugins-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
   }
 
   .actions {
