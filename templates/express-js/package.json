@@ -64,6 +64,7 @@
   },
   "pnpm": {
     "auditConfig": {
+      "//ignoreGhsas": "See AUDIT_EXCEPTIONS.md for details on each suppressed advisory",
       "ignoreGhsas": [
         "GHSA-23c5-xmqv-rm74",
         "GHSA-25h7-pfq9-p65f",

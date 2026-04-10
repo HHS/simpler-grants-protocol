@@ -134,7 +134,7 @@ This shouldn't happen — internal deps are in the ignore list. If it does, chec
 
 Template CI workflows (`ci-template-express-js.yml`, `ci-template-quickstart.yml`) run `pnpm audit --audit-level=high --ignore-workspace`. This filters out moderate and low severity findings, which are typically transitive dependency issues that only upstream maintainers can fix.
 
-When a high or critical severity GHSA must be suppressed (because it's a transitive dependency you can't resolve), add it to the template's `pnpm.auditConfig.ignoreGhsas` in `package.json`. Keep the list as small as possible.
+When a high or critical severity GHSA must be suppressed (because it's a transitive dependency you can't resolve), add it to the template's `pnpm.auditConfig.ignoreGhsas` in `package.json` and document it in [AUDIT_EXCEPTIONS.md](./AUDIT_EXCEPTIONS.md). Keep the list as small as possible.
 
 **Review cadence:** Check suppressed GHSAs quarterly, or whenever TypeSpec or vitest do a major release, to see if upstream has resolved the transitive vulnerabilities. Remove entries that are no longer needed.
 
