@@ -6,6 +6,7 @@
 - Group minor/patch updates by manifest (e.g. `pnpm-lock.yaml` or `poetry.lock`) into a single PR
 - Ignore major bumps for packages — these are handled manually to control breaking changes
 - Catalog-managed deps (TypeSpec, vitest, etc.) bypass Dependabot entirely due to pnpm catalog bugs
+- Suppress known transitive vulnerabilities via `pnpm.auditConfig.ignoreGhsas` — see [AUDIT_EXCEPTIONS.md](./AUDIT_EXCEPTIONS.md) for the full registry
 
 This repo uses a split strategy for automated dependency updates: Dependabot handles most things, and a scheduled GitHub Actions workflow handles the rest. Expect roughly 3-5 dependency PRs per week in normal operation.
 
