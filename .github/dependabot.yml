@@ -97,7 +97,16 @@ updates:
       interval: "weekly"
       day: "wednesday"
     groups:
+      linter-tools:
+        patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
       all-deps:
+        exclude-patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
         patterns: ["*"]
     ignore:
       - dependency-name: "*"
@@ -113,7 +122,16 @@ updates:
     schedule:
       interval: "monthly"
     groups:
+      linter-tools:
+        patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
       all-deps:
+        exclude-patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
         patterns: ["*"]
     ignore:
       - dependency-name: "*"
@@ -130,7 +148,16 @@ updates:
     schedule:
       interval: "monthly"
     groups:
+      linter-tools:
+        patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
       all-deps:
+        exclude-patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
         patterns: ["*"]
     ignore:
       - dependency-name: "*"
@@ -147,7 +174,16 @@ updates:
     schedule:
       interval: "monthly"
     groups:
+      linter-tools:
+        patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
       all-deps:
+        exclude-patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
         patterns: ["*"]
     ignore:
       - dependency-name: "*"

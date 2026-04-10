@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import mock_open, patch
 
 import pytest
-
 from common_grants.utils.opp_data_source import OpportunityDataSource
 
 

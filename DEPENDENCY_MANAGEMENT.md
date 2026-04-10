@@ -6,6 +6,7 @@
 - Group minor/patch updates by manifest (e.g. `pnpm-lock.yaml` or `poetry.lock`) into a single PR
 - Ignore major bumps for packages — these are handled manually to control breaking changes
 - Catalog-managed deps (TypeSpec, vitest, etc.) bypass Dependabot entirely due to pnpm catalog bugs
+- Separate linter tools (ruff, black, mypy) into their own Dependabot group for Python projects to isolate linter version bumps from functional dependency updates
 
 This repo uses a split strategy for automated dependency updates: Dependabot handles most things, and a scheduled GitHub Actions workflow handles the rest. Expect roughly 3-5 dependency PRs per week in normal operation.
 
@@ -43,6 +44,8 @@ Dependabot runs on three "worlds":
 | `templates/fast-api` | Monthly | pip/Poetry, ignores `common-grants-sdk` |
 | `examples/pa-opportunity-example` | Monthly | pip/Poetry, ignores `common-grants-sdk` |
 | `examples/ca-opportunity-example` | Monthly | pip/Poetry, ignores `common-grants-sdk` |
+
+Python projects use a `linter-tools` group separate from `all-deps`. This isolates ruff/black/mypy version bumps — which often introduce new lint rules that break projects using `select = ["ALL"]` — into their own PRs, separate from functional dependency updates.
 
 **World C: GitHub Actions** (weekly, Mondays)
 - All Actions grouped into a single PR
