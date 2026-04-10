@@ -11,7 +11,7 @@ export interface Props {
 export const getStaticPaths: GetStaticPaths = () => {
   const pluginIds = getPluginIds();
   return pluginIds.map((pluginId) => ({
-    params: { slug: pluginId },
+    params: { slug: encodeURIComponent(pluginId) },
     props: { pluginId },
   }));
 };
@@ -32,5 +32,20 @@ if (!plugin) {
     tableOfContents: false,
   }}
 >
+  <a href="/plugins" class="back-link">&larr; Back to Plugins</a>
   <PluginDetails plugin={plugin} />
 </StarlightPage>
+
+<style>
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+    color: var(--sl-color-accent);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>

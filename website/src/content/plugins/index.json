@@ -1,11 +1,9 @@
 {
-  "ts-cg-grants-gov": {
+  "@common-grants/cg-grants-gov": {
     "label": "TypeScript Common-Grants Plugin",
     "description": "A TypeScript adapter that maps Grants.gov opportunity data to the CommonGrants protocol.",
     "system": "Grants.gov",
-    "url": "https://github.com/common-grants/ts-cg-grants-gov",
-    "language": "TypeScript",
-    "version": "0.1.0",
+    "packageUrl": "https://www.npmjs.com/package/@common-grants/cg-grants-gov",
     "fields": {
       "Opportunity": [
         "legacySerialId",
@@ -23,13 +21,12 @@
     "createdAt": "2026-01-20",
     "lastModifiedAt": "2026-04-09"
   },
-  "py-cg-grants-gov": {
+  "cg-grants-gov": {
     "label": "Python Common-Grants Plugin",
     "description": "A Python adapter that maps Grants.gov opportunity data to the CommonGrants protocol.",
     "system": "Grants.gov",
-    "url": "https://github.com/common-grants/py-cg-grants-gov",
-    "language": "Python",
-    "version": "0.1.0",
+    "packageUrl": "https://pypi.org/project/cg-grants-gov/",
+    "repoUrl": "https://github.com/common-grants/py-cg-grants-gov",
     "fields": {
       "Opportunity": [
         "legacySerialId",

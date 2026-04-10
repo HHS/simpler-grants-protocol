@@ -7,7 +7,7 @@ interface Props {
 }
 
 const { plugin } = Astro.props;
-const detailHref = `/plugins/${plugin.id}`;
+const detailHref = `/plugins/${encodeURIComponent(plugin.id)}`;
 ---
 
 <CatalogCard

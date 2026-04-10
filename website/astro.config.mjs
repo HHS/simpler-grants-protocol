@@ -108,6 +108,10 @@ export default defineConfig({
               link: "custom-fields",
             },
             {
+              label: "Plugins",
+              link: "plugins",
+            },
+            {
               label: "Types",
               collapsed: true,
               autogenerate: { directory: "protocol/types" },
@@ -131,10 +135,6 @@ export default defineConfig({
               label: "Responses",
               collapsed: true,
               autogenerate: { directory: "protocol/responses" },
-            },
-            {
-              label: "Plugins",
-              link: "plugins",
             },
             {
               label: "Pagination",

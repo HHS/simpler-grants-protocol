@@ -1,6 +1,8 @@
+import { readFileSync } from "fs";
 import pluginsIndex from "@/content/plugins/index.json";
 import { loadAllCustomFields } from "@/lib/custom-fields";
-import type { Plugin, PluginIndexEntry, ResolvedPluginField } from "./types";
+import { Paths } from "@/lib/schema/paths";
+import type { Plugin, PluginCacheEntry, ResolvedPluginField } from "./types";
 
 // =============================================================================
 // PRIVATE HELPERS
@@ -14,18 +16,22 @@ let pluginsCache: Plugin[] | null = null;
 // =============================================================================
 
 /**
- * Loads all plugins from the index (with caching).
+ * Loads all plugins from the generated metadata cache (with caching).
  * Resolves each plugin's field IDs against the custom-fields catalog.
+ *
+ * Requires `pnpm generate:plugin-metadata` to have been run first.
  */
 export function loadAllPlugins(): Plugin[] {
   if (pluginsCache) {
     return pluginsCache;
   }
 
-  const customFields = loadAllCustomFields();
-  const index = pluginsIndex as Record<string, PluginIndexEntry>;
+  const cacheContent = readFileSync(Paths.PLUGIN_METADATA, "utf-8");
+  const cacheIndex = JSON.parse(cacheContent) as Record<string, PluginCacheEntry>;
 
-  pluginsCache = Object.entries(index).map(([id, entry]) => {
+  const customFields = loadAllCustomFields();
+
+  pluginsCache = Object.entries(cacheIndex).map(([id, entry]) => {
     const allFieldIds = Object.values(entry.fields).flat();
     const resolvedFields = allFieldIds.reduce<ResolvedPluginField[]>(
       (acc, fieldId) => {
@@ -55,6 +61,7 @@ export function loadAllPlugins(): Plugin[] {
 
 /**
  * Returns all plugin IDs for static path generation.
+ * Reads directly from index.json so it works without the generated cache.
  */
 export function getPluginIds(): string[] {
   return Object.keys(pluginsIndex);
