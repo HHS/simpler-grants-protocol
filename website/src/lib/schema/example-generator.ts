@@ -3,15 +3,20 @@ import { resolveSchemaRefs } from "./ref-resolver";
 import { Paths } from "./paths";
 import * as path from "path";
 import * as OpenAPISampler from "openapi-sampler";
+import type Ajv2020 from "ajv/dist/2020";
 
 /**
  * Generates a sample example for a given schema path.
  * @param schemaPath - Path to the schema file, relative to the repo root
  *   (e.g. "website/public/schemas/yaml/OpportunityBase.yaml").
+ * @param options.validator - Optional Ajv instance to use for validation.
+ *   Defaults to the base protocol schema validator. Pass `extensionsAjv`
+ *   for extension schemas (custom fields, question bank).
  * @returns The generated example as a JSON string.
  */
 export async function generateSchemaExample(
   schemaPath: string,
+  options?: { validator?: Ajv2020 },
 ): Promise<string> {
   const filePath = path.resolve(Paths.REPO_ROOT, schemaPath);
   const schemaName = path.basename(filePath);
@@ -23,7 +28,7 @@ export async function generateSchemaExample(
     null,
     2,
   );
-  validateExample(example, schemaName);
+  validateExample(example, schemaName, options?.validator ?? ajv);
 
   return example;
 }
@@ -32,9 +37,13 @@ export async function generateSchemaExample(
 // Helper functions
 // #########################################################################
 
-function validateExample(example: string, schemaName: string): void {
+function validateExample(
+  example: string,
+  schemaName: string,
+  ajvInstance: Ajv2020 = ajv,
+): void {
   // Validate the generated example against the source schema
-  const validator = ajv.getSchema(schemaName);
+  const validator = ajvInstance.getSchema(schemaName);
   if (!validator) {
     throw new Error(`Schema ${schemaName} not found for ${schemaName}`);
   }

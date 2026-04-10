@@ -7,7 +7,7 @@ import CatalogPage from "@/layouts/CatalogPage.astro";
 import QuestionCard from "@/components/question-bank/QuestionCard.astro";
 
 const questions = await loadAllQuestionBankItems();
-const { tags: allTags } = await getFilterOptions();
+const { tags: allTags, entities: allEntities } = await getFilterOptions();
 ---
 
 <CatalogPage
@@ -16,6 +16,13 @@ const { tags: allTags } = await getFilterOptions();
   searchLabel="Search questions"
   searchPlaceholder="Search by name, description, or tags..."
   filters={[
+    {
+      id: "entity-filter",
+      label: "Entity",
+      options: allEntities,
+      dataAttribute: "entity",
+      placeholder: "Any entity",
+    },
     {
       id: "tag-filter",
       label: "Tag",

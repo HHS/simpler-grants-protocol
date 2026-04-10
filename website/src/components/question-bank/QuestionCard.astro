@@ -18,8 +18,21 @@ const detailHref = `/question-bank/${item.id}`;
     name: item.name,
     description: item.description,
     tags: item.tags.join(","),
+    entity: item.entity.join(","),
   }}
 >
+  {
+    item.entity.length > 0 && (
+      <div class="card-entity">
+        <span class="sr-only">Entity</span>
+        <div class="entity-pill-list">
+          {item.entity.map((e) => (
+            <span class="entity-pill">{e}</span>
+          ))}
+        </div>
+      </div>
+    )
+  }
   <div class="card-tags">
     <span class="sr-only">Tags</span>
     <div class="tag-pill-list">
@@ -29,10 +42,25 @@ const detailHref = `/question-bank/${item.id}`;
 </CatalogCard>
 
 <style>
+  .entity-pill-list,
   .tag-pill-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.375rem;
+  }
+
+  .card-entity {
+    margin-bottom: 0.375rem;
+  }
+
+  .entity-pill {
+    padding: 0.375rem 0.75rem;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-accent-high);
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-family: monospace;
+    font-weight: 500;
   }
 
   .tag-pill {

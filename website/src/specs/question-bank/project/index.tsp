@@ -1,0 +1,1 @@
+import "./project-details.tsp";

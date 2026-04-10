@@ -1,6 +1,6 @@
 import "@common-grants/core";
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using CommonGrants.Fields;
 using JsonSchema;
@@ -9,6 +9,7 @@ namespace QuestionBank.OrgPhone;
 
 /** A phone number for the applicant organization */
 @extension("x-tags", #[Tags.organization, Tags.phone])
+@extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
   #{
@@ -41,9 +42,21 @@ namespace QuestionBank.OrgPhone;
     type: "Group",
     label: "Applicant Organization Phone Number",
     elements: #[
-      #{ type: "Control", scope: "#/properties/countryCode", label: "Country Code" },
-      #{ type: "Control", scope: "#/properties/number", label: "Phone Number" },
-      #{ type: "Control", scope: "#/properties/extension", label: "Extension" },
+      #{
+        type: "Control",
+        scope: "#/properties/countryCode",
+        label: "Country Code",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/number",
+        label: "Phone Number",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/extension",
+        label: "Extension",
+      },
       #{ type: "Control", scope: "#/properties/isMobile", label: "Is Mobile?" }
     ],
   }

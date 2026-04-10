@@ -1,13 +1,14 @@
 import "@typespec/json-schema";
-import "./index.tsp";
-import "./question-address.tsp";
+import "../index.tsp";
+import "../generics/question-address.tsp";
 
 using JsonSchema;
 
 namespace QuestionBank.PocAddress;
 
 /** A mailing address for the primary point of contact */
-@extension("x-tags", #[Tags.contact, Tags.address])
+@extension("x-tags", #[Tags.person, Tags.address])
+@extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",
   #{
@@ -44,8 +45,16 @@ namespace QuestionBank.PocAddress;
     type: "Group",
     label: "Primary Point of Contact Mailing Address",
     elements: #[
-      #{ type: "Control", scope: "#/properties/street1", label: "Street Address (Line 1)" },
-      #{ type: "Control", scope: "#/properties/street2", label: "Street Address (Line 2)" },
+      #{
+        type: "Control",
+        scope: "#/properties/street1",
+        label: "Street Address (Line 1)",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/street2",
+        label: "Street Address (Line 2)",
+      },
       #{ type: "Control", scope: "#/properties/city", label: "City" },
       #{ type: "Control", scope: "#/properties/state", label: "State" },
       #{
@@ -61,7 +70,11 @@ namespace QuestionBank.PocAddress;
         },
       },
       #{ type: "Control", scope: "#/properties/country", label: "Country" },
-      #{ type: "Control", scope: "#/properties/postalCode", label: "Postal Code" }
+      #{
+        type: "Control",
+        scope: "#/properties/postalCode",
+        label: "Postal Code",
+      }
     ],
   }
 )

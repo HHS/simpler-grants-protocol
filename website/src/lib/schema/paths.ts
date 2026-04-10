@@ -60,6 +60,10 @@ export class Paths {
     Paths.CACHE_DIR,
     "type-formatting-cache.json",
   );
+  static readonly PLUGIN_METADATA = path.join(
+    Paths.CACHE_DIR,
+    "plugin-metadata.json",
+  );
 
   // Source directories
   static readonly CONTENT_DOCS_DIR = path.join(

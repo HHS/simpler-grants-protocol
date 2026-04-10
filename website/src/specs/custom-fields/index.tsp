@@ -10,6 +10,7 @@ import "./attachments.tsp";
 import "./federal-funding-source.tsp";
 import "./cost-sharing.tsp";
 import "./additional-info.tsp";
+import "./fiscal-year.tsp";
 import "./eligibility-criteria.tsp";
 import "./federal-funding-instruments.tsp";
 

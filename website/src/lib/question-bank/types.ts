@@ -18,8 +18,10 @@ export interface QuestionBankSchemaData {
   name: string;
   /** Question description */
   description: string;
-  /** Tags (x-tags) for categorization */
+  /** Tags (x-tags) for categorization by field type */
   tags: string[];
+  /** Entity roles (x-entity) for categorization by semantic context */
+  entity: string[];
   /** Schema properties */
   properties: Record<string, unknown>;
   /** Example values */
@@ -37,6 +39,7 @@ export interface QuestionBankSchemaData {
 /** Filter dropdown options returned by getFilterOptions() */
 export interface QuestionBankFilterOptions {
   tags: string[];
+  entities: string[];
 }
 
 /**

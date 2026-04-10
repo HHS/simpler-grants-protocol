@@ -1,27 +1,20 @@
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using JsonSchema;
 
 namespace QuestionBank.PocTitle;
 
 /** The job title of the primary point of contact */
-@extension("x-tags", #[Tags.contact])
+@extension("x-tags", #[Tags.person, Tags.title])
+@extension("x-entity", #[Entities.poc])
 @extension(
   "x-mapping-from-cg",
-  #{
-    title: #{ field: "contacts.primary.title" },
-  }
+  #{ title: #{ field: "contacts.primary.title" } }
 )
 @extension(
   "x-mapping-to-cg",
-  #{
-    contacts: #{
-      primary: #{
-        title: #{ field: "title" },
-      },
-    },
-  }
+  #{ contacts: #{ primary: #{ title: #{ field: "title" } } } }
 )
 @extension(
   "x-ui-schema",

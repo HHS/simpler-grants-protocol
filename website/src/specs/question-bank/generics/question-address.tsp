@@ -1,5 +1,5 @@
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using JsonSchema;
 
@@ -67,7 +67,7 @@ enum USState {
 }
 
 /** A generic address question with US state dropdown and conditional state/province */
-@extension("x-tags", #[Tags.address])
+@extension("x-tags", #[Tags.generic, Tags.address])
 @extension(
   "x-mapping-from-cg",
   #{
@@ -96,8 +96,16 @@ enum USState {
     type: "Group",
     label: "Address",
     elements: #[
-      #{ type: "Control", scope: "#/properties/street1", label: "Street Address (Line 1)" },
-      #{ type: "Control", scope: "#/properties/street2", label: "Street Address (Line 2)" },
+      #{
+        type: "Control",
+        scope: "#/properties/street1",
+        label: "Street Address (Line 1)",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/street2",
+        label: "Street Address (Line 2)",
+      },
       #{ type: "Control", scope: "#/properties/city", label: "City" },
       #{ type: "Control", scope: "#/properties/state", label: "State" },
       #{
@@ -113,7 +121,11 @@ enum USState {
         },
       },
       #{ type: "Control", scope: "#/properties/country", label: "Country" },
-      #{ type: "Control", scope: "#/properties/postalCode", label: "Postal Code" }
+      #{
+        type: "Control",
+        scope: "#/properties/postalCode",
+        label: "Postal Code",
+      }
     ],
   }
 )

@@ -1,5 +1,5 @@
 import "@typespec/json-schema";
-import "./index.tsp";
+import "../index.tsp";
 
 using JsonSchema;
 
@@ -27,7 +27,7 @@ enum NameSuffix {
 }
 
 /** A generic name question with structured prefix and suffix enums */
-@extension("x-tags", #[Tags.name])
+@extension("x-tags", #[Tags.generic, Tags.name])
 @extension(
   "x-mapping-from-cg",
   #{
@@ -55,8 +55,16 @@ enum NameSuffix {
     label: "Name",
     elements: #[
       #{ type: "Control", scope: "#/properties/prefix", label: "Prefix" },
-      #{ type: "Control", scope: "#/properties/firstName", label: "First Name" },
-      #{ type: "Control", scope: "#/properties/middleName", label: "Middle Name" },
+      #{
+        type: "Control",
+        scope: "#/properties/firstName",
+        label: "First Name",
+      },
+      #{
+        type: "Control",
+        scope: "#/properties/middleName",
+        label: "Middle Name",
+      },
       #{ type: "Control", scope: "#/properties/lastName", label: "Last Name" },
       #{ type: "Control", scope: "#/properties/suffix", label: "Suffix" }
     ],

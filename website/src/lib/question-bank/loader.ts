@@ -41,6 +41,7 @@ function extractSchemaData(
       name: getString("title"),
       description: getString("description"),
       tags: getStringArray("x-tags"),
+      entity: getStringArray("x-entity"),
       properties: getObject("properties"),
       examples: getArray("examples"),
       mappingFromCg: getObject("x-mapping-from-cg"),
@@ -136,5 +137,6 @@ export async function getFilterOptions(): Promise<QuestionBankFilterOptions> {
 
   return {
     tags: collectUniqueValues(allItems, (item) => item.tags),
+    entities: collectUniqueValues(allItems, (item) => item.entity),
   };
 }
