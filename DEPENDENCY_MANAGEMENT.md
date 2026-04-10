@@ -45,7 +45,7 @@ Dependabot runs on three "worlds":
 - Major version bumps are ignored (handled manually)
 - Ignores `@common-grants/*` (internal workspace deps) and all catalog-managed deps
 
-**World B: Isolated lockfile directories** (weekly or monthly)
+**World B: Isolated lockfile directories** (weekly)
 
 | Directory | Schedule | Notes |
 |-----------|----------|-------|

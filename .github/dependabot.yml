@@ -1,7 +1,7 @@
 # Automated dependency updates for the CommonGrants monorepo.
 #
 # Split strategy:
-#   - Dependabot handles non-catalog deps (templates, examples, Python, Actions, non-catalog workspace deps)
+#   - Dependabot handles non-catalog deps (Python SDK, Actions, non-catalog workspace deps)
 #   - A scheduled GitHub Action (deps-catalog-check.yml) handles catalog-managed deps
 #     (avoids dependabot-core pnpm catalog bugs: #14339, #13347, #12244, #12445, #13000)
 #
