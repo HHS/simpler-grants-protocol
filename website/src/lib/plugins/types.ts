@@ -6,13 +6,13 @@ export interface PluginSourceEntry {
   label: string;
   description: string;
   system: string;
+  /** Name of the package on npm or PyPI (e.g. "@common-grants/cg-grants-gov") */
+  packageName: string;
   /** URL to the plugin's npm or PyPI package page */
   packageUrl: string;
   /** Optional fallback repo URL if the package registry doesn't provide one */
   repoUrl?: string;
   fields: Record<string, string[]>;
-  createdAt: string;
-  lastModifiedAt: string;
 }
 
 /**

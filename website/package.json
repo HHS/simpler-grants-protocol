@@ -54,6 +54,7 @@
     "swagger-ui-react": "^5.32.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "zod": "^3",
     "typespec-versioning-changelog": "workspace:*"
   },
   "devDependencies": {

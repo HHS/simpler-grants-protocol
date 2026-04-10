@@ -11,7 +11,7 @@ export interface Props {
 export const getStaticPaths: GetStaticPaths = () => {
   const pluginIds = getPluginIds();
   return pluginIds.map((pluginId) => ({
-    params: { slug: encodeURIComponent(pluginId) },
+    params: { slug: pluginId },
     props: { pluginId },
   }));
 };
