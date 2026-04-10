@@ -25,15 +25,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
       - name: Run script (dry run)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && env.FIDER_API_TOKEN != ''
         run: |
           python run.py \
             --org "${{ github.repository_owner }}" \

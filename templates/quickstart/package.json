@@ -20,5 +20,19 @@
     "@typespec/openapi": "^1.5.0",
     "@typespec/rest": "^0.75.0",
     "@typespec/versioning": "^0.75.0"
+  },
+  "pnpm": {
+    "auditConfig": {
+      "//ignoreGhsas": "See AUDIT_EXCEPTIONS.md for details on each suppressed advisory",
+      "ignoreGhsas": [
+        "GHSA-83g3-92jg-28cx",
+        "GHSA-qffp-2rhf-9h96",
+        "GHSA-9ppj-qmqm-q256",
+        "GHSA-c2c7-rcm5-vvqj",
+        "GHSA-2g4f-4pwh-qvx6",
+        "GHSA-3v7f-55p6-f55p",
+        "GHSA-48c2-rrv3-qjmp"
+      ]
+    }
   }
 }
