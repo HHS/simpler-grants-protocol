@@ -4,6 +4,7 @@ from datetime import date, datetime, timezone
 from uuid import uuid4
 
 import pytest
+from common_grants.api import app
 from common_grants_sdk.schemas.pydantic import (
     EventType,
     Money,
@@ -15,8 +16,6 @@ from common_grants_sdk.schemas.pydantic import (
     SingleDateEvent,
 )
 from fastapi.testclient import TestClient
-
-from common_grants.api import app
 
 
 @pytest.fixture(scope="session", name="client")

@@ -4,16 +4,15 @@ from datetime import date
 from typing import cast
 from uuid import UUID
 
+from common_grants.services.utils import (
+    build_applied_filters,
+    mock_opportunity,
+)
 from common_grants_sdk.schemas.pydantic import (
     EventType,
     OppFilters,
     OppStatusOptions,
     SingleDateEvent,
-)
-
-from common_grants.services.utils import (
-    build_applied_filters,
-    mock_opportunity,
 )
 
 
@@ -80,12 +79,12 @@ class TestMockOpportunity:
 
         assert opp.key_dates is not None
         assert opp.key_dates.post_date is not None
-        post_date_event = cast(SingleDateEvent, opp.key_dates.post_date)
+        post_date_event = cast("SingleDateEvent", opp.key_dates.post_date)
         assert post_date_event.date == app_opens
         assert post_date_event.name == "Application Posted"
         assert post_date_event.event_type == EventType.SINGLE_DATE
         assert opp.key_dates.close_date is not None
-        close_date_event = cast(SingleDateEvent, opp.key_dates.close_date)
+        close_date_event = cast("SingleDateEvent", opp.key_dates.close_date)
         assert close_date_event.date == app_deadline
         assert close_date_event.name == "Application Deadline"
         assert close_date_event.event_type == EventType.SINGLE_DATE
@@ -144,6 +143,6 @@ class TestMockOpportunity:
 
         assert opp.key_dates is not None
         assert opp.key_dates.post_date is not None
-        post_date_event = cast(SingleDateEvent, opp.key_dates.post_date)
+        post_date_event = cast("SingleDateEvent", opp.key_dates.post_date)
         assert post_date_event.date == app_opens
         assert opp.key_dates.close_date is None
