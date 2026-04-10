@@ -1,0 +1,185 @@
+---
+import type { Plugin } from "@/lib/plugins";
+import { LinkButton, CardGrid } from "@astrojs/starlight/components";
+import { loadAllCustomFields } from "@/lib/custom-fields";
+import CustomFieldCard from "@/components/custom-fields/CustomFieldCard.astro";
+
+interface Props {
+  plugin: Plugin;
+}
+
+const { plugin } = Astro.props;
+
+const allCustomFields = loadAllCustomFields();
+const pluginFields = plugin.resolvedFields
+  .map((f) => allCustomFields[f.id])
+  .filter(Boolean);
+---
+
+<div class="plugin-details">
+  <!-- Summary Section -->
+  <section class="section">
+    <h2>Summary</h2>
+    <p class="description">{plugin.description}</p>
+
+    <dl class="meta-list">
+      <div class="meta-item">
+        <dt>System</dt>
+        <dd>{plugin.system}</dd>
+      </div>
+      <div class="meta-item">
+        <dt>Language</dt>
+        <dd><span class="language-badge">{plugin.language}</span></dd>
+      </div>
+      <div class="meta-item">
+        <dt>Version</dt>
+        <dd>{plugin.version}</dd>
+      </div>
+      <div class="meta-item">
+        <dt>Package</dt>
+        <dd><a href={plugin.packageUrl}>{plugin.packageName}</a></dd>
+      </div>
+      <div class="meta-item">
+        <dt>Repository</dt>
+        <dd>
+          <a
+            href={plugin.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="repo-link"
+          >
+            <span class="sr-only">GitHub repo for this plugin: </span>{
+              new URL(plugin.url).pathname.slice(1)
+            }
+            <span aria-hidden="true">↗</span>
+          </a>
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- Custom Fields Section -->
+  <section class="section">
+    <h2>Custom Fields</h2>
+    <p class="section-description">
+      This plugin exposes {pluginFields.length} custom fields beyond the CommonGrants
+      base schema:
+    </p>
+    <CardGrid>
+      {pluginFields.map((field) => <CustomFieldCard field={field} />)}
+    </CardGrid>
+  </section>
+
+  <!-- Actions -->
+  <div class="actions">
+    <LinkButton
+      href="/plugins"
+      variant="secondary"
+      icon="left-arrow"
+      iconPlacement="start"
+    >
+      Back to Plugins
+    </LinkButton>
+  </div>
+</div>
+
+<style>
+  .plugin-details {
+    max-width: 800px;
+  }
+
+  .section {
+    margin-bottom: 2.5rem;
+  }
+
+  .section h2 {
+    font-size: 1.6rem;
+    color: var(--sl-color-white);
+  }
+
+  .section-description {
+    color: var(--sl-color-gray-2);
+    margin-bottom: 1rem;
+  }
+
+  .description {
+    font-size: 1.1rem;
+    color: var(--sl-color-gray-1);
+    margin-bottom: 1.5rem;
+  }
+
+  dl.meta-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  dl.meta-list > .meta-item {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .meta-item dt {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-gray-3);
+    font-weight: normal;
+    margin: 0 0 0.5rem 0;
+    padding: 0;
+  }
+
+  .meta-item dd {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--sl-color-text);
+    margin: 0;
+    padding: 0;
+  }
+
+  .language-badge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-accent-high);
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .repo-link {
+    color: var(--sl-color-accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+    word-break: break-all;
+  }
+
+  .repo-link:hover {
+    text-decoration: underline;
+  }
+
+  .actions {
+    margin-top: 3rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+</style>

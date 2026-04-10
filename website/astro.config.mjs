@@ -49,6 +49,8 @@ export default defineConfig({
             "/forms/playground",
             "/question-bank",
             "/question-bank/**",
+            "/plugins",
+            "/plugins/**",
           ],
         }),
       ],
@@ -104,6 +106,10 @@ export default defineConfig({
             {
               label: "Custom field catalog",
               link: "custom-fields",
+            },
+            {
+              label: "Plugins",
+              link: "plugins",
             },
             {
               label: "Types",

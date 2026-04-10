@@ -81,7 +81,9 @@
     "fieldtype",
     "browsable",
     "apidevtools",
-    "allof"
+    "allof",
+    "pypi",
+    "Pypi"
   ],
   "import": []
 }

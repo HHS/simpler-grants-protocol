@@ -45,6 +45,7 @@ catalogs:
       version: 4.1.2
 
 overrides:
+  axios@<1.15.0: '>=1.15.0'
   lodash@>=4.0.0 <=4.17.23: '>=4.18.0'
   qs@<6.14.2: '>=6.14.2'
   yaml@>=2.0.0 <2.8.3: '>=2.8.3'
@@ -416,6 +417,9 @@ importers:
       typespec-versioning-changelog:
         specifier: workspace:*
         version: link:../lib/changelog-emitter
+      zod:
+        specifier: ^3
+        version: 3.25.76
     devDependencies:
       '@astrojs/check':
         specifier: ^0.9.8

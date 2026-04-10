@@ -1,9 +1,11 @@
 ---
 import type { CustomField } from "@/lib/custom-fields";
-import { LinkButton } from "@astrojs/starlight/components";
+import { LinkButton, CardGrid } from "@astrojs/starlight/components";
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import { SchemaDocMapper } from "@/lib/schema/schema-doc-mapper";
 import { Paths } from "@/lib/schema/paths";
+import { loadAllPlugins } from "@/lib/plugins";
+import PluginCatalogCard from "@/components/plugins/PluginCatalogCard.astro";
 
 interface Props {
   field: CustomField;
@@ -32,6 +34,10 @@ function getSchemaDocPath(schemaName: string): string {
 
 // Build schema file path for SchemaFormatTabs (repo-root-relative; reads from .extension-schemas; no hosted link)
 const schemaPath = `${Paths.EXTENSION_SCHEMAS_PATH_PREFIX}/${field.schema}.yaml`;
+
+const pluginsWithField = loadAllPlugins().filter((p) =>
+  Object.values(p.fields).flat().includes(field.id),
+);
 
 // Build example directly from the field's const values and examples
 // (The generic example generator doesn't handle allOf + const values well)
@@ -104,6 +110,23 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
       jsonSchema={{ file: { path: schemaPath } }}
     />
   </section>
+
+  <!-- Plugins Section -->
+  {
+    pluginsWithField.length > 0 && (
+      <section class="section">
+        <h2>Used By Plugins</h2>
+        <p class="section-description">
+          The following plugins include this custom field:
+        </p>
+        <CardGrid>
+          {pluginsWithField.map((plugin) => (
+            <PluginCatalogCard plugin={plugin} />
+          ))}
+        </CardGrid>
+      </section>
+    )
+  }
 
   <!-- Actions -->
   <div class="actions">
@@ -227,5 +250,8 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
 
   .actions {
     margin-top: 3rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 </style>

@@ -1,0 +1,51 @@
+---
+import { loadAllPlugins, getPluginIds } from "@/lib/plugins";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import PluginDetails from "@/components/plugins/PluginDetails.astro";
+import type { GetStaticPaths } from "astro";
+
+export interface Props {
+  pluginId: string;
+}
+
+export const getStaticPaths: GetStaticPaths = () => {
+  const pluginIds = getPluginIds();
+  return pluginIds.map((pluginId) => ({
+    params: { slug: pluginId },
+    props: { pluginId },
+  }));
+};
+
+const { pluginId } = Astro.props;
+const plugins = loadAllPlugins();
+const plugin = plugins.find((p) => p.id === pluginId);
+
+if (!plugin) {
+  throw new Error(`Plugin "${pluginId}" not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: plugin.label,
+    description: plugin.description,
+    tableOfContents: false,
+  }}
+>
+  <a href="/plugins" class="back-link">&larr; Back to Plugins</a>
+  <PluginDetails plugin={plugin} />
+</StarlightPage>
+
+<style>
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+    color: var(--sl-color-accent);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>
