@@ -41,9 +41,7 @@ export interface CustomFieldSchemaData {
  * Complete custom field data: index metadata + schema-derived fields.
  */
 export interface CustomField
-  extends CustomFieldIndexEntry,
-    CustomFieldSchemaData,
-    CatalogItem {
+  extends CustomFieldIndexEntry, CustomFieldSchemaData, CatalogItem {
   /** The field's unique identifier (key in index.json) */
   id: string;
 }

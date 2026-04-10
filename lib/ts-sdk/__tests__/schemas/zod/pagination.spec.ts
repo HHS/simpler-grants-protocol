@@ -37,8 +37,8 @@ describe("PaginatedQueryParams Schema", () => {
     expect(paramsWithPageSize.pageSize).toBe(25);
   });
 
-  it("should match PaginatedQueryParams.yaml", () => {
-    expectZodMatchesJsonSchema(PaginatedQueryParamsSchema, jsonSchemaId);
+  it("should match PaginatedQueryParams.yaml", async () => {
+    await expectZodMatchesJsonSchema(PaginatedQueryParamsSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid PaginatedQueryParams", () => {
@@ -89,8 +89,8 @@ describe("PaginatedBodyParams Schema", () => {
     expect(paramsWithPageSize.pageSize).toBe(25);
   });
 
-  it("should match PaginatedBodyParams.yaml", () => {
-    expectZodMatchesJsonSchema(PaginatedBodyParamsSchema, jsonSchemaId);
+  it("should match PaginatedBodyParams.yaml", async () => {
+    await expectZodMatchesJsonSchema(PaginatedBodyParamsSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid PaginatedBodyParams", () => {
@@ -151,8 +151,8 @@ describe("PaginatedResultsInfo Schema", () => {
     expect(PaginatedResultsInfoSchema.parse(validInfo2)).toEqual(validInfo2);
   });
 
-  it("should match PaginatedResultsInfo.yaml", () => {
-    expectZodMatchesJsonSchema(PaginatedResultsInfoSchema, jsonSchemaId);
+  it("should match PaginatedResultsInfo.yaml", async () => {
+    await expectZodMatchesJsonSchema(PaginatedResultsInfoSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid PaginatedResultsInfo", () => {
