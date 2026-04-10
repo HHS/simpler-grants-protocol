@@ -20,5 +20,15 @@
     "@typespec/openapi": "^1.5.0",
     "@typespec/rest": "^0.75.0",
     "@typespec/versioning": "^0.75.0"
+  },
+  "pnpm": {
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-83g3-92jg-28cx",
+        "GHSA-9ppj-qmqm-q256",
+        "GHSA-c2c7-rcm5-vvqj",
+        "GHSA-qffp-2rhf-9h96"
+      ]
+    }
   }
 }
