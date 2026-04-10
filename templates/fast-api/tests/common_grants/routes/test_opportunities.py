@@ -2,8 +2,9 @@
 
 from uuid import uuid4
 
-from common_grants.services.opportunity import OpportunityService
 from fastapi.testclient import TestClient
+
+from common_grants.services.opportunity import OpportunityService
 
 
 class TestListOpportunities:
