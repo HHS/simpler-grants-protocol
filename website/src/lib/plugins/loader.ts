@@ -27,7 +27,10 @@ export function loadAllPlugins(): Plugin[] {
   }
 
   const cacheContent = readFileSync(Paths.PLUGIN_METADATA, "utf-8");
-  const cacheIndex = JSON.parse(cacheContent) as Record<string, PluginCacheEntry>;
+  const cacheIndex = JSON.parse(cacheContent) as Record<
+    string,
+    PluginCacheEntry
+  >;
 
   const customFields = loadAllCustomFields();
 

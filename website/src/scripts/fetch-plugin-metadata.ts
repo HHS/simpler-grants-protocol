@@ -88,16 +88,17 @@ class PluginMetadataGenerator {
       Paths.WEBSITE_ROOT,
       "src/content/plugins/index.json",
     );
-    const source = JSON.parse(
-      readFileSync(indexPath, "utf-8"),
-    ) as Record<string, PluginSourceEntry>;
+    const source = JSON.parse(readFileSync(indexPath, "utf-8")) as Record<
+      string,
+      PluginSourceEntry
+    >;
 
     const entries = await Promise.all(
       Object.entries(source).map(async ([id, entry]) => {
         console.log(`  Fetching metadata for "${id}" (${entry.packageUrl})...`);
         const fetched = await fetchPackageMeta(entry.packageUrl);
         const url = fetched.url || entry.repoUrl || "";
-      const cacheEntry: PluginCacheEntry = { ...entry, ...fetched, url };
+        const cacheEntry: PluginCacheEntry = { ...entry, ...fetched, url };
         return [id, cacheEntry] as const;
       }),
     );

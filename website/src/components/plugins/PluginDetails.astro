@@ -44,7 +44,9 @@ const pluginFields = plugin.resolvedFields
             rel="noopener noreferrer"
             class="repo-link"
           >
-            <span class="sr-only">GitHub repo for this plugin: </span>{new URL(plugin.url).pathname.slice(1)}
+            <span class="sr-only">GitHub repo for this plugin: </span>{
+              new URL(plugin.url).pathname.slice(1)
+            }
             <span aria-hidden="true">↗</span>
           </a>
         </dd>
