@@ -11,6 +11,10 @@
       },
       { "path": "./quickstart/main.tsp", "destination": "main.tsp" },
       { "path": "./quickstart/routes.tsp", "destination": "routes.tsp" },
+      {
+        "path": "./quickstart/pnpm-lock.yaml",
+        "destination": "pnpm-lock.yaml"
+      },
       { "path": "./quickstart/package.json", "destination": "package.json" }
     ]
   },
@@ -27,6 +31,10 @@
       {
         "path": "./fast-api/src/common_grants/api.py",
         "destination": "src/common_grants/api.py"
+      },
+      {
+        "path": "./fast-api/src/common_grants/constants.py",
+        "destination": "src/common_grants/constants.py"
       },
       {
         "path": "./fast-api/src/common_grants/routes/__init__.py",
@@ -108,8 +116,8 @@
     "compilerVersion": "1.1.0",
     "files": [
       {
-        "path": "./express-js/.eslintrc.js",
-        "destination": ".eslintrc.js"
+        "path": "./express-js/eslint.config.js",
+        "destination": "eslint.config.js"
       },
       {
         "path": "./express-js/.prettierignore",
@@ -120,8 +128,8 @@
         "destination": ".prettierrc"
       },
       {
-        "path": "./express-js/package-lock.json",
-        "destination": "package-lock.json"
+        "path": "./express-js/pnpm-lock.yaml",
+        "destination": "pnpm-lock.yaml"
       },
       {
         "path": "./express-js/package.json",
