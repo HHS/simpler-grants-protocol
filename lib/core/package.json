@@ -71,6 +71,6 @@
     "rimraf": "^5.0.10",
     "source-map-support": "^0.5.21",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.2"
+    "typescript-eslint": "^8.58.2"
   }
 }
