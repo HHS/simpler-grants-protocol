@@ -33,13 +33,22 @@ catalogs:
     '@vitest/coverage-v8':
       specifier: ^3.2.4
       version: 3.2.4
+    eslint:
+      specifier: ^9.39.4
+      version: 9.39.4
     eslint-plugin-vitest:
       specifier: ^0.5.4
       version: 0.5.4
+    prettier:
+      specifier: ^3.8.1
+      version: 3.8.1
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
   website:
+    prettier:
+      specifier: 3.4.2
+      version: 3.4.2
     vitest:
       specifier: ^4.1.2
       version: 4.1.2
@@ -83,13 +92,13 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
       '@vitest/coverage-v8':
-        specifier: ^3.2.4
+        specifier: 'catalog:'
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.13)(@types/node@20.19.37)(tsx@4.21.0)(yaml@2.8.3))
       eslint:
-        specifier: ^9.39.4
+        specifier: 'catalog:'
         version: 9.39.4
       prettier:
-        specifier: ^3.8.1
+        specifier: 'catalog:'
         version: 3.8.1
       typescript:
         specifier: ^5.9.3
@@ -183,7 +192,7 @@ importers:
         specifier: 'catalog:'
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.13)(@types/node@20.19.37)(tsx@4.21.0)(yaml@2.8.3))
       eslint:
-        specifier: ^9.39.4
+        specifier: 'catalog:'
         version: 9.39.4
       eslint-config-prettier:
         specifier: ^9.1.2
@@ -195,7 +204,7 @@ importers:
         specifier: 'catalog:'
         version: 0.5.4(@typescript-eslint/eslint-plugin@8.57.2(@typescript-eslint/parser@8.57.2(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4)(typescript@5.9.3)(vitest@3.2.4(@types/debug@4.1.13)(@types/node@20.19.37)(tsx@4.21.0)(yaml@2.8.3))
       prettier:
-        specifier: ^3.8.1
+        specifier: 'catalog:'
         version: 3.8.1
       prettier-linter-helpers:
         specifier: ^1.0.1
@@ -247,13 +256,13 @@ importers:
         specifier: 'catalog:'
         version: 20.19.37
       eslint:
-        specifier: ^9.39.4
+        specifier: 'catalog:'
         version: 9.39.4
       globals:
         specifier: ^15.15.0
         version: 15.15.0
       prettier:
-        specifier: ^3.8.1
+        specifier: 'catalog:'
         version: 3.8.1
       rimraf:
         specifier: ^5.0.10
@@ -325,7 +334,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1(ajv@8.18.0)
       eslint:
-        specifier: ^9.39.4
+        specifier: 'catalog:'
         version: 9.39.4
       eslint-config-prettier:
         specifier: ^9.1.2
@@ -340,7 +349,7 @@ importers:
         specifier: ^0.5.9
         version: 0.5.9
       prettier:
-        specifier: ^3.8.1
+        specifier: 'catalog:'
         version: 3.8.1
       ts-node:
         specifier: ^10.9.2
@@ -473,7 +482,7 @@ importers:
         specifier: ^8.19.4
         version: 8.19.4
       eslint:
-        specifier: ^9.39.4
+        specifier: 'catalog:'
         version: 9.39.4
       eslint-plugin-astro:
         specifier: ^1.6.0
@@ -482,7 +491,7 @@ importers:
         specifier: ^15.15.0
         version: 15.15.0
       prettier:
-        specifier: 3.4.2
+        specifier: catalog:website
         version: 3.4.2
       prettier-plugin-astro:
         specifier: ^0.14.1
@@ -11922,7 +11931,7 @@ snapshots:
   prettier-plugin-astro@0.14.1:
     dependencies:
       '@astrojs/compiler': 2.13.1
-      prettier: 3.4.2
+      prettier: 3.8.1
       sass-formatter: 0.7.9
 
   prettier@2.8.8: {}
