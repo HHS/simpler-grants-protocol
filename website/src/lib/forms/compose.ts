@@ -1,0 +1,192 @@
+/**
+ * Helpers that synthesize a form-level x-ui-schema and x-mapping-* from the
+ * extensions declared on the form's composed properties (typically QB
+ * questions referenced via $ref). The form spec author declares the
+ * properties; the loader composes their UI schemas and mappings instead of
+ * forcing the author to redeclare them.
+ *
+ * The loader prefers an explicitly-declared form-level x-ui-schema /
+ * x-mapping-* over the synthesized version, so simple forms with no
+ * composition (like the canary) keep working unchanged.
+ */
+
+// =============================================================================
+// SHARED TYPES
+// =============================================================================
+
+/** A node in a JSON-Forms UI schema (Control or Layout). */
+type UiNode = Record<string, unknown> & {
+  type?: string;
+  scope?: string;
+  elements?: UiNode[];
+};
+
+// =============================================================================
+// UI SCHEMA COMPOSITION
+// =============================================================================
+
+/**
+ * Returns a deep-cloned UI subtree with every Control's `scope` re-prefixed
+ * so it sits under `#/properties/<propName>/...` instead of `#/properties/...`.
+ *
+ * Used when lifting a child question's UI schema into a parent form's
+ * composed UI schema.
+ */
+function rescopeUi(node: UiNode, propName: string): UiNode {
+  const cloned = structuredClone(node);
+  const visit = (n: UiNode): void => {
+    if (typeof n.scope === "string" && n.scope.startsWith("#/")) {
+      // "#/properties/X/..." -> "#/properties/<propName>/properties/X/..."
+      n.scope = `#/properties/${propName}/${n.scope.slice(2)}`;
+    }
+    if (Array.isArray(n.elements)) {
+      for (const child of n.elements) visit(child as UiNode);
+    }
+  };
+  visit(cloned);
+  return cloned;
+}
+
+/**
+ * Synthesizes a form-level VerticalLayout from each property's `x-ui-schema`.
+ *
+ * Properties that carry their own `x-ui-schema` (typically QB questions
+ * referenced via $ref) are lifted in as nested elements, re-scoped to sit
+ * under their property name. Properties without `x-ui-schema` (atomic
+ * types like `string` with `@example`) get a default Control referencing
+ * the property's scope.
+ */
+export function composeUiSchema(
+  properties: Record<string, unknown>,
+): Record<string, unknown> {
+  const elements: UiNode[] = [];
+  for (const [propName, propSchema] of Object.entries(properties)) {
+    if (typeof propSchema !== "object" || propSchema === null) continue;
+    const childUi = (propSchema as Record<string, unknown>)["x-ui-schema"];
+    if (typeof childUi === "object" && childUi !== null) {
+      elements.push(rescopeUi(childUi as UiNode, propName));
+    } else {
+      elements.push({
+        type: "Control",
+        scope: `#/properties/${propName}`,
+      });
+    }
+  }
+  return { type: "VerticalLayout", elements };
+}
+
+// =============================================================================
+// MAPPING COMPOSITION
+// =============================================================================
+
+/**
+ * Deep-merges `source` into `target` (mutating `target`). Object values are
+ * merged recursively; non-object values from `source` overwrite `target`.
+ */
+function deepMergeInto(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>,
+): void {
+  for (const [key, value] of Object.entries(source)) {
+    const existing = target[key];
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      !Array.isArray(value) &&
+      typeof existing === "object" &&
+      existing !== null &&
+      !Array.isArray(existing)
+    ) {
+      deepMergeInto(
+        existing as Record<string, unknown>,
+        value as Record<string, unknown>,
+      );
+    } else {
+      target[key] = value;
+    }
+  }
+}
+
+/**
+ * Synthesizes a form-level `x-mapping-from-cg` by nesting each property's
+ * own `x-mapping-from-cg` under its property name.
+ *
+ * The form-side keys in the child mapping are relative to the child's
+ * structure; nesting them under `<propName>` makes them relative to the
+ * parent form's structure. The CG-side leaf values stay unchanged.
+ */
+export function composeMappingFromCg(
+  properties: Record<string, unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [propName, propSchema] of Object.entries(properties)) {
+    if (typeof propSchema !== "object" || propSchema === null) continue;
+    const childMapping = (propSchema as Record<string, unknown>)[
+      "x-mapping-from-cg"
+    ];
+    if (typeof childMapping !== "object" || childMapping === null) continue;
+    result[propName] = structuredClone(childMapping);
+  }
+  return result;
+}
+
+/**
+ * Walks a mapping subtree and rewrites every `field: "<path>"` (and the
+ * `field` inside any `switch` block) to be relative to the parent property
+ * by prefixing the path with `<propName>.`.
+ */
+function rewriteFieldRefs(node: unknown, propName: string): unknown {
+  if (typeof node !== "object" || node === null) return node;
+  if (Array.isArray(node)) {
+    return node.map((n) => rewriteFieldRefs(n, propName));
+  }
+  const obj = node as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === "field" && typeof value === "string") {
+      out[key] = `${propName}.${value}`;
+    } else if (
+      key === "switch" &&
+      typeof value === "object" &&
+      value !== null
+    ) {
+      const sw = value as Record<string, unknown>;
+      out[key] = {
+        ...sw,
+        ...(typeof sw.field === "string"
+          ? { field: `${propName}.${sw.field}` }
+          : {}),
+      };
+    } else {
+      out[key] = rewriteFieldRefs(value, propName);
+    }
+  }
+  return out;
+}
+
+/**
+ * Synthesizes a form-level `x-mapping-to-cg` by deep-merging each property's
+ * own `x-mapping-to-cg`, with leaf `field` references rewritten to be
+ * relative to the parent form.
+ *
+ * The CG-side keys (top of the tree) stay as written; only the form-side
+ * leaf paths inside `field` / `switch.field` get re-prefixed.
+ */
+export function composeMappingToCg(
+  properties: Record<string, unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [propName, propSchema] of Object.entries(properties)) {
+    if (typeof propSchema !== "object" || propSchema === null) continue;
+    const childMapping = (propSchema as Record<string, unknown>)[
+      "x-mapping-to-cg"
+    ];
+    if (typeof childMapping !== "object" || childMapping === null) continue;
+    const rewritten = rewriteFieldRefs(childMapping, propName) as Record<
+      string,
+      unknown
+    >;
+    deepMergeInto(result, rewritten);
+  }
+  return result;
+}

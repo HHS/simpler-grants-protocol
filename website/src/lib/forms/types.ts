@@ -16,6 +16,10 @@ export interface FormItemIndexEntry {
  * Each value is a partial patch: for UI overrides it overwrites named
  * keys on the matching JSON-Forms Control (e.g. `{ label: "..." }`); for
  * mapping overrides it replaces the entire leaf entry under that path.
+ *
+ * In TypeSpec, dotted paths are written with backticks, e.g.
+ * `` `org.name`: #{ label: "..." } ``, since identifiers without backticks
+ * cannot contain dots.
  */
 export type OverrideMap = Record<string, Record<string, unknown>>;
 
@@ -64,9 +68,7 @@ export interface FormItemSchemaData {
  * Complete form item: index metadata + schema-derived fields.
  */
 export interface FormItem
-  extends FormItemIndexEntry,
-    FormItemSchemaData,
-    CatalogItem {
+  extends FormItemIndexEntry, FormItemSchemaData, CatalogItem {
   /** The form's unique identifier (key in typespec-index.json) */
   id: string;
 }

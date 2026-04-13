@@ -16,6 +16,11 @@ import type {
   OverrideMap,
 } from "./types";
 import { applyUiOverrides, applyMappingOverrides } from "./overrides";
+import {
+  composeUiSchema,
+  composeMappingFromCg,
+  composeMappingToCg,
+} from "./compose";
 
 // Import the forms index
 import formIndex from "@/content/forms/typespec-index.json";
@@ -27,9 +32,8 @@ import formIndex from "@/content/forms/typespec-index.json";
 /** Cache for loaded form items */
 let formCache: FormItemMap | null = null;
 
-/** Pulls the per-section maps out of the schema's `x-overrides` block. */
-function extractOverrides(schema: Record<string, unknown>): FormOverrides {
-  const raw = schema["x-overrides"];
+/** Pulls the three section maps (uiSchema, mappingFromCg, mappingToCg) out of an `x-overrides` block. */
+function readOverrideBlock(raw: unknown): FormOverrides {
   if (typeof raw !== "object" || raw === null) {
     return {};
   }
@@ -47,15 +51,105 @@ function extractOverrides(schema: Record<string, unknown>): FormOverrides {
   };
 }
 
+/** Adds entries from `additions` into `target`, prepending `prefix` to each path. */
+function mergePrefixedInto(
+  target: OverrideMap,
+  additions: OverrideMap | undefined,
+  prefix: string,
+): void {
+  if (!additions) return;
+  for (const [path, patch] of Object.entries(additions)) {
+    const fullPath = prefix ? `${prefix}.${path}` : path;
+    target[fullPath] = patch;
+  }
+}
+
 /**
- * Extracts form data from a resolved JSON schema and applies any
- * `x-overrides` patches on top of the base UI schema and mappings.
+ * Aggregates overrides declared on the form model itself plus overrides
+ * declared on individual properties.
+ *
+ * Authors prefer field-level overrides for patches into a property's
+ * composed type (e.g. `@extension("x-overrides", #{ uiSchema: #{ name: #{ label: "..." } } })`
+ * on `org: QuestionOrgName` becomes `org.name` at the form level). The
+ * model-level `x-overrides` block remains supported for top-level or
+ * cross-cutting patches.
+ */
+function extractOverrides(schema: Record<string, unknown>): FormOverrides {
+  const aggregated: Required<FormOverrides> = {
+    uiSchema: {},
+    mappingFromCg: {},
+    mappingToCg: {},
+  };
+
+  // Model-level overrides keep their paths as written.
+  const modelLevel = readOverrideBlock(schema["x-overrides"]);
+  mergePrefixedInto(aggregated.uiSchema, modelLevel.uiSchema, "");
+  mergePrefixedInto(aggregated.mappingFromCg, modelLevel.mappingFromCg, "");
+  mergePrefixedInto(aggregated.mappingToCg, modelLevel.mappingToCg, "");
+
+  // Field-level overrides have their paths re-keyed with the property name.
+  const properties = schema.properties;
+  if (typeof properties === "object" && properties !== null) {
+    for (const [propName, propSchema] of Object.entries(properties)) {
+      if (typeof propSchema !== "object" || propSchema === null) continue;
+      const propBlock = readOverrideBlock(
+        (propSchema as Record<string, unknown>)["x-overrides"],
+      );
+      mergePrefixedInto(aggregated.uiSchema, propBlock.uiSchema, propName);
+      mergePrefixedInto(
+        aggregated.mappingFromCg,
+        propBlock.mappingFromCg,
+        propName,
+      );
+      mergePrefixedInto(
+        aggregated.mappingToCg,
+        propBlock.mappingToCg,
+        propName,
+      );
+    }
+  }
+
+  // Drop empty section maps so the FormOverrides shape mirrors what was authored.
+  const result: FormOverrides = {};
+  if (Object.keys(aggregated.uiSchema).length > 0) {
+    result.uiSchema = aggregated.uiSchema;
+  }
+  if (Object.keys(aggregated.mappingFromCg).length > 0) {
+    result.mappingFromCg = aggregated.mappingFromCg;
+  }
+  if (Object.keys(aggregated.mappingToCg).length > 0) {
+    result.mappingToCg = aggregated.mappingToCg;
+  }
+  return result;
+}
+
+/** Returns a non-null object value at `schema[key]`, or `undefined` if absent / not an object. */
+function getOptionalObject(
+  schema: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> | undefined {
+  const value = schema[key];
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+/**
+ * Extracts form data from a resolved JSON schema, composes any missing
+ * sections from the form's properties, and then applies `x-overrides`
+ * patches on top.
  *
  * Form schemas use standard JSON Schema properties (title, description,
  * properties, examples) plus the same x-* extensions used by the question
  * bank (x-tags, x-mapping-from-cg, x-mapping-to-cg, x-ui-schema), with
- * an additional x-overrides block that lets a form patch individual
- * labels / mapping leaves without re-declaring the whole inherited tree.
+ * an additional x-overrides block.
+ *
+ * For x-ui-schema and the two x-mapping-* sections: if the form spec
+ * declares one explicitly, it is used as-is; otherwise the loader composes
+ * one by walking the form's properties (typically QB questions referenced
+ * via $ref) and stitching their respective extensions together. This is
+ * what lets a form spec be just a list of composed properties without
+ * redeclaring the inherited UI schema or mapping tree.
  */
 function extractSchemaData(
   schema: Record<string, unknown>,
@@ -66,19 +160,27 @@ function extractSchemaData(
     tags: getStringArray("x-tags"),
     properties: getObject("properties"),
     examples: getArray("examples"),
-    mappingFromCg: getObject("x-mapping-from-cg"),
-    mappingToCg: getObject("x-mapping-to-cg"),
-    uiSchema: getObject("x-ui-schema"),
   });
+
+  const explicitUi = getOptionalObject(schema, "x-ui-schema");
+  const explicitFromCg = getOptionalObject(schema, "x-mapping-from-cg");
+  const explicitToCg = getOptionalObject(schema, "x-mapping-to-cg");
+
+  const composedUi = explicitUi ?? composeUiSchema(base.properties);
+  const composedFromCg =
+    explicitFromCg ?? composeMappingFromCg(base.properties);
+  const composedToCg = explicitToCg ?? composeMappingToCg(base.properties);
+
   const overrides = extractOverrides(schema);
+
   return {
     ...base,
-    uiSchema: applyUiOverrides(base.uiSchema, overrides.uiSchema),
+    uiSchema: applyUiOverrides(composedUi, overrides.uiSchema),
     mappingFromCg: applyMappingOverrides(
-      base.mappingFromCg,
+      composedFromCg,
       overrides.mappingFromCg,
     ),
-    mappingToCg: applyMappingOverrides(base.mappingToCg, overrides.mappingToCg),
+    mappingToCg: applyMappingOverrides(composedToCg, overrides.mappingToCg),
     overrides,
     rawSchema: schema,
   };

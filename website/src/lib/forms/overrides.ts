@@ -50,7 +50,7 @@ function* walkControls(node: UiNode): Generator<UiNode> {
  * to the matching JSON-Forms `scope` string and looked up inside the tree.
  *
  * @throws Error when an override path resolves to a scope that does not
- *   appear anywhere in the base UI schema. This is intentional — silently
+ *   appear anywhere in the base UI schema. This is intentional: silently
  *   dropping a mistyped path would leave the form unchanged with no
  *   feedback, which is exactly the failure mode the user wants surfaced.
  */
