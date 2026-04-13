@@ -24,6 +24,8 @@ updates:
           - "astro"
           - "@astrojs/*"
           - "starlight-*"
+          - "prettier-plugin-astro"
+          - "eslint-plugin-astro"
       tooling:
         patterns:
           - "typescript"
