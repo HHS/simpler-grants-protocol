@@ -6,11 +6,6 @@ packages:
   - lib/ts-sdk
   - website
 
-auditConfig:
-  ignoreGhsas:
-    - GHSA-2g4f-4pwh-qvx6
-    - GHSA-v2wj-7wpq-c8vv
-
 catalog:
   '@types/node': ^20.19.37
   '@typespec/compiler': ^1.10.0
