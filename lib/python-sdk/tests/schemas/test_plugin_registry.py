@@ -7,6 +7,7 @@ from common_grants_sdk.extensions import Plugin
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.schemas.pydantic.models.opp_base import OpportunityBase
 
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

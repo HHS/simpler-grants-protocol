@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from plugins.opportunity_extensions import opportunity_extensions  # noqa: E402
 
+
 # ---------------------------------------------------------------------------
 # Sample API payload containing our four custom fields
 # ---------------------------------------------------------------------------

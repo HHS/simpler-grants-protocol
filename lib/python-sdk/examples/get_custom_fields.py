@@ -1,4 +1,4 @@
-"""Example script to demonstrate how to retrieve custom fields to an opportunity object
+"""Example script to demonstrate how to retrieve custom fields to an opportunity object 
 
 Run with poetry run python ./get_custom_fields.py
 """

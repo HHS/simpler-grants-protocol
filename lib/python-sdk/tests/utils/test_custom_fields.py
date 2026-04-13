@@ -15,6 +15,7 @@ from common_grants_sdk.schemas.pydantic import (
 )
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 
+
 BASE_OPP = {
     "id": uuid4(),
     "title": "Foo bar",
