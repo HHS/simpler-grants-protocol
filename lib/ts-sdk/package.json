@@ -88,8 +88,8 @@
     "@eslint/js": "^9.39.4",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
-    "@typescript-eslint/eslint-plugin": "^8.57.2",
-    "@typescript-eslint/parser": "^8.57.2",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2",
     "@typespec/compiler": "catalog:",
     "@typespec/http": "catalog:",
     "@typespec/json-schema": "catalog:",
@@ -104,12 +104,12 @@
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-prettier": "^5.5.5",
     "js-yaml": "^4.1.1",
-    "json-schema-faker": "^0.5.9",
-    "prettier": "^3.8.1",
+    "json-schema-faker": "^0.6.1",
+    "prettier": "^3.8.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.2",
+    "typescript-eslint": "^8.58.2",
     "vitest": "catalog:"
   }
 }
