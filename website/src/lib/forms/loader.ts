@@ -12,7 +12,10 @@ import type {
   FormItemIndexEntry,
   FormItemMap,
   FormItemSchemaData,
+  FormOverrides,
+  OverrideMap,
 } from "./types";
+import { applyUiOverrides, applyMappingOverrides } from "./overrides";
 
 // Import the forms index
 import formIndex from "@/content/forms/typespec-index.json";
@@ -24,27 +27,59 @@ import formIndex from "@/content/forms/typespec-index.json";
 /** Cache for loaded form items */
 let formCache: FormItemMap | null = null;
 
+/** Pulls the per-section maps out of the schema's `x-overrides` block. */
+function extractOverrides(schema: Record<string, unknown>): FormOverrides {
+  const raw = schema["x-overrides"];
+  if (typeof raw !== "object" || raw === null) {
+    return {};
+  }
+  const block = raw as Record<string, unknown>;
+  const pickMap = (key: string): OverrideMap | undefined => {
+    const value = block[key];
+    return typeof value === "object" && value !== null
+      ? (value as OverrideMap)
+      : undefined;
+  };
+  return {
+    uiSchema: pickMap("uiSchema"),
+    mappingFromCg: pickMap("mappingFromCg"),
+    mappingToCg: pickMap("mappingToCg"),
+  };
+}
+
 /**
- * Extracts form data from a resolved JSON schema.
+ * Extracts form data from a resolved JSON schema and applies any
+ * `x-overrides` patches on top of the base UI schema and mappings.
  *
  * Form schemas use standard JSON Schema properties (title, description,
  * properties, examples) plus the same x-* extensions used by the question
- * bank: x-tags, x-mapping-from-cg, x-mapping-to-cg, x-ui-schema.
+ * bank (x-tags, x-mapping-from-cg, x-mapping-to-cg, x-ui-schema), with
+ * an additional x-overrides block that lets a form patch individual
+ * labels / mapping leaves without re-declaring the whole inherited tree.
  */
 function extractSchemaData(
   schema: Record<string, unknown>,
 ): FormItemSchemaData {
+  const base = extractFromSchema(schema, {
+    name: getString("title"),
+    description: getString("description"),
+    tags: getStringArray("x-tags"),
+    properties: getObject("properties"),
+    examples: getArray("examples"),
+    mappingFromCg: getObject("x-mapping-from-cg"),
+    mappingToCg: getObject("x-mapping-to-cg"),
+    uiSchema: getObject("x-ui-schema"),
+  });
+  const overrides = extractOverrides(schema);
   return {
-    ...extractFromSchema(schema, {
-      name: getString("title"),
-      description: getString("description"),
-      tags: getStringArray("x-tags"),
-      properties: getObject("properties"),
-      examples: getArray("examples"),
-      mappingFromCg: getObject("x-mapping-from-cg"),
-      mappingToCg: getObject("x-mapping-to-cg"),
-      uiSchema: getObject("x-ui-schema"),
-    }),
+    ...base,
+    uiSchema: applyUiOverrides(base.uiSchema, overrides.uiSchema),
+    mappingFromCg: applyMappingOverrides(
+      base.mappingFromCg,
+      overrides.mappingFromCg,
+    ),
+    mappingToCg: applyMappingOverrides(base.mappingToCg, overrides.mappingToCg),
+    overrides,
     rawSchema: schema,
   };
 }
