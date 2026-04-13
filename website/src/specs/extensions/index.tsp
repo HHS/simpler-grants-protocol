@@ -4,3 +4,4 @@
  */
 import "../custom-fields/index.tsp";
 import "../question-bank/index.tsp";
+import "../forms/index.tsp";
