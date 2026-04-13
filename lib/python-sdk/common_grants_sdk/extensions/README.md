@@ -508,7 +508,7 @@ A plugin should represent a single logical concern (one agency's fields, one int
 
 ### Type safety
 
-- Omitting `value` in `CustomFieldSpec` falls back to a sensible default (`str`, `int`, `float`, `bool`, `list[str]`, or `dict[str, Any]`). Specify it explicitly when you need a more precise type.
+- Omitting `value` in `CustomFieldSpec` falls back to a sensible default (`str`, `int`, `float`, `bool`, `list[Any]`, or `dict[str, Any]`). Specify it explicitly when you need a more precise type.
 - For complex object types, define a Pydantic `BaseModel` subclass and pass it as `value`:
 
   ```python
