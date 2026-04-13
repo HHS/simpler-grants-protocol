@@ -28,7 +28,6 @@ catalog:
 
 catalogs:
   website:
-    prettier: 3.4.2
     vitest: ^4.1.2
 
 overrides:
