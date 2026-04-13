@@ -37,7 +37,7 @@
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^15.3.2",
     "@astrojs/react": "^4.4.2",
-    "@astrojs/starlight": "^0.37.7",
+    "@astrojs/starlight": "^0.38.3",
     "@jsonforms/core": "^3.7.0",
     "@jsonforms/react": "^3.7.0",
     "@jsonforms/vanilla-renderers": "^3.7.0",
