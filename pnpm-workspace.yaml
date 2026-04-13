@@ -12,21 +12,21 @@ auditConfig:
     - GHSA-v2wj-7wpq-c8vv
 
 catalog:
-  '@types/node': ^20.19.37
-  '@typespec/compiler': ^1.10.0
-  '@typespec/http': ^1.10.0
-  '@typespec/json-schema': ^1.10.0
-  '@typespec/openapi': ^1.10.0
-  '@typespec/openapi3': ^1.10.0
-  '@typespec/rest': ^0.80.0
-  '@typespec/versioning': ^0.80.0
-  '@vitest/coverage-v8': ^3.2.4
+  '@types/node': ^25.6.0
+  '@typespec/compiler': ^1.11.0
+  '@typespec/http': ^1.11.0
+  '@typespec/json-schema': ^1.11.0
+  '@typespec/openapi': ^1.11.0
+  '@typespec/openapi3': ^1.11.0
+  '@typespec/rest': ^0.81.0
+  '@typespec/versioning': ^0.81.0
+  '@vitest/coverage-v8': ^4.1.4
   eslint-plugin-vitest: ^0.5.4
-  vitest: ^3.2.4
+  vitest: ^4.1.4
 
 catalogs:
   website:
-    vitest: ^4.1.2
+    vitest: ^4.1.4
 
 overrides:
   axios@<1.15.0: '>=1.15.0'
