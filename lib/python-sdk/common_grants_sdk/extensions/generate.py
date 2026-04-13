@@ -21,7 +21,7 @@ MODEL_BASE_CLASS: dict[str, str] = {
 }
 
 # Default Python type annotation strings written into generated source for each field type.
-# ARRAY and OBJECT use parameterized forms (list[str], dict[str, Any]) as practical defaults;
+# ARRAY and OBJECT use parameterized forms (list[Any], dict[str, Any]) as practical defaults;
 # callers can override these by setting spec.value to a more specific type.
 FIELD_TYPE_DEFAULT_ANNOTATION: dict[CustomFieldType, str] = {
     CustomFieldType.STRING: "str",
@@ -29,7 +29,7 @@ FIELD_TYPE_DEFAULT_ANNOTATION: dict[CustomFieldType, str] = {
     CustomFieldType.INTEGER: "int",
     CustomFieldType.BOOLEAN: "bool",
     CustomFieldType.OBJECT: "dict[str, Any]",
-    CustomFieldType.ARRAY: "list[str]",
+    CustomFieldType.ARRAY: "list[Any]",
 }
 
 
@@ -132,7 +132,7 @@ def _annotation_for_spec(spec: CustomFieldSpec, resolved_type: CustomFieldType) 
     Handles three cases based on what ``spec.value`` contains:
 
     - ``None``: looks up a default annotation from ``FIELD_TYPE_DEFAULT_ANNOTATION``
-      (e.g. ``field_type="array"`` → ``"list[str]"``).
+      (e.g. ``field_type="array"`` → ``"list[Any]"``).
     - A plain ``type`` object (e.g. ``int``, ``MyModel``): uses ``__name__``. Builtin
       and SDK types are already importable in the generated file; external types (e.g.
       Pydantic models from ``cg_config.py`` or third-party packages) will have their
