@@ -1,0 +1,127 @@
+---
+import type { FormItem } from "@/lib/forms";
+import { Code, Tabs, TabItem } from "@astrojs/starlight/components";
+import { JsonFormRenderer } from "@/components/forms/JsonFormRenderer";
+import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
+import type { FormData, JsonValue } from "@/lib/types";
+import { transformWithMapping } from "@/lib/transformation";
+import { generateSchemaExample } from "@/lib/schema/example-generator";
+import { Paths } from "@/lib/schema/paths";
+import { extensionsAjv } from "@/lib/validation";
+import * as yaml from "js-yaml";
+
+interface Props {
+  item: FormItem;
+}
+
+const { item } = Astro.props;
+
+const toJson = (data: Record<string, unknown>) =>
+  JSON.stringify(data, null, 2) as string;
+
+const toYaml = (data: Record<string, unknown>) =>
+  yaml.dump(data, { noRefs: true, lineWidth: -1 }) as string;
+
+// Generate example data from the schema using openapi-sampler, which
+// composes examples from nested $ref schemas automatically. Mirrors the
+// approach used by QuestionDetails.astro so form authors can rely on
+// @example decorators in their TypeSpec the same way.
+const schemaRelPath = `${Paths.EXTENSION_SCHEMAS_PATH_PREFIX}/${item.schema}.yaml`;
+const exampleJson = await generateSchemaExample(schemaRelPath, {
+  validator: extensionsAjv,
+});
+const exampleData = JSON.parse(exampleJson) as FormData;
+
+// Transform example data to CommonGrants format using the mapping
+const commonGrantsData = transformWithMapping(
+  exampleData as Record<string, JsonValue>,
+  item.mappingToCg as Record<string, JsonValue>,
+);
+
+const hasOverrides =
+  Object.keys(item.overrides.uiSchema ?? {}).length > 0 ||
+  Object.keys(item.overrides.mappingFromCg ?? {}).length > 0 ||
+  Object.keys(item.overrides.mappingToCg ?? {}).length > 0;
+---
+
+<h2 class="details-title">Details</h2>
+
+<Tabs>
+  <TabItem label="Form">
+    <p>Sample version of the rendered form.</p>
+    <JsonFormRenderer
+      client:load
+      schema={item.rawSchema as JsonSchema}
+      uischema={item.uiSchema as unknown as VerticalLayout}
+      data={exampleData}
+    />
+  </TabItem>
+  <TabItem label="Data">
+    <details open>
+      <summary>Form Data</summary>
+      <p>What the form data looks like when it is submitted.</p>
+      <Code lang="json" code={toJson(exampleData)} />
+    </details>
+    <details>
+      <summary>CommonGrants Data</summary>
+      <p>
+        What the data looks like translated to the CommonGrants data model using
+        the mapping-to-cg.
+      </p>
+      <Code lang="json" code={toJson(commonGrantsData)} />
+    </details>
+  </TabItem>
+  <TabItem label="Schemas">
+    <details>
+      <summary>JSON Schema</summary>
+      <p>Provides the structure and data validation for this form.</p>
+      <Code lang="yaml" code={toYaml(item.rawSchema)} />
+    </details>
+    <details>
+      <summary>UI Schema (merged)</summary>
+      <p>
+        Describes how to present the form. Reflects any per-form
+        <code>x-overrides.uiSchema</code> patches applied on top of the inherited
+        question-bank UI schemas.
+      </p>
+      <Code lang="json" code={toJson(item.uiSchema)} />
+    </details>
+  </TabItem>
+  <TabItem label="Mappings">
+    <details>
+      <summary>Mapping to CommonGrants</summary>
+      <p>How to translate this form into the CommonGrants data model.</p>
+      <Code lang="json" code={toJson(item.mappingToCg)} />
+    </details>
+    <details>
+      <summary>Mapping from CommonGrants</summary>
+      <p>
+        How to pre-fill this form with data from the CommonGrants data model.
+      </p>
+      <Code lang="json" code={toJson(item.mappingFromCg)} />
+    </details>
+    {
+      hasOverrides && (
+        <details>
+          <summary>Per-form overrides (x-overrides)</summary>
+          <p>
+            The raw <code>x-overrides</code> block declared on the form spec.
+            Already merged into the UI schema and mappings shown above.
+          </p>
+          <Code
+            lang="json"
+            code={toJson(item.overrides as unknown as Record<string, unknown>)}
+          />
+        </details>
+      )
+    }
+  </TabItem>
+</Tabs>
+
+<style>
+  .details-title {
+    font-size: 1.75rem !important;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+</style>

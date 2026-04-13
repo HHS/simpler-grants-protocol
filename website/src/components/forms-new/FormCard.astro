@@ -1,0 +1,88 @@
+---
+import type { FormItem } from "@/lib/forms";
+import CatalogCard from "@/components/catalog/CatalogCard.astro";
+
+interface Props {
+  item: FormItem;
+}
+
+const { item } = Astro.props;
+const detailHref = `/forms-new/${item.id}`;
+---
+
+<CatalogCard
+  href={detailHref}
+  title={item.label}
+  description={item.description}
+  dataAttributes={{
+    name: item.name,
+    description: item.description,
+    tags: item.tags.join(","),
+  }}
+>
+  <div class="card-schema">
+    <span class="sr-only">Schema</span>
+    <span class="schema-pill">{item.schema}</span>
+  </div>
+  {
+    item.tags.length > 0 && (
+      <div class="card-tags">
+        <span class="sr-only">Tags</span>
+        <div class="tag-pill-list">
+          {item.tags.map((tag) => (
+            <span class="tag-pill">{tag}</span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+</CatalogCard>
+
+<style>
+  .card-schema {
+    margin-bottom: 0.5rem;
+  }
+
+  .schema-pill {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-accent-high);
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-family: monospace;
+    font-weight: 500;
+  }
+
+  .card-tags {
+    margin-bottom: 0.375rem;
+  }
+
+  .tag-pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .tag-pill {
+    padding: 0.375rem 0.75rem;
+    background: var(--sl-color-blue-low);
+    color: var(--sl-color-blue-high);
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-family: monospace;
+    font-weight: 500;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
