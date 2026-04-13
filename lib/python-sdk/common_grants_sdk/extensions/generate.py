@@ -417,7 +417,6 @@ def _render_plugin_init_py(plugin_variable_name: str) -> str:
             "from .cg_config import config",
             "from .generated import schemas",
             "",
-            "",
             f"{plugin_variable_name} = Plugin(",
             "    extensions=config.extensions,",
             "    schemas=schemas,",
