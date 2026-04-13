@@ -69,6 +69,8 @@ updates:
       - dependency-name: "vitest"
       - dependency-name: "@vitest/*"
       - dependency-name: "eslint-plugin-vitest"
+      - dependency-name: "eslint"
+      - dependency-name: "prettier"
       - dependency-name: "@types/node"
     commit-message:
       prefix: "chore"
