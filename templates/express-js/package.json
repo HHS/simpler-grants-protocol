@@ -28,7 +28,7 @@
   "license": "MIT",
   "packageManager": "pnpm@10.18.3",
   "dependencies": {
-    "@common-grants/core": "^0.2.4",
+    "@common-grants/core": "^0.3.2",
     "cors": "^2.8.6",
     "express": "^4.22.1",
     "js-yaml": "^4.1.1",
