@@ -33,6 +33,10 @@
         "destination": "src/common_grants/api.py"
       },
       {
+        "path": "./fast-api/src/common_grants/constants.py",
+        "destination": "src/common_grants/constants.py"
+      },
+      {
         "path": "./fast-api/src/common_grants/routes/__init__.py",
         "destination": "src/common_grants/routes/__init__.py"
       },
