@@ -1,4 +1,4 @@
-"""Example script to demonstrate how to use and add custom fields to an opportunity object 
+"""Example script to demonstrate how to use and add custom fields to an opportunity object
 
 Run with poetry run python ./custom_fields.py
 """
