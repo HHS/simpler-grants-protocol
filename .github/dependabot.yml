@@ -23,12 +23,39 @@ updates:
         patterns:
           - "astro"
           - "@astrojs/*"
-          - "@starlight/*"
-      minor-patch:
+          - "starlight-*"
+          - "prettier-plugin-astro"
+          - "eslint-plugin-astro"
+      tooling:
+        patterns:
+          - "typescript"
+          - "ts-node"
+          - "tsx"
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+          - "prettier"
+          - "prettier-*"
+          - "@types/*"
+        update-types:
+          - "minor"
+          - "patch"
+      runtime:
         exclude-patterns:
           - "astro"
           - "@astrojs/*"
-          - "@starlight/*"
+          - "starlight-*"
+          - "typescript"
+          - "ts-node"
+          - "tsx"
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+          - "prettier"
+          - "prettier-*"
+          - "@types/*"
         update-types:
           - "minor"
           - "patch"
@@ -44,13 +71,15 @@ updates:
       - dependency-name: "vitest"
       - dependency-name: "@vitest/*"
       - dependency-name: "eslint-plugin-vitest"
+      - dependency-name: "eslint"
+      - dependency-name: "prettier"
       - dependency-name: "@types/node"
     commit-message:
       prefix: "chore"
       include: "scope"
     labels:
       - "dependencies"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
 
   # ── World B: Python SDK (pip, isolated lockfile) ──
 
@@ -77,7 +106,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
+      day: "tuesday"
     groups:
       actions:
         patterns: ["*"]
