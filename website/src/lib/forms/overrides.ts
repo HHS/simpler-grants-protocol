@@ -1,4 +1,4 @@
-import type { OverrideMap } from "./types";
+import type { OverrideMap, UiNode } from "./types";
 
 // =============================================================================
 // PATH UTILITIES
@@ -20,13 +20,6 @@ function pathToScope(dottedPath: string): string {
 // =============================================================================
 // UI SCHEMA OVERRIDE MERGE
 // =============================================================================
-
-/** A node in a JSON-Forms UI schema (Control or Layout). */
-type UiNode = Record<string, unknown> & {
-  type?: string;
-  scope?: string;
-  elements?: UiNode[];
-};
 
 /**
  * Walks a UI-schema tree and yields every Control node along with a
@@ -90,16 +83,16 @@ export function applyUiOverrides(
 // =============================================================================
 
 /**
- * Returns a deep-cloned mapping object with per-path leaf entries
+ * Returns a deep-cloned mapping object with per-path field entries
  * replaced by the corresponding override values.
  *
  * Each override key is a dotted path into the nested mapping object;
- * the entire leaf entry at that path is replaced by the override value
- * (not shallow-merged), since a mapping leaf is a single semantic unit
- * (e.g. `{ field: "..." }` or a `{ switch: ... }` block).
+ * the entire field entry at that path is replaced by the override value
+ * (not shallow-merged), since a mapping field entry is a single
+ * semantic unit (e.g. `{ field: "..." }` or a `{ switch: ... }` block).
  *
  * @throws Error when an override path does not resolve to an existing
- *   leaf in the base mapping.
+ *   entry in the base mapping.
  */
 export function applyMappingOverrides(
   baseMapping: Record<string, unknown>,

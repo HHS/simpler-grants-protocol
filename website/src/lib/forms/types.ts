@@ -1,6 +1,24 @@
 import type { CatalogItem } from "../catalog";
 
 /**
+ * A node in a JSON-Forms UI schema tree (Control or Layout).
+ *
+ * Controls have a `scope` pointing at a JSON Schema property path.
+ * Layouts (Group, VerticalLayout, HorizontalLayout, etc.) have an
+ * `elements` array containing child nodes. Both may carry additional
+ * keys like `label`, `rule`, or `options`.
+ *
+ * Used by `compose.ts` (to re-scope Controls when lifting a child
+ * question's UI schema into a parent form) and by `overrides.ts`
+ * (to walk the tree and patch Controls by scope).
+ */
+export type UiNode = Record<string, unknown> & {
+  type?: string;
+  scope?: string;
+  elements?: UiNode[];
+};
+
+/**
  * Metadata stored in the forms typespec-index.json.
  */
 export interface FormItemIndexEntry {
@@ -15,7 +33,7 @@ export interface FormItemIndexEntry {
  *
  * Each value is a partial patch: for UI overrides it overwrites named
  * keys on the matching JSON-Forms Control (e.g. `{ label: "..." }`); for
- * mapping overrides it replaces the entire leaf entry under that path.
+ * mapping overrides it replaces the entire field entry under that path.
  *
  * In TypeSpec, dotted paths are written with backticks, e.g.
  * `` `org.name`: #{ label: "..." } ``, since identifiers without backticks

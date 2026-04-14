@@ -10,16 +10,7 @@
  * composition (like the canary) keep working unchanged.
  */
 
-// =============================================================================
-// SHARED TYPES
-// =============================================================================
-
-/** A node in a JSON-Forms UI schema (Control or Layout). */
-type UiNode = Record<string, unknown> & {
-  type?: string;
-  scope?: string;
-  elements?: UiNode[];
-};
+import type { UiNode } from "./types";
 
 // =============================================================================
 // UI SCHEMA COMPOSITION

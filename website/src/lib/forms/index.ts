@@ -6,6 +6,7 @@ export type {
   FormItemMap,
   FormOverrides,
   OverrideMap,
+  UiNode,
 } from "./types";
 
 // Loader functions
