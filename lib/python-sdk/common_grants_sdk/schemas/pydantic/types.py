@@ -6,7 +6,6 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
-
 # Date and Time
 ISODate = date
 ISOTime = time

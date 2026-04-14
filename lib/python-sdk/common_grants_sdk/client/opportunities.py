@@ -16,7 +16,6 @@ from ..schemas.pydantic.models.opp_status import OppStatusOptions
 from .types import ItemsT
 from typing import List
 
-
 if TYPE_CHECKING:
     from .client import Client
 

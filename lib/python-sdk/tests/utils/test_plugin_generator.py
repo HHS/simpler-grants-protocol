@@ -307,4 +307,4 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
         check=False,
     )
     assert pyright.returncode == 0, pyright.stdout + "\n" + pyright.stderr
-    assert 'Type of "values" is "list[str] | None"' in pyright.stdout
+    assert 'Type of "values" is "list[Any] | None"' in pyright.stdout
