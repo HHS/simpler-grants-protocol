@@ -81,11 +81,11 @@ function deepMergeInto(
   for (const [key, value] of Object.entries(source)) {
     const existing = target[key];
     if (
-      typeof value === "object" &&
       value !== null &&
-      !Array.isArray(value) &&
-      typeof existing === "object" &&
       existing !== null &&
+      typeof value === "object" &&
+      typeof existing === "object" &&
+      !Array.isArray(value) &&
       !Array.isArray(existing)
     ) {
       deepMergeInto(
