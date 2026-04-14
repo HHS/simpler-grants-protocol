@@ -63,6 +63,92 @@ Things to call out:
   want to patch (see below); avoid model-level re-declarations of the
   inherited UI schema or mapping.
 
+## How compose, overrides, and the loader fit together
+
+```
+  TypeSpec spec (.tsp)
+  ┌──────────────────────────────────┐
+  │  model KeyContact {              │
+  │    org: QuestionOrgName;         │    ← composed QB questions
+  │    contact: QuestionPocDetails;  │
+  │    projectRole: string;          │    ← atomic form-only field
+  │  }                               │
+  └──────────────┬───────────────────┘
+                 │ pnpm typespec
+                 ▼
+  Compiled YAML (.extension-schemas/KeyContact.yaml)
+  ┌──────────────────────────────────┐
+  │  properties:                     │
+  │    org: { $ref: OrgName.yaml }   │    ← still $ref'd, not inlined
+  │    contact: { $ref: Poc... }     │
+  │    projectRole: { type: string } │
+  │  x-tags: [key-contact]           │
+  └──────────────┬───────────────────┘
+                 │ loader.ts: dereferenceSchema()
+                 ▼
+  Dereferenced schema (in memory)
+  ┌──────────────────────────────────┐
+  │  properties:                     │
+  │    org:                          │
+  │      name: { type: string }      │    ← $ref inlined, x-ui-schema
+  │      x-ui-schema: { ... }        │      and x-mapping-* carried in
+  │      x-overrides: { ... }        │
+  │    contact:                      │
+  │      name: { ... }               │
+  │      title: { ... }              │
+  │      x-ui-schema: { ... }        │
+  │      x-mapping-from-cg: { ... }  │
+  │    projectRole:                  │
+  │      type: string                │
+  └──────────────┬───────────────────┘
+                 │
+        ┌────────┴────────┐
+        ▼                 ▼
+  compose.ts           overrides.ts
+  ┌─────────────┐      ┌────────────────┐
+  │ Walks each  │      │ Reads          │
+  │ property's  │      │ x-overrides    │
+  │ x-ui-schema │      │ from each      │
+  │ and         │      │ property,      │
+  │ x-mapping-* │      │ re-keys paths  │
+  │ to build a  │      │ with property  │
+  │ form-level  │      │ name prefix,   │
+  │ composite   │      │ then patches   │
+  │             │      │ the composed   │
+  │             │      │ result         │
+  │ Re-scopes   │      │                │
+  │ UI Control  │      │ Strict mode:   │
+  │ paths under │      │ bad path =     │
+  │ property    │      │ build error    │
+  │ names       │      │                │
+  └─────┬───────┘      └───────┬────────┘
+        │                      │
+        └────────┬─────────────┘
+                 ▼
+  Final FormItem (returned by loader.ts)
+  ┌──────────────────────────────────┐
+  │  uiSchema: { ... }               │  ← composed + overrides applied
+  │  mappingFromCg: { ... }          │  ← composed + overrides applied
+  │  mappingToCg: { ... }            │  ← composed + overrides applied
+  │  rawSchema: { ... }              │  ← full dereferenced schema
+  │  overrides: { ... }              │  ← raw x-overrides for debugging
+  │  properties, tags, name, ...     │
+  └──────────────────────────────────┘
+```
+
+**compose.ts** synthesizes a form-level UI schema and mappings by
+stitching together the extensions from each question bank question
+referenced in the form spec. It only runs when the form spec does not
+declare its own explicit `x-ui-schema` or `x-mapping-*`.
+
+**overrides.ts** applies per-field patches on top of the composed (or
+explicit) result. Each override is keyed by a dotted property path that
+gets translated to a JSON-Forms scope (for UI) or walked segment-by-
+segment (for mappings).
+
+**loader.ts** orchestrates both: dereference the schema, compose if
+needed, apply overrides, and return a normalized `FormItem`.
+
 ## `x-overrides` extension
 
 The `x-overrides` block patches the UI schema and mappings the loader

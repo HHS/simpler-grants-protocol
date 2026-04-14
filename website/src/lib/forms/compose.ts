@@ -102,9 +102,24 @@ function deepMergeInto(
  * Synthesizes a form-level `x-mapping-from-cg` by nesting each property's
  * own `x-mapping-from-cg` under its property name.
  *
- * The form-side keys in the child mapping are relative to the child's
- * structure; nesting them under `<propName>` makes them relative to the
- * parent form's structure. The CG-side leaf values stay unchanged.
+ * Each child mapping's keys describe paths relative to that child's
+ * structure. Nesting them under the property name makes them relative to
+ * the parent form.
+ *
+ * The field entry values are CommonGrants data-model paths (e.g.
+ * `organizations.primary.name`) and stay unchanged, since they always
+ * reference the same place in the CG model regardless of where the
+ * question sits in the form.
+ *
+ * @example
+ * // Given a form with `org: QuestionOrgName` whose x-mapping-from-cg is:
+ * //   { name: { field: "organizations.primary.name" } }
+ * //
+ * // composeMappingFromCg produces:
+ * //   { org: { name: { field: "organizations.primary.name" } } }
+ * //
+ * // The form-side key changed (name -> org.name) but the CG-side
+ * // value ("organizations.primary.name") stayed the same.
  */
 export function composeMappingFromCg(
   properties: Record<string, unknown>,
@@ -157,11 +172,29 @@ function rewriteFieldRefs(node: unknown, propName: string): unknown {
 
 /**
  * Synthesizes a form-level `x-mapping-to-cg` by deep-merging each property's
- * own `x-mapping-to-cg`, with leaf `field` references rewritten to be
+ * own `x-mapping-to-cg`, with `field` references rewritten to be
  * relative to the parent form.
  *
- * The CG-side keys (top of the tree) stay as written; only the form-side
- * leaf paths inside `field` / `switch.field` get re-prefixed.
+ * The top-level keys in each child mapping are CommonGrants data-model
+ * paths (e.g. `organizations.primary.name`); these stay as written
+ * because the CG model is the same regardless of form structure. Only
+ * the form-side paths inside `field` (or `switch.field`) entries get
+ * re-prefixed with the property name.
+ *
+ * When multiple properties contribute to the same CG path tree (e.g.
+ * both `org` and `contact` write under `contacts`), their sub-trees are
+ * deep-merged so no CG path is lost.
+ *
+ * @example
+ * // Given a form with `org: QuestionOrgName` whose x-mapping-to-cg is:
+ * //   { organizations: { primary: { name: { field: "name" } } } }
+ * //
+ * // composeMappingToCg produces:
+ * //   { organizations: { primary: { name: { field: "org.name" } } } }
+ * //
+ * // The CG-side keys stayed the same. The form-side field reference
+ * // ("name") became "org.name" because it's now relative to the
+ * // form root.
  */
 export function composeMappingToCg(
   properties: Record<string, unknown>,
