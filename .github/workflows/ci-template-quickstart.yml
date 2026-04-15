@@ -42,4 +42,7 @@ jobs:
         run: pnpm run typespec
 
       - name: Audit dependencies
-        run: pnpm audit --ignore-workspace
+        # Calls the npm bulk advisory endpoint directly as a workaround for
+        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
+        # revert to `pnpm audit --ignore-workspace` once pnpm ships native support.
+        run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js

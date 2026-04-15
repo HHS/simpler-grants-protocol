@@ -42,4 +42,7 @@ jobs:
         run: pnpm --filter @common-grants/sdk run test:coverage
 
       - name: Audit dependencies
-        run: pnpm --filter @common-grants/sdk run audit
+        # Calls the npm bulk advisory endpoint directly as a workaround for
+        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
+        # revert to `pnpm --filter @common-grants/sdk run audit` once pnpm ships native support.
+        run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js --filter @common-grants/sdk

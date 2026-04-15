@@ -45,7 +45,10 @@ jobs:
         run: pnpm run checks
 
       - name: Audit dependencies
-        run: pnpm run audit:high
+        # Calls the npm bulk advisory endpoint directly as a workaround for
+        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
+        # revert to `pnpm run audit:high` once pnpm ships native support.
+        run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js --level high
 
       # Preview deployment (only on PRs)
       - name: Deploy PR preview
