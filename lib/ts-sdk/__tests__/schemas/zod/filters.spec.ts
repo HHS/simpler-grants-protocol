@@ -31,8 +31,8 @@ describe("EquivalenceOperatorsEnum", () => {
     expect(EquivalenceOperatorsEnum.parse("neq")).toBe("neq");
   });
 
-  it("should match equivalenceOperatorsEnum.yaml", () => {
-    expectZodMatchesJsonSchema(EquivalenceOperatorsEnum, jsonSchemaId);
+  it("should match equivalenceOperatorsEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(EquivalenceOperatorsEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid EquivalenceOperatorsEnum", () => {
@@ -57,8 +57,8 @@ describe("ComparisonOperatorsEnum", () => {
     expect(ComparisonOperatorsEnum.parse("lte")).toBe("lte");
   });
 
-  it("should match comparisonOperatorsEnum.yaml", () => {
-    expectZodMatchesJsonSchema(ComparisonOperatorsEnum, jsonSchemaId);
+  it("should match comparisonOperatorsEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(ComparisonOperatorsEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid ComparisonOperatorsEnum", () => {
@@ -81,8 +81,8 @@ describe("ArrayOperatorsEnum", () => {
     expect(ArrayOperatorsEnum.parse("notIn")).toBe("notIn");
   });
 
-  it("should match arrayOperatorsEnum.yaml", () => {
-    expectZodMatchesJsonSchema(ArrayOperatorsEnum, jsonSchemaId);
+  it("should match arrayOperatorsEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(ArrayOperatorsEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid ArrayOperatorsEnum", () => {
@@ -105,8 +105,8 @@ describe("StringOperatorsEnum", () => {
     expect(StringOperatorsEnum.parse("notLike")).toBe("notLike");
   });
 
-  it("should match stringOperatorsEnum.yaml", () => {
-    expectZodMatchesJsonSchema(StringOperatorsEnum, jsonSchemaId);
+  it("should match stringOperatorsEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(StringOperatorsEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid StringOperatorsEnum", () => {
@@ -129,8 +129,8 @@ describe("RangeOperatorsEnum", () => {
     expect(RangeOperatorsEnum.parse("outside")).toBe("outside");
   });
 
-  it("should match rangeOperatorsEnum.yaml", () => {
-    expectZodMatchesJsonSchema(RangeOperatorsEnum, jsonSchemaId);
+  it("should match rangeOperatorsEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(RangeOperatorsEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid RangeOperatorsEnum", () => {
@@ -156,8 +156,8 @@ describe("AllOperatorsEnum", () => {
     expect(AllOperatorsEnum.parse("between")).toBe("between");
   });
 
-  it("should match allOperatorsEnum.yaml", () => {
-    expectZodMatchesJsonSchema(AllOperatorsEnum, jsonSchemaId);
+  it("should match allOperatorsEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(AllOperatorsEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid AllOperatorsEnum", () => {
@@ -180,8 +180,8 @@ describe("DefaultFilter Schema", () => {
     expect(DefaultFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match defaultFilter.yaml", () => {
-    expectZodMatchesJsonSchema(DefaultFilterSchema, jsonSchemaId);
+  it("should match defaultFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(DefaultFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid DefaultFilter", () => {
@@ -204,8 +204,8 @@ describe("StringComparisonFilter Schema", () => {
     expect(StringComparisonFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match stringComparisonFilter.yaml", () => {
-    expectZodMatchesJsonSchema(StringComparisonFilterSchema, jsonSchemaId);
+  it("should match stringComparisonFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(StringComparisonFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid StringComparisonFilter", () => {
@@ -230,8 +230,8 @@ describe("StringArrayFilter Schema", () => {
     expect(StringArrayFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match stringArrayFilter.yaml", () => {
-    expectZodMatchesJsonSchema(StringArrayFilterSchema, jsonSchemaId);
+  it("should match stringArrayFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(StringArrayFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid StringArrayFilter", () => {
@@ -256,8 +256,8 @@ describe("NumberComparisonFilter Schema", () => {
     expect(NumberComparisonFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match numberComparisonFilter.yaml", () => {
-    expectZodMatchesJsonSchema(NumberComparisonFilterSchema, jsonSchemaId);
+  it("should match numberComparisonFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(NumberComparisonFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid NumberComparisonFilter", () => {
@@ -282,8 +282,8 @@ describe("NumberRangeFilter Schema", () => {
     expect(NumberRangeFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match numberRangeFilter.yaml", () => {
-    expectZodMatchesJsonSchema(NumberRangeFilterSchema, jsonSchemaId);
+  it("should match numberRangeFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(NumberRangeFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid NumberRangeFilter", () => {
@@ -314,8 +314,8 @@ describe("NumberArrayFilter Schema", () => {
     expect(NumberArrayFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match numberArrayFilter.yaml", () => {
-    expectZodMatchesJsonSchema(NumberArrayFilterSchema, jsonSchemaId);
+  it("should match numberArrayFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(NumberArrayFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid NumberArrayFilter", () => {
@@ -340,8 +340,8 @@ describe("DateComparisonFilter Schema", () => {
     expect(DateComparisonFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match dateComparisonFilter.yaml", () => {
-    expectZodMatchesJsonSchema(DateComparisonFilterSchema, jsonSchemaId);
+  it("should match dateComparisonFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(DateComparisonFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid DateComparisonFilter", () => {
@@ -370,8 +370,8 @@ describe("DateRangeFilter Schema", () => {
     expect(DateRangeFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match dateRangeFilter.yaml", () => {
-    expectZodMatchesJsonSchema(DateRangeFilterSchema, jsonSchemaId);
+  it("should match dateRangeFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(DateRangeFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid DateRangeFilter", () => {
@@ -408,8 +408,8 @@ describe("MoneyComparisonFilter Schema", () => {
     expect(MoneyComparisonFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match moneyComparisonFilter.yaml", () => {
-    expectZodMatchesJsonSchema(MoneyComparisonFilterSchema, jsonSchemaId);
+  it("should match moneyComparisonFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(MoneyComparisonFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid MoneyComparisonFilter", () => {
@@ -452,8 +452,8 @@ describe("MoneyRangeFilter Schema", () => {
     expect(MoneyRangeFilterSchema.parse(validFilter)).toEqual(validFilter);
   });
 
-  it("should match moneyRangeFilter.yaml", () => {
-    expectZodMatchesJsonSchema(MoneyRangeFilterSchema, jsonSchemaId);
+  it("should match moneyRangeFilter.yaml", async () => {
+    await expectZodMatchesJsonSchema(MoneyRangeFilterSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid MoneyRangeFilter", () => {

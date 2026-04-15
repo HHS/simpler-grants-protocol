@@ -8,9 +8,9 @@ describe("Fuzz Testing Helper", () => {
   // #########################################################
 
   describe("checkZodMatchesJsonSchema", () => {
-    it("should validate a matching UUID schema", () => {
+    it("should validate a matching UUID schema", async () => {
       const zodSchema = z.string().uuid();
-      const result = checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
 
       expect(result.passed).toBe(true);
       expect(result.successCount).toBe(SAMPLE_SIZE);
@@ -18,9 +18,9 @@ describe("Fuzz Testing Helper", () => {
       expect(result.mismatches.length).toBe(0);
     });
 
-    it("should validate a matching email schema", () => {
+    it("should validate a matching email schema", async () => {
       const zodSchema = z.string().email();
-      const result = checkZodMatchesJsonSchema(zodSchema, "email.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "email.yaml");
 
       expect(result.passed).toBe(true);
       expect(result.successCount).toBe(SAMPLE_SIZE);
@@ -28,10 +28,10 @@ describe("Fuzz Testing Helper", () => {
       expect(result.mismatches.length).toBe(0);
     });
 
-    it("should detect a mismatch when schemas don't match", () => {
+    it("should detect a mismatch when schemas don't match", async () => {
       // Create a Zod schema that doesn't match the UUID JSON schema
       const zodSchema = z.string().min(100); // This won't match UUID format
-      const result = checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
 
       // Should find mismatches since UUIDs generated might not be SAMPLE_SIZE+ chars
       expect(result.totalTests).toBe(SAMPLE_SIZE);
@@ -41,9 +41,9 @@ describe("Fuzz Testing Helper", () => {
       expect(result.mismatches.length).toBeGreaterThan(0);
     });
 
-    it("should return detailed mismatch information", () => {
+    it("should return detailed mismatch information", async () => {
       const zodSchema = z.string().min(50); // Won't match UUID
-      const result = checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
 
       if (result.mismatches.length > 0) {
         const mismatch = result.mismatches[0];
@@ -55,11 +55,11 @@ describe("Fuzz Testing Helper", () => {
       }
     });
 
-    it("should handle schema not found error", () => {
+    it("should handle schema not found error", async () => {
       const zodSchema = z.string();
-      expect(() => {
-        checkZodMatchesJsonSchema(zodSchema, "nonexistent-schema.yaml");
-      }).toThrow('JSON schema "nonexistent-schema.yaml" not found');
+      await expect(checkZodMatchesJsonSchema(zodSchema, "nonexistent-schema.yaml")).rejects.toThrow(
+        'JSON schema "nonexistent-schema.yaml" not found'
+      );
     });
   });
 
@@ -68,7 +68,7 @@ describe("Fuzz Testing Helper", () => {
   // #########################################################
 
   describe("Complex Schema Testing", () => {
-    it("should validate a schema with multiple properties", () => {
+    it("should validate a schema with multiple properties", async () => {
       const zodSchema = z.object({
         street1: z.string(),
         city: z.string(),
@@ -80,7 +80,7 @@ describe("Fuzz Testing Helper", () => {
         longitude: z.number().optional(),
       });
 
-      const result = checkZodMatchesJsonSchema(zodSchema, "Address.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "Address.yaml");
 
       // Should have some successes (might have some failures due to generation issues)
       expect(result.totalTests).toBe(SAMPLE_SIZE);
@@ -88,7 +88,7 @@ describe("Fuzz Testing Helper", () => {
       expect(result.successCount + result.mismatches.length).toBeGreaterThan(0);
     });
 
-    it("should flag when zod schema is missing required properties", () => {
+    it("should flag when zod schema is missing required properties", async () => {
       const zodSchema = z.object({
         street1: z.string(),
         street2: z.string().optional(),
@@ -97,7 +97,7 @@ describe("Fuzz Testing Helper", () => {
         // missing country
         // missing postalCode
       });
-      const result = checkZodMatchesJsonSchema(zodSchema, "Address.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "Address.yaml");
 
       expect(result.passed).toBe(false);
       expect(result.successCount).toBeLessThan(SAMPLE_SIZE);
@@ -105,7 +105,7 @@ describe("Fuzz Testing Helper", () => {
       expect(result.mismatches.length).toBeGreaterThan(0);
     });
 
-    it("should flag when zod schema is missing optional properties", () => {
+    it("should flag when zod schema is missing optional properties", async () => {
       const zodSchema = z.object({
         street1: z.string(),
         street2: z.string().optional(),
@@ -117,14 +117,14 @@ describe("Fuzz Testing Helper", () => {
         // missing longitude
         // missing geography
       });
-      const result = checkZodMatchesJsonSchema(zodSchema, "Address.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "Address.yaml");
       expect(result.passed).toBe(false);
       expect(result.successCount).toBeLessThan(SAMPLE_SIZE);
       expect(result.totalTests).toBe(SAMPLE_SIZE);
       expect(result.mismatches.length).toBeGreaterThan(0);
     });
 
-    it("should flag when zod schema has extra required properties", () => {
+    it("should flag when zod schema has extra required properties", async () => {
       const zodSchema = z.object({
         street1: z.string(),
         street2: z.string().optional(),
@@ -134,14 +134,14 @@ describe("Fuzz Testing Helper", () => {
         postalCode: z.string(),
         extra: z.string(), // extra required property
       });
-      const result = checkZodMatchesJsonSchema(zodSchema, "Address.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "Address.yaml");
       expect(result.passed).toBe(false);
       expect(result.successCount).toBeLessThan(SAMPLE_SIZE);
       expect(result.totalTests).toBe(SAMPLE_SIZE);
       expect(result.mismatches.length).toBeGreaterThan(0);
     });
 
-    it("should validate Money schema with $ref to decimalString", () => {
+    it("should validate Money schema with $ref to decimalString", async () => {
       // Money.yaml has a $ref to decimalString.yaml for the amount field
       // This tests that $ref resolution works correctly
       const zodSchema = z.object({
@@ -149,7 +149,7 @@ describe("Fuzz Testing Helper", () => {
         currency: z.string(),
       });
 
-      const result = checkZodMatchesJsonSchema(zodSchema, "Money.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "Money.yaml");
 
       expect(result.totalTests).toBe(SAMPLE_SIZE);
       // Log mismatches if any to help debug
@@ -162,7 +162,7 @@ describe("Fuzz Testing Helper", () => {
       expect(result.passed).toBe(true);
     });
 
-    it("should validate CustomField schema with $ref to CustomFieldType", () => {
+    it("should validate CustomField schema with $ref to CustomFieldType", async () => {
       // CustomField.yaml has a $ref to CustomFieldType.yaml for the fieldType field
       // This tests that enum $refs are resolved correctly
       const zodSchema = z.object({
@@ -173,7 +173,7 @@ describe("Fuzz Testing Helper", () => {
         description: z.string().optional(),
       });
 
-      const result = checkZodMatchesJsonSchema(zodSchema, "CustomField.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "CustomField.yaml");
 
       expect(result.passed).toBe(true);
       expect(result.totalTests).toBe(SAMPLE_SIZE);
@@ -181,7 +181,7 @@ describe("Fuzz Testing Helper", () => {
       expect(result.mismatches.length).toBe(0);
     });
 
-    it("should validate EmailCollection schema with $ref to email", () => {
+    it("should validate EmailCollection schema with $ref to email", async () => {
       // EmailCollection.yaml has $ref to email.yaml in multiple places
       // This tests nested $ref resolution in complex object structures
       const emailSchema = z.string().email();
@@ -190,7 +190,7 @@ describe("Fuzz Testing Helper", () => {
         otherEmails: z.record(emailSchema).optional(),
       });
 
-      const result = checkZodMatchesJsonSchema(zodSchema, "EmailCollection.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "EmailCollection.yaml");
 
       expect(result.passed).toBe(true);
       expect(result.totalTests).toBe(SAMPLE_SIZE);
@@ -204,21 +204,21 @@ describe("Fuzz Testing Helper", () => {
   // #########################################################
 
   describe("Integration Tests", () => {
-    it("should work end-to-end with a real schema", () => {
+    it("should work end-to-end with a real schema", async () => {
       const zodSchema = z.string().uuid();
-      const result = checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
+      const result = await checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
 
       expect(result.totalTests).toBe(SAMPLE_SIZE);
       expect(result.passed).toBe(true);
       expect(result.mismatches.length).toBe(0);
     });
 
-    it("should validate multiple schemas in sequence", () => {
+    it("should validate multiple schemas in sequence", async () => {
       const uuidSchema = z.string().uuid();
       const emailSchema = z.string().email();
 
-      const uuidResult = checkZodMatchesJsonSchema(uuidSchema, "uuid.yaml");
-      const emailResult = checkZodMatchesJsonSchema(emailSchema, "email.yaml");
+      const uuidResult = await checkZodMatchesJsonSchema(uuidSchema, "uuid.yaml");
+      const emailResult = await checkZodMatchesJsonSchema(emailSchema, "email.yaml");
 
       expect(uuidResult.passed).toBe(true);
       expect(emailResult.passed).toBe(true);
