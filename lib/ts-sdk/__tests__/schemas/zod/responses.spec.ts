@@ -40,8 +40,8 @@ describe("Success Schema", () => {
     });
   });
 
-  it("should match Success.yaml", () => {
-    expectZodMatchesJsonSchema(SuccessSchema, jsonSchemaId);
+  it("should match Success.yaml", async () => {
+    await expectZodMatchesJsonSchema(SuccessSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid Success response", () => {
@@ -465,8 +465,8 @@ describe("Error Schema", () => {
     expect(ErrorSchema.parse(validError)).toEqual(validError);
   });
 
-  it("should match Error.yaml", () => {
-    expectZodMatchesJsonSchema(ErrorSchema, jsonSchemaId);
+  it("should match Error.yaml", async () => {
+    await expectZodMatchesJsonSchema(ErrorSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid Error response", () => {
@@ -574,8 +574,8 @@ describe("ApplicationSubmissionError Schema", () => {
     expect(ApplicationSubmissionErrorSchema.parse(validError)).toEqual(validError);
   });
 
-  it("should match ApplicationSubmissionError.yaml", () => {
-    expectZodMatchesJsonSchema(ApplicationSubmissionErrorSchema, jsonSchemaId);
+  it("should match ApplicationSubmissionError.yaml", async () => {
+    await expectZodMatchesJsonSchema(ApplicationSubmissionErrorSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid ApplicationSubmissionError response", () => {

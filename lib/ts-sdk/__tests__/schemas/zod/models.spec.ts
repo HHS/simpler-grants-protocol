@@ -26,8 +26,8 @@ describe("OppStatusOptionsEnum", () => {
     expect(OppStatusOptionsEnum.parse("custom")).toBe("custom");
   });
 
-  it("should match oppStatusOptionsEnum.yaml", () => {
-    expectZodMatchesJsonSchema(OppStatusOptionsEnum, jsonSchemaId);
+  it("should match oppStatusOptionsEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(OppStatusOptionsEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OppStatusOptionsEnum", () => {
@@ -53,8 +53,8 @@ describe("OppStatus Schema", () => {
     expect(OppStatusSchema.parse(validStatus)).toEqual(validStatus);
   });
 
-  it("should match oppStatus.yaml", () => {
-    expectZodMatchesJsonSchema(OppStatusSchema, jsonSchemaId);
+  it("should match oppStatus.yaml", async () => {
+    await expectZodMatchesJsonSchema(OppStatusSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OppStatus", () => {
@@ -86,8 +86,8 @@ describe("OppFunding Schema", () => {
     expect(OppFundingSchema.parse(validFunding)).toEqual(validFunding);
   });
 
-  it("should match oppFunding.yaml", () => {
-    expectZodMatchesJsonSchema(OppFundingSchema, jsonSchemaId);
+  it("should match oppFunding.yaml", async () => {
+    await expectZodMatchesJsonSchema(OppFundingSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OppFunding", () => {
@@ -147,8 +147,8 @@ describe("OppTimeline Schema", () => {
     }
   });
 
-  it("should match oppTimeline.yaml", () => {
-    expectZodMatchesJsonSchema(OppTimelineSchema, jsonSchemaId);
+  it("should match oppTimeline.yaml", async () => {
+    await expectZodMatchesJsonSchema(OppTimelineSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OppTimeline", () => {
@@ -201,8 +201,8 @@ describe("OpportunityBase Schema", () => {
     expect(OpportunityBaseSchema.parse(validOpportunity)).toBeDefined();
   });
 
-  it("should match opportunityBase.yaml", () => {
-    expectZodMatchesJsonSchema(OpportunityBaseSchema, jsonSchemaId);
+  it("should match opportunityBase.yaml", async () => {
+    await expectZodMatchesJsonSchema(OpportunityBaseSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OpportunityBase", () => {
@@ -263,8 +263,8 @@ describe("OppSortByEnum", () => {
     expect(OppSortByEnum.parse("keyDates.closeDate")).toBe("keyDates.closeDate");
   });
 
-  it("should match oppSortByEnum.yaml", () => {
-    expectZodMatchesJsonSchema(OppSortByEnum, jsonSchemaId);
+  it("should match oppSortByEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(OppSortByEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OppSortByEnum", () => {
@@ -290,8 +290,8 @@ describe("OppSorting Schema", () => {
     expect(OppSortingSchema.parse(validSorting)).toEqual(validSorting);
   });
 
-  it("should match oppSorting.yaml", () => {
-    expectZodMatchesJsonSchema(OppSortingSchema, jsonSchemaId);
+  it("should match oppSorting.yaml", async () => {
+    await expectZodMatchesJsonSchema(OppSortingSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OppSorting", () => {
@@ -332,8 +332,8 @@ describe("OppDefaultFilters Schema", () => {
     expect(OppDefaultFiltersSchema.parse(validFilters)).toEqual(validFilters);
   });
 
-  it("should match oppDefaultFilters.yaml", () => {
-    expectZodMatchesJsonSchema(OppDefaultFiltersSchema, jsonSchemaId);
+  it("should match oppDefaultFilters.yaml", async () => {
+    await expectZodMatchesJsonSchema(OppDefaultFiltersSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OppDefaultFilters", () => {
@@ -376,8 +376,8 @@ describe("OppFilters Schema", () => {
     expect(OppFiltersSchema.parse(validFilters)).toEqual(validFilters);
   });
 
-  it("should match oppFilters.yaml", () => {
-    expectZodMatchesJsonSchema(OppFiltersSchema, jsonSchemaId);
+  it("should match oppFilters.yaml", async () => {
+    await expectZodMatchesJsonSchema(OppFiltersSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OppFilters", () => {

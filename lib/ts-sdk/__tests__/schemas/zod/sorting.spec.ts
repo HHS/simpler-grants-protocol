@@ -177,8 +177,8 @@ describe("SortedResultsInfo Schema", () => {
     expect(SortedResultsInfoSchema.parse(validInfoWithErrors)).toEqual(validInfoWithErrors);
   });
 
-  it("should match SortedResultsInfo.yaml", () => {
-    expectZodMatchesJsonSchema(SortedResultsInfoSchema, jsonSchemaId);
+  it("should match SortedResultsInfo.yaml", async () => {
+    await expectZodMatchesJsonSchema(SortedResultsInfoSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid SortedResultsInfo", () => {
