@@ -24,7 +24,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -47,7 +47,7 @@ jobs:
 
       - name: Create release
         if: github.event.inputs.dry_run != 'true'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.release_tag }}
           body: ${{ steps.release-notes.outputs.notes }}
@@ -70,17 +70,17 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.release_tag }}
 
       - name: Install Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
       - name: Install Poetry
-        uses: Gr1N/setup-poetry@v8
+        uses: Gr1N/setup-poetry@v9
 
       - name: Install dependencies
         run: poetry install
