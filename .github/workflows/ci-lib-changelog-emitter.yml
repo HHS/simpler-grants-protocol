@@ -40,4 +40,7 @@ jobs:
         run: pnpm --filter typespec-versioning-changelog run test:coverage
 
       - name: Audit dependencies
-        run: pnpm --filter typespec-versioning-changelog run audit
+        # Calls the npm bulk advisory endpoint directly as a workaround for
+        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
+        # revert to `pnpm --filter typespec-versioning-changelog run audit` once pnpm ships native support.
+        run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js --filter typespec-versioning-changelog

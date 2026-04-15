@@ -34,9 +34,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Audit dependencies
-        # auditConfig.ignoreGhsas in pnpm-workspace.yaml excludes known advisories;
-        # --audit-level=moderate keeps low-severity findings from blocking CI.
-        run: pnpm audit --audit-level=moderate
+        # Calls the npm bulk advisory endpoint directly as a workaround for
+        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
+        # revert to `pnpm audit` once pnpm ships native support.
+        run: node .github/scripts/audit-deps.js --level moderate
 
       - name: CI — core
         run: pnpm run ci:core
