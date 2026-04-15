@@ -45,6 +45,13 @@ jobs:
         # Calls the npm bulk advisory endpoint directly as a workaround for
         # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
         # revert to `pnpm audit --ignore-workspace` once pnpm ships native support.
+        #
+        # Suppressed GHSAs — all are unpatched transitive deps of express v4 / swagger-ui-express.
+        # Remove each once an upstream fix lands or the template migrates to express v5.
+        #   GHSA-3ppc-4f35-3m26  high     minimatch ReDoS (via glob < 9, transitive of express)
+        #   GHSA-83g3-92jg-28cx  high     node-tar symlink escape (transitive of npm/pacote)
+        #   GHSA-2g4f-4pwh-qvx6  moderate ajv ReDoS with $data (transitive of swagger-ui-express)
+        #   GHSA-w7fw-mjwx-w883  low      qs arrayLimit DoS (transitive of express body-parser)
         run: >
           node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js
           --ignore-ghsa GHSA-3ppc-4f35-3m26

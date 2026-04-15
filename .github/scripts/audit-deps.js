@@ -135,7 +135,15 @@ const req = https.request(
         process.exit(1);
       }
 
-      const advisories = JSON.parse(data);
+      let advisories;
+      try {
+        advisories = JSON.parse(data);
+      } catch {
+        console.error(
+          'Failed to parse registry response:\n' + data.slice(0, 200)
+        );
+        process.exit(1);
+      }
       const affected = Object.keys(advisories);
 
       if (affected.length === 0) {
