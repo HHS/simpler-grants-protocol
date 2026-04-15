@@ -19,6 +19,7 @@ catalog:
   eslint: ^9.39.4
   eslint-plugin-vitest: ^0.5.4
   prettier: ^3.8.1
+  typescript-eslint: ^8.58.2
   vitest: ^3.2.4
 
 catalogs:

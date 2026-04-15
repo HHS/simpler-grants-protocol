@@ -80,7 +80,7 @@
     "prettier": "catalog:",
     "prettier-plugin-astro": "^0.14.1",
     "starlight-links-validator": "^0.14.3",
-    "typescript-eslint": "^8.58.2",
+    "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
     "wrangler": "^4.83.0"
   },

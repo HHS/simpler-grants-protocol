@@ -42,6 +42,9 @@ catalogs:
     prettier:
       specifier: ^3.8.1
       version: 3.8.1
+    typescript-eslint:
+      specifier: ^8.58.2
+      version: 8.58.2
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
@@ -101,7 +104,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.58.2
+        specifier: 'catalog:'
         version: 8.58.2(eslint@9.39.4)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
@@ -216,7 +219,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.58.2
+        specifier: 'catalog:'
         version: 8.58.2(eslint@9.39.4)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
@@ -271,7 +274,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.58.2
+        specifier: 'catalog:'
         version: 8.58.2(eslint@9.39.4)(typescript@5.9.3)
 
   lib/python-sdk: {}
@@ -358,7 +361,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.58.2
+        specifier: 'catalog:'
         version: 8.58.2(eslint@9.39.4)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
@@ -497,7 +500,7 @@ importers:
         specifier: ^0.14.3
         version: 0.14.3(@astrojs/starlight@0.37.7(astro@5.18.1(@types/node@20.19.37)(rollup@4.60.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)))
       typescript-eslint:
-        specifier: ^8.58.2
+        specifier: 'catalog:'
         version: 8.58.2(eslint@9.39.4)(typescript@5.9.3)
       vitest:
         specifier: catalog:website
