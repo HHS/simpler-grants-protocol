@@ -23,9 +23,7 @@ jobs:
           node-version: "22.x"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.18.3
+        uses: pnpm/action-setup@v6
 
       - name: Validate catalog deps in Dependabot ignore list
         run: ./.github/scripts/validate-catalog-deps.sh
