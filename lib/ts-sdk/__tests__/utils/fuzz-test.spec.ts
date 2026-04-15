@@ -57,9 +57,9 @@ describe("Fuzz Testing Helper", () => {
 
     it("should handle schema not found error", async () => {
       const zodSchema = z.string();
-      await expect(
-        checkZodMatchesJsonSchema(zodSchema, "nonexistent-schema.yaml")
-      ).rejects.toThrow('JSON schema "nonexistent-schema.yaml" not found');
+      await expect(checkZodMatchesJsonSchema(zodSchema, "nonexistent-schema.yaml")).rejects.toThrow(
+        'JSON schema "nonexistent-schema.yaml" not found'
+      );
     });
   });
 

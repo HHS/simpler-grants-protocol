@@ -9,7 +9,10 @@ import { checkZodMatchesJsonSchema } from "./utils/fuzz-test";
  * @param zodSchema - The Zod schema to test
  * @param jsonSchemaId - The JSON schema ID
  */
-export async function expectZodMatchesJsonSchema(zodSchema: ZodSchema, jsonSchemaId: string): Promise<void> {
+export async function expectZodMatchesJsonSchema(
+  zodSchema: ZodSchema,
+  jsonSchemaId: string
+): Promise<void> {
   const result = await checkZodMatchesJsonSchema(zodSchema, jsonSchemaId);
 
   if (!result.passed) {
