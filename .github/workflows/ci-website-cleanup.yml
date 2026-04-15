@@ -14,8 +14,6 @@ jobs:
     steps:
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10
 
       - name: Delete Worker for PR
         run: |
