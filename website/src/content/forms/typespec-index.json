@@ -1,6 +1,6 @@
 {
-  "form-canary": {
-    "schema": "FormCanary",
-    "label": "Canary"
+  "key-contact": {
+    "schema": "KeyContact",
+    "label": "Key Contact"
   }
 }
