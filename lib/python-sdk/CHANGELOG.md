@@ -1,5 +1,11 @@
 # common-grants-sdk
 
+## 0.6.2
+
+### Patch Changes
+
+- 600da2f: Record the Python SDK runtime dependency range update for httpx.
+
 ## 0.6.1
 
 ### Patch Changes
