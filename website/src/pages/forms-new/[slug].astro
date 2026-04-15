@@ -1,0 +1,52 @@
+---
+import { loadAllFormItems, getFormIds } from "@/lib/forms";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import FormDetails from "@/components/forms-new/FormDetails.astro";
+import type { GetStaticPaths } from "astro";
+
+export interface Props {
+  itemId: string;
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const itemIds = getFormIds();
+  const paths = itemIds.map((itemId) => ({
+    params: { slug: itemId },
+    props: { itemId },
+  }));
+  return paths;
+};
+
+const { itemId } = Astro.props;
+const forms = await loadAllFormItems();
+const item = forms[itemId];
+
+if (!item) {
+  throw new Error(`Form "${itemId}" not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: item.label,
+    description: item.description,
+    tableOfContents: false,
+  }}
+>
+  <a href="/forms-new" class="back-link">&larr; Back to Form library</a>
+  <FormDetails item={item} />
+</StarlightPage>
+
+<style>
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+    color: var(--sl-color-accent);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>

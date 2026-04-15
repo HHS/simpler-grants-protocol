@@ -1,0 +1,37 @@
+---
+import { loadAllFormItems } from "@/lib/forms";
+import CatalogPage from "@/layouts/CatalogPage.astro";
+import FormCard from "@/components/forms-new/FormCard.astro";
+
+const forms = await loadAllFormItems();
+---
+
+<CatalogPage
+  title="Form library (TypeSpec)"
+  description="Forms composed from question-bank questions and compiled from TypeSpec specs"
+  searchLabel="Search forms"
+  searchPlaceholder="Search by name, description, or tags..."
+  filters={[]}
+  noResultsMessage="No forms match your search criteria."
+  stats={[{ count: Object.keys(forms).length, label: "forms" }]}
+>
+  <p slot="intro" class="intro">
+    A parallel form library that renders forms compiled from TypeSpec specs in
+    <code>website/src/specs/forms/</code>. Each form is composed from
+    question-bank questions and may apply per-field UI / mapping overrides via
+    the <code>x-overrides</code> extension. The legacy hand-written forms remain available
+    at <a href="/forms">/forms</a> until the migration completes.
+  </p>
+  {
+    Object.entries(forms)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, item]) => <FormCard item={item} />)
+  }
+</CatalogPage>
+
+<style>
+  .intro {
+    margin-bottom: 2rem;
+    color: var(--sl-color-gray-2);
+  }
+</style>
