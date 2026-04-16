@@ -3,10 +3,11 @@ import type { FormItem } from "@/lib/forms";
 import { loadFormItem, loadAllFormItems, getFormIds } from "@/lib/forms";
 
 /**
- * End-to-end loader tests against the KeyContact form. The compiled YAML
- * must exist at website/.extension-schemas/KeyContact.yaml, which the
- * typespec emit step produces. CI runs `pnpm build` (which runs typespec
- * first) before `pnpm test`; locally, run `pnpm typespec` once.
+ * End-to-end loader tests against the forms loader. The compiled YAMLs
+ * must exist at website/.form-schemas/ (e.g. KeyContact.yaml,
+ * SF424Mandatory.yaml), which the typespec:forms emit step produces.
+ * CI runs `pnpm build` (which runs typespec first) before `pnpm test`;
+ * locally, run `pnpm typespec` once.
  */
 
 describe("forms loader", () => {
@@ -17,6 +18,7 @@ describe("forms loader", () => {
   describe("getFormIds", () => {
     it("returns the slugs in typespec-index.json", () => {
       expect(getFormIds()).toContain("key-contact");
+      expect(getFormIds()).toContain("sf424-mandatory");
     });
   });
 
@@ -105,6 +107,40 @@ describe("forms loader", () => {
     });
 
     // =============================================================================
+    // sf424-mandatory form (multi-composite with shared refs)
+    // =============================================================================
+
+    describe("sf424-mandatory form (multi-composite with shared refs)", () => {
+      let item: FormItem | null;
+
+      beforeAll(async () => {
+        item = await loadFormItem("sf424-mandatory");
+      });
+
+      it("loads without error (verifies no AJV shared-ref init failure)", () => {
+        expect(item).not.toBeNull();
+        expect(item?.id).toBe("sf424-mandatory");
+        expect(item?.schema).toBe("SF424Mandatory");
+        expect(item?.label).toBe("SF-424 Mandatory Contacts");
+        expect(item?.tags).toEqual(
+          expect.arrayContaining(["sf424-mandatory", "application"]),
+        );
+      });
+
+      it("exposes org, contact, and aor properties", () => {
+        expect(item?.properties).toHaveProperty("org");
+        expect(item?.properties).toHaveProperty("contact");
+        expect(item?.properties).toHaveProperty("aor");
+      });
+
+      it("composes a VerticalLayout with three top-level group elements", () => {
+        expect(item?.uiSchema.type).toBe("VerticalLayout");
+        const elements = item?.uiSchema.elements as Record<string, unknown>[];
+        expect(elements).toHaveLength(3);
+      });
+    });
+
+    // =============================================================================
     // unknown form id
     // =============================================================================
 
@@ -123,6 +159,7 @@ describe("forms loader", () => {
       const all = await loadAllFormItems();
       expect(all["key-contact"]).toBeDefined();
       expect(all["key-contact"].label).toBe("Key Contact");
+      expect(all["sf424-mandatory"]).toBeDefined();
     });
 
     it("caches across calls (same reference returned)", async () => {

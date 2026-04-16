@@ -16,6 +16,7 @@ import * as path from "path";
  *     schemas/
  *       yaml/
  *   .extension-schemas/          (gitignored; extension schema output)
+ *   .form-schemas/               (gitignored; form schema output)
  *   src/
  *     content/
  *       docs/
@@ -40,6 +41,14 @@ export class Paths {
   static readonly EXTENSION_SCHEMAS_DIR = path.join(
     Paths.WEBSITE_ROOT,
     ".extension-schemas",
+  );
+  /** Form schema output (gitignored) — compiled from src/specs/forms/index.tsp.
+   * Contains top-level form schemas plus all transitive QB dependencies emitted
+   * by the TypeSpec compiler. Use typespec-index.json as the canonical list of
+   * registered forms; do not enumerate this directory as a form registry. */
+  static readonly FORM_SCHEMAS_DIR = path.join(
+    Paths.WEBSITE_ROOT,
+    ".form-schemas",
   );
   /** Extension schema path prefix relative to repo root (for SchemaFormatTabs / SchemaLoader) */
   static readonly EXTENSION_SCHEMAS_PATH_PREFIX = path

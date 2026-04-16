@@ -20,6 +20,14 @@ export function schemaFilePath(schemaName: string): string {
   return path.join(Paths.EXTENSION_SCHEMAS_DIR, fileName);
 }
 
+/** Builds the absolute file path for a form schema in the form schemas directory */
+export function formSchemaFilePath(schemaName: string): string {
+  const fileName = schemaName.endsWith(".yaml")
+    ? schemaName
+    : `${schemaName}.yaml`;
+  return path.join(Paths.FORM_SCHEMAS_DIR, fileName);
+}
+
 // =============================================================================
 // Filter helpers
 // =============================================================================

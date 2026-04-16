@@ -1,6 +1,6 @@
 import { dereferenceSchema } from "../schema/ref-resolver";
 import {
-  schemaFilePath,
+  formSchemaFilePath,
   extractFromSchema,
   getString,
   getStringArray,
@@ -204,7 +204,7 @@ export async function loadFormItem(itemId: string): Promise<FormItem | null> {
   }
 
   try {
-    const schema = await dereferenceSchema(schemaFilePath(indexEntry.schema));
+    const schema = await dereferenceSchema(formSchemaFilePath(indexEntry.schema));
     const schemaData = extractSchemaData(schema);
 
     return {

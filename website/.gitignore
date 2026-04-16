@@ -8,6 +8,8 @@ dist/
 tsp-output/
 # extension schemas (custom fields + question bank, generated, not committed)
 .extension-schemas/
+# form schemas (generated, not committed)
+.form-schemas/
 # generated json cache
 cache/
 public/schemas/yaml/versions/**
