@@ -18,7 +18,7 @@ describe("forms loader", () => {
   describe("getFormIds", () => {
     it("returns the slugs in typespec-index.json", () => {
       expect(getFormIds()).toContain("key-contact");
-      expect(getFormIds()).toContain("sf424-mandatory");
+      expect(getFormIds()).toContain("sf424");
     });
   });
 
@@ -107,23 +107,23 @@ describe("forms loader", () => {
     });
 
     // =============================================================================
-    // sf424-mandatory form (multi-composite with shared refs)
+    // sf424 form (multi-composite with shared refs)
     // =============================================================================
 
-    describe("sf424-mandatory form (multi-composite with shared refs)", () => {
+    describe("sf424 form (multi-composite with shared refs)", () => {
       let item: FormItem | null;
 
       beforeAll(async () => {
-        item = await loadFormItem("sf424-mandatory");
+        item = await loadFormItem("sf424");
       });
 
       it("loads without error (verifies no AJV shared-ref init failure)", () => {
         expect(item).not.toBeNull();
-        expect(item?.id).toBe("sf424-mandatory");
+        expect(item?.id).toBe("sf424");
         expect(item?.schema).toBe("SF424Mandatory");
-        expect(item?.label).toBe("SF-424 Mandatory Contacts");
+        expect(item?.label).toBe("SF-424 Mandatory");
         expect(item?.tags).toEqual(
-          expect.arrayContaining(["sf424-mandatory", "application"]),
+          expect.arrayContaining(["sf424", "application"]),
         );
       });
 
@@ -159,7 +159,7 @@ describe("forms loader", () => {
       const all = await loadAllFormItems();
       expect(all["key-contact"]).toBeDefined();
       expect(all["key-contact"].label).toBe("Key Contact");
-      expect(all["sf424-mandatory"]).toBeDefined();
+      expect(all["sf424"]).toBeDefined();
     });
 
     it("caches across calls (same reference returned)", async () => {

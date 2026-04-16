@@ -55,6 +55,11 @@ export class Paths {
     .relative(Paths.REPO_ROOT, Paths.EXTENSION_SCHEMAS_DIR)
     .split(path.sep)
     .join("/");
+  /** Form schema path prefix relative to repo root (for generateSchemaExample) */
+  static readonly FORM_SCHEMAS_PATH_PREFIX = path
+    .relative(Paths.REPO_ROOT, Paths.FORM_SCHEMAS_DIR)
+    .split(path.sep)
+    .join("/");
 
   // Generated cache files
   static readonly SCHEMA_DOCS_MAPPING = path.join(

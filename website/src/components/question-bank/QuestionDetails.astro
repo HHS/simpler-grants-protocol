@@ -8,7 +8,6 @@ import type { FormData, JsonValue } from "@/lib/types";
 import { transformWithMapping } from "@/lib/transformation";
 import { generateSchemaExample } from "@/lib/schema/example-generator";
 import { Paths } from "@/lib/schema/paths";
-import { extensionsAjv } from "@/lib/validation";
 import * as yaml from "js-yaml";
 
 interface Props {
@@ -26,9 +25,7 @@ const toYaml = (data: Record<string, unknown>) =>
 // Generate example data from the schema using openapi-sampler, which
 // composes examples from nested $ref schemas automatically
 const schemaRelPath = `${Paths.EXTENSION_SCHEMAS_PATH_PREFIX}/${item.schema}.yaml`;
-const exampleJson = await generateSchemaExample(schemaRelPath, {
-  validator: extensionsAjv,
-});
+const exampleJson = await generateSchemaExample(schemaRelPath);
 const exampleData = JSON.parse(exampleJson) as FormData;
 
 // Transform example data to CommonGrants format using the mapping

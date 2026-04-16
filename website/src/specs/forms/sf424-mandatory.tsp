@@ -15,7 +15,7 @@ namespace Forms.SF424Mandatory;
  * Composes org + contact + AOR — all three include QuestionAddress,
  * which is the multi-composite case that triggers the AJV shared-refs error.
  */
-@extension("x-tags", #["sf424-mandatory", "application"])
+@extension("x-tags", #["sf424", "application"])
 model SF424Mandatory {
   /** Primary applicant organization */
   org: QuestionOrgDetails;

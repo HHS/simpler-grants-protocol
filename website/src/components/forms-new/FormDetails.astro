@@ -7,7 +7,6 @@ import type { FormData, JsonValue } from "@/lib/types";
 import { transformWithMapping } from "@/lib/transformation";
 import { generateSchemaExample } from "@/lib/schema/example-generator";
 import { Paths } from "@/lib/schema/paths";
-import { extensionsAjv } from "@/lib/validation";
 import * as yaml from "js-yaml";
 
 interface Props {
@@ -26,10 +25,8 @@ const toYaml = (data: Record<string, unknown>) =>
 // composes examples from nested $ref schemas automatically. Mirrors the
 // approach used by QuestionDetails.astro so form authors can rely on
 // @example decorators in their TypeSpec the same way.
-const schemaRelPath = `${Paths.EXTENSION_SCHEMAS_PATH_PREFIX}/${item.schema}.yaml`;
-const exampleJson = await generateSchemaExample(schemaRelPath, {
-  validator: extensionsAjv,
-});
+const schemaRelPath = `${Paths.FORM_SCHEMAS_PATH_PREFIX}/${item.schema}.yaml`;
+const exampleJson = await generateSchemaExample(schemaRelPath);
 const exampleData = JSON.parse(exampleJson) as FormData;
 
 // Transform example data to CommonGrants format using the mapping
@@ -42,6 +39,17 @@ const hasOverrides =
   Object.keys(item.overrides.uiSchema ?? {}).length > 0 ||
   Object.keys(item.overrides.mappingFromCg ?? {}).length > 0 ||
   Object.keys(item.overrides.mappingToCg ?? {}).length > 0;
+
+// Strip all $id fields before passing to JsonForms. After full $ref
+// inlining, the same $id (e.g. QuestionAddress.yaml) can appear multiple
+// times in the schema tree — once per composite that references it. AJV
+// (used internally by JsonForms) throws "resolves to more than one schema"
+// when it encounters duplicate $id values.
+const rawSchemaForRenderer = JSON.parse(
+  JSON.stringify(item.rawSchema, (key, value) =>
+    key === "$id" && typeof value === "string" ? undefined : value,
+  ),
+) as JsonSchema;
 ---
 
 <h2 class="details-title">Details</h2>
@@ -51,7 +59,7 @@ const hasOverrides =
     <p>Sample version of the rendered form.</p>
     <JsonFormRenderer
       client:load
-      schema={item.rawSchema as JsonSchema}
+      schema={rawSchemaForRenderer}
       uischema={item.uiSchema as unknown as VerticalLayout}
       data={exampleData}
     />
