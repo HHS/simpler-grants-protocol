@@ -25,8 +25,8 @@ describe("EventTypeEnum", () => {
     expect(EventTypeEnum.parse("other")).toBe("other");
   });
 
-  it("should match eventTypeEnum.yaml", () => {
-    expectZodMatchesJsonSchema(EventTypeEnum, jsonSchemaId);
+  it("should match eventTypeEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(EventTypeEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid EventTypeEnum", () => {
@@ -55,8 +55,8 @@ describe("SingleDateEvent Schema", () => {
     expect(parsed.eventType).toBe("singleDate");
   });
 
-  it("should match singleDateEvent.yaml", () => {
-    expectZodMatchesJsonSchema(SingleDateEventSchema, jsonSchemaId);
+  it("should match singleDateEvent.yaml", async () => {
+    await expectZodMatchesJsonSchema(SingleDateEventSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid SingleDateEvent", () => {
@@ -92,8 +92,8 @@ describe("DateRangeEvent Schema", () => {
     expect(parsed.eventType).toBe("dateRange");
   });
 
-  it("should match dateRangeEvent.yaml", () => {
-    expectZodMatchesJsonSchema(DateRangeEventSchema, jsonSchemaId);
+  it("should match dateRangeEvent.yaml", async () => {
+    await expectZodMatchesJsonSchema(DateRangeEventSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid DateRangeEvent", () => {
@@ -137,8 +137,8 @@ describe("OtherEvent Schema", () => {
     expect(parsed.eventType).toBe("other");
   });
 
-  it("should match otherEvent.yaml", () => {
-    expectZodMatchesJsonSchema(OtherEventSchema, jsonSchemaId);
+  it("should match otherEvent.yaml", async () => {
+    await expectZodMatchesJsonSchema(OtherEventSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid OtherEvent", () => {
@@ -174,8 +174,8 @@ describe("Event Schema", () => {
     expect(EventSchema.parse(otherEvent)).toBeDefined();
   });
 
-  it("should match event.yaml", () => {
-    expectZodMatchesJsonSchema(EventSchema, jsonSchemaId);
+  it("should match event.yaml", async () => {
+    await expectZodMatchesJsonSchema(EventSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid Event", () => {
@@ -200,8 +200,8 @@ describe("Money Schema", () => {
     expect(MoneySchema.parse(validMoney)).toEqual(validMoney);
   });
 
-  it("should match money.yaml", () => {
-    expectZodMatchesJsonSchema(MoneySchema, jsonSchemaId);
+  it("should match money.yaml", async () => {
+    await expectZodMatchesJsonSchema(MoneySchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid Money", () => {
@@ -231,8 +231,8 @@ describe("CustomFieldTypeEnum", () => {
     expect(CustomFieldTypeEnum.parse("array")).toBe("array");
   });
 
-  it("should match customFieldTypeEnum.yaml", () => {
-    expectZodMatchesJsonSchema(CustomFieldTypeEnum, jsonSchemaId);
+  it("should match customFieldTypeEnum.yaml", async () => {
+    await expectZodMatchesJsonSchema(CustomFieldTypeEnum, jsonSchemaId);
   });
 
   it("should raise an error for an invalid CustomFieldTypeEnum", () => {
@@ -259,8 +259,8 @@ describe("CustomField Schema", () => {
     expect(CustomFieldSchema.parse(validField)).toEqual(validField);
   });
 
-  it("should match customField.yaml", () => {
-    expectZodMatchesJsonSchema(CustomFieldSchema, jsonSchemaId);
+  it("should match customField.yaml", async () => {
+    await expectZodMatchesJsonSchema(CustomFieldSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid CustomField", () => {
@@ -292,8 +292,8 @@ describe("SystemMetadata Schema", () => {
     expect(parsed.lastModifiedAt).toBeInstanceOf(Date);
   });
 
-  it("should match systemMetadata.yaml", () => {
-    expectZodMatchesJsonSchema(SystemMetadataSchema, jsonSchemaId);
+  it("should match systemMetadata.yaml", async () => {
+    await expectZodMatchesJsonSchema(SystemMetadataSchema, jsonSchemaId);
   });
 
   it("should raise an error for an invalid SystemMetadata", () => {
