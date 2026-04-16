@@ -44,7 +44,7 @@ export async function generateSchemaExample(
 function validateExample(
   example: string,
   schemaName: string,
-  ajvInstance: Ajv2020 = ajv,
+  ajvInstance: Ajv2020,
 ): void {
   // Validate the generated example against the source schema
   const validator = ajvInstance.getSchema(schemaName);
