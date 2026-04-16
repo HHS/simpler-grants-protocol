@@ -204,7 +204,9 @@ export async function loadFormItem(itemId: string): Promise<FormItem | null> {
   }
 
   try {
-    const schema = await dereferenceSchema(formSchemaFilePath(indexEntry.schema));
+    const schema = await dereferenceSchema(
+      formSchemaFilePath(indexEntry.schema),
+    );
     const schemaData = extractSchemaData(schema);
 
     return {
