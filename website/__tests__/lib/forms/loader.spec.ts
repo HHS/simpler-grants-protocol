@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import type { FormItem } from "@/lib/forms";
 import { loadFormItem, loadAllFormItems, getFormIds } from "@/lib/forms";
+import { generateSchemaExample } from "@/lib/schema/example-generator";
+import { Paths } from "@/lib/schema/paths";
 
 /**
  * End-to-end loader tests against the forms loader. The compiled YAMLs
@@ -137,6 +139,28 @@ describe("forms loader", () => {
         expect(item?.uiSchema.type).toBe("VerticalLayout");
         const elements = item?.uiSchema.elements as Record<string, unknown>[];
         expect(elements).toHaveLength(3);
+      });
+
+      it("generates a valid example for SF424Mandatory (covers multi-composite AJV path)", async () => {
+        const schemaPath = `${Paths.FORM_SCHEMAS_PATH_PREFIX}/SF424Mandatory.yaml`;
+        const exampleJson = await generateSchemaExample(schemaPath);
+        const parsed = JSON.parse(exampleJson) as {
+          org: { name: string };
+          contact: { name: { firstName: string; lastName: string } };
+          aor: { name: { firstName: string; lastName: string } };
+        };
+        // Top-level required properties are present
+        expect(parsed).toHaveProperty("org");
+        expect(parsed).toHaveProperty("contact");
+        expect(parsed).toHaveProperty("aor");
+        // org.name is the only required field on QuestionOrgDetails
+        expect(typeof parsed.org.name).toBe("string");
+        expect(parsed.org.name.length).toBeGreaterThan(0);
+        // contact and aor each require name.firstName + name.lastName (QuestionName)
+        expect(typeof parsed.contact.name.firstName).toBe("string");
+        expect(typeof parsed.contact.name.lastName).toBe("string");
+        expect(typeof parsed.aor.name.firstName).toBe("string");
+        expect(typeof parsed.aor.name.lastName).toBe("string");
       });
     });
 

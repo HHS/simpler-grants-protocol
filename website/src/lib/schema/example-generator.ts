@@ -49,10 +49,7 @@ function validateExample(
   // Validate the generated example against the source schema
   const validator = ajvInstance.getSchema(schemaName);
   if (!validator) {
-    console.warn(
-      `Schema ${schemaName} not registered in validator — skipping example validation`,
-    );
-    return;
+    throw new Error(`Schema ${schemaName} not found for ${schemaName}`);
   }
   const isValid = validator(JSON.parse(example));
   if (!isValid) {

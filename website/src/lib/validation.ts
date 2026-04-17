@@ -13,10 +13,6 @@ import { Paths } from "./schema/paths";
 
 /** Ajv instance loaded from Paths.SCHEMAS_DIR (base protocol schemas only) */
 export const ajv = createAjvWithSchemas();
-/** Ajv instance loaded from Paths.EXTENSION_SCHEMAS_DIR (custom fields + question bank), used for validation only */
-export const extensionsAjv = createAjvWithSchemas({
-  schemaDir: Paths.EXTENSION_SCHEMAS_DIR,
-});
 const commonGrantsSchema = ajv.getSchema("ProposalBase.yaml")
   ?.schema as JsonSchema;
 

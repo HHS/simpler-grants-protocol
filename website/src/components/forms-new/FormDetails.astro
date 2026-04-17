@@ -7,6 +7,7 @@ import type { FormData, JsonValue } from "@/lib/types";
 import { transformWithMapping } from "@/lib/transformation";
 import { generateSchemaExample } from "@/lib/schema/example-generator";
 import { Paths } from "@/lib/schema/paths";
+import { stripIds } from "@/lib/schema/strip-ids";
 import * as yaml from "js-yaml";
 
 interface Props {
@@ -45,11 +46,7 @@ const hasOverrides =
 // times in the schema tree — once per composite that references it. AJV
 // (used internally by JsonForms) throws "resolves to more than one schema"
 // when it encounters duplicate $id values.
-const rawSchemaForRenderer = JSON.parse(
-  JSON.stringify(item.rawSchema, (key, value) =>
-    key === "$id" && typeof value === "string" ? undefined : value,
-  ),
-) as JsonSchema;
+const rawSchemaForRenderer = stripIds(item.rawSchema) as JsonSchema;
 ---
 
 <h2 class="details-title">Details</h2>
