@@ -21,7 +21,7 @@ export async function resolveSchemaRefs(
  * Why strip $ids: $RefParser.dereference() deep-clones each resolved $ref,
  * so a schema that pulls in the same sub-schema through multiple paths
  * (e.g. a form composing three QB questions that each include
- * QuestionAddress) produces a tree with N distinct subschemas all
+ * QuestionAddress) produces a tree with N distinct sub-schemas all
  * carrying the same $id. Any AJV consumer that walks that tree via
  * addSchema / compile throws "reference X resolves to more than one
  * schema". Stripping $ids at this boundary makes the result safe for

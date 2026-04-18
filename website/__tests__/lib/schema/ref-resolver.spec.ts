@@ -40,7 +40,7 @@ describe("dereferenceSchema — multi-composite AJV safety", () => {
   it("fully dereferenced output (without stripping $id) throws — pins the underlying bug", async () => {
     // Baseline: $RefParser deep-clones each resolved $ref, so a schema
     // with three $refs to Event.yaml produces a tree with three distinct
-    // subschemas all carrying the same $id. AJV walks the tree on
+    // sub-schemas all carrying the same $id. AJV walks the tree on
     // addSchema, sees duplicates, and throws.
     //
     // If this test ever stops throwing, $RefParser changed its semantics
