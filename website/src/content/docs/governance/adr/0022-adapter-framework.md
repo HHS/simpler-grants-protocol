@@ -115,19 +115,19 @@ result = adapter.transform(source_data)
 ### Options considered
 
 - Feature-first structure with "Plugin" naming retained
-- Feature-first structure renamed to "Adapter"
+- Object-first structure with adapted model/schema (no separate Adapter class)
 - Object-first structure with "Plugin" for registry, "Adapter" for SDK *(chosen)*
 
 ## Evaluation
 
 ### Side-by-side
 
-| Criteria | Feature-first / Plugin | Feature-first / Adapter | Object-first / Plugin+Adapter |
+| Criteria | Feature-first / Plugin | Object-first / Adapted Schema | Object-first / Plugin+Adapter |
 | :--- | :---: | :---: | :---: |
-| Backward compatible | ✅ | ❌ | ✅ |
-| SDK-friendly | 🟡 | 🟡 | ✅ |
+| Backward compatible | ✅ | ✅ | ✅ |
+| SDK-friendly | 🟡 | ✅ | ✅ |
 | Language-agnostic config | ✅ | ✅ | ✅ |
-| Clear naming | 🟡 | ✅ | ✅ |
+| Clear naming | 🟡 | 🟡 | ✅ |
 | Supports both capabilities | ✅ | ✅ | ✅ |
 
 ### Option 1: Feature-first structure, retain "Plugin" naming
@@ -160,24 +160,40 @@ Feature-first / Plugin is best if:
   - "Plugin" doesn't communicate the transformation/mapping purpose
   - `fields` and `mappings` for the same model are structurally separated
 
-### Option 2: Feature-first structure, rename to "Adapter"
+### Option 2: Object-first structure, adapted model/schema (no separate Adapter class)
 
-Same feature-first JSON shape, but SDK classes and types renamed from "plugin" to "adapter" throughout.
+Same object-first `AdapterConfig` shape, but instead of constructing a separate `Adapter` object, the SDK returns an *extended version of the model/schema itself* with the transform baked in. Adopters call native parse/validate methods directly on the returned object.
+
+```ts
+// TypeScript: createAdapter returns an extended Zod schema (ZodEffects), not an Adapter object
+const opportunityAdapter = createAdapter(opportunitySchema, adapterConfig)
+const opportunity = opportunityAdapter.parse(grantsGovData)       // native Zod
+const result = opportunityAdapter.safeParse(grantsGovData)        // native Zod non-throwing
+```
+
+```python
+# Python: create_adapter returns a new Pydantic model class with a custom validator applied
+OpportunityAdapter = create_adapter(Opportunity, adapter_config)
+opportunity = OpportunityAdapter.model_validate(grants_gov_data)  # native Pydantic
+```
 
 :::note[Bottom line]
-Feature-first / Adapter is best if:
+Object-first / Adapted Schema is best if:
 
-- we want clearer naming that communicates the transformation purpose
-- but we're willing to accept the SDK join-across-keys problem and a breaking rename
+- we want the SDK return type to feel like a first-class schema object, not a wrapper
+- and we're willing to accept that the "Adapter" concept is implicit rather than a named class
 :::
 
 - **Pros**
-  - "Adapter" clearly communicates bridging two systems
-  - Well-understood software pattern name
+  - Very idiomatic — `.parse()` / `safeParse()` in Zod and `.model_validate()` in Pydantic are already the expected call sites
+  - Type inference is clean — the return type IS the schema's output type, no separate inference needed
+  - No new runtime class name to explain; the adapted schema is still recognizably a schema
+  - Config shape is unchanged; same `AdapterConfig` JSON format
+  - Backward compatible — both keys optional, `custom_fields`-only is valid
 - **Cons**
-  - Breaking rename of existing SDK types
-  - SDK still must join across two top-level keys per model
-  - `fields` and `mappings` for the same model remain structurally separated
+  - `transform` vs `validate` distinction (throwing vs non-throwing) must be communicated through Zod's `.parse()` / `.safeParse()` and Pydantic's `.model_validate()` / `try/except`, rather than as named SDK methods — less explicit
+  - In Python, `create_adapter` must dynamically generate a new model class (e.g. via `model_validator`), which is less transparent than instantiating an `Adapter` object
+  - "Adapter" as a concept is implicit — there is no `Adapter` type to import, document, or type-hint against
 
 ### Option 3: Object-first structure, "Plugin" for registry / "Adapter" for SDK *(chosen)*
 
