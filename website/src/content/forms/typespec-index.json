@@ -2,5 +2,9 @@
   "key-contact": {
     "schema": "KeyContact",
     "label": "Key Contact"
+  },
+  "sf424-mandatory": {
+    "schema": "SF424Mandatory",
+    "label": "SF-424 Mandatory Contacts"
   }
 }
