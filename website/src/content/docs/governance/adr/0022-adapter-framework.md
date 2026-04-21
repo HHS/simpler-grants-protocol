@@ -17,7 +17,7 @@ _How should the Adapter object be structured to support both custom field declar
 ### Decision drivers
 
 - The framework must be implementable in both the Python and TypeScript SDKs with as consistent an interface as possible.
-- The `extensions` config must be serializable and validatable (JSON-safe), and must be combinable across multiple extension packages via `mergeExtensions()` (TypeScript) / `merge_extensions()` (Python).
+- The `extensions` config must be serializable and able to pass validation (JSON-safe), and must be combinable across multiple extension packages via `mergeExtensions()` (TypeScript) / `merge_extensions()` (Python).
 - Existing plugin packages that declare only custom fields should remain valid with minimal changes.
 - The SDK interface should support clean dependency injection — it must be possible to pass `client` or `schemas` as a coherent unit without reassembling them from per-object branches.
 - Auth, transport, and rate-limiting are system-level concerns that belong to a single client, not distributed across per-object branches.
@@ -126,7 +126,7 @@ const adapter = defineAdapter(
         customFields: {
           programArea: {
             fieldType: "string",
-            description: "HHS program area code (e.g. CFDA-93.243)",
+            description: "HHS program area code",
           },
           legacyGrantId: {
             fieldType: "integer",
@@ -382,7 +382,7 @@ Pure object-first / Plugin+Adapter is best if:
 
 - **Pros**
   - Co-location: all of an object's config is in one branch during authoring
-  - Clear semantic split: "plugin" = what you install, "adapter" = what you construct in code — `Adapter` is a well-understood bridging pattern with a named, importable, type-hintable class
+  - Clear semantic split: "plugin" = what you install, "adapter" = what you construct in code — `Adapter` is a well-understood bridging pattern with a named, importable, type-hint enabled class
 - **Cons**
   - Top-level keys track the protocol's object list, which is long and open-ended — surface grows as protocol grows and raises questions about which of 100+ schemas belongs at the top level
   - Client, auth, and transport are system-level but must either be duplicated per object or kept implicit alongside object keys, creating an awkward mix of concerns
