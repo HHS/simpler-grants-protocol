@@ -3,7 +3,7 @@ title: Adapter framework
 description: ADR documenting the decision to use an Adapter pattern with functional top-level grouping and per-object schema grouping for the expanded plugin framework that supports both custom fields and data mappings across the Python/Pydantic and TypeScript/Zod SDKs.
 ---
 
-The existing plugin framework allows adopters to publish npm or PyPI packages that declare custom fields for CommonGrants schema objects. We want to expand this framework to also support bidirectional data mappings — declarative transforms that the SDK compiles into type-safe `toCommon`/`fromCommon` functions at runtime (see [ADR-0017](./0017-mapping-format.md)). We also want to organize this framework to support other potential future features with minimal rework. 
+The existing plugin framework allows adopters to publish npm or PyPI packages that declare custom fields for CommonGrants schema objects. We want to expand this framework to also support bidirectional data mappings — declarative transforms that the SDK compiles into type-safe `toCommon`/`fromCommon` functions at runtime (see [ADR-0017](https://commongrants.org/governance/adr/0017-mapping-format)). We also want to organize this framework to support other potential future features with minimal rework. 
 
 _How should the Adapter object be structured to support both custom field declarations and data mappings, while enabling clean dependency injection and remaining stable as the protocol's object list grows?_
 
