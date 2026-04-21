@@ -3,7 +3,7 @@ title: Adapter framework
 description: ADR documenting the decision to use an Adapter pattern with functional top-level grouping and per-object schema grouping for the expanded plugin framework that supports both custom fields and data mappings across the Python/Pydantic and TypeScript/Zod SDKs.
 ---
 
-The existing plugin framework allows adopters to publish npm or PyPI packages that declare custom fields for CommonGrants schema objects. We want to expand this framework to also support bidirectional data mappings — declarative transforms that the SDK compiles into type-safe `toCommon`/`fromCommon` functions at runtime (see [ADR-0017](https://commongrants.org/governance/adr/0017-mapping-format)). We also want to organize this framework to support other potential future features with minimal rework. 
+The existing plugin framework allows adopters to publish npm or PyPI packages that declare custom fields for CommonGrants schema objects. We want to expand this framework to also support bidirectional data mappings — declarative transforms that the SDK compiles into type-safe `toCommon`/`fromCommon` functions at runtime (see [ADR-0017](https://commongrants.org/governance/adr/0017-mapping-format)). We also want to organize this framework to support other potential future features with minimal rework.
 
 _How should the Adapter object be structured to support both custom field declarations and data mappings, while enabling clean dependency injection and remaining stable as the protocol's object list grows?_
 
@@ -50,43 +50,43 @@ adapter.schemas.<ObjectName> = { native, common, toCommon, fromCommon }
 
 ```ts
 interface AdapterMeta {
-  name: string
-  version: string
-  sourceSystem: string
-  capabilities?: string[]
+  name: string;
+  version: string;
+  sourceSystem: string;
+  capabilities?: string[];
 }
 
 interface CustomFieldDef {
-  name?: string    // optional; dict key is used as the display name fallback
-  fieldType: string
-  description?: string
+  name?: string; // optional; dict key is used as the display name fallback
+  fieldType: string;
+  description?: string;
 }
 
 interface ObjectSchemas<TNative, TCommon> {
-  native: ZodType<TNative>
-  common: ZodType<TCommon>
-  toCommon: (native: TNative) => TCommon
-  fromCommon: (common: TCommon) => TNative
+  native: ZodType<TNative>;
+  common: ZodType<TCommon>;
+  toCommon: (native: TNative) => TCommon;
+  fromCommon: (common: TCommon) => TNative;
 }
 
 // Per-object config shape inside extensions.schemas — mirrors Python's AdapterExtensionsSchema
 interface AdapterExtensionsObjectConfig {
-  customFields?: Record<string, CustomFieldDef>
-  mappings?: Record<string, unknown>  // see ADR-0017 for mapping format
+  customFields?: Record<string, CustomFieldDef>;
+  mappings?: Record<string, unknown>; // see ADR-0017 for mapping format
 }
 
 // Serializable input to defineAdapter() — safe to store as JSON
 interface AdapterExtensions {
-  meta?: Partial<AdapterMeta>
-  schemas?: Record<string, AdapterExtensionsObjectConfig>
+  meta?: Partial<AdapterMeta>;
+  schemas?: Record<string, AdapterExtensionsObjectConfig>;
 }
 
 // Client is a placeholder for the SDK's runtime client type (not shown here)
 interface Adapter {
-  meta: AdapterMeta
-  client: Client                                          // one per source system
-  extensions: AdapterExtensions                          // serializable
-  schemas: Record<string, ObjectSchemas<unknown, unknown>>
+  meta: AdapterMeta;
+  client: Client; // one per source system
+  extensions: AdapterExtensions; // serializable
+  schemas: Record<string, ObjectSchemas<unknown, unknown>>;
 }
 
 // Factory: takes serializable extensions and a runtime client.
@@ -99,35 +99,48 @@ interface Adapter {
 //
 // Client config (auth, base URL, rate-limiting) is not JSON-safe and must be
 // provided separately at runtime — it is never part of extensions.
-function defineAdapter(extensions: AdapterExtensions, client: Client): Adapter
+function defineAdapter(extensions: AdapterExtensions, client: Client): Adapter;
 
 // Combine multiple extension objects (e.g. from separate packages)
-function mergeExtensions(...extensions: AdapterExtensions[]): AdapterExtensions
+function mergeExtensions(...extensions: AdapterExtensions[]): AdapterExtensions;
 ```
 
 Usage:
 
 ```ts
 // Client is configured separately — auth and transport are not JSON-safe
-const client = createClient({ baseUrl: 'https://api.grants.gov', auth: { type: 'oauth2', /* ... */ } })
+const client = createClient({
+  baseUrl: "https://api.grants.gov",
+  auth: { type: "oauth2" /* ... */ },
+});
 
 const adapter = defineAdapter(
   {
-    meta: { name: 'grants-gov-adapter', version: '1.0.0', sourceSystem: 'grants.gov' },
+    meta: {
+      name: "grants-gov-adapter",
+      version: "1.0.0",
+      sourceSystem: "grants.gov",
+    },
     schemas: {
       Opportunity: {
         customFields: {
-          programArea: { fieldType: 'string', description: 'HHS program area code (e.g. CFDA-93.243)' },
-          legacyGrantId: { fieldType: 'integer', description: 'Numeric ID from the legacy grants system' },
+          programArea: {
+            fieldType: "string",
+            description: "HHS program area code (e.g. CFDA-93.243)",
+          },
+          legacyGrantId: {
+            fieldType: "integer",
+            description: "Numeric ID from the legacy grants system",
+          },
         },
         mappings: {
-          title: 'data.opportunity_title',
+          title: "data.opportunity_title",
           status: {
             value: {
               match: {
-                field: 'data.opportunity_status',
-                case: { posted: 'open', archived: 'closed' },
-                default: 'custom',
+                field: "data.opportunity_status",
+                case: { posted: "open", archived: "closed" },
+                default: "custom",
               },
             },
           },
@@ -136,11 +149,11 @@ const adapter = defineAdapter(
     },
   },
   client,
-)
+);
 
 // Combine extensions from multiple packages before constructing the adapter
-const merged = mergeExtensions(baseExtensions, grantsGovExtensions)
-const mergedAdapter = defineAdapter(merged, client)
+const merged = mergeExtensions(baseExtensions, grantsGovExtensions);
+const mergedAdapter = defineAdapter(merged, client);
 ```
 
 **Python interface (Pydantic-based):**
@@ -284,31 +297,31 @@ merged_adapter = define_adapter(merged, client)
 
 - Object-first structure with adapted model/schema (no separate Adapter class)
 - Pure object-first structure with "Plugin" for registry, "Adapter" for SDK
-- Functional top-level with per-object schema grouping *(chosen)*
+- Functional top-level with per-object schema grouping _(chosen)_
 
 ## Evaluation
 
 ### Side-by-side
 
-| Criteria | Object-first / Adapted Schema | Pure object-first / Plugin+Adapter | Functional top-level / per-object schemas |
-| :--- | :---: | :---: | :---: |
-| Backward compatible | ✅ | ✅ | ✅ |
-| SDK-friendly | ✅ | ✅ | ✅ |
-| Language-agnostic config | ✅ | ✅ | ✅ |
-| Clear naming | 🟡 | ✅ | ✅ |
-| Supports both capabilities | ✅ | ✅ | ✅ |
-| DI-friendly | 🟡 | 🔴 | ✅ |
-| Stable surface | 🟡 | 🔴 | ✅ |
+| Criteria                   | Object-first / Adapted Schema | Pure object-first / Plugin+Adapter | Functional top-level / per-object schemas |
+| :------------------------- | :---------------------------: | :--------------------------------: | :---------------------------------------: |
+| Backward compatible        |              ✅               |                 ✅                 |                    ✅                     |
+| SDK-friendly               |              ✅               |                 ✅                 |                    ✅                     |
+| Language-agnostic config   |              ✅               |                 ✅                 |                    ✅                     |
+| Clear naming               |              🟡               |                 ✅                 |                    ✅                     |
+| Supports both capabilities |              ✅               |                 ✅                 |                    ✅                     |
+| DI-friendly                |              🟡               |                 🔴                 |                    ✅                     |
+| Stable surface             |              🟡               |                 🔴                 |                    ✅                     |
 
 ### Option 1: Object-first structure, adapted model/schema (no separate Adapter class)
 
-Instead of constructing a separate `Adapter` object, the SDK returns an *extended version of the model/schema itself* with the transform baked in. Adopters call native parse/validate methods directly on the returned object.
+Instead of constructing a separate `Adapter` object, the SDK returns an _extended version of the model/schema itself_ with the transform baked in. Adopters call native parse/validate methods directly on the returned object.
 
 ```ts
 // TypeScript: createAdapter returns an extended Zod schema (ZodEffects), not an Adapter object
-const opportunityAdapter = createAdapter(opportunitySchema, adapterConfig)
-const opportunity = opportunityAdapter.parse(grantsGovData)       // native Zod
-const result = opportunityAdapter.safeParse(grantsGovData)        // native Zod non-throwing
+const opportunityAdapter = createAdapter(opportunitySchema, adapterConfig);
+const opportunity = opportunityAdapter.parse(grantsGovData); // native Zod
+const result = opportunityAdapter.safeParse(grantsGovData); // native Zod non-throwing
 ```
 
 ```python
@@ -322,7 +335,7 @@ Object-first / Adapted Schema is best if:
 
 - we want the SDK return type to feel like a first-class schema object, not a wrapper
 - and we're willing to accept that the "Adapter" concept is implicit rather than a named class
-:::
+  :::
 
 - **Pros**
   - Very idiomatic — `.parse()` / `safeParse()` in Zod and `.model_validate()` in Pydantic are the expected call sites
@@ -341,10 +354,10 @@ Config and runtime object both keyed by CommonGrants model name at the root. `me
 
 ```ts
 interface Adapter {
-  meta?: AdapterMeta
-  client?: Client
-  Opportunity?: ObjectAdapterConfig
-  Application?: ObjectAdapterConfig
+  meta?: AdapterMeta;
+  client?: Client;
+  Opportunity?: ObjectAdapterConfig;
+  Application?: ObjectAdapterConfig;
   // ... one key per protocol object
 }
 ```
@@ -365,7 +378,7 @@ Pure object-first / Plugin+Adapter is best if:
 
 - we want authoring a new object's support to feel self-contained during development
 - but we're willing to accept a top-level key set that grows with the protocol and scattered client config
-:::
+  :::
 
 - **Pros**
   - Co-location: all of an object's config is in one branch during authoring
@@ -377,16 +390,16 @@ Pure object-first / Plugin+Adapter is best if:
   - DI requires reassembling a flat view across all object branches (e.g. an `allSchemas` helper) — working against the grain of the structure
   - `mergeExtensions()` must deeply merge nested per-object branches rather than operating on a flat serializable root
 
-### Option 3: Functional top-level with per-object schema grouping *(chosen)*
+### Option 3: Functional top-level with per-object schema grouping _(chosen)_
 
 Top-level keys are functional (`meta`, `client`, `schemas`, `extensions`). Per-object grouping is used only inside `schemas`, where it reflects real coupling between native schemas, CommonGrants schemas, and bidirectional transforms.
 
 ```ts
 interface Adapter {
-  meta: AdapterMeta
-  client: Client
-  extensions: AdapterExtensions
-  schemas: Record<string, ObjectSchemas>  // per-object grouping only here
+  meta: AdapterMeta;
+  client: Client;
+  extensions: AdapterExtensions;
+  schemas: Record<string, ObjectSchemas>; // per-object grouping only here
 }
 ```
 
@@ -395,7 +408,7 @@ Functional top-level / per-object schemas is best if:
 
 - we want a stable, short top-level surface that doesn't grow with the protocol's object list
 - and we want a singular client and clean DI while still co-locating the tightly-coupled schema/transform pairs per object
-:::
+  :::
 
 - **Pros**
   - Short, stable top-level surface — `meta`, `client`, `schemas`, `extensions` tracks a closed list regardless of how many protocol objects exist
