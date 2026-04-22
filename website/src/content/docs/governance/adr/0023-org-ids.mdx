@@ -1,8 +1,8 @@
 ---
-title: Cross-platform organization identifiers
+title: Organization identifiers
 description: ADR documenting the approach for representing multiple identifiers (EIN, UEI, DUNS, platform IDs, etc.) on organizations and related models.
 tableOfContents:
-  maxHeadingLevel: 2
+  maxHeadingLevel: 3
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components";
@@ -13,7 +13,7 @@ _How should the protocol represent the set of identifiers associated with an org
 
 ## Decision
 
-The protocol will replace the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `IdentifierCollection` field will be reused across other core models, with each model extending it with its own well-known keys.
+The protocol will replace the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `IdentifierCollection` field will be reused across other core models, with each model extending it with its own base identifiers.
 
 The collection looks like this:
 
@@ -78,13 +78,13 @@ The collection looks like this:
 At a glance, the decisions are:
 
 1. **Top-level ID:** A pure UUID on each resource, with the hosting system's own ID also surfaced inside the collection as `systemId`.
-2. **Collection structure:** A map keyed by short well-known aliases, with a catch-all `otherIds` map for extensions.
+2. **Collection structure:** A map keyed by short base-identifier aliases, with a catch-all `otherIds` map for extensions.
 3. **Map key format:** Model-defined camelCase aliases (`ein`, `uei`, `duns`), not raw registry codes.
 4. **Identifier metadata structure:** A hybrid shape with `registry` (code), two small registry-level fields (`scope`, `kind`), and instance-level fields (`value`, `compositeId`, `uri`, `verifiedAt`). Full registry metadata (issuer, human-readable name, schema, lookup template) lives in an external CommonGrants registry catalog.
 5. **Multiple IDs per registry:** Parallel arrays (`value` as primary, `additionalValues` for other currently valid IDs, `previousValues` for archived ones).
 6. **Parent organization:** `parent` carries `id`, `name`, and optionally an embedded `identifiers` collection. Parent identifiers do not leak into the child's collection.
 7. **Registry code format:** org-id.guide codes (`US-EIN`, `GB-CHC`) for well-known public registries, `namespace:type` (`grants.gov:org`, `candid:bridge`) for everything else.
-8. **Registry governance:** CommonGrants maintains a registry catalog that wraps org-id.guide where applicable and adds CommonGrants-specific metadata (schema URLs, kind, lookup templates). A documented promotion flow moves a registry from `otherIds` to a well-known key on the relevant model.
+8. **Registry governance:** CommonGrants maintains a registry catalog that wraps org-id.guide where applicable and adds CommonGrants-specific metadata (schema URLs, kind, lookup templates). A documented promotion flow moves a registry from `otherIds` to a base identifier on the relevant model.
 
 ### Consequences
 
@@ -101,42 +101,52 @@ At a glance, the decisions are:
   - Registry metadata is split across two places (inline fields plus the external catalog), which needs clear documentation.
   - Two extension mechanisms (`otherIds` for new registries, `additionalValues` / `previousValues` for multiple IDs in one registry) add complexity.
 
-### Well-known keys and extensions
+### Identifier key hierarchy
 
 Each `IdentifierCollection` has two tiers of keys:
 
-- **Well-known (root-level) keys** are defined by the protocol on a per-model basis. They are the short camelCase aliases that every CommonGrants-compliant system is expected to recognize for that model. On `OrganizationBase`, these include `ein`, `uei`, and `duns`. On `OpportunityBase`, they include `opportunityNumber` and `cfda`. Well-known keys have a registered entry in the CommonGrants registry catalog and are validated against a per-key JSON schema.
-- **`otherIds`** is a catch-all map for identifiers that don't yet have a well-known key on that model. Adopters can put any identifier here using any camelCase alias they choose (e.g. `candidBridge`, `statePortalId`). The value must still follow the `Identifier` schema, but the key itself is not reserved or validated by the protocol.
+- **Base identifiers** are defined by `@common-grants/core` at the root of each model's `IdentifierCollection` extension (e.g. `ein`, `uei`, `duns` on `OrgIdentifierCollection`). Each one has an identifier-specific JSON schema that extends the generic `Identifier` schema, plus a registered entry in the CommonGrants registry catalog. Every CommonGrants-compliant system is expected to recognize them for that model.
+- **`otherIds`** is a catch-all map for identifiers the protocol does not define. Adopters can publish any identifier here using any camelCase alias they choose (e.g. `candidBridge`, `statePortalId`). Entries need only conform to the generic `Identifier` schema. They may optionally be listed in the CommonGrants registry catalog, but the key itself is not reserved or validated by the protocol.
 
 **When to use each:**
 
-- If the registry has a well-known key on the model, publish it under that key.
+- If the registry has a base identifier on the model, publish it under that key.
 - If it doesn't (yet), publish it under `otherIds` with a descriptive alias.
 - Consumers that want to consume new identifier types early can read from both places during the transition.
 
-**Promotion flow: `otherIds` to well-known key**
+**Identifier lifecycle**
 
-An identifier type moves from `otherIds` to a first-class well-known key through a documented flow. This ensures that new keys are vetted, validated, and released on the standard protocol cadence instead of being added ad hoc.
+An identifier evolves through two distinct stages. The first is lightweight and does not require a protocol release. The second is deliberately high-bar because it ships as part of the core protocol itself.
+
+_Stage 1: Register in the catalog (lightweight)_
+
+Listing an `otherIds` entry in the CommonGrants registry catalog lets other systems discover and optionally support it. The key still lives under `otherIds`; cataloging just turns a one-off extension into a shared, documented one so that adopters use a consistent alias, schema, and lookup template.
 
 1. **Proposal.** An adopter or maintainer opens a GitHub issue with the proposed code, scope, kind, example values, and relevant models.
-2. **Review.** Reviewers evaluate: is the registry broadly applicable? Is it authoritative (a named issuer)? Can values be validated?
-3. **Catalog entry.** On acceptance, a PR adds a catalog file (`commongrants.org/registries/<code>.yaml`) with the alias, scope, kind, schema, and lookup template.
-4. **Model extension.** For each relevant model, the alias is added as a well-known key on that model's `IdentifierCollection` extension (e.g. `ein`, `uei` on `OrgIdentifierCollection`).
-5. **Release.** Changes ship in the next minor protocol version with the appropriate `@Versioning.added`.
-6. **Adopter migration.** Adopters can continue to publish the identifier under `otherIds` during a deprecation window, then move it to the well-known key.
+2. **Review.** Reviewers evaluate: is the registry coherent and documentable? Does it have a named issuer? Can values be validated?
+3. **Catalog entry.** On acceptance, a PR adds a catalog file (`commongrants.org/registries/<code>.yaml`) with the alias, scope, kind, schema, and lookup template. Adopters continue to publish the identifier under `otherIds`, using the cataloged alias.
 
-See [Evaluation - Registry governance](#evaluation---registry-governance) for the full rationale behind this flow.
+_Stage 2: Promote to a base identifier (high threshold)_
+
+Moving an identifier out of `otherIds` and into a base identifier slot requires a minor release of `@common-grants/core`, because it adds a reserved key to that model's `IdentifierCollection` extension that every CommonGrants-compliant system is then expected to recognize. Promotion should be reserved for identifiers with demonstrated broad adoption, cross-platform value, and a stable authoritative issuer.
+
+1. **Promotion proposal.** A maintainer proposes promoting a cataloged identifier to a base identifier on one or more models, including evidence of broad use and cross-platform value.
+2. **Model extension.** On acceptance, the alias is added as a base identifier on the relevant model's `IdentifierCollection` extension (e.g. `ein`, `uei` on `OrgIdentifierCollection`) and the identifier-specific schema is wired up in `@common-grants/core`.
+3. **Release.** Changes ship in the next minor protocol version with the appropriate `@Versioning.added`.
+4. **Adopter migration.** Adopters can continue to publish the identifier under `otherIds` during a deprecation window, then move it to the base identifier key.
+
+See [Registry governance](#registry-governance) for the full rationale behind this flow.
 
 ### Questions
 
-- **[Top-level ID format](#evaluation---top-level-id-format):** Should the top-level `id` be a plain UUID, a prefixed UUID, or a registry-scoped composite string?
-- **[Collection structure](#evaluation---collection-structure):** Should the identifier collection be a flat array or a keyed map?
-- **[Map key format](#evaluation---map-key-format):** If the collection is a map, should the keys be raw registry codes or short model-defined aliases?
-- **[Identifier metadata structure](#evaluation---identifier-metadata-structure):** How much registry metadata belongs on each identifier instance, and how much should live in an external catalog?
-- **[Multiple IDs per registry](#evaluation---multiple-ids-per-registry):** How should the protocol represent multiple IDs that share the same registry, including archived versions?
-- **[Parent organization representation](#evaluation---parent-organization-representation):** What should a parent organization reference carry?
-- **[Registry code format](#evaluation---registry-code-format):** Should registry codes follow org-id.guide, a uniform namespaced format, or both?
-- **[Registry governance](#evaluation---registry-governance):** Who maintains the registry catalog, and how does a registry get promoted from `otherIds` to a well-known key?
+- **[Top-level ID format](#top-level-id-format):** Should the top-level `id` be a plain UUID, a prefixed UUID, or a registry-scoped composite string?
+- **[Collection structure](#collection-structure):** Should the identifier collection be a flat array or a keyed map?
+- **[Map key format](#map-key-format):** If the collection is a map, should the keys be raw registry codes or short model-defined aliases?
+- **[Identifier metadata structure](#identifier-metadata-structure):** How much registry metadata belongs on each identifier instance, and how much should live in an external catalog?
+- **[Multiple IDs per registry](#multiple-ids-per-registry):** How should the protocol represent multiple IDs that share the same registry, including archived versions?
+- **[Parent organization representation](#parent-organization-representation):** What should a parent organization reference carry?
+- **[Registry code format](#registry-code-format):** Should registry codes follow org-id.guide, a uniform namespaced format, or both?
+- **[Registry governance](#registry-governance):** Who maintains the registry catalog, and how does a registry get promoted from `otherIds` to a base identifier?
 
 ### Decision drivers
 
@@ -220,7 +230,7 @@ Identifier:
 </details>
 
 <details>
-<summary>IdentifierCollection (base)</summary>
+<summary>IdentifierCollection</summary>
 
 ```yaml
 IdentifierCollection:
@@ -352,11 +362,13 @@ GET /opportunities?identifier=US-CFDA:93.575
 GET /applications?identifier=fluxx:app:app-98765
 ```
 
-## Evaluation - Top-level ID format
+## Evaluation
+
+### Top-level ID format
 
 _Should the top-level `id` be a plain UUID, a prefixed UUID, or a registry-scoped composite string?_
 
-### Side-by-side comparison
+#### Side-by-side comparison
 
 - ✅ Criterion met
 - ❌ Criterion not met
@@ -371,7 +383,7 @@ _Should the top-level `id` be a plain UUID, a prefixed UUID, or a registry-scope
 | Standard REST path parameter                   |        ✅        |      ✅       |             🟡             |
 | Self-describing in logs                        |        ❌        |      ✅       |             ✅             |
 
-### Option 1: Pure UUID (recommended)
+#### Option 1: Pure UUID (recommended)
 
 :::note[Bottom line]
 A pure UUID is best if:
@@ -399,7 +411,7 @@ GET /organizations?identifier=US-EIN:12-3456789
   - Top-level `id` duplicates `identifiers.systemId.value`.
   - UUIDs carry no information about the record on their own, so logs and error messages need an extra lookup for context.
 
-### Option 2: Prefixed UUID
+#### Option 2: Prefixed UUID
 
 :::note[Bottom line]
 A prefixed UUID is best if:
@@ -422,7 +434,7 @@ GET /organizations/org_01912a8b-7c3d-7890-abcd-ef1234567890
   - No canonical rule for what the prefix should encode (resource type? platform? both?).
   - Requires every client and SDK to parse the prefix out before using the UUID.
 
-### Option 3: Composite `registry:value` string
+#### Option 3: Composite `registry:value` string
 
 :::note[Bottom line]
 A composite ID is best if:
@@ -445,11 +457,11 @@ GET /organizations/US-EIN:12-3456789
   - Colons in URL paths complicate routing and URL parsing in several web frameworks.
   - If the organization corrects or replaces the underlying ID (e.g. EIN reassignment), every stored reference breaks.
 
-## Evaluation - Collection structure
+### Collection structure
 
 _Should the identifier collection be a flat array or a keyed map?_
 
-### Side-by-side comparison
+#### Side-by-side comparison
 
 | Criteria                                     | Map (rec.) | Flat array |
 | -------------------------------------------- | :--------: | :--------: |
@@ -460,7 +472,7 @@ _Should the identifier collection be a flat array or a keyed map?_
 | Cross-system matching                        |     ✅     |     ✅     |
 | Mirrors org-id.guide wire shape              |     🟡     |     ✅     |
 
-### Option 1: Map (recommended)
+#### Option 1: Map (recommended)
 
 :::note[Bottom line]
 A map is best if:
@@ -502,7 +514,7 @@ ein.additionalValues; // ["98-7654321"]
   - Differs structurally from org-id.guide, even though codes are shared.
   - `otherIds` nesting adds one level of indirection for extensions.
 
-### Option 2: Flat array
+#### Option 2: Flat array
 
 :::note[Bottom line]
 A flat array is best if:
@@ -535,11 +547,11 @@ const ein = org.identifiers.find((i) => i.scheme === "US-EIN");
   - Per-registry validation is hard in a mixed array because JSON schema can't branch on `scheme` cleanly.
   - Multiple IDs per registry appear as duplicate entries with no clear primary.
 
-## Evaluation - Map key format
+### Map key format
 
 _If the collection is a map, should the keys be raw registry codes or short model-defined aliases?_
 
-### Side-by-side comparison
+#### Side-by-side comparison
 
 | Criteria                                       | camelCase alias (rec.) | Registry code as key |
 | ---------------------------------------------- | :--------------------: | :------------------: |
@@ -550,7 +562,7 @@ _If the collection is a map, should the keys be raw registry codes or short mode
 | Works cleanly in JSON Pointer / JSONPath       |           ✅           |          🟡          |
 | Self-describing without catalog lookup         |           🟡           |          ✅          |
 
-### Option 1: camelCase alias (recommended)
+#### Option 1: camelCase alias (recommended)
 
 :::note[Bottom line]
 camelCase aliases are best if:
@@ -591,7 +603,7 @@ const candid = org.identifiers.otherIds.candidBridge;
   - Consumers need a small alias-to-registry-code mapping, maintained in the CommonGrants registry catalog.
   - Aliases can shadow each other across scopes (e.g. an EIN-like ID in another jurisdiction), so the catalog must prevent collisions.
 
-### Option 2: Registry code as key
+#### Option 2: Registry code as key
 
 :::note[Bottom line]
 Keying by registry code is best if:
@@ -624,11 +636,11 @@ const ein = org.identifiers["US-EIN"];
   - Couples the key to the registry's naming: if org-id.guide renames a code, every consumer has to adapt.
   - Inconsistent with the rest of the CommonGrants spec, where map keys are camelCase.
 
-## Evaluation - Identifier metadata structure
+### Identifier metadata structure
 
 _How much registry metadata belongs on each identifier instance, and how much should live in an external catalog?_
 
-### Side-by-side comparison
+#### Side-by-side comparison
 
 | Criteria                                       | Hybrid (rec.) | Flat | Fully decomposed |
 | ---------------------------------------------- | :-----------: | :--: | :--------------: |
@@ -639,7 +651,7 @@ _How much registry metadata belongs on each identifier instance, and how much sh
 | Payload brevity                                |      🟡       |  ✅  |        ❌        |
 | Fully self-contained without a catalog         |      🟡       |  ❌  |        ✅        |
 
-### Option 1: Hybrid (recommended)
+#### Option 1: Hybrid (recommended)
 
 :::note[Bottom line]
 The hybrid shape is best if:
@@ -688,7 +700,7 @@ source: https://org-id.guide/list/US-EIN
   - Two sources of truth: inline fields must stay consistent with the catalog.
   - `scope` and `kind` are technically derivable from `registry` via the catalog, so they are redundant.
 
-### Option 2: Flat single-string registry
+#### Option 2: Flat single-string registry
 
 :::note[Bottom line]
 A flat registry string is best if:
@@ -715,7 +727,7 @@ A flat registry string is best if:
   - No in-payload hint about whether the registry is authoritative, commercial, or platform-specific.
   - No format validation at the schema level without consulting the catalog.
 
-### Option 3: Fully decomposed
+#### Option 3: Fully decomposed
 
 :::note[Bottom line]
 Full decomposition is best if:
@@ -751,11 +763,11 @@ Full decomposition is best if:
   - Registry metadata is duplicated across every record and drifts over time.
   - Still needs a canonical catalog somewhere to resolve conflicts when two records disagree.
 
-## Evaluation - Multiple IDs per registry
+### Multiple IDs per registry
 
 _How should the protocol represent multiple IDs that share the same registry, including archived versions?_
 
-### Side-by-side comparison
+#### Side-by-side comparison
 
 | Criteria                                          | Parallel arrays (rec.) | Flat array | Structured entries |
 | ------------------------------------------------- | :--------------------: | :--------: | :----------------: |
@@ -766,7 +778,7 @@ _How should the protocol represent multiple IDs that share the same registry, in
 | Simple to read and populate                       |           ✅           |     ✅     |         ❌         |
 | Carries timestamped history                       |           ❌           |     ❌     |         ✅         |
 
-### Option 1: Parallel arrays (recommended)
+#### Option 1: Parallel arrays (recommended)
 
 :::note[Bottom line]
 Parallel arrays are best if:
@@ -797,7 +809,7 @@ Parallel arrays are best if:
   - No timestamps, so "when did this EIN become archived" is not representable in the payload.
   - Three separate fields to track when populating or reading.
 
-### Option 2: Flat `allValues` array
+#### Option 2: Flat `allValues` array
 
 :::note[Bottom line]
 A flat array is best if:
@@ -825,7 +837,7 @@ A flat array is best if:
   - Can't tell which IDs are still valid and which are archived.
   - Can't tell the difference between a fiscal-sponsor case (two active EINs) and a rename history.
 
-### Option 3: Structured entries
+#### Option 3: Structured entries
 
 :::note[Bottom line]
 Structured entries are best if:
@@ -866,13 +878,13 @@ Structured entries are best if:
   - Consumers must always inspect each entry's `status` before using it.
   - Adds a mini sub-schema that needs its own validation rules.
 
-## Evaluation - Parent organization representation
+### Parent organization representation
 
 _What should a parent organization reference carry?_
 
 This sub-decision applies only to `OrganizationBase`. Other models (`OpportunityBase`, `ApplicationBase`, `AwardBase`) do not currently carry a parent concept.
 
-### Side-by-side comparison
+#### Side-by-side comparison
 
 | Criteria                                     | With identifiers (rec.) | Minimal | Full summary |
 | -------------------------------------------- | :---------------------: | :-----: | :----------: |
@@ -883,7 +895,7 @@ This sub-decision applies only to `OrganizationBase`. Other models (`Opportunity
 | Payload brevity                              |           🟡            |   ✅    |      ❌      |
 | Renderable without a follow-up fetch         |           🟡            |   ❌    |      ✅      |
 
-### Option 1: Reference with identifiers (recommended)
+#### Option 1: Reference with identifiers (recommended)
 
 :::note[Bottom line]
 A reference with identifiers is best if:
@@ -919,7 +931,7 @@ A reference with identifiers is best if:
   - Parent identifier data can drift from the authoritative parent record if not kept in sync.
   - Slightly more complex to serialize than a bare reference.
 
-### Option 2: Minimal reference
+#### Option 2: Minimal reference
 
 :::note[Bottom line]
 A minimal reference is best if:
@@ -946,7 +958,7 @@ A minimal reference is best if:
   - Can't match the parent across systems without another fetch.
   - Display surfaces (e.g. "parent org: UEI AB123...") require extra round trips.
 
-### Option 3: Full summary
+#### Option 3: Full summary
 
 :::note[Bottom line]
 A full summary is best if:
@@ -983,11 +995,11 @@ A full summary is best if:
   - High risk of drift between parent reference and canonical parent record.
   - Unclear where the summary should stop: what about the grandparent?
 
-## Evaluation - Registry code format
+### Registry code format
 
 _Should registry codes follow org-id.guide, a uniform namespaced format, or both?_
 
-### Side-by-side comparison
+#### Side-by-side comparison
 
 | Criteria                                              | org-id.guide + namespaced (rec.) | Uniform `namespace:type` |
 | ----------------------------------------------------- | :------------------------------: | :----------------------: |
@@ -997,7 +1009,7 @@ _Should registry codes follow org-id.guide, a uniform namespaced format, or both
 | Covers non-standard system IDs                        |                ✅                |            ✅            |
 | Internal format consistency                           |                🟡                |            ✅            |
 
-### Option 1: org-id.guide + namespaced (recommended)
+#### Option 1: org-id.guide + namespaced (recommended)
 
 :::note[Bottom line]
 The hybrid format is best if:
@@ -1025,7 +1037,7 @@ The hybrid format is best if:
   - Two formats coexist: uppercase-hyphenated and lowercase-colon.
   - Camel-case alias keys help, but the registry field itself still requires bracket notation when used as an object key elsewhere.
 
-### Option 2: Uniform `namespace:type`
+#### Option 2: Uniform `namespace:type`
 
 :::note[Bottom line]
 A uniform format is best if:
@@ -1050,11 +1062,11 @@ A uniform format is best if:
   - Requires a mapping table to interoperate with org-id.guide.
   - Not recognizable to anyone already using OCDS, 360Giving, or IATI.
 
-## Evaluation - Registry governance
+### Registry governance
 
-_Who maintains the registry catalog, and how does a registry get promoted from `otherIds` to a well-known key?_
+_Who maintains the registry catalog, and how does a registry get promoted from `otherIds` to a base identifier?_
 
-### Side-by-side comparison
+#### Side-by-side comparison
 
 | Criteria                                             | Hybrid (rec.) | org-id.guide only | CG-managed only |
 | ---------------------------------------------------- | :-----------: | :---------------: | :-------------: |
@@ -1062,10 +1074,10 @@ _Who maintains the registry catalog, and how does a registry get promoted from `
 | CG-specific metadata (`schema`, `kind`, `alias`)     |      ✅       |        ❌         |       ✅        |
 | Covers non-standard system IDs (`fluxx:org`, etc.)   |      ✅       |        ❌         |       ✅        |
 | Promotion path independent of upstream release cycle |      ✅       |        🟡         |       ✅        |
-| Clear `otherIds` → well-known key flow               |      ✅       |        🟡         |       ✅        |
+| Clear `otherIds` → base identifier flow              |      ✅       |        🟡         |       ✅        |
 | Low maintenance burden                               |      🟡       |        ✅         |       ❌        |
 
-### Option 1: Hybrid with promotion flow (recommended)
+#### Option 1: Hybrid with promotion flow (recommended)
 
 :::note[Bottom line]
 The hybrid approach is best if:
@@ -1094,7 +1106,7 @@ models: [Organization]
 
 **Promotion flow**
 
-Any identifier that starts in `otherIds` can become a first-class well-known key through the promotion flow documented in [Well-known keys and extensions](#well-known-keys-and-extensions).
+Any identifier that starts in `otherIds` can become a base identifier through the promotion flow documented in [Identifier key hierarchy](#identifier-key-hierarchy).
 
 - **Pros**
   - Reuses org-id.guide codes where they exist, avoiding duplicated taxonomy work.
@@ -1105,7 +1117,7 @@ Any identifier that starts in `otherIds` can become a first-class well-known key
   - Two sources of truth (org-id.guide and the CG catalog) that must be kept in sync.
   - Promotion flow adds process overhead that some adopters may route around.
 
-### Option 2: org-id.guide only
+#### Option 2: org-id.guide only
 
 :::note[Bottom line]
 Relying on org-id.guide alone is best if:
@@ -1122,7 +1134,7 @@ Relying on org-id.guide alone is best if:
   - No concept of `kind: platform` or `kind: system` for non-public registries.
   - Getting a new registry added to org-id.guide is external to our release cycle.
 
-### Option 3: CG-managed catalog only
+#### Option 3: CG-managed catalog only
 
 :::note[Bottom line]
 A CG-only catalog is best if:
