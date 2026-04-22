@@ -3,8 +3,7 @@ import type { FormItem } from "@/lib/forms";
 import { Code, Tabs, TabItem } from "@astrojs/starlight/components";
 import { JsonFormRenderer } from "@/components/forms/JsonFormRenderer";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
-import type { FormData, JsonValue } from "@/lib/types";
-import { transformWithMapping } from "@/lib/transformation";
+import type { FormData } from "@/lib/types";
 import { generateSchemaExample } from "@/lib/schema/example-generator";
 import { Paths } from "@/lib/schema/paths";
 import { extensionsAjv } from "@/lib/validation";
@@ -32,12 +31,6 @@ const exampleJson = await generateSchemaExample(schemaRelPath, {
 });
 const exampleData = JSON.parse(exampleJson) as FormData;
 
-// Transform example data to CommonGrants format using the mapping
-const commonGrantsData = transformWithMapping(
-  exampleData as Record<string, JsonValue>,
-  item.mappingToCg as Record<string, JsonValue>,
-);
-
 const hasOverrides =
   Object.keys(item.overrides.uiSchema ?? {}).length > 0 ||
   Object.keys(item.overrides.mappingFromCg ?? {}).length > 0 ||
@@ -62,20 +55,12 @@ const hasOverrides =
       <p>What the form data looks like when it is submitted.</p>
       <Code lang="json" code={toJson(exampleData)} />
     </details>
-    <details>
-      <summary>CommonGrants Data</summary>
-      <p>
-        What the data looks like translated to the CommonGrants data model using
-        the mapping-to-cg.
-      </p>
-      <Code lang="json" code={toJson(commonGrantsData)} />
-    </details>
   </TabItem>
   <TabItem label="Schemas">
     <details>
       <summary>JSON Schema</summary>
       <p>Provides the structure and data validation for this form.</p>
-      <Code lang="yaml" code={toYaml(item.rawSchema)} />
+      <Code lang="json" code={toJson(item.rawSchema)} />
     </details>
     <details>
       <summary>UI Schema (merged)</summary>
