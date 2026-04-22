@@ -417,14 +417,16 @@ GET /organizations?identifier=US-EIN:12-3456789
   - Top-level `id` duplicates `identifiers.systemId.id`.
   - UUIDs carry no information about the record on their own, so logs and error messages need an extra lookup for context.
 
-#### Option 2: Prefixed UUID
+#### Option 2: Prefixed UUID (also known as TypeID)
 
 :::note[Bottom line]
-A prefixed UUID is best if:
+A prefixed UUID (also called a [TypeID](https://github.com/jetify-com/typeid)) is best if:
 
 - we want resource IDs that are self-describing in logs and error messages,
 - but we're willing to give up the standard UUID tooling that most databases and libraries provide.
   :::
+
+For organizations, the prefix would be `org_`. Adopting this would be a protocol-wide decision (Opportunity, Competition, Form, Application, Award, etc. all have UUIDs today), so it's flagged here but deferred to a future ADR that can apply the convention consistently across all models.
 
 **Example**
 
@@ -435,10 +437,11 @@ GET /organizations/org_01912a8b-7c3d-7890-abcd-ef1234567890
 - **Pros**
   - Resource type is visible at a glance (`org_...`, `opp_...`, `app_...`).
   - Popular in API design (Stripe and similar) and easy to grep for.
+  - TypeID has a growing ecosystem of language bindings and a published spec.
 - **Cons**
-  - Not an RFC-standard string: loses database UUID column support, most UUID libraries, and standard validators.
-  - No canonical rule for what the prefix should encode (resource type? platform? both?).
-  - Requires every client and SDK to parse the prefix out before using the UUID.
+  - Not an RFC-standard UUID string: loses native database UUID column support, most UUID libraries, and standard validators.
+  - Requires every client and SDK to parse the prefix out before using the underlying UUID.
+  - Needs to be applied consistently across every model with an `id` field, which is out of scope for this ADR.
 
 #### Option 3: Composite `registry:id` string
 
