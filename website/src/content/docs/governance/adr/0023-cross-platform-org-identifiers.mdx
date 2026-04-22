@@ -101,6 +101,32 @@ At a glance, the decisions are:
   - Registry metadata is split across two places (inline fields plus the external catalog), which needs clear documentation.
   - Two extension mechanisms (`otherIds` for new registries, `additionalValues` / `previousValues` for multiple IDs in one registry) add complexity.
 
+### Well-known keys and extensions
+
+Each `IdentifierCollection` has two tiers of keys:
+
+- **Well-known (root-level) keys** are defined by the protocol on a per-model basis. They are the short camelCase aliases that every CommonGrants-compliant system is expected to recognize for that model. On `OrganizationBase`, these include `ein`, `uei`, and `duns`. On `OpportunityBase`, they include `opportunityNumber` and `cfda`. Well-known keys have a registered entry in the CommonGrants registry catalog and are validated against a per-key JSON schema.
+- **`otherIds`** is a catch-all map for identifiers that don't yet have a well-known key on that model. Adopters can put any identifier here using any camelCase alias they choose (e.g. `candidBridge`, `statePortalId`). The value must still follow the `Identifier` schema, but the key itself is not reserved or validated by the protocol.
+
+**When to use each:**
+
+- If the registry has a well-known key on the model, publish it under that key.
+- If it doesn't (yet), publish it under `otherIds` with a descriptive alias.
+- Consumers that want to consume new identifier types early can read from both places during the transition.
+
+**Promotion flow: `otherIds` to well-known key**
+
+An identifier type moves from `otherIds` to a first-class well-known key through a documented flow. This ensures that new keys are vetted, validated, and released on the standard protocol cadence instead of being added ad hoc.
+
+1. **Proposal.** An adopter or maintainer opens a GitHub issue with the proposed code, scope, kind, example values, and relevant models.
+2. **Review.** Reviewers evaluate: is the registry broadly applicable? Is it authoritative (a named issuer)? Can values be validated?
+3. **Catalog entry.** On acceptance, a PR adds a catalog file (`commongrants.org/registries/<code>.yaml`) with the alias, scope, kind, schema, and lookup template.
+4. **Model extension.** For each relevant model, the alias is added as a well-known key on that model's `IdentifierCollection` extension (e.g. `ein`, `uei` on `OrgIdentifierCollection`).
+5. **Release.** Changes ship in the next minor protocol version with the appropriate `@Versioning.added`.
+6. **Adopter migration.** Adopters can continue to publish the identifier under `otherIds` during a deprecation window, then move it to the well-known key.
+
+See [Evaluation - Registry governance](#evaluation---registry-governance) for the full rationale behind this flow.
+
 ### Questions
 
 - **[Top-level ID format](#evaluation---top-level-id-format):** Should the top-level `id` be a plain UUID, a prefixed UUID, or a registry-scoped composite string?
@@ -1066,16 +1092,9 @@ source: https://org-id.guide/list/US-EIN
 models: [Organization]
 ```
 
-**Promotion flow: `otherIds` to well-known key**
+**Promotion flow**
 
-An identifier starts in `otherIds` using any alias the adopter chooses. It becomes a first-class well-known key through this flow:
-
-1. **Proposal.** An adopter or maintainer opens a GitHub issue with the proposed code, scope, kind, example values, and relevant models.
-2. **Review.** Reviewers evaluate: is the registry broadly applicable? Is it authoritative (a named issuer)? Can values be validated?
-3. **Catalog entry.** On acceptance, a PR adds a catalog file (`commongrants.org/registries/<code>.yaml`) with the alias, scope, kind, schema, and lookup template.
-4. **Model extension.** For each relevant model, the alias is added as a well-known key on that model's `IdentifierCollection` extension (e.g. `ein`, `uei` on `OrgIdentifierCollection`).
-5. **Release.** Changes ship in the next minor protocol version with the appropriate `@Versioning.added`.
-6. **Adopter migration.** Adopters can continue to publish the identifier under `otherIds` during a deprecation window, then move it to the well-known key.
+Any identifier that starts in `otherIds` can become a first-class well-known key through the promotion flow documented in [Well-known keys and extensions](#well-known-keys-and-extensions).
 
 - **Pros**
   - Reuses org-id.guide codes where they exist, avoiding duplicated taxonomy work.
