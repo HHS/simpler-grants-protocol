@@ -1,18 +1,19 @@
 ---
-title: Adapter framework
-description: ADR documenting the decision to use an Adapter pattern with functional top-level grouping and per-object schema grouping for the expanded plugin framework that supports both custom fields and data mappings across the Python/Pydantic and TypeScript/Zod SDKs.
+title: Plugin framework
+description: ADR documenting the decision to use a functional top-level grouping and per-object schema grouping for the expanded plugin framework that supports both custom fields and data mappings across the Python/Pydantic and TypeScript/Zod SDKs.
 ---
 
-The existing plugin framework allows adopters to publish npm or PyPI packages that declare custom fields for CommonGrants schema objects. We want to expand this framework to also support bidirectional data mappings — declarative transforms that the SDK compiles into type-safe `toCommon`/`fromCommon` functions at runtime (see [ADR-0017](https://commongrants.org/governance/adr/0017-mapping-format)). We also want to organize this framework to support other potential future features with minimal rework.
+The existing plugin framework allows adopters to publish npm or PyPI packages that declare custom fields for CommonGrants schema objects. We want to expand this framework to also support bidirectional data transformations — `toCommon`/`fromCommon` functions that convert between a source system's native data shape and the CommonGrants schema. We also want to organize this framework to support other potential future features with minimal rework.
 
-_How should the Adapter object be structured to support both custom field declarations and data mappings, while enabling clean dependency injection and remaining stable as the protocol's object list grows?_
+Plugin authors are free to implement `toCommon`/`fromCommon` as plain hand-written functions. The SDK also provides a `buildTransforms()` / `build_transforms()` utility (see [ADR-0017](/governance/adr/0017-mapping-format)) that can generate these functions from separate declarative mapping objects, but using it is not required.
+
+_How should the Plugin object be structured to support both custom field declarations and bidirectional transforms, while enabling clean dependency injection and remaining stable as the protocol's object list grows?_
 
 ### Questions
 
-- Should the framework still be called a "plugin", or does adding mappings warrant a new name?
-- Should the top-level Adapter structure group by feature (`meta`, `client`, `schemas`, `extensions`) or by object (`Opportunity`, `Application`, …)?
+- Should the top-level Plugin structure group by feature (`meta`, `client`, `schemas`, `extensions`) or by object (`Opportunity`, `Application`, …)?
 - Should client configuration (auth, transport, rate-limiting) sit alongside per-object schemas, or be lifted to the top level as a system-level concern?
-- Should custom fields and mappings be coupled in the same package, or allowed independently?
+- Should custom fields and transforms be coupled in the same package, or allowed independently?
 
 ### Decision drivers
 
@@ -21,50 +22,57 @@ _How should the Adapter object be structured to support both custom field declar
 - Existing plugin packages that declare only custom fields should remain valid with minimal changes.
 - The SDK interface should support clean dependency injection — it must be possible to pass `client` or `schemas` as a coherent unit without reassembling them from per-object branches.
 - Auth, transport, and rate-limiting are system-level concerns that belong to a single client, not distributed across per-object branches.
-- The top-level Adapter surface should be short and stable — adding new protocol objects should not expand the top-level key set.
+- The top-level Plugin surface should be short and stable — adding new protocol objects should not expand the top-level key set.
 
 ## Decision
 
 We decided to:
 
-1. **Keep "plugin" as the registry term** for published npm/PyPI packages displayed in the website catalog. No change to `PluginSourceEntry` or `src/content/plugins/index.json`.
+1. **Keep "plugin" as the unified term** for both the published npm/PyPI packages in the website catalog and the runtime SDK object. No change to `PluginSourceEntry` or `src/content/plugins/index.json`. The existing `definePlugin()` function is expanded to accept the full set of top-level fields described below.
 
-2. **Introduce "Adapter" as the SDK term** for the runtime object that wires together meta, client, schemas, and extensions for a single source system.
+2. **Use functional grouping at the top level** with four keys — `meta`, `client`, `schemas`, and `extensions` — rather than grouping by object name at the root.
 
-3. **Use functional grouping at the top level** with four keys — `meta`, `client`, `schemas`, and `extensions` — rather than grouping by object name at the root.
+3. **Use per-object grouping inside `schemas`** where it reflects real coupling: each object's native schema, CommonGrants schema, and bidirectional transforms are tightly coupled and change together.
 
-4. **Use per-object grouping inside `schemas`** where it reflects real coupling: each object's native schema, CommonGrants schema, and bidirectional transforms are tightly coupled and change together.
+4. **Expand `definePlugin()` to accept all top-level fields** — `meta`, `client`, `schemas`, and `extensions` — rather than only `extensions`. `extensions` will contain any parts of the plugin that can be merged with other plugins by using `mergeExtensions()`, which has a flag for handling key conflicts.
 
-5. **Make `extensions` the serializable root** — the input to `defineAdapter()` and the unit operated on by `mergeExtensions()`. mergeExtensions has a flag for handling key conflicts
+5. **Make all top-level Plugin fields optional** so adopters can publish a plugin that provides only the features they need — for example, custom fields only — and expand to include transforms, client config, or additional schemas incrementally over time.
 
-6. **Allow Independent fields** by making custom fields and mappings be optional to allow flexibility. 
-
-
-The resulting Adapter shape:
+The resulting Plugin shape:
 
 ```
-adapter.meta        // name, version, sourceSystem, capabilities
-adapter.client      // auth, transport, resource methods, filters
-adapter.extensions  // serializable input to defineAdapter(); used by mergeExtensions()
-adapter.schemas.<ObjectName> = { native, common, toCommon, fromCommon }
+plugin.meta        // name, version, sourceSystem, capabilities
+plugin.getClient   // (config: ClientConfig) => Client; memoized by definePlugin()
+plugin.extensions  // serializable; used by mergeExtensions()
+plugin.schemas.<ObjectName> = { native, common, toCommon, fromCommon }
 ```
 
-**TypeScript interface (Zod-based):**
+<details>
+<summary>TypeScript interface (Zod-based)</summary>
 
 ```ts
-interface AdapterMeta {
+type PluginCapability =
+  | "customFields" // declares custom fields on CommonGrants schema objects
+  | "customFilters" // declares custom filter parameters for resource methods
+  | "transforms" // provides toCommon/fromCommon transformation functions
+  | "client"; // provides a runtime client (auth, transport, resource methods)
+
+interface PluginMeta {
   name: string;
-  version: string;
+  version?: string; // optional; if omitted, definePlugin() infers it from the package's package.json
   sourceSystem: string;
-  capabilities?: string[]; //Name, version, source system
+  capabilities?: PluginCapability[];
 }
 
-interface CustomFieldDef {
+// Defined in lib/ts-sdk/src/extensions/types.ts — reproduced here for reference
+interface CustomFieldSpec {
   name?: string; // optional; dict key is used as the display name fallback
-  fieldType: string;
+  fieldType: CustomFieldType; // enum defined in the SDK
+  value?: z.ZodTypeAny; // optional Zod schema to validate the value; defaults based on fieldType
   description?: string;
 }
 
+// Runtime type — produced by definePlugin(), not provided directly by plugin authors
 interface ObjectSchemas<TNative, TCommon> {
   native: ZodType<TNative>;
   common: ZodType<TCommon>;
@@ -72,111 +80,233 @@ interface ObjectSchemas<TNative, TCommon> {
   fromCommon: (common: TCommon) => TNative;
 }
 
-// Per-object config shape inside extensions.schemas — mirrors Python's AdapterExtensionsSchema
-interface AdapterExtensionsObjectConfig {
-  customFields?: Record<string, CustomFieldDef>;
-  mappings?: Record<string, unknown>; // see ADR-0017 for mapping format
+// Input type — provided by plugin authors inside DefinePluginOptions.schemas
+interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
+  native?: ZodType<TNative>; // defaults to Record<string, unknown> if omitted
+  toCommon?: (native: TNative) => TCommon;
+  fromCommon?: (common: TCommon) => TNative;
 }
 
-// Serializable input to defineAdapter() — safe to store as JSON
-interface AdapterExtensions {
-  meta?: Partial<AdapterMeta>;
-  schemas?: Record<string, AdapterExtensionsObjectConfig>;
+// Scalar types only — filters are query parameters, not schema fields
+type CustomFilterType = "string" | "number" | "integer" | "boolean";
+
+interface CustomFilterSpec {
+  filterType: CustomFilterType;
+  description?: string;
+}
+
+// Per-object config shape inside extensions.schemas — mirrors Python's PluginExtensionsSchema
+interface PluginExtensionsObjectConfig {
+  customFields?: Record<string, CustomFieldSpec>;
+}
+
+// Serializable portion of the plugin config — safe to store as JSON.
+// schemas keys are restricted to ExtensibleSchemaName (the known set of CommonGrants
+// objects that support custom fields), following the existing SchemaExtensions pattern.
+interface PluginExtensions {
+  meta?: Partial<PluginMeta>;
+  schemas?: Partial<Record<ExtensibleSchemaName, PluginExtensionsObjectConfig>>;
+}
+
+// ClientConfig is defined by the plugin author to declare the system-specific inputs
+// they require (e.g. auth token, base URL, max page size, timeouts).
+interface ClientConfig {
+  [key: string]: unknown;
 }
 
 // Client is a placeholder for the SDK's runtime client type (not shown here)
-interface Adapter {
-  meta: AdapterMeta;
-  client: Client; // one per source system
-  extensions: AdapterExtensions; // serializable
-  schemas: Record<string, ObjectSchemas<unknown, unknown>>;
+interface Plugin {
+  meta?: PluginMeta;
+  getClient?: (config: ClientConfig) => Client;
+  extensions?: PluginExtensions; // serializable
+  schemas?: Partial<
+    Record<ExtensibleSchemaName, ObjectSchemas<unknown, unknown>>
+  >;
+  filters?: Partial<
+    Record<ExtensibleSchemaName, Record<string, CustomFilterSpec>>
+  >;
 }
 
-// Factory: takes serializable extensions and a runtime client.
-//
-// defineAdapter builds adapter.schemas from extensions.schemas by:
-//   - extending the base CommonGrants schema with any declared customFields → common
-//   - interpreting the declarative mappings (ADR-0017) into toCommon / fromCommon functions
-//   - native defaults to Record<string, unknown> (extensions is JSON-safe; runtime
-//     Zod schemas cannot be included)
-//
-// Client config (auth, base URL, rate-limiting) is not JSON-safe and must be
-// provided separately at runtime — it is never part of extensions.
-function defineAdapter(extensions: AdapterExtensions, client: Client): Adapter;
+// Input object for definePlugin(). Using a named-options object makes it easy to add
+// new inputs over time without breaking existing callers.
+interface DefinePluginOptions {
+  meta?: PluginMeta;
+  // Plugin authors provide a factory function; definePlugin() wraps it with memoization
+  // so the same Client instance is returned for equivalent configs automatically.
+  getClient?: (config: ClientConfig & { auth?: AuthMethod }) => Client;
+  extensions?: PluginExtensions; // serializable
+  // Plugin authors provide input schemas and transforms; definePlugin() compiles them
+  // into the full ObjectSchemas runtime type, merging any customFields from extensions.
+  schemas?: Partial<Record<ExtensibleSchemaName, ObjectSchemasInput>>;
+  filters?: Partial<
+    Record<ExtensibleSchemaName, Record<string, CustomFilterSpec>>
+  >;
+}
 
-// Combine multiple extension objects (e.g. from separate packages) 
-function mergeExtensions(...extensions: AdapterExtensions[], onConflict="firstWins"): AdapterExtensions;
+// Factory: all options are optional so adopters can start with only what they need
+// and expand incrementally.
+//
+// definePlugin compiles DefinePluginOptions into a Plugin by:
+//   - extending the base CommonGrants schema with any declared customFields → common
+//   - native defaults to Record<string, unknown> if omitted (extensions is JSON-safe;
+//     runtime Zod schemas cannot be included)
+//   - wrapping getClient with memoization so the same Client instance is returned
+//     for equivalent configs automatically
+//
+// toCommon / fromCommon may be plain hand-written functions or generated via
+// buildTransforms(). Either way they are provided in schemas, not derived from extensions.
+function definePlugin(options: DefinePluginOptions): Plugin;
+
+// Combine multiple extension objects (e.g. from separate packages)
+function mergeExtensions(
+  ...extensions: PluginExtensions[],
+  onConflict = "firstWins",
+): PluginExtensions;
+
+// Utility: generates toCommon and fromCommon functions from separate declarative
+// mapping objects (ADR-0017 format). Using this utility is optional — plugin authors
+// may provide plain hand-written functions instead.
+function buildTransforms<TNative, TCommon>(
+  toCommonMapping: Record<string, unknown>, // ADR-0017 mapping from native → CommonGrants
+  fromCommonMapping: Record<string, unknown>, // ADR-0017 mapping from CommonGrants → native
+): {
+  toCommon: (native: TNative) => TCommon;
+  fromCommon: (common: TCommon) => TNative;
+};
 ```
 
-Usage:
+</details>
+
+<details>
+<summary>Plugin author usage (TypeScript)</summary>
 
 ```ts
-// Client is configured separately — auth and transport are not JSON-safe
-const client = createClient({
-  baseUrl: "https://api.grants.gov",
-  auth: { type: "oauth2" /* ... */ },
-});
-
-const adapter = defineAdapter(
+// buildTransforms() is a utility that generates toCommon/fromCommon from declarative
+// mappings (ADR-0017). Using it is optional — plain functions work just as well.
+const { toCommon, fromCommon } = buildTransforms(
+  // toCommon: native grants.gov shape → CommonGrants Opportunity
   {
-    meta: {
-      name: "grants-gov-adapter",
-      version: "1.0.0",
-      sourceSystem: "grants.gov",
+    title: "data.opportunity_title",
+    status: {
+      value: {
+        match: {
+          field: "data.opportunity_status",
+          case: { posted: "open", archived: "closed" },
+          default: "custom",
+        },
+      },
     },
+  },
+  // fromCommon: CommonGrants Opportunity → native grants.gov shape
+  {
+    "data.opportunity_title": "title",
+    "data.opportunity_status": {
+      value: {
+        match: {
+          field: "status",
+          case: { open: "posted", closed: "archived" },
+          default: "custom",
+        },
+      },
+    },
+  },
+);
+
+const plugin = definePlugin({
+  meta: {
+    name: "grants-gov-plugin",
+    version: "1.0.0",
+    sourceSystem: "grants.gov",
+  },
+  // definePlugin memoizes getClient — the same Client is returned for equivalent configs.
+  getClient: (config: ClientConfig & { auth?: AuthMethod }) =>
+    new Client({
+      baseUrl: config.baseUrl ?? "https://api.grants.gov",
+      timeout: config.timeout,
+      pageSize: config.pageSize,
+      maxItems: config.maxItems,
+      auth: config.auth,
+    }),
+  extensions: {
     schemas: {
       Opportunity: {
         customFields: {
           programArea: {
-            fieldType: "string",
+            fieldType: CustomFieldType.String,
             description: "HHS program area code",
           },
           legacyGrantId: {
-            fieldType: "integer",
+            fieldType: CustomFieldType.Integer,
             description: "Numeric ID from the legacy grants system",
-          },
-        },
-        mappings: {
-          title: "data.opportunity_title",
-          status: {
-            value: {
-              match: {
-                field: "data.opportunity_status",
-                case: { posted: "open", archived: "closed" },
-                default: "custom",
-              },
-            },
           },
         },
       },
     },
   },
-  client,
-);
+  schemas: {
+    Opportunity: {
+      native: GrantsGovOpportunitySchema,
+      toCommon,
+      fromCommon,
+    },
+  },
+});
 
-// Combine extensions from multiple packages before constructing the adapter
+// Combine extensions from multiple packages before constructing the plugin
 const merged = mergeExtensions(baseExtensions, grantsGovExtensions);
-const mergedAdapter = defineAdapter(merged, client);
+const mergedPlugin = definePlugin({ extensions: merged });
+
+// Calling getClient() with a config object — memoized, so repeated calls return the same instance
+const client = plugin.getClient({ auth: Auth.bearer("token"), pageSize: 50 });
 ```
 
-**Python interface (Pydantic-based):**
+</details>
+
+<details>
+<summary>Consumer usage (TypeScript)</summary>
+
+```ts
+import { grantsGovPlugin } from "grants-gov-plugin";
+
+// Get a configured client for this source system
+const client = grantsGovPlugin.getClient({
+  auth: Auth.bearer(process.env.GRANTS_GOV_API_KEY),
+  pageSize: 25,
+});
+
+// Use the compiled schemas to transform native data into CommonGrants shape
+const { toCommon } = grantsGovPlugin.schemas.Opportunity;
+const opportunity = toCommon(rawGrantsGovData);
+
+// Inspect what the plugin declares about itself
+console.log(grantsGovPlugin.meta.sourceSystem); // "grants.gov"
+console.log(grantsGovPlugin.meta.capabilities); // ["customFields", "transforms", "client"]
+```
+
+</details>
+
+<details>
+<summary>Python interface (Pydantic-based)</summary>
 
 ```python
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, Literal, TypeVar
 from pydantic import BaseModel, ConfigDict, Field
 # Client is a placeholder for the SDK's runtime client type (not shown here)
 
 TNative = TypeVar('TNative')
 TCommon = TypeVar('TCommon')
 
-class CustomFieldDef(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+# Defined in lib/python-sdk/common_grants_sdk/extensions/specs.py — reproduced here for reference
+@dataclass
+class CustomFieldSpec:
+    """Custom Field spec class to support adding custom fields"""
+    field_type: CustomFieldType  # enum defined in the SDK
+    value: Any | None = None     # optional; used to validate the field value
+    name: str = ""               # optional; dict key is used as the display name fallback
+    description: str = ""
 
-    name: str | None = None  # optional; dict key is used as the display name fallback
-    field_type: str = Field(alias='fieldType')
-    description: str | None = None
-
+# Runtime type — produced by define_plugin(), not provided directly by plugin authors
 @dataclass
 class ObjectSchemas(Generic[TNative, TCommon]):
     native: type[TNative]   # expects a Pydantic BaseModel subclass
@@ -184,160 +314,265 @@ class ObjectSchemas(Generic[TNative, TCommon]):
     to_common: Callable[[TNative], TCommon]
     from_common: Callable[[TCommon], TNative]
 
-class AdapterMeta(BaseModel):
+# Input type — provided by plugin authors inside define_plugin(schemas=...)
+@dataclass
+class ObjectSchemasInput(Generic[TNative, TCommon]):
+    native: type[TNative] | None = None  # defaults to dict[str, Any] if omitted
+    to_common: Callable[[TNative], TCommon] | None = None
+    from_common: Callable[[TCommon], TNative] | None = None
+
+# Scalar types only — filters are query parameters, not schema fields
+CustomFilterType = Literal['string', 'number', 'integer', 'boolean']
+
+@dataclass
+class CustomFilterSpec:
+    filter_type: CustomFilterType
+    description: str = ""
+
+PluginCapability = Literal['customFields', 'customFilters', 'transforms', 'client']
+
+class PluginMeta(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     name: str
-    version: str
+    version: str | None = None  # optional; if omitted, define_plugin() infers it from the package's pyproject.toml / importlib.metadata
     source_system: str = Field(alias='sourceSystem')
-    capabilities: list[str] | None = None #Name, version, source system
+    capabilities: list[PluginCapability] | None = None
 
-# Equivalent to TypeScript's Partial<AdapterMeta>. Defined as a separate model
-# rather than reusing AdapterMeta because Pydantic does not have a built-in Partial.
-# Note: if AdapterMeta gains new required fields, this class must be updated manually.
-# Drift can be caught with: assert AdapterMeta.model_fields.keys() == AdapterExtensionsMeta.model_fields.keys()
-class AdapterExtensionsMeta(BaseModel):
+# Equivalent to TypeScript's Partial<PluginMeta>. Defined as a separate model
+# rather than reusing PluginMeta because Pydantic does not have a built-in Partial.
+# Note: if PluginMeta gains new required fields, this class must be updated manually.
+# Drift can be caught with: assert PluginMeta.model_fields.keys() == PluginExtensionsMeta.model_fields.keys()
+class PluginExtensionsMeta(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     name: str | None = None
     version: str | None = None
     source_system: str | None = Field(default=None, alias='sourceSystem')
-    capabilities: list[str] | None = None
+    capabilities: list[PluginCapability] | None = None
 
-class AdapterExtensionsSchema(BaseModel):
+class PluginExtensionsSchema(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    custom_fields: dict[str, CustomFieldDef] | None = Field(default=None, alias='customFields')
-    mappings: dict[str, Any] | None = None  # see ADR-0017 for mapping format
+    custom_fields: dict[str, CustomFieldSpec] | None = Field(default=None, alias='customFields')
 
-class AdapterExtensions(BaseModel):
-    meta: AdapterExtensionsMeta | None = None
-    schemas: dict[str, AdapterExtensionsSchema] | None = None
+class PluginExtensions(BaseModel):
+    meta: PluginExtensionsMeta | None = None
+    schemas: dict[str, PluginExtensionsSchema] | None = None
+
+ClientConfig = dict[str, Any]  # plugin authors define their own keys (auth, base_url, timeout, etc.)
 
 @dataclass
-class Adapter:
-    meta: AdapterMeta
-    client: Client
-    extensions: AdapterExtensions
-    schemas: dict[str, ObjectSchemas[Any, Any]]
+class Plugin:
+    meta: PluginMeta | None = None
+    get_client: Callable[[ClientConfig], Client] | None = None
+    extensions: PluginExtensions | None = None
+    schemas: dict[ExtensibleSchemaName, ObjectSchemas[Any, Any]] | None = None
+    filters: dict[ExtensibleSchemaName, dict[str, CustomFilterSpec]] | None = None
 
-# Client config (auth, base URL) is not JSON-safe — passed separately at runtime.
+# All params are optional — adopters can start with only what they need and expand
+# incrementally. Unlike TypeScript, Python supports named optional params at the
+# function root, so no DefinePluginOptions wrapper object is needed.
 #
-# define_adapter builds adapter.schemas from extensions.schemas by:
+# define_plugin compiles inputs into a Plugin by:
 #   - extending the base CommonGrants model with any declared custom_fields → common
-#   - interpreting declarative mappings (ADR-0017) into to_common / from_common callables
-#   - native defaults to dict[str, Any] (extensions is JSON-safe; runtime
+#   - native defaults to dict[str, Any] if omitted (extensions is JSON-safe; runtime
 #     Pydantic models cannot be included)
-def define_adapter(extensions: AdapterExtensions, client: Client) -> Adapter: ...
-def merge_extensions(*extensions: AdapterExtensions, on_conflict: "first_wins") -> AdapterExtensions: ...
+#   - wrapping get_client with memoization so the same Client instance is returned
+#     for equivalent configs automatically
+#
+# to_common / from_common may be plain hand-written callables or generated via
+# build_transforms(). Either way they are provided in schemas, not derived from extensions.
+def define_plugin(
+    meta: PluginMeta | None = None,
+    get_client: Callable[[ClientConfig], Client] | None = None,
+    extensions: PluginExtensions | None = None,
+    schemas: dict[ExtensibleSchemaName, ObjectSchemasInput[Any, Any]] | None = None,
+    filters: dict[ExtensibleSchemaName, dict[str, CustomFilterSpec]] | None = None,
+) -> Plugin: ...
+def merge_extensions(*extensions: PluginExtensions, on_conflict: "first_wins") -> PluginExtensions: ...
+
+# Utility: generates to_common and from_common callables from separate declarative
+# mapping dicts (ADR-0017 format). Using this utility is optional — plugin authors
+# may provide plain hand-written callables instead.
+def build_transforms(
+    to_common_mapping: dict[str, Any],   # ADR-0017 mapping from native → CommonGrants
+    from_common_mapping: dict[str, Any], # ADR-0017 mapping from CommonGrants → native
+) -> tuple[Callable[[TNative], TCommon], Callable[[TCommon], TNative]]: ...
 ```
 
-Usage:
+</details>
+
+<details>
+<summary>Plugin author usage (Python)</summary>
 
 ```python
-# Client is configured separately — auth and transport are not JSON-safe
-client = create_client(base_url='https://api.grants.gov', auth=OAuth2Config(...))
-
-adapter = define_adapter(
-    AdapterExtensions(
-        meta=AdapterExtensionsMeta(name='grants-gov-adapter', version='1.0.0', source_system='grants.gov'),  # source_system serializes as 'sourceSystem' in JSON
-        schemas={
-            'Opportunity': AdapterExtensionsSchema(
-                custom_fields={
-                    'programArea': CustomFieldDef(field_type='string', description='HHS program area code'),
-                    'legacyGrantId': CustomFieldDef(field_type='integer', description='Numeric ID from legacy system'),
+# build_transforms() is a utility that generates to_common/from_common from declarative
+# mappings (ADR-0017). Using it is optional — plain callables work just as well.
+to_common, from_common = build_transforms(
+    # to_common: native grants.gov shape → CommonGrants Opportunity
+    to_common_mapping={
+        'title': 'data.opportunity_title',
+        'status': {
+            'value': {
+                'match': {
+                    'field': 'data.opportunity_status',
+                    'case': {'posted': 'open', 'archived': 'closed'},
+                    'default': 'custom',
                 },
-                # Declarative mappings are interpreted into to_common / from_common at runtime.
-                # Supports the same full ADR-0017 syntax as TypeScript (field paths, match/case, etc.)
-                mappings={
-                    'title': 'data.opportunity_title',
-                    'status': {
-                        'value': {
-                            'match': {
-                                'field': 'data.opportunity_status',
-                                'case': {'posted': 'open', 'archived': 'closed'},
-                                'default': 'custom',
-                            },
-                        },
-                    },
+            },
+        },
+    },
+    # from_common: CommonGrants Opportunity → native grants.gov shape
+    from_common_mapping={
+        'data.opportunity_title': 'title',
+        'data.opportunity_status': {
+            'value': {
+                'match': {
+                    'field': 'status',
+                    'case': {'open': 'posted', 'closed': 'archived'},
+                    'default': 'custom',
+                },
+            },
+        },
+    },
+)
+
+plugin = define_plugin(
+    meta=PluginMeta(name='grants-gov-plugin', version='1.0.0', source_system='grants.gov'),  # source_system serializes as 'sourceSystem' in JSON
+    # define_plugin memoizes get_client — the same Client is returned for equivalent configs.
+    get_client=lambda config: Client(config=Config(
+        base_url=config.get('base_url', 'https://api.grants.gov'),
+        api_key=config['api_key'],
+        timeout=config.get('timeout', 10.0),
+        page_size=config.get('page_size', 100),
+        list_items_limit=config.get('list_items_limit', 1000),
+    )),
+    extensions=PluginExtensions(
+        schemas={
+            'Opportunity': PluginExtensionsSchema(
+                custom_fields={
+                    'programArea': CustomFieldSpec(field_type=CustomFieldType.STRING, description='HHS program area code'),
+                    'legacyGrantId': CustomFieldSpec(field_type=CustomFieldType.INTEGER, description='Numeric ID from legacy system'),
                 },
             ),
         },
     ),
-    client,
+    schemas={
+        'Opportunity': ObjectSchemasInput(
+            native=GrantsGovOpportunity,
+            to_common=to_common,
+            from_common=from_common,
+        ),
+    },
 )
 
 
-# Combine extensions from multiple packages before constructing the adapter
+# Combine extensions from multiple packages before constructing the plugin
 merged = merge_extensions(base_extensions, grants_gov_extensions)
-merged_adapter = define_adapter(merged, client)
+merged_plugin = define_plugin(extensions=merged)
+
+# Calling get_client() with a config dict — memoized, so repeated calls return the same instance
+client = plugin.get_client({'api_key': 'abc123', 'page_size': 50})
 ```
 
+</details>
+
+<details>
+<summary>Consumer usage (Python)</summary>
+
+```python
+from grants_gov_plugin import grants_gov_plugin
+
+# Get a configured client for this source system
+client = grants_gov_plugin.get_client({
+    'api_key': os.environ['GRANTS_GOV_API_KEY'],
+    'page_size': 25,
+})
+
+# Use the compiled schemas to transform native data into CommonGrants shape
+to_common = grants_gov_plugin.schemas['Opportunity'].to_common
+opportunity = to_common(raw_grants_gov_data)
+
+# Inspect what the plugin declares about itself
+print(grants_gov_plugin.meta.source_system)   # "grants.gov"
+print(grants_gov_plugin.meta.capabilities)    # ["customFields", "transforms", "client"]
+```
+
+</details>
+
 - **Positive consequences**
-  - Client stays singular — one source system has one auth config, one base URL, one rate limiter
+  - Client stays singular — `getClient()` is memoized by `definePlugin()`, so one source system always produces one `Client` instance regardless of how many times `getClient()` is called
   - Top-level surface (`meta`, `client`, `schemas`, `extensions`) is short, closed, and stable — adding protocol objects adds a key under `schemas` only
-  - Dependency injection works along functional lines: pass a `Client`, pass `Schemas`, pass `Extensions` as coherent units without needing to reassemble from per-object branches
+  - Dependency injection works along functional lines: pass `getClient`, pass `Schemas`, pass `Extensions` as coherent units without needing to reassemble from per-object branches
   - `mergeExtensions()` / `merge_extensions()` operates on flat, serializable data at the root, not on deeply nested per-object branches
   - Per-object grouping inside `schemas` preserves the real coupling between native schema, CommonGrants schema, and bidirectional transforms — they share type signatures and change together
-  - Mirrors the SDK module structure (`client`, `schemas`, `extensions`), so Adapter reads as a system-specific version of the existing SDK rather than a different mental model
-  - `customFields` and `mappings` for the same object are colocated inside `schemas.<ObjectName>`
-  - Both `customFields` and `mappings` are optional — the `customFields`-only config structure remains valid; existing extension packages require only minimal code changes to adopt `defineAdapter()`
+  - Mirrors the SDK module structure (`client`, `schemas`, `extensions`), so Plugin reads as a system-specific version of the existing SDK rather than a different mental model
+  - `toCommon`/`fromCommon` can be plain hand-written functions or generated via `buildTransforms()` — plugin authors are not required to use a declarative mapping format
+  - `buildTransforms()` accepts separate `toCommonMapping` and `fromCommonMapping` objects, reflecting that the two directions of a bidirectional transform are distinct
+  - `customFields` is optional — the `customFields`-only config structure remains valid; existing plugin packages require only minimal code changes to adopt `definePlugin()`
+  - All top-level Plugin fields are optional — adopters can start with only what they need and expand incrementally
 - **Negative consequences**
-  - Introduces two terms ("plugin" and "adapter") where previously only "plugin" existed — "plugin" for the registry catalog, "adapter" for the runtime SDK object
-  - `extensions` (serializable config) and `adapter` (runtime object including client) are distinct concepts that adopters must understand separately
+  - `extensions` (serializable config) and `plugin` (runtime object including client) are distinct concepts that adopters must understand separately
 
 ### Criteria
 
 - **Backward compatible:** Existing custom-fields-only plugins remain valid without changes
 - **SDK-friendly:** Config shape maps naturally to Pydantic/Zod one-model-at-a-time usage inside `schemas`
 - **Language-agnostic config:** The `extensions` JSON document uses camelCase keys (`customFields`, `fieldType`, `sourceSystem`) in both SDKs — Python source uses snake_case attributes with camelCase `alias` fields, matching the existing SDK convention
-- **Clear naming:** Registry and runtime concepts are distinct and unambiguous
-- **Supports both capabilities:** Custom field declarations and data mappings can coexist or be used independently
+- **Clear naming:** A single term — "plugin" — is used consistently across the registry catalog and SDK
+- **Supports both capabilities:** Custom field declarations and bidirectional transforms can coexist or be used independently; transforms may be hand-written or generated from declarative mappings
+- **Incremental adoption:** All top-level fields are optional, so adopters can start with only what they need
 - **DI-friendly:** Functional top-level keys can be passed as coherent units without reassembly
 - **Stable surface:** New protocol objects do not expand the top-level key set
 
 ### Options considered
 
-- Object-first structure with adapted model/schema (no separate Adapter class)
-- Pure object-first structure with "Plugin" for registry, "Adapter" for SDK
+- Object-first structure with adapted model/schema (no separate Plugin class)
+- Pure object-first structure with "Plugin" for both registry and SDK
 - Functional top-level with per-object schema grouping _(chosen)_
 
 ## Evaluation
 
 ### Side-by-side
 
-| Criteria                   | Object-first / Adapted Schema | Pure object-first / Plugin+Adapter | Functional top-level / per-object schemas |
-| :------------------------- | :---------------------------: | :--------------------------------: | :---------------------------------------: |
-| Backward compatible        |              ✅               |                 ✅                 |                    ✅                     |
-| SDK-friendly               |              ✅               |                 ✅                 |                    ✅                     |
-| Language-agnostic config   |              ✅               |                 ✅                 |                    ✅                     |
-| Clear naming               |              🟡               |                 ✅                 |                    ✅                     |
-| Supports both capabilities |              ✅               |                 ✅                 |                    ✅                     |
-| DI-friendly                |              🟡               |                 🔴                 |                    ✅                     |
-| Stable surface             |              🟡               |                 🔴                 |                    ✅                     |
+| Criteria                   | Object-first / Adapted Schema | Pure object-first / Plugin | Functional top-level / per-object schemas |
+| :------------------------- | :---------------------------: | :------------------------: | :---------------------------------------: |
+| Backward compatible        |              ✅               |             ✅             |                    ✅                     |
+| SDK-friendly               |              ✅               |             ✅             |                    ✅                     |
+| Language-agnostic config   |              ✅               |             ✅             |                    ✅                     |
+| Clear naming               |              🟡               |             ✅             |                    ✅                     |
+| Supports both capabilities |              ✅               |             ✅             |                    ✅                     |
+| DI-friendly                |              🟡               |             🔴             |                    ✅                     |
+| Stable surface             |              🟡               |             🔴             |                    ✅                     |
 
-### Option 1: Object-first structure, adapted model/schema (no separate Adapter class)
+### Option 1: Object-first structure, adapted model/schema (no separate Plugin class)
 
-Instead of constructing a separate `Adapter` object, the SDK returns an _extended version of the model/schema itself_ with the transform baked in. Adopters call native parse/validate methods directly on the returned object.
+Instead of constructing a separate `Plugin` object, the SDK returns an _extended version of the model/schema itself_ with the transform baked in. Adopters call native parse/validate methods directly on the returned object.
+
+<details>
+<summary>Option 1 code example</summary>
 
 ```ts
-// TypeScript: createAdapter returns an extended Zod schema (ZodEffects), not an Adapter object
-const opportunityAdapter = createAdapter(opportunitySchema, adapterConfig);
-const opportunity = opportunityAdapter.parse(grantsGovData); // native Zod
-const result = opportunityAdapter.safeParse(grantsGovData); // native Zod non-throwing
+// TypeScript: createPlugin returns an extended Zod schema (ZodEffects), not a Plugin object
+const opportunityPlugin = createPlugin(opportunitySchema, pluginConfig);
+const opportunity = opportunityPlugin.parse(grantsGovData); // native Zod
+const result = opportunityPlugin.safeParse(grantsGovData); // native Zod non-throwing
 ```
 
 ```python
-# Python: create_adapter returns a new Pydantic model class with a custom validator applied
-OpportunityAdapter = create_adapter(Opportunity, adapter_config)
-opportunity = OpportunityAdapter.model_validate(grants_gov_data)  # native Pydantic
+# Python: create_plugin returns a new Pydantic model class with a custom validator applied
+OpportunityPlugin = create_plugin(Opportunity, plugin_config)
+opportunity = OpportunityPlugin.model_validate(grants_gov_data)  # native Pydantic
 ```
+
+</details>
 
 :::note[Bottom line]
 Object-first / Adapted Schema is best if:
 
 - we want the SDK return type to feel like a first-class schema object, not a wrapper
-- and we're willing to accept that the "Adapter" concept is implicit rather than a named class
+- and we're willing to accept that the "Plugin" concept is implicit rather than a named class
   :::
 
 - **Pros**
@@ -345,22 +580,25 @@ Object-first / Adapted Schema is best if:
   - No new runtime class name to explain; the adapted schema is still recognizably a schema
   - Backward compatible — both keys optional, `custom_fields`-only is valid
 - **Cons**
-  - No named `Adapter` type to import, document, or type-hint against
+  - No named `Plugin` type to import, document, or type-hint against
   - Client, auth, and transport have no natural home in this model
-  - DI requires passing each model's adapter separately rather than a unified `Schemas` object — callers must accept one adapted schema per object rather than a single `Schemas` unit (**DI-friendly: 🟡**)
-  - Top-level surface tracks the object list indirectly via function calls (`createAdapter(opportunitySchema, ...)`, `createAdapter(applicationSchema, ...)`), but there is no stable type that enumerates supported objects (**Stable surface: 🟡**)
-  - In Python, `create_adapter` must dynamically generate a new model class, which is less transparent
+  - DI requires passing each model's plugin separately rather than a unified `Schemas` object — callers must accept one plugin per object rather than a single `Schemas` unit (**DI-friendly: 🟡**)
+  - Top-level surface tracks the object list indirectly via function calls (`createPlugin(opportunitySchema, ...)`, `createPlugin(applicationSchema, ...)`), but there is no stable type that enumerates supported objects (**Stable surface: 🟡**)
+  - In Python, `create_plugin` must dynamically generate a new model class, which is less transparent
 
-### Option 2: Pure object-first structure, "Plugin" for registry / "Adapter" for SDK
+### Option 2: Pure object-first structure, "Plugin" for both registry and SDK
 
 Config and runtime object both keyed by CommonGrants model name at the root. `meta` and `client` sit alongside object keys but are not themselves objects.
 
+<details>
+<summary>Option 2 code example</summary>
+
 ```ts
-interface Adapter {
-  meta?: AdapterMeta;
+interface Plugin {
+  meta?: PluginMeta;
   client?: Client;
-  Opportunity?: ObjectAdapterConfig;
-  Application?: ObjectAdapterConfig;
+  Opportunity?: ObjectPluginConfig;
+  Application?: ObjectPluginConfig;
   // ... one key per protocol object
 }
 ```
@@ -368,16 +606,18 @@ interface Adapter {
 ```python
 # Python equivalent — same object-keyed shape
 @dataclass
-class Adapter:
-    meta: AdapterMeta | None = None
+class Plugin:
+    meta: PluginMeta | None = None
     client: Client | None = None
-    Opportunity: ObjectAdapterConfig | None = None
-    Application: ObjectAdapterConfig | None = None
+    Opportunity: ObjectPluginConfig | None = None
+    Application: ObjectPluginConfig | None = None
     # ... one field per protocol object
 ```
 
+</details>
+
 :::note[Bottom line]
-Pure object-first / Plugin+Adapter is best if:
+Pure object-first / Plugin is best if:
 
 - we want authoring a new object's support to feel self-contained during development
 - but we're willing to accept a top-level key set that grows with the protocol and scattered client config
@@ -385,7 +625,7 @@ Pure object-first / Plugin+Adapter is best if:
 
 - **Pros**
   - Co-location: all of an object's config is in one branch during authoring
-  - Clear semantic split: "plugin" = what you install, "adapter" = what you construct in code — `Adapter` is a well-understood bridging pattern with a named, importable, type-hint enabled class
+  - Single unified term — `Plugin` is used for both the registry catalog and the SDK runtime object
 - **Cons**
   - Top-level keys track the protocol's object list, which is long and open-ended — surface grows as protocol grows and raises questions about which of 100+ schemas belongs at the top level
   - Client, auth, and transport are system-level but must either be duplicated per object or kept implicit alongside object keys, creating an awkward mix of concerns
@@ -397,14 +637,19 @@ Pure object-first / Plugin+Adapter is best if:
 
 Top-level keys are functional (`meta`, `client`, `schemas`, `extensions`). Per-object grouping is used only inside `schemas`, where it reflects real coupling between native schemas, CommonGrants schemas, and bidirectional transforms.
 
+<details>
+<summary>Option 3 code example</summary>
+
 ```ts
-interface Adapter {
-  meta: AdapterMeta;
-  client: Client;
-  extensions: AdapterExtensions;
-  schemas: Record<string, ObjectSchemas>; // per-object grouping only here
+interface Plugin {
+  meta?: PluginMeta;
+  client?: Client;
+  extensions?: PluginExtensions;
+  schemas?: Partial<Record<ExtensibleSchemaName, ObjectSchemas>>; // per-object grouping only here
 }
 ```
+
+</details>
 
 :::note[Bottom line]
 Functional top-level / per-object schemas is best if:
@@ -415,10 +660,10 @@ Functional top-level / per-object schemas is best if:
 
 - **Pros**
   - Short, stable top-level surface — `meta`, `client`, `schemas`, `extensions` tracks a closed list regardless of how many protocol objects exist
-  - Client is singular — one source system has one OAuth config, one base URL, one rate limiter
-  - DI works along functional lines: pass `Client`, pass `Schemas`, pass `Extensions` as units
+  - Client is singular — `getClient()` is memoized by `definePlugin()`, so one source system always produces one `Client` instance
+  - DI works along functional lines: pass `getClient`, pass `Schemas`, pass `Extensions` as units
   - `mergeExtensions()` operates on flat, serializable data at the root, not deeply nested per-object branches
   - Per-object grouping inside `schemas` preserves real coupling — native schema, CommonGrants schema, `toCommon`, and `fromCommon` share type signatures and change together
-  - Mirrors the SDK module structure (`client`, `schemas`, `extensions`) — Adapter is a system-specific version of the existing SDK, not a different mental model
+  - Mirrors the SDK module structure (`client`, `schemas`, `extensions`) — Plugin is a system-specific version of the existing SDK, not a different mental model
 - **Cons**
-  - `extensions` (serializable config) and `adapter` (runtime object including client) are distinct concepts that adopters must learn separately
+  - `extensions` (serializable config) and `plugin` (runtime object including client) are distinct concepts that adopters must learn separately
