@@ -35,7 +35,10 @@ We decided to:
 
 4. **Use per-object grouping inside `schemas`** where it reflects real coupling: each object's native schema, CommonGrants schema, and bidirectional transforms are tightly coupled and change together.
 
-5. **Make `extensions` the serializable root** — the input to `defineAdapter()` and the unit operated on by `mergeExtensions()`.
+5. **Make `extensions` the serializable root** — the input to `defineAdapter()` and the unit operated on by `mergeExtensions()`. mergeExtensions has a flag for handling key conflicts
+
+6. **Allow Independent fields** by making custom fields and mappings be optional to allow flexibility. 
+
 
 The resulting Adapter shape:
 
@@ -53,7 +56,7 @@ interface AdapterMeta {
   name: string;
   version: string;
   sourceSystem: string;
-  capabilities?: string[];
+  capabilities?: string[]; //Name, version, source system
 }
 
 interface CustomFieldDef {
@@ -101,8 +104,8 @@ interface Adapter {
 // provided separately at runtime — it is never part of extensions.
 function defineAdapter(extensions: AdapterExtensions, client: Client): Adapter;
 
-// Combine multiple extension objects (e.g. from separate packages)
-function mergeExtensions(...extensions: AdapterExtensions[]): AdapterExtensions;
+// Combine multiple extension objects (e.g. from separate packages) 
+function mergeExtensions(...extensions: AdapterExtensions[], onConflict="firstWins"): AdapterExtensions;
 ```
 
 Usage:
@@ -187,7 +190,7 @@ class AdapterMeta(BaseModel):
     name: str
     version: str
     source_system: str = Field(alias='sourceSystem')
-    capabilities: list[str] | None = None
+    capabilities: list[str] | None = None #Name, version, source system
 
 # Equivalent to TypeScript's Partial<AdapterMeta>. Defined as a separate model
 # rather than reusing AdapterMeta because Pydantic does not have a built-in Partial.
@@ -226,7 +229,7 @@ class Adapter:
 #   - native defaults to dict[str, Any] (extensions is JSON-safe; runtime
 #     Pydantic models cannot be included)
 def define_adapter(extensions: AdapterExtensions, client: Client) -> Adapter: ...
-def merge_extensions(*extensions: AdapterExtensions) -> AdapterExtensions: ...
+def merge_extensions(*extensions: AdapterExtensions, on_conflict: "first_wins") -> AdapterExtensions: ...
 ```
 
 Usage:
