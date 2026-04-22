@@ -13,7 +13,7 @@ _How should the protocol represent the set of identifiers associated with an org
 
 ## Decision
 
-The protocol will replace the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `IdentifierCollection` field will be reused across other core models, with each model extending it with its own base identifiers.
+The protocol adopts an identification system that supports both uniquely identifying a record _within_ a given system and matching records _across_ multiple systems. To do this, it replaces the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `IdentifierCollection` field will be reused across other core models, with each model extending it with its own base identifiers.
 
 The collection looks like this:
 
@@ -29,7 +29,7 @@ The collection looks like this:
         "registry": "US-EIN",
         "scope": "US",
         "kind": "government",
-        "value": "98-7654321",
+        "id": "98-7654321",
         "compositeId": "US-EIN:98-7654321"
       }
     }
@@ -39,16 +39,18 @@ The collection looks like this:
       "registry": "grants.gov:org",
       "scope": "grants.gov",
       "kind": "platform",
-      "value": "01912a8b-7c3d-7890-abcd-ef1234567890",
+      "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
       "compositeId": "grants.gov:org:01912a8b-7c3d-7890-abcd-ef1234567890"
     },
     "ein": {
       "registry": "US-EIN",
       "scope": "US",
       "kind": "government",
-      "value": "12-3456789",
-      "additionalValues": ["65-4321098"],
-      "previousValues": ["11-1111111"],
+      "id": "12-3456789",
+      "allIds": [
+        { "id": "65-4321098", "status": "active" },
+        { "id": "11-1111111", "status": "archived" }
+      ],
       "compositeId": "US-EIN:12-3456789",
       "schema": "https://commongrants.org/registries/us-ein/schema.json",
       "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
@@ -58,7 +60,7 @@ The collection looks like this:
       "registry": "US-UEI",
       "scope": "US",
       "kind": "government",
-      "value": "AB0123456789",
+      "id": "AB0123456789",
       "compositeId": "US-UEI:AB0123456789"
     },
     "otherIds": {
@@ -66,7 +68,7 @@ The collection looks like this:
         "registry": "candid:bridge",
         "scope": "candid",
         "kind": "commercial",
-        "value": "1234567",
+        "id": "1234567",
         "compositeId": "candid:bridge:1234567",
         "uri": "https://www.guidestar.org/profile/1234567"
       }
@@ -75,13 +77,13 @@ The collection looks like this:
 }
 ```
 
-At a glance, the decisions are:
+At a glance, the key decisions for this identification system are:
 
 1. **Top-level ID:** A pure UUID on each resource, with the hosting system's own ID also surfaced inside the collection as `systemId`.
 2. **Collection structure:** A map keyed by short base-identifier aliases, with a catch-all `otherIds` map for extensions.
 3. **Map key format:** Model-defined camelCase aliases (`ein`, `uei`, `duns`), not raw registry codes.
-4. **Identifier metadata structure:** A hybrid shape with `registry` (code), two small registry-level fields (`scope`, `kind`), and instance-level fields (`value`, `compositeId`, `uri`, `verifiedAt`). Full registry metadata (issuer, human-readable name, schema, lookup template) lives in an external CommonGrants registry catalog.
-5. **Multiple IDs per registry:** Parallel arrays (`value` as primary, `additionalValues` for other currently valid IDs, `previousValues` for archived ones).
+4. **Identifier metadata structure:** A hybrid shape with `registry` (code), two small registry-level fields (`scope`, `kind`), and instance-level fields (`id`, `compositeId`, `uri`, `verifiedAt`). Full registry metadata (issuer, human-readable name, schema, lookup template) lives in an external CommonGrants registry catalog.
+5. **Multiple IDs per registry:** `id` for the primary, plus an optional `allIds` array of `{ id, status }` objects for additional and archived IDs.
 6. **Parent organization:** `parent` carries `id`, `name`, and optionally an embedded `identifiers` collection. Parent identifiers do not leak into the child's collection.
 7. **Registry code format:** org-id.guide codes (`US-EIN`, `GB-CHC`) for well-known public registries, `namespace:type` (`grants.gov:org`, `candid:bridge`) for everything else.
 8. **Registry governance:** CommonGrants maintains a registry catalog that wraps org-id.guide where applicable and adds CommonGrants-specific metadata (schema URLs, kind, lookup templates). A documented promotion flow moves a registry from `otherIds` to a base identifier on the relevant model.
@@ -96,10 +98,10 @@ At a glance, the decisions are:
   - `systemId` makes each collection self-contained: a consumer can match across systems without inspecting the top-level `id` separately.
 - **Negative consequences**
   - Breaking change: existing `ein`, `uei`, and `duns` fields on `OrganizationBase` must migrate.
-  - Top-level `id` is duplicated in `identifiers.systemId.value`.
-  - `compositeId` is derivable from `registry` and `value`, so it is technically redundant on the wire.
+  - Top-level `id` is duplicated in `identifiers.systemId.id`.
+  - `compositeId` is derivable from `registry` and `id`, so it is technically redundant on the wire.
   - Registry metadata is split across two places (inline fields plus the external catalog), which needs clear documentation.
-  - Two extension mechanisms (`otherIds` for new registries, `additionalValues` / `previousValues` for multiple IDs in one registry) add complexity.
+  - Two extension mechanisms (`otherIds` for new registries, `allIds` for multiple IDs in one registry) add complexity.
 
 ### Identifier key hierarchy
 
@@ -161,11 +163,11 @@ See [Registry governance](#registry-governance) for the full rationale behind th
 
 ### Options considered
 
-- **Top-level ID format:** pure UUID, prefixed UUID, composite registry:value
+- **Top-level ID format:** pure UUID, prefixed UUID, composite registry:id
 - **Collection structure:** flat array, keyed map
 - **Map key format:** raw registry code, camelCase alias
 - **Identifier metadata structure:** flat single-string registry, hybrid, fully decomposed
-- **Multiple IDs per registry:** flat array, parallel arrays, structured entries
+- **Multiple IDs per registry:** array of `{ id, status }` objects, flat array of strings
 - **Parent representation:** minimal reference, reference with identifiers, full summary
 - **Registry code format:** uniform namespaced, hybrid (org-id.guide + namespaced)
 - **Registry governance:** org-id.guide only, CommonGrants-managed only, hybrid with promotion flow
@@ -194,26 +196,30 @@ Identifier:
         - commercial: issued by a commercial data provider (DUNS, Candid Bridge)
         - platform: assigned by a CommonGrants-compliant system
         - system: assigned by a non-CommonGrants system
-    value:
+    id:
       type: string
-      description: Primary current identifier value
-    additionalValues:
+      description: Primary current identifier string
+    allIds:
       type: array
+      description: Additional IDs in this registry beyond the primary `id` (e.g. fiscal sponsor EINs, retired UEIs)
       items:
-        type: string
-      description: Other currently valid IDs in this registry (e.g. fiscal sponsor EINs)
-    previousValues:
-      type: array
-      items:
-        type: string
-      description: Archived or retired IDs in this registry (e.g. a prior UEI)
+        type: object
+        properties:
+          id:
+            type: string
+            description: The identifier string
+          status:
+            type: string
+            enum: [active, archived]
+            description: Whether the identifier is currently valid or retired
+        required: [id, status]
     compositeId:
       type: string
-      description: "{registry}:{value}, for use in query parameters"
+      description: "{registry}:{id}, for use in query parameters"
     schema:
       type: string
       format: uri
-      description: JSON schema for validating the value format
+      description: JSON schema for validating the identifier format
     uri:
       type: string
       format: uri
@@ -224,7 +230,7 @@ Identifier:
       description: When this identifier was last verified
   required:
     - registry
-    - value
+    - id
 ```
 
 </details>
@@ -283,19 +289,19 @@ The same shape extends to other models with model-specific keys:
       "registry": "grants.gov:opp",
       "scope": "grants.gov",
       "kind": "platform",
-      "value": "01912a8b-7c3d-7892-abcd-ef1234567892"
+      "id": "01912a8b-7c3d-7892-abcd-ef1234567892"
     },
     "opportunityNumber": {
       "registry": "grants.gov:opp",
       "scope": "grants.gov",
       "kind": "platform",
-      "value": "HHS-2026-ACF-OCC-YD-0001"
+      "id": "HHS-2026-ACF-OCC-YD-0001"
     },
     "cfda": {
       "registry": "US-CFDA",
       "scope": "US",
       "kind": "government",
-      "value": "93.575"
+      "id": "93.575"
     }
   }
 }
@@ -312,14 +318,14 @@ The same shape extends to other models with model-specific keys:
       "registry": "fluxx:app",
       "scope": "fluxx",
       "kind": "system",
-      "value": "01912a8b-7c3d-7893-abcd-ef1234567893"
+      "id": "01912a8b-7c3d-7893-abcd-ef1234567893"
     },
     "otherIds": {
       "grantsGovTracking": {
         "registry": "grants.gov:tracking",
         "scope": "grants.gov",
         "kind": "platform",
-        "value": "GRANT12345678"
+        "id": "GRANT12345678"
       }
     }
   }
@@ -337,13 +343,13 @@ The same shape extends to other models with model-specific keys:
       "registry": "grants.gov:award",
       "scope": "grants.gov",
       "kind": "platform",
-      "value": "01912a8b-7c3d-7894-abcd-ef1234567894"
+      "id": "01912a8b-7c3d-7894-abcd-ef1234567894"
     },
     "fain": {
       "registry": "US-FAIN",
       "scope": "US",
       "kind": "government",
-      "value": "ABC12345"
+      "id": "ABC12345"
     }
   }
 }
@@ -374,14 +380,14 @@ _Should the top-level `id` be a plain UUID, a prefixed UUID, or a registry-scope
 - ❌ Criterion not met
 - 🟡 Partially met or unsure
 
-| Criteria                                       | Pure UUID (rec.) | Prefixed UUID | Composite `registry:value` |
-| ---------------------------------------------- | :--------------: | :-----------: | :------------------------: |
-| Consistent with other CommonGrants `id` fields |        ✅        |      ❌       |             ❌             |
-| Compatible with native UUID database columns   |        ✅        |      ❌       |             ❌             |
-| RFC-standard UUID (stdlib parsers, validators) |        ✅        |      ❌       |             ❌             |
-| Stable if external identifiers change          |        ✅        |      ✅       |             ❌             |
-| Standard REST path parameter                   |        ✅        |      ✅       |             🟡             |
-| Self-describing in logs                        |        ❌        |      ✅       |             ✅             |
+| Criteria                                       | Pure UUID (rec.) | Prefixed UUID | Composite `registry:id` |
+| ---------------------------------------------- | :--------------: | :-----------: | :---------------------: |
+| Consistent with other CommonGrants `id` fields |        ✅        |      ❌       |           ❌            |
+| Compatible with native UUID database columns   |        ✅        |      ❌       |           ❌            |
+| RFC-standard UUID (stdlib parsers, validators) |        ✅        |      ❌       |           ❌            |
+| Stable if external identifiers change          |        ✅        |      ✅       |           ❌            |
+| Standard REST path parameter                   |        ✅        |      ✅       |           🟡            |
+| Self-describing in logs                        |        ❌        |      ✅       |           ✅            |
 
 #### Option 1: Pure UUID (recommended)
 
@@ -408,7 +414,7 @@ GET /organizations?identifier=US-EIN:12-3456789
   - `compositeId` inside the collection covers the cross-system lookup case.
   - Implementers can use UUIDv7 for time-ordered, index-friendly IDs without the protocol specifying a version.
 - **Cons**
-  - Top-level `id` duplicates `identifiers.systemId.value`.
+  - Top-level `id` duplicates `identifiers.systemId.id`.
   - UUIDs carry no information about the record on their own, so logs and error messages need an extra lookup for context.
 
 #### Option 2: Prefixed UUID
@@ -434,7 +440,7 @@ GET /organizations/org_01912a8b-7c3d-7890-abcd-ef1234567890
   - No canonical rule for what the prefix should encode (resource type? platform? both?).
   - Requires every client and SDK to parse the prefix out before using the UUID.
 
-#### Option 3: Composite `registry:value` string
+#### Option 3: Composite `registry:id` string
 
 :::note[Bottom line]
 A composite ID is best if:
@@ -488,12 +494,12 @@ A map is best if:
   "identifiers": {
     "ein": {
       "registry": "US-EIN",
-      "value": "12-3456789",
-      "additionalValues": ["98-7654321"]
+      "id": "12-3456789",
+      "allIds": [{ "id": "98-7654321", "status": "active" }]
     },
     "uei": {
       "registry": "US-UEI",
-      "value": "AB0123456789"
+      "id": "AB0123456789"
     }
   }
 }
@@ -501,8 +507,8 @@ A map is best if:
 
 ```ts
 const ein = org.identifiers.ein;
-ein.value; // "12-3456789"
-ein.additionalValues; // ["98-7654321"]
+ein.id; // "12-3456789"
+ein.allIds; // [{ id: "98-7654321", status: "active" }]
 ```
 
 - **Pros**
@@ -576,12 +582,12 @@ camelCase aliases are best if:
 ```json
 {
   "identifiers": {
-    "ein": { "registry": "US-EIN", "value": "12-3456789" },
-    "uei": { "registry": "US-UEI", "value": "AB0123456789" },
+    "ein": { "registry": "US-EIN", "id": "12-3456789" },
+    "uei": { "registry": "US-UEI", "id": "AB0123456789" },
     "otherIds": {
       "candidBridge": {
         "registry": "candid:bridge",
-        "value": "1234567"
+        "id": "1234567"
       }
     }
   }
@@ -617,8 +623,8 @@ Keying by registry code is best if:
 ```json
 {
   "identifiers": {
-    "US-EIN": { "registry": "US-EIN", "value": "12-3456789" },
-    "US-UEI": { "registry": "US-UEI", "value": "AB0123456789" }
+    "US-EIN": { "registry": "US-EIN", "id": "12-3456789" },
+    "US-UEI": { "registry": "US-UEI", "id": "AB0123456789" }
   }
 }
 ```
@@ -668,7 +674,7 @@ The hybrid shape is best if:
     "registry": "US-EIN",
     "scope": "US",
     "kind": "government",
-    "value": "12-3456789",
+    "id": "12-3456789",
     "compositeId": "US-EIN:12-3456789",
     "schema": "https://commongrants.org/registries/us-ein/schema.json",
     "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
@@ -687,7 +693,7 @@ scope: US
 kind: government
 issuer: US Internal Revenue Service
 schema: https://commongrants.org/registries/us-ein/schema.json
-lookupUriTemplate: https://apps.irs.gov/app/eos/detailsPage?ein={value}
+lookupUriTemplate: https://apps.irs.gov/app/eos/detailsPage?ein={id}
 source: https://org-id.guide/list/US-EIN
 ```
 
@@ -695,7 +701,7 @@ source: https://org-id.guide/list/US-EIN
   - `scope` and `kind` are available inline for filtering and UI decisions (e.g. "show all government-issued IDs") without a catalog fetch.
   - `schema` supports per-registry validation in JSON Schema.
   - Verbose metadata (full name, issuer, lookup template) stays in the catalog, so payloads don't bloat.
-  - Adopters who want to avoid the catalog entirely can fall back to `registry` + `value` alone.
+  - Adopters who want to avoid the catalog entirely can fall back to `registry` + `id` alone.
 - **Cons**
   - Two sources of truth: inline fields must stay consistent with the catalog.
   - `scope` and `kind` are technically derivable from `registry` via the catalog, so they are redundant.
@@ -715,7 +721,7 @@ A flat registry string is best if:
 {
   "ein": {
     "registry": "US-EIN",
-    "value": "12-3456789"
+    "id": "12-3456789"
   }
 }
 ```
@@ -748,9 +754,9 @@ Full decomposition is best if:
       "kind": "government",
       "issuer": "US Internal Revenue Service",
       "schema": "https://commongrants.org/registries/us-ein/schema.json",
-      "lookupUriTemplate": "https://apps.irs.gov/app/eos/detailsPage?ein={value}"
+      "lookupUriTemplate": "https://apps.irs.gov/app/eos/detailsPage?ein={id}"
     },
-    "value": "12-3456789"
+    "id": "12-3456789"
   }
 }
 ```
@@ -767,24 +773,26 @@ Full decomposition is best if:
 
 _How should the protocol represent multiple IDs that share the same registry, including archived versions?_
 
+In both options below, the primary ID stays at the top level as `id`. The difference is how additional IDs (fiscal sponsor EINs, retired UEIs, etc.) are represented.
+
 #### Side-by-side comparison
 
-| Criteria                                          | Parallel arrays (rec.) | Flat array | Structured entries |
-| ------------------------------------------------- | :--------------------: | :--------: | :----------------: |
-| Distinguishes active, alternate, and archived IDs |           ✅           |     ❌     |         ✅         |
-| Unambiguous primary value                         |           ✅           |     🟡     |         🟡         |
-| Works with per-field JSON Schema validation       |           ✅           |     ✅     |         🟡         |
-| Zero overhead for the common single-value case    |           ✅           |     ✅     |         ❌         |
-| Simple to read and populate                       |           ✅           |     ✅     |         ❌         |
-| Carries timestamped history                       |           ❌           |     ❌     |         ✅         |
+| Criteria                                         | Array of `{ id, status }` (rec.) | Flat array of strings |
+| ------------------------------------------------ | :------------------------------: | :-------------------: |
+| Distinguishes active vs. archived additional IDs |                ✅                |          ❌           |
+| Unambiguous primary value                        |                ✅                |          ✅           |
+| Zero overhead for the common single-value case   |                ✅                |          ✅           |
+| Extensible without breaking changes              |                ✅                |          🟡           |
+| Simple to populate and read                      |                🟡                |          ✅           |
+| Works with native `contains()` / `in` membership |                ❌                |          ✅           |
 
-#### Option 1: Parallel arrays (recommended)
+#### Option 1: Array of `{ id, status }` objects (recommended)
 
 :::note[Bottom line]
-Parallel arrays are best if:
+An object array is best if:
 
 - we want to preserve the distinction between active-alternate and archived IDs,
-- but we're willing to stop short of full timestamped history.
+- but we're willing to wrap each entry in a small object to carry status.
   :::
 
 **Example**
@@ -793,23 +801,27 @@ Parallel arrays are best if:
 {
   "ein": {
     "registry": "US-EIN",
-    "value": "12-3456789",
-    "additionalValues": ["98-7654321"],
-    "previousValues": ["11-1111111"]
+    "id": "12-3456789",
+    "allIds": [
+      { "id": "98-7654321", "status": "active" },
+      { "id": "11-1111111", "status": "archived" }
+    ]
   }
 }
 ```
 
 - **Pros**
-  - `value` is the single clear primary.
-  - `additionalValues` cleanly covers fiscal sponsor, post-merger, and multi-subsidiary cases.
-  - `previousValues` covers UEI rebrands, EIN reassignments, and similar history.
-  - Consumers that don't care about alternates can ignore both arrays.
+  - `id` is the single clear primary; `allIds` only appears when there are alternates.
+  - `status: "active"` cleanly covers fiscal sponsor, post-merger, and multi-subsidiary cases.
+  - `status: "archived"` covers UEI rebrands, EIN reassignments, and similar history.
+  - Consumers that don't care about alternates can ignore `allIds` entirely.
+  - Extensible: future optional fields (`validFrom`, `note`, etc.) can be added per entry without breaking consumers.
 - **Cons**
-  - No timestamps, so "when did this EIN become archived" is not representable in the payload.
-  - Three separate fields to track when populating or reading.
+  - Small object wrapper per entry rather than a bare string.
+  - Consumers that want to filter archived entries must check the `status` field.
+  - Doesn't support native `contains()` or `in` membership checks (e.g. `"98-7654321" in ein.allIds`). Consumers have to project first: `ein.allIds.map(v => v.id).includes("98-7654321")`.
 
-#### Option 2: Flat `allValues` array
+#### Option 2: Flat array of strings
 
 :::note[Bottom line]
 A flat array is best if:
@@ -824,59 +836,20 @@ A flat array is best if:
 {
   "ein": {
     "registry": "US-EIN",
-    "value": "12-3456789",
-    "allValues": ["12-3456789", "98-7654321", "11-1111111"]
+    "id": "12-3456789",
+    "allIds": ["98-7654321", "11-1111111"]
   }
 }
 ```
 
 - **Pros**
-  - Simple array of strings.
-  - Primary ID is implicit from `value`.
+  - Simple array of strings, no object wrapper.
+  - Primary ID is implicit from `id`.
+  - Works with native `contains()` / `in` membership checks (e.g. `"98-7654321" in ein.allIds`).
 - **Cons**
-  - Can't tell which IDs are still valid and which are archived.
+  - Can't tell which additional IDs are still valid and which are archived.
   - Can't tell the difference between a fiscal-sponsor case (two active EINs) and a rename history.
-
-#### Option 3: Structured entries
-
-:::note[Bottom line]
-Structured entries are best if:
-
-- we want timestamped history and richer per-value metadata,
-- but we're willing to accept a heavier payload and more complex reader logic.
-  :::
-
-**Example**
-
-```json
-{
-  "ein": {
-    "registry": "US-EIN",
-    "value": "12-3456789",
-    "allValues": [
-      { "value": "12-3456789", "status": "active" },
-      {
-        "value": "98-7654321",
-        "status": "active",
-        "note": "fiscal sponsor"
-      },
-      {
-        "value": "11-1111111",
-        "status": "archived",
-        "validTo": "2023-01-15"
-      }
-    ]
-  }
-}
-```
-
-- **Pros**
-  - Full per-value metadata, including timestamps and free-text notes.
-  - Single uniform array instead of three scalars.
-- **Cons**
-  - Heavier payload, especially for the common case where there's only one value.
-  - Consumers must always inspect each entry's `status` before using it.
-  - Adds a mini sub-schema that needs its own validation rules.
+  - Adding per-entry metadata later (status, timestamps) would be a breaking change.
 
 ### Parent organization representation
 
@@ -916,7 +889,7 @@ A reference with identifiers is best if:
         "registry": "US-EIN",
         "scope": "US",
         "kind": "government",
-        "value": "98-7654321"
+        "id": "98-7654321"
       }
     }
   }
@@ -975,7 +948,7 @@ A full summary is best if:
     "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
     "name": "Example Parent Foundation",
     "orgType": "private_foundation",
-    "identifiers": { "ein": { "registry": "US-EIN", "value": "98-7654321" } },
+    "identifiers": { "ein": { "registry": "US-EIN", "id": "98-7654321" } },
     "addresses": {
       "primary": {
         "line1": "...",
@@ -1022,9 +995,9 @@ The hybrid format is best if:
 
 ```json
 {
-  "ein": { "registry": "US-EIN", "value": "12-3456789" },
+  "ein": { "registry": "US-EIN", "id": "12-3456789" },
   "otherIds": {
-    "fluxxOrg": { "registry": "fluxx:org", "value": "FLUXX-12345" }
+    "fluxxOrg": { "registry": "fluxx:org", "id": "FLUXX-12345" }
   }
 }
 ```
@@ -1050,8 +1023,8 @@ A uniform format is best if:
 
 ```json
 {
-  "ein": { "registry": "us:ein", "value": "12-3456789" },
-  "uei": { "registry": "us:uei", "value": "AB0123456789" }
+  "ein": { "registry": "us:ein", "id": "12-3456789" },
+  "uei": { "registry": "us:uei", "id": "AB0123456789" }
 }
 ```
 
@@ -1099,7 +1072,7 @@ scope: US
 kind: government
 issuer: US Internal Revenue Service
 schema: https://commongrants.org/registries/us-ein/schema.json
-lookupUriTemplate: https://apps.irs.gov/app/eos/detailsPage?ein={value}
+lookupUriTemplate: https://apps.irs.gov/app/eos/detailsPage?ein={id}
 source: https://org-id.guide/list/US-EIN
 models: [Organization]
 ```
