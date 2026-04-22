@@ -1,0 +1,1120 @@
+---
+title: Cross-platform organization identifiers
+description: ADR documenting the approach for representing multiple identifiers (EIN, UEI, DUNS, platform IDs, etc.) on organizations and related models.
+tableOfContents:
+  maxHeadingLevel: 2
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+The `OrganizationBase` model currently hardcodes three U.S. federal identifier fields (`ein`, `uei`, `duns`). As CommonGrants expands to state, local, private, and international contexts, we need an extensible way to map multiple identifiers to a given organization, and ideally reuse the same pattern across other models (`OpportunityBase`, `ApplicationBase`, `AwardBase`).
+
+_How should the protocol represent the set of identifiers associated with an organization (or other resource), given that those identifiers come from different registries, follow different formats, and may change over time?_
+
+## Decision
+
+The protocol will replace the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `IdentifierCollection` field will be reused across other core models, with each model extending it with its own well-known keys.
+
+The collection looks like this:
+
+```json
+{
+  "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+  "name": "Example Nonprofit",
+  "parent": {
+    "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+    "name": "Example Parent Foundation",
+    "identifiers": {
+      "ein": {
+        "registry": "US-EIN",
+        "scope": "US",
+        "kind": "government",
+        "value": "98-7654321",
+        "compositeId": "US-EIN:98-7654321"
+      }
+    }
+  },
+  "identifiers": {
+    "systemId": {
+      "registry": "grants.gov:org",
+      "scope": "grants.gov",
+      "kind": "platform",
+      "value": "01912a8b-7c3d-7890-abcd-ef1234567890",
+      "compositeId": "grants.gov:org:01912a8b-7c3d-7890-abcd-ef1234567890"
+    },
+    "ein": {
+      "registry": "US-EIN",
+      "scope": "US",
+      "kind": "government",
+      "value": "12-3456789",
+      "additionalValues": ["65-4321098"],
+      "previousValues": ["11-1111111"],
+      "compositeId": "US-EIN:12-3456789",
+      "schema": "https://commongrants.org/registries/us-ein/schema.json",
+      "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
+      "verifiedAt": "2026-03-15T00:00:00Z"
+    },
+    "uei": {
+      "registry": "US-UEI",
+      "scope": "US",
+      "kind": "government",
+      "value": "AB0123456789",
+      "compositeId": "US-UEI:AB0123456789"
+    },
+    "otherIds": {
+      "candidBridge": {
+        "registry": "candid:bridge",
+        "scope": "candid",
+        "kind": "commercial",
+        "value": "1234567",
+        "compositeId": "candid:bridge:1234567",
+        "uri": "https://www.guidestar.org/profile/1234567"
+      }
+    }
+  }
+}
+```
+
+At a glance, the decisions are:
+
+1. **Top-level ID:** A pure UUID on each resource, with the hosting system's own ID also surfaced inside the collection as `systemId`.
+2. **Collection structure:** A map keyed by short well-known aliases, with a catch-all `otherIds` map for extensions.
+3. **Map key format:** Model-defined camelCase aliases (`ein`, `uei`, `duns`), not raw registry codes.
+4. **Identifier metadata structure:** A hybrid shape with `registry` (code), two small registry-level fields (`scope`, `kind`), and instance-level fields (`value`, `compositeId`, `uri`, `verifiedAt`). Full registry metadata (issuer, human-readable name, schema, lookup template) lives in an external CommonGrants registry catalog.
+5. **Multiple IDs per registry:** Parallel arrays (`value` as primary, `additionalValues` for other currently valid IDs, `previousValues` for archived ones).
+6. **Parent organization:** `parent` carries `id`, `name`, and optionally an embedded `identifiers` collection. Parent identifiers do not leak into the child's collection.
+7. **Registry code format:** org-id.guide codes (`US-EIN`, `GB-CHC`) for well-known public registries, `namespace:type` (`grants.gov:org`, `candid:bridge`) for everything else.
+8. **Registry governance:** CommonGrants maintains a registry catalog that wraps org-id.guide where applicable and adds CommonGrants-specific metadata (schema URLs, kind, lookup templates). A documented promotion flow moves a registry from `otherIds` to a well-known key on the relevant model.
+
+### Consequences
+
+- **Positive consequences**
+  - One reusable `Identifier` / `IdentifierCollection` pair across every core model, with model-specific keys on each extension.
+  - Multiple IDs per registry are represented explicitly, with active, additional, and archived cases distinguishable.
+  - Consistent with existing patterns (`AddressCollection`, `customFields`) and compatible with open data standards that use org-id.guide codes.
+  - The optional `schema` URI lets new identifier types define their own validation without protocol changes.
+  - `systemId` makes each collection self-contained: a consumer can match across systems without inspecting the top-level `id` separately.
+- **Negative consequences**
+  - Breaking change: existing `ein`, `uei`, and `duns` fields on `OrganizationBase` must migrate.
+  - Top-level `id` is duplicated in `identifiers.systemId.value`.
+  - `compositeId` is derivable from `registry` and `value`, so it is technically redundant on the wire.
+  - Registry metadata is split across two places (inline fields plus the external catalog), which needs clear documentation.
+  - Two extension mechanisms (`otherIds` for new registries, `additionalValues` / `previousValues` for multiple IDs in one registry) add complexity.
+
+### Questions
+
+- **[Top-level ID format](#evaluation---top-level-id-format):** Should the top-level `id` be a plain UUID, a prefixed UUID, or a registry-scoped composite string?
+- **[Collection structure](#evaluation---collection-structure):** Should the identifier collection be a flat array or a keyed map?
+- **[Map key format](#evaluation---map-key-format):** If the collection is a map, should the keys be raw registry codes or short model-defined aliases?
+- **[Identifier metadata structure](#evaluation---identifier-metadata-structure):** How much registry metadata belongs on each identifier instance, and how much should live in an external catalog?
+- **[Multiple IDs per registry](#evaluation---multiple-ids-per-registry):** How should the protocol represent multiple IDs that share the same registry, including archived versions?
+- **[Parent organization representation](#evaluation---parent-organization-representation):** What should a parent organization reference carry?
+- **[Registry code format](#evaluation---registry-code-format):** Should registry codes follow org-id.guide, a uniform namespaced format, or both?
+- **[Registry governance](#evaluation---registry-governance):** Who maintains the registry catalog, and how does a registry get promoted from `otherIds` to a well-known key?
+
+### Decision drivers
+
+- **Cross-system matching:** Can identifiers match the same record across systems?
+- **Within-system location:** Can an identifier locate and update a record in a given system?
+- **Standards interop:** Does the approach work with org-id.guide and adjacent open data standards (OCDS, 360Giving, IATI)?
+- **Pattern alignment:** Does it follow existing CommonGrants conventions (`AddressCollection`, `customFields`, versioning)?
+- **Format validation:** Can well-known ID formats (EIN, UEI) be validated at the schema level?
+- **Extensibility:** Can new identifier types be added without protocol changes?
+- **Multi-ID support:** Can a record have multiple IDs in the same registry, and can archived IDs be distinguished from active ones?
+- **Reusability:** Can the same types be used across `OrganizationBase`, `OpportunityBase`, `ApplicationBase`, and `AwardBase`?
+
+### Options considered
+
+- **Top-level ID format:** pure UUID, prefixed UUID, composite registry:value
+- **Collection structure:** flat array, keyed map
+- **Map key format:** raw registry code, camelCase alias
+- **Identifier metadata structure:** flat single-string registry, hybrid, fully decomposed
+- **Multiple IDs per registry:** flat array, parallel arrays, structured entries
+- **Parent representation:** minimal reference, reference with identifiers, full summary
+- **Registry code format:** uniform namespaced, hybrid (org-id.guide + namespaced)
+- **Registry governance:** org-id.guide only, CommonGrants-managed only, hybrid with promotion flow
+
+### Schema definitions
+
+<details>
+<summary>Identifier</summary>
+
+```yaml
+Identifier:
+  type: object
+  properties:
+    registry:
+      type: string
+      description: Registry code (e.g. "US-EIN", "grants.gov:org")
+    scope:
+      type: string
+      description: Jurisdiction or namespace the registry applies within (e.g. "US", "GB", "grants.gov")
+    kind:
+      type: string
+      enum: [government, commercial, platform, system]
+      description: |
+        Classification of the registry:
+        - government: issued by a government authority (EIN, UEI)
+        - commercial: issued by a commercial data provider (DUNS, Candid Bridge)
+        - platform: assigned by a CommonGrants-compliant system
+        - system: assigned by a non-CommonGrants system
+    value:
+      type: string
+      description: Primary current identifier value
+    additionalValues:
+      type: array
+      items:
+        type: string
+      description: Other currently valid IDs in this registry (e.g. fiscal sponsor EINs)
+    previousValues:
+      type: array
+      items:
+        type: string
+      description: Archived or retired IDs in this registry (e.g. a prior UEI)
+    compositeId:
+      type: string
+      description: "{registry}:{value}, for use in query parameters"
+    schema:
+      type: string
+      format: uri
+      description: JSON schema for validating the value format
+    uri:
+      type: string
+      format: uri
+      description: Link to this record in the registry's lookup service
+    verifiedAt:
+      type: string
+      format: date-time
+      description: When this identifier was last verified
+  required:
+    - registry
+    - value
+```
+
+</details>
+
+<details>
+<summary>IdentifierCollection (base)</summary>
+
+```yaml
+IdentifierCollection:
+  type: object
+  properties:
+    systemId:
+      $ref: "#/components/schemas/Identifier"
+      description: The hosting system's own ID for this record
+    otherIds:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/Identifier"
+      description: Extension point for non-standard registries
+```
+
+</details>
+
+<details>
+<summary>OrgIdentifierCollection (model-specific extension)</summary>
+
+```yaml
+OrgIdentifierCollection:
+  allOf:
+    - $ref: "#/components/schemas/IdentifierCollection"
+    - type: object
+      properties:
+        ein:
+          $ref: "#/components/schemas/Identifier"
+        uei:
+          $ref: "#/components/schemas/Identifier"
+        duns:
+          $ref: "#/components/schemas/Identifier"
+```
+
+</details>
+
+### Cross-model reuse
+
+The same shape extends to other models with model-specific keys:
+
+<Tabs>
+  <TabItem label="Opportunity">
+
+```json
+{
+  "id": "01912a8b-7c3d-7892-abcd-ef1234567892",
+  "title": "Community Health Initiative Grant",
+  "identifiers": {
+    "systemId": {
+      "registry": "grants.gov:opp",
+      "scope": "grants.gov",
+      "kind": "platform",
+      "value": "01912a8b-7c3d-7892-abcd-ef1234567892"
+    },
+    "opportunityNumber": {
+      "registry": "grants.gov:opp",
+      "scope": "grants.gov",
+      "kind": "platform",
+      "value": "HHS-2026-ACF-OCC-YD-0001"
+    },
+    "cfda": {
+      "registry": "US-CFDA",
+      "scope": "US",
+      "kind": "government",
+      "value": "93.575"
+    }
+  }
+}
+```
+
+  </TabItem>
+  <TabItem label="Application">
+
+```json
+{
+  "id": "01912a8b-7c3d-7893-abcd-ef1234567893",
+  "identifiers": {
+    "systemId": {
+      "registry": "fluxx:app",
+      "scope": "fluxx",
+      "kind": "system",
+      "value": "01912a8b-7c3d-7893-abcd-ef1234567893"
+    },
+    "otherIds": {
+      "grantsGovTracking": {
+        "registry": "grants.gov:tracking",
+        "scope": "grants.gov",
+        "kind": "platform",
+        "value": "GRANT12345678"
+      }
+    }
+  }
+}
+```
+
+  </TabItem>
+  <TabItem label="Award">
+
+```json
+{
+  "id": "01912a8b-7c3d-7894-abcd-ef1234567894",
+  "identifiers": {
+    "systemId": {
+      "registry": "grants.gov:award",
+      "scope": "grants.gov",
+      "kind": "platform",
+      "value": "01912a8b-7c3d-7894-abcd-ef1234567894"
+    },
+    "fain": {
+      "registry": "US-FAIN",
+      "scope": "US",
+      "kind": "government",
+      "value": "ABC12345"
+    }
+  }
+}
+```
+
+  </TabItem>
+</Tabs>
+
+### Cross-system lookup route
+
+A new query parameter on list routes supports cross-system lookups without requiring consumers to know the local UUID:
+
+```
+GET /organizations?identifier=US-EIN:12-3456789
+GET /opportunities?identifier=US-CFDA:93.575
+GET /applications?identifier=fluxx:app:app-98765
+```
+
+## Evaluation - Top-level ID format
+
+_Should the top-level `id` be a plain UUID, a prefixed UUID, or a registry-scoped composite string?_
+
+### Side-by-side comparison
+
+- ✅ Criterion met
+- ❌ Criterion not met
+- 🟡 Partially met or unsure
+
+| Criteria                                       | Pure UUID (rec.) | Prefixed UUID | Composite `registry:value` |
+| ---------------------------------------------- | :--------------: | :-----------: | :------------------------: |
+| Consistent with other CommonGrants `id` fields |        ✅        |      ❌       |             ❌             |
+| Compatible with native UUID database columns   |        ✅        |      ❌       |             ❌             |
+| RFC-standard UUID (stdlib parsers, validators) |        ✅        |      ❌       |             ❌             |
+| Stable if external identifiers change          |        ✅        |      ✅       |             ❌             |
+| Standard REST path parameter                   |        ✅        |      ✅       |             🟡             |
+| Self-describing in logs                        |        ❌        |      ✅       |             ✅             |
+
+### Option 1: Pure UUID (recommended)
+
+:::note[Bottom line]
+A pure UUID is best if:
+
+- we want standard REST behavior and stable references that outlive identifier changes,
+- but we're willing to rely on the identifier collection for human-readable context.
+  :::
+
+**Example**
+
+```
+GET /organizations/01912a8b-7c3d-7890-abcd-ef1234567890
+GET /organizations?identifier=US-EIN:12-3456789
+```
+
+- **Pros**
+  - Consistent with how every other CommonGrants model represents `id` (Opportunity, Application, Award, etc.).
+  - Aligns with common database and platform-specific ID conventions (UUID columns, existing API keys, platform primary keys).
+  - Works with standard REST patterns: `GET /organizations/{uuid}` just works.
+  - UUIDs remain stable even if external identifiers change.
+  - Full ecosystem support: standard validators, most languages' stdlib, OpenAPI `format: uuid`.
+  - `compositeId` inside the collection covers the cross-system lookup case.
+  - Implementers can use UUIDv7 for time-ordered, index-friendly IDs without the protocol specifying a version.
+- **Cons**
+  - Top-level `id` duplicates `identifiers.systemId.value`.
+  - UUIDs carry no information about the record on their own, so logs and error messages need an extra lookup for context.
+
+### Option 2: Prefixed UUID
+
+:::note[Bottom line]
+A prefixed UUID is best if:
+
+- we want resource IDs that are self-describing in logs and error messages,
+- but we're willing to give up the standard UUID tooling that most databases and libraries provide.
+  :::
+
+**Example**
+
+```
+GET /organizations/org_01912a8b-7c3d-7890-abcd-ef1234567890
+```
+
+- **Pros**
+  - Resource type is visible at a glance (`org_...`, `opp_...`, `app_...`).
+  - Popular in API design (Stripe and similar) and easy to grep for.
+- **Cons**
+  - Not an RFC-standard string: loses database UUID column support, most UUID libraries, and standard validators.
+  - No canonical rule for what the prefix should encode (resource type? platform? both?).
+  - Requires every client and SDK to parse the prefix out before using the UUID.
+
+### Option 3: Composite `registry:value` string
+
+:::note[Bottom line]
+A composite ID is best if:
+
+- we want the top-level `id` to carry its own meaning without a lookup,
+- but we're willing to couple the resource's stable identity to an external registry.
+  :::
+
+**Example**
+
+```
+GET /organizations/US-EIN:12-3456789
+```
+
+- **Pros**
+  - Readable: `US-EIN:12-3456789` makes the registry and value visible in logs and URLs.
+  - One string carries both registry and value, so no separate field is needed.
+- **Cons**
+  - Forces systems to pick one registry as canonical, which is arbitrary for orgs with multiple IDs.
+  - Colons in URL paths complicate routing and URL parsing in several web frameworks.
+  - If the organization corrects or replaces the underlying ID (e.g. EIN reassignment), every stored reference breaks.
+
+## Evaluation - Collection structure
+
+_Should the identifier collection be a flat array or a keyed map?_
+
+### Side-by-side comparison
+
+| Criteria                                     | Map (rec.) | Flat array |
+| -------------------------------------------- | :--------: | :--------: |
+| Keyed access without filtering               |     ✅     |     ❌     |
+| Per-registry JSON schemas                    |     ✅     |     ❌     |
+| Consistent with existing CG collections      |     ✅     |     ❌     |
+| Clear primary vs. alternate IDs per registry |     ✅     |     🟡     |
+| Cross-system matching                        |     ✅     |     ✅     |
+| Mirrors org-id.guide wire shape              |     🟡     |     ✅     |
+
+### Option 1: Map (recommended)
+
+:::note[Bottom line]
+A map is best if:
+
+- we want keyed access and per-registry schemas,
+- but we're willing to differ structurally from org-id.guide (while still using its codes).
+  :::
+
+**Example**
+
+```json
+{
+  "identifiers": {
+    "ein": {
+      "registry": "US-EIN",
+      "value": "12-3456789",
+      "additionalValues": ["98-7654321"]
+    },
+    "uei": {
+      "registry": "US-UEI",
+      "value": "AB0123456789"
+    }
+  }
+}
+```
+
+```ts
+const ein = org.identifiers.ein;
+ein.value; // "12-3456789"
+ein.additionalValues; // ["98-7654321"]
+```
+
+- **Pros**
+  - Consistent with existing CommonGrants map collections (`AddressCollection`, `customFields`).
+  - Direct keyed access with per-key JSON schemas, so validators can branch on the registry.
+  - Clear separation of primary vs. alternate values per registry.
+  - `otherIds` gives a natural extension point for non-standard registries.
+- **Cons**
+  - Differs structurally from org-id.guide, even though codes are shared.
+  - `otherIds` nesting adds one level of indirection for extensions.
+
+### Option 2: Flat array
+
+:::note[Bottom line]
+A flat array is best if:
+
+- we want the wire shape to mirror org-id.guide directly,
+- but we're willing to give up keyed access and per-registry validation.
+  :::
+
+**Example**
+
+```json
+{
+  "identifiers": [
+    { "scheme": "US-EIN", "id": "12-3456789" },
+    { "scheme": "US-EIN", "id": "98-7654321" },
+    { "scheme": "US-UEI", "id": "AB0123456789" }
+  ]
+}
+```
+
+```ts
+const ein = org.identifiers.find((i) => i.scheme === "US-EIN");
+```
+
+- **Pros**
+  - Mirrors org-id.guide's `scheme` + `id` model directly.
+  - Well-established in open data standards (OCDS, 360Giving, IATI).
+- **Cons**
+  - Accessing a specific identifier requires filtering by scheme.
+  - Per-registry validation is hard in a mixed array because JSON schema can't branch on `scheme` cleanly.
+  - Multiple IDs per registry appear as duplicate entries with no clear primary.
+
+## Evaluation - Map key format
+
+_If the collection is a map, should the keys be raw registry codes or short model-defined aliases?_
+
+### Side-by-side comparison
+
+| Criteria                                       | camelCase alias (rec.) | Registry code as key |
+| ---------------------------------------------- | :--------------------: | :------------------: |
+| Dot access in JS, Python, Go, Ruby             |           ✅           |          ❌          |
+| Consistent with existing CG map key convention |           ✅           |          ❌          |
+| Stable if registry codes are renamed           |           ✅           |          ❌          |
+| No duplication with inline `registry` field    |           ✅           |          ❌          |
+| Works cleanly in JSON Pointer / JSONPath       |           ✅           |          🟡          |
+| Self-describing without catalog lookup         |           🟡           |          ✅          |
+
+### Option 1: camelCase alias (recommended)
+
+:::note[Bottom line]
+camelCase aliases are best if:
+
+- we want idiomatic access in most programming languages and stable keys across registry renames,
+- but we're willing to maintain a small mapping from alias to registry code.
+  :::
+
+**Example**
+
+```json
+{
+  "identifiers": {
+    "ein": { "registry": "US-EIN", "value": "12-3456789" },
+    "uei": { "registry": "US-UEI", "value": "AB0123456789" },
+    "otherIds": {
+      "candidBridge": {
+        "registry": "candid:bridge",
+        "value": "1234567"
+      }
+    }
+  }
+}
+```
+
+```ts
+const ein = org.identifiers.ein;
+const candid = org.identifiers.otherIds.candidBridge;
+```
+
+- **Pros**
+  - Dot access works in every major language, no bracket notation required.
+  - Matches the existing CommonGrants map convention (`customFields`, `addresses`, `emails`).
+  - Aliases stay stable even if the underlying registry code changes.
+  - Keys stay short and clean in JSON Pointer paths, logs, and query parameters.
+  - No duplication with the decomposed `registry` field inside each entry.
+- **Cons**
+  - Consumers need a small alias-to-registry-code mapping, maintained in the CommonGrants registry catalog.
+  - Aliases can shadow each other across scopes (e.g. an EIN-like ID in another jurisdiction), so the catalog must prevent collisions.
+
+### Option 2: Registry code as key
+
+:::note[Bottom line]
+Keying by registry code is best if:
+
+- we want the key to be self-documenting without needing a catalog lookup,
+- but we're willing to require bracket notation and duplicate the code into the body.
+  :::
+
+**Example**
+
+```json
+{
+  "identifiers": {
+    "US-EIN": { "registry": "US-EIN", "value": "12-3456789" },
+    "US-UEI": { "registry": "US-UEI", "value": "AB0123456789" }
+  }
+}
+```
+
+```ts
+const ein = org.identifiers["US-EIN"];
+```
+
+- **Pros**
+  - Key tells you immediately which registry the entry refers to.
+  - No alias mapping needed: consumers can use org-id.guide codes directly.
+- **Cons**
+  - Uppercase and hyphenated keys force bracket notation in most languages (JS, Python, Go).
+  - Duplicates the registry code into both the key and the body (under the decomposed registry object).
+  - Couples the key to the registry's naming: if org-id.guide renames a code, every consumer has to adapt.
+  - Inconsistent with the rest of the CommonGrants spec, where map keys are camelCase.
+
+## Evaluation - Identifier metadata structure
+
+_How much registry metadata belongs on each identifier instance, and how much should live in an external catalog?_
+
+### Side-by-side comparison
+
+| Criteria                                       | Hybrid (rec.) | Flat | Fully decomposed |
+| ---------------------------------------------- | :-----------: | :--: | :--------------: |
+| Inline filtering by scope or kind              |      ✅       |  ❌  |        ✅        |
+| Per-registry schema validation                 |      ✅       |  ❌  |        ✅        |
+| Few required fields                            |      ✅       |  ✅  |        ❌        |
+| Avoids duplicating catalog metadata per record |      ✅       |  ✅  |        ❌        |
+| Payload brevity                                |      🟡       |  ✅  |        ❌        |
+| Fully self-contained without a catalog         |      🟡       |  ❌  |        ✅        |
+
+### Option 1: Hybrid (recommended)
+
+:::note[Bottom line]
+The hybrid shape is best if:
+
+- we want payloads to carry enough context for filtering and UI decisions without a catalog fetch,
+- but we're willing to keep verbose fields like human-readable names and issuer in an external catalog.
+  :::
+
+**Example**
+
+```json
+{
+  "ein": {
+    "registry": "US-EIN",
+    "scope": "US",
+    "kind": "government",
+    "value": "12-3456789",
+    "compositeId": "US-EIN:12-3456789",
+    "schema": "https://commongrants.org/registries/us-ein/schema.json",
+    "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
+    "verifiedAt": "2026-03-15T00:00:00Z"
+  }
+}
+```
+
+The CommonGrants registry catalog carries the rest:
+
+```yaml
+# commongrants.org/registries/us-ein.yaml
+code: US-EIN
+name: Employer Identification Number
+scope: US
+kind: government
+issuer: US Internal Revenue Service
+schema: https://commongrants.org/registries/us-ein/schema.json
+lookupUriTemplate: https://apps.irs.gov/app/eos/detailsPage?ein={value}
+source: https://org-id.guide/list/US-EIN
+```
+
+- **Pros**
+  - `scope` and `kind` are available inline for filtering and UI decisions (e.g. "show all government-issued IDs") without a catalog fetch.
+  - `schema` supports per-registry validation in JSON Schema.
+  - Verbose metadata (full name, issuer, lookup template) stays in the catalog, so payloads don't bloat.
+  - Adopters who want to avoid the catalog entirely can fall back to `registry` + `value` alone.
+- **Cons**
+  - Two sources of truth: inline fields must stay consistent with the catalog.
+  - `scope` and `kind` are technically derivable from `registry` via the catalog, so they are redundant.
+
+### Option 2: Flat single-string registry
+
+:::note[Bottom line]
+A flat registry string is best if:
+
+- we want the smallest possible payload,
+- but we're willing to require a catalog lookup for any registry metadata.
+  :::
+
+**Example**
+
+```json
+{
+  "ein": {
+    "registry": "US-EIN",
+    "value": "12-3456789"
+  }
+}
+```
+
+- **Pros**
+  - Minimal shape: just two required fields.
+- **Cons**
+  - No way to filter by scope or kind without a catalog lookup.
+  - No in-payload hint about whether the registry is authoritative, commercial, or platform-specific.
+  - No format validation at the schema level without consulting the catalog.
+
+### Option 3: Fully decomposed
+
+:::note[Bottom line]
+Full decomposition is best if:
+
+- we want each identifier entry to be entirely self-contained,
+- but we're willing to carry verbose metadata on every record.
+  :::
+
+**Example**
+
+```json
+{
+  "ein": {
+    "registry": {
+      "code": "US-EIN",
+      "name": "Employer Identification Number",
+      "scope": "US",
+      "kind": "government",
+      "issuer": "US Internal Revenue Service",
+      "schema": "https://commongrants.org/registries/us-ein/schema.json",
+      "lookupUriTemplate": "https://apps.irs.gov/app/eos/detailsPage?ein={value}"
+    },
+    "value": "12-3456789"
+  }
+}
+```
+
+- **Pros**
+  - No catalog lookup needed for any consumer decision.
+  - Each identifier is self-documenting end to end.
+- **Cons**
+  - Payloads bloat quickly, especially for records with many identifiers.
+  - Registry metadata is duplicated across every record and drifts over time.
+  - Still needs a canonical catalog somewhere to resolve conflicts when two records disagree.
+
+## Evaluation - Multiple IDs per registry
+
+_How should the protocol represent multiple IDs that share the same registry, including archived versions?_
+
+### Side-by-side comparison
+
+| Criteria                                          | Parallel arrays (rec.) | Flat array | Structured entries |
+| ------------------------------------------------- | :--------------------: | :--------: | :----------------: |
+| Distinguishes active, alternate, and archived IDs |           ✅           |     ❌     |         ✅         |
+| Unambiguous primary value                         |           ✅           |     🟡     |         🟡         |
+| Works with per-field JSON Schema validation       |           ✅           |     ✅     |         🟡         |
+| Zero overhead for the common single-value case    |           ✅           |     ✅     |         ❌         |
+| Simple to read and populate                       |           ✅           |     ✅     |         ❌         |
+| Carries timestamped history                       |           ❌           |     ❌     |         ✅         |
+
+### Option 1: Parallel arrays (recommended)
+
+:::note[Bottom line]
+Parallel arrays are best if:
+
+- we want to preserve the distinction between active-alternate and archived IDs,
+- but we're willing to stop short of full timestamped history.
+  :::
+
+**Example**
+
+```json
+{
+  "ein": {
+    "registry": "US-EIN",
+    "value": "12-3456789",
+    "additionalValues": ["98-7654321"],
+    "previousValues": ["11-1111111"]
+  }
+}
+```
+
+- **Pros**
+  - `value` is the single clear primary.
+  - `additionalValues` cleanly covers fiscal sponsor, post-merger, and multi-subsidiary cases.
+  - `previousValues` covers UEI rebrands, EIN reassignments, and similar history.
+  - Consumers that don't care about alternates can ignore both arrays.
+- **Cons**
+  - No timestamps, so "when did this EIN become archived" is not representable in the payload.
+  - Three separate fields to track when populating or reading.
+
+### Option 2: Flat `allValues` array
+
+:::note[Bottom line]
+A flat array is best if:
+
+- we want the simplest possible shape,
+- but we're willing to lose the distinction between currently valid and archived IDs.
+  :::
+
+**Example**
+
+```json
+{
+  "ein": {
+    "registry": "US-EIN",
+    "value": "12-3456789",
+    "allValues": ["12-3456789", "98-7654321", "11-1111111"]
+  }
+}
+```
+
+- **Pros**
+  - Simple array of strings.
+  - Primary ID is implicit from `value`.
+- **Cons**
+  - Can't tell which IDs are still valid and which are archived.
+  - Can't tell the difference between a fiscal-sponsor case (two active EINs) and a rename history.
+
+### Option 3: Structured entries
+
+:::note[Bottom line]
+Structured entries are best if:
+
+- we want timestamped history and richer per-value metadata,
+- but we're willing to accept a heavier payload and more complex reader logic.
+  :::
+
+**Example**
+
+```json
+{
+  "ein": {
+    "registry": "US-EIN",
+    "value": "12-3456789",
+    "allValues": [
+      { "value": "12-3456789", "status": "active" },
+      {
+        "value": "98-7654321",
+        "status": "active",
+        "note": "fiscal sponsor"
+      },
+      {
+        "value": "11-1111111",
+        "status": "archived",
+        "validTo": "2023-01-15"
+      }
+    ]
+  }
+}
+```
+
+- **Pros**
+  - Full per-value metadata, including timestamps and free-text notes.
+  - Single uniform array instead of three scalars.
+- **Cons**
+  - Heavier payload, especially for the common case where there's only one value.
+  - Consumers must always inspect each entry's `status` before using it.
+  - Adds a mini sub-schema that needs its own validation rules.
+
+## Evaluation - Parent organization representation
+
+_What should a parent organization reference carry?_
+
+This sub-decision applies only to `OrganizationBase`. Other models (`OpportunityBase`, `ApplicationBase`, `AwardBase`) do not currently carry a parent concept.
+
+### Side-by-side comparison
+
+| Criteria                                     | With identifiers (rec.) | Minimal | Full summary |
+| -------------------------------------------- | :---------------------: | :-----: | :----------: |
+| One-hop cross-system matching on the parent  |           ✅            |   ❌    |      ✅      |
+| No duplication of `OrganizationBase` fields  |           ✅            |   ✅    |      ❌      |
+| Bounded scope (no risk of grandparent bloat) |           ✅            |   ✅    |      ❌      |
+| Low drift risk vs. canonical parent record   |           🟡            |   ✅    |      ❌      |
+| Payload brevity                              |           🟡            |   ✅    |      ❌      |
+| Renderable without a follow-up fetch         |           🟡            |   ❌    |      ✅      |
+
+### Option 1: Reference with identifiers (recommended)
+
+:::note[Bottom line]
+A reference with identifiers is best if:
+
+- we want lightweight one-hop matching without embedding the full parent record,
+- but we're willing to accept that some parent metadata may drift if caches aren't refreshed.
+  :::
+
+**Example**
+
+```json
+{
+  "parent": {
+    "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+    "name": "Example Parent Foundation",
+    "identifiers": {
+      "ein": {
+        "registry": "US-EIN",
+        "scope": "US",
+        "kind": "government",
+        "value": "98-7654321"
+      }
+    }
+  }
+}
+```
+
+- **Pros**
+  - Enables one-hop cross-system matching on the parent (e.g. "find all children of this UEI").
+  - Still lightweight: only identifiers are embedded, not addresses or mission.
+  - Parent IDs never leak into the child's own `identifiers`, so the child collection stays self-referential.
+- **Cons**
+  - Parent identifier data can drift from the authoritative parent record if not kept in sync.
+  - Slightly more complex to serialize than a bare reference.
+
+### Option 2: Minimal reference
+
+:::note[Bottom line]
+A minimal reference is best if:
+
+- we want `parent` to be a pure pointer,
+- but we're willing to require a follow-up request for any parent-level matching.
+  :::
+
+**Example**
+
+```json
+{
+  "parent": {
+    "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+    "name": "Example Parent Foundation"
+  }
+}
+```
+
+- **Pros**
+  - Smallest possible shape.
+  - No risk of the parent reference drifting from the parent's canonical record.
+- **Cons**
+  - Can't match the parent across systems without another fetch.
+  - Display surfaces (e.g. "parent org: UEI AB123...") require extra round trips.
+
+### Option 3: Full summary
+
+:::note[Bottom line]
+A full summary is best if:
+
+- we want the parent to be renderable without any additional fetch,
+- but we're willing to accept significant payload overhead and duplicate OrgBase fields.
+  :::
+
+**Example**
+
+```json
+{
+  "parent": {
+    "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+    "name": "Example Parent Foundation",
+    "orgType": "private_foundation",
+    "identifiers": { "ein": { "registry": "US-EIN", "value": "98-7654321" } },
+    "addresses": {
+      "primary": {
+        "line1": "...",
+        "city": "...",
+        "state": "...",
+        "postalCode": "..."
+      }
+    }
+  }
+}
+```
+
+- **Pros**
+  - Enough data to render a parent card with no follow-up fetch.
+- **Cons**
+  - Duplicates large portions of `OrganizationBase`.
+  - High risk of drift between parent reference and canonical parent record.
+  - Unclear where the summary should stop: what about the grandparent?
+
+## Evaluation - Registry code format
+
+_Should registry codes follow org-id.guide, a uniform namespaced format, or both?_
+
+### Side-by-side comparison
+
+| Criteria                                              | org-id.guide + namespaced (rec.) | Uniform `namespace:type` |
+| ----------------------------------------------------- | :------------------------------: | :----------------------: |
+| Zero-translation interop with open data standards     |                ✅                |            ❌            |
+| Recognizable to OCDS, 360Giving, IATI users           |                ✅                |            ❌            |
+| Visually distinguishes standard vs. system registries |                ✅                |            ❌            |
+| Covers non-standard system IDs                        |                ✅                |            ✅            |
+| Internal format consistency                           |                🟡                |            ✅            |
+
+### Option 1: org-id.guide + namespaced (recommended)
+
+:::note[Bottom line]
+The hybrid format is best if:
+
+- we want seamless interop with org-id.guide's existing ecosystem,
+- but we're willing to have two formats coexist for the sake of recognition.
+  :::
+
+**Example**
+
+```json
+{
+  "ein": { "registry": "US-EIN", "value": "12-3456789" },
+  "otherIds": {
+    "fluxxOrg": { "registry": "fluxx:org", "value": "FLUXX-12345" }
+  }
+}
+```
+
+- **Pros**
+  - Uses org-id.guide codes as-is, so existing open data systems interoperate without translation.
+  - Visually distinguishes standardized registries (`US-EIN`) from system-specific ones (`fluxx:org`).
+  - Anyone familiar with OCDS, 360Giving, or IATI recognizes the codes at a glance.
+- **Cons**
+  - Two formats coexist: uppercase-hyphenated and lowercase-colon.
+  - Camel-case alias keys help, but the registry field itself still requires bracket notation when used as an object key elsewhere.
+
+### Option 2: Uniform `namespace:type`
+
+:::note[Bottom line]
+A uniform format is best if:
+
+- we want one consistent code format across every registry,
+- but we're willing to translate every code from org-id.guide before interoperating.
+  :::
+
+**Example**
+
+```json
+{
+  "ein": { "registry": "us:ein", "value": "12-3456789" },
+  "uei": { "registry": "us:uei", "value": "AB0123456789" }
+}
+```
+
+- **Pros**
+  - One format for everything.
+  - No need to decide when to use hyphens vs. colons.
+- **Cons**
+  - Requires a mapping table to interoperate with org-id.guide.
+  - Not recognizable to anyone already using OCDS, 360Giving, or IATI.
+
+## Evaluation - Registry governance
+
+_Who maintains the registry catalog, and how does a registry get promoted from `otherIds` to a well-known key?_
+
+### Side-by-side comparison
+
+| Criteria                                             | Hybrid (rec.) | org-id.guide only | CG-managed only |
+| ---------------------------------------------------- | :-----------: | :---------------: | :-------------: |
+| Leverages existing open data taxonomy                |      ✅       |        ✅         |       ❌        |
+| CG-specific metadata (`schema`, `kind`, `alias`)     |      ✅       |        ❌         |       ✅        |
+| Covers non-standard system IDs (`fluxx:org`, etc.)   |      ✅       |        ❌         |       ✅        |
+| Promotion path independent of upstream release cycle |      ✅       |        🟡         |       ✅        |
+| Clear `otherIds` → well-known key flow               |      ✅       |        🟡         |       ✅        |
+| Low maintenance burden                               |      🟡       |        ✅         |       ❌        |
+
+### Option 1: Hybrid with promotion flow (recommended)
+
+:::note[Bottom line]
+The hybrid approach is best if:
+
+- we want open data alignment where it exists and CG-specific metadata where it doesn't,
+- but we're willing to maintain a thin catalog that cross-references org-id.guide.
+  :::
+
+**Shape of the CommonGrants registry catalog**
+
+Each catalog entry wraps an org-id.guide entry (when one exists) and adds CG-specific fields:
+
+```yaml
+# commongrants.org/registries/us-ein.yaml
+code: US-EIN
+alias: ein
+name: Employer Identification Number
+scope: US
+kind: government
+issuer: US Internal Revenue Service
+schema: https://commongrants.org/registries/us-ein/schema.json
+lookupUriTemplate: https://apps.irs.gov/app/eos/detailsPage?ein={value}
+source: https://org-id.guide/list/US-EIN
+models: [Organization]
+```
+
+**Promotion flow: `otherIds` to well-known key**
+
+An identifier starts in `otherIds` using any alias the adopter chooses. It becomes a first-class well-known key through this flow:
+
+1. **Proposal.** An adopter or maintainer opens a GitHub issue with the proposed code, scope, kind, example values, and relevant models.
+2. **Review.** Reviewers evaluate: is the registry broadly applicable? Is it authoritative (a named issuer)? Can values be validated?
+3. **Catalog entry.** On acceptance, a PR adds a catalog file (`commongrants.org/registries/<code>.yaml`) with the alias, scope, kind, schema, and lookup template.
+4. **Model extension.** For each relevant model, the alias is added as a well-known key on that model's `IdentifierCollection` extension (e.g. `ein`, `uei` on `OrgIdentifierCollection`).
+5. **Release.** Changes ship in the next minor protocol version with the appropriate `@Versioning.added`.
+6. **Adopter migration.** Adopters can continue to publish the identifier under `otherIds` during a deprecation window, then move it to the well-known key.
+
+- **Pros**
+  - Reuses org-id.guide codes where they exist, avoiding duplicated taxonomy work.
+  - Adds CG-specific metadata (schema, kind, alias) in one place.
+  - Clear, documented path from ad-hoc use to first-class protocol support.
+  - Parallels the way custom fields are promoted today.
+- **Cons**
+  - Two sources of truth (org-id.guide and the CG catalog) that must be kept in sync.
+  - Promotion flow adds process overhead that some adopters may route around.
+
+### Option 2: org-id.guide only
+
+:::note[Bottom line]
+Relying on org-id.guide alone is best if:
+
+- we want to minimize CommonGrants maintenance overhead,
+- but we're willing to give up CG-specific metadata and non-governmental system IDs.
+  :::
+
+- **Pros**
+  - No catalog maintenance: codes, scopes, and lookups live in org-id.guide.
+  - Strong ecosystem alignment.
+- **Cons**
+  - No standard place to attach JSON schemas for per-registry validation.
+  - No concept of `kind: platform` or `kind: system` for non-public registries.
+  - Getting a new registry added to org-id.guide is external to our release cycle.
+
+### Option 3: CG-managed catalog only
+
+:::note[Bottom line]
+A CG-only catalog is best if:
+
+- we want full control over registry metadata and schemas,
+- but we're willing to duplicate work already done in org-id.guide.
+  :::
+
+- **Pros**
+  - Complete control over codes, scopes, schemas, and lookup templates.
+  - Can carry CG-specific fields (`kind`, `schema`).
+- **Cons**
+  - Duplicates org-id.guide entries, which must be kept in sync manually.
+  - CG becomes the single point of failure for registry definitions.
