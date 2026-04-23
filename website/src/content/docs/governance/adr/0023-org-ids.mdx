@@ -15,6 +15,12 @@ _How should the protocol represent the set of identifiers associated with an org
 
 The protocol adopts an identification system that supports both uniquely identifying a record _within_ a given system and matching records _across_ multiple systems. To do this, it replaces the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `IdentifierCollection` field will be reused across other core models, with each model extending it with its own base identifiers.
 
+:::caution[Important: publicly available identifiers only]
+
+The `identifiers` collection is intended for identifiers that are already publicly available as part of public award data (e.g. EIN, UEI, CFDA, platform-assigned opportunity IDs). Sensitive or private identifiers (applicant PII, internal account IDs, personal contact identifiers) are out of scope for this collection. Adopters handling sensitive data should use a separate mechanism that keeps those IDs out of `identifiers` and off URL query parameters.
+
+:::
+
 The collection looks like this:
 
 ```json
