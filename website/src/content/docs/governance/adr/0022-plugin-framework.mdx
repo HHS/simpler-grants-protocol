@@ -195,7 +195,7 @@ type Handler = (value: unknown, context: unknown) => unknown;
 // time; unknown handlers, structural errors, and unresolvable field paths raise
 // PluginError subclasses. The optional `handlers` argument registers custom handler
 // names for this call only — collisions with the default set (`field`, `switch`)
-// raise at load time (see Decision #8).
+// raise at buildTransforms() call time (see Decision #8).
 function buildTransforms<TNative, TCommon>(
   toCommonMapping: Record<string, unknown>, // ADR-0017 mapping from native → CommonGrants
   fromCommonMapping: Record<string, unknown>, // ADR-0017 mapping from CommonGrants → native
@@ -355,9 +355,7 @@ Handler = Callable[[Any, Any], Any]
 # time; unknown handlers, structural errors, and unresolvable field paths raise
 # PluginError subclasses. The optional `handlers` argument registers custom handler
 # names for this call only — collisions with the default set ('field', 'switch')
-# raise at build_transforms() call time (see Decision #8). Concrete typing of the
-# returned callables is provided by the caller (ObjectSchemas[TNative, TCommon]);
-# the utility itself is generic over Any to avoid unbound TypeVar drift.
+# raise at build_transforms() call time (see Decision #8).
 def build_transforms(
     to_common_mapping: dict[str, Any],   # ADR-0017 mapping from native → CommonGrants
     from_common_mapping: dict[str, Any], # ADR-0017 mapping from CommonGrants → native
