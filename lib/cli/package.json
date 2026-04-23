@@ -69,7 +69,7 @@
   },
   "devDependencies": {
     "@common-grants/core": "workspace:*",
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "catalog:",
     "@types/express": "^4.17.25",
     "@types/inquirer": "^9.0.9",
     "@types/js-yaml": "^4.0.9",
@@ -84,14 +84,14 @@
     "@typespec/versioning": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
-    "eslint-config-prettier": "^9.1.2",
-    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
     "eslint-plugin-vitest": "catalog:",
     "prettier": "catalog:",
     "prettier-linter-helpers": "^1.0.1",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:"
   }

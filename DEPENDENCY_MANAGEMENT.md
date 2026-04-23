@@ -63,7 +63,8 @@ The `deps-catalog-check` workflow (`.github/workflows/deps-catalog-check.yml`) r
 **What it manages** (defined in `pnpm-workspace.yaml` under `catalog:`):
 - `@typespec/compiler`, `@typespec/http`, `@typespec/json-schema`, `@typespec/openapi`, `@typespec/openapi3`, `@typespec/rest`, `@typespec/versioning`
 - `vitest`, `@vitest/coverage-v8`, `eslint-plugin-vitest`
-- `@types/node`
+- `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-prettier`, `prettier`
+- `typescript`, `@types/node`
 
 The `website` catalog has its own `vitest` version (`^4.x`). The update script includes an explicit `pnpm update vitest --filter website` step to ensure it stays current alongside the default catalog.
 

@@ -63,14 +63,14 @@
     "@typespec/versioning": "catalog:"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "globals": "^15.15.0",
     "prettier": "catalog:",
     "rimraf": "^5.0.10",
     "source-map-support": "^0.5.21",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:",
     "typescript-eslint": "catalog:"
   }
 }

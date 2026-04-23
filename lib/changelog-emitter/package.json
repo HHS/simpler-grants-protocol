@@ -18,13 +18,13 @@
     "@typespec/versioning": "catalog:"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "catalog:",
     "@types/node": "catalog:",
     "@typespec/prettier-plugin-typespec": "^1.10.0",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:"
   },
