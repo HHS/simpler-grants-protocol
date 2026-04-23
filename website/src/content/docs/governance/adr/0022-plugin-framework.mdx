@@ -49,7 +49,7 @@ plugin.extensions  // serializable; used by mergeExtensions()
 plugin.schemas.<ObjectName> = { native, common, toCommon, fromCommon }
 ```
 
-### Interface / types
+### Example interface
 
 <Tabs syncKey="sdk-lang">
 <TabItem label="TypeScript">
@@ -298,7 +298,7 @@ def build_transforms(
 </TabItem>
 </Tabs>
 
-### Plugin author usage
+### Example author usage
 
 <Tabs syncKey="sdk-lang">
 <TabItem label="TypeScript">
@@ -459,7 +459,7 @@ client = plugin.get_client({'api_key': 'abc123', 'page_size': 50})
 </TabItem>
 </Tabs>
 
-### Consumer usage
+### Example consumer usage
 
 <Tabs syncKey="sdk-lang">
 <TabItem label="TypeScript">
@@ -505,6 +505,8 @@ print(grants_gov_plugin.meta.capabilities)    # ["customFields", "transforms", "
 
 </TabItem>
 </Tabs>
+
+### Consequences
 
 - **Positive consequences**
   - Client stays singular — `getClient()` is memoized by `definePlugin()`, so one source system always produces one `Client` instance regardless of how many times `getClient()` is called
