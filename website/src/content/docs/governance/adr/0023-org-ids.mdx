@@ -403,7 +403,10 @@ A pure UUID is best if:
 **Example**
 
 ```
+# Direct lookup by the system's UUID for this organization
 GET /organizations/01912a8b-7c3d-7890-abcd-ef1234567890
+
+# Cross-system lookup by registry-scoped identifier (here: the org's EIN)
 GET /organizations?identifier=US-EIN:12-3456789
 ```
 
@@ -443,7 +446,7 @@ GET /organizations/org_01912a8b-7c3d-7890-abcd-ef1234567890
 - **Cons**
   - Not an RFC-standard UUID string: loses native database UUID column support, most UUID libraries, and standard validators.
   - Requires every client and SDK to parse the prefix out before using the underlying UUID.
-  - Needs to be applied consistently across every model with an `id` field, which is out of scope for this ADR.
+  - Needs to be applied consistently across every model with an `id` field (Opportunity, Competition, Form, Application, Award, etc.) and would also require updating each model's `id` validation to accept the prefixed format. Out of scope for this ADR.
 
 #### Option 3: Composite `registry:id` string
 
