@@ -48,6 +48,7 @@ The collection looks like this:
       "kind": "government",
       "id": "12-3456789",
       "allIds": [
+        { "id": "12-3456789", "status": "active" },
         { "id": "65-4321098", "status": "active" },
         { "id": "11-1111111", "status": "archived" }
       ],
@@ -83,7 +84,7 @@ At a glance, the key decisions for this identification system are:
 2. **Collection structure:** A map keyed by short base-identifier aliases, with a catch-all `otherIds` map for extensions.
 3. **Map key format:** Model-defined camelCase aliases (`ein`, `uei`, `duns`), not raw registry codes.
 4. **Identifier metadata structure:** A hybrid shape with `registry` (code), two small registry-level fields (`scope`, `kind`), and instance-level fields (`id`, `compositeId`, `uri`, `verifiedAt`). Full registry metadata (issuer, human-readable name, schema, lookup template) lives in an external CommonGrants registry catalog.
-5. **Multiple IDs per registry:** `id` for the primary, plus an optional `allIds` array of `{ id, status }` objects for additional and archived IDs.
+5. **Multiple IDs per registry:** `id` for the primary, plus an optional `allIds` array of `{ id, status }` objects covering every known ID for this registry (the primary included), so consumers can do membership checks against `allIds` alone.
 6. **Parent organization:** `parent` carries `id`, `name`, and optionally an embedded `identifiers` collection. Parent identifiers do not leak into the child's collection.
 7. **Registry code format:** org-id.guide codes (`US-EIN`, `GB-CHC`) for well-known public registries, `namespace:type` (`grants.gov:org`, `candid:bridge`) for everything else.
 8. **Registry governance:** CommonGrants maintains a registry catalog that wraps org-id.guide where applicable and adds CommonGrants-specific metadata (schema URLs, kind, lookup templates). A documented promotion flow moves a registry from `otherIds` to a base identifier on the relevant model.
@@ -100,6 +101,7 @@ At a glance, the key decisions for this identification system are:
   - Breaking change: existing `ein`, `uei`, and `duns` fields on `OrganizationBase` must migrate.
   - Top-level `id` is duplicated in `identifiers.systemId.id`.
   - `compositeId` is derivable from `registry` and `id`, so it is technically redundant on the wire.
+  - When `allIds` is present, the primary `id` value is repeated as one of the entries (deliberate, so consumers only need to check one place for membership).
   - Registry metadata is split across two places (inline fields plus the external catalog), which needs clear documentation.
   - Two extension mechanisms (`otherIds` for new registries, `allIds` for multiple IDs in one registry) add complexity.
 
@@ -201,7 +203,12 @@ Identifier:
       description: Primary current identifier string
     allIds:
       type: array
-      description: Additional IDs in this registry beyond the primary `id` (e.g. fiscal sponsor EINs, retired UEIs)
+      description: |
+        Every known ID for this record in this registry, including the primary `id`
+        and any additional or archived IDs (e.g. fiscal sponsor EINs, retired UEIs).
+        When present, the primary `id` MUST also appear here so consumers can do
+        membership checks (e.g. `recordId in allIds.map(v => v.id)`) without also
+        consulting `id` separately.
       items:
         type: object
         properties:
@@ -498,7 +505,10 @@ A map is best if:
     "ein": {
       "registry": "US-EIN",
       "id": "12-3456789",
-      "allIds": [{ "id": "98-7654321", "status": "active" }]
+      "allIds": [
+        { "id": "12-3456789", "status": "active" },
+        { "id": "98-7654321", "status": "active" }
+      ]
     },
     "uei": {
       "registry": "US-UEI",
@@ -510,8 +520,8 @@ A map is best if:
 
 ```ts
 const ein = org.identifiers.ein;
-ein.id; // "12-3456789"
-ein.allIds; // [{ id: "98-7654321", status: "active" }]
+ein.id; // "12-3456789" (primary)
+ein.allIds.map((v) => v.id); // ["12-3456789", "98-7654321"] (every known ID)
 ```
 
 - **Pros**
@@ -776,18 +786,18 @@ Full decomposition is best if:
 
 _How should the protocol represent multiple IDs that share the same registry, including archived versions?_
 
-In both options below, the primary ID stays at the top level as `id`. The difference is how additional IDs (fiscal sponsor EINs, retired UEIs, etc.) are represented.
+In both options below, the primary ID stays at the top level as `id`. When `allIds` is present, it includes every known ID for this registry (the primary value included), so consumers can run a single membership check against `allIds` without also inspecting `id` separately. The difference between the two options is whether each entry is a bare string or a `{ id, status }` object.
 
 #### Side-by-side comparison
 
-| Criteria                                         | Array of `{ id, status }` (rec.) | Flat array of strings |
-| ------------------------------------------------ | :------------------------------: | :-------------------: |
-| Distinguishes active vs. archived additional IDs |                ✅                |          ❌           |
-| Unambiguous primary value                        |                ✅                |          ✅           |
-| Zero overhead for the common single-value case   |                ✅                |          ✅           |
-| Extensible without breaking changes              |                ✅                |          🟡           |
-| Simple to populate and read                      |                🟡                |          ✅           |
-| Works with native `contains()` / `in` membership |                ❌                |          ✅           |
+| Criteria                                                 | Array of `{ id, status }` (rec.) | Flat array of strings |
+| -------------------------------------------------------- | :------------------------------: | :-------------------: |
+| Distinguishes active vs. archived IDs                    |                ✅                |          ❌           |
+| Unambiguous primary value                                |                ✅                |          ✅           |
+| Zero overhead for the common single-value case           |                ✅                |          ✅           |
+| Extensible without breaking changes                      |                ✅                |          🟡           |
+| Simple to populate and read                              |                🟡                |          ✅           |
+| Native `contains()` / `in` membership without projecting |                ❌                |          ✅           |
 
 #### Option 1: Array of `{ id, status }` objects (recommended)
 
@@ -806,6 +816,7 @@ An object array is best if:
     "registry": "US-EIN",
     "id": "12-3456789",
     "allIds": [
+      { "id": "12-3456789", "status": "active" },
       { "id": "98-7654321", "status": "active" },
       { "id": "11-1111111", "status": "archived" }
     ]
@@ -814,15 +825,16 @@ An object array is best if:
 ```
 
 - **Pros**
-  - `id` is the single clear primary; `allIds` only appears when there are alternates.
+  - `id` is the single clear primary, but `allIds` covers every known value (including the primary) so a single membership check is sufficient: `recordId in ein.allIds.map(v => v.id)`.
   - `status: "active"` cleanly covers fiscal sponsor, post-merger, and multi-subsidiary cases.
   - `status: "archived"` covers UEI rebrands, EIN reassignments, and similar history.
-  - Consumers that don't care about alternates can ignore `allIds` entirely.
+  - Consumers that don't care about alternates can ignore `allIds` entirely and just use `id`.
   - Extensible: future optional fields (`validFrom`, `note`, etc.) can be added per entry without breaking consumers.
 - **Cons**
   - Small object wrapper per entry rather than a bare string.
   - Consumers that want to filter archived entries must check the `status` field.
-  - Doesn't support native `contains()` or `in` membership checks (e.g. `"98-7654321" in ein.allIds`). Consumers have to project first: `ein.allIds.map(v => v.id).includes("98-7654321")`.
+  - Membership checks require projecting first (`ein.allIds.map(v => v.id).includes(x)`) instead of a native `in` / `contains()` check.
+  - The primary `id` value is duplicated across `id` and the corresponding `allIds` entry.
 
 #### Option 2: Flat array of strings
 
@@ -840,19 +852,19 @@ A flat array is best if:
   "ein": {
     "registry": "US-EIN",
     "id": "12-3456789",
-    "allIds": ["98-7654321", "11-1111111"]
+    "allIds": ["12-3456789", "98-7654321", "11-1111111"]
   }
 }
 ```
 
 - **Pros**
   - Simple array of strings, no object wrapper.
-  - Primary ID is implicit from `id`.
-  - Works with native `contains()` / `in` membership checks (e.g. `"98-7654321" in ein.allIds`).
+  - Native `contains()` / `in` membership checks against `allIds` work directly: `"98-7654321" in ein.allIds`.
 - **Cons**
-  - Can't tell which additional IDs are still valid and which are archived.
+  - Can't tell which IDs are still valid and which are archived.
   - Can't tell the difference between a fiscal-sponsor case (two active EINs) and a rename history.
   - Adding per-entry metadata later (status, timestamps) would be a breaking change.
+  - The primary `id` value is duplicated across `id` and the `allIds` array.
 
 ### Parent organization representation
 
