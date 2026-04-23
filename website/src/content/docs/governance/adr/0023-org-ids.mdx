@@ -61,7 +61,8 @@ The collection looks like this:
         { "id": "11-1111111", "status": "archived" }
       ],
       "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
-      "verifiedAt": "2026-03-15T00:00:00Z"
+      "verifiedAt": "2026-03-15T00:00:00Z",
+      "verifiedBy": "irs.gov"
     },
     "uei": {
       "registry": {
@@ -93,7 +94,7 @@ At a glance, the key decisions for this identification system are:
 1. **Top-level ID:** A pure UUID on each resource, with the hosting system's own ID also surfaced inside the collection as `systemId`.
 2. **Collection structure:** A map keyed by short base-identifier aliases, with a catch-all `otherIds` map for extensions.
 3. **Map key format:** Model-defined camelCase aliases (`ein`, `uei`, `duns`), not raw registry codes.
-4. **Identifier metadata structure:** A nested hybrid shape. Registry-level facts (the same for every record in the registry) live in a nested `registry` object with required `code` and `url` (linking to the catalog entry) plus optional `scope`, `kind`, and `schema`. Instance-level facts (`id`, `allIds`, `uri`, `verifiedAt`) stay at the top level. Richer registry metadata (issuer, human-readable name, lookup template, etc.) lives in the external CommonGrants registry catalog reachable through `registry.url`.
+4. **Identifier metadata structure:** A nested hybrid shape. Registry-level facts (the same for every record in the registry) live in a nested `registry` object with required `code` and `url` (linking to the catalog entry) plus optional `scope`, `kind`, and `schema`. Instance-level facts (`id`, `allIds`, `uri`, `verifiedAt`, `verifiedBy`) stay at the top level. Richer registry metadata (issuer, human-readable name, lookup template, etc.) lives in the external CommonGrants registry catalog reachable through `registry.url`.
 5. **Multiple IDs per registry:** `id` for the primary, plus an optional `allIds` array of `{ id, status }` objects covering every known ID for this registry (the primary included), so consumers can do membership checks against `allIds` alone.
 6. **Parent organization:** `parent` carries `id`, `name`, and optionally an embedded `identifiers` collection. Parent identifiers do not leak into the child's collection.
 7. **Registry code format:** org-id.guide codes (`US-EIN`, `GB-CHC`) for well-known public registries, `namespace:type` (`grants.gov:org`, `candid:bridge`) for everything else.
@@ -249,6 +250,13 @@ Identifier:
       type: string
       format: date-time
       description: When this identifier was last verified
+    verifiedBy:
+      type: string
+      description: |
+        Reference to the system, service, or process that performed the verification
+        (e.g. "irs.gov", "candid.org", "system:manual-review"). Be mindful of PII such
+        as a human name or email address. The exact format and vocabulary for this
+        field may be tightened during implementation.
   required:
     - registry
     - id
