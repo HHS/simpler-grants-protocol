@@ -29,8 +29,7 @@ The collection looks like this:
         "registry": "US-EIN",
         "scope": "US",
         "kind": "government",
-        "id": "98-7654321",
-        "compositeId": "US-EIN:98-7654321"
+        "id": "98-7654321"
       }
     }
   },
@@ -39,8 +38,7 @@ The collection looks like this:
       "registry": "grants.gov:org",
       "scope": "grants.gov",
       "kind": "platform",
-      "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
-      "compositeId": "grants.gov:org:01912a8b-7c3d-7890-abcd-ef1234567890"
+      "id": "01912a8b-7c3d-7890-abcd-ef1234567890"
     },
     "ein": {
       "registry": "US-EIN",
@@ -52,7 +50,6 @@ The collection looks like this:
         { "id": "65-4321098", "status": "active" },
         { "id": "11-1111111", "status": "archived" }
       ],
-      "compositeId": "US-EIN:12-3456789",
       "schema": "https://commongrants.org/registries/us-ein/schema.json",
       "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
       "verifiedAt": "2026-03-15T00:00:00Z"
@@ -61,8 +58,7 @@ The collection looks like this:
       "registry": "US-UEI",
       "scope": "US",
       "kind": "government",
-      "id": "AB0123456789",
-      "compositeId": "US-UEI:AB0123456789"
+      "id": "AB0123456789"
     },
     "otherIds": {
       "candidBridge": {
@@ -70,7 +66,6 @@ The collection looks like this:
         "scope": "candid",
         "kind": "commercial",
         "id": "1234567",
-        "compositeId": "candid:bridge:1234567",
         "uri": "https://www.guidestar.org/profile/1234567"
       }
     }
@@ -83,7 +78,7 @@ At a glance, the key decisions for this identification system are:
 1. **Top-level ID:** A pure UUID on each resource, with the hosting system's own ID also surfaced inside the collection as `systemId`.
 2. **Collection structure:** A map keyed by short base-identifier aliases, with a catch-all `otherIds` map for extensions.
 3. **Map key format:** Model-defined camelCase aliases (`ein`, `uei`, `duns`), not raw registry codes.
-4. **Identifier metadata structure:** A hybrid shape with `registry` (code), two small registry-level fields (`scope`, `kind`), and instance-level fields (`id`, `compositeId`, `uri`, `verifiedAt`). Full registry metadata (issuer, human-readable name, schema, lookup template) lives in an external CommonGrants registry catalog.
+4. **Identifier metadata structure:** A hybrid shape with `registry` (code), two small registry-level fields (`scope`, `kind`), and instance-level fields (`id`, `uri`, `verifiedAt`). Full registry metadata (issuer, human-readable name, schema, lookup template) lives in an external CommonGrants registry catalog.
 5. **Multiple IDs per registry:** `id` for the primary, plus an optional `allIds` array of `{ id, status }` objects covering every known ID for this registry (the primary included), so consumers can do membership checks against `allIds` alone.
 6. **Parent organization:** `parent` carries `id`, `name`, and optionally an embedded `identifiers` collection. Parent identifiers do not leak into the child's collection.
 7. **Registry code format:** org-id.guide codes (`US-EIN`, `GB-CHC`) for well-known public registries, `namespace:type` (`grants.gov:org`, `candid:bridge`) for everything else.
@@ -100,7 +95,6 @@ At a glance, the key decisions for this identification system are:
 - **Negative consequences**
   - Breaking change: existing `ein`, `uei`, and `duns` fields on `OrganizationBase` must migrate.
   - Top-level `id` is duplicated in `identifiers.systemId.id`.
-  - `compositeId` is derivable from `registry` and `id`, so it is technically redundant on the wire.
   - When `allIds` is present, the primary `id` value is repeated as one of the entries (deliberate, so consumers only need to check one place for membership).
   - Registry metadata is split across two places (inline fields plus the external catalog), which needs clear documentation.
   - Two extension mechanisms (`otherIds` for new registries, `allIds` for multiple IDs in one registry) add complexity.
@@ -215,9 +209,6 @@ Identifier:
             enum: [active, archived]
             description: Whether the identifier is currently valid or retired
         required: [id, status]
-    compositeId:
-      type: string
-      description: "{registry}:{id}, for use in query parameters"
     schema:
       type: string
       format: uri
@@ -362,13 +353,15 @@ The same shape extends to other models with model-specific keys:
 
 ### Cross-system lookup route
 
-A new query parameter on list routes supports cross-system lookups without requiring consumers to know the local UUID:
+List routes accept two new query parameters, `registry` and `id`, that together let consumers locate a record by any of its registered identifiers without knowing the local UUID:
 
 ```
-GET /organizations?identifier=US-EIN:12-3456789
-GET /opportunities?identifier=US-CFDA:93.575
-GET /applications?identifier=fluxx:app:app-98765
+GET /organizations?registry=US-EIN&id=12-3456789
+GET /opportunities?registry=US-CFDA&id=93.575
+GET /applications?registry=fluxx:app&id=app-98765
 ```
+
+`registry` may be passed on its own as a filter (e.g. `?registry=US-CFDA` returns every record that has a CFDA entry). `id` on its own is meaningless without a registry to scope it to and SHOULD be rejected with a 400.
 
 ## Evaluation
 
@@ -407,7 +400,7 @@ A pure UUID is best if:
 GET /organizations/01912a8b-7c3d-7890-abcd-ef1234567890
 
 # Cross-system lookup by registry-scoped identifier (here: the org's EIN)
-GET /organizations?identifier=US-EIN:12-3456789
+GET /organizations?registry=US-EIN&id=12-3456789
 ```
 
 - **Pros**
@@ -416,7 +409,7 @@ GET /organizations?identifier=US-EIN:12-3456789
   - Works with standard REST patterns: `GET /organizations/{uuid}` just works.
   - UUIDs remain stable even if external identifiers change.
   - Full ecosystem support: standard validators, most languages' stdlib, OpenAPI `format: uuid`.
-  - `compositeId` inside the collection covers the cross-system lookup case.
+  - Cross-system lookups are handled by separate `registry` and `id` query parameters on list routes, so the top-level `id` doesn't need to encode any cross-system context.
   - Implementers can use UUIDv7 for time-ordered, index-friendly IDs without the protocol specifying a version.
 - **Cons**
   - Top-level `id` duplicates `identifiers.systemId.id`.
@@ -686,7 +679,6 @@ The hybrid shape is best if:
     "scope": "US",
     "kind": "government",
     "id": "12-3456789",
-    "compositeId": "US-EIN:12-3456789",
     "schema": "https://commongrants.org/registries/us-ein/schema.json",
     "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
     "verifiedAt": "2026-03-15T00:00:00Z"
