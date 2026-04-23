@@ -26,45 +26,60 @@ The collection looks like this:
     "name": "Example Parent Foundation",
     "identifiers": {
       "ein": {
-        "registry": "US-EIN",
-        "scope": "US",
-        "kind": "government",
+        "registry": {
+          "code": "US-EIN",
+          "url": "https://commongrants.org/registries/us-ein",
+          "scope": "US",
+          "kind": "government"
+        },
         "id": "98-7654321"
       }
     }
   },
   "identifiers": {
     "systemId": {
-      "registry": "grants.gov:org",
-      "scope": "grants.gov",
-      "kind": "platform",
+      "registry": {
+        "code": "grants.gov:org",
+        "url": "https://commongrants.org/registries/grants-gov-org",
+        "scope": "grants.gov",
+        "kind": "platform"
+      },
       "id": "01912a8b-7c3d-7890-abcd-ef1234567890"
     },
     "ein": {
-      "registry": "US-EIN",
-      "scope": "US",
-      "kind": "government",
+      "registry": {
+        "code": "US-EIN",
+        "url": "https://commongrants.org/registries/us-ein",
+        "scope": "US",
+        "kind": "government",
+        "schema": "https://commongrants.org/registries/us-ein/schema.json"
+      },
       "id": "12-3456789",
       "allIds": [
         { "id": "12-3456789", "status": "active" },
         { "id": "65-4321098", "status": "active" },
         { "id": "11-1111111", "status": "archived" }
       ],
-      "schema": "https://commongrants.org/registries/us-ein/schema.json",
       "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
       "verifiedAt": "2026-03-15T00:00:00Z"
     },
     "uei": {
-      "registry": "US-UEI",
-      "scope": "US",
-      "kind": "government",
+      "registry": {
+        "code": "US-UEI",
+        "url": "https://commongrants.org/registries/us-uei",
+        "scope": "US",
+        "kind": "government"
+      },
       "id": "AB0123456789"
     },
     "otherIds": {
       "candidBridge": {
-        "registry": "candid:bridge",
-        "scope": "candid",
-        "kind": "commercial",
+        "registry": {
+          "code": "candid:bridge",
+          "url": "https://commongrants.org/registries/candid-bridge",
+          "scope": "candid",
+          "kind": "commercial"
+        },
         "id": "1234567",
         "uri": "https://www.guidestar.org/profile/1234567"
       }
@@ -78,7 +93,7 @@ At a glance, the key decisions for this identification system are:
 1. **Top-level ID:** A pure UUID on each resource, with the hosting system's own ID also surfaced inside the collection as `systemId`.
 2. **Collection structure:** A map keyed by short base-identifier aliases, with a catch-all `otherIds` map for extensions.
 3. **Map key format:** Model-defined camelCase aliases (`ein`, `uei`, `duns`), not raw registry codes.
-4. **Identifier metadata structure:** A hybrid shape with `registry` (code), two small registry-level fields (`scope`, `kind`), and instance-level fields (`id`, `uri`, `verifiedAt`). Full registry metadata (issuer, human-readable name, schema, lookup template) lives in an external CommonGrants registry catalog.
+4. **Identifier metadata structure:** A nested hybrid shape. Registry-level facts (the same for every record in the registry) live in a nested `registry` object with required `code` and `url` (linking to the catalog entry) plus optional `scope`, `kind`, and `schema`. Instance-level facts (`id`, `allIds`, `uri`, `verifiedAt`) stay at the top level. Richer registry metadata (issuer, human-readable name, lookup template, etc.) lives in the external CommonGrants registry catalog reachable through `registry.url`.
 5. **Multiple IDs per registry:** `id` for the primary, plus an optional `allIds` array of `{ id, status }` objects covering every known ID for this registry (the primary included), so consumers can do membership checks against `allIds` alone.
 6. **Parent organization:** `parent` carries `id`, `name`, and optionally an embedded `identifiers` collection. Parent identifiers do not leak into the child's collection.
 7. **Registry code format:** org-id.guide codes (`US-EIN`, `GB-CHC`) for well-known public registries, `namespace:type` (`grants.gov:org`, `candid:bridge`) for everything else.
@@ -90,13 +105,14 @@ At a glance, the key decisions for this identification system are:
   - One reusable `Identifier` / `IdentifierCollection` pair across every core model, with model-specific keys on each extension.
   - Multiple IDs per registry are represented explicitly, with active, additional, and archived cases distinguishable.
   - Consistent with existing patterns (`AddressCollection`, `customFields`) and compatible with open data standards that use org-id.guide codes.
-  - The optional `schema` URI lets new identifier types define their own validation without protocol changes.
+  - Nesting the `registry` object visually groups registry-level facts and points to the catalog entry via `registry.url`, so consumers can always find the source of truth.
+  - The optional `registry.schema` URI lets new identifier types define their own validation without protocol changes.
   - `systemId` makes each collection self-contained: a consumer can match across systems without inspecting the top-level `id` separately.
 - **Negative consequences**
   - Breaking change: existing `ein`, `uei`, and `duns` fields on `OrganizationBase` must migrate.
   - Top-level `id` is duplicated in `identifiers.systemId.id`.
   - When `allIds` is present, the primary `id` value is repeated as one of the entries (deliberate, so consumers only need to check one place for membership).
-  - Registry metadata is split across two places (inline fields plus the external catalog), which needs clear documentation.
+  - Registry-level fields inside `registry` partially duplicate the catalog entry at `registry.url`, so adopters must keep them in sync.
   - Two extension mechanisms (`otherIds` for new registries, `allIds` for multiple IDs in one registry) add complexity.
 
 ### Identifier key hierarchy
@@ -173,20 +189,36 @@ Identifier:
   type: object
   properties:
     registry:
-      type: string
-      description: Registry code (e.g. "US-EIN", "grants.gov:org")
-    scope:
-      type: string
-      description: Jurisdiction or namespace the registry applies within (e.g. "US", "GB", "grants.gov")
-    kind:
-      type: string
-      enum: [government, commercial, platform, system]
+      type: object
       description: |
-        Classification of the registry:
-        - government: issued by a government authority (EIN, UEI)
-        - commercial: issued by a commercial data provider (DUNS, Candid Bridge)
-        - platform: assigned by a CommonGrants-compliant system
-        - system: assigned by a non-CommonGrants system
+        Registry-level facts that are the same for every record in this registry.
+        A subset of the corresponding catalog entry; consumers can fetch the full
+        entry via `registry.url`.
+      properties:
+        code:
+          type: string
+          description: Registry code (e.g. "US-EIN", "grants.gov:org")
+        url:
+          type: string
+          format: uri
+          description: Link to the catalog entry for this registry
+        scope:
+          type: string
+          description: Jurisdiction or namespace the registry applies within (e.g. "US", "GB", "grants.gov")
+        kind:
+          type: string
+          enum: [government, commercial, platform, system]
+          description: |
+            Classification of the registry:
+            - government: issued by a government authority (EIN, UEI)
+            - commercial: issued by a commercial data provider (DUNS, Candid Bridge)
+            - platform: assigned by a CommonGrants-compliant system
+            - system: assigned by a non-CommonGrants system
+        schema:
+          type: string
+          format: uri
+          description: JSON schema for validating the identifier format
+      required: [code, url]
     id:
       type: string
       description: Primary current identifier string
@@ -209,10 +241,6 @@ Identifier:
             enum: [active, archived]
             description: Whether the identifier is currently valid or retired
         required: [id, status]
-    schema:
-      type: string
-      format: uri
-      description: JSON schema for validating the identifier format
     uri:
       type: string
       format: uri
@@ -279,21 +307,30 @@ The same shape extends to other models with model-specific keys:
   "title": "Community Health Initiative Grant",
   "identifiers": {
     "systemId": {
-      "registry": "grants.gov:opp",
-      "scope": "grants.gov",
-      "kind": "platform",
+      "registry": {
+        "code": "grants.gov:opp",
+        "url": "https://commongrants.org/registries/grants-gov-opp",
+        "scope": "grants.gov",
+        "kind": "platform"
+      },
       "id": "01912a8b-7c3d-7892-abcd-ef1234567892"
     },
     "opportunityNumber": {
-      "registry": "grants.gov:opp",
-      "scope": "grants.gov",
-      "kind": "platform",
+      "registry": {
+        "code": "grants.gov:opp",
+        "url": "https://commongrants.org/registries/grants-gov-opp",
+        "scope": "grants.gov",
+        "kind": "platform"
+      },
       "id": "HHS-2026-ACF-OCC-YD-0001"
     },
     "cfda": {
-      "registry": "US-CFDA",
-      "scope": "US",
-      "kind": "government",
+      "registry": {
+        "code": "US-CFDA",
+        "url": "https://commongrants.org/registries/us-cfda",
+        "scope": "US",
+        "kind": "government"
+      },
       "id": "93.575"
     }
   }
@@ -308,16 +345,22 @@ The same shape extends to other models with model-specific keys:
   "id": "01912a8b-7c3d-7893-abcd-ef1234567893",
   "identifiers": {
     "systemId": {
-      "registry": "fluxx:app",
-      "scope": "fluxx",
-      "kind": "system",
+      "registry": {
+        "code": "fluxx:app",
+        "url": "https://commongrants.org/registries/fluxx-app",
+        "scope": "fluxx",
+        "kind": "system"
+      },
       "id": "01912a8b-7c3d-7893-abcd-ef1234567893"
     },
     "otherIds": {
       "grantsGovTracking": {
-        "registry": "grants.gov:tracking",
-        "scope": "grants.gov",
-        "kind": "platform",
+        "registry": {
+          "code": "grants.gov:tracking",
+          "url": "https://commongrants.org/registries/grants-gov-tracking",
+          "scope": "grants.gov",
+          "kind": "platform"
+        },
         "id": "GRANT12345678"
       }
     }
@@ -333,15 +376,21 @@ The same shape extends to other models with model-specific keys:
   "id": "01912a8b-7c3d-7894-abcd-ef1234567894",
   "identifiers": {
     "systemId": {
-      "registry": "grants.gov:award",
-      "scope": "grants.gov",
-      "kind": "platform",
+      "registry": {
+        "code": "grants.gov:award",
+        "url": "https://commongrants.org/registries/grants-gov-award",
+        "scope": "grants.gov",
+        "kind": "platform"
+      },
       "id": "01912a8b-7c3d-7894-abcd-ef1234567894"
     },
     "fain": {
-      "registry": "US-FAIN",
-      "scope": "US",
-      "kind": "government",
+      "registry": {
+        "code": "US-FAIN",
+        "url": "https://commongrants.org/registries/us-fain",
+        "scope": "US",
+        "kind": "government"
+      },
       "id": "ABC12345"
     }
   }
@@ -494,7 +543,10 @@ A map is best if:
 {
   "identifiers": {
     "ein": {
-      "registry": "US-EIN",
+      "registry": {
+        "code": "US-EIN",
+        "url": "https://commongrants.org/registries/us-ein"
+      },
       "id": "12-3456789",
       "allIds": [
         { "id": "12-3456789", "status": "active" },
@@ -502,7 +554,10 @@ A map is best if:
       ]
     },
     "uei": {
-      "registry": "US-UEI",
+      "registry": {
+        "code": "US-UEI",
+        "url": "https://commongrants.org/registries/us-uei"
+      },
       "id": "AB0123456789"
     }
   }
@@ -586,11 +641,26 @@ camelCase aliases are best if:
 ```json
 {
   "identifiers": {
-    "ein": { "registry": "US-EIN", "id": "12-3456789" },
-    "uei": { "registry": "US-UEI", "id": "AB0123456789" },
+    "ein": {
+      "registry": {
+        "code": "US-EIN",
+        "url": "https://commongrants.org/registries/us-ein"
+      },
+      "id": "12-3456789"
+    },
+    "uei": {
+      "registry": {
+        "code": "US-UEI",
+        "url": "https://commongrants.org/registries/us-uei"
+      },
+      "id": "AB0123456789"
+    },
     "otherIds": {
       "candidBridge": {
-        "registry": "candid:bridge",
+        "registry": {
+          "code": "candid:bridge",
+          "url": "https://commongrants.org/registries/candid-bridge"
+        },
         "id": "1234567"
       }
     }
@@ -608,7 +678,7 @@ const candid = org.identifiers.otherIds.candidBridge;
   - Matches the existing CommonGrants map convention (`customFields`, `addresses`, `emails`).
   - Aliases stay stable even if the underlying registry code changes.
   - Keys stay short and clean in JSON Pointer paths, logs, and query parameters.
-  - No duplication with the decomposed `registry` field inside each entry.
+  - No duplication with the `registry.code` field inside each entry.
 - **Cons**
   - Consumers need a small alias-to-registry-code mapping, maintained in the CommonGrants registry catalog.
   - Aliases can shadow each other across scopes (e.g. an EIN-like ID in another jurisdiction), so the catalog must prevent collisions.
@@ -627,8 +697,20 @@ Keying by registry code is best if:
 ```json
 {
   "identifiers": {
-    "US-EIN": { "registry": "US-EIN", "id": "12-3456789" },
-    "US-UEI": { "registry": "US-UEI", "id": "AB0123456789" }
+    "US-EIN": {
+      "registry": {
+        "code": "US-EIN",
+        "url": "https://commongrants.org/registries/us-ein"
+      },
+      "id": "12-3456789"
+    },
+    "US-UEI": {
+      "registry": {
+        "code": "US-UEI",
+        "url": "https://commongrants.org/registries/us-uei"
+      },
+      "id": "AB0123456789"
+    }
   }
 }
 ```
@@ -642,7 +724,7 @@ const ein = org.identifiers["US-EIN"];
   - No alias mapping needed: consumers can use org-id.guide codes directly.
 - **Cons**
   - Uppercase and hyphenated keys force bracket notation in most languages (JS, Python, Go).
-  - Duplicates the registry code into both the key and the body (under the decomposed registry object).
+  - Duplicates the registry code into both the key and the body (`registry.code`).
   - Couples the key to the registry's naming: if org-id.guide renames a code, every consumer has to adapt.
   - Inconsistent with the rest of the CommonGrants spec, where map keys are camelCase.
 
@@ -650,43 +732,52 @@ const ein = org.identifiers["US-EIN"];
 
 _How much registry metadata belongs on each identifier instance, and how much should live in an external catalog?_
 
+All three options below share the same principle: registry-level facts (the same for every record in this registry) and instance-level facts (specific to this record's entry) are conceptually distinct. They differ in how the registry-level facts are expressed.
+
 #### Side-by-side comparison
 
-| Criteria                                       | Hybrid (rec.) | Flat | Fully decomposed |
-| ---------------------------------------------- | :-----------: | :--: | :--------------: |
-| Inline filtering by scope or kind              |      ✅       |  ❌  |        ✅        |
-| Per-registry schema validation                 |      ✅       |  ❌  |        ✅        |
-| Few required fields                            |      ✅       |  ✅  |        ❌        |
-| Avoids duplicating catalog metadata per record |      ✅       |  ✅  |        ❌        |
-| Payload brevity                                |      🟡       |  ✅  |        ❌        |
-| Fully self-contained without a catalog         |      🟡       |  ❌  |        ✅        |
+| Criteria                                       | Nested hybrid (rec.) | Flat | Fully decomposed |
+| ---------------------------------------------- | :------------------: | :--: | :--------------: |
+| Explicit pointer to the catalog entry          |          ✅          |  ✅  |        ✅        |
+| Registry vs. instance fields visually grouped  |          ✅          |  ❌  |        ✅        |
+| Inline filtering by scope or kind              |          ✅          |  ❌  |        ✅        |
+| Per-registry schema validation                 |          ✅          |  ❌  |        ✅        |
+| Avoids duplicating catalog metadata per record |          ✅          |  ✅  |        ❌        |
+| Payload brevity                                |          🟡          |  ✅  |        ❌        |
+| Fully self-contained without a catalog         |          🟡          |  ❌  |        ✅        |
+| Few required fields                            |          ✅          |  ✅  |        ❌        |
 
-#### Option 1: Hybrid (recommended)
+#### Option 1: Nested hybrid (recommended)
 
 :::note[Bottom line]
-The hybrid shape is best if:
+The nested hybrid shape is best if:
 
-- we want payloads to carry enough context for filtering and UI decisions without a catalog fetch,
-- but we're willing to keep verbose fields like human-readable names and issuer in an external catalog.
+- we want payloads to carry just enough registry context for filtering and validation, with a clear pointer to the catalog for everything else,
+- but we're willing to nest registry-level fields under a `registry` object instead of keeping the shape flat.
   :::
+
+The `registry` object holds a curated subset of the catalog entry: the fields that are useful in payload (filtering, validation, identification) plus a `url` linking back to the full catalog entry. Required fields are kept minimal (`code` and `url`); the rest are optional. Per-instance fields stay at the top level.
 
 **Example**
 
 ```json
 {
   "ein": {
-    "registry": "US-EIN",
-    "scope": "US",
-    "kind": "government",
+    "registry": {
+      "code": "US-EIN",
+      "url": "https://commongrants.org/registries/us-ein",
+      "scope": "US",
+      "kind": "government",
+      "schema": "https://commongrants.org/registries/us-ein/schema.json"
+    },
     "id": "12-3456789",
-    "schema": "https://commongrants.org/registries/us-ein/schema.json",
     "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
     "verifiedAt": "2026-03-15T00:00:00Z"
   }
 }
 ```
 
-The CommonGrants registry catalog carries the rest:
+The CommonGrants registry catalog at `registry.url` carries the rest:
 
 ```yaml
 # commongrants.org/registries/us-ein.yaml
@@ -701,21 +792,24 @@ source: https://org-id.guide/list/US-EIN
 ```
 
 - **Pros**
+  - `registry.url` gives consumers an explicit pointer to the catalog entry, removing ambiguity about how inline and catalog fields relate.
+  - Nesting visually groups registry-level vs. instance-level facts, mirroring the catalog shape.
   - `scope` and `kind` are available inline for filtering and UI decisions (e.g. "show all government-issued IDs") without a catalog fetch.
   - `schema` supports per-registry validation in JSON Schema.
-  - Verbose metadata (full name, issuer, lookup template) stays in the catalog, so payloads don't bloat.
-  - Adopters who want to avoid the catalog entirely can fall back to `registry` + `id` alone.
+  - Required surface stays minimal: only `registry.code`, `registry.url`, and `id` are required; everything else is optional.
+  - Verbose metadata (full name, issuer, lookup template) stays in the catalog so payloads don't bloat.
 - **Cons**
-  - Two sources of truth: inline fields must stay consistent with the catalog.
-  - `scope` and `kind` are technically derivable from `registry` via the catalog, so they are redundant.
+  - One extra level of access (`identifier.registry.code` vs. a flat `identifier.registry`).
+  - Inline registry fields can drift from the catalog if not kept in sync.
+  - `scope` and `kind` are technically derivable from `registry.code` via the catalog, so they are redundant.
 
-#### Option 2: Flat single-string registry
+#### Option 2: Flat with `registryUrl`
 
 :::note[Bottom line]
-A flat registry string is best if:
+A flat shape is best if:
 
-- we want the smallest possible payload,
-- but we're willing to require a catalog lookup for any registry metadata.
+- we want the smallest possible payload and the most direct keyed access,
+- but we're willing to require a catalog lookup for any registry metadata beyond the code itself.
   :::
 
 **Example**
@@ -724,17 +818,21 @@ A flat registry string is best if:
 {
   "ein": {
     "registry": "US-EIN",
+    "registryUrl": "https://commongrants.org/registries/us-ein",
     "id": "12-3456789"
   }
 }
 ```
 
 - **Pros**
-  - Minimal shape: just two required fields.
+  - Minimal shape: just `registry` (code), `registryUrl`, and `id`.
+  - Direct keyed access without extra nesting.
+  - `registryUrl` still gives a clear pointer to the catalog.
 - **Cons**
   - No way to filter by scope or kind without a catalog lookup.
   - No in-payload hint about whether the registry is authoritative, commercial, or platform-specific.
   - No format validation at the schema level without consulting the catalog.
+  - Registry-level vs. instance-level facts are not visually grouped.
 
 #### Option 3: Fully decomposed
 
@@ -752,6 +850,7 @@ Full decomposition is best if:
   "ein": {
     "registry": {
       "code": "US-EIN",
+      "url": "https://commongrants.org/registries/us-ein",
       "name": "Employer Identification Number",
       "scope": "US",
       "kind": "government",
@@ -803,7 +902,10 @@ An object array is best if:
 ```json
 {
   "ein": {
-    "registry": "US-EIN",
+    "registry": {
+      "code": "US-EIN",
+      "url": "https://commongrants.org/registries/us-ein"
+    },
     "id": "12-3456789",
     "allIds": [
       { "id": "12-3456789", "status": "active" },
@@ -840,7 +942,10 @@ A flat array is best if:
 ```json
 {
   "ein": {
-    "registry": "US-EIN",
+    "registry": {
+      "code": "US-EIN",
+      "url": "https://commongrants.org/registries/us-ein"
+    },
     "id": "12-3456789",
     "allIds": ["12-3456789", "98-7654321", "11-1111111"]
   }
@@ -891,9 +996,12 @@ A reference with identifiers is best if:
     "name": "Example Parent Foundation",
     "identifiers": {
       "ein": {
-        "registry": "US-EIN",
-        "scope": "US",
-        "kind": "government",
+        "registry": {
+          "code": "US-EIN",
+          "url": "https://commongrants.org/registries/us-ein",
+          "scope": "US",
+          "kind": "government"
+        },
         "id": "98-7654321"
       }
     }
@@ -953,7 +1061,15 @@ A full summary is best if:
     "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
     "name": "Example Parent Foundation",
     "orgType": "private_foundation",
-    "identifiers": { "ein": { "registry": "US-EIN", "id": "98-7654321" } },
+    "identifiers": {
+      "ein": {
+        "registry": {
+          "code": "US-EIN",
+          "url": "https://commongrants.org/registries/us-ein"
+        },
+        "id": "98-7654321"
+      }
+    },
     "addresses": {
       "primary": {
         "line1": "...",
@@ -1000,9 +1116,21 @@ The hybrid format is best if:
 
 ```json
 {
-  "ein": { "registry": "US-EIN", "id": "12-3456789" },
+  "ein": {
+    "registry": {
+      "code": "US-EIN",
+      "url": "https://commongrants.org/registries/us-ein"
+    },
+    "id": "12-3456789"
+  },
   "otherIds": {
-    "fluxxOrg": { "registry": "fluxx:org", "id": "FLUXX-12345" }
+    "fluxxOrg": {
+      "registry": {
+        "code": "fluxx:org",
+        "url": "https://commongrants.org/registries/fluxx-org"
+      },
+      "id": "FLUXX-12345"
+    }
   }
 }
 ```
@@ -1028,8 +1156,20 @@ A uniform format is best if:
 
 ```json
 {
-  "ein": { "registry": "us:ein", "id": "12-3456789" },
-  "uei": { "registry": "us:uei", "id": "AB0123456789" }
+  "ein": {
+    "registry": {
+      "code": "us:ein",
+      "url": "https://commongrants.org/registries/us-ein"
+    },
+    "id": "12-3456789"
+  },
+  "uei": {
+    "registry": {
+      "code": "us:uei",
+      "url": "https://commongrants.org/registries/us-uei"
+    },
+    "id": "AB0123456789"
+  }
 }
 ```
 
