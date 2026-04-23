@@ -5,7 +5,8 @@ on:
     types: [closed]
     paths:
       - website/**
-      - .github/workflows/ci-website.yml
+      - .github/workflows/ci-website-preview.yml
+      - .github/workflows/ci-website-cleanup.yml
 
 jobs:
   cleanup-preview:
