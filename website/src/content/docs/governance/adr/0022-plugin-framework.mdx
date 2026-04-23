@@ -571,7 +571,9 @@ if (errors.length === 0) {
 
 // Batch transformation is a plain .map — each element carries its own result and errors
 const items = rawBatch.map(toCommon);
-const successful = items.filter((r) => r.errors.length === 0).map((r) => r.result);
+const successful = items
+  .filter((r) => r.errors.length === 0)
+  .map((r) => r.result);
 
 // Inspect what the plugin declares about itself
 console.log(grantsGovPlugin.meta.sourceSystem); // "grants.gov"
