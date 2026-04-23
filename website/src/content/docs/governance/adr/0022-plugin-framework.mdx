@@ -40,13 +40,13 @@ We decided to:
 
 5. **Make all top-level Plugin fields optional** so adopters can publish a plugin that provides only the features they need — for example, custom fields only — and expand to include transforms, client config, or additional schemas incrementally over time.
 
-6. **Plugin authors provide `toCommon` / `fromCommon` as functions; mappings are one way to generate them.** The SDK exposes `buildTransforms()` / `build_transforms()` as a public utility that wraps the existing mapping runtimes (`website/src/lib/transformation.ts`, `common_grants_sdk.utils.transformation`). `PluginExtensions.schemas.<Object>` gains an optional `mappings` key carrying JSON-safe `toCommon` / `fromCommon` mapping objects; when those are declared and no explicit transform is supplied in `schemas.<Object>`, `definePlugin()` invokes `buildTransforms()` automatically. Mappings for each direction are author-provided — `buildTransforms()` does not invert one direction into the other, because many-to-one handlers like `switch` are not reversible. First-release handler set is `field` and `switch`; the reverse direction is limited to the reversible subset until [ADR-0017](/governance/adr/0017-mapping-format) defines reversible mapping semantics. Implementation tracked under [#744](https://github.com/HHS/simpler-grants-protocol/issues/744); handler expansion under [#745](https://github.com/HHS/simpler-grants-protocol/issues/745).
+6. **Plugin authors provide `toCommon` / `fromCommon` as functions; mappings are one way to generate them.** The SDK exposes `buildTransforms()` / `build_transforms()` as a public utility wrapping the existing mapping runtimes. `PluginExtensions.schemas.<Object>` gains an optional `mappings` key carrying JSON-safe `toCommon` / `fromCommon` mapping objects; when those are declared and no explicit transform is supplied in `schemas.<Object>`, `definePlugin()` invokes `buildTransforms()` automatically. Mappings for each direction are author-provided — `buildTransforms()` does not invert one direction into the other, because many-to-one handlers like `switch` are not reversible. Implementation tracked under [#744](https://github.com/HHS/simpler-grants-protocol/issues/744); handler set and expansion under [#745](https://github.com/HHS/simpler-grants-protocol/issues/745).
 
-7. **Validate plugin output at runtime; validate mapping definitions at utility-invocation time.** `definePlugin()` wraps the final `toCommon` / `fromCommon` (however produced) with `schema.parse` / `model_validate`, because compile-time types do not guarantee runtime shape. Mappings passed to `buildTransforms()` are checked at the call site, failing fast on structural errors, unknown handlers, or unresolvable field paths. A non-throwing `safeTransform` / `safe_transform` variant returns aggregated per-item errors for batch transformation. Tracked under [#744](https://github.com/HHS/simpler-grants-protocol/issues/744).
+7. **Validate plugin output at runtime; validate mapping definitions at utility-invocation time.** `definePlugin()` wraps the final `toCommon` / `fromCommon` (however produced) with runtime schema validation, because compile-time types do not guarantee runtime shape. Mappings passed to `buildTransforms()` are checked at the call site, failing fast on structural errors, unknown handlers, or unresolvable field paths. A non-throwing `safeTransform` / `safe_transform` variant returns aggregated per-item errors for batch transformation. Tracked under [#744](https://github.com/HHS/simpler-grants-protocol/issues/744).
 
-8. **Custom handlers are registered per utility call, not globally.** `buildTransforms()` accepts an optional `handlers` argument for registering additional handler names. Per-call scoping keeps behavior explicit and testable; name collisions with the default set (`field`, `switch`) raise at `buildTransforms()` call time rather than silently shadowing them. Handler-name lookup uses own-property access (`Object.hasOwn` in TypeScript, explicit dict `in` checks in Python) to avoid resolving inherited prototype or class-dict members (`__proto__`, `constructor`) when mapping JSON is reconstituted from untrusted sources via `mergeExtensions()`. Tracked under [#745](https://github.com/HHS/simpler-grants-protocol/issues/745).
+8. **Custom handlers are registered per utility call, not globally.** `buildTransforms()` accepts an optional `handlers` argument for registering additional handler names. Per-call scoping keeps behavior explicit and testable; name collisions with the default set raise at `buildTransforms()` call time rather than silently shadowing them. Handler-name lookup must not resolve inherited attributes, because mapping JSON can be reconstituted from untrusted sources via `mergeExtensions()`. Tracked under [#745](https://github.com/HHS/simpler-grants-protocol/issues/745).
 
-9. **Transformation errors carry structured context.** SDK-emitted transformation errors extend a single `PluginError` base with `path`, `handler`, `sourceValue`, and `cause` fields, enabling programmatic reasoning without parsing error text. `sourceValue` may contain PII when transforming applicant data; adopters are responsible for redacting it before logging or re-raising, and the SDK does not redact by default. Specific subclasses are documented alongside the implementation in [#744](https://github.com/HHS/simpler-grants-protocol/issues/744) / [#745](https://github.com/HHS/simpler-grants-protocol/issues/745).
+9. **Transformation errors carry structured context.** SDK-emitted transformation errors extend a single `PluginError` base carrying field path, handler name, source value, and underlying cause, enabling programmatic reasoning without parsing error text. The source value may contain PII when transforming applicant data; adopters are responsible for redacting it before logging or re-raising, and the SDK does not redact by default. Specific subclasses are documented alongside the implementation in [#744](https://github.com/HHS/simpler-grants-protocol/issues/744) / [#745](https://github.com/HHS/simpler-grants-protocol/issues/745).
 
 The resulting Plugin shape:
 
@@ -192,10 +192,8 @@ type Handler = (value: unknown, context: unknown) => unknown;
 // Utility: generates toCommon and fromCommon functions from separate declarative
 // mapping objects (ADR-0017 format). Using this utility is optional — plugin authors
 // may provide plain hand-written functions instead. Mappings are validated at call
-// time; unknown handlers, structural errors, and unresolvable field paths raise
-// PluginError subclasses. The optional `handlers` argument registers custom handler
-// names for this call only — collisions with the default set (`field`, `switch`)
-// raise at buildTransforms() call time (see Decision #8).
+// time (see Decision #7); the optional `handlers` argument registers custom handler
+// names for this call only (see Decision #8).
 function buildTransforms<TNative, TCommon>(
   toCommonMapping: Record<string, unknown>, // ADR-0017 mapping from native → CommonGrants
   fromCommonMapping: Record<string, unknown>, // ADR-0017 mapping from CommonGrants → native
@@ -205,23 +203,20 @@ function buildTransforms<TNative, TCommon>(
   fromCommon: (common: TCommon) => TNative;
 };
 
-// Non-throwing batch variant. Applies a transform to each input and returns aggregated
-// per-item results and errors — useful when partial failure is preferable to aborting
-// the whole batch (see Decision #7). Exact return-type shape — including whether
-// errors carry the failing input's index for position attribution — is finalized in #744.
+// Non-throwing batch variant — applies a transform to each input and returns aggregated
+// per-item results and errors (see Decision #7). Return shape finalized in #744.
 function safeTransform<TIn, TOut>(
   transform: (input: TIn) => TOut,
   inputs: TIn[],
 ): { results: (TOut | null)[]; errors: PluginError[] };
 
-// Base class for SDK-emitted transformation errors (see Decision #9). Specific
-// subclasses (e.g. UnknownHandlerError, PathResolutionError, ValidationFailedError)
-// are documented alongside the implementation in #744 / #745.
+// Base class for SDK-emitted transformation errors (see Decision #9).
+// Specific subclasses are defined alongside the implementation in #744 / #745.
 interface PluginError extends Error {
-  path?: string; // field path where the failure occurred
-  handler?: string; // handler name that raised, if applicable
-  sourceValue?: unknown; // value that couldn't be transformed
-  cause?: unknown; // underlying error, when wrapped
+  path?: string;
+  handler?: string;
+  sourceValue?: unknown;
+  cause?: unknown;
 }
 ```
 
@@ -352,45 +347,28 @@ Handler = Callable[[Any, Any], Any]
 # Utility: generates to_common and from_common callables from separate declarative
 # mapping dicts (ADR-0017 format). Using this utility is optional — plugin authors
 # may provide plain hand-written callables instead. Mappings are validated at call
-# time; unknown handlers, structural errors, and unresolvable field paths raise
-# PluginError subclasses. The optional `handlers` argument registers custom handler
-# names for this call only — collisions with the default set ('field', 'switch')
-# raise at build_transforms() call time (see Decision #8).
+# time (see Decision #7); the optional `handlers` argument registers custom handler
+# names for this call only (see Decision #8).
 def build_transforms(
     to_common_mapping: dict[str, Any],   # ADR-0017 mapping from native → CommonGrants
     from_common_mapping: dict[str, Any], # ADR-0017 mapping from CommonGrants → native
     handlers: dict[str, Handler] | None = None,
 ) -> tuple[Callable[[Any], Any], Callable[[Any], Any]]: ...
 
-# Non-throwing batch variant. Applies a transform to each input and returns aggregated
-# per-item results and errors — useful when partial failure is preferable to aborting
-# the whole batch (see Decision #7). Exact return-type shape — including whether
-# errors carry the failing input's index for position attribution — is finalized in #744.
+# Non-throwing batch variant — applies a transform to each input and returns aggregated
+# per-item results and errors (see Decision #7). Return shape finalized in #744.
 def safe_transform(
     transform: Callable[[Any], Any],
     inputs: list[Any],
 ) -> tuple[list[Any | None], list['PluginError']]: ...
 
-# Base class for SDK-emitted transformation errors (see Decision #9). Specific
-# subclasses (e.g. UnknownHandlerError, PathResolutionError, ValidationFailedError)
-# are documented alongside the implementation in #744 / #745. The explicit __init__
-# (rather than bare class-level annotations) keeps the four attributes as per-instance
-# state instead of class variables shared across instances.
+# Base class for SDK-emitted transformation errors (see Decision #9).
+# Specific subclasses are defined alongside the implementation in #744 / #745.
 class PluginError(Exception):
-    def __init__(
-        self,
-        message: str = '',
-        *,
-        path: str | None = None,              # field path where the failure occurred
-        handler: str | None = None,           # handler name that raised, if applicable
-        source_value: Any = None,             # value that couldn't be transformed
-        cause: BaseException | None = None,   # underlying error, when wrapped
-    ) -> None:
-        super().__init__(message)
-        self.path = path
-        self.handler = handler
-        self.source_value = source_value
-        self.cause = cause
+    path: str | None
+    handler: str | None
+    source_value: Any
+    cause: BaseException | None
 ```
 
 </TabItem>
