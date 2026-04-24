@@ -87,6 +87,7 @@ model QuestionName {
   firstName: string;
 
   /** Middle name */
+  @minLength(0)
   @maxLength(25)
   middleName?: string;
 

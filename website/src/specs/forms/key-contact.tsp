@@ -73,16 +73,19 @@ model KeyContact {
 
   /** Contact's organizational affiliation if different from the applicant organization */
   @example("Test Organization")
+  @minLength(0)
   @maxLength(60)
   contactOrganizationalAffiliation?: string;
 
   /** County or parish of the contact address */
   @example("")
+  @minLength(0)
   @maxLength(30)
   contactCounty?: string;
 
   /** Contact's fax number */
   @example("555-111-2222")
+  @minLength(0)
   @maxLength(25)
   contactFax?: string;
 

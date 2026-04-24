@@ -74,7 +74,7 @@ export function composeUiSchema(
  * Deep-merges `source` into `target` (mutating `target`). Object values are
  * merged recursively; non-object values from `source` overwrite `target`.
  */
-function deepMergeInto(
+export function deepMergeInto(
   target: Record<string, unknown>,
   source: Record<string, unknown>,
 ): void {

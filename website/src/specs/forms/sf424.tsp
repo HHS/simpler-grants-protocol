@@ -162,16 +162,19 @@ model SF424 {
 
   /** Applicant's control number */
   @example("")
+  @minLength(0)
   @maxLength(30)
   applicantId?: string;
 
   /** Number assigned to the organization by the Federal agency */
   @example("")
+  @minLength(0)
   @maxLength(30)
   federalEntityIdentifier?: string;
 
   /** Previously assigned Federal award identifier (for continuation or revision) */
   @example("")
+  @minLength(0)
   @maxLength(25)
   federalAwardIdentifier?: string;
 
@@ -182,6 +185,7 @@ model SF424 {
 
   /** Identifier assigned by the State */
   @example("")
+  @minLength(0)
   @maxLength(30)
   stateApplicationId?: string;
 
@@ -255,21 +259,25 @@ model SF424 {
 
   /** County or parish of the applicant address */
   @example("District of Columbia")
+  @minLength(0)
   @maxLength(30)
   applicantCounty?: string;
 
   /** Province of the applicant address */
   @example("")
+  @minLength(0)
   @maxLength(30)
   applicantProvince?: string;
 
   /** Primary organizational department or equivalent level */
   @example("Research Division")
+  @minLength(0)
   @maxLength(30)
   departmentName?: string;
 
   /** Primary organizational division or major subdivision */
   @example("Innovation Lab")
+  @minLength(0)
   @maxLength(30)
   divisionName?: string;
 
@@ -353,11 +361,13 @@ model SF424 {
 
   /** Contact's fax number */
   @example("555-987-6543")
+  @minLength(0)
   @maxLength(25)
   contactFax?: string;
 
   /** Contact's organizational affiliation if different from the applicant organization */
   @example("")
+  @minLength(0)
   @maxLength(60)
   orgAffiliation?: string;
 
@@ -375,6 +385,7 @@ model SF424 {
 
   /** Explanation if applicant type is Other (specify) */
   @example("")
+  @minLength(0)
   @maxLength(50)
   applicantTypeOtherSpecify?: string;
 
@@ -388,11 +399,13 @@ model SF424 {
 
   /** Assistance Listing (CFDA) Number — pre-populated from Application cover sheet */
   @example("47.041")
+  @minLength(0)
   @maxLength(15)
   cfdaNumber?: string;
 
   /** Assistance Listing (CFDA) Program Title — pre-populated from Application cover sheet */
   @example("Engineering Grants")
+  @minLength(0)
   @maxLength(120)
   cfdaProgramTitle?: string;
 
@@ -456,6 +469,7 @@ model SF424 {
 
   /** Areas or entities affected, using categories specified in agency instructions */
   @example("")
+  @minLength(0)
   @maxLength(250)
   areasAffected?: string;
 
@@ -477,6 +491,7 @@ model SF424 {
 
   /** Additional congressional districts if the project spans more than one */
   @example("")
+  @minLength(0)
   @maxLength(6)
   additionalCongressionalDistricts?: string;
 
@@ -614,6 +629,7 @@ model SF424 {
 
   /** AOR fax number */
   @example("555-876-5432")
+  @minLength(0)
   @maxLength(25)
   aorFax?: string;
 

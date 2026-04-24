@@ -65,11 +65,13 @@ model SF424Individual {
 
   /** Assistance Listing (CFDA) Number — pre-populated from Application cover sheet */
   @example("93.123")
+  @minLength(0)
   @maxLength(15)
   cfdaNumber?: string;
 
   /** Assistance Listing (CFDA) Title — pre-populated from Application cover sheet */
   @example("Example Grant Program")
+  @minLength(0)
   @maxLength(120)
   cfdaTitle?: string;
 
@@ -149,11 +151,13 @@ model SF424Individual {
 
   /** Evening telephone number */
   @example("555-987-6543")
+  @minLength(0)
   @maxLength(25)
   eveningPhone?: string;
 
   /** Fax number */
   @example("555-456-7890")
+  @minLength(0)
   @maxLength(25)
   fax?: string;
 
@@ -165,6 +169,7 @@ model SF424Individual {
 
   /** Alien Registration Number (required if not a U.S. citizen) */
   @example("")
+  @minLength(0)
   @maxLength(14)
   alienRegistrationNumber?: string;
 
@@ -181,11 +186,13 @@ model SF424Individual {
 
   /** County or parish of the applicant address */
   @example("District of Columbia")
+  @minLength(0)
   @maxLength(30)
   county?: string;
 
   /** Province of the applicant address */
   @example("")
+  @minLength(0)
   @maxLength(30)
   province?: string;
 

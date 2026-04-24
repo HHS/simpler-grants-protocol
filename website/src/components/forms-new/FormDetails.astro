@@ -49,8 +49,6 @@ function stripExtensions(value: unknown, depth = 0): unknown {
     // Drop $schema and $id at all levels — TypeSpec anchor fields, not part
     // of the user-facing schema.
     if (key === "$schema" || key === "$id") continue;
-    // Drop required arrays — validation is implied by the property definitions.
-    if (key === "required") continue;
     // Drop example/examples — these are authoring aids, not part of the schema spec.
     if (key === "examples" || key === "example") continue;
     result[key] = stripExtensions(val, depth + 1);

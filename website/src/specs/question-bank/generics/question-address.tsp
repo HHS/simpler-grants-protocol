@@ -144,6 +144,7 @@ model QuestionAddress {
   street1: string;
 
   /** Additional street address information */
+  @minLength(0)
   @maxLength(55)
   street2?: string;
 
@@ -156,6 +157,7 @@ model QuestionAddress {
   state: USState;
 
   /** State or province name (for non-US addresses) */
+  @minLength(0)
   @maxLength(30)
   stateOrProvince?: string;
 
@@ -165,6 +167,7 @@ model QuestionAddress {
   country: string;
 
   /** The postal or ZIP code */
+  @minLength(0)
   @maxLength(30)
   postalCode: string;
 }

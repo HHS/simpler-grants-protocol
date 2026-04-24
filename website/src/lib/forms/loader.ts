@@ -20,6 +20,7 @@ import {
   composeUiSchema,
   composeMappingFromCg,
   composeMappingToCg,
+  deepMergeInto,
 } from "./compose";
 
 // Import the forms index
@@ -169,7 +170,9 @@ function extractSchemaData(
   const composedUi = explicitUi ?? composeUiSchema(base.properties);
   const composedFromCg =
     explicitFromCg ?? composeMappingFromCg(base.properties);
-  const composedToCg = explicitToCg ?? composeMappingToCg(base.properties);
+  const baseToCg = composeMappingToCg(base.properties);
+  if (explicitToCg) deepMergeInto(baseToCg, explicitToCg);
+  const composedToCg = baseToCg;
 
   const overrides = extractOverrides(schema);
 
