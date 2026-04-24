@@ -38,6 +38,72 @@ function* walkControls(node: UiNode): Generator<UiNode> {
 }
 
 /**
+ * Returns the deepest common scope-segment prefix shared by all entries in
+ * `scopes`, then strips a trailing `/properties` segment so the result
+ * matches what `pathToScope` produces for the parent property name.
+ *
+ * @example
+ *   commonScopePrefix([
+ *     "#/properties/contact/properties/address/properties/street1",
+ *     "#/properties/contact/properties/address/properties/city",
+ *   ])
+ *   // → "#/properties/contact/properties/address"
+ */
+function commonScopePrefix(scopes: string[]): string {
+  if (scopes.length === 0) return "";
+  const parts = scopes.map((s) => s.split("/"));
+  const first = parts[0];
+  let len = first.length;
+  for (const p of parts.slice(1)) {
+    let i = 0;
+    while (i < len && i < p.length && first[i] === p[i]) i++;
+    len = i;
+  }
+  const joined = first.slice(0, len).join("/");
+  return joined.endsWith("/properties")
+    ? joined.slice(0, -"/properties".length)
+    : joined;
+}
+
+/**
+ * Walks a UI-schema tree and yields [childScopePrefix, groupNode] for every
+ * Group/Layout node. The child scope prefix is the common scope-segment
+ * prefix of all Control nodes within the group, which equals the
+ * `pathToScope()` result for the dotted path that should target the group.
+ *
+ * This lets callers look up a Group by the same dotted-path key they would
+ * use for its children (e.g. `"contact.address"` finds the Group whose
+ * Controls all live under `#/properties/contact/properties/address/…`).
+ */
+function* walkGroups(node: UiNode): Generator<[string, UiNode]> {
+  const type = node.type as string | undefined;
+  if (
+    type !== "Group" &&
+    type !== "VerticalLayout" &&
+    type !== "HorizontalLayout"
+  ) {
+    return;
+  }
+
+  const childScopes: string[] = [];
+  for (const control of walkControls(node)) {
+    if (typeof control.scope === "string") {
+      childScopes.push(control.scope);
+    }
+  }
+  if (childScopes.length > 0) {
+    const prefix = commonScopePrefix(childScopes);
+    if (prefix) yield [prefix, node];
+  }
+
+  if (Array.isArray(node.elements)) {
+    for (const child of node.elements) {
+      yield* walkGroups(child as UiNode);
+    }
+  }
+}
+
+/**
  * Returns a deep-cloned UI schema with per-path label / control overrides
  * applied. Each override key is a dotted property path that is converted
  * to the matching JSON-Forms `scope` string and looked up inside the tree.
@@ -63,16 +129,33 @@ export function applyUiOverrides(
     }
   }
 
+  // Build a secondary index of Group/Layout nodes keyed by the common scope
+  // prefix of their descendant Controls. This allows a dotted path like
+  // "contact.address" to target the "Mailing Address" Group that wraps those
+  // Controls, rather than requiring individual Control overrides.
+  const groupsByChildPrefix = new Map<string, UiNode>();
+  for (const [prefix, group] of walkGroups(cloned)) {
+    if (!groupsByChildPrefix.has(prefix)) {
+      groupsByChildPrefix.set(prefix, group);
+    }
+  }
+
   for (const [dottedPath, patch] of Object.entries(overrides)) {
     const scope = pathToScope(dottedPath);
     const control = controlsByScope.get(scope);
-    if (!control) {
-      throw new Error(
-        `x-overrides.uiSchema path "${dottedPath}" (scope "${scope}") ` +
-          `does not match any Control in the base UI schema.`,
-      );
+    if (control) {
+      Object.assign(control, patch);
+      continue;
     }
-    Object.assign(control, patch);
+    const group = groupsByChildPrefix.get(scope);
+    if (group) {
+      Object.assign(group, patch);
+      continue;
+    }
+    throw new Error(
+      `x-overrides.uiSchema path "${dottedPath}" (scope "${scope}") ` +
+        `does not match any Control or Group in the base UI schema.`,
+    );
   }
 
   return cloned as Record<string, unknown>;

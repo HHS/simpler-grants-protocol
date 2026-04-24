@@ -343,56 +343,11 @@ model SF424 {
     "x-overrides",
     #{
       uiSchema: #{
-        `address.street1`: #{
+        address: #{
           rule: #{
             effect: "HIDE",
             condition: #{
               scope: "#/properties/contact/properties/address/properties/street1",
-              schema: #{},
-            },
-          },
-        },
-        `address.street2`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/address/properties/street2",
-              schema: #{},
-            },
-          },
-        },
-        `address.city`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/address/properties/city",
-              schema: #{},
-            },
-          },
-        },
-        `address.state`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/address/properties/state",
-              schema: #{},
-            },
-          },
-        },
-        `address.country`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/address/properties/country",
-              schema: #{},
-            },
-          },
-        },
-        `address.postalCode`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/address/properties/postalCode",
               schema: #{},
             },
           },
@@ -644,7 +599,7 @@ model SF424 {
     "x-overrides",
     #{
       uiSchema: #{
-        `address.street1`: #{
+        address: #{
           rule: #{
             effect: "HIDE",
             condition: #{
@@ -653,47 +608,11 @@ model SF424 {
             },
           },
         },
-        `address.street2`: #{
+        name: #{
           rule: #{
             effect: "HIDE",
             condition: #{
-              scope: "#/properties/aor/properties/address/properties/street2",
-              schema: #{},
-            },
-          },
-        },
-        `address.city`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/aor/properties/address/properties/city",
-              schema: #{},
-            },
-          },
-        },
-        `address.state`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/aor/properties/address/properties/state",
-              schema: #{},
-            },
-          },
-        },
-        `address.country`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/aor/properties/address/properties/country",
-              schema: #{},
-            },
-          },
-        },
-        `address.postalCode`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/aor/properties/address/properties/postalCode",
+              scope: "#/properties/aor/properties/name/properties/firstName",
               schema: #{},
             },
           },
