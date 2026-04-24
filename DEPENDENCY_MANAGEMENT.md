@@ -18,7 +18,7 @@ Dependabot has [multiple open bugs](https://github.com/dependabot/dependabot-cor
 | Tier | Tool | What it covers |
 |------|------|----------------|
 | Tier 1 | Dependabot | Python SDK, GitHub Actions, non-catalog workspace deps |
-| Tier 2 | `deps-catalog-check` workflow | Catalog-managed deps: `@typespec/*`, `vitest`, `@vitest/*`, `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-prettier`, `eslint-plugin-vitest`, `globals`, `prettier`, `typescript`, `ts-node`, `@types/node` |
+| Tier 2 | `deps-catalog-check` workflow | Catalog-managed deps (see [Catalog workflow scope](#catalog-workflow-scope) below) |
 
 Config lives in `.github/dependabot.yml` and `.github/workflows/deps-catalog-check.yml`.
 
