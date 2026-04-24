@@ -73,17 +73,22 @@ model KeyContact {
 
   /** Contact's organizational affiliation if different from the applicant organization */
   @example("Test Organization")
+  @maxLength(60)
   contactOrganizationalAffiliation?: string;
 
   /** County or parish of the contact address */
   @example("")
+  @maxLength(30)
   contactCounty?: string;
 
   /** Contact's fax number */
   @example("555-111-2222")
+  @maxLength(25)
   contactFax?: string;
 
   /** This contact's role on the project (e.g. Project Director, Fiscal Contact) */
   @example("Project Director")
+  @minLength(1)
+  @maxLength(45)
   projectRole: string;
 }

@@ -181,6 +181,7 @@ model SF424Mandatory {
 
   /** Specify the type of submission (required if typeOfSubmission is Other) */
   @example("")
+  @maxLength(50)
   otherSubmissionTypeExplanation?: string;
 
   /** 1.b. Frequency */
@@ -189,6 +190,7 @@ model SF424Mandatory {
 
   /** Specify the frequency of submission (required if frequency is Other) */
   @example("")
+  @maxLength(50)
   otherFrequencyExplanation?: string;
 
   /** 1.c. Consolidated Application/Plan/Funding Request? */
@@ -197,6 +199,7 @@ model SF424Mandatory {
 
   /** Identify programs covered by the consolidated submission */
   @example("")
+  @maxLength(4000)
   consolidatedRequestExplanation?: string;
 
   /** 1.d. Version */
@@ -210,14 +213,17 @@ model SF424Mandatory {
 
   /** 3. Applicant Identifier — optional applicant control number */
   @example("GRANT-2024-001")
+  @maxLength(30)
   applicantIdentifier?: string;
 
   /** 4a. Federal Entity Identifier */
   @example("")
+  @maxLength(30)
   federalEntityId?: string;
 
   /** 4b. Federal Award Identifier */
   @example("")
+  @maxLength(25)
   federalAwardId?: string;
 
   /** 5. Date Received by State */
@@ -227,6 +233,7 @@ model SF424Mandatory {
 
   /** 6. State Application Identifier */
   @example("")
+  @maxLength(30)
   stateApplicationId?: string;
 
   // == Section 7: Applicant organization ==
@@ -259,14 +266,17 @@ model SF424Mandatory {
 
   /** County or parish of the applicant address */
   @example("Greene County")
+  @maxLength(30)
   orgCountyParish?: string;
 
   /** Primary organizational department or equivalent level */
   @example("Program Development")
+  @maxLength(30)
   orgDepartmentName?: string;
 
   /** Primary organizational division or major subdivision */
   @example("Health Services")
+  @maxLength(30)
   orgDivisionName?: string;
 
   // == Section 7f: Primary point of contact ==
@@ -287,6 +297,7 @@ model SF424Mandatory {
 
   /** Contact's organizational affiliation if different from the applicant organization */
   @example("Community Health Initiative")
+  @maxLength(60)
   contactOrganizationalAffiliation?: string;
 
   /** Primary point of contact phone number */
@@ -320,6 +331,7 @@ model SF424Mandatory {
 
   /** Contact's fax number */
   @example("(417) 555-0124")
+  @maxLength(25)
   contactFaxNumber?: string;
 
   /** Primary point of contact email */
@@ -334,42 +346,54 @@ model SF424Mandatory {
 
   /** Specify applicant type if Other was selected */
   @example("")
+  @maxLength(50)
   otherApplicantTypeExplanation?: string;
 
   /** 8b. Additional description of applicant type */
   @example("")
+  @maxLength(50)
   additionalDescription?: string;
 
   // == Sections 9–12: Grant opportunity info ==
 
   /** 9. Name of Federal Agency — pre-populated from Application cover sheet */
   @example("National Institutes of Health")
+  @minLength(1)
+  @maxLength(60)
   nameOfFederalAgency: string;
 
   /** 10. Assistance Listing Number — pre-populated from Application cover sheet */
   @example("93.123")
+  @maxLength(15)
   assistanceListingNumber?: string;
 
   /** Assistance Listing Title — pre-populated from Application cover sheet */
   @example("Community Health Centers Program")
+  @maxLength(120)
   assistanceListingTitle?: string;
 
   /** 11. Descriptive Title of Applicant's Project */
   @example("Community Health Improvement Initiative")
+  @minLength(1)
+  @maxLength(250)
   descriptiveTitleOfApplicantProject: string;
 
   /** 12. Areas Affected by Funding */
   @example("Rural communities in Southwest Missouri")
+  @maxLength(250)
   areasAffectedByFunding?: string;
 
   // == Section 13: Congressional districts ==
 
   /** 13a. Congressional district of the applicant (format: XX-###, e.g. MO-007) */
   @example("MO-007")
+  @minLength(1)
+  @maxLength(6)
   congressionalDistrictApplicant: string;
 
   /** 13b. Congressional district(s) of the program/project */
   @example("MO-007")
+  @maxLength(6)
   congressionalDistrictProject?: string;
 
   // == Section 14: Funding period ==
@@ -413,6 +437,7 @@ model SF424Mandatory {
 
   /** Explanation of federal debt delinquency (required if Yes) */
   @example("")
+  @maxLength(4000)
   delinquentFederalDebtExplanation?: string;
 
   // == Section 18: Authorized Organization Representative ==
@@ -436,6 +461,7 @@ model SF424Mandatory {
 
   /** AOR organizational affiliation if different from the applicant organization */
   @example("Community Health Initiative")
+  @maxLength(60)
   aorOrganizationalAffiliation?: string;
 
   /** AOR phone number */
@@ -469,6 +495,7 @@ model SF424Mandatory {
 
   /** AOR fax number */
   @example("(417) 555-0101")
+  @maxLength(25)
   aorFaxNumber?: string;
 
   /** AOR email */
@@ -477,6 +504,8 @@ model SF424Mandatory {
 
   /** Signature of Authorized Representative — completed by Grants.gov upon submission */
   @example("Michael Thompson")
+  @minLength(1)
+  @maxLength(144)
   aorSignature: string;
 
   /** Date the application was signed — completed by Grants.gov upon submission */

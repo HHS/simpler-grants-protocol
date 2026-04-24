@@ -28,5 +28,6 @@ namespace QuestionBank.PocTitle;
 @example(#{ title: "Chief Executive Officer" })
 model QuestionPocTitle {
   /** The contact's job title or role */
+  @maxLength(45)
   title: string;
 }

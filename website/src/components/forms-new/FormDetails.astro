@@ -35,6 +35,41 @@ const hasOverrides =
   Object.keys(item.overrides.uiSchema ?? {}).length > 0 ||
   Object.keys(item.overrides.mappingFromCg ?? {}).length > 0 ||
   Object.keys(item.overrides.mappingToCg ?? {}).length > 0;
+
+// Strip x-* extension fields and TypeSpec anchor fields from the raw schema
+// so the Schemas tab shows a clean, standard JSON Schema. Also reorder
+// top-level keys to match the conventional shape (title → description → type).
+function stripExtensions(value: unknown, depth = 0): unknown {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return value;
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    if (key.startsWith("x-")) continue;
+    // Drop $schema and $id at all levels — TypeSpec anchor fields, not part
+    // of the user-facing schema.
+    if (key === "$schema" || key === "$id") continue;
+    // Drop required arrays — validation is implied by the property definitions.
+    if (key === "required") continue;
+    // Drop example/examples — these are authoring aids, not part of the schema spec.
+    if (key === "examples" || key === "example") continue;
+    result[key] = stripExtensions(val, depth + 1);
+  }
+  return result;
+}
+
+const {
+  description,
+  type,
+  ...rest
+} = stripExtensions(item.rawSchema) as Record<string, unknown>;
+
+const cleanSchema: Record<string, unknown> = {
+  title: item.label,
+  ...(description !== undefined ? { description } : {}),
+  ...(type !== undefined ? { type } : {}),
+  ...rest,
+};
 ---
 
 <h2 class="details-title">Details</h2>
@@ -61,7 +96,7 @@ const hasOverrides =
     <details>
       <summary>JSON Schema</summary>
       <p>Provides the structure and data validation for this form.</p>
-      <Code lang="json" code={toJson(item.rawSchema)} />
+      <Code lang="json" code={toJson(cleanSchema)} />
     </details>
     <details>
       <summary>UI Schema (merged)</summary>

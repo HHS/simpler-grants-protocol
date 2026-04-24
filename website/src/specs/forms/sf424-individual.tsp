@@ -59,14 +59,18 @@ model SF424Individual {
 
   /** Name of the awarding federal agency — pre-populated from Application cover sheet */
   @example("Department of Health and Human Services")
+  @minLength(1)
+  @maxLength(60)
   federalAgency: string;
 
   /** Assistance Listing (CFDA) Number — pre-populated from Application cover sheet */
   @example("93.123")
+  @maxLength(15)
   cfdaNumber?: string;
 
   /** Assistance Listing (CFDA) Title — pre-populated from Application cover sheet */
   @example("Example Grant Program")
+  @maxLength(120)
   cfdaTitle?: string;
 
   /** Date received — completed by Grants.gov upon submission */
@@ -76,10 +80,14 @@ model SF424Individual {
 
   /** Funding opportunity number — pre-populated from Application cover sheet */
   @example("ABC-123-456")
+  @minLength(1)
+  @maxLength(40)
   opportunityId: string;
 
   /** Funding opportunity title — pre-populated from Application cover sheet */
   @example("Example Funding Opportunity")
+  @minLength(1)
+  @maxLength(255)
   opportunityTitle: string;
 
   // == Individual applicant contact information ==
@@ -141,10 +149,12 @@ model SF424Individual {
 
   /** Evening telephone number */
   @example("555-987-6543")
+  @maxLength(25)
   eveningPhone?: string;
 
   /** Fax number */
   @example("555-456-7890")
+  @maxLength(25)
   fax?: string;
 
   // == Citizenship ==
@@ -155,6 +165,7 @@ model SF424Individual {
 
   /** Alien Registration Number (required if not a U.S. citizen) */
   @example("")
+  @maxLength(14)
   alienRegistrationNumber?: string;
 
   /** Country of citizenship */
@@ -170,14 +181,18 @@ model SF424Individual {
 
   /** County or parish of the applicant address */
   @example("District of Columbia")
+  @maxLength(30)
   county?: string;
 
   /** Province of the applicant address */
   @example("")
+  @maxLength(30)
   province?: string;
 
   /** Congressional district of the applicant (format: XX-###, e.g. CA-005) */
   @example("DC-000")
+  @minLength(1)
+  @maxLength(6)
   congressionalDistrictApplicant: string;
 
   // == Project information ==

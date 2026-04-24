@@ -64,6 +64,7 @@ model CD511 {
 
   /** AOR signature — system-generated when submitted through Grants.gov */
   @example("")
+  @maxLength(144)
   signature: string;
 
   /** Date the AOR signed the application — system-generated when submitted through Grants.gov */

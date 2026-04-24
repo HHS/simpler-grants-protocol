@@ -88,10 +88,12 @@ namespace QuestionBank.ProjectDetails;
 model QuestionProjectDetails {
   /** The title of the project */
   @example("Community Health Initiative")
+  @maxLength(200)
   title?: string;
 
   /** A description of the project */
   @example("A project to improve health outcomes in rural communities.")
+  @maxLength(1000)
   description?: string;
 
   /** The amount of funding requested */

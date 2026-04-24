@@ -139,23 +139,32 @@ enum USState {
 })
 model QuestionAddress {
   /** The primary street address line */
+  @minLength(1)
+  @maxLength(55)
   street1: string;
 
   /** Additional street address information */
+  @maxLength(55)
   street2?: string;
 
   /** The city or municipality */
+  @minLength(1)
+  @maxLength(35)
   city: string;
 
   /** The US state, territory, or "Outside the US" */
   state: USState;
 
   /** State or province name (for non-US addresses) */
+  @maxLength(30)
   stateOrProvince?: string;
 
   /** The country */
+  @minLength(1)
+  @maxLength(49)
   country: string;
 
   /** The postal or ZIP code */
+  @maxLength(30)
   postalCode: string;
 }
