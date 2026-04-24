@@ -40,6 +40,14 @@ We decided to:
 
 5. **Make all top-level Plugin fields optional** so adopters can publish a plugin that provides only the features they need — for example, custom fields only — and expand to include transforms, client config, or additional schemas incrementally over time.
 
+6. **Plugin authors provide `toCommon` / `fromCommon` as functions; mappings are one way to generate them.** The SDK exposes `buildTransforms()` / `build_transforms()` as a public utility wrapping the existing mapping runtimes. `PluginExtensions.schemas.<Object>` gains an optional `mappings` key carrying JSON-safe `toCommon` / `fromCommon` mapping objects; when those are declared and no explicit transform is supplied in `schemas.<Object>`, `definePlugin()` invokes `buildTransforms()` automatically. Mappings for each direction are author-provided — `buildTransforms()` does not invert one direction into the other, because many-to-one handlers like `switch` are not reversible.
+
+7. **`toCommon` / `fromCommon` return a `TransformResult<T>` of `{ result, errors }` unconditionally; mapping definitions are validated at `buildTransforms()` call time.** Partial failure is routine for cross-schema transforms — field handlers can emit warnings that do not invalidate a record — so the transform surface is safe by default rather than throwing. `definePlugin()` wraps the underlying transform output with runtime schema validation (Zod `.parse()` / Pydantic `model_validate()`); validation failures surface as entries in `errors` rather than thrown exceptions. Consumers apply their own rule for what counts as success — strict adopters treat any non-empty `errors` as failure, lenient adopters tolerate warnings. Mappings passed to `buildTransforms()` are checked at the call site, failing fast on structural errors, unknown handlers, or unresolvable field paths.
+
+8. **Custom handlers are registered per utility call, not globally.** `buildTransforms()` accepts an optional `handlers` argument for registering additional handler names. Per-call scoping keeps behavior explicit and testable; name collisions with the default set raise at `buildTransforms()` call time rather than silently shadowing them. Handler-name lookup must not resolve inherited attributes, because mapping JSON can be reconstituted from untrusted sources via `mergeExtensions()`.
+
+9. **Transformation errors carry structured context.** SDK-emitted transformation errors extend a single `PluginError` base carrying field path, handler name, source value, and underlying cause, enabling programmatic reasoning without parsing error text. The source value may contain PII when transforming applicant data; adopters are responsible for redacting it before logging or re-raising, and the SDK does not redact by default.
+
 The resulting Plugin shape:
 
 ```
@@ -76,19 +84,28 @@ interface CustomFieldSpec {
   description?: string;
 }
 
+// Unconditional return shape for toCommon / fromCommon (see Decision #7).
+// `result` is the transformed value; `errors` aggregates PluginErrors emitted during
+// transformation and runtime schema validation. `errors` may be empty on full success,
+// or non-empty alongside a result when handlers emit non-fatal warnings.
+interface TransformResult<T> {
+  result: T;
+  errors: PluginError[];
+}
+
 // Runtime type — produced by definePlugin(), not provided directly by plugin authors
 interface ObjectSchemas<TNative, TCommon> {
   native: ZodType<TNative>;
   common: ZodType<TCommon>;
-  toCommon: (native: TNative) => TCommon;
-  fromCommon: (common: TCommon) => TNative;
+  toCommon: (native: TNative) => TransformResult<TCommon>;
+  fromCommon: (common: TCommon) => TransformResult<TNative>;
 }
 
 // Input type — provided by plugin authors inside DefinePluginOptions.schemas
 interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
   native?: ZodType<TNative>; // defaults to Record<string, unknown> if omitted
-  toCommon?: (native: TNative) => TCommon;
-  fromCommon?: (common: TCommon) => TNative;
+  toCommon?: (native: TNative) => TransformResult<TCommon>;
+  fromCommon?: (common: TCommon) => TransformResult<TNative>;
 }
 
 // Scalar types only — filters are query parameters, not schema fields
@@ -102,6 +119,13 @@ interface CustomFilterSpec {
 // Per-object config shape inside extensions.schemas — mirrors Python's PluginExtensionsSchema
 interface PluginExtensionsObjectConfig {
   customFields?: Record<string, CustomFieldSpec>;
+  // Optional declarative mappings in ADR-0017 format. When present and no explicit
+  // toCommon / fromCommon is supplied in schemas.<Object>, definePlugin() auto-invokes
+  // buildTransforms() on these. Each direction is author-provided; see Decision #6.
+  mappings?: {
+    toCommon?: Record<string, unknown>; // ADR-0017 mapping: native → CommonGrants
+    fromCommon?: Record<string, unknown>; // ADR-0017 mapping: CommonGrants → native
+  };
 }
 
 // Serializable portion of the plugin config — safe to store as JSON.
@@ -157,8 +181,13 @@ interface DefinePluginOptions {
 //   - wrapping getClient with memoization so the same Client instance is returned
 //     for equivalent configs automatically
 //
-// toCommon / fromCommon may be plain hand-written functions or generated via
-// buildTransforms(). Either way they are provided in schemas, not derived from extensions.
+// toCommon / fromCommon may be plain hand-written functions, generated via
+// buildTransforms() and passed in schemas, or auto-generated by definePlugin()
+// itself — when extensions.schemas.<Object>.mappings is declared and schemas.<Object>
+// provides no explicit transform, definePlugin() invokes buildTransforms() internally.
+// All transforms return TransformResult<T>; definePlugin() validates the result field
+// at runtime with schema.parse / model_validate and appends any validation failures
+// to the errors array rather than throwing (see Decision #7).
 function definePlugin(options: DefinePluginOptions): Plugin;
 
 // Combine multiple extension objects (e.g. from separate packages)
@@ -167,16 +196,30 @@ function mergeExtensions(
   onConflict: "firstWins" = "firstWins",
 ): PluginExtensions;
 
+// Handler signature matches ADR-0017 runtime conventions.
+type Handler = (value: unknown, context: unknown) => unknown;
+
 // Utility: generates toCommon and fromCommon functions from separate declarative
 // mapping objects (ADR-0017 format). Using this utility is optional — plugin authors
-// may provide plain hand-written functions instead.
+// may provide plain hand-written functions instead. Mappings are validated at call
+// time (see Decision #7); the optional `handlers` argument registers custom handler
+// names for this call only (see Decision #8).
 function buildTransforms<TNative, TCommon>(
   toCommonMapping: Record<string, unknown>, // ADR-0017 mapping from native → CommonGrants
   fromCommonMapping: Record<string, unknown>, // ADR-0017 mapping from CommonGrants → native
+  handlers?: Record<string, Handler>,
 ): {
-  toCommon: (native: TNative) => TCommon;
-  fromCommon: (common: TCommon) => TNative;
+  toCommon: (native: TNative) => TransformResult<TCommon>;
+  fromCommon: (common: TCommon) => TransformResult<TNative>;
 };
+
+// Base class for SDK-emitted transformation errors (see Decision #9).
+interface PluginError extends Error {
+  path?: string;
+  handler?: string;
+  sourceValue?: unknown;
+  cause?: unknown;
+}
 ```
 
 </TabItem>
@@ -190,6 +233,16 @@ from pydantic import BaseModel, ConfigDict, Field
 
 TNative = TypeVar('TNative')
 TCommon = TypeVar('TCommon')
+T = TypeVar('T')
+
+# Unconditional return shape for to_common / from_common (see Decision #7).
+# `result` is the transformed value; `errors` aggregates PluginErrors emitted during
+# transformation and runtime schema validation. `errors` may be empty on full success,
+# or non-empty alongside a result when handlers emit non-fatal warnings.
+@dataclass
+class TransformResult(Generic[T]):
+    result: T
+    errors: list['PluginError']
 
 # Defined in lib/python-sdk/common_grants_sdk/extensions/specs.py — reproduced here for reference
 @dataclass
@@ -205,15 +258,15 @@ class CustomFieldSpec:
 class ObjectSchemas(Generic[TNative, TCommon]):
     native: type[TNative]   # expects a Pydantic BaseModel subclass
     common: type[TCommon]   # expects a Pydantic BaseModel subclass
-    to_common: Callable[[TNative], TCommon]
-    from_common: Callable[[TCommon], TNative]
+    to_common: Callable[[TNative], TransformResult[TCommon]]
+    from_common: Callable[[TCommon], TransformResult[TNative]]
 
 # Input type — provided by plugin authors inside define_plugin(schemas=...)
 @dataclass
 class ObjectSchemasInput(Generic[TNative, TCommon]):
     native: type[TNative] | None = None  # defaults to dict[str, Any] if omitted
-    to_common: Callable[[TNative], TCommon] | None = None
-    from_common: Callable[[TCommon], TNative] | None = None
+    to_common: Callable[[TNative], TransformResult[TCommon]] | None = None
+    from_common: Callable[[TCommon], TransformResult[TNative]] | None = None
 
 # Scalar types only — filters are query parameters, not schema fields
 CustomFilterType = Literal['string', 'number', 'integer', 'boolean']
@@ -245,10 +298,20 @@ class PluginExtensionsMeta(BaseModel):
     source_system: str | None = Field(default=None, alias='sourceSystem')
     capabilities: list[PluginCapability] | None = None
 
+class ObjectMappings(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    # ADR-0017 mappings. Each direction is author-provided; see Decision #6.
+    to_common: dict[str, Any] | None = Field(default=None, alias='toCommon')      # native → CommonGrants
+    from_common: dict[str, Any] | None = Field(default=None, alias='fromCommon')  # CommonGrants → native
+
 class PluginExtensionsSchema(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     custom_fields: dict[str, CustomFieldSpec] | None = Field(default=None, alias='customFields')
+    # Optional declarative mappings. When present and no explicit to_common / from_common
+    # is supplied in schemas[obj], define_plugin() auto-invokes build_transforms() on these.
+    mappings: ObjectMappings | None = None
 
 class PluginExtensions(BaseModel):
     meta: PluginExtensionsMeta | None = None
@@ -275,8 +338,13 @@ class Plugin:
 #   - wrapping get_client with memoization so the same Client instance is returned
 #     for equivalent configs automatically
 #
-# to_common / from_common may be plain hand-written callables or generated via
-# build_transforms(). Either way they are provided in schemas, not derived from extensions.
+# to_common / from_common may be plain hand-written callables, generated via
+# build_transforms() and passed in schemas, or auto-generated by define_plugin()
+# itself — when extensions.schemas[obj].mappings is declared and schemas[obj] provides
+# no explicit transform, define_plugin() invokes build_transforms() internally.
+# All transforms return TransformResult[T]; define_plugin() validates the result field
+# at runtime with model_validate and appends any validation failures to the errors
+# list rather than raising (see Decision #7).
 def define_plugin(
     meta: PluginMeta | None = None,
     get_client: Callable[[ClientConfig], Client] | None = None,
@@ -286,13 +354,29 @@ def define_plugin(
 ) -> Plugin: ...
 def merge_extensions(*extensions: PluginExtensions, on_conflict: Literal["first_wins"] = "first_wins") -> PluginExtensions: ...
 
+# Handler signature matches ADR-0017 runtime conventions.
+Handler = Callable[[Any, Any], Any]
+
 # Utility: generates to_common and from_common callables from separate declarative
 # mapping dicts (ADR-0017 format). Using this utility is optional — plugin authors
-# may provide plain hand-written callables instead.
+# may provide plain hand-written callables instead. Mappings are validated at call
+# time (see Decision #7); the optional `handlers` argument registers custom handler
+# names for this call only (see Decision #8).
 def build_transforms(
     to_common_mapping: dict[str, Any],   # ADR-0017 mapping from native → CommonGrants
     from_common_mapping: dict[str, Any], # ADR-0017 mapping from CommonGrants → native
-) -> tuple[Callable[[TNative], TCommon], Callable[[TCommon], TNative]]: ...
+    handlers: dict[str, Handler] | None = None,
+) -> tuple[
+    Callable[[Any], TransformResult[Any]],
+    Callable[[Any], TransformResult[Any]],
+]: ...
+
+# Base class for SDK-emitted transformation errors (see Decision #9).
+class PluginError(Exception):
+    path: str | None
+    handler: str | None
+    source_value: Any
+    cause: BaseException | None
 ```
 
 </TabItem>
@@ -473,9 +557,23 @@ const client = grantsGovPlugin.getClient({
   pageSize: 25,
 });
 
-// Use the compiled schemas to transform native data into CommonGrants shape
+// Use the compiled schemas to transform native data into CommonGrants shape.
+// toCommon / fromCommon return TransformResult<T> = { result, errors } — consumers
+// apply their own strict-vs-lenient rule for what counts as success.
 const { toCommon } = grantsGovPlugin.schemas.Opportunity;
-const opportunity = toCommon(rawGrantsGovData);
+const { result, errors } = toCommon(rawGrantsGovData);
+if (errors.length === 0) {
+  use(result); // strict: treat any error (including handler warnings) as failure
+} else {
+  // lenient: use result despite warnings; inspect errors for context
+  for (const err of errors) console.warn(err.path, err.message);
+}
+
+// Batch transformation is a plain .map — each element carries its own result and errors
+const items = rawBatch.map(toCommon);
+const successful = items
+  .filter((r) => r.errors.length === 0)
+  .map((r) => r.result);
 
 // Inspect what the plugin declares about itself
 console.log(grantsGovPlugin.meta.sourceSystem); // "grants.gov"
@@ -494,9 +592,21 @@ client = grants_gov_plugin.get_client({
     'page_size': 25,
 })
 
-# Use the compiled schemas to transform native data into CommonGrants shape
+# Use the compiled schemas to transform native data into CommonGrants shape.
+# to_common / from_common return TransformResult[T] = {result, errors} — consumers
+# apply their own strict-vs-lenient rule for what counts as success.
 to_common = grants_gov_plugin.schemas['Opportunity'].to_common
-opportunity = to_common(raw_grants_gov_data)
+outcome = to_common(raw_grants_gov_data)
+if not outcome.errors:
+    use(outcome.result)  # strict: treat any error (including handler warnings) as failure
+else:
+    # lenient: use outcome.result despite warnings; inspect errors for context
+    for err in outcome.errors:
+        print(err.path, err)
+
+# Batch transformation is a plain list comprehension — each element carries its own result and errors
+items = [to_common(x) for x in raw_batch]
+successful = [r.result for r in items if not r.errors]
 
 # Inspect what the plugin declares about itself
 print(grants_gov_plugin.meta.source_system)   # "grants.gov"
@@ -515,8 +625,10 @@ print(grants_gov_plugin.meta.capabilities)    # ["customFields", "transforms", "
   - `mergeExtensions()` / `merge_extensions()` operates on flat, serializable data at the root, not on deeply nested per-object branches
   - Per-object grouping inside `schemas` preserves the real coupling between native schema, CommonGrants schema, and bidirectional transforms — they share type signatures and change together
   - Mirrors the SDK module structure (`client`, `schemas`, `extensions`), so Plugin reads as a system-specific version of the existing SDK rather than a different mental model
-  - `toCommon`/`fromCommon` can be plain hand-written functions or generated via `buildTransforms()` — plugin authors are not required to use a declarative mapping format
+  - `toCommon`/`fromCommon` can be plain hand-written functions, generated via `buildTransforms()` and passed in `schemas`, or auto-generated by `definePlugin()` from mappings declared in `extensions` — plugin authors are not required to use a declarative mapping format
   - `buildTransforms()` accepts separate `toCommonMapping` and `fromCommonMapping` objects, reflecting that the two directions of a bidirectional transform are distinct
+  - `toCommon` / `fromCommon` return `TransformResult<T>` so partial failure surfaces as data, batch processing is a plain `.map`, and consumers apply their own strict-vs-lenient rule for what counts as success; structured `PluginError` lets adopters reason about those failures programmatically without parsing error text
+  - Custom handlers are registered per-call on `buildTransforms()`, not globally — behavior stays explicit and testable, and collisions with the default set raise at `buildTransforms()` call time
   - `customFields` is optional — the `customFields`-only config structure remains valid; existing plugin packages require only minimal code changes to adopt `definePlugin()`
   - All top-level Plugin fields are optional — adopters can start with only what they need and expand incrementally
 - **Negative consequences**
