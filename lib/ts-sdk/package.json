@@ -81,15 +81,13 @@
     "example:server": "tsx examples/mock-api-server.ts"
   },
   "dependencies": {
-    "zod": "^3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@common-grants/core": "workspace:*",
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "catalog:",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
-    "@typescript-eslint/eslint-plugin": "^8.59.0",
-    "@typescript-eslint/parser": "^8.59.0",
     "@typespec/compiler": "catalog:",
     "@typespec/http": "catalog:",
     "@typespec/json-schema": "catalog:",
@@ -101,14 +99,14 @@
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
     "eslint": "catalog:",
-    "eslint-config-prettier": "^9.1.2",
-    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
     "js-yaml": "^4.1.1",
     "json-schema-faker": "^0.6.1",
     "prettier": "catalog:",
-    "ts-node": "^10.9.2",
+    "ts-node": "catalog:",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:"
   }
