@@ -31,26 +31,36 @@ namespace Forms.SF424Individual;
     uiSchema: #{
       // Section numbered labels
       federalAgency: #{ label: "1. Name of Federal Agency" },
+
       cfdaNumber: #{ label: "2a. Assistance Listing Number" },
       cfdaTitle: #{ label: "2b. Assistance Listing Title" },
       dateReceived: #{ label: "3. Date Received" },
       opportunityId: #{ label: "4a. Funding Opportunity Number" },
       opportunityTitle: #{ label: "4b. Funding Opportunity Title" },
-      congressionalDistrictApplicant: #{ label: "5d. Congressional District of Applicant" },
+      congressionalDistrictApplicant: #{
+        label: "5d. Congressional District of Applicant",
+      },
+
       // Citizenship labels
       citizenship: #{ label: "U.S. Citizenship" },
+
       alienRegistrationNumber: #{ label: "Alien Registration Number" },
       countryOfOrigin: #{ label: "Citizenship Country" },
       visitDate: #{ label: "Residency Start Date" },
+
       // Location labels
       county: #{ label: "County/Parish" },
+
       province: #{ label: "Province" },
+
       // Contact labels
       eveningPhone: #{ label: "Evening Phone Number" },
+
       fax: #{ label: "Fax Number" },
+
       // Certification
-      applicationCertification: #{ label: "Certification Agreement" }
-    }
+      applicationCertification: #{ label: "Certification Agreement" },
+    },
   }
 )
 @extension("x-tags", #["sf424-individual", "application"])
@@ -121,30 +131,42 @@ model SF424Individual {
         title: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/applicant/properties/title", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/applicant/properties/title",
+              schema: #{},
+            },
+          },
         },
         `phone.number`: #{ label: "Daytime Phone Number" },
         `phone.countryCode`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/applicant/properties/phone/properties/countryCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/applicant/properties/phone/properties/countryCode",
+              schema: #{},
+            },
+          },
         },
         `phone.extension`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/applicant/properties/phone/properties/extension", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/applicant/properties/phone/properties/extension",
+              schema: #{},
+            },
+          },
         },
         `phone.isMobile`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/applicant/properties/phone/properties/isMobile", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/applicant/properties/phone/properties/isMobile",
+              schema: #{},
+            },
+          },
         },
-        `address.postalCode`: #{ label: "Zip/Postal Code" }
-      }
+        `address.postalCode`: #{ label: "Zip/Postal Code" },
+      },
     }
   )
   applicant: QuestionPocDetails;
@@ -222,16 +244,22 @@ model SF424Individual {
         `amountRequested.amount`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/project/properties/amountRequested/properties/amount", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/project/properties/amountRequested/properties/amount",
+              schema: #{},
+            },
+          },
         },
         `amountRequested.currency`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/project/properties/amountRequested/properties/currency", schema: #{} }
-          }
-        }
-      }
+            condition: #{
+              scope: "#/properties/project/properties/amountRequested/properties/currency",
+              schema: #{},
+            },
+          },
+        },
+      },
     }
   )
   project: QuestionProjectDetails;

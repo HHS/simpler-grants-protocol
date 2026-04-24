@@ -4,7 +4,7 @@
   flex-direction: column;
 }
 
-/* Restore hidden behaviour overridden by display:flex above */
+/* Restore hidden behavior overridden by display:flex above */
 .control[hidden] {
   display: none;
 }

@@ -85,6 +85,7 @@ enum ApplicantTypeCode {
     uiSchema: #{
       // Submission metadata labels
       submissionType: #{ label: "Submission Type" },
+
       applicationType: #{ label: "Application Type" },
       revisionType: #{ label: "Revision Type" },
       revisionOtherSpecify: #{ label: "Other Explanation" },
@@ -93,47 +94,71 @@ enum ApplicantTypeCode {
       federalAwardIdentifier: #{ label: "Federal Award Identifier" },
       stateReceiveDate: #{ label: "Date Received by State" },
       stateApplicationId: #{ label: "State Application Identifier" },
+
       // Org section labels
       applicantCounty: #{ label: "County/Parish" },
+
       applicantProvince: #{ label: "Province" },
       departmentName: #{ label: "Department Name" },
       divisionName: #{ label: "Division Name" },
+
       // Contact section labels
       contactFax: #{ label: "Fax Number" },
+
       orgAffiliation: #{ label: "Organizational Affiliation" },
+
       // Opportunity labels
       agencyName: #{ label: "Agency Name" },
+
       cfdaNumber: #{ label: "CFDA Number" },
       cfdaProgramTitle: #{ label: "CFDA Program Title" },
       fundingOpportunityNumber: #{ label: "Funding Opportunity Number" },
       fundingOpportunityTitle: #{ label: "Funding Opportunity Title" },
-      competitionIdentificationNumber: #{ label: "Competition Identification Number" },
-      competitionIdentificationTitle: #{ label: "Competition Identification Title" },
+      competitionIdentificationNumber: #{
+        label: "Competition Identification Number",
+      },
+      competitionIdentificationTitle: #{
+        label: "Competition Identification Title",
+      },
+
       // Project labels
       areasAffected: #{ label: "Areas Affected" },
+
       additionalProjectTitle: #{ label: "Additional Project Title" },
-      congressionalDistrictApplicant: #{ label: "Congressional District - Applicant" },
-      congressionalDistrictProgramProject: #{ label: "Congressional District - Program/Project" },
-      additionalCongressionalDistricts: #{ label: "Additional Congressional Districts" },
+      congressionalDistrictApplicant: #{
+        label: "Congressional District - Applicant",
+      },
+      congressionalDistrictProgramProject: #{
+        label: "Congressional District - Program/Project",
+      },
+      additionalCongressionalDistricts: #{
+        label: "Additional Congressional Districts",
+      },
+
       // Estimated funding labels
       federalEstimatedFunding: #{ label: "Federal ($)" },
+
       applicantEstimatedFunding: #{ label: "Applicant ($)" },
       stateEstimatedFunding: #{ label: "State ($)" },
       localEstimatedFunding: #{ label: "Local ($)" },
       otherEstimatedFunding: #{ label: "Other ($)" },
       programIncomeEstimatedFunding: #{ label: "Program Income ($)" },
       totalEstimatedFunding: #{ label: "Total ($)" },
+
       // State review / debt labels
       stateReview: #{ label: "State Review" },
+
       stateReviewAvailableDate: #{ label: "State Review Date" },
       delinquentFederalDebt: #{ label: "Delinquent on Federal Debt?" },
       debtExplanation: #{ label: "Explanation" },
       certificationAgree: #{ label: "Certification Agreement" },
+
       // AOR labels
       aorFax: #{ label: "Fax Number" },
+
       aorSignature: #{ label: "AOR Signature" },
-      dateSigned: #{ label: "Date Signed" }
-    }
+      dateSigned: #{ label: "Date Signed" },
+    },
   }
 )
 @extension("x-tags", #["sf424", "application"])
@@ -219,40 +244,58 @@ model SF424 {
         duns: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/org/properties/duns", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/org/properties/duns",
+              schema: #{},
+            },
+          },
         },
         mission: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/org/properties/mission", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/org/properties/mission",
+              schema: #{},
+            },
+          },
         },
         yearFounded: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/org/properties/yearFounded", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/org/properties/yearFounded",
+              schema: #{},
+            },
+          },
         },
         `phone.countryCode`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/org/properties/phone/properties/countryCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/org/properties/phone/properties/countryCode",
+              schema: #{},
+            },
+          },
         },
         `phone.extension`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/org/properties/phone/properties/extension", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/org/properties/phone/properties/extension",
+              schema: #{},
+            },
+          },
         },
         `phone.isMobile`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/org/properties/phone/properties/isMobile", schema: #{} }
-          }
-        }
-      }
+            condition: #{
+              scope: "#/properties/org/properties/phone/properties/isMobile",
+              schema: #{},
+            },
+          },
+        },
+      },
     }
   )
   org: QuestionOrgDetails;
@@ -303,58 +346,85 @@ model SF424 {
         `address.street1`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/address/properties/street1", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/address/properties/street1",
+              schema: #{},
+            },
+          },
         },
         `address.street2`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/address/properties/street2", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/address/properties/street2",
+              schema: #{},
+            },
+          },
         },
         `address.city`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/address/properties/city", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/address/properties/city",
+              schema: #{},
+            },
+          },
         },
         `address.state`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/address/properties/state", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/address/properties/state",
+              schema: #{},
+            },
+          },
         },
         `address.country`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/address/properties/country", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/address/properties/country",
+              schema: #{},
+            },
+          },
         },
         `address.postalCode`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/address/properties/postalCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/address/properties/postalCode",
+              schema: #{},
+            },
+          },
         },
         `phone.countryCode`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/phone/properties/countryCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/phone/properties/countryCode",
+              schema: #{},
+            },
+          },
         },
         `phone.extension`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/phone/properties/extension", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/phone/properties/extension",
+              schema: #{},
+            },
+          },
         },
         `phone.isMobile`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/phone/properties/isMobile", schema: #{} }
-          }
-        }
-      }
+            condition: #{
+              scope: "#/properties/contact/properties/phone/properties/isMobile",
+              schema: #{},
+            },
+          },
+        },
+      },
     }
   )
   contact: QuestionPocDetails;
@@ -447,22 +517,31 @@ model SF424 {
         description: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/project/properties/description", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/project/properties/description",
+              schema: #{},
+            },
+          },
         },
         `amountRequested.amount`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/project/properties/amountRequested/properties/amount", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/project/properties/amountRequested/properties/amount",
+              schema: #{},
+            },
+          },
         },
         `amountRequested.currency`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/project/properties/amountRequested/properties/currency", schema: #{} }
-          }
-        }
-      }
+            condition: #{
+              scope: "#/properties/project/properties/amountRequested/properties/currency",
+              schema: #{},
+            },
+          },
+        },
+      },
     }
   )
   project: QuestionProjectDetails;
@@ -556,10 +635,7 @@ model SF424 {
 
   /** Authorized Organization Representative */
   @example(#{
-    name: #{
-      firstName: "Alex",
-      lastName: "Johnson",
-    },
+    name: #{ firstName: "Alex", lastName: "Johnson" },
     title: "Executive Director",
     phone: #{ countryCode: "+1", number: "555-234-5678" },
     email: "director@example.org",
@@ -571,58 +647,85 @@ model SF424 {
         `address.street1`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aor/properties/address/properties/street1", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aor/properties/address/properties/street1",
+              schema: #{},
+            },
+          },
         },
         `address.street2`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aor/properties/address/properties/street2", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aor/properties/address/properties/street2",
+              schema: #{},
+            },
+          },
         },
         `address.city`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aor/properties/address/properties/city", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aor/properties/address/properties/city",
+              schema: #{},
+            },
+          },
         },
         `address.state`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aor/properties/address/properties/state", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aor/properties/address/properties/state",
+              schema: #{},
+            },
+          },
         },
         `address.country`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aor/properties/address/properties/country", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aor/properties/address/properties/country",
+              schema: #{},
+            },
+          },
         },
         `address.postalCode`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aor/properties/address/properties/postalCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aor/properties/address/properties/postalCode",
+              schema: #{},
+            },
+          },
         },
         `phone.countryCode`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aor/properties/phone/properties/countryCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aor/properties/phone/properties/countryCode",
+              schema: #{},
+            },
+          },
         },
         `phone.extension`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aor/properties/phone/properties/extension", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aor/properties/phone/properties/extension",
+              schema: #{},
+            },
+          },
         },
         `phone.isMobile`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aor/properties/phone/properties/isMobile", schema: #{} }
-          }
-        }
-      }
+            condition: #{
+              scope: "#/properties/aor/properties/phone/properties/isMobile",
+              schema: #{},
+            },
+          },
+        },
+      },
     }
   )
   aor: QuestionAorDetails;

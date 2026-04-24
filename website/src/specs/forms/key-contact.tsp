@@ -23,11 +23,13 @@ namespace Forms.KeyContact;
   "x-overrides",
   #{
     uiSchema: #{
-      contactOrganizationalAffiliation: #{ label: "Organizational Affiliation" },
+      contactOrganizationalAffiliation: #{
+        label: "Organizational Affiliation",
+      },
       contactCounty: #{ label: "County" },
       contactFax: #{ label: "Fax Number" },
-      projectRole: #{ label: "Project Role" }
-    }
+      projectRole: #{ label: "Project Role" },
+    },
   }
 )
 @extension("x-tags", #["key-contact", "application"])
@@ -48,25 +50,34 @@ model KeyContact {
         `phone.countryCode`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/phone/properties/countryCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/phone/properties/countryCode",
+              schema: #{},
+            },
+          },
         },
         `phone.extension`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/phone/properties/extension", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/phone/properties/extension",
+              schema: #{},
+            },
+          },
         },
         `phone.isMobile`: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contact/properties/phone/properties/isMobile", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contact/properties/phone/properties/isMobile",
+              schema: #{},
+            },
+          },
         },
         `address.street1`: #{ label: "Street Address Line 1" },
         `address.street2`: #{ label: "Street Address Line 2" },
-        `address.postalCode`: #{ label: "Zip / Postal Code" }
-      }
+        `address.postalCode`: #{ label: "Zip / Postal Code" },
+      },
     }
   )
   contact: QuestionPocDetails;

@@ -173,19 +173,13 @@ enum Sf424YesNo {
           },
         },
         phones: #{
-          fax: #{
-            countryCode: "+1",
-            number: #{ field: "contactFaxNumber" },
-          },
+          fax: #{ countryCode: "+1", number: #{ field: "contactFaxNumber" } },
         },
       },
       otherContacts: #{
         authorizedRepresentative: #{
           phones: #{
-            fax: #{
-              countryCode: "+1",
-              number: #{ field: "aorFaxNumber" },
-            },
+            fax: #{ countryCode: "+1", number: #{ field: "aorFaxNumber" } },
           },
         },
       },
@@ -195,9 +189,9 @@ enum Sf424YesNo {
         name: "applicantType",
         fieldType: "string",
         value: #{
-          `switch`: #{
+          switch: #{
             field: "typeOfApplicant",
-            `case`: #{
+            case: #{
               `A: State Government`: "government-state",
               `B: County Government`: "government-local",
               `C: City or Township Government`: "government-local",
@@ -223,7 +217,7 @@ enum Sf424YesNo {
               `W: Non-domestic (non-US) Entity`: "custom",
               `X: Other (specify)`: "custom",
             },
-            `default`: "custom",
+            default: "custom",
           },
         },
         description: "The type of applicant organization",
@@ -315,73 +309,113 @@ enum Sf424YesNo {
     uiSchema: #{
       // Section 1 labels
       typeOfSubmission: #{ label: "1.a. Type of Submission" },
+
       otherSubmissionTypeExplanation: #{
         label: "Other (specify)",
         rule: #{
           effect: "HIDE",
-          condition: #{ scope: "#/properties/typeOfSubmission", schema: #{ not: #{ type: "string", pattern: "^Other$" } } }
-        }
+          condition: #{
+            scope: "#/properties/typeOfSubmission",
+            schema: #{ not: #{ type: "string", pattern: "^Other$" } },
+          },
+        },
       },
       frequency: #{ label: "1.b. Frequency" },
       otherFrequencyExplanation: #{
         label: "Other (specify)",
         rule: #{
           effect: "HIDE",
-          condition: #{ scope: "#/properties/frequency", schema: #{ not: #{ type: "string", pattern: "^Other$" } } }
-        }
+          condition: #{
+            scope: "#/properties/frequency",
+            schema: #{ not: #{ type: "string", pattern: "^Other$" } },
+          },
+        },
       },
-      consolidatedRequest: #{ label: "1.c. Consolidated Application/Plan/Funding Request?" },
+      consolidatedRequest: #{
+        label: "1.c. Consolidated Application/Plan/Funding Request?",
+      },
       consolidatedRequestExplanation: #{
         label: "Consolidated Application/Plan/Funding Request Explanation",
         rule: #{
           effect: "HIDE",
-          condition: #{ scope: "#/properties/consolidatedRequest", schema: #{ not: #{ type: "string", pattern: "^Yes$" } } }
-        }
+          condition: #{
+            scope: "#/properties/consolidatedRequest",
+            schema: #{ not: #{ type: "string", pattern: "^Yes$" } },
+          },
+        },
       },
       version: #{ label: "1.d. Version" },
+
       // Section 2-6 labels
       dateReceived: #{ label: "2. Date Received" },
+
       applicantIdentifier: #{ label: "3. Applicant Identifier" },
       federalEntityId: #{ label: "4a. Federal Entity Identifier" },
       federalAwardId: #{ label: "4b. Federal Award Identifier" },
       dateReceivedState: #{ label: "5. Date Received by State" },
       stateApplicationId: #{ label: "6. State Application Identifier" },
+
       // Section 7 labels (org sub-fields handled via field-level overrides below)
       orgCountyParish: #{ label: "County / Parish" },
+
       orgDepartmentName: #{ label: "Department Name" },
       orgDivisionName: #{ label: "Division Name" },
+
       // Section 8 labels
       typeOfApplicant: #{ label: "8a. Type of Applicant" },
+
       additionalDescription: #{ label: "b. Additional Description" },
+
       // Section 9-12 labels
       nameOfFederalAgency: #{ label: "9. Name of Federal Agency" },
+
       assistanceListingNumber: #{ label: "10. Assistance Listing Number" },
-      descriptiveTitleOfApplicantProject: #{ label: "11. Descriptive Title of Applicant's Project" },
+      descriptiveTitleOfApplicantProject: #{
+        label: "11. Descriptive Title of Applicant's Project",
+      },
       areasAffectedByFunding: #{ label: "12. Areas Affected by Funding" },
+
       // Section 13 labels
       congressionalDistrictApplicant: #{ label: "13a. Applicant" },
+
       congressionalDistrictProject: #{ label: "13b. Program/Project" },
+
       // Section 14 labels
       fundingPeriodStartDate: #{ label: "14a. Start Date" },
+
       fundingPeriodEndDate: #{ label: "14b. End Date" },
+
       // Section 15 labels
       estimatedFundingFederal: #{ label: "15a. Federal ($)" },
+
       estimatedFundingMatch: #{ label: "15b. Match ($)" },
+
       // Section 16 labels
-      submissionSubjectToReview: #{ label: "IS SUBMISSION SUBJECT TO REVIEW BY STATE UNDER EXECUTIVE ORDER 12372 PROCESS?" },
+      submissionSubjectToReview: #{
+        label: "IS SUBMISSION SUBJECT TO REVIEW BY STATE UNDER EXECUTIVE ORDER 12372 PROCESS?",
+      },
+
       // Section 17 labels
-      applicantDelinquentFederalDebt: #{ label: "17. Is The Applicant Delinquent On Any Federal Debt?" },
+      applicantDelinquentFederalDebt: #{
+        label: "17. Is The Applicant Delinquent On Any Federal Debt?",
+      },
+
       // Contact section labels
-      contactOrganizationalAffiliation: #{ label: "Organizational Affiliation" },
+      contactOrganizationalAffiliation: #{
+        label: "Organizational Affiliation",
+      },
+
       contactFaxNumber: #{ label: "Fax Number" },
+
       // Section 18 labels
       aorIAgree: #{ label: "I Agree" },
+
       aorOrganizationalAffiliation: #{ label: "Organizational Affiliation" },
       aorFaxNumber: #{ label: "Fax Number" },
       aorSignature: #{ label: "Signature of Authorized Representative" },
       aorSignatureDate: #{ label: "Date Signed" },
-      attachSupportingDocuments: #{ label: "Attach Supporting Documents" }
-    }
+      attachSupportingDocuments: #{ label: "Attach Supporting Documents" },
+    },
   }
 )
 @extension("x-tags", #["sf424-mandatory", "application"])
@@ -460,12 +494,22 @@ model SF424Mandatory {
 
   /** Primary applicant organization name */
   @example(#{ name: "Community Health Initiative" })
-  @extension("x-overrides", #{ uiSchema: #{ name: #{ label: "a. Legal Name" } } })
+  @extension(
+    "x-overrides",
+    #{ uiSchema: #{ name: #{ label: "a. Legal Name" } } }
+  )
   orgName: QuestionOrgName;
 
   /** Employer Identification Number (EIN) of the applicant organization */
   @example(#{ ein: "12-3456789" })
-  @extension("x-overrides", #{ uiSchema: #{ ein: #{ label: "b. Employer/Taxpayer Identification Number (EIN/TIN)" } } })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        ein: #{ label: "b. Employer/Taxpayer Identification Number (EIN/TIN)" },
+      },
+    }
+  )
   orgEin: QuestionOrgEin;
 
   /** SAM Unique Entity Identifier (UEI) of the applicant organization */
@@ -533,22 +577,31 @@ model SF424Mandatory {
         countryCode: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contactPhone/properties/countryCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contactPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
         },
         extension: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contactPhone/properties/countryCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/contactPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
         },
         isMobile: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/contactPhone/properties/countryCode", schema: #{} }
-          }
-        }
-      }
+            condition: #{
+              scope: "#/properties/contactPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
+        },
+      },
     }
   )
   contactPhone: QuestionPocPhone;
@@ -706,22 +759,31 @@ model SF424Mandatory {
         countryCode: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aorPhone/properties/countryCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aorPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
         },
         extension: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aorPhone/properties/countryCode", schema: #{} }
-          }
+            condition: #{
+              scope: "#/properties/aorPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
         },
         isMobile: #{
           rule: #{
             effect: "HIDE",
-            condition: #{ scope: "#/properties/aorPhone/properties/countryCode", schema: #{} }
-          }
-        }
-      }
+            condition: #{
+              scope: "#/properties/aorPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
+        },
+      },
     }
   )
   aorPhone: QuestionAorPhone;

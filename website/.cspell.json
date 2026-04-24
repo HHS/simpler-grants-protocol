@@ -35,7 +35,11 @@
     "USCDI",
     "rescope",
     "rescoped",
-    "underrepresents"
+    "underrepresents",
+    "cfda",
+    "CFDA",
+    "HBCUs",
+    "TCCUs"
   ],
   "ignoreWords": [
     "opblock",

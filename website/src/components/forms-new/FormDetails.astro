@@ -7,7 +7,6 @@ import type { FormData } from "@/lib/types";
 import { generateSchemaExample } from "@/lib/schema/example-generator";
 import { Paths } from "@/lib/schema/paths";
 import { extensionsAjv } from "@/lib/validation";
-import * as yaml from "js-yaml";
 
 interface Props {
   item: FormItem;
@@ -17,9 +16,6 @@ const { item } = Astro.props;
 
 const toJson = (data: Record<string, unknown>) =>
   JSON.stringify(data, null, 2) as string;
-
-const toYaml = (data: Record<string, unknown>) =>
-  yaml.dump(data, { noRefs: true, lineWidth: -1 }) as string;
 
 // Generate example data from the schema using openapi-sampler, which
 // composes examples from nested $ref schemas automatically. Mirrors the
@@ -56,11 +52,9 @@ function stripExtensions(value: unknown, depth = 0): unknown {
   return result;
 }
 
-const {
-  description,
-  type,
-  ...rest
-} = stripExtensions(item.rawSchema) as Record<string, unknown>;
+const { description, type, ...rest } = stripExtensions(
+  item.rawSchema,
+) as Record<string, unknown>;
 
 const cleanSchema: Record<string, unknown> = {
   title: item.label,

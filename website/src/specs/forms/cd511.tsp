@@ -28,15 +28,18 @@ namespace Forms.CD511;
       awardNumber: #{ label: "Award Number" },
       projectName: #{ label: "Project Name" },
       signature: #{ label: "Signature" },
-      submittedDate: #{ label: "Date" }
-    }
+      submittedDate: #{ label: "Date" },
+    },
   }
 )
 @extension("x-tags", #["cd511", "application"])
 model CD511 {
   /** Legal name of the applicant organization */
   @example(#{ name: "Example Research Institute" })
-  @extension("x-overrides", #{ uiSchema: #{ name: #{ label: "Organization Name" } } })
+  @extension(
+    "x-overrides",
+    #{ uiSchema: #{ name: #{ label: "Organization Name" } } }
+  )
   org: QuestionOrgName;
 
   /** Project award number */
