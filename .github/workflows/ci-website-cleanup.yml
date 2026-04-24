@@ -12,6 +12,9 @@ jobs:
   cleanup-preview:
     runs-on: ubuntu-latest
     name: Cleanup PR preview
+    # Previews are not deployed for dependabot PRs (see ci-website-preview.yml),
+    # so there's nothing to clean up and `wrangler delete` would 404.
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
