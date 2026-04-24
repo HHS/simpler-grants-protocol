@@ -66,7 +66,7 @@
     "@eslint/js": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
-    "globals": "^15.15.0",
+    "globals": "catalog:",
     "prettier": "catalog:",
     "rimraf": "^5.0.10",
     "source-map-support": "^0.5.21",

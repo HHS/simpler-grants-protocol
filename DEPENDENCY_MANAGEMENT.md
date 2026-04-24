@@ -18,7 +18,7 @@ Dependabot has [multiple open bugs](https://github.com/dependabot/dependabot-cor
 | Tier | Tool | What it covers |
 |------|------|----------------|
 | Tier 1 | Dependabot | Python SDK, GitHub Actions, non-catalog workspace deps |
-| Tier 2 | `deps-catalog-check` workflow | Catalog-managed deps: `@typespec/*`, `vitest`, `@vitest/*`, `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-prettier`, `eslint-plugin-vitest`, `prettier`, `typescript`, `@types/node` |
+| Tier 2 | `deps-catalog-check` workflow | Catalog-managed deps: `@typespec/*`, `vitest`, `@vitest/*`, `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-prettier`, `eslint-plugin-vitest`, `globals`, `prettier`, `typescript`, `ts-node`, `@types/node` |
 
 Config lives in `.github/dependabot.yml` and `.github/workflows/deps-catalog-check.yml`.
 
@@ -63,8 +63,8 @@ The `deps-catalog-check` workflow (`.github/workflows/deps-catalog-check.yml`) r
 **What it manages** (defined in `pnpm-workspace.yaml` under `catalog:`):
 - TypeSpec: `@typespec/compiler`, `@typespec/http`, `@typespec/json-schema`, `@typespec/openapi`, `@typespec/openapi3`, `@typespec/rest`, `@typespec/versioning`
 - Testing: `vitest`, `@vitest/coverage-v8`, `eslint-plugin-vitest`
-- Linting/formatting: `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-prettier`, `prettier`
-- TypeScript: `typescript`, `@types/node`
+- Linting/formatting: `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-prettier`, `globals`, `prettier`
+- TypeScript: `typescript`, `ts-node`, `@types/node`
 
 The `website` catalog has its own `vitest` version (`^4.x`). The update script includes an explicit `pnpm update vitest --filter website` step to ensure it stays current alongside the default catalog.
 
