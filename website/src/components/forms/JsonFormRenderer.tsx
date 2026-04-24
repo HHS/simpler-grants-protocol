@@ -10,27 +10,26 @@ import "./form-styles.css";
 import type { FormData } from "@/lib/types";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
 
-const styleContextValue = {
-  styles: [
-    ...vanillaStyles, // keep defaults
-    { name: "control.input", classNames: ["form-input", "rounded"] },
-    { name: "control.select", classNames: ["form-select", "rounded"] },
-    { name: "control.textarea", classNames: ["form-textarea", "rounded"] },
-    { name: "array.button", classNames: ["btn", "btn-primary"] },
-    { name: "array.item", classNames: ["form-array-item", "rounded"] },
-    { name: "array.layout", classNames: ["form-array-layout"] },
-    { name: "control.label", classNames: ["form-label", "font-semibold"] },
-    {
-      name: "control.validation",
-      classNames: ["form-validation", "text-red-500"],
-    },
-    {
-      name: "control.description",
-      classNames: ["form-description", "text-gray-600"],
-    },
-    { name: "group.layout", classNames: ["form-group", "rounded"] },
-    { name: "group.label", classNames: ["form-group-label", "font-bold"] },
-  ],
+const baseStyles = [
+  ...vanillaStyles, // keep defaults
+  { name: "control.input", classNames: ["form-input", "rounded"] },
+  { name: "control.select", classNames: ["form-select", "rounded"] },
+  { name: "control.textarea", classNames: ["form-textarea", "rounded"] },
+  { name: "array.button", classNames: ["btn", "btn-primary"] },
+  { name: "array.item", classNames: ["form-array-item", "rounded"] },
+  { name: "array.layout", classNames: ["form-array-layout"] },
+  { name: "control.label", classNames: ["form-label", "font-semibold"] },
+  {
+    name: "control.validation",
+    classNames: ["form-validation", "text-red-500"],
+  },
+  { name: "group.layout", classNames: ["form-group", "rounded"] },
+  { name: "group.label", classNames: ["form-group-label", "font-bold"] },
+];
+
+const descriptionAboveStyle = {
+  name: "input.description",
+  classNames: ["form-description", "text-gray-600"],
 };
 
 export interface JsonFormRendererProps {
@@ -39,6 +38,7 @@ export interface JsonFormRendererProps {
   data: FormData;
   onChange?: (data: FormData) => void;
   readonly?: boolean;
+  descriptionAbove?: boolean;
 }
 
 export const JsonFormRenderer: React.FC<JsonFormRendererProps> = ({
@@ -47,7 +47,14 @@ export const JsonFormRenderer: React.FC<JsonFormRendererProps> = ({
   data,
   onChange,
   readonly = false,
+  descriptionAbove = false,
 }) => {
+  const styleContextValue = {
+    styles: descriptionAbove
+      ? [...baseStyles, descriptionAboveStyle]
+      : baseStyles,
+  };
+
   return (
     <JsonFormsStyleContext.Provider value={styleContextValue}>
       <JsonForms

@@ -29,6 +29,31 @@ model KeyContact {
   org: QuestionOrgName;
 
   /** Primary point of contact for the project */
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        `phone.countryCode`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/phone/properties/countryCode", schema: #{} }
+          }
+        },
+        `phone.extension`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/phone/properties/extension", schema: #{} }
+          }
+        },
+        `phone.isMobile`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/phone/properties/isMobile", schema: #{} }
+          }
+        }
+      }
+    }
+  )
   contact: QuestionPocDetails;
 
   /** Contact's organizational affiliation if different from the applicant organization */

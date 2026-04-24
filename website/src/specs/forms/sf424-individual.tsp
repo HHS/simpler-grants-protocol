@@ -76,6 +76,37 @@ model SF424Individual {
     phone: #{ countryCode: "+1", number: "555-123-4567" },
     email: "john.smith@example.com",
   })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        title: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/applicant/properties/title", schema: #{} }
+          }
+        },
+        `phone.countryCode`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/applicant/properties/phone/properties/countryCode", schema: #{} }
+          }
+        },
+        `phone.extension`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/applicant/properties/phone/properties/extension", schema: #{} }
+          }
+        },
+        `phone.isMobile`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/applicant/properties/phone/properties/isMobile", schema: #{} }
+          }
+        }
+      }
+    }
+  )
   applicant: QuestionPocDetails;
 
   /** Evening telephone number */
@@ -128,6 +159,25 @@ model SF424Individual {
     startDate: "2024-10-01",
     endDate: "2025-09-30",
   })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        `amountRequested.amount`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/project/properties/amountRequested/properties/amount", schema: #{} }
+          }
+        },
+        `amountRequested.currency`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/project/properties/amountRequested/properties/currency", schema: #{} }
+          }
+        }
+      }
+    }
+  )
   project: QuestionProjectDetails;
 
   // == Certification ==

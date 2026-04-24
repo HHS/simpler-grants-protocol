@@ -242,6 +242,12 @@ model SF424Mandatory {
     "x-overrides",
     #{
       uiSchema: #{
+        countryCode: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contactPhone/properties/countryCode", schema: #{} }
+          }
+        },
         extension: #{
           rule: #{
             effect: "HIDE",
@@ -385,6 +391,12 @@ model SF424Mandatory {
     "x-overrides",
     #{
       uiSchema: #{
+        countryCode: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aorPhone/properties/countryCode", schema: #{} }
+          }
+        },
         extension: #{
           rule: #{
             effect: "HIDE",

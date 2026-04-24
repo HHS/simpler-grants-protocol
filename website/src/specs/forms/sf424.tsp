@@ -140,6 +140,49 @@ model SF424 {
       postalCode: "20001",
     },
   })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        duns: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/org/properties/duns", schema: #{} }
+          }
+        },
+        mission: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/org/properties/mission", schema: #{} }
+          }
+        },
+        yearFounded: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/org/properties/yearFounded", schema: #{} }
+          }
+        },
+        `phone.countryCode`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/org/properties/phone/properties/countryCode", schema: #{} }
+          }
+        },
+        `phone.extension`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/org/properties/phone/properties/extension", schema: #{} }
+          }
+        },
+        `phone.isMobile`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/org/properties/phone/properties/isMobile", schema: #{} }
+          }
+        }
+      }
+    }
+  )
   org: QuestionOrgDetails;
 
   /** County or parish of the applicant address */
@@ -173,6 +216,67 @@ model SF424 {
     phone: #{ countryCode: "+1", number: "555-123-4567" },
     email: "jane.smith@example.org",
   })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        `address.street1`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/address/properties/street1", schema: #{} }
+          }
+        },
+        `address.street2`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/address/properties/street2", schema: #{} }
+          }
+        },
+        `address.city`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/address/properties/city", schema: #{} }
+          }
+        },
+        `address.state`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/address/properties/state", schema: #{} }
+          }
+        },
+        `address.country`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/address/properties/country", schema: #{} }
+          }
+        },
+        `address.postalCode`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/address/properties/postalCode", schema: #{} }
+          }
+        },
+        `phone.countryCode`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/phone/properties/countryCode", schema: #{} }
+          }
+        },
+        `phone.extension`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/phone/properties/extension", schema: #{} }
+          }
+        },
+        `phone.isMobile`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/contact/properties/phone/properties/isMobile", schema: #{} }
+          }
+        }
+      }
+    }
+  )
   contact: QuestionPocDetails;
 
   /** Contact's fax number */
@@ -237,6 +341,31 @@ model SF424 {
     startDate: "2024-10-01",
     endDate: "2025-09-30",
   })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        description: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/project/properties/description", schema: #{} }
+          }
+        },
+        `amountRequested.amount`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/project/properties/amountRequested/properties/amount", schema: #{} }
+          }
+        },
+        `amountRequested.currency`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/project/properties/amountRequested/properties/currency", schema: #{} }
+          }
+        }
+      }
+    }
+  )
   project: QuestionProjectDetails;
 
   /** Areas or entities affected, using categories specified in agency instructions */
@@ -328,6 +457,67 @@ model SF424 {
     phone: #{ countryCode: "+1", number: "555-234-5678" },
     email: "director@example.org",
   })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        `address.street1`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aor/properties/address/properties/street1", schema: #{} }
+          }
+        },
+        `address.street2`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aor/properties/address/properties/street2", schema: #{} }
+          }
+        },
+        `address.city`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aor/properties/address/properties/city", schema: #{} }
+          }
+        },
+        `address.state`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aor/properties/address/properties/state", schema: #{} }
+          }
+        },
+        `address.country`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aor/properties/address/properties/country", schema: #{} }
+          }
+        },
+        `address.postalCode`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aor/properties/address/properties/postalCode", schema: #{} }
+          }
+        },
+        `phone.countryCode`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aor/properties/phone/properties/countryCode", schema: #{} }
+          }
+        },
+        `phone.extension`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aor/properties/phone/properties/extension", schema: #{} }
+          }
+        },
+        `phone.isMobile`: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{ scope: "#/properties/aor/properties/phone/properties/isMobile", schema: #{} }
+          }
+        }
+      }
+    }
+  )
   aor: QuestionAorDetails;
 
   /** AOR fax number */
