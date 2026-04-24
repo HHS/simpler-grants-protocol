@@ -79,6 +79,63 @@ enum ApplicantTypeCode {
  * The legacy hand-written version lives at website/src/content/forms/sf424/.
  * Reviewers compare the two via /forms-new/sf424 vs /forms/sf424 during migration.
  */
+@extension(
+  "x-overrides",
+  #{
+    uiSchema: #{
+      // Submission metadata labels
+      submissionType: #{ label: "Submission Type" },
+      applicationType: #{ label: "Application Type" },
+      revisionType: #{ label: "Revision Type" },
+      revisionOtherSpecify: #{ label: "Other Explanation" },
+      applicantId: #{ label: "Applicant Identifier" },
+      federalEntityIdentifier: #{ label: "Federal Entity Identifier" },
+      federalAwardIdentifier: #{ label: "Federal Award Identifier" },
+      stateReceiveDate: #{ label: "Date Received by State" },
+      stateApplicationId: #{ label: "State Application Identifier" },
+      // Org section labels
+      applicantCounty: #{ label: "County/Parish" },
+      applicantProvince: #{ label: "Province" },
+      departmentName: #{ label: "Department Name" },
+      divisionName: #{ label: "Division Name" },
+      // Contact section labels
+      contactFax: #{ label: "Fax Number" },
+      orgAffiliation: #{ label: "Organizational Affiliation" },
+      // Opportunity labels
+      agencyName: #{ label: "Agency Name" },
+      cfdaNumber: #{ label: "CFDA Number" },
+      cfdaProgramTitle: #{ label: "CFDA Program Title" },
+      fundingOpportunityNumber: #{ label: "Funding Opportunity Number" },
+      fundingOpportunityTitle: #{ label: "Funding Opportunity Title" },
+      competitionIdentificationNumber: #{ label: "Competition Identification Number" },
+      competitionIdentificationTitle: #{ label: "Competition Identification Title" },
+      // Project labels
+      areasAffected: #{ label: "Areas Affected" },
+      additionalProjectTitle: #{ label: "Additional Project Title" },
+      congressionalDistrictApplicant: #{ label: "Congressional District - Applicant" },
+      congressionalDistrictProgramProject: #{ label: "Congressional District - Program/Project" },
+      additionalCongressionalDistricts: #{ label: "Additional Congressional Districts" },
+      // Estimated funding labels
+      federalEstimatedFunding: #{ label: "Federal ($)" },
+      applicantEstimatedFunding: #{ label: "Applicant ($)" },
+      stateEstimatedFunding: #{ label: "State ($)" },
+      localEstimatedFunding: #{ label: "Local ($)" },
+      otherEstimatedFunding: #{ label: "Other ($)" },
+      programIncomeEstimatedFunding: #{ label: "Program Income ($)" },
+      totalEstimatedFunding: #{ label: "Total ($)" },
+      // State review / debt labels
+      stateReview: #{ label: "State Review" },
+      stateReviewAvailableDate: #{ label: "State Review Date" },
+      delinquentFederalDebt: #{ label: "Delinquent on Federal Debt?" },
+      debtExplanation: #{ label: "Explanation" },
+      certificationAgree: #{ label: "Certification Agreement" },
+      // AOR labels
+      aorFax: #{ label: "Fax Number" },
+      aorSignature: #{ label: "AOR Signature" },
+      dateSigned: #{ label: "Date Signed" }
+    }
+  }
+)
 @extension("x-tags", #["sf424", "application"])
 model SF424 {
   // == Submission metadata ==
@@ -144,6 +201,13 @@ model SF424 {
     "x-overrides",
     #{
       uiSchema: #{
+        name: #{ label: "Organization Name" },
+        ein: #{ label: "EIN/TIN" },
+        uei: #{ label: "SAM UEI" },
+        `address.street1`: #{ label: "Street1" },
+        `address.street2`: #{ label: "Street2" },
+        `address.city`: #{ label: "City" },
+        `address.postalCode`: #{ label: "Zip / Postal Code" },
         duns: #{
           rule: #{
             effect: "HIDE",
@@ -345,6 +409,9 @@ model SF424 {
     "x-overrides",
     #{
       uiSchema: #{
+        title: #{ label: "Project Title" },
+        startDate: #{ label: "Project Start Date" },
+        endDate: #{ label: "Project End Date" },
         description: #{
           rule: #{
             effect: "HIDE",

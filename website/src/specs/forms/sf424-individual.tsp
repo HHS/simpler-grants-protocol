@@ -25,6 +25,34 @@ namespace Forms.SF424Individual;
  * Reviewers compare the two via /forms-new/sf424-individual vs /forms/sf424-individual
  * during migration.
  */
+@extension(
+  "x-overrides",
+  #{
+    uiSchema: #{
+      // Section numbered labels
+      federalAgency: #{ label: "1. Name of Federal Agency" },
+      cfdaNumber: #{ label: "2a. Assistance Listing Number" },
+      cfdaTitle: #{ label: "2b. Assistance Listing Title" },
+      dateReceived: #{ label: "3. Date Received" },
+      opportunityId: #{ label: "4a. Funding Opportunity Number" },
+      opportunityTitle: #{ label: "4b. Funding Opportunity Title" },
+      congressionalDistrictApplicant: #{ label: "5d. Congressional District of Applicant" },
+      // Citizenship labels
+      citizenship: #{ label: "U.S. Citizenship" },
+      alienRegistrationNumber: #{ label: "Alien Registration Number" },
+      countryOfOrigin: #{ label: "Citizenship Country" },
+      visitDate: #{ label: "Residency Start Date" },
+      // Location labels
+      county: #{ label: "County/Parish" },
+      province: #{ label: "Province" },
+      // Contact labels
+      eveningPhone: #{ label: "Evening Phone Number" },
+      fax: #{ label: "Fax Number" },
+      // Certification
+      applicationCertification: #{ label: "Certification Agreement" }
+    }
+  }
+)
 @extension("x-tags", #["sf424-individual", "application"])
 model SF424Individual {
   // == Grant opportunity information ==
@@ -86,6 +114,7 @@ model SF424Individual {
             condition: #{ scope: "#/properties/applicant/properties/title", schema: #{} }
           }
         },
+        `phone.number`: #{ label: "Daytime Phone Number" },
         `phone.countryCode`: #{
           rule: #{
             effect: "HIDE",
@@ -103,7 +132,8 @@ model SF424Individual {
             effect: "HIDE",
             condition: #{ scope: "#/properties/applicant/properties/phone/properties/isMobile", schema: #{} }
           }
-        }
+        },
+        `address.postalCode`: #{ label: "Zip/Postal Code" }
       }
     }
   )
@@ -163,6 +193,10 @@ model SF424Individual {
     "x-overrides",
     #{
       uiSchema: #{
+        title: #{ label: "6a. Project Title" },
+        description: #{ label: "6b. Project Description" },
+        startDate: #{ label: "6c. Start Date" },
+        endDate: #{ label: "6c. End Date" },
         `amountRequested.amount`: #{
           rule: #{
             effect: "HIDE",

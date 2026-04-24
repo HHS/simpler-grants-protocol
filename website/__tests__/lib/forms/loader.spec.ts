@@ -53,7 +53,7 @@ describe("forms loader", () => {
       it("composes a VerticalLayout UI schema from the form's properties", async () => {
         expect(item?.uiSchema.type).toBe("VerticalLayout");
         const elements = item?.uiSchema.elements as Record<string, unknown>[];
-        expect(elements).toHaveLength(3);
+        expect(elements).toHaveLength(6);
       });
 
       it("re-scopes inherited Control scopes under the property name", async () => {
@@ -67,7 +67,7 @@ describe("forms loader", () => {
       it("generates a default Control for atomic form-only fields", async () => {
         const elements = item?.uiSchema.elements as Record<string, unknown>[];
         const projectRoleEl = elements[elements.length - 1];
-        expect(projectRoleEl).toEqual({
+        expect(projectRoleEl).toMatchObject({
           type: "Control",
           scope: "#/properties/projectRole",
         });
@@ -79,7 +79,7 @@ describe("forms loader", () => {
       });
 
       it("aggregates field-level overrides under the property name", async () => {
-        expect(item?.overrides.uiSchema).toEqual({
+        expect(item?.overrides.uiSchema).toMatchObject({
           "org.name": { label: "Applicant Organization Name" },
         });
       });

@@ -21,10 +21,22 @@ namespace Forms.CD511;
  * The legacy hand-written version lives at website/src/content/forms/cd511/.
  * Reviewers compare the two via /forms-new/cd511 vs /forms/cd511 during migration.
  */
+@extension(
+  "x-overrides",
+  #{
+    uiSchema: #{
+      awardNumber: #{ label: "Award Number" },
+      projectName: #{ label: "Project Name" },
+      signature: #{ label: "Signature" },
+      submittedDate: #{ label: "Date" }
+    }
+  }
+)
 @extension("x-tags", #["cd511", "application"])
 model CD511 {
   /** Legal name of the applicant organization */
   @example(#{ name: "Example Research Institute" })
+  @extension("x-overrides", #{ uiSchema: #{ name: #{ label: "Organization Name" } } })
   org: QuestionOrgName;
 
   /** Project award number */
@@ -47,6 +59,7 @@ model CD511 {
 
   /** Authorized Organization Representative title */
   @example(#{ title: "Research Director" })
+  @extension("x-overrides", #{ uiSchema: #{ title: #{ label: "Title" } } })
   aorTitle: QuestionAorTitle;
 
   /** AOR signature — system-generated when submitted through Grants.gov */

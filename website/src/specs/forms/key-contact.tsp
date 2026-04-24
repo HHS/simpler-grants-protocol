@@ -19,6 +19,17 @@ namespace Forms.KeyContact;
  * at website/src/content/forms/key-contact/. Reviewers compare the two
  * via /forms-new/key-contact vs /forms/key-contact during migration.
  */
+@extension(
+  "x-overrides",
+  #{
+    uiSchema: #{
+      contactOrganizationalAffiliation: #{ label: "Organizational Affiliation" },
+      contactCounty: #{ label: "County" },
+      contactFax: #{ label: "Fax Number" },
+      projectRole: #{ label: "Project Role" }
+    }
+  }
+)
 @extension("x-tags", #["key-contact", "application"])
 model KeyContact {
   /** Applicant organization */
@@ -33,6 +44,7 @@ model KeyContact {
     "x-overrides",
     #{
       uiSchema: #{
+        `phone.number`: #{ label: "Telephone Number" },
         `phone.countryCode`: #{
           rule: #{
             effect: "HIDE",
@@ -50,7 +62,10 @@ model KeyContact {
             effect: "HIDE",
             condition: #{ scope: "#/properties/contact/properties/phone/properties/isMobile", schema: #{} }
           }
-        }
+        },
+        `address.street1`: #{ label: "Street Address Line 1" },
+        `address.street2`: #{ label: "Street Address Line 2" },
+        `address.postalCode`: #{ label: "Zip / Postal Code" }
       }
     }
   )
