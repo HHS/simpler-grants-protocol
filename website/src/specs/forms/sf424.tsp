@@ -95,6 +95,7 @@ model SF424 {
   revisionType?: RevisionType;
 
   /** Revision explanation (required if revisionType is Other) */
+  @example("")
   revisionOtherSpecify?: string;
 
   /** Date received by federal agency — completed by Grants.gov upon submission */
@@ -103,19 +104,24 @@ model SF424 {
   dateReceived: string;
 
   /** Applicant's control number */
+  @example("")
   applicantId?: string;
 
   /** Number assigned to the organization by the Federal agency */
+  @example("")
   federalEntityIdentifier?: string;
 
   /** Previously assigned Federal award identifier (for continuation or revision) */
+  @example("")
   federalAwardIdentifier?: string;
 
   /** Date received by the State */
   @format("date")
+  @example("")
   stateReceiveDate?: string;
 
   /** Identifier assigned by the State */
+  @example("")
   stateApplicationId?: string;
 
   // == Applicant organization ==
@@ -141,6 +147,7 @@ model SF424 {
   applicantCounty?: string;
 
   /** Province of the applicant address */
+  @example("")
   applicantProvince?: string;
 
   /** Primary organizational department or equivalent level */
@@ -173,6 +180,7 @@ model SF424 {
   contactFax?: string;
 
   /** Contact's organizational affiliation if different from the applicant organization */
+  @example("")
   orgAffiliation?: string;
 
   // == Applicant type ==
@@ -188,6 +196,7 @@ model SF424 {
   applicantTypeCode3?: ApplicantTypeCode;
 
   /** Explanation if applicant type is Other (specify) */
+  @example("")
   applicantTypeOtherSpecify?: string;
 
   // == Grant opportunity information ==
@@ -213,9 +222,11 @@ model SF424 {
   fundingOpportunityTitle: string;
 
   /** Competition identification number — pre-populated from Application cover sheet */
+  @example("")
   competitionIdentificationNumber?: string;
 
   /** Competition identification title — pre-populated from Application cover sheet */
+  @example("")
   competitionIdentificationTitle?: string;
 
   // == Project information ==
@@ -229,9 +240,11 @@ model SF424 {
   project: QuestionProjectDetails;
 
   /** Areas or entities affected, using categories specified in agency instructions */
+  @example("")
   areasAffected?: string;
 
   /** Additional project titles (attach file) */
+  @example("")
   additionalProjectTitle?: string;
 
   /** Congressional district of the applicant (format: XX-###, e.g. CA-005) */
@@ -243,6 +256,7 @@ model SF424 {
   congressionalDistrictProgramProject: string;
 
   /** Additional congressional districts if the project spans more than one */
+  @example("")
   additionalCongressionalDistricts?: string;
 
   // == Estimated funding ==
@@ -283,6 +297,7 @@ model SF424 {
 
   /** Date the application was made available for state review */
   @format("date")
+  @example("")
   stateReviewAvailableDate?: string;
 
   // == Federal debt delinquency ==
@@ -292,6 +307,7 @@ model SF424 {
   delinquentFederalDebt: string;
 
   /** Explanation of federal debt delinquency (required if delinquent) */
+  @example("")
   debtExplanation?: string;
 
   // == Certification ==

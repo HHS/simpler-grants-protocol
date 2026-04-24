@@ -43,6 +43,7 @@ model SF424Individual {
 
   /** Date received — completed by Grants.gov upon submission */
   @format("date")
+  @example("")
   dateReceived?: string;
 
   /** Funding opportunity number — pre-populated from Application cover sheet */
@@ -92,13 +93,16 @@ model SF424Individual {
   citizenship: string;
 
   /** Alien Registration Number (required if not a U.S. citizen) */
+  @example("")
   alienRegistrationNumber?: string;
 
   /** Country of citizenship */
+  @example("")
   countryOfOrigin?: string;
 
   /** Start date of most recent U.S. residency (required if not a U.S. citizen) */
   @format("date")
+  @example("")
   visitDate?: string;
 
   // == Location ==
@@ -108,6 +112,7 @@ model SF424Individual {
   county?: string;
 
   /** Province of the applicant address */
+  @example("")
   province?: string;
 
   /** Congressional district of the applicant (format: XX-###, e.g. CA-005) */

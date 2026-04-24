@@ -56,6 +56,7 @@ export const JsonFormRenderer: React.FC<JsonFormRendererProps> = ({
         data={data}
         renderers={vanillaRenderers}
         cells={vanillaCells}
+        config={{ showUnfocusedDescription: true }}
         onChange={
           onChange ? ({ data }) => onChange(data as FormData) : undefined
         }

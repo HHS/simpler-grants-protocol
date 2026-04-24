@@ -100,12 +100,20 @@ export function createAjvWithSchemas(
   for (const file of files) {
     const filePath = path.join(yamlDir, file);
     const schemaContent = fs.readFileSync(filePath, "utf-8");
-    const schema = yaml.load(schemaContent) as JsonSchema & { $id?: string };
+    const schema = yaml.load(schemaContent) as JsonSchema & {
+      $id?: string;
+      unevaluatedProperties?: unknown;
+    };
 
     // Ensure the schema has an $id that matches the filename
     if (!schema.$id) {
       schema.$id = file;
     }
+
+    // Strip unevaluatedProperties — TypeSpec generates `not: {}` on every
+    // model, which causes AJV to flag defined properties as invalid on complex
+    // schemas with $ref + sibling keywords.
+    delete schema.unevaluatedProperties;
 
     // Register the schema with Ajv using the $id as the schema ID
     ajv.addSchema(schema, schema.$id);

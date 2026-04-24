@@ -1,3 +1,14 @@
+/* Control wrapper — flex column so description can be ordered above the input */
+.control {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Restore hidden behaviour overridden by display:flex above */
+.control[hidden] {
+  display: none;
+}
+
 /* Form Controls */
 .form-input,
 .form-select,
@@ -12,7 +23,7 @@
   font-family: system-ui, sans-serif;
   background: var(--sl-color-black);
   color: var(--sl-color-white);
-  margin-top: 0 !important;
+  order: 3;
 }
 
 .form-input:focus,
@@ -29,19 +40,22 @@
   margin-bottom: 0.25rem;
   display: block;
   color: var(--sl-color-white);
+  order: 1;
 }
 
 /* Validation */
 .form-validation {
   font-size: 14px;
   margin-top: 4px;
+  order: 4;
 }
 
 /* Descriptions */
 .form-description {
   color: var(--sl-color-gray-3) !important;
   font-size: 14px;
-  margin-top: 2px;
+  margin-bottom: 4px;
+  order: 2;
 }
 
 /* Array Items */

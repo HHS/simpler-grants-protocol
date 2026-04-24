@@ -31,6 +31,18 @@ model KeyContact {
   /** Primary point of contact for the project */
   contact: QuestionPocDetails;
 
+  /** Contact's organizational affiliation if different from the applicant organization */
+  @example("Test Organization")
+  contactOrganizationalAffiliation?: string;
+
+  /** County or parish of the contact address */
+  @example("")
+  contactCounty?: string;
+
+  /** Contact's fax number */
+  @example("555-111-2222")
+  contactFax?: string;
+
   /** This contact's role on the project (e.g. Project Director, Fiscal Contact) */
   @example("Project Director")
   projectRole: string;
