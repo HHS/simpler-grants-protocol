@@ -55,7 +55,7 @@
     "tsx": "^4.21.0",
     "typescript": "catalog:",
     "typespec-versioning-changelog": "workspace:*",
-    "zod": "^3"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",

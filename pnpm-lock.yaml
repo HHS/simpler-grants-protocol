@@ -436,7 +436,7 @@ importers:
         specifier: workspace:*
         version: link:../lib/changelog-emitter
       zod:
-        specifier: ^3
+        specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
       '@astrojs/check':
