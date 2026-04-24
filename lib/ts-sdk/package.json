@@ -81,7 +81,7 @@
     "example:server": "tsx examples/mock-api-server.ts"
   },
   "dependencies": {
-    "zod": "^3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@common-grants/core": "workspace:*",

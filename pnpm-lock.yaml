@@ -66,6 +66,9 @@ catalogs:
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
+    zod:
+      specifier: ^3.25.76
+      version: 3.25.76
   website:
     vitest:
       specifier: ^4.1.2
@@ -161,7 +164,7 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(express@4.22.1)
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@common-grants/core':
@@ -294,7 +297,7 @@ importers:
   lib/ts-sdk:
     dependencies:
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@common-grants/core':
@@ -436,7 +439,7 @@ importers:
         specifier: workspace:*
         version: link:../lib/changelog-emitter
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@astrojs/check':

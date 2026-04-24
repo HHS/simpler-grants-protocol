@@ -81,6 +81,7 @@ updates:
       - dependency-name: "typescript"
       - dependency-name: "typescript-eslint"
       - dependency-name: "vitest"
+      - dependency-name: "zod"
     commit-message:
       prefix: "chore"
       include: "scope"

@@ -65,6 +65,7 @@ The `deps-catalog-check` workflow (`.github/workflows/deps-catalog-check.yml`) r
 - Testing: `vitest`, `@vitest/coverage-v8`, `eslint-plugin-vitest`
 - Linting/formatting: `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-prettier`, `globals`, `prettier`
 - TypeScript: `typescript`, `ts-node`, `@types/node`
+- Runtime: `zod`
 
 The `website` catalog has its own `vitest` version (`^4.x`). The update script includes an explicit `pnpm update vitest --filter website` step to ensure it stays current alongside the default catalog.
 
