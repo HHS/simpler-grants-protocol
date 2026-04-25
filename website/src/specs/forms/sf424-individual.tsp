@@ -59,7 +59,16 @@ namespace Forms.SF424Individual;
       fax: #{ label: "Fax Number" },
 
       // Certification
-      applicationCertification: #{ label: "Certification Agreement" },
+      applicationCertification: #{
+        label: "Certification Agreement",
+        rule: #{
+          effect: "HIDE",
+          condition: #{
+            scope: "#/properties/applicationCertification",
+            schema: #{},
+          },
+        },
+      },
     },
   }
 )

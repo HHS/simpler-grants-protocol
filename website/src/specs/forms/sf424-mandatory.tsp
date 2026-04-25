@@ -364,6 +364,16 @@ enum Sf424YesNo {
       // Section 8 labels
       typeOfApplicant: #{ label: "8a. Type of Applicant" },
 
+      otherApplicantTypeExplanation: #{
+        label: "Other (specify)",
+        rule: #{
+          effect: "HIDE",
+          condition: #{
+            scope: "#/properties/typeOfApplicant",
+            schema: #{ not: #{ type: "string", pattern: "^X: Other" } },
+          },
+        },
+      },
       additionalDescription: #{ label: "b. Additional Description" },
 
       // Section 9-12 labels
@@ -395,9 +405,31 @@ enum Sf424YesNo {
         label: "IS SUBMISSION SUBJECT TO REVIEW BY STATE UNDER EXECUTIVE ORDER 12372 PROCESS?",
       },
 
+      stateReviewDate: #{
+        label: "State Review Date",
+        rule: #{
+          effect: "HIDE",
+          condition: #{
+            scope: "#/properties/submissionSubjectToReview",
+            schema: #{ not: #{ type: "string", pattern: "^a\\." } },
+          },
+        },
+      },
+
       // Section 17 labels
       applicantDelinquentFederalDebt: #{
         label: "17. Is The Applicant Delinquent On Any Federal Debt?",
+      },
+
+      delinquentFederalDebtExplanation: #{
+        label: "Explanation",
+        rule: #{
+          effect: "HIDE",
+          condition: #{
+            scope: "#/properties/applicantDelinquentFederalDebt",
+            schema: #{ not: #{ type: "string", pattern: "^Yes$" } },
+          },
+        },
       },
 
       // Contact section labels

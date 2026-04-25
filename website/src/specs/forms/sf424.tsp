@@ -43,6 +43,7 @@ enum RevisionType {
 
 /** Applicant type code */
 enum ApplicantTypeCode {
+  None: "None",
   StateGovernment: "A: State Government",
   CountyGovernment: "B: County Government",
   CityOrTownshipGovernment: "C: City or Township Government",
@@ -96,8 +97,9 @@ enum ApplicantTypeCode {
       stateApplicationId: #{ label: "State Application Identifier" },
 
       // Org section labels
-      applicantCounty: #{ label: "County/Parish" },
+      applicantAddressHeader: #{ label: "Address Header" },
 
+      applicantCounty: #{ label: "County/Parish" },
       applicantProvince: #{ label: "Province" },
       departmentName: #{ label: "Department Name" },
       divisionName: #{ label: "Division Name" },
@@ -136,14 +138,16 @@ enum ApplicantTypeCode {
       },
 
       // Estimated funding labels
-      federalEstimatedFunding: #{ label: "Federal ($)" },
+      federalEstimatedFunding: #{ label: "Federal Estimated Funding" },
 
-      applicantEstimatedFunding: #{ label: "Applicant ($)" },
-      stateEstimatedFunding: #{ label: "State ($)" },
-      localEstimatedFunding: #{ label: "Local ($)" },
-      otherEstimatedFunding: #{ label: "Other ($)" },
-      programIncomeEstimatedFunding: #{ label: "Program Income ($)" },
-      totalEstimatedFunding: #{ label: "Total ($)" },
+      applicantEstimatedFunding: #{ label: "Applicant Estimated Funding" },
+      stateEstimatedFunding: #{ label: "State Estimated Funding" },
+      localEstimatedFunding: #{ label: "Local Estimated Funding" },
+      otherEstimatedFunding: #{ label: "Other Estimated Funding" },
+      programIncomeEstimatedFunding: #{
+        label: "Program Income Estimated Funding",
+      },
+      totalEstimatedFunding: #{ label: "Total Estimated Funding" },
 
       // State review / debt labels
       stateReview: #{ label: "State Review" },
@@ -154,8 +158,9 @@ enum ApplicantTypeCode {
       certificationAgree: #{ label: "Certification Agreement" },
 
       // AOR labels
-      aorFax: #{ label: "Fax Number" },
+      aorHeader: #{ label: "Authorized Representative Header" },
 
+      aorFax: #{ label: "Fax Number" },
       aorSignature: #{ label: "AOR Signature" },
       dateSigned: #{ label: "Date Signed" },
     },
@@ -295,10 +300,23 @@ model SF424 {
             },
           },
         },
+        email: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{
+              scope: "#/properties/org/properties/email",
+              schema: #{},
+            },
+          },
+        },
       },
     }
   )
   org: QuestionOrgDetails;
+
+  /** Address header — section label from the legacy SF-424 form */
+  @example("")
+  applicantAddressHeader?: string;
 
   /** County or parish of the applicant address */
   @example("District of Columbia")
@@ -403,9 +421,11 @@ model SF424 {
   applicantTypeCode1: ApplicantTypeCode;
 
   /** Secondary applicant type */
+  @example(ApplicantTypeCode.None)
   applicantTypeCode2?: ApplicantTypeCode;
 
   /** Tertiary applicant type */
+  @example(ApplicantTypeCode.None)
   applicantTypeCode3?: ApplicantTypeCode;
 
   /** Explanation if applicant type is Other (specify) */
@@ -478,6 +498,15 @@ model SF424 {
             },
           },
         },
+        amountRequested: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{
+              scope: "#/properties/project/properties/amountRequested/properties/amount",
+              schema: #{},
+            },
+          },
+        },
         `amountRequested.amount`: #{
           rule: #{
             effect: "HIDE",
@@ -501,15 +530,15 @@ model SF424 {
   )
   project: QuestionProjectDetails;
 
+  /** Additional project titles (attach file) */
+  @example("")
+  additionalProjectTitle?: string;
+
   /** Areas or entities affected, using categories specified in agency instructions */
   @example("")
   @minLength(0)
   @maxLength(250)
   areasAffected?: string;
-
-  /** Additional project titles (attach file) */
-  @example("")
-  additionalProjectTitle?: string;
 
   /** Congressional district of the applicant (format: XX-###, e.g. CA-005) */
   @example("DC-000")
@@ -587,6 +616,10 @@ model SF424 {
   certificationAgree: string;
 
   // == Authorized Organization Representative ==
+
+  /** Authorized representative section header */
+  @example("")
+  aorHeader?: string;
 
   /** Authorized Organization Representative */
   @example(#{
