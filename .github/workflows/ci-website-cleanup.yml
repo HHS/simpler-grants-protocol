@@ -5,15 +5,21 @@ on:
     types: [closed]
     paths:
       - website/**
-      - .github/workflows/ci-website.yml
+      - .github/workflows/ci-website-preview.yml
+      - .github/workflows/ci-website-cleanup.yml
 
 jobs:
   cleanup-preview:
     runs-on: ubuntu-latest
     name: Cleanup PR preview
+    # Previews are not deployed for dependabot PRs (see ci-website-preview.yml),
+    # so there's nothing to clean up and `wrangler delete` would 404.
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
+        with:
+          version: 10
 
       - name: Delete Worker for PR
         run: |
