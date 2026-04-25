@@ -82,12 +82,18 @@ model QuestionName {
   prefix?: NamePrefix;
 
   /** First or given name */
+  @minLength(1)
+  @maxLength(35)
   firstName: string;
 
   /** Middle name */
+  @minLength(0)
+  @maxLength(25)
   middleName?: string;
 
   /** Last or family name */
+  @minLength(1)
+  @maxLength(60)
   lastName: string;
 
   /** Name suffix */

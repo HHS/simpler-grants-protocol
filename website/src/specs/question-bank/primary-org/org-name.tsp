@@ -34,5 +34,7 @@ namespace QuestionBank.OrgName;
 @example(#{ name: "Example Organization" })
 model QuestionOrgName {
   /** The organization's legal name */
+  @minLength(1)
+  @maxLength(60)
   name: string;
 }

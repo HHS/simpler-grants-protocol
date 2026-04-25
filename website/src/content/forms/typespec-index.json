@@ -5,6 +5,18 @@
   },
   "sf424-mandatory": {
     "schema": "SF424Mandatory",
-    "label": "SF-424 Mandatory Contacts"
+    "label": "SF424 - Mandatory"
+  },
+  "sf424": {
+    "schema": "SF424",
+    "label": "SF424"
+  },
+  "cd511": {
+    "schema": "CD511",
+    "label": "CD511 Form"
+  },
+  "sf424-individual": {
+    "schema": "SF424Individual",
+    "label": "SF424 - Individual"
   }
 }

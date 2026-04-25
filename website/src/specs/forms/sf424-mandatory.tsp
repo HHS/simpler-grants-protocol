@@ -1,28 +1,817 @@
 import "@typespec/json-schema";
-import "../question-bank/primary-org/org-details.tsp";
-import "../question-bank/poc/poc-details.tsp";
-import "../question-bank/aor/aor-details.tsp";
+import "../question-bank/primary-org/org-name.tsp";
+import "../question-bank/primary-org/org-ein.tsp";
+import "../question-bank/primary-org/org-uei.tsp";
+import "../question-bank/primary-org/org-address.tsp";
+import "../question-bank/poc/poc-name.tsp";
+import "../question-bank/poc/poc-title.tsp";
+import "../question-bank/poc/poc-phone.tsp";
+import "../question-bank/poc/poc-email.tsp";
+import "../question-bank/aor/aor-name.tsp";
+import "../question-bank/aor/aor-title.tsp";
+import "../question-bank/aor/aor-phone.tsp";
+import "../question-bank/aor/aor-email.tsp";
 
 using JsonSchema;
-using QuestionBank.OrgDetails;
-using QuestionBank.PocDetails;
-using QuestionBank.AorDetails;
+using QuestionBank.OrgName;
+using QuestionBank.OrgEin;
+using QuestionBank.OrgUei;
+using QuestionBank.OrgAddress;
+using QuestionBank.PocName;
+using QuestionBank.PocTitle;
+using QuestionBank.PocPhone;
+using QuestionBank.PocEmail;
+using QuestionBank.AorName;
+using QuestionBank.AorTitle;
+using QuestionBank.AorPhone;
+using QuestionBank.AorEmail;
+using QuestionBank.QuestionName;
+using QuestionBank.QuestionAddress;
 
 namespace Forms.SF424Mandatory;
 
+/** Type of submission or frequency */
+enum Sf424SubmissionType {
+  Application: "Application",
+  Preapplication: "Preapplication",
+  ChangedCorrectedApplication: "Changed/Corrected Application",
+  ChangedCorrectedPreapplication: "Changed/Corrected Preapplication",
+  Other: "Other",
+}
+
+/** Version of the submission */
+enum Sf424Version {
+  V1: "1",
+  V2: "2",
+  V3: "3",
+  V4: "4",
+  V5: "5",
+}
+
+/** Applicant type code */
+enum Sf424ApplicantType {
+  StateGovernment: "A: State Government",
+  CountyGovernment: "B: County Government",
+  CityOrTownshipGovernment: "C: City or Township Government",
+  SpecialDistrictGovernment: "D: Special District Government",
+  RegionalOrganization: "E: Regional Organization",
+  USTerritoryOrPossession: "F: U.S. Territory or Possession",
+  IndependentSchoolDistrict: "G: Independent School District",
+  PublicStateControlledHigherEd: "H: Public/State Controlled Institution of Higher Education",
+  TribalGovernmentFederallyRecognized: "I: Indian/Native American Tribal Government (Federally Recognized)",
+  TribalGovernmentOther: "J: Indian/Native American Tribal Government (Other than Federally Recognized)",
+  TriballyDesignatedOrganization: "K: Indian/Native American Tribally Designated Organization",
+  PublicIndianHousingAuthority: "L: Public/Indian Housing Authority",
+  NonprofitWith501C3: "M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)",
+  NonprofitWithout501C3: "N: Nonprofit without 501C3 IRS Status (Other than Institution of Higher Education)",
+  PrivateHigherEd: "O: Private Institution of Higher Education",
+  Individual: "P: Individual",
+  ForProfitOrganization: "Q: For-Profit Organization (Other than Small Business)",
+  SmallBusiness: "R: Small Business",
+  HispanicServingInstitution: "S: Hispanic-serving Institution",
+  HistoricallyBlackColleges: "T: Historically Black Colleges and Universities (HBCUs)",
+  TriballyControlledColleges: "U: Tribally Controlled Colleges and Universities (TCCUs)",
+  AlaskaNativeNativeHawaiian: "V: Alaska Native and Native Hawaiian Serving Institutions",
+  NonDomesticEntity: "W: Non-domestic (non-US) Entity",
+  Other: "X: Other (specify)",
+}
+
+/** State review status under Executive Order 12372 */
+enum Sf424StateReviewStatus {
+  MadeAvailableForReview: "a. This application was made available to the State under the Executive Order 12372 Process for review on",
+  SubjectButNotSelected: "b. Program is subject to E.O. 12372 but has not been selected by the State for review",
+  NotCovered: "c. Program is not covered by E.O. 12372",
+}
+
+/** Yes/No answer */
+enum Sf424YesNo {
+  Yes: "Yes",
+  No: "No",
+}
+
 /**
- * SF-424 mandatory contact information section.
- * Composes org + contact + AOR — all three include QuestionAddress,
- * which is the multi-composite case that triggers the AJV shared-refs error.
+ * SF-424 Application for Federal Assistance (Mandatory Fields).
+ *
+ * Composes org + contact + AOR sections from the question bank and adds all
+ * SF-424-specific mandatory fields (submission type, frequency, applicant type,
+ * opportunity info, funding, state review, and certification).
  */
+@extension(
+  "x-mapping-to-cg",
+  #{
+    title: #{ field: "descriptiveTitleOfApplicantProject" },
+    description: #{ field: "additionalDescription" },
+    amountRequested: #{
+      amount: #{ field: "estimatedFundingFederal" },
+      currency: "USD",
+    },
+    projectTimeline: #{
+      startDate: #{
+        name: "Project Start Date",
+        eventType: "singleDate",
+        date: #{ field: "fundingPeriodStartDate" },
+      },
+      endDate: #{
+        name: "Project End Date",
+        eventType: "singleDate",
+        date: #{ field: "fundingPeriodEndDate" },
+      },
+    },
+    opportunity: #{
+      id: #{ field: "assistanceListingNumber" },
+      title: #{ field: "assistanceListingTitle" },
+      customFields: #{
+        federalAgency: #{
+          name: "federalAgency",
+          fieldType: "string",
+          value: #{ field: "nameOfFederalAgency" },
+          description: "The federal agency managing this opportunity",
+        },
+        assistanceListingNumber: #{
+          name: "assistanceListingNumber",
+          fieldType: "string",
+          value: #{ field: "assistanceListingNumber" },
+          description: "The assistance listing number",
+        },
+        assistanceListingTitle: #{
+          name: "assistanceListingTitle",
+          fieldType: "string",
+          value: #{ field: "assistanceListingTitle" },
+          description: "The assistance listing title",
+        },
+      },
+    },
+    organizations: #{
+      primary: #{
+        id: #{ field: "orgName.name" },
+        customFields: #{
+          departmentName: #{
+            name: "departmentName",
+            fieldType: "string",
+            value: #{ field: "orgDepartmentName" },
+            description: "Department name",
+          },
+          divisionName: #{
+            name: "divisionName",
+            fieldType: "string",
+            value: #{ field: "orgDivisionName" },
+            description: "Division name",
+          },
+        },
+      },
+    },
+    contacts: #{
+      primary: #{
+        addresses: #{
+          primary: #{
+            street1: #{ field: "orgAddress.street1" },
+            street2: #{ field: "orgAddress.street2" },
+            city: #{ field: "orgAddress.city" },
+            stateOrProvince: #{ field: "orgAddress.state" },
+            country: #{ field: "orgAddress.country" },
+            postalCode: #{ field: "orgAddress.postalCode" },
+          },
+        },
+        phones: #{
+          fax: #{ countryCode: "+1", number: #{ field: "contactFaxNumber" } },
+        },
+      },
+      otherContacts: #{
+        authorizedRepresentative: #{
+          phones: #{
+            fax: #{ countryCode: "+1", number: #{ field: "aorFaxNumber" } },
+          },
+        },
+      },
+    },
+    customFields: #{
+      applicantType: #{
+        name: "applicantType",
+        fieldType: "string",
+        value: #{
+          switch: #{
+            field: "typeOfApplicant",
+            case: #{
+              `A: State Government`: "government-state",
+              `B: County Government`: "government-local",
+              `C: City or Township Government`: "government-local",
+              `D: Special District Government`: "government-local",
+              `E: Regional Organization`: "government-general",
+              `F: U.S. Territory or Possession`: "government-general",
+              `G: Independent School District`: "government-local",
+              `H: Public/State Controlled Institution of Higher Education`: "nonprofit-educational",
+              `I: Indian/Native American Tribal Government (Federally Recognized)`: "government-tribal",
+              `J: Indian/Native American Tribal Government (Other than Federally Recognized)`: "government-tribal",
+              `K: Indian/Native American Tribally Designated Organization`: "nonprofit-general",
+              `L: Public/Indian Housing Authority`: "government-general",
+              `M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)`: "nonprofit-general",
+              `N: Nonprofit without 501C3 IRS Status (Other than Institution of Higher Education)`: "nonprofit-general",
+              `O: Private Institution of Higher Education`: "nonprofit-educational",
+              `P: Individual`: "individual",
+              `Q: For-Profit Organization (Other than Small Business)`: "business-general",
+              `R: Small Business`: "business-small",
+              `S: Hispanic-serving Institution`: "nonprofit-educational",
+              `T: Historically Black Colleges and Universities (HBCUs)`: "nonprofit-educational",
+              `U: Tribally Controlled Colleges and Universities (TCCUs)`: "nonprofit-educational",
+              `V: Alaska Native and Native Hawaiian Serving Institutions`: "nonprofit-educational",
+              `W: Non-domestic (non-US) Entity`: "custom",
+              `X: Other (specify)`: "custom",
+            },
+            default: "custom",
+          },
+        },
+        description: "The type of applicant organization",
+      },
+      typeOfSubmission: #{
+        name: "typeOfSubmission",
+        fieldType: "string",
+        value: #{ field: "typeOfSubmission" },
+        description: "Type of submission",
+      },
+      frequency: #{
+        name: "frequency",
+        fieldType: "string",
+        value: #{ field: "frequency" },
+        description: "Frequency of submission",
+      },
+      version: #{
+        name: "version",
+        fieldType: "string",
+        value: #{ field: "version" },
+        description: "Version number",
+      },
+      consolidatedRequest: #{
+        name: "consolidatedRequest",
+        fieldType: "string",
+        value: #{ field: "consolidatedRequest" },
+        description: "Whether this is a consolidated request",
+      },
+      congressionalDistricts: #{
+        name: "congressionalDistricts",
+        fieldType: "string",
+        value: #{ field: "congressionalDistrictApplicant" },
+        description: "Congressional districts",
+      },
+      areasAffectedByFunding: #{
+        name: "areasAffectedByFunding",
+        fieldType: "string",
+        value: #{ field: "areasAffectedByFunding" },
+        description: "Areas affected by funding",
+      },
+      submissionSubjectToReview: #{
+        name: "submissionSubjectToReview",
+        fieldType: "string",
+        value: #{ field: "submissionSubjectToReview" },
+        description: "Whether submission is subject to review",
+      },
+      applicantDelinquentFederalDebt: #{
+        name: "applicantDelinquentFederalDebt",
+        fieldType: "string",
+        value: #{ field: "applicantDelinquentFederalDebt" },
+        description: "Whether applicant has delinquent federal debt",
+      },
+      dateReceived: #{
+        name: "dateReceived",
+        fieldType: "string",
+        value: #{ field: "dateReceived" },
+        description: "Date the application was received",
+      },
+      authorizedRepresentativeIAgree: #{
+        name: "authorizedRepresentativeIAgree",
+        fieldType: "boolean",
+        value: #{ field: "aorIAgree" },
+        description: "Whether the authorized representative agrees to the terms",
+      },
+      authorizedRepresentativeOrganizationalAffiliation: #{
+        name: "authorizedRepresentativeOrganizationalAffiliation",
+        fieldType: "string",
+        value: #{ field: "aorOrganizationalAffiliation" },
+        description: "Organizational affiliation of the authorized representative",
+      },
+      authorizedRepresentativeSignature: #{
+        name: "authorizedRepresentativeSignature",
+        fieldType: "string",
+        value: #{ field: "aorSignature" },
+        description: "Signature of the authorized representative",
+      },
+      authorizedRepresentativeSignatureDate: #{
+        name: "authorizedRepresentativeSignatureDate",
+        fieldType: "string",
+        value: #{ field: "aorSignatureDate" },
+        description: "Date of the authorized representative signature",
+      },
+    },
+  }
+)
+@extension(
+  "x-overrides",
+  #{
+    uiSchema: #{
+      // Section 1 labels
+      typeOfSubmission: #{ label: "1.a. Type of Submission" },
+
+      otherSubmissionTypeExplanation: #{
+        label: "Other (specify)",
+        rule: #{
+          effect: "HIDE",
+          condition: #{
+            scope: "#/properties/typeOfSubmission",
+            schema: #{ not: #{ type: "string", pattern: "^Other$" } },
+          },
+        },
+      },
+      frequency: #{ label: "1.b. Frequency" },
+      otherFrequencyExplanation: #{
+        label: "Other (specify)",
+        rule: #{
+          effect: "HIDE",
+          condition: #{
+            scope: "#/properties/frequency",
+            schema: #{ not: #{ type: "string", pattern: "^Other$" } },
+          },
+        },
+      },
+      consolidatedRequest: #{
+        label: "1.c. Consolidated Application/Plan/Funding Request?",
+      },
+      consolidatedRequestExplanation: #{
+        label: "Consolidated Application/Plan/Funding Request Explanation",
+        rule: #{
+          effect: "HIDE",
+          condition: #{
+            scope: "#/properties/consolidatedRequest",
+            schema: #{ not: #{ type: "string", pattern: "^Yes$" } },
+          },
+        },
+      },
+      version: #{ label: "1.d. Version" },
+
+      // Section 2-6 labels
+      dateReceived: #{ label: "2. Date Received" },
+
+      applicantIdentifier: #{ label: "3. Applicant Identifier" },
+      federalEntityId: #{ label: "4a. Federal Entity Identifier" },
+      federalAwardId: #{ label: "4b. Federal Award Identifier" },
+      dateReceivedState: #{ label: "5. Date Received by State" },
+      stateApplicationId: #{ label: "6. State Application Identifier" },
+
+      // Section 7 labels (org sub-fields handled via field-level overrides below)
+      orgCountyParish: #{ label: "County / Parish" },
+
+      orgDepartmentName: #{ label: "Department Name" },
+      orgDivisionName: #{ label: "Division Name" },
+
+      // Section 8 labels
+      typeOfApplicant: #{ label: "8a. Type of Applicant" },
+
+      additionalDescription: #{ label: "b. Additional Description" },
+
+      // Section 9-12 labels
+      nameOfFederalAgency: #{ label: "9. Name of Federal Agency" },
+
+      assistanceListingNumber: #{ label: "10. Assistance Listing Number" },
+      descriptiveTitleOfApplicantProject: #{
+        label: "11. Descriptive Title of Applicant's Project",
+      },
+      areasAffectedByFunding: #{ label: "12. Areas Affected by Funding" },
+
+      // Section 13 labels
+      congressionalDistrictApplicant: #{ label: "13a. Applicant" },
+
+      congressionalDistrictProject: #{ label: "13b. Program/Project" },
+
+      // Section 14 labels
+      fundingPeriodStartDate: #{ label: "14a. Start Date" },
+
+      fundingPeriodEndDate: #{ label: "14b. End Date" },
+
+      // Section 15 labels
+      estimatedFundingFederal: #{ label: "15a. Federal ($)" },
+
+      estimatedFundingMatch: #{ label: "15b. Match ($)" },
+
+      // Section 16 labels
+      submissionSubjectToReview: #{
+        label: "IS SUBMISSION SUBJECT TO REVIEW BY STATE UNDER EXECUTIVE ORDER 12372 PROCESS?",
+      },
+
+      // Section 17 labels
+      applicantDelinquentFederalDebt: #{
+        label: "17. Is The Applicant Delinquent On Any Federal Debt?",
+      },
+
+      // Contact section labels
+      contactOrganizationalAffiliation: #{
+        label: "Organizational Affiliation",
+      },
+
+      contactFaxNumber: #{ label: "Fax Number" },
+
+      // Section 18 labels
+      aorIAgree: #{ label: "I Agree" },
+
+      aorOrganizationalAffiliation: #{ label: "Organizational Affiliation" },
+      aorFaxNumber: #{ label: "Fax Number" },
+      aorSignature: #{ label: "Signature of Authorized Representative" },
+      aorSignatureDate: #{ label: "Date Signed" },
+      attachSupportingDocuments: #{ label: "Attach Supporting Documents" },
+    },
+  }
+)
 @extension("x-tags", #["sf424-mandatory", "application"])
 model SF424Mandatory {
-  /** Primary applicant organization */
-  org: QuestionOrgDetails;
+  // == Section 1: Submission metadata ==
 
-  /** Primary point of contact */
-  contact: QuestionPocDetails;
+  /** 1.a. Type of Submission */
+  @example(Sf424SubmissionType.Application)
+  typeOfSubmission: Sf424SubmissionType;
 
-  /** Authorized Organization Representative */
-  aor: QuestionAorDetails;
+  /** Specify the type of submission (required if typeOfSubmission is Other) */
+  @example("")
+  @minLength(0)
+  @maxLength(50)
+  otherSubmissionTypeExplanation?: string;
+
+  /** 1.b. Frequency */
+  @example(Sf424SubmissionType.Application)
+  frequency: Sf424SubmissionType;
+
+  /** Specify the frequency of submission (required if frequency is Other) */
+  @example("")
+  @minLength(0)
+  @maxLength(50)
+  otherFrequencyExplanation?: string;
+
+  /** 1.c. Consolidated Application/Plan/Funding Request? */
+  @example(Sf424YesNo.No)
+  consolidatedRequest?: Sf424YesNo;
+
+  /** Identify programs covered by the consolidated submission */
+  @example("")
+  @minLength(0)
+  @maxLength(4000)
+  consolidatedRequestExplanation?: string;
+
+  /** 1.d. Version */
+  @example(Sf424Version.V1)
+  version: Sf424Version;
+
+  /** 2. Date Received — completed by Grants.gov upon submission */
+  @format("date")
+  @example("2024-03-20")
+  dateReceived: string;
+
+  /** 3. Applicant Identifier — optional applicant control number */
+  @example("GRANT-2024-001")
+  @minLength(0)
+  @maxLength(30)
+  applicantIdentifier?: string;
+
+  /** 4a. Federal Entity Identifier */
+  @example("")
+  @minLength(0)
+  @maxLength(30)
+  federalEntityId?: string;
+
+  /** 4b. Federal Award Identifier */
+  @example("")
+  @minLength(0)
+  @maxLength(25)
+  federalAwardId?: string;
+
+  /** 5. Date Received by State */
+  @format("date")
+  @example("")
+  dateReceivedState?: string;
+
+  /** 6. State Application Identifier */
+  @example("")
+  @minLength(0)
+  @maxLength(30)
+  stateApplicationId?: string;
+
+  // == Section 7: Applicant organization ==
+
+  /** Primary applicant organization name */
+  @example(#{ name: "Community Health Initiative" })
+  @extension(
+    "x-overrides",
+    #{ uiSchema: #{ name: #{ label: "a. Legal Name" } } }
+  )
+  orgName: QuestionOrgName;
+
+  /** Employer Identification Number (EIN) of the applicant organization */
+  @example(#{ ein: "12-3456789" })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        ein: #{ label: "b. Employer/Taxpayer Identification Number (EIN/TIN)" },
+      },
+    }
+  )
+  orgEin: QuestionOrgEin;
+
+  /** SAM Unique Entity Identifier (UEI) of the applicant organization */
+  @example(#{ uei: "ABCD12345678" })
+  @extension("x-overrides", #{ uiSchema: #{ uei: #{ label: "c. UEI" } } })
+  orgUei: QuestionOrgUei;
+
+  /** Mailing address of the applicant organization */
+  @example(#{
+    street1: "123 Main Street",
+    street2: "Suite 200",
+    city: "Springfield",
+    state: USState.MO,
+    country: "US",
+    postalCode: "65804",
+  })
+  orgAddress: QuestionPrimaryOrgAddress;
+
+  /** County or parish of the applicant address */
+  @example("Greene County")
+  @minLength(0)
+  @maxLength(30)
+  orgCountyParish?: string;
+
+  /** Primary organizational department or equivalent level */
+  @example("Program Development")
+  @minLength(0)
+  @maxLength(30)
+  orgDepartmentName?: string;
+
+  /** Primary organizational division or major subdivision */
+  @example("Health Services")
+  @minLength(0)
+  @maxLength(30)
+  orgDivisionName?: string;
+
+  // == Section 7f: Primary point of contact ==
+
+  /** Primary point of contact name */
+  @example(#{
+    prefix: NamePrefix.Dr,
+    firstName: "Sarah",
+    middleName: "Marie",
+    lastName: "Johnson",
+    suffix: NameSuffix.PhD,
+  })
+  contactName: QuestionPrimaryContactName;
+
+  /** Primary point of contact title */
+  @example(#{ title: "Program Director" })
+  contactTitle: QuestionPocTitle;
+
+  /** Contact's organizational affiliation if different from the applicant organization */
+  @example("Community Health Initiative")
+  @minLength(0)
+  @maxLength(60)
+  contactOrganizationalAffiliation?: string;
+
+  /** Primary point of contact phone number */
+  @example(#{ countryCode: "+1", number: "(417) 555-0123" })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        countryCode: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{
+              scope: "#/properties/contactPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
+        },
+        extension: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{
+              scope: "#/properties/contactPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
+        },
+        isMobile: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{
+              scope: "#/properties/contactPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
+        },
+      },
+    }
+  )
+  contactPhone: QuestionPocPhone;
+
+  /** Contact's fax number */
+  @example("(417) 555-0124")
+  @minLength(0)
+  @maxLength(25)
+  contactFaxNumber?: string;
+
+  /** Primary point of contact email */
+  @example(#{ email: "sarah.johnson@communityhealth.org" })
+  contactEmail: QuestionPocEmail;
+
+  // == Section 8: Applicant type ==
+
+  /** 8a. Type of Applicant */
+  @example(Sf424ApplicantType.NonprofitWith501C3)
+  typeOfApplicant: Sf424ApplicantType;
+
+  /** Specify applicant type if Other was selected */
+  @example("")
+  @minLength(0)
+  @maxLength(50)
+  otherApplicantTypeExplanation?: string;
+
+  /** 8b. Additional description of applicant type */
+  @example("")
+  @minLength(0)
+  @maxLength(50)
+  additionalDescription?: string;
+
+  // == Sections 9–12: Grant opportunity info ==
+
+  /** 9. Name of Federal Agency — pre-populated from Application cover sheet */
+  @example("National Institutes of Health")
+  @minLength(1)
+  @maxLength(60)
+  nameOfFederalAgency: string;
+
+  /** 10. Assistance Listing Number — pre-populated from Application cover sheet */
+  @example("93.123")
+  @minLength(0)
+  @maxLength(15)
+  assistanceListingNumber?: string;
+
+  /** Assistance Listing Title — pre-populated from Application cover sheet */
+  @example("Community Health Centers Program")
+  @minLength(0)
+  @maxLength(120)
+  assistanceListingTitle?: string;
+
+  /** 11. Descriptive Title of Applicant's Project */
+  @example("Community Health Improvement Initiative")
+  @minLength(1)
+  @maxLength(250)
+  descriptiveTitleOfApplicantProject: string;
+
+  /** 12. Areas Affected by Funding */
+  @example("Rural communities in Southwest Missouri")
+  @minLength(0)
+  @maxLength(250)
+  areasAffectedByFunding?: string;
+
+  // == Section 13: Congressional districts ==
+
+  /** 13a. Congressional district of the applicant (format: XX-###, e.g. MO-007) */
+  @example("MO-007")
+  @minLength(1)
+  @maxLength(6)
+  congressionalDistrictApplicant: string;
+
+  /** 13b. Congressional district(s) of the program/project */
+  @example("MO-007")
+  @minLength(0)
+  @maxLength(6)
+  congressionalDistrictProject?: string;
+
+  // == Section 14: Funding period ==
+
+  /** 14a. Funding period start date */
+  @format("date")
+  @example("2024-10-01")
+  fundingPeriodStartDate: string;
+
+  /** 14b. Funding period end date */
+  @format("date")
+  @example("2025-09-30")
+  fundingPeriodEndDate: string;
+
+  // == Section 15: Estimated funding ==
+
+  /** 15a. Federal share of estimated funding */
+  @example("500000.00")
+  estimatedFundingFederal: string;
+
+  /** 15b. Match (non-federal) share of estimated funding */
+  @example("125000")
+  estimatedFundingMatch?: string;
+
+  // == Section 16: State review ==
+
+  /** 16. Is submission subject to review under Executive Order 12372? */
+  @example(Sf424StateReviewStatus.NotCovered)
+  submissionSubjectToReview: Sf424StateReviewStatus;
+
+  /** Date the application was made available for state review */
+  @format("date")
+  @example("")
+  stateReviewDate?: string;
+
+  // == Section 17: Federal debt delinquency ==
+
+  /** 17. Is the applicant delinquent on any federal debt? */
+  @example(Sf424YesNo.No)
+  applicantDelinquentFederalDebt: Sf424YesNo;
+
+  /** Explanation of federal debt delinquency (required if Yes) */
+  @example("")
+  @minLength(0)
+  @maxLength(4000)
+  delinquentFederalDebtExplanation?: string;
+
+  // == Section 18: Authorized Organization Representative ==
+
+  /** AOR agrees to all required certifications */
+  @example(true)
+  aorIAgree: boolean;
+
+  /** AOR name */
+  @example(#{
+    prefix: NamePrefix.Mr,
+    firstName: "Michael",
+    lastName: "Thompson",
+    suffix: NameSuffix.PhD,
+  })
+  aorName: QuestionAorName;
+
+  /** AOR title */
+  @example(#{ title: "Executive Director" })
+  aorTitle: QuestionAorTitle;
+
+  /** AOR organizational affiliation if different from the applicant organization */
+  @example("Community Health Initiative")
+  @minLength(0)
+  @maxLength(60)
+  aorOrganizationalAffiliation?: string;
+
+  /** AOR phone number */
+  @example(#{ countryCode: "+1", number: "(417) 555-0100" })
+  @extension(
+    "x-overrides",
+    #{
+      uiSchema: #{
+        countryCode: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{
+              scope: "#/properties/aorPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
+        },
+        extension: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{
+              scope: "#/properties/aorPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
+        },
+        isMobile: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{
+              scope: "#/properties/aorPhone/properties/countryCode",
+              schema: #{},
+            },
+          },
+        },
+      },
+    }
+  )
+  aorPhone: QuestionAorPhone;
+
+  /** AOR fax number */
+  @example("(417) 555-0101")
+  @minLength(0)
+  @maxLength(25)
+  aorFaxNumber?: string;
+
+  /** AOR email */
+  @example(#{ email: "michael.thompson@communityhealth.org" })
+  aorEmail: QuestionAorEmail;
+
+  /** Signature of Authorized Representative — completed by Grants.gov upon submission */
+  @example("Michael Thompson")
+  @minLength(1)
+  @maxLength(144)
+  aorSignature: string;
+
+  /** Date the application was signed — completed by Grants.gov upon submission */
+  @format("date")
+  @example("2024-03-20")
+  aorSignatureDate: string;
+
+  // == Supporting documents ==
+
+  /** Attach supporting documents as specified in agency instructions */
+  @example("")
+  attachSupportingDocuments?: string;
 }

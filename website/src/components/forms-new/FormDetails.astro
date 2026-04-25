@@ -3,12 +3,10 @@ import type { FormItem } from "@/lib/forms";
 import { Code, Tabs, TabItem } from "@astrojs/starlight/components";
 import { JsonFormRenderer } from "@/components/forms/JsonFormRenderer";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
-import type { FormData, JsonValue } from "@/lib/types";
-import { transformWithMapping } from "@/lib/transformation";
+import type { FormData } from "@/lib/types";
 import { generateSchemaExample } from "@/lib/schema/example-generator";
 import { Paths } from "@/lib/schema/paths";
 import { extensionsAjv } from "@/lib/validation";
-import * as yaml from "js-yaml";
 
 interface Props {
   item: FormItem;
@@ -18,9 +16,6 @@ const { item } = Astro.props;
 
 const toJson = (data: Record<string, unknown>) =>
   JSON.stringify(data, null, 2) as string;
-
-const toYaml = (data: Record<string, unknown>) =>
-  yaml.dump(data, { noRefs: true, lineWidth: -1 }) as string;
 
 // Generate example data from the schema using openapi-sampler, which
 // composes examples from nested $ref schemas automatically. Mirrors the
@@ -32,16 +27,41 @@ const exampleJson = await generateSchemaExample(schemaRelPath, {
 });
 const exampleData = JSON.parse(exampleJson) as FormData;
 
-// Transform example data to CommonGrants format using the mapping
-const commonGrantsData = transformWithMapping(
-  exampleData as Record<string, JsonValue>,
-  item.mappingToCg as Record<string, JsonValue>,
-);
-
 const hasOverrides =
   Object.keys(item.overrides.uiSchema ?? {}).length > 0 ||
   Object.keys(item.overrides.mappingFromCg ?? {}).length > 0 ||
   Object.keys(item.overrides.mappingToCg ?? {}).length > 0;
+
+// Strip x-* extension fields and TypeSpec anchor fields from the raw schema
+// so the Schemas tab shows a clean, standard JSON Schema. Also reorder
+// top-level keys to match the conventional shape (title → description → type).
+function stripExtensions(value: unknown, depth = 0): unknown {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return value;
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    if (key.startsWith("x-")) continue;
+    // Drop $schema and $id at all levels — TypeSpec anchor fields, not part
+    // of the user-facing schema.
+    if (key === "$schema" || key === "$id") continue;
+    // Drop example/examples — these are authoring aids, not part of the schema spec.
+    if (key === "examples" || key === "example") continue;
+    result[key] = stripExtensions(val, depth + 1);
+  }
+  return result;
+}
+
+const { description, type, ...rest } = stripExtensions(
+  item.rawSchema,
+) as Record<string, unknown>;
+
+const cleanSchema: Record<string, unknown> = {
+  title: item.label,
+  ...(description !== undefined ? { description } : {}),
+  ...(type !== undefined ? { type } : {}),
+  ...rest,
+};
 ---
 
 <h2 class="details-title">Details</h2>
@@ -54,6 +74,7 @@ const hasOverrides =
       schema={item.rawSchema as JsonSchema}
       uischema={item.uiSchema as unknown as VerticalLayout}
       data={exampleData}
+      descriptionAbove
     />
   </TabItem>
   <TabItem label="Data">
@@ -62,20 +83,12 @@ const hasOverrides =
       <p>What the form data looks like when it is submitted.</p>
       <Code lang="json" code={toJson(exampleData)} />
     </details>
-    <details>
-      <summary>CommonGrants Data</summary>
-      <p>
-        What the data looks like translated to the CommonGrants data model using
-        the mapping-to-cg.
-      </p>
-      <Code lang="json" code={toJson(commonGrantsData)} />
-    </details>
   </TabItem>
   <TabItem label="Schemas">
     <details>
       <summary>JSON Schema</summary>
       <p>Provides the structure and data validation for this form.</p>
-      <Code lang="yaml" code={toYaml(item.rawSchema)} />
+      <Code lang="json" code={toJson(cleanSchema)} />
     </details>
     <details>
       <summary>UI Schema (merged)</summary>
