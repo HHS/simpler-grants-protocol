@@ -44,10 +44,12 @@ model CD511 {
 
   /** Project award number */
   @example("CD511-2024-001")
+  @extension("x-mapping-from-cg", #{ field: "customFields.awardNumber.value" })
   awardNumber?: string;
 
   /** Name of the project */
   @example("Advanced Research Project")
+  @extension("x-mapping-from-cg", #{ field: "title" })
   projectName?: string;
 
   /** Authorized Organization Representative name */
@@ -68,10 +70,15 @@ model CD511 {
   /** AOR signature — system-generated when submitted through Grants.gov */
   @example("")
   @maxLength(144)
+  @extension("x-mapping-from-cg", #{ field: "customFields.signature.value" })
   signature: string;
 
   /** Date the AOR signed the application — system-generated when submitted through Grants.gov */
   @format("date")
   @example("2024-03-20")
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.submittedDate.value" }
+  )
   submittedDate: string;
 }

@@ -104,5 +104,6 @@ model KeyContact {
   @example("Project Director")
   @minLength(1)
   @maxLength(45)
+  @extension("x-mapping-from-cg", #{ field: "customFields.projectRole.value" })
   projectRole: string;
 }

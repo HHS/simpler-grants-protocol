@@ -80,18 +80,30 @@ model SF424Individual {
   @example("Department of Health and Human Services")
   @minLength(1)
   @maxLength(60)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "opportunity.customFields.federalAgency.value" }
+  )
   federalAgency: string;
 
   /** Assistance Listing (CFDA) Number — pre-populated from Application cover sheet */
   @example("93.123")
   @minLength(0)
   @maxLength(15)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "opportunity.customFields.cfdaNumber.value" }
+  )
   cfdaNumber?: string;
 
   /** Assistance Listing (CFDA) Title — pre-populated from Application cover sheet */
   @example("Example Grant Program")
   @minLength(0)
   @maxLength(120)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "opportunity.customFields.cfdaTitle.value" }
+  )
   cfdaTitle?: string;
 
   /** Date received — completed by Grants.gov upon submission */
@@ -103,12 +115,14 @@ model SF424Individual {
   @example("ABC-123-456")
   @minLength(1)
   @maxLength(40)
+  @extension("x-mapping-from-cg", #{ field: "opportunity.id" })
   opportunityId: string;
 
   /** Funding opportunity title — pre-populated from Application cover sheet */
   @example("Example Funding Opportunity")
   @minLength(1)
   @maxLength(255)
+  @extension("x-mapping-from-cg", #{ field: "opportunity.title" })
   opportunityTitle: string;
 
   // == Individual applicant contact information ==
@@ -184,33 +198,51 @@ model SF424Individual {
   @example("555-987-6543")
   @minLength(0)
   @maxLength(25)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "contacts.primary.phones.otherPhones.evening.number" }
+  )
   eveningPhone?: string;
 
   /** Fax number */
   @example("555-456-7890")
   @minLength(0)
   @maxLength(25)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "contacts.primary.phones.otherPhones.fax.number" }
+  )
   fax?: string;
 
   // == Citizenship ==
 
   /** U.S. citizenship status */
   @example("Y: Yes")
+  @extension("x-mapping-from-cg", #{ field: "customFields.citizenship.value" })
   citizenship: string;
 
   /** Alien Registration Number (required if not a U.S. citizen) */
   @example("")
   @minLength(0)
   @maxLength(14)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.alienRegistrationNumber.value" }
+  )
   alienRegistrationNumber?: string;
 
   /** Country of citizenship */
   @example("")
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.countryOfOrigin.value" }
+  )
   countryOfOrigin?: string;
 
   /** Start date of most recent U.S. residency (required if not a U.S. citizen) */
   @format("date")
   @example("")
+  @extension("x-mapping-from-cg", #{ field: "customFields.visitDate.value" })
   visitDate?: string;
 
   // == Location ==
@@ -231,6 +263,10 @@ model SF424Individual {
   @example("DC-000")
   @minLength(1)
   @maxLength(6)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.congressionalDistrictApplicant.value" }
+  )
   congressionalDistrictApplicant: string;
 
   // == Project information ==
@@ -277,5 +313,9 @@ model SF424Individual {
 
   /** Applicant agrees to all required certifications */
   @example("Y: Yes")
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.applicationCertification.value" }
+  )
   applicationCertification: string;
 }

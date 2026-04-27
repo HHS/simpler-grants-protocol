@@ -26,6 +26,8 @@ export interface FormItemIndexEntry {
   schema: string;
   /** Human-readable label for display in cards and page titles */
   label: string;
+  /** Optional URL linking to the source form details page */
+  url?: string;
 }
 
 /**

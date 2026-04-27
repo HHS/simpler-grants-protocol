@@ -214,6 +214,12 @@ export async function loadFormItem(itemId: string): Promise<FormItem | null> {
       id: itemId,
       ...indexEntry,
       ...schemaData,
+      ...((indexEntry as unknown as Record<string, unknown>).description
+        ? {
+            description: (indexEntry as unknown as Record<string, unknown>)
+              .description as string,
+          }
+        : {}),
     };
   } catch (error) {
     console.error(`Failed to load form ${itemId}:`, error);

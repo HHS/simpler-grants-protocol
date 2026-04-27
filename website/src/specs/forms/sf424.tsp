@@ -334,12 +334,20 @@ model SF424 {
   @example("Research Division")
   @minLength(0)
   @maxLength(30)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "organizations.primary.customFields.department.value" }
+  )
   departmentName?: string;
 
   /** Primary organizational division or major subdivision */
   @example("Innovation Lab")
   @minLength(0)
   @maxLength(30)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "organizations.primary.customFields.division.value" }
+  )
   divisionName?: string;
 
   // == Primary point of contact ==
@@ -406,6 +414,10 @@ model SF424 {
   @example("555-987-6543")
   @minLength(0)
   @maxLength(25)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "contacts.primary.phones.fax.number" }
+  )
   contactFax?: string;
 
   /** Contact's organizational affiliation if different from the applicant organization */
@@ -418,6 +430,27 @@ model SF424 {
 
   /** Primary applicant type */
   @example(ApplicantTypeCode.NonprofitWith501C3)
+  @extension(
+    "x-mapping-from-cg",
+    #{
+      switch: #{
+        field: "customFields.applicantType.value",
+        case: #{
+          `government-state`: "A: State Government",
+          `government-local`: "B: County Government",
+          `government-general`: "E: Regional Organization",
+          `government-tribal`: "I: Indian/Native American Tribal Government (Federally Recognized)",
+          `nonprofit-general`: "M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)",
+          `nonprofit-educational`: "H: Public/State Controlled Institution of Higher Education",
+          `business-small`: "R: Small Business",
+          `business-general`: "Q: For-Profit Organization (Other than Small Business)",
+          individual: "P: Individual",
+          custom: "X: Other (specify)",
+        },
+        default: "M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)",
+      },
+    }
+  )
   applicantTypeCode1: ApplicantTypeCode;
 
   /** Secondary applicant type */
@@ -440,12 +473,20 @@ model SF424 {
   @example("National Science Foundation")
   @minLength(1)
   @maxLength(60)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "opportunity.customFields.agency.value" }
+  )
   agencyName: string;
 
   /** Assistance Listing (CFDA) Number — pre-populated from Application cover sheet */
   @example("47.041")
   @minLength(0)
   @maxLength(15)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "opportunity.customFields.cfdaNumber.value" }
+  )
   cfdaNumber?: string;
 
   /** Assistance Listing (CFDA) Program Title — pre-populated from Application cover sheet */
@@ -458,12 +499,14 @@ model SF424 {
   @example("NSF-24-123")
   @minLength(1)
   @maxLength(40)
+  @extension("x-mapping-from-cg", #{ field: "opportunity.id" })
   fundingOpportunityNumber: string;
 
   /** Funding opportunity title — pre-populated from Application cover sheet */
   @example("Innovation in Research Technology")
   @minLength(1)
   @maxLength(255)
+  @extension("x-mapping-from-cg", #{ field: "opportunity.title" })
   fundingOpportunityTitle: string;
 
   /** Competition identification number — pre-populated from Application cover sheet */
@@ -544,12 +587,20 @@ model SF424 {
   @example("DC-000")
   @minLength(1)
   @maxLength(6)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.congressionalDistrictApplicant.value" }
+  )
   congressionalDistrictApplicant: string;
 
   /** Congressional district(s) where the program/project will be performed */
   @example("DC-000")
   @minLength(1)
   @maxLength(6)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.congressionalDistrictProgramProject.value" }
+  )
   congressionalDistrictProgramProject: string;
 
   /** Additional congressional districts if the project spans more than one */
@@ -562,36 +613,50 @@ model SF424 {
 
   /** Federal share of estimated funding */
   @example("500000.00")
+  @extension("x-mapping-from-cg", #{ field: "amountRequested.amount" })
   federalEstimatedFunding: string;
 
   /** Applicant share of estimated funding */
   @example("100000.00")
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.applicantFunding.value" }
+  )
   applicantEstimatedFunding: string;
 
   /** State share of estimated funding */
   @example("50000.00")
+  @extension("x-mapping-from-cg", #{ field: "customFields.stateFunding.value" })
   stateEstimatedFunding: string;
 
   /** Local share of estimated funding */
   @example("25000.00")
+  @extension("x-mapping-from-cg", #{ field: "customFields.localFunding.value" })
   localEstimatedFunding: string;
 
   /** Other share of estimated funding */
   @example("25000.00")
+  @extension("x-mapping-from-cg", #{ field: "customFields.otherFunding.value" })
   otherEstimatedFunding: string;
 
   /** Program income share of estimated funding */
   @example("0.00")
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.programIncome.value" }
+  )
   programIncomeEstimatedFunding: string;
 
   /** Total estimated funding — calculated field */
   @example("700000.00")
+  @extension("x-mapping-from-cg", #{ field: "customFields.totalBudget.value" })
   totalEstimatedFunding: string;
 
   // == State review ==
 
   /** Is the application subject to review by state executive order 12372? */
   @example("No")
+  @extension("x-mapping-from-cg", #{ field: "customFields.stateReview.value" })
   stateReview: string;
 
   /** Date the application was made available for state review */
@@ -603,6 +668,10 @@ model SF424 {
 
   /** Is the applicant delinquent on any federal debt? */
   @example("No")
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.delinquentFederalDebt.value" }
+  )
   delinquentFederalDebt: string;
 
   /** Explanation of federal debt delinquency (required if delinquent) */
@@ -613,6 +682,10 @@ model SF424 {
 
   /** Applicant agrees to all required certifications */
   @example("Yes")
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.certificationAgree.value" }
+  )
   certificationAgree: string;
 
   // == Authorized Organization Representative ==
@@ -686,15 +759,23 @@ model SF424 {
   @example("555-876-5432")
   @minLength(0)
   @maxLength(25)
+  @extension(
+    "x-mapping-from-cg",
+    #{
+      field: "contacts.otherContacts.authorizedRepresentative.phones.fax.number",
+    }
+  )
   aorFax?: string;
 
   /** AOR signature — completed by Grants.gov upon submission */
   @example("")
   @maxLength(144)
+  @extension("x-mapping-from-cg", #{ field: "customFields.aorSignature.value" })
   aorSignature: string;
 
   /** Date the application was signed — completed by Grants.gov upon submission */
   @format("date")
   @example("2024-03-20")
+  @extension("x-mapping-from-cg", #{ field: "customFields.dateSigned.value" })
   dateSigned: string;
 }

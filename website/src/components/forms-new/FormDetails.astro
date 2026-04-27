@@ -1,6 +1,6 @@
 ---
 import type { FormItem } from "@/lib/forms";
-import { Code, Tabs, TabItem } from "@astrojs/starlight/components";
+import { Code, Tabs, TabItem, LinkButton } from "@astrojs/starlight/components";
 import { JsonFormRenderer } from "@/components/forms/JsonFormRenderer";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
 import type { FormData } from "@/lib/types";
@@ -62,7 +62,112 @@ const cleanSchema: Record<string, unknown> = {
   ...(type !== undefined ? { type } : {}),
   ...rest,
 };
+
+// Compute stats from the UI schema and the separately composed mapping.
+// Counting visible Controls in the UI schema (rather than all JSON schema
+// properties) excludes fields that are intentionally hidden via HIDE rules —
+// QB question types often carry extra fields that a specific form hides.
+function countVisibleControls(node: Record<string, unknown>): number {
+  // Skip any node (Control or layout) that is hidden — a HIDE rule on a Group
+  // or Layout hides all of its children too.
+  const rule = node.rule as Record<string, unknown> | undefined;
+  if (rule?.effect === "HIDE") return 0;
+
+  if (node.type === "Control") return 1;
+
+  const elements = node.elements as Record<string, unknown>[] | undefined;
+  if (!elements) return 0;
+  return elements.reduce(
+    (sum, el) => sum + countVisibleControls(el as Record<string, unknown>),
+    0,
+  );
+}
+
+/** Converts a JSON Schema scope string to a key path array.
+ * e.g. "#/properties/org/properties/name" → ["org", "name"] */
+function scopeToPath(scope: string): string[] {
+  return scope.split("/").filter((s) => s !== "#" && s !== "properties");
+}
+
+/** Walks mappingFromCg along path and returns true if the terminal node has a
+ * "field" key (simple mapping) or a "switch.field" key (switch mapping). */
+function isMapped(mapping: Record<string, unknown>, path: string[]): boolean {
+  let cur: unknown = mapping;
+  for (const key of path) {
+    if (typeof cur !== "object" || cur === null) return false;
+    cur = (cur as Record<string, unknown>)[key];
+  }
+  if (typeof cur !== "object" || cur === null) return false;
+  const obj = cur as Record<string, unknown>;
+  if ("field" in obj) return true;
+  const sw = obj.switch;
+  return (
+    typeof sw === "object" &&
+    sw !== null &&
+    "field" in (sw as Record<string, unknown>)
+  );
+}
+
+/** Counts visible Controls whose scope has a corresponding mapping entry. */
+function countMappedVisible(
+  node: Record<string, unknown>,
+  mapping: Record<string, unknown>,
+): number {
+  const rule = node.rule as Record<string, unknown> | undefined;
+  if (rule?.effect === "HIDE") return 0;
+
+  if (node.type === "Control") {
+    const scope = node.scope as string | undefined;
+    return scope && isMapped(mapping, scopeToPath(scope)) ? 1 : 0;
+  }
+
+  const elements = node.elements as Record<string, unknown>[] | undefined;
+  if (!elements) return 0;
+  return elements.reduce(
+    (sum, el) =>
+      sum + countMappedVisible(el as Record<string, unknown>, mapping),
+    0,
+  );
+}
+
+const totalQuestions = countVisibleControls(
+  item.uiSchema as Record<string, unknown>,
+);
+const mappedFields = countMappedVisible(
+  item.uiSchema as Record<string, unknown>,
+  item.mappingFromCg,
+);
+const mappingPercentage =
+  totalQuestions > 0 ? Math.round((mappedFields / totalQuestions) * 100) : 0;
 ---
+
+<section class="summary-section">
+  <div class="summary-content">
+    <h2 class="summary-title">Summary</h2>
+    <div class="summary-description">
+      <p>
+        {
+          `${totalQuestions} total questions | ${mappingPercentage}% mapped to the CommonGrants schema`
+        }
+      </p>
+      {item.description && <p>{item.description}</p>}
+      {
+        item.url && (
+          <p>
+            <a href={item.url} target="_blank">
+              View source form details
+            </a>
+          </p>
+        )
+      }
+    </div>
+    <div class="summary-actions">
+      <LinkButton href={`/forms/playground?src=${item.id}`} variant="primary">
+        Explore in playground
+      </LinkButton>
+    </div>
+  </div>
+</section>
 
 <h2 class="details-title">Details</h2>
 
@@ -132,9 +237,44 @@ const cleanSchema: Record<string, unknown> = {
 </Tabs>
 
 <style>
+  .summary-section {
+    margin: 0;
+    padding: 0;
+  }
+
+  .summary-title {
+    font-size: 1.75rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .summary-content {
+    margin: 0;
+    padding: 0;
+  }
+
+  .summary-description {
+    margin: 0 0 1.5rem 0;
+  }
+
+  .summary-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
   .details-title {
     font-size: 1.75rem !important;
     margin-top: 0.25rem;
     margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .summary-actions {
+      flex-direction: column;
+      align-items: center;
+    }
   }
 </style>

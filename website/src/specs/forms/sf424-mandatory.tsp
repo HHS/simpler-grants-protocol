@@ -313,10 +313,10 @@ enum Sf424YesNo {
       otherSubmissionTypeExplanation: #{
         label: "Other (specify)",
         rule: #{
-          effect: "HIDE",
+          effect: "SHOW",
           condition: #{
             scope: "#/properties/typeOfSubmission",
-            schema: #{ not: #{ type: "string", pattern: "^Other$" } },
+            schema: #{ type: "string", pattern: "^Other$" },
           },
         },
       },
@@ -324,10 +324,10 @@ enum Sf424YesNo {
       otherFrequencyExplanation: #{
         label: "Other (specify)",
         rule: #{
-          effect: "HIDE",
+          effect: "SHOW",
           condition: #{
             scope: "#/properties/frequency",
-            schema: #{ not: #{ type: "string", pattern: "^Other$" } },
+            schema: #{ type: "string", pattern: "^Other$" },
           },
         },
       },
@@ -337,10 +337,10 @@ enum Sf424YesNo {
       consolidatedRequestExplanation: #{
         label: "Consolidated Application/Plan/Funding Request Explanation",
         rule: #{
-          effect: "HIDE",
+          effect: "SHOW",
           condition: #{
             scope: "#/properties/consolidatedRequest",
-            schema: #{ not: #{ type: "string", pattern: "^Yes$" } },
+            schema: #{ type: "string", pattern: "^Yes$" },
           },
         },
       },
@@ -367,10 +367,10 @@ enum Sf424YesNo {
       otherApplicantTypeExplanation: #{
         label: "Other (specify)",
         rule: #{
-          effect: "HIDE",
+          effect: "SHOW",
           condition: #{
             scope: "#/properties/typeOfApplicant",
-            schema: #{ not: #{ type: "string", pattern: "^X: Other" } },
+            schema: #{ type: "string", pattern: "^X: Other" },
           },
         },
       },
@@ -408,10 +408,10 @@ enum Sf424YesNo {
       stateReviewDate: #{
         label: "State Review Date",
         rule: #{
-          effect: "HIDE",
+          effect: "SHOW",
           condition: #{
             scope: "#/properties/submissionSubjectToReview",
-            schema: #{ not: #{ type: "string", pattern: "^a\\." } },
+            schema: #{ type: "string", pattern: "^a\\." },
           },
         },
       },
@@ -424,10 +424,10 @@ enum Sf424YesNo {
       delinquentFederalDebtExplanation: #{
         label: "Explanation",
         rule: #{
-          effect: "HIDE",
+          effect: "SHOW",
           condition: #{
             scope: "#/properties/applicantDelinquentFederalDebt",
-            schema: #{ not: #{ type: "string", pattern: "^Yes$" } },
+            schema: #{ type: "string", pattern: "^Yes$" },
           },
         },
       },
@@ -456,6 +456,10 @@ model SF424Mandatory {
 
   /** 1.a. Type of Submission */
   @example(Sf424SubmissionType.Application)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.typeOfSubmission.value" }
+  )
   typeOfSubmission: Sf424SubmissionType;
 
   /** Specify the type of submission (required if typeOfSubmission is Other) */
@@ -466,6 +470,7 @@ model SF424Mandatory {
 
   /** 1.b. Frequency */
   @example(Sf424SubmissionType.Application)
+  @extension("x-mapping-from-cg", #{ field: "customFields.frequency.value" })
   frequency: Sf424SubmissionType;
 
   /** Specify the frequency of submission (required if frequency is Other) */
@@ -476,6 +481,10 @@ model SF424Mandatory {
 
   /** 1.c. Consolidated Application/Plan/Funding Request? */
   @example(Sf424YesNo.No)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.consolidatedRequest.value" }
+  )
   consolidatedRequest?: Sf424YesNo;
 
   /** Identify programs covered by the consolidated submission */
@@ -486,11 +495,13 @@ model SF424Mandatory {
 
   /** 1.d. Version */
   @example(Sf424Version.V1)
+  @extension("x-mapping-from-cg", #{ field: "customFields.version.value" })
   version: Sf424Version;
 
   /** 2. Date Received — completed by Grants.gov upon submission */
   @format("date")
   @example("2024-03-20")
+  @extension("x-mapping-from-cg", #{ field: "customFields.dateReceived.value" })
   dateReceived: string;
 
   /** 3. Applicant Identifier — optional applicant control number */
@@ -570,12 +581,20 @@ model SF424Mandatory {
   @example("Program Development")
   @minLength(0)
   @maxLength(30)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "organizations.primary.customFields.departmentName.value" }
+  )
   orgDepartmentName?: string;
 
   /** Primary organizational division or major subdivision */
   @example("Health Services")
   @minLength(0)
   @maxLength(30)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "organizations.primary.customFields.divisionName.value" }
+  )
   orgDivisionName?: string;
 
   // == Section 7f: Primary point of contact ==
@@ -642,6 +661,10 @@ model SF424Mandatory {
   @example("(417) 555-0124")
   @minLength(0)
   @maxLength(25)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "contacts.primary.phones.fax.number" }
+  )
   contactFaxNumber?: string;
 
   /** Primary point of contact email */
@@ -652,6 +675,27 @@ model SF424Mandatory {
 
   /** 8a. Type of Applicant */
   @example(Sf424ApplicantType.NonprofitWith501C3)
+  @extension(
+    "x-mapping-from-cg",
+    #{
+      switch: #{
+        field: "customFields.applicantType.value",
+        case: #{
+          `government-state`: "A: State Government",
+          `government-local`: "B: County Government",
+          `government-general`: "E: Regional Organization",
+          `government-tribal`: "I: Indian/Native American Tribal Government (Federally Recognized)",
+          `nonprofit-general`: "M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)",
+          `nonprofit-educational`: "H: Public/State Controlled Institution of Higher Education",
+          `business-small`: "R: Small Business",
+          `business-general`: "Q: For-Profit Organization (Other than Small Business)",
+          individual: "P: Individual",
+          custom: "X: Other (specify)",
+        },
+        default: "X: Other (specify)",
+      },
+    }
+  )
   typeOfApplicant: Sf424ApplicantType;
 
   /** Specify applicant type if Other was selected */
@@ -664,6 +708,7 @@ model SF424Mandatory {
   @example("")
   @minLength(0)
   @maxLength(50)
+  @extension("x-mapping-from-cg", #{ field: "description" })
   additionalDescription?: string;
 
   // == Sections 9–12: Grant opportunity info ==
@@ -672,30 +717,47 @@ model SF424Mandatory {
   @example("National Institutes of Health")
   @minLength(1)
   @maxLength(60)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "opportunity.customFields.federalAgency.value" }
+  )
   nameOfFederalAgency: string;
 
   /** 10. Assistance Listing Number — pre-populated from Application cover sheet */
   @example("93.123")
   @minLength(0)
   @maxLength(15)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "opportunity.customFields.assistanceListingNumber.value" }
+  )
   assistanceListingNumber?: string;
 
   /** Assistance Listing Title — pre-populated from Application cover sheet */
   @example("Community Health Centers Program")
   @minLength(0)
   @maxLength(120)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "opportunity.customFields.assistanceListingTitle.value" }
+  )
   assistanceListingTitle?: string;
 
   /** 11. Descriptive Title of Applicant's Project */
   @example("Community Health Improvement Initiative")
   @minLength(1)
   @maxLength(250)
+  @extension("x-mapping-from-cg", #{ field: "title" })
   descriptiveTitleOfApplicantProject: string;
 
   /** 12. Areas Affected by Funding */
   @example("Rural communities in Southwest Missouri")
   @minLength(0)
   @maxLength(250)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.areasAffectedByFunding.value" }
+  )
   areasAffectedByFunding?: string;
 
   // == Section 13: Congressional districts ==
@@ -704,6 +766,10 @@ model SF424Mandatory {
   @example("MO-007")
   @minLength(1)
   @maxLength(6)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.congressionalDistricts.value" }
+  )
   congressionalDistrictApplicant: string;
 
   /** 13b. Congressional district(s) of the program/project */
@@ -717,17 +783,20 @@ model SF424Mandatory {
   /** 14a. Funding period start date */
   @format("date")
   @example("2024-10-01")
+  @extension("x-mapping-from-cg", #{ field: "projectTimeline.startDate.date" })
   fundingPeriodStartDate: string;
 
   /** 14b. Funding period end date */
   @format("date")
   @example("2025-09-30")
+  @extension("x-mapping-from-cg", #{ field: "projectTimeline.endDate.date" })
   fundingPeriodEndDate: string;
 
   // == Section 15: Estimated funding ==
 
   /** 15a. Federal share of estimated funding */
   @example("500000.00")
+  @extension("x-mapping-from-cg", #{ field: "amountRequested.amount" })
   estimatedFundingFederal: string;
 
   /** 15b. Match (non-federal) share of estimated funding */
@@ -738,6 +807,10 @@ model SF424Mandatory {
 
   /** 16. Is submission subject to review under Executive Order 12372? */
   @example(Sf424StateReviewStatus.NotCovered)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.submissionSubjectToReview.value" }
+  )
   submissionSubjectToReview: Sf424StateReviewStatus;
 
   /** Date the application was made available for state review */
@@ -749,6 +822,10 @@ model SF424Mandatory {
 
   /** 17. Is the applicant delinquent on any federal debt? */
   @example(Sf424YesNo.No)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.applicantDelinquentFederalDebt.value" }
+  )
   applicantDelinquentFederalDebt: Sf424YesNo;
 
   /** Explanation of federal debt delinquency (required if Yes) */
@@ -761,6 +838,10 @@ model SF424Mandatory {
 
   /** AOR agrees to all required certifications */
   @example(true)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.authorizedRepresentativeIAgree.value" }
+  )
   aorIAgree: boolean;
 
   /** AOR name */
@@ -780,6 +861,12 @@ model SF424Mandatory {
   @example("Community Health Initiative")
   @minLength(0)
   @maxLength(60)
+  @extension(
+    "x-mapping-from-cg",
+    #{
+      field: "customFields.authorizedRepresentativeOrganizationalAffiliation.value",
+    }
+  )
   aorOrganizationalAffiliation?: string;
 
   /** AOR phone number */
@@ -824,6 +911,12 @@ model SF424Mandatory {
   @example("(417) 555-0101")
   @minLength(0)
   @maxLength(25)
+  @extension(
+    "x-mapping-from-cg",
+    #{
+      field: "contacts.otherContacts.authorizedRepresentative.phones.fax.number",
+    }
+  )
   aorFaxNumber?: string;
 
   /** AOR email */
@@ -834,11 +927,19 @@ model SF424Mandatory {
   @example("Michael Thompson")
   @minLength(1)
   @maxLength(144)
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.authorizedRepresentativeSignature.value" }
+  )
   aorSignature: string;
 
   /** Date the application was signed — completed by Grants.gov upon submission */
   @format("date")
   @example("2024-03-20")
+  @extension(
+    "x-mapping-from-cg",
+    #{ field: "customFields.authorizedRepresentativeSignatureDate.value" }
+  )
   aorSignatureDate: string;
 
   // == Supporting documents ==
