@@ -1,8 +1,10 @@
 import "@typespec/json-schema";
+import "./shared.tsp";
 import "../question-bank/primary-org/org-name.tsp";
 import "../question-bank/poc/poc-details.tsp";
 
 using JsonSchema;
+using Forms.Shared;
 using QuestionBank.OrgName;
 using QuestionBank.PocDetails;
 
@@ -84,9 +86,7 @@ model KeyContact {
 
   /** Contact's organizational affiliation if different from the applicant organization */
   @example("Test Organization")
-  @minLength(0)
-  @maxLength(60)
-  contactOrganizationalAffiliation?: string;
+  contactOrganizationalAffiliation?: OrgAffiliation;
 
   /** County or parish of the contact address */
   @example("")
@@ -96,9 +96,7 @@ model KeyContact {
 
   /** Contact's fax number */
   @example("555-111-2222")
-  @minLength(0)
-  @maxLength(25)
-  contactFax?: string;
+  contactFax?: FaxNumber;
 
   /** This contact's role on the project (e.g. Project Director, Fiscal Contact) */
   @example("Project Director")

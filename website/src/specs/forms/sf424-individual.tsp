@@ -1,8 +1,10 @@
 import "@typespec/json-schema";
+import "./shared.tsp";
 import "../question-bank/poc/poc-details.tsp";
 import "../question-bank/project/project-details.tsp";
 
 using JsonSchema;
+using Forms.Shared;
 using QuestionBank.PocDetails;
 using QuestionBank.ProjectDetails;
 using QuestionBank.QuestionName;
@@ -261,13 +263,11 @@ model SF424Individual {
 
   /** Congressional district of the applicant (format: XX-###, e.g. CA-005) */
   @example("DC-000")
-  @minLength(1)
-  @maxLength(6)
   @extension(
     "x-mapping-from-cg",
     #{ field: "customFields.congressionalDistrictApplicant.value" }
   )
-  congressionalDistrictApplicant: string;
+  congressionalDistrictApplicant: CongressionalDistrict;
 
   // == Project information ==
 

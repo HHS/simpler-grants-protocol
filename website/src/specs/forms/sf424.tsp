@@ -1,4 +1,5 @@
 import "@typespec/json-schema";
+import "./shared.tsp";
 import "../question-bank/primary-org/org-details.tsp";
 import "../question-bank/poc/poc-details.tsp";
 import "../question-bank/aor/aor-details.tsp";
@@ -11,15 +12,9 @@ using QuestionBank.AorDetails;
 using QuestionBank.ProjectDetails;
 using QuestionBank.QuestionName;
 using QuestionBank.QuestionAddress;
+using Forms.Shared;
 
 namespace Forms.SF424;
-
-/** Type of submission */
-enum SubmissionType {
-  Preapplication: "Preapplication",
-  Application: "Application",
-  ChangedCorrectedApplication: "Changed/Corrected Application",
-}
 
 /** Type of application */
 enum ApplicationType {
@@ -41,35 +36,6 @@ enum RevisionType {
   DecreaseAwardDecreaseDuration: "BD: Decrease Award, Decrease Duration",
 }
 
-/** Applicant type code */
-enum ApplicantTypeCode {
-  None: "None",
-  StateGovernment: "A: State Government",
-  CountyGovernment: "B: County Government",
-  CityOrTownshipGovernment: "C: City or Township Government",
-  SpecialDistrictGovernment: "D: Special District Government",
-  RegionalOrganization: "E: Regional Organization",
-  USTerritoryOrPossession: "F: U.S. Territory or Possession",
-  IndependentSchoolDistrict: "G: Independent School District",
-  PublicStateControlledHigherEd: "H: Public/State Controlled Institution of Higher Education",
-  TribalGovernmentFederallyRecognized: "I: Indian/Native American Tribal Government (Federally Recognized)",
-  TribalGovernmentOther: "J: Indian/Native American Tribal Government (Other than Federally Recognized)",
-  TriballyDesignatedOrganization: "K: Indian/Native American Tribally Designated Organization",
-  PublicIndianHousingAuthority: "L: Public/Indian Housing Authority",
-  NonprofitWith501C3: "M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)",
-  NonprofitWithout501C3: "N: Nonprofit without 501C3 IRS Status (Other than Institution of Higher Education)",
-  PrivateHigherEd: "O: Private Institution of Higher Education",
-  Individual: "P: Individual",
-  ForProfitOrganization: "Q: For-Profit Organization (Other than Small Business)",
-  SmallBusiness: "R: Small Business",
-  HispanicServingInstitution: "S: Hispanic-serving Institution",
-  HistoricallyBlackColleges: "T: Historically Black Colleges and Universities (HBCUs)",
-  TriballyControlledColleges: "U: Tribally Controlled Colleges and Universities (TCCUs)",
-  AlaskaNativeNativeHawaiian: "V: Alaska Native and Native Hawaiian Serving Institutions",
-  NonDomesticEntity: "W: Non-domestic (non-US) Entity",
-  Other: "X: Other (specify)",
-}
-
 /**
  * SF-424 Application for Federal Assistance.
  *
@@ -88,8 +54,26 @@ enum ApplicantTypeCode {
       submissionType: #{ label: "Submission Type" },
 
       applicationType: #{ label: "Application Type" },
-      revisionType: #{ label: "Revision Type" },
-      revisionOtherSpecify: #{ label: "Other Explanation" },
+      revisionType: #{
+        label: "Revision Type",
+        rule: #{
+          effect: "SHOW",
+          condition: #{
+            scope: "#/properties/applicationType",
+            schema: #{ type: "string", pattern: "^Revision$" },
+          },
+        },
+      },
+      revisionOtherSpecify: #{
+        label: "Other Explanation",
+        rule: #{
+          effect: "SHOW",
+          condition: #{
+            scope: "#/properties/revisionType",
+            schema: #{ type: "string", pattern: "^E: Other" },
+          },
+        },
+      },
       applicantId: #{ label: "Applicant Identifier" },
       federalEntityIdentifier: #{ label: "Federal Entity Identifier" },
       federalAwardIdentifier: #{ label: "Federal Award Identifier" },
@@ -108,6 +92,17 @@ enum ApplicantTypeCode {
       contactFax: #{ label: "Fax Number" },
 
       orgAffiliation: #{ label: "Organizational Affiliation" },
+
+      // Applicant type labels
+      applicantTypeOtherSpecify: #{
+        rule: #{
+          effect: "SHOW",
+          condition: #{
+            scope: "#/properties/applicantTypeCode1",
+            schema: #{ type: "string", pattern: "^X: Other" },
+          },
+        },
+      },
 
       // Opportunity labels
       agencyName: #{ label: "Agency Name" },
@@ -152,9 +147,27 @@ enum ApplicantTypeCode {
       // State review / debt labels
       stateReview: #{ label: "State Review" },
 
-      stateReviewAvailableDate: #{ label: "State Review Date" },
+      stateReviewAvailableDate: #{
+        label: "State Review Date",
+        rule: #{
+          effect: "SHOW",
+          condition: #{
+            scope: "#/properties/stateReview",
+            schema: #{ type: "string", pattern: "^a\\." },
+          },
+        },
+      },
       delinquentFederalDebt: #{ label: "Delinquent on Federal Debt?" },
-      debtExplanation: #{ label: "Explanation" },
+      debtExplanation: #{
+        label: "Explanation",
+        rule: #{
+          effect: "SHOW",
+          condition: #{
+            scope: "#/properties/delinquentFederalDebt",
+            schema: #{ type: "string", pattern: "^Yes$" },
+          },
+        },
+      },
       certificationAgree: #{ label: "Certification Agreement" },
 
       // AOR labels
@@ -412,19 +425,15 @@ model SF424 {
 
   /** Contact's fax number */
   @example("555-987-6543")
-  @minLength(0)
-  @maxLength(25)
   @extension(
     "x-mapping-from-cg",
     #{ field: "contacts.primary.phones.fax.number" }
   )
-  contactFax?: string;
+  contactFax?: FaxNumber;
 
   /** Contact's organizational affiliation if different from the applicant organization */
   @example("")
-  @minLength(0)
-  @maxLength(60)
-  orgAffiliation?: string;
+  orgAffiliation?: OrgAffiliation;
 
   // == Applicant type ==
 
@@ -585,23 +594,19 @@ model SF424 {
 
   /** Congressional district of the applicant (format: XX-###, e.g. CA-005) */
   @example("DC-000")
-  @minLength(1)
-  @maxLength(6)
   @extension(
     "x-mapping-from-cg",
     #{ field: "customFields.congressionalDistrictApplicant.value" }
   )
-  congressionalDistrictApplicant: string;
+  congressionalDistrictApplicant: CongressionalDistrict;
 
   /** Congressional district(s) where the program/project will be performed */
   @example("DC-000")
-  @minLength(1)
-  @maxLength(6)
   @extension(
     "x-mapping-from-cg",
     #{ field: "customFields.congressionalDistrictProgramProject.value" }
   )
-  congressionalDistrictProgramProject: string;
+  congressionalDistrictProgramProject: CongressionalDistrict;
 
   /** Additional congressional districts if the project spans more than one */
   @example("")
@@ -667,12 +672,12 @@ model SF424 {
   // == Federal debt delinquency ==
 
   /** Is the applicant delinquent on any federal debt? */
-  @example("No")
+  @example(YesNo.No)
   @extension(
     "x-mapping-from-cg",
     #{ field: "customFields.delinquentFederalDebt.value" }
   )
-  delinquentFederalDebt: string;
+  delinquentFederalDebt: YesNo;
 
   /** Explanation of federal debt delinquency (required if delinquent) */
   @example("")
@@ -681,12 +686,12 @@ model SF424 {
   // == Certification ==
 
   /** Applicant agrees to all required certifications */
-  @example("Yes")
+  @example(YesNo.Yes)
   @extension(
     "x-mapping-from-cg",
     #{ field: "customFields.certificationAgree.value" }
   )
-  certificationAgree: string;
+  certificationAgree: YesNo;
 
   // == Authorized Organization Representative ==
 
@@ -757,15 +762,13 @@ model SF424 {
 
   /** AOR fax number */
   @example("555-876-5432")
-  @minLength(0)
-  @maxLength(25)
   @extension(
     "x-mapping-from-cg",
     #{
       field: "contacts.otherContacts.authorizedRepresentative.phones.fax.number",
     }
   )
-  aorFax?: string;
+  aorFax?: FaxNumber;
 
   /** AOR signature — completed by Grants.gov upon submission */
   @example("")

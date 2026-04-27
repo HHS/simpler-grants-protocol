@@ -1,4 +1,5 @@
 import "@typespec/json-schema";
+import "./shared.tsp";
 import "../question-bank/primary-org/org-name.tsp";
 import "../question-bank/primary-org/org-ein.tsp";
 import "../question-bank/primary-org/org-uei.tsp";
@@ -27,17 +28,9 @@ using QuestionBank.AorPhone;
 using QuestionBank.AorEmail;
 using QuestionBank.QuestionName;
 using QuestionBank.QuestionAddress;
+using Forms.Shared;
 
 namespace Forms.SF424Mandatory;
-
-/** Type of submission or frequency */
-enum Sf424SubmissionType {
-  Application: "Application",
-  Preapplication: "Preapplication",
-  ChangedCorrectedApplication: "Changed/Corrected Application",
-  ChangedCorrectedPreapplication: "Changed/Corrected Preapplication",
-  Other: "Other",
-}
 
 /** Version of the submission */
 enum Sf424Version {
@@ -48,45 +41,11 @@ enum Sf424Version {
   V5: "5",
 }
 
-/** Applicant type code */
-enum Sf424ApplicantType {
-  StateGovernment: "A: State Government",
-  CountyGovernment: "B: County Government",
-  CityOrTownshipGovernment: "C: City or Township Government",
-  SpecialDistrictGovernment: "D: Special District Government",
-  RegionalOrganization: "E: Regional Organization",
-  USTerritoryOrPossession: "F: U.S. Territory or Possession",
-  IndependentSchoolDistrict: "G: Independent School District",
-  PublicStateControlledHigherEd: "H: Public/State Controlled Institution of Higher Education",
-  TribalGovernmentFederallyRecognized: "I: Indian/Native American Tribal Government (Federally Recognized)",
-  TribalGovernmentOther: "J: Indian/Native American Tribal Government (Other than Federally Recognized)",
-  TriballyDesignatedOrganization: "K: Indian/Native American Tribally Designated Organization",
-  PublicIndianHousingAuthority: "L: Public/Indian Housing Authority",
-  NonprofitWith501C3: "M: Nonprofit with 501C3 IRS Status (Other than Institution of Higher Education)",
-  NonprofitWithout501C3: "N: Nonprofit without 501C3 IRS Status (Other than Institution of Higher Education)",
-  PrivateHigherEd: "O: Private Institution of Higher Education",
-  Individual: "P: Individual",
-  ForProfitOrganization: "Q: For-Profit Organization (Other than Small Business)",
-  SmallBusiness: "R: Small Business",
-  HispanicServingInstitution: "S: Hispanic-serving Institution",
-  HistoricallyBlackColleges: "T: Historically Black Colleges and Universities (HBCUs)",
-  TriballyControlledColleges: "U: Tribally Controlled Colleges and Universities (TCCUs)",
-  AlaskaNativeNativeHawaiian: "V: Alaska Native and Native Hawaiian Serving Institutions",
-  NonDomesticEntity: "W: Non-domestic (non-US) Entity",
-  Other: "X: Other (specify)",
-}
-
 /** State review status under Executive Order 12372 */
 enum Sf424StateReviewStatus {
   MadeAvailableForReview: "a. This application was made available to the State under the Executive Order 12372 Process for review on",
   SubjectButNotSelected: "b. Program is subject to E.O. 12372 but has not been selected by the State for review",
   NotCovered: "c. Program is not covered by E.O. 12372",
-}
-
-/** Yes/No answer */
-enum Sf424YesNo {
-  Yes: "Yes",
-  No: "No",
 }
 
 /**
@@ -455,12 +414,12 @@ model SF424Mandatory {
   // == Section 1: Submission metadata ==
 
   /** 1.a. Type of Submission */
-  @example(Sf424SubmissionType.Application)
+  @example(SubmissionType.Application)
   @extension(
     "x-mapping-from-cg",
     #{ field: "customFields.typeOfSubmission.value" }
   )
-  typeOfSubmission: Sf424SubmissionType;
+  typeOfSubmission: SubmissionType;
 
   /** Specify the type of submission (required if typeOfSubmission is Other) */
   @example("")
@@ -469,9 +428,9 @@ model SF424Mandatory {
   otherSubmissionTypeExplanation?: string;
 
   /** 1.b. Frequency */
-  @example(Sf424SubmissionType.Application)
+  @example(FrequencyType.Annual)
   @extension("x-mapping-from-cg", #{ field: "customFields.frequency.value" })
-  frequency: Sf424SubmissionType;
+  frequency: FrequencyType;
 
   /** Specify the frequency of submission (required if frequency is Other) */
   @example("")
@@ -480,12 +439,12 @@ model SF424Mandatory {
   otherFrequencyExplanation?: string;
 
   /** 1.c. Consolidated Application/Plan/Funding Request? */
-  @example(Sf424YesNo.No)
+  @example(YesNo.No)
   @extension(
     "x-mapping-from-cg",
     #{ field: "customFields.consolidatedRequest.value" }
   )
-  consolidatedRequest?: Sf424YesNo;
+  consolidatedRequest?: YesNo;
 
   /** Identify programs covered by the consolidated submission */
   @example("")
@@ -615,9 +574,7 @@ model SF424Mandatory {
 
   /** Contact's organizational affiliation if different from the applicant organization */
   @example("Community Health Initiative")
-  @minLength(0)
-  @maxLength(60)
-  contactOrganizationalAffiliation?: string;
+  contactOrganizationalAffiliation?: OrgAffiliation;
 
   /** Primary point of contact phone number */
   @example(#{ countryCode: "+1", number: "(417) 555-0123" })
@@ -659,13 +616,11 @@ model SF424Mandatory {
 
   /** Contact's fax number */
   @example("(417) 555-0124")
-  @minLength(0)
-  @maxLength(25)
   @extension(
     "x-mapping-from-cg",
     #{ field: "contacts.primary.phones.fax.number" }
   )
-  contactFaxNumber?: string;
+  contactFaxNumber?: FaxNumber;
 
   /** Primary point of contact email */
   @example(#{ email: "sarah.johnson@communityhealth.org" })
@@ -674,7 +629,7 @@ model SF424Mandatory {
   // == Section 8: Applicant type ==
 
   /** 8a. Type of Applicant */
-  @example(Sf424ApplicantType.NonprofitWith501C3)
+  @example(ApplicantTypeCode.NonprofitWith501C3)
   @extension(
     "x-mapping-from-cg",
     #{
@@ -696,7 +651,7 @@ model SF424Mandatory {
       },
     }
   )
-  typeOfApplicant: Sf424ApplicantType;
+  typeOfApplicant: ApplicantTypeCode;
 
   /** Specify applicant type if Other was selected */
   @example("")
@@ -764,13 +719,11 @@ model SF424Mandatory {
 
   /** 13a. Congressional district of the applicant (format: XX-###, e.g. MO-007) */
   @example("MO-007")
-  @minLength(1)
-  @maxLength(6)
   @extension(
     "x-mapping-from-cg",
     #{ field: "customFields.congressionalDistricts.value" }
   )
-  congressionalDistrictApplicant: string;
+  congressionalDistrictApplicant: CongressionalDistrict;
 
   /** 13b. Congressional district(s) of the program/project */
   @example("MO-007")
@@ -821,12 +774,12 @@ model SF424Mandatory {
   // == Section 17: Federal debt delinquency ==
 
   /** 17. Is the applicant delinquent on any federal debt? */
-  @example(Sf424YesNo.No)
+  @example(YesNo.No)
   @extension(
     "x-mapping-from-cg",
     #{ field: "customFields.applicantDelinquentFederalDebt.value" }
   )
-  applicantDelinquentFederalDebt: Sf424YesNo;
+  applicantDelinquentFederalDebt: YesNo;
 
   /** Explanation of federal debt delinquency (required if Yes) */
   @example("")
@@ -859,15 +812,13 @@ model SF424Mandatory {
 
   /** AOR organizational affiliation if different from the applicant organization */
   @example("Community Health Initiative")
-  @minLength(0)
-  @maxLength(60)
   @extension(
     "x-mapping-from-cg",
     #{
       field: "customFields.authorizedRepresentativeOrganizationalAffiliation.value",
     }
   )
-  aorOrganizationalAffiliation?: string;
+  aorOrganizationalAffiliation?: OrgAffiliation;
 
   /** AOR phone number */
   @example(#{ countryCode: "+1", number: "(417) 555-0100" })
@@ -909,15 +860,13 @@ model SF424Mandatory {
 
   /** AOR fax number */
   @example("(417) 555-0101")
-  @minLength(0)
-  @maxLength(25)
   @extension(
     "x-mapping-from-cg",
     #{
       field: "contacts.otherContacts.authorizedRepresentative.phones.fax.number",
     }
   )
-  aorFaxNumber?: string;
+  aorFaxNumber?: FaxNumber;
 
   /** AOR email */
   @example(#{ email: "michael.thompson@communityhealth.org" })
