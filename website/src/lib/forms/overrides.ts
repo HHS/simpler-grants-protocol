@@ -142,20 +142,14 @@ export function applyUiOverrides(
 
   for (const [dottedPath, patch] of Object.entries(overrides)) {
     const scope = pathToScope(dottedPath);
-    const control = controlsByScope.get(scope);
-    if (control) {
-      Object.assign(control, patch);
-      continue;
+    const target = controlsByScope.get(scope) ?? groupsByChildPrefix.get(scope);
+    if (!target) {
+      throw new Error(
+        `x-overrides.uiSchema path "${dottedPath}" (scope "${scope}") ` +
+          `does not match any Control or Group in the base UI schema.`,
+      );
     }
-    const group = groupsByChildPrefix.get(scope);
-    if (group) {
-      Object.assign(group, patch);
-      continue;
-    }
-    throw new Error(
-      `x-overrides.uiSchema path "${dottedPath}" (scope "${scope}") ` +
-        `does not match any Control or Group in the base UI schema.`,
-    );
+    Object.assign(target, patch);
   }
 
   return cloned as Record<string, unknown>;

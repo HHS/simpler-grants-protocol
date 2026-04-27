@@ -35,8 +35,9 @@ const hasOverrides =
 // Strip x-* extension fields and TypeSpec anchor fields from the raw schema
 // so the Schemas tab shows a clean, standard JSON Schema. Also reorder
 // top-level keys to match the conventional shape (title → description → type).
-function stripExtensions(value: unknown, depth = 0): unknown {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+function stripExtensions(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripExtensions);
+  if (typeof value !== "object" || value === null) {
     return value;
   }
   const result: Record<string, unknown> = {};
@@ -47,7 +48,7 @@ function stripExtensions(value: unknown, depth = 0): unknown {
     if (key === "$schema" || key === "$id") continue;
     // Drop example/examples — these are authoring aids, not part of the schema spec.
     if (key === "examples" || key === "example") continue;
-    result[key] = stripExtensions(val, depth + 1);
+    result[key] = stripExtensions(val);
   }
   return result;
 }
@@ -58,8 +59,8 @@ const { description, type, ...rest } = stripExtensions(
 
 const cleanSchema: Record<string, unknown> = {
   title: item.label,
-  ...(description !== undefined ? { description } : {}),
-  ...(type !== undefined ? { type } : {}),
+  description,
+  type,
   ...rest,
 };
 
@@ -164,6 +165,9 @@ const mappingPercentage =
     <div class="summary-actions">
       <LinkButton href={`/forms/playground?src=${item.id}`} variant="primary">
         Explore in playground
+      </LinkButton>
+      <LinkButton href="/forms-new" variant="secondary">
+        Return to form library
       </LinkButton>
     </div>
   </div>

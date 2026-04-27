@@ -170,9 +170,8 @@ function extractSchemaData(
   const composedUi = explicitUi ?? composeUiSchema(base.properties);
   const composedFromCg =
     explicitFromCg ?? composeMappingFromCg(base.properties);
-  const baseToCg = composeMappingToCg(base.properties);
-  if (explicitToCg) deepMergeInto(baseToCg, explicitToCg);
-  const composedToCg = baseToCg;
+  const composedToCg = composeMappingToCg(base.properties);
+  if (explicitToCg) deepMergeInto(composedToCg, explicitToCg);
 
   const overrides = extractOverrides(schema);
 

@@ -36,7 +36,5 @@ namespace QuestionBank.AorTitle;
 @example(#{ title: "Grants Administrator" })
 model QuestionAorTitle {
   /** The AOR's job title or role */
-  @minLength(1)
-  @maxLength(45)
   title: string;
 }

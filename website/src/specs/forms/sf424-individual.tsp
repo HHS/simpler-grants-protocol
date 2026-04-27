@@ -286,6 +286,15 @@ model SF424Individual {
         description: #{ label: "6b. Project Description" },
         startDate: #{ label: "6c. Start Date" },
         endDate: #{ label: "6c. End Date" },
+        amountRequested: #{
+          rule: #{
+            effect: "HIDE",
+            condition: #{
+              scope: "#/properties/project/properties/amountRequested/properties/amount",
+              schema: #{},
+            },
+          },
+        },
         `amountRequested.amount`: #{
           rule: #{
             effect: "HIDE",

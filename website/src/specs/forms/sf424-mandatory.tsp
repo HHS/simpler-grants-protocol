@@ -638,7 +638,7 @@ model SF424Mandatory {
           rule: #{
             effect: "HIDE",
             condition: #{
-              scope: "#/properties/contactPhone/properties/countryCode",
+              scope: "#/properties/contactPhone/properties/extension",
               schema: #{},
             },
           },
@@ -647,7 +647,7 @@ model SF424Mandatory {
           rule: #{
             effect: "HIDE",
             condition: #{
-              scope: "#/properties/contactPhone/properties/countryCode",
+              scope: "#/properties/contactPhone/properties/isMobile",
               schema: #{},
             },
           },
@@ -888,7 +888,7 @@ model SF424Mandatory {
           rule: #{
             effect: "HIDE",
             condition: #{
-              scope: "#/properties/aorPhone/properties/countryCode",
+              scope: "#/properties/aorPhone/properties/extension",
               schema: #{},
             },
           },
@@ -897,7 +897,7 @@ model SF424Mandatory {
           rule: #{
             effect: "HIDE",
             condition: #{
-              scope: "#/properties/aorPhone/properties/countryCode",
+              scope: "#/properties/aorPhone/properties/isMobile",
               schema: #{},
             },
           },
