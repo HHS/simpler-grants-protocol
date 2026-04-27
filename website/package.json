@@ -11,7 +11,7 @@
     "astro": "astro",
     "typespec": "pnpm typespec:clear-output && pnpm typespec:openapi && pnpm typespec:extensions",
     "typespec:openapi": "tsp compile src/specs/main.tsp && cp tsp-output/@typespec/openapi3/** public/openapi && cp tsp-output/@typespec/json-schema/** public/schemas/yaml",
-    "typespec:extensions": "tsp compile src/specs/extensions/index.tsp --emit @typespec/json-schema && mkdir -p .extension-schemas && cp tsp-output/@typespec/json-schema/** .extension-schemas",
+    "typespec:extensions": "tsp compile src/specs/extensions/index.tsp --emit @typespec/json-schema --option \"@typespec/json-schema.seal-object-schemas=false\" && mkdir -p .extension-schemas && cp tsp-output/@typespec/json-schema/** .extension-schemas",
     "typespec:clear-output": "rm -rf tsp-output && rm -rf public/schemas/yaml/* && rm -rf public/openapi/* && rm -rf .extension-schemas",
     "generate": "pnpm generate:schema-docs && pnpm generate:schema-metadata && pnpm generate:type-formatting && pnpm generate:versioned-schemas && pnpm generate:plugin-metadata",
     "generate:schema-docs": "tsx src/scripts/generate-schema-docs.ts",
