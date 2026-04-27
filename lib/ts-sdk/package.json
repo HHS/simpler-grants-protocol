@@ -98,7 +98,7 @@
     "@typespec/rest": "catalog:",
     "@typespec/versioning": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "ajv": "^8.18.0",
+    "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "eslint": "catalog:",
     "eslint-config-prettier": "^9.1.2",
