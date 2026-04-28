@@ -6,6 +6,11 @@ on:
     - cron: "0 15 * * 1"
   workflow_call:
   workflow_dispatch:
+  # Smoke-test the script end-to-end on changes here (e.g. dependabot action bumps).
+  pull_request:
+    paths:
+      - .github/scripts/update-catalog-deps.sh
+      - .github/workflows/deps-catalog-check.yml
 
 permissions:
   contents: write
@@ -50,7 +55,7 @@ jobs:
         run: ./.github/scripts/update-catalog-deps.sh
 
       - name: Create pull request
-        if: steps.check.outputs.has_updates == 'true'
+        if: steps.check.outputs.has_updates == 'true' && github.event_name != 'pull_request'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

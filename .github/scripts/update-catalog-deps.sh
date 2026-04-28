@@ -138,7 +138,8 @@ fi
 
 echo ""
 echo "--- Regenerating lockfile ---"
-pnpm install
+# Catalog edits above changed pnpm-workspace.yaml; override CI's frozen default to update the lockfile.
+pnpm install --no-frozen-lockfile
 
 echo ""
 echo "--- Summary of changes ---"
