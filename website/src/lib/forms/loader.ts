@@ -20,6 +20,7 @@ import {
   composeUiSchema,
   composeMappingFromCg,
   composeMappingToCg,
+  deepMergeInto,
 } from "./compose";
 
 // Import the forms index
@@ -169,7 +170,8 @@ function extractSchemaData(
   const composedUi = explicitUi ?? composeUiSchema(base.properties);
   const composedFromCg =
     explicitFromCg ?? composeMappingFromCg(base.properties);
-  const composedToCg = explicitToCg ?? composeMappingToCg(base.properties);
+  const composedToCg = composeMappingToCg(base.properties);
+  if (explicitToCg) deepMergeInto(composedToCg, explicitToCg);
 
   const overrides = extractOverrides(schema);
 
@@ -211,6 +213,12 @@ export async function loadFormItem(itemId: string): Promise<FormItem | null> {
       id: itemId,
       ...indexEntry,
       ...schemaData,
+      ...((indexEntry as unknown as Record<string, unknown>).description
+        ? {
+            description: (indexEntry as unknown as Record<string, unknown>)
+              .description as string,
+          }
+        : {}),
     };
   } catch (error) {
     console.error(`Failed to load form ${itemId}:`, error);

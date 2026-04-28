@@ -1,5 +1,5 @@
 /**
- * Recursively removes all `$id` fields from a schema object.
+ * Recursively removes `$id` fields from a schema object.
  *
  * After full $ref inlining, the same $id (e.g. "QuestionAddress.yaml") can
  * appear multiple times in the schema tree — once per composite that references
@@ -9,8 +9,9 @@
  */
 export function stripIds<T>(schema: T): T {
   return JSON.parse(
-    JSON.stringify(schema, (key, value) =>
-      key === "$id" && typeof value === "string" ? undefined : value,
-    ),
+    JSON.stringify(schema, (key, value) => {
+      if (key === "$id" && typeof value === "string") return undefined;
+      return value;
+    }),
   ) as T;
 }

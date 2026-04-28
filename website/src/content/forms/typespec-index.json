@@ -1,10 +1,32 @@
 {
   "key-contact": {
     "schema": "KeyContact",
-    "label": "Key Contact"
+    "label": "Key Contact",
+    "description": "List of key contacts for the application",
+    "url": "https://www.grants.gov/forms/form-items-description/fid/683"
   },
   "sf424-mandatory": {
     "schema": "SF424Mandatory",
-    "label": "SF-424 Mandatory Contacts"
+    "label": "SF424 - Mandatory",
+    "description": "SF424 - Application for Federal Assistance for organizations, managed by Grants.gov",
+    "url": "https://www.grants.gov/forms/form-items-description/fid/668"
+  },
+  "sf424": {
+    "schema": "SF424",
+    "label": "SF424",
+    "description": "SF424 - Application for Federal Assistance for organizations",
+    "url": "https://www.grants.gov/forms/form-items-description/fid/713"
+  },
+  "cd511": {
+    "schema": "CD511",
+    "label": "CD511 Form",
+    "description": "CD511 Form - Application for Federal Assistance for organizations",
+    "url": "https://www.grants.gov/forms/form-items-description/fid/276"
+  },
+  "sf424-individual": {
+    "schema": "SF424Individual",
+    "label": "SF424 - Individual",
+    "description": "SF424 - Application for Federal Assistance for individual applicants",
+    "url": "https://www.grants.gov/forms/form-items-description/fid/668"
   }
 }

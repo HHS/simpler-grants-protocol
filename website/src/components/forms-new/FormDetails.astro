@@ -1,14 +1,12 @@
 ---
 import type { FormItem } from "@/lib/forms";
-import { Code, Tabs, TabItem } from "@astrojs/starlight/components";
+import { Code, Tabs, TabItem, LinkButton } from "@astrojs/starlight/components";
 import { JsonFormRenderer } from "@/components/forms/JsonFormRenderer";
 import type { JsonSchema, VerticalLayout } from "@jsonforms/core";
-import type { FormData, JsonValue } from "@/lib/types";
-import { transformWithMapping } from "@/lib/transformation";
+import type { FormData } from "@/lib/types";
 import { generateSchemaExample } from "@/lib/schema/example-generator";
 import { Paths } from "@/lib/schema/paths";
 import { extensionsAjv } from "@/lib/validation";
-import * as yaml from "js-yaml";
 
 interface Props {
   item: FormItem;
@@ -18,9 +16,6 @@ const { item } = Astro.props;
 
 const toJson = (data: Record<string, unknown>) =>
   JSON.stringify(data, null, 2) as string;
-
-const toYaml = (data: Record<string, unknown>) =>
-  yaml.dump(data, { noRefs: true, lineWidth: -1 }) as string;
 
 // Generate example data from the schema using openapi-sampler, which
 // composes examples from nested $ref schemas automatically. Mirrors the
@@ -32,17 +27,151 @@ const exampleJson = await generateSchemaExample(schemaRelPath, {
 });
 const exampleData = JSON.parse(exampleJson) as FormData;
 
-// Transform example data to CommonGrants format using the mapping
-const commonGrantsData = transformWithMapping(
-  exampleData as Record<string, JsonValue>,
-  item.mappingToCg as Record<string, JsonValue>,
-);
-
 const hasOverrides =
   Object.keys(item.overrides.uiSchema ?? {}).length > 0 ||
   Object.keys(item.overrides.mappingFromCg ?? {}).length > 0 ||
   Object.keys(item.overrides.mappingToCg ?? {}).length > 0;
+
+// Strip x-* extension fields and TypeSpec anchor fields from the raw schema
+// so the Schemas tab shows a clean, standard JSON Schema. Also reorder
+// top-level keys to match the conventional shape (title → description → type).
+function stripExtensions(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripExtensions);
+  if (typeof value !== "object" || value === null) {
+    return value;
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    if (key.startsWith("x-")) continue;
+    // Drop $schema and $id at all levels — TypeSpec anchor fields, not part
+    // of the user-facing schema.
+    if (key === "$schema" || key === "$id") continue;
+    // Drop example/examples — these are authoring aids, not part of the schema spec.
+    if (key === "examples" || key === "example") continue;
+    result[key] = stripExtensions(val);
+  }
+  return result;
+}
+
+const { description, type, ...rest } = stripExtensions(
+  item.rawSchema,
+) as Record<string, unknown>;
+
+const cleanSchema: Record<string, unknown> = {
+  title: item.label,
+  description,
+  type,
+  ...rest,
+};
+
+// Compute stats from the UI schema and the separately composed mapping.
+// Counting visible Controls in the UI schema (rather than all JSON schema
+// properties) excludes fields that are intentionally hidden via HIDE rules —
+// QB question types often carry extra fields that a specific form hides.
+function countVisibleControls(node: Record<string, unknown>): number {
+  // Skip any node (Control or layout) that is hidden — a HIDE rule on a Group
+  // or Layout hides all of its children too.
+  const rule = node.rule as Record<string, unknown> | undefined;
+  if (rule?.effect === "HIDE") return 0;
+
+  if (node.type === "Control") return 1;
+
+  const elements = node.elements as Record<string, unknown>[] | undefined;
+  if (!elements) return 0;
+  return elements.reduce(
+    (sum, el) => sum + countVisibleControls(el as Record<string, unknown>),
+    0,
+  );
+}
+
+/** Converts a JSON Schema scope string to a key path array.
+ * e.g. "#/properties/org/properties/name" → ["org", "name"] */
+function scopeToPath(scope: string): string[] {
+  return scope.split("/").filter((s) => s !== "#" && s !== "properties");
+}
+
+/** Walks mappingFromCg along path and returns true if the terminal node has a
+ * "field" key (simple mapping) or a "switch.field" key (switch mapping). */
+function isMapped(mapping: Record<string, unknown>, path: string[]): boolean {
+  let cur: unknown = mapping;
+  for (const key of path) {
+    if (typeof cur !== "object" || cur === null) return false;
+    cur = (cur as Record<string, unknown>)[key];
+  }
+  if (typeof cur !== "object" || cur === null) return false;
+  const obj = cur as Record<string, unknown>;
+  if ("field" in obj) return true;
+  const sw = obj.switch;
+  return (
+    typeof sw === "object" &&
+    sw !== null &&
+    "field" in (sw as Record<string, unknown>)
+  );
+}
+
+/** Counts visible Controls whose scope has a corresponding mapping entry. */
+function countMappedVisible(
+  node: Record<string, unknown>,
+  mapping: Record<string, unknown>,
+): number {
+  const rule = node.rule as Record<string, unknown> | undefined;
+  if (rule?.effect === "HIDE") return 0;
+
+  if (node.type === "Control") {
+    const scope = node.scope as string | undefined;
+    return scope && isMapped(mapping, scopeToPath(scope)) ? 1 : 0;
+  }
+
+  const elements = node.elements as Record<string, unknown>[] | undefined;
+  if (!elements) return 0;
+  return elements.reduce(
+    (sum, el) =>
+      sum + countMappedVisible(el as Record<string, unknown>, mapping),
+    0,
+  );
+}
+
+const totalQuestions = countVisibleControls(
+  item.uiSchema as Record<string, unknown>,
+);
+const mappedFields = countMappedVisible(
+  item.uiSchema as Record<string, unknown>,
+  item.mappingFromCg,
+);
+const mappingPercentage =
+  totalQuestions > 0 ? Math.round((mappedFields / totalQuestions) * 100) : 0;
 ---
+
+<section class="summary-section">
+  <div class="summary-content">
+    <h2 class="summary-title">Summary</h2>
+    <div class="summary-description">
+      <p>
+        {
+          `${totalQuestions} total questions | ${mappingPercentage}% mapped to the CommonGrants schema`
+        }
+      </p>
+      {item.description && <p>{item.description}</p>}
+      {
+        item.url && (
+          <p>
+            <a href={item.url} target="_blank">
+              View source form details
+            </a>
+          </p>
+        )
+      }
+    </div>
+    <div class="summary-actions">
+      <LinkButton href={`/forms/playground?src=${item.id}`} variant="primary">
+        Explore in playground
+      </LinkButton>
+      <LinkButton href="/forms-new" variant="secondary">
+        Return to form library
+      </LinkButton>
+    </div>
+  </div>
+</section>
 
 <h2 class="details-title">Details</h2>
 
@@ -54,6 +183,7 @@ const hasOverrides =
       schema={item.rawSchema as JsonSchema}
       uischema={item.uiSchema as unknown as VerticalLayout}
       data={exampleData}
+      descriptionAbove
     />
   </TabItem>
   <TabItem label="Data">
@@ -62,20 +192,12 @@ const hasOverrides =
       <p>What the form data looks like when it is submitted.</p>
       <Code lang="json" code={toJson(exampleData)} />
     </details>
-    <details>
-      <summary>CommonGrants Data</summary>
-      <p>
-        What the data looks like translated to the CommonGrants data model using
-        the mapping-to-cg.
-      </p>
-      <Code lang="json" code={toJson(commonGrantsData)} />
-    </details>
   </TabItem>
   <TabItem label="Schemas">
     <details>
       <summary>JSON Schema</summary>
       <p>Provides the structure and data validation for this form.</p>
-      <Code lang="yaml" code={toYaml(item.rawSchema)} />
+      <Code lang="json" code={toJson(cleanSchema)} />
     </details>
     <details>
       <summary>UI Schema (merged)</summary>
@@ -119,9 +241,44 @@ const hasOverrides =
 </Tabs>
 
 <style>
+  .summary-section {
+    margin: 0;
+    padding: 0;
+  }
+
+  .summary-title {
+    font-size: 1.75rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .summary-content {
+    margin: 0;
+    padding: 0;
+  }
+
+  .summary-description {
+    margin: 0 0 1.5rem 0;
+  }
+
+  .summary-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
   .details-title {
     font-size: 1.75rem !important;
     margin-top: 0.25rem;
     margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .summary-actions {
+      flex-direction: column;
+      align-items: center;
+    }
   }
 </style>
