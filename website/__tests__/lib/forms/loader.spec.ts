@@ -17,6 +17,8 @@ describe("forms loader", () => {
   describe("getFormIds", () => {
     it("returns the slugs in typespec-index.json", () => {
       expect(getFormIds()).toContain("key-contact");
+      expect(getFormIds()).toContain("formA");
+      expect(getFormIds()).toContain("formB");
     });
   });
 
@@ -105,6 +107,187 @@ describe("forms loader", () => {
     });
 
     // =============================================================================
+    // formA form
+    // =============================================================================
+
+    describe("formA form", () => {
+      let item: FormItem | null;
+
+      beforeAll(async () => {
+        item = await loadFormItem("formA");
+      });
+
+      it("loads formA with all metadata fields populated", async () => {
+        expect(item).not.toBeNull();
+        expect(item?.id).toBe("formA");
+        expect(item?.schema).toBe("FormA");
+        expect(item?.label).toBe("Form A - Basic Grant");
+        expect(item?.description).toContain("Basic grant application");
+        expect(item?.tags).toEqual(
+          expect.arrayContaining(["formA", "application"]),
+        );
+        expect(item?.properties).toHaveProperty("contact");
+        expect(item?.properties).toHaveProperty("org");
+        expect(item?.properties).toHaveProperty("applicantType");
+        expect(item?.properties).toHaveProperty("project");
+      });
+
+      it("produces a VerticalLayout top-level UI schema", async () => {
+        expect(item?.uiSchema.type).toBe("VerticalLayout");
+        const elements = item?.uiSchema.elements as Record<string, unknown>[];
+        expect(elements).toHaveLength(4);
+      });
+
+      it("applies the Applicant Information group label override", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain('"label":"Applicant Information"');
+      });
+
+      it("re-scopes contact controls under contact property", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain(
+          '"scope":"#/properties/contact/properties/name/properties/firstName"',
+        );
+      });
+
+      it("re-scopes project controls under project property", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain('"scope":"#/properties/project/properties/title"');
+      });
+
+      it("applies Requested Amount (USD) label override", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain('"label":"Requested Amount (USD)"');
+      });
+
+      it("composes mappingFromCg for contact fields", async () => {
+        expect(item?.mappingFromCg).toMatchObject({
+          contact: {
+            name: {
+              firstName: { field: "contacts.primary.name.firstName" },
+            },
+            email: { field: "contacts.primary.emails.primary" },
+          },
+        });
+      });
+
+      it("composes mappingFromCg for org name", async () => {
+        expect(item?.mappingFromCg).toMatchObject({
+          org: { name: { field: "organizations.primary.name" } },
+        });
+      });
+
+      it("composes mappingToCg with property name prefix on field references", async () => {
+        const orgPath = (
+          (item?.mappingToCg.organizations as Record<string, unknown>)
+            ?.primary as Record<string, unknown>
+        )?.name as { field: string };
+        expect(orgPath.field).toBe("org.name");
+      });
+
+      it("aggregates field-level overrides under the property name", async () => {
+        expect(item?.overrides.uiSchema).toMatchObject({
+          "org.name": { label: "Organization Name" },
+        });
+      });
+    });
+
+    // =============================================================================
+    // formB form
+    // =============================================================================
+
+    describe("formB form", () => {
+      let item: FormItem | null;
+
+      beforeAll(async () => {
+        item = await loadFormItem("formB");
+      });
+
+      it("loads formB with all metadata fields populated", async () => {
+        expect(item).not.toBeNull();
+        expect(item?.id).toBe("formB");
+        expect(item?.schema).toBe("FormB");
+        expect(item?.label).toBe("Form B - Research Grant");
+        expect(item?.description).toContain("Research grant application");
+        expect(item?.tags).toEqual(
+          expect.arrayContaining(["formB", "research", "application"]),
+        );
+        expect(item?.properties).toHaveProperty("contact");
+        expect(item?.properties).toHaveProperty("org");
+        expect(item?.properties).toHaveProperty("institutionType");
+        expect(item?.properties).toHaveProperty("project");
+      });
+
+      it("produces a VerticalLayout top-level UI schema", async () => {
+        expect(item?.uiSchema.type).toBe("VerticalLayout");
+        const elements = item?.uiSchema.elements as Record<string, unknown>[];
+        expect(elements).toHaveLength(4);
+      });
+
+      it("applies the Principal Investigator group label override", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain('"label":"Principal Investigator"');
+      });
+
+      it("applies PI First Name label override on firstName control", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain('"label":"PI First Name"');
+      });
+
+      it("applies Institution Name label override on org.name", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain('"label":"Institution Name"');
+      });
+
+      it("applies Research Project Name label override on project title", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain('"label":"Research Project Name"');
+      });
+
+      it("applies Total Budget (USD) on amount field", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain('"label":"Total Budget (USD)"');
+      });
+
+      it("applies Kick-off Date and Completion Date label overrides", async () => {
+        const json = JSON.stringify(item?.uiSchema);
+        expect(json).toContain('"label":"Kick-off Date"');
+        expect(json).toContain('"label":"Completion Date"');
+      });
+
+      it("composes mappingFromCg for contact (PI) fields", async () => {
+        expect(item?.mappingFromCg).toMatchObject({
+          contact: {
+            name: {
+              firstName: { field: "contacts.primary.name.firstName" },
+            },
+            email: { field: "contacts.primary.emails.primary" },
+          },
+        });
+      });
+
+      it("composes mappingFromCg for org name", async () => {
+        expect(item?.mappingFromCg).toMatchObject({
+          org: { name: { field: "organizations.primary.name" } },
+        });
+      });
+
+      it("composes mappingToCg with property name prefix on field references", async () => {
+        const orgPath = (
+          (item?.mappingToCg.organizations as Record<string, unknown>)
+            ?.primary as Record<string, unknown>
+        )?.name as { field: string };
+        expect(orgPath.field).toBe("org.name");
+      });
+
+      it("aggregates field-level overrides under the property name", async () => {
+        expect(item?.overrides.uiSchema).toMatchObject({
+          "org.name": { label: "Institution Name" },
+        });
+      });
+    });
+
+    // =============================================================================
     // unknown form id
     // =============================================================================
 
@@ -123,6 +306,10 @@ describe("forms loader", () => {
       const all = await loadAllFormItems();
       expect(all["key-contact"]).toBeDefined();
       expect(all["key-contact"].label).toBe("Key Contact");
+      expect(all["formA"]).toBeDefined();
+      expect(all["formA"].label).toBe("Form A - Basic Grant");
+      expect(all["formB"]).toBeDefined();
+      expect(all["formB"].label).toBe("Form B - Research Grant");
     });
 
     it("caches across calls (same reference returned)", async () => {
