@@ -82,9 +82,15 @@ jobs:
         run: pnpm run test
 
       - name: Audit dependencies
+        # Run independently of checks/tests so a vulnerable dependency still
+        # surfaces when an unrelated step earlier in validate has failed.
+        # Gated on build success because the audit script reads from the
+        # installed node_modules tree.
+        #
         # Calls the npm bulk advisory endpoint directly as a workaround for
         # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
         # revert to `pnpm run audit:high` once pnpm ships native support.
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js --level high
 
   deploy-preview:
