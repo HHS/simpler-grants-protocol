@@ -5,14 +5,14 @@ on:
     types: [closed]
     paths:
       - website/**
-      - .github/workflows/ci-website-preview.yml
+      - .github/workflows/ci-website.yml
       - .github/workflows/ci-website-cleanup.yml
 
 jobs:
   cleanup-preview:
     runs-on: ubuntu-latest
     name: Cleanup PR preview
-    # Previews are not deployed for dependabot PRs (see ci-website-preview.yml),
+    # Previews are not deployed for dependabot PRs (see ci-website.yml),
     # so there's nothing to clean up and `wrangler delete` would 404.
     # Use pull_request.user.login because github.actor on `closed` events is
     # the person who closed/merged the PR, not the PR author.
