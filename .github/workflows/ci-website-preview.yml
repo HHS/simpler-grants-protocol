@@ -5,7 +5,7 @@ on:
   pull_request:
     paths:
       - website/**
-      - .github/workflows/ci-website.yml
+      - .github/workflows/ci-website-preview.yml
       - .github/workflows/ci-website-cleanup.yml
       - pnpm-lock.yaml
 
