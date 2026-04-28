@@ -20,9 +20,11 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     outputs:
-      # Captured immediately after the build step so deploy-preview can run on
-      # build success even when a later step (checks/tests/audit) fails.
-      build_succeeded: ${{ steps.build.outcome == 'success' }}
+      # Captured from the upload step (not the build step) so deploy-preview
+      # only attempts to download when the artifact is actually present. The
+      # output is read regardless of validate's overall outcome, so the deploy
+      # can run even when a later step (checks/tests/audit) failed.
+      artifact_ready: ${{ steps.upload-build.outcome == 'success' }}
 
     steps:
       - name: Checkout Code
@@ -50,6 +52,14 @@ jobs:
       - name: Upload build output
         # Uploaded immediately after build so a later failure (checks/tests/
         # audit) doesn't suppress the artifact deploy-preview depends on.
+        #
+        # Path-structure invariant: every entry shares `website/` as common
+        # parent, so upload-artifact stores them with that prefix stripped
+        # (artifact root = website/). The deploy-preview download then uses
+        # `path: website` to restore them at website/dist, website/cache, etc.
+        # Adding a path outside `website/` here will shrink the common prefix
+        # and silently shift download locations — keep new paths under website/.
+        id: upload-build
         if: always() && steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
@@ -80,13 +90,15 @@ jobs:
   deploy-preview:
     runs-on: ubuntu-latest
     needs: validate
-    # Run when the build step in validate succeeded, even if a later step
-    # (checks/tests/audit) failed. Skipped for dependabot PRs (the cleanup
-    # workflow uses the same guard via pull_request.user.login) and on
-    # workflow_call where there's no PR number to name the worker.
+    # Run when the artifact uploaded successfully, even if a later step in
+    # validate (checks/tests/audit) failed. Use `!cancelled()` rather than
+    # `always()` so a user-cancelled run doesn't still kick off the deploy.
+    # Skipped for dependabot PRs (the cleanup workflow uses the same guard
+    # via pull_request.user.login) and on workflow_call where there's no PR
+    # number to name the worker.
     if: |
-      always()
-      && needs.validate.outputs.build_succeeded == 'true'
+      !cancelled()
+      && needs.validate.outputs.artifact_ready == 'true'
       && github.event_name == 'pull_request'
       && github.actor != 'dependabot[bot]'
 
