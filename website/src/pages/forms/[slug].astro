@@ -1,36 +1,37 @@
 ---
-import { schemas } from "@/lib/schemas";
+import { loadAllFormItems, getFormIds } from "@/lib/forms";
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import FormDetails from "@/components/forms/FormDetails.astro";
 import type { GetStaticPaths } from "astro";
-import FormDetails from "@/components/forms/library/FormDetails.astro";
-import FormSummary from "@/components/forms/library/FormSummary.astro";
 
 export interface Props {
-  formId: string;
+  itemId: string;
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const paths = Object.keys(schemas).map((formId) => ({
-    params: { slug: formId },
-    props: { formId },
+  const itemIds = getFormIds();
+  const paths = itemIds.map((itemId) => ({
+    params: { slug: itemId },
+    props: { itemId },
   }));
   return paths;
 };
 
-const { formId } = Astro.props;
-const form = schemas[formId];
+const { itemId } = Astro.props;
+const forms = await loadAllFormItems();
+const item = forms[itemId];
 
-if (!form) {
-  throw new Error(`Form ${formId} not found`);
+if (!item) {
+  throw new Error(`Form "${itemId}" not found`);
 }
 ---
 
 <StarlightPage
   frontmatter={{
-    title: form.label,
+    title: item.label,
+    description: item.description,
     tableOfContents: false,
   }}
 >
-  <FormSummary form={form} />
-  <FormDetails form={form} />
+  <FormDetails item={item} />
 </StarlightPage>

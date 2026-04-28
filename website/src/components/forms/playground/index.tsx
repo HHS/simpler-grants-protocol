@@ -1,9 +1,8 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 
 // Internal utilities
-import type { FormData, TransformOutput } from "@/lib/types";
+import type { FormData, TransformOutput, FormSchemaMap } from "@/lib/types";
 import { transformWithMapping } from "@/lib/transformation";
-import { schemas } from "@/lib/schemas";
 
 // Components
 import { styles } from "./styles";
@@ -35,7 +34,15 @@ const updateUrlParams = (sourceId: string, targetId: string) => {
   window.history.replaceState({}, "", url.toString());
 };
 
-const getValidSchemaId = (id: string | null, fallbackId: string): string => {
+interface Props {
+  schemas: FormSchemaMap;
+}
+
+const getValidSchemaId = (
+  id: string | null,
+  fallbackId: string,
+  schemas: FormSchemaMap,
+): string => {
   if (!id || !schemas[id]) {
     return fallbackId;
   }
@@ -54,6 +61,7 @@ function mapJson(
   data: FormData,
   sourceId: string,
   targetId: string,
+  schemas: FormSchemaMap,
 ): TransformOutput {
   const sourceSchema = schemas[sourceId];
   const targetSchema = schemas[targetId];
@@ -81,7 +89,7 @@ function mapJson(
   };
 }
 
-export default function FormMappingPlayground() {
+export default function FormMappingPlayground({ schemas }: Props) {
   // #########################################################
   // Set up state management
   // #########################################################
@@ -95,10 +103,12 @@ export default function FormMappingPlayground() {
   const initialSourceId = getValidSchemaId(
     urlParams.src || null,
     sourceSchema.id,
+    schemas,
   );
   const initialTargetId = getValidSchemaId(
     urlParams.tgt || null,
     targetSchema.id,
+    schemas,
   );
 
   // Step 3: Create the state for the source and target forms
@@ -144,7 +154,7 @@ export default function FormMappingPlayground() {
   // Transform the data
   // #########################################################
   const transformData = useCallback(() => {
-    const result = mapJson(sourceFormData, sourceId, targetId);
+    const result = mapJson(sourceFormData, sourceId, targetId, schemas);
     setOutput(result);
     setTargetFormData(result.targetData as FormData);
   }, [sourceFormData, sourceId, targetId]);
@@ -177,6 +187,7 @@ export default function FormMappingPlayground() {
           <SchemaSelector
             label="Source form"
             value={sourceId}
+            schemas={schemas}
             onChange={handleSourceSchemaChange}
           />
           <FormSection
@@ -195,6 +206,7 @@ export default function FormMappingPlayground() {
           <SchemaSelector
             label="Form to prefill"
             value={targetId}
+            schemas={schemas}
             onChange={handleTargetSchemaChange}
           />
           <FormSection

@@ -41,7 +41,7 @@ describe("forms loader", () => {
         expect(item?.id).toBe("key-contact");
         expect(item?.schema).toBe("KeyContact");
         expect(item?.label).toBe("Key Contact");
-        expect(item?.description).toContain("Key Contacts");
+        expect(item?.description).toContain("key contacts");
         expect(item?.tags).toEqual(
           expect.arrayContaining(["key-contact", "application"]),
         );

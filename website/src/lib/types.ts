@@ -24,11 +24,6 @@ export type FormSchema = {
   defaultData: FormData;
   mappingToCommon: Record<string, unknown>;
   mappingFromCommon: Record<string, unknown>;
-  statistics: {
-    totalQuestions: number;
-    mappedQuestions: number;
-    mappingPercentage: number;
-  };
 };
 
 export type TransformOutput = {

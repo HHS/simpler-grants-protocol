@@ -1,6 +1,4 @@
-import type { JsonValue } from "./types";
 import type { JsonSchema } from "@jsonforms/core";
-import { transformWithMapping } from "./transformation";
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
@@ -17,37 +15,6 @@ export const ajv = createAjvWithSchemas();
 export const extensionsAjv = createAjvWithSchemas({
   schemaDir: Paths.EXTENSION_SCHEMAS_DIR,
 });
-const commonGrantsSchema = ajv.getSchema("ProposalBase.yaml")
-  ?.schema as JsonSchema;
-
-// #########################################################
-// Validation types
-// #########################################################
-
-/**
- * Validation error details
- */
-interface ValidationError {
-  path: string;
-  message: string;
-  value?: unknown;
-}
-
-/**
- * Validation result containing success status and any errors
- */
-interface ValidationResult {
-  isValid: boolean;
-  errors: ValidationError[];
-}
-
-interface CommonGrantsValidationProps {
-  formId: string;
-  formSchema: JsonSchema;
-  mappingToCommon: Record<string, JsonValue>;
-  mappingFromCommon: Record<string, JsonValue>;
-  defaultData: Record<string, JsonValue>;
-}
 
 // #########################################################
 // Validator
@@ -120,89 +87,4 @@ export function createAjvWithSchemas(
   }
 
   return ajv;
-}
-
-// #########################################################
-// Validation functions
-// #########################################################
-
-/**
- * Validates data against a JSON schema using Ajv
- */
-function validateAgainstSchema(
-  data: unknown,
-  schema: JsonSchema,
-): ValidationResult {
-  try {
-    const validate = ajv.compile(schema);
-    const isValid = validate(data);
-
-    if (isValid) {
-      return {
-        isValid: true,
-        errors: [],
-      };
-    }
-
-    // Convert Ajv errors to our ValidationError format
-    const errors: ValidationError[] = (validate.errors || []).map((error) => ({
-      path: error.instancePath || error.schemaPath || "",
-      message: error.message || "Validation failed",
-      value: error.data,
-    }));
-
-    return {
-      isValid: false,
-      errors,
-    };
-  } catch (error) {
-    // If Ajv compilation fails, return a validation error
-    return {
-      isValid: false,
-      errors: [
-        {
-          path: "",
-          message: `Schema compilation failed: ${error instanceof Error ? error.message : String(error)}`,
-        },
-      ],
-    };
-  }
-}
-
-/**
- * Validates the mappings between a form and the CommonGrants data model
- */
-export async function validateCommonGrantsMappings(
-  props: CommonGrantsValidationProps,
-): Promise<void> {
-  // Transform the form data to CommonGrants using the form's `mappingToCommon` attribute
-  // Then validate the CommonGrants data against the CommonGrants schema
-  const commonData = transformWithMapping(
-    props.defaultData,
-    props.mappingToCommon,
-  );
-  const mappingToCommon = validateAgainstSchema(commonData, commonGrantsSchema);
-  if (!mappingToCommon.isValid) {
-    console.warn(
-      `${props.formId}: Failed mapping to CommonGrants`,
-      mappingToCommon.errors,
-    );
-  }
-
-  // Transform the CommonGrants data back to the form data using the form's `mappingFromCommon` attribute
-  // Then validate the transformed data against the form schema
-  const transformedData = transformWithMapping(
-    commonData,
-    props.mappingFromCommon as Record<string, JsonValue>,
-  );
-  const mappingFromCommon = validateAgainstSchema(
-    transformedData,
-    props.formSchema,
-  );
-  if (!mappingFromCommon.isValid) {
-    console.warn(
-      `${props.formId}: Failed mapping from CommonGrants`,
-      mappingFromCommon.errors,
-    );
-  }
 }

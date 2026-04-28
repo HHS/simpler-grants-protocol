@@ -1,6 +1,23 @@
 ---
 import FormMappingPlayground from "@/components/forms/playground";
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { loadAllFormItems } from "@/lib/forms";
+import { generateSchemaExample } from "@/lib/schema/example-generator";
+import { Paths } from "@/lib/schema/paths";
+import { extensionsAjv } from "@/lib/validation";
+import { buildFormSchema } from "@/components/forms/playground/adapter";
+import type { FormSchemaMap } from "@/lib/types";
+
+const formItems = await loadAllFormItems();
+const schemas: FormSchemaMap = {};
+
+for (const [id, item] of Object.entries(formItems)) {
+  const schemaRelPath = `${Paths.EXTENSION_SCHEMAS_PATH_PREFIX}/${item.schema}.yaml`;
+  const exampleJson = await generateSchemaExample(schemaRelPath, {
+    validator: extensionsAjv,
+  });
+  schemas[id] = buildFormSchema(item, exampleJson);
+}
 ---
 
 <StarlightPage
@@ -12,7 +29,7 @@ import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
   }}
 >
   <div class="form-playground-page">
-    <FormMappingPlayground client:only="react" />
+    <FormMappingPlayground client:only="react" schemas={schemas} />
   </div>
 </StarlightPage>
 
