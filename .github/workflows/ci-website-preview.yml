@@ -79,6 +79,11 @@ jobs:
         run: pnpm run checks
 
       - name: Run tests
+        # Run independently of checks so a real test failure still surfaces
+        # when an unrelated lint/format/spell/astro-check step has failed.
+        # Gated on build success because vitest needs the build outputs and
+        # the install tree.
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: pnpm run test
 
       - name: Audit dependencies
