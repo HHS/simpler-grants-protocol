@@ -45,6 +45,9 @@ jobs:
         # linting, formatting, spelling, astro checking
         run: pnpm run checks
 
+      - name: Run tests
+        run: pnpm run test
+
       - name: Audit dependencies
         # Calls the npm bulk advisory endpoint directly as a workaround for
         # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
