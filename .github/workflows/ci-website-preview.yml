@@ -121,7 +121,10 @@ jobs:
         # pnpm dlx fetches wrangler on demand — avoids a full workspace install
         # just to get wrangler on PATH. Pin to major @4 to match the devDep in
         # website/package.json and avoid silent v5+ drift.
-        run: pnpm dlx wrangler@4 deploy --name cg-pr-${{ github.event.pull_request.number }}
+        # --allow-build list: wrangler pulls in workerd/esbuild/sharp, each of
+        # which wants to run a postinstall build; pnpm 10's default rejects
+        # those unless explicitly allowed.
+        run: pnpm --allow-build=workerd --allow-build=esbuild --allow-build=sharp dlx wrangler@4 deploy --name cg-pr-${{ github.event.pull_request.number }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
