@@ -143,7 +143,9 @@ describe("forms loader", () => {
 
       it("re-scopes project controls under project property", () => {
         const json = JSON.stringify(item?.uiSchema);
-        expect(json).toContain('"scope":"#/properties/project/properties/title"');
+        expect(json).toContain(
+          '"scope":"#/properties/project/properties/title"',
+        );
       });
 
       it("applies Requested Amount (USD) label override", () => {
