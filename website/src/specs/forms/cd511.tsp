@@ -17,9 +17,6 @@ namespace Forms.CD511;
  * Captures the AOR certification against lobbying violations for a grant
  * application or award. Composes org name + AOR name + AOR title from the
  * question bank and adds form-specific fields for award context and signature.
- *
- * The legacy hand-written version lives at website/src/content/forms/cd511/.
- * Reviewers compare the two via /forms-new/cd511 vs /forms/cd511 during migration.
  */
 @extension(
   "x-overrides",

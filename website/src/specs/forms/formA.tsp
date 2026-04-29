@@ -56,56 +56,11 @@ model FormA {
             },
           },
         },
-        `name.middleName`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/name/properties/middleName",
-              schema: #{},
-            },
-          },
-        },
         `name.suffix`: #{
           rule: #{
             effect: "HIDE",
             condition: #{
               scope: "#/properties/contact/properties/name/properties/suffix",
-              schema: #{},
-            },
-          },
-        },
-        address: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/address/properties/street1",
-              schema: #{},
-            },
-          },
-        },
-        `phone.countryCode`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/phone/properties/countryCode",
-              schema: #{},
-            },
-          },
-        },
-        `phone.extension`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/phone/properties/extension",
-              schema: #{},
-            },
-          },
-        },
-        `phone.isMobile`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/contact/properties/phone/properties/isMobile",
               schema: #{},
             },
           },
@@ -144,15 +99,6 @@ model FormA {
     #{
       uiSchema: #{
         `amountRequested.amount`: #{ label: "Requested Amount (USD)" },
-        `amountRequested.currency`: #{
-          rule: #{
-            effect: "HIDE",
-            condition: #{
-              scope: "#/properties/project/properties/amountRequested/properties/currency",
-              schema: #{},
-            },
-          },
-        },
       },
     }
   )

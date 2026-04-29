@@ -16,10 +16,6 @@ namespace Forms.KeyContact;
  * Captures the primary point of contact for a grant application along
  * with their role on the project. The applicant organization name doubles
  * as the link to ApplicantInfo on full applications.
- *
- * The legacy hand-written version (no longer the source of truth) lives
- * at website/src/content/forms/key-contact/. Reviewers compare the two
- * via /forms-new/key-contact vs /forms/key-contact during migration.
  */
 @extension(
   "x-overrides",

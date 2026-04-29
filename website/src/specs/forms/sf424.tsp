@@ -42,9 +42,6 @@ enum RevisionType {
  * Composes org + contact + AOR + project details from the question bank,
  * and adds SF-424-specific fields (submission type, applicant type codes,
  * opportunity info, estimated funding, state review, and certification).
- *
- * The legacy hand-written version lives at website/src/content/forms/sf424/.
- * Reviewers compare the two via /forms-new/sf424 vs /forms/sf424 during migration.
  */
 @extension(
   "x-overrides",

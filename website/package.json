@@ -31,7 +31,6 @@
     "audit:moderate": "pnpm audit --audit-level=moderate",
     "audit:high": "pnpm audit --audit-level=high",
     "audit:critical": "pnpm audit --audit-level=critical",
-    "validate:schemas": "tsx src/scripts/validate-schemas.ts",
     "test": "vitest run"
   },
   "dependencies": {
