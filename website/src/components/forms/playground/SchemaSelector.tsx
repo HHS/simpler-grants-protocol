@@ -1,16 +1,18 @@
 import React from "react";
-import { schemas } from "@/lib/schemas";
+import type { FormSchemaMap } from "@/lib/types";
 import { styles } from "./styles";
 
 interface SchemaSelectorProps {
   label: string;
   value: string;
+  schemas: FormSchemaMap;
   onChange: (value: string) => void;
 }
 
 export const SchemaSelector: React.FC<SchemaSelectorProps> = ({
   label,
   value,
+  schemas,
   onChange,
 }) => (
   <div>

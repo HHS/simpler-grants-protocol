@@ -15,6 +15,10 @@ export default defineConfig({
     "/protocol/models/opp-funding": "/protocol/models/opportunity#oppfunding",
     "/protocol/models/opp-timeline": "/protocol/models/opportunity#opptimeline",
     "/form-playground": "/forms/playground",
+    // forms-new -> forms migration redirects
+    "/forms/library": "/forms/",
+    "/forms-new": "/forms/",
+    "/forms-new/[slug]": "/forms/[slug]",
   },
   integrations: [
     starlight({
@@ -44,9 +48,8 @@ export default defineConfig({
             "/protocol/api-docs**", // Catches ?version=v0.2.0
             "/custom-fields",
             "/custom-fields/**",
-            "/forms/library",
-            "/forms/library/**",
-            "/forms/playground",
+            "/forms",
+            "/forms/**",
             "/question-bank",
             "/question-bank/**",
             "/plugins",
@@ -151,7 +154,7 @@ export default defineConfig({
           items: [
             {
               label: "Form library",
-              link: "forms/library",
+              link: "forms",
             },
             {
               label: "Form question bank",

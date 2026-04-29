@@ -9,7 +9,7 @@ into `website/.extension-schemas/<FormName>.yaml`, alongside the question-bank
 and custom-fields schemas. The `lib/forms` loader (see
 `website/src/lib/forms/`) reads that YAML, dereferences `$ref`s into the
 composed QB schemas, and exposes a normalized `FormItem` to the
-`/forms-new/` pages.
+`/forms/` pages.
 
 ## Anatomy of a form spec
 
@@ -251,14 +251,14 @@ Add an entry to `website/src/content/forms/typespec-index.json`:
 
 The `schema` value matches the TypeSpec model name and the `<schema>.yaml`
 filename emitted into `.extension-schemas/`. The slug becomes the URL
-under `/forms-new/<slug>`.
+under `/forms/<slug>`.
 
 ## Local workflow
 
 ```bash
 cd website
 pnpm typespec   # emits .extension-schemas/<schema>.yaml for every form
-pnpm dev        # serves /forms-new/<slug> with hot reload
+pnpm dev        # serves /forms/<slug> with hot reload
 pnpm test       # runs the loader + compose + override unit tests
 ```
 

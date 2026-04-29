@@ -22,10 +22,6 @@ namespace Forms.SF424Individual;
  * Composes poc (individual applicant contact) + project details from the
  * question bank, and adds SF-424-Individual-specific fields (opportunity info,
  * citizenship, congressional district, and certification).
- *
- * The legacy hand-written version lives at website/src/content/forms/sf424-individual/.
- * Reviewers compare the two via /forms-new/sf424-individual vs /forms/sf424-individual
- * during migration.
  */
 @extension(
   "x-overrides",
