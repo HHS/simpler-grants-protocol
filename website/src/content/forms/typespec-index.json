@@ -28,5 +28,17 @@
     "label": "SF424 - Individual",
     "description": "SF424 - Application for Federal Assistance for individual applicants",
     "url": "https://www.grants.gov/forms/form-items-description/fid/668"
+  },
+  "formA": {
+    "schema": "FormA",
+    "label": "Form A - Basic Grant",
+    "description": "Basic grant application form",
+    "url": ""
+  },
+  "formB": {
+    "schema": "FormB",
+    "label": "Form B - Research Grant",
+    "description": "Research grant application form",
+    "url": ""
   }
 }

@@ -95,8 +95,8 @@ export default function FormMappingPlayground({ schemas }: Props) {
   // #########################################################
 
   // Step 1: Get initial source and target form schemas on page load
-  const sourceSchema = Object.values(schemas)[0];
-  const targetSchema = Object.values(schemas)[1];
+  const sourceSchema = schemas["formA"] ?? Object.values(schemas)[0];
+  const targetSchema = schemas["formB"] ?? Object.values(schemas)[1];
 
   // Step 2: Read URL parameters on initial load
   const urlParams = useMemo(() => getUrlParams(), []);
