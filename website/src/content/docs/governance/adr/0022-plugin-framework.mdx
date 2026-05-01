@@ -143,6 +143,7 @@ interface ClientConfig {
 }
 
 // Client is a placeholder for the SDK's runtime client type (not shown here).
+//
 // Per Decision #2: the runtime Plugin shape stays at four keys. Custom filters
 // declared on DefinePluginOptions are handled by the Client returned by getClient(),
 // so `filters` does not appear on Plugin itself.
@@ -192,8 +193,7 @@ function definePlugin(options: DefinePluginOptions): Plugin;
 
 // Combine multiple extension objects (e.g. from separate packages).
 // Exact signature is provisional pending SDK implementation (#744) — the SDK PR
-// will pin the final shape, including the `error` default that preserves detailed
-// type inference for plugins.
+// will pin the final shape, including the conflict-resolution default.
 function mergeExtensions(
   extensions: PluginExtensions[],
   options?: { onConflict?: "firstWins" | "lastWins" | "error" }, // default: "error"
@@ -324,7 +324,7 @@ ClientConfig = dict[str, Any]  # plugin authors define their own keys (auth, bas
 
 # Per Decision #2: the runtime Plugin shape stays at four keys. Custom filters
 # declared on define_plugin(filters=...) are handled by the Client returned by
-# get_client(), so `filters` does not appear on Plugin itself.
+# getClient(), so `filters` does not appear on Plugin itself.
 @dataclass
 class Plugin:
     meta: PluginMeta | None = None
@@ -357,8 +357,9 @@ def define_plugin(
     schemas: dict[ExtensibleSchemaName, ObjectSchemasInput[Any, Any]] | None = None,
     filters: dict[ExtensibleSchemaName, dict[str, CustomFilterSpec]] | None = None,
 ) -> Plugin: ...
+
 # Exact signature is provisional pending SDK implementation (#744) — the SDK PR
-# will pin the final shape.
+# will pin the final shape, including the conflict-resolution default.
 def merge_extensions(
     *extensions: PluginExtensions,
     on_conflict: Literal["firstWins", "lastWins", "error"] = "firstWins",
