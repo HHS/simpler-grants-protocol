@@ -196,7 +196,7 @@ function definePlugin(options: DefinePluginOptions): Plugin;
 // will pin the final shape, including the conflict-resolution default.
 function mergeExtensions(
   extensions: PluginExtensions[],
-  options?: { onConflict?: "firstWins" | "lastWins" | "error" }, // default: "error"
+  options?: { onConflict?: "firstWins" | "lastWins" | "error" },
 ): PluginExtensions;
 
 // Handler signature matches ADR-0017 runtime conventions.
