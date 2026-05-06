@@ -143,10 +143,7 @@ interface ClientConfig {
 }
 
 // Client is a placeholder for the SDK's runtime client type (not shown here).
-//
-// Per Decision #2: the runtime Plugin shape stays at four keys. Custom filters
-// declared on DefinePluginOptions are handled by the Client returned by getClient(),
-// so `filters` does not appear on Plugin itself.
+// No `filters` key on Plugin — handled by the Client returned by getClient() (see Decision #2).
 interface Plugin {
   meta?: PluginMeta;
   getClient?: (config: ClientConfig) => Client;
@@ -322,9 +319,7 @@ class PluginExtensions(BaseModel):
 
 ClientConfig = dict[str, Any]  # plugin authors define their own keys (auth, base_url, timeout, etc.)
 
-# Per Decision #2: the runtime Plugin shape stays at four keys. Custom filters
-# declared on define_plugin(filters=...) are handled by the Client returned by
-# getClient(), so `filters` does not appear on Plugin itself.
+# No `filters` field on Plugin — handled by the Client returned by get_client() (see Decision #2).
 @dataclass
 class Plugin:
     meta: PluginMeta | None = None
