@@ -139,3 +139,5 @@ plugin = define_plugin(
         )
     },
 )
+
+config = plugin
