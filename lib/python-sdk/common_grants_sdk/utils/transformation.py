@@ -64,10 +64,69 @@ def switch_on_value(data: dict, switch_spec: dict) -> Any:
     return lookup.get(val, switch_spec.get("default"))
 
 
+def const_value(_data: dict, value: Any) -> Any:
+    """
+    Handles a const transformation by returning a fixed literal value.
+
+    Args:
+        _data: The source data dictionary (unused)
+        value: The constant value to return
+
+    Returns:
+        The constant value exactly as specified
+    """
+    return value
+
+
+def number_to_string(data: dict, field_path: str) -> str | None:
+    """
+    Handles a numberToString transformation by extracting a numeric value and coercing it to a string.
+
+    Args:
+        data: The source data dictionary
+        field_path: A dot-separated string representing the path to the numeric value
+
+    Returns:
+        The value at the specified path converted to a string, or None if the path doesn't exist
+    """
+    val = get_from_path(data, field_path)
+    return str(val) if val is not None else None
+
+
+def string_to_number(data: dict, field_path: str) -> int | float | None:
+    """
+    Handles a stringToNumber transformation by extracting a string value and coercing it to a number.
+
+    Attempts integer conversion first; falls back to float for decimal strings.
+
+    Args:
+        data: The source data dictionary
+        field_path: A dot-separated string representing the path to the string value
+
+    Returns:
+        The value at the specified path converted to int or float, or None if the path doesn't exist
+
+    Raises:
+        ValueError: If the extracted value cannot be converted to a number
+    """
+    val = get_from_path(data, field_path)
+    if val is None:
+        return None
+    s = str(val)
+    try:
+        return int(s)
+    except ValueError:
+        return float(s)
+
+
 # Registry for handlers
 DEFAULT_HANDLERS: dict[str, handle_func] = {
+    "const": const_value,
     "field": pluck_field_value,
-    "switch": switch_on_value,
+    "match": switch_on_value,  # ADR-0017 canonical name
+    "numberToString": number_to_string,
+    "stringToNumber": string_to_number,
+    "switch": switch_on_value,  # alias kept for backward compatibility
 }
 
 
@@ -83,8 +142,12 @@ def transform_from_mapping(
 
     The mapping supports both literal values and transformations keyed by
     the following reserved words:
+    - `const`: Returns a fixed literal value regardless of input data
     - `field`: Extracts a value from the data using a dot-notation path
-    - `switch`: Performs a case-based lookup based on a field value
+    - `match`: Performs a case-based lookup based on a field value (canonical)
+    - `numberToString`: Extracts a numeric value and coerces it to a string
+    - `stringToNumber`: Extracts a string value and coerces it to int or float
+    - `switch`: Alias for `match` (kept for backward compatibility)
 
     Args:
         data: The source data dictionary to transform

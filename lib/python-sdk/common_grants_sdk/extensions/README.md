@@ -22,6 +22,10 @@ The `common-grants/sdk/extensions` module contains the utilities for working wit
   - [Defining a plugin](#defining-a-plugin)
   - [Publishing a plugin](#publishing-a-plugin)
   - [Combining Plugins](#combining-plugins)
+- [Bidirectional Transforms](#bidirectional-transforms)
+  - [Defining transforms](#defining-transforms)
+  - [Mapping format](#mapping-format)
+  - [Using transforms](#using-transforms)
 - [Using plugins with the API client](#using-plugins-with-the-api-client)
 - [Best practices](#best-practices)
   - [Field naming](#field-naming)
@@ -37,11 +41,15 @@ The `common-grants/sdk/extensions` module contains the utilities for working wit
 Here are some key concepts that are used to define custom fields and plugins that extend base schemas from the CommonGrants protocol.
 
 | Concept | Description |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Custom field**       | A key-value pair attached to a resource's `customFields` property. Each field has a `name`, `fieldType`, `value`, and optional `description`.                                                               |
-| **`CustomFieldSpec`**  | A Python dataclass that _describes_ a custom field: its `field_type`, optional `value` (a Python type for the `value` property), and optional `name` and `description`.                                     |
-| **`SchemaExtensions`** | A mapping of extensible model names (e.g. `"Opportunity"`) to dicts of `CustomFieldSpec` objects. This is the shape that `define_plugin()` and `with_custom_fields()` accept.                               |
-| **`Plugin`**           | A dataclass with `.extensions` (the raw `SchemaExtensions`) and `.schemas` (Pydantic models with typed `customFields` applied). Created by `define_plugin()`.                                               |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Custom field**        | A key-value pair attached to a resource's `customFields` property. Each field has a `name`, `fieldType`, `value`, and optional `description`.                                                               |
+| **`CustomFieldSpec`**   | A Python dataclass that _describes_ a custom field: its `field_type`, optional `value` (a Python type for the `value` property), and optional `name` and `description`.                                     |
+| **`SchemaExtensions`**  | A mapping of extensible model names (e.g. `"Opportunity"`) to dicts of `CustomFieldSpec` objects. This is the shape that `define_plugin()` and `with_custom_fields()` accept.                               |
+| **`Plugin`**            | A dataclass with `.extensions` (the raw `SchemaExtensions`) and `.schemas` (Pydantic models with typed `customFields` applied). Created by `define_plugin()`.                                               |
+| **`PluginMeta`**        | Optional metadata attached to a plugin: `name`, `version`, `source_system`, and `capabilities` (e.g. `["customFields", "transforms"]`).                                                                     |
+| **`build_transforms()`**| Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Each callable accepts a data dict and returns a `TransformResult`.                                                              |
+| **`TransformResult`**   | A dataclass `(result: dict, errors: list[PluginError])` returned by each transform callable. Errors are non-fatal — a partial result is always returned alongside any errors.                               |
+| **`ObjectSchemasInput`**| Bundles a `to_common` and `from_common` callable for a single object type. Passed to `define_plugin()` via the `transform_schemas` parameter.                                                               |
 
 
 
@@ -432,6 +440,140 @@ Prefer unique, namespaced field names so `"error"` is never triggered.
 #### Verify type inference before publishing
 
 After building your package, import the plugin in a test file and confirm that `.extensions` keys and `.schemas` parse types resolve correctly. Hover over the types in your editor to confirm they are not `any`.
+
+## Bidirectional Transforms
+
+Plugins can define bidirectional mappings between a source system's native data format and the CommonGrants format. These transforms are authored as plain Python dicts and compiled into callable functions by `build_transforms()`.
+
+### Defining transforms
+
+Use `build_transforms()` to compile a pair of mapping dicts into `(to_common, from_common)` callables, then pass them to `define_plugin()` via `transform_schemas`:
+
+```python
+from common_grants_sdk.extensions import (
+    CustomFieldSpec,
+    ObjectSchemasInput,
+    PluginMeta,
+    build_transforms,
+    define_plugin,
+)
+from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
+
+to_common, from_common = build_transforms(
+    to_common_mapping={
+        "title": {"field": "data.opportunity_title"},
+        "status": {
+            "value": {
+                "match": {
+                    "field": "data.opportunity_status",
+                    "case": {"posted": "open", "archived": "closed", "forecasted": "forecasted"},
+                    "default": "custom",
+                }
+            },
+            "description": {"const": "The opportunity is currently accepting applications"},
+        },
+        "funding": {
+            "minAwardAmount": {
+                "amount": {"field": "data.summary.award_floor"},
+                "currency": {"const": "USD"},
+            },
+        },
+    },
+    from_common_mapping={
+        "data": {
+            "opportunity_title": {"field": "title"},
+            "opportunity_status": {
+                "match": {
+                    "field": "status.value",
+                    "case": {"open": "posted", "closed": "archived", "forecasted": "forecasted"},
+                    "default": "custom",
+                }
+            },
+        }
+    },
+)
+
+plugin = define_plugin(
+    extensions={
+        "Opportunity": {
+            "legacyId": CustomFieldSpec(
+                field_type=CustomFieldType.INTEGER,
+                description="Unique identifier in legacy database",
+            ),
+        }
+    },
+    meta=PluginMeta(
+        name="my-system",
+        version="0.1.0",
+        source_system="my-system.example.gov",
+        capabilities=["customFields", "transforms"],
+    ),
+    transform_schemas={
+        "Opportunity": ObjectSchemasInput(
+            to_common=to_common,
+            from_common=from_common,
+        )
+    },
+)
+```
+
+Both directions must be provided explicitly. `build_transforms()` does not invert one mapping from the other, because many-to-one handlers like `match` are not reversible.
+
+### Mapping format
+
+A mapping dict describes how to build an output object from a source dict. Each leaf node is either a literal value or a single-key dict that invokes a named handler.
+
+| Handler | Syntax | Description |
+|---|---|---|
+| `const` | `{"const": "USD"}` | Returns a fixed literal value, ignoring source data |
+| `field` | `{"field": "data.summary.award_floor"}` | Extracts a value using a dot-notation path |
+| `match` | `{"match": {"field": "...", "case": {...}, "default": "..."}}` | Case-based lookup on a field value (canonical ADR name) |
+| `switch` | `{"switch": {...}}` | Alias for `match`, kept for backward compatibility |
+| `numberToString` | `{"numberToString": "data.summary.award_floor"}` | Extracts a numeric value and coerces it to a string |
+| `stringToNumber` | `{"stringToNumber": "some.string.field"}` | Extracts a string and coerces it to `int` or `float` |
+
+Bare non-dict values (strings, numbers, booleans) in a mapping are treated as literals and passed through unchanged. Use `{"const": ...}` when you want a literal value inside a dict node that might otherwise be mistaken for a field name.
+
+You can also register custom handlers by passing a `handlers` dict to `build_transforms()`:
+
+```python
+def handle_upper(data, field_path):
+    val = get_from_path(data, field_path)
+    return val.upper() if isinstance(val, str) else val
+
+to_common, from_common = build_transforms(
+    to_common_mapping={"title": {"upper": "data.opportunity_title"}},
+    from_common_mapping={...},
+    handlers={"upper": handle_upper},
+)
+```
+
+Custom handlers are merged with the defaults; they cannot override built-in handler names.
+
+### Using transforms
+
+The compiled callables are stored on the plugin's `transform_schemas` dict, keyed by object name. Each callable takes a data dict and returns a `TransformResult`:
+
+```python
+opp_transforms = plugin.transform_schemas["Opportunity"]
+
+# Source system → CommonGrants
+result = opp_transforms.to_common(native_data)
+if result.errors:
+    for err in result.errors:
+        print(f"[{err.path}] {err}")
+else:
+    cg_data = result.result
+
+# CommonGrants → source system
+result = opp_transforms.from_common(cg_data)
+native_data = result.result
+```
+
+`TransformResult.errors` is always a list (empty on success). A non-empty errors list means the transform encountered a problem but still returned a partial result in `result`.
+
+See `examples/transforms.py` for a complete working example with roundtrip verification.
+
 
 ## Using plugins with the API client
 

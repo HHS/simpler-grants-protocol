@@ -119,6 +119,58 @@ None
 ```
 
 
+# Bidirectional transforms example
+
+This example demonstrates the plugin transform framework: mapping source system data (grants.gov format) to the CommonGrants format and back again, with a roundtrip consistency check. No API server is required — the script runs entirely offline using sample data defined in the file itself.
+
+```bash
+poetry run python examples/transforms.py
+```
+
+**Output Example:**
+```
+============================================================
+SOURCE DATA (grants.gov format)
+============================================================
+{ ... }
+
+============================================================
+to_common: grants.gov → CommonGrants
+============================================================
+Errors: none
+
+Result:
+{
+  "title": "Research into conservation techniques",
+  "status": { "value": "open", "description": "The opportunity is currently accepting applications" },
+  "funding": {
+    "minAwardAmount": { "amount": 10000, "currency": "USD" },
+    "maxAwardAmount": { "amount": 100000, "currency": "USD" }
+  },
+  ...
+}
+
+============================================================
+from_common: CommonGrants → grants.gov
+============================================================
+Errors: none
+
+Result: { ... }
+
+============================================================
+ROUNDTRIP CHECK
+============================================================
+  [PASS] title: 'Research into conservation techniques' -> 'Research into conservation techniques'
+  [PASS] status: 'posted' -> 'posted'
+  [PASS] award_floor: 10000 -> 10000
+  [PASS] award_ceiling: 100000 -> 100000
+
+Roundtrip result: ALL PASS
+```
+
+The transform mappings live in `examples/plugins/grants_gov/cg_config.py`. See the [extensions README](../common_grants_sdk/extensions/README.md#bidirectional-transforms) for a full explanation of the mapping format.
+
+
 # Plugin framework example
 
 This example uses the plugin framework to define four typed custom fields, generate static Pydantic models, and validate an API payload.
