@@ -1,4 +1,5 @@
 import pytest
+from pydantic import BaseModel
 
 from common_grants_sdk.utils.transformation import (
     DEFAULT_HANDLERS,
@@ -312,6 +313,24 @@ def test_string_to_number_invalid_raises(input_data):
     data = {**input_data, "bad": "not-a-number"}
     with pytest.raises(ValueError):
         transform_from_mapping(data, {"x": {"stringToNumber": "bad"}})
+
+
+def test_pydantic_model_instance_is_normalized():
+    """transform_from_mapping accepts a Pydantic model instance and extracts fields correctly."""
+
+    class Inner(BaseModel):
+        value: str
+
+    class Source(BaseModel):
+        title: str
+        nested: Inner
+
+    model = Source(title="hello", nested=Inner(value="world"))
+    result = transform_from_mapping(model, {
+        "out_title": {"field": "title"},
+        "out_value": {"field": "nested.value"},
+    })
+    assert result == {"out_title": "hello", "out_value": "world"}
 
 
 def test_deeply_nested(input_data):

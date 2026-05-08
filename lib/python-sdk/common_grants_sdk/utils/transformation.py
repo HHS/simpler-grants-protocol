@@ -186,6 +186,13 @@ def transform_from_mapping(
     }
     ```
     """
+    # Normalize Pydantic model instances to plain dicts so that field path
+    # extraction works regardless of whether the caller passes a raw dict or a
+    # validated model (e.g. the output of to_common with common_model set).
+    # mode="json" matches the convention used by CommonGrantsBaseModel.dump_with_mapping.
+    if hasattr(data, "model_dump"):
+        data = data.model_dump(mode="json")
+
     # Check for maximum depth
     # This is a sanity check to prevent stack overflow from deeply nested mappings
     # which may be a concern when running this function on third-party mappings

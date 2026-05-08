@@ -18,6 +18,7 @@ from typing import Any
 # the `plugins.` prefix (not `examples.plugins.`) — the `examples.` prefix only
 # works in -c or interactive contexts where lib/python-sdk/ is sys.path[0].
 from plugins.grants_gov.cg_config import plugin
+from plugins.grants_gov.generated.schemas import Opportunity
 
 from common_grants_sdk.extensions import build_transforms
 from common_grants_sdk.utils.transformation import get_from_path
@@ -29,10 +30,14 @@ from common_grants_sdk.utils.transformation import get_from_path
 SOURCE_DATA: dict[str, Any] = {
     "data": {
         "agency_name": "Department of Examples",
+        "created_at": "2025-01-15T09:00:00Z",
+        "last_modified_at": "2025-04-01T12:30:00Z",
+        "opportunity_description": "Funding to advance research into conservation techniques for endangered ecosystems.",
         "opportunity_id": 12345,
         "opportunity_number": "ABC-123-XYZ-001",
         "opportunity_status": "posted",
         "opportunity_title": "Research into conservation techniques",
+        "opportunity_uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         "summary": {
             "applicant_types": ["state_governments"],
             "archive_date": "2025-05-01",
@@ -76,29 +81,58 @@ def split_field(data: dict[str, Any], spec: dict[str, Any]) -> str | None:
     return parts[index] if index < len(parts) else None
 
 
-# Transform that uses the custom handlers — built independently of the plugin
-# above to show that build_transforms() accepts arbitrary handler dicts.
+# Transform that uses the custom handlers and validates output against the generated
+# Opportunity model. common_model=Opportunity (from generated/schemas.py) ensures
+# model_validate runs against the extended class with typed custom fields
+# (legacyId, agencyName, applicantTypes), not just the base OpportunityBase.
 to_common_with_custom, from_common_with_custom = build_transforms(
     to_common_mapping={
+        "id": {"field": "data.opportunity_uuid"},
         "title": {"field": "data.opportunity_title"},
+        "description": {"field": "data.opportunity_description"},
+        "createdAt": {"field": "data.created_at"},
+        "lastModifiedAt": {"field": "data.last_modified_at"},
+        "status": {
+            "value": {
+                "match": {
+                    "field": "data.opportunity_status",
+                    "case": {
+                        "posted": "open",
+                        "archived": "closed",
+                        "forecasted": "forecasted",
+                    },
+                    "default": "custom",
+                }
+            },
+        },
         "label": {
             "join": {
                 "fields": ["data.opportunity_number", "data.opportunity_title"],
                 "sep": " — ",
             }
         },
+        "customFields": {
+            "legacyId": {
+                "value": {"field": "data.opportunity_id"},
+            },
+            "agencyName": {
+                "value": {"field": "data.agency_name"},
+            },
+            "applicantTypes": {
+                "value": {"field": "data.summary.applicant_types"},
+            },
+        },
     },
     from_common_mapping={
         "data": {
-            "opportunity_number": {
-                "split": {"field": "label", "sep": " — ", "index": 0}
-            },
-            "opportunity_title": {
-                "split": {"field": "label", "sep": " — ", "index": 1}
-            },
+            # label is produced by the join handler above but gets dropped by
+            # model_validate (it is not a CG field), so from_common maps directly
+            # from the standard CG title field instead.
+            "opportunity_title": {"field": "title"},
         }
     },
     handlers={"join": join_fields, "split": split_field},
+    common_model=Opportunity,
 )
 
 
@@ -182,28 +216,37 @@ def main() -> None:
 
     print(f"\nRoundtrip result: {'ALL PASS' if all_pass else 'SOME FIELDS DIFFER'}")
 
-    # --- Custom handler demo ---
-    _section("CUSTOM HANDLER DEMO (join / split)")
-    print("Custom handlers passed to build_transforms(): join, split\n")
+    # --- Custom handler + model_validate demo ---
+    _section("CUSTOM HANDLER + MODEL VALIDATE DEMO (join / split / extended Opportunity)")
+    print("Custom handlers: join, split")
+    print("common_model: generated Opportunity (with typed customFields)\n")
 
     custom_cg = to_common_with_custom(SOURCE_DATA)
-    print("to_common (with join handler):")
-    print(json.dumps(custom_cg.result, indent=2))
 
-    custom_native = from_common_with_custom(custom_cg.result)
-    print("\nfrom_common (with split handler):")
-    print(json.dumps(custom_native.result, indent=2))
+    if custom_cg.errors:
+        print(f"ERRORS ({len(custom_cg.errors)}):")
+        for err in custom_cg.errors:
+            print(f"  [path={err.path}] {err}")
+    else:
+        print("Validation: PASS — result is a typed Opportunity instance")
+        opp_instance = custom_cg.result
+        print(f"\n  title:       {opp_instance.title}")
+        print(f"  id:          {opp_instance.id}")
+        print(f"  status:      {opp_instance.status.value}")
+        if opp_instance.custom_fields:
+            cf = opp_instance.custom_fields
+            print(f"\n  customFields (typed):")
+            if cf.legacy_id:
+                print(f"    legacyId.value:        {cf.legacy_id.value!r}  ({type(cf.legacy_id.value).__name__})")
+            if cf.agency_name:
+                print(f"    agencyName.value:      {cf.agency_name.value!r}  ({type(cf.agency_name.value).__name__})")
+            if cf.applicant_types:
+                print(f"    applicantTypes.value:  {cf.applicant_types.value!r}  ({type(cf.applicant_types.value).__name__})")
 
-    orig_num = SOURCE_DATA["data"]["opportunity_number"]
+    custom_native = from_common_with_custom(custom_cg.result if not custom_cg.errors else {})
     orig_title = SOURCE_DATA["data"]["opportunity_title"]
-    rt_num = custom_native.result.get("data", {}).get("opportunity_number")
     rt_title = custom_native.result.get("data", {}).get("opportunity_title")
-    print(
-        f"\n  [{'PASS' if orig_num == rt_num else 'FAIL'}] opportunity_number: {orig_num!r} -> {rt_num!r}"
-    )
-    print(
-        f"  [{'PASS' if orig_title == rt_title else 'FAIL'}] opportunity_title:  {orig_title!r} -> {rt_title!r}"
-    )
+    print(f"\n  [{'PASS' if orig_title == rt_title else 'FAIL'}] opportunity_title: {orig_title!r} -> {rt_title!r}")
 
     # --- Plugin metadata ---
     _section("PLUGIN METADATA")

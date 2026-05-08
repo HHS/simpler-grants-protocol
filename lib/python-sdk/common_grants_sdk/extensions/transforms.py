@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
+from pydantic import ValidationError
+
 from common_grants_sdk.utils.transformation import (
     DEFAULT_HANDLERS,
     transform_from_mapping,
@@ -57,6 +59,7 @@ def build_transforms(
     to_common_mapping: dict[str, Any],
     from_common_mapping: dict[str, Any],
     handlers: dict[str, Handler] | None = None,
+    common_model: type | None = None,
 ) -> tuple[
     Callable[[Any], TransformResult[Any]],
     Callable[[Any], TransformResult[Any]],
@@ -68,6 +71,15 @@ def build_transforms(
         from_common_mapping: mapping from CommonGrants → native source.
         handlers: Optional additional handlers registered for this call only.
             Keys must not collide with DEFAULT_HANDLERS (raises ValueError if they do).
+        common_model: Optional Pydantic model class to validate the to_common output
+            against. Must be the fully extended generated model class (e.g. the
+            generated Opportunity from generated/schemas.py), NOT the base class
+            (e.g. OpportunityBase). Passing a base class will silently weaken
+            validation — custom_fields will only be checked against
+            dict[str, CustomField] rather than the typed container produced by the
+            plugin's custom field declarations. When provided, model_validate is
+            called on the transform result and any ValidationErrors are appended to
+            TransformResult.errors rather than raised.
 
     Returns:
         A (to_common, from_common) tuple. Each callable accepts a dict and returns
@@ -100,13 +112,25 @@ def build_transforms(
     def to_common(native: Any) -> TransformResult[Any]:
         try:
             result = transform_from_mapping(native, to_common_mapping, handlers=merged)
-            # TODO (full SDK): run model_validate on result and append validation
-            # failures to errors. Belongs in define_plugin() wrapper which knows
-            # the target Pydantic model, not here.
-            return TransformResult(result=result, errors=[])
         except Exception as exc:
             error = PluginError(str(exc), path=None, source_value=native, cause=exc)
             return TransformResult(result={}, errors=[error])
+
+        if common_model is None:
+            return TransformResult(result=result, errors=[])
+
+        try:
+            validated = common_model.model_validate(result)
+            return TransformResult(result=validated, errors=[])
+        except ValidationError as exc:
+            errors = [
+                PluginError(
+                    e["msg"],
+                    path=".".join(str(loc) for loc in e["loc"]),
+                )
+                for e in exc.errors()
+            ]
+            return TransformResult(result=result, errors=errors)
 
     def from_common(common: Any) -> TransformResult[Any]:
         try:

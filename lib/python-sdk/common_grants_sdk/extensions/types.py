@@ -138,6 +138,11 @@ class ObjectSchemasInput(Generic[TNative, TCommon]):
     Plugin authors supply to_common and from_common as plain callables — either
     hand-written or generated via build_transforms(). native defaults to
     dict[str, Any] if omitted.
+
+    common is intentionally absent here. It is injected by define_plugin() during
+    compilation from ObjectSchemasInput → ObjectSchemas, resolved from the generated
+    model classes produced by the code generator. Plugin authors never set it directly —
+    cg_config.py cannot import from generated/ (it is the input to generation).
     """
 
     native: type[TNative] | None = None

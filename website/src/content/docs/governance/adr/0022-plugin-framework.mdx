@@ -102,6 +102,9 @@ interface ObjectSchemas<TNative, TCommon> {
 }
 
 // Input type — provided by plugin authors inside DefinePluginOptions.schemas
+// common is intentionally absent: the plugin config file cannot import from generated/
+// since it is the input to generation. definePlugin() injects common during compilation
+// from ObjectSchemasInput → ObjectSchemas, resolved from the generated model classes.
 interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
   native?: ZodType<TNative>; // defaults to Record<string, unknown> if omitted
   toCommon?: (native: TNative) => TransformResult<TCommon>;
@@ -199,15 +202,24 @@ function mergeExtensions(
 // Handler signature matches ADR-0017 runtime conventions.
 type Handler = (value: unknown, context: unknown) => unknown;
 
-// Utility: generates toCommon and fromCommon functions from separate declarative
+/// Utility: generates toCommon and fromCommon functions from separate declarative
 // mapping objects (ADR-0017 format). Using this utility is optional — plugin authors
 // may provide plain hand-written functions instead. Mappings are validated at call
 // time (see Decision #7); the optional `handlers` argument registers custom handler
 // names for this call only (see Decision #8).
+// When commonModel is provided, toCommon calls commonModel.parse (Zod) on its output
+// and appends any validation errors to TransformResult.errors rather than throwing.
+// commonModel must be the fully extended generated schema (e.g. the generated
+// Opportunity with typed customFields), not the base schema — passing a base schema
+// silently weakens validation of typed custom fields.
+// The underlying mapping runtime normalizes model/schema instances to plain objects
+// at the entry point, so fromCommon can receive the validated output of toCommon
+// and field paths still resolve correctly.
 function buildTransforms<TNative, TCommon>(
   toCommonMapping: Record<string, unknown>, // ADR-0017 mapping from native → CommonGrants
   fromCommonMapping: Record<string, unknown>, // ADR-0017 mapping from CommonGrants → native
   handlers?: Record<string, Handler>,
+  commonModel?: ZodType<TCommon>, // must be the generated extended schema, not the base
 ): {
   toCommon: (native: TNative) => TransformResult<TCommon>;
   fromCommon: (common: TCommon) => TransformResult<TNative>;
@@ -262,6 +274,9 @@ class ObjectSchemas(Generic[TNative, TCommon]):
     from_common: Callable[[TCommon], TransformResult[TNative]]
 
 # Input type — provided by plugin authors inside define_plugin(schemas=...)
+# common is intentionally absent: cg_config.py cannot import from generated/ since
+# it is the input to generation. define_plugin() injects common during compilation
+# from ObjectSchemasInput → ObjectSchemas, resolved from the generated model classes.
 @dataclass
 class ObjectSchemasInput(Generic[TNative, TCommon]):
     native: type[TNative] | None = None  # defaults to dict[str, Any] if omitted
@@ -362,10 +377,19 @@ Handler = Callable[[Any, Any], Any]
 # may provide plain hand-written callables instead. Mappings are validated at call
 # time (see Decision #7); the optional `handlers` argument registers custom handler
 # names for this call only (see Decision #8).
+# When common_model is provided, to_common calls model_validate on its output and
+# appends any ValidationErrors to TransformResult.errors rather than raising.
+# common_model must be the fully extended generated model class (e.g.
+# generated/schemas.py's Opportunity), not the base class — passing a base class
+# silently weakens validation of typed custom fields.
+# transform_from_mapping normalizes Pydantic model instances to plain dicts via
+# model_dump(mode="json") at the entry point, so from_common can receive the
+# validated model output of to_common and field paths still resolve correctly.
 def build_transforms(
     to_common_mapping: dict[str, Any],   # ADR-0017 mapping from native → CommonGrants
     from_common_mapping: dict[str, Any], # ADR-0017 mapping from CommonGrants → native
     handlers: dict[str, Handler] | None = None,
+    common_model: type | None = None,    # must be the generated extended model, not the base
 ) -> tuple[
     Callable[[Any], TransformResult[Any]],
     Callable[[Any], TransformResult[Any]],

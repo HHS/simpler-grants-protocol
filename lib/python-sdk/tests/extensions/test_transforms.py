@@ -1,6 +1,7 @@
 """Tests for build_transforms() in common_grants_sdk.extensions.transforms."""
 
 import pytest
+from pydantic import BaseModel
 from common_grants_sdk.extensions.transforms import build_transforms
 from common_grants_sdk.extensions.types import PluginError, TransformResult
 
@@ -203,6 +204,66 @@ def test_structural_error_nested_list_path_reported():
     bad_mapping = {"funding": {"amount": [1, 2]}}
     with pytest.raises(ValueError, match="funding.amount"):
         build_transforms(bad_mapping, {})
+
+
+# --- model_validate via common_model ---
+
+
+class _TitleModel(BaseModel):
+    title: str
+
+
+class _StrictModel(BaseModel):
+    title: str
+    required_field: str  # always missing from SOURCE_DATA transform output
+
+
+def test_common_model_validates_result():
+    """When common_model is provided, result is a model instance on success."""
+    to_common, _ = build_transforms(
+        {"title": {"field": "data.opportunity_title"}},
+        {},
+        common_model=_TitleModel,
+    )
+    result = to_common(SOURCE_DATA)
+    assert result.errors == []
+    assert isinstance(result.result, _TitleModel)
+    assert result.result.title == "Research into conservation techniques"
+
+
+def test_common_model_validation_failure_surfaces_as_plugin_errors():
+    """ValidationError from model_validate surfaces as PluginError entries, not raised."""
+    to_common, _ = build_transforms(
+        {"title": {"field": "data.opportunity_title"}},
+        {},
+        common_model=_StrictModel,
+    )
+    result = to_common(SOURCE_DATA)
+    assert len(result.errors) >= 1
+    assert all(isinstance(e, PluginError) for e in result.errors)
+    assert any("required_field" in (e.path or "") for e in result.errors)
+
+
+def test_common_model_validation_failure_preserves_partial_result():
+    """On validation failure, the raw transform result dict is still returned."""
+    to_common, _ = build_transforms(
+        {"title": {"field": "data.opportunity_title"}},
+        {},
+        common_model=_StrictModel,
+    )
+    result = to_common(SOURCE_DATA)
+    assert result.result["title"] == "Research into conservation techniques"
+
+
+def test_no_common_model_returns_dict():
+    """Without common_model, result is a plain dict as before."""
+    to_common, _ = build_transforms(
+        {"title": {"field": "data.opportunity_title"}},
+        {},
+    )
+    result = to_common(SOURCE_DATA)
+    assert result.errors == []
+    assert isinstance(result.result, dict)
 
 
 def test_custom_handler_registered_per_call():
