@@ -19,6 +19,9 @@ from typing import Any
 # works in -c or interactive contexts where lib/python-sdk/ is sys.path[0].
 from plugins.grants_gov.cg_config import plugin
 
+from common_grants_sdk.extensions import build_transforms
+from common_grants_sdk.utils.transformation import get_from_path
+
 # ---------------------------------------------------------------------------
 # Sample grants.gov source data
 # ---------------------------------------------------------------------------
@@ -41,6 +44,62 @@ SOURCE_DATA: dict[str, Any] = {
         },
     }
 }
+
+
+# ---------------------------------------------------------------------------
+# Custom handlers: join_fields and split_field
+#
+# join_fields concatenates multiple source field values with a configurable
+# separator. Mapping spec: {"join": {"fields": ["a.b", "c.d"], "sep": " — "}}
+#
+# split_field is the inverse: it splits a single field on a separator and
+# returns the element at the given index.
+# Mapping spec: {"split": {"field": "label", "sep": " — ", "index": 0}}
+# ---------------------------------------------------------------------------
+
+
+def join_fields(data: dict[str, Any], spec: dict[str, Any]) -> str | None:
+    """Custom handler that joins multiple field values with a separator."""
+    sep = spec.get("sep", " ")
+    parts = [get_from_path(data, path) for path in spec.get("fields", [])]
+    values = [str(p) for p in parts if p is not None]
+    return sep.join(values) if values else None
+
+
+def split_field(data: dict[str, Any], spec: dict[str, Any]) -> str | None:
+    """Custom handler that splits a field value and returns the element at index."""
+    value = get_from_path(data, spec.get("field", ""))
+    if value is None:
+        return None
+    parts = str(value).split(spec.get("sep", " "))
+    index = spec.get("index", 0)
+    return parts[index] if index < len(parts) else None
+
+
+# Transform that uses the custom handlers — built independently of the plugin
+# above to show that build_transforms() accepts arbitrary handler dicts.
+to_common_with_custom, from_common_with_custom = build_transforms(
+    to_common_mapping={
+        "title": {"field": "data.opportunity_title"},
+        "label": {
+            "join": {
+                "fields": ["data.opportunity_number", "data.opportunity_title"],
+                "sep": " — ",
+            }
+        },
+    },
+    from_common_mapping={
+        "data": {
+            "opportunity_number": {
+                "split": {"field": "label", "sep": " — ", "index": 0}
+            },
+            "opportunity_title": {
+                "split": {"field": "label", "sep": " — ", "index": 1}
+            },
+        }
+    },
+    handlers={"join": join_fields, "split": split_field},
+)
 
 
 def _section(title: str) -> None:
@@ -122,6 +181,29 @@ def main() -> None:
         print(f"  [{status}] {field}: {original!r} -> {roundtripped!r}")
 
     print(f"\nRoundtrip result: {'ALL PASS' if all_pass else 'SOME FIELDS DIFFER'}")
+
+    # --- Custom handler demo ---
+    _section("CUSTOM HANDLER DEMO (join / split)")
+    print("Custom handlers passed to build_transforms(): join, split\n")
+
+    custom_cg = to_common_with_custom(SOURCE_DATA)
+    print("to_common (with join handler):")
+    print(json.dumps(custom_cg.result, indent=2))
+
+    custom_native = from_common_with_custom(custom_cg.result)
+    print("\nfrom_common (with split handler):")
+    print(json.dumps(custom_native.result, indent=2))
+
+    orig_num = SOURCE_DATA["data"]["opportunity_number"]
+    orig_title = SOURCE_DATA["data"]["opportunity_title"]
+    rt_num = custom_native.result.get("data", {}).get("opportunity_number")
+    rt_title = custom_native.result.get("data", {}).get("opportunity_title")
+    print(
+        f"\n  [{'PASS' if orig_num == rt_num else 'FAIL'}] opportunity_number: {orig_num!r} -> {rt_num!r}"
+    )
+    print(
+        f"  [{'PASS' if orig_title == rt_title else 'FAIL'}] opportunity_title:  {orig_title!r} -> {rt_title!r}"
+    )
 
     # --- Plugin metadata ---
     _section("PLUGIN METADATA")
