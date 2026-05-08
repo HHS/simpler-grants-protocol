@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from common_grants_sdk.utils.transformation import (
     DEFAULT_HANDLERS,
@@ -59,7 +59,7 @@ def build_transforms(
     to_common_mapping: dict[str, Any],
     from_common_mapping: dict[str, Any],
     handlers: dict[str, Handler] | None = None,
-    common_model: type | None = None,
+    common_model: type[BaseModel] | None = None,
 ) -> tuple[
     Callable[[Any], TransformResult[Any]],
     Callable[[Any], TransformResult[Any]],

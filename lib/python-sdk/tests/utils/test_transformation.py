@@ -326,10 +326,13 @@ def test_pydantic_model_instance_is_normalized():
         nested: Inner
 
     model = Source(title="hello", nested=Inner(value="world"))
-    result = transform_from_mapping(model, {
-        "out_title": {"field": "title"},
-        "out_value": {"field": "nested.value"},
-    })
+    result = transform_from_mapping(
+        model,
+        {
+            "out_title": {"field": "title"},
+            "out_value": {"field": "nested.value"},
+        },
+    )
     assert result == {"out_title": "hello", "out_value": "world"}
 
 

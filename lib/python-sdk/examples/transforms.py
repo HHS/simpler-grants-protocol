@@ -217,7 +217,9 @@ def main() -> None:
     print(f"\nRoundtrip result: {'ALL PASS' if all_pass else 'SOME FIELDS DIFFER'}")
 
     # --- Custom handler + model_validate demo ---
-    _section("CUSTOM HANDLER + MODEL VALIDATE DEMO (join / split / extended Opportunity)")
+    _section(
+        "CUSTOM HANDLER + MODEL VALIDATE DEMO (join / split / extended Opportunity)"
+    )
     print("Custom handlers: join, split")
     print("common_model: generated Opportunity (with typed customFields)\n")
 
@@ -235,18 +237,28 @@ def main() -> None:
         print(f"  status:      {opp_instance.status.value}")
         if opp_instance.custom_fields:
             cf = opp_instance.custom_fields
-            print(f"\n  customFields (typed):")
+            print("\n  customFields (typed):")
             if cf.legacy_id:
-                print(f"    legacyId.value:        {cf.legacy_id.value!r}  ({type(cf.legacy_id.value).__name__})")
+                print(
+                    f"    legacyId.value:        {cf.legacy_id.value!r}  ({type(cf.legacy_id.value).__name__})"
+                )
             if cf.agency_name:
-                print(f"    agencyName.value:      {cf.agency_name.value!r}  ({type(cf.agency_name.value).__name__})")
+                print(
+                    f"    agencyName.value:      {cf.agency_name.value!r}  ({type(cf.agency_name.value).__name__})"
+                )
             if cf.applicant_types:
-                print(f"    applicantTypes.value:  {cf.applicant_types.value!r}  ({type(cf.applicant_types.value).__name__})")
+                print(
+                    f"    applicantTypes.value:  {cf.applicant_types.value!r}  ({type(cf.applicant_types.value).__name__})"
+                )
 
-    custom_native = from_common_with_custom(custom_cg.result if not custom_cg.errors else {})
+    custom_native = from_common_with_custom(
+        custom_cg.result if not custom_cg.errors else {}
+    )
     orig_title = SOURCE_DATA["data"]["opportunity_title"]
     rt_title = custom_native.result.get("data", {}).get("opportunity_title")
-    print(f"\n  [{'PASS' if orig_title == rt_title else 'FAIL'}] opportunity_title: {orig_title!r} -> {rt_title!r}")
+    print(
+        f"\n  [{'PASS' if orig_title == rt_title else 'FAIL'}] opportunity_title: {orig_title!r} -> {rt_title!r}"
+    )
 
     # --- Plugin metadata ---
     _section("PLUGIN METADATA")

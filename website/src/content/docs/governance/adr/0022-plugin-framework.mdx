@@ -389,7 +389,7 @@ def build_transforms(
     to_common_mapping: dict[str, Any],   # ADR-0017 mapping from native → CommonGrants
     from_common_mapping: dict[str, Any], # ADR-0017 mapping from CommonGrants → native
     handlers: dict[str, Handler] | None = None,
-    common_model: type | None = None,    # must be the generated extended model, not the base
+    common_model: type[BaseModel] | None = None,  # must be the generated extended model, not the base
 ) -> tuple[
     Callable[[Any], TransformResult[Any]],
     Callable[[Any], TransformResult[Any]],
