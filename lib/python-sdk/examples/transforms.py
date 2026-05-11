@@ -4,7 +4,13 @@
 Demonstrates source (grants.gov) → CommonGrants and CommonGrants → source
 bidirectional transformations using the grants.gov sample plugin.
 
-Run with (from lib/python-sdk/):
+Requires generated schemas (examples/plugins/grants_gov/generated/).
+Generate them first (from lib/python-sdk/):
+    poetry run python -m common_grants_sdk.extensions.generate --plugin examples/plugins/grants_gov
+Or run all plugins at once:
+    make plugins
+
+Then run (from lib/python-sdk/):
     poetry run python examples/transforms.py
 """
 
@@ -214,7 +220,9 @@ def main() -> None:
         status = "PASS" if ok else "FAIL"
         print(f"  [{status}] {field}: {original!r} -> {roundtripped!r}")
 
-    print(f"\nRoundtrip result: {'ALL PASS' if all_pass else 'SOME FIELDS DIFFER'}")
+    print(
+        f"\nRoundtrip result ({len(checks)} mapped fields checked; unmapped fields dropped by design): {'ALL PASS' if all_pass else 'SOME FIELDS DIFFER'}"
+    )
 
     # --- Custom handler + model_validate demo ---
     _section(

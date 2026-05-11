@@ -46,7 +46,7 @@ Here are some key concepts that are used to define custom fields and plugins tha
 | **`CustomFieldSpec`**   | A Python dataclass that _describes_ a custom field: its `field_type`, optional `value` (a Python type for the `value` property), and optional `name` and `description`.                                     |
 | **`SchemaExtensions`**  | A mapping of extensible model names (e.g. `"Opportunity"`) to dicts of `CustomFieldSpec` objects. This is the shape that `define_plugin()` and `with_custom_fields()` accept.                               |
 | **`Plugin`**            | A dataclass with `.extensions` (the raw `SchemaExtensions`) and `.schemas` (Pydantic models with typed `customFields` applied). Created by `define_plugin()`.                                               |
-| **`PluginMeta`**        | Optional metadata attached to a plugin: `name`, `version`, `source_system`, and `capabilities` (e.g. `["customFields", "transforms"]`).                                                                     |
+| **`PluginExtensionsMeta`**        | Optional metadata attached to a plugin: `name`, `version`, `source_system`, and `capabilities` (e.g. `["customFields", "transforms"]`).                                                                     |
 | **`build_transforms()`**| Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Each callable accepts a data dict and returns a `TransformResult`.                                                              |
 | **`TransformResult`**   | A dataclass `(result: dict, errors: list[PluginError])` returned by each transform callable. Errors are non-fatal — a partial result is always returned alongside any errors.                               |
 | **`ObjectSchemasInput`**| Bundles a `to_common` and `from_common` callable for a single object type. Passed to `define_plugin()` via the `transform_schemas` parameter.                                                               |
@@ -453,7 +453,7 @@ Use `build_transforms()` to compile a pair of mapping dicts into `(to_common, fr
 from common_grants_sdk.extensions import (
     CustomFieldSpec,
     ObjectSchemasInput,
-    PluginMeta,
+    PluginExtensionsMeta,
     build_transforms,
     define_plugin,
 )
@@ -502,7 +502,7 @@ plugin = define_plugin(
             ),
         }
     },
-    meta=PluginMeta(
+    meta=PluginExtensionsMeta(
         name="my-system",
         version="0.1.0",
         source_system="my-system.example.gov",

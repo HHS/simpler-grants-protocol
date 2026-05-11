@@ -7,6 +7,8 @@ from typing import Any, Callable, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .specs import CustomFieldSpec
+
 TNative = TypeVar("TNative")
 TCommon = TypeVar("TCommon")
 T = TypeVar("T")
@@ -97,7 +99,9 @@ class PluginExtensionsSchema(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    custom_fields: dict[str, Any] | None = Field(default=None, alias="customFields")
+    custom_fields: dict[str, CustomFieldSpec] | None = Field(
+        default=None, alias="customFields"
+    )
     mappings: ObjectMappings | None = None
 
 

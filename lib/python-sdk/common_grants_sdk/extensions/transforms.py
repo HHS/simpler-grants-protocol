@@ -16,6 +16,7 @@ from pydantic import BaseModel, ValidationError
 
 from common_grants_sdk.utils.transformation import (
     DEFAULT_HANDLERS,
+    HandlerError,
     transform_from_mapping,
 )
 
@@ -81,6 +82,12 @@ def build_transforms(
             called on the transform result and any ValidationErrors are appended to
             TransformResult.errors rather than raised.
 
+            Note on result shape: when common_model is set, TransformResult.result
+            holds the validated Pydantic instance on success, or the raw transformed
+            dict on ValidationError (so callers can inspect the malformed data
+            alongside the errors). This is intentional — check TransformResult.errors
+            before consuming TransformResult.result.
+
     Returns:
         A (to_common, from_common) tuple. Each callable accepts a dict and returns
         TransformResult[Any]. Failures surface as PluginError entries in
@@ -112,6 +119,15 @@ def build_transforms(
     def to_common(native: Any) -> TransformResult[Any]:
         try:
             result = transform_from_mapping(native, to_common_mapping, handlers=merged)
+        except HandlerError as exc:
+            error = PluginError(
+                str(exc.cause),
+                path=None,
+                handler=exc.handler,
+                source_value=native,
+                cause=exc.cause,
+            )
+            return TransformResult(result={}, errors=[error])
         except Exception as exc:
             error = PluginError(str(exc), path=None, source_value=native, cause=exc)
             return TransformResult(result={}, errors=[error])
@@ -138,6 +154,15 @@ def build_transforms(
                 common, from_common_mapping, handlers=merged
             )
             return TransformResult(result=result, errors=[])
+        except HandlerError as exc:
+            error = PluginError(
+                str(exc.cause),
+                path=None,
+                handler=exc.handler,
+                source_value=common,
+                cause=exc.cause,
+            )
+            return TransformResult(result={}, errors=[error])
         except Exception as exc:
             error = PluginError(str(exc), path=None, source_value=common, cause=exc)
             return TransformResult(result={}, errors=[error])

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from common_grants_sdk.utils.transformation import (
     DEFAULT_HANDLERS,
+    HandlerError,
     transform_from_mapping,
 )
 
@@ -180,13 +181,15 @@ def test_extend_with_concat(input_data):
     - The handler works with both field values and constants
     """
 
-    # Patch in a concat handler for this test
     def handle_concat(data, concat_spec):
         return "".join(
             str(transform_from_mapping(data, part)) for part in concat_spec["parts"]
         )
 
-    DEFAULT_HANDLERS["concat"] = handle_concat
+    handlers = {
+        **DEFAULT_HANDLERS,
+        "concat": handle_concat,
+    }
 
     mapping = {
         "opportunity_code": {
@@ -199,7 +202,7 @@ def test_extend_with_concat(input_data):
             }
         }
     }
-    result = transform_from_mapping(input_data, mapping)
+    result = transform_from_mapping(input_data, mapping, handlers=handlers)
     assert result == {"opportunity_code": "ABC-123-XYZ-001-12345"}
 
 
@@ -308,11 +311,13 @@ def test_string_to_number_missing_field(input_data):
 
 
 def test_string_to_number_invalid_raises(input_data):
-    """Test stringToNumber raises ValueError for non-numeric strings."""
+    """Test stringToNumber raises HandlerError (wrapping ValueError) for non-numeric strings."""
 
     data = {**input_data, "bad": "not-a-number"}
-    with pytest.raises(ValueError):
+    with pytest.raises(HandlerError) as exc_info:
         transform_from_mapping(data, {"x": {"stringToNumber": "bad"}})
+    assert exc_info.value.handler == "stringToNumber"
+    assert isinstance(exc_info.value.cause, ValueError)
 
 
 def test_pydantic_model_instance_is_normalized():

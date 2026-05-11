@@ -119,6 +119,15 @@ def string_to_number(data: dict, field_path: str) -> int | float | None:
         return float(s)
 
 
+class HandlerError(Exception):
+    """Raised when a handler function raises, carrying the handler name for attribution."""
+
+    def __init__(self, handler: str, cause: Exception) -> None:
+        super().__init__(str(cause))
+        self.handler = handler
+        self.cause = cause
+
+
 # Registry for handlers
 DEFAULT_HANDLERS: dict[str, handle_func] = {
     "const": const_value,
@@ -220,7 +229,10 @@ def transform_from_mapping(
             # Returns: `extract_field_value(data, "opportunity_status")`
             if k in handlers:
                 handler_func = handlers[k]
-                return handler_func(data, v)
+                try:
+                    return handler_func(data, v)
+                except Exception as exc:
+                    raise HandlerError(k, exc) from exc
 
             # Otherwise, preserve the dictionary structure and
             # recursively apply the transformation to each value.

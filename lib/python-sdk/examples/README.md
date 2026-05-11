@@ -123,6 +123,21 @@ None
 
 This example demonstrates the plugin transform framework: mapping source system data (grants.gov format) to the CommonGrants format and back again, with a roundtrip consistency check. No API server is required — the script runs entirely offline using sample data defined in the file itself.
 
+**Step 1:** Generate the typed models for the grants.gov plugin (only needed once, or after changing `cg_config.py`):
+
+```bash
+cd lib/python-sdk
+poetry run python -m common_grants_sdk.extensions.generate --plugin examples/plugins/grants_gov
+```
+
+Or generate all example plugins at once with:
+
+```bash
+make plugins
+```
+
+**Step 2:** Run the example:
+
 ```bash
 poetry run python examples/transforms.py
 ```

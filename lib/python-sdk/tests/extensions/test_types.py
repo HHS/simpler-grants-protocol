@@ -1,6 +1,7 @@
 """Tests for ADR-0022 types defined in common_grants_sdk.extensions.types."""
 
 import pytest
+from common_grants_sdk.extensions.specs import CustomFieldSpec
 from common_grants_sdk.extensions.types import (
     ObjectMappings,
     ObjectSchemas,
@@ -11,6 +12,7 @@ from common_grants_sdk.extensions.types import (
     PluginExtensionsSchema,
     TransformResult,
 )
+from common_grants_sdk.schemas.pydantic.fields.custom import CustomFieldType
 
 # --- PluginError ---
 
@@ -91,9 +93,10 @@ def test_plugin_extensions_schema():
 def test_plugin_extensions():
     assert PluginExtensions().meta is None
     assert PluginExtensions().schemas is None
-    schema = PluginExtensionsSchema(customFields={"legacyId": {}})
+    spec = CustomFieldSpec(field_type=CustomFieldType.INTEGER)
+    schema = PluginExtensionsSchema(customFields={"legacyId": spec})
     ext = PluginExtensions(schemas={"Opportunity": schema})
-    assert ext.schemas["Opportunity"].custom_fields == {"legacyId": {}}
+    assert ext.schemas["Opportunity"].custom_fields == {"legacyId": spec}
 
 
 # --- ObjectSchemasInput ---
