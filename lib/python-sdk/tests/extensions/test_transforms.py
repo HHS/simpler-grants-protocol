@@ -67,114 +67,58 @@ FROM_COMMON_MAPPING = {
 # --- Call-time validation ---
 
 
-def test_handler_collision_raises():
+@pytest.mark.parametrize("name", ["field", "switch"])
+def test_handler_collision_raises(name):
     """build_transforms raises if custom handler shadows a default handler name."""
     with pytest.raises(ValueError, match="collide with defaults"):
         build_transforms(
             TO_COMMON_MAPPING,
             FROM_COMMON_MAPPING,
-            handlers={"field": lambda d, v: v},  # "field" is a default handler
+            handlers={name: lambda d, v: v},
         )
 
 
-def test_handler_collision_raises_for_switch():
-    with pytest.raises(ValueError, match="collide with defaults"):
-        build_transforms(
-            TO_COMMON_MAPPING,
-            FROM_COMMON_MAPPING,
-            handlers={"switch": lambda d, v: v},
-        )
-
-
-def test_structural_error_list_node_raises():
-    """build_transforms raises if a mapping node is a list (structural malformation)."""
-    bad_mapping = {"title": ["should", "not", "be", "a", "list"]}
+def test_structural_error_raises_with_path():
+    """build_transforms raises on list nodes and includes the field path."""
     with pytest.raises(ValueError, match="Invalid mapping node"):
-        build_transforms(bad_mapping, FROM_COMMON_MAPPING)
-
-
-def test_valid_mapping_does_not_raise():
-    """build_transforms does not raise on a well-formed mapping."""
-    to_common, from_common = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    assert callable(to_common)
-    assert callable(from_common)
+        build_transforms(
+            {"title": ["should", "not", "be", "a", "list"]}, FROM_COMMON_MAPPING
+        )
+    with pytest.raises(ValueError, match="funding.amount"):
+        build_transforms({"funding": {"amount": [1, 2]}}, {})
 
 
 # --- to_common transform ---
 
 
-def test_to_common_returns_transform_result():
+def test_to_common():
     to_common, _ = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
     result = to_common(SOURCE_DATA)
     assert isinstance(result, TransformResult)
-
-
-def test_to_common_no_errors_on_valid_data():
-    to_common, _ = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    result = to_common(SOURCE_DATA)
     assert result.errors == []
-
-
-def test_to_common_maps_title():
-    to_common, _ = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    result = to_common(SOURCE_DATA)
     assert result.result["title"] == "Research into conservation techniques"
-
-
-def test_to_common_maps_status_via_switch():
-    to_common, _ = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    result = to_common(SOURCE_DATA)
     assert result.result["status"]["value"] == "open"
-
-
-def test_to_common_preserves_literal_constant():
-    to_common, _ = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    result = to_common(SOURCE_DATA)
     assert (
         result.result["status"]["description"]
         == "The opportunity is currently accepting applications"
     )
-
-
-def test_to_common_maps_nested_funding():
-    to_common, _ = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    result = to_common(SOURCE_DATA)
     assert result.result["funding"]["minAwardAmount"]["amount"] == 10000
     assert result.result["funding"]["minAwardAmount"]["currency"] == "USD"
 
 
-# --- from_common transform ---
+# --- from_common roundtrip ---
 
 
-def test_from_common_returns_transform_result():
+def test_from_common_roundtrip():
+    """Status roundtrip: posted → open → posted."""
     to_common, from_common = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    cg = to_common(SOURCE_DATA)
-    result = from_common(cg.result)
-    assert isinstance(result, TransformResult)
-
-
-def test_from_common_no_errors_on_valid_data():
-    to_common, from_common = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    cg = to_common(SOURCE_DATA)
-    result = from_common(cg.result)
-    assert result.errors == []
-
-
-def test_from_common_roundtrip_title():
-    to_common, from_common = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    cg = to_common(SOURCE_DATA)
-    native = from_common(cg.result)
+    native = from_common(to_common(SOURCE_DATA).result)
+    assert isinstance(native, TransformResult)
+    assert native.errors == []
     assert (
         native.result["data"]["opportunity_title"]
         == "Research into conservation techniques"
     )
-
-
-def test_from_common_roundtrip_status():
-    """Status roundtrip: posted → open → posted."""
-    to_common, from_common = build_transforms(TO_COMMON_MAPPING, FROM_COMMON_MAPPING)
-    cg = to_common(SOURCE_DATA)
-    native = from_common(cg.result)
     assert native.result["data"]["opportunity_status"] == "posted"
 
 
@@ -193,17 +137,9 @@ def test_exception_surfaces_as_plugin_error_not_raised():
         handlers={"boom": boom},
     )
     result = to_common(SOURCE_DATA)
-    assert isinstance(result, TransformResult)
     assert len(result.errors) == 1
     assert isinstance(result.errors[0], PluginError)
     assert "handler exploded" in str(result.errors[0])
-
-
-def test_structural_error_nested_list_path_reported():
-    """_validate_mapping includes the field path in the error message for nested lists."""
-    bad_mapping = {"funding": {"amount": [1, 2]}}
-    with pytest.raises(ValueError, match="funding.amount"):
-        build_transforms(bad_mapping, {})
 
 
 # --- model_validate via common_model ---
@@ -231,8 +167,8 @@ def test_common_model_validates_result():
     assert result.result.title == "Research into conservation techniques"
 
 
-def test_common_model_validation_failure_surfaces_as_plugin_errors():
-    """ValidationError from model_validate surfaces as PluginError entries, not raised."""
+def test_common_model_validation_failure():
+    """ValidationError surfaces as PluginError entries; raw dict is still returned."""
     to_common, _ = build_transforms(
         {"title": {"field": "data.opportunity_title"}},
         {},
@@ -242,28 +178,7 @@ def test_common_model_validation_failure_surfaces_as_plugin_errors():
     assert len(result.errors) >= 1
     assert all(isinstance(e, PluginError) for e in result.errors)
     assert any("required_field" in (e.path or "") for e in result.errors)
-
-
-def test_common_model_validation_failure_preserves_partial_result():
-    """On validation failure, the raw transform result dict is still returned."""
-    to_common, _ = build_transforms(
-        {"title": {"field": "data.opportunity_title"}},
-        {},
-        common_model=_StrictModel,
-    )
-    result = to_common(SOURCE_DATA)
     assert result.result["title"] == "Research into conservation techniques"
-
-
-def test_no_common_model_returns_dict():
-    """Without common_model, result is a plain dict as before."""
-    to_common, _ = build_transforms(
-        {"title": {"field": "data.opportunity_title"}},
-        {},
-    )
-    result = to_common(SOURCE_DATA)
-    assert result.errors == []
-    assert isinstance(result.result, dict)
 
 
 def test_custom_handler_registered_per_call():
@@ -273,11 +188,7 @@ def test_custom_handler_registered_per_call():
         parts = path.split(".")
         val = data
         for part in parts:
-            if isinstance(val, dict):
-                val = val.get(part)
-            else:
-                val = None
-                break
+            val = val.get(part) if isinstance(val, dict) else None
         return str(val).upper() if val is not None else None
 
     to_common, _ = build_transforms(

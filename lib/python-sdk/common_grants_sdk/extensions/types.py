@@ -62,18 +62,6 @@ class TransformResult(Generic[T]):
     errors: list[PluginError]
 
 
-class PluginMeta(BaseModel):
-    """Plugin identity and capability declaration."""
-
-    model_config = ConfigDict(populate_by_name=True)
-
-    name: str
-    version: str | None = None
-    # Serialises as "sourceSystem" in JSON (camelCase per ADR-0022 language-agnostic config).
-    source_system: str = Field(alias="sourceSystem")
-    capabilities: list[PluginCapability] | None = None
-
-
 class ObjectMappings(BaseModel):
     """ADR-0017 mapping dicts for a single object, stored in the serializable extensions config.
 
@@ -88,13 +76,7 @@ class ObjectMappings(BaseModel):
 
 
 class PluginExtensionsMeta(BaseModel):
-    """All-optional mirror of PluginMeta for use inside the serializable PluginExtensions.
-
-    All fields are Optional so partial metadata can be declared without requiring
-    a full PluginMeta. If PluginMeta gains new required fields, update this class
-    manually — drift can be caught with:
-        assert PluginMeta.model_fields.keys() == PluginExtensionsMeta.model_fields.keys()
-    """
+    """Plugin identity and capability declaration. All fields are optional."""
 
     model_config = ConfigDict(populate_by_name=True)
 

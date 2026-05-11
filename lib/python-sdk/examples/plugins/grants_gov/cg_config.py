@@ -12,7 +12,7 @@ Code generation (generates typed custom-field schemas):
 from common_grants_sdk.extensions import (
     CustomFieldSpec,
     ObjectSchemasInput,
-    PluginMeta,
+    PluginExtensionsMeta,
     build_transforms,
     define_plugin,
 )
@@ -126,7 +126,7 @@ plugin = define_plugin(
             ),
         }
     },
-    meta=PluginMeta(
+    meta=PluginExtensionsMeta(
         name="grants-gov",
         version="0.1.0",
         sourceSystem="grants.gov",

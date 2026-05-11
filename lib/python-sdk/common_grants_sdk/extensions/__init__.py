@@ -14,7 +14,6 @@ from .types import (
     PluginExtensions,
     PluginExtensionsMeta,
     PluginExtensionsSchema,
-    PluginMeta,
     TransformResult,
 )
 
@@ -40,6 +39,5 @@ __all__ = [
     "PluginExtensions",
     "PluginExtensionsMeta",
     "PluginExtensionsSchema",
-    "PluginMeta",
     "TransformResult",
 ]

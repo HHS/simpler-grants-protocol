@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Generic, TypeVar
 
 from .specs import SchemaExtensions
-from .types import ClientConfig, ObjectSchemas, ObjectSchemasInput, PluginMeta
+from .types import ClientConfig, ObjectSchemas, ObjectSchemasInput, PluginExtensionsMeta
 
 T = TypeVar("T")
 
@@ -25,7 +25,7 @@ class PluginConfig:
     """
 
     extensions: SchemaExtensions
-    meta: PluginMeta | None = None
+    meta: PluginExtensionsMeta | None = None
     transform_schemas: dict[str, ObjectSchemasInput[Any, Any]] | None = None
 
 
@@ -47,7 +47,7 @@ class Plugin(Generic[T]):
 
     extensions: SchemaExtensions
     schemas: T  # generated _Schemas object — keep as positional for generate.py compat
-    meta: PluginMeta | None = None
+    meta: PluginExtensionsMeta | None = None
     get_client: Callable[[ClientConfig], Any] | None = None  # TODO: memoize
     # PoC stores ObjectSchemasInput here (no compilation yet); full SDK will store
     # ObjectSchemas after model_validate wrapping. Annotated as the union so both
@@ -60,7 +60,7 @@ class Plugin(Generic[T]):
 
 def define_plugin(
     extensions: SchemaExtensions,
-    meta: PluginMeta | None = None,
+    meta: PluginExtensionsMeta | None = None,
     transform_schemas: dict[str, ObjectSchemasInput[Any, Any]] | None = None,
     # TODO (full SDK): get_client, filters
 ) -> PluginConfig:

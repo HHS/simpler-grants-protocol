@@ -132,7 +132,28 @@ poetry run python examples/transforms.py
 ============================================================
 SOURCE DATA (grants.gov format)
 ============================================================
-{ ... }
+{
+  "data": {
+    "agency_name": "Department of Examples",
+    "created_at": "2025-01-15T09:00:00Z",
+    "last_modified_at": "2025-04-01T12:30:00Z",
+    "opportunity_description": "Funding to advance research into conservation techniques for endangered ecosystems.",
+    "opportunity_id": 12345,
+    "opportunity_number": "ABC-123-XYZ-001",
+    "opportunity_status": "posted",
+    "opportunity_title": "Research into conservation techniques",
+    "opportunity_uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "summary": {
+      "applicant_types": ["state_governments"],
+      "archive_date": "2025-05-01",
+      "award_ceiling": 100000,
+      "award_floor": 10000,
+      "forecasted_award_date": "2025-09-01",
+      "forecasted_close_date": "2025-07-15",
+      "forecasted_post_date": "2025-05-01"
+    }
+  }
+}
 
 ============================================================
 to_common: grants.gov → CommonGrants
@@ -155,7 +176,19 @@ from_common: CommonGrants → grants.gov
 ============================================================
 Errors: none
 
-Result: { ... }
+Result:
+{
+  "data": {
+    "opportunity_title": "Research into conservation techniques",
+    "opportunity_status": "posted",
+    "summary": {
+      "award_floor": 10000,
+      "award_ceiling": 100000,
+      "forecasted_post_date": "2025-05-01",
+      "forecasted_close_date": "2025-07-15"
+    }
+  }
+}
 
 ============================================================
 ROUNDTRIP CHECK
