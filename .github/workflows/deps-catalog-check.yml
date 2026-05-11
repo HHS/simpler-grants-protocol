@@ -34,8 +34,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Check for outdated catalog deps
-        id: check
+      # ── Pass 1: within-major bumps ────────────────────────────────────────
+      # Safe updates that almost always work. Auto-mergeable after CI passes.
+
+      - name: Check for within-major updates
+        id: check_minor
         run: |
           set +e
           ./.github/scripts/update-catalog-deps.sh --dry-run
@@ -46,16 +49,16 @@ jobs:
           elif [[ "$EXIT_CODE" -eq 0 ]]; then
             echo "has_updates=true" >> $GITHUB_OUTPUT
           else
-            echo "::error::Catalog dep check failed with exit code $EXIT_CODE"
+            echo "::error::Catalog dep check (within-major) failed with exit code $EXIT_CODE"
             exit 1
           fi
 
-      - name: Run catalog update script
-        if: steps.check.outputs.has_updates == 'true'
+      - name: Apply within-major updates
+        if: steps.check_minor.outputs.has_updates == 'true'
         run: ./.github/scripts/update-catalog-deps.sh
 
-      - name: Create pull request
-        if: steps.check.outputs.has_updates == 'true' && github.event_name != 'pull_request'
+      - name: Open within-major PR
+        if: steps.check_minor.outputs.has_updates == 'true' && github.event_name != 'pull_request'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -67,6 +70,9 @@ jobs:
             ## Automated catalog dependency update
 
             This PR was created by the weekly `deps-catalog-check` workflow.
+
+            ### Scope
+            **Within-major bumps only.** Each dep moves to the newest version on its current compatibility line (same major for `^X.Y.Z`, same `0.x` line for `^0.Y.Z`, same minor for `~X.Y.Z`). Major-version bumps are handled by a separate draft PR (`chore/update-catalog-deps-majors`) that lands alongside this one when applicable.
 
             ### What changed
             Updates to dependencies managed via `pnpm-workspace.yaml` catalog:
@@ -82,9 +88,70 @@ jobs:
             - [ ] If TypeSpec packages updated: verify `pnpm run typespec` output is sensible
             - [ ] If website deps updated: spot-check key pages render correctly
             - [ ] If SDK-affecting deps updated: verify SDK examples still work
-            - [ ] If this is a **major** version bump: review changelog of updated packages
             - [ ] Add changeset if peerDep ranges changed for `@common-grants/core`
           labels: |
             dependencies
           commit-message: "chore(deps): update catalog dependencies"
+          delete-branch: true
+
+      # ── Pass 2: cross-major bumps (manual review) ─────────────────────────
+      # Drafts a separate PR for major bumps so they're visible but obviously
+      # not auto-mergeable. Reset the working tree first so pass 2 sees the
+      # original committed workspace + lockfile, not pass 1's modifications.
+
+      - name: Reset working tree for major pass
+        run: git checkout HEAD -- pnpm-workspace.yaml pnpm-lock.yaml
+
+      - name: Check for major-version updates
+        id: check_major
+        run: |
+          set +e
+          ./.github/scripts/update-catalog-deps.sh --majors-only --dry-run
+          EXIT_CODE=$?
+          set -e
+          if [[ "$EXIT_CODE" -eq 2 ]]; then
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          elif [[ "$EXIT_CODE" -eq 0 ]]; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Catalog dep check (majors-only) failed with exit code $EXIT_CODE"
+            exit 1
+          fi
+
+      - name: Apply major-version updates
+        if: steps.check_major.outputs.has_updates == 'true'
+        run: ./.github/scripts/update-catalog-deps.sh --majors-only
+
+      - name: Open major-version draft PR
+        if: steps.check_major.outputs.has_updates == 'true' && github.event_name != 'pull_request'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/update-catalog-deps-majors
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          draft: true
+          title: "chore(deps-major): catalog major-version bumps — REQUIRES MANUAL REVIEW"
+          body: |
+            ## ⚠️ Major-version catalog bumps — manual review required
+
+            This is a **draft** PR opened by the weekly `deps-catalog-check` workflow to surface available cross-major dependency bumps. Each one is presumed to contain breaking changes (see recent history: zod 3→4 renamed `ZodError.errors`, typescript 5→6 deprecated `baseUrl`, etc.).
+
+            ### How to handle this PR
+            1. Look at the diff to see which majors are now available.
+            2. **Cherry-pick** the major(s) you want to adopt into their own focused PR with the corresponding migration work, OR
+            3. Pull this branch locally and chip away at the migrations, then mark ready for review.
+            4. If you don't want a particular major right now, drop it from the workspace diff before merging.
+
+            CI on this PR is **expected to fail** until migration work is done. The script regenerated the lockfile with `--ignore-scripts` so the lockfile is internally consistent even though `tsc`/build steps would currently break.
+
+            ### Why this PR exists
+            The within-major auto-update PR (`chore/update-catalog-deps`) intentionally holds these back because they break the build. This draft PR exists so they don't get silently forgotten — but they need a human to drive the migration.
+
+            ### Workflow
+            This PR is re-pushed every Monday with the latest majors. Don't worry about it going stale; merge or close it on your own cadence.
+          labels: |
+            dependencies
+            DO NOT MERGE
+          commit-message: "chore(deps-major): catalog major-version bumps"
           delete-branch: true
