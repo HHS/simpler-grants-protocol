@@ -2,12 +2,17 @@
 
 A Python SDK for interacting with the CommonGrants protocol, providing a type-safe interface for managing grant opportunities.
 
-## Features
+## Table of contents <!-- omit in toc -->
 
-- **Type-Safe Models**: Built with Pydantic v2 for robust data validation and serialization
-- **Comprehensive Schema Support**: Full implementation of the CommonGrants protocol schemas
-- **Modern Python**: Requires Python 3.11+ for optimal performance and type safety
-- **Extensible**: Easy to extend with custom fields and validation
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Quick start](#quick-start)
+  - [Kitchen sink example](#kitchen-sink-example)
+- [Modules](#modules)
+  - [API Client](#api-client)
+  - [Schemas and Validation](#schemas-and-validation)
+  - [Extensions and Plugins](#extensions-and-plugins)
+- [License](#license)
 
 ## Installation
 
@@ -19,187 +24,101 @@ pip install common-grants-sdk
 poetry add common-grants-sdk
 ```
 
-## Quick Start
+## Usage
 
-```python
-from datetime import datetime, date, UTC
-from uuid import uuid4
-
-from common_grants_sdk.schemas.pydantic import (
-    Event,
-    Money,
-    OpportunityBase,
-    OppFunding,
-    OppStatus,
-    OppStatusOptions,
-    OppTimeline,
-)
-
-# Create a new opportunity
-opportunity = OpportunityBase(
-    id=uuid4(),
-    title="Research Grant 2024",
-    description="Funding for innovative research projects",
-    status=OppStatus(
-        value=OppStatusOptions.OPEN,
-        description="This opportunity is currently accepting applications"
-    ),
-    created_at=datetime.now(UTC),
-    last_modified_at=datetime.now(UTC),
-    funding=OppFunding(
-        total_amount_available=Money(amount="100000.00", currency="USD"),
-        min_award_amount=Money(amount="10000.00", currency="USD"),
-        max_award_amount=Money(amount="50000.00", currency="USD"),
-        estimated_award_count=5
-    ),
-    key_dates=OppTimeline(
-        app_opens=Event(
-            name="Application Opens",
-            date=date(2024, 1, 1),
-            description="Applications open"
-        ),
-        app_deadline=Event(
-            name="Application Deadline",
-            date=date(2024, 3, 31),
-            description="Applications close"
-        )
-    )
-)
-
-# Serialize to JSON
-json_data = opportunity.dump_json()
-
-# Deserialize from JSON
-loaded_opportunity = OpportunityBase.from_json(json_data)
-```
-
-## Core Components
-
-### Base Model
-
-- `CommonGrantsBaseModel`: Base class for all models, provides common serialization and validation methods
-- `SystemMetadata`: Tracks creation and modification timestamps for records
-
-### Opportunity Models
-
-- `OpportunityBase`: Core opportunity model
-- `OppFunding`: Funding details and constraints
-- `OppStatus` & `OppStatusOptions`: Opportunity status tracking
-- `OppTimeline`: Key dates and milestones
-
-### Field Types
-
-- `Money`: Represents monetary amounts with currency
-- `DecimalString`: Validated string representing a decimal number
-- `Event`: Union of event types
-- `EventType`: Enum for event type discrimination
-- `SingleDateEvent`: Event with a single date
-- `DateRangeEvent`: Event with a start and end date
-- `OtherEvent`: Event with a custom description or recurrence
-- `CustomField`: Flexible field type for custom data
-- `CustomFieldType`: Enum for custom field value types
-- `ISODate`: Alias for `datetime.date` (ISO 8601 date)
-- `ISOTime`: Alias for `datetime.time` (ISO 8601 time)
-- `UTCDateTime`: Alias for `datetime.datetime` (UTC timestamp)
-
-### Transformation Utilities
-
-The SDK includes a utility for transforming data according to a mapping specification:
-
-- `transform_from_mapping()` supports extracting fields, switching on values, and reshaping data dictionaries
-
-## Example: Data Transformation
-
-```python
-from common_grants_sdk.utils.transformation import transform_from_mapping
-
-source_data = {
-    "opportunity_id": 12345,
-    "opportunity_title": "Research into ABC",
-    "opportunity_status": "posted",
-    "summary": {
-        "award_ceiling": 100000,
-        "award_floor": 10000,
-        "forecasted_close_date": "2025-07-15",
-        "forecasted_post_date": "2025-05-01",
-    },
-}
-
-mapping = {
-    "id": { "field": "opportunity_id" },
-    "title": { "field": "opportunity_title" },
-    "status": { 
-        "switch": {
-            "field": "opportunity_status",
-            "case": {
-                "posted": "open",
-                "closed": "closed",
-            },
-            "default": "custom",
-        }
-    },
-    "funding": {
-        "minAwardAmount": {
-            "amount": { "field": "summary.award_floor" },
-            "currency": "USD",
-        },
-        "maxAwardAmount": {
-            "amount": { "field": "summary.award_ceiling" },
-            "currency": "USD",
-        },
-    },
-    "keyDates": {
-        "appOpens": { "field": "summary.forecasted_post_date" },
-        "appDeadline": { "field": "summary.forecasted_close_date" },
-    },
-}
-
-transformed_data = transform_from_mapping(source_data, mapping)
-
-assert transformed_data == {
-    "id": uuid4(),
-    "title": "Research into ABC",
-    "status": "open",
-    "funding": {
-        "minAwardAmount": { "amount": 10000, "currency": "USD" },
-        "maxAwardAmount": { "amount": 100000, "currency": "USD" },
-    },
-    "keyDates": {
-        "appOpens": "2025-05-01",
-        "appDeadline": "2025-07-15",
-    },
-}
-```
-
-## HTTP Client
-
-The SDK includes a type-safe HTTP client for interacting with CommonGrants Protocol-compliant APIs. The client provides a Pythonic interface with automatic authentication, request/response parsing, and pagination support.
+### Quick start
 
 ```python
 from common_grants_sdk.client import Client, Auth
 from common_grants_sdk.client.config import Config
 
-# Initialize client
+# 1. Create a client
 config = Config(base_url="https://api.example.org")
 client = Client(config=config, auth=Auth.api_key("YOUR_API_KEY"))
 
-# Get a specific opportunity
-opportunity = client.opportunity.get("<opportunity_id>")
-print(opportunity.title)
-
-# List opportunities
-response = client.opportunity.list(page=1)
+# 2. List opportunities
+response = client.opportunities.list()
 for opp in response.items:
-    print(opp.id, opp.title)
+    print(f"{opp.title} ({opp.status.value})")
 ```
 
-For detailed documentation, examples, and configuration options, see the [HTTP Client README](common_grants_sdk/client/README.md).
+### Kitchen sink example
+
+This example shows how the SDK's modules work together: fetching data with the client, validating it with schemas, and accessing typed custom fields via extensions.
+
+```python
+from common_grants_sdk.client import Client, Auth
+from common_grants_sdk.client.config import Config
+from common_grants_sdk.schemas.pydantic import (
+    OpportunityBase,
+    OppStatusOptions,
+    CustomFieldType,
+)
+from common_grants_sdk.extensions.specs import CustomFieldSpec
+
+# Extend the base schema with custom fields
+CustomOpportunity = OpportunityBase.with_custom_fields(
+    custom_fields={
+        "programArea": CustomFieldSpec(
+            field_type=CustomFieldType.STRING,
+            description="Grant program area",
+        ),
+        "legacyId": CustomFieldSpec(
+            field_type=CustomFieldType.INTEGER,
+            description="Legacy system ID",
+        ),
+    },
+    model_name="CustomOpportunity",
+)
+
+# Create a client
+config = Config(base_url="https://api.example.org")
+client = Client(config=config, auth=Auth.api_key("YOUR_API_KEY"))
+
+# Fetch opportunities using the extended schema
+response = client.opportunities.list(schema=CustomOpportunity)
+for opp in response.items:
+    print(f"{opp.title} ({opp.status.value})")
+
+    # Access typed custom fields
+    if opp.status.value == OppStatusOptions.OPEN:
+        program = opp.get_custom_field_value("programArea", str)
+        print(f"  Program area: {program}")
+
+# Validate standalone data directly against the schema
+raw = {
+    "id": "ac201443-5480-4e36-9799-a39765225153",
+    "title": "Community Health Grant",
+    "status": {"value": "open"},
+    "createdAt": "2025-01-01T00:00:00Z",
+    "lastModifiedAt": "2025-01-01T00:00:00Z",
+}
+validated_opp = OpportunityBase.model_validate(raw)
+print(validated_opp.title)
+```
+
+## Modules
+
+The SDK is organized into modules, each with its own documentation:
+
+| Module | Description |
+|---|---|
+| [Client](common_grants_sdk/client/README.md) | HTTP client with auth, pagination, and low-level HTTP methods |
+| [Schemas](common_grants_sdk/schemas/README.md) | Pydantic models, validation, and generic response schemas |
+| [Extensions](common_grants_sdk/extensions/README.md) | Custom fields and plugin framework |
+
+### API Client
+
+HTTP client with built-in authentication, auto-pagination, and environment variable configuration. See the [Client guide](common_grants_sdk/client/README.md) for setup, authentication, and usage examples.
+
+### Schemas and Validation
+
+[Pydantic v2](https://docs.pydantic.dev/) models for validating and parsing CommonGrants data, along with type-safe enum constants. See the [Schemas guide](common_grants_sdk/schemas/README.md) for validation examples, type safety patterns, and the full API reference.
+
+### Extensions and Plugins
+
+Extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc or as reusable plugins. See the [Extensions guide](common_grants_sdk/extensions/README.md) for the full guide.
 
 ## License
 
 See [LICENSE](../../LICENSE.md)
-
-
-## Extensions and Plugins
-
-The SDK provides an extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc with `with_custom_fields()` or as reusable plugins with `define_plugin()`. See the [Extensions documentation](common_grants_sdk/extensions/README.md) for the full guide, including best practices for publishing plugin packages and a complete API reference.
