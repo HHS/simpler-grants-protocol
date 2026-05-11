@@ -189,11 +189,10 @@ interface DefinePluginOptions {
 function definePlugin(options: DefinePluginOptions): Plugin;
 
 // Combine multiple extension objects (e.g. from separate packages).
-// Exact signature is provisional pending SDK implementation (#744) — the SDK PR
-// will pin the final shape, including the conflict-resolution default.
+// Exact signature shape (overloads, param structure) is provisional pending SDK pin in #744.
 function mergeExtensions(
   extensions: PluginExtensions[],
-  options?: { onConflict?: "firstWins" | "lastWins" | "error" },
+  options?: { onConflict?: "error" | "firstWins" | "lastWins" }, // defaults to "error"
 ): PluginExtensions;
 
 // Handler signature matches ADR-0017 runtime conventions.
@@ -353,11 +352,10 @@ def define_plugin(
     filters: dict[ExtensibleSchemaName, dict[str, CustomFilterSpec]] | None = None,
 ) -> Plugin: ...
 
-# Exact signature is provisional pending SDK implementation (#744) — the SDK PR
-# will pin the final shape, including the conflict-resolution default.
+# Exact signature shape is provisional pending SDK pin in #744.
 def merge_extensions(
     *extensions: PluginExtensions,
-    on_conflict: Literal["firstWins", "lastWins", "error"] = "firstWins",
+    on_conflict: Literal["error", "firstWins", "lastWins"] = "error",
 ) -> PluginExtensions: ...
 
 # Handler signature matches ADR-0017 runtime conventions.
