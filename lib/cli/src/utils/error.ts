@@ -4,7 +4,7 @@ import chalk from "chalk";
 export function handleCommandError(error: unknown): never {
   if (error instanceof ZodError) {
     console.error(chalk.red("Validation error:"));
-    error.errors.forEach(err => {
+    error.issues.forEach(err => {
       console.error(chalk.red(`- ${err.path.join(".")}: ${err.message}`));
     });
   } else if (error instanceof Error) {
