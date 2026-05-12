@@ -117,27 +117,27 @@ export default defineConfig({
             {
               label: "Types",
               collapsed: true,
-              autogenerate: { directory: "protocol/types" },
+              items: [{ autogenerate: { directory: "protocol/types" } }],
             },
             {
               label: "Fields",
               collapsed: true,
-              autogenerate: { directory: "protocol/fields" },
+              items: [{ autogenerate: { directory: "protocol/fields" } }],
             },
             {
               label: "Models",
               collapsed: true,
-              autogenerate: { directory: "protocol/models" },
+              items: [{ autogenerate: { directory: "protocol/models" } }],
             },
             {
               label: "Filters",
               collapsed: true,
-              autogenerate: { directory: "protocol/filters" },
+              items: [{ autogenerate: { directory: "protocol/filters" } }],
             },
             {
               label: "Responses",
               collapsed: true,
-              autogenerate: { directory: "protocol/responses" },
+              items: [{ autogenerate: { directory: "protocol/responses" } }],
             },
             {
               label: "Pagination",
@@ -168,7 +168,7 @@ export default defineConfig({
         },
         {
           label: "Guides",
-          autogenerate: { directory: "guides" },
+          items: [{ autogenerate: { directory: "guides" } }],
         },
         {
           label: "Governance",
@@ -180,12 +180,12 @@ export default defineConfig({
             {
               label: "ADRs",
               collapsed: true,
-              autogenerate: { directory: "governance/adr" },
+              items: [{ autogenerate: { directory: "governance/adr" } }],
             },
             {
               label: "RFCs",
               collapsed: true,
-              autogenerate: { directory: "governance/rfc" },
+              items: [{ autogenerate: { directory: "governance/rfc" } }],
             },
           ],
         },
