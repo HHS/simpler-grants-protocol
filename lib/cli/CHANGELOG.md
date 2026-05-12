@@ -1,5 +1,11 @@
 # @common-grants/cli
 
+## 0.3.2
+
+### Patch Changes
+
+- 7873d25: Bump express from 4.22.1 to 4.22.2
+
 ## 0.3.1
 
 ### Patch Changes
