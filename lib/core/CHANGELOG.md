@@ -1,5 +1,11 @@
 # @common-grants/core
 
+## 0.3.3
+
+### Patch Changes
+
+- 2271168: Bump TypeSpec packages from 1.10.0 to 1.11.0 (no breaking changes)
+
 ## 0.3.2
 
 ### Patch Changes
