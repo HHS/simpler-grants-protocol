@@ -202,7 +202,7 @@ function mergeExtensions(
 // Handler signature matches ADR-0017 runtime conventions.
 type Handler = (value: unknown, context: unknown) => unknown;
 
-/// Utility: generates toCommon and fromCommon functions from separate declarative
+// Utility: generates toCommon and fromCommon functions from separate declarative
 // mapping objects (ADR-0017 format). Using this utility is optional — plugin authors
 // may provide plain hand-written functions instead. Mappings are validated at call
 // time (see Decision #7); the optional `handlers` argument registers custom handler
