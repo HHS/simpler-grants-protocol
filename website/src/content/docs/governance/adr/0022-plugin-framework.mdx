@@ -32,7 +32,7 @@ We decided to:
 
 1. **Keep "plugin" as the unified term** for both the published npm/PyPI packages in the website catalog and the runtime SDK object. No change to `PluginSourceEntry` or `src/content/plugins/index.json`. The existing `definePlugin()` function is expanded to accept the full set of top-level fields described below.
 
-2. **Use functional grouping at the top level** with four keys — `meta`, `client`, `schemas`, and `extensions` — rather than grouping by object name at the root.
+2. **Use functional grouping at the top level** with four keys — `meta`, `client`, `schemas`, and `extensions` — rather than grouping by object name at the root. Custom filters (`filters`) are an authoring-time input on `DefinePluginOptions` / `define_plugin()` and surface through the `Client` returned by `getClient()`, so they don't add a fifth top-level key on the runtime `Plugin` shape.
 
 3. **Use per-object grouping inside `schemas`** where it reflects real coupling: each object's native schema, CommonGrants schema, and bidirectional transforms are tightly coupled and change together.
 
@@ -145,16 +145,14 @@ interface ClientConfig {
   [key: string]: unknown;
 }
 
-// Client is a placeholder for the SDK's runtime client type (not shown here)
+// Client is a placeholder for the SDK's runtime client type (not shown here).
+// No `filters` key on Plugin — handled by the Client returned by getClient() (see Decision #2).
 interface Plugin {
   meta?: PluginMeta;
   getClient?: (config: ClientConfig) => Client;
   extensions?: PluginExtensions; // serializable
   schemas?: Partial<
     Record<ExtensibleSchemaName, ObjectSchemas<unknown, unknown>>
-  >;
-  filters?: Partial<
-    Record<ExtensibleSchemaName, Record<string, CustomFilterSpec>>
   >;
 }
 
@@ -193,10 +191,11 @@ interface DefinePluginOptions {
 // to the errors array rather than throwing (see Decision #7).
 function definePlugin(options: DefinePluginOptions): Plugin;
 
-// Combine multiple extension objects (e.g. from separate packages)
+// Combine multiple extension objects (e.g. from separate packages).
+// Exact signature shape (overloads, param structure) is provisional pending SDK pin in #744.
 function mergeExtensions(
-  ...extensions: PluginExtensions[],
-  onConflict: "firstWins" = "firstWins",
+  extensions: PluginExtensions[],
+  options?: { onConflict?: "error" | "firstWins" | "lastWins" }, // defaults to "error"
 ): PluginExtensions;
 
 // Handler signature matches ADR-0017 runtime conventions.
@@ -334,13 +333,13 @@ class PluginExtensions(BaseModel):
 
 ClientConfig = dict[str, Any]  # plugin authors define their own keys (auth, base_url, timeout, etc.)
 
+# No `filters` field on Plugin — handled by the Client returned by get_client() (see Decision #2).
 @dataclass
 class Plugin:
     meta: PluginMeta | None = None
     get_client: Callable[[ClientConfig], Client] | None = None
     extensions: PluginExtensions | None = None
     schemas: dict[ExtensibleSchemaName, ObjectSchemas[Any, Any]] | None = None
-    filters: dict[ExtensibleSchemaName, dict[str, CustomFilterSpec]] | None = None
 
 # All params are optional — adopters can start with only what they need and expand
 # incrementally. Unlike TypeScript, Python supports named optional params at the
@@ -367,7 +366,12 @@ def define_plugin(
     schemas: dict[ExtensibleSchemaName, ObjectSchemasInput[Any, Any]] | None = None,
     filters: dict[ExtensibleSchemaName, dict[str, CustomFilterSpec]] | None = None,
 ) -> Plugin: ...
-def merge_extensions(*extensions: PluginExtensions, on_conflict: Literal["first_wins"] = "first_wins") -> PluginExtensions: ...
+
+# Exact signature shape is provisional pending SDK pin in #744.
+def merge_extensions(
+    *extensions: PluginExtensions,
+    on_conflict: Literal["error", "firstWins", "lastWins"] = "error",
+) -> PluginExtensions: ...
 
 # Handler signature matches ADR-0017 runtime conventions.
 Handler = Callable[[Any, Any], Any]
@@ -484,7 +488,7 @@ const plugin = definePlugin({
 });
 
 // Combine extensions from multiple packages before constructing the plugin
-const merged = mergeExtensions(baseExtensions, grantsGovExtensions);
+const merged = mergeExtensions([baseExtensions, grantsGovExtensions]);
 const mergedPlugin = definePlugin({ extensions: merged });
 
 // Calling getClient() with a config object — memoized, so repeated calls return the same instance
@@ -791,7 +795,7 @@ Top-level keys are functional (`meta`, `client`, `schemas`, `extensions`). Per-o
 ```ts
 interface Plugin {
   meta?: PluginMeta;
-  client?: Client;
+  getClient?: (config: ClientConfig) => Client;
   extensions?: PluginExtensions;
   schemas?: Partial<Record<ExtensibleSchemaName, ObjectSchemas>>; // per-object grouping only here
 }
