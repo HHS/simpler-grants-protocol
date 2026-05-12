@@ -88,6 +88,15 @@ def test_structural_error_raises_with_path():
         build_transforms({"funding": {"amount": [1, 2]}}, {})
 
 
+def test_handler_with_sibling_keys_raises():
+    """build_transforms raises when a handler key has siblings in the same dict."""
+    with pytest.raises(ValueError, match="sibling keys"):
+        build_transforms({"title": {"field": "x", "extra": "literal"}}, {})
+    # Nested occurrence is also caught, and the path is reported
+    with pytest.raises(ValueError, match="nested.title"):
+        build_transforms({"nested": {"title": {"field": "x", "extra": "literal"}}}, {})
+
+
 # --- to_common transform ---
 
 
@@ -138,8 +147,12 @@ def test_exception_surfaces_as_plugin_error_not_raised():
     )
     result = to_common(SOURCE_DATA)
     assert len(result.errors) == 1
-    assert isinstance(result.errors[0], PluginError)
-    assert "handler exploded" in str(result.errors[0])
+    err = result.errors[0]
+    assert isinstance(err, PluginError)
+    assert "handler exploded" in str(err)
+    assert err.handler == "boom"
+    assert isinstance(err.cause, RuntimeError)
+    assert str(err.cause) == "handler exploded"
 
 
 # --- model_validate via common_model ---

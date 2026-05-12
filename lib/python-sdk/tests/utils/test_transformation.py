@@ -320,6 +320,17 @@ def test_string_to_number_invalid_raises(input_data):
     assert isinstance(exc_info.value.cause, ValueError)
 
 
+def test_handler_error_is_value_error():
+    """HandlerError is a subclass of ValueError for backward compat with existing callers."""
+    err = HandlerError("myHandler", ValueError("bad input"))
+    assert isinstance(err, ValueError)
+    # Callers catching ValueError continue to work; callers wanting attribution catch HandlerError
+    with pytest.raises(ValueError):
+        transform_from_mapping(
+            {"bad": "not-a-number"}, {"x": {"stringToNumber": "bad"}}
+        )
+
+
 def test_pydantic_model_instance_is_normalized():
     """transform_from_mapping accepts a Pydantic model instance and extracts fields correctly."""
 

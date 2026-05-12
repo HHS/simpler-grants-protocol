@@ -27,13 +27,16 @@ def _validate_mapping(mapping: Any, known_handlers: set[str], path: str = "") ->
     """Walk the mapping tree and raise ValueError on structural malformation.
 
     For each dict node:
-    - If a key is a known handler, the corresponding value is a runtime-only
-      handler argument and is NOT recursed into.
+    - If a key is a known handler, the node must contain ONLY that handler key.
+      The corresponding value is a runtime-only handler argument and is NOT
+      recursed into.
     - All other keys are output field names (always valid); their values are
       recursed into.
 
     Raises ValueError if any node is not a dict, string, number, boolean, or None
-    (e.g. a list where a scalar or dict is expected).
+    (e.g. a list where a scalar or dict is expected), or if a handler key appears
+    alongside sibling keys in the same dict (ambiguous — handler invocations must
+    be the sole key in their dict).
 
     Note: this function cannot detect intended-but-unknown handler invocations
     because unknown keys are indistinguishable from output field names at static
@@ -46,6 +49,15 @@ def _validate_mapping(mapping: Any, known_handlers: set[str], path: str = "") ->
         raise ValueError(
             f"Invalid mapping node at '{path}': expected dict, str, number, or bool, "
             f"got {type(mapping).__name__}"
+        )
+
+    handler_keys = [k for k in mapping if k in known_handlers]
+    if handler_keys and len(mapping) > 1:
+        label = f" at '{path}'" if path else ""
+        raise ValueError(
+            f"Invalid mapping node{label}: handler key {handler_keys[0]!r} "
+            f"cannot have sibling keys {sorted(k for k in mapping if k not in known_handlers)!r}. "
+            f"A handler invocation must be the only key in its dict."
         )
 
     for key, value in mapping.items():

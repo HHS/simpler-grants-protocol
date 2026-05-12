@@ -119,8 +119,14 @@ def string_to_number(data: dict, field_path: str) -> int | float | None:
         return float(s)
 
 
-class HandlerError(Exception):
-    """Raised when a handler function raises, carrying the handler name for attribution."""
+class HandlerError(ValueError):
+    """Raised when a handler function raises, carrying the handler name for attribution.
+
+    Extends ValueError so that existing ``except ValueError`` handlers around
+    ``transform_from_mapping``, ``dump_with_mapping``, and ``validate_with_mapping``
+    continue to work after this class was introduced.  Callers that want handler-level
+    attribution can catch ``HandlerError`` specifically (it is more derived).
+    """
 
     def __init__(self, handler: str, cause: Exception) -> None:
         super().__init__(str(cause))
