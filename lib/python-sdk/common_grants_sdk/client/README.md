@@ -1,6 +1,6 @@
 # CommonGrants HTTP Client
 
-The `common_grants_sdk.client` module provides an HTTP client for interacting with CommonGrants-compatible APIs, with built-in authentication, auto-pagination, and environment variable configuration.
+The CommonGrants HTTP Client provides a type-safe, Pythonic interface for interacting with CommonGrants Protocol-compliant APIs. It handles authentication, request/response parsing, and pagination automatically.
 
 ## Table of contents <!-- omit in toc -->
 
@@ -11,10 +11,12 @@ The `common_grants_sdk.client` module provides an HTTP client for interacting wi
   - [Opportunity methods](#opportunity-methods)
   - [Pagination](#pagination)
   - [Low-level HTTP methods](#low-level-http-methods)
+  - [Handling errors](#handling-errors)
 - [API reference](#api-reference)
   - [Client class](#client-class)
   - [Opportunities resource](#opportunities-resource)
   - [Auth class](#auth-class)
+- [See Also](#see-also)
 
 ## Quick start
 
@@ -63,6 +65,14 @@ config = Config(
 )
 client = Client(config=config, auth=Auth.api_key("my-api-key"))
 ```
+
+#### Configuration Priority
+
+Configuration values are resolved in this order (highest to lowest priority):
+
+1. Explicit parameters passed to `Config()`
+2. Environment variables
+3. Default values
 
 #### Environment variables <!-- omit in toc -->
 
