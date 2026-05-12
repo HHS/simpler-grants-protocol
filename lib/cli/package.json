@@ -59,7 +59,7 @@
     "@typespec/compiler": "catalog:",
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
-    "express": "^4.22.1",
+    "express": "^4.22.2",
     "inquirer": "^9.3.8",
     "js-yaml": "^4.1.1",
     "json-schema-merge-allof": "^0.8.1",
