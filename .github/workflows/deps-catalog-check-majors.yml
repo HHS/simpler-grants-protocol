@@ -1,0 +1,89 @@
+name: "Deps: Check Catalog Major Updates"
+
+on:
+  schedule:
+    # Weekly Monday at ~7-8am PT (15:00 UTC = 8am PDT / 7am PST)
+    - cron: "0 15 * * 1"
+  workflow_call:
+  workflow_dispatch:
+  # Smoke-test the script end-to-end on changes here (e.g. dependabot action bumps).
+  pull_request:
+    paths:
+      - .github/scripts/update-catalog-deps.sh
+      - .github/workflows/deps-catalog-check-majors.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-catalog-majors:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Check for major-version updates
+        id: check
+        run: |
+          set +e
+          ./.github/scripts/update-catalog-deps.sh --majors-only --dry-run
+          EXIT_CODE=$?
+          set -e
+          if [[ "$EXIT_CODE" -eq 2 ]]; then
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          elif [[ "$EXIT_CODE" -eq 0 ]]; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Catalog dep check (majors-only) failed with exit code $EXIT_CODE"
+            exit 1
+          fi
+
+      - name: Apply major-version updates
+        if: steps.check.outputs.has_updates == 'true'
+        run: ./.github/scripts/update-catalog-deps.sh --majors-only
+
+      - name: Open major-version draft PR
+        if: steps.check.outputs.has_updates == 'true' && github.event_name != 'pull_request'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/update-catalog-deps-majors
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          draft: true
+          title: "chore(deps-major): catalog major-version bumps — REQUIRES MANUAL REVIEW"
+          body: |
+            ## ⚠️ Major-version catalog bumps — manual review required
+
+            This is a **draft** PR opened by the weekly `deps-catalog-check-majors` workflow to surface available cross-major dependency bumps. Each one is presumed to contain breaking changes (see recent history: zod 3→4 renamed `ZodError.errors`, typescript 5→6 deprecated `baseUrl`, etc.).
+
+            ### How to handle this PR
+            1. Look at the diff to see which majors are now available.
+            2. **Cherry-pick** the major(s) you want to adopt into their own focused PR with the corresponding migration work, OR
+            3. Pull this branch locally and chip away at the migrations, then mark ready for review.
+            4. If you don't want a particular major right now, drop it from the workspace diff before merging.
+
+            CI on this PR is **expected to fail** until migration work is done. The script regenerated the lockfile with `--ignore-scripts` so the lockfile is internally consistent even though `tsc`/build steps would currently break.
+
+            ### Why this PR exists
+            The within-major auto-update PR (`chore/update-catalog-deps`) intentionally holds these back because they break the build. This draft PR exists so they don't get silently forgotten — but they need a human to drive the migration.
+
+            ### Workflow
+            This PR is re-pushed every Monday with the latest majors. Don't worry about it going stale; merge or close it on your own cadence.
+          labels: |
+            dependencies
+            DO NOT MERGE
+          commit-message: "chore(deps-major): catalog major-version bumps"
+          delete-branch: true
