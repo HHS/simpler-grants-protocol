@@ -75,6 +75,7 @@ try:
     opp = OpportunityBase.model_validate({
         "id": "not-a-uuid",
         "title": "Research Grant",
+        "description": "Funding for research projects",
         "status": {"value": "invalid-status"},
         "createdAt": "2024-01-01T00:00:00Z",
         "lastModifiedAt": "2024-01-01T00:00:00Z",
@@ -144,6 +145,7 @@ response = Paginated[OpportunityBase].model_validate({
         {
             "id": "ac201443-5480-4e36-9799-a39765225153",
             "title": "Test Opportunity",
+            "description": "A test grant opportunity",
             "status": {"value": "open"},
             "createdAt": "2025-01-01T00:00:00Z",
             "lastModifiedAt": "2025-01-01T00:00:00Z",
@@ -184,15 +186,16 @@ Other generic response schemas include `Sorted[T]` and `Filtered[T, F]`. See the
 
 | Type | Description |
 |---|---|
-| `Money` | Monetary amount with `amount` (decimal string) and `currency` (ISO 4217 code) |
+| `Money` | Monetary amount with `amount` (decimal string) and `currency` (currency code, convention: ISO 4217) |
 | `DecimalString` | Validated string representing a decimal number |
 | `Event` | Union of `SingleDateEvent`, `DateRangeEvent`, and `OtherEvent` |
 | `EventType` | Enum for event type discrimination |
 | `SingleDateEvent` | Event with a single `date` |
 | `DateRangeEvent` | Event with a `start_date` and `end_date` |
 | `OtherEvent` | Event with a custom description or recurrence |
-| `CustomField` | Flexible key-value field for custom data |
+| `CustomField` | Custom field with `name`, `field_type` (`CustomFieldType`), `value`, and optional `schema_url` and `description` |
 | `CustomFieldType` | Enum for custom field value types: `string`, `integer`, `number`, `boolean`, `array`, `object` |
+| `OppStatusOptions` | StrEnum: `OPEN`, `CLOSED`, `FORECASTED`, `CUSTOM` |
 | `ISODate` | Alias for `datetime.date` (ISO 8601 date) |
 | `ISOTime` | Alias for `datetime.time` (ISO 8601 time) |
 | `UTCDateTime` | Alias for `datetime.datetime` (UTC timestamp) |
@@ -203,8 +206,7 @@ Other generic response schemas include `Sorted[T]` and `Filtered[T, F]`. See the
 |---|---|
 | `OpportunityBase` | Core opportunity model |
 | `OppFunding` | Funding details: total amount available, min/max award, estimated award count |
-| `OppStatus` | Opportunity status with `value` and optional `description` |
-| `OppStatusOptions` | Enum: `OPEN`, `CLOSED`, `FORECASTED`, `CUSTOM` |
+| `OppStatus` | Opportunity status with `value`, optional `custom_value` (alias `customValue`, used when `value` is `CUSTOM`), and optional `description` |
 | `OppTimeline` | Key dates: `app_opens`, `app_deadline`, and other milestones |
 
 ### Response schemas

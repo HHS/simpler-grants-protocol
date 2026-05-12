@@ -33,7 +33,7 @@ from common_grants_sdk.client import Client, Auth
 from common_grants_sdk.client.config import Config
 
 # 1. Create a client
-config = Config(base_url="https://api.example.org")
+config = Config(base_url="https://api.example.org", api_key="YOUR_API_KEY")
 client = Client(config=config, auth=Auth.api_key("YOUR_API_KEY"))
 
 # 2. List opportunities
@@ -72,7 +72,7 @@ CustomOpportunity = OpportunityBase.with_custom_fields(
 )
 
 # Create a client
-config = Config(base_url="https://api.example.org")
+config = Config(base_url="https://api.example.org", api_key="YOUR_API_KEY")
 client = Client(config=config, auth=Auth.api_key("YOUR_API_KEY"))
 
 # Fetch opportunities using the extended schema
@@ -89,6 +89,7 @@ for opp in response.items:
 raw = {
     "id": "ac201443-5480-4e36-9799-a39765225153",
     "title": "Community Health Grant",
+    "description": "A grant supporting community health initiatives.",
     "status": {"value": "open"},
     "createdAt": "2025-01-01T00:00:00Z",
     "lastModifiedAt": "2025-01-01T00:00:00Z",

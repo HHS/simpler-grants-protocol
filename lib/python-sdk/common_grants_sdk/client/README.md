@@ -24,7 +24,7 @@ The CommonGrants HTTP Client provides a type-safe, Pythonic interface for intera
 from common_grants_sdk.client import Client, Auth
 from common_grants_sdk.client.config import Config
 
-config = Config(base_url="https://api.example.org")
+config = Config(base_url="https://api.example.org", api_key="YOUR_API_KEY")
 client = Client(config=config, auth=Auth.api_key("YOUR_API_KEY"))
 
 response = client.opportunities.list()
