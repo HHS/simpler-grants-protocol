@@ -487,13 +487,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--plugin",
-        default=".",
-        help="Path to plugin directory containing cg_config.py (default: current directory)",
+        nargs="+",
+        default=["."],
+        help="One or more plugin directories containing cg_config.py (default: current directory)",
     )
     args = parser.parse_args(argv)
 
-    generated_dir = generate_plugin(Path(args.plugin))
-    print(f"Generated plugin schemas at {generated_dir}")
+    for plugin_path in args.plugin:
+        generated_dir = generate_plugin(Path(plugin_path))
+        print(f"Generated plugin schemas at {generated_dir}")
     return 0
 
 

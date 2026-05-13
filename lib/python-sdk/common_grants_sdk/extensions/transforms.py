@@ -1,0 +1,182 @@
+"""build_transforms() — generates to_common/from_common callables from mapping dicts.
+
+Using this utility is optional — plugin authors may provide plain hand-written
+callables instead.
+
+Mappings are validated at call time. Custom handler names are
+registered per call only; name collisions with defaults raise at call time
+rather than silently shadowing them.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Callable
+
+from pydantic import BaseModel, ValidationError
+
+from common_grants_sdk.utils.transformation import (
+    DEFAULT_HANDLERS,
+    HandlerError,
+    transform_from_mapping,
+)
+
+from .types import Handler, PluginError, TransformResult
+
+
+def _validate_mapping(mapping: Any, known_handlers: set[str], path: str = "") -> None:
+    """Walk the mapping tree and raise ValueError on structural malformation.
+
+    For each dict node:
+    - If a key is a known handler, the node must contain ONLY that handler key.
+      The corresponding value is a runtime-only handler argument and is NOT
+      recursed into.
+    - All other keys are output field names (always valid); their values are
+      recursed into.
+
+    Raises ValueError if any node is not a dict, string, number, boolean, or None
+    (e.g. a list where a scalar or dict is expected), or if a handler key appears
+    alongside sibling keys in the same dict (ambiguous — handler invocations must
+    be the sole key in their dict).
+
+    Note: this function cannot detect intended-but-unknown handler invocations
+    because unknown keys are indistinguishable from output field names at static
+    analysis time. That detection is deferred to the full SDK.
+    """
+    if mapping is None or isinstance(mapping, (str, int, float, bool)):
+        return  # primitives and None are valid literals
+
+    if not isinstance(mapping, dict):
+        raise ValueError(
+            f"Invalid mapping node at '{path}': expected dict, str, number, or bool, "
+            f"got {type(mapping).__name__}"
+        )
+
+    handler_keys = [k for k in mapping if k in known_handlers]
+    if handler_keys and len(mapping) > 1:
+        label = f" at '{path}'" if path else ""
+        raise ValueError(
+            f"Invalid mapping node{label}: handler key {handler_keys[0]!r} "
+            f"cannot have sibling keys {sorted(k for k in mapping if k not in known_handlers)!r}. "
+            f"A handler invocation must be the only key in its dict."
+        )
+
+    for key, value in mapping.items():
+        current_path = f"{path}.{key}" if path else key
+        if key in known_handlers:
+            # Handler invocation — argument is runtime-only, do not recurse
+            continue
+        _validate_mapping(value, known_handlers, current_path)
+
+
+def build_transforms(
+    to_common_mapping: dict[str, Any],
+    from_common_mapping: dict[str, Any],
+    handlers: dict[str, Handler] | None = None,
+    common_model: type[BaseModel] | None = None,
+) -> tuple[
+    Callable[[Any], TransformResult[Any]],
+    Callable[[Any], TransformResult[Any]],
+]:
+    """Generate to_common and from_common callables from mapping dicts.
+
+    Args:
+        to_common_mapping: mapping from native source → CommonGrants.
+        from_common_mapping: mapping from CommonGrants → native source.
+        handlers: Optional additional handlers registered for this call only.
+            Keys must not collide with DEFAULT_HANDLERS (raises ValueError if they do).
+        common_model: Optional Pydantic model class to validate the to_common output
+            against. Must be the fully extended generated model class (e.g. the
+            generated Opportunity from generated/schemas.py), NOT the base class
+            (e.g. OpportunityBase). Passing a base class will silently weaken
+            validation — custom_fields will only be checked against
+            dict[str, CustomField] rather than the typed container produced by the
+            plugin's custom field declarations. When provided, model_validate is
+            called on the transform result and any ValidationErrors are appended to
+            TransformResult.errors rather than raised.
+
+            Note on result shape: when common_model is set, TransformResult.result
+            holds the validated Pydantic instance on success, or the raw transformed
+            dict on ValidationError (so callers can inspect the malformed data
+            alongside the errors). This is intentional — check TransformResult.errors
+            before consuming TransformResult.result.
+
+    Returns:
+        A (to_common, from_common) tuple. Each callable accepts a dict and returns
+        TransformResult[Any]. Failures surface as PluginError entries in
+        TransformResult.errors rather than being raised.
+
+    Raises:
+        ValueError: At call time if handler names collide with defaults,
+            or if either mapping has structural malformation.
+
+    TODO (full SDK):
+        - Validate field-path resolvability at call time (requires sample data or
+          schema introspection).
+    """
+    # Custom handler names must not shadow defaults
+    if handlers:
+        collisions = set(handlers) & set(DEFAULT_HANDLERS)
+        if collisions:
+            raise ValueError(
+                f"build_transforms: handler names collide with defaults: {sorted(collisions)}"
+            )
+
+    merged = {**DEFAULT_HANDLERS, **(handlers or {})}
+    known = set(merged)
+
+    # Validate mapping structure at call time
+    _validate_mapping(to_common_mapping, known)
+    _validate_mapping(from_common_mapping, known)
+
+    def to_common(native: Any) -> TransformResult[Any]:
+        try:
+            result = transform_from_mapping(native, to_common_mapping, handlers=merged)
+        except HandlerError as exc:
+            error = PluginError(
+                str(exc.cause),
+                path=None,
+                handler=exc.handler,
+                source_value=native,
+                cause=exc.cause,
+            )
+            return TransformResult(result={}, errors=[error])
+        except Exception as exc:
+            error = PluginError(str(exc), path=None, source_value=native, cause=exc)
+            return TransformResult(result={}, errors=[error])
+
+        if common_model is None:
+            return TransformResult(result=result, errors=[])
+
+        try:
+            validated = common_model.model_validate(result)
+            return TransformResult(result=validated, errors=[])
+        except ValidationError as exc:
+            errors = [
+                PluginError(
+                    e["msg"],
+                    path=".".join(str(loc) for loc in e["loc"]),
+                )
+                for e in exc.errors()
+            ]
+            return TransformResult(result=result, errors=errors)
+
+    def from_common(common: Any) -> TransformResult[Any]:
+        try:
+            result = transform_from_mapping(
+                common, from_common_mapping, handlers=merged
+            )
+            return TransformResult(result=result, errors=[])
+        except HandlerError as exc:
+            error = PluginError(
+                str(exc.cause),
+                path=None,
+                handler=exc.handler,
+                source_value=common,
+                cause=exc.cause,
+            )
+            return TransformResult(result={}, errors=[error])
+        except Exception as exc:
+            error = PluginError(str(exc), path=None, source_value=common, cause=exc)
+            return TransformResult(result={}, errors=[error])
+
+    return to_common, from_common

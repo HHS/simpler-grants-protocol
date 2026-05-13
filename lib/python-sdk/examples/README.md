@@ -119,6 +119,106 @@ None
 ```
 
 
+# Bidirectional transforms example
+
+This example demonstrates the plugin transform framework: mapping source system data (grants.gov format) to the CommonGrants format and back again, with a roundtrip consistency check. No API server is required — the script runs entirely offline using sample data defined in the file itself.
+
+**Step 1:** Generate the typed models for the grants.gov plugin (only needed once, or after changing `cg_config.py`):
+
+```bash
+cd lib/python-sdk
+poetry run python -m common_grants_sdk.extensions.generate --plugin examples/plugins/grants_gov
+```
+
+Or generate all example plugins at once with:
+
+```bash
+make plugins
+```
+
+**Step 2:** Run the example:
+
+```bash
+poetry run python examples/transforms.py
+```
+
+**Output Example:**
+```
+============================================================
+SOURCE DATA (grants.gov format)
+============================================================
+{
+  "data": {
+    "agency_name": "Department of Examples",
+    "created_at": "2025-01-15T09:00:00Z",
+    "last_modified_at": "2025-04-01T12:30:00Z",
+    "opportunity_description": "Funding to advance research into conservation techniques for endangered ecosystems.",
+    "opportunity_id": 12345,
+    "opportunity_number": "ABC-123-XYZ-001",
+    "opportunity_status": "posted",
+    "opportunity_title": "Research into conservation techniques",
+    "opportunity_uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "summary": {
+      "applicant_types": ["state_governments"],
+      "archive_date": "2025-05-01",
+      "award_ceiling": 100000,
+      "award_floor": 10000,
+      "forecasted_award_date": "2025-09-01",
+      "forecasted_close_date": "2025-07-15",
+      "forecasted_post_date": "2025-05-01"
+    }
+  }
+}
+
+============================================================
+to_common: grants.gov → CommonGrants
+============================================================
+Errors: none
+
+Result:
+{
+  "title": "Research into conservation techniques",
+  "status": { "value": "open", "description": "The opportunity is currently accepting applications" },
+  "funding": {
+    "minAwardAmount": { "amount": 10000, "currency": "USD" },
+    "maxAwardAmount": { "amount": 100000, "currency": "USD" }
+  },
+  ...
+}
+
+============================================================
+from_common: CommonGrants → grants.gov
+============================================================
+Errors: none
+
+Result:
+{
+  "data": {
+    "opportunity_title": "Research into conservation techniques",
+    "opportunity_status": "posted",
+    "summary": {
+      "award_floor": 10000,
+      "award_ceiling": 100000,
+      "forecasted_post_date": "2025-05-01",
+      "forecasted_close_date": "2025-07-15"
+    }
+  }
+}
+
+============================================================
+ROUNDTRIP CHECK
+============================================================
+  [PASS] title: 'Research into conservation techniques' -> 'Research into conservation techniques'
+  [PASS] status: 'posted' -> 'posted'
+  [PASS] award_floor: 10000 -> 10000
+  [PASS] award_ceiling: 100000 -> 100000
+
+Roundtrip result: ALL PASS
+```
+
+The transform mappings live in `examples/plugins/grants_gov/cg_config.py`. See the [extensions README](../common_grants_sdk/extensions/README.md#bidirectional-transforms) for a full explanation of the mapping format.
+
+
 # Plugin framework example
 
 This example uses the plugin framework to define four typed custom fields, generate static Pydantic models, and validate an API payload.

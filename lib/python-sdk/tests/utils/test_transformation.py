@@ -1,7 +1,9 @@
 import pytest
+from pydantic import BaseModel
 
 from common_grants_sdk.utils.transformation import (
     DEFAULT_HANDLERS,
+    HandlerError,
     transform_from_mapping,
 )
 
@@ -179,13 +181,15 @@ def test_extend_with_concat(input_data):
     - The handler works with both field values and constants
     """
 
-    # Patch in a concat handler for this test
     def handle_concat(data, concat_spec):
         return "".join(
             str(transform_from_mapping(data, part)) for part in concat_spec["parts"]
         )
 
-    DEFAULT_HANDLERS["concat"] = handle_concat
+    handlers = {
+        **DEFAULT_HANDLERS,
+        "concat": handle_concat,
+    }
 
     mapping = {
         "opportunity_code": {
@@ -198,7 +202,7 @@ def test_extend_with_concat(input_data):
             }
         }
     }
-    result = transform_from_mapping(input_data, mapping)
+    result = transform_from_mapping(input_data, mapping, handlers=handlers)
     assert result == {"opportunity_code": "ABC-123-XYZ-001-12345"}
 
 
@@ -231,6 +235,121 @@ def test_extend_with_type_conversion(input_data):
     }
     result = transform_from_mapping(input_data, mapping, handlers=handlers)
     assert result == {"id_str": "12345"}
+
+
+def test_const_string(input_data):
+    """Test const handler returns a fixed string value."""
+    mapping = {"currency": {"const": "USD"}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"currency": "USD"}
+
+
+def test_const_number(input_data):
+    """Test const handler returns a fixed numeric value."""
+    mapping = {"version": {"const": 1}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"version": 1}
+
+
+def test_const_ignores_source_data(input_data):
+    """Test const handler is independent of source data."""
+    mapping = {"x": {"const": "fixed"}}
+    result = transform_from_mapping({}, mapping)
+    assert result == {"x": "fixed"}
+
+
+def test_match_key_alias(input_data):
+    """Test match key (ADR-0017 canonical name) works identically to switch."""
+    mapping = {
+        "status": {
+            "match": {
+                "field": "opportunity_status",
+                "case": {"posted": "open", "archived": "closed"},
+                "default": "custom",
+            }
+        }
+    }
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"status": "open"}
+
+
+def test_number_to_string(input_data):
+    """Test numberToString handler coerces a numeric field to a string."""
+    mapping = {"floor_str": {"numberToString": "summary.award_floor"}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"floor_str": "10000"}
+
+
+def test_number_to_string_missing_field(input_data):
+    """Test numberToString returns None when the field path does not exist."""
+    mapping = {"x": {"numberToString": "nonexistent.path"}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"x": None}
+
+
+def test_string_to_number_integer(input_data):
+    """Test stringToNumber handler coerces a string integer field to int."""
+    data = {**input_data, "amount_str": "50000"}
+    result = transform_from_mapping(data, {"amount": {"stringToNumber": "amount_str"}})
+    assert result == {"amount": 50000}
+    assert isinstance(result["amount"], int)
+
+
+def test_string_to_number_float(input_data):
+    """Test stringToNumber handler coerces a decimal string to float."""
+    data = {**input_data, "rate_str": "3.14"}
+    result = transform_from_mapping(data, {"rate": {"stringToNumber": "rate_str"}})
+    assert result == {"rate": 3.14}
+    assert isinstance(result["rate"], float)
+
+
+def test_string_to_number_missing_field(input_data):
+    """Test stringToNumber returns None when the field path does not exist."""
+    mapping = {"x": {"stringToNumber": "nonexistent.path"}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"x": None}
+
+
+def test_string_to_number_invalid_raises(input_data):
+    """Test stringToNumber raises HandlerError (wrapping ValueError) for non-numeric strings."""
+
+    data = {**input_data, "bad": "not-a-number"}
+    with pytest.raises(HandlerError) as exc_info:
+        transform_from_mapping(data, {"x": {"stringToNumber": "bad"}})
+    assert exc_info.value.handler == "stringToNumber"
+    assert isinstance(exc_info.value.cause, ValueError)
+
+
+def test_handler_error_is_value_error():
+    """HandlerError is a subclass of ValueError for backward compat with existing callers."""
+    err = HandlerError("myHandler", ValueError("bad input"))
+    assert isinstance(err, ValueError)
+    # Callers catching ValueError continue to work; callers wanting attribution catch HandlerError
+    with pytest.raises(ValueError):
+        transform_from_mapping(
+            {"bad": "not-a-number"}, {"x": {"stringToNumber": "bad"}}
+        )
+
+
+def test_pydantic_model_instance_is_normalized():
+    """transform_from_mapping accepts a Pydantic model instance and extracts fields correctly."""
+
+    class Inner(BaseModel):
+        value: str
+
+    class Source(BaseModel):
+        title: str
+        nested: Inner
+
+    model = Source(title="hello", nested=Inner(value="world"))
+    result = transform_from_mapping(
+        model,
+        {
+            "out_title": {"field": "title"},
+            "out_value": {"field": "nested.value"},
+        },
+    )
+    assert result == {"out_title": "hello", "out_value": "world"}
 
 
 def test_deeply_nested(input_data):
