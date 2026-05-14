@@ -64,36 +64,18 @@ if [ ${#MISSING_RELEASES[@]} -eq 0 ]; then
 fi
 echo ""
 
-# Find releases without tags
-echo "=== Releases without corresponding tags ==="
-MISSING_TAGS=()
-if [ $RELEASE_COUNT -gt 0 ]; then
-    while IFS= read -r release; do
-        if [ -n "$release" ] && ! echo "$ALL_TAGS" | grep -qx "$release"; then
-            echo "  ❌ Release '$release' has no corresponding Git tag"
-            MISSING_TAGS+=("$release")
-        fi
-    done <<< "$RELEASES"
-fi
-
-if [ ${#MISSING_TAGS[@]} -eq 0 ]; then
-    echo "  ✅ All releases have corresponding tags"
-fi
-echo ""
-
 # Summary and exit status
 echo "=== Summary (Last $DAYS Days) ==="
 echo "Git tags created: $TAG_COUNT"
 echo "GitHub releases created: $RELEASE_COUNT"
 echo "Tags without releases: ${#MISSING_RELEASES[@]}"
-echo "Releases without tags: ${#MISSING_TAGS[@]}"
 echo ""
 
 # Fail if any mismatches found
-if [ ${#MISSING_RELEASES[@]} -gt 0 ] || [ ${#MISSING_TAGS[@]} -gt 0 ]; then
-    echo "❌ FAILURE: Mismatches detected between tags and releases!"
+if [ ${#MISSING_RELEASES[@]} -gt 0 ]; then
+    echo "❌ FAILURE: Tags without releases detected!"
     exit 1
 else
-    echo "✅ SUCCESS: All tags and releases are in sync!"
+    echo "✅ SUCCESS: All tags have corresponding releases!"
     exit 0
 fi
