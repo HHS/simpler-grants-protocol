@@ -159,6 +159,34 @@ describe("stringToNumber", () => {
   it("throws on non-numeric input", () => {
     expect(() => stringToNumber({ a: "abc" }, "a")).toThrow(/cannot convert/);
   });
+
+  it("throws on the empty string (would otherwise coerce to 0)", () => {
+    // `Number("")` returns 0 in JavaScript, which would silently turn an
+    // implicit-absent CSV cell into a real zero on the transformed side.
+    expect(() => stringToNumber({ a: "" }, "a")).toThrow(/cannot convert/);
+  });
+
+  it("throws on a whitespace-only string (post-trim empty)", () => {
+    // `Number("  ")` also coerces to 0; the trim-then-empty-check covers it.
+    expect(() => stringToNumber({ a: "   " }, "a")).toThrow(/cannot convert/);
+  });
+
+  it("accepts integer strings up to Number.MAX_SAFE_INTEGER", () => {
+    expect(stringToNumber({ a: String(Number.MAX_SAFE_INTEGER) }, "a")).toBe(
+      Number.MAX_SAFE_INTEGER
+    );
+    expect(stringToNumber({ a: String(Number.MIN_SAFE_INTEGER) }, "a")).toBe(
+      Number.MIN_SAFE_INTEGER
+    );
+  });
+
+  it("throws on integer strings beyond the safe-integer range (no silent precision loss)", () => {
+    // Without the safe-integer guard, `Number("9999999999999999999")` would
+    // return `1e19` — a different value than the input. Plugin authors
+    // round-tripping 64-bit IDs would see silent corruption. Reject instead.
+    expect(() => stringToNumber({ a: "9999999999999999999" }, "a")).toThrow(/cannot convert/);
+    expect(() => stringToNumber({ a: "-9999999999999999999" }, "a")).toThrow(/cannot convert/);
+  });
 });
 
 // ############################################################################

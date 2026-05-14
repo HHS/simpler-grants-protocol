@@ -135,22 +135,43 @@ export function numberToString(data: unknown, fieldPath: unknown): string | unde
  * string is a pure integer, otherwise fall back to a general `Number()`
  * coercion. Non-numeric inputs throw.
  *
- * Note: this is *not* a strict port of Python's `int(s)` semantics. Python's
- * `int("42.0")` raises `ValueError`; this handler falls through to `Number(s)`
- * and returns `42`. Plugin authors porting a Python handler that relies on
- * `int("42.0")` throwing should add their own decimal-rejecting regex.
+ * Divergences from Python's `int(s)` semantics, both intentional:
+ *
+ * - `int("42.0")` raises `ValueError` in Python; this handler falls through
+ *   to `Number(s)` and returns `42`. Plugin authors porting a handler that
+ *   relies on the Python behavior should add their own decimal-rejecting regex.
+ * - Python's `int()` is arbitrary precision; JavaScript numbers are IEEE 754
+ *   doubles with a safe-integer ceiling of `Number.MAX_SAFE_INTEGER`
+ *   (2^53 − 1). An integer-shaped string outside that range cannot be
+ *   represented without precision loss, so this handler throws rather than
+ *   silently returning a corrupted value. Plugin authors round-tripping
+ *   64-bit IDs should declare the field as a string (and skip this handler)
+ *   or write a custom handler that returns a `BigInt`.
+ *
+ * Empty and whitespace-only strings throw — `Number("")` and `Number("  ")`
+ * both coerce to `0` in JavaScript, which would silently turn an
+ * implicit-absent CSV cell into a real zero on the transformed side.
+ * Callers who want absent input to surface as `undefined` should null the
+ * field upstream.
  */
 export function stringToNumber(data: unknown, fieldPath: unknown): number | undefined {
   const val = getFromPath(data, String(fieldPath ?? ""));
   if (val === null || val === undefined) return undefined;
   const s = String(val).trim();
+  // Empty / whitespace-only strings would otherwise coerce to 0 via `Number()`.
+  if (s === "") {
+    throw new Error("stringToNumber: cannot convert source value to a number");
+  }
   // Integer-shaped strings parse as integers (Python `int(s)` parity);
   // anything else falls through to `Number(s)`. The integer branch is
   // intentional even though `Number(s)` would handle integer inputs too —
   // it pins the int-vs-float distinction at the call site.
   if (/^-?\d+$/.test(s)) {
     const n = Number(s);
-    if (Number.isFinite(n)) return n;
+    // Outside the safe-integer range, `Number(s)` silently loses precision
+    // (e.g. `"9999999999999999999"` → `1e19`). Reject rather than corrupt.
+    if (Number.isFinite(n) && Number.isSafeInteger(n)) return n;
+    throw new Error("stringToNumber: cannot convert source value to a number");
   }
   const f = Number(s);
   if (Number.isFinite(f)) return f;
