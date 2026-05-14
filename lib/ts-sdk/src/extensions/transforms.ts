@@ -40,6 +40,11 @@ import {
  * so adversarial mapping JSON cannot exhaust the call stack before
  * `buildTransforms()` returns.
  *
+ * Rejects nodes where a handler key has sibling keys — the runtime walker is
+ * first-key-wins, so `{ field: "x", const: "fallback" }` would silently drop
+ * `const`. Almost always an author bug; fail loud at build time. Matches
+ * Python PoC `_validate_mapping`.
+ *
  * @internal
  */
 function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = "", depth = 0): void {
@@ -57,6 +62,18 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
       `Invalid mapping node at '${path}': expected object, string, number, boolean, or null, got ${
         Array.isArray(mapping) ? "array" : t
       }`
+    );
+  }
+
+  const keys = Object.keys(mapping as Record<string, unknown>);
+  const handlerKeys = keys.filter(k => knownHandlers.has(k));
+  if (handlerKeys.length > 0 && keys.length > 1) {
+    const label = path === "" ? "" : ` at '${path}'`;
+    const siblings = keys.filter(k => k !== handlerKeys[0]).sort();
+    throw new Error(
+      `Invalid mapping node${label}: handler key '${handlerKeys[0]}' cannot have sibling keys ${JSON.stringify(
+        siblings
+      )}. A handler invocation must be the only key in its node.`
     );
   }
 

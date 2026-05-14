@@ -106,6 +106,29 @@ describe("buildTransforms — call-time validation", () => {
       })
     ).toThrow(/exceeded maximum nesting depth/);
   });
+
+  it("rejects sibling keys alongside a handler key — two handlers in one node (Python PoC parity)", () => {
+    // The runtime walker is first-key-wins, so `{ field, const }` would
+    // silently drop `const`. Almost always an author bug. Match Python's
+    // `_validate_mapping` and reject at build time.
+    expect(() =>
+      buildTransforms({
+        toCommonMapping: { value: { field: "x", const: "fallback" } },
+        fromCommonMapping: {},
+      })
+    ).toThrow(/cannot have sibling keys/);
+  });
+
+  it("rejects a handler key alongside a non-handler sibling at the same node", () => {
+    // The non-handler sibling would also be silently dropped by the runtime
+    // walker once the handler dispatches. Catch the typo early.
+    expect(() =>
+      buildTransforms({
+        toCommonMapping: { value: { field: "x", extra: "literal" } },
+        fromCommonMapping: {},
+      })
+    ).toThrow(/cannot have sibling keys/);
+  });
 });
 
 // ############################################################################
