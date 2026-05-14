@@ -10,24 +10,55 @@ import type {
   HasCustomFields,
   SchemaExtensions,
   CustomFieldSpec,
+  ObjectSchemasInput,
+  PluginMeta,
 } from "./types";
 import { EXTENSIBLE_SCHEMA_MAP } from "./types";
 import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fields";
 
 // ############################################################################
-// Public types - DefinePluginOptions, Plugin
+// Public types - DefinePluginOptions, Plugin, TransformSchemasInput
 // ############################################################################
+
+/**
+ * Per-object transform input keyed by extensible model name.
+ *
+ * Plugin authors populate this with hand-written or `buildTransforms()`-generated
+ * `toCommon` / `fromCommon` callables. Names match the Python PoC's
+ * `transform_schemas` parameter — the `transformSchemas` field on
+ * {@link DefinePluginOptions} is so named to avoid collision with the existing
+ * `Plugin.schemas` field (compiled Zod schemas); the full SDK will resolve this
+ * naming conflict per ADR-0022 (issue
+ * [#756](https://github.com/HHS/simpler-grants-protocol/issues/756)).
+ */
+// Per-entry (TNative, TCommon) pairs only meet at the `buildTransforms()`
+// boundary. `unknown` would reject legitimate caller schemas at contravariant
+// positions; the widening lives only at this dictionary storage layer.
+export type TransformSchemasInput = Partial<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Record<ExtensibleSchemaName, ObjectSchemasInput<any, any>>
+>;
 
 /**
  * Options for `definePlugin()`.
  *
- * Accepts an `extensions` property with custom field specifications.
- * Structured as an options object for forward-compatibility with future
- * properties like `namespace`.
+ * Accepts an `extensions` property with custom field specifications, plus optional
+ * `meta` and `transformSchemas` per ADR-0022. Structured as an options object for
+ * forward-compatibility with future properties like `namespace`.
  */
 export interface DefinePluginOptions<T extends SchemaExtensions = SchemaExtensions> {
   /** Custom field specifications for extensible models */
   extensions: T;
+  /** Optional plugin identity and capability declaration (ADR-0022). */
+  meta?: PluginMeta;
+  /**
+   * Optional bidirectional transform callables per extensible model.
+   *
+   * Stored as-is in the PoC (no compilation, no Zod-wrap). Full SDK will compile
+   * `ObjectSchemasInput` → `ObjectSchemas` and inject the generated `common`
+   * model per ADR-0022 Decision #6/#7.
+   */
+  transformSchemas?: TransformSchemasInput;
 }
 
 /**
@@ -35,10 +66,14 @@ export interface DefinePluginOptions<T extends SchemaExtensions = SchemaExtensio
  *
  * - `extensions` — the original `SchemaExtensions` input (preserved by reference)
  * - `schemas` — extensible schemas with custom fields applied where applicable
+ * - `meta` — plugin identity passed through from options
+ * - `transformSchemas` — author-provided transform callables passed through from options
  */
 export interface Plugin<T extends SchemaExtensions = SchemaExtensions> {
   extensions: T;
   schemas: PluginSchemas<T>;
+  meta?: PluginMeta;
+  transformSchemas?: TransformSchemasInput;
 }
 
 // ############################################################################
@@ -72,7 +107,7 @@ export interface Plugin<T extends SchemaExtensions = SchemaExtensions> {
 export function definePlugin<const T extends SchemaExtensions>(
   options: DefinePluginOptions<T>
 ): Plugin<T> {
-  const { extensions } = options;
+  const { extensions, meta, transformSchemas } = options;
   const schemas: Record<string, z.ZodTypeAny> = {};
 
   // Walk every extensible model. If the caller supplied specs for it,
@@ -91,7 +126,7 @@ export function definePlugin<const T extends SchemaExtensions>(
 
   // Cast is safe — the runtime loop mirrors the PluginSchemas<T> mapped type,
   // but TypeScript can't verify that from the dynamic Object.entries() iteration.
-  return { extensions, schemas } as Plugin<T>;
+  return { extensions, schemas, meta, transformSchemas } as Plugin<T>;
 }
 
 // ############################################################################

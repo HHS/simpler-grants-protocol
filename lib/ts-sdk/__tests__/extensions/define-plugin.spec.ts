@@ -1,6 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { definePlugin, mergeExtensions, type SchemaExtensions } from "@/extensions";
+import {
+  buildTransforms,
+  definePlugin,
+  mergeExtensions,
+  type PluginMeta,
+  type SchemaExtensions,
+  type TransformResult,
+} from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas/zod/models";
 import { CustomFieldType } from "@/constants";
 
@@ -227,6 +234,77 @@ describe("definePlugin", () => {
 
       const plugin = definePlugin({ extensions });
       expect(plugin.schemas.Opportunity).toBeDefined();
+    });
+  });
+
+  // ############################################################################
+  // ADR-0022 — meta and transformSchemas (PoC additions)
+  // ############################################################################
+
+  describe("meta", () => {
+    it("preserves meta on the returned plugin", () => {
+      const meta: PluginMeta = {
+        name: "grants.gov",
+        version: "1.0.0",
+        sourceSystem: "grants.gov",
+        capabilities: ["customFields", "transforms"],
+      };
+
+      const plugin = definePlugin({ extensions: {}, meta });
+
+      expect(plugin.meta).toBe(meta);
+    });
+
+    it("leaves meta undefined when not provided (backward compatibility)", () => {
+      const plugin = definePlugin({ extensions: {} });
+
+      expect(plugin.meta).toBeUndefined();
+    });
+  });
+
+  describe("transformSchemas", () => {
+    it("preserves transformSchemas on the returned plugin", () => {
+      const { toCommon, fromCommon } = buildTransforms({
+        toCommonMapping: { title: { field: "data.opportunity_title" } },
+        fromCommonMapping: { data: { opportunity_title: { field: "title" } } },
+      });
+
+      const plugin = definePlugin({
+        extensions: {},
+        transformSchemas: {
+          Opportunity: { toCommon, fromCommon },
+        },
+      });
+
+      expect(plugin.transformSchemas?.Opportunity?.toCommon).toBe(toCommon);
+      expect(plugin.transformSchemas?.Opportunity?.fromCommon).toBe(fromCommon);
+    });
+
+    it("invokes the stored transform callable via plugin.transformSchemas", () => {
+      const { toCommon, fromCommon } = buildTransforms({
+        toCommonMapping: { title: { field: "data.opportunity_title" } },
+        fromCommonMapping: { data: { opportunity_title: { field: "title" } } },
+      });
+
+      const plugin = definePlugin({
+        extensions: {},
+        transformSchemas: {
+          Opportunity: { toCommon, fromCommon },
+        },
+      });
+
+      const out = plugin.transformSchemas?.Opportunity?.toCommon?.({
+        data: { opportunity_title: "Hello" },
+      }) as TransformResult<{ title: string }>;
+
+      expect(out.errors).toEqual([]);
+      expect(out.result.title).toBe("Hello");
+    });
+
+    it("leaves transformSchemas undefined when not provided (backward compatibility)", () => {
+      const plugin = definePlugin({ extensions: {} });
+
+      expect(plugin.transformSchemas).toBeUndefined();
     });
   });
 });

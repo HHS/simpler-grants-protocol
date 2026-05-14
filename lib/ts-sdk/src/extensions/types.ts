@@ -160,3 +160,236 @@ export const EXTENSIBLE_SCHEMA_MAP = {
 export type SchemaExtensions = Partial<
   Record<ExtensibleSchemaName, Record<string, CustomFieldSpec>>
 >;
+
+// ############################################################################
+// Public types - Transform contract (ADR-0022 §"TypeScript implementation")
+// ############################################################################
+
+/**
+ * Features a plugin can declare in `PluginMeta.capabilities`.
+ */
+export type PluginCapability = "customFields" | "customFilters" | "transforms" | "client";
+
+/**
+ * Loose configuration object for plugin-provided HTTP clients.
+ *
+ * Mirrors the Python PoC's `ClientConfig = dict[str, Any]` parity export.
+ * The PoC does not constrain client config shape; the full SDK's `client`
+ * capability work decides the precise type (tracked alongside the rest of
+ * the transforms-bucket follow-ups).
+ */
+export type ClientConfig = Record<string, unknown>;
+
+/**
+ * Handler signature for transform mapping handlers (ADR-0017).
+ *
+ * - First arg: the source data being transformed (where field paths resolve from).
+ * - Second arg: the handler argument from the mapping spec.
+ * - Return: the transformed value.
+ *
+ * @remarks
+ * Two contracts custom-handler authors should respect:
+ *
+ * 1. **Be aware that handler return values can carry prototype-pollution
+ *    payloads.** The walker treats handler returns as opaque — it does not
+ *    descend into a handler's return value looking for nested `__proto__`
+ *    keys. As a defense in depth, `transformFromMapping` does scrub
+ *    top-level own `__proto__` keys from object handler returns before
+ *    assigning them into the surrounding output shape, so a `const` /
+ *    `field` / `match` handler whose return value is a `JSON.parse`-loaded
+ *    object with an own `__proto__` key cannot land that key on the
+ *    transform result. Built-in handlers can still return objects whose
+ *    *nested* values carry such keys; custom handlers that wrap or
+ *    construct objects from untrusted input should sanitize their own
+ *    output rather than rely on the walker.
+ *
+ * 2. **Do not throw `Error`s whose `.message` embeds source data when that
+ *    data may contain PII.** `buildTransforms()` wraps a handler exception's
+ *    message verbatim into the resulting `PluginError.message`, which is
+ *    enumerable on `Error.prototype` and rendered by `util.inspect` /
+ *    `console.log(err)` (`PluginError.toJSON()` only protects the
+ *    non-enumerable `sourceValue` and `cause` fields, and even those are
+ *    rendered by Node's default Error inspection — see the README warning).
+ *    The built-in `stringToNumber` handler follows this rule by throwing a
+ *    generic "cannot convert source value to a number" message.
+ */
+export type Handler = (data: unknown, arg: unknown) => unknown;
+
+/**
+ * Unconditional return shape for `toCommon` / `fromCommon` per ADR-0022 Decision #7.
+ *
+ * `result` is the transformed value (may be partial on handler error or validation
+ * failure). `errors` is the aggregated `PluginError` list, empty on full success.
+ *
+ * Consumers apply their own strict-vs-lenient rule — strict adopters treat any
+ * non-empty `errors` as failure; lenient adopters use `result` despite warnings
+ * and inspect `errors` for context.
+ */
+export interface TransformResult<T> {
+  result: T;
+  errors: PluginError[];
+}
+
+/**
+ * Structured transformation error per ADR-0022 Decision #9.
+ *
+ * Carries field path, handler name, source value, and underlying cause so
+ * consumers can reason about failures programmatically without parsing error text.
+ *
+ * @remarks
+ * `sourceValue` may contain PII. When populated by `buildTransforms()` it
+ * carries the entire input record passed to `toCommon` / `fromCommon` — not
+ * just the value at the failing field. To make the default safer, this class
+ * stores `sourceValue` as a non-enumerable own property and overrides
+ * `toJSON()` to emit only `name`, `message`, `path`, and `handler`. Both
+ * `JSON.stringify(err)` and any structured logger that calls `toJSON` will
+ * omit the payload; callers that need the raw value can still read
+ * `err.sourceValue` directly.
+ *
+ * On the Zod-validation path (`buildTransforms({ commonModel })`), `message`
+ * is also data-bearing: Zod's default error map embeds the received runtime
+ * value into `issue.message` (e.g. `invalid_enum_value` echoes the received
+ * value), and that string flows directly into `PluginError.message` here.
+ * Adopters whose source data may contain PII should sanitize `err.message`
+ * alongside `err.sourceValue` before logging.
+ */
+export class PluginError extends Error {
+  /** Dot-notation field path where the error occurred, if known. */
+  path?: string;
+  /** Name of the handler that raised, if applicable. */
+  handler?: string;
+  /** The source value that triggered the error (may contain PII — redact before logging). */
+  sourceValue?: unknown;
+  /** Underlying cause of the error, if any. */
+  cause?: unknown;
+
+  constructor(
+    message: string,
+    options?: {
+      path?: string;
+      handler?: string;
+      sourceValue?: unknown;
+      cause?: unknown;
+    }
+  ) {
+    super(message);
+    this.name = "PluginError";
+    this.path = options?.path;
+    this.handler = options?.handler;
+    // Store PII-bearing fields as non-enumerable so `JSON.stringify` and any
+    // logger that enumerates own properties omit them by default. Callers can
+    // still read them directly via `err.sourceValue` / `err.cause`.
+    Object.defineProperty(this, "sourceValue", {
+      value: options?.sourceValue,
+      enumerable: false,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(this, "cause", {
+      value: options?.cause,
+      enumerable: false,
+      writable: true,
+      configurable: true,
+    });
+  }
+
+  /**
+   * Serialization for `JSON.stringify` and structured loggers. Omits
+   * `sourceValue` and `cause` so PII does not leak through the default
+   * serialization path. Callers that need the raw payload should read the
+   * fields directly.
+   */
+  toJSON(): { name: string; message: string; path?: string; handler?: string } {
+    return {
+      name: this.name,
+      message: this.message,
+      path: this.path,
+      handler: this.handler,
+    };
+  }
+}
+
+/**
+ * Input type provided by plugin authors inside `DefinePluginOptions.transformSchemas`.
+ *
+ * Plugin authors supply `toCommon` and `fromCommon` as plain callables — either
+ * hand-written or generated via `buildTransforms()`. `native` is the optional Zod
+ * schema for the source format.
+ *
+ * @remarks
+ * `common` is intentionally absent here. It is injected by `definePlugin()`
+ * during compilation from `ObjectSchemasInput` → `ObjectSchemas`, resolved from
+ * the generated model classes produced by the code generator. Plugin config
+ * files cannot import from `generated/` (which is the input to generation).
+ */
+export interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
+  native?: z.ZodType<TNative>;
+  toCommon?: (native: TNative) => TransformResult<TCommon>;
+  fromCommon?: (common: TCommon) => TransformResult<TNative>;
+}
+
+/**
+ * Runtime compiled type produced by `definePlugin()` — not provided directly by authors.
+ *
+ * In the PoC, `definePlugin()` stores `ObjectSchemasInput` as-is on the returned
+ * plugin's `transformSchemas` field. Full compilation (adding `common` from the
+ * base CG model, wrapping with Zod validation) is deferred to the full SDK
+ * (ADR-0022 Decision #7, tracked under #756).
+ */
+export interface ObjectSchemas<TNative, TCommon> {
+  native: z.ZodType<TNative>;
+  common: z.ZodType<TCommon>;
+  toCommon: (native: TNative) => TransformResult<TCommon>;
+  fromCommon: (common: TCommon) => TransformResult<TNative>;
+}
+
+/**
+ * Plugin identity and capability declaration. All fields are optional.
+ */
+export interface PluginMeta {
+  /** Plugin display name (e.g. `"grants.gov"`). */
+  name?: string;
+  /** Plugin version (semver, e.g. `"1.0.0"`). */
+  version?: string;
+  /** Name of the native source system (e.g. `"grants.gov"`). */
+  sourceSystem?: string;
+  /** Features the plugin provides. */
+  capabilities?: PluginCapability[];
+}
+
+/**
+ * ADR-0017 mapping dicts for a single object, stored in the serializable
+ * extensions config (ADR-0022 Decision #6).
+ *
+ * Each direction is author-provided — `buildTransforms()` does not invert one
+ * direction into the other, because many-to-one handlers like `switch` are not
+ * reversible.
+ */
+export interface ObjectMappings {
+  toCommon?: Record<string, unknown>;
+  fromCommon?: Record<string, unknown>;
+}
+
+/**
+ * Per-object config inside the serializable `PluginExtensions.schemas` dict.
+ *
+ * `customFields` carries declarations merged by `mergeExtensions()`. `mappings`
+ * carries optional ADR-0017 declarative mappings; when present and no explicit
+ * `toCommon` / `fromCommon` is supplied in `DefinePluginOptions.transformSchemas`,
+ * `definePlugin()` will auto-invoke `buildTransforms()` on these. Deferred to
+ * the full SDK (ADR-0022 Decision #6, tracked under #756).
+ */
+export interface PluginExtensionsObjectConfig {
+  customFields?: Record<string, CustomFieldSpec>;
+  mappings?: ObjectMappings;
+}
+
+/**
+ * Serializable portion of plugin config — safe to store as JSON.
+ *
+ * Used by `mergeExtensions()` to combine declarations from multiple plugin packages.
+ */
+export interface PluginExtensions {
+  meta?: PluginMeta;
+  schemas?: Partial<Record<ExtensibleSchemaName, PluginExtensionsObjectConfig>>;
+}

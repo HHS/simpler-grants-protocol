@@ -81,7 +81,8 @@
     "example:custom-fields": "tsx examples/custom-fields.ts",
     "example:get-custom-fields": "tsx examples/get-opportunity-with-custom-fields.ts",
     "example:plugins": "tsx examples/plugins.ts",
-    "example:server": "tsx examples/mock-api-server.ts"
+    "example:server": "tsx examples/mock-api-server.ts",
+    "example:transforms": "tsx examples/transforms.ts"
   },
   "dependencies": {
     "zod": "catalog:"
