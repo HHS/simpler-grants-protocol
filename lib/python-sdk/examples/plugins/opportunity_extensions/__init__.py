@@ -7,8 +7,11 @@ from .cg_config import config
 from .generated import schemas
 
 opportunity_extensions = Plugin(
+    generated_schemas=schemas,
     extensions=config.extensions,
-    schemas=schemas,
+    meta=config.meta,
+    get_client=None,
+    schemas=None,
 )
 
 __all__ = ["opportunity_extensions", "schemas"]

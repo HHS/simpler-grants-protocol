@@ -38,6 +38,8 @@ opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Oppor
 
 opportunity = client.opportunities.get(opp_id, schema=opp)
 
+opportunity
+
 print(f"Opportunity {opp_id}:")
 print(f"  Title: {opportunity.title}")
 print(f"  ID: {opportunity.id}")

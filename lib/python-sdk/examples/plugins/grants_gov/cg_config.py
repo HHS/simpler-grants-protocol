@@ -16,6 +16,7 @@ from common_grants_sdk.extensions import (
     build_transforms,
     define_plugin,
 )
+from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 
 # ---------------------------------------------------------------------------
@@ -105,39 +106,40 @@ to_common, from_common = build_transforms(
 # Plugin config
 # ---------------------------------------------------------------------------
 
-plugin = define_plugin(
-    # extensions: SchemaExtensions — dict[str, dict[str, CustomFieldSpec]]
-    extensions={
-        "Opportunity": {
-            "legacyId": CustomFieldSpec(
-                field_type=CustomFieldType.INTEGER,
-                name="Legacy ID",
-                description="Unique identifier in legacy database",
-            ),
-            "agencyName": CustomFieldSpec(
-                field_type=CustomFieldType.STRING,
-                name="Agency",
-                description="Agency hosting the opportunity",
-            ),
-            "applicantTypes": CustomFieldSpec(
-                field_type=CustomFieldType.ARRAY,
-                name="Applicant types",
-                description="Types of applicants eligible to apply",
-            ),
-        }
-    },
+config = define_plugin(
     meta=PluginExtensionsMeta(
         name="grants-gov",
         version="0.1.0",
         sourceSystem="grants.gov",
         capabilities=["customFields", "transforms"],
     ),
-    transform_schemas={
+    extensions=PluginExtensions(
+        schemas={
+            "Opportunity": PluginExtensionsSchema(
+                customFields={
+                    "legacyId": CustomFieldSpec(
+                        field_type=CustomFieldType.INTEGER,
+                        name="Legacy ID",
+                        description="Unique identifier in legacy database",
+                    ),
+                    "agencyName": CustomFieldSpec(
+                        field_type=CustomFieldType.STRING,
+                        name="Agency",
+                        description="Agency hosting the opportunity",
+                    ),
+                    "applicantTypes": CustomFieldSpec(
+                        field_type=CustomFieldType.ARRAY,
+                        name="Applicant types",
+                        description="Types of applicants eligible to apply",
+                    ),
+                },
+            )
+        }
+    ),
+    schemas={
         "Opportunity": ObjectSchemasInput(
             to_common=to_common,
             from_common=from_common,
         )
     },
 )
-
-config = plugin

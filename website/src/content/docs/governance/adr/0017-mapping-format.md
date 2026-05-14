@@ -31,7 +31,7 @@ For example, the following mapping:
 {
   "mappings": {
     "data": {
-      "title": "data.opportunity_title",
+      "title": { "field": "data.opportunity_title" },
       "funding": {
         "minAwardAmount": {
           "amount": {
@@ -88,6 +88,25 @@ Into the following output format:
   }
 }
 ```
+
+### Field path convention
+
+Bare string values in a mapping are treated as **literals** by the transform
+engine — they are returned as-is, not interpreted as field paths.
+
+To extract a value from the source data, use the `field` handler:
+
+```json
+{ "title": { "field": "data.opportunity_title" } }
+```
+
+Not:
+
+```json
+{ "title": "data.opportunity_title" }
+```
+
+The second form sets `title` to the literal string `"data.opportunity_title"`.
 
 ### Example
 
@@ -203,7 +222,7 @@ And we want to translate this data into the following format:
 {
   "mappings": {
     "data": {
-      "title": "data.opportunity_title",
+      "title": { "field": "data.opportunity_title" },
       "status": {
         "value": {
           "match": {
@@ -236,12 +255,12 @@ And we want to translate this data into the following format:
       },
       "keyDates": {
         "appOpens": {
-          "date": "data.summary.forecasted_post_date",
+          "date": { "field": "data.summary.forecasted_post_date" },
           "name": { "const": "Open Date" },
           "description": { "const": "Applications begin being accepted" }
         },
         "appDeadline": {
-          "date": "data.summary.forecasted_close_date",
+          "date": { "field": "data.summary.forecasted_close_date" },
           "name": { "const": "Application Deadline" },
           "description": {
             "const": "Final submission deadline for all grant applications"
@@ -249,7 +268,7 @@ And we want to translate this data into the following format:
         },
         "otherDates": {
           "forecastedAwardDate": {
-            "date": "data.summary.forecasted_award_date",
+            "date": { "field": "data.summary.forecasted_award_date" },
             "name": { "const": "Forecasted award date" },
             "description": {
               "const": "When we expect to announce awards for this opportunity."
@@ -259,19 +278,19 @@ And we want to translate this data into the following format:
       },
       "customFields": {
         "legacyId": {
-          "value": "data.opportunity_id",
+          "value": { "field": "data.opportunity_id" },
           "name": { "const": "Legacy ID" },
           "type": { "const": "number" },
           "description": { "const": "Unique identifier in legacy database" }
         },
         "agencyName": {
-          "value": "data.agency_name",
+          "value": { "field": "data.agency_name" },
           "name": { "const": "Agency" },
           "type": { "const": "string" },
           "description": { "const": "Agency hosting the opportunity" }
         },
         "applicantTypes": {
-          "value": "data.summary.applicant_types",
+          "value": { "field": "data.summary.applicant_types" },
           "name": { "const": "Applicant types" },
           "type": { "const": "array" },
           "description": { "const": "Types of applicants eligible to apply" }
@@ -346,7 +365,7 @@ JSON mapping is best if:
 {
   "mappings": {
     "data": {
-      "title": "data.opportunity_title",
+      "title": { "field": "data.opportunity_title" },
       "status": {
         "value": {
           "match": {
@@ -379,12 +398,12 @@ JSON mapping is best if:
       },
       "keyDates": {
         "appOpens": {
-          "date": "data.summary.forecasted_post_date",
+          "date": { "field": "data.summary.forecasted_post_date" },
           "name": { "const": "Open Date" },
           "description": { "const": "Applications begin being accepted" }
         },
         "appDeadline": {
-          "date": "data.summary.forecasted_close_date",
+          "date": { "field": "data.summary.forecasted_close_date" },
           "name": { "const": "Application Deadline" },
           "description": {
             "const": "Final submission deadline for all grant applications"
@@ -392,7 +411,7 @@ JSON mapping is best if:
         },
         "otherDates": {
           "forecastedAwardDate": {
-            "date": "data.summary.forecasted_award_date",
+            "date": { "field": "data.summary.forecasted_award_date" },
             "name": { "const": "Forecasted award date" },
             "description": {
               "const": "When we expect to announce awards for this opportunity."
@@ -402,19 +421,19 @@ JSON mapping is best if:
       },
       "customFields": {
         "legacyId": {
-          "value": "data.opportunity_id",
+          "value": { "field": "data.opportunity_id" },
           "name": { "const": "Legacy ID" },
           "type": { "const": "number" },
           "description": { "const": "Unique identifier in legacy database" }
         },
         "agencyName": {
-          "value": "data.agency_name",
+          "value": { "field": "data.agency_name" },
           "name": { "const": "Agency" },
           "type": { "const": "string" },
           "description": { "const": "Agency hosting the opportunity" }
         },
         "applicantTypes": {
-          "value": "data.summary.applicant_types",
+          "value": { "field": "data.summary.applicant_types" },
           "name": { "const": "Applicant types" },
           "type": { "const": "array" },
           "description": { "const": "Types of applicants eligible to apply" }

@@ -23,7 +23,7 @@ from typing import Any
 # adds the script's directory (examples/) to sys.path. Import from there using
 # the `plugins.` prefix (not `examples.plugins.`) — the `examples.` prefix only
 # works in -c or interactive contexts where lib/python-sdk/ is sys.path[0].
-from plugins.grants_gov.cg_config import plugin
+from plugins.grants_gov import grants_gov as plugin
 from plugins.grants_gov.generated.schemas import Opportunity
 
 from common_grants_sdk.extensions import build_transforms
@@ -149,8 +149,8 @@ def _section(title: str) -> None:
 
 
 def main() -> None:
-    assert plugin.transform_schemas is not None
-    opp = plugin.transform_schemas["Opportunity"]
+    assert plugin.schemas is not None
+    opp = plugin.schemas["Opportunity"]
 
     _section("SOURCE DATA (grants.gov format)")
     print(json.dumps(SOURCE_DATA, indent=2))

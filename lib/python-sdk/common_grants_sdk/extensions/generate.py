@@ -7,15 +7,15 @@ import importlib.util
 import keyword
 import re
 from pathlib import Path
-from typing import Iterable, cast
+from typing import Iterable
 
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.utils.json import snake
 from .plugin import PluginConfig
-from .specs import CustomFieldSpec, SchemaExtensions
+from .specs import CustomFieldSpec
 
 # Maps extensible model names to the SDK base class they extend in generated code.
-# Add an entry here (and to SchemaExtensions) when a new model gains customFields support.
+# Add an entry here (and to PluginExtensionsSchema) when a new model gains customFields support.
 MODEL_BASE_CLASS: dict[str, str] = {
     "Opportunity": "OpportunityBase",
 }
@@ -59,11 +59,27 @@ def _load_config(config_path: Path) -> PluginConfig:
     spec.loader.exec_module(module)
 
     config = getattr(module, "config", None)
-    if config is None or not hasattr(config, "extensions"):
+    if not isinstance(config, PluginConfig):
         raise RuntimeError(
             'Plugin config must expose a "config" variable created by define_plugin()'
         )
     return config
+
+
+def _extract_custom_fields(
+    config: PluginConfig,
+) -> dict[str, dict[str, CustomFieldSpec]]:
+    """Extract custom field specs from PluginExtensions into the flat shape used by generators.
+
+    Returns an empty dict if config.extensions is None or has no schemas with custom_fields.
+    """
+    if config.extensions is None or config.extensions.schemas is None:
+        return {}
+    return {
+        obj: schema.custom_fields
+        for obj, schema in config.extensions.schemas.items()
+        if schema.custom_fields is not None
+    }
 
 
 def _normalize_identifier(name: str) -> str:
@@ -173,7 +189,9 @@ def _annotation_for_spec(spec: CustomFieldSpec, resolved_type: CustomFieldType) 
     return rendered or "Any"
 
 
-def _collect_extra_imports(extensions: SchemaExtensions) -> list[str]:
+def _collect_extra_imports(
+    custom_fields: dict[str, dict[str, CustomFieldSpec]],
+) -> list[str]:
     """Collect import lines needed for external types used as ``spec.value``.
 
     Walks all specs and returns one ``import`` line per distinct external type.
@@ -186,7 +204,7 @@ def _collect_extra_imports(extensions: SchemaExtensions) -> list[str]:
     types are imported using their ``__module__`` path directly.
 
     Args:
-        extensions: The merged ``SchemaExtensions`` from the plugin config.
+        custom_fields: The flat custom fields mapping extracted from the plugin config.
 
     Returns:
         A deduplicated list of import-statement strings in the order they were
@@ -195,7 +213,7 @@ def _collect_extra_imports(extensions: SchemaExtensions) -> list[str]:
     seen: set[tuple[str, str]] = set()
     imports: list[str] = []
 
-    for fields in cast(dict[str, dict[str, CustomFieldSpec]], extensions).values():
+    for fields in custom_fields.values():
         for spec in fields.values():
             if not isinstance(spec.value, type):
                 continue
@@ -217,7 +235,9 @@ def _collect_extra_imports(extensions: SchemaExtensions) -> list[str]:
     return imports
 
 
-def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
+def _model_blocks(
+    custom_fields: dict[str, dict[str, CustomFieldSpec]],
+) -> Iterable[str]:
     """Yield source-code blocks for every model defined in the extensions mapping.
 
     For each model, yields three blocks in dependency order:
@@ -228,7 +248,7 @@ def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
        the container.
 
     Args:
-        extensions: The merged ``SchemaExtensions`` from the plugin config.
+        custom_fields: The flat custom fields mapping extracted from the plugin config.
 
     Yields:
         Source-code strings to be joined and written into ``schemas.py``.
@@ -236,9 +256,7 @@ def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
     Raises:
         ValueError: If a model name is not present in ``MODEL_BASE_CLASS``.
     """
-    for model_name, fields in cast(
-        dict[str, dict[str, CustomFieldSpec]], extensions
-    ).items():
+    for model_name, fields in custom_fields.items():
         if model_name not in MODEL_BASE_CLASS:
             raise ValueError(
                 f'Generator does not support model "{model_name}". '
@@ -257,7 +275,7 @@ def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
                 spec=spec, resolved_type=resolved_type
             )
             # Use spec.name as the runtime display name if provided, otherwise fall back
-            # to the field key (the dict key in SchemaExtensions).
+            # to the field key (the dict key in PluginExtensionsSchema.custom_fields).
             field_name_default = spec.name or field_key
             # repr() produces a quoted string literal safe to embed directly in source code.
             description_default = repr(spec.description) if spec.description else "None"
@@ -316,16 +334,25 @@ def _model_blocks(extensions: SchemaExtensions) -> Iterable[str]:
         )
 
 
-def _render_schemas_py(extensions: SchemaExtensions) -> str:
+def _render_schemas_py(
+    custom_fields: dict[str, dict[str, CustomFieldSpec]],
+    mappings_only_objs: set[str] | None = None,
+) -> str:
     """Render the full source of the generated ``schemas.py`` file.
 
     Produces a self-contained module containing typed ``CustomField`` subclasses,
     a ``CustomFields`` container, and an extended model class for each entry in
-    ``extensions``. Also emits a ``_Schemas`` container object (attribute access
+    ``custom_fields``. Also emits a ``_Schemas`` container object (attribute access
     rather than dict lookup) and a module-level ``schemas`` instance.
 
+    For objects that only have ``mappings`` (no ``custom_fields``), the ``_Schemas``
+    object will expose the base SDK model class directly (e.g. ``schemas.Opportunity``
+    will be ``OpportunityBase``).
+
     Args:
-        extensions: The merged ``SchemaExtensions`` from the plugin config.
+        custom_fields: The flat custom fields mapping extracted from the plugin config.
+        mappings_only_objs: Set of object names that have mappings but no custom_fields.
+            These will be exposed on ``_Schemas`` as their base SDK class.
 
     Returns:
         A string of valid Python source code ready to be written to disk.
@@ -334,13 +361,26 @@ def _render_schemas_py(extensions: SchemaExtensions) -> str:
     # plugin.schemas.Opportunity rather than plugin.schemas["Opportunity"].
     # The dynamic __init__ assignment is necessary because model names aren't
     # known until generation time, so a static class body can't be used.
-    model_names = list(extensions.keys())
-    blocks = "\n\n\n".join(_model_blocks(extensions))
-    schema_assignments = "\n".join(
-        [f"        self.{name} = {name}" for name in model_names] or ["        pass"]
-    )
-    all_exports = ", ".join([f'"{name}"' for name in model_names] + ['"schemas"'])
-    extra_imports = _collect_extra_imports(extensions)
+    model_names = list(custom_fields.keys())
+    blocks = "\n\n\n".join(_model_blocks(custom_fields))
+    mappings_only: set[str] = mappings_only_objs or set()
+
+    # Build schema assignments: generated classes for custom_fields objects,
+    # base SDK classes for mappings-only objects.
+    assignments: list[str] = [f"        self.{name} = {name}" for name in model_names]
+    for obj in sorted(mappings_only):
+        if obj not in MODEL_BASE_CLASS:
+            raise ValueError(
+                f'Generator does not support model "{obj}". '
+                f"Supported models: {sorted(MODEL_BASE_CLASS)}"
+            )
+        base_class = MODEL_BASE_CLASS[obj]
+        assignments.append(f"        self.{obj} = {base_class}")
+
+    schema_assignments = "\n".join(assignments or ["        pass"])
+    all_names = model_names + sorted(mappings_only)
+    all_exports = ", ".join([f'"{name}"' for name in all_names] + ['"schemas"'])
+    extra_imports = _collect_extra_imports(custom_fields)
     extra_import_lines = ["", *extra_imports] if extra_imports else []
 
     return "\n".join(
@@ -357,9 +397,7 @@ def _render_schemas_py(extensions: SchemaExtensions) -> str:
             "from common_grants_sdk.schemas.pydantic.fields import CustomField, CustomFieldType",
             "from common_grants_sdk.schemas.pydantic.models import OpportunityBase",
             *extra_import_lines,
-            "",
-            blocks,
-            "",
+            *([blocks, ""] if blocks else []),
             "class _Schemas:",
             "    def __init__(self) -> None:",
             schema_assignments,
@@ -393,34 +431,141 @@ def _render_generated_init_py() -> str:
     )
 
 
-def _render_plugin_init_py(plugin_variable_name: str) -> str:
-    """Render the source of the plugin directory's root ``__init__.py`` file.
+def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> str:
+    """Render the source of the plugin directory's root __init__.py file.
 
-    The generated file imports ``config`` directly from ``cg_config.py`` and
-    exports a ``Plugin`` instance named after the plugin directory alongside the
-    ``schemas`` object.
-
-    Args:
-        plugin_variable_name: A valid Python identifier derived from the plugin
-            directory name (e.g. ``"opportunity_extensions"``).
-
-    Returns:
-        A string of valid Python source code ready to be written to disk.
+    Emits a fully compiled Plugin instance that includes:
+    - generated_schemas: the _Schemas object from generated/schemas.py
+    - extensions, meta: forwarded from config
+    - schemas: compiled ObjectSchemas dict (one entry per config.schemas key,
+      plus auto-generated entries for mappings-only objects)
+    - get_client: wrapped with functools.lru_cache if provided
     """
-    return "\n".join(
-        [
-            "# This file is auto-generated. Do not edit it manually — it will be overwritten",
-            "# the next time `python -m common_grants_sdk.extensions.generate` is run.",
-            "from __future__ import annotations",
-            "",
-            "from common_grants_sdk.extensions import Plugin",
-            "from .cg_config import config",
-            "from .generated import schemas",
-            "",
-            f"{plugin_variable_name} = Plugin(",
-            "    extensions=config.extensions,",
-            "    schemas=schemas,",
+    needs_functools = config.get_client is not None
+
+    # Collect the sets of objects needing ObjectSchemas entries.
+    explicit_objs: set[str] = set(config.schemas.keys()) if config.schemas else set()
+    mappings_objs: set[str] = (
+        {obj for obj, s in config.extensions.schemas.items() if s.mappings is not None}
+        if config.extensions and config.extensions.schemas
+        else set()
+    )
+    all_schema_objs: set[str] = explicit_objs | mappings_objs
+
+    needs_object_schemas = bool(all_schema_objs)
+    needs_build_transforms = bool(mappings_objs - explicit_objs)
+
+    # Build pre-plugin lines for build_transforms calls (mappings-only objects).
+    build_transforms_lines: list[str] = []
+    for obj in sorted(mappings_objs - explicit_objs):
+        build_transforms_lines += [
+            f"_{obj}_to_common, _{obj}_from_common = build_transforms(",
+            f'    to_common_mapping=config.extensions.schemas["{obj}"].mappings.to_common,',
+            f'    from_common_mapping=config.extensions.schemas["{obj}"].mappings.from_common,',
+            f"    common_model=schemas.{obj},",
             ")",
+            "",
+        ]
+
+    obj_schemas_lines: list[str] = []
+    if all_schema_objs:
+        entries: list[str] = []
+        for obj in sorted(all_schema_objs):
+            if obj in explicit_objs:
+                entries.extend(
+                    [
+                        f'        "{obj}": ObjectSchemas(',
+                        f'            native=(config.schemas["{obj}"].native or dict),',
+                        f"            common=schemas.{obj},",
+                        f'            to_common=config.schemas["{obj}"].to_common,',
+                        f'            from_common=config.schemas["{obj}"].from_common,',
+                        "        ),",
+                    ]
+                )
+            else:
+                # mappings-only object: no explicit schemas entry, use dict as native
+                entries.extend(
+                    [
+                        f'        "{obj}": ObjectSchemas(',
+                        "            native=dict,",
+                        f"            common=schemas.{obj},",
+                        f"            to_common=_{obj}_to_common,",
+                        f"            from_common=_{obj}_from_common,",
+                        "        ),",
+                    ]
+                )
+        obj_schemas_lines = [
+            "    schemas={",
+            *entries,
+            "    },",
+        ]
+    else:
+        obj_schemas_lines = ["    schemas=None,"]
+
+    get_client_lines = (
+        [
+            "    get_client=(",
+            "        functools.lru_cache(maxsize=None)(config.get_client)",
+            "        if config.get_client is not None else None",
+            "    ),",
+        ]
+        if needs_functools
+        else ["    get_client=None,"]
+    )
+
+    imports = [
+        "# This file is auto-generated. Do not edit it manually — it will be overwritten",
+        "# the next time `python -m common_grants_sdk.extensions.generate` is run.",
+        "from __future__ import annotations",
+        "",
+    ]
+    if needs_functools:
+        imports.append("import functools")
+        imports.append("")
+
+    if needs_build_transforms:
+        imports.append(
+            "from common_grants_sdk.extensions import Plugin, build_transforms"
+        )
+    else:
+        imports.append("from common_grants_sdk.extensions import Plugin")
+    if needs_object_schemas:
+        imports.append("from common_grants_sdk.extensions.types import ObjectSchemas")
+    imports += [
+        "from .cg_config import config",
+        "from .generated import schemas",
+        "",
+    ]
+
+    plugin_lines = [
+        f"{plugin_variable_name} = Plugin(",
+        "    generated_schemas=schemas,",
+        "    extensions=config.extensions,",
+        "    meta=config.meta,",
+        *get_client_lines,
+        *obj_schemas_lines,
+        ")",
+    ]
+
+    # Emit None-narrowing assertions for config.schemas and per-object transforms
+    # so that mypy can verify the types without the pydantic plugin.
+    narrow_lines: list[str] = []
+    if explicit_objs:
+        narrow_lines.append("assert config.schemas is not None")
+        for obj in sorted(explicit_objs):
+            narrow_lines.append(f'assert config.schemas["{obj}"].to_common is not None')
+            narrow_lines.append(
+                f'assert config.schemas["{obj}"].from_common is not None'
+            )
+        narrow_lines.append("")
+
+    pre_plugin = build_transforms_lines + narrow_lines  # may be empty
+
+    return "\n".join(
+        imports
+        + pre_plugin
+        + plugin_lines
+        + [
             "",
             f'__all__ = ["{plugin_variable_name}", "schemas"]',
             "",
@@ -452,6 +597,21 @@ def generate_plugin(plugin_dir: Path) -> Path:
         raise FileNotFoundError(f"Could not find config file: {config_path}")
 
     config = _load_config(config_path)
+    custom_fields = _extract_custom_fields(config)
+
+    # Determine objects that have mappings but no custom_fields — these need a
+    # pass-through entry in _Schemas pointing at the base SDK model class.
+    explicit_cf_objs: set[str] = set(custom_fields.keys())
+    mappings_only_objs: set[str] = (
+        {
+            obj
+            for obj, s in config.extensions.schemas.items()
+            if s.mappings is not None and obj not in explicit_cf_objs
+        }
+        if config.extensions and config.extensions.schemas
+        else set()
+    )
+
     generated_dir = plugin_dir / "generated"
     generated_dir.mkdir(parents=True, exist_ok=True)
 
@@ -459,12 +619,15 @@ def generate_plugin(plugin_dir: Path) -> Path:
     init_generated_py = generated_dir / "__init__.py"
     root_init_py = plugin_dir / "__init__.py"
 
-    schemas_py.write_text(_render_schemas_py(config.extensions), encoding="utf-8")
+    schemas_py.write_text(
+        _render_schemas_py(custom_fields, mappings_only_objs=mappings_only_objs),
+        encoding="utf-8",
+    )
     init_generated_py.write_text(_render_generated_init_py(), encoding="utf-8")
 
     plugin_variable_name = _normalize_identifier(plugin_dir.name)
     root_init_py.write_text(
-        _render_plugin_init_py(plugin_variable_name), encoding="utf-8"
+        _render_plugin_init_py(plugin_variable_name, config), encoding="utf-8"
     )
 
     return generated_dir

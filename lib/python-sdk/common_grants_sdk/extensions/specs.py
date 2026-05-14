@@ -1,9 +1,17 @@
 """Extension types and utilities for SDK schema customization."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Literal, Optional, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict
 
 from ..schemas.pydantic.fields.custom import CustomFieldType
+
+if TYPE_CHECKING:
+    from .types import (
+        PluginExtensions,
+        PluginExtensionsMeta,
+    )
 
 ConflictStrategy = Literal["error", "first_wins", "last_wins"]
 
@@ -19,15 +27,10 @@ class CustomFieldSpec:
 
 
 class SchemaExtensions(TypedDict, total=False):
-    """Maps extensible model names to custom field specifications
+    """Maps extensible model names to custom field specifications.
 
-    This class is the definitive list of base model names that support custom fields.
-
-    Add schemas here if they support `custom_fields` extensions
-
-
-    Args:
-        total: Determines if all keys are required or not, defaults to False which means no keys are required.
+    Retained for callers that still use the flat TypedDict form directly.
+    merge_extensions now accepts PluginExtensions instead.
     """
 
     Opportunity: dict[str, CustomFieldSpec]
@@ -51,43 +54,107 @@ def _merge_fields(
         model_fields[field_name] = spec
 
 
-def _merge_source(
-    result: dict[str, dict[str, CustomFieldSpec]],
-    source: SchemaExtensions,
+def _merge_meta(
+    current: PluginExtensionsMeta | None,
+    incoming: PluginExtensionsMeta,
     on_conflict: ConflictStrategy,
-) -> None:
-    """Merge a single source into result in place."""
-    for model_name, source_fields in cast(
-        dict[str, dict[str, CustomFieldSpec]], source
-    ).items():
-        model_fields = result.setdefault(model_name, {})
-        _merge_fields(model_name, model_fields, source_fields, on_conflict)
+) -> PluginExtensionsMeta:
+    """Merge incoming meta into current, respecting on_conflict for non-None field collisions."""
+    from .types import PluginExtensionsMeta as _PluginExtensionsMeta
+
+    if current is None:
+        return incoming
+
+    merged: dict[str, Any] = {}
+    for field_name in ("name", "version", "source_system", "capabilities"):
+        current_val = getattr(current, field_name)
+        incoming_val = getattr(incoming, field_name)
+
+        if incoming_val is None:
+            merged[field_name] = current_val
+        elif current_val is None:
+            merged[field_name] = incoming_val
+        else:
+            # Both have non-None values — apply conflict strategy
+            if on_conflict == "error":
+                raise ValueError(
+                    f'merge_extensions: duplicate meta field "{field_name}"'
+                )
+            merged[field_name] = (
+                current_val if on_conflict == "first_wins" else incoming_val
+            )
+
+    return _PluginExtensionsMeta(
+        name=merged["name"],
+        version=merged["version"],
+        sourceSystem=merged["source_system"],
+        capabilities=merged["capabilities"],
+    )
 
 
 def merge_extensions(
-    sources: list[SchemaExtensions], on_conflict: ConflictStrategy = "error"
-) -> SchemaExtensions:
-    """Merge multiple extension sources into one schema extension mapping.
+    sources: list[PluginExtensions], on_conflict: ConflictStrategy = "error"
+) -> PluginExtensions:
+    """Merge multiple PluginExtensions into one.
 
     Args:
-        sources: Ordered list of extension mappings to merge.
-        on_conflict: Duplicate field strategy per model.
-            - ``"error"``: raise on duplicate field name.
-            - ``"first_wins"``: keep first seen definition.
-            - ``"last_wins"``: overwrite with latest definition.
+        sources: Ordered list of PluginExtensions to merge.
+        on_conflict: Strategy for duplicate field names per object.
+            - "error": raise on first duplicate (default).
+            - "first_wins": keep first seen value.
+            - "last_wins": overwrite with latest value.
     """
+    from .types import ObjectMappings as _ObjectMappings
+    from .types import PluginExtensions as _PluginExtensions
+    from .types import PluginExtensionsSchema as _PluginExtensionsSchema
+
     if on_conflict not in {"error", "first_wins", "last_wins"}:
         raise ValueError(
             'merge_extensions: on_conflict must be "error", "first_wins", or "last_wins"'
         )
 
     if len(sources) == 0:
-        return {}
+        return _PluginExtensions()
     if len(sources) == 1:
         return sources[0]
 
-    result: dict[str, dict[str, CustomFieldSpec]] = {}
-    for source in sources:
-        _merge_source(result, source, on_conflict)
+    # Accumulate into plain dicts; construct PluginExtensions once at the end.
+    merged_fields: dict[str, dict[str, CustomFieldSpec]] = {}
+    merged_mappings: dict[str, _ObjectMappings] = {}
+    merged_meta: PluginExtensionsMeta | None = None
 
-    return cast(SchemaExtensions, result)
+    for source in sources:
+        if source.schemas:
+            for obj, src_schema in source.schemas.items():
+                if src_schema.custom_fields:
+                    obj_fields = merged_fields.setdefault(obj, {})
+                    _merge_fields(
+                        obj, obj_fields, src_schema.custom_fields, on_conflict
+                    )
+                if src_schema.mappings:
+                    if obj in merged_mappings:
+                        if on_conflict == "error":
+                            raise ValueError(
+                                f'merge_extensions: duplicate mappings for object "{obj}"'
+                            )
+                        if on_conflict == "first_wins":
+                            continue
+                    merged_mappings[obj] = src_schema.mappings
+        if source.meta:
+            merged_meta = _merge_meta(merged_meta, source.meta, on_conflict)
+
+    all_objs = set(merged_fields) | set(merged_mappings)
+    return _PluginExtensions(
+        meta=merged_meta,
+        schemas=(
+            {
+                obj: _PluginExtensionsSchema(
+                    customFields=merged_fields.get(obj) or None,
+                    mappings=merged_mappings.get(obj),
+                )
+                for obj in all_objs
+            }
+            if all_objs
+            else None
+        ),
+    )

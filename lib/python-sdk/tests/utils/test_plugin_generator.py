@@ -29,27 +29,54 @@ def _env_with_sdk_pythonpath() -> dict[str, str]:
 
 
 def test_define_plugin_returns_config_with_extensions():
-    extensions = {
-        "Opportunity": {
-            "program_area": CustomFieldSpec(
-                field_type=CustomFieldType.STRING,
-                description="Grant category",
+    from common_grants_sdk.extensions.types import (
+        PluginExtensions,
+        PluginExtensionsSchema,
+    )
+
+    ext = PluginExtensions(
+        schemas={
+            "Opportunity": PluginExtensionsSchema(
+                custom_fields={
+                    "program_area": CustomFieldSpec(
+                        field_type=CustomFieldType.STRING,
+                        description="Grant category",
+                    )
+                }
             )
         }
-    }
-    config = define_plugin(extensions)
+    )
+    config = define_plugin(extensions=ext)
 
     assert isinstance(config, PluginConfig)
-    assert config.extensions == extensions
+    assert config.extensions is ext
 
 
 def test_merge_extensions_merges_extensions():
-    one = {"Opportunity": {"program_area": CustomFieldSpec(field_type="string")}}
-    two = {"Opportunity": {"eligibility_type": CustomFieldSpec(field_type="array")}}
+    from common_grants_sdk.extensions.types import (
+        PluginExtensions,
+        PluginExtensionsSchema,
+    )
+
+    one = PluginExtensions(
+        schemas={
+            "Opportunity": PluginExtensionsSchema(
+                custom_fields={"program_area": CustomFieldSpec(field_type="string")}
+            )
+        }
+    )
+    two = PluginExtensions(
+        schemas={
+            "Opportunity": PluginExtensionsSchema(
+                custom_fields={"eligibility_type": CustomFieldSpec(field_type="array")}
+            )
+        }
+    )
 
     merged = merge_extensions([one, two], on_conflict="error")
 
-    assert set(merged["Opportunity"].keys()) == {"program_area", "eligibility_type"}
+    fields = merged.schemas["Opportunity"].custom_fields
+    assert set(fields.keys()) == {"program_area", "eligibility_type"}
 
 
 def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
@@ -62,23 +89,28 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
     (plugin_dir / "cg_config.py").write_text(
         "\n".join(
             [
-                "from common_grants_sdk import merge_extensions, define_plugin",
-                "from common_grants_sdk.extensions import SchemaExtensions, CustomFieldSpec",
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions import CustomFieldSpec",
+                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema",
                 "",
-                "local_extensions: SchemaExtensions = {",
-                '    "Opportunity": {',
-                '        "program_area": CustomFieldSpec(',
-                '            field_type="string",',
-                '            description="Program area",',
-                "        ),",
-                '        "eligibility_type": CustomFieldSpec(',
-                '            field_type="array",',
-                '            description="Types of eligible organizations",',
-                "        ),",
-                "    },",
-                "}",
-                "",
-                "config = define_plugin(merge_extensions([local_extensions], on_conflict='error'))",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(",
+                "        schemas={",
+                '            "Opportunity": PluginExtensionsSchema(',
+                "                custom_fields={",
+                '                    "program_area": CustomFieldSpec(',
+                '                        field_type="string",',
+                '                        description="Program area",',
+                "                    ),",
+                '                    "eligibility_type": CustomFieldSpec(',
+                '                        field_type="array",',
+                '                        description="Types of eligible organizations",',
+                "                    ),",
+                "                },",
+                "            )",
+                "        }",
+                "    ),",
+                ")",
                 "",
             ]
         ),
@@ -105,7 +137,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
     try:
         combined_module = importlib.import_module("plugins.combined")
         combined = getattr(combined_module, "combined")
-        opp_model = combined.schemas.Opportunity
+        opp_model = combined.generated_schemas.Opportunity
 
         type_hints = get_type_hints(opp_model, include_extras=False)
         assert "custom_fields" in type_hints
@@ -139,7 +171,8 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
             "nonprofit",
             "city_government",
         ]
-        assert "Opportunity" in combined.extensions
+        assert combined.extensions is not None
+        assert "Opportunity" in (combined.extensions.schemas or {})
     finally:
         sys.path.remove(str(tmp_path))
 
@@ -155,19 +188,26 @@ def test_generate_emits_import_for_pydantic_model_in_cg_config(tmp_path: Path):
                 "from pydantic import BaseModel",
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
+                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema",
                 "",
                 "class AgentInfo(BaseModel):",
                 "    name: str",
                 "    email: str",
                 "",
-                "config = define_plugin({",
-                '    "Opportunity": {',
-                '        "point_of_contact": CustomFieldSpec(',
-                '            field_type="object",',
-                "            value=AgentInfo,",
-                "        ),",
-                "    },",
-                "})",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(",
+                "        schemas={",
+                '            "Opportunity": PluginExtensionsSchema(',
+                "                custom_fields={",
+                '                    "point_of_contact": CustomFieldSpec(',
+                '                        field_type="object",',
+                "                        value=AgentInfo,",
+                "                    ),",
+                "                },",
+                "            )",
+                "        }",
+                "    ),",
+                ")",
                 "",
             ]
         ),
@@ -201,15 +241,22 @@ def test_generate_emits_import_for_external_module_type(tmp_path: Path):
                 "from datetime import datetime",
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
+                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema",
                 "",
-                "config = define_plugin({",
-                '    "Opportunity": {',
-                '        "deadline": CustomFieldSpec(',
-                '            field_type="string",',
-                "            value=datetime,",
-                "        ),",
-                "    },",
-                "})",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(",
+                "        schemas={",
+                '            "Opportunity": PluginExtensionsSchema(',
+                "                custom_fields={",
+                '                    "deadline": CustomFieldSpec(',
+                '                        field_type="string",',
+                "                        value=datetime,",
+                "                    ),",
+                "                },",
+                "            )",
+                "        }",
+                "    ),",
+                ")",
                 "",
             ]
         ),
@@ -232,6 +279,70 @@ def test_generate_emits_import_for_external_module_type(tmp_path: Path):
     assert "value: Optional[datetime]" in schemas_src
 
 
+def test_generate_auto_builds_transforms_from_mappings(tmp_path):
+    """When cg_config has extensions.schemas[obj].mappings but no explicit schemas[obj],
+    the generated __init__.py calls build_transforms() automatically."""
+    plugin_dir = tmp_path / "plugins" / "auto_transform"
+    plugin_dir.mkdir(parents=True)
+    (plugin_dir / "__init__.py").write_text("", encoding="utf-8")
+
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema, ObjectMappings",
+                "",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(",
+                "        schemas={",
+                '            "Opportunity": PluginExtensionsSchema(',
+                "                mappings=ObjectMappings(",
+                '                    to_common={"title": {"field": "data.title"}},',
+                "                    from_common={},",
+                "                ),",
+                "            )",
+                "        }",
+                "    ),",
+                ")",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    from common_grants_sdk.extensions.generate import generate_plugin
+
+    generate_plugin(plugin_dir)
+
+    init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
+    assert "build_transforms" in init_content
+    assert 'config.extensions.schemas["Opportunity"].mappings.to_common' in init_content
+    assert "_Opportunity_to_common" in init_content
+
+    # Load the generated plugin and verify schemas are populated
+    import importlib
+    import sys
+
+    # Remove any stale 'plugins' package from previous tests before inserting our path.
+    for key in list(sys.modules.keys()):
+        if key == "plugins" or key.startswith("plugins."):
+            del sys.modules[key]
+
+    sys.path.insert(0, str(tmp_path))
+    try:
+        mod = importlib.import_module("plugins.auto_transform")
+        plugin = getattr(mod, "auto_transform")
+        assert plugin.schemas is not None
+        assert "Opportunity" in plugin.schemas
+        assert plugin.schemas["Opportunity"].to_common is not None
+    finally:
+        if str(tmp_path) in sys.path:
+            sys.path.remove(str(tmp_path))
+        for key in list(sys.modules.keys()):
+            if key == "plugins" or key.startswith("plugins."):
+                del sys.modules[key]
+
+
 @pytest.mark.skipif(shutil.which("pyright") is None, reason="pyright is not installed")
 def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
     plugins_dir = tmp_path / "plugins"
@@ -244,14 +355,20 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
         "\n".join(
             [
                 "from common_grants_sdk import define_plugin",
-                "from common_grants_sdk.extensions import SchemaExtensions, CustomFieldSpec",
+                "from common_grants_sdk.extensions import CustomFieldSpec",
+                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema",
                 "",
-                "extensions: SchemaExtensions = {",
-                '    "Opportunity": {',
-                '        "eligibility_type": CustomFieldSpec(field_type="array"),',
-                "    },",
-                "}",
-                "config = define_plugin(extensions)",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(",
+                "        schemas={",
+                '            "Opportunity": PluginExtensionsSchema(',
+                "                custom_fields={",
+                '                    "eligibility_type": CustomFieldSpec(field_type="array"),',
+                "                },",
+                "            )",
+                "        }",
+                "    ),",
+                ")",
                 "",
             ]
         ),
@@ -286,7 +403,7 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
                 '    "customFields": {"eligibility_type": {"fieldType": "array", "value": ["a"]}},',
                 "}",
                 "",
-                "opp = combined.schemas.Opportunity.model_validate(payload)",
+                "opp = combined.generated_schemas.Opportunity.model_validate(payload)",
                 "if opp.custom_fields is not None and opp.custom_fields.eligibility_type is not None:",
                 "    values = opp.custom_fields.eligibility_type.value",
                 "    reveal_type(values)",
@@ -308,3 +425,55 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
     )
     assert pyright.returncode == 0, pyright.stdout + "\n" + pyright.stderr
     assert 'Type of "values" is "list[Any] | None"' in pyright.stdout
+
+
+def test_generate_get_client_is_memoized(tmp_path):
+    """get_client in generated __init__.py is wrapped with lru_cache."""
+    from common_grants_sdk.extensions.generate import generate_plugin
+
+    plugin_dir = tmp_path / "plugins" / "memoized"
+    plugin_dir.mkdir(parents=True)
+    (plugin_dir / "__init__.py").write_text("", encoding="utf-8")
+
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions.types import PluginExtensions",
+                "",
+                "def _get_client(cfg):",
+                "    # cfg is a frozenset of items, convert back to dict",
+                "    cfg_dict = dict(cfg) if isinstance(cfg, frozenset) else cfg",
+                "    # returns a new dict each call — lru_cache makes it return the same one",
+                "    return {'host': cfg_dict.get('host', 'localhost')}",
+                "",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(),",
+                "    get_client=_get_client,",
+                ")",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    generate_plugin(plugin_dir)
+
+    init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
+    assert "functools.lru_cache" in init_content
+
+    sys.path.insert(0, str(tmp_path))
+    try:
+        mod = importlib.import_module("plugins.memoized")
+        plugin = getattr(mod, "memoized")
+        assert plugin.get_client is not None
+        result_a = plugin.get_client(frozenset({"host": "example.com"}.items()))
+        result_b = plugin.get_client(frozenset({"host": "example.com"}.items()))
+        assert (
+            result_a is result_b
+        ), "lru_cache should return the same instance for the same args"
+    finally:
+        sys.path.remove(str(tmp_path))
+        for key in list(sys.modules.keys()):
+            if "memoized" in key:
+                del sys.modules[key]
