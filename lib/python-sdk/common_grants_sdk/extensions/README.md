@@ -49,7 +49,7 @@ Here are some key concepts that are used to define custom fields and plugins tha
 | **`PluginExtensionsMeta`**        | Optional metadata attached to a plugin: `name`, `version`, `source_system`, and `capabilities` (e.g. `["customFields", "transforms"]`).                                                                     |
 | **`build_transforms()`**| Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Each callable accepts a data dict and returns a `TransformResult`.                                                              |
 | **`TransformResult`**   | A dataclass `(result: dict, errors: list[PluginError])` returned by each transform callable. Errors are non-fatal — a partial result is always returned alongside any errors.                               |
-| **`ObjectSchemasInput`**| Bundles a `to_common` and `from_common` callable for a single object type. Passed to `define_plugin()` via the `transform_schemas` parameter.                                                               |
+| **`ObjectSchemasInput`**| Bundles a `to_common` and `from_common` callable for a single object type. Passed to `define_plugin()` via the `schemas` parameter.                                                               |
 
 
 
@@ -447,13 +447,15 @@ Plugins can define bidirectional mappings between a source system's native data 
 
 ### Defining transforms
 
-Use `build_transforms()` to compile a pair of mapping dicts into `(to_common, from_common)` callables, then pass them to `define_plugin()` via `transform_schemas`:
+Use `build_transforms()` to compile a pair of mapping dicts into `(to_common, from_common)` callables, then pass them to `define_plugin()` via `schemas`:
 
 ```python
 from common_grants_sdk.extensions import (
     CustomFieldSpec,
     ObjectSchemasInput,
+    PluginExtensions,
     PluginExtensionsMeta,
+    PluginExtensionsSchema,
     build_transforms,
     define_plugin,
 )
@@ -494,21 +496,25 @@ to_common, from_common = build_transforms(
 )
 
 plugin = define_plugin(
-    extensions={
-        "Opportunity": {
-            "legacyId": CustomFieldSpec(
-                field_type=CustomFieldType.INTEGER,
-                description="Unique identifier in legacy database",
-            ),
-        }
-    },
-    meta=PluginExtensionsMeta(
-        name="my-system",
-        version="0.1.0",
-        source_system="my-system.example.gov",
-        capabilities=["customFields", "transforms"],
+    extensions=PluginExtensions(
+        meta=PluginExtensionsMeta(
+            name="my-system",
+            version="0.1.0",
+            source_system="my-system.example.gov",
+            capabilities=["customFields", "transforms"],
+        ),
+        schemas={
+            "Opportunity": PluginExtensionsSchema(
+                custom_fields={
+                    "legacyId": CustomFieldSpec(
+                        field_type=CustomFieldType.INTEGER,
+                        description="Unique identifier in legacy database",
+                    ),
+                }
+            )
+        },
     ),
-    transform_schemas={
+    schemas={
         "Opportunity": ObjectSchemasInput(
             to_common=to_common,
             from_common=from_common,
@@ -552,10 +558,10 @@ Custom handlers are merged with the defaults; they cannot override built-in hand
 
 ### Using transforms
 
-The compiled callables are stored on the plugin's `transform_schemas` dict, keyed by object name. Each callable takes a data dict and returns a `TransformResult`:
+The compiled callables are stored on the plugin's `schemas` dict, keyed by object name. Each callable takes a data dict and returns a `TransformResult`:
 
 ```python
-opp_transforms = plugin.transform_schemas["Opportunity"]
+opp_transforms = plugin.schemas["Opportunity"]
 
 # Source system → CommonGrants
 result = opp_transforms.to_common(native_data)

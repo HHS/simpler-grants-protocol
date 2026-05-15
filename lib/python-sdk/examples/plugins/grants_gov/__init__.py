@@ -24,6 +24,7 @@ grants_gov = Plugin(
             from_common=config.schemas["Opportunity"].from_common,
         ),
     },
+    filters=config.filters,
 )
 
 __all__ = ["grants_gov", "schemas"]

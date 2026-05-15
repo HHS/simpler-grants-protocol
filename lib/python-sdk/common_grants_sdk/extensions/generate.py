@@ -544,6 +544,7 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> s
         "    meta=config.meta,",
         *get_client_lines,
         *obj_schemas_lines,
+        "    filters=config.filters,",
         ")",
     ]
 
@@ -611,6 +612,30 @@ def generate_plugin(plugin_dir: Path) -> Path:
         if config.extensions and config.extensions.schemas
         else set()
     )
+
+    # Validate that auto-generated transform objects have both mapping directions.
+    # Auto-generated objects: have mappings in extensions.schemas but no explicit
+    # to_common/from_common in config.schemas.
+    if config.extensions and config.extensions.schemas:
+        explicit_schema_objs: set[str] = (
+            set(config.schemas.keys()) if config.schemas else set()
+        )
+        ext_schemas = config.extensions.schemas
+        for obj, schema in ext_schemas.items():
+            if schema.mappings is None or obj in explicit_schema_objs:
+                continue
+            if schema.mappings.to_common is None:
+                raise ValueError(
+                    f'Plugin object "{obj}": mappings.to_common is required when '
+                    f"auto-generating transforms. Either provide a to_common mapping "
+                    f"or pass an explicit to_common callable via schemas['{obj}']."
+                )
+            if schema.mappings.from_common is None:
+                raise ValueError(
+                    f'Plugin object "{obj}": mappings.from_common is required when '
+                    f"auto-generating transforms. Either provide a from_common mapping "
+                    f"or pass an explicit from_common callable via schemas['{obj}']."
+                )
 
     generated_dir = plugin_dir / "generated"
     generated_dir.mkdir(parents=True, exist_ok=True)

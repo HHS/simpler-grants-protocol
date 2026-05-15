@@ -477,3 +477,117 @@ def test_generate_get_client_is_memoized(tmp_path):
         for key in list(sys.modules.keys()):
             if "memoized" in key:
                 del sys.modules[key]
+
+
+def test_generate_explicit_transforms(tmp_path):
+    """When cg_config has config.schemas with explicit to_common/from_common,
+    the generated __init__.py emits ObjectSchemas with the supplied callables."""
+    from common_grants_sdk.extensions.generate import generate_plugin
+
+    plugin_dir = tmp_path / "plugins" / "explicit_tf"
+    plugin_dir.mkdir(parents=True)
+    (plugin_dir / "__init__.py").write_text("", encoding="utf-8")
+
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions.types import (",
+                "    ObjectSchemasInput, PluginExtensions, PluginExtensionsSchema,",
+                "    TransformResult,",
+                ")",
+                "from common_grants_sdk.extensions import CustomFieldSpec",
+                "",
+                "def _to_common(native):",
+                "    return TransformResult(result={'title': native.get('name', '')}, errors=[])",
+                "",
+                "def _from_common(common):",
+                "    return TransformResult(result={'name': common.get('title', '')}, errors=[])",
+                "",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(",
+                "        schemas={",
+                '            "Opportunity": PluginExtensionsSchema(',
+                "                custom_fields={",
+                '                    "legacyId": CustomFieldSpec(field_type="integer"),',
+                "                },",
+                "            )",
+                "        }",
+                "    ),",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            to_common=_to_common,",
+                "            from_common=_from_common,",
+                "        )",
+                "    },",
+                ")",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    generate_plugin(plugin_dir)
+
+    init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
+    # Explicit transforms use config.schemas directly, not build_transforms
+    assert "build_transforms" not in init_content
+    assert 'config.schemas["Opportunity"].to_common' in init_content
+    assert 'config.schemas["Opportunity"].from_common' in init_content
+    assert "ObjectSchemas" in init_content
+
+    # Load and verify the plugin works end-to-end
+    sys.path.insert(0, str(tmp_path))
+    try:
+        mod = importlib.import_module("plugins.explicit_tf")
+        plugin = getattr(mod, "explicit_tf")
+        assert plugin.schemas is not None
+        assert "Opportunity" in plugin.schemas
+        opp_schemas = plugin.schemas["Opportunity"]
+        result = opp_schemas.to_common({"name": "Test Grant"})
+        assert result.result == {"title": "Test Grant"}
+        assert result.errors == []
+    finally:
+        if str(tmp_path) in sys.path:
+            sys.path.remove(str(tmp_path))
+        for key in list(sys.modules.keys()):
+            if "explicit_tf" in key or key == "plugins":
+                del sys.modules[key]
+
+
+def test_generate_raises_on_missing_mapping_direction(tmp_path):
+    """generate_plugin raises ValueError when a mappings-only object is missing
+    one of its mapping directions (to_common or from_common is None)."""
+    from common_grants_sdk.extensions.generate import generate_plugin
+
+    plugin_dir = tmp_path / "bad_plugin"
+    plugin_dir.mkdir(parents=True)
+
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions.types import (",
+                "    ObjectMappings, PluginExtensions, PluginExtensionsSchema,",
+                ")",
+                "",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(",
+                "        schemas={",
+                '            "Opportunity": PluginExtensionsSchema(',
+                "                mappings=ObjectMappings(",
+                '                    to_common={"title": {"field": "data.title"}},',
+                "                    # from_common intentionally omitted (None)",
+                "                ),",
+                "            )",
+                "        }",
+                "    ),",
+                ")",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="from_common.*required"):
+        generate_plugin(plugin_dir)

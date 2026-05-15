@@ -12,6 +12,7 @@ opportunity_extensions = Plugin(
     meta=config.meta,
     get_client=None,
     schemas=None,
+    filters=config.filters,
 )
 
 __all__ = ["opportunity_extensions", "schemas"]

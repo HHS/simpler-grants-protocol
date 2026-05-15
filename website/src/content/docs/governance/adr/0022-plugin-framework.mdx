@@ -40,7 +40,7 @@ We decided to:
 
 5. **Make all top-level Plugin fields optional** so adopters can publish a plugin that provides only the features they need — for example, custom fields only — and expand to include transforms, client config, or additional schemas incrementally over time.
 
-6. **Plugin authors provide `toCommon` / `fromCommon` as functions; mappings are one way to generate them.** The SDK exposes `buildTransforms()` / `build_transforms()` as a public utility wrapping the existing mapping runtimes. `PluginExtensions.schemas.<Object>` gains an optional `mappings` key carrying JSON-safe `toCommon` / `fromCommon` mapping objects; when those are declared and no explicit transform is supplied in `schemas.<Object>`, `definePlugin()` invokes `buildTransforms()` automatically. Mappings for each direction are author-provided — `buildTransforms()` does not invert one direction into the other, because many-to-one handlers like `switch` are not reversible.
+6. **Plugin authors provide `toCommon` / `fromCommon` as functions; mappings are one way to generate them.** The SDK exposes `buildTransforms()` / `build_transforms()` as a public utility wrapping the existing mapping runtimes. `PluginExtensions.schemas.<Object>` gains an optional `mappings` key carrying JSON-safe `toCommon` / `fromCommon` mapping objects; when those are declared and no explicit transform is supplied in `schemas.<Object>`, the SDK invokes `buildTransforms()` automatically. In TypeScript this happens inside `definePlugin()`; in Python it happens inside the code generator (`generate.py`) at generation time, emitting a `build_transforms()` call into the generated `__init__.py`. Both mapping directions must be provided explicitly — `buildTransforms()` / `build_transforms()` does not invert one direction into the other, because many-to-one handlers like `switch` are not reversible.
 
 7. **`toCommon` / `fromCommon` return a `TransformResult<T>` of `{ result, errors }` unconditionally; mapping definitions are validated at `buildTransforms()` call time.** Partial failure is routine for cross-schema transforms — field handlers can emit warnings that do not invalidate a record — so the transform surface is safe by default rather than throwing. Runtime schema validation (Zod `.parse()` / Pydantic `model_validate()`) surfaces as entries in `errors` rather than thrown exceptions. In the current PoC, this validation is opt-in at the `buildTransforms()` call site via the `commonModel` / `common_model` parameter — when supplied, validation runs inside `toCommon` against the fully extended generated schema. In the full SDK, `definePlugin()` will additionally inject validation when auto-generating transforms from `extensions.schemas.<Object>.mappings`. Plugin authors using hand-written transforms are responsible for their own validation. Consumers apply their own rule for what counts as success — strict adopters treat any non-empty `errors` as failure, lenient adopters tolerate warnings. Mappings passed to `buildTransforms()` are checked at the call site, failing fast on structural errors, unknown handlers, or unresolvable field paths.
 
@@ -51,11 +51,14 @@ We decided to:
 The resulting Plugin shape:
 
 ```
-plugin.meta        // name, version, sourceSystem, capabilities
-plugin.getClient   // (config: ClientConfig) => Client; memoized by definePlugin()
-plugin.extensions  // serializable; used by mergeExtensions()
-plugin.schemas.<ObjectName> = { native, common, toCommon, fromCommon }
+plugin.meta                      // name, version, sourceSystem, capabilities
+plugin.get_client                // (config: ClientConfig) => Client; memoized by the code generator
+plugin.extensions                // serializable; used by merge_extensions()
+plugin.generated_schemas.<Name>  // generated Pydantic model class (e.g. plugin.generated_schemas.Opportunity)
+plugin.schemas["<Name>"]         // { native, common, to_common, from_common } — bidirectional transforms
 ```
+
+**Python note:** In the Python SDK, `define_plugin()` returns a `PluginConfig` (build-time input) rather than a fully compiled `Plugin`. The code generator (`generate.py`) compiles `PluginConfig → Plugin` by injecting the generated model classes as the `common` schema, wrapping `get_client` with `functools.lru_cache`, and auto-generating `build_transforms()` calls for any objects that have `extensions.schemas[obj].mappings` but no explicit `schemas[obj]` entry. This split is necessary because `cg_config.py` cannot import from `generated/` — it is the input to code generation.
 
 ### Example interface
 
@@ -292,18 +295,9 @@ class CustomFilterSpec:
 
 PluginCapability = Literal['customFields', 'customFilters', 'transforms', 'client']
 
-class PluginMeta(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
-    name: str
-    version: str | None = None  # optional; if omitted, define_plugin() infers it from the package's pyproject.toml / importlib.metadata
-    source_system: str = Field(alias='sourceSystem')
-    capabilities: list[PluginCapability] | None = None
-
-# Equivalent to TypeScript's Partial<PluginMeta>. Defined as a separate model
-# rather than reusing PluginMeta because Pydantic does not have a built-in Partial.
-# Note: if PluginMeta gains new required fields, this class must be updated manually.
-# Drift can be caught with: assert PluginMeta.model_fields.keys() == PluginExtensionsMeta.model_fields.keys()
+# PluginExtensionsMeta is used for both Plugin.meta (top-level plugin identity) and
+# PluginExtensions.meta (serializable meta in the extensions JSON object). All fields
+# are optional at the type level; plugins should populate name and source_system.
 class PluginExtensionsMeta(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -333,44 +327,63 @@ class PluginExtensions(BaseModel):
 
 ClientConfig = dict[str, Any]  # plugin authors define their own keys (auth, base_url, timeout, etc.)
 
-# No `filters` field on Plugin — handled by the Client returned by get_client() (see Decision #2).
+# Runtime plugin container — assembled by the code generator (generate.py) from
+# the generated model classes and a compiled PluginConfig. Plugin authors do not
+# construct this directly; it is emitted into the plugin's __init__.py.
+#
+# generated_schemas: typed _Schemas object with attribute access to generated
+#     Pydantic model classes (e.g. plugin.generated_schemas.Opportunity).
+# schemas: compiled ObjectSchemas dict for bidirectional transforms
+#     (e.g. plugin.schemas["Opportunity"].to_common(...)). Distinct from generated_schemas.
 @dataclass
-class Plugin:
-    meta: PluginMeta | None = None
-    get_client: Callable[[ClientConfig], Client] | None = None
+class Plugin(Generic[T]):
+    generated_schemas: T
     extensions: PluginExtensions | None = None
-    schemas: dict[ExtensibleSchemaName, ObjectSchemas[Any, Any]] | None = None
+    meta: PluginExtensionsMeta | None = None
+    get_client: Callable[[ClientConfig], Any] | None = None
+    schemas: dict[str, ObjectSchemas[Any, Any]] | None = None
+    filters: dict[str, Any] | None = None
+
+# Build-time config — produced by define_plugin(), consumed by generate.py.
+#
+# Compilation from PluginConfig → Plugin (injecting the common model classes from
+# generated/, wrapping get_client with functools.lru_cache) happens inside
+# generate.py at code-generation time, not at define_plugin() call time. This split
+# is necessary in Python because cg_config.py cannot import from generated/ — it is
+# the input to code generation.
+@dataclass(frozen=True)
+class PluginConfig:
+    extensions: PluginExtensions | None = None
+    meta: PluginExtensionsMeta | None = None
+    schemas: dict[str, ObjectSchemasInput[Any, Any]] | None = None
+    get_client: Callable[[ClientConfig], Any] | None = None
+    filters: dict[str, Any] | None = None
 
 # All params are optional — adopters can start with only what they need and expand
 # incrementally. Unlike TypeScript, Python supports named optional params at the
 # function root, so no DefinePluginOptions wrapper object is needed.
 #
-# define_plugin compiles inputs into a Plugin by:
+# define_plugin stores inputs as-is in a PluginConfig. The code generator
+# (generate.py) then compiles PluginConfig → Plugin by:
 #   - extending the base CommonGrants model with any declared custom_fields → common
-#   - native defaults to dict[str, Any] if omitted (extensions is JSON-safe; runtime
-#     Pydantic models cannot be included)
-#   - wrapping get_client with memoization so the same Client instance is returned
-#     for equivalent configs automatically
+#   - native defaults to dict[str, Any] if omitted
+#   - wrapping get_client with functools.lru_cache for memoization
 #
 # to_common / from_common may be plain hand-written callables, generated via
-# build_transforms() and passed in schemas, or auto-generated by define_plugin()
+# build_transforms() and passed in schemas, or auto-generated by the code generator
 # itself — when extensions.schemas[obj].mappings is declared and schemas[obj] provides
-# no explicit transform, define_plugin() invokes build_transforms() internally.
-# All transforms return TransformResult[T]; define_plugin() validates the result field
-# at runtime with model_validate and appends any validation failures to the errors
-# list rather than raising (see Decision #7).
+# no explicit transform, generate.py invokes build_transforms() in the emitted code.
 def define_plugin(
-    meta: PluginMeta | None = None,
-    get_client: Callable[[ClientConfig], Client] | None = None,
+    meta: PluginExtensionsMeta | None = None,
+    get_client: Callable[[ClientConfig], Any] | None = None,
     extensions: PluginExtensions | None = None,
-    schemas: dict[ExtensibleSchemaName, ObjectSchemasInput[Any, Any]] | None = None,
-    filters: dict[ExtensibleSchemaName, dict[str, CustomFilterSpec]] | None = None,
-) -> Plugin: ...
+    schemas: dict[str, ObjectSchemasInput[Any, Any]] | None = None,
+    filters: dict[str, Any] | None = None,
+) -> PluginConfig: ...
 
-# Exact signature shape is provisional pending SDK pin in #744.
 def merge_extensions(
-    *extensions: PluginExtensions,
-    on_conflict: Literal["error", "firstWins", "lastWins"] = "error",
+    sources: list[PluginExtensions],
+    on_conflict: Literal["error", "first_wins", "last_wins"] = "error",
 ) -> PluginExtensions: ...
 
 # Handler signature matches ADR-0017 runtime conventions.
@@ -531,7 +544,7 @@ to_common, from_common = build_transforms(
 )
 
 plugin = define_plugin(
-    meta=PluginMeta(name='grants-gov-plugin', version='1.0.0', source_system='grants.gov'),  # source_system serializes as 'sourceSystem' in JSON
+    meta=PluginExtensionsMeta(name='grants-gov-plugin', version='1.0.0', source_system='grants.gov'),  # source_system serializes as 'sourceSystem' in JSON
     # define_plugin memoizes get_client — the same Client is returned for equivalent configs.
     get_client=lambda config: Client(config=Config(
         base_url=config.get('base_url', 'https://api.grants.gov'),
@@ -561,7 +574,7 @@ plugin = define_plugin(
 
 
 # Combine extensions from multiple packages before constructing the plugin
-merged = merge_extensions(base_extensions, grants_gov_extensions)
+merged = merge_extensions([base_extensions, grants_gov_extensions])
 merged_plugin = define_plugin(extensions=merged)
 
 # Calling get_client() with a config dict — memoized, so repeated calls return the same instance
@@ -647,7 +660,7 @@ print(grants_gov_plugin.meta.capabilities)    # ["customFields", "transforms", "
 ### Consequences
 
 - **Positive consequences**
-  - Client stays singular — `getClient()` is memoized by `definePlugin()`, so one source system always produces one `Client` instance regardless of how many times `getClient()` is called
+  - Client stays singular — `getClient()` / `get_client()` is memoized (in TypeScript by `definePlugin()`; in Python by the code generator wrapping it with `functools.lru_cache`), so one source system always produces one `Client` instance regardless of how many times it is called
   - Top-level surface (`meta`, `client`, `schemas`, `extensions`) is short, closed, and stable — adding protocol objects adds a key under `schemas` only
   - Dependency injection works along functional lines: pass `getClient`, pass `Schemas`, pass `Extensions` as coherent units without needing to reassemble from per-object branches
   - `mergeExtensions()` / `merge_extensions()` operates on flat, serializable data at the root, not on deeply nested per-object branches
