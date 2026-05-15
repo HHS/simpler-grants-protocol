@@ -1,5 +1,7 @@
 """Tests for OpportunityBase.with_custom_fields()."""
 
+from typing import Any
+
 import pytest
 
 from common_grants_sdk.extensions import CustomFieldSpec
@@ -16,7 +18,7 @@ from common_grants_sdk.schemas.pydantic.models.opp_base import OpportunityBase
 class _Schemas:
     """Minimal schemas container that mirrors the generated _Schemas class."""
 
-    pass
+    Opportunity: ObjectSchemas[Any, Any]
 
 
 def _make_plugin(
