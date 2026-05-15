@@ -15,7 +15,7 @@ from .plugin import PluginConfig
 from .specs import CustomFieldSpec
 
 # Maps extensible model names to the SDK base class they extend in generated code.
-# Add an entry here (and to PluginExtensionsSchema) when a new model gains customFields support.
+# Add an entry here when a new model gains customFields support.
 MODEL_BASE_CLASS: dict[str, str] = {
     "Opportunity": "OpportunityBase",
 }
