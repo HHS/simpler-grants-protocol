@@ -365,9 +365,15 @@ def _render_schemas_py(
     blocks = "\n\n\n".join(_model_blocks(custom_fields))
     mappings_only: set[str] = mappings_only_objs or set()
 
-    # Build schema assignments: generated classes for custom_fields objects,
-    # base SDK classes for mappings-only objects.
-    assignments: list[str] = [f"        self.{name} = {name}" for name in model_names]
+    # Build schema assignments: each attribute is an ObjectSchemas instance so
+    # callers get a unified interface (plugin.schemas.Opportunity.common for the
+    # model class, .to_common/.from_common for transforms).
+    # to_common/from_common default to None here; root __init__.py injects the
+    # real callables for any object that has transforms configured.
+    assignments: list[str] = [
+        f"        self.{name} = ObjectSchemas(native=dict, common={name}, to_common=None, from_common=None)"
+        for name in model_names
+    ]
     for obj in sorted(mappings_only):
         if obj not in MODEL_BASE_CLASS:
             raise ValueError(
@@ -375,7 +381,9 @@ def _render_schemas_py(
                 f"Supported models: {sorted(MODEL_BASE_CLASS)}"
             )
         base_class = MODEL_BASE_CLASS[obj]
-        assignments.append(f"        self.{obj} = {base_class}")
+        assignments.append(
+            f"        self.{obj} = ObjectSchemas(native=dict, common={base_class}, to_common=None, from_common=None)"
+        )
 
     schema_assignments = "\n".join(assignments or ["        pass"])
     all_names = model_names + sorted(mappings_only)
@@ -393,6 +401,7 @@ def _render_schemas_py(
             "",
             "from pydantic import ConfigDict, Field",
             "",
+            "from common_grants_sdk.extensions.types import ObjectSchemas",
             "from common_grants_sdk.schemas.pydantic.base import CommonGrantsBaseModel",
             "from common_grants_sdk.schemas.pydantic.fields import CustomField, CustomFieldType",
             "from common_grants_sdk.schemas.pydantic.models import OpportunityBase",
@@ -434,73 +443,54 @@ def _render_generated_init_py() -> str:
 def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> str:
     """Render the source of the plugin directory's root __init__.py file.
 
-    Emits a fully compiled Plugin instance that includes:
-    - generated_schemas: the _Schemas object from generated/schemas.py
-    - extensions, meta: forwarded from config
-    - schemas: compiled ObjectSchemas dict (one entry per config.schemas key,
-      plus auto-generated entries for mappings-only objects)
+    Emits a fully compiled Plugin instance. Transform callables are injected
+    into the _Schemas object (from generated/schemas.py) before Plugin is
+    constructed, so plugin.schemas.Opportunity.to_common etc. are populated.
     - get_client: wrapped with functools.lru_cache if provided
     """
     needs_functools = config.get_client is not None
 
-    # Collect the sets of objects needing ObjectSchemas entries.
+    # Collect the sets of objects needing transform injection.
     explicit_objs: set[str] = set(config.schemas.keys()) if config.schemas else set()
     mappings_objs: set[str] = (
         {obj for obj, s in config.extensions.schemas.items() if s.mappings is not None}
         if config.extensions and config.extensions.schemas
         else set()
     )
-    all_schema_objs: set[str] = explicit_objs | mappings_objs
 
-    needs_object_schemas = bool(all_schema_objs)
     needs_build_transforms = bool(mappings_objs - explicit_objs)
 
-    # Build pre-plugin lines for build_transforms calls (mappings-only objects).
-    build_transforms_lines: list[str] = []
+    # Build pre-plugin lines: inject transforms into the _Schemas object before
+    # constructing Plugin. schemas.py initialises each ObjectSchemas with
+    # to_common=None/from_common=None; we mutate those attrs here.
+    inject_lines: list[str] = []
+
+    # Mappings-only objects: call build_transforms() then inject results.
     for obj in sorted(mappings_objs - explicit_objs):
-        build_transforms_lines += [
+        inject_lines += [
             f"_{obj}_to_common, _{obj}_from_common = build_transforms(",
             f'    to_common_mapping=config.extensions.schemas["{obj}"].mappings.to_common,',
             f'    from_common_mapping=config.extensions.schemas["{obj}"].mappings.from_common,',
-            f"    common_model=schemas.{obj},",
+            f"    common_model=schemas.{obj}.common,",
             ")",
+            f"schemas.{obj}.to_common = _{obj}_to_common",
+            f"schemas.{obj}.from_common = _{obj}_from_common",
             "",
         ]
 
-    obj_schemas_lines: list[str] = []
-    if all_schema_objs:
-        entries: list[str] = []
-        for obj in sorted(all_schema_objs):
-            if obj in explicit_objs:
-                entries.extend(
-                    [
-                        f'        "{obj}": ObjectSchemas(',
-                        f'            native=(config.schemas["{obj}"].native or dict),',
-                        f"            common=schemas.{obj},",
-                        f'            to_common=config.schemas["{obj}"].to_common,',
-                        f'            from_common=config.schemas["{obj}"].from_common,',
-                        "        ),",
-                    ]
-                )
-            else:
-                # mappings-only object: no explicit schemas entry, use dict as native
-                entries.extend(
-                    [
-                        f'        "{obj}": ObjectSchemas(',
-                        "            native=dict,",
-                        f"            common=schemas.{obj},",
-                        f"            to_common=_{obj}_to_common,",
-                        f"            from_common=_{obj}_from_common,",
-                        "        ),",
-                    ]
-                )
-        obj_schemas_lines = [
-            "    schemas={",
-            *entries,
-            "    },",
-        ]
-    else:
-        obj_schemas_lines = ["    schemas=None,"]
+    # Explicit schemas: assert then inject callables (and native type if provided) per object.
+    if explicit_objs:
+        inject_lines.append("assert config.schemas is not None")
+        inject_lines.append("")
+        for obj in sorted(explicit_objs):
+            inject_lines += [
+                f'assert config.schemas["{obj}"].to_common is not None',
+                f'assert config.schemas["{obj}"].from_common is not None',
+                f'schemas.{obj}.native = config.schemas["{obj}"].native or dict',
+                f'schemas.{obj}.to_common = config.schemas["{obj}"].to_common',
+                f'schemas.{obj}.from_common = config.schemas["{obj}"].from_common',
+                "",
+            ]
 
     get_client_lines = (
         [
@@ -529,8 +519,6 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> s
         )
     else:
         imports.append("from common_grants_sdk.extensions import Plugin")
-    if needs_object_schemas:
-        imports.append("from common_grants_sdk.extensions.types import ObjectSchemas")
     imports += [
         "from .cg_config import config",
         "from .generated import schemas",
@@ -539,28 +527,15 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> s
 
     plugin_lines = [
         f"{plugin_variable_name} = Plugin(",
-        "    generated_schemas=schemas,",
+        "    schemas=schemas,",
         "    extensions=config.extensions,",
         "    meta=config.meta,",
         *get_client_lines,
-        *obj_schemas_lines,
         "    filters=config.filters,",
         ")",
     ]
 
-    # Emit None-narrowing assertions for config.schemas and per-object transforms
-    # so that mypy can verify the types without the pydantic plugin.
-    narrow_lines: list[str] = []
-    if explicit_objs:
-        narrow_lines.append("assert config.schemas is not None")
-        for obj in sorted(explicit_objs):
-            narrow_lines.append(f'assert config.schemas["{obj}"].to_common is not None')
-            narrow_lines.append(
-                f'assert config.schemas["{obj}"].from_common is not None'
-            )
-        narrow_lines.append("")
-
-    pre_plugin = build_transforms_lines + narrow_lines  # may be empty
+    pre_plugin = inject_lines  # may be empty
 
     return "\n".join(
         imports

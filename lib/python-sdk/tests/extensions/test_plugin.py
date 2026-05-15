@@ -63,11 +63,10 @@ def test_define_plugin_schemas_callable_roundtrip():
 
 
 def test_plugin_fields_default_to_none():
-    """Plugin accepts generated_schemas as first arg; all others default to None."""
-    base = Plugin(generated_schemas=object())
+    """Plugin.schemas holds the container; meta/get_client/filters/extensions default to None."""
+    base = Plugin(schemas=object())
     assert base.meta is None
     assert base.get_client is None
-    assert base.schemas is None
     assert base.filters is None
     assert base.extensions is None
 
@@ -75,6 +74,14 @@ def test_plugin_fields_default_to_none():
 def test_plugin_fields_populated():
     meta = PluginExtensionsMeta(name="p", source_system="s")
     ext = PluginExtensions(schemas={"Opportunity": PluginExtensionsSchema()})
-    full = Plugin(generated_schemas=object(), extensions=ext, meta=meta)
+    full = Plugin(schemas=object(), extensions=ext, meta=meta)
     assert full.meta is meta
     assert full.extensions is ext
+
+
+def test_plugin_schemas_is_attribute_container():
+    """Plugin.schemas holds the _Schemas object (no generated_schemas field)."""
+    s = object()
+    p = Plugin(schemas=s)
+    assert p.schemas is s
+    assert not hasattr(p, "generated_schemas")

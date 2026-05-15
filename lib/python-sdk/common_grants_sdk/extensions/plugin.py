@@ -7,7 +7,6 @@ from typing import Any, Callable, Generic, TypeVar
 
 from .types import (
     ClientConfig,
-    ObjectSchemas,
     ObjectSchemasInput,
     PluginExtensions,
     PluginExtensionsMeta,
@@ -18,10 +17,17 @@ T = TypeVar("T")
 
 @dataclass(frozen=True)
 class PluginConfig:
-    """Build-time plugin config discoverable by the code generator.
+    """Build-time plugin config produced by define_plugin() and consumed by generate.py.
 
-    All fields are optional. Passed to generate.py which compiles it into
-    a fully resolved Plugin instance (with ObjectSchemas, memoized get_client).
+    Stores inputs as-is — no compilation occurs at define_plugin() call time.
+    generate.py compiles this into a fully resolved Plugin by:
+    - Injecting the generated Pydantic model class as the common schema for each
+      ObjectSchemasInput entry (schemas[obj].native + common → ObjectSchemas).
+    - Auto-generating build_transforms() calls for any object that has
+      extensions.schemas[obj].mappings but no explicit schemas[obj] entry.
+    - Wrapping get_client with functools.lru_cache for memoization.
+
+    All fields are optional so adopters can start with only what they need.
     """
 
     extensions: PluginExtensions | None = None
@@ -35,17 +41,20 @@ class PluginConfig:
 class Plugin(Generic[T]):
     """Runtime plugin container assembled by generate.py after code generation.
 
-    generated_schemas: typed _Schemas object from generate.py (attribute access
-        to generated Pydantic model classes, e.g. plugin.generated_schemas.Opportunity).
-    schemas: compiled dict[str, ObjectSchemas] for bidirectional transforms.
-        Named 'schemas' per ADR-0022. Distinct from generated_schemas.
+    schemas: the _Schemas object from generated/schemas.py. Each attribute is an
+        ObjectSchemas instance providing unified access to the model class and
+        transforms for that object:
+          plugin.schemas.Opportunity.common      → the Pydantic model class (includes
+                                                   any custom fields declared by the plugin)
+          plugin.schemas.Opportunity.to_common   → transform callable (or None)
+          plugin.schemas.Opportunity.from_common → transform callable (or None)
+          plugin.schemas.Opportunity.native      → the source system's type (or dict)
     """
 
-    generated_schemas: T
+    schemas: T
     extensions: PluginExtensions | None = None
     meta: PluginExtensionsMeta | None = None
     get_client: Callable[[ClientConfig], Any] | None = None
-    schemas: dict[str, ObjectSchemas[Any, Any]] | None = None
     filters: dict[str, Any] | None = None
 
 

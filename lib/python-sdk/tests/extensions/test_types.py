@@ -1,6 +1,5 @@
 """Tests for ADR-0022 types defined in common_grants_sdk.extensions.types."""
 
-import pytest
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 from common_grants_sdk.extensions.types import (
     ObjectMappings,
@@ -126,7 +125,7 @@ def test_object_schemas():
     assert schemas.native is dict
     assert schemas.common is dict
 
-    with pytest.raises(TypeError):
-        ObjectSchemas(
-            native=dict, common=dict, to_common=passthrough
-        )  # missing from_common
+    # to_common and from_common are optional — omitting them is valid
+    minimal = ObjectSchemas(native=dict, common=dict)
+    assert minimal.to_common is None
+    assert minimal.from_common is None

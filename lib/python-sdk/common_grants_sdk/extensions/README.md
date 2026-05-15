@@ -45,7 +45,7 @@ Here are some key concepts that are used to define custom fields and plugins tha
 | **Custom field**        | A key-value pair attached to a resource's `customFields` property. Each field has a `name`, `fieldType`, `value`, and optional `description`.                                                               |
 | **`CustomFieldSpec`**   | A Python dataclass that _describes_ a custom field: its `field_type`, optional `value` (a Python type for the `value` property), and optional `name` and `description`.                                     |
 | **`SchemaExtensions`**  | A mapping of extensible model names (e.g. `"Opportunity"`) to dicts of `CustomFieldSpec` objects. This is the shape that `define_plugin()` and `with_custom_fields()` accept.                               |
-| **`Plugin`**            | A dataclass with `.extensions` (the raw `SchemaExtensions`) and `.schemas` (Pydantic models with typed `customFields` applied). Created by `define_plugin()`.                                               |
+| **`Plugin`**            | A dataclass assembled by the code generator. `.schemas` is a container object where each attribute (e.g. `.schemas.Opportunity`) is an `ObjectSchemas` instance providing the model class (`.common`), transform callables (`.to_common`, `.from_common`), and native type (`.native`). `.extensions` holds the serializable extension declarations.                                               |
 | **`PluginExtensionsMeta`**        | Optional metadata attached to a plugin: `name`, `version`, `source_system`, and `capabilities` (e.g. `["customFields", "transforms"]`).                                                                     |
 | **`build_transforms()`**| Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Each callable accepts a data dict and returns a `TransformResult`.                                                              |
 | **`TransformResult`**   | A dataclass `(result: dict, errors: list[PluginError])` returned by each transform callable. Errors are non-fatal — a partial result is always returned alongside any errors.                               |
@@ -215,7 +215,7 @@ api_response = {
 # Use the model returned via opportunity_extensions
 # ---------------------------------------------------------------------------
 
-opp = opportunity_extensions.schemas.Opportunity.model_validate(api_response)
+opp = opportunity_extensions.schemas.Opportunity.common.model_validate(api_response)
 
 ```
 
@@ -393,7 +393,7 @@ After installing the plugin (e.g. `poetry add opportunity-extensions`):
 ```python
 from opportunity_extensions import opportunity_extensions
 
-opp = opportunity_extensions.schemas.Opportunity.model_validate(api_response)
+opp = opportunity_extensions.schemas.Opportunity.common.model_validate(api_response)
 print(opp.custom_fields.program_area.value)    # typed as str
 print(opp.custom_fields.legacy_grant_id.value) # typed as int
 ```
@@ -558,13 +558,13 @@ Custom handlers are merged with the defaults; they cannot override built-in hand
 
 ### Using transforms
 
-The compiled callables are stored on the plugin's `schemas` dict, keyed by object name. Each callable takes a data dict and returns a `TransformResult`:
+The compiled callables are stored on the plugin's `schemas` object, accessible by attribute name. Each callable takes a data dict and returns a `TransformResult`:
 
 ```python
-opp_transforms = plugin.schemas["Opportunity"]
+opp_schemas = plugin.schemas.Opportunity
 
 # Source system → CommonGrants
-result = opp_transforms.to_common(native_data)
+result = opp_schemas.to_common(native_data)
 if result.errors:
     for err in result.errors:
         print(f"[{err.path}] {err}")
@@ -572,7 +572,7 @@ else:
     cg_data = result.result
 
 # CommonGrants → source system
-result = opp_transforms.from_common(cg_data)
+result = opp_schemas.from_common(cg_data)
 native_data = result.result
 ```
 
@@ -592,11 +592,11 @@ from plugins.opportunity_extensions import opportunity_extensions
 client = Client(base_url="https://api.example.gov")
 
 # Get a single opportunity with typed custom fields
-opp = client.opportunities.get(opp_id, schema=opportunity_extensions.schemas.Opportunity)
+opp = client.opportunities.get(opp_id, schema=opportunity_extensions.schemas.Opportunity.common)
 print(opp.custom_fields.program_area.value)  # typed as str
 
 # List with the same schema
-response = client.opportunities.list(schema=opportunity_extensions.schemas.Opportunity)
+response = client.opportunities.list(schema=opportunity_extensions.schemas.Opportunity.common)
 for opp in response.items:
     print(opp.custom_fields.legacy_grant_id.value)  # typed as int
 
@@ -604,7 +604,7 @@ for opp in response.items:
 results = client.opportunities.search(
     search="health",
     status=["open"],
-    schema=opportunity_extensions.schemas.Opportunity,
+    schema=opportunity_extensions.schemas.Opportunity.common,
 )
 ```
 
@@ -641,7 +641,7 @@ api_response = {
     },
 }
 
-opp = my_plugin.schemas.Opportunity.model_validate(api_response)
+opp = my_plugin.schemas.Opportunity.common.model_validate(api_response)
 opp.custom_fields.legacy_grant_id.value  # 98765, typed as int
 ```
 
@@ -713,7 +713,7 @@ This allows consumers to use `get_custom_field_value()` with the same type the p
 ```python
 from commongrants_hhs_plugin import hhs_plugin, ProgramAreaValue
 
-opp = hhs_plugin.schemas.Opportunity.model_validate(api_response)
+opp = hhs_plugin.schemas.Opportunity.common.model_validate(api_response)
 
 # Extract the value with full type safety using the exported type
 area = opp.get_custom_field_value("programArea", ProgramAreaValue)

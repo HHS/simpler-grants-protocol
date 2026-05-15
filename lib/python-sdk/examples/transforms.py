@@ -149,8 +149,7 @@ def _section(title: str) -> None:
 
 
 def main() -> None:
-    assert plugin.schemas is not None
-    opp = plugin.schemas["Opportunity"]
+    opp = plugin.schemas.Opportunity
 
     _section("SOURCE DATA (grants.gov format)")
     print(json.dumps(SOURCE_DATA, indent=2))

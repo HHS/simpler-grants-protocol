@@ -137,7 +137,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
     try:
         combined_module = importlib.import_module("plugins.combined")
         combined = getattr(combined_module, "combined")
-        opp_model = combined.generated_schemas.Opportunity
+        opp_model = combined.schemas.Opportunity.common
 
         type_hints = get_type_hints(opp_model, include_extras=False)
         assert "custom_fields" in type_hints
@@ -318,6 +318,7 @@ def test_generate_auto_builds_transforms_from_mappings(tmp_path):
     assert "build_transforms" in init_content
     assert 'config.extensions.schemas["Opportunity"].mappings.to_common' in init_content
     assert "_Opportunity_to_common" in init_content
+    assert "common_model=schemas.Opportunity.common" in init_content
 
     # Load the generated plugin and verify schemas are populated
     import importlib
@@ -332,9 +333,8 @@ def test_generate_auto_builds_transforms_from_mappings(tmp_path):
     try:
         mod = importlib.import_module("plugins.auto_transform")
         plugin = getattr(mod, "auto_transform")
-        assert plugin.schemas is not None
-        assert "Opportunity" in plugin.schemas
-        assert plugin.schemas["Opportunity"].to_common is not None
+        assert hasattr(plugin.schemas, "Opportunity")
+        assert plugin.schemas.Opportunity.to_common is not None
     finally:
         if str(tmp_path) in sys.path:
             sys.path.remove(str(tmp_path))
@@ -403,7 +403,7 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
                 '    "customFields": {"eligibility_type": {"fieldType": "array", "value": ["a"]}},',
                 "}",
                 "",
-                "opp = combined.generated_schemas.Opportunity.model_validate(payload)",
+                "opp = combined.schemas.Opportunity.common.model_validate(payload)",
                 "if opp.custom_fields is not None and opp.custom_fields.eligibility_type is not None:",
                 "    values = opp.custom_fields.eligibility_type.value",
                 "    reveal_type(values)",
@@ -532,18 +532,24 @@ def test_generate_explicit_transforms(tmp_path):
     init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
     # Explicit transforms use config.schemas directly, not build_transforms
     assert "build_transforms" not in init_content
-    assert 'config.schemas["Opportunity"].to_common' in init_content
-    assert 'config.schemas["Opportunity"].from_common' in init_content
-    assert "ObjectSchemas" in init_content
+    assert (
+        'schemas.Opportunity.to_common = config.schemas["Opportunity"].to_common'
+        in init_content
+    )
+    assert (
+        'schemas.Opportunity.from_common = config.schemas["Opportunity"].from_common'
+        in init_content
+    )
+    # ObjectSchemas is no longer constructed in __init__.py (only in schemas.py)
+    assert "ObjectSchemas" not in init_content
 
     # Load and verify the plugin works end-to-end
     sys.path.insert(0, str(tmp_path))
     try:
         mod = importlib.import_module("plugins.explicit_tf")
         plugin = getattr(mod, "explicit_tf")
-        assert plugin.schemas is not None
-        assert "Opportunity" in plugin.schemas
-        opp_schemas = plugin.schemas["Opportunity"]
+        assert hasattr(plugin.schemas, "Opportunity")
+        opp_schemas = plugin.schemas.Opportunity
         result = opp_schemas.to_common({"name": "Test Grant"})
         assert result.result == {"title": "Test Grant"}
         assert result.errors == []

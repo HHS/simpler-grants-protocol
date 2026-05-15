@@ -51,11 +51,14 @@ We decided to:
 The resulting Plugin shape:
 
 ```
-plugin.meta                      // name, version, sourceSystem, capabilities
-plugin.get_client                // (config: ClientConfig) => Client; memoized by the code generator
-plugin.extensions                // serializable; used by merge_extensions()
-plugin.generated_schemas.<Name>  // generated Pydantic model class (e.g. plugin.generated_schemas.Opportunity)
-plugin.schemas["<Name>"]         // { native, common, to_common, from_common } — bidirectional transforms
+plugin.meta                          // name, version, sourceSystem, capabilities
+plugin.get_client                    // (config: ClientConfig) => Client; memoized by the code generator
+plugin.extensions                    // serializable; used by merge_extensions()
+plugin.schemas.<Name>                // ObjectSchemas instance — unified access to model class and transforms
+plugin.schemas.<Name>.common         // generated Pydantic model class (includes any declared custom fields)
+plugin.schemas.<Name>.native         // source system type (defaults to dict)
+plugin.schemas.<Name>.to_common      // callable: native → TransformResult[common] (None if not configured)
+plugin.schemas.<Name>.from_common    // callable: common → TransformResult[native] (None if not configured)
 ```
 
 **Python note:** In the Python SDK, `define_plugin()` returns a `PluginConfig` (build-time input) rather than a fully compiled `Plugin`. The code generator (`generate.py`) compiles `PluginConfig → Plugin` by injecting the generated model classes as the `common` schema, wrapping `get_client` with `functools.lru_cache`, and auto-generating `build_transforms()` calls for any objects that have `extensions.schemas[obj].mappings` but no explicit `schemas[obj]` entry. This split is necessary because `cg_config.py` cannot import from `generated/` — it is the input to code generation.
@@ -267,13 +270,16 @@ class CustomFieldSpec:
     name: str = ""               # optional; dict key is used as the display name fallback
     description: str = ""
 
-# Runtime type — produced by define_plugin(), not provided directly by plugin authors
+# Runtime schema container — assembled by the code generator, not provided directly by authors.
+# Accessed via plugin.schemas.<Name> (attribute access, not dict lookup).
+# common includes any custom fields declared by the plugin (it is a generated subclass of the
+# base CG model, e.g. OpportunityBase, with typed custom_fields baked in).
 @dataclass
 class ObjectSchemas(Generic[TNative, TCommon]):
-    native: type[TNative]   # expects a Pydantic BaseModel subclass
-    common: type[TCommon]   # expects a Pydantic BaseModel subclass
-    to_common: Callable[[TNative], TransformResult[TCommon]]
-    from_common: Callable[[TCommon], TransformResult[TNative]]
+    native: type[TNative]   # source system type; defaults to dict
+    common: type[TCommon]   # generated Pydantic model class (includes declared custom fields)
+    to_common: Callable[[TNative], TransformResult[TCommon]] | None = None
+    from_common: Callable[[TCommon], TransformResult[TNative]] | None = None
 
 # Input type — provided by plugin authors inside define_plugin(schemas=...)
 # common is intentionally absent: cg_config.py cannot import from generated/ since
@@ -331,17 +337,18 @@ ClientConfig = dict[str, Any]  # plugin authors define their own keys (auth, bas
 # the generated model classes and a compiled PluginConfig. Plugin authors do not
 # construct this directly; it is emitted into the plugin's __init__.py.
 #
-# generated_schemas: typed _Schemas object with attribute access to generated
-#     Pydantic model classes (e.g. plugin.generated_schemas.Opportunity).
-# schemas: compiled ObjectSchemas dict for bidirectional transforms
-#     (e.g. plugin.schemas["Opportunity"].to_common(...)). Distinct from generated_schemas.
+# schemas: the _Schemas object from generated/schemas.py. Each attribute is an
+#     ObjectSchemas instance providing unified access to the model class and transforms:
+#       plugin.schemas.Opportunity.common      → Pydantic model class (with custom fields)
+#       plugin.schemas.Opportunity.to_common   → transform callable (or None)
+#       plugin.schemas.Opportunity.from_common → transform callable (or None)
+#       plugin.schemas.Opportunity.native      → source system type (or dict)
 @dataclass
 class Plugin(Generic[T]):
-    generated_schemas: T
+    schemas: T
     extensions: PluginExtensions | None = None
     meta: PluginExtensionsMeta | None = None
     get_client: Callable[[ClientConfig], Any] | None = None
-    schemas: dict[str, ObjectSchemas[Any, Any]] | None = None
     filters: dict[str, Any] | None = None
 
 # Build-time config — produced by define_plugin(), consumed by generate.py.
@@ -636,7 +643,7 @@ client = grants_gov_plugin.get_client({
 # Use the compiled schemas to transform native data into CommonGrants shape.
 # to_common / from_common return TransformResult[T] = {result, errors} — consumers
 # apply their own strict-vs-lenient rule for what counts as success.
-to_common = grants_gov_plugin.schemas['Opportunity'].to_common
+to_common = grants_gov_plugin.schemas.Opportunity.to_common
 outcome = to_common(raw_grants_gov_data)
 if not outcome.errors:
     use(outcome.result)  # strict: treat any error (including handler warnings) as failure

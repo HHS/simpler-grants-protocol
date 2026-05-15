@@ -138,14 +138,22 @@ class ObjectSchemasInput(Generic[TNative, TCommon]):
 
 @dataclass
 class ObjectSchemas(Generic[TNative, TCommon]):
-    """Runtime compiled type produced by define_plugin() — not provided directly by authors.
+    """Runtime compiled schema container for a single object (ADR-0022).
 
-    In the PoC, define_plugin() stores ObjectSchemasInput as-is; full compilation
-    (adding common from the base CG model, wrapping with model_validate) is a TODO
-    for the real SDK (ADR-0022 Decision #7).
+    Bundles the type information and transform callables for one schema object
+    (e.g. Opportunity). Accessed via attribute lookup on the plugin's schemas
+    container: plugin.schemas.Opportunity.
+
+    native:      The source system's Python type (defaults to dict when not specified).
+    common:      The CommonGrants-format Pydantic model class produced by the generator.
+                 If the plugin declares custom_fields, this is a generated subclass of
+                 the base CG model (e.g. OpportunityBase) with those fields already
+                 baked in as typed attributes.
+    to_common:   Transforms native_data → TransformResult[common] (None if not configured).
+    from_common: Transforms common_data → TransformResult[native] (None if not configured).
     """
 
     native: type[TNative]
     common: type[TCommon]
-    to_common: Callable[[TNative], TransformResult[TCommon]]
-    from_common: Callable[[TCommon], TransformResult[TNative]]
+    to_common: Callable[[TNative], TransformResult[TCommon]] | None = None
+    from_common: Callable[[TCommon], TransformResult[TNative]] | None = None
