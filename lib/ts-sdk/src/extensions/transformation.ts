@@ -76,36 +76,41 @@ export function constValue(_data: unknown, value: unknown): unknown {
  * Returns the mapped value if `data[field]` is a `case` key, otherwise `default`
  * (or undefined when no default is provided).
  *
- * Mirrors Python's `lookup.get(val, default)`: only string source values match
- * string-keyed `case` entries. Numeric and boolean source values do **not**
- * coerce — `case: { "1": "yes" }` does not match a source value of `1`.
- * Authors who need to map non-string source values to mapped outputs should
- * either coerce upstream (e.g. wrap the source field in a custom handler that
- * `String()`-coerces before dispatching the match) or key `case` by the
- * non-string primitive directly.
+ * Only string source values are candidate lookup keys: a non-string `val`
+ * short-circuits to `default`. `case: { "1": "yes" }` does not match a source
+ * value of `1`. Authors who need to map non-string source values should coerce
+ * upstream (e.g. via a custom handler that `String()`-coerces before
+ * dispatching `match`).
  *
- * A missing field resolves to `undefined` (via `getFromPath`), which is also
- * the value `lookup[undefined]` returns. To distinguish "field absent" from
- * "field present and equal to undefined," guard upstream.
+ * A missing field resolves to `undefined` via `getFromPath`, which fails the
+ * string-only guard and falls through to `default`. To distinguish "field
+ * absent" from "field present and equal to undefined," guard upstream.
  *
  * If `field` is omitted or `""`, `getFromPath` returns the entire `data`
- * object. Object instances are not lookup-key-coercible, so the `case`
- * lookup will miss and the handler falls back to `default` (or `undefined`).
- * A spec like `{ match: { case: { ... } } }` with no `field` key is a
- * foot-gun; supply `field` explicitly.
+ * object — non-string, so the handler falls back to `default`. A `match` spec
+ * with no `field` is functionally equivalent to `const: <default>`; prefer
+ * `const` for clarity when the constant case is what you want.
+ *
+ * Cross-SDK divergence: Python's PoC uses bare `dict.get(val, default)` —
+ * it accepts non-string `val` natively (though string-keyed `case` entries
+ * still miss), and a non-dict `spec` crashes generically via `AttributeError`
+ * on `.get()`. TS fails loud explicitly with a descriptive error in both
+ * cases (cf. #810 for parallel Python proposal).
  *
  * `match` is the canonical handler name (ADR-0017); `switch` is kept as an
  * alias for backward compatibility (ADR-0022 Decision #3).
+ *
+ * @throws Error when `spec` is not a non-null object. The walker wraps this
+ *   as a `HandlerError`; `buildTransforms` surfaces it as a `PluginError`
+ *   with `handler: "match"`.
  */
 export function switchOnValue(data: unknown, spec: unknown): unknown {
-  if (typeof spec !== "object" || spec === null) return undefined;
+  if (typeof spec !== "object" || spec === null) {
+    throw new Error("match/switch handler: spec must be an object");
+  }
   const s = spec as { field?: string; case?: Record<string, unknown>; default?: unknown };
   const val = getFromPath(data, s.field ?? "");
   const lookup = s.case ?? {};
-  // Only string source values are candidate lookup keys — mirrors Python's
-  // `lookup.get(val, default)`, which compares the raw value against dict
-  // keys without coercion. Non-string `val` short-circuits to `default` so
-  // mapping JSON authored against the Python PoC behaves identically here.
   if (typeof val === "string" && Object.prototype.hasOwnProperty.call(lookup, val)) {
     return lookup[val];
   }
@@ -134,6 +139,9 @@ export function numberToString(data: unknown, fieldPath: unknown): string | unde
  * `stringToNumber` handler — pluck a value, coerce to an integer when the
  * string is a pure integer, otherwise fall back to a general `Number()`
  * coercion. Non-numeric inputs throw.
+ *
+ * Returns `undefined` when the source path is missing or resolves to
+ * `null`/`undefined` (no throw — parallels `numberToString`).
  *
  * Divergences from Python's `int(s)` semantics, both intentional:
  *
@@ -223,10 +231,10 @@ export const DEFAULT_HANDLERS: Readonly<Record<string, Handler>> = Object.freeze
 });
 
 /**
- * Default recursion-depth cap for both `transformFromMapping` (runtime walk)
- * and `validateMapping` (build-time walk). Re-exported so the two stay in
- * sync if the cap is ever bumped — a divergence would let an adversarial
- * mapping pass build-time validation but blow the stack at runtime.
+ * Default recursion-depth cap shared between `transformFromMapping` (runtime
+ * walk) and `validateMapping` (build-time walk) so the two stay in sync if
+ * the cap is ever bumped — a divergence would let an adversarial mapping pass
+ * build-time validation but blow the stack at runtime.
  */
 export const DEFAULT_MAX_TRANSFORM_DEPTH = 500;
 
@@ -251,9 +259,9 @@ export interface TransformFromMappingOptions {
  *   ignored at this low-level walker — only the first key is read. Callers
  *   entering through `buildTransforms()` get a stricter check: its
  *   `validateMapping` pass rejects sibling keys alongside a handler at
- *   build time (Python PoC parity). This walker keeps the lenient behavior
- *   so programmatic users composing partial mappings aren't forced into
- *   the strict shape.
+ *   build time (TS-only hardening; cf. #810 for parallel Python proposal).
+ *   This walker keeps the lenient behavior so programmatic users composing
+ *   partial mappings aren't forced into the strict shape.
  * - Object nodes whose first key is not a handler are treated as output
  *   shapes — each child is transformed recursively.
  *
@@ -270,6 +278,8 @@ export interface TransformFromMappingOptions {
  * ```
  *
  * @throws Error when recursion exceeds `maxDepth`.
+ * @throws Error when an output field name is literally `__proto__` (rejected
+ *   to prevent prototype-chain mutation under bracket-assign).
  * @throws {@link HandlerError} when a registered handler throws.
  */
 export function transformFromMapping(

@@ -237,21 +237,24 @@ export interface TransformResult<T> {
  * consumers can reason about failures programmatically without parsing error text.
  *
  * @remarks
- * `sourceValue` may contain PII. When populated by `buildTransforms()` it
- * carries the entire input record passed to `toCommon` / `fromCommon` — not
- * just the value at the failing field. To make the default safer, this class
- * stores `sourceValue` as a non-enumerable own property and overrides
- * `toJSON()` to emit only `name`, `message`, `path`, and `handler`. Both
- * `JSON.stringify(err)` and any structured logger that calls `toJSON` will
- * omit the payload; callers that need the raw value can still read
- * `err.sourceValue` directly.
+ * Per ADR-0022 Decision #9, **the SDK does not redact by default.**
+ * `sourceValue` and `cause` are plain enumerable fields and flow through
+ * `JSON.stringify(err)`, `util.inspect(err)`, and any logger that enumerates
+ * own properties. When populated by `buildTransforms()`, `sourceValue` is the
+ * entire input record passed to `toCommon` / `fromCommon` — not just the
+ * value at the failing field — so adopters whose source data may contain PII
+ * must redact before logging.
  *
- * On the Zod-validation path (`buildTransforms({ commonModel })`), `message`
- * is also data-bearing: Zod's default error map embeds the received runtime
- * value into `issue.message` (e.g. `invalid_enum_value` echoes the received
- * value), and that string flows directly into `PluginError.message` here.
- * Adopters whose source data may contain PII should sanitize `err.message`
- * alongside `err.sourceValue` before logging.
+ * Recommended redacted projection:
+ * ```ts
+ * const safe = { name: err.name, message: err.message, path: err.path, handler: err.handler };
+ * ```
+ *
+ * `PluginError.message` is also data-bearing on the Zod-validation path
+ * (`buildTransforms({ commonModel })`): Zod's default error map embeds the
+ * received runtime value into `issue.message`, which flows verbatim into
+ * `PluginError.message`. Redact `message` alongside `sourceValue` and `cause`.
+ * Full-message sanitization is tracked under #744.
  */
 export class PluginError extends Error {
   /** Dot-notation field path where the error occurred, if known. */
@@ -260,7 +263,7 @@ export class PluginError extends Error {
   handler?: string;
   /** The source value that triggered the error (may contain PII — redact before logging). */
   sourceValue?: unknown;
-  /** Underlying cause of the error, if any. */
+  /** Underlying cause of the error, if any (may contain PII — redact before logging). */
   cause?: unknown;
 
   constructor(
@@ -276,36 +279,8 @@ export class PluginError extends Error {
     this.name = "PluginError";
     this.path = options?.path;
     this.handler = options?.handler;
-    // Store PII-bearing fields as non-enumerable so `JSON.stringify` and any
-    // logger that enumerates own properties omit them by default. Callers can
-    // still read them directly via `err.sourceValue` / `err.cause`.
-    Object.defineProperty(this, "sourceValue", {
-      value: options?.sourceValue,
-      enumerable: false,
-      writable: true,
-      configurable: true,
-    });
-    Object.defineProperty(this, "cause", {
-      value: options?.cause,
-      enumerable: false,
-      writable: true,
-      configurable: true,
-    });
-  }
-
-  /**
-   * Serialization for `JSON.stringify` and structured loggers. Omits
-   * `sourceValue` and `cause` so PII does not leak through the default
-   * serialization path. Callers that need the raw payload should read the
-   * fields directly.
-   */
-  toJSON(): { name: string; message: string; path?: string; handler?: string } {
-    return {
-      name: this.name,
-      message: this.message,
-      path: this.path,
-      handler: this.handler,
-    };
+    this.sourceValue = options?.sourceValue;
+    this.cause = options?.cause;
   }
 }
 

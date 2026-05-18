@@ -1,7 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { z } from "zod";
 
-import { PluginError, buildTransforms, getFromPath, withCustomFields } from "@/extensions";
+import {
+  PluginError,
+  buildTransforms,
+  getFromPath,
+  withCustomFields,
+  type Handler,
+} from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas/zod/models";
 import { CustomFieldType } from "@/constants";
 
@@ -47,6 +53,18 @@ const fromCommonMapping = {
   },
 };
 
+/**
+ * Build a mapping nested past the shared `DEFAULT_MAX_TRANSFORM_DEPTH` cap
+ * (500) so `validateMapping` throws at build time. Used by the to/fromCommon
+ * depth-cap tests to verify both sides of the validator exercise the same
+ * guard.
+ */
+const deepMapping = (levels = 600): Record<string, unknown> => {
+  let deep: unknown = "leaf";
+  for (let i = 0; i < levels; i++) deep = { nested: deep };
+  return deep as Record<string, unknown>;
+};
+
 // ############################################################################
 // Call-time validation
 // ############################################################################
@@ -62,6 +80,16 @@ describe("buildTransforms — call-time validation", () => {
         },
       })
     ).toThrow(/collide with defaults/);
+    // Also `match` — confirms the collision check isn't hardcoded to `field`.
+    expect(() =>
+      buildTransforms({
+        toCommonMapping: {},
+        fromCommonMapping: {},
+        handlers: {
+          match: (_d: unknown, _a: unknown) => null,
+        },
+      })
+    ).toThrow(/collide with defaults/);
   });
 
   it("rejects custom handler names that shadow Object.prototype keys (Decision #8 hardening)", () => {
@@ -74,6 +102,76 @@ describe("buildTransforms — call-time validation", () => {
         },
       })
     ).toThrow(/shadow Object\.prototype/);
+    // Also `toString` and `__proto__` — confirms the check isn't hardcoded
+    // to `constructor`. `__proto__` is an own accessor on `Object.prototype`,
+    // so `hasOwnProperty.call(Object.prototype, "__proto__")` returns true
+    // (the load-bearing claim in the source comment at transforms.ts:218).
+    expect(() =>
+      buildTransforms({
+        toCommonMapping: {},
+        fromCommonMapping: {},
+        handlers: {
+          toString: (_d: unknown, _a: unknown) => null,
+        },
+      })
+    ).toThrow(/shadow Object\.prototype/);
+    // `__proto__` as an OWN enumerable property — mirrors the
+    // `JSON.parse('{"__proto__": ...}')` attack vector. Object literal
+    // `{ __proto__: ... }` triggers the prototype setter instead, so
+    // construct via `defineProperty` to match the real shape.
+    const protoHandlers: Record<string, Handler> = {};
+    Object.defineProperty(protoHandlers, "__proto__", {
+      value: (_d: unknown, _a: unknown) => null,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
+    expect(() =>
+      buildTransforms({
+        toCommonMapping: {},
+        fromCommonMapping: {},
+        handlers: protoHandlers,
+      })
+    ).toThrow(/shadow Object\.prototype/);
+  });
+
+  it("rejects `__proto__` as an output field name at build time (Decision #8 hardening)", () => {
+    // The runtime walker also rejects this (see transformation.spec.ts), but
+    // build-time rejection means a JSON-loaded mapping with `__proto__` at
+    // any path fails before any data flows. Use `JSON.parse` to materialize
+    // the own enumerable `__proto__` key — TS object literal syntax cannot
+    // express it (it triggers the prototype setter instead).
+    const rootProtoMapping = JSON.parse('{"__proto__": {"polluted": true}}') as Record<
+      string,
+      unknown
+    >;
+    expect(() =>
+      buildTransforms({
+        toCommonMapping: rootProtoMapping,
+        fromCommonMapping: {},
+      })
+    ).toThrow(/'__proto__' is not allowed/);
+
+    const nestedProtoMapping = JSON.parse(
+      '{"wrapper": {"__proto__": {"polluted": true}}}'
+    ) as Record<string, unknown>;
+    expect(() =>
+      buildTransforms({
+        toCommonMapping: nestedProtoMapping,
+        fromCommonMapping: {},
+      })
+    ).toThrow(/'__proto__' is not allowed/);
+  });
+
+  it("rejects a fromCommonMapping whose nesting depth exceeds the shared cap", () => {
+    // Symmetric to the toCommonMapping depth-cap test above. A regression
+    // that validated only `toCommonMapping` would slip past today's coverage.
+    expect(() =>
+      buildTransforms({
+        toCommonMapping: {},
+        fromCommonMapping: deepMapping(),
+      })
+    ).toThrow(/exceeded maximum nesting depth/);
   });
 
   it("rejects mappings whose nodes are structurally malformed (array where scalar expected)", () => {
@@ -97,20 +195,19 @@ describe("buildTransforms — call-time validation", () => {
     // depth-cap test; locks in the shared `DEFAULT_MAX_TRANSFORM_DEPTH` so
     // adversarial mapping JSON cannot survive build-time validation only
     // to blow the stack at runtime.
-    let deep: unknown = "leaf";
-    for (let i = 0; i < 600; i++) deep = { nested: deep };
     expect(() =>
       buildTransforms({
-        toCommonMapping: deep as Record<string, unknown>,
+        toCommonMapping: deepMapping(),
         fromCommonMapping: {},
       })
     ).toThrow(/exceeded maximum nesting depth/);
   });
 
-  it("rejects sibling keys alongside a handler key — two handlers in one node (Python PoC parity)", () => {
+  it("rejects sibling keys alongside a handler key — two handlers in one node", () => {
     // The runtime walker is first-key-wins, so `{ field, const }` would
-    // silently drop `const`. Almost always an author bug. Match Python's
-    // `_validate_mapping` and reject at build time.
+    // silently drop `const`. Almost always an author bug. TS-only build-time
+    // fail-loud; cf. #810 for parallel Python proposal (Python's
+    // `_validate_mapping` accepts this shape today).
     expect(() =>
       buildTransforms({
         toCommonMapping: { value: { field: "x", const: "fallback" } },
@@ -330,25 +427,44 @@ describe("buildTransforms — fromCommon", () => {
 // Custom handlers
 // ############################################################################
 
-describe("PluginError — PII-safe serialization", () => {
-  it("omits sourceValue and cause from JSON.stringify by default", () => {
+describe("PluginError — serialization (ADR-0022 Decision #9)", () => {
+  // ADR-0022 Decision #9: the SDK does not redact by default. Both tests
+  // assert on the same PluginError instance — one without redaction (PII
+  // flows), one with the adopter-supplied projection (PII contained).
+  // Forcing one shared setup keeps "redacted vs. raw is the only delta" a
+  // structural property of the test code rather than just narration.
+  let err: PluginError;
+
+  beforeEach(() => {
     const { toCommon } = buildTransforms({
       toCommonMapping: { amount: { stringToNumber: "data.bogus" } },
       fromCommonMapping: {},
     });
-    const out = toCommon({ data: { bogus: "abc", ssn: "PII_PAYLOAD_123" } });
+    [err] = toCommon({ data: { bogus: "abc", ssn: "PII_PAYLOAD_123" } }).errors;
+  });
 
-    const [err] = out.errors;
+  it("includes sourceValue and cause in JSON.stringify by default — adopters redact", () => {
     expect(err).toBeInstanceOf(PluginError);
-    // Sanity: the fields are still readable directly for callers that opt in.
     expect(err.sourceValue).toEqual({ data: { bogus: "abc", ssn: "PII_PAYLOAD_123" } });
     expect(err.cause).toBeInstanceOf(Error);
 
+    // No redaction by default: PII flows through JSON.stringify.
     const serialized = JSON.stringify(err);
+    expect(serialized).toContain("PII_PAYLOAD_123");
+    expect(serialized).toContain("sourceValue");
+  });
+
+  it("supports an adopter-provided redacted projection for safe logging", () => {
+    // The projection adopters are documented to use (see README).
+    const safe = {
+      name: err.name,
+      message: err.message,
+      path: err.path,
+      handler: err.handler,
+    };
+    const serialized = JSON.stringify(safe);
     expect(serialized).not.toContain("PII_PAYLOAD_123");
-    expect(serialized).not.toContain("sourceValue");
-    const parsed = JSON.parse(serialized);
-    expect(parsed).toEqual({
+    expect(JSON.parse(serialized)).toEqual({
       name: "PluginError",
       message: expect.any(String),
       handler: "stringToNumber",

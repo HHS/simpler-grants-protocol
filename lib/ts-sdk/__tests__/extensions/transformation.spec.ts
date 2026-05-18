@@ -44,6 +44,21 @@ describe("getFromPath", () => {
     expect(getFromPath({ a: null }, "a")).toBeNull();
     expect(getFromPath({ a: 0 }, "a")).toBe(0);
   });
+
+  it("does not resolve inherited prototype-chain properties (ADR-0022 Decision #8)", () => {
+    // Mapping field paths can come from untrusted sources via
+    // `mergeExtensions()`, so a path like `__proto__.polluted` must NOT
+    // resolve to `Object.prototype.polluted`. The implementation uses
+    // `Object.prototype.hasOwnProperty.call` rather than `in`; if a future
+    // refactor switched back to `in`, these would silently resolve to the
+    // prototype chain.
+    expect(getFromPath({}, "__proto__")).toBeUndefined();
+    expect(getFromPath({}, "__proto__.polluted")).toBeUndefined();
+    expect(getFromPath({}, "constructor")).toBeUndefined();
+    expect(getFromPath({}, "constructor.prototype.x")).toBeUndefined();
+    expect(getFromPath({}, "toString")).toBeUndefined();
+    expect(getFromPath({ a: 1 }, "a.toString")).toBeUndefined();
+  });
 });
 
 // ############################################################################
@@ -88,15 +103,23 @@ describe("switchOnValue", () => {
     expect(switchOnValue({ status: "x" }, { field: "status", case: { y: 1 } })).toBeUndefined();
   });
 
-  it("returns undefined when spec is not an object", () => {
-    expect(switchOnValue({ status: "posted" }, "garbage")).toBeUndefined();
+  it("throws when spec is not an object (D2: fail loud on malformed mapping)", () => {
+    // Prior contract returned `undefined` silently when `spec` was non-object,
+    // which let a typo'd mapping like `{ match: "literal-where-spec-belongs" }`
+    // produce missing fields with no error trail. New contract: throw, so the
+    // walker wraps as `HandlerError` and the boundary materializes a
+    // `PluginError` with `handler: "match"`.
+    expect(() => switchOnValue({ status: "posted" }, "garbage")).toThrow(/spec must be an object/);
+    expect(() => switchOnValue({ status: "posted" }, null)).toThrow(/spec must be an object/);
+    expect(() => switchOnValue({ status: "posted" }, 42)).toThrow(/spec must be an object/);
   });
 
-  it("does not coerce numeric source values to string keys (Python dict.get parity)", () => {
-    // The Python PoC's `lookup.get(val, default)` compares values without
-    // coercion: { "1": "yes" } does NOT match a numeric `1`. This test
-    // pins the same behavior in TS so cross-SDK plugin authors get
-    // identical results from JSON-loaded mappings.
+  it("does not coerce numeric source values to string-keyed cases", () => {
+    // TS uses an explicit `typeof val === "string"` guard. Python's PoC uses
+    // bare `dict.get(val, default)` which would natively support non-string
+    // keys; but for JSON-loaded mappings (where `case` keys are always
+    // strings) the practical behavior matches — string-keyed lookup misses
+    // a numeric `val`, falls through to `default`. TS pins this explicitly.
     expect(switchOnValue({ n: 1 }, { field: "n", case: { "1": "yes" }, default: "no" })).toBe("no");
     // String "1" still matches.
     expect(switchOnValue({ n: "1" }, { field: "n", case: { "1": "yes" }, default: "no" })).toBe(
@@ -104,7 +127,7 @@ describe("switchOnValue", () => {
     );
   });
 
-  it("does not coerce boolean source values to string keys (Python dict.get parity)", () => {
+  it("does not coerce boolean source values to string-keyed cases", () => {
     expect(switchOnValue({ b: true }, { field: "b", case: { true: "yes" }, default: "no" })).toBe(
       "no"
     );

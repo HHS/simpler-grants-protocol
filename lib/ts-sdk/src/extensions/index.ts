@@ -38,8 +38,16 @@ export { PluginError } from "./types";
 export type { BuildTransformsOptions, BuiltTransforms } from "./transforms";
 export { buildTransforms } from "./transforms";
 export type { TransformFromMappingOptions } from "./transformation";
-// Mirrors the Python PoC's extensions/__init__.py — only the high-level surface is
-// re-exported. Individual handler functions stay internal; reach them through
-// DEFAULT_HANDLERS when programmatic access is needed. getFromPath stays exported
-// because plugin authors need it to write custom mapping handlers.
+// TypeScript surface is a superset of the Python PoC's extensions/__init__.py.
+// Both expose the high-level transform contract (buildTransforms, PluginError,
+// TransformResult, ObjectSchemas{Input}, ObjectMappings, PluginExtensions,
+// PluginCapability, Handler, ClientConfig). TS additionally exposes:
+//   - BuildTransformsOptions, BuiltTransforms — Zod-typed options-object types
+//     for ergonomic construction in TS callers
+//   - TransformFromMappingOptions — options shape for the low-level walker
+//   - DEFAULT_HANDLERS, getFromPath, transformFromMapping — programmatic
+//     access for plugin authors writing custom mapping handlers
+//   - PluginMeta — type companion to the runtime `meta` field
+// Individual handler functions (fieldValue, constValue, switchOnValue, etc.)
+// stay internal; reach them through DEFAULT_HANDLERS when needed.
 export { DEFAULT_HANDLERS, getFromPath, transformFromMapping } from "./transformation";

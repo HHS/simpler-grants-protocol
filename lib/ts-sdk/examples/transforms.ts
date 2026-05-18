@@ -6,7 +6,8 @@
  *   1. Defining `toCommon` / `fromCommon` mappings in ADR-0017 format.
  *   2. Registering a custom mapping handler (`join`) for this call only.
  *   3. Validating `toCommon` output against the fully extended Zod schema
- *      (`withCustomFields(OpportunityBaseSchema, ...)`) — see PoC findings #2.
+ *      (`withCustomFields(OpportunityBaseSchema, ...)`) — passing the base
+ *      schema would silently weaken validation of typed custom fields.
  *   4. Exposing the compiled transform via `definePlugin({ transformSchemas })`.
  *   5. Round-tripping `native → common → native` and printing both directions.
  *

@@ -42,8 +42,8 @@ import {
  *
  * Rejects nodes where a handler key has sibling keys — the runtime walker is
  * first-key-wins, so `{ field: "x", const: "fallback" }` would silently drop
- * `const`. Almost always an author bug; fail loud at build time. Matches
- * Python PoC `_validate_mapping`.
+ * `const`. Almost always an author bug; fail loud at build time. TS-only
+ * hardening; cf. #810 for parallel Python proposal.
  *
  * @internal
  */
@@ -190,8 +190,12 @@ export interface BuiltTransforms<TNative, TCommon> {
  * Callers writing strict-mode handling should treat any non-empty `errors`
  * as failure regardless of length.
  *
- * @throws TypeError when custom handler names collide with built-in defaults.
- * @throws Error when either mapping is structurally malformed.
+ * @throws TypeError when custom handler names collide with built-in defaults
+ *   or shadow `Object.prototype` keys (e.g. `constructor`, `toString`,
+ *   `__proto__`).
+ * @throws Error when either mapping is structurally malformed (includes
+ *   `__proto__` as an output field name, sibling keys on a handler-dispatch
+ *   node, or recursion exceeding `DEFAULT_MAX_TRANSFORM_DEPTH`).
  */
 export function buildTransforms<TNative = unknown, TCommon = unknown>(
   args: {
