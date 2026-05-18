@@ -1,3 +1,11 @@
+"""
+Plugin configuration for opportunity extensions.
+
+Defines and merges two sets of custom field extensions for the Opportunity schema:
+- hhs_extensions: HHS-specific fields (programArea, legacyGrantId)
+- local_extensions: Local fields (eligibilityTypes, awardCeiling)
+"""
+
 from common_grants_sdk import define_plugin, merge_extensions
 from common_grants_sdk.extensions import CustomFieldSpec
 from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema
