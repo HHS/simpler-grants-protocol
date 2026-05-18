@@ -256,12 +256,11 @@ export interface TransformFromMappingOptions {
  * - Object nodes whose first key is a registered handler dispatch to that
  *   handler with `(data, handlerArg)`. The handler's return value is the
  *   transformed node. Sibling keys on a handler-dispatch node are silently
- *   ignored at this low-level walker — only the first key is read. Callers
- *   entering through `buildTransforms()` get a stricter check: its
- *   `validateMapping` pass rejects sibling keys alongside a handler at
- *   build time (TS-only hardening; cf. #810 for parallel Python proposal).
- *   This walker keeps the lenient behavior so programmatic users composing
- *   partial mappings aren't forced into the strict shape.
+ *   ignored — only the first key is read. `{ field: "x", const: "fallback" }`
+ *   silently drops `const`. Both this walker and `buildTransforms()`'s
+ *   build-time `validateMapping` accept this shape; Python's PoC has the
+ *   same first-key-wins behavior, so cross-SDK mapping JSON behaves
+ *   identically.
  * - Object nodes whose first key is not a handler are treated as output
  *   shapes — each child is transformed recursively.
  *
