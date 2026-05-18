@@ -33,7 +33,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "22.x"
+          node-version-file: .nvmrc
 
       - name: Install CommonGrants CLI
         run: npm install -g @common-grants/cli
