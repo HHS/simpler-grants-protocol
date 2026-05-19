@@ -44,6 +44,7 @@ SOURCE_DATA: dict[str, Any] = {
         "opportunity_status": "posted",
         "opportunity_title": "Research into conservation techniques",
         "opportunity_uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "priority_score_str": "75",
         "summary": {
             "applicant_types": ["state_governments"],
             "archive_date": "2025-05-01",
@@ -209,6 +210,11 @@ def main() -> None:
             native_result.result.get("data", {})
             .get("summary", {})
             .get("award_ceiling"),
+        ),
+        (
+            "priority_score_str",
+            SOURCE_DATA["data"]["priority_score_str"],
+            native_result.result.get("data", {}).get("priority_score_str"),
         ),
     ]
     all_pass = True

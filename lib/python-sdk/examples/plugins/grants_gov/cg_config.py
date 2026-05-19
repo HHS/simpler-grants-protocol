@@ -76,6 +76,14 @@ to_common, from_common = build_transforms(
                 },
             },
         },
+        "customFields": {
+            "legacyIdStr": {
+                "value": {"numberToString": "data.opportunity_id"},
+            },
+            "priorityScore": {
+                "value": {"stringToNumber": "data.priority_score_str"},
+            },
+        },
     },
     # from_common: CommonGrants Opportunity → grants.gov native
     from_common_mapping={
@@ -97,6 +105,9 @@ to_common, from_common = build_transforms(
                 "award_ceiling": {"field": "funding.maxAwardAmount.amount"},
                 "forecasted_post_date": {"field": "keyDates.appOpens.date"},
                 "forecasted_close_date": {"field": "keyDates.appDeadline.date"},
+            },
+            "priority_score_str": {
+                "numberToString": "customFields.priorityScore.value"
             },
         }
     },
@@ -122,6 +133,11 @@ config = define_plugin(
                         name="Legacy ID",
                         description="Unique identifier in legacy database",
                     ),
+                    "legacyIdStr": CustomFieldSpec(
+                        field_type=CustomFieldType.STRING,
+                        name="Legacy ID (string)",
+                        description="Legacy ID coerced to a string via numberToString",
+                    ),
                     "agencyName": CustomFieldSpec(
                         field_type=CustomFieldType.STRING,
                         name="Agency",
@@ -131,6 +147,11 @@ config = define_plugin(
                         field_type=CustomFieldType.ARRAY,
                         name="Applicant types",
                         description="Types of applicants eligible to apply",
+                    ),
+                    "priorityScore": CustomFieldSpec(
+                        field_type=CustomFieldType.NUMBER,
+                        name="Priority score",
+                        description="Numeric priority score coerced from a string via stringToNumber",
                     ),
                 },
             )
