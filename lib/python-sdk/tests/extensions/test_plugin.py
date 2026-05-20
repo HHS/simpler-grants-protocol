@@ -17,8 +17,6 @@ def test_define_plugin_no_args():
     assert config.extensions is None
     assert config.meta is None
     assert config.schemas is None
-    assert config.get_client is None
-    assert config.filters is None
 
 
 def test_define_plugin_with_extensions():
@@ -63,11 +61,9 @@ def test_define_plugin_schemas_callable_roundtrip():
 
 
 def test_plugin_fields_default_to_none():
-    """Plugin.schemas holds the container; meta/get_client/filters/extensions default to None."""
+    """Plugin.schemas holds the container; meta/extensions default to None."""
     base = Plugin(schemas=object())
     assert base.meta is None
-    assert base.get_client is None
-    assert base.filters is None
     assert base.extensions is None
 
 

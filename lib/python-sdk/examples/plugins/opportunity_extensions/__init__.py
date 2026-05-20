@@ -10,8 +10,6 @@ opportunity_extensions = Plugin(
     schemas=schemas,
     extensions=config.extensions,
     meta=config.meta,
-    get_client=None,
-    filters=config.filters,
 )
 
 __all__ = ["opportunity_extensions", "schemas"]

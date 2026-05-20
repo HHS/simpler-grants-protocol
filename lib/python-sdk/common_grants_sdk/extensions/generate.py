@@ -446,10 +446,7 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> s
     Emits a fully compiled Plugin instance. Transform callables are injected
     into the _Schemas object (from generated/schemas.py) before Plugin is
     constructed, so plugin.schemas.Opportunity.to_common etc. are populated.
-    - get_client: wrapped with functools.lru_cache if provided
     """
-    needs_functools = config.get_client is not None
-
     # Collect the sets of objects needing transform injection.
     explicit_objs: set[str] = set(config.schemas.keys()) if config.schemas else set()
     mappings_objs: set[str] = (
@@ -492,26 +489,12 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> s
                 "",
             ]
 
-    get_client_lines = (
-        [
-            "    get_client=(",
-            "        functools.lru_cache(maxsize=None)(config.get_client)",
-            "        if config.get_client is not None else None",
-            "    ),",
-        ]
-        if needs_functools
-        else ["    get_client=None,"]
-    )
-
     imports = [
         "# This file is auto-generated. Do not edit it manually — it will be overwritten",
         "# the next time `python -m common_grants_sdk.extensions.generate` is run.",
         "from __future__ import annotations",
         "",
     ]
-    if needs_functools:
-        imports.append("import functools")
-        imports.append("")
 
     if needs_build_transforms:
         imports.append(
@@ -530,8 +513,6 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> s
         "    schemas=schemas,",
         "    extensions=config.extensions,",
         "    meta=config.meta,",
-        *get_client_lines,
-        "    filters=config.filters,",
         ")",
     ]
 

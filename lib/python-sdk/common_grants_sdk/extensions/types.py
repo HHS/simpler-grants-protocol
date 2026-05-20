@@ -18,7 +18,6 @@ PluginCapability = Literal["customFields", "customFilters", "transforms", "clien
 
 # Type aliases
 Handler = Callable[[Any, Any], Any]
-ClientConfig = dict[str, Any]
 
 
 class PluginError(Exception):

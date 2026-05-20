@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from .types import (
-    ClientConfig,
     ObjectSchemasInput,
     PluginExtensions,
     PluginExtensionsMeta,
@@ -25,7 +24,6 @@ class PluginConfig:
       ObjectSchemasInput entry (schemas[obj].native + common → ObjectSchemas).
     - Auto-generating build_transforms() calls for any object that has
       extensions.schemas[obj].mappings but no explicit schemas[obj] entry.
-    - Wrapping get_client with functools.lru_cache for memoization.
 
     All fields are optional so adopters can start with only what they need.
     """
@@ -33,8 +31,6 @@ class PluginConfig:
     extensions: PluginExtensions | None = None
     meta: PluginExtensionsMeta | None = None
     schemas: dict[str, ObjectSchemasInput[Any, Any]] | None = None
-    get_client: Callable[[ClientConfig], Any] | None = None
-    filters: dict[str, Any] | None = None
 
 
 @dataclass
@@ -54,28 +50,21 @@ class Plugin(Generic[T]):
     schemas: T
     extensions: PluginExtensions | None = None
     meta: PluginExtensionsMeta | None = None
-    get_client: Callable[[ClientConfig], Any] | None = None
-    filters: dict[str, Any] | None = None
 
 
 def define_plugin(
     meta: PluginExtensionsMeta | None = None,
-    get_client: Callable[[ClientConfig], Any] | None = None,
     extensions: PluginExtensions | None = None,
     schemas: dict[str, ObjectSchemasInput[Any, Any]] | None = None,
-    filters: dict[str, Any] | None = None,
 ) -> PluginConfig:
     """Create a PluginConfig consumed by the code generator.
 
     No compilation occurs here — inputs are stored as-is. The code generator
     (generate.py) compiles ObjectSchemasInput → ObjectSchemas by injecting
-    the common model from the generated schemas, and wraps get_client with
-    functools.lru_cache.
+    the common model from the generated schemas.
     """
     return PluginConfig(
         extensions=extensions,
         meta=meta,
         schemas=schemas,
-        get_client=get_client,
-        filters=filters,
     )

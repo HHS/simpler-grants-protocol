@@ -18,8 +18,6 @@ grants_gov = Plugin(
     schemas=schemas,
     extensions=config.extensions,
     meta=config.meta,
-    get_client=None,
-    filters=config.filters,
 )
 
 __all__ = ["grants_gov", "schemas"]

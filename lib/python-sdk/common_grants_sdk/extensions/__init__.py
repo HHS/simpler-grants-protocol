@@ -4,7 +4,6 @@ from .plugin import Plugin, PluginConfig, define_plugin
 from .specs import ConflictStrategy, CustomFieldSpec, SchemaExtensions, merge_extensions
 from .transforms import build_transforms
 from .types import (
-    ClientConfig,
     Handler,
     ObjectMappings,
     ObjectSchemas,
@@ -29,7 +28,6 @@ __all__ = [
     # New: build_transforms
     "build_transforms",
     # New: ADR-0022 types
-    "ClientConfig",
     "Handler",
     "ObjectMappings",
     "ObjectSchemas",

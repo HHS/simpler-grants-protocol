@@ -427,58 +427,6 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
     assert 'Type of "values" is "list[Any] | None"' in pyright.stdout
 
 
-def test_generate_get_client_is_memoized(tmp_path):
-    """get_client in generated __init__.py is wrapped with lru_cache."""
-    from common_grants_sdk.extensions.generate import generate_plugin
-
-    plugin_dir = tmp_path / "plugins" / "memoized"
-    plugin_dir.mkdir(parents=True)
-    (plugin_dir / "__init__.py").write_text("", encoding="utf-8")
-
-    (plugin_dir / "cg_config.py").write_text(
-        "\n".join(
-            [
-                "from common_grants_sdk import define_plugin",
-                "from common_grants_sdk.extensions.types import PluginExtensions",
-                "",
-                "def _get_client(cfg):",
-                "    # cfg is a frozenset of items, convert back to dict",
-                "    cfg_dict = dict(cfg) if isinstance(cfg, frozenset) else cfg",
-                "    # returns a new dict each call — lru_cache makes it return the same one",
-                "    return {'host': cfg_dict.get('host', 'localhost')}",
-                "",
-                "config = define_plugin(",
-                "    extensions=PluginExtensions(),",
-                "    get_client=_get_client,",
-                ")",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
-
-    generate_plugin(plugin_dir)
-
-    init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
-    assert "functools.lru_cache" in init_content
-
-    sys.path.insert(0, str(tmp_path))
-    try:
-        mod = importlib.import_module("plugins.memoized")
-        plugin = getattr(mod, "memoized")
-        assert plugin.get_client is not None
-        result_a = plugin.get_client(frozenset({"host": "example.com"}.items()))
-        result_b = plugin.get_client(frozenset({"host": "example.com"}.items()))
-        assert (
-            result_a is result_b
-        ), "lru_cache should return the same instance for the same args"
-    finally:
-        sys.path.remove(str(tmp_path))
-        for key in list(sys.modules.keys()):
-            if "memoized" in key:
-                del sys.modules[key]
-
-
 def test_generate_explicit_transforms(tmp_path):
     """When cg_config has config.schemas with explicit to_common/from_common,
     the generated __init__.py emits ObjectSchemas with the supplied callables."""
