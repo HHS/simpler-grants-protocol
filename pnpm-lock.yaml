@@ -387,7 +387,7 @@ importers:
         version: 5.0.5(@types/node@20.19.41)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tsx@4.21.0)(yaml@2.8.3)
       '@astrojs/starlight':
         specifier: ^0.39.2
-        version: 0.39.2(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3)
+        version: 0.39.2(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3)
       '@jsonforms/core':
         specifier: ^3.7.0
         version: 3.7.0
@@ -407,8 +407,8 @@ importers:
         specifier: ^8.20.0
         version: 8.20.0
       astro:
-        specifier: ^6.3.3
-        version: 6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
+        specifier: ^6.3.5
+        version: 6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
       js-yaml:
         specifier: ^4.1.1
         version: 4.1.1
@@ -508,7 +508,7 @@ importers:
         version: 0.14.1
       starlight-links-validator:
         specifier: ^0.24.0
-        version: 0.24.0(@astrojs/starlight@0.39.2(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3))(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))
+        version: 0.24.0(@astrojs/starlight@0.39.2(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3))(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))
       typescript-eslint:
         specifier: 'catalog:'
         version: 8.59.3(eslint@9.39.4)(typescript@5.9.3)
@@ -3300,8 +3300,8 @@ packages:
     peerDependencies:
       astro: ^4.0.0-beta || ^5.0.0-beta || ^3.3.0 || ^6.0.0-beta
 
-  astro@6.3.3:
-    resolution: {integrity: sha512-wvLIZQYbBZt6U8gyflBW4SLBypaqdwLZUH93rT3oT53cmQ0bTGubvMAGjqBRoheOYzYcTJZtW6czztzbu4kQ5g==}
+  astro@6.3.5:
+    resolution: {integrity: sha512-gU+4KedkbTuVgz7YoVAN+9Ftnq0GaYwejxK2NbqDzB0M9dWd0f3kXZBuaM9hzbchRFoRAJfJjFtdX9LK6Ir7ZA==}
     engines: {node: '>=22.12.0', npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
 
@@ -4826,8 +4826,8 @@ packages:
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
 
-  lru-cache@11.3.6:
-    resolution: {integrity: sha512-Gf/KoL3C/MlI7Bt0PGI9I+TeTC/I6r/csU58N4BSNc4lppLBeKsOdFYkK+dX0ABDUMJNfCHTyPpzwwO21Awd3A==}
+  lru-cache@11.4.0:
+    resolution: {integrity: sha512-W+R+kFL4HgVxONq2bhXPi3bGpzGe/yEhVOp233qw9wCRtgncJ15P3bC+e4zZMu4Cq7d+WAJjXGW0uUkifhcatA==}
     engines: {node: 20 || >=22}
 
   lru-cache@5.1.1:
@@ -5277,8 +5277,8 @@ packages:
     resolution: {integrity: sha512-y3b8Kpd8OAN444hxfBbFfj1FY/RjtTd8tzYwhUqNYXx0fXx2iX4maP4Qr6qhIKbQXI02wTLAda4fYUbDagTUFw==}
     engines: {node: '>=6'}
 
-  p-queue@9.2.0:
-    resolution: {integrity: sha512-dWgLE8AH0HjQ9fe74pUkKkvzzYT18Inp4zra3lKHnnwqGvcfcUBrvF2EAVX+envufDNBOzpPq/IBUONDbI7+3g==}
+  p-queue@9.3.0:
+    resolution: {integrity: sha512-7NED7xhQ74Ngp4JP/2e0VZHp7vSWfJfqeiR92jPgxsz6m0Se4P03YoTKa9dDXyZ3r6P616gUXttrB6nnHYKang==}
     engines: {node: '>=20'}
 
   p-timeout@7.0.1:
@@ -6928,12 +6928,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@5.0.4(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))':
+  '@astrojs/mdx@5.0.4(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))':
     dependencies:
       '@astrojs/markdown-remark': 7.1.1
       '@mdx-js/mdx': 3.1.1
       acorn: 8.16.0
-      astro: 6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
+      astro: 6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
       es-module-lexer: 2.1.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -6986,17 +6986,17 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 4.4.3
 
-  '@astrojs/starlight@0.39.2(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3)':
+  '@astrojs/starlight@0.39.2(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3)':
     dependencies:
       '@astrojs/markdown-remark': 7.1.1
-      '@astrojs/mdx': 5.0.4(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))
+      '@astrojs/mdx': 5.0.4(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))
       '@astrojs/sitemap': 3.7.2
       '@pagefind/default-ui': 1.5.2
       '@types/hast': 3.0.4
       '@types/js-yaml': 4.0.9
       '@types/mdast': 4.0.4
-      astro: 6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
-      astro-expressive-code: 0.42.0(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))
+      astro: 6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
+      astro-expressive-code: 0.42.0(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.3
       hast-util-select: 6.0.4
@@ -9785,12 +9785,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  astro-expressive-code@0.42.0(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)):
+  astro-expressive-code@0.42.0(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)):
     dependencies:
-      astro: 6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
+      astro: 6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
       rehype-expressive-code: 0.42.0
 
-  astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3):
+  astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3):
     dependencies:
       '@astrojs/compiler': 4.0.0
       '@astrojs/internal-helpers': 0.9.1
@@ -9825,7 +9825,7 @@ snapshots:
       neotraverse: 0.6.18
       obug: 2.1.1
       p-limit: 7.3.0
-      p-queue: 9.2.0
+      p-queue: 9.3.0
       package-manager-detector: 1.6.0
       piccolore: 0.1.3
       picomatch: 4.0.4
@@ -11599,7 +11599,7 @@ snapshots:
 
   lru-cache@10.4.3: {}
 
-  lru-cache@11.3.6: {}
+  lru-cache@11.4.0: {}
 
   lru-cache@5.1.1:
     dependencies:
@@ -12310,7 +12310,7 @@ snapshots:
 
   p-map@2.1.0: {}
 
-  p-queue@9.2.0:
+  p-queue@9.3.0:
     dependencies:
       eventemitter3: 5.0.4
       p-timeout: 7.0.1
@@ -13063,11 +13063,11 @@ snapshots:
 
   stackback@0.0.2: {}
 
-  starlight-links-validator@0.24.0(@astrojs/starlight@0.39.2(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3))(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)):
+  starlight-links-validator@0.24.0(@astrojs/starlight@0.39.2(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3))(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)):
     dependencies:
-      '@astrojs/starlight': 0.39.2(astro@6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3)
+      '@astrojs/starlight': 0.39.2(astro@6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3))(typescript@5.9.3)
       '@types/picomatch': 4.0.3
-      astro: 6.3.3(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
+      astro: 6.3.5(@types/node@20.19.41)(lightningcss@1.32.0)(rollup@4.60.4)(tsx@4.21.0)(yaml@2.8.3)
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.3
       is-absolute-url: 5.0.0
@@ -13534,7 +13534,7 @@ snapshots:
       chokidar: 5.0.0
       destr: 2.0.5
       h3: 1.15.11
-      lru-cache: 11.3.6
+      lru-cache: 11.4.0
       node-fetch-native: 1.6.7
       ofetch: 1.5.1
       ufo: 1.6.4
