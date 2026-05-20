@@ -475,14 +475,19 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> s
             "",
         ]
 
-    # Explicit schemas: assert then inject callables (and native type if provided) per object.
+    # Explicit schemas: guard then inject callables (and native type if provided) per object.
     if explicit_objs:
-        inject_lines.append("assert config.schemas is not None")
-        inject_lines.append("")
+        inject_lines += [
+            "if config.schemas is None:",
+            '    raise ValueError("config.schemas is required when explicit transforms are declared")',
+            "",
+        ]
         for obj in sorted(explicit_objs):
             inject_lines += [
-                f'assert config.schemas["{obj}"].to_common is not None',
-                f'assert config.schemas["{obj}"].from_common is not None',
+                f'if config.schemas["{obj}"].to_common is None:',
+                f'    raise ValueError("Plugin object {obj!r}: to_common callable is required")',
+                f'if config.schemas["{obj}"].from_common is None:',
+                f'    raise ValueError("Plugin object {obj!r}: from_common callable is required")',
                 f'schemas.{obj}.native = config.schemas["{obj}"].native or dict',
                 f'schemas.{obj}.to_common = config.schemas["{obj}"].to_common',
                 f'schemas.{obj}.from_common = config.schemas["{obj}"].from_common',

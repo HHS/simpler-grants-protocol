@@ -78,7 +78,8 @@ def _merge_meta(
             # Both have non-None values — apply conflict strategy
             if on_conflict == "error":
                 raise ValueError(
-                    f'merge_extensions: duplicate meta field "{field_name}"'
+                    f'merge_extensions: duplicate meta field "{field_name}" '
+                    f"(existing: {current_val!r}, incoming: {incoming_val!r})"
                 )
             merged[field_name] = (
                 current_val if on_conflict == "first_wins" else incoming_val

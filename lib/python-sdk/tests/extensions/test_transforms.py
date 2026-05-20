@@ -23,7 +23,7 @@ TO_COMMON_MAPPING = {
     "title": {"field": "data.opportunity_title"},
     "status": {
         "value": {
-            "switch": {
+            "match": {
                 "field": "data.opportunity_status",
                 "case": {
                     "posted": "open",
@@ -47,7 +47,7 @@ FROM_COMMON_MAPPING = {
     "data": {
         "opportunity_title": {"field": "title"},
         "opportunity_status": {
-            "switch": {
+            "match": {
                 "field": "status.value",
                 "case": {
                     "open": "posted",
@@ -67,7 +67,7 @@ FROM_COMMON_MAPPING = {
 # --- Call-time validation ---
 
 
-@pytest.mark.parametrize("name", ["field", "switch"])
+@pytest.mark.parametrize("name", ["field", "match", "switch"])
 def test_handler_collision_raises(name):
     """build_transforms raises if custom handler shadows a default handler name."""
     with pytest.raises(ValueError, match="collide with defaults"):
@@ -191,6 +191,29 @@ def test_common_model_validation_failure():
     assert len(result.errors) >= 1
     assert all(isinstance(e, PluginError) for e in result.errors)
     assert any("required_field" in (e.path or "") for e in result.errors)
+    assert result.result["title"] == "Research into conservation techniques"
+
+
+def test_common_model_non_validation_error_is_caught():
+    """Non-ValidationError exceptions from model_validate surface as PluginError (errors-as-values contract)."""
+
+    class _BrokenModel(BaseModel):
+        title: str
+
+        @classmethod
+        def model_validate(cls, obj, **kwargs):
+            raise TypeError("misconfigured root validator")
+
+    to_common, _ = build_transforms(
+        {"title": {"field": "data.opportunity_title"}},
+        {},
+        common_model=_BrokenModel,
+    )
+    result = to_common(SOURCE_DATA)
+    assert len(result.errors) == 1
+    assert isinstance(result.errors[0], PluginError)
+    assert "misconfigured root validator" in str(result.errors[0])
+    # raw transformed dict is preserved so the caller can inspect it
     assert result.result["title"] == "Research into conservation techniques"
 
 

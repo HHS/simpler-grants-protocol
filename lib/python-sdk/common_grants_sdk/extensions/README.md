@@ -47,7 +47,7 @@ Here are some key concepts that are used to define custom fields and plugins tha
 | **`SchemaExtensions`**  | A mapping of extensible model names (e.g. `"Opportunity"`) to dicts of `CustomFieldSpec` objects. This is the shape that `define_plugin()` and `with_custom_fields()` accept.                               |
 | **`Plugin`**            | A dataclass assembled by the code generator. `.schemas` is a container object where each attribute (e.g. `.schemas.Opportunity`) is an `ObjectSchemas` instance providing the model class (`.common`), transform callables (`.to_common`, `.from_common`), and native type (`.native`). `.extensions` holds the serializable extension declarations.                                               |
 | **`PluginExtensionsMeta`**        | Optional metadata attached to a plugin: `name`, `version`, `source_system`, and `capabilities` (e.g. `["customFields", "transforms"]`).                                                                     |
-| **`build_transforms()`**| Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Each callable accepts a data dict and returns a `TransformResult`.                                                              |
+| **`build_transforms()`**| Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Each callable accepts a data dict **or a Pydantic model instance** and returns a `TransformResult`.                                                              |
 | **`TransformResult`**   | A dataclass `(result: dict, errors: list[PluginError])` returned by each transform callable. Errors are non-fatal — a partial result is always returned alongside any errors.                               |
 | **`ObjectSchemasInput`**| Bundles a `to_common` and `from_common` callable for a single object type. Passed to `define_plugin()` via the `schemas` parameter.                                                               |
 
@@ -525,6 +525,37 @@ plugin = define_plugin(
 
 Both directions must be provided explicitly. `build_transforms()` does not invert one mapping from the other, because many-to-one handlers like `match` are not reversible.
 
+#### Hand-written callables
+
+`build_transforms()` is optional. You can supply any plain Python callable to `ObjectSchemasInput` as long as it matches the expected signature:
+
+```python
+def to_common(native_data: dict) -> TransformResult:
+    ...
+
+def from_common(cg_data: dict) -> TransformResult:
+    ...
+
+config = define_plugin(
+    schemas={
+        "Opportunity": ObjectSchemasInput(
+            to_common=to_common,
+            from_common=from_common,
+        )
+    },
+)
+```
+
+The key requirement when porting existing transform code is that **both callables must return `TransformResult`**. The type annotation enforces this, but it is easy to miss when wrapping a function that previously returned a plain dict. Wrap the return value like so:
+
+```python
+from common_grants_sdk.extensions.types import TransformResult
+
+def to_common(native_data: dict) -> TransformResult:
+    result = my_existing_transform(native_data)  # returns a plain dict
+    return TransformResult(result=result, errors=[])
+```
+
 ### Mapping format
 
 A mapping dict describes how to build an output object from a source dict. Each leaf node is either a literal value or a single-key dict that invokes a named handler.
@@ -558,7 +589,7 @@ Custom handlers are merged with the defaults; they cannot override built-in hand
 
 ### Using transforms
 
-The compiled callables are stored on the plugin's `schemas` object, accessible by attribute name. Each callable takes a data dict and returns a `TransformResult`:
+The compiled callables are stored on the plugin's `schemas` object, accessible by attribute name. Each callable takes a data dict (or a Pydantic model instance) and returns a `TransformResult`:
 
 ```python
 opp_schemas = plugin.schemas.Opportunity
@@ -577,6 +608,9 @@ native_data = result.result
 ```
 
 `TransformResult.errors` is always a list (empty on success). A non-empty errors list means the transform encountered a problem but still returned a partial result in `result`.
+
+> [!IMPORTANT]
+> When `common_model` is set on `build_transforms()`, `to_common` returns a validated Pydantic model instance in `result.result`. That instance can be passed directly to `from_common`. In that case, field paths in `from_common_mapping` must use the model's **camelCase alias names** (e.g. `"status.value"`, `"funding.minAwardAmount.amount"`), not Python snake_case attribute names. This matches the camelCase convention used throughout CommonGrants field paths.
 
 See `examples/transforms.py` for a complete working example with roundtrip verification.
 

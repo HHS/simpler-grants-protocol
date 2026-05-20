@@ -1,5 +1,5 @@
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from common_grants_sdk.utils.transformation import (
     DEFAULT_HANDLERS,
@@ -332,24 +332,43 @@ def test_handler_error_is_value_error():
 
 
 def test_pydantic_model_instance_is_normalized():
-    """transform_from_mapping accepts a Pydantic model instance and extracts fields correctly."""
+    """transform_from_mapping accepts a Pydantic model and uses camelCase alias keys."""
 
     class Inner(BaseModel):
+        model_config = ConfigDict(populate_by_name=True)
         value: str
 
     class Source(BaseModel):
+        model_config = ConfigDict(populate_by_name=True)
         title: str
-        nested: Inner
+        nested_item: Inner = Field(alias="nestedItem")
 
-    model = Source(title="hello", nested=Inner(value="world"))
+    model = Source(title="hello", nestedItem=Inner(value="world"))
     result = transform_from_mapping(
         model,
         {
             "out_title": {"field": "title"},
-            "out_value": {"field": "nested.value"},
+            "out_value": {"field": "nestedItem.value"},  # camelCase alias path
         },
     )
     assert result == {"out_title": "hello", "out_value": "world"}
+
+
+def test_pydantic_model_alias_not_snake_case():
+    """Field paths must use camelCase aliases, not snake_case attribute names."""
+
+    class Source(BaseModel):
+        model_config = ConfigDict(populate_by_name=True)
+        award_floor: int = Field(alias="awardFloor")
+
+    model = Source(awardFloor=10000)
+    # camelCase alias path resolves correctly
+    result = transform_from_mapping(model, {"amount": {"field": "awardFloor"}})
+    assert result == {"amount": 10000}
+
+    # snake_case attribute name does NOT resolve (returns None)
+    result_snake = transform_from_mapping(model, {"amount": {"field": "award_floor"}})
+    assert result_snake == {"amount": None}
 
 
 def test_deeply_nested(input_data):

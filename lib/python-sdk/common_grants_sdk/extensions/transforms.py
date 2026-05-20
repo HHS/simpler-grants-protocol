@@ -159,6 +159,9 @@ def build_transforms(
                 for e in exc.errors()
             ]
             return TransformResult(result=result, errors=errors)
+        except Exception as exc:
+            error = PluginError(str(exc), path=None, source_value=result, cause=exc)
+            return TransformResult(result=result, errors=[error])
 
     def from_common(common: Any) -> TransformResult[Any]:
         try:
