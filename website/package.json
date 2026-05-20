@@ -35,22 +35,22 @@
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^15.3.5",
-    "@astrojs/react": "^5.0.4",
-    "@astrojs/starlight": "^0.38.5",
+    "@astrojs/react": "^5.0.5",
+    "@astrojs/starlight": "^0.39.2",
     "@jsonforms/core": "^3.7.0",
     "@jsonforms/react": "^3.7.0",
     "@jsonforms/vanilla-renderers": "^3.7.0",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "ajv": "^8.20.0",
-    "astro": "^6.2.2",
+    "astro": "^6.3.3",
     "js-yaml": "^4.1.1",
     "json-schema-merge-allof": "^0.8.1",
     "openapi-sampler": "^1.7.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.34.5",
-    "swagger-ui-react": "^5.32.5",
+    "swagger-ui-react": "^5.32.6",
     "tsx": "^4.21.0",
     "typescript": "catalog:",
     "typespec-versioning-changelog": "workspace:*",
@@ -81,7 +81,7 @@
     "starlight-links-validator": "^0.24.0",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
-    "wrangler": "^4.90.0"
+    "wrangler": "^4.90.1"
   },
   "overrides": {
     "js-yaml": "^4.1.1"

@@ -68,6 +68,9 @@ jobs:
 
             This PR was created by the weekly `deps-catalog-check` workflow.
 
+            ### Scope
+            **Within-major bumps only.** Each dep moves to the newest version on its current compatibility line (same major for `^X.Y.Z`, same `0.x` line for `^0.Y.Z`, same minor for `~X.Y.Z`). Major-version bumps are handled by a separate draft PR (`chore/update-catalog-deps-majors`) opened by the `deps-catalog-check-majors` workflow.
+
             ### What changed
             Updates to dependencies managed via `pnpm-workspace.yaml` catalog:
             - TypeSpec packages (`@typespec/*`)
@@ -82,7 +85,6 @@ jobs:
             - [ ] If TypeSpec packages updated: verify `pnpm run typespec` output is sensible
             - [ ] If website deps updated: spot-check key pages render correctly
             - [ ] If SDK-affecting deps updated: verify SDK examples still work
-            - [ ] If this is a **major** version bump: review changelog of updated packages
             - [ ] Add changeset if peerDep ranges changed for `@common-grants/core`
           labels: |
             dependencies
