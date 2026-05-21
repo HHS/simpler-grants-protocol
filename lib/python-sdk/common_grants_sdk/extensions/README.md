@@ -44,12 +44,12 @@ Here are some key concepts that are used to define custom fields and plugins tha
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Custom field**        | A key-value pair attached to a resource's `customFields` property. Each field has a `name`, `fieldType`, `value`, and optional `description`.                                                               |
 | **`CustomFieldSpec`**   | A Python dataclass that _describes_ a custom field: its `field_type`, optional `value` (a Python type for the `value` property), and optional `name` and `description`.                                     |
-| **`SchemaExtensions`**  | A mapping of extensible model names (e.g. `"Opportunity"`) to dicts of `CustomFieldSpec` objects. This is the shape that `define_plugin()` and `with_custom_fields()` accept.                               |
+| **`SchemaExtensions`**  | A legacy TypedDict mapping extensible model names (e.g. `"Opportunity"`) to dicts of `CustomFieldSpec`. Still accepted by `with_custom_fields()`. For plugins, declare custom fields inside `ObjectSchemasInput.custom_fields` instead. |
 | **`Plugin`**            | A dataclass assembled by the code generator. `.schemas` is a container object where each attribute (e.g. `.schemas.Opportunity`) is an `ObjectSchemas` instance providing the model class (`.common`), transform callables (`.to_common`, `.from_common`), and native type (`.native`). `.extensions` holds the serializable extension declarations.                                               |
 | **`PluginExtensionsMeta`**        | Optional metadata attached to a plugin: `name`, `version`, `source_system`, and `capabilities` (e.g. `["customFields", "transforms"]`).                                                                     |
 | **`build_transforms()`**| Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Each callable accepts a data dict **or a Pydantic model instance** and returns a `TransformResult`.                                                              |
 | **`TransformResult`**   | A dataclass `(result: dict, errors: list[PluginError])` returned by each transform callable. Errors are non-fatal — a partial result is always returned alongside any errors.                               |
-| **`ObjectSchemasInput`**| Bundles a `to_common` and `from_common` callable for a single object type. Passed to `define_plugin()` via the `schemas` parameter.                                                               |
+| **`ObjectSchemasInput`**| Bundles `custom_fields`, `to_common`, and `from_common` for a single object type. Passed to `define_plugin()` via the `schemas` parameter.                                                               |
 
 
 
@@ -123,40 +123,33 @@ The following is an example `cg_config.py` file, which you pass to the build ste
 
 
 ```python
-from common_grants_sdk import define_plugin, merge_extensions
-from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk import define_plugin
+from common_grants_sdk.extensions import CustomFieldSpec, ObjectSchemasInput
 from common_grants_sdk.schemas.pydantic import CustomFieldType
 
-# Extensions that might come from a shared HHS package
-hhs_extensions: SchemaExtensions = {
-    "Opportunity": {
-        "programArea": CustomFieldSpec(
-            field_type=CustomFieldType.STRING,
-            description="HHS program area code (e.g. 'CFDA-93.243')",
-        ),
-        "legacyGrantId": CustomFieldSpec(
-            field_type=CustomFieldType.INTEGER,
-            description="Numeric ID from the legacy grants management system",
-        ),
-    },
-}
-
-# Extensions specific to this project
-local_extensions: SchemaExtensions = {
-    "Opportunity": {
-        "eligibilityTypes": CustomFieldSpec(
-            field_type=CustomFieldType.ARRAY,
-            description="Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')",
-        ),
-        "awardCeiling": CustomFieldSpec(
-            field_type=CustomFieldType.NUMBER,
-            description="Maximum award amount in USD",
-        ),
-    },
-}
-
 config = define_plugin(
-    merge_extensions([hhs_extensions, local_extensions], on_conflict="error"),
+    schemas={
+        "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                "programArea": CustomFieldSpec(
+                    field_type=CustomFieldType.STRING,
+                    description="HHS program area code (e.g. 'CFDA-93.243')",
+                ),
+                "legacyGrantId": CustomFieldSpec(
+                    field_type=CustomFieldType.INTEGER,
+                    description="Numeric ID from the legacy grants management system",
+                ),
+                "eligibilityTypes": CustomFieldSpec(
+                    field_type=CustomFieldType.ARRAY,
+                    description="Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')",
+                ),
+                "awardCeiling": CustomFieldSpec(
+                    field_type=CustomFieldType.NUMBER,
+                    description="Maximum award amount in USD",
+                ),
+            }
+        )
+    }
 )
 ```
 
@@ -270,36 +263,26 @@ A plugin is a Python class that contains extension specs and generated schemas
 
 
 ```python
-T = TypeVar("T")
-
-@dataclass(frozen=True)
-class Plugin(Generic[T]):
-    """Runtime plugin container with both extension specs and generated schemas."""
-
-    extensions: SchemaExtensions
-    schemas: T
-```
-
-
-```python
-from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk import define_plugin
+from common_grants_sdk.extensions import CustomFieldSpec, ObjectSchemasInput
 from common_grants_sdk.schemas.pydantic import CustomFieldType
-# Extensions specific to this project
-local_extensions: SchemaExtensions = {
-    "Opportunity": {
-        "eligibilityTypes": CustomFieldSpec(
-            field_type=CustomFieldType.ARRAY,
-            description="Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')",
-        ),
-        "awardCeiling": CustomFieldSpec(
-            field_type=CustomFieldType.NUMBER,
-            description="Maximum award amount in USD",
-        ),
-    },
-}
 
-config = define_plugin(local_extensions)
-
+config = define_plugin(
+    schemas={
+        "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                "eligibilityTypes": CustomFieldSpec(
+                    field_type=CustomFieldType.ARRAY,
+                    description="Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')",
+                ),
+                "awardCeiling": CustomFieldSpec(
+                    field_type=CustomFieldType.NUMBER,
+                    description="Maximum award amount in USD",
+                ),
+            }
+        )
+    }
+)
 ```
 
 After running the build step the imported extension object will have 2 fields to use.
@@ -414,32 +397,34 @@ Before publishing a new version of your plugin:
 
 ### Combining Plugins
 
-Use `merge_extensions()` to combine field specs from multiple sources before passing them to `define_plugin()`:
+Custom fields from multiple logical sources are combined by declaring them all inside a single `ObjectSchemasInput.custom_fields` dict. Because the dict is plain Python, there is no special merge utility needed — just add the keys side by side:
 
 ```python
-from common_grants_sdk import define_plugin, merge_extensions
+from common_grants_sdk import define_plugin
+from common_grants_sdk.extensions import CustomFieldSpec, ObjectSchemasInput
+from common_grants_sdk.schemas.pydantic import CustomFieldType
 
 config = define_plugin(
-    merge_extensions([shared_extensions, local_extensions], on_conflict="error"),
+    schemas={
+        "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                # fields from a shared HHS package
+                "programArea": CustomFieldSpec(field_type=CustomFieldType.STRING),
+                "legacyGrantId": CustomFieldSpec(field_type=CustomFieldType.INTEGER),
+                # fields specific to this project
+                "eligibilityTypes": CustomFieldSpec(field_type=CustomFieldType.ARRAY),
+                "awardCeiling": CustomFieldSpec(field_type=CustomFieldType.NUMBER),
+            }
+        )
+    }
 )
 ```
 
-`on_conflict` controls what happens when two sources declare the same field key on the same model:
-
-| Strategy | Behaviour |
-|---|---|
-| `"error"` (default) | Raises `ValueError` — safest, forces explicit resolution |
-| `"first_wins"` | Keeps the definition from the first source in the list |
-| `"last_wins"` | Overwrites with the definition from the last source |
-
-Prefer unique, namespaced field names so `"error"` is never triggered.
-
-> [!Note]
->  The `"first_wins"` and `"last_wins"` strategies resolve conflicts at runtime but the merged result loses the specific field types of the overridden definitions. For full static type safety, use the default `"error"` strategy with non-overlapping, namespaced field names.
+`merge_extensions()` is still available for merging `PluginExtensions` objects that carry declarative `mappings` (ADR-0017 transform configs). It no longer merges `custom_fields`.
 
 #### Verify type inference before publishing
 
-After building your package, import the plugin in a test file and confirm that `.extensions` keys and `.schemas` parse types resolve correctly. Hover over the types in your editor to confirm they are not `any`.
+After building your package, import the plugin in a test file and confirm that `.schemas` parse types resolve correctly. Hover over the types in your editor to confirm they are not `any`.
 
 ## Bidirectional Transforms
 
@@ -453,9 +438,7 @@ Use `build_transforms()` to compile a pair of mapping dicts into `(to_common, fr
 from common_grants_sdk.extensions import (
     CustomFieldSpec,
     ObjectSchemasInput,
-    PluginExtensions,
     PluginExtensionsMeta,
-    PluginExtensionsSchema,
     build_transforms,
     define_plugin,
 )
@@ -496,26 +479,20 @@ to_common, from_common = build_transforms(
 )
 
 plugin = define_plugin(
-    extensions=PluginExtensions(
-        meta=PluginExtensionsMeta(
-            name="my-system",
-            version="0.1.0",
-            source_system="my-system.example.gov",
-            capabilities=["customFields", "transforms"],
-        ),
-        schemas={
-            "Opportunity": PluginExtensionsSchema(
-                custom_fields={
-                    "legacyId": CustomFieldSpec(
-                        field_type=CustomFieldType.INTEGER,
-                        description="Unique identifier in legacy database",
-                    ),
-                }
-            )
-        },
+    meta=PluginExtensionsMeta(
+        name="my-system",
+        version="0.1.0",
+        source_system="my-system.example.gov",
+        capabilities=["customFields", "transforms"],
     ),
     schemas={
         "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                "legacyId": CustomFieldSpec(
+                    field_type=CustomFieldType.INTEGER,
+                    description="Unique identifier in legacy database",
+                ),
+            },
             to_common=to_common,
             from_common=from_common,
         )
@@ -654,17 +631,22 @@ The generator converts `camelCase` keys to `snake_case` Python attribute names a
 
 ```python
 # cg_config.py
-from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk import define_plugin
+from common_grants_sdk.extensions import CustomFieldSpec, ObjectSchemasInput
 from common_grants_sdk.schemas.pydantic import CustomFieldType
 
-extensions: SchemaExtensions = {
-    "Opportunity": {
-        "legacyGrantId": CustomFieldSpec(   # camelCase key — matches the JSON
-            field_type=CustomFieldType.INTEGER,
-            description="Numeric ID from the legacy grants management system",
-        ),
-    },
-}
+config = define_plugin(
+    schemas={
+        "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                "legacyGrantId": CustomFieldSpec(   # camelCase key — matches the JSON
+                    field_type=CustomFieldType.INTEGER,
+                    description="Numeric ID from the legacy grants management system",
+                ),
+            }
+        )
+    }
+)
 ```
 
 ```python
@@ -686,7 +668,7 @@ Additional field naming guidelines:
 
 ### Keep plugins focused
 
-A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, use `merge_extensions()` to compose separate plugins rather than bundling everything into one.
+A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, declare them all in one `ObjectSchemasInput.custom_fields` dict — Python dict literals compose cleanly without a special merge utility.
 
 ### Type safety
 
@@ -695,22 +677,27 @@ A plugin should represent a single logical concern (one agency's fields, one int
 
   ```python
   from pydantic import BaseModel
-  from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+  from common_grants_sdk import define_plugin
+  from common_grants_sdk.extensions import CustomFieldSpec, ObjectSchemasInput
   from common_grants_sdk.schemas.pydantic import CustomFieldType
 
   class LegacyRef(BaseModel):
       system: str
       id: int
 
-  extensions: SchemaExtensions = {
-      "Opportunity": {
-          "legacyRef": CustomFieldSpec(
-              field_type=CustomFieldType.OBJECT,
-              value=LegacyRef,
-              description="Reference to the opportunity in the legacy system",
-          ),
-      },
-  }
+  config = define_plugin(
+      schemas={
+          "Opportunity": ObjectSchemasInput(
+              custom_fields={
+                  "legacyRef": CustomFieldSpec(
+                      field_type=CustomFieldType.OBJECT,
+                      value=LegacyRef,
+                      description="Reference to the opportunity in the legacy system",
+                  ),
+              }
+          )
+      }
+  )
   ```
 
 > [!NOTE]
@@ -721,9 +708,10 @@ A plugin should represent a single logical concern (one agency's fields, one int
 When you define Pydantic models for complex `value` fields, export them as named exports from your package. Downstream consumers may need these types for use with `get_custom_field_value()`:
 
 ```python
-# __init__.py of a plugin package
+# cg_config.py of a plugin package
 from pydantic import BaseModel
-from common_grants_sdk.extensions import CustomFieldSpec, SchemaExtensions
+from common_grants_sdk import define_plugin
+from common_grants_sdk.extensions import CustomFieldSpec, ObjectSchemasInput
 from common_grants_sdk.schemas.pydantic import CustomFieldType
 
 # Export value types so consumers can reference them directly
@@ -731,15 +719,19 @@ class ProgramAreaValue(BaseModel):
     code: str
     name: str
 
-extensions: SchemaExtensions = {
-    "Opportunity": {
-        "programArea": CustomFieldSpec(
-            field_type=CustomFieldType.OBJECT,
-            value=ProgramAreaValue,
-            description="The HHS program area for this opportunity",
-        ),
-    },
-}
+config = define_plugin(
+    schemas={
+        "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                "programArea": CustomFieldSpec(
+                    field_type=CustomFieldType.OBJECT,
+                    value=ProgramAreaValue,
+                    description="The HHS program area for this opportunity",
+                ),
+            }
+        )
+    }
+)
 ```
 
 This allows consumers to use `get_custom_field_value()` with the same type the plugin uses for validation:

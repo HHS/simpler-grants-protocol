@@ -88,9 +88,8 @@ class PluginExtensionsMeta(BaseModel):
 
 
 class PluginExtensionsSchema(BaseModel):
-    """Per-object config inside extensions.schemas.
+    """Per-object config inside extensions.schemas. Holds declarative mappings only.
 
-    custom_fields: custom field declarations (merged by merge_extensions).
     mappings: optional ADR-0017 declarative mappings. When present and no explicit
         to_common / from_common is supplied in schemas[obj], define_plugin() will
         auto-invoke build_transforms() on these (TODO — ADR-0022 Decision #6).
@@ -98,9 +97,6 @@ class PluginExtensionsSchema(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    custom_fields: dict[str, CustomFieldSpec] | None = Field(
-        default=None, alias="customFields"
-    )
     mappings: ObjectMappings | None = None
 
 
@@ -124,6 +120,9 @@ class ObjectSchemasInput(Generic[TNative, TCommon]):
     hand-written or generated via build_transforms(). native defaults to
     dict[str, Any] if omitted.
 
+    custom_fields declares any extra fields this object exposes beyond the base
+    CommonGrants schema. The code generator reads these and emits typed subclasses.
+
     common is intentionally absent here. It is injected by define_plugin() during
     compilation from ObjectSchemasInput → ObjectSchemas, resolved from the generated
     model classes produced by the code generator. Plugin authors never set it directly —
@@ -131,6 +130,7 @@ class ObjectSchemasInput(Generic[TNative, TCommon]):
     """
 
     native: type[TNative] | None = None
+    custom_fields: dict[str, CustomFieldSpec] | None = None
     to_common: Callable[[TNative], TransformResult[TCommon]] | None = None
     from_common: Callable[[TCommon], TransformResult[TNative]] | None = None
 

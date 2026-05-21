@@ -69,15 +69,15 @@ def _load_config(config_path: Path) -> PluginConfig:
 def _extract_custom_fields(
     config: PluginConfig,
 ) -> dict[str, dict[str, CustomFieldSpec]]:
-    """Extract custom field specs from PluginExtensions into the flat shape used by generators.
+    """Extract custom field specs from config.schemas into the flat shape used by generators.
 
-    Returns an empty dict if config.extensions is None or has no schemas with custom_fields.
+    Returns an empty dict if config.schemas is None or has no schemas with custom_fields.
     """
-    if config.extensions is None or config.extensions.schemas is None:
+    if config.schemas is None:
         return {}
     return {
         obj: schema.custom_fields
-        for obj, schema in config.extensions.schemas.items()
+        for obj, schema in config.schemas.items()
         if schema.custom_fields is not None
     }
 
@@ -275,7 +275,7 @@ def _model_blocks(
                 spec=spec, resolved_type=resolved_type
             )
             # Use spec.name as the runtime display name if provided, otherwise fall back
-            # to the field key (the dict key in PluginExtensionsSchema.custom_fields).
+            # to the field key (the dict key in ObjectSchemasInput.custom_fields).
             field_name_default = spec.name or field_key
             # repr() produces a quoted string literal safe to embed directly in source code.
             description_default = repr(spec.description) if spec.description else "None"
@@ -448,7 +448,16 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> s
     constructed, so plugin.schemas.Opportunity.to_common etc. are populated.
     """
     # Collect the sets of objects needing transform injection.
-    explicit_objs: set[str] = set(config.schemas.keys()) if config.schemas else set()
+    # Only count schemas that have explicit callable transforms, not those with custom_fields only.
+    explicit_objs: set[str] = (
+        {
+            obj
+            for obj, s in config.schemas.items()
+            if s.to_common is not None or s.from_common is not None
+        }
+        if config.schemas
+        else set()
+    )
     mappings_objs: set[str] = (
         {obj for obj, s in config.extensions.schemas.items() if s.mappings is not None}
         if config.extensions and config.extensions.schemas
@@ -579,7 +588,13 @@ def generate_plugin(plugin_dir: Path) -> Path:
     # to_common/from_common in config.schemas.
     if config.extensions and config.extensions.schemas:
         explicit_schema_objs: set[str] = (
-            set(config.schemas.keys()) if config.schemas else set()
+            {
+                obj
+                for obj, s in config.schemas.items()
+                if s.to_common is not None or s.from_common is not None
+            }
+            if config.schemas
+            else set()
         )
         ext_schemas = config.extensions.schemas
         for obj, schema in ext_schemas.items():

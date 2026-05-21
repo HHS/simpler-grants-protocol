@@ -1,20 +1,19 @@
 """
 Plugin configuration for opportunity extensions.
 
-Defines and merges two sets of custom field extensions for the Opportunity schema:
-- hhs_extensions: HHS-specific fields (programArea, legacyGrantId)
-- local_extensions: Local fields (eligibilityTypes, awardCeiling)
+Defines custom field extensions for the Opportunity schema:
+- HHS-specific fields (programArea, legacyGrantId)
+- Local fields (eligibilityTypes, awardCeiling)
 """
 
-from common_grants_sdk import define_plugin, merge_extensions
-from common_grants_sdk.extensions import CustomFieldSpec
-from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema
+from common_grants_sdk import define_plugin
+from common_grants_sdk.extensions import CustomFieldSpec, ObjectSchemasInput
 from common_grants_sdk.schemas.pydantic.fields.custom import CustomFieldType
 
-hhs_extensions = PluginExtensions(
+config = define_plugin(
     schemas={
-        "Opportunity": PluginExtensionsSchema(
-            customFields={
+        "Opportunity": ObjectSchemasInput(
+            custom_fields={
                 "programArea": CustomFieldSpec(
                     field_type=CustomFieldType.STRING,
                     description="HHS program area code (e.g. 'CFDA-93.243')",
@@ -23,15 +22,6 @@ hhs_extensions = PluginExtensions(
                     field_type=CustomFieldType.INTEGER,
                     description="Numeric ID from the legacy grants management system",
                 ),
-            }
-        )
-    }
-)
-
-local_extensions = PluginExtensions(
-    schemas={
-        "Opportunity": PluginExtensionsSchema(
-            customFields={
                 "eligibilityTypes": CustomFieldSpec(
                     field_type=CustomFieldType.ARRAY,
                     description="Types of organizations eligible to apply",
@@ -43,10 +33,4 @@ local_extensions = PluginExtensions(
             }
         )
     }
-)
-
-config = define_plugin(
-    extensions=merge_extensions(
-        [hhs_extensions, local_extensions], on_conflict="error"
-    ),
 )

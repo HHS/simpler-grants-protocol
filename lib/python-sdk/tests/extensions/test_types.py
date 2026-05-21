@@ -80,7 +80,6 @@ def test_plugin_extensions_meta():
 
 
 def test_plugin_extensions_schema():
-    assert PluginExtensionsSchema().custom_fields is None
     assert PluginExtensionsSchema().mappings is None
     s = PluginExtensionsSchema(mappings=ObjectMappings(toCommon={"a": "b"}))
     assert s.mappings.to_common == {"a": "b"}
@@ -92,10 +91,9 @@ def test_plugin_extensions_schema():
 def test_plugin_extensions():
     assert PluginExtensions().meta is None
     assert PluginExtensions().schemas is None
-    spec = CustomFieldSpec(field_type=CustomFieldType.INTEGER)
-    schema = PluginExtensionsSchema(customFields={"legacyId": spec})
+    schema = PluginExtensionsSchema(mappings=ObjectMappings(toCommon={"a": "b"}))
     ext = PluginExtensions(schemas={"Opportunity": schema})
-    assert ext.schemas["Opportunity"].custom_fields == {"legacyId": spec}
+    assert ext.schemas["Opportunity"].mappings is not None
 
 
 # --- ObjectSchemasInput ---
@@ -103,13 +101,18 @@ def test_plugin_extensions():
 
 def test_object_schemas_input():
     assert ObjectSchemasInput().native is None
+    assert ObjectSchemasInput().custom_fields is None
     assert ObjectSchemasInput().to_common is None
+
+    spec = CustomFieldSpec(field_type=CustomFieldType.INTEGER)
+    inp = ObjectSchemasInput(custom_fields={"legacyId": spec})
+    assert inp.custom_fields == {"legacyId": spec}
 
     def passthrough(x):
         return TransformResult(result=x, errors=[])
 
-    inp = ObjectSchemasInput(to_common=passthrough, from_common=passthrough)
-    assert inp.to_common is passthrough
+    inp2 = ObjectSchemasInput(to_common=passthrough, from_common=passthrough)
+    assert inp2.to_common is passthrough
 
 
 # --- ObjectSchemas ---

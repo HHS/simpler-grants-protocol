@@ -16,7 +16,6 @@ from common_grants_sdk.extensions import (
     build_transforms,
     define_plugin,
 )
-from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 
 # ---------------------------------------------------------------------------
@@ -124,41 +123,35 @@ config = define_plugin(
         sourceSystem="grants.gov",
         capabilities=["customFields", "transforms"],
     ),
-    extensions=PluginExtensions(
-        schemas={
-            "Opportunity": PluginExtensionsSchema(
-                customFields={
-                    "legacyId": CustomFieldSpec(
-                        field_type=CustomFieldType.INTEGER,
-                        name="Legacy ID",
-                        description="Unique identifier in legacy database",
-                    ),
-                    "legacyIdStr": CustomFieldSpec(
-                        field_type=CustomFieldType.STRING,
-                        name="Legacy ID (string)",
-                        description="Legacy ID coerced to a string via numberToString",
-                    ),
-                    "agencyName": CustomFieldSpec(
-                        field_type=CustomFieldType.STRING,
-                        name="Agency",
-                        description="Agency hosting the opportunity",
-                    ),
-                    "applicantTypes": CustomFieldSpec(
-                        field_type=CustomFieldType.ARRAY,
-                        name="Applicant types",
-                        description="Types of applicants eligible to apply",
-                    ),
-                    "priorityScore": CustomFieldSpec(
-                        field_type=CustomFieldType.NUMBER,
-                        name="Priority score",
-                        description="Numeric priority score coerced from a string via stringToNumber",
-                    ),
-                },
-            )
-        }
-    ),
     schemas={
         "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                "legacyId": CustomFieldSpec(
+                    field_type=CustomFieldType.INTEGER,
+                    name="Legacy ID",
+                    description="Unique identifier in legacy database",
+                ),
+                "legacyIdStr": CustomFieldSpec(
+                    field_type=CustomFieldType.STRING,
+                    name="Legacy ID (string)",
+                    description="Legacy ID coerced to a string via numberToString",
+                ),
+                "agencyName": CustomFieldSpec(
+                    field_type=CustomFieldType.STRING,
+                    name="Agency",
+                    description="Agency hosting the opportunity",
+                ),
+                "applicantTypes": CustomFieldSpec(
+                    field_type=CustomFieldType.ARRAY,
+                    name="Applicant types",
+                    description="Types of applicants eligible to apply",
+                ),
+                "priorityScore": CustomFieldSpec(
+                    field_type=CustomFieldType.NUMBER,
+                    name="Priority score",
+                    description="Numeric priority score coerced from a string via stringToNumber",
+                ),
+            },
             to_common=to_common,
             from_common=from_common,
         )

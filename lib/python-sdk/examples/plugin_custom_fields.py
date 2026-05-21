@@ -20,6 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from plugins.opportunity_extensions import opportunity_extensions  # noqa: E402
+from plugins.opportunity_extensions.cg_config import config as opp_config  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Sample API payload containing our four custom fields
@@ -76,12 +77,9 @@ print()
 # The plugin also exposes the original extension specs
 # ---------------------------------------------------------------------------
 
-print("Registered extensions:")
-assert opportunity_extensions.extensions is not None
-assert opportunity_extensions.extensions.schemas is not None
-_opp_custom_fields = opportunity_extensions.extensions.schemas[
-    "Opportunity"
-].custom_fields
+print("Registered custom fields:")
+assert opp_config.schemas is not None
+_opp_custom_fields = opp_config.schemas["Opportunity"].custom_fields
 assert _opp_custom_fields is not None
 for field_name, spec in _opp_custom_fields.items():
     print(f"  {field_name}: {spec.field_type} — {spec.description}")

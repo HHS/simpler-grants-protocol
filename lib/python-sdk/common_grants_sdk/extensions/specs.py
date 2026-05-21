@@ -36,24 +36,6 @@ class SchemaExtensions(TypedDict, total=False):
     Opportunity: dict[str, CustomFieldSpec]
 
 
-def _merge_fields(
-    model_name: str,
-    model_fields: dict[str, CustomFieldSpec],
-    source_fields: dict[str, CustomFieldSpec],
-    on_conflict: ConflictStrategy,
-) -> None:
-    """Merge source_fields into model_fields in place, applying the conflict strategy."""
-    for field_name, spec in source_fields.items():
-        if field_name in model_fields:
-            if on_conflict == "error":
-                raise ValueError(
-                    f'merge_extensions: duplicate field "{field_name}" on model "{model_name}"'
-                )
-            if on_conflict == "first_wins":
-                continue
-        model_fields[field_name] = spec
-
-
 def _merge_meta(
     current: PluginExtensionsMeta | None,
     incoming: PluginExtensionsMeta,
@@ -120,18 +102,12 @@ def merge_extensions(
         return sources[0]
 
     # Accumulate into plain dicts; construct PluginExtensions once at the end.
-    merged_fields: dict[str, dict[str, CustomFieldSpec]] = {}
     merged_mappings: dict[str, _ObjectMappings] = {}
     merged_meta: PluginExtensionsMeta | None = None
 
     for source in sources:
         if source.schemas:
             for obj, src_schema in source.schemas.items():
-                if src_schema.custom_fields:
-                    obj_fields = merged_fields.setdefault(obj, {})
-                    _merge_fields(
-                        obj, obj_fields, src_schema.custom_fields, on_conflict
-                    )
                 if src_schema.mappings:
                     if obj in merged_mappings:
                         if on_conflict == "error":
@@ -144,18 +120,16 @@ def merge_extensions(
         if source.meta:
             merged_meta = _merge_meta(merged_meta, source.meta, on_conflict)
 
-    all_objs = set(merged_fields) | set(merged_mappings)
     return _PluginExtensions(
         meta=merged_meta,
         schemas=(
             {
                 obj: _PluginExtensionsSchema(
-                    customFields=merged_fields.get(obj) or None,
                     mappings=merged_mappings.get(obj),
                 )
-                for obj in all_objs
+                for obj in merged_mappings
             }
-            if all_objs
+            if merged_mappings
             else None
         ),
     )

@@ -10,7 +10,7 @@ from typing import get_type_hints
 
 import pytest
 
-from common_grants_sdk import merge_extensions, define_plugin
+from common_grants_sdk import define_plugin
 from common_grants_sdk.extensions import CustomFieldSpec
 from common_grants_sdk.extensions import PluginConfig
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
@@ -28,55 +28,25 @@ def _env_with_sdk_pythonpath() -> dict[str, str]:
     return env
 
 
-def test_define_plugin_returns_config_with_extensions():
-    from common_grants_sdk.extensions.types import (
-        PluginExtensions,
-        PluginExtensionsSchema,
-    )
+def test_define_plugin_returns_config_with_schemas():
+    from common_grants_sdk.extensions.types import ObjectSchemasInput
 
-    ext = PluginExtensions(
-        schemas={
-            "Opportunity": PluginExtensionsSchema(
-                custom_fields={
-                    "program_area": CustomFieldSpec(
-                        field_type=CustomFieldType.STRING,
-                        description="Grant category",
-                    )
-                }
-            )
-        }
-    )
-    config = define_plugin(extensions=ext)
+    schemas = {
+        "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                "program_area": CustomFieldSpec(
+                    field_type=CustomFieldType.STRING,
+                    description="Grant category",
+                )
+            }
+        )
+    }
+    config = define_plugin(schemas=schemas)
 
     assert isinstance(config, PluginConfig)
-    assert config.extensions is ext
-
-
-def test_merge_extensions_merges_extensions():
-    from common_grants_sdk.extensions.types import (
-        PluginExtensions,
-        PluginExtensionsSchema,
-    )
-
-    one = PluginExtensions(
-        schemas={
-            "Opportunity": PluginExtensionsSchema(
-                custom_fields={"program_area": CustomFieldSpec(field_type="string")}
-            )
-        }
-    )
-    two = PluginExtensions(
-        schemas={
-            "Opportunity": PluginExtensionsSchema(
-                custom_fields={"eligibility_type": CustomFieldSpec(field_type="array")}
-            )
-        }
-    )
-
-    merged = merge_extensions([one, two], on_conflict="error")
-
-    fields = merged.schemas["Opportunity"].custom_fields
-    assert set(fields.keys()) == {"program_area", "eligibility_type"}
+    assert config.schemas is schemas
+    assert config.schemas["Opportunity"].custom_fields is not None
+    assert "program_area" in config.schemas["Opportunity"].custom_fields
 
 
 def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
@@ -91,25 +61,23 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
             [
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
-                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
                 "",
                 "config = define_plugin(",
-                "    extensions=PluginExtensions(",
-                "        schemas={",
-                '            "Opportunity": PluginExtensionsSchema(',
-                "                custom_fields={",
-                '                    "program_area": CustomFieldSpec(',
-                '                        field_type="string",',
-                '                        description="Program area",',
-                "                    ),",
-                '                    "eligibility_type": CustomFieldSpec(',
-                '                        field_type="array",',
-                '                        description="Types of eligible organizations",',
-                "                    ),",
-                "                },",
-                "            )",
-                "        }",
-                "    ),",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            custom_fields={",
+                '                "program_area": CustomFieldSpec(',
+                '                    field_type="string",',
+                '                    description="Program area",',
+                "                ),",
+                '                "eligibility_type": CustomFieldSpec(',
+                '                    field_type="array",',
+                '                    description="Types of eligible organizations",',
+                "                ),",
+                "            },",
+                "        )",
+                "    },",
                 ")",
                 "",
             ]
@@ -171,8 +139,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
             "nonprofit",
             "city_government",
         ]
-        assert combined.extensions is not None
-        assert "Opportunity" in (combined.extensions.schemas or {})
+        assert combined.schemas.Opportunity.common is opp_model
     finally:
         sys.path.remove(str(tmp_path))
 
@@ -188,25 +155,23 @@ def test_generate_emits_import_for_pydantic_model_in_cg_config(tmp_path: Path):
                 "from pydantic import BaseModel",
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
-                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
                 "",
                 "class AgentInfo(BaseModel):",
                 "    name: str",
                 "    email: str",
                 "",
                 "config = define_plugin(",
-                "    extensions=PluginExtensions(",
-                "        schemas={",
-                '            "Opportunity": PluginExtensionsSchema(',
-                "                custom_fields={",
-                '                    "point_of_contact": CustomFieldSpec(',
-                '                        field_type="object",',
-                "                        value=AgentInfo,",
-                "                    ),",
-                "                },",
-                "            )",
-                "        }",
-                "    ),",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            custom_fields={",
+                '                "point_of_contact": CustomFieldSpec(',
+                '                    field_type="object",',
+                "                    value=AgentInfo,",
+                "                ),",
+                "            },",
+                "        )",
+                "    },",
                 ")",
                 "",
             ]
@@ -241,21 +206,19 @@ def test_generate_emits_import_for_external_module_type(tmp_path: Path):
                 "from datetime import datetime",
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
-                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
                 "",
                 "config = define_plugin(",
-                "    extensions=PluginExtensions(",
-                "        schemas={",
-                '            "Opportunity": PluginExtensionsSchema(',
-                "                custom_fields={",
-                '                    "deadline": CustomFieldSpec(',
-                '                        field_type="string",',
-                "                        value=datetime,",
-                "                    ),",
-                "                },",
-                "            )",
-                "        }",
-                "    ),",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            custom_fields={",
+                '                "deadline": CustomFieldSpec(',
+                '                    field_type="string",',
+                "                    value=datetime,",
+                "                ),",
+                "            },",
+                "        )",
+                "    },",
                 ")",
                 "",
             ]
@@ -356,18 +319,16 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
             [
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
-                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
                 "",
                 "config = define_plugin(",
-                "    extensions=PluginExtensions(",
-                "        schemas={",
-                '            "Opportunity": PluginExtensionsSchema(',
-                "                custom_fields={",
-                '                    "eligibility_type": CustomFieldSpec(field_type="array"),',
-                "                },",
-                "            )",
-                "        }",
-                "    ),",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            custom_fields={",
+                '                "eligibility_type": CustomFieldSpec(field_type="array"),',
+                "            },",
+                "        )",
+                "    },",
                 ")",
                 "",
             ]
@@ -440,10 +401,7 @@ def test_generate_explicit_transforms(tmp_path):
         "\n".join(
             [
                 "from common_grants_sdk import define_plugin",
-                "from common_grants_sdk.extensions.types import (",
-                "    ObjectSchemasInput, PluginExtensions, PluginExtensionsSchema,",
-                "    TransformResult,",
-                ")",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput, TransformResult",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
                 "",
                 "def _to_common(native):",
@@ -453,17 +411,9 @@ def test_generate_explicit_transforms(tmp_path):
                 "    return TransformResult(result={'name': common.get('title', '')}, errors=[])",
                 "",
                 "config = define_plugin(",
-                "    extensions=PluginExtensions(",
-                "        schemas={",
-                '            "Opportunity": PluginExtensionsSchema(',
-                "                custom_fields={",
-                '                    "legacyId": CustomFieldSpec(field_type="integer"),',
-                "                },",
-                "            )",
-                "        }",
-                "    ),",
                 "    schemas={",
                 '        "Opportunity": ObjectSchemasInput(',
+                '            custom_fields={"legacyId": CustomFieldSpec(field_type="integer")},',
                 "            to_common=_to_common,",
                 "            from_common=_from_common,",
                 "        )",
