@@ -78,7 +78,7 @@ jobs:
             - Type definitions (`@types/node`)
 
             ### Why a separate workflow?
-            Dependabot's pnpm workspace-catalog support has known bugs that corrupt the lockfile. This workflow runs `pnpm update` + `pnpm install` to produce a clean, valid lockfile. See [`DEPENDENCY_MANAGEMENT.md`](./DEPENDENCY_MANAGEMENT.md) for the upstream bug references and full rationale.
+            Dependabot's pnpm workspace-catalog support has known bugs that corrupt the lockfile. This workflow runs `pnpm update` + `pnpm install` to produce a clean, valid lockfile. See [`DEPENDENCY_MANAGEMENT.md`](https://github.com/HHS/simpler-grants-protocol/blob/main/DEPENDENCY_MANAGEMENT.md) for the upstream bug references and full rationale.
 
             ### Reviewer checklist
             - [ ] CI passes (catalog validation runs all workspace package checks)
