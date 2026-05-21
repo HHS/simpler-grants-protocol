@@ -372,7 +372,7 @@ describe("plugin composition", () => {
   });
 
   it("should merge extensions from multiple plugins without conflict", () => {
-    const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+    const merged = mergeExtensions([legacyPlugin.extensions!, classificationPlugin.extensions!]);
 
     // All three fields should be present under Opportunity
     expect(merged.Opportunity).toBeDefined();
@@ -383,7 +383,7 @@ describe("plugin composition", () => {
   });
 
   it("should parse a payload with all custom fields from the combined plugin", () => {
-    const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+    const merged = mergeExtensions([legacyPlugin.extensions!, classificationPlugin.extensions!]);
     const combinedPlugin = definePlugin({ extensions: merged });
 
     const fullData = {
@@ -422,7 +422,7 @@ describe("plugin composition", () => {
   });
 
   it("should reject invalid data in the combined schema", () => {
-    const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+    const merged = mergeExtensions([legacyPlugin.extensions!, classificationPlugin.extensions!]);
     const combinedPlugin = definePlugin({ extensions: merged });
 
     const invalidData = {

@@ -115,7 +115,7 @@ function demonstrateComposition() {
   console.log("\n--- Composed plugins ---\n");
 
   // Merge extensions from both plugins into one
-  const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+  const merged = mergeExtensions([legacyPlugin.extensions!, classificationPlugin.extensions!]);
 
   // Build a combined plugin with all custom fields
   const combinedPlugin = definePlugin({ extensions: merged });
@@ -157,7 +157,7 @@ function demonstrateComposition() {
 function demonstrateValidation() {
   console.log("\n--- Validation ---\n");
 
-  const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
+  const merged = mergeExtensions([legacyPlugin.extensions!, classificationPlugin.extensions!]);
   const combinedPlugin = definePlugin({ extensions: merged });
 
   const oppData = {

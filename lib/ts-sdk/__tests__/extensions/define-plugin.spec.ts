@@ -180,7 +180,10 @@ describe("definePlugin", () => {
         },
       } as const);
 
-      const merged = mergeExtensions([pluginA.extensions, pluginB.extensions]);
+      // Non-null assertions: extensions on the returned Plugin is typed
+      // optional (since `DefinePluginOptions.extensions` is optional in the
+      // consolidated shape), but both pluginA and pluginB declared it above.
+      const merged = mergeExtensions([pluginA.extensions!, pluginB.extensions!]);
       const combined = definePlugin({ extensions: merged });
 
       const result = combined.schemas.Opportunity.parse({
@@ -305,6 +308,104 @@ describe("definePlugin", () => {
       const plugin = definePlugin({ extensions: {} });
 
       expect(plugin.transformSchemas).toBeUndefined();
+    });
+  });
+
+  // ############################################################################
+  // ADR-0022 consolidation — customFields on transformSchemas[obj]
+  //
+  // Mirrors Python PoC PR #838 (commit `a156d31`): authors add a single
+  // per-object entry under transformSchemas with native + customFields +
+  // toCommon + fromCommon, rather than splitting customFields into a separate
+  // top-level `extensions` dict. Legacy `extensions` surface is still supported
+  // for customFields-only plugins.
+  // ############################################################################
+
+  describe("transformSchemas.customFields (consolidated shape)", () => {
+    it("applies customFields from transformSchemas[obj] to the compiled schema", () => {
+      const plugin = definePlugin({
+        transformSchemas: {
+          Opportunity: {
+            customFields: {
+              legacyId: {
+                fieldType: CustomFieldType.object,
+                value: LegacyIdValueSchema,
+              },
+            },
+          },
+        },
+      });
+
+      const result = plugin.schemas.Opportunity.parse({
+        ...validOpp,
+        customFields: {
+          legacyId: {
+            name: "legacyId",
+            fieldType: "object",
+            value: { system: "legacy", id: 42 },
+          },
+        },
+      });
+
+      // Cast: type inference for `plugin.schemas[obj]` still flows through the
+      // legacy `extensions` parameter, not through `transformSchemas[obj].customFields`.
+      // Wiring the generic through transformSchemas is a follow-up; runtime
+      // already applies customFields from either source.
+      const legacy = result.customFields?.legacyId?.value as { system: string; id: number };
+      expect(legacy.system).toBe("legacy");
+      expect(legacy.id).toBe(42);
+    });
+
+    it("works without an `extensions` argument at all", () => {
+      const plugin = definePlugin({
+        transformSchemas: {
+          Opportunity: {
+            customFields: {
+              category: { fieldType: CustomFieldType.string },
+            },
+          },
+        },
+      });
+
+      // No extensions argument was passed; legacy surface is undefined.
+      expect(plugin.extensions).toBeUndefined();
+      // Compiled schema still applied customFields from transformSchemas.
+      const result = plugin.schemas.Opportunity.parse({
+        ...validOpp,
+        customFields: {
+          category: { name: "category", fieldType: "string", value: "Education" },
+        },
+      });
+      expect(result.customFields?.category?.value).toBe("Education");
+    });
+
+    it("prefers transformSchemas[obj].customFields over extensions[obj] when both are set", () => {
+      const plugin = definePlugin({
+        // Legacy surface declares one shape...
+        extensions: {
+          Opportunity: {
+            legacyId: { fieldType: CustomFieldType.string },
+          },
+        },
+        // ...transformSchemas declares a different one for the same object.
+        transformSchemas: {
+          Opportunity: {
+            customFields: {
+              category: { fieldType: CustomFieldType.string },
+            },
+          },
+        },
+      } as const);
+
+      // transformSchemas wins: the compiled schema validates `category`,
+      // not `legacyId`.
+      const result = plugin.schemas.Opportunity.safeParse({
+        ...validOpp,
+        customFields: {
+          category: { name: "category", fieldType: "string", value: "Education" },
+        },
+      });
+      expect(result.success).toBe(true);
     });
   });
 });

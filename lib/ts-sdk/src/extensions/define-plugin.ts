@@ -42,17 +42,36 @@ export type TransformSchemasInput = Partial<
 /**
  * Options for `definePlugin()`.
  *
- * Accepts an `extensions` property with custom field specifications, plus optional
- * `meta` and `transformSchemas` per ADR-0022. Structured as an options object for
- * forward-compatibility with future properties like `namespace`.
+ * `transformSchemas` carries the consolidated per-object input (custom fields,
+ * native schema, transforms) — matches the Python PoC's `ObjectSchemasInput`
+ * shape (PR #838 commit `a156d31`). `extensions` is preserved as a legacy
+ * surface for customFields-only plugins that predate the consolidation and so
+ * `mergeExtensions()` keeps working for cross-package composition of those
+ * declarations. New plugins should put `customFields` inside
+ * `transformSchemas[Object]` alongside `toCommon` / `fromCommon`.
+ *
+ * When the same object has `customFields` in both surfaces, `transformSchemas`
+ * wins. The legacy `extensions` surface and its mergeability are pending the
+ * ADR-0022 amendment that formalizes consolidation; see the `customFields` note
+ * on {@link ObjectSchemasInput}.
+ *
+ * Structured as an options object for forward-compatibility with future
+ * properties like `namespace`.
  */
 export interface DefinePluginOptions<T extends SchemaExtensions = SchemaExtensions> {
-  /** Custom field specifications for extensible models */
-  extensions: T;
+  /**
+   * Legacy customFields surface for customFields-only plugins. Optional.
+   *
+   * Prefer placing `customFields` on `transformSchemas[Object]` for new plugins.
+   * This surface is preserved so existing `mergeExtensions()`-composed
+   * declarations keep working; see the type-level note above.
+   */
+  extensions?: T;
   /** Optional plugin identity and capability declaration (ADR-0022). */
   meta?: PluginMeta;
   /**
-   * Optional bidirectional transform callables per extensible model.
+   * Optional per-object transform input — `native` schema, `customFields` specs,
+   * and `toCommon` / `fromCommon` callables — for each extensible model.
    *
    * Stored as-is in the PoC (no compilation, no Zod-wrap). Full SDK will compile
    * `ObjectSchemasInput` → `ObjectSchemas` and inject the generated `common`
@@ -64,13 +83,13 @@ export interface DefinePluginOptions<T extends SchemaExtensions = SchemaExtensio
 /**
  * Configuration object returned by `definePlugin()`.
  *
- * - `extensions` — the original `SchemaExtensions` input (preserved by reference)
+ * - `extensions` — the legacy `SchemaExtensions` input (preserved by reference when provided)
  * - `schemas` — extensible schemas with custom fields applied where applicable
  * - `meta` — plugin identity passed through from options
- * - `transformSchemas` — author-provided transform callables passed through from options
+ * - `transformSchemas` — author-provided per-object input (native, customFields, transforms)
  */
 export interface Plugin<T extends SchemaExtensions = SchemaExtensions> {
-  extensions: T;
+  extensions?: T;
   schemas: PluginSchemas<T>;
   meta?: PluginMeta;
   transformSchemas?: TransformSchemasInput;
@@ -83,25 +102,39 @@ export interface Plugin<T extends SchemaExtensions = SchemaExtensions> {
 /**
  * Creates a `Plugin` from the given options.
  *
- * Iterates over extensible schemas. For those with specs in `extensions`,
- * applies `withCustomFields()` to produce a typed schema. Others pass
- * through unchanged.
+ * Iterates over extensible schemas. For each model, looks up customFields specs
+ * — `transformSchemas[name].customFields` takes precedence, falling back to the
+ * legacy `extensions[name]` surface. When specs are present, applies
+ * `withCustomFields()` to produce a typed schema; otherwise the base schema
+ * passes through unchanged.
  *
- * @param options - Options containing custom field specifications
- * @returns A `Plugin` with `.extensions` and `.schemas`
+ * @param options - Options containing transformSchemas and/or legacy extensions
+ * @returns A `Plugin` with `.extensions`, `.schemas`, and `.transformSchemas`
  *
  * @example
  * ```typescript
+ * // Consolidated shape (preferred):
  * const plugin = definePlugin({
- *   extensions: {
+ *   transformSchemas: {
  *     Opportunity: {
- *       legacyId: { fieldType: "string" },
- *       category: { fieldType: "string", description: "Grant category" },
+ *       customFields: {
+ *         legacyId: { fieldType: "string" },
+ *         category: { fieldType: "string", description: "Grant category" },
+ *       },
+ *       toCommon,
+ *       fromCommon,
  *     },
  *   },
  * } as const);
  *
- * // plugin.schemas.Opportunity has typed customFields
+ * // Legacy shape (still supported for customFields-only plugins):
+ * const legacy = definePlugin({
+ *   extensions: {
+ *     Opportunity: {
+ *       legacyId: { fieldType: "string" },
+ *     },
+ *   },
+ * } as const);
  * ```
  */
 export function definePlugin<const T extends SchemaExtensions>(
@@ -110,13 +143,17 @@ export function definePlugin<const T extends SchemaExtensions>(
   const { extensions, meta, transformSchemas } = options;
   const schemas: Record<string, z.ZodTypeAny> = {};
 
-  // Walk every extensible model. If the caller supplied specs for it,
-  // produce a schema with typed customFields; otherwise keep the base schema.
+  // Walk every extensible model. Look up customFields specs from
+  // transformSchemas[name].customFields first, then fall back to the legacy
+  // extensions[name] surface. If either is non-empty, produce a schema with
+  // typed customFields; otherwise keep the base schema.
   for (const [name, extensibleSchema] of Object.entries(EXTENSIBLE_SCHEMA_MAP) as [
     ExtensibleSchemaName,
     HasCustomFields,
   ][]) {
-    const specs = extensions[name as ExtensibleSchemaName];
+    const fromTransformSchemas = transformSchemas?.[name]?.customFields;
+    const fromExtensions = extensions?.[name];
+    const specs = fromTransformSchemas ?? fromExtensions;
     if (specs && Object.keys(specs).length > 0) {
       schemas[name] = withCustomFields(extensibleSchema, specs);
     } else {

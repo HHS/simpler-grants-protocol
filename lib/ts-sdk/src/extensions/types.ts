@@ -289,16 +289,29 @@ export class PluginError extends Error {
  *
  * Plugin authors supply `toCommon` and `fromCommon` as plain callables — either
  * hand-written or generated via `buildTransforms()`. `native` is the optional Zod
- * schema for the source format.
+ * schema for the source format. `customFields` declares any extra fields this
+ * object exposes beyond the base CommonGrants schema; `definePlugin()` applies
+ * them to the compiled schema via `withCustomFields()`.
  *
  * @remarks
  * `common` is intentionally absent here. It is injected by `definePlugin()`
  * during compilation from `ObjectSchemasInput` → `ObjectSchemas`, resolved from
  * the generated model classes produced by the code generator. Plugin config
  * files cannot import from `generated/` (which is the input to generation).
+ *
+ * **ADR-0022 consolidation (pending amendment):** `customFields` lives here so
+ * authors add a single per-object entry under `DefinePluginOptions.transformSchemas`
+ * when introducing a new object, matching the Python PoC's `ObjectSchemasInput`
+ * shape (PR #838 commit `a156d31`). ADR-0022 as originally written placed
+ * `customFields` inside the serializable `PluginExtensions.schemas[obj]` so that
+ * declarations could be combined across packages via `mergeExtensions()` — moving
+ * `customFields` onto the runtime input drops that cross-package merge surface.
+ * The ADR amendment formalizing this trade-off is the open question; see the
+ * matching note on `PluginExtensionsObjectConfig` below.
  */
 export interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
   native?: z.ZodType<TNative>;
+  customFields?: Record<string, CustomFieldSpec>;
   toCommon?: (native: TNative) => TransformResult<TCommon>;
   fromCommon?: (common: TCommon) => TransformResult<TNative>;
 }
@@ -348,14 +361,21 @@ export interface ObjectMappings {
 /**
  * Per-object config inside the serializable `PluginExtensions.schemas` dict.
  *
- * `customFields` carries declarations merged by `mergeExtensions()`. `mappings`
- * carries optional ADR-0017 declarative mappings; when present and no explicit
- * `toCommon` / `fromCommon` is supplied in `DefinePluginOptions.transformSchemas`,
- * `definePlugin()` will auto-invoke `buildTransforms()` on these. Deferred to
- * the full SDK (ADR-0022 Decision #6, tracked under #756).
+ * `mappings` carries optional ADR-0017 declarative mappings; when present and no
+ * explicit `toCommon` / `fromCommon` is supplied in
+ * `DefinePluginOptions.transformSchemas`, `definePlugin()` will auto-invoke
+ * `buildTransforms()` on these. Deferred to the full SDK (ADR-0022 Decision #6,
+ * tracked under #756).
+ *
+ * **ADR-0022 consolidation (pending amendment):** `customFields` moved to
+ * {@link ObjectSchemasInput} so authors add a single per-object entry under
+ * `DefinePluginOptions.transformSchemas`, matching the Python PoC PR #838
+ * (commit `a156d31`). The original ADR-0022 placed `customFields` here so they
+ * could be combined across packages via `mergeExtensions()`; that surface is
+ * preserved for legacy callers via {@link SchemaExtensions} but no longer flows
+ * through this interface. Pending an ADR amendment.
  */
 export interface PluginExtensionsObjectConfig {
-  customFields?: Record<string, CustomFieldSpec>;
   mappings?: ObjectMappings;
 }
 

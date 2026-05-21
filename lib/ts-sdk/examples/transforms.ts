@@ -198,10 +198,12 @@ const { toCommon, fromCommon } = buildTransforms({
 // Step 5 — Plug the compiled transforms into a plugin definition
 // ############################################################################
 
+// Consolidated per-object input: customFields, toCommon, and fromCommon all live
+// on the same transformSchemas[Opportunity] entry — matching the Python PoC PR
+// #838 (commit `a156d31`), so authors add one entry per object rather than two.
+// See the `customFields` note on ObjectSchemasInput in extensions/types.ts for
+// the open ADR-0022 amendment question this consolidation depends on.
 const grantsGovPlugin = definePlugin({
-  extensions: {
-    Opportunity: customFieldSpecs,
-  },
   meta: {
     name: "grants.gov",
     version: "0.1.0",
@@ -209,7 +211,7 @@ const grantsGovPlugin = definePlugin({
     capabilities: ["customFields", "transforms"],
   },
   transformSchemas: {
-    Opportunity: { toCommon, fromCommon },
+    Opportunity: { customFields: customFieldSpecs, toCommon, fromCommon },
   },
 } as const);
 
