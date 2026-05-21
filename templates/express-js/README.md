@@ -4,7 +4,7 @@ A template for a CommonGrants API implemented using Express.js and TypeScript.
 
 ## Pre-requisites
 
-1. Node.js 18 or greater is installed globally: `node --version`
+1. Node.js 22 or greater is installed globally: `node --version`
 2. pnpm is installed globally: `pnpm --version`
 3. The CommonGrants CLI is installed globally: `pnpm install -g @common-grants/cli`
 
