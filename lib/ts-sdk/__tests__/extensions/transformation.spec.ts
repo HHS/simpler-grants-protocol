@@ -112,6 +112,14 @@ describe("switchOnValue", () => {
     expect(() => switchOnValue({ status: "posted" }, "garbage")).toThrow(/spec must be an object/);
     expect(() => switchOnValue({ status: "posted" }, null)).toThrow(/spec must be an object/);
     expect(() => switchOnValue({ status: "posted" }, 42)).toThrow(/spec must be an object/);
+    // Arrays pass `typeof === "object"` and non-null, but are not the
+    // structural-object shape `switchOnValue` expects. A mapping like
+    // `{ match: ["posted", "archived"] }` (plausible from a plugin author
+    // hand-writing JSON config) would otherwise silently resolve to
+    // `s.field`/`s.case`/`s.default` all-undefined and return undefined.
+    expect(() => switchOnValue({ status: "posted" }, ["posted", "archived"])).toThrow(
+      /spec must be an object/
+    );
   });
 
   it("does not coerce numeric source values to string-keyed cases", () => {

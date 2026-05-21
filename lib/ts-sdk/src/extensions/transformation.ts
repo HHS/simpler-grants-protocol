@@ -105,7 +105,7 @@ export function constValue(_data: unknown, value: unknown): unknown {
  *   with `handler: "match"`.
  */
 export function switchOnValue(data: unknown, spec: unknown): unknown {
-  if (typeof spec !== "object" || spec === null) {
+  if (typeof spec !== "object" || spec === null || Array.isArray(spec)) {
     throw new Error("match/switch handler: spec must be an object");
   }
   const s = spec as { field?: string; case?: Record<string, unknown>; default?: unknown };
@@ -328,6 +328,16 @@ export function transformFromMapping(
       // (ADR-0022 Decision #8). Arrays and class instances pass through
       // unchanged; nested `__proto__` inside non-plain values is the
       // handler author's responsibility.
+      //
+      // Shallow-clone the value rather than `delete`-in-place: `fieldValue`
+      // returns references plucked from caller input via `getFromPath`, so
+      // an in-place delete would silently mutate the caller's data —
+      // surprising for plugin authors caching parsed source records across
+      // `toCommon` calls. Spread is the correct copy primitive here:
+      // `{ ...src }` uses the spec's CopyDataProperties → CreateDataProperty,
+      // which copies an own `__proto__` data property AS a data property
+      // instead of firing the prototype setter. `Object.assign({}, src)`
+      // would mutate the target's prototype chain instead — do not switch.
       if (
         typeof returned === "object" &&
         returned !== null &&
@@ -335,7 +345,9 @@ export function transformFromMapping(
         Object.getPrototypeOf(returned) === Object.prototype &&
         Object.prototype.hasOwnProperty.call(returned, "__proto__")
       ) {
-        delete (returned as Record<string, unknown>).__proto__;
+        const cleaned = { ...(returned as Record<string, unknown>) };
+        delete cleaned.__proto__;
+        return cleaned;
       }
       return returned;
     }

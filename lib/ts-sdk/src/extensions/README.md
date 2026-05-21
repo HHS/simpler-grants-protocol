@@ -566,9 +566,12 @@ For a complete runnable round-trip with custom handlers and `commonModel` valida
 ```typescript
 const out = toCommon(sourceData);
 for (const err of out.errors) {
-  console.warn(`[${err.path ?? "?"}] (${err.handler ?? "?"}): ${err.message}`);
-  // err.sourceValue / err.cause may contain PII. On the Zod-validation path,
-  // err.message also embeds the rejected runtime value — redact before logging.
+  // Build a redacted projection — err.sourceValue / err.cause carry input data
+  // by design (ADR-0022 Decision #9); the projection enumerates only safe
+  // fields. On the Zod-validation path err.message is also data-bearing —
+  // see the PII warning below for the full picture and tracking issue.
+  const safe = { name: err.name, message: err.message, path: err.path, handler: err.handler };
+  console.warn(safe);
 }
 ```
 

@@ -533,6 +533,26 @@ describe("buildTransforms — handler-return __proto__ scrub (Decision #8 harden
     expect(wrap.ok).toBe(1);
   });
 
+  it("does NOT mutate the source object when scrubbing a `field` return", () => {
+    // `fieldValue` returns references plucked from caller input via `getFromPath`,
+    // so the scrub must clone rather than `delete`-in-place — otherwise running
+    // `toCommon` would silently mutate the caller's data. Plugin authors caching
+    // parsed source records across calls (common in long-running adapter processes
+    // and multi-tenant deployments) would otherwise observe surprise mutation.
+    const evilSource = { data: JSON.parse('{"__proto__": {"polluted": true}, "ok": 1}') };
+    expect(Object.prototype.hasOwnProperty.call(evilSource.data, "__proto__")).toBe(true);
+
+    const { toCommon } = buildTransforms({
+      toCommonMapping: { wrap: { field: "data" } },
+      fromCommonMapping: {},
+    });
+    toCommon(evilSource);
+
+    // Source preserved — input still has its own __proto__ key after toCommon.
+    expect(Object.prototype.hasOwnProperty.call(evilSource.data, "__proto__")).toBe(true);
+    expect((evilSource.data as { ok: number }).ok).toBe(1);
+  });
+
   it("after the scrub, a vulnerable for-in deep-merge of the result does NOT pollute Object.prototype", () => {
     const evilArg = JSON.parse('{"__proto__": {"polluted": true}}');
     const { toCommon } = buildTransforms({
