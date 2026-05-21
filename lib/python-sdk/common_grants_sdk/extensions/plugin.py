@@ -3,20 +3,24 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, overload
 
 from .types import (
-    ObjectSchemasInput,
     PluginExtensions,
     PluginExtensionsMeta,
 )
 
 T = TypeVar("T")
+TSchemas = TypeVar("TSchemas")
 
 
 @dataclass(frozen=True)
-class PluginConfig:
+class PluginConfig(Generic[TSchemas]):
     """Build-time plugin config produced by define_plugin() and consumed by generate.py.
+
+    Generic on TSchemas so the precise type of the schemas dict is preserved — e.g.
+    PluginConfig[dict[str, ObjectSchemasInput[MyNative, MyCg]]] — rather than being
+    widened to ObjectSchemasInput[Any, Any] at the storage boundary.
 
     Stores inputs as-is — no compilation occurs at define_plugin() call time.
     generate.py compiles this into a fully resolved Plugin by:
@@ -30,7 +34,7 @@ class PluginConfig:
 
     extensions: PluginExtensions | None = None
     meta: PluginExtensionsMeta | None = None
-    schemas: dict[str, ObjectSchemasInput[Any, Any]] | None = None
+    schemas: TSchemas | None = None
 
 
 @dataclass
@@ -52,16 +56,37 @@ class Plugin(Generic[T]):
     meta: PluginExtensionsMeta | None = None
 
 
+@overload
+def define_plugin(
+    meta: PluginExtensionsMeta | None = ...,
+    extensions: PluginExtensions | None = ...,
+    schemas: None = ...,
+) -> PluginConfig[None]: ...
+
+
+@overload
+def define_plugin(
+    meta: PluginExtensionsMeta | None = ...,
+    extensions: PluginExtensions | None = ...,
+    schemas: TSchemas = ...,
+) -> PluginConfig[TSchemas]: ...
+
+
 def define_plugin(
     meta: PluginExtensionsMeta | None = None,
     extensions: PluginExtensions | None = None,
-    schemas: dict[str, ObjectSchemasInput[Any, Any]] | None = None,
-) -> PluginConfig:
+    schemas: Any = None,
+) -> PluginConfig[Any]:
     """Create a PluginConfig consumed by the code generator.
 
     No compilation occurs here — inputs are stored as-is. The code generator
     (generate.py) compiles ObjectSchemasInput → ObjectSchemas by injecting
     the common model from the generated schemas.
+
+    The return type is generic on the schemas argument: passing a typed dict
+    (e.g. {"Opportunity": ObjectSchemasInput[MyNative, MyCg](...) }) preserves
+    those per-object generics on the returned PluginConfig rather than widening
+    them to Any.
     """
     return PluginConfig(
         extensions=extensions,

@@ -7,7 +7,7 @@ import importlib.util
 import keyword
 import re
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.utils.json import snake
@@ -33,7 +33,7 @@ FIELD_TYPE_DEFAULT_ANNOTATION: dict[CustomFieldType, str] = {
 }
 
 
-def _load_config(config_path: Path) -> PluginConfig:
+def _load_config(config_path: Path) -> PluginConfig[Any]:
     """Load and validate a plugin config file, returning the PluginConfig object.
 
     Uses importlib to load cg_config.py as an isolated module so it doesn't
@@ -67,7 +67,7 @@ def _load_config(config_path: Path) -> PluginConfig:
 
 
 def _extract_custom_fields(
-    config: PluginConfig,
+    config: PluginConfig[Any],
 ) -> dict[str, dict[str, CustomFieldSpec]]:
     """Extract custom field specs from config.schemas into the flat shape used by generators.
 
@@ -440,7 +440,7 @@ def _render_generated_init_py() -> str:
     )
 
 
-def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig) -> str:
+def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig[Any]) -> str:
     """Render the source of the plugin directory's root __init__.py file.
 
     Emits a fully compiled Plugin instance. Transform callables are injected

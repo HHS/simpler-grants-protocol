@@ -6,11 +6,14 @@ Defines custom field extensions for the Opportunity schema:
 - Local fields (eligibilityTypes, awardCeiling)
 """
 
+from typing import Any
+
 from common_grants_sdk import define_plugin
 from common_grants_sdk.extensions import CustomFieldSpec, ObjectSchemasInput
+from common_grants_sdk.extensions.plugin import PluginConfig
 from common_grants_sdk.schemas.pydantic.fields.custom import CustomFieldType
 
-config = define_plugin(
+config: PluginConfig[Any] = define_plugin(
     schemas={
         "Opportunity": ObjectSchemasInput(
             custom_fields={
