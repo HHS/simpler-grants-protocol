@@ -10,7 +10,7 @@ rather than silently shadowing them.
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar, overload
 
 from pydantic import BaseModel, ValidationError
 
@@ -21,6 +21,8 @@ from common_grants_sdk.utils.transformation import (
 )
 
 from .types import Handler, PluginError, TransformResult
+
+TCommon = TypeVar("TCommon", bound=BaseModel)
 
 
 def _validate_mapping(mapping: Any, known_handlers: set[str], path: str = "") -> None:
@@ -66,6 +68,30 @@ def _validate_mapping(mapping: Any, known_handlers: set[str], path: str = "") ->
             # Handler invocation — argument is runtime-only, do not recurse
             continue
         _validate_mapping(value, known_handlers, current_path)
+
+
+@overload
+def build_transforms(
+    to_common_mapping: dict[str, Any],
+    from_common_mapping: dict[str, Any],
+    handlers: dict[str, Handler] | None = ...,
+    common_model: None = ...,
+) -> tuple[
+    Callable[[Any], TransformResult[Any]],
+    Callable[[Any], TransformResult[Any]],
+]: ...
+
+
+@overload
+def build_transforms(
+    to_common_mapping: dict[str, Any],
+    from_common_mapping: dict[str, Any],
+    handlers: dict[str, Handler] | None = ...,
+    common_model: type[TCommon] = ...,
+) -> tuple[
+    Callable[[Any], TransformResult[TCommon]],
+    Callable[[Any], TransformResult[dict[str, Any]]],
+]: ...
 
 
 def build_transforms(
