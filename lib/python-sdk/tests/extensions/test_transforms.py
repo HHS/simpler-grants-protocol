@@ -1,5 +1,7 @@
 """Tests for build_transforms() in common_grants_sdk.extensions.transforms."""
 
+from typing import Any
+
 import pytest
 from pydantic import BaseModel
 from common_grants_sdk.extensions.transforms import build_transforms
@@ -194,14 +196,14 @@ def test_common_model_validation_failure():
     assert result.result["title"] == "Research into conservation techniques"
 
 
-def test_common_model_non_validation_error_is_caught():
+def test_common_model_non_validation_error_is_caught() -> None:
     """Non-ValidationError exceptions from model_validate surface as PluginError (errors-as-values contract)."""
 
     class _BrokenModel(BaseModel):
         title: str
 
         @classmethod
-        def model_validate(cls, obj, **kwargs):
+        def model_validate(cls, obj: Any, **kwargs: Any) -> "_BrokenModel":
             raise TypeError("misconfigured root validator")
 
     to_common, _ = build_transforms(
@@ -214,6 +216,7 @@ def test_common_model_non_validation_error_is_caught():
     assert isinstance(result.errors[0], PluginError)
     assert "misconfigured root validator" in str(result.errors[0])
     # raw transformed dict is preserved so the caller can inspect it
+    assert isinstance(result.result, dict)
     assert result.result["title"] == "Research into conservation techniques"
 
 

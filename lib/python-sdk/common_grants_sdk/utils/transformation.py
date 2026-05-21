@@ -148,7 +148,7 @@ DEFAULT_HANDLERS: dict[str, handle_func] = {
 
 
 def transform_from_mapping(
-    data: dict,
+    data: Any,
     mapping: dict,
     depth: int = 0,
     max_depth: int = 500,

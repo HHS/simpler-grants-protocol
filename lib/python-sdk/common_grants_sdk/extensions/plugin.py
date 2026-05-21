@@ -12,6 +12,7 @@ from .types import (
 
 T = TypeVar("T")
 TSchemas = TypeVar("TSchemas")
+_TSchemasContainer = TypeVar("_TSchemasContainer")
 
 
 @dataclass(frozen=True)
@@ -93,3 +94,55 @@ def define_plugin(
         meta=meta,
         schemas=schemas,
     )
+
+
+def inject_transforms(
+    config: PluginConfig[Any], schemas: _TSchemasContainer
+) -> _TSchemasContainer:
+    """Wire transform callables from plugin config into the generated schemas container.
+
+    Called by the generated plugin __init__.py to inject to_common/from_common
+    callables (and the native type) from cg_config into the ObjectSchemas instances
+    produced by the code generator.
+
+    Iterates over all entries in config.schemas that have at least one callable,
+    validates that both directions are present, then sets the attributes on the
+    matching schemas container attribute (e.g. schemas.Opportunity).
+
+    Returns the same schemas container (mutated in place) so callers can write
+    ``schemas = inject_transforms(config, schemas)`` and retain the concrete
+    generated type rather than widening to Any.
+
+    Args:
+        config: The PluginConfig produced by define_plugin().
+        schemas: The generated _Schemas container from generated/schemas.py.
+
+    Returns:
+        The same schemas container, with transform callables injected.
+
+    Raises:
+        ValueError: If a schema with any callable is missing its counterpart,
+            or if the object name is not found in the schemas container.
+    """
+    if not config.schemas:
+        return schemas
+    for obj_name, schema_input in config.schemas.items():
+        if schema_input.to_common is None and schema_input.from_common is None:
+            continue
+        obj_schemas = getattr(schemas, obj_name, None)
+        if obj_schemas is None:
+            raise ValueError(
+                f"Plugin object {obj_name!r}: not found in generated schemas"
+            )
+        if schema_input.to_common is None:
+            raise ValueError(
+                f"Plugin object {obj_name!r}: to_common callable is required"
+            )
+        if schema_input.from_common is None:
+            raise ValueError(
+                f"Plugin object {obj_name!r}: from_common callable is required"
+            )
+        obj_schemas.native = schema_input.native or dict
+        obj_schemas.to_common = schema_input.to_common
+        obj_schemas.from_common = schema_input.from_common
+    return schemas

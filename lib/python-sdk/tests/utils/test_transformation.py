@@ -331,7 +331,7 @@ def test_handler_error_is_value_error():
         )
 
 
-def test_pydantic_model_instance_is_normalized():
+def test_pydantic_model_instance_is_normalized() -> None:
     """transform_from_mapping accepts a Pydantic model and uses camelCase alias keys."""
 
     class Inner(BaseModel):
@@ -354,7 +354,7 @@ def test_pydantic_model_instance_is_normalized():
     assert result == {"out_title": "hello", "out_value": "world"}
 
 
-def test_pydantic_model_alias_not_snake_case():
+def test_pydantic_model_alias_not_snake_case() -> None:
     """Field paths must use camelCase aliases, not snake_case attribute names."""
 
     class Source(BaseModel):

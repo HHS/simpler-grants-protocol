@@ -244,6 +244,7 @@ def main() -> None:
             print(f"  [path={err.path}] {err}")
     else:
         print("Validation: PASS — result is a typed Opportunity instance")
+        assert isinstance(custom_cg.result, Opportunity)
         opp_instance = custom_cg.result
         print(f"\n  title:       {opp_instance.title}")
         print(f"  id:          {opp_instance.id}")

@@ -428,16 +428,12 @@ def test_generate_explicit_transforms(tmp_path):
     generate_plugin(plugin_dir)
 
     init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
-    # Explicit transforms use config.schemas directly, not build_transforms
+    # Explicit transforms use inject_transforms(), not per-object boilerplate
     assert "build_transforms" not in init_content
-    assert (
-        'schemas.Opportunity.to_common = config.schemas["Opportunity"].to_common'
-        in init_content
-    )
-    assert (
-        'schemas.Opportunity.from_common = config.schemas["Opportunity"].from_common'
-        in init_content
-    )
+    assert "schemas = inject_transforms(config, schemas)" in init_content
+    # No per-object assignment lines
+    assert 'config.schemas["Opportunity"].to_common' not in init_content
+    assert 'config.schemas["Opportunity"].from_common' not in init_content
     # ObjectSchemas is no longer constructed in __init__.py (only in schemas.py)
     assert "ObjectSchemas" not in init_content
 

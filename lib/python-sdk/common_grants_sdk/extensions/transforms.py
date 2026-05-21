@@ -89,7 +89,7 @@ def build_transforms(
     handlers: dict[str, Handler] | None = ...,
     common_model: type[TCommon] = ...,
 ) -> tuple[
-    Callable[[Any], TransformResult[TCommon]],
+    Callable[[Any], TransformResult[TCommon | dict[str, Any]]],
     Callable[[Any], TransformResult[dict[str, Any]]],
 ]: ...
 

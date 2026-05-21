@@ -484,24 +484,11 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig[Any])
             "",
         ]
 
-    # Explicit schemas: guard then inject callables (and native type if provided) per object.
+    # Explicit schemas: single inject_transforms() call handles all objects.
+    # Reassigning the return value preserves the concrete _Schemas type for mypy.
     if explicit_objs:
-        inject_lines += [
-            "if config.schemas is None:",
-            '    raise ValueError("config.schemas is required when explicit transforms are declared")',
-            "",
-        ]
-        for obj in sorted(explicit_objs):
-            inject_lines += [
-                f'if config.schemas["{obj}"].to_common is None:',
-                f'    raise ValueError("Plugin object {obj!r}: to_common callable is required")',
-                f'if config.schemas["{obj}"].from_common is None:',
-                f'    raise ValueError("Plugin object {obj!r}: from_common callable is required")',
-                f'schemas.{obj}.native = config.schemas["{obj}"].native or dict',
-                f'schemas.{obj}.to_common = config.schemas["{obj}"].to_common',
-                f'schemas.{obj}.from_common = config.schemas["{obj}"].from_common',
-                "",
-            ]
+        inject_lines.append("schemas = inject_transforms(config, schemas)")
+        inject_lines.append("")
 
     imports = [
         "# This file is auto-generated. Do not edit it manually — it will be overwritten",
@@ -510,12 +497,14 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig[Any])
         "",
     ]
 
+    sdk_imports = {"Plugin"}
+    if explicit_objs:
+        sdk_imports.add("inject_transforms")
     if needs_build_transforms:
-        imports.append(
-            "from common_grants_sdk.extensions import Plugin, build_transforms"
-        )
-    else:
-        imports.append("from common_grants_sdk.extensions import Plugin")
+        sdk_imports.add("build_transforms")
+    imports.append(
+        f"from common_grants_sdk.extensions import {', '.join(sorted(sdk_imports))}"
+    )
     imports += [
         "from .cg_config import config",
         "from .generated import schemas",
