@@ -571,6 +571,14 @@ def generate_plugin(plugin_dir: Path) -> Path:
         if config.extensions and config.extensions.schemas
         else set()
     )
+    # Third bucket: objects in config.schemas with explicit transforms but no
+    # custom_fields and no extensions.schemas entry. They also need a pass-through
+    # entry in _Schemas or schemas.<Obj> won't exist at import time.
+    transforms_only_objs: set[str] = (
+        set(config.schemas.keys()) - explicit_cf_objs - mappings_only_objs
+        if config.schemas
+        else set()
+    )
 
     # Validate that auto-generated transform objects have both mapping directions.
     # Auto-generated objects: have mappings in extensions.schemas but no explicit
@@ -610,7 +618,9 @@ def generate_plugin(plugin_dir: Path) -> Path:
     root_init_py = plugin_dir / "__init__.py"
 
     schemas_py.write_text(
-        _render_schemas_py(custom_fields, mappings_only_objs=mappings_only_objs),
+        _render_schemas_py(
+            custom_fields, mappings_only_objs=mappings_only_objs | transforms_only_objs
+        ),
         encoding="utf-8",
     )
     init_generated_py.write_text(_render_generated_init_py(), encoding="utf-8")

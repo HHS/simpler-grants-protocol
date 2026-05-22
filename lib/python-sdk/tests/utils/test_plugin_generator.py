@@ -455,6 +455,71 @@ def test_generate_explicit_transforms(tmp_path):
                 del sys.modules[key]
 
 
+def test_generate_transforms_only_no_custom_fields(tmp_path):
+    """Regression: config.schemas with only explicit transforms (no custom_fields, no extensions)
+    must produce a _Schemas entry for the object so inject_transforms() can access it at import.
+    """
+    from common_grants_sdk.extensions.generate import generate_plugin
+
+    plugin_dir = tmp_path / "plugins" / "transforms_only"
+    plugin_dir.mkdir(parents=True)
+    (plugin_dir / "__init__.py").write_text("", encoding="utf-8")
+
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput, TransformResult",
+                "",
+                "def _to_common(native):",
+                "    return TransformResult(result={'title': native.get('name', '')}, errors=[])",
+                "",
+                "def _from_common(common):",
+                "    return TransformResult(result={'name': common.get('title', '')}, errors=[])",
+                "",
+                "config = define_plugin(",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            to_common=_to_common,",
+                "            from_common=_from_common,",
+                "        )",
+                "    },",
+                ")",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    generate_plugin(plugin_dir)
+
+    # schemas.py must assign self.Opportunity using the base SDK class
+    schemas_src = (plugin_dir / "generated" / "schemas.py").read_text(encoding="utf-8")
+    assert "self.Opportunity = ObjectSchemas" in schemas_src
+    assert "OpportunityBase" in schemas_src
+
+    # __init__.py must use inject_transforms (not build_transforms)
+    init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
+    assert "inject_transforms" in init_content
+    assert "build_transforms" not in init_content
+
+    # Importing must not raise AttributeError / ValueError
+    sys.path.insert(0, str(tmp_path))
+    try:
+        mod = importlib.import_module("plugins.transforms_only")
+        plugin = getattr(mod, "transforms_only")
+        assert hasattr(plugin.schemas, "Opportunity")
+        result = plugin.schemas.Opportunity.to_common({"name": "Test Grant"})
+        assert result.result == {"title": "Test Grant"}
+        assert result.errors == []
+    finally:
+        if str(tmp_path) in sys.path:
+            sys.path.remove(str(tmp_path))
+        for key in list(sys.modules.keys()):
+            if "transforms_only" in key or key == "plugins":
+                del sys.modules[key]
+
+
 def test_generate_raises_on_missing_mapping_direction(tmp_path):
     """generate_plugin raises ValueError when a mappings-only object is missing
     one of its mapping directions (to_common or from_common is None)."""
