@@ -510,7 +510,7 @@ To translate "doesn't apply" into a target-side sentinel (e.g. an `n_a` status t
 
 `default` is **not** consulted for `null` source values — `default` belongs to "unrecognized value," not to "publisher asserts irrelevant." The opt-in `"null"` case key is the only path from `null` source to a non-`null` target.
 
-**For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `undefined` for "not provided," return `null` for "doesn't apply," return a value otherwise. The walker will place `null` returns onto the output object as a real `null` (distinct from an absent key), so consumers downstream can rely on the distinction.
+**For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `undefined` for "not provided," return `null` for "doesn't apply," return a value otherwise. The walker omits keys whose handler returned `undefined` and writes `null` returns as a real, present `null` — so the output object distinguishes the three states the same way the wire does: absent → key omitted, `null` → present `null`, value → present value. Consumers can use key presence (`hasOwnProperty` / `in`) to tell "not provided" from "doesn't apply."
 
 > **Cross-SDK note.** The TS PoC leads on ADR-0024 alignment; the Python PoC ([#810](https://github.com/HHS/simpler-grants-protocol/pull/810)) still collapses `None` source into the "not provided" path for the coercing handlers. Parity follow-up tracked there. ADR-0024 itself audited the Zod / Pydantic validation surface — these handler-level guarantees pin the parallel contract for the transforms surface.
 

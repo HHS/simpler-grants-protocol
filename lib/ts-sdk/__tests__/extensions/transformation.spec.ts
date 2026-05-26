@@ -404,6 +404,27 @@ describe("transformFromMapping", () => {
     ).toEqual({ value: null });
   });
 
+  it("omits an output key whose handler returned undefined (ADR-0024 'not provided')", () => {
+    // Counterpart to the null-preservation test above: an absent source field
+    // produces `undefined` from the handler, and the walker must OMIT the key
+    // rather than write `{ x: undefined }`. This is what makes the in-memory
+    // object distinguish "not provided" (key absent) from "doesn't apply"
+    // (key present, value null). `toEqual` treats `{}` and `{ x: undefined }`
+    // as equal, so assert key presence with `hasOwnProperty` directly.
+    const out = transformFromMapping({}, { x: { numberToString: "missing" } }) as Record<
+      string,
+      unknown
+    >;
+    expect(Object.prototype.hasOwnProperty.call(out, "x")).toBe(false);
+    // A sibling present key is still written — only the undefined child is dropped.
+    const mixed = transformFromMapping(
+      { a: 42 },
+      { present: { numberToString: "a" }, absent: { field: "nope" } }
+    ) as Record<string, unknown>;
+    expect(mixed).toEqual({ present: "42" });
+    expect(Object.prototype.hasOwnProperty.call(mixed, "absent")).toBe(false);
+  });
+
   it("rejects `__proto__` as an output field name (Decision #8 hardening)", () => {
     // JSON.parse adds `__proto__` as an own enumerable property (it uses
     // CreateDataProperty, not Set, so the inherited setter never fires) — that's

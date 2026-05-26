@@ -334,7 +334,11 @@ export interface TransformFromMappingOptions {
  *   same first-key-wins behavior, so cross-SDK mapping JSON behaves
  *   identically.
  * - Object nodes whose first key is not a handler are treated as output
- *   shapes — each child is transformed recursively.
+ *   shapes — each child is transformed recursively. A child that transforms to
+ *   `undefined` (absent source, per the ADR-0024 three-state contract) is
+ *   omitted from the output object; `null` ("doesn't apply") is written as a
+ *   present key. So absent → missing key, `null` → present `null`, value →
+ *   present value.
  *
  * @example
  * ```ts
@@ -433,7 +437,20 @@ export function transformFromMapping(
           `Invalid mapping node: '__proto__' is not allowed as an output field name (depth ${depth})`
         );
       }
-      out[k] = transformNode(v, depth + 1);
+      // ADR-0024 three-state: a child that transforms to `undefined` means the
+      // source field was absent ("not provided"). Omit the output key entirely
+      // rather than writing `out[k] = undefined`, so the in-memory object
+      // carries all three states faithfully — absent → key omitted, `null` →
+      // key present with `null` ("doesn't apply"), value → key present. Only
+      // `undefined` is skipped; `null` is written. This matches the shape
+      // `JSON.stringify` already produces on the wire (it drops `undefined`
+      // keys) and the dict Python lands on once it adopts the three-state
+      // contract — Python has no `undefined`, so an absent field is a missing
+      // dict key there too.
+      const child = transformNode(v, depth + 1);
+      if (child !== undefined) {
+        out[k] = child;
+      }
     }
     return out;
   };

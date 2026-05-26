@@ -541,7 +541,10 @@ describe("buildTransforms — null preservation (ADR-0024 three-state)", () => {
 
   it("distinguishes absent from null at the buildTransforms boundary", () => {
     // Pin the asymmetry the three-state contract depends on: absent source
-    // produces an absent output key; null source produces an explicit null.
+    // produces an absent output KEY; null source produces a present, explicit
+    // null. The distinction is by key presence, not just by value — both an
+    // absent key and a present-`undefined` key read as `undefined` via
+    // property access, so this test asserts `hasOwnProperty` directly.
     const { toCommon } = buildTransforms({
       toCommonMapping: {
         absentField: { field: "data.does_not_exist" },
@@ -553,11 +556,14 @@ describe("buildTransforms — null preservation (ADR-0024 three-state)", () => {
     const out = toCommon({ data: { declared_null: null } });
 
     expect(out.errors).toEqual([]);
-    // Walker writes the key whether the handler returns null or undefined —
-    // distinguishing the two is the handler's job (here, `field` returns
-    // undefined for absent and null for declared null).
     const result = out.result as Record<string, unknown>;
+    // null source ("doesn't apply") → present key with value null.
+    expect(Object.prototype.hasOwnProperty.call(result, "nullField")).toBe(true);
     expect(result.nullField).toBeNull();
+    // absent source ("not provided") → key omitted entirely (ADR-0024). The
+    // walker skips `undefined`-valued children so the in-memory object matches
+    // the wire shape `JSON.stringify` produces.
+    expect(Object.prototype.hasOwnProperty.call(result, "absentField")).toBe(false);
     expect(result.absentField).toBeUndefined();
   });
 });
