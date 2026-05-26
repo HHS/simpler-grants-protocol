@@ -40,7 +40,14 @@ jobs:
         run: pnpm --filter @common-grants/core run typespec
 
       - name: Audit dependencies
+        # Gated to PRs into `main` (and main-context workflow_call invocations) so
+        # advisories that live on `main` and can only be fixed there don't block
+        # PRs into HOLD-* batching branches or other non-main bases. The HOLD → main
+        # checkpoint PR re-runs this audit, so anything live at merge time is gated
+        # at the actionable boundary.
+        #
         # Calls the npm bulk advisory endpoint directly as a workaround for
         # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
         # revert to `pnpm --filter @common-grants/core run audit` once pnpm ships native support.
+        if: github.base_ref == 'main' || github.ref == 'refs/heads/main'
         run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js --filter @common-grants/core
