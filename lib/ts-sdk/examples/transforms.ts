@@ -241,6 +241,11 @@ function fail(message: string): never {
 const toCommonResult = grantsGovPlugin.transformSchemas?.Opportunity?.toCommon?.(SOURCE_DATA);
 if (!toCommonResult) fail("transformSchemas.Opportunity.toCommon missing");
 if (toCommonResult.errors.length > 0) {
+  // The source data in this example is fixed and PII-free, so embedding
+  // `e.message` here is safe. Production adopters: `PluginError.message` can
+  // carry source values on the Zod-validation path (Zod's default error map
+  // embeds runtime values). See the README PII warning before copying this
+  // logging shape.
   fail(
     `toCommon failed: ${toCommonResult.errors
       .map(e => `[${e.path ?? "?"}] ${e.message}`)
@@ -259,6 +264,8 @@ const fromCommonResult = grantsGovPlugin.transformSchemas?.Opportunity?.fromComm
 );
 if (!fromCommonResult) fail("transformSchemas.Opportunity.fromCommon missing");
 if (fromCommonResult.errors.length > 0) {
+  // Same PII caveat as the toCommon error block above — `e.message` may carry
+  // source values on the Zod path. Safe here because the example data is fixed.
   fail(
     `fromCommon failed: ${fromCommonResult.errors
       .map(e => `[${e.path ?? "?"}] ${e.message}`)

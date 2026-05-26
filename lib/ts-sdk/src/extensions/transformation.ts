@@ -141,8 +141,10 @@ export function constValue(_data: unknown, value: unknown): unknown {
  * fails loud explicitly with a descriptive error on malformed spec
  * (cf. #810 for parallel Python proposal).
  *
- * `match` is the canonical handler name (ADR-0017); `switch` is kept as an
- * alias for backward compatibility (ADR-0022 Decision #3).
+ * `match` is the canonical handler name (ADR-0017); `switch` is provided as a
+ * convenience alias — both point at the same handler function. (No prior SDK
+ * API defined `switch`; the alias is for ergonomic preference, not a
+ * backward-compatibility obligation.)
  *
  * @throws Error when `spec` is not a non-null object. The walker wraps this
  *   as a `HandlerError`; `buildTransforms` surfaces it as a `PluginError`
@@ -288,9 +290,8 @@ export class HandlerError extends Error {
 /**
  * Registry of built-in mapping handlers.
  *
- * `match` is the canonical name per ADR-0017; `switch` is an alias kept for
- * backward compatibility (ADR-0022 Decision #3) — both point at the same
- * handler function.
+ * `match` is the canonical name per ADR-0017; `switch` is a convenience alias
+ * — both point at the same handler function.
  */
 export const DEFAULT_HANDLERS: Readonly<Record<string, Handler>> = Object.freeze({
   const: constValue,

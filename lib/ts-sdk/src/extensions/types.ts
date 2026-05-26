@@ -207,11 +207,16 @@ export type ClientConfig = Record<string, unknown>;
  *    data may contain PII.** `buildTransforms()` wraps a handler exception's
  *    message verbatim into the resulting `PluginError.message`, which is
  *    enumerable on `Error.prototype` and rendered by `util.inspect` /
- *    `console.log(err)` (`PluginError.toJSON()` only protects the
- *    non-enumerable `sourceValue` and `cause` fields, and even those are
- *    rendered by Node's default Error inspection — see the README warning).
- *    The built-in `stringToNumber` handler follows this rule by throwing a
- *    generic "cannot convert source value to a number" message.
+ *    `console.log(err)`. Per ADR-0022 Decision #9, the SDK does not redact by
+ *    default — `PluginError.sourceValue` and `.cause` are enumerable, and
+ *    `.message` flows through verbatim. The built-in `stringToNumber` handler
+ *    follows this rule by throwing a generic "cannot convert source value to a
+ *    number" message; see the README's `PluginError` PII warning for the
+ *    adopter-side redaction pattern.
+ *
+ * Parameter naming: ADR-0022's `Handler` interface uses `(value, context)`;
+ * this implementation uses `(data, arg)` to match the existing TS SDK's
+ * style. The semantics are identical.
  */
 export type Handler = (data: unknown, arg: unknown) => unknown;
 
@@ -245,16 +250,25 @@ export interface TransformResult<T> {
  * value at the failing field — so adopters whose source data may contain PII
  * must redact before logging.
  *
- * Recommended redacted projection:
+ * Partial-redaction pattern (strips `sourceValue` and `cause` only — see
+ * caveat on `message` below):
  * ```ts
- * const safe = { name: err.name, message: err.message, path: err.path, handler: err.handler };
+ * const partiallySafe = {
+ *   name: err.name,
+ *   // CAUTION: `message` is data-bearing on the Zod-validation path.
+ *   // Strip or transform it before logging if your source data may contain PII.
+ *   message: err.message,
+ *   path: err.path,
+ *   handler: err.handler,
+ * };
  * ```
  *
- * `PluginError.message` is also data-bearing on the Zod-validation path
+ * `PluginError.message` is data-bearing on the Zod-validation path
  * (`buildTransforms({ commonModel })`): Zod's default error map embeds the
  * received runtime value into `issue.message`, which flows verbatim into
- * `PluginError.message`. Redact `message` alongside `sourceValue` and `cause`.
- * Full-message sanitization is tracked under #744.
+ * `PluginError.message`. Adopters whose source data may contain PII must redact
+ * `message` alongside `sourceValue` and `cause`. Full-message sanitization is
+ * tracked under #744.
  */
 export class PluginError extends Error {
   /** Dot-notation field path where the error occurred, if known. */
