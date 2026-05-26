@@ -512,7 +512,7 @@ To translate "doesn't apply" into a target-side sentinel (e.g. an `n_a` status t
 
 **For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `undefined` for "not provided," return `null` for "doesn't apply," return a value otherwise. The walker omits keys whose handler returned `undefined` and writes `null` returns as a real, present `null` — so the output object distinguishes the three states the same way the wire does: absent → key omitted, `null` → present `null`, value → present value. Consumers can use key presence (`hasOwnProperty` / `in`) to tell "not provided" from "doesn't apply."
 
-> **Cross-SDK note.** The TS PoC leads on ADR-0024 alignment; the Python PoC ([#810](https://github.com/HHS/simpler-grants-protocol/pull/810)) still collapses `None` source into the "not provided" path for the coercing handlers. Parity follow-up tracked there. ADR-0024 itself audited the Zod / Pydantic validation surface — these handler-level guarantees pin the parallel contract for the transforms surface.
+> **Cross-SDK note.** The TS PoC leads on [ADR-0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/) alignment. The Python PoC ([#810](https://github.com/HHS/simpler-grants-protocol/pull/810)) predates ADR-0024 and still collapses `None` source into the "not provided" path for the coercing handlers, so it does not yet preserve the three-state distinction at the transform layer — bringing the Python handlers to parity is a pending follow-up. ADR-0024 audited the Zod / Pydantic validation surface but not the handler surface; these TS handler-level guarantees pin the parallel contract for the transforms layer.
 
 ### Custom handlers
 
