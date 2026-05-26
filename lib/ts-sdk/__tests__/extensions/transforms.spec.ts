@@ -742,4 +742,30 @@ describe("buildTransforms — handler-return __proto__ scrub (Decision #8 harden
     // on its prototype if pollution had occurred.
     expect(({} as Record<string, unknown>).polluted).toBeUndefined();
   });
+
+  it("attributes a throw while scrubbing an exotic handler return to the handler", () => {
+    // The __proto__ scrub runs inside the handler try/catch on purpose. A
+    // custom handler returning a Proxy whose `getPrototypeOf` trap throws makes
+    // the scrub throw; that must surface as a PluginError WITH handler
+    // attribution, not as an unattributed PluginError from the generic catch.
+    const trapReturn = new Proxy(
+      {},
+      {
+        getPrototypeOf() {
+          throw new Error("getPrototypeOf trap");
+        },
+      }
+    );
+
+    const { toCommon } = buildTransforms({
+      toCommonMapping: { x: { boom: "arg" } },
+      fromCommonMapping: {},
+      handlers: { boom: () => trapReturn },
+    });
+
+    const out = toCommon({});
+    expect(out.errors).toHaveLength(1);
+    expect(out.errors[0]).toBeInstanceOf(PluginError);
+    expect(out.errors[0].handler).toBe("boom");
+  });
 });

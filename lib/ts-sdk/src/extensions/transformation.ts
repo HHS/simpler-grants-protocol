@@ -389,43 +389,47 @@ export function transformFromMapping(
     if (Object.prototype.hasOwnProperty.call(handlers, firstKey)) {
       const handlerFn = handlers[firstKey];
       const handlerArg = (node as Record<string, unknown>)[firstKey];
-      let returned: unknown;
+      // The scrub below lives INSIDE this try on purpose: it operates on the
+      // handler's return value, so a trap-throwing exotic return (e.g. a Proxy
+      // whose `getPrototypeOf` / `hasOwnProperty` trap throws, or a spread that
+      // throws) is attributed to the handler via `HandlerError` rather than
+      // escaping as an unattributed `PluginError`. Don't hoist it out.
       try {
-        returned = handlerFn(data, handlerArg);
+        const returned = handlerFn(data, handlerArg);
+        // Defense in depth: a handler's return value is opaque to the walker
+        // (we never recurse into it), but a `const` / `field` / `match` handler
+        // can return a `JSON.parse`-loaded object that carries an own
+        // `__proto__` key. Strip that key from plain-object returns before
+        // it lands on the transform result — downstream consumers using a
+        // for-in deep-merge would otherwise pollute Object.prototype
+        // (ADR-0022 Decision #8). Arrays and class instances pass through
+        // unchanged; nested `__proto__` inside non-plain values is the
+        // handler author's responsibility.
+        //
+        // Shallow-clone the value rather than `delete`-in-place: `fieldValue`
+        // returns references plucked from caller input via `getFromPath`, so
+        // an in-place delete would silently mutate the caller's data —
+        // surprising for plugin authors caching parsed source records across
+        // `toCommon` calls. Spread is the correct copy primitive here:
+        // `{ ...src }` uses the spec's CopyDataProperties → CreateDataProperty,
+        // which copies an own `__proto__` data property AS a data property
+        // instead of firing the prototype setter. `Object.assign({}, src)`
+        // would mutate the target's prototype chain instead — do not switch.
+        if (
+          typeof returned === "object" &&
+          returned !== null &&
+          !Array.isArray(returned) &&
+          Object.getPrototypeOf(returned) === Object.prototype &&
+          Object.prototype.hasOwnProperty.call(returned, "__proto__")
+        ) {
+          const cleaned = { ...(returned as Record<string, unknown>) };
+          delete cleaned.__proto__;
+          return cleaned;
+        }
+        return returned;
       } catch (exc) {
         throw new HandlerError(firstKey, exc);
       }
-      // Defense in depth: a handler's return value is opaque to the walker
-      // (we never recurse into it), but a `const` / `field` / `match` handler
-      // can return a `JSON.parse`-loaded object that carries an own
-      // `__proto__` key. Strip that key from plain-object returns before
-      // it lands on the transform result — downstream consumers using a
-      // for-in deep-merge would otherwise pollute Object.prototype
-      // (ADR-0022 Decision #8). Arrays and class instances pass through
-      // unchanged; nested `__proto__` inside non-plain values is the
-      // handler author's responsibility.
-      //
-      // Shallow-clone the value rather than `delete`-in-place: `fieldValue`
-      // returns references plucked from caller input via `getFromPath`, so
-      // an in-place delete would silently mutate the caller's data —
-      // surprising for plugin authors caching parsed source records across
-      // `toCommon` calls. Spread is the correct copy primitive here:
-      // `{ ...src }` uses the spec's CopyDataProperties → CreateDataProperty,
-      // which copies an own `__proto__` data property AS a data property
-      // instead of firing the prototype setter. `Object.assign({}, src)`
-      // would mutate the target's prototype chain instead — do not switch.
-      if (
-        typeof returned === "object" &&
-        returned !== null &&
-        !Array.isArray(returned) &&
-        Object.getPrototypeOf(returned) === Object.prototype &&
-        Object.prototype.hasOwnProperty.call(returned, "__proto__")
-      ) {
-        const cleaned = { ...(returned as Record<string, unknown>) };
-        delete cleaned.__proto__;
-        return cleaned;
-      }
-      return returned;
     }
 
     const out: Record<string, unknown> = {};
