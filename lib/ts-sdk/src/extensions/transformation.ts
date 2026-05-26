@@ -7,6 +7,24 @@
  *
  * Handler conventions follow ADR-0017 (mapping format).
  *
+ * ## Null handling (ADR-0024 three-state contract)
+ *
+ * Optional fields carry three distinct states on the wire:
+ *
+ * - **absent** — "not provided" (publisher did not supply this data)
+ * - **`null`** — "doesn't apply" (publisher actively asserts irrelevant for this record)
+ * - **value** — "has a value"
+ *
+ * The value-coercing handlers (`numberToString`, `stringToNumber`,
+ * `switchOnValue`) preserve all three rather than collapsing `null` into
+ * `undefined`. `fieldValue` / `getFromPath` already pass terminal `null`
+ * through verbatim. Custom-handler authors should follow the same contract.
+ *
+ * Cross-SDK note: this TS PoC leads the alignment with ADR-0024. The Python
+ * PoC at `common_grants_sdk.utils.transformation` (#810) still collapses
+ * `null` → `None`-via-default in some handlers; parity follow-up tracked
+ * there.
+ *
  * @module @common-grants/sdk/extensions
  */
 
@@ -22,11 +40,23 @@ import type { Handler } from "./types";
  * Walks the path through nested objects. Returns the default when any
  * intermediate step is missing or non-object.
  *
+ * Null handling (ADR-0024 three-state):
+ * - A terminal `null` is returned verbatim — preserves the publisher's
+ *   "doesn't apply" assertion at the leaf.
+ * - A `null` intermediate step short-circuits to `defaultValue` (typically
+ *   `undefined`). Rationale: if the publisher asserts the parent doesn't
+ *   apply, child paths are by extension "not provided" — there is no field
+ *   for the publisher to make a separate per-leaf assertion on. Authors who
+ *   need richer per-leaf null semantics inside a null parent should write
+ *   a custom handler.
+ *
  * @example
  * ```ts
- * getFromPath({ a: { b: 1 } }, "a.b");        // 1
- * getFromPath({ a: { b: 1 } }, "a.c");        // undefined
- * getFromPath({ a: 1 }, "");                   // { a: 1 }   (empty path returns input)
+ * getFromPath({ a: { b: 1 } }, "a.b");  // 1
+ * getFromPath({ a: { b: 1 } }, "a.c");  // undefined (absent)
+ * getFromPath({ a: null }, "a");        // null   (terminal null preserved)
+ * getFromPath({ a: null }, "a.b");      // undefined (intermediate null → absent)
+ * getFromPath({ a: 1 }, "");            // { a: 1 } (empty path returns input)
  * ```
  */
 export function getFromPath<T = unknown>(
@@ -82,6 +112,18 @@ export function constValue(_data: unknown, value: unknown): unknown {
  * upstream (e.g. via a custom handler that `String()`-coerces before
  * dispatching `match`).
  *
+ * Null handling (ADR-0024 three-state). When the source field resolves to an
+ * explicit `null` (the publisher's "doesn't apply" assertion), the handler:
+ *
+ * - returns the mapped value from `case["null"]` if the author has opted in
+ *   to target-side translation, OR
+ * - returns `null` directly (pass-through) — preserving the publisher's
+ *   assertion across the schema boundary.
+ *
+ * `default` is NOT consulted for `null` source values: `default` belongs to
+ * "unrecognized value," not to "publisher asserts irrelevant." Authors who
+ * want a target-side sentinel for "doesn't apply" use `case: { "null": ... }`.
+ *
  * A missing field resolves to `undefined` via `getFromPath`, which fails the
  * string-only guard and falls through to `default`. To distinguish "field
  * absent" from "field present and equal to undefined," guard upstream.
@@ -93,9 +135,11 @@ export function constValue(_data: unknown, value: unknown): unknown {
  *
  * Cross-SDK divergence: Python's PoC uses bare `dict.get(val, default)` —
  * it accepts non-string `val` natively (though string-keyed `case` entries
- * still miss), and a non-dict `spec` crashes generically via `AttributeError`
- * on `.get()`. TS fails loud explicitly with a descriptive error in both
- * cases (cf. #810 for parallel Python proposal).
+ * still miss), collapses `null` into `default`, and a non-dict `spec`
+ * crashes generically via `AttributeError` on `.get()`. TS leads on
+ * ADR-0024 alignment (null pass-through, opt-in `"null"` case key) and
+ * fails loud explicitly with a descriptive error on malformed spec
+ * (cf. #810 for parallel Python proposal).
  *
  * `match` is the canonical handler name (ADR-0017); `switch` is kept as an
  * alias for backward compatibility (ADR-0022 Decision #3).
@@ -111,6 +155,16 @@ export function switchOnValue(data: unknown, spec: unknown): unknown {
   const s = spec as { field?: string; case?: Record<string, unknown>; default?: unknown };
   const val = getFromPath(data, s.field ?? "");
   const lookup = s.case ?? {};
+  // ADR-0024 three-state: null source = publisher asserts "doesn't apply."
+  // Author opts in to target-side translation via a `"null"` case key.
+  // Otherwise pass null through unchanged — do NOT fall through to default,
+  // which is for unrecognized values, not for publisher assertions.
+  if (val === null) {
+    if (Object.prototype.hasOwnProperty.call(lookup, "null")) {
+      return lookup["null"];
+    }
+    return null;
+  }
   if (typeof val === "string" && Object.prototype.hasOwnProperty.call(lookup, val)) {
     return lookup[val];
   }
@@ -120,8 +174,12 @@ export function switchOnValue(data: unknown, spec: unknown): unknown {
 /**
  * `numberToString` handler — pluck a value and coerce it to string via `String()`.
  *
- * Returns undefined if the path resolves to null/undefined (no string coercion
- * applied — `String(null)` would otherwise produce the literal "null").
+ * Null handling (ADR-0024 three-state):
+ *
+ * - **absent source** → returns `undefined` ("not provided" — preserves absence)
+ * - **`null` source** → returns `null` ("doesn't apply" — preserves the publisher's
+ *   assertion; `String(null)` is bypassed so the literal "null" never lands in output)
+ * - **value** → returns `String(val)`
  *
  * The handler is named for its primary use case (numeric source values) but the
  * coercion is `String()`, so booleans (`"true"` / `"false"`), arrays
@@ -129,10 +187,15 @@ export function switchOnValue(data: unknown, spec: unknown): unknown {
  * who need strict number-only behavior should validate the source value before
  * the handler runs (e.g. via a custom handler) or use `field` plus a downstream
  * Zod check.
+ *
+ * Cross-SDK note: the TS handler leads on ADR-0024 alignment; the Python PoC
+ * still collapses `None` source to "not provided." Parity follow-up: #810.
  */
-export function numberToString(data: unknown, fieldPath: unknown): string | undefined {
+export function numberToString(data: unknown, fieldPath: unknown): string | null | undefined {
   const val = getFromPath(data, String(fieldPath ?? ""));
-  return val === null || val === undefined ? undefined : String(val);
+  if (val === undefined) return undefined;
+  if (val === null) return null;
+  return String(val);
 }
 
 /**
@@ -140,8 +203,12 @@ export function numberToString(data: unknown, fieldPath: unknown): string | unde
  * string is a pure integer, otherwise fall back to a general `Number()`
  * coercion. Non-numeric inputs throw.
  *
- * Returns `undefined` when the source path is missing or resolves to
- * `null`/`undefined` (no throw — parallels `numberToString`).
+ * Null handling (ADR-0024 three-state):
+ *
+ * - **absent source** → returns `undefined` ("not provided")
+ * - **`null` source** → returns `null` ("doesn't apply" — preserves the
+ *   publisher's assertion; no coercion attempted)
+ * - **value** → coerces via the integer / float / safe-integer rules below
  *
  * Divergences from Python's `int(s)` semantics, both intentional:
  *
@@ -161,10 +228,14 @@ export function numberToString(data: unknown, fieldPath: unknown): string | unde
  * implicit-absent CSV cell into a real zero on the transformed side.
  * Callers who want absent input to surface as `undefined` should null the
  * field upstream.
+ *
+ * Cross-SDK note: the TS handler leads on ADR-0024 alignment; the Python PoC
+ * still collapses `None` source to "not provided." Parity follow-up: #810.
  */
-export function stringToNumber(data: unknown, fieldPath: unknown): number | undefined {
+export function stringToNumber(data: unknown, fieldPath: unknown): number | null | undefined {
   const val = getFromPath(data, String(fieldPath ?? ""));
-  if (val === null || val === undefined) return undefined;
+  if (val === undefined) return undefined;
+  if (val === null) return null;
   const s = String(val).trim();
   // Empty / whitespace-only strings would otherwise coerce to 0 via `Number()`.
   if (s === "") {

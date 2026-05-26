@@ -73,6 +73,22 @@ describe("fieldValue", () => {
   it("returns undefined on missing path", () => {
     expect(fieldValue({ x: 1 }, "x.y")).toBeUndefined();
   });
+
+  it("preserves terminal null (ADR-0024 'doesn't apply')", () => {
+    // `fieldValue` defers to `getFromPath`, which returns the terminal value
+    // verbatim — so an explicit `null` survives unchanged. This pins the
+    // three-state contract for the bare `field` handler.
+    expect(fieldValue({ a: null }, "a")).toBeNull();
+  });
+
+  it("returns undefined when an intermediate null short-circuits the path", () => {
+    // ADR-0024 makes `null` mean "doesn't apply for THIS field." A null
+    // intermediate ("the parent doesn't apply") is treated as a propagating
+    // assertion: child paths return undefined ("not provided") rather than
+    // null, because the publisher made the assertion at the parent level.
+    // Scoped-out for now; see the README "Null handling" section.
+    expect(fieldValue({ a: null }, "a.b")).toBeUndefined();
+  });
 });
 
 describe("constValue", () => {
@@ -159,6 +175,43 @@ describe("switchOnValue", () => {
     // an object value is non-string and short-circuits to `default`.
     expect(switchOnValue({ a: 1 }, { case: { a: "b" }, default: "fallback" })).toBe("fallback");
   });
+
+  // ADR-0024 three-state preservation for null source values. The mapping
+  // author opts in to target-side translation via a `"null"` case key;
+  // otherwise the publisher's "doesn't apply" assertion passes through
+  // unchanged. `default` is NOT consulted for null — `default` belongs to
+  // "unrecognized value," not to "publisher asserts irrelevant."
+
+  it("passes null source through as null when no `case.null` is provided (ADR-0024)", () => {
+    expect(switchOnValue({ status: null }, spec)).toBeNull();
+  });
+
+  it("does NOT fall through to `default` for a null source (default is for unrecognized values)", () => {
+    // The current spec has `default: "custom"`. If null source incorrectly
+    // fell through to default, this would be "custom" instead of null.
+    expect(switchOnValue({ status: null }, spec)).not.toBe("custom");
+  });
+
+  it("uses a `case.null` mapping when the author opts in (target-side translation)", () => {
+    // A mapping author who wants to translate the publisher's "doesn't
+    // apply" assertion into a target-side sentinel (e.g. an `n_a` status
+    // token) opts in by adding a `"null"` key to the case map.
+    expect(
+      switchOnValue(
+        { status: null },
+        { field: "status", case: { posted: "open", null: "n_a" }, default: "custom" }
+      )
+    ).toBe("n_a");
+  });
+
+  it("opt-in null mapping wins over the pass-through default", () => {
+    // Pin the precedence: case.null takes priority over the pass-through
+    // null behavior. (Documents that the author's explicit decision
+    // overrides the SDK's default treatment.)
+    expect(switchOnValue({ status: null }, { field: "status", case: { null: "translated" } })).toBe(
+      "translated"
+    );
+  });
 });
 
 describe("numberToString", () => {
@@ -167,8 +220,15 @@ describe("numberToString", () => {
     expect(numberToString({ x: 1.5 }, "x")).toBe("1.5");
   });
 
-  it("returns undefined on null or missing", () => {
-    expect(numberToString({ a: null }, "a")).toBeUndefined();
+  it("returns null on explicit null source (ADR-0024 'doesn't apply')", () => {
+    // The publisher asserted the field is irrelevant for this record. The
+    // handler must preserve that assertion instead of collapsing it to
+    // `undefined` (which would be indistinguishable from "not provided").
+    // `String(null)` is bypassed — it would otherwise emit the literal "null".
+    expect(numberToString({ a: null }, "a")).toBeNull();
+  });
+
+  it("returns undefined on absent source (ADR-0024 'not provided')", () => {
     expect(numberToString({}, "a")).toBeUndefined();
   });
 });
@@ -182,9 +242,14 @@ describe("stringToNumber", () => {
     expect(stringToNumber({ a: "1.5" }, "a")).toBe(1.5);
   });
 
-  it("returns undefined on null or missing", () => {
+  it("returns null on explicit null source (ADR-0024 'doesn't apply')", () => {
+    // Parallels numberToString — null is the publisher's assertion that the
+    // field doesn't apply. Preserve it as data; don't collapse to undefined.
+    expect(stringToNumber({ a: null }, "a")).toBeNull();
+  });
+
+  it("returns undefined on absent source (ADR-0024 'not provided')", () => {
     expect(stringToNumber({}, "x")).toBeUndefined();
-    expect(stringToNumber({ a: null }, "a")).toBeUndefined();
   });
 
   it("throws on non-numeric input", () => {
@@ -321,6 +386,22 @@ describe("transformFromMapping", () => {
     // Should treat `toString` as an output field name, not as a handler dispatch.
     const out = transformFromMapping({ x: 1 }, mapping);
     expect(out).toEqual({ toString: 1 });
+  });
+
+  it("preserves a handler-returned null on the output object (ADR-0024 three-state)", () => {
+    // The walker must place `null` returned by a handler onto the output
+    // shape — not drop the key, not coerce to undefined. Combined with the
+    // null-aware handlers, this preserves the publisher's "doesn't apply"
+    // assertion end-to-end through `toCommon` / `fromCommon`.
+    expect(transformFromMapping({ a: null }, { x: { numberToString: "a" } })).toEqual({
+      x: null,
+    });
+    expect(transformFromMapping({ a: null }, { x: { stringToNumber: "a" } })).toEqual({
+      x: null,
+    });
+    expect(
+      transformFromMapping({ status: null }, { value: { match: { field: "status" } } })
+    ).toEqual({ value: null });
   });
 
   it("rejects `__proto__` as an output field name (Decision #8 hardening)", () => {

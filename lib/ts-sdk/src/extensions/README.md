@@ -27,6 +27,7 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
 - [Plugin transformations (PoC)](#plugin-transformations-poc)
   - [Defining bidirectional transforms](#defining-bidirectional-transforms)
   - [Built-in mapping handlers](#built-in-mapping-handlers)
+  - [Null handling](#null-handling)
   - [Custom handlers](#custom-handlers)
   - [Validating against the extended schema](#validating-against-the-extended-schema)
   - [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)
@@ -472,22 +473,60 @@ Each callable returns a `TransformResult<T>` of `{ result, errors }` uncondition
 
 Mapping objects are nested literals where keys are either output field names or registered handler names. The handler-keyed node dispatches the handler with `(data, handlerArg)`. Bare primitives are treated as literals.
 
-| Handler          | Spec shape                                      | Behavior                                                                                       |
-| ---------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `field`          | `{ field: "dot.notation.path" }`                | Plucks a value from the source via dot-notation; returns `undefined` if absent.                |
-| `const`          | `{ const: <literal> }`                          | Returns the literal value, ignoring source data.                                               |
-| `match`          | `{ match: { field, case: { ... }, default? } }` | Case-based lookup on a source field value. Canonical per ADR-0017.                             |
-| `switch`         | Same as `match`                                 | Alias for `match`, kept for backward compatibility (ADR-0022 Decision #3).                     |
-| `numberToString` | `{ numberToString: "dot.notation.path" }`       | Plucks a value and coerces to string via `String()`; `undefined` on null/missing.              |
-| `stringToNumber` | `{ stringToNumber: "dot.notation.path" }`       | Plucks a value, parses as int when possible, falls back to float. Throws on non-numeric input. |
+| Handler          | Spec shape                                      | Behavior                                                                                                                                                               |
+| ---------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `field`          | `{ field: "dot.notation.path" }`                | Plucks a value from the source via dot-notation. Terminal `null` is preserved; absent / intermediate-null returns `undefined`. See [Null handling](#null-handling).    |
+| `const`          | `{ const: <literal> }`                          | Returns the literal value, ignoring source data.                                                                                                                       |
+| `match`          | `{ match: { field, case: { ... }, default? } }` | Case-based lookup on a source field value. Canonical per ADR-0017. `null` source passes through unchanged; opt-in target-side translation via `case: { "null": ... }`. |
+| `switch`         | Same as `match`                                 | Alias for `match`, kept for backward compatibility (ADR-0022 Decision #3).                                                                                             |
+| `numberToString` | `{ numberToString: "dot.notation.path" }`       | Plucks a value and coerces to string via `String()`. Returns `null` on `null` source ("doesn't apply"); `undefined` on absent.                                         |
+| `stringToNumber` | `{ stringToNumber: "dot.notation.path" }`       | Plucks a value, parses as int when possible, falls back to float. Returns `null` on `null` source; `undefined` on absent. Throws on non-numeric input.                 |
+
+### Null handling
+
+The transforms layer respects [ADR-0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/)'s three-state contract for optional fields. Optional values carry three distinct states on the wire, each preserved through the transform:
+
+| State      | Meaning                                                                                  | Handler output |
+| ---------- | ---------------------------------------------------------------------------------------- | -------------- |
+| **absent** | "Not provided" — the publisher did not supply this data                                  | `undefined`    |
+| **`null`** | "Doesn't apply" — the publisher actively asserts the field is irrelevant for this record | `null`         |
+| **value**  | "Has a value"                                                                            | coerced value  |
+
+The built-in coercing handlers (`numberToString`, `stringToNumber`) pass `null` through unchanged instead of collapsing it to `undefined`. `field` defers to `getFromPath`, which preserves terminal `null` and treats an intermediate `null` as a propagating absence (`{ a: null }` at path `"a.b"` → `undefined`).
+
+`match` / `switch` adds an opt-in for target-side translation. By default a `null` source passes through:
+
+```typescript
+// status = null on input → status = null on output (publisher's "doesn't apply" survives)
+{ match: { field: "status", case: { posted: "open", archived: "closed" }, default: "custom" } }
+```
+
+To translate "doesn't apply" into a target-side sentinel (e.g. an `n_a` status token), opt in via a `"null"` case key:
+
+```typescript
+// status = null on input → status = "n_a" on output (author-chosen translation)
+{ match: { field: "status", case: { posted: "open", "null": "n_a" }, default: "custom" } }
+```
+
+`default` is **not** consulted for `null` source values — `default` belongs to "unrecognized value," not to "publisher asserts irrelevant." The opt-in `"null"` case key is the only path from `null` source to a non-`null` target.
+
+**For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `undefined` for "not provided," return `null` for "doesn't apply," return a value otherwise. The walker will place `null` returns onto the output object as a real `null` (distinct from an absent key), so consumers downstream can rely on the distinction.
+
+> **Cross-SDK note.** The TS PoC leads on ADR-0024 alignment; the Python PoC ([#810](https://github.com/HHS/simpler-grants-protocol/pull/810)) still collapses `None` source into the "not provided" path for the coercing handlers. Parity follow-up tracked there. ADR-0024 itself audited the Zod / Pydantic validation surface — these handler-level guarantees pin the parallel contract for the transforms surface.
 
 ### Custom handlers
 
-Register additional handlers per `buildTransforms()` call. Name collisions with built-ins raise at call time:
+Register additional handlers per `buildTransforms()` call. Name collisions with built-ins raise at call time. Custom handlers should follow the three-state contract from [Null handling](#null-handling) above:
 
 ```typescript
 import { buildTransforms, getFromPath } from "@common-grants/sdk/extensions";
 
+// `join` is a special case: string concatenation has no meaningful null
+// behavior, so the filter below drops both `undefined` and `null` source
+// values. This is appropriate for `join` specifically — most coercing
+// handlers should follow `numberToString` / `stringToNumber` and preserve
+// the three-state contract (return `null` on null source, `undefined` on
+// absent) instead.
 const join = (data: unknown, spec: unknown) => {
   const s = spec as { fields?: string[]; sep?: string };
   const parts = (s.fields ?? [])

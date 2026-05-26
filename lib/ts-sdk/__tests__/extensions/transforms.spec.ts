@@ -414,6 +414,155 @@ describe("buildTransforms — fromCommon", () => {
 });
 
 // ############################################################################
+// Null preservation — ADR-0024 three-state contract
+// ############################################################################
+
+describe("buildTransforms — null preservation (ADR-0024 three-state)", () => {
+  // ADR-0024 establishes that optional fields carry three distinct states on
+  // the wire: absent ("not provided"), explicit `null` ("doesn't apply"), and
+  // a value. The transform handlers preserve all three so the publisher's
+  // assertion survives end-to-end through `toCommon` / `fromCommon`.
+  //
+  // ADR-0024 itself audited the Zod / Pydantic validation surface — these
+  // tests pin the parallel contract for the transforms surface, which the
+  // ADR didn't directly cover.
+
+  it("preserves explicit null on the toCommon side (publisher 'doesn't apply')", () => {
+    // Source has `description: null` — publisher asserts the field doesn't
+    // apply for this record. The `field` handler returns the terminal null;
+    // the walker places it on the output object as a real `null`, distinct
+    // from an absent key.
+    const { toCommon } = buildTransforms({
+      toCommonMapping: {
+        id: { field: "data.opportunity_uuid" },
+        title: { field: "data.opportunity_title" },
+        description: { field: "data.opportunity_description" },
+      },
+      fromCommonMapping: {},
+    });
+
+    const out = toCommon({
+      data: {
+        opportunity_uuid: "uuid-1",
+        opportunity_title: "T",
+        opportunity_description: null,
+      },
+    });
+
+    expect(out.errors).toEqual([]);
+    expect(out.result).toEqual({
+      id: "uuid-1",
+      title: "T",
+      description: null,
+    });
+    // Pin the absent vs. null distinction explicitly.
+    expect((out.result as Record<string, unknown>).description).toBeNull();
+    expect(Object.prototype.hasOwnProperty.call(out.result, "description")).toBe(true);
+  });
+
+  it("validates a null-bearing toCommon result against a .nullish() Zod schema", () => {
+    // ADR-0024 says SDKs already accept null on `.nullish()` fields; this
+    // pins it inside the buildTransforms() Zod path so a future schema
+    // change that swapped `.nullish()` for plain `.optional()` would surface
+    // here as a PluginError. `source` is `.nullish()` on OpportunityBaseSchema;
+    // `description` is required (z.string()) so it can't carry the null state.
+    const { toCommon } = buildTransforms({
+      toCommonMapping: {
+        ...toCommonMapping,
+        source: { field: "data.source_url" },
+      },
+      fromCommonMapping: {},
+      commonModel: OpportunityBaseSchema,
+    });
+
+    const out = toCommon({
+      data: {
+        ...SOURCE_DATA.data,
+        source_url: null,
+      },
+    });
+
+    expect(out.errors).toEqual([]);
+    expect((out.result as { source: string | null }).source).toBeNull();
+  });
+
+  it("preserves null through a full toCommon → fromCommon round trip", () => {
+    // The reverse direction must also carry null verbatim — `null` on the
+    // CommonGrants side ("publisher said doesn't apply") survives back to
+    // the native shape.
+    const { toCommon, fromCommon } = buildTransforms({
+      toCommonMapping: {
+        id: { field: "data.opportunity_uuid" },
+        title: { field: "data.opportunity_title" },
+        description: { field: "data.opportunity_description" },
+      },
+      fromCommonMapping: {
+        data: {
+          opportunity_uuid: { field: "id" },
+          opportunity_title: { field: "title" },
+          opportunity_description: { field: "description" },
+        },
+      },
+    });
+
+    const cg = toCommon({
+      data: {
+        opportunity_uuid: "uuid-1",
+        opportunity_title: "T",
+        opportunity_description: null,
+      },
+    });
+    expect(cg.errors).toEqual([]);
+    expect((cg.result as { description: string | null }).description).toBeNull();
+
+    const back = fromCommon(cg.result);
+    expect(back.errors).toEqual([]);
+    expect(
+      (back.result as { data: { opportunity_description: string | null } }).data
+        .opportunity_description
+    ).toBeNull();
+  });
+
+  it("preserves null through the numberToString handler in a real mapping", () => {
+    // Cross-check that the coercing handlers carry null in a buildTransforms
+    // context, not just at the unit-test level.
+    const { toCommon } = buildTransforms({
+      toCommonMapping: {
+        legacyId: { numberToString: "data.opportunity_id" },
+      },
+      fromCommonMapping: {},
+    });
+
+    const out = toCommon({ data: { opportunity_id: null } });
+
+    expect(out.errors).toEqual([]);
+    expect(out.result).toEqual({ legacyId: null });
+  });
+
+  it("distinguishes absent from null at the buildTransforms boundary", () => {
+    // Pin the asymmetry the three-state contract depends on: absent source
+    // produces an absent output key; null source produces an explicit null.
+    const { toCommon } = buildTransforms({
+      toCommonMapping: {
+        absentField: { field: "data.does_not_exist" },
+        nullField: { field: "data.declared_null" },
+      },
+      fromCommonMapping: {},
+    });
+
+    const out = toCommon({ data: { declared_null: null } });
+
+    expect(out.errors).toEqual([]);
+    // Walker writes the key whether the handler returns null or undefined —
+    // distinguishing the two is the handler's job (here, `field` returns
+    // undefined for absent and null for declared null).
+    const result = out.result as Record<string, unknown>;
+    expect(result.nullField).toBeNull();
+    expect(result.absentField).toBeUndefined();
+  });
+});
+
+// ############################################################################
 // Custom handlers
 // ############################################################################
 

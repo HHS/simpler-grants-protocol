@@ -36,6 +36,11 @@ import { OpportunityBaseSchema } from "../src/schemas/zod/models";
 // Step 1 — Sample grants.gov source data
 // ############################################################################
 
+// Note the `source_url: null` below — this is the publisher actively asserting
+// "doesn't apply" for the source URL (ADR-0024 three-state). The transforms
+// preserve it as `null` end-to-end rather than collapsing to absent, so a
+// downstream consumer can distinguish "publisher said N/A" from "publisher
+// didn't supply this."
 const SOURCE_DATA = {
   data: {
     agency_name: "Department of Examples",
@@ -48,6 +53,7 @@ const SOURCE_DATA = {
     opportunity_status: "posted",
     opportunity_title: "Research into conservation techniques",
     opportunity_uuid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    source_url: null,
     summary: {
       applicant_types: ["state_governments"],
     },
@@ -124,6 +130,11 @@ const { toCommon, fromCommon } = buildTransforms({
     description: { field: "data.opportunity_description" },
     createdAt: { field: "data.created_at" },
     lastModifiedAt: { field: "data.last_modified_at" },
+    // Three-state demo (ADR-0024): native `source_url: null` carries the
+    // publisher's "doesn't apply" assertion. The `field` handler preserves
+    // the terminal null; the walker places it on the output as a real null
+    // (distinct from an absent key). Zod's `.nullish()` accepts it.
+    source: { field: "data.source_url" },
     status: {
       value: {
         match: {
@@ -185,6 +196,9 @@ const { toCommon, fromCommon } = buildTransforms({
       },
       opportunity_id: { field: "customFields.legacyId.value" },
       agency_name: { field: "customFields.agencyName.value" },
+      // Round-trip the "doesn't apply" assertion back to native: the null
+      // sourced from `source` on the CG side becomes `source_url: null` again.
+      source_url: { field: "source" },
       summary: {
         applicant_types: { field: "customFields.applicantTypes.value" },
       },
@@ -256,11 +270,26 @@ console.log("\n=== fromCommon (CommonGrants → native) ===");
 console.log(JSON.stringify(fromCommonResult.result, null, 2));
 
 // Spot-check a covered field round-trips.
-const native = fromCommonResult.result as { data: { opportunity_number: string } };
+const native = fromCommonResult.result as {
+  data: { opportunity_number: string; source_url: string | null | undefined };
+};
 if (native.data.opportunity_number !== SOURCE_DATA.data.opportunity_number) {
   fail(
     `round-trip mismatch on opportunity_number: ${native.data.opportunity_number} ≠ ${SOURCE_DATA.data.opportunity_number}`
   );
 }
 
+// ADR-0024 three-state pin: an explicit `null` ("doesn't apply") on the
+// source side must survive both transforms as a real `null`, not collapse
+// to undefined ("not provided"). A future regression that put `undefined`
+// here instead of `null` would fail this check.
+if (native.data.source_url !== null) {
+  fail(
+    `three-state mismatch on source_url: expected explicit null ("doesn't apply"), got ${JSON.stringify(
+      native.data.source_url
+    )}`
+  );
+}
+
 console.log("\n✓ round-trip verified for fields covered by both mappings");
+console.log("✓ ADR-0024 three-state preserved: source_url null ('doesn't apply') round-tripped");
