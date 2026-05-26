@@ -7,11 +7,11 @@ Both the Python SDK (`Optional[X]` via Pydantic) and the TypeScript SDK (`.nulli
 
 Experience from production grant data publishing systems highlights a subtlety that shapes this decision: `optional + nullable` is not sufficient on its own. Publishers need to express three distinct field states, not two:
 
-| State | Meaning |
-| ----- | ------- |
-| Field absent | "Not provided" — the publisher did not supply this data |
-| Explicit N/A value | "Doesn't apply" — the field is intentionally irrelevant for this record |
-| Field present with value | "Has a value" |
+| State                    | Meaning                                                                 |
+| ------------------------ | ----------------------------------------------------------------------- |
+| Field absent             | "Not provided" — the publisher did not supply this data                 |
+| Explicit N/A value       | "Doesn't apply" — the field is intentionally irrelevant for this record |
+| Field present with value | "Has a value"                                                           |
 
 The key insight is that the three-state model can be preserved under a nullable spec — but only if `null` and absent are given distinct, explicitly defined meanings. If `null` is defined as "doesn't apply" (an active publisher assertion) and field absence is defined as "not provided," the full semantic space is preserved for all field types, including scalars like dates where no natural sentinel value exists. This is not possible under a non-nullable spec, where scalar fields have no ergonomic way to express "doesn't apply."
 
@@ -19,11 +19,11 @@ The key insight is that the three-state model can be preserved under a nullable 
 
 We've decided to make optional fields nullable in the base protocol (Option 1), with explicitly defined semantics for each field state. Field absence means "not provided." An explicit `null` means "doesn't apply" — the publisher actively asserts the field is irrelevant for this record. A present value means "has a value." The SDKs already reflect this model and require no changes.
 
-| Wire representation | Meaning |
-| ------------------- | ------- |
-| Field absent | "Not provided" — publisher did not supply this data |
-| `null` | "Doesn't apply" — publisher actively asserts the field is irrelevant |
-| Value | "Has a value" |
+| Wire representation | Meaning                                                              |
+| ------------------- | -------------------------------------------------------------------- |
+| Field absent        | "Not provided" — publisher did not supply this data                  |
+| `null`              | "Doesn't apply" — publisher actively asserts the field is irrelevant |
+| Value               | "Has a value"                                                        |
 
 - **Positive consequences**
   - Preserves the full three-state semantic model for all field types, including scalars like dates where no sentinel value is practical
@@ -57,7 +57,7 @@ We've decided to make optional fields nullable in the base protocol (Option 1), 
 - 🟡 Partially met or unsure
 
 | Criteria                                 | Option 1 (nullable in spec) | Option 2 (non-nullable, fix SDKs) | Option 3 (allow both) |
-| ---------------------------------------- | :-------------------------: | :--------------------------------: | :-------------------: |
+| ---------------------------------------- | :-------------------------: | :-------------------------------: | :-------------------: |
 | Cross-language compatibility             |             ✅              |                🟡                 |          ✅           |
 | Wire-format clarity                      |             ✅              |                ✅                 |          ❌           |
 | Semantic expressiveness                  |             ✅              |                🟡                 |          ❌           |
@@ -71,7 +71,7 @@ Option 1 is best if:
 
 - we want to preserve the full three-state semantic model across all field types, including scalars like dates
 - and are willing to document and enforce the `null` vs. absent distinction in the spec and consumer guidance
-:::
+  :::
 
 Update the TypeSpec source to use nullable optionals, aligning with both SDKs. `null` and field absence are given distinct, protocol-defined meanings: `null` means "doesn't apply" and absence means "not provided." Publishers must actively send `null` to assert N/A — they cannot simply omit the field.
 
@@ -90,7 +90,7 @@ Option 2 is best if:
 
 - all optional fields in the protocol are numerics or categoricals where a sentinel value is practical
 - but does not work for scalar types like dates, where no natural "doesn't apply" value exists
-:::
+  :::
 
 Both SDKs stop using `.nullish()` / `Optional[X]` and rely solely on field absence. The Python SDK would need a custom Pydantic config to omit `None` fields from serialization rather than sending `null`. Publishers use explicit sentinel values (zero for numerics, a `not_applicable` enum variant for categoricals) to assert "doesn't apply."
 
@@ -110,7 +110,7 @@ Option 3 is best if:
 
 - we want to maximize pragmatic compatibility across implementations
 - but can accept a looser spec where `null` and absent are treated as semantically equivalent
-:::
+  :::
 
 The protocol accepts either an absent field or an explicit `null`. The `cg check spec` validator is updated to treat a `type: T` schema as compatible with `type: [T, "null"]`.
 
