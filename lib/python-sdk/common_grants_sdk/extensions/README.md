@@ -564,6 +564,23 @@ to_common, from_common = build_transforms(
 
 Custom handlers are merged with the defaults; they cannot override built-in handler names.
 
+Handlers are scoped to the `build_transforms()` call they are registered on — they do not affect other calls:
+
+```python
+# Only the first pair of callables knows about "upper"
+to_common_with_upper, _ = build_transforms(
+    to_common_mapping={"title": {"upper": "data.opportunity_title"}},
+    from_common_mapping={},
+    handlers={"upper": handle_upper},
+)
+
+# This call has no knowledge of "upper" — using it in the mapping would fail at call time
+to_common_plain, _ = build_transforms(
+    to_common_mapping={"title": {"field": "data.opportunity_title"}},
+    from_common_mapping={},
+)
+```
+
 ### Using transforms
 
 The compiled callables are stored on the plugin's `schemas` object, accessible by attribute name. Each callable takes a data dict (or a Pydantic model instance) and returns a `TransformResult`:

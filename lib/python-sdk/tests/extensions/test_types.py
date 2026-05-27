@@ -41,6 +41,14 @@ def test_plugin_error_structured_fields():
     assert err.cause is cause
 
 
+def test_plugin_error_source_value_excluded_from_str_and_repr():
+    """source_value must not appear in str(err) or repr(err) — PII defence per ADR-0022 Decision #9."""
+    sensitive = {"ssn": "123-45-6789"}
+    err = PluginError("transform failed", source_value=sensitive)
+    assert "123-45-6789" not in str(err)
+    assert "123-45-6789" not in repr(err)
+
+
 # --- TransformResult ---
 
 

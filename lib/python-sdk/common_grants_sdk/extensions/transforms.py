@@ -25,6 +25,37 @@ from .types import Handler, PluginError, TransformResult
 TCommon = TypeVar("TCommon", bound=BaseModel)
 
 
+def _validate_output_paths(
+    mapping: dict[str, Any],
+    model: type[BaseModel],
+    known_handlers: set[str],
+    direction: str = "to_common",
+) -> None:
+    """Validate that top-level output keys in mapping are valid fields on model.
+
+    Called when common_model is supplied to build_transforms(). Custom fields
+    declared by the plugin appear as regular model fields on the generated common
+    model and are therefore treated as valid output paths automatically.
+
+    Raises ValueError if any top-level key is not a field name or alias on model.
+    """
+    valid_names: set[str] = set(model.model_fields.keys())
+    for field_info in model.model_fields.values():
+        if field_info.alias:
+            valid_names.add(field_info.alias)
+
+    # Top-level handler invocations (rare but structurally valid) are not output keys
+    output_keys = {k for k in mapping if k not in known_handlers}
+    invalid = output_keys - valid_names
+    if invalid:
+        noun = "field" if len(invalid) == 1 else "fields"
+        raise ValueError(
+            f"build_transforms ({direction}_mapping): unknown output {noun} "
+            f"{sorted(invalid)!r} for model {model.__name__}. "
+            f"Declare them as custom_fields in ObjectSchemasInput or check the field name."
+        )
+
+
 def _validate_mapping(mapping: Any, known_handlers: set[str], path: str = "") -> None:
     """Walk the mapping tree and raise ValueError on structural malformation.
 
@@ -153,6 +184,10 @@ def build_transforms(
     # Validate mapping structure at call time
     _validate_mapping(to_common_mapping, known)
     _validate_mapping(from_common_mapping, known)
+
+    # When common_model is provided, validate that to_common output keys are real fields
+    if common_model is not None:
+        _validate_output_paths(to_common_mapping, common_model, known, "to_common")
 
     def to_common(native: Any) -> TransformResult[Any]:
         try:

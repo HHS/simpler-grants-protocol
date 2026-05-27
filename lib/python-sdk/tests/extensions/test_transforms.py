@@ -7,6 +7,18 @@ from pydantic import BaseModel
 from common_grants_sdk.extensions.transforms import build_transforms
 from common_grants_sdk.extensions.types import PluginError, TransformResult
 
+
+# Shared model fixtures for output-path validation tests
+class _CommonModel(BaseModel):
+    title: str
+    status: dict[str, Any] | None = None
+
+
+class _CommonModelWithCustomFields(BaseModel):
+    title: str
+    custom_fields: dict[str, Any] | None = None
+
+
 # Shared source data matching the ADR-0017 grants.gov example
 SOURCE_DATA = {
     "data": {
@@ -237,3 +249,60 @@ def test_custom_handler_registered_per_call():
     )
     result = to_common(SOURCE_DATA)
     assert result.result["title"] == "RESEARCH INTO CONSERVATION TECHNIQUES"
+
+
+# --- Output field-path validation (when common_model is provided) ---
+
+
+def test_unknown_output_key_raises_when_model_provided():
+    """build_transforms raises at call time if a to_common output key is not on the model."""
+    with pytest.raises(ValueError, match="unknown_xyz"):
+        build_transforms(
+            {"title": {"field": "data.opportunity_title"}, "unknown_xyz": "literal"},
+            {},
+            common_model=_CommonModel,
+        )
+
+
+def test_custom_fields_key_is_valid_output_path():
+    """custom_fields is accepted as a top-level output key when the model declares it."""
+    to_common, _ = build_transforms(
+        {
+            "title": {"field": "data.opportunity_title"},
+            "custom_fields": {"legacyId": {"field": "data.opportunity_title"}},
+        },
+        {},
+        common_model=_CommonModelWithCustomFields,
+    )
+    result = to_common(SOURCE_DATA)
+    assert result.errors == []
+    assert isinstance(result.result, _CommonModelWithCustomFields)
+    assert result.result.title == "Research into conservation techniques"
+    assert (
+        result.result.custom_fields["legacyId"]
+        == "Research into conservation techniques"
+    )
+
+
+def test_output_path_validation_only_applies_to_to_common():
+    """from_common output keys are not validated against common_model (they target native format)."""
+    # from_common_mapping has keys that are NOT on _CommonModel — that's fine
+    to_common, from_common = build_transforms(
+        {"title": {"field": "data.opportunity_title"}},
+        {"data": {"opportunity_title": {"field": "title"}}},
+        common_model=_CommonModel,
+    )
+    result = from_common({"title": "hello"})
+    assert result.errors == []
+    assert result.result["data"]["opportunity_title"] == "hello"
+
+
+def test_no_output_validation_without_common_model():
+    """Without common_model, unknown output keys are allowed (no schema to validate against)."""
+    to_common, _ = build_transforms(
+        {"any_key_is_fine": {"field": "data.opportunity_title"}},
+        {},
+    )
+    result = to_common(SOURCE_DATA)
+    assert result.errors == []
+    assert result.result["any_key_is_fine"] == "Research into conservation techniques"
