@@ -24,9 +24,12 @@ jobs:
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v9
 
+<<<<<<< Updated upstream
       - name: Install poetry-audit-plugin
         run: poetry self add poetry-audit-plugin "safety<3.3.0"
 
+=======
+>>>>>>> Stashed changes
       - name: Install dependencies
         run: make install
 

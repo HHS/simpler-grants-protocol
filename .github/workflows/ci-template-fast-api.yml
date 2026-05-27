@@ -28,7 +28,13 @@ jobs:
         uses: Gr1N/setup-poetry@v9
 
       - name: Install poetry-audit-plugin
+<<<<<<< Updated upstream
         run: poetry self add poetry-audit-plugin "safety<3.3.0"
+=======
+        run: |
+          poetry self add poetry-audit-plugin
+          pipx inject poetry "safety<3.3.0"
+>>>>>>> Stashed changes
 
       - name: Install Node.js
         uses: actions/setup-node@v6
