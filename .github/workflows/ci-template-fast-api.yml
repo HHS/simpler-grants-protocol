@@ -28,7 +28,7 @@ jobs:
         uses: Gr1N/setup-poetry@v9
 
       - name: Install poetry-audit-plugin
-        run: poetry self add poetry-audit-plugin
+        run: poetry self add poetry-audit-plugin "safety<3.3.0"
 
       - name: Install Node.js
         uses: actions/setup-node@v6
