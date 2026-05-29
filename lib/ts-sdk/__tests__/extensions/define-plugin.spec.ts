@@ -312,7 +312,7 @@ describe("definePlugin", () => {
   });
 
   // ############################################################################
-  // Consolidation (pending ADR-0022 amendment) — customFields on transformSchemas[obj]
+  // Consolidation — customFields on transformSchemas[obj]
   //
   // Authors add a single per-object entry under transformSchemas with native +
   // customFields + toCommon + fromCommon, rather than splitting customFields

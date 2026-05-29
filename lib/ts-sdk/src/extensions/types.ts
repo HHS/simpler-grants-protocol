@@ -313,14 +313,14 @@ export class PluginError extends Error {
  * the generated model classes produced by the code generator. Plugin config
  * files cannot import from `generated/` (which is the input to generation).
  *
- * **Consolidation (pending ADR-0022 amendment):** `customFields` lives here so
- * authors add a single per-object entry under `DefinePluginOptions.transformSchemas`
- * when introducing a new object. ADR-0022 as originally written placed
- * `customFields` inside the serializable `PluginExtensions.schemas[obj]` so that
- * declarations could be combined across packages via `mergeExtensions()` — moving
- * it onto the runtime input drops that cross-package merge surface. The ADR
- * amendment formalizing this trade-off is the open question; see the matching
- * note on `PluginExtensionsObjectConfig` below.
+ * **Consolidation:** `customFields` lives here so authors add a single
+ * per-object entry under `DefinePluginOptions.transformSchemas` when
+ * introducing a new object. ADR-0022 as originally written placed
+ * `customFields` inside the serializable `PluginExtensions.schemas[obj]` so
+ * declarations could be combined across packages via `mergeExtensions()`;
+ * moving it onto the runtime input trades that cross-package merge surface for
+ * single-entry ergonomics. See the matching note on
+ * `PluginExtensionsObjectConfig` below.
  */
 export interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
   native?: z.ZodType<TNative>;
@@ -380,7 +380,7 @@ export interface ObjectMappings {
  * `buildTransforms()` on these. Deferred to the full SDK (ADR-0022 Decision #6,
  * tracked under #756).
  *
- * **Consolidation (pending ADR-0022 amendment):** `customFields` moved to
+ * **Consolidation:** `customFields` moved to
  * {@link ObjectSchemasInput} so authors add a single per-object entry under
  * `DefinePluginOptions.transformSchemas`. The original ADR-0022 placed
  * `customFields` here so they could be combined across packages via

@@ -50,9 +50,9 @@ export type TransformSchemasInput = Partial<
  * `transformSchemas[Object]` alongside `toCommon` / `fromCommon`.
  *
  * When the same object has `customFields` in both surfaces, `transformSchemas`
- * wins. The legacy `extensions` surface and its mergeability are pending the
- * ADR-0022 amendment that formalizes consolidation; see the `customFields` note
- * on {@link ObjectSchemasInput}.
+ * wins. The legacy `extensions` surface is kept for `mergeExtensions()`
+ * cross-package composition; see the `customFields` note on
+ * {@link ObjectSchemasInput}.
  *
  * Structured as an options object for forward-compatibility with future
  * properties like `namespace`.

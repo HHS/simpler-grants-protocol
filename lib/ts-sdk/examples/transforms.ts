@@ -215,7 +215,7 @@ const { toCommon, fromCommon } = buildTransforms({
 // Consolidated per-object input: customFields, toCommon, and fromCommon all live
 // on the same transformSchemas[Opportunity] entry, so authors add one entry per
 // object rather than two. See the `customFields` note on ObjectSchemasInput in
-// extensions/types.ts for the open ADR-0022 amendment question this depends on.
+// extensions/types.ts for the cross-package-merge trade-off this involves.
 const grantsGovPlugin = definePlugin({
   meta: {
     name: "grants.gov",
