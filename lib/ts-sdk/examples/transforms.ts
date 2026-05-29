@@ -1,9 +1,6 @@
 /**
- * Example script demonstrating bidirectional transforms (ADR-0022 PoC).
- *
- * Mirrors `lib/python-sdk/examples/transforms.py` so the two PoCs share a
- * runnable shape. Shows:
- *   1. Defining `toCommon` / `fromCommon` mappings in ADR-0017 format.
+ * Example script demonstrating bidirectional transforms. Shows:
+ *   1. Defining `toCommon` / `fromCommon` mappings.
  *   2. Registering a custom mapping handler (`join`) for this call only.
  *   3. Validating `toCommon` output against the fully extended Zod schema
  *      (`withCustomFields(OpportunityBaseSchema, ...)`) — passing the base
@@ -37,7 +34,7 @@ import { OpportunityBaseSchema } from "../src/schemas/zod/models";
 // ############################################################################
 
 // Note the `source_url: null` below — this is the publisher actively asserting
-// "doesn't apply" for the source URL (ADR-0024 three-state). The transforms
+// "doesn't apply" for the source URL (three-state null). The transforms
 // preserve it as `null` end-to-end rather than collapsing to absent, so a
 // downstream consumer can distinguish "publisher said N/A" from "publisher
 // didn't supply this."
@@ -130,7 +127,7 @@ const { toCommon, fromCommon } = buildTransforms({
     description: { field: "data.opportunity_description" },
     createdAt: { field: "data.created_at" },
     lastModifiedAt: { field: "data.last_modified_at" },
-    // Three-state demo (ADR-0024): native `source_url: null` carries the
+    // Three-state demo: native `source_url: null` carries the
     // publisher's "doesn't apply" assertion. The `field` handler preserves
     // the terminal null; the walker places it on the output as a real null
     // (distinct from an absent key). Zod's `.nullish()` accepts it.
@@ -285,7 +282,7 @@ if (native.data.opportunity_number !== SOURCE_DATA.data.opportunity_number) {
   );
 }
 
-// ADR-0024 three-state pin: an explicit `null` ("doesn't apply") on the
+// Three-state pin: an explicit `null` ("doesn't apply") on the
 // source side must survive both transforms as a real `null`, not collapse
 // to undefined ("not provided"). A future regression that put `undefined`
 // here instead of `null` would fail this check.
@@ -298,4 +295,4 @@ if (native.data.source_url !== null) {
 }
 
 console.log("\n✓ round-trip verified for fields covered by both mappings");
-console.log("✓ ADR-0024 three-state preserved: source_url null ('doesn't apply') round-tripped");
+console.log("✓ three-state null preserved: source_url null ('doesn't apply') round-tripped");

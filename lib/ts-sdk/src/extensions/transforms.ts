@@ -1,11 +1,9 @@
 /**
- * `buildTransforms()` — compile a pair of ADR-0017 mapping objects into typed
+ * `buildTransforms()` — compile a pair of declarative mapping objects into typed
  * `(toCommon, fromCommon)` callables.
  *
- * Mirrors the Python SDK's `common_grants_sdk.extensions.transforms` so the
- * two PoC ports share semantics. Per ADR-0022 Decision #6, each direction is
- * author-provided — this utility never inverts one into the other, because
- * many-to-one handlers like `switch` are not reversible.
+ * Each direction is author-provided — this utility never inverts one into the
+ * other, because many-to-one handlers like `switch` are not reversible.
  *
  * @module @common-grants/sdk/extensions
  */
@@ -34,7 +32,7 @@ import {
  * arrays, deeply nested specs, or anything else the handler accepts. The
  * walker can't detect *unknown* handler names at static analysis time (an
  * unknown key is indistinguishable from an output field name); that
- * detection is deferred to the full SDK per ADR-0022 Decision #7.
+ * detection is deferred to the full SDK.
  *
  * Bounded by `DEFAULT_MAX_TRANSFORM_DEPTH` (shared with `transformFromMapping`)
  * so adversarial mapping JSON cannot exhaust the call stack before
@@ -43,9 +41,8 @@ import {
  * Sibling keys at a handler-dispatch node are rejected here. The runtime
  * walker is first-key-wins, so `{ field: "x", const: "fallback" }` would
  * silently drop `const` — almost always an author typo — so fail loud at
- * build time instead. Cross-SDK parity: mirrors Python's `_validate_mapping`
- * (called from `build_transforms`), which raises on the same shape. The
- * low-level `transformFromMapping` walker stays lenient so programmatic
+ * build time instead (parity with the Python PoC's build-time validation).
+ * The low-level `transformFromMapping` walker stays lenient so programmatic
  * callers composing partial mappings aren't forced into the strict shape.
  *
  * @internal
@@ -112,7 +109,7 @@ export interface BuildTransformsOptions<TCommon = unknown> {
    * Custom mapping handlers registered for this call only.
    *
    * Name collisions with {@link DEFAULT_HANDLERS} raise a `TypeError` at call
-   * time rather than silently shadowing the default (ADR-0022 Decision #8).
+   * time rather than silently shadowing the default.
    */
   handlers?: Record<string, Handler>;
 
@@ -136,8 +133,7 @@ export interface BuildTransformsOptions<TCommon = unknown> {
    * joined with `"."` and stringified — including numeric array indices, so a
    * Zod issue with path `["customFields", "items", 0, "value"]` becomes
    * `"customFields.items.0.value"` (not the JSONPath form
-   * `"items[0].value"`). This matches the Python PoC's `.`-join convention;
-   * the full SDK's validation pass may revisit the format.
+   * `"items[0].value"`).
    */
   // Bivariant `any` accepts schemas with input/output asymmetry; `unknown`
   // would reject them at the contravariant input position.
@@ -154,7 +150,7 @@ export interface BuiltTransforms<TNative, TCommon> {
 }
 
 /**
- * Compile a pair of ADR-0017 mapping objects into typed
+ * Compile a pair of declarative mapping objects into typed
  * `(toCommon, fromCommon)` callables.
  *
  * @example
@@ -223,7 +219,7 @@ export function buildTransforms<TNative = unknown, TCommon = unknown>(
     // `__proto__`) become own properties of the merged registry on spread, then enter
     // `known` and would dispatch via the walker. Reject so a caller can't accidentally
     // open a path for attacker-controlled mapping JSON to invoke unexpected handlers
-    // (ADR-0022 Decision #8 hardening). `__proto__` itself is an own property of
+    // (prototype-pollution hardening). `__proto__` itself is an own property of
     // `Object.prototype` (as an accessor), so the single hasOwnProperty check
     // covers it without an explicit branch.
     const unsafe = Object.keys(handlers).filter(k =>
@@ -292,7 +288,7 @@ export function buildTransforms<TNative = unknown, TCommon = unknown>(
       return new PluginError(issue.message, { path: joined });
     });
     // Return the raw transformed object alongside errors so callers can
-    // inspect malformed data — matches Python PoC behavior.
+    // inspect malformed data.
     return { result: ran.value as TCommon, errors };
   };
 

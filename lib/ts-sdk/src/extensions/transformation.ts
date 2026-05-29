@@ -1,11 +1,7 @@
 /**
  * Mapping-runtime utilities for declarative bidirectional transforms.
  *
- * Mirrors the Python SDK's `common_grants_sdk.utils.transformation` so the
- * two PoC ports share semantics. Used by `buildTransforms()` in
- * `./transforms`. Re-exported by `./index`.
- *
- * Handler conventions follow ADR-0017 (mapping format).
+ * Used by `buildTransforms()` in `./transforms`. Re-exported by `./index`.
  *
  * ## Null handling (three-state contract, ADR-0024)
  *
@@ -126,7 +122,7 @@ export function constValue(_data: unknown, value: unknown): unknown {
  * handler instead preserves `null` (three-state) and fails loud with a
  * descriptive error on a malformed spec.
  *
- * `match` is the canonical handler name (ADR-0017); `switch` is provided as a
+ * `match` is the canonical handler name; `switch` is provided as a
  * convenience alias — both point at the same handler function. (No prior SDK
  * API defined `switch`; the alias is for ergonomic preference, not a
  * backward-compatibility obligation.)
@@ -142,7 +138,7 @@ export function switchOnValue(data: unknown, spec: unknown): unknown {
   const s = spec as { field?: string; case?: Record<string, unknown>; default?: unknown };
   const val = getFromPath(data, s.field ?? "");
   const lookup = s.case ?? {};
-  // ADR-0024 three-state: null source = publisher asserts "doesn't apply."
+  // null source = publisher asserts "doesn't apply."
   // Author opts in to target-side translation via a `"null"` case key.
   // Otherwise pass null through unchanged — do NOT fall through to default,
   // which is for unrecognized values, not for publisher assertions.
@@ -216,8 +212,8 @@ export function stringToNumber(data: unknown, fieldPath: unknown): number | null
   if (s === "") {
     throw new Error("stringToNumber: cannot convert source value to a number");
   }
-  // Integer-shaped strings parse as integers (Python `int(s)` parity);
-  // anything else falls through to `Number(s)`. The integer branch is
+  // Integer-shaped strings parse as integers; anything else falls through to
+  // `Number(s)`. The integer branch is
   // intentional even though `Number(s)` would handle integer inputs too —
   // it pins the int-vs-float distinction at the call site.
   if (/^-?\d+$/.test(s)) {
@@ -263,7 +259,7 @@ export class HandlerError extends Error {
 /**
  * Registry of built-in mapping handlers.
  *
- * `match` is the canonical name per ADR-0017; `switch` is a convenience alias
+ * `match` is the canonical name; `switch` is a convenience alias
  * — both point at the same handler function.
  */
 export const DEFAULT_HANDLERS: Readonly<Record<string, Handler>> = Object.freeze({
@@ -294,7 +290,7 @@ export interface TransformFromMappingOptions {
 }
 
 /**
- * Transform a data object according to an ADR-0017 mapping spec.
+ * Transform a data object according to a declarative mapping spec.
  *
  * The mapping is a nested object where:
  * - Primitive leaves (string, number, boolean, null) pass through as literals.
@@ -304,12 +300,10 @@ export interface TransformFromMappingOptions {
  *   ignored here — only the first key is read, so `{ field: "x", const: "fallback" }`
  *   drops `const`. This low-level walker stays lenient; callers entering
  *   through `buildTransforms()` get a stricter `validateMapping` pass that
- *   rejects the shape at build time, mirroring Python's `_validate_mapping`.
- *   (Python's runtime walker is first-key-wins too, so direct walker use
- *   behaves identically across SDKs.)
+ *   rejects the shape at build time.
  * - Object nodes whose first key is not a handler are treated as output
  *   shapes — each child is transformed recursively. A child that transforms to
- *   `undefined` (absent source, per the ADR-0024 three-state contract) is
+ *   `undefined` (absent source) is
  *   omitted from the output object; `null` ("doesn't apply") is written as a
  *   present key. So absent → missing key, `null` → present `null`, value →
  *   present value.
@@ -353,9 +347,9 @@ export function transformFromMapping(
     const entries = Object.entries(node as Record<string, unknown>);
     if (entries.length === 0) return {};
 
-    // Mirror the Python walker: check the first key. If it names a handler,
-    // dispatch with the handler argument. Otherwise treat the node as an
-    // output shape and recurse over every child.
+    // Check the first key. If it names a handler, dispatch with the handler
+    // argument. Otherwise treat the node as an output shape and recurse over
+    // every child.
     const [firstKey] = entries[0];
     // Disallow inherited / prototype properties (`__proto__`, `toString`,
     // etc.) from resolving to a handler — mapping JSON can be reconstituted

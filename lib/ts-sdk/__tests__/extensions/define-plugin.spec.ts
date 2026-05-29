@@ -241,7 +241,7 @@ describe("definePlugin", () => {
   });
 
   // ############################################################################
-  // ADR-0022 — meta and transformSchemas (PoC additions)
+  // meta and transformSchemas (PoC additions)
   // ############################################################################
 
   describe("meta", () => {

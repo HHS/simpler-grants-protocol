@@ -24,12 +24,9 @@ import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fie
  * Per-object transform input keyed by extensible model name.
  *
  * Plugin authors populate this with hand-written or `buildTransforms()`-generated
- * `toCommon` / `fromCommon` callables. Names match the Python PoC's
- * `transform_schemas` parameter — the `transformSchemas` field on
- * {@link DefinePluginOptions} is so named to avoid collision with the existing
- * `Plugin.schemas` field (compiled Zod schemas); the full SDK will resolve this
- * naming conflict per ADR-0022 (issue
- * [#756](https://github.com/HHS/simpler-grants-protocol/issues/756)).
+ * `toCommon` / `fromCommon` callables. Named `transformSchemas` (not `schemas`)
+ * to avoid colliding with the existing compiled-schema `Plugin.schemas` field;
+ * the full SDK folds transforms into the ADR-0022 `schemas` slot (#756).
  */
 // Per-entry (TNative, TCommon) pairs only meet at the `buildTransforms()`
 // boundary. `unknown` would reject legitimate caller schemas at contravariant
@@ -66,15 +63,14 @@ export interface DefinePluginOptions<T extends SchemaExtensions = SchemaExtensio
    * declarations keep working; see the type-level note above.
    */
   extensions?: T;
-  /** Optional plugin identity and capability declaration (ADR-0022). */
+  /** Optional plugin identity and capability declaration. */
   meta?: PluginMeta;
   /**
    * Optional per-object transform input — `native` schema, `customFields` specs,
    * and `toCommon` / `fromCommon` callables — for each extensible model.
    *
-   * Stored as-is in the PoC (no compilation, no Zod-wrap). Full SDK will compile
-   * `ObjectSchemasInput` → `ObjectSchemas` and inject the generated `common`
-   * model per ADR-0022 Decision #6/#7.
+   * Stored as-is in the PoC (no compilation, no Zod-wrap); the full SDK compiles
+   * `ObjectSchemasInput` → `ObjectSchemas` and injects the generated `common` model.
    */
   transformSchemas?: TransformSchemasInput;
 }

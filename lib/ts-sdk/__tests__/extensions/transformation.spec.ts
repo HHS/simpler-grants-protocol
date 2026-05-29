@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 
-// Public barrel only re-exports the high-level surface (mirrors the Python PoC's
-// extensions/__init__.py). Individual handler functions are imported directly from
-// the source module for unit testing — they remain module-internal otherwise.
+// Public barrel only re-exports the high-level surface. Individual handler
+// functions are imported directly from the source module for unit testing —
+// they remain module-internal otherwise.
 import { DEFAULT_HANDLERS, getFromPath, transformFromMapping } from "@/extensions";
 import {
   constValue,
@@ -45,7 +45,7 @@ describe("getFromPath", () => {
     expect(getFromPath({ a: 0 }, "a")).toBe(0);
   });
 
-  it("does not resolve inherited prototype-chain properties (ADR-0022 Decision #8)", () => {
+  it("does not resolve inherited prototype-chain properties", () => {
     // Mapping field paths can come from untrusted sources via
     // `mergeExtensions()`, so a path like `__proto__.polluted` must NOT
     // resolve to `Object.prototype.polluted`. The implementation uses
@@ -74,7 +74,7 @@ describe("fieldValue", () => {
     expect(fieldValue({ x: 1 }, "x.y")).toBeUndefined();
   });
 
-  it("preserves terminal null (ADR-0024 'doesn't apply')", () => {
+  it("preserves terminal null ('doesn't apply')", () => {
     // `fieldValue` defers to `getFromPath`, which returns the terminal value
     // verbatim — so an explicit `null` survives unchanged. This pins the
     // three-state contract for the bare `field` handler.
@@ -82,7 +82,7 @@ describe("fieldValue", () => {
   });
 
   it("returns undefined when an intermediate null short-circuits the path", () => {
-    // ADR-0024 makes `null` mean "doesn't apply for THIS field." A null
+    // `null` means "doesn't apply for THIS field." A null
     // intermediate ("the parent doesn't apply") is treated as a propagating
     // assertion: child paths return undefined ("not provided") rather than
     // null, because the publisher made the assertion at the parent level.
@@ -176,13 +176,13 @@ describe("switchOnValue", () => {
     expect(switchOnValue({ a: 1 }, { case: { a: "b" }, default: "fallback" })).toBe("fallback");
   });
 
-  // ADR-0024 three-state preservation for null source values. The mapping
+  // Three-state preservation for null source values. The mapping
   // author opts in to target-side translation via a `"null"` case key;
   // otherwise the publisher's "doesn't apply" assertion passes through
   // unchanged. `default` is NOT consulted for null — `default` belongs to
   // "unrecognized value," not to "publisher asserts irrelevant."
 
-  it("passes null source through as null when no `case.null` is provided (ADR-0024)", () => {
+  it("passes null source through as null when no `case.null` is provided", () => {
     expect(switchOnValue({ status: null }, spec)).toBeNull();
   });
 
@@ -220,7 +220,7 @@ describe("numberToString", () => {
     expect(numberToString({ x: 1.5 }, "x")).toBe("1.5");
   });
 
-  it("returns null on explicit null source (ADR-0024 'doesn't apply')", () => {
+  it("returns null on explicit null source ('doesn't apply')", () => {
     // The publisher asserted the field is irrelevant for this record. The
     // handler must preserve that assertion instead of collapsing it to
     // `undefined` (which would be indistinguishable from "not provided").
@@ -228,7 +228,7 @@ describe("numberToString", () => {
     expect(numberToString({ a: null }, "a")).toBeNull();
   });
 
-  it("returns undefined on absent source (ADR-0024 'not provided')", () => {
+  it("returns undefined on absent source ('not provided')", () => {
     expect(numberToString({}, "a")).toBeUndefined();
   });
 });
@@ -242,13 +242,13 @@ describe("stringToNumber", () => {
     expect(stringToNumber({ a: "1.5" }, "a")).toBe(1.5);
   });
 
-  it("returns null on explicit null source (ADR-0024 'doesn't apply')", () => {
+  it("returns null on explicit null source ('doesn't apply')", () => {
     // Parallels numberToString — null is the publisher's assertion that the
     // field doesn't apply. Preserve it as data; don't collapse to undefined.
     expect(stringToNumber({ a: null }, "a")).toBeNull();
   });
 
-  it("returns undefined on absent source (ADR-0024 'not provided')", () => {
+  it("returns undefined on absent source ('not provided')", () => {
     expect(stringToNumber({}, "x")).toBeUndefined();
   });
 
@@ -296,7 +296,7 @@ describe("DEFAULT_HANDLERS", () => {
     );
   });
 
-  it("points `match` and `switch` at the same handler function (ADR-0017 alias)", () => {
+  it("points `match` and `switch` at the same handler function (alias)", () => {
     expect(DEFAULT_HANDLERS.match).toBe(DEFAULT_HANDLERS.switch);
   });
 
@@ -379,7 +379,7 @@ describe("transformFromMapping", () => {
     expect((caught as Error).message).toMatch(/cannot convert/);
   });
 
-  it("ignores inherited prototype keys when dispatching (Decision #8 hardening)", () => {
+  it("ignores inherited prototype keys when dispatching (prototype-pollution hardening)", () => {
     const mapping: Record<string, unknown> = {};
     // toString exists on Object.prototype but is not a registered handler key.
     mapping["toString"] = { field: "x" };
@@ -388,7 +388,7 @@ describe("transformFromMapping", () => {
     expect(out).toEqual({ toString: 1 });
   });
 
-  it("preserves a handler-returned null on the output object (ADR-0024 three-state)", () => {
+  it("preserves a handler-returned null on the output object (three-state)", () => {
     // The walker must place `null` returned by a handler onto the output
     // shape — not drop the key, not coerce to undefined. Combined with the
     // null-aware handlers, this preserves the publisher's "doesn't apply"
@@ -404,7 +404,7 @@ describe("transformFromMapping", () => {
     ).toEqual({ value: null });
   });
 
-  it("omits an output key whose handler returned undefined (ADR-0024 'not provided')", () => {
+  it("omits an output key whose handler returned undefined ('not provided')", () => {
     // Counterpart to the null-preservation test above: an absent source field
     // produces `undefined` from the handler, and the walker must OMIT the key
     // rather than write `{ x: undefined }`. This is what makes the in-memory
@@ -425,7 +425,7 @@ describe("transformFromMapping", () => {
     expect(Object.prototype.hasOwnProperty.call(mixed, "absent")).toBe(false);
   });
 
-  it("rejects `__proto__` as an output field name (Decision #8 hardening)", () => {
+  it("rejects `__proto__` as an output field name (prototype-pollution hardening)", () => {
     // JSON.parse adds `__proto__` as an own enumerable property (it uses
     // CreateDataProperty, not Set, so the inherited setter never fires) — that's
     // the actual attack vector. Assignment via `obj["__proto__"] = ...` would

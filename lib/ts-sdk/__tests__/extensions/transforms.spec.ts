@@ -92,7 +92,7 @@ describe("buildTransforms — call-time validation", () => {
     ).toThrow(/collide with defaults/);
   });
 
-  it("rejects custom handler names that shadow Object.prototype keys (Decision #8 hardening)", () => {
+  it("rejects custom handler names that shadow Object.prototype keys (prototype-pollution hardening)", () => {
     expect(() =>
       buildTransforms({
         toCommonMapping: {},
@@ -105,7 +105,7 @@ describe("buildTransforms — call-time validation", () => {
     // Also `toString` and `__proto__` — confirms the check isn't hardcoded
     // to `constructor`. `__proto__` is an own accessor on `Object.prototype`,
     // so `hasOwnProperty.call(Object.prototype, "__proto__")` returns true
-    // (the load-bearing claim in the source comment at transforms.ts:218).
+    // (the load-bearing claim in the buildTransforms unsafe-handler check).
     expect(() =>
       buildTransforms({
         toCommonMapping: {},
@@ -135,7 +135,7 @@ describe("buildTransforms — call-time validation", () => {
     ).toThrow(/shadow Object\.prototype/);
   });
 
-  it("rejects `__proto__` as an output field name at build time (Decision #8 hardening)", () => {
+  it("rejects `__proto__` as an output field name at build time (prototype-pollution hardening)", () => {
     // The runtime walker also rejects this (see transformation.spec.ts), but
     // build-time rejection means a JSON-loaded mapping with `__proto__` at
     // any path fails before any data flows. Use `JSON.parse` to materialize
@@ -205,8 +205,8 @@ describe("buildTransforms — call-time validation", () => {
 
   it("rejects sibling keys alongside a handler key — two handlers in one node (Python PoC parity)", () => {
     // The runtime walker is first-key-wins, so `{ field, const }` would
-    // silently drop `const` — almost always an author bug. Match Python's
-    // `_validate_mapping`, which raises on this shape, and reject at build time.
+    // silently drop `const` — almost always an author bug — so reject at
+    // build time.
     expect(() =>
       buildTransforms({
         toCommonMapping: { value: { field: "data.x", const: "fallback" } },
@@ -217,7 +217,7 @@ describe("buildTransforms — call-time validation", () => {
 
   it("rejects a handler key alongside a non-handler sibling at the same node", () => {
     // The non-handler sibling would also be silently dropped by the runtime
-    // walker once the handler dispatches. Catch the typo early — Python parity.
+    // walker once the handler dispatches. Catch the typo early.
     expect(() =>
       buildTransforms({
         toCommonMapping: { value: { field: "data.x", extra: "literal" } },
@@ -261,7 +261,6 @@ describe("buildTransforms — toCommon", () => {
     expect(err.handler).toBe("stringToNumber");
     expect(err.cause).toBeInstanceOf(Error);
     // On handler exception, result is an empty object — no partial fields.
-    // Matches Python PoC's TransformResult(result={}, errors=[...]) behavior.
     // `toStrictEqual` (not `toEqual`) so the contract rejects null/undefined-
     // shaped "empty" sentinels — the documented shape is a literal `{}`.
     expect(out.result).toStrictEqual({});
@@ -423,18 +422,14 @@ describe("buildTransforms — fromCommon", () => {
 });
 
 // ############################################################################
-// Null preservation — ADR-0024 three-state contract
+// Null preservation — three-state contract
 // ############################################################################
 
-describe("buildTransforms — null preservation (ADR-0024 three-state)", () => {
-  // ADR-0024 establishes that optional fields carry three distinct states on
-  // the wire: absent ("not provided"), explicit `null` ("doesn't apply"), and
-  // a value. The transform handlers preserve all three so the publisher's
-  // assertion survives end-to-end through `toCommon` / `fromCommon`.
-  //
-  // ADR-0024 itself audited the Zod / Pydantic validation surface — these
-  // tests pin the parallel contract for the transforms surface, which the
-  // ADR didn't directly cover.
+describe("buildTransforms — null preservation (three-state)", () => {
+  // Optional fields carry three distinct states on the wire: absent ("not
+  // provided"), explicit `null` ("doesn't apply"), and a value. The transform
+  // handlers preserve all three so the publisher's assertion survives
+  // end-to-end through `toCommon` / `fromCommon`.
 
   it("preserves explicit null on the toCommon side (publisher 'doesn't apply')", () => {
     // Source has `description: null` — publisher asserts the field doesn't
@@ -470,7 +465,7 @@ describe("buildTransforms — null preservation (ADR-0024 three-state)", () => {
   });
 
   it("validates a null-bearing toCommon result against a .nullish() Zod schema", () => {
-    // ADR-0024 says SDKs already accept null on `.nullish()` fields; this
+    // SDKs already accept null on `.nullish()` fields; this
     // pins it inside the buildTransforms() Zod path so a future schema
     // change that swapped `.nullish()` for plain `.optional()` would surface
     // here as a PluginError. `source` is `.nullish()` on OpportunityBaseSchema;
@@ -569,9 +564,9 @@ describe("buildTransforms — null preservation (ADR-0024 three-state)", () => {
     // null source ("doesn't apply") → present key with value null.
     expect(Object.prototype.hasOwnProperty.call(result, "nullField")).toBe(true);
     expect(result.nullField).toBeNull();
-    // absent source ("not provided") → key omitted entirely (ADR-0024). The
-    // walker skips `undefined`-valued children so the in-memory object matches
-    // the wire shape `JSON.stringify` produces.
+    // absent source ("not provided") → key omitted entirely. The walker skips
+    // `undefined`-valued children so the in-memory object matches the wire
+    // shape `JSON.stringify` produces.
     expect(Object.prototype.hasOwnProperty.call(result, "absentField")).toBe(false);
     expect(result.absentField).toBeUndefined();
   });
@@ -581,8 +576,8 @@ describe("buildTransforms — null preservation (ADR-0024 three-state)", () => {
 // Custom handlers
 // ############################################################################
 
-describe("PluginError — serialization (ADR-0022 Decision #9)", () => {
-  // ADR-0022 Decision #9: the SDK does not redact by default. Both tests
+describe("PluginError — serialization", () => {
+  // The SDK does not redact by default. Both tests
   // assert on the same PluginError instance — one without redaction (PII
   // flows), one with the adopter-supplied projection (PII contained).
   // Forcing one shared setup keeps "redacted vs. raw is the only delta" a
@@ -657,10 +652,10 @@ describe("buildTransforms — custom handlers", () => {
 });
 
 // ############################################################################
-// Decision #8 hardening — handler-return prototype-pollution scrub
+// Prototype-pollution hardening — handler-return scrub
 // ############################################################################
 
-describe("buildTransforms — handler-return __proto__ scrub (Decision #8 hardening)", () => {
+describe("buildTransforms — handler-return __proto__ scrub (prototype-pollution hardening)", () => {
   it("strips own `__proto__` from a `const` handler's plain-object return", () => {
     // JSON.parse adds `__proto__` as an own enumerable property on the
     // resulting object — the canonical entry point for prototype-pollution

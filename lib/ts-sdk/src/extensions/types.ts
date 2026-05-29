@@ -162,7 +162,7 @@ export type SchemaExtensions = Partial<
 >;
 
 // ############################################################################
-// Public types - Transform contract (ADR-0022 §"TypeScript implementation")
+// Public types - Transform contract
 // ############################################################################
 
 /**
@@ -173,15 +173,13 @@ export type PluginCapability = "customFields" | "customFilters" | "transforms" |
 /**
  * Loose configuration object for plugin-provided HTTP clients.
  *
- * Mirrors the Python PoC's `ClientConfig = dict[str, Any]` parity export.
- * The PoC does not constrain client config shape; the full SDK's `client`
- * capability work decides the precise type (tracked alongside the rest of
- * the transforms-bucket follow-ups).
+ * Loose per-plugin client configuration. The PoC does not constrain the shape;
+ * the full SDK's `client` capability work decides the precise type.
  */
 export type ClientConfig = Record<string, unknown>;
 
 /**
- * Handler signature for transform mapping handlers (ADR-0017).
+ * Handler signature for transform mapping handlers.
  *
  * - First arg: the source data being transformed (where field paths resolve from).
  * - Second arg: the handler argument from the mapping spec.
@@ -207,21 +205,17 @@ export type ClientConfig = Record<string, unknown>;
  *    data may contain PII.** `buildTransforms()` wraps a handler exception's
  *    message verbatim into the resulting `PluginError.message`, which is
  *    enumerable on `Error.prototype` and rendered by `util.inspect` /
- *    `console.log(err)`. Per ADR-0022 Decision #9, the SDK does not redact by
- *    default — `PluginError.sourceValue` and `.cause` are enumerable, and
+ *    `console.log(err)`. The SDK does not redact by default —
+ *    `PluginError.sourceValue` and `.cause` are enumerable, and
  *    `.message` flows through verbatim. The built-in `stringToNumber` handler
  *    follows this rule by throwing a generic "cannot convert source value to a
  *    number" message; see the README's `PluginError` PII warning for the
  *    adopter-side redaction pattern.
- *
- * Parameter naming: ADR-0022's `Handler` interface uses `(value, context)`;
- * this implementation uses `(data, arg)` to match the existing TS SDK's
- * style. The semantics are identical.
  */
 export type Handler = (data: unknown, arg: unknown) => unknown;
 
 /**
- * Unconditional return shape for `toCommon` / `fromCommon` per ADR-0022 Decision #7.
+ * Unconditional return shape for `toCommon` / `fromCommon`.
  *
  * `result` is the transformed value (may be partial on handler error or validation
  * failure). `errors` is the aggregated `PluginError` list, empty on full success.
@@ -236,13 +230,13 @@ export interface TransformResult<T> {
 }
 
 /**
- * Structured transformation error per ADR-0022 Decision #9.
+ * Structured transformation error.
  *
  * Carries field path, handler name, source value, and underlying cause so
  * consumers can reason about failures programmatically without parsing error text.
  *
  * @remarks
- * Per ADR-0022 Decision #9, **the SDK does not redact by default.**
+ * **The SDK does not redact by default.**
  * `sourceValue` and `cause` are plain enumerable fields and flow through
  * `JSON.stringify(err)`, `util.inspect(err)`, and any logger that enumerates
  * own properties. When populated by `buildTransforms()`, `sourceValue` is the
@@ -334,8 +328,7 @@ export interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
  *
  * In the PoC, `definePlugin()` stores `ObjectSchemasInput` as-is on the returned
  * plugin's `transformSchemas` field. Full compilation (adding `common` from the
- * base CG model, wrapping with Zod validation) is deferred to the full SDK
- * (ADR-0022 Decision #7, tracked under #756).
+ * base CG model, wrapping with Zod validation) is deferred to the full SDK.
  */
 export interface ObjectSchemas<TNative, TCommon> {
   native: z.ZodType<TNative>;
@@ -359,8 +352,8 @@ export interface PluginMeta {
 }
 
 /**
- * ADR-0017 mapping dicts for a single object, stored in the serializable
- * extensions config (ADR-0022 Decision #6).
+ * Declarative mapping dicts for a single object, stored in the serializable
+ * extensions config.
  *
  * Each direction is author-provided — `buildTransforms()` does not invert one
  * direction into the other, because many-to-one handlers like `switch` are not
@@ -374,11 +367,10 @@ export interface ObjectMappings {
 /**
  * Per-object config inside the serializable `PluginExtensions.schemas` dict.
  *
- * `mappings` carries optional ADR-0017 declarative mappings; when present and no
+ * `mappings` carries optional declarative mappings; when present and no
  * explicit `toCommon` / `fromCommon` is supplied in
  * `DefinePluginOptions.transformSchemas`, `definePlugin()` will auto-invoke
- * `buildTransforms()` on these. Deferred to the full SDK (ADR-0022 Decision #6,
- * tracked under #756).
+ * `buildTransforms()` on these. Deferred to the full SDK.
  *
  * **Consolidation:** `customFields` moved to
  * {@link ObjectSchemasInput} so authors add a single per-object entry under
