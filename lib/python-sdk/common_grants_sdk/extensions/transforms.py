@@ -141,6 +141,23 @@ def build_transforms(
         from_common_mapping: mapping from CommonGrants → native source.
         handlers: Optional additional handlers registered for this call only.
             Keys must not collide with DEFAULT_HANDLERS (raises ValueError if they do).
+            Each ``build_transforms()`` call gets its own isolated handler registry —
+            handlers passed here are not visible to any other call.
+
+            Example::
+
+                def handle_upper(data, path):
+                    parts = path.split(".")
+                    val = data
+                    for p in parts:
+                        val = val.get(p) if isinstance(val, dict) else None
+                    return str(val).upper() if val is not None else None
+
+                to_common, _ = build_transforms(
+                    {"title": {"upper": "data.opportunity_title"}},
+                    {},
+                    handlers={"upper": handle_upper},
+                )
         common_model: Optional Pydantic model class to validate the to_common output
             against. Must be the fully extended generated model class (e.g. the
             generated Opportunity from generated/schemas.py), NOT the base class
