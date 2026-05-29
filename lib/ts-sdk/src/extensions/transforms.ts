@@ -40,10 +40,13 @@ import {
  * so adversarial mapping JSON cannot exhaust the call stack before
  * `buildTransforms()` returns.
  *
- * Sibling keys at a handler-dispatch node are NOT rejected here. The runtime
- * walker is first-key-wins, so `{ field: "x", const: "fallback" }` silently
- * drops `const`. Cross-SDK parity: Python's `_validate_mapping` accepts this
- * shape too. Both SDKs share the foot-gun.
+ * Sibling keys at a handler-dispatch node are rejected here. The runtime
+ * walker is first-key-wins, so `{ field: "x", const: "fallback" }` would
+ * silently drop `const` — almost always an author typo — so fail loud at
+ * build time instead. Cross-SDK parity: mirrors Python's `_validate_mapping`
+ * (called from `build_transforms`), which raises on the same shape. The
+ * low-level `transformFromMapping` walker stays lenient so programmatic
+ * callers composing partial mappings aren't forced into the strict shape.
  *
  * @internal
  */
@@ -62,6 +65,22 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
       `Invalid mapping node at '${path}': expected object, string, number, boolean, or null, got ${
         Array.isArray(mapping) ? "array" : t
       }`
+    );
+  }
+
+  // A handler invocation must be the sole key in its node. The runtime walker
+  // is first-key-wins, so a handler key alongside siblings silently drops the
+  // siblings (`{ field, const }` keeps `field`, drops `const`) — almost always
+  // an author typo. Fail loud at build time. Mirrors Python's `_validate_mapping`.
+  const nodeKeys = Object.keys(mapping as Record<string, unknown>);
+  const handlerKeys = nodeKeys.filter(k => knownHandlers.has(k));
+  if (handlerKeys.length > 0 && nodeKeys.length > 1) {
+    const siblings = nodeKeys.filter(k => !knownHandlers.has(k)).sort();
+    throw new Error(
+      `Invalid mapping node at '${path === "" ? "<root>" : path}': handler key '${
+        handlerKeys[0]
+      }' cannot have sibling keys ${JSON.stringify(siblings)}. ` +
+        `A handler invocation must be the only key in its dict.`
     );
   }
 

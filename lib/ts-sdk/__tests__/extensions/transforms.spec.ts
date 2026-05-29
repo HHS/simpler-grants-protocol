@@ -203,18 +203,27 @@ describe("buildTransforms — call-time validation", () => {
     ).toThrow(/exceeded maximum nesting depth/);
   });
 
-  it("accepts (does not reject) sibling keys at a handler-dispatch node — cross-SDK parity", () => {
-    // The runtime walker is first-key-wins: `{ field, const }` silently
-    // drops `const`. Python's `_validate_mapping` accepts this shape too,
-    // so both SDKs share the foot-gun. This test pins the parity decision
-    // so a future regression that re-introduces build-time rejection
-    // (creating cross-SDK divergence) fails loudly here.
+  it("rejects sibling keys alongside a handler key — two handlers in one node (Python PoC parity)", () => {
+    // The runtime walker is first-key-wins, so `{ field, const }` would
+    // silently drop `const` — almost always an author bug. Match Python's
+    // `_validate_mapping`, which raises on this shape, and reject at build time.
     expect(() =>
       buildTransforms({
-        toCommonMapping: { value: { field: "data.x", const: "silently-dropped" } },
+        toCommonMapping: { value: { field: "data.x", const: "fallback" } },
         fromCommonMapping: {},
       })
-    ).not.toThrow();
+    ).toThrow(/cannot have sibling keys/);
+  });
+
+  it("rejects a handler key alongside a non-handler sibling at the same node", () => {
+    // The non-handler sibling would also be silently dropped by the runtime
+    // walker once the handler dispatches. Catch the typo early — Python parity.
+    expect(() =>
+      buildTransforms({
+        toCommonMapping: { value: { field: "data.x", extra: "literal" } },
+        fromCommonMapping: {},
+      })
+    ).toThrow(/cannot have sibling keys/);
   });
 });
 
