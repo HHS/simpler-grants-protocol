@@ -10,7 +10,7 @@ from typing import get_type_hints
 
 import pytest
 
-from common_grants_sdk import merge_extensions, define_plugin
+from common_grants_sdk import define_plugin
 from common_grants_sdk.extensions import CustomFieldSpec
 from common_grants_sdk.extensions import PluginConfig
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
@@ -28,28 +28,25 @@ def _env_with_sdk_pythonpath() -> dict[str, str]:
     return env
 
 
-def test_define_plugin_returns_config_with_extensions():
-    extensions = {
-        "Opportunity": {
-            "program_area": CustomFieldSpec(
-                field_type=CustomFieldType.STRING,
-                description="Grant category",
-            )
-        }
+def test_define_plugin_returns_config_with_schemas():
+    from common_grants_sdk.extensions.types import ObjectSchemasInput
+
+    schemas = {
+        "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                "program_area": CustomFieldSpec(
+                    field_type=CustomFieldType.STRING,
+                    description="Grant category",
+                )
+            }
+        )
     }
-    config = define_plugin(extensions)
+    config = define_plugin(schemas=schemas)
 
     assert isinstance(config, PluginConfig)
-    assert config.extensions == extensions
-
-
-def test_merge_extensions_merges_extensions():
-    one = {"Opportunity": {"program_area": CustomFieldSpec(field_type="string")}}
-    two = {"Opportunity": {"eligibility_type": CustomFieldSpec(field_type="array")}}
-
-    merged = merge_extensions([one, two], on_conflict="error")
-
-    assert set(merged["Opportunity"].keys()) == {"program_area", "eligibility_type"}
+    assert config.schemas is schemas
+    assert config.schemas["Opportunity"].custom_fields is not None
+    assert "program_area" in config.schemas["Opportunity"].custom_fields
 
 
 def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
@@ -62,23 +59,26 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
     (plugin_dir / "cg_config.py").write_text(
         "\n".join(
             [
-                "from common_grants_sdk import merge_extensions, define_plugin",
-                "from common_grants_sdk.extensions import SchemaExtensions, CustomFieldSpec",
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions import CustomFieldSpec",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
                 "",
-                "local_extensions: SchemaExtensions = {",
-                '    "Opportunity": {',
-                '        "program_area": CustomFieldSpec(',
-                '            field_type="string",',
-                '            description="Program area",',
-                "        ),",
-                '        "eligibility_type": CustomFieldSpec(',
-                '            field_type="array",',
-                '            description="Types of eligible organizations",',
-                "        ),",
+                "config = define_plugin(",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            custom_fields={",
+                '                "program_area": CustomFieldSpec(',
+                '                    field_type="string",',
+                '                    description="Program area",',
+                "                ),",
+                '                "eligibility_type": CustomFieldSpec(',
+                '                    field_type="array",',
+                '                    description="Types of eligible organizations",',
+                "                ),",
+                "            },",
+                "        )",
                 "    },",
-                "}",
-                "",
-                "config = define_plugin(merge_extensions([local_extensions], on_conflict='error'))",
+                ")",
                 "",
             ]
         ),
@@ -105,7 +105,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
     try:
         combined_module = importlib.import_module("plugins.combined")
         combined = getattr(combined_module, "combined")
-        opp_model = combined.schemas.Opportunity
+        opp_model = combined.schemas.Opportunity.common
 
         type_hints = get_type_hints(opp_model, include_extras=False)
         assert "custom_fields" in type_hints
@@ -139,7 +139,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
             "nonprofit",
             "city_government",
         ]
-        assert "Opportunity" in combined.extensions
+        assert combined.schemas.Opportunity.common is opp_model
     finally:
         sys.path.remove(str(tmp_path))
 
@@ -155,19 +155,24 @@ def test_generate_emits_import_for_pydantic_model_in_cg_config(tmp_path: Path):
                 "from pydantic import BaseModel",
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
                 "",
                 "class AgentInfo(BaseModel):",
                 "    name: str",
                 "    email: str",
                 "",
-                "config = define_plugin({",
-                '    "Opportunity": {',
-                '        "point_of_contact": CustomFieldSpec(',
-                '            field_type="object",',
-                "            value=AgentInfo,",
-                "        ),",
+                "config = define_plugin(",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            custom_fields={",
+                '                "point_of_contact": CustomFieldSpec(',
+                '                    field_type="object",',
+                "                    value=AgentInfo,",
+                "                ),",
+                "            },",
+                "        )",
                 "    },",
-                "})",
+                ")",
                 "",
             ]
         ),
@@ -201,15 +206,20 @@ def test_generate_emits_import_for_external_module_type(tmp_path: Path):
                 "from datetime import datetime",
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
                 "",
-                "config = define_plugin({",
-                '    "Opportunity": {',
-                '        "deadline": CustomFieldSpec(',
-                '            field_type="string",',
-                "            value=datetime,",
-                "        ),",
+                "config = define_plugin(",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            custom_fields={",
+                '                "deadline": CustomFieldSpec(',
+                '                    field_type="string",',
+                "                    value=datetime,",
+                "                ),",
+                "            },",
+                "        )",
                 "    },",
-                "})",
+                ")",
                 "",
             ]
         ),
@@ -232,6 +242,70 @@ def test_generate_emits_import_for_external_module_type(tmp_path: Path):
     assert "value: Optional[datetime]" in schemas_src
 
 
+def test_generate_auto_builds_transforms_from_mappings(tmp_path):
+    """When cg_config has extensions.schemas[obj].mappings but no explicit schemas[obj],
+    the generated __init__.py calls build_transforms() automatically."""
+    plugin_dir = tmp_path / "plugins" / "auto_transform"
+    plugin_dir.mkdir(parents=True)
+    (plugin_dir / "__init__.py").write_text("", encoding="utf-8")
+
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema, ObjectMappings",
+                "",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(",
+                "        schemas={",
+                '            "Opportunity": PluginExtensionsSchema(',
+                "                mappings=ObjectMappings(",
+                '                    to_common={"title": {"field": "data.title"}},',
+                "                    from_common={},",
+                "                ),",
+                "            )",
+                "        }",
+                "    ),",
+                ")",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    from common_grants_sdk.extensions.generate import generate_plugin
+
+    generate_plugin(plugin_dir)
+
+    init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
+    assert "build_transforms" in init_content
+    assert 'config.extensions.schemas["Opportunity"].mappings.to_common' in init_content
+    assert "_Opportunity_to_common" in init_content
+    assert "common_model=schemas.Opportunity.common" in init_content
+
+    # Load the generated plugin and verify schemas are populated
+    import importlib
+    import sys
+
+    # Remove any stale 'plugins' package from previous tests before inserting our path.
+    for key in list(sys.modules.keys()):
+        if key == "plugins" or key.startswith("plugins."):
+            del sys.modules[key]
+
+    sys.path.insert(0, str(tmp_path))
+    try:
+        mod = importlib.import_module("plugins.auto_transform")
+        plugin = getattr(mod, "auto_transform")
+        assert hasattr(plugin.schemas, "Opportunity")
+        assert plugin.schemas.Opportunity.to_common is not None
+    finally:
+        if str(tmp_path) in sys.path:
+            sys.path.remove(str(tmp_path))
+        for key in list(sys.modules.keys()):
+            if key == "plugins" or key.startswith("plugins."):
+                del sys.modules[key]
+
+
 @pytest.mark.skipif(shutil.which("pyright") is None, reason="pyright is not installed")
 def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
     plugins_dir = tmp_path / "plugins"
@@ -244,14 +318,18 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
         "\n".join(
             [
                 "from common_grants_sdk import define_plugin",
-                "from common_grants_sdk.extensions import SchemaExtensions, CustomFieldSpec",
+                "from common_grants_sdk.extensions import CustomFieldSpec",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
                 "",
-                "extensions: SchemaExtensions = {",
-                '    "Opportunity": {',
-                '        "eligibility_type": CustomFieldSpec(field_type="array"),',
+                "config = define_plugin(",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            custom_fields={",
+                '                "eligibility_type": CustomFieldSpec(field_type="array"),',
+                "            },",
+                "        )",
                 "    },",
-                "}",
-                "config = define_plugin(extensions)",
+                ")",
                 "",
             ]
         ),
@@ -286,7 +364,7 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
                 '    "customFields": {"eligibility_type": {"fieldType": "array", "value": ["a"]}},',
                 "}",
                 "",
-                "opp = combined.schemas.Opportunity.model_validate(payload)",
+                "opp = combined.schemas.Opportunity.common.model_validate(payload)",
                 "if opp.custom_fields is not None and opp.custom_fields.eligibility_type is not None:",
                 "    values = opp.custom_fields.eligibility_type.value",
                 "    reveal_type(values)",
@@ -308,3 +386,173 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
     )
     assert pyright.returncode == 0, pyright.stdout + "\n" + pyright.stderr
     assert 'Type of "values" is "list[Any] | None"' in pyright.stdout
+
+
+def test_generate_explicit_transforms(tmp_path):
+    """When cg_config has config.schemas with explicit to_common/from_common,
+    the generated __init__.py emits ObjectSchemas with the supplied callables."""
+    from common_grants_sdk.extensions.generate import generate_plugin
+
+    plugin_dir = tmp_path / "plugins" / "explicit_tf"
+    plugin_dir.mkdir(parents=True)
+    (plugin_dir / "__init__.py").write_text("", encoding="utf-8")
+
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput, TransformResult",
+                "from common_grants_sdk.extensions import CustomFieldSpec",
+                "",
+                "def _to_common(native):",
+                "    return TransformResult(result={'title': native.get('name', '')}, errors=[])",
+                "",
+                "def _from_common(common):",
+                "    return TransformResult(result={'name': common.get('title', '')}, errors=[])",
+                "",
+                "config = define_plugin(",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                '            custom_fields={"legacyId": CustomFieldSpec(field_type="integer")},',
+                "            to_common=_to_common,",
+                "            from_common=_from_common,",
+                "        )",
+                "    },",
+                ")",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    generate_plugin(plugin_dir)
+
+    init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
+    # Explicit transforms use inject_transforms(), not per-object boilerplate
+    assert "build_transforms" not in init_content
+    assert "schemas = inject_transforms(config, schemas)" in init_content
+    # No per-object assignment lines
+    assert 'config.schemas["Opportunity"].to_common' not in init_content
+    assert 'config.schemas["Opportunity"].from_common' not in init_content
+    # ObjectSchemas is no longer constructed in __init__.py (only in schemas.py)
+    assert "ObjectSchemas" not in init_content
+
+    # Load and verify the plugin works end-to-end
+    sys.path.insert(0, str(tmp_path))
+    try:
+        mod = importlib.import_module("plugins.explicit_tf")
+        plugin = getattr(mod, "explicit_tf")
+        assert hasattr(plugin.schemas, "Opportunity")
+        opp_schemas = plugin.schemas.Opportunity
+        result = opp_schemas.to_common({"name": "Test Grant"})
+        assert result.result == {"title": "Test Grant"}
+        assert result.errors == []
+    finally:
+        if str(tmp_path) in sys.path:
+            sys.path.remove(str(tmp_path))
+        for key in list(sys.modules.keys()):
+            if "explicit_tf" in key or key == "plugins":
+                del sys.modules[key]
+
+
+def test_generate_transforms_only_no_custom_fields(tmp_path):
+    """Regression: config.schemas with only explicit transforms (no custom_fields, no extensions)
+    must produce a _Schemas entry for the object so inject_transforms() can access it at import.
+    """
+    from common_grants_sdk.extensions.generate import generate_plugin
+
+    plugin_dir = tmp_path / "plugins" / "transforms_only"
+    plugin_dir.mkdir(parents=True)
+    (plugin_dir / "__init__.py").write_text("", encoding="utf-8")
+
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions.types import ObjectSchemasInput, TransformResult",
+                "",
+                "def _to_common(native):",
+                "    return TransformResult(result={'title': native.get('name', '')}, errors=[])",
+                "",
+                "def _from_common(common):",
+                "    return TransformResult(result={'name': common.get('title', '')}, errors=[])",
+                "",
+                "config = define_plugin(",
+                "    schemas={",
+                '        "Opportunity": ObjectSchemasInput(',
+                "            to_common=_to_common,",
+                "            from_common=_from_common,",
+                "        )",
+                "    },",
+                ")",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    generate_plugin(plugin_dir)
+
+    # schemas.py must assign self.Opportunity using the base SDK class
+    schemas_src = (plugin_dir / "generated" / "schemas.py").read_text(encoding="utf-8")
+    assert "self.Opportunity = ObjectSchemas" in schemas_src
+    assert "OpportunityBase" in schemas_src
+
+    # __init__.py must use inject_transforms (not build_transforms)
+    init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
+    assert "inject_transforms" in init_content
+    assert "build_transforms" not in init_content
+
+    # Importing must not raise AttributeError / ValueError
+    sys.path.insert(0, str(tmp_path))
+    try:
+        mod = importlib.import_module("plugins.transforms_only")
+        plugin = getattr(mod, "transforms_only")
+        assert hasattr(plugin.schemas, "Opportunity")
+        result = plugin.schemas.Opportunity.to_common({"name": "Test Grant"})
+        assert result.result == {"title": "Test Grant"}
+        assert result.errors == []
+    finally:
+        if str(tmp_path) in sys.path:
+            sys.path.remove(str(tmp_path))
+        for key in list(sys.modules.keys()):
+            if "transforms_only" in key or key == "plugins":
+                del sys.modules[key]
+
+
+def test_generate_raises_on_missing_mapping_direction(tmp_path):
+    """generate_plugin raises ValueError when a mappings-only object is missing
+    one of its mapping directions (to_common or from_common is None)."""
+    from common_grants_sdk.extensions.generate import generate_plugin
+
+    plugin_dir = tmp_path / "bad_plugin"
+    plugin_dir.mkdir(parents=True)
+
+    (plugin_dir / "cg_config.py").write_text(
+        "\n".join(
+            [
+                "from common_grants_sdk import define_plugin",
+                "from common_grants_sdk.extensions.types import (",
+                "    ObjectMappings, PluginExtensions, PluginExtensionsSchema,",
+                ")",
+                "",
+                "config = define_plugin(",
+                "    extensions=PluginExtensions(",
+                "        schemas={",
+                '            "Opportunity": PluginExtensionsSchema(',
+                "                mappings=ObjectMappings(",
+                '                    to_common={"title": {"field": "data.title"}},',
+                "                    # from_common intentionally omitted (None)",
+                "                ),",
+                "            )",
+                "        }",
+                "    ),",
+                ")",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="from_common.*required"):
+        generate_plugin(plugin_dir)

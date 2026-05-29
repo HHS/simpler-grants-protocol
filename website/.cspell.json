@@ -100,7 +100,8 @@
     "apidevtools",
     "allof",
     "pypi",
-    "Pypi"
+    "Pypi",
+    "functools"
   ],
   "import": []
 }

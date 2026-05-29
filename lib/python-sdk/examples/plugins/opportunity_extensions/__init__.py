@@ -7,8 +7,9 @@ from .cg_config import config
 from .generated import schemas
 
 opportunity_extensions = Plugin(
-    extensions=config.extensions,
     schemas=schemas,
+    extensions=config.extensions,
+    meta=config.meta,
 )
 
 __all__ = ["opportunity_extensions", "schemas"]

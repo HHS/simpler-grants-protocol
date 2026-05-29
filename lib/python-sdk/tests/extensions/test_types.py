@@ -1,6 +1,5 @@
 """Tests for ADR-0022 types defined in common_grants_sdk.extensions.types."""
 
-import pytest
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 from common_grants_sdk.extensions.types import (
     ObjectMappings,
@@ -42,6 +41,14 @@ def test_plugin_error_structured_fields():
     assert err.cause is cause
 
 
+def test_plugin_error_source_value_excluded_from_str_and_repr():
+    """source_value must not appear in str(err) or repr(err) — PII defence per ADR-0022 Decision #9."""
+    sensitive = {"ssn": "123-45-6789"}
+    err = PluginError("transform failed", source_value=sensitive)
+    assert "123-45-6789" not in str(err)
+    assert "123-45-6789" not in repr(err)
+
+
 # --- TransformResult ---
 
 
@@ -81,7 +88,6 @@ def test_plugin_extensions_meta():
 
 
 def test_plugin_extensions_schema():
-    assert PluginExtensionsSchema().custom_fields is None
     assert PluginExtensionsSchema().mappings is None
     s = PluginExtensionsSchema(mappings=ObjectMappings(toCommon={"a": "b"}))
     assert s.mappings.to_common == {"a": "b"}
@@ -93,10 +99,9 @@ def test_plugin_extensions_schema():
 def test_plugin_extensions():
     assert PluginExtensions().meta is None
     assert PluginExtensions().schemas is None
-    spec = CustomFieldSpec(field_type=CustomFieldType.INTEGER)
-    schema = PluginExtensionsSchema(customFields={"legacyId": spec})
+    schema = PluginExtensionsSchema(mappings=ObjectMappings(toCommon={"a": "b"}))
     ext = PluginExtensions(schemas={"Opportunity": schema})
-    assert ext.schemas["Opportunity"].custom_fields == {"legacyId": spec}
+    assert ext.schemas["Opportunity"].mappings is not None
 
 
 # --- ObjectSchemasInput ---
@@ -104,13 +109,18 @@ def test_plugin_extensions():
 
 def test_object_schemas_input():
     assert ObjectSchemasInput().native is None
+    assert ObjectSchemasInput().custom_fields is None
     assert ObjectSchemasInput().to_common is None
+
+    spec = CustomFieldSpec(field_type=CustomFieldType.INTEGER)
+    inp = ObjectSchemasInput(custom_fields={"legacyId": spec})
+    assert inp.custom_fields == {"legacyId": spec}
 
     def passthrough(x):
         return TransformResult(result=x, errors=[])
 
-    inp = ObjectSchemasInput(to_common=passthrough, from_common=passthrough)
-    assert inp.to_common is passthrough
+    inp2 = ObjectSchemasInput(to_common=passthrough, from_common=passthrough)
+    assert inp2.to_common is passthrough
 
 
 # --- ObjectSchemas ---
@@ -126,7 +136,7 @@ def test_object_schemas():
     assert schemas.native is dict
     assert schemas.common is dict
 
-    with pytest.raises(TypeError):
-        ObjectSchemas(
-            native=dict, common=dict, to_common=passthrough
-        )  # missing from_common
+    # to_common and from_common are optional — omitting them is valid
+    minimal = ObjectSchemas(native=dict, common=dict)
+    assert minimal.to_common is None
+    assert minimal.from_common is None

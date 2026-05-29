@@ -23,7 +23,7 @@ from typing import Any
 # adds the script's directory (examples/) to sys.path. Import from there using
 # the `plugins.` prefix (not `examples.plugins.`) — the `examples.` prefix only
 # works in -c or interactive contexts where lib/python-sdk/ is sys.path[0].
-from plugins.grants_gov.cg_config import plugin
+from plugins.grants_gov import grants_gov as plugin
 from plugins.grants_gov.generated.schemas import Opportunity
 
 from common_grants_sdk.extensions import build_transforms
@@ -44,6 +44,7 @@ SOURCE_DATA: dict[str, Any] = {
         "opportunity_status": "posted",
         "opportunity_title": "Research into conservation techniques",
         "opportunity_uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "priority_score_str": "75",
         "summary": {
             "applicant_types": ["state_governments"],
             "archive_date": "2025-05-01",
@@ -149,8 +150,7 @@ def _section(title: str) -> None:
 
 
 def main() -> None:
-    assert plugin.transform_schemas is not None
-    opp = plugin.transform_schemas["Opportunity"]
+    opp = plugin.schemas.Opportunity
 
     _section("SOURCE DATA (grants.gov format)")
     print(json.dumps(SOURCE_DATA, indent=2))
@@ -211,6 +211,11 @@ def main() -> None:
             .get("summary", {})
             .get("award_ceiling"),
         ),
+        (
+            "priority_score_str",
+            SOURCE_DATA["data"]["priority_score_str"],
+            native_result.result.get("data", {}).get("priority_score_str"),
+        ),
     ]
     all_pass = True
     for field, original, roundtripped in checks:
@@ -239,6 +244,7 @@ def main() -> None:
             print(f"  [path={err.path}] {err}")
     else:
         print("Validation: PASS — result is a typed Opportunity instance")
+        assert isinstance(custom_cg.result, Opportunity)
         opp_instance = custom_cg.result
         print(f"\n  title:       {opp_instance.title}")
         print(f"  id:          {opp_instance.id}")

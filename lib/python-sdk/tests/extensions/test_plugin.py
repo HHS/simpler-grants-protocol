@@ -1,23 +1,28 @@
-"""Tests for expanded plugin.py — backward compat + new optional fields."""
+"""Tests for plugin.py — PluginExtensions-based API."""
 
 from common_grants_sdk.extensions.plugin import Plugin, PluginConfig, define_plugin
-from common_grants_sdk.extensions.specs import SchemaExtensions
 from common_grants_sdk.extensions.types import (
     ObjectSchemasInput,
+    PluginExtensions,
     PluginExtensionsMeta,
+    PluginExtensionsSchema,
     TransformResult,
 )
 
-EXTENSIONS: SchemaExtensions = {}  # minimal valid extensions
 
-
-def test_define_plugin_backward_compat():
-    """define_plugin(extensions=...) still returns PluginConfig with all optional fields None."""
-    config = define_plugin(extensions=EXTENSIONS)
+def test_define_plugin_no_args():
+    """define_plugin() with no args returns PluginConfig with all fields None."""
+    config = define_plugin()
     assert isinstance(config, PluginConfig)
-    assert config.extensions is EXTENSIONS
+    assert config.extensions is None
     assert config.meta is None
-    assert config.transform_schemas is None
+    assert config.schemas is None
+
+
+def test_define_plugin_with_extensions():
+    ext = PluginExtensions()
+    config = define_plugin(extensions=ext)
+    assert config.extensions is ext
 
 
 def test_define_plugin_with_meta_and_schemas():
@@ -31,43 +36,48 @@ def test_define_plugin_with_meta_and_schemas():
             to_common=passthrough, from_common=passthrough
         )
     }
-    config = define_plugin(extensions=EXTENSIONS, meta=meta, transform_schemas=schemas)
+    config = define_plugin(meta=meta, schemas=schemas)
     assert config.meta is meta
     assert config.meta.name == "test"
-    assert config.transform_schemas is schemas
+    assert config.schemas is schemas
 
 
-def test_plugin_fields():
-    """Plugin accepts all fields; optional ones default to None."""
-    base = Plugin(extensions=EXTENSIONS, schemas=object())
-    assert base.meta is None
-    assert base.get_client is None
-    assert base.transform_schemas is None
-    assert base.filters is None
-
-    meta = PluginExtensionsMeta(name="p", source_system="s")
-    schemas = {"Opportunity": object()}
-    full = Plugin(
-        extensions=EXTENSIONS, schemas=object(), meta=meta, transform_schemas=schemas
-    )
-    assert full.meta is meta
-    assert full.transform_schemas is schemas
-
-
-def test_transform_schemas_callable_roundtrip():
-    """The demo calls config.transform_schemas["Opportunity"].to_common(data)."""
+def test_define_plugin_schemas_callable_roundtrip():
+    """config.schemas["Opportunity"].to_common(data) works."""
 
     def always_transformed(_x):
         return TransformResult(result={"transformed": True}, errors=[])
 
     config = define_plugin(
-        extensions=EXTENSIONS,
-        transform_schemas={
+        schemas={
             "Opportunity": ObjectSchemasInput(
                 to_common=always_transformed, from_common=always_transformed
             )
         },
     )
-    result = config.transform_schemas["Opportunity"].to_common({"raw": "data"})
+    result = config.schemas["Opportunity"].to_common({"raw": "data"})
     assert result.result == {"transformed": True}
     assert result.errors == []
+
+
+def test_plugin_fields_default_to_none():
+    """Plugin.schemas holds the container; meta/extensions default to None."""
+    base = Plugin(schemas=object())
+    assert base.meta is None
+    assert base.extensions is None
+
+
+def test_plugin_fields_populated():
+    meta = PluginExtensionsMeta(name="p", source_system="s")
+    ext = PluginExtensions(schemas={"Opportunity": PluginExtensionsSchema()})
+    full = Plugin(schemas=object(), extensions=ext, meta=meta)
+    assert full.meta is meta
+    assert full.extensions is ext
+
+
+def test_plugin_schemas_is_attribute_container():
+    """Plugin.schemas holds the _Schemas object (no generated_schemas field)."""
+    s = object()
+    p = Plugin(schemas=s)
+    assert p.schemas is s
+    assert not hasattr(p, "generated_schemas")

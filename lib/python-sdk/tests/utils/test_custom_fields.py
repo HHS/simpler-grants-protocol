@@ -470,3 +470,29 @@ class TestCustomFieldSpecEmptyStrings:
             }
         )
         assert opp.custom_fields.legacy_id.description is None
+
+
+class TestUnknownCustomFieldsPreserved:
+    """Unknown customFields keys should survive round-trip (extra='allow' + validator)."""
+
+    def test_unknown_key_survives_round_trip(self):
+        fields = {
+            "legacyId": CustomFieldSpec(field_type=CustomFieldType.INTEGER, value=int),
+        }
+        Opportunity = OpportunityBase.with_custom_fields(
+            custom_fields=fields, model_name="Opportunity"
+        )
+        payload = {
+            **BASE_OPP,
+            "customFields": {
+                "legacyId": {"fieldType": "integer", "value": 42},
+                "unknownField": {"fieldType": "string", "value": "preserved"},
+            },
+        }
+
+        opp = Opportunity.model_validate(payload)
+
+        assert opp.custom_fields is not None
+        assert opp.custom_fields.legacy_id.value == 42
+        # unknown field should be present in model_extra (extra="allow" behaviour)
+        assert "unknownField" in opp.custom_fields.model_extra

@@ -75,6 +75,14 @@ to_common, from_common = build_transforms(
                 },
             },
         },
+        "customFields": {
+            "legacyIdStr": {
+                "value": {"numberToString": "data.opportunity_id"},
+            },
+            "priorityScore": {
+                "value": {"stringToNumber": "data.priority_score_str"},
+            },
+        },
     },
     # from_common: CommonGrants Opportunity → grants.gov native
     from_common_mapping={
@@ -97,6 +105,9 @@ to_common, from_common = build_transforms(
                 "forecasted_post_date": {"field": "keyDates.appOpens.date"},
                 "forecasted_close_date": {"field": "keyDates.appDeadline.date"},
             },
+            "priority_score_str": {
+                "numberToString": "customFields.priorityScore.value"
+            },
         }
     },
 )
@@ -105,39 +116,44 @@ to_common, from_common = build_transforms(
 # Plugin config
 # ---------------------------------------------------------------------------
 
-plugin = define_plugin(
-    # extensions: SchemaExtensions — dict[str, dict[str, CustomFieldSpec]]
-    extensions={
-        "Opportunity": {
-            "legacyId": CustomFieldSpec(
-                field_type=CustomFieldType.INTEGER,
-                name="Legacy ID",
-                description="Unique identifier in legacy database",
-            ),
-            "agencyName": CustomFieldSpec(
-                field_type=CustomFieldType.STRING,
-                name="Agency",
-                description="Agency hosting the opportunity",
-            ),
-            "applicantTypes": CustomFieldSpec(
-                field_type=CustomFieldType.ARRAY,
-                name="Applicant types",
-                description="Types of applicants eligible to apply",
-            ),
-        }
-    },
+config = define_plugin(
     meta=PluginExtensionsMeta(
         name="grants-gov",
         version="0.1.0",
         sourceSystem="grants.gov",
         capabilities=["customFields", "transforms"],
     ),
-    transform_schemas={
+    schemas={
         "Opportunity": ObjectSchemasInput(
+            custom_fields={
+                "legacyId": CustomFieldSpec(
+                    field_type=CustomFieldType.INTEGER,
+                    name="Legacy ID",
+                    description="Unique identifier in legacy database",
+                ),
+                "legacyIdStr": CustomFieldSpec(
+                    field_type=CustomFieldType.STRING,
+                    name="Legacy ID (string)",
+                    description="Legacy ID coerced to a string via numberToString",
+                ),
+                "agencyName": CustomFieldSpec(
+                    field_type=CustomFieldType.STRING,
+                    name="Agency",
+                    description="Agency hosting the opportunity",
+                ),
+                "applicantTypes": CustomFieldSpec(
+                    field_type=CustomFieldType.ARRAY,
+                    name="Applicant types",
+                    description="Types of applicants eligible to apply",
+                ),
+                "priorityScore": CustomFieldSpec(
+                    field_type=CustomFieldType.NUMBER,
+                    name="Priority score",
+                    description="Numeric priority score coerced from a string via stringToNumber",
+                ),
+            },
             to_common=to_common,
             from_common=from_common,
         )
     },
 )
-
-config = plugin

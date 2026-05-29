@@ -18,7 +18,6 @@ PluginCapability = Literal["customFields", "customFilters", "transforms", "clien
 
 # Type aliases
 Handler = Callable[[Any, Any], Any]
-ClientConfig = dict[str, Any]
 
 
 class PluginError(Exception):
@@ -89,9 +88,8 @@ class PluginExtensionsMeta(BaseModel):
 
 
 class PluginExtensionsSchema(BaseModel):
-    """Per-object config inside extensions.schemas.
+    """Per-object config inside extensions.schemas. Holds declarative mappings only.
 
-    custom_fields: custom field declarations (merged by merge_extensions).
     mappings: optional ADR-0017 declarative mappings. When present and no explicit
         to_common / from_common is supplied in schemas[obj], define_plugin() will
         auto-invoke build_transforms() on these (TODO — ADR-0022 Decision #6).
@@ -99,9 +97,6 @@ class PluginExtensionsSchema(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    custom_fields: dict[str, CustomFieldSpec] | None = Field(
-        default=None, alias="customFields"
-    )
     mappings: ObjectMappings | None = None
 
 
@@ -125,6 +120,9 @@ class ObjectSchemasInput(Generic[TNative, TCommon]):
     hand-written or generated via build_transforms(). native defaults to
     dict[str, Any] if omitted.
 
+    custom_fields declares any extra fields this object exposes beyond the base
+    CommonGrants schema. The code generator reads these and emits typed subclasses.
+
     common is intentionally absent here. It is injected by define_plugin() during
     compilation from ObjectSchemasInput → ObjectSchemas, resolved from the generated
     model classes produced by the code generator. Plugin authors never set it directly —
@@ -132,20 +130,29 @@ class ObjectSchemasInput(Generic[TNative, TCommon]):
     """
 
     native: type[TNative] | None = None
+    custom_fields: dict[str, CustomFieldSpec] | None = None
     to_common: Callable[[TNative], TransformResult[TCommon]] | None = None
     from_common: Callable[[TCommon], TransformResult[TNative]] | None = None
 
 
 @dataclass
 class ObjectSchemas(Generic[TNative, TCommon]):
-    """Runtime compiled type produced by define_plugin() — not provided directly by authors.
+    """Runtime compiled schema container for a single object (ADR-0022).
 
-    In the PoC, define_plugin() stores ObjectSchemasInput as-is; full compilation
-    (adding common from the base CG model, wrapping with model_validate) is a TODO
-    for the real SDK (ADR-0022 Decision #7).
+    Bundles the type information and transform callables for one schema object
+    (e.g. Opportunity). Accessed via attribute lookup on the plugin's schemas
+    container: plugin.schemas.Opportunity.
+
+    native:      The source system's Python type (defaults to dict when not specified).
+    common:      The CommonGrants-format Pydantic model class produced by the generator.
+                 If the plugin declares custom_fields, this is a generated subclass of
+                 the base CG model (e.g. OpportunityBase) with those fields already
+                 baked in as typed attributes.
+    to_common:   Transforms native_data → TransformResult[common] (None if not configured).
+    from_common: Transforms common_data → TransformResult[native] (None if not configured).
     """
 
     native: type[TNative]
     common: type[TCommon]
-    to_common: Callable[[TNative], TransformResult[TCommon]]
-    from_common: Callable[[TCommon], TransformResult[TNative]]
+    to_common: Callable[[TNative], TransformResult[TCommon]] | None = None
+    from_common: Callable[[TCommon], TransformResult[TNative]] | None = None

@@ -10,7 +10,7 @@ rather than silently shadowing them.
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar, overload
 
 from pydantic import BaseModel, ValidationError
 
@@ -21,6 +21,39 @@ from common_grants_sdk.utils.transformation import (
 )
 
 from .types import Handler, PluginError, TransformResult
+
+TCommon = TypeVar("TCommon", bound=BaseModel)
+
+
+def _validate_output_paths(
+    mapping: dict[str, Any],
+    model: type[BaseModel],
+    known_handlers: set[str],
+    direction: str = "to_common",
+) -> None:
+    """Validate that top-level output keys in mapping are valid fields on model.
+
+    Called when common_model is supplied to build_transforms(). Custom fields
+    declared by the plugin appear as regular model fields on the generated common
+    model and are therefore treated as valid output paths automatically.
+
+    Raises ValueError if any top-level key is not a field name or alias on model.
+    """
+    valid_names: set[str] = set(model.model_fields.keys())
+    for field_info in model.model_fields.values():
+        if field_info.alias:
+            valid_names.add(field_info.alias)
+
+    # Top-level handler invocations (rare but structurally valid) are not output keys
+    output_keys = {k for k in mapping if k not in known_handlers}
+    invalid = output_keys - valid_names
+    if invalid:
+        noun = "field" if len(invalid) == 1 else "fields"
+        raise ValueError(
+            f"build_transforms ({direction}_mapping): unknown output {noun} "
+            f"{sorted(invalid)!r} for model {model.__name__}. "
+            f"Declare them as custom_fields in ObjectSchemasInput or check the field name."
+        )
 
 
 def _validate_mapping(mapping: Any, known_handlers: set[str], path: str = "") -> None:
@@ -68,6 +101,30 @@ def _validate_mapping(mapping: Any, known_handlers: set[str], path: str = "") ->
         _validate_mapping(value, known_handlers, current_path)
 
 
+@overload
+def build_transforms(
+    to_common_mapping: dict[str, Any],
+    from_common_mapping: dict[str, Any],
+    handlers: dict[str, Handler] | None = ...,
+    common_model: None = ...,
+) -> tuple[
+    Callable[[Any], TransformResult[Any]],
+    Callable[[Any], TransformResult[Any]],
+]: ...
+
+
+@overload
+def build_transforms(
+    to_common_mapping: dict[str, Any],
+    from_common_mapping: dict[str, Any],
+    handlers: dict[str, Handler] | None = ...,
+    common_model: type[TCommon] = ...,
+) -> tuple[
+    Callable[[Any], TransformResult[TCommon | dict[str, Any]]],
+    Callable[[Any], TransformResult[dict[str, Any]]],
+]: ...
+
+
 def build_transforms(
     to_common_mapping: dict[str, Any],
     from_common_mapping: dict[str, Any],
@@ -84,6 +141,23 @@ def build_transforms(
         from_common_mapping: mapping from CommonGrants → native source.
         handlers: Optional additional handlers registered for this call only.
             Keys must not collide with DEFAULT_HANDLERS (raises ValueError if they do).
+            Each ``build_transforms()`` call gets its own isolated handler registry —
+            handlers passed here are not visible to any other call.
+
+            Example::
+
+                def handle_upper(data, path):
+                    parts = path.split(".")
+                    val = data
+                    for p in parts:
+                        val = val.get(p) if isinstance(val, dict) else None
+                    return str(val).upper() if val is not None else None
+
+                to_common, _ = build_transforms(
+                    {"title": {"upper": "data.opportunity_title"}},
+                    {},
+                    handlers={"upper": handle_upper},
+                )
         common_model: Optional Pydantic model class to validate the to_common output
             against. Must be the fully extended generated model class (e.g. the
             generated Opportunity from generated/schemas.py), NOT the base class
@@ -128,6 +202,10 @@ def build_transforms(
     _validate_mapping(to_common_mapping, known)
     _validate_mapping(from_common_mapping, known)
 
+    # When common_model is provided, validate that to_common output keys are real fields
+    if common_model is not None:
+        _validate_output_paths(to_common_mapping, common_model, known, "to_common")
+
     def to_common(native: Any) -> TransformResult[Any]:
         try:
             result = transform_from_mapping(native, to_common_mapping, handlers=merged)
@@ -159,6 +237,9 @@ def build_transforms(
                 for e in exc.errors()
             ]
             return TransformResult(result=result, errors=errors)
+        except Exception as exc:
+            error = PluginError(str(exc), path=None, source_value=result, cause=exc)
+            return TransformResult(result=result, errors=[error])
 
     def from_common(common: Any) -> TransformResult[Any]:
         try:
