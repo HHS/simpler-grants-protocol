@@ -7,23 +7,20 @@
  *
  * Handler conventions follow ADR-0017 (mapping format).
  *
- * ## Null handling (ADR-0024 three-state contract)
+ * ## Null handling (three-state contract, ADR-0024)
  *
- * Optional fields carry three distinct states on the wire:
+ * Optional fields carry three distinct states, each preserved through every
+ * built-in handler rather than collapsing `null` into `undefined`:
  *
  * - **absent** — "not provided" (publisher did not supply this data)
  * - **`null`** — "doesn't apply" (publisher actively asserts irrelevant for this record)
  * - **value** — "has a value"
  *
- * The value-coercing handlers (`numberToString`, `stringToNumber`,
- * `switchOnValue`) preserve all three rather than collapsing `null` into
- * `undefined`. `fieldValue` / `getFromPath` already pass terminal `null`
- * through verbatim. Custom-handler authors should follow the same contract.
- *
- * Cross-SDK note: this TS PoC leads the alignment with ADR-0024. The Python
- * PoC at `common_grants_sdk.utils.transformation` (#810) still collapses
- * `null` → `None`-via-default in some handlers; parity follow-up tracked
- * there.
+ * `fieldValue` / `getFromPath` pass terminal `null` through verbatim; the
+ * coercing handlers (`numberToString`, `stringToNumber`, `switchOnValue`)
+ * return `null` on `null` source. Custom-handler authors should do the same.
+ * This is the canonical description — handlers below note only their own
+ * departures from it.
  *
  * @module @common-grants/sdk/extensions
  */
@@ -40,15 +37,11 @@ import type { Handler } from "./types";
  * Walks the path through nested objects. Returns the default when any
  * intermediate step is missing or non-object.
  *
- * Null handling (ADR-0024 three-state):
- * - A terminal `null` is returned verbatim — preserves the publisher's
- *   "doesn't apply" assertion at the leaf.
- * - A `null` intermediate step short-circuits to `defaultValue` (typically
- *   `undefined`). Rationale: if the publisher asserts the parent doesn't
- *   apply, child paths are by extension "not provided" — there is no field
- *   for the publisher to make a separate per-leaf assertion on. Authors who
- *   need richer per-leaf null semantics inside a null parent should write
- *   a custom handler.
+ * Null handling: a terminal `null` is returned verbatim (preserves "doesn't
+ * apply" at the leaf); a `null` intermediate step short-circuits to
+ * `defaultValue` (typically `undefined`) — a null parent makes its children
+ * "not provided" by extension. Authors needing richer per-leaf null semantics
+ * inside a null parent should write a custom handler.
  *
  * @example
  * ```ts
@@ -112,17 +105,12 @@ export function constValue(_data: unknown, value: unknown): unknown {
  * upstream (e.g. via a custom handler that `String()`-coerces before
  * dispatching `match`).
  *
- * Null handling (ADR-0024 three-state). When the source field resolves to an
- * explicit `null` (the publisher's "doesn't apply" assertion), the handler:
- *
- * - returns the mapped value from `case["null"]` if the author has opted in
- *   to target-side translation, OR
- * - returns `null` directly (pass-through) — preserving the publisher's
- *   assertion across the schema boundary.
- *
- * `default` is NOT consulted for `null` source values: `default` belongs to
- * "unrecognized value," not to "publisher asserts irrelevant." Authors who
- * want a target-side sentinel for "doesn't apply" use `case: { "null": ... }`.
+ * Null handling. When the source field resolves to an explicit `null`, the
+ * handler returns `case["null"]` if the author opted in to target-side
+ * translation, otherwise passes `null` through unchanged. `default` is NOT
+ * consulted for `null` source — `default` is for unrecognized values, not for
+ * the publisher's "doesn't apply" assertion; use `case: { "null": ... }` for a
+ * target-side sentinel. (See the module-level null-handling note.)
  *
  * A missing field resolves to `undefined` via `getFromPath`, which fails the
  * string-only guard and falls through to `default`. To distinguish "field
@@ -133,13 +121,10 @@ export function constValue(_data: unknown, value: unknown): unknown {
  * with no `field` is functionally equivalent to `const: <default>`; prefer
  * `const` for clarity when the constant case is what you want.
  *
- * Cross-SDK divergence: Python's PoC uses bare `dict.get(val, default)` —
- * it accepts non-string `val` natively (though string-keyed `case` entries
- * still miss), collapses `null` into `default`, and a non-dict `spec`
- * crashes generically via `AttributeError` on `.get()`. TS leads on
- * ADR-0024 alignment (null pass-through, opt-in `"null"` case key) and
- * fails loud explicitly with a descriptive error on malformed spec
- * (cf. #810 for parallel Python proposal).
+ * Cross-SDK divergence: Python's PoC uses bare `dict.get(val, default)`, which
+ * accepts non-string `val` natively and collapses `null` into `default`. This
+ * handler instead preserves `null` (three-state) and fails loud with a
+ * descriptive error on a malformed spec.
  *
  * `match` is the canonical handler name (ADR-0017); `switch` is provided as a
  * convenience alias — both point at the same handler function. (No prior SDK
@@ -176,12 +161,9 @@ export function switchOnValue(data: unknown, spec: unknown): unknown {
 /**
  * `numberToString` handler — pluck a value and coerce it to string via `String()`.
  *
- * Null handling (ADR-0024 three-state):
- *
- * - **absent source** → returns `undefined` ("not provided" — preserves absence)
- * - **`null` source** → returns `null` ("doesn't apply" — preserves the publisher's
- *   assertion; `String(null)` is bypassed so the literal "null" never lands in output)
- * - **value** → returns `String(val)`
+ * Null handling: absent → `undefined`; `null` source → `null` (`String(null)`
+ * is bypassed so the literal "null" never lands in output); value →
+ * `String(val)`. (See the module-level null-handling note.)
  *
  * The handler is named for its primary use case (numeric source values) but the
  * coercion is `String()`, so booleans (`"true"` / `"false"`), arrays
@@ -189,9 +171,6 @@ export function switchOnValue(data: unknown, spec: unknown): unknown {
  * who need strict number-only behavior should validate the source value before
  * the handler runs (e.g. via a custom handler) or use `field` plus a downstream
  * Zod check.
- *
- * Cross-SDK note: the TS handler leads on ADR-0024 alignment; the Python PoC
- * still collapses `None` source to "not provided." Parity follow-up: #810.
  */
 export function numberToString(data: unknown, fieldPath: unknown): string | null | undefined {
   const val = getFromPath(data, String(fieldPath ?? ""));
@@ -205,12 +184,9 @@ export function numberToString(data: unknown, fieldPath: unknown): string | null
  * string is a pure integer, otherwise fall back to a general `Number()`
  * coercion. Non-numeric inputs throw.
  *
- * Null handling (ADR-0024 three-state):
- *
- * - **absent source** → returns `undefined` ("not provided")
- * - **`null` source** → returns `null` ("doesn't apply" — preserves the
- *   publisher's assertion; no coercion attempted)
- * - **value** → coerces via the integer / float / safe-integer rules below
+ * Null handling: absent → `undefined`; `null` source → `null` (no coercion
+ * attempted); value → coerced via the integer / float / safe-integer rules
+ * below. (See the module-level null-handling note.)
  *
  * Divergences from Python's `int(s)` semantics, both intentional:
  *
@@ -230,9 +206,6 @@ export function numberToString(data: unknown, fieldPath: unknown): string | null
  * implicit-absent CSV cell into a real zero on the transformed side.
  * Callers who want absent input to surface as `undefined` should null the
  * field upstream.
- *
- * Cross-SDK note: the TS handler leads on ADR-0024 alignment; the Python PoC
- * still collapses `None` source to "not provided." Parity follow-up: #810.
  */
 export function stringToNumber(data: unknown, fieldPath: unknown): number | null | undefined {
   const val = getFromPath(data, String(fieldPath ?? ""));
@@ -386,7 +359,7 @@ export function transformFromMapping(
     const [firstKey] = entries[0];
     // Disallow inherited / prototype properties (`__proto__`, `toString`,
     // etc.) from resolving to a handler — mapping JSON can be reconstituted
-    // from untrusted sources via `mergeExtensions()` (ADR-0022 Decision #8).
+    // from untrusted sources via `mergeExtensions()`.
     if (Object.prototype.hasOwnProperty.call(handlers, firstKey)) {
       const handlerFn = handlers[firstKey];
       const handlerArg = (node as Record<string, unknown>)[firstKey];
@@ -402,8 +375,8 @@ export function transformFromMapping(
         // can return a `JSON.parse`-loaded object that carries an own
         // `__proto__` key. Strip that key from plain-object returns before
         // it lands on the transform result — downstream consumers using a
-        // for-in deep-merge would otherwise pollute Object.prototype
-        // (ADR-0022 Decision #8). Arrays and class instances pass through
+        // for-in deep-merge would otherwise pollute Object.prototype.
+        // Arrays and class instances pass through
         // unchanged; nested `__proto__` inside non-plain values is the
         // handler author's responsibility.
         //
@@ -436,22 +409,17 @@ export function transformFromMapping(
     const out: Record<string, unknown> = {};
     for (const [k, v] of entries) {
       // Reject `__proto__` — bracket-assign invokes the prototype setter in
-      // V8/SpiderMonkey and mutates the prototype chain (ADR-0022 Decision #8).
+      // V8/SpiderMonkey and mutates the prototype chain.
       if (k === "__proto__") {
         throw new Error(
           `Invalid mapping node: '__proto__' is not allowed as an output field name (depth ${depth})`
         );
       }
-      // ADR-0024 three-state: a child that transforms to `undefined` means the
-      // source field was absent ("not provided"). Omit the output key entirely
-      // rather than writing `out[k] = undefined`, so the in-memory object
-      // carries all three states faithfully — absent → key omitted, `null` →
-      // key present with `null` ("doesn't apply"), value → key present. Only
-      // `undefined` is skipped; `null` is written. This matches the shape
-      // `JSON.stringify` already produces on the wire (it drops `undefined`
-      // keys) and the dict Python lands on once it adopts the three-state
-      // contract — Python has no `undefined`, so an absent field is a missing
-      // dict key there too.
+      // Three-state: a child that transforms to `undefined` (absent source) is
+      // omitted entirely rather than written as `out[k] = undefined`, so the
+      // object carries all three states — absent → key omitted, `null` →
+      // present `null`, value → present. This matches what `JSON.stringify`
+      // produces on the wire (it drops `undefined` keys).
       const child = transformNode(v, depth + 1);
       if (child !== undefined) {
         out[k] = child;

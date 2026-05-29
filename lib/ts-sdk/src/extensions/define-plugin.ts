@@ -43,8 +43,7 @@ export type TransformSchemasInput = Partial<
  * Options for `definePlugin()`.
  *
  * `transformSchemas` carries the consolidated per-object input (custom fields,
- * native schema, transforms) — matches the Python PoC's `ObjectSchemasInput`
- * shape (PR #838 commit `a156d31`). `extensions` is preserved as a legacy
+ * native schema, transforms). `extensions` is preserved as a legacy
  * surface for customFields-only plugins that predate the consolidation and so
  * `mergeExtensions()` keeps working for cross-package composition of those
  * declarations. New plugins should put `customFields` inside

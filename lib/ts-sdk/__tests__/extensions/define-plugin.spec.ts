@@ -312,13 +312,12 @@ describe("definePlugin", () => {
   });
 
   // ############################################################################
-  // ADR-0022 consolidation — customFields on transformSchemas[obj]
+  // Consolidation (pending ADR-0022 amendment) — customFields on transformSchemas[obj]
   //
-  // Mirrors Python PoC PR #838 (commit `a156d31`): authors add a single
-  // per-object entry under transformSchemas with native + customFields +
-  // toCommon + fromCommon, rather than splitting customFields into a separate
-  // top-level `extensions` dict. Legacy `extensions` surface is still supported
-  // for customFields-only plugins.
+  // Authors add a single per-object entry under transformSchemas with native +
+  // customFields + toCommon + fromCommon, rather than splitting customFields
+  // into a separate top-level `extensions` dict. Legacy `extensions` surface is
+  // still supported for customFields-only plugins.
   // ############################################################################
 
   describe("transformSchemas.customFields (consolidated shape)", () => {

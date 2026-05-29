@@ -68,10 +68,8 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
     );
   }
 
-  // A handler invocation must be the sole key in its node. The runtime walker
-  // is first-key-wins, so a handler key alongside siblings silently drops the
-  // siblings (`{ field, const }` keeps `field`, drops `const`) — almost always
-  // an author typo. Fail loud at build time. Mirrors Python's `_validate_mapping`.
+  // A handler invocation must be the sole key in its node — see the function
+  // docstring above for the first-key-wins rationale and cross-SDK parity.
   const nodeKeys = Object.keys(mapping as Record<string, unknown>);
   const handlerKeys = nodeKeys.filter(k => knownHandlers.has(k));
   if (handlerKeys.length > 0 && nodeKeys.length > 1) {
@@ -88,7 +86,7 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
     const childPath = path === "" ? key : `${path}.${key}`;
     // Fail loud at build time so adopters can't ship a mapping whose only
     // signal is a runtime PluginError. Mirrors the walker's guard in
-    // transformFromMapping (ADR-0022 Decision #8).
+    // transformFromMapping.
     if (key === "__proto__") {
       throw new Error(
         `Invalid mapping node at '${childPath}': '__proto__' is not allowed as an output field name`

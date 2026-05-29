@@ -313,15 +313,14 @@ export class PluginError extends Error {
  * the generated model classes produced by the code generator. Plugin config
  * files cannot import from `generated/` (which is the input to generation).
  *
- * **ADR-0022 consolidation (pending amendment):** `customFields` lives here so
+ * **Consolidation (pending ADR-0022 amendment):** `customFields` lives here so
  * authors add a single per-object entry under `DefinePluginOptions.transformSchemas`
- * when introducing a new object, matching the Python PoC's `ObjectSchemasInput`
- * shape (PR #838 commit `a156d31`). ADR-0022 as originally written placed
+ * when introducing a new object. ADR-0022 as originally written placed
  * `customFields` inside the serializable `PluginExtensions.schemas[obj]` so that
  * declarations could be combined across packages via `mergeExtensions()` — moving
- * `customFields` onto the runtime input drops that cross-package merge surface.
- * The ADR amendment formalizing this trade-off is the open question; see the
- * matching note on `PluginExtensionsObjectConfig` below.
+ * it onto the runtime input drops that cross-package merge surface. The ADR
+ * amendment formalizing this trade-off is the open question; see the matching
+ * note on `PluginExtensionsObjectConfig` below.
  */
 export interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
   native?: z.ZodType<TNative>;
@@ -381,13 +380,12 @@ export interface ObjectMappings {
  * `buildTransforms()` on these. Deferred to the full SDK (ADR-0022 Decision #6,
  * tracked under #756).
  *
- * **ADR-0022 consolidation (pending amendment):** `customFields` moved to
+ * **Consolidation (pending ADR-0022 amendment):** `customFields` moved to
  * {@link ObjectSchemasInput} so authors add a single per-object entry under
- * `DefinePluginOptions.transformSchemas`, matching the Python PoC PR #838
- * (commit `a156d31`). The original ADR-0022 placed `customFields` here so they
- * could be combined across packages via `mergeExtensions()`; that surface is
- * preserved for legacy callers via {@link SchemaExtensions} but no longer flows
- * through this interface. Pending an ADR amendment.
+ * `DefinePluginOptions.transformSchemas`. The original ADR-0022 placed
+ * `customFields` here so they could be combined across packages via
+ * `mergeExtensions()`; that surface is preserved for legacy callers via
+ * {@link SchemaExtensions} but no longer flows through this interface.
  */
 export interface PluginExtensionsObjectConfig {
   mappings?: ObjectMappings;
