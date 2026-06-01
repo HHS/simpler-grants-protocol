@@ -61,6 +61,26 @@ const SOURCE_DATA = {
 // Step 2 — Custom handlers (joined-label round trip)
 // ############################################################################
 
+// A mapping leaf like `{ field: "data.x" }` dispatches to a *handler* — a
+// `(data, spec) => value` function looked up by the leaf's key. `buildTransforms`
+// ships built-ins (`field`, `const`, `match`/`switch`, `numberToString`,
+// `stringToNumber`); anything beyond those is a custom handler you register on
+// the `handlers` map in Step 4. A mapping invokes one by name — `{ join: {...} }`
+// runs `joinFields` with `{...}` as its `spec`. `data` is always the whole object
+// under transform, so handler paths are absolute from its root (hence the
+// `data.`-prefixed paths below). A custom name that collides with a built-in is
+// rejected when `buildTransforms` runs.
+//
+// `join` and `split` are an inverse pair, here to demo a *derived* custom field
+// with no single source column: `join` composes `compositeLabel`
+// ("<opportunity_number> — <title>") on the toCommon side, and `split` recovers
+// `opportunity_number` back out of it on the fromCommon side. The round trip is
+// lossless only while the separator never occurs inside a constituent value —
+// see the NOTE on the `compositeLabel` mapping in Step 4.
+
+// join: concatenate the values at `spec.fields`, in order, joined by `spec.sep`
+// (default " "). undefined/null parts are dropped; when nothing survives it
+// returns undefined so the field is omitted rather than emitted as an empty "".
 const joinFields: Handler = (data, spec) => {
   const s = (spec ?? {}) as { fields?: string[]; sep?: string };
   const sep = s.sep ?? " ";
@@ -71,6 +91,9 @@ const joinFields: Handler = (data, spec) => {
   return parts.length > 0 ? parts.join(sep) : undefined;
 };
 
+// split: the inverse of join. Read the string at `spec.field`, split it on
+// `spec.sep` (default " "), and return the segment at `spec.index` (default 0).
+// Returns undefined when the source value is absent or the index is out of range.
 const splitField: Handler = (data, spec) => {
   const s = (spec ?? {}) as { field?: string; sep?: string; index?: number };
   const value = getFromPath(data, s.field ?? "");
