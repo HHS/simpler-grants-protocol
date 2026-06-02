@@ -224,7 +224,10 @@ const { toCommon, fromCommon } = buildTransforms(
       },
     },
   },
-  { join: joinFields, split: splitField },
+  new Map([
+    ["join", joinFields],
+    ["split", splitField],
+  ]),
   ExtendedOpportunitySchema
 );
 

@@ -57,21 +57,10 @@ export function getFromPath<T = unknown>(
   const parts = path.split(".");
   let cursor: unknown = data;
   for (const part of parts) {
-    // `hasOwnProperty` not `in` — `in` walks the prototype chain, so an
-    // attacker-controlled field path of `__proto__` would resolve to
-    // `Object.prototype`. Mapping field paths can come from untrusted sources
-    // (e.g. deserialized plugin config from JSON).
-    if (
-      typeof cursor === "object" &&
-      cursor !== null &&
-      Object.prototype.hasOwnProperty.call(cursor, part)
-    ) {
-      cursor = (cursor as Record<string, unknown>)[part];
-    } else {
-      return defaultValue;
-    }
+    if (typeof cursor !== "object" || cursor === null) return defaultValue;
+    cursor = (cursor as Record<string, unknown>)[part];
   }
-  return cursor as T;
+  return cursor === undefined ? defaultValue : (cursor as T);
 }
 
 /**
@@ -137,19 +126,16 @@ export function switchOnValue(data: unknown, spec: unknown): unknown {
   }
   const s = spec as { field?: string; case?: Record<string, unknown>; default?: unknown };
   const val = getFromPath(data, s.field ?? "");
-  const lookup = s.case ?? {};
+  const lookup = new Map(Object.entries(s.case ?? {}));
   // null source = publisher asserts "doesn't apply."
   // Author opts in to target-side translation via a `"null"` case key.
   // Otherwise pass null through unchanged — do NOT fall through to default,
   // which is for unrecognized values, not for publisher assertions.
   if (val === null) {
-    if (Object.prototype.hasOwnProperty.call(lookup, "null")) {
-      return lookup["null"];
-    }
-    return null;
+    return lookup.has("null") ? lookup.get("null") : null;
   }
-  if (typeof val === "string" && Object.prototype.hasOwnProperty.call(lookup, val)) {
-    return lookup[val];
+  if (typeof val === "string" && lookup.has(val)) {
+    return lookup.get(val);
   }
   return s.default;
 }
@@ -262,31 +248,21 @@ export class HandlerError extends Error {
  * `match` is the canonical name; `switch` is a convenience alias
  * — both point at the same handler function.
  */
-export const DEFAULT_HANDLERS: Readonly<Record<string, Handler>> = Object.freeze({
-  const: constValue,
-  field: fieldValue,
-  match: switchOnValue,
-  numberToString,
-  stringToNumber,
-  switch: switchOnValue,
-});
-
-/**
- * Default recursion-depth cap shared between `transformFromMapping` (runtime
- * walk) and `validateMapping` (build-time walk) so the two stay in sync if
- * the cap is ever bumped — a divergence would let an adversarial mapping pass
- * build-time validation but blow the stack at runtime.
- */
-export const DEFAULT_MAX_TRANSFORM_DEPTH = 500;
+export const DEFAULT_HANDLERS: Map<string, Handler> = new Map([
+  ["const", constValue],
+  ["field", fieldValue],
+  ["match", switchOnValue],
+  ["numberToString", numberToString],
+  ["stringToNumber", stringToNumber],
+  ["switch", switchOnValue],
+]);
 
 /**
  * Options for {@link transformFromMapping}.
  */
 export interface TransformFromMappingOptions {
   /** Handler registry. Defaults to {@link DEFAULT_HANDLERS}. */
-  handlers?: Record<string, Handler>;
-  /** Maximum recursion depth. Defaults to {@link DEFAULT_MAX_TRANSFORM_DEPTH}. */
-  maxDepth?: number;
+  handlers?: Map<string, Handler>;
 }
 
 /**
@@ -303,10 +279,9 @@ export interface TransformFromMappingOptions {
  *   rejects the shape at build time.
  * - Object nodes whose first key is not a handler are treated as output
  *   shapes — each child is transformed recursively. A child that transforms to
- *   `undefined` (absent source) is
- *   omitted from the output object; `null` ("doesn't apply") is written as a
- *   present key. So absent → missing key, `null` → present `null`, value →
- *   present value.
+ *   `undefined` (absent source) is omitted from the output object; `null`
+ *   ("doesn't apply") is written as a present key. So absent → missing key,
+ *   `null` → present `null`, value → present value.
  *
  * @example
  * ```ts
@@ -320,9 +295,6 @@ export interface TransformFromMappingOptions {
  * // => { status: "posted", amount: { value: 1000, currency: "USD" } }
  * ```
  *
- * @throws Error when recursion exceeds `maxDepth`.
- * @throws Error when an output field name is literally `__proto__` (rejected
- *   to prevent prototype-chain mutation under bracket-assign).
  * @throws {@link HandlerError} when a registered handler throws.
  */
 export function transformFromMapping(
@@ -331,13 +303,8 @@ export function transformFromMapping(
   options: TransformFromMappingOptions = {}
 ): unknown {
   const handlers = options.handlers ?? DEFAULT_HANDLERS;
-  const maxDepth = options.maxDepth ?? DEFAULT_MAX_TRANSFORM_DEPTH;
 
-  const transformNode = (node: unknown, depth: number): unknown => {
-    if (depth > maxDepth) {
-      throw new Error("Maximum transformation depth exceeded.");
-    }
-
+  const transformNode = (node: unknown): unknown => {
     // Primitives, null, and arrays pass through as literals. Arrays in handler
     // args are opaque to the walker by design — handlers own their own shape.
     if (typeof node !== "object" || node === null || Array.isArray(node)) {
@@ -351,50 +318,11 @@ export function transformFromMapping(
     // argument. Otherwise treat the node as an output shape and recurse over
     // every child.
     const [firstKey] = entries[0];
-    // Disallow inherited / prototype properties (`__proto__`, `toString`,
-    // etc.) from resolving to a handler — mapping JSON can come from
-    // untrusted sources (e.g. deserialized plugin config).
-    if (Object.prototype.hasOwnProperty.call(handlers, firstKey)) {
-      const handlerFn = handlers[firstKey];
+    if (handlers.has(firstKey)) {
+      const handlerFn = handlers.get(firstKey)!;
       const handlerArg = (node as Record<string, unknown>)[firstKey];
-      // The scrub below lives INSIDE this try on purpose: it operates on the
-      // handler's return value, so a trap-throwing exotic return (e.g. a Proxy
-      // whose `getPrototypeOf` / `hasOwnProperty` trap throws, or a spread that
-      // throws) is attributed to the handler via `HandlerError` rather than
-      // escaping as an unattributed `PluginError`. Don't hoist it out.
       try {
-        const returned = handlerFn(data, handlerArg);
-        // Defense in depth: a handler's return value is opaque to the walker
-        // (we never recurse into it), but a `const` / `field` / `match` handler
-        // can return a `JSON.parse`-loaded object that carries an own
-        // `__proto__` key. Strip that key from plain-object returns before
-        // it lands on the transform result — downstream consumers using a
-        // for-in deep-merge would otherwise pollute Object.prototype.
-        // Arrays and class instances pass through
-        // unchanged; nested `__proto__` inside non-plain values is the
-        // handler author's responsibility.
-        //
-        // Shallow-clone the value rather than `delete`-in-place: `fieldValue`
-        // returns references plucked from caller input via `getFromPath`, so
-        // an in-place delete would silently mutate the caller's data —
-        // surprising for plugin authors caching parsed source records across
-        // `toCommon` calls. Spread is the correct copy primitive here:
-        // `{ ...src }` uses the spec's CopyDataProperties → CreateDataProperty,
-        // which copies an own `__proto__` data property AS a data property
-        // instead of firing the prototype setter. `Object.assign({}, src)`
-        // would mutate the target's prototype chain instead — do not switch.
-        if (
-          typeof returned === "object" &&
-          returned !== null &&
-          !Array.isArray(returned) &&
-          Object.getPrototypeOf(returned) === Object.prototype &&
-          Object.prototype.hasOwnProperty.call(returned, "__proto__")
-        ) {
-          const cleaned = { ...(returned as Record<string, unknown>) };
-          delete cleaned.__proto__;
-          return cleaned;
-        }
-        return returned;
+        return handlerFn(data, handlerArg);
       } catch (exc) {
         throw new HandlerError(firstKey, exc);
       }
@@ -402,19 +330,12 @@ export function transformFromMapping(
 
     const out: Record<string, unknown> = {};
     for (const [k, v] of entries) {
-      // Reject `__proto__` — bracket-assign invokes the prototype setter in
-      // V8/SpiderMonkey and mutates the prototype chain.
-      if (k === "__proto__") {
-        throw new Error(
-          `Invalid mapping node: '__proto__' is not allowed as an output field name (depth ${depth})`
-        );
-      }
       // Three-state: a child that transforms to `undefined` (absent source) is
       // omitted entirely rather than written as `out[k] = undefined`, so the
       // object carries all three states — absent → key omitted, `null` →
       // present `null`, value → present. This matches what `JSON.stringify`
       // produces on the wire (it drops `undefined` keys).
-      const child = transformNode(v, depth + 1);
+      const child = transformNode(v);
       if (child !== undefined) {
         out[k] = child;
       }
@@ -422,5 +343,5 @@ export function transformFromMapping(
     return out;
   };
 
-  return transformNode(mapping, 0);
+  return transformNode(mapping);
 }

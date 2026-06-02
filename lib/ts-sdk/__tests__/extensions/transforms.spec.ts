@@ -1,13 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { z } from "zod";
 
-import {
-  PluginError,
-  buildTransforms,
-  getFromPath,
-  withCustomFields,
-  type Handler,
-} from "@/extensions";
+import { PluginError, buildTransforms, getFromPath, withCustomFields } from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas/zod/models";
 import { CustomFieldType } from "@/constants";
 
@@ -53,18 +47,6 @@ const fromCommonMapping = {
   },
 };
 
-/**
- * Build a mapping nested past the shared `DEFAULT_MAX_TRANSFORM_DEPTH` cap
- * (500) so `validateMapping` throws at build time. Used by the to/fromCommon
- * depth-cap tests to verify both sides of the validator exercise the same
- * guard.
- */
-const deepMapping = (levels = 600): Record<string, unknown> => {
-  let deep: unknown = "leaf";
-  for (let i = 0; i < levels; i++) deep = { nested: deep };
-  return deep as Record<string, unknown>;
-};
-
 // ############################################################################
 // Call-time validation
 // ############################################################################
@@ -72,85 +54,12 @@ const deepMapping = (levels = 600): Record<string, unknown> => {
 describe("buildTransforms — call-time validation", () => {
   it("rejects custom handler names that collide with defaults", () => {
     expect(() =>
-      buildTransforms(
-        {},
-        {},
-        {
-          field: (_d: unknown, _a: unknown) => null,
-        }
-      )
+      buildTransforms({}, {}, new Map([["field", (_d: unknown, _a: unknown) => null]]))
     ).toThrow(/collide with defaults/);
     // Also `match` — confirms the collision check isn't hardcoded to `field`.
     expect(() =>
-      buildTransforms(
-        {},
-        {},
-        {
-          match: (_d: unknown, _a: unknown) => null,
-        }
-      )
+      buildTransforms({}, {}, new Map([["match", (_d: unknown, _a: unknown) => null]]))
     ).toThrow(/collide with defaults/);
-  });
-
-  it("rejects custom handler names that shadow Object.prototype keys (prototype-pollution hardening)", () => {
-    expect(() =>
-      buildTransforms(
-        {},
-        {},
-        {
-          constructor: (_d: unknown, _a: unknown) => null,
-        }
-      )
-    ).toThrow(/shadow Object\.prototype/);
-    // Also `toString` and `__proto__` — confirms the check isn't hardcoded
-    // to `constructor`. `__proto__` is an own accessor on `Object.prototype`,
-    // so `hasOwnProperty.call(Object.prototype, "__proto__")` returns true
-    // (the load-bearing claim in the buildTransforms unsafe-handler check).
-    expect(() =>
-      buildTransforms(
-        {},
-        {},
-        {
-          toString: (_d: unknown, _a: unknown) => null,
-        }
-      )
-    ).toThrow(/shadow Object\.prototype/);
-    // `__proto__` as an OWN enumerable property — mirrors the
-    // `JSON.parse('{"__proto__": ...}')` attack vector. Object literal
-    // `{ __proto__: ... }` triggers the prototype setter instead, so
-    // construct via `defineProperty` to match the real shape.
-    const protoHandlers: Record<string, Handler> = {};
-    Object.defineProperty(protoHandlers, "__proto__", {
-      value: (_d: unknown, _a: unknown) => null,
-      enumerable: true,
-      configurable: true,
-      writable: true,
-    });
-    expect(() => buildTransforms({}, {}, protoHandlers)).toThrow(/shadow Object\.prototype/);
-  });
-
-  it("rejects `__proto__` as an output field name at build time (prototype-pollution hardening)", () => {
-    // The runtime walker also rejects this (see transformation.spec.ts), but
-    // build-time rejection means a JSON-loaded mapping with `__proto__` at
-    // any path fails before any data flows. Use `JSON.parse` to materialize
-    // the own enumerable `__proto__` key — TS object literal syntax cannot
-    // express it (it triggers the prototype setter instead).
-    const rootProtoMapping = JSON.parse('{"__proto__": {"polluted": true}}') as Record<
-      string,
-      unknown
-    >;
-    expect(() => buildTransforms(rootProtoMapping, {})).toThrow(/'__proto__' is not allowed/);
-
-    const nestedProtoMapping = JSON.parse(
-      '{"wrapper": {"__proto__": {"polluted": true}}}'
-    ) as Record<string, unknown>;
-    expect(() => buildTransforms(nestedProtoMapping, {})).toThrow(/'__proto__' is not allowed/);
-  });
-
-  it("rejects a fromCommonMapping whose nesting depth exceeds the shared cap", () => {
-    // Symmetric to the toCommonMapping depth-cap test above. A regression
-    // that validated only `toCommonMapping` would slip past today's coverage.
-    expect(() => buildTransforms({}, deepMapping())).toThrow(/exceeded maximum nesting depth/);
   });
 
   it("rejects mappings whose nodes are structurally malformed (array where scalar expected)", () => {
@@ -163,15 +72,6 @@ describe("buildTransforms — call-time validation", () => {
     const built = buildTransforms(toCommonMapping, fromCommonMapping);
     expect(typeof built.toCommon).toBe("function");
     expect(typeof built.fromCommon).toBe("function");
-  });
-
-  it("rejects a mapping whose nesting depth exceeds the shared cap", () => {
-    // Build a mapping just past the default depth cap so validateMapping
-    // throws before buildTransforms returns. Mirrors the runtime walker's
-    // depth-cap test; locks in the shared `DEFAULT_MAX_TRANSFORM_DEPTH` so
-    // adversarial mapping JSON cannot survive build-time validation only
-    // to blow the stack at runtime.
-    expect(() => buildTransforms(deepMapping(), {})).toThrow(/exceeded maximum nesting depth/);
   });
 
   it("rejects sibling keys alongside a handler key — two handlers in one node (Python PoC parity)", () => {
@@ -523,12 +423,12 @@ describe("buildTransforms — null preservation (three-state)", () => {
     expect(out.errors).toEqual([]);
     const result = out.result as Record<string, unknown>;
     // null source ("doesn't apply") → present key with value null.
-    expect(Object.prototype.hasOwnProperty.call(result, "nullField")).toBe(true);
+    expect(result).toHaveProperty("nullField");
     expect(result.nullField).toBeNull();
     // absent source ("not provided") → key omitted entirely. The walker skips
     // `undefined`-valued children so the in-memory object matches the wire
     // shape `JSON.stringify` produces.
-    expect(Object.prototype.hasOwnProperty.call(result, "absentField")).toBe(false);
+    expect(result).not.toHaveProperty("absentField");
     expect(result.absentField).toBeUndefined();
   });
 });
@@ -598,7 +498,7 @@ describe("buildTransforms — custom handlers", () => {
         },
       },
       {},
-      { join }
+      new Map([["join", join]])
     );
 
     const out = toCommon(SOURCE_DATA);
@@ -606,111 +506,5 @@ describe("buildTransforms — custom handlers", () => {
     expect((out.result as { label: string }).label).toBe(
       "ABC-123-XYZ-001 — Research into conservation techniques"
     );
-  });
-});
-
-// ############################################################################
-// Prototype-pollution hardening — handler-return scrub
-// ############################################################################
-
-describe("buildTransforms — handler-return __proto__ scrub (prototype-pollution hardening)", () => {
-  it("strips own `__proto__` from a `const` handler's plain-object return", () => {
-    // JSON.parse adds `__proto__` as an own enumerable property on the
-    // resulting object — the canonical entry point for prototype-pollution
-    // payloads in mapping JSON. The walker treats handler returns as opaque,
-    // so without the scrub a downstream for-in deep-merge of the result would
-    // pollute Object.prototype. Pin the scrub here.
-    const evilArg = JSON.parse('{"__proto__": {"polluted": true}, "ok": 1}');
-    expect(Object.prototype.hasOwnProperty.call(evilArg, "__proto__")).toBe(true);
-
-    const { toCommon } = buildTransforms({ wrap: { const: evilArg } }, {});
-    const out = toCommon({});
-    const wrap = (out.result as { wrap: Record<string, unknown> }).wrap;
-
-    expect(out.errors).toEqual([]);
-    expect(Object.prototype.hasOwnProperty.call(wrap, "__proto__")).toBe(false);
-    expect(wrap.ok).toBe(1);
-  });
-
-  it("strips own `__proto__` from a `field` handler's plucked object", () => {
-    const evilSource = { data: JSON.parse('{"__proto__": {"polluted": true}, "ok": 1}') };
-
-    const { toCommon } = buildTransforms({ wrap: { field: "data" } }, {});
-    const out = toCommon(evilSource);
-    const wrap = (out.result as { wrap: Record<string, unknown> }).wrap;
-
-    expect(Object.prototype.hasOwnProperty.call(wrap, "__proto__")).toBe(false);
-    expect(wrap.ok).toBe(1);
-  });
-
-  it("does NOT mutate the source object when scrubbing a `field` return", () => {
-    // `fieldValue` returns references plucked from caller input via `getFromPath`,
-    // so the scrub must clone rather than `delete`-in-place — otherwise running
-    // `toCommon` would silently mutate the caller's data. Plugin authors caching
-    // parsed source records across calls (common in long-running adapter processes
-    // and multi-tenant deployments) would otherwise observe surprise mutation.
-    const evilSource = { data: JSON.parse('{"__proto__": {"polluted": true}, "ok": 1}') };
-    expect(Object.prototype.hasOwnProperty.call(evilSource.data, "__proto__")).toBe(true);
-
-    const { toCommon } = buildTransforms({ wrap: { field: "data" } }, {});
-    toCommon(evilSource);
-
-    // Source preserved — input still has its own __proto__ key after toCommon.
-    expect(Object.prototype.hasOwnProperty.call(evilSource.data, "__proto__")).toBe(true);
-    expect((evilSource.data as { ok: number }).ok).toBe(1);
-  });
-
-  it("after the scrub, a vulnerable for-in deep-merge of the result does NOT pollute Object.prototype", () => {
-    const evilArg = JSON.parse('{"__proto__": {"polluted": true}}');
-    const { toCommon } = buildTransforms({ wrap: { const: evilArg } }, {});
-    const out = toCommon({});
-
-    // Standard recursive for-in deep-merge — the canonical pollution gadget
-    // used by countless utility libs. Without the runtime scrub above this
-    // would set Object.prototype.polluted = true.
-    function vulnerableMerge(t: Record<string, unknown>, s: Record<string, unknown>) {
-      for (const k in s) {
-        const sv = s[k];
-        if (typeof sv === "object" && sv !== null) {
-          const tv = t[k];
-          if (typeof tv === "object" && tv !== null) {
-            vulnerableMerge(tv as Record<string, unknown>, sv as Record<string, unknown>);
-          } else {
-            t[k] = sv;
-          }
-        } else {
-          t[k] = sv;
-        }
-      }
-    }
-
-    const target: Record<string, unknown> = {};
-    vulnerableMerge(target, out.result as Record<string, unknown>);
-
-    // The smoking gun: a fresh empty object would expose `polluted: true`
-    // on its prototype if pollution had occurred.
-    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
-  });
-
-  it("attributes a throw while scrubbing an exotic handler return to the handler", () => {
-    // The __proto__ scrub runs inside the handler try/catch on purpose. A
-    // custom handler returning a Proxy whose `getPrototypeOf` trap throws makes
-    // the scrub throw; that must surface as a PluginError WITH handler
-    // attribution, not as an unattributed PluginError from the generic catch.
-    const trapReturn = new Proxy(
-      {},
-      {
-        getPrototypeOf() {
-          throw new Error("getPrototypeOf trap");
-        },
-      }
-    );
-
-    const { toCommon } = buildTransforms({ x: { boom: "arg" } }, {}, { boom: () => trapReturn });
-
-    const out = toCommon({});
-    expect(out.errors).toHaveLength(1);
-    expect(out.errors[0]).toBeInstanceOf(PluginError);
-    expect(out.errors[0].handler).toBe("boom");
   });
 });

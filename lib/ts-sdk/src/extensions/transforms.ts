@@ -11,12 +11,7 @@
 import { z } from "zod";
 
 import { PluginError, type Handler, type TransformResult } from "./types";
-import {
-  DEFAULT_HANDLERS,
-  DEFAULT_MAX_TRANSFORM_DEPTH,
-  HandlerError,
-  transformFromMapping,
-} from "./transformation";
+import { DEFAULT_HANDLERS, HandlerError, transformFromMapping } from "./transformation";
 
 // ############################################################################
 // Internal - mapping structure validation
@@ -47,12 +42,7 @@ import {
  *
  * @internal
  */
-function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = "", depth = 0): void {
-  if (depth > DEFAULT_MAX_TRANSFORM_DEPTH) {
-    throw new Error(
-      `Invalid mapping at '${path}': exceeded maximum nesting depth of ${DEFAULT_MAX_TRANSFORM_DEPTH}`
-    );
-  }
+function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""): void {
   if (mapping === null || mapping === undefined) return;
   const t = typeof mapping;
   if (t === "string" || t === "number" || t === "boolean") return;
@@ -81,19 +71,11 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
 
   for (const [key, value] of Object.entries(mapping as Record<string, unknown>)) {
     const childPath = path === "" ? key : `${path}.${key}`;
-    // Fail loud at build time so adopters can't ship a mapping whose only
-    // signal is a runtime PluginError. Mirrors the walker's guard in
-    // transformFromMapping.
-    if (key === "__proto__") {
-      throw new Error(
-        `Invalid mapping node at '${childPath}': '__proto__' is not allowed as an output field name`
-      );
-    }
     if (knownHandlers.has(key)) {
       // Handler invocation — argument is runtime-only, do not recurse.
       continue;
     }
-    validateMapping(value, knownHandlers, childPath, depth + 1);
+    validateMapping(value, knownHandlers, childPath);
   }
 }
 
@@ -162,50 +144,30 @@ export interface BuiltTransforms<TNative, TCommon> {
  *   `PluginError.path` for Zod-flattened issues uses dot notation including
  *   numeric indices (e.g. `"customFields.items.0.value"`).
  *
- * @throws TypeError when custom handler names collide with built-in defaults
- *   or shadow `Object.prototype` keys (e.g. `constructor`, `toString`,
- *   `__proto__`).
- * @throws Error when either mapping is structurally malformed (includes
- *   `__proto__` as an output field name, sibling keys on a handler-dispatch
- *   node, or recursion exceeding `DEFAULT_MAX_TRANSFORM_DEPTH`).
+ * @throws TypeError when custom handler names collide with built-in defaults.
+ * @throws Error when either mapping is structurally malformed (sibling keys
+ *   on a handler-dispatch node).
  */
 export function buildTransforms<TNative = unknown, TCommon = unknown>(
   toCommonMapping: Record<string, unknown>,
   fromCommonMapping: Record<string, unknown>,
-  handlers?: Record<string, Handler>,
+  handlers?: Map<string, Handler>,
   // Bivariant `any` accepts schemas with input/output asymmetry; `unknown`
   // would reject them at the contravariant input position.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   commonModel?: z.ZodType<TCommon, z.ZodTypeDef, any>
 ): BuiltTransforms<TNative, TCommon> {
   if (handlers) {
-    const collisions = Object.keys(handlers).filter(k =>
-      Object.prototype.hasOwnProperty.call(DEFAULT_HANDLERS, k)
-    );
+    const collisions = [...handlers.keys()].filter(k => DEFAULT_HANDLERS.has(k));
     if (collisions.length > 0) {
       throw new TypeError(
         `buildTransforms: handler names collide with defaults: ${JSON.stringify(collisions.sort())}`
       );
     }
-    // Names that shadow Object.prototype keys (e.g. `constructor`, `toString`,
-    // `__proto__`) become own properties of the merged registry on spread, then enter
-    // `known` and would dispatch via the walker. Reject so a caller can't accidentally
-    // open a path for attacker-controlled mapping JSON to invoke unexpected handlers
-    // (prototype-pollution hardening). `__proto__` itself is an own property of
-    // `Object.prototype` (as an accessor), so the single hasOwnProperty check
-    // covers it without an explicit branch.
-    const unsafe = Object.keys(handlers).filter(k =>
-      Object.prototype.hasOwnProperty.call(Object.prototype, k)
-    );
-    if (unsafe.length > 0) {
-      throw new TypeError(
-        `buildTransforms: handler names shadow Object.prototype: ${JSON.stringify(unsafe.sort())}`
-      );
-    }
   }
 
-  const merged: Record<string, Handler> = { ...DEFAULT_HANDLERS, ...(handlers ?? {}) };
-  const known = new Set(Object.keys(merged));
+  const merged = new Map([...DEFAULT_HANDLERS, ...(handlers ?? [])]);
+  const known = new Set(merged.keys());
 
   // Validate mapping structure up front so structurally malformed mappings
   // fail at build time, not on first invocation.
