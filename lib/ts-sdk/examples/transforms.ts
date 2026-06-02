@@ -5,7 +5,7 @@
  *   3. Validating `toCommon` output against the fully extended Zod schema
  *      (`withCustomFields(OpportunityBaseSchema, ...)`) — passing the base
  *      schema would silently weaken validation of typed custom fields.
- *   4. Exposing the compiled transform via `definePlugin({ transformSchemas })`.
+ *   4. Exposing the compiled transform via `definePlugin({ schemas })`.
  *   5. Round-tripping `native → common → native` and printing both directions.
  *
  * Run with: `pnpm example:transforms`
@@ -143,8 +143,8 @@ const ExtendedOpportunitySchema = withCustomFields(OpportunityBaseSchema, custom
 // Step 4 — Compile bidirectional transforms
 // ############################################################################
 
-const { toCommon, fromCommon } = buildTransforms({
-  toCommonMapping: {
+const { toCommon, fromCommon } = buildTransforms(
+  {
     id: { field: "data.opportunity_uuid" },
     title: { field: "data.opportunity_title" },
     description: { field: "data.opportunity_description" },
@@ -200,7 +200,7 @@ const { toCommon, fromCommon } = buildTransforms({
       },
     },
   },
-  fromCommonMapping: {
+  {
     data: {
       opportunity_uuid: { field: "id" },
       opportunity_title: { field: "title" },
@@ -224,18 +224,17 @@ const { toCommon, fromCommon } = buildTransforms({
       },
     },
   },
-  handlers: { join: joinFields, split: splitField },
-  commonModel: ExtendedOpportunitySchema,
-});
+  { join: joinFields, split: splitField },
+  ExtendedOpportunitySchema
+);
 
 // ############################################################################
 // Step 5 — Plug the compiled transforms into a plugin definition
 // ############################################################################
 
-// Consolidated per-object input: customFields, toCommon, and fromCommon all live
-// on the same transformSchemas[Opportunity] entry, so authors add one entry per
-// object rather than two. See the `customFields` note on ObjectSchemasInput in
-// extensions/types.ts for the cross-package-merge trade-off this involves.
+// All per-object input — customFields, toCommon, and fromCommon — lives on
+// the same schemas[Opportunity] entry. See ObjectSchemasInput in
+// extensions/types.ts for details.
 const grantsGovPlugin = definePlugin({
   meta: {
     name: "grants.gov",
@@ -243,7 +242,7 @@ const grantsGovPlugin = definePlugin({
     sourceSystem: "grants.gov",
     capabilities: ["customFields", "transforms"],
   },
-  transformSchemas: {
+  schemas: {
     Opportunity: { customFields: customFieldSpecs, toCommon, fromCommon },
   },
 } as const);
@@ -257,8 +256,8 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-const toCommonResult = grantsGovPlugin.transformSchemas?.Opportunity?.toCommon?.(SOURCE_DATA);
-if (!toCommonResult) fail("transformSchemas.Opportunity.toCommon missing");
+const toCommonResult = grantsGovPlugin.schemas.Opportunity.toCommon?.(SOURCE_DATA);
+if (!toCommonResult) fail("schemas.Opportunity.toCommon missing");
 if (toCommonResult.errors.length > 0) {
   // The source data in this example is fixed and PII-free, so embedding
   // `e.message` here is safe. Production adopters: `PluginError.message` can
@@ -278,10 +277,8 @@ if (toCommonResult.errors.length > 0) {
 console.log("=== toCommon (native → CommonGrants) ===");
 console.log(JSON.stringify(toCommonResult.result, null, 2));
 
-const fromCommonResult = grantsGovPlugin.transformSchemas?.Opportunity?.fromCommon?.(
-  toCommonResult.result
-);
-if (!fromCommonResult) fail("transformSchemas.Opportunity.fromCommon missing");
+const fromCommonResult = grantsGovPlugin.schemas.Opportunity.fromCommon?.(toCommonResult.result);
+if (!fromCommonResult) fail("schemas.Opportunity.fromCommon missing");
 if (fromCommonResult.errors.length > 0) {
   // Same PII caveat as the toCommon error block above — `e.message` may carry
   // source values on the Zod path. Safe here because the example data is fixed.

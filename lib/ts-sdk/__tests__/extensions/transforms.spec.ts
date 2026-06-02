@@ -72,48 +72,48 @@ const deepMapping = (levels = 600): Record<string, unknown> => {
 describe("buildTransforms — call-time validation", () => {
   it("rejects custom handler names that collide with defaults", () => {
     expect(() =>
-      buildTransforms({
-        toCommonMapping: {},
-        fromCommonMapping: {},
-        handlers: {
+      buildTransforms(
+        {},
+        {},
+        {
           field: (_d: unknown, _a: unknown) => null,
-        },
-      })
+        }
+      )
     ).toThrow(/collide with defaults/);
     // Also `match` — confirms the collision check isn't hardcoded to `field`.
     expect(() =>
-      buildTransforms({
-        toCommonMapping: {},
-        fromCommonMapping: {},
-        handlers: {
+      buildTransforms(
+        {},
+        {},
+        {
           match: (_d: unknown, _a: unknown) => null,
-        },
-      })
+        }
+      )
     ).toThrow(/collide with defaults/);
   });
 
   it("rejects custom handler names that shadow Object.prototype keys (prototype-pollution hardening)", () => {
     expect(() =>
-      buildTransforms({
-        toCommonMapping: {},
-        fromCommonMapping: {},
-        handlers: {
+      buildTransforms(
+        {},
+        {},
+        {
           constructor: (_d: unknown, _a: unknown) => null,
-        },
-      })
+        }
+      )
     ).toThrow(/shadow Object\.prototype/);
     // Also `toString` and `__proto__` — confirms the check isn't hardcoded
     // to `constructor`. `__proto__` is an own accessor on `Object.prototype`,
     // so `hasOwnProperty.call(Object.prototype, "__proto__")` returns true
     // (the load-bearing claim in the buildTransforms unsafe-handler check).
     expect(() =>
-      buildTransforms({
-        toCommonMapping: {},
-        fromCommonMapping: {},
-        handlers: {
+      buildTransforms(
+        {},
+        {},
+        {
           toString: (_d: unknown, _a: unknown) => null,
-        },
-      })
+        }
+      )
     ).toThrow(/shadow Object\.prototype/);
     // `__proto__` as an OWN enumerable property — mirrors the
     // `JSON.parse('{"__proto__": ...}')` attack vector. Object literal
@@ -126,13 +126,7 @@ describe("buildTransforms — call-time validation", () => {
       configurable: true,
       writable: true,
     });
-    expect(() =>
-      buildTransforms({
-        toCommonMapping: {},
-        fromCommonMapping: {},
-        handlers: protoHandlers,
-      })
-    ).toThrow(/shadow Object\.prototype/);
+    expect(() => buildTransforms({}, {}, protoHandlers)).toThrow(/shadow Object\.prototype/);
   });
 
   it("rejects `__proto__` as an output field name at build time (prototype-pollution hardening)", () => {
@@ -145,46 +139,28 @@ describe("buildTransforms — call-time validation", () => {
       string,
       unknown
     >;
-    expect(() =>
-      buildTransforms({
-        toCommonMapping: rootProtoMapping,
-        fromCommonMapping: {},
-      })
-    ).toThrow(/'__proto__' is not allowed/);
+    expect(() => buildTransforms(rootProtoMapping, {})).toThrow(/'__proto__' is not allowed/);
 
     const nestedProtoMapping = JSON.parse(
       '{"wrapper": {"__proto__": {"polluted": true}}}'
     ) as Record<string, unknown>;
-    expect(() =>
-      buildTransforms({
-        toCommonMapping: nestedProtoMapping,
-        fromCommonMapping: {},
-      })
-    ).toThrow(/'__proto__' is not allowed/);
+    expect(() => buildTransforms(nestedProtoMapping, {})).toThrow(/'__proto__' is not allowed/);
   });
 
   it("rejects a fromCommonMapping whose nesting depth exceeds the shared cap", () => {
     // Symmetric to the toCommonMapping depth-cap test above. A regression
     // that validated only `toCommonMapping` would slip past today's coverage.
-    expect(() =>
-      buildTransforms({
-        toCommonMapping: {},
-        fromCommonMapping: deepMapping(),
-      })
-    ).toThrow(/exceeded maximum nesting depth/);
+    expect(() => buildTransforms({}, deepMapping())).toThrow(/exceeded maximum nesting depth/);
   });
 
   it("rejects mappings whose nodes are structurally malformed (array where scalar expected)", () => {
     expect(() =>
-      buildTransforms({
-        toCommonMapping: { a: ["unexpected", "array"] as unknown as Record<string, unknown> },
-        fromCommonMapping: {},
-      })
+      buildTransforms({ a: ["unexpected", "array"] as unknown as Record<string, unknown> }, {})
     ).toThrow(/Invalid mapping node/);
   });
 
   it("accepts a well-formed pair of mappings", () => {
-    const built = buildTransforms({ toCommonMapping, fromCommonMapping });
+    const built = buildTransforms(toCommonMapping, fromCommonMapping);
     expect(typeof built.toCommon).toBe("function");
     expect(typeof built.fromCommon).toBe("function");
   });
@@ -195,35 +171,24 @@ describe("buildTransforms — call-time validation", () => {
     // depth-cap test; locks in the shared `DEFAULT_MAX_TRANSFORM_DEPTH` so
     // adversarial mapping JSON cannot survive build-time validation only
     // to blow the stack at runtime.
-    expect(() =>
-      buildTransforms({
-        toCommonMapping: deepMapping(),
-        fromCommonMapping: {},
-      })
-    ).toThrow(/exceeded maximum nesting depth/);
+    expect(() => buildTransforms(deepMapping(), {})).toThrow(/exceeded maximum nesting depth/);
   });
 
   it("rejects sibling keys alongside a handler key — two handlers in one node (Python PoC parity)", () => {
     // The runtime walker is first-key-wins, so `{ field, const }` would
     // silently drop `const` — almost always an author bug — so reject at
     // build time.
-    expect(() =>
-      buildTransforms({
-        toCommonMapping: { value: { field: "data.x", const: "fallback" } },
-        fromCommonMapping: {},
-      })
-    ).toThrow(/cannot have sibling keys/);
+    expect(() => buildTransforms({ value: { field: "data.x", const: "fallback" } }, {})).toThrow(
+      /cannot have sibling keys/
+    );
   });
 
   it("rejects a handler key alongside a non-handler sibling at the same node", () => {
     // The non-handler sibling would also be silently dropped by the runtime
     // walker once the handler dispatches. Catch the typo early.
-    expect(() =>
-      buildTransforms({
-        toCommonMapping: { value: { field: "data.x", extra: "literal" } },
-        fromCommonMapping: {},
-      })
-    ).toThrow(/cannot have sibling keys/);
+    expect(() => buildTransforms({ value: { field: "data.x", extra: "literal" } }, {})).toThrow(
+      /cannot have sibling keys/
+    );
   });
 });
 
@@ -233,7 +198,7 @@ describe("buildTransforms — call-time validation", () => {
 
 describe("buildTransforms — toCommon", () => {
   it("returns the transformed result with an empty error list on success", () => {
-    const { toCommon } = buildTransforms({ toCommonMapping, fromCommonMapping });
+    const { toCommon } = buildTransforms(toCommonMapping, fromCommonMapping);
     const out = toCommon(SOURCE_DATA);
 
     expect(out.errors).toEqual([]);
@@ -248,10 +213,7 @@ describe("buildTransforms — toCommon", () => {
   });
 
   it("wraps a handler exception as a PluginError carrying handler + cause", () => {
-    const { toCommon } = buildTransforms({
-      toCommonMapping: { amount: { stringToNumber: "data.bogus" } },
-      fromCommonMapping: {},
-    });
+    const { toCommon } = buildTransforms({ amount: { stringToNumber: "data.bogus" } }, {});
     // Use a source value that fails coercion so stringToNumber throws.
     const out = toCommon({ data: { bogus: "abc" } });
 
@@ -270,13 +232,13 @@ describe("buildTransforms — toCommon", () => {
     // Locks in the documented asymmetry: handler-failure mode is first-error-stops,
     // while the Zod-validation path aggregates every issue. Two `stringToNumber`
     // calls both fail on `"abc"`, but only one PluginError surfaces.
-    const { toCommon } = buildTransforms({
-      toCommonMapping: {
+    const { toCommon } = buildTransforms(
+      {
         a: { stringToNumber: "data.bogus_a" },
         b: { stringToNumber: "data.bogus_b" },
       },
-      fromCommonMapping: {},
-    });
+      {}
+    );
 
     const out = toCommon({ data: { bogus_a: "abc", bogus_b: "def" } });
 
@@ -286,12 +248,13 @@ describe("buildTransforms — toCommon", () => {
   });
 
   it("flattens Zod validation issues into PluginError[] when commonModel is provided", () => {
-    const { toCommon } = buildTransforms({
+    const { toCommon } = buildTransforms(
       // Output is intentionally missing required CG fields so Zod fails.
-      toCommonMapping: { title: { field: "data.opportunity_title" } },
-      fromCommonMapping: {},
-      commonModel: OpportunityBaseSchema,
-    });
+      { title: { field: "data.opportunity_title" } },
+      {},
+      undefined,
+      OpportunityBaseSchema
+    );
 
     const out = toCommon(SOURCE_DATA);
 
@@ -319,14 +282,15 @@ describe("buildTransforms — toCommon", () => {
       b: z.number().int(),
     });
 
-    const { toCommon } = buildTransforms({
-      toCommonMapping: {
+    const { toCommon } = buildTransforms(
+      {
         a: { const: "x" },
         b: { const: "not-a-number" },
       },
-      fromCommonMapping: {},
-      commonModel: TwoFieldSchema,
-    });
+      {},
+      undefined,
+      TwoFieldSchema
+    );
 
     const out = toCommon({});
 
@@ -341,8 +305,8 @@ describe("buildTransforms — toCommon", () => {
       legacyId: { fieldType: CustomFieldType.integer, value: z.number().int() },
     });
 
-    const { toCommon } = buildTransforms({
-      toCommonMapping: {
+    const { toCommon } = buildTransforms(
+      {
         id: { field: "data.opportunity_uuid" },
         title: { field: "data.opportunity_title" },
         description: { field: "data.opportunity_description" },
@@ -357,9 +321,10 @@ describe("buildTransforms — toCommon", () => {
           },
         },
       },
-      fromCommonMapping: {},
-      commonModel: extendedOpp,
-    });
+      {},
+      undefined,
+      extendedOpp
+    );
 
     const out = toCommon(SOURCE_DATA);
 
@@ -375,7 +340,7 @@ describe("buildTransforms — toCommon", () => {
 
 describe("buildTransforms — fromCommon", () => {
   it("transforms CG → native using the fromCommon mapping", () => {
-    const { fromCommon } = buildTransforms({ toCommonMapping, fromCommonMapping });
+    const { fromCommon } = buildTransforms(toCommonMapping, fromCommonMapping);
     const out = fromCommon({
       id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       title: "Research into conservation techniques",
@@ -391,7 +356,7 @@ describe("buildTransforms — fromCommon", () => {
   });
 
   it("supports a round trip on fields covered by both directions", () => {
-    const { toCommon, fromCommon } = buildTransforms({ toCommonMapping, fromCommonMapping });
+    const { toCommon, fromCommon } = buildTransforms(toCommonMapping, fromCommonMapping);
 
     const cg = toCommon(SOURCE_DATA);
     expect(cg.errors).toEqual([]);
@@ -404,10 +369,7 @@ describe("buildTransforms — fromCommon", () => {
   });
 
   it("wraps a handler exception as a PluginError carrying handler + cause", () => {
-    const { fromCommon } = buildTransforms({
-      toCommonMapping: {},
-      fromCommonMapping: { data: { amount: { stringToNumber: "bogus" } } },
-    });
+    const { fromCommon } = buildTransforms({}, { data: { amount: { stringToNumber: "bogus" } } });
     // Use a CG-shaped value where `bogus` fails coercion so stringToNumber throws.
     const out = fromCommon({ bogus: "abc" } as never);
 
@@ -436,14 +398,14 @@ describe("buildTransforms — null preservation (three-state)", () => {
     // apply for this record. The `field` handler returns the terminal null;
     // the walker places it on the output object as a real `null`, distinct
     // from an absent key.
-    const { toCommon } = buildTransforms({
-      toCommonMapping: {
+    const { toCommon } = buildTransforms(
+      {
         id: { field: "data.opportunity_uuid" },
         title: { field: "data.opportunity_title" },
         description: { field: "data.opportunity_description" },
       },
-      fromCommonMapping: {},
-    });
+      {}
+    );
 
     const out = toCommon({
       data: {
@@ -470,14 +432,15 @@ describe("buildTransforms — null preservation (three-state)", () => {
     // change that swapped `.nullish()` for plain `.optional()` would surface
     // here as a PluginError. `source` is `.nullish()` on OpportunityBaseSchema;
     // `description` is required (z.string()) so it can't carry the null state.
-    const { toCommon } = buildTransforms({
-      toCommonMapping: {
+    const { toCommon } = buildTransforms(
+      {
         ...toCommonMapping,
         source: { field: "data.source_url" },
       },
-      fromCommonMapping: {},
-      commonModel: OpportunityBaseSchema,
-    });
+      {},
+      undefined,
+      OpportunityBaseSchema
+    );
 
     const out = toCommon({
       data: {
@@ -494,20 +457,20 @@ describe("buildTransforms — null preservation (three-state)", () => {
     // The reverse direction must also carry null verbatim — `null` on the
     // CommonGrants side ("publisher said doesn't apply") survives back to
     // the native shape.
-    const { toCommon, fromCommon } = buildTransforms({
-      toCommonMapping: {
+    const { toCommon, fromCommon } = buildTransforms(
+      {
         id: { field: "data.opportunity_uuid" },
         title: { field: "data.opportunity_title" },
         description: { field: "data.opportunity_description" },
       },
-      fromCommonMapping: {
+      {
         data: {
           opportunity_uuid: { field: "id" },
           opportunity_title: { field: "title" },
           opportunity_description: { field: "description" },
         },
-      },
-    });
+      }
+    );
 
     const cg = toCommon({
       data: {
@@ -530,12 +493,10 @@ describe("buildTransforms — null preservation (three-state)", () => {
   it("preserves null through the numberToString handler in a real mapping", () => {
     // Cross-check that the coercing handlers carry null in a buildTransforms
     // context, not just at the unit-test level.
-    const { toCommon } = buildTransforms({
-      toCommonMapping: {
-        legacyId: { numberToString: "data.opportunity_id" },
-      },
-      fromCommonMapping: {},
-    });
+    const { toCommon } = buildTransforms(
+      { legacyId: { numberToString: "data.opportunity_id" } },
+      {}
+    );
 
     const out = toCommon({ data: { opportunity_id: null } });
 
@@ -549,13 +510,13 @@ describe("buildTransforms — null preservation (three-state)", () => {
     // null. The distinction is by key presence, not just by value — both an
     // absent key and a present-`undefined` key read as `undefined` via
     // property access, so this test asserts `hasOwnProperty` directly.
-    const { toCommon } = buildTransforms({
-      toCommonMapping: {
+    const { toCommon } = buildTransforms(
+      {
         absentField: { field: "data.does_not_exist" },
         nullField: { field: "data.declared_null" },
       },
-      fromCommonMapping: {},
-    });
+      {}
+    );
 
     const out = toCommon({ data: { declared_null: null } });
 
@@ -585,10 +546,7 @@ describe("PluginError — serialization", () => {
   let err: PluginError;
 
   beforeEach(() => {
-    const { toCommon } = buildTransforms({
-      toCommonMapping: { amount: { stringToNumber: "data.bogus" } },
-      fromCommonMapping: {},
-    });
+    const { toCommon } = buildTransforms({ amount: { stringToNumber: "data.bogus" } }, {});
     [err] = toCommon({ data: { bogus: "abc", ssn: "PII_PAYLOAD_123" } }).errors;
   });
 
@@ -633,15 +591,15 @@ describe("buildTransforms — custom handlers", () => {
       return parts.length > 0 ? parts.join(sep) : undefined;
     };
 
-    const { toCommon } = buildTransforms({
-      toCommonMapping: {
+    const { toCommon } = buildTransforms(
+      {
         label: {
           join: { fields: ["data.opportunity_number", "data.opportunity_title"], sep: " — " },
         },
       },
-      fromCommonMapping: {},
-      handlers: { join },
-    });
+      {},
+      { join }
+    );
 
     const out = toCommon(SOURCE_DATA);
     expect(out.errors).toEqual([]);
@@ -659,17 +617,13 @@ describe("buildTransforms — handler-return __proto__ scrub (prototype-pollutio
   it("strips own `__proto__` from a `const` handler's plain-object return", () => {
     // JSON.parse adds `__proto__` as an own enumerable property on the
     // resulting object — the canonical entry point for prototype-pollution
-    // payloads in mapping JSON reconstituted from untrusted sources via
-    // mergeExtensions(). The walker treats handler returns as opaque, so
-    // without the scrub a downstream for-in deep-merge of the result would
+    // payloads in mapping JSON. The walker treats handler returns as opaque,
+    // so without the scrub a downstream for-in deep-merge of the result would
     // pollute Object.prototype. Pin the scrub here.
     const evilArg = JSON.parse('{"__proto__": {"polluted": true}, "ok": 1}');
     expect(Object.prototype.hasOwnProperty.call(evilArg, "__proto__")).toBe(true);
 
-    const { toCommon } = buildTransforms({
-      toCommonMapping: { wrap: { const: evilArg } },
-      fromCommonMapping: {},
-    });
+    const { toCommon } = buildTransforms({ wrap: { const: evilArg } }, {});
     const out = toCommon({});
     const wrap = (out.result as { wrap: Record<string, unknown> }).wrap;
 
@@ -681,10 +635,7 @@ describe("buildTransforms — handler-return __proto__ scrub (prototype-pollutio
   it("strips own `__proto__` from a `field` handler's plucked object", () => {
     const evilSource = { data: JSON.parse('{"__proto__": {"polluted": true}, "ok": 1}') };
 
-    const { toCommon } = buildTransforms({
-      toCommonMapping: { wrap: { field: "data" } },
-      fromCommonMapping: {},
-    });
+    const { toCommon } = buildTransforms({ wrap: { field: "data" } }, {});
     const out = toCommon(evilSource);
     const wrap = (out.result as { wrap: Record<string, unknown> }).wrap;
 
@@ -701,10 +652,7 @@ describe("buildTransforms — handler-return __proto__ scrub (prototype-pollutio
     const evilSource = { data: JSON.parse('{"__proto__": {"polluted": true}, "ok": 1}') };
     expect(Object.prototype.hasOwnProperty.call(evilSource.data, "__proto__")).toBe(true);
 
-    const { toCommon } = buildTransforms({
-      toCommonMapping: { wrap: { field: "data" } },
-      fromCommonMapping: {},
-    });
+    const { toCommon } = buildTransforms({ wrap: { field: "data" } }, {});
     toCommon(evilSource);
 
     // Source preserved — input still has its own __proto__ key after toCommon.
@@ -714,10 +662,7 @@ describe("buildTransforms — handler-return __proto__ scrub (prototype-pollutio
 
   it("after the scrub, a vulnerable for-in deep-merge of the result does NOT pollute Object.prototype", () => {
     const evilArg = JSON.parse('{"__proto__": {"polluted": true}}');
-    const { toCommon } = buildTransforms({
-      toCommonMapping: { wrap: { const: evilArg } },
-      fromCommonMapping: {},
-    });
+    const { toCommon } = buildTransforms({ wrap: { const: evilArg } }, {});
     const out = toCommon({});
 
     // Standard recursive for-in deep-merge — the canonical pollution gadget
@@ -761,11 +706,7 @@ describe("buildTransforms — handler-return __proto__ scrub (prototype-pollutio
       }
     );
 
-    const { toCommon } = buildTransforms({
-      toCommonMapping: { x: { boom: "arg" } },
-      fromCommonMapping: {},
-      handlers: { boom: () => trapReturn },
-    });
+    const { toCommon } = buildTransforms({ x: { boom: "arg" } }, {}, { boom: () => trapReturn });
 
     const out = toCommon({});
     expect(out.errors).toHaveLength(1);

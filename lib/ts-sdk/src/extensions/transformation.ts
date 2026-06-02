@@ -60,7 +60,7 @@ export function getFromPath<T = unknown>(
     // `hasOwnProperty` not `in` — `in` walks the prototype chain, so an
     // attacker-controlled field path of `__proto__` would resolve to
     // `Object.prototype`. Mapping field paths can come from untrusted sources
-    // via `mergeExtensions()` (ADR-0022 Decision #8).
+    // (e.g. deserialized plugin config from JSON).
     if (
       typeof cursor === "object" &&
       cursor !== null &&
@@ -352,8 +352,8 @@ export function transformFromMapping(
     // every child.
     const [firstKey] = entries[0];
     // Disallow inherited / prototype properties (`__proto__`, `toString`,
-    // etc.) from resolving to a handler — mapping JSON can be reconstituted
-    // from untrusted sources via `mergeExtensions()`.
+    // etc.) from resolving to a handler — mapping JSON can come from
+    // untrusted sources (e.g. deserialized plugin config).
     if (Object.prototype.hasOwnProperty.call(handlers, firstKey)) {
       const handlerFn = handlers[firstKey];
       const handlerArg = (node as Record<string, unknown>)[firstKey];

@@ -91,7 +91,7 @@ export interface ExtensibleObject {
 }
 
 // ############################################################################
-// Public types - ExtensibleSchemaName, SchemaExtensions
+// Public types - ExtensibleSchemaName
 // ############################################################################
 
 /**
@@ -116,50 +116,6 @@ export type ExtensibleSchemaName = "Opportunity";
 export const EXTENSIBLE_SCHEMA_MAP = {
   Opportunity: OpportunityBaseSchema,
 } as const satisfies Record<ExtensibleSchemaName, HasCustomFields>;
-
-/**
- * Maps extensible model names to their custom field specifications.
- *
- * Each key is the name of a model that supports `customFields`, and the value
- * is a record mapping custom field keys to their `CustomFieldSpec` definitions.
- * The `Partial` type is used so plugins only need to declare models they actually extend.
- *
- * @example
- * The following `SchemaExtensions` object:
- *
- * ```typescript
- * const extensions: SchemaExtensions = {
- *   Opportunity: {
- *     legacyId: { name: "Legacy ID", fieldType: "integer" },
- *     category: { name: "Category", fieldType: "string", description: "Grant category" },
- *   },
- * };
- * ```
- * Corresponds to the following customFields object on the Opportunity schema:
- * ```json
- * {
- *   "id": "573525f2-8e15-4405-83fb-e6523511d893",
- *   "title": "Test Opportunity",
- *   "status": { "value": "open" },
- *   "customFields": {
- *     "legacyId": {
- *       "name": "Legacy ID",
- *       "fieldType": "integer",
- *       "value": 12345,
- *     },
- *     "category": {
- *       "name": "Category",
- *       "fieldType": "string",
- *       "value": "Education",
- *       "description": "Grant category",
- *     }
- *   }
- * }
- * ```
- */
-export type SchemaExtensions = Partial<
-  Record<ExtensibleSchemaName, Record<string, CustomFieldSpec>>
->;
 
 // ############################################################################
 // Public types - Transform contract
@@ -293,7 +249,8 @@ export class PluginError extends Error {
 }
 
 /**
- * Input type provided by plugin authors inside `DefinePluginOptions.transformSchemas`.
+ * Author-provided input for a single extensible object, passed inside
+ * `DefinePluginOptions.schemas`.
  *
  * Plugin authors supply `toCommon` and `fromCommon` as plain callables — either
  * hand-written or generated via `buildTransforms()`. `native` is the optional Zod
@@ -307,14 +264,11 @@ export class PluginError extends Error {
  * the generated model classes produced by the code generator. Plugin config
  * files cannot import from `generated/` (which is the input to generation).
  *
- * **Consolidation:** `customFields` lives here so authors add a single
- * per-object entry under `DefinePluginOptions.transformSchemas` when
- * introducing a new object. ADR-0022 as originally written placed
- * `customFields` inside the serializable `PluginExtensions.schemas[obj]` so
- * declarations could be combined across packages via `mergeExtensions()`;
- * moving it onto the runtime input trades that cross-package merge surface for
- * single-entry ergonomics. See the matching note on
- * `PluginExtensionsObjectConfig` below.
+ * `customFields` is co-located with the transform callables so authors add a
+ * single per-object entry under `DefinePluginOptions.schemas` rather than
+ * splitting declarations across two top-level keys. This matches the Python SDK's
+ * `ObjectSchemasInput` shape, which also carries `custom_fields` alongside
+ * `to_common` / `from_common`.
  */
 export interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
   native?: z.ZodType<TNative>;
@@ -338,15 +292,20 @@ export interface ObjectSchemas<TNative, TCommon> {
 }
 
 /**
- * Plugin identity and capability declaration. All fields are optional.
+ * Plugin identity and capability declaration.
+ *
+ * `name` and `sourceSystem` are required so that plugin registries and
+ * dependency-injection surfaces always have a reliable display label and
+ * provenance string. `version` and `capabilities` remain optional because
+ * they can be inferred or omitted during early development.
  */
 export interface PluginMeta {
   /** Plugin display name (e.g. `"grants.gov"`). */
-  name?: string;
+  name: string;
   /** Plugin version (semver, e.g. `"1.0.0"`). */
   version?: string;
   /** Name of the native source system (e.g. `"grants.gov"`). */
-  sourceSystem?: string;
+  sourceSystem: string;
   /** Features the plugin provides. */
   capabilities?: PluginCapability[];
 }
@@ -369,15 +328,16 @@ export interface ObjectMappings {
  *
  * `mappings` carries optional declarative mappings; when present and no
  * explicit `toCommon` / `fromCommon` is supplied in
- * `DefinePluginOptions.transformSchemas`, `definePlugin()` will auto-invoke
+ * `DefinePluginOptions.schemas`, `definePlugin()` will auto-invoke
  * `buildTransforms()` on these. Deferred to the full SDK.
  *
- * **Consolidation:** `customFields` moved to
- * {@link ObjectSchemasInput} so authors add a single per-object entry under
- * `DefinePluginOptions.transformSchemas`. The original ADR-0022 placed
- * `customFields` here so they could be combined across packages via
- * `mergeExtensions()`; that surface is preserved for legacy callers via
- * {@link SchemaExtensions} but no longer flows through this interface.
+ * @remarks
+ * `customFields` lives on {@link ObjectSchemasInput} (inside
+ * `DefinePluginOptions.schemas[obj]`) rather than here, so authors keep
+ * all per-object declarations — custom fields, native schema, and transforms
+ * — in one entry. This matches the Python SDK's `ObjectSchemasInput` shape.
+ * Cross-package composition of custom field declarations is done by defining
+ * a combined plugin with all fields under `schemas[Object].customFields`.
  */
 export interface PluginExtensionsObjectConfig {
   mappings?: ObjectMappings;
@@ -386,9 +346,9 @@ export interface PluginExtensionsObjectConfig {
 /**
  * Serializable portion of plugin config — safe to store as JSON.
  *
- * Used by `mergeExtensions()` to combine declarations from multiple plugin packages.
+ * Used to store JSON-safe serializable config alongside a plugin.
  */
 export interface PluginExtensions {
-  meta?: PluginMeta;
+  meta?: Partial<PluginMeta>;
   schemas?: Partial<Record<ExtensibleSchemaName, PluginExtensionsObjectConfig>>;
 }

@@ -102,46 +102,6 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
 // ############################################################################
 
 /**
- * Options for {@link buildTransforms}.
- */
-export interface BuildTransformsOptions<TCommon = unknown> {
-  /**
-   * Custom mapping handlers registered for this call only.
-   *
-   * Name collisions with {@link DEFAULT_HANDLERS} raise a `TypeError` at call
-   * time rather than silently shadowing the default.
-   */
-  handlers?: Record<string, Handler>;
-
-  /**
-   * Optional Zod schema to validate `toCommon` output against.
-   *
-   * Must be the fully extended schema — e.g. the result of
-   * `withCustomFields(OpportunityBaseSchema, specs)` — not the base schema.
-   * Passing the base schema silently weakens validation of typed custom
-   * fields, because Zod will only check `customFields` against
-   * `Record<string, CustomField>` rather than the typed container produced
-   * by the plugin's declarations.
-   *
-   * When provided, `commonModel.safeParse()` runs on the transform result and
-   * any Zod issues are flattened into `TransformResult.errors` rather than
-   * thrown. On validation failure, `result` holds the raw transformed object
-   * (not the parsed instance), so callers can inspect malformed data
-   * alongside the errors.
-   *
-   * `PluginError.path` for Zod-flattened issues is the issue's `path` array
-   * joined with `"."` and stringified — including numeric array indices, so a
-   * Zod issue with path `["customFields", "items", 0, "value"]` becomes
-   * `"customFields.items.0.value"` (not the JSONPath form
-   * `"items[0].value"`).
-   */
-  // Bivariant `any` accepts schemas with input/output asymmetry; `unknown`
-  // would reject them at the contravariant input position.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commonModel?: z.ZodType<TCommon, z.ZodTypeDef, any>;
-}
-
-/**
  * Return shape of {@link buildTransforms}.
  */
 export interface BuiltTransforms<TNative, TCommon> {
@@ -155,8 +115,8 @@ export interface BuiltTransforms<TNative, TCommon> {
  *
  * @example
  * ```ts
- * const { toCommon, fromCommon } = buildTransforms({
- *   toCommonMapping: {
+ * const { toCommon, fromCommon } = buildTransforms(
+ *   {
  *     id:    { field: "data.opportunity_uuid" },
  *     title: { field: "data.opportunity_title" },
  *     status: {
@@ -169,10 +129,8 @@ export interface BuiltTransforms<TNative, TCommon> {
  *       },
  *     },
  *   },
- *   fromCommonMapping: {
- *     data: { opportunity_title: { field: "title" } },
- *   },
- * });
+ *   { data: { opportunity_title: { field: "title" } } },
+ * );
  *
  * const result = toCommon(sourceData);
  * if (result.errors.length === 0) use(result.result);
@@ -191,6 +149,19 @@ export interface BuiltTransforms<TNative, TCommon> {
  * Callers writing strict-mode handling should treat any non-empty `errors`
  * as failure regardless of length.
  *
+ * @param toCommonMapping - ADR-0017 mapping from native format → CommonGrants.
+ * @param fromCommonMapping - ADR-0017 mapping from CommonGrants → native format.
+ * @param handlers - Optional custom handlers registered for this call only.
+ *   Name collisions with {@link DEFAULT_HANDLERS} raise a `TypeError` at call
+ *   time rather than silently shadowing the default.
+ * @param commonModel - Optional Zod schema to validate `toCommon` output against.
+ *   Must be the fully extended schema (e.g. result of `withCustomFields(...)`) —
+ *   not the base schema. Passing the base schema silently weakens validation of
+ *   typed custom fields. When provided, `safeParse()` runs on the transform
+ *   result and Zod issues are flattened into `TransformResult.errors`.
+ *   `PluginError.path` for Zod-flattened issues uses dot notation including
+ *   numeric indices (e.g. `"customFields.items.0.value"`).
+ *
  * @throws TypeError when custom handler names collide with built-in defaults
  *   or shadow `Object.prototype` keys (e.g. `constructor`, `toString`,
  *   `__proto__`).
@@ -199,13 +170,14 @@ export interface BuiltTransforms<TNative, TCommon> {
  *   node, or recursion exceeding `DEFAULT_MAX_TRANSFORM_DEPTH`).
  */
 export function buildTransforms<TNative = unknown, TCommon = unknown>(
-  args: {
-    toCommonMapping: Record<string, unknown>;
-    fromCommonMapping: Record<string, unknown>;
-  } & BuildTransformsOptions<TCommon>
+  toCommonMapping: Record<string, unknown>,
+  fromCommonMapping: Record<string, unknown>,
+  handlers?: Record<string, Handler>,
+  // Bivariant `any` accepts schemas with input/output asymmetry; `unknown`
+  // would reject them at the contravariant input position.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  commonModel?: z.ZodType<TCommon, z.ZodTypeDef, any>
 ): BuiltTransforms<TNative, TCommon> {
-  const { toCommonMapping, fromCommonMapping, handlers, commonModel } = args;
-
   if (handlers) {
     const collisions = Object.keys(handlers).filter(k =>
       Object.prototype.hasOwnProperty.call(DEFAULT_HANDLERS, k)
