@@ -44,7 +44,7 @@ We decided to:
 
 7. **`toCommon` / `fromCommon` return a `TransformResult<T>` of `{ result, errors }` unconditionally; mapping definitions are validated at `buildTransforms()` call time.** Partial failure is routine for cross-schema transforms — field handlers can emit warnings that do not invalidate a record — so the transform surface is safe by default rather than throwing. Runtime schema validation (Zod `.parse()` / Pydantic `model_validate()`) surfaces as entries in `errors` rather than thrown exceptions. In the current PoC, this validation is opt-in at the `buildTransforms()` call site via the `commonModel` / `common_model` parameter — when supplied, validation runs inside `toCommon` against the fully extended generated schema. In the full SDK, `definePlugin()` will additionally inject validation when auto-generating transforms from `extensions.schemas.<Object>.mappings`. Plugin authors using hand-written transforms are responsible for their own validation. Consumers apply their own rule for what counts as success — strict adopters treat any non-empty `errors` as failure, lenient adopters tolerate warnings. Mappings passed to `buildTransforms()` are checked at the call site, failing fast on structural errors, unknown handlers, or unresolvable field paths.
 
-8. **Custom handlers are registered per utility call, not globally.** `buildTransforms()` accepts an optional `handlers` argument for registering additional handler names. Per-call scoping keeps behavior explicit and testable; name collisions with the default set raise at `buildTransforms()` call time rather than silently shadowing them. Handler-name lookup must not resolve inherited attributes, because mapping JSON can be reconstituted from untrusted sources (e.g. deserialized plugin config).
+8. **Custom handlers are registered per utility call, not globally.** `buildTransforms()` accepts an optional `handlers` argument (`Map<string, Handler>`) for registering additional handler names. Per-call scoping keeps behavior explicit and testable; name collisions with the default set raise at `buildTransforms()` call time rather than silently shadowing them. The registry is a `Map` rather than a plain object so that handler-name lookup uses `Map.has()` — which does not walk the prototype chain — rather than `in` or own-property checks on a plain object.
 
 9. **Transformation errors carry structured context.** SDK-emitted transformation errors extend a single `PluginError` base carrying field path, handler name, source value, and underlying cause, enabling programmatic reasoning without parsing error text. The source value may contain PII when transforming applicant data; adopters are responsible for redacting it before logging or re-raising, and the SDK does not redact by default.
 
@@ -221,7 +221,7 @@ type Handler = (value: unknown, context: unknown) => unknown;
 function buildTransforms<TNative, TCommon>(
   toCommonMapping: Record<string, unknown>, // ADR-0017 mapping from native → CommonGrants
   fromCommonMapping: Record<string, unknown>, // ADR-0017 mapping from CommonGrants → native
-  handlers?: Record<string, Handler>,
+  handlers?: Map<string, Handler>, // Map (not plain object) — Map.has() is prototype-safe
   commonModel?: ZodType<TCommon>, // must be the generated extended schema, not the base
 ): {
   toCommon: (native: TNative) => TransformResult<TCommon>;

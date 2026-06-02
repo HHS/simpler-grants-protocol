@@ -22,7 +22,6 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [What is a plugin?](#what-is-a-plugin)
   - [Defining a plugin](#defining-a-plugin)
   - [Publishing a plugin](#publishing-a-plugin)
-  - [Combining plugins](#combining-plugins)
 - [Using plugins with the API client](#using-plugins-with-the-api-client)
 - [Plugin transformations (PoC)](#plugin-transformations-poc)
   - [Defining bidirectional transforms](#defining-bidirectional-transforms)
@@ -36,11 +35,9 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [Export value schemas alongside your plugin](#export-value-schemas-alongside-your-plugin)
   - [Use `peerDependencies` for `@common-grants/sdk`](#use-peerdependencies-for-common-grantssdk)
   - [Keep plugins focused](#keep-plugins-focused)
-  - [Avoid `"firstWins"` / `"lastWins"` in published plugins](#avoid-firstwins--lastwins-in-published-plugins)
 - [API reference](#api-reference)
   - [Plugin creation](#plugin-creation)
   - [Schema utilities](#schema-utilities)
-  - [Merging and composition](#merging-and-composition)
   - [Transforms (PoC)](#transforms-poc)
   - [Shared types](#shared-types)
 
@@ -48,12 +45,11 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
 
 Here are some key concepts that are used to define custom fields and plugins that extend base schemas from the CommonGrants protocol.
 
-| Concept                | Description                                                                                                                                                                           |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Custom field**       | A key-value pair attached to a resource's `customFields` property. Each field has a `name`, `fieldType`, `value`, and optional `description`.                                         |
-| **`CustomFieldSpec`**  | A TypeScript object that _describes_ a custom field: its `fieldType`, optional `value` (a Zod schema for validating the custom field's value), and optional `name` and `description`. |
-| **`SchemaExtensions`** | A mapping of extensible model names (e.g. `"Opportunity"`) to records of `CustomFieldSpec` objects. This is the shape that `definePlugin()` and `withCustomFields()` accept.          |
-| **`Plugin`**           | An object with `.extensions` (the raw `SchemaExtensions`) and `.schemas` (Zod schemas with typed `customFields` applied). Created by `definePlugin()`.                                |
+| Concept               | Description                                                                                                                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Custom field**      | A key-value pair attached to a resource's `customFields` property. Each field has a `name`, `fieldType`, `value`, and optional `description`.                                         |
+| **`CustomFieldSpec`** | A TypeScript object that _describes_ a custom field: its `fieldType`, optional `value` (a Zod schema for validating the custom field's value), and optional `name` and `description`. |
+| **`Plugin`**          | An object returned by `definePlugin()` with `.schemas` (per-object compiled output: `.common` Zod schema, `.native`, `.toCommon`, `.fromCommon`) and optional `.extensions` / `.meta`. |
 
 ## Extending base models with custom fields
 
@@ -108,19 +104,21 @@ Use `definePlugin()` when you want to create a **reusable, shareable** set of cu
 import { definePlugin } from "@common-grants/sdk/extensions";
 
 const legacyPlugin = definePlugin({
-  extensions: {
+  schemas: {
     Opportunity: {
-      legacyId: {
-        fieldType: "object",
-        value: LegacyIdValueSchema,
-        description: "Maps to the opportunity_id in the legacy system",
+      customFields: {
+        legacyId: {
+          fieldType: "object",
+          value: LegacyIdValueSchema,
+          description: "Maps to the opportunity_id in the legacy system",
+        },
       },
     },
   },
 } as const);
 
 // The plugin exposes typed schemas for every extensible model
-const opportunity = legacyPlugin.schemas.Opportunity.parse(data);
+const opportunity = legacyPlugin.schemas.Opportunity.common.parse(data);
 opportunity.customFields?.legacyId?.value.id; // number
 ```
 
@@ -181,13 +179,14 @@ const missing = getCustomFieldValue(opp, "nonexistent", z.string());
 A plugin is any object that satisfies the `Plugin` interface:
 
 ```typescript
-interface Plugin<T extends SchemaExtensions = SchemaExtensions> {
-  extensions: T;
+interface Plugin<T extends SchemasInput = SchemasInput> {
   schemas: PluginSchemas<T>;
+  extensions?: PluginExtensions;
+  meta?: PluginMeta;
 }
 ```
 
-The `Plugin` interface uses [structural typing](https://www.typescriptlang.org/docs/handbook/type-compatibility.html), so any object with the right shape qualifies as a plugin, whether it comes from a local file, a monorepo package, or an installed npm package. There is no base class to extend or registry to sign up for. In practice, you'll almost always create plugins with `definePlugin()`, which handles building the `.schemas` from your `.extensions` automatically.
+The `Plugin` interface uses [structural typing](https://www.typescriptlang.org/docs/handbook/type-compatibility.html), so any object with the right shape qualifies as a plugin, whether it comes from a local file, a monorepo package, or an installed npm package. There is no base class to extend or registry to sign up for. In practice, you'll almost always create plugins with `definePlugin()`, which builds `.schemas` (including the `.common` Zod schema) from your `schemas` input automatically.
 
 For the full interface definition, see [define-plugin.ts](./define-plugin.ts).
 
@@ -203,20 +202,22 @@ const LegacyIdValueSchema = z.object({
 });
 
 const myPlugin = definePlugin({
-  extensions: {
+  schemas: {
     Opportunity: {
-      legacyId: {
-        fieldType: "object",
-        value: LegacyIdValueSchema,
-        description: "Maps to the opportunity_id in the legacy system",
-      },
-      category: {
-        fieldType: "string",
-        description: "Grant category",
-      },
-      priority: {
-        fieldType: "integer",
-        description: "Processing priority (1 = highest)",
+      customFields: {
+        legacyId: {
+          fieldType: "object",
+          value: LegacyIdValueSchema,
+          description: "Maps to the opportunity_id in the legacy system",
+        },
+        category: {
+          fieldType: "string",
+          description: "Grant category",
+        },
+        priority: {
+          fieldType: "integer",
+          description: "Processing priority (1 = highest)",
+        },
       },
     },
   },
@@ -226,10 +227,13 @@ const myPlugin = definePlugin({
 > [!IMPORTANT]
 > Always pass `as const` to the options object for `definePlugin()` (and the specs object for `withCustomFields()`). Without it, TypeScript widens literal types like `"string"` to `string`, which prevents the type system from inferring the correct `value` type for each custom field.
 
-The returned `Plugin` object has two main properties:
+The returned `Plugin` object has three properties:
 
-- **`myPlugin.extensions`**: the raw `SchemaExtensions` you passed in, preserved by reference. Useful for introspection or for passing to `mergeExtensions()`.
-- **`myPlugin.schemas`**: a record of Zod schemas, one per extensible model. Each schema has typed `customFields` based on the specs you provided. Models without extensions pass through with their base schema.
+- **`myPlugin.schemas`**: a record of per-object compiled output, one entry per extensible model. Each entry has:
+  - `.common` — the Zod schema with typed `customFields` applied (use this to parse data).
+  - `.native`, `.toCommon`, `.fromCommon` — populated when transforms are configured.
+- **`myPlugin.extensions`**: optional serializable config (mappings, meta) — safe to store as JSON.
+- **`myPlugin.meta`**: optional plugin identity (`name`, `version`, `sourceSystem`, `capabilities`).
 
 ### Publishing a plugin
 
@@ -257,16 +261,18 @@ export const ProgramAreaValueSchema = z.object({
 });
 
 const plugin = definePlugin({
-  extensions: {
+  schemas: {
     Opportunity: {
-      programArea: {
-        fieldType: "object",
-        value: ProgramAreaValueSchema,
-        description: "The HHS program area for this opportunity",
-      },
-      cfda: {
-        fieldType: "string",
-        description: "CFDA number",
+      customFields: {
+        programArea: {
+          fieldType: "object",
+          value: ProgramAreaValueSchema,
+          description: "The HHS program area for this opportunity",
+        },
+        cfda: {
+          fieldType: "string",
+          description: "CFDA number",
+        },
       },
     },
   },
@@ -328,8 +334,7 @@ export default plugin;
    ```typescript
    import plugin from "./";
 
-   plugin.extensions.Opportunity.programArea; // CustomFieldSpec
-   plugin.schemas.Opportunity.parse({} as any); // fully typed result
+   plugin.schemas.Opportunity.common.parse({} as any); // fully typed result
    ```
 
 3. **Publish** with `npm publish` (or your preferred registry workflow).
@@ -341,40 +346,11 @@ After installing the plugin (e.g. `npm install @commongrants/hhs-plugin`):
 ```typescript
 import hhs from "@commongrants/hhs-plugin";
 
-const opp = hhs.schemas.Opportunity.parse(data);
+const opp = hhs.schemas.Opportunity.common.parse(data);
 opp.customFields?.programArea?.value.code; // string
 opp.customFields?.cfda?.value; // string
 ```
 
-### Combining plugins
-
-Use `mergeExtensions()` to combine extensions from multiple plugins into a single set, then pass the result to `definePlugin()`:
-
-```typescript
-import { definePlugin, mergeExtensions } from "@common-grants/sdk/extensions";
-
-const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
-
-const combinedPlugin = definePlugin({ extensions: merged });
-
-// All custom fields from both plugins are available with full type safety
-const opp = combinedPlugin.schemas.Opportunity.parse(data);
-opp.customFields?.legacyId?.value.id; // number (from legacyPlugin)
-opp.customFields?.category?.value; // string (from classificationPlugin)
-```
-
-**Conflict resolution:** By default, `mergeExtensions()` throws an error if two sources define the same field name on the same model. You can change this behavior with the `onConflict` option:
-
-```typescript
-// Keep the first definition encountered
-mergeExtensions([a.extensions, b.extensions], { onConflict: "firstWins" });
-
-// Keep the last definition encountered
-mergeExtensions([a.extensions, b.extensions], { onConflict: "lastWins" });
-```
-
-> [!WARNING]
-> When using `"firstWins"` or `"lastWins"`, the return type falls back to the base `SchemaExtensions` type because conflict resolution makes static typing unreliable for overlapping field names. The default `"error"` strategy preserves full type inference via intersection types.
 
 ## Using plugins with the API client
 
@@ -385,10 +361,12 @@ import { Client, Auth } from "@common-grants/sdk/client";
 import { definePlugin } from "@common-grants/sdk/extensions";
 
 const myPlugin = definePlugin({
-  extensions: {
+  schemas: {
     Opportunity: {
-      legacyId: { fieldType: "integer", description: "Legacy system ID" },
-      category: { fieldType: "string", description: "Grant category" },
+      customFields: {
+        legacyId: { fieldType: "integer", description: "Legacy system ID" },
+        category: { fieldType: "string", description: "Grant category" },
+      },
     },
   },
 } as const);
@@ -400,14 +378,14 @@ const client = new Client({
 
 // Get a single opportunity with typed custom fields
 const opp = await client.opportunities.get(oppId, {
-  schema: myPlugin.schemas.Opportunity,
+  schema: myPlugin.schemas.Opportunity.common,
 });
 opp.customFields?.legacyId?.value; // typed as number
 opp.customFields?.category?.value; // typed as string
 
 // List with the same schema
 const response = await client.opportunities.list({
-  schema: myPlugin.schemas.Opportunity,
+  schema: myPlugin.schemas.Opportunity.common,
 });
 for (const opp of response.items) {
   console.log(opp.customFields?.category?.value);
@@ -417,7 +395,7 @@ for (const opp of response.items) {
 const results = await client.opportunities.search({
   query: "health",
   statuses: ["open"],
-  schema: myPlugin.schemas.Opportunity,
+  schema: myPlugin.schemas.Opportunity.common,
 });
 ```
 
@@ -436,8 +414,9 @@ Use `buildTransforms()` to compile a pair of mapping objects into typed callable
 ```typescript
 import { buildTransforms } from "@common-grants/sdk/extensions";
 
-const { toCommon, fromCommon } = buildTransforms({
-  toCommonMapping: {
+const { toCommon, fromCommon } = buildTransforms(
+  // toCommonMapping: native → CommonGrants
+  {
     id: { field: "data.opportunity_uuid" },
     title: { field: "data.opportunity_title" },
     description: { field: "data.opportunity_description" },
@@ -453,13 +432,14 @@ const { toCommon, fromCommon } = buildTransforms({
       },
     },
   },
-  fromCommonMapping: {
+  // fromCommonMapping: CommonGrants → native
+  {
     data: {
       opportunity_uuid: { field: "id" },
       opportunity_title: { field: "title" },
     },
-  },
-});
+  }
+);
 
 const result = toCommon(sourceData);
 if (result.errors.length === 0) {
@@ -510,7 +490,7 @@ To translate "doesn't apply" into a target-side sentinel (e.g. an `n_a` status t
 
 `default` is **not** consulted for `null` source values — `default` belongs to "unrecognized value," not to "publisher asserts irrelevant." The opt-in `"null"` case key is the only path from `null` source to a non-`null` target.
 
-**For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `undefined` for "not provided," return `null` for "doesn't apply," return a value otherwise. The walker omits keys whose handler returned `undefined` and writes `null` returns as a real, present `null` — so the output object distinguishes the three states the same way the wire does: absent → key omitted, `null` → present `null`, value → present value. Consumers can use key presence (`hasOwnProperty` / `in`) to tell "not provided" from "doesn't apply."
+**For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `undefined` for "not provided," return `null` for "doesn't apply," return a value otherwise. The walker omits keys whose handler returned `undefined` and writes `null` returns as a real, present `null` — so the output object distinguishes the three states the same way the wire does: absent → key omitted, `null` → present `null`, value → present value. Consumers can check for key presence to tell "not provided" from "doesn't apply."
 
 > **Cross-SDK note.** The TS PoC leads on [ADR-0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/) alignment: it preserves the three-state distinction (absent / `null` / value) at the transform layer. The Python PoC ([#810](https://github.com/HHS/simpler-grants-protocol/pull/810)) predates ADR-0024 and still collapses `None` source into the "not provided" path for the coercing handlers — bringing the Python handlers to parity is a pending follow-up.
 
@@ -536,13 +516,11 @@ const join = (data: unknown, spec: unknown) => {
   return parts.length > 0 ? parts.join(s.sep ?? " ") : undefined;
 };
 
-const { toCommon } = buildTransforms({
-  toCommonMapping: {
-    label: { join: { fields: ["a.b", "c.d"], sep: " — " } },
-  },
-  fromCommonMapping: {},
-  handlers: { join },
-});
+const { toCommon } = buildTransforms(
+  { label: { join: { fields: ["a.b", "c.d"], sep: " — " } } },
+  {},
+  new Map([["join", join]])
+);
 ```
 
 ### Validating against the extended schema
@@ -557,13 +535,12 @@ const ExtendedOpportunity = withCustomFields(OpportunityBaseSchema, {
   legacyId: { fieldType: "integer", value: z.number().int() },
 });
 
-const { toCommon } = buildTransforms({
-  toCommonMapping: {
-    /* ... */
-  },
-  fromCommonMapping: {},
-  commonModel: ExtendedOpportunity,
-});
+const { toCommon } = buildTransforms(
+  { /* toCommonMapping ... */ },
+  {},
+  undefined,
+  ExtendedOpportunity
+);
 
 const out = toCommon(sourceData);
 // On validation failure, `out.result` holds the raw transformed object so
@@ -572,28 +549,29 @@ const out = toCommon(sourceData);
 
 ### Wiring transforms into a plugin
 
-`definePlugin()` accepts optional `meta` and `transformSchemas`, both new in the PoC. Existing callers passing only `extensions` are unaffected:
+Pass `toCommon` / `fromCommon` and `customFields` together under `schemas.<Object>`:
 
 ```typescript
 const plugin = definePlugin({
-  extensions: {
-    Opportunity: {
-      /* customFieldSpecs */
-    },
-  },
   meta: {
     name: "grants.gov",
     version: "0.1.0",
     sourceSystem: "grants.gov",
     capabilities: ["customFields", "transforms"],
   },
-  transformSchemas: {
-    Opportunity: { toCommon, fromCommon },
+  schemas: {
+    Opportunity: {
+      customFields: {
+        /* customFieldSpecs */
+      },
+      toCommon,
+      fromCommon,
+    },
   },
 });
 
 // Invoke at runtime:
-const cg = plugin.transformSchemas?.Opportunity?.toCommon?.(sourceData);
+const cg = plugin.schemas.Opportunity?.toCommon?.(sourceData);
 ```
 
 For a complete runnable round-trip with custom handlers and `commonModel` validation, see [`examples/transforms.ts`](../../examples/transforms.ts) (`pnpm example:transforms`).
@@ -614,7 +592,7 @@ for (const err of out.errors) {
 }
 ```
 
-> **PII warning (ADR-0022 Decision #9):** The SDK does **not** redact by default. `PluginError.sourceValue` and `cause` are plain enumerable fields and flow through `JSON.stringify(err)`, `util.inspect(err)`, `console.log(err)`, and any logger that enumerates own properties. `sourceValue` is populated with the entire input record passed to `toCommon` / `fromCommon` — not just the value at the failing field. Log a redacted projection instead — e.g. `{ name: err.name, message: err.message, path: err.path, handler: err.handler }`. On the Zod-validation path (`buildTransforms({ commonModel })`), `PluginError.message` is also data-bearing — Zod's default error map embeds the rejected value into `issue.message`, which flows verbatim into `PluginError.message`. Redact `message` alongside `sourceValue` and `cause`. Full-message sanitization is tracked under [#744](https://github.com/HHS/simpler-grants-protocol/issues/744).
+> **PII warning (ADR-0022 Decision #9):** The SDK does **not** redact by default. `PluginError.sourceValue` and `cause` are plain enumerable fields and flow through `JSON.stringify(err)`, `util.inspect(err)`, `console.log(err)`, and any logger that enumerates own properties. `sourceValue` is populated with the entire input record passed to `toCommon` / `fromCommon` — not just the value at the failing field. Log a redacted projection instead — e.g. `{ name: err.name, message: err.message, path: err.path, handler: err.handler }`. On the Zod-validation path (when `commonModel` is passed to `buildTransforms()`), `PluginError.message` is also data-bearing — Zod's default error map embeds the rejected value into `issue.message`, which flows verbatim into `PluginError.message`. Redact `message` alongside `sourceValue` and `cause`. Full-message sanitization is tracked under [#744](https://github.com/HHS/simpler-grants-protocol/issues/744).
 
 ## Best practices
 
@@ -634,12 +612,14 @@ export const ProgramAreaValueSchema = z.object({
 });
 
 const plugin = definePlugin({
-  extensions: {
+  schemas: {
     Opportunity: {
-      programArea: {
-        fieldType: "object",
-        value: ProgramAreaValueSchema,
-        description: "The HHS program area for this opportunity",
+      customFields: {
+        programArea: {
+          fieldType: "object",
+          value: ProgramAreaValueSchema,
+          description: "The HHS program area for this opportunity",
+        },
       },
     },
   },
@@ -654,7 +634,7 @@ This allows consumers to use `getCustomFieldValue()` with the same schema the pl
 import hhs, { ProgramAreaValueSchema } from "@commongrants/hhs-plugin";
 import { getCustomFieldValue } from "@common-grants/sdk/extensions";
 
-const opp = hhs.schemas.Opportunity.parse(data);
+const opp = hhs.schemas.Opportunity.common.parse(data);
 
 // Extract the value with full type safety using the exported schema
 const area = getCustomFieldValue(opp, "programArea", ProgramAreaValueSchema);
@@ -667,13 +647,7 @@ Declare `@common-grants/sdk` as a `peerDependency` in your plugin's `package.jso
 
 ### Keep plugins focused
 
-A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, use `mergeExtensions()` to combine separate plugins rather than bundling everything into one.
-
-### Avoid `"firstWins"` / `"lastWins"` in published plugins
-
-When calling `mergeExtensions()` with `"firstWins"` or `"lastWins"`, the return type widens to `SchemaExtensions`, losing specific field-level type inference. This is fine for local or ad hoc usage, but if you publish a package that uses one of these strategies internally, the widened type propagates to your consumers. They'll see `SchemaExtensions` instead of the precise field types, with no indication of why.
-
-Prefer the default `"error"` strategy in published plugins. If your extensions genuinely overlap with another plugin, resolve the conflicts explicitly before publishing rather than deferring the resolution to a lossy merge strategy.
+A plugin should represent a single logical concern (one agency's fields, one integration's needs, or one domain concept). If you need fields from multiple concerns, define a combined plugin with all fields declared under a single `definePlugin({ schemas: { ... } })` call rather than splitting them across separate plugins.
 
 ## API reference
 
@@ -681,11 +655,11 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 ### Plugin creation
 
-| Export                                      | Kind      | Description                                                                                                                                                       | Demonstrated in                         |
-| ------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| [`definePlugin()`](./define-plugin.ts)      | function  | Creates a `Plugin` from a `SchemaExtensions` config. Returns an object with `.extensions` (the raw input) and `.schemas` (Zod schemas with typed `customFields`). | [Defining a plugin](#defining-a-plugin) |
-| [`Plugin`](./define-plugin.ts)              | interface | The object returned by `definePlugin()`.                                                                                                                          | [What is a plugin?](#what-is-a-plugin)  |
-| [`DefinePluginOptions`](./define-plugin.ts) | interface | Options accepted by `definePlugin()`. Contains the `extensions` property.                                                                                         | [Defining a plugin](#defining-a-plugin) |
+| Export                                      | Kind      | Description                                                                                                                                                                                                    | Demonstrated in                         |
+| ------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| [`definePlugin()`](./define-plugin.ts)      | function  | Creates a `Plugin` from `DefinePluginOptions`. Returns an object with `.schemas` (per-object output: `.common`, `.native`, `.toCommon`, `.fromCommon`) and optional `.extensions` / `.meta`.                   | [Defining a plugin](#defining-a-plugin) |
+| [`Plugin`](./define-plugin.ts)              | interface | The object returned by `definePlugin()`.                                                                                                                                                                       | [What is a plugin?](#what-is-a-plugin)  |
+| [`DefinePluginOptions`](./define-plugin.ts) | interface | Options for `definePlugin()`. `schemas` carries per-object input (custom fields, native schema, transforms); `extensions` is serializable-only config; `meta` is plugin identity.                              | [Defining a plugin](#defining-a-plugin) |
 
 ### Schema utilities
 
@@ -695,44 +669,35 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 | [`WithCustomFieldsResult`](./with-custom-fields.ts)    | type     | The return type of `withCustomFields()`. A Zod object schema where `customFields` is replaced with a typed version.                                            |                                                                            |
 | [`getCustomFieldValue()`](./get-custom-field-value.ts) | function | Safely extracts and parses a custom field value from an `ExtensibleObject`. Returns the parsed value, `undefined` if missing, or throws `ZodError` if invalid. | [Extracting custom field values](#extracting-custom-field-values)          |
 
-### Merging and composition
-
-| Export                                            | Kind      | Description                                                                                                                                           | Demonstrated in                         |
-| ------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| [`mergeExtensions()`](./merge-extensions.ts)      | function  | Combines multiple `SchemaExtensions` objects into one. Throws on field name conflicts by default; supports `"firstWins"` and `"lastWins"` strategies. | [Combining plugins](#combining-plugins) |
-| [`MergeExtensionsOptions`](./merge-extensions.ts) | interface | Controls conflict resolution for `mergeExtensions()`.                                                                                                 | [Combining plugins](#combining-plugins) |
-| [`MergedSchemaExtensions`](./merge-extensions.ts) | type      | The return type of `mergeExtensions()` with the default `"error"` strategy. Intersects field specs from each source.                                  |                                         |
 
 ### Transforms (PoC)
 
-| Export                                               | Kind      | Description                                                                                                                                                        | Demonstrated in                                                         |
-| ---------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| [`buildTransforms()`](./transforms.ts)               | function  | Compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables. Validates mapping structure at call time; collisions with built-ins throw.       | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
-| [`BuildTransformsOptions`](./transforms.ts)          | interface | Options for `buildTransforms()`: `handlers` for custom registrations, `commonModel` for opt-in Zod validation.                                                     |                                                                         |
-| [`BuiltTransforms`](./transforms.ts)                 | interface | Return shape of `buildTransforms()` — `{ toCommon, fromCommon }`.                                                                                                  |                                                                         |
-| [`transformFromMapping()`](./transformation.ts)      | function  | Low-level mapping walker used by `buildTransforms()`. Useful if you want to drive a single mapping pass without the call-time validation or error-wrapping layer.  |                                                                         |
-| [`TransformFromMappingOptions`](./transformation.ts) | interface | Options for `transformFromMapping()`: `handlers` registry and `maxDepth` cap.                                                                                      |                                                                         |
-| [`DEFAULT_HANDLERS`](./transformation.ts)            | const     | Frozen registry of built-in handlers: `const`, `field`, `match`, `numberToString`, `stringToNumber`, `switch`.                                                     | [Built-in mapping handlers](#built-in-mapping-handlers)                 |
-| [`getFromPath()`](./transformation.ts)               | function  | Walks an object via dot-notation; returns `undefined` (or a provided default) when the path is missing or traverses a non-object.                                  |                                                                         |
-| [`TransformResult`](./types.ts)                      | interface | Unconditional return shape `{ result, errors }` for `toCommon` / `fromCommon`.                                                                                     | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
-| [`PluginError`](./types.ts)                          | class     | Structured transformation error carrying `path`, `handler`, `sourceValue`, `cause`. Extends `Error`.                                                               | [Error handling](#error-handling)                                       |
-| [`Handler`](./types.ts)                              | type      | Signature for mapping handler functions: `(data, arg) => unknown`.                                                                                                 | [Custom handlers](#custom-handlers)                                     |
-| [`PluginMeta`](./types.ts)                           | interface | Plugin identity (`name`, `version`, `sourceSystem`, `capabilities`).                                                                                               | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
-| [`PluginCapability`](./types.ts)                     | type      | Literal union of capability names: `"customFields" \| "customFilters" \| "transforms" \| "client"`.                                                                |                                                                         |
-| [`ObjectSchemasInput`](./types.ts)                   | interface | Author-provided input: `{ native?, customFields?, toCommon?, fromCommon? }` per object. Passed to `definePlugin({ transformSchemas })`.                            | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
-| [`ObjectSchemas`](./types.ts)                        | interface | Compiled runtime shape (full SDK target): `{ native, common, toCommon, fromCommon }`. Not produced by the PoC's `definePlugin()`.                                  |                                                                         |
-| [`TransformSchemasInput`](./define-plugin.ts)        | type      | Map from extensible model name to `ObjectSchemasInput`. The shape of `DefinePluginOptions.transformSchemas`.                                                       | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
-| [`ObjectMappings`](./types.ts)                       | interface | Serializable `{ toCommon?, fromCommon? }` mapping dicts. Stored inside `PluginExtensionsObjectConfig.mappings`.                                                    |                                                                         |
-| [`PluginExtensionsObjectConfig`](./types.ts)         | interface | Per-object slot inside `PluginExtensions.schemas`: `{ mappings? }`. (`customFields` moved to `ObjectSchemasInput` per the post-PoC consolidation — see its JSDoc.) |                                                                         |
-| [`PluginExtensions`](./types.ts)                     | interface | Serializable plugin config carrying `meta` and per-object `schemas`. Used by `mergeExtensions()` to combine declarations from multiple packages.                   |                                                                         |
-| [`ClientConfig`](./types.ts)                         | type      | The per-plugin client configuration shape. Concrete shape is deferred to the full SDK.                                                                             |                                                                         |
+| Export                                               | Kind      | Description                                                                                                                                                       | Demonstrated in                                                         |
+| ---------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [`buildTransforms()`](./transforms.ts)               | function  | Compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables. Positional params: `(toCommonMapping, fromCommonMapping, handlers?, commonModel?)`. Validates mapping structure at call time; collisions with built-ins throw. | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
+| [`BuiltTransforms`](./transforms.ts)                 | interface | Return shape of `buildTransforms()` — `{ toCommon, fromCommon }`.                                                                                                 |                                                                         |
+| [`transformFromMapping()`](./transformation.ts)      | function  | Low-level mapping walker used by `buildTransforms()`. Useful if you want to drive a single mapping pass without the call-time validation or error-wrapping layer. |                                                                         |
+| [`TransformFromMappingOptions`](./transformation.ts) | interface | Options for `transformFromMapping()`: optional `handlers` registry (`Map<string, Handler>`).                                                                      |                                                                         |
+| [`DEFAULT_HANDLERS`](./transformation.ts)            | const     | `Map<string, Handler>` of built-in handlers: `const`, `field`, `match`, `numberToString`, `stringToNumber`, `switch`.                                             | [Built-in mapping handlers](#built-in-mapping-handlers)                 |
+| [`getFromPath()`](./transformation.ts)               | function  | Walks an object via dot-notation; returns `undefined` (or a provided default) when the path is missing or traverses a non-object.                                 |                                                                         |
+| [`TransformResult`](./types.ts)                      | interface | Unconditional return shape `{ result, errors }` for `toCommon` / `fromCommon`.                                                                                    | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
+| [`PluginError`](./types.ts)                          | class     | Structured transformation error carrying `path`, `handler`, `sourceValue`, `cause`. Extends `Error`.                                                              | [Error handling](#error-handling)                                       |
+| [`Handler`](./types.ts)                              | type      | Signature for mapping handler functions: `(data, arg) => unknown`.                                                                                                | [Custom handlers](#custom-handlers)                                     |
+| [`PluginMeta`](./types.ts)                           | interface | Plugin identity: `name` (required), `sourceSystem` (required), optional `version` and `capabilities`.                                                             | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
+| [`PluginCapability`](./types.ts)                     | type      | Literal union of capability names: `"customFields" \| "customFilters" \| "transforms" \| "client"`.                                                               |                                                                         |
+| [`SchemasInput`](./define-plugin.ts)                 | type      | Map from extensible model name to `ObjectSchemasInput`. The shape of `DefinePluginOptions.schemas`.                                                               | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
+| [`ObjectSchemasInput`](./types.ts)                   | interface | Author-provided input per object: `{ native?, customFields?, toCommon?, fromCommon? }`. Passed inside `definePlugin({ schemas })`.                                | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
+| [`ObjectSchemas`](./types.ts)                        | interface | Compiled runtime shape: `{ native, common, toCommon, fromCommon }`. Accessed via `plugin.schemas.<Name>`.                                                         |                                                                         |
+| [`ObjectMappings`](./types.ts)                       | interface | Serializable `{ toCommon?, fromCommon? }` mapping dicts. Stored inside `PluginExtensionsObjectConfig.mappings`.                                                   |                                                                         |
+| [`PluginExtensionsObjectConfig`](./types.ts)         | interface | Per-object slot inside `PluginExtensions.schemas`: `{ mappings? }`.                                                                                               |                                                                         |
+| [`PluginExtensions`](./types.ts)                     | interface | Serializable plugin config carrying `meta?: Partial<PluginMeta>` and per-object `schemas`.                                                                        |                                                                         |
+| [`ClientConfig`](./types.ts)                         | type      | The per-plugin client configuration shape. Concrete shape is deferred to the full SDK.                                                                            |                                                                         |
 
 ### Shared types
 
 | Export                               | Kind      | Description                                                                                                                    | Demonstrated in               |
 | ------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
 | [`CustomFieldSpec`](./types.ts)      | interface | Describes a single custom field: its `fieldType`, optional `value`, and optional `name`/`description`.                         | [Key concepts](#key-concepts) |
-| [`SchemaExtensions`](./types.ts)     | type      | Maps extensible model names to records of `CustomFieldSpec` objects. Plugins only need to declare models they actually extend. | [Key concepts](#key-concepts) |
 | [`ExtensibleSchemaName`](./types.ts) | type      | Union of model names that support `customFields` extensions. Currently: `"Opportunity"`.                                       |                               |
 | [`HasCustomFields`](./types.ts)      | type      | A Zod object schema whose shape includes a `customFields` property. Constrains `withCustomFields()` inputs at compile time.    |                               |
 | [`ExtensibleObject`](./types.ts)     | interface | An object with an optional `customFields` property. Constrains `getCustomFieldValue()` inputs at compile time.                 |                               |

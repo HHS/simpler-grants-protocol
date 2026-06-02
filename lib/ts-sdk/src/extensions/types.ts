@@ -142,31 +142,18 @@ export type ClientConfig = Record<string, unknown>;
  * - Return: the transformed value.
  *
  * @remarks
- * Two contracts custom-handler authors should respect:
+ * One contract custom-handler authors should respect:
  *
- * 1. **Be aware that handler return values can carry prototype-pollution
- *    payloads.** The walker treats handler returns as opaque — it does not
- *    descend into a handler's return value looking for nested `__proto__`
- *    keys. As a defense in depth, `transformFromMapping` does scrub
- *    top-level own `__proto__` keys from object handler returns before
- *    assigning them into the surrounding output shape, so a `const` /
- *    `field` / `match` handler whose return value is a `JSON.parse`-loaded
- *    object with an own `__proto__` key cannot land that key on the
- *    transform result. Built-in handlers can still return objects whose
- *    *nested* values carry such keys; custom handlers that wrap or
- *    construct objects from untrusted input should sanitize their own
- *    output rather than rely on the walker.
- *
- * 2. **Do not throw `Error`s whose `.message` embeds source data when that
- *    data may contain PII.** `buildTransforms()` wraps a handler exception's
- *    message verbatim into the resulting `PluginError.message`, which is
- *    enumerable on `Error.prototype` and rendered by `util.inspect` /
- *    `console.log(err)`. The SDK does not redact by default —
- *    `PluginError.sourceValue` and `.cause` are enumerable, and
- *    `.message` flows through verbatim. The built-in `stringToNumber` handler
- *    follows this rule by throwing a generic "cannot convert source value to a
- *    number" message; see the README's `PluginError` PII warning for the
- *    adopter-side redaction pattern.
+ * **Do not throw `Error`s whose `.message` embeds source data when that
+ * data may contain PII.** `buildTransforms()` wraps a handler exception's
+ * message verbatim into the resulting `PluginError.message`, which is
+ * enumerable on `Error.prototype` and rendered by `util.inspect` /
+ * `console.log(err)`. The SDK does not redact by default —
+ * `PluginError.sourceValue` and `.cause` are enumerable, and
+ * `.message` flows through verbatim. The built-in `stringToNumber` handler
+ * follows this rule by throwing a generic "cannot convert source value to a
+ * number" message; see the README's `PluginError` PII warning for the
+ * adopter-side redaction pattern.
  */
 export type Handler = (data: unknown, arg: unknown) => unknown;
 
