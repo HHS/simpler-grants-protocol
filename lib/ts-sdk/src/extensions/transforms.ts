@@ -29,10 +29,6 @@ import { DEFAULT_HANDLERS, HandlerError, transformFromMapping } from "./transfor
  * unknown key is indistinguishable from an output field name); that
  * detection is deferred to the full SDK.
  *
- * Bounded by `DEFAULT_MAX_TRANSFORM_DEPTH` (shared with `transformFromMapping`)
- * so adversarial mapping JSON cannot exhaust the call stack before
- * `buildTransforms()` returns.
- *
  * Sibling keys at a handler-dispatch node are rejected here. The runtime
  * walker is first-key-wins, so `{ field: "x", const: "fallback" }` would
  * silently drop `const` — almost always an author typo — so fail loud at

@@ -20,6 +20,10 @@ Add a TypeScript proof-of-concept for the plugin transformation framework (issue
 - `field` / `getFromPath` already preserve terminal `null`; intermediate-null short-circuits the path (documented as propagating "doesn't apply").
 - The walker places handler-returned `null` onto the output object as a real `null`, distinct from an absent key — so consumers can read the three states (absent / `null` / value) end-to-end through `toCommon` and `fromCommon`.
 
+**Removed:**
+
+- `mergeExtensions` has been removed from the public surface. Consumers who previously used `mergeExtensions` to combine extension objects should merge them manually (e.g. with object spread) before passing to `definePlugin`.
+
 **Out of scope** (deferred to full SDK):
 
 - Auto-generation of transforms from declarative `extensions.schemas[obj].mappings` inside `definePlugin()`.

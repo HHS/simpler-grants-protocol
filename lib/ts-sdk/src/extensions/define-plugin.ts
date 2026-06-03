@@ -39,8 +39,7 @@ export type SchemasInput = Partial<
  *
  * `schemas` carries the consolidated per-object input (custom fields,
  * native schema, transforms). `extensions` is the serializable-only surface
- * for JSON-safe config (mappings, meta) that can be stored and composed via
- * `mergeExtensions()` across packages. Custom field declarations belong
+ * for JSON-safe config (mappings, meta). Custom field declarations belong
  * exclusively on `schemas[Object].customFields`.
  *
  * Structured as an options object for forward-compatibility with future

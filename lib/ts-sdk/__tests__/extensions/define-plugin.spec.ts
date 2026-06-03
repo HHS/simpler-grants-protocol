@@ -46,7 +46,7 @@ describe("definePlugin", () => {
       expect(plugin).toHaveProperty("schemas");
     });
 
-    it("should preserve extensions input by reference on .extensions", () => {
+    it("should preserve meta input by reference", () => {
       const extensions = { meta: { name: "test", sourceSystem: "test" } };
 
       const plugin = definePlugin({ extensions });
