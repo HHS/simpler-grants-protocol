@@ -16,7 +16,7 @@ catalog:
   '@typespec/openapi3': ^1.11.0
   '@typespec/rest': ^0.81.0
   '@typespec/versioning': ^0.81.0
-  '@vitest/coverage-v8': ^4.1.6
+  '@vitest/coverage-v8': ^4.1.8
   eslint: ^9.39.4
   eslint-config-prettier: ^9.1.2
   eslint-plugin-prettier: ^5.5.5
@@ -26,12 +26,12 @@ catalog:
   ts-node: ^10.9.2
   typescript: ^5.9.3
   typescript-eslint: ^8.59.3
-  vitest: ^4.1.6
+  vitest: ^4.1.8
   zod: ^3.25.76
 
 catalogs:
   website:
-    vitest: ^4.1.6
+    vitest: ^4.1.8
 
 overrides:
   axios@<1.15.0: '>=1.15.0'
