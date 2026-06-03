@@ -2,16 +2,16 @@
 "@common-grants/sdk": minor
 ---
 
-Add a TypeScript proof-of-concept for the plugin transformation framework (issue #798), mirroring the Python PoC in PR #810. Plugin authors can now compile declarative mapping objects into typed `(toCommon, fromCommon)` callables, validate `toCommon` output against an extended Zod schema, and attach those callables to a plugin via `definePlugin({ transformSchemas })`.
+Add a TypeScript proof-of-concept for the plugin transformation framework (issue #798), mirroring the Python PoC in PR #810. Plugin authors can now compile declarative mapping objects into typed `(toCommon, fromCommon)` callables, validate `toCommon` output against an extended Zod schema, and attach those callables to a plugin via `definePlugin({ schemas })`.
 
 **New public surface (under `@common-grants/sdk/extensions`):**
 
-- `buildTransforms()` — compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables with call-time structural validation. Optional `commonModel` Zod schema turns parse failures into `PluginError[]` instead of thrown exceptions.
+- `buildTransforms(toCommonMapping, fromCommonMapping, handlers?, commonModel?)` — compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables with call-time structural validation. `handlers` is a `Map<string, Handler>` for custom handler registration. Optional `commonModel` Zod schema turns parse failures into `PluginError[]` instead of thrown exceptions.
 - `TransformResult<T>` — unconditional `{ result, errors }` return shape.
 - `PluginError` — structured error class carrying `path`, `handler`, `sourceValue`, `cause`.
-- `transformFromMapping()`, `getFromPath()`, `DEFAULT_HANDLERS` — lower-level mapping runtime pieces; six built-in handlers (`const`, `field`, `match` / `switch` alias, `numberToString`, `stringToNumber`).
-- `definePlugin()` accepts optional `meta: PluginMeta` and `transformSchemas: Partial<Record<ExtensibleSchemaName, ObjectSchemasInput>>`. Existing callers passing only `extensions` are unaffected.
-- New supporting types: `Handler`, `ObjectSchemasInput`, `ObjectSchemas`, `PluginMeta`, `PluginCapability`, `ObjectMappings`, `PluginExtensionsObjectConfig`, `PluginExtensions`, `TransformSchemasInput`.
+- `transformFromMapping()`, `getFromPath()`, `DEFAULT_HANDLERS` — lower-level mapping runtime pieces; `DEFAULT_HANDLERS` is a `Map<string, Handler>` of six built-in handlers (`const`, `field`, `match` / `switch` alias, `numberToString`, `stringToNumber`).
+- `definePlugin()` accepts optional `meta: PluginMeta` and `schemas: SchemasInput`. All per-object declarations (custom fields, native schema, transforms) are co-located under `schemas[Object]` — `customFields` lives on `schemas[Object].customFields` rather than on the `extensions` key. The compiled `plugin.schemas[Object].common` holds the extended Zod schema.
+- New supporting types: `Handler`, `SchemasInput`, `ObjectSchemasInput`, `ObjectSchemas`, `PluginMeta`, `PluginCapability`, `ObjectMappings`, `PluginExtensionsObjectConfig`, `PluginExtensions`.
 
 **Three-state null handling (ADR-0024)** for optional fields:
 
