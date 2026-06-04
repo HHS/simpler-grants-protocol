@@ -111,67 +111,7 @@ function demonstrateStandalonePlugins() {
 }
 
 // ############################################################################
-// Step 3: Combined plugin
-// ############################################################################
-
-function demonstrateCombinedPlugin() {
-  console.log("\n--- Combined plugin ---\n");
-
-  // Declare all custom fields in a single plugin entry
-  const combinedPlugin = definePlugin({
-    schemas: {
-      Opportunity: {
-        customFields: {
-          legacyId: {
-            fieldType: CustomFieldType.object,
-            value: LegacyIdValueSchema,
-            description: "Maps to the opportunity_id in the legacy system",
-          },
-          category: {
-            fieldType: CustomFieldType.string,
-            description: "Grant category",
-          },
-          priority: {
-            fieldType: CustomFieldType.integer,
-            description: "Processing priority (1 = highest)",
-          },
-        },
-      },
-    },
-  } as const);
-
-  // Parse data with all custom fields
-  const opportunity = combinedPlugin.schemas.Opportunity.common.parse({
-    ...baseData,
-    customFields: {
-      legacyId: {
-        name: "legacyId",
-        fieldType: CustomFieldType.object,
-        value: { system: "grants-v1", id: 42 },
-      },
-      category: {
-        name: "category",
-        fieldType: CustomFieldType.string,
-        value: "STEM Education",
-      },
-      priority: {
-        name: "priority",
-        fieldType: CustomFieldType.integer,
-        value: 1,
-      },
-    },
-  });
-
-  // All fields are accessible with full type safety
-  console.log(`  ${opportunity.title}\n`);
-  console.log(`  legacyId.system: ${opportunity.customFields?.legacyId?.value.system}`);
-  console.log(`  legacyId.id:     ${opportunity.customFields?.legacyId?.value.id}`);
-  console.log(`  category:        ${opportunity.customFields?.category?.value}`);
-  console.log(`  priority:        ${opportunity.customFields?.priority?.value}`);
-}
-
-// ############################################################################
-// Step 4: Demonstrate validation
+// Step 3: Demonstrate validation
 // ############################################################################
 
 function demonstrateValidation() {
@@ -222,7 +162,6 @@ function demonstrateValidation() {
 function main() {
   console.log("=== Plugins Example ===\n");
   demonstrateStandalonePlugins();
-  demonstrateCombinedPlugin();
   demonstrateValidation();
   console.log("\n=== Example Complete ===");
 }

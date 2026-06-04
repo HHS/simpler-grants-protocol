@@ -375,7 +375,7 @@ describe("plugin integration", () => {
     expect(priority).toBe(1);
   });
 
-  it("should parse a payload with all custom fields from a combined plugin", () => {
+  it("should parse a payload with multiple custom fields defined in a single plugin", () => {
     const combinedPlugin = definePlugin({
       schemas: {
         Opportunity: {
@@ -433,7 +433,7 @@ describe("plugin integration", () => {
     expect(priority).toBe(1);
   });
 
-  it("should reject invalid data in the combined schema", () => {
+  it("should reject invalid data for a custom field type", () => {
     const combinedPlugin = definePlugin({
       schemas: {
         Opportunity: {
