@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { withCustomFields, getCustomFieldValue, definePlugin, mergeExtensions } from "@/extensions";
+import { withCustomFields, getCustomFieldValue, definePlugin } from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas";
 import { CustomFieldType } from "@/constants";
 
@@ -289,10 +289,10 @@ describe("withCustomFields + getCustomFieldValue integration", () => {
 });
 
 // ############################################################################
-// Plugin composition integration tests
+// Plugin integration tests
 // ############################################################################
 
-describe("plugin composition", () => {
+describe("plugin integration", () => {
   // Shared test data
   const validOpp = {
     id: "573525f2-8e15-4405-83fb-e6523511d893",
@@ -305,12 +305,14 @@ describe("plugin composition", () => {
 
   // Plugin 1: Legacy System — adds legacyId (object with system + id)
   const legacyPlugin = definePlugin({
-    extensions: {
+    schemas: {
       Opportunity: {
-        legacyId: {
-          fieldType: CustomFieldType.object,
-          value: LegacyIdValueSchema,
-          description: "Maps to the opportunity_id in the legacy system",
+        customFields: {
+          legacyId: {
+            fieldType: CustomFieldType.object,
+            value: LegacyIdValueSchema,
+            description: "Maps to the opportunity_id in the legacy system",
+          },
         },
       },
     },
@@ -318,15 +320,17 @@ describe("plugin composition", () => {
 
   // Plugin 2: Classification — adds category (string) and priority (integer)
   const classificationPlugin = definePlugin({
-    extensions: {
+    schemas: {
       Opportunity: {
-        category: {
-          fieldType: CustomFieldType.string,
-          description: "Grant category",
-        },
-        priority: {
-          fieldType: CustomFieldType.integer,
-          description: "Processing priority (1 = highest)",
+        customFields: {
+          category: {
+            fieldType: CustomFieldType.string,
+            description: "Grant category",
+          },
+          priority: {
+            fieldType: CustomFieldType.integer,
+            description: "Processing priority (1 = highest)",
+          },
         },
       },
     },
@@ -344,7 +348,7 @@ describe("plugin composition", () => {
         },
       },
     };
-    const legacyResult = legacyPlugin.schemas.Opportunity.parse(legacyData);
+    const legacyResult = legacyPlugin.schemas.Opportunity.common.parse(legacyData);
     const legacyId = getCustomFieldValue(legacyResult, "legacyId", LegacyIdValueSchema);
     expect(legacyId).toEqual({ system: "grants-v1", id: 42 });
 
@@ -364,27 +368,35 @@ describe("plugin composition", () => {
         },
       },
     };
-    const classResult = classificationPlugin.schemas.Opportunity.parse(classificationData);
+    const classResult = classificationPlugin.schemas.Opportunity.common.parse(classificationData);
     const category = getCustomFieldValue(classResult, "category", z.string());
     const priority = getCustomFieldValue(classResult, "priority", z.number().int());
     expect(category).toBe("STEM Education");
     expect(priority).toBe(1);
   });
 
-  it("should merge extensions from multiple plugins without conflict", () => {
-    const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
-
-    // All three fields should be present under Opportunity
-    expect(merged.Opportunity).toBeDefined();
-    expect(Object.keys(merged.Opportunity!)).toEqual(
-      expect.arrayContaining(["legacyId", "category", "priority"])
-    );
-    expect(Object.keys(merged.Opportunity!)).toHaveLength(3);
-  });
-
-  it("should parse a payload with all custom fields from the combined plugin", () => {
-    const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
-    const combinedPlugin = definePlugin({ extensions: merged });
+  it("should parse a payload with multiple custom fields defined in a single plugin", () => {
+    const combinedPlugin = definePlugin({
+      schemas: {
+        Opportunity: {
+          customFields: {
+            legacyId: {
+              fieldType: CustomFieldType.object,
+              value: LegacyIdValueSchema,
+              description: "Maps to the opportunity_id in the legacy system",
+            },
+            category: {
+              fieldType: CustomFieldType.string,
+              description: "Grant category",
+            },
+            priority: {
+              fieldType: CustomFieldType.integer,
+              description: "Processing priority (1 = highest)",
+            },
+          },
+        },
+      },
+    } as const);
 
     const fullData = {
       ...validOpp,
@@ -407,7 +419,7 @@ describe("plugin composition", () => {
       },
     };
 
-    const parsed = combinedPlugin.schemas.Opportunity.parse(fullData);
+    const parsed = combinedPlugin.schemas.Opportunity.common.parse(fullData);
 
     // Extract all custom field values
     const legacyId = parsed.customFields?.legacyId?.value;
@@ -421,9 +433,19 @@ describe("plugin composition", () => {
     expect(priority).toBe(1);
   });
 
-  it("should reject invalid data in the combined schema", () => {
-    const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
-    const combinedPlugin = definePlugin({ extensions: merged });
+  it("should reject invalid data for a custom field type", () => {
+    const combinedPlugin = definePlugin({
+      schemas: {
+        Opportunity: {
+          customFields: {
+            priority: {
+              fieldType: CustomFieldType.integer,
+              description: "Processing priority (1 = highest)",
+            },
+          },
+        },
+      },
+    } as const);
 
     const invalidData = {
       ...validOpp,
@@ -436,7 +458,7 @@ describe("plugin composition", () => {
       },
     };
 
-    const result = combinedPlugin.schemas.Opportunity.safeParse(invalidData);
+    const result = combinedPlugin.schemas.Opportunity.common.safeParse(invalidData);
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].path).toContain("customFields");

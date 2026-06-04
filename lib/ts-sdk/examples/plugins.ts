@@ -2,17 +2,16 @@
  * Example script demonstrating the plugin framework.
  *
  * This example shows how to:
- * 1. Define independent plugins with definePlugin()
- * 2. Use a standalone plugin's typed schemas
- * 3. Compose plugins with mergeExtensions()
- * 4. Access typed custom fields from the combined schema
+ * 1. Define a plugin with custom fields via `definePlugin({ schemas })`
+ * 2. Access the typed `common` schema for validation
+ * 3. Read typed custom field values directly
  *
  * Run with: pnpm example:plugins
  */
 
 import { z } from "zod";
 import { CustomFieldType } from "../src/constants";
-import { definePlugin, mergeExtensions } from "../src/extensions";
+import { definePlugin } from "../src/extensions";
 
 // ############################################################################
 // Step 1: Define independent plugins
@@ -25,12 +24,14 @@ const LegacyIdValueSchema = z.object({
 });
 
 const legacyPlugin = definePlugin({
-  extensions: {
+  schemas: {
     Opportunity: {
-      legacyId: {
-        fieldType: CustomFieldType.object,
-        value: LegacyIdValueSchema,
-        description: "Maps to the opportunity_id in the legacy system",
+      customFields: {
+        legacyId: {
+          fieldType: CustomFieldType.object,
+          value: LegacyIdValueSchema,
+          description: "Maps to the opportunity_id in the legacy system",
+        },
       },
     },
   },
@@ -38,15 +39,17 @@ const legacyPlugin = definePlugin({
 
 // Plugin for grant categorization
 const classificationPlugin = definePlugin({
-  extensions: {
+  schemas: {
     Opportunity: {
-      category: {
-        fieldType: CustomFieldType.string,
-        description: "Grant category",
-      },
-      priority: {
-        fieldType: CustomFieldType.integer,
-        description: "Processing priority (1 = highest)",
+      customFields: {
+        category: {
+          fieldType: CustomFieldType.string,
+          description: "Grant category",
+        },
+        priority: {
+          fieldType: CustomFieldType.integer,
+          description: "Processing priority (1 = highest)",
+        },
       },
     },
   },
@@ -70,7 +73,7 @@ function demonstrateStandalonePlugins() {
   console.log("--- Standalone plugins ---\n");
 
   // Legacy plugin schema validates and types its own fields
-  const legacyOpp = legacyPlugin.schemas.Opportunity.parse({
+  const legacyOpp = legacyPlugin.schemas.Opportunity.common.parse({
     ...baseData,
     customFields: {
       legacyId: {
@@ -87,7 +90,7 @@ function demonstrateStandalonePlugins() {
   console.log(`  legacyId.id:     ${legacyId?.id} (typed as number)\n`);
 
   // Classification plugin schema validates its fields
-  const classOpp = classificationPlugin.schemas.Opportunity.parse({
+  const classOpp = classificationPlugin.schemas.Opportunity.common.parse({
     ...baseData,
     customFields: {
       category: {
@@ -108,57 +111,24 @@ function demonstrateStandalonePlugins() {
 }
 
 // ############################################################################
-// Step 3: Compose plugins
-// ############################################################################
-
-function demonstrateComposition() {
-  console.log("\n--- Composed plugins ---\n");
-
-  // Merge extensions from both plugins into one
-  const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
-
-  // Build a combined plugin with all custom fields
-  const combinedPlugin = definePlugin({ extensions: merged });
-
-  // Parse data with all custom fields
-  const opportunity = combinedPlugin.schemas.Opportunity.parse({
-    ...baseData,
-    customFields: {
-      legacyId: {
-        name: "legacyId",
-        fieldType: CustomFieldType.object,
-        value: { system: "grants-v1", id: 42 },
-      },
-      category: {
-        name: "category",
-        fieldType: CustomFieldType.string,
-        value: "STEM Education",
-      },
-      priority: {
-        name: "priority",
-        fieldType: CustomFieldType.integer,
-        value: 1,
-      },
-    },
-  });
-
-  // All fields are accessible with full type safety
-  console.log(`  ${opportunity.title}\n`);
-  console.log(`  legacyId.system: ${opportunity.customFields?.legacyId?.value.system}`);
-  console.log(`  legacyId.id:     ${opportunity.customFields?.legacyId?.value.id}`);
-  console.log(`  category:        ${opportunity.customFields?.category?.value}`);
-  console.log(`  priority:        ${opportunity.customFields?.priority?.value}`);
-}
-
-// ############################################################################
-// Step 4: Demonstrate validation
+// Step 3: Demonstrate validation
 // ############################################################################
 
 function demonstrateValidation() {
   console.log("\n--- Validation ---\n");
 
-  const merged = mergeExtensions([legacyPlugin.extensions, classificationPlugin.extensions]);
-  const combinedPlugin = definePlugin({ extensions: merged });
+  const combinedPlugin = definePlugin({
+    schemas: {
+      Opportunity: {
+        customFields: {
+          priority: {
+            fieldType: CustomFieldType.integer,
+            description: "Processing priority (1 = highest)",
+          },
+        },
+      },
+    },
+  } as const);
 
   const oppData = {
     ...baseData,
@@ -175,7 +145,7 @@ function demonstrateValidation() {
   console.log(JSON.stringify(oppData, null, 2));
   console.log();
 
-  const result = combinedPlugin.schemas.Opportunity.safeParse(oppData);
+  const result = combinedPlugin.schemas.Opportunity.common.safeParse(oppData);
 
   if (!result.success) {
     const issue = result.error.issues[0];
@@ -192,7 +162,6 @@ function demonstrateValidation() {
 function main() {
   console.log("=== Plugins Example ===\n");
   demonstrateStandalonePlugins();
-  demonstrateComposition();
   demonstrateValidation();
   console.log("\n=== Example Complete ===");
 }

@@ -29,7 +29,7 @@
     "vitest": "catalog:"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node --input-type=module -e \"import{copyFileSync}from'node:fs';copyFileSync('package.json','dist/package.json')\"",
     "prepare": "pnpm build",
     "watch": "tsc --watch",
     "test": "vitest run",

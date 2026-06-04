@@ -8,10 +8,9 @@ const mockCheckSpec = vi.fn();
 
 // Mock the service with consistent implementation
 vi.mock("../../../commands/check/check-service.ts", () => ({
-  DefaultCheckService: vi.fn(() => ({
-    checkApi: mockCheckApi,
-    checkSpec: mockCheckSpec,
-  })),
+  DefaultCheckService: vi.fn(function () {
+    return { checkApi: mockCheckApi, checkSpec: mockCheckSpec };
+  }),
 }));
 
 describe("checkCommand", () => {

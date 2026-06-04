@@ -20,7 +20,7 @@ _How should the Plugin object be structured to support both custom field declara
 ### Decision drivers
 
 - The framework must be implementable in both the Python and TypeScript SDKs with as consistent an interface as possible.
-- The `extensions` config must be serializable and able to pass validation (JSON-safe), and must be combinable across multiple extension packages via `mergeExtensions()` (TypeScript) / `merge_extensions()` (Python).
+- The `extensions` config must be serializable and able to pass validation (JSON-safe).
 - Existing plugin packages that declare only custom fields should remain valid with minimal changes.
 - The SDK interface should support clean dependency injection — it must be possible to pass `client` or `schemas` as a coherent unit without reassembling them from per-object branches.
 - Auth, transport, and rate-limiting are system-level concerns that belong to a single client, not distributed across per-object branches.
@@ -36,7 +36,7 @@ We decided to:
 
 3. **Use per-object grouping inside `schemas`** where it reflects real coupling: each object's native schema, CommonGrants schema, and bidirectional transforms are tightly coupled and change together.
 
-4. **Expand `definePlugin()` to accept all top-level fields** — `meta`, `client`, `schemas`, and `extensions` — rather than only `extensions`. `extensions` will contain any parts of the plugin that can be merged with other plugins by using `mergeExtensions()`, which has a flag for handling key conflicts.
+4. **Expand `definePlugin()` to accept all top-level fields** — `meta`, `client`, `schemas`, and `extensions` — rather than only `extensions`. `extensions` holds serializable-only config (mappings, meta); all per-object declarations (custom fields, native schema, transforms) live under `schemas.<Object>`.
 
 5. **Make all top-level Plugin fields optional** so adopters can publish a plugin that provides only the features they need — for example, custom fields only — and expand to include transforms, client config, or additional schemas incrementally over time.
 
@@ -44,7 +44,7 @@ We decided to:
 
 7. **`toCommon` / `fromCommon` return a `TransformResult<T>` of `{ result, errors }` unconditionally; mapping definitions are validated at `buildTransforms()` call time.** Partial failure is routine for cross-schema transforms — field handlers can emit warnings that do not invalidate a record — so the transform surface is safe by default rather than throwing. Runtime schema validation (Zod `.parse()` / Pydantic `model_validate()`) surfaces as entries in `errors` rather than thrown exceptions. In the current PoC, this validation is opt-in at the `buildTransforms()` call site via the `commonModel` / `common_model` parameter — when supplied, validation runs inside `toCommon` against the fully extended generated schema. In the full SDK, `definePlugin()` will additionally inject validation when auto-generating transforms from `extensions.schemas.<Object>.mappings`. Plugin authors using hand-written transforms are responsible for their own validation. Consumers apply their own rule for what counts as success — strict adopters treat any non-empty `errors` as failure, lenient adopters tolerate warnings. Mappings passed to `buildTransforms()` are checked at the call site, failing fast on structural errors, unknown handlers, or unresolvable field paths.
 
-8. **Custom handlers are registered per utility call, not globally.** `buildTransforms()` accepts an optional `handlers` argument for registering additional handler names. Per-call scoping keeps behavior explicit and testable; name collisions with the default set raise at `buildTransforms()` call time rather than silently shadowing them. Handler-name lookup must not resolve inherited attributes, because mapping JSON can be reconstituted from untrusted sources via `mergeExtensions()`.
+8. **Custom handlers are registered per utility call, not globally.** `buildTransforms()` accepts an optional `handlers` argument (`Map<string, Handler>`) for registering additional handler names. Per-call scoping keeps behavior explicit and testable; name collisions with the default set raise at `buildTransforms()` call time rather than silently shadowing them. The registry is a `Map` rather than a plain object so that handler-name lookup uses `Map.has()` — which does not walk the prototype chain — rather than `in` or own-property checks on a plain object.
 
 9. **Transformation errors carry structured context.** SDK-emitted transformation errors extend a single `PluginError` base carrying field path, handler name, source value, and underlying cause, enabling programmatic reasoning without parsing error text. The source value may contain PII when transforming applicant data; adopters are responsible for redacting it before logging or re-raising, and the SDK does not redact by default.
 
@@ -61,7 +61,7 @@ plugin.schemas.<Name>.to_common      // callable: native → TransformResult[com
 plugin.schemas.<Name>.from_common    // callable: common → TransformResult[native] (None if not configured)
 ```
 
-**Python note:** In the Python SDK, `define_plugin()` returns a `PluginConfig` (build-time input) rather than a fully compiled `Plugin`. The code generator (`generate.py`) compiles `PluginConfig → Plugin` by injecting the generated model classes as the `common` schema, wrapping `get_client` with `functools.lru_cache`, and auto-generating `build_transforms()` calls for any objects that have `extensions.schemas[obj].mappings` but no explicit `to_common`/`from_common` in `schemas[obj]`. This split is necessary because `cg_config.py` cannot import from `generated/` — it is the input to code generation. In the Python SDK, `custom_fields` is declared on `ObjectSchemasInput` (inside `schemas`) rather than on `PluginExtensionsSchema` (inside `extensions`).
+**Python note:** In the Python SDK, `define_plugin()` returns a `PluginConfig` (build-time input) rather than a fully compiled `Plugin`. The code generator (`generate.py`) compiles `PluginConfig → Plugin` by injecting the generated model classes as the `common` schema, wrapping `get_client` with `functools.lru_cache`, and auto-generating `build_transforms()` calls for any objects that have `extensions.schemas[obj].mappings` but no explicit `to_common`/`from_common` in `schemas[obj]`. This split is necessary because `cg_config.py` cannot import from `generated/` — it is the input to code generation. Both SDKs declare `custom_fields` / `customFields` on `ObjectSchemasInput` (inside `schemas`), not on `PluginExtensionsSchema` / `PluginExtensionsObjectConfig` (inside `extensions`).
 
 ### Example interface
 
@@ -111,8 +111,11 @@ interface ObjectSchemas<TNative, TCommon> {
 // common is intentionally absent: the plugin config file cannot import from generated/
 // since it is the input to generation. definePlugin() injects common during compilation
 // from ObjectSchemasInput → ObjectSchemas, resolved from the generated model classes.
+// customFields declares extra fields beyond the base CG schema; definePlugin() extends
+// the base schema with them to produce the typed common schema.
 interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
   native?: ZodType<TNative>; // defaults to Record<string, unknown> if omitted
+  customFields?: Record<string, CustomFieldSpec>;
   toCommon?: (native: TNative) => TransformResult<TCommon>;
   fromCommon?: (common: TCommon) => TransformResult<TNative>;
 }
@@ -125,9 +128,11 @@ interface CustomFilterSpec {
   description?: string;
 }
 
-// Per-object config shape inside extensions.schemas — mirrors Python's PluginExtensionsSchema
+// Per-object config shape inside extensions.schemas — mirrors Python's PluginExtensionsSchema.
+// customFields is intentionally absent here; it lives on ObjectSchemasInput so that
+// all per-object declarations (custom fields, native schema, transforms) are co-located
+// under schemas.<Object> rather than split across two top-level keys.
 interface PluginExtensionsObjectConfig {
-  customFields?: Record<string, CustomFieldSpec>;
   // Optional declarative mappings in ADR-0017 format. When present and no explicit
   // toCommon / fromCommon is supplied in schemas.<Object>, definePlugin() auto-invokes
   // buildTransforms() on these. Each direction is author-provided; see Decision #6.
@@ -139,7 +144,7 @@ interface PluginExtensionsObjectConfig {
 
 // Serializable portion of the plugin config — safe to store as JSON.
 // schemas keys are restricted to ExtensibleSchemaName (the known set of CommonGrants
-// objects that support custom fields), following the existing SchemaExtensions pattern.
+// objects that support custom fields).
 interface PluginExtensions {
   meta?: Partial<PluginMeta>;
   schemas?: Partial<Record<ExtensibleSchemaName, PluginExtensionsObjectConfig>>;
@@ -197,13 +202,6 @@ interface DefinePluginOptions {
 // to the errors array rather than throwing (see Decision #7).
 function definePlugin(options: DefinePluginOptions): Plugin;
 
-// Combine multiple extension objects (e.g. from separate packages).
-// Exact signature shape (overloads, param structure) is provisional pending SDK pin in #744.
-function mergeExtensions(
-  extensions: PluginExtensions[],
-  options?: { onConflict?: "error" | "firstWins" | "lastWins" }, // defaults to "error"
-): PluginExtensions;
-
 // Handler signature matches ADR-0017 runtime conventions.
 type Handler = (value: unknown, context: unknown) => unknown;
 
@@ -223,7 +221,7 @@ type Handler = (value: unknown, context: unknown) => unknown;
 function buildTransforms<TNative, TCommon>(
   toCommonMapping: Record<string, unknown>, // ADR-0017 mapping from native → CommonGrants
   fromCommonMapping: Record<string, unknown>, // ADR-0017 mapping from CommonGrants → native
-  handlers?: Record<string, Handler>,
+  handlers?: Map<string, Handler>, // Map (not plain object) — Map.has() is prototype-safe
   commonModel?: ZodType<TCommon>, // must be the generated extended schema, not the base
 ): {
   toCommon: (native: TNative) => TransformResult<TCommon>;
@@ -485,34 +483,26 @@ const plugin = definePlugin({
       maxItems: config.maxItems,
       auth: config.auth,
     }),
-  extensions: {
-    schemas: {
-      Opportunity: {
-        customFields: {
-          programArea: {
-            fieldType: CustomFieldType.String,
-            description: "HHS program area code",
-          },
-          legacyGrantId: {
-            fieldType: CustomFieldType.Integer,
-            description: "Numeric ID from the legacy grants system",
-          },
-        },
-      },
-    },
-  },
+  // All per-object declarations — customFields, native schema, and transforms — live
+  // under schemas.<Object> so authors have one entry per object rather than two.
   schemas: {
     Opportunity: {
       native: GrantsGovOpportunitySchema,
+      customFields: {
+        programArea: {
+          fieldType: CustomFieldType.String,
+          description: "HHS program area code",
+        },
+        legacyGrantId: {
+          fieldType: CustomFieldType.Integer,
+          description: "Numeric ID from the legacy grants system",
+        },
+      },
       toCommon,
       fromCommon,
     },
   },
 });
-
-// Combine extensions from multiple packages before constructing the plugin
-const merged = mergeExtensions([baseExtensions, grantsGovExtensions]);
-const mergedPlugin = definePlugin({ extensions: merged });
 
 // Calling getClient() with a config object — memoized, so repeated calls return the same instance
 const client = plugin.getClient({ auth: Auth.bearer("token"), pageSize: 50 });
@@ -668,7 +658,7 @@ print(grants_gov_plugin.meta.capabilities)    # ["customFields", "transforms", "
   - Client stays singular — `getClient()` / `get_client()` is memoized (in TypeScript by `definePlugin()`; in Python by the code generator wrapping it with `functools.lru_cache`), so one source system always produces one `Client` instance regardless of how many times it is called
   - Top-level surface (`meta`, `client`, `schemas`, `extensions`) is short, closed, and stable — adding protocol objects adds a key under `schemas` only
   - Dependency injection works along functional lines: pass `getClient`, pass `Schemas`, pass `Extensions` as coherent units without needing to reassemble from per-object branches
-  - `mergeExtensions()` / `merge_extensions()` operates on flat, serializable data at the root, not on deeply nested per-object branches
+  - `extensions` (serializable config) is flat and JSON-safe — it can be stored, versioned, or passed across package boundaries without carrying runtime Zod/Pydantic schemas
   - Per-object grouping inside `schemas` preserves the real coupling between native schema, CommonGrants schema, and bidirectional transforms — they share type signatures and change together
   - Mirrors the SDK module structure (`client`, `schemas`, `extensions`), so Plugin reads as a system-specific version of the existing SDK rather than a different mental model
   - `toCommon`/`fromCommon` can be plain hand-written functions, generated via `buildTransforms()` and passed in `schemas`, or auto-generated by `definePlugin()` from mappings declared in `extensions` — plugin authors are not required to use a declarative mapping format
