@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
 import { buildTransforms, definePlugin, type PluginMeta, type TransformResult } from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas/zod/models";
@@ -286,5 +286,200 @@ describe("definePlugin", () => {
       const result = plugin.schemas.Opportunity.common.parse(validOpp);
       expect(result.title).toBe("Test Opportunity");
     });
+  });
+});
+
+// ############################################################################
+// Auto-wiring from mappings
+// ############################################################################
+
+// Mappings used across auto-wiring tests. toCommon covers all required fields of
+// OpportunityBaseSchema so that Zod validation (run because `common` is passed as
+// commonModel in the auto-wiring call) does not produce errors.
+// `status: { value: { const: "open" } }` produces `{ value: "open" }` because
+// `value` is an output key and `{ const: "open" }` dispatches the const handler.
+const autoWireToCommonMapping = {
+  id: { field: "native_id" },
+  title: { field: "native_title" },
+  description: { const: "Test opportunity" },
+  createdAt: { const: "2025-01-01T00:00:00Z" },
+  lastModifiedAt: { const: "2025-01-01T00:00:00Z" },
+  status: { value: { const: "open" } },
+};
+const autoWireFromCommonMapping = {
+  native_title: { field: "title" },
+  native_id: { field: "id" },
+};
+
+describe("definePlugin — auto-wiring from mappings", () => {
+  it("auto-generates working toCommon/fromCommon from extensions.schemas.Opportunity.mappings", () => {
+    const plugin = definePlugin({
+      extensions: {
+        schemas: {
+          Opportunity: {
+            mappings: {
+              toCommon: autoWireToCommonMapping,
+              fromCommon: autoWireFromCommonMapping,
+            },
+          },
+        },
+      },
+    });
+
+    const nativeData = {
+      native_id: "573525f2-8e15-4405-83fb-e6523511d893",
+      native_title: "Test Opp",
+    };
+    const result = plugin.schemas.Opportunity.toCommon?.(nativeData);
+    expect(result?.errors).toHaveLength(0);
+    expect(result?.result).toMatchObject({
+      id: "573525f2-8e15-4405-83fb-e6523511d893",
+      title: "Test Opp",
+    });
+  });
+
+  it("explicit callables take priority — any explicit callable disables auto-wiring for that object", () => {
+    const explicitToCommon = vi.fn(() => ({ result: { id: "explicit" } as any, errors: [] }));
+    const explicitFromCommon = vi.fn(() => ({ result: {} as any, errors: [] }));
+
+    const plugin = definePlugin({
+      extensions: {
+        schemas: {
+          Opportunity: {
+            mappings: {
+              toCommon: autoWireToCommonMapping,
+              fromCommon: autoWireFromCommonMapping,
+            },
+          },
+        },
+      },
+      schemas: {
+        Opportunity: {
+          toCommon: explicitToCommon as any,
+          fromCommon: explicitFromCommon as any,
+        },
+      },
+    });
+
+    plugin.schemas.Opportunity.toCommon?.({});
+    expect(explicitToCommon).toHaveBeenCalledOnce();
+  });
+
+  it("disables auto-wiring when only one explicit callable is provided", () => {
+    const explicitToCommon = vi.fn(() => ({ result: {} as any, errors: [] }));
+
+    const plugin = definePlugin({
+      extensions: {
+        schemas: {
+          Opportunity: {
+            mappings: {
+              toCommon: autoWireToCommonMapping,
+              fromCommon: autoWireFromCommonMapping,
+            },
+          },
+        },
+      },
+      schemas: {
+        Opportunity: { toCommon: explicitToCommon as any },
+      },
+    });
+
+    // fromCommon is not auto-wired because explicitToCommon disables auto-wiring
+    expect(plugin.schemas.Opportunity.fromCommon).toBeUndefined();
+    plugin.schemas.Opportunity.toCommon?.({});
+    expect(explicitToCommon).toHaveBeenCalledOnce();
+  });
+
+  it("throws at definition time when mappings.fromCommon is absent", () => {
+    expect(() =>
+      definePlugin({
+        extensions: {
+          schemas: {
+            Opportunity: {
+              mappings: {
+                toCommon: autoWireToCommonMapping,
+                // fromCommon intentionally absent
+              },
+            },
+          },
+        },
+      })
+    ).toThrow(/Opportunity\.mappings\.fromCommon is required/);
+  });
+
+  it("throws at definition time when mappings.toCommon is absent", () => {
+    expect(() =>
+      definePlugin({
+        extensions: {
+          schemas: {
+            Opportunity: {
+              mappings: {
+                // toCommon intentionally absent
+                fromCommon: autoWireFromCommonMapping,
+              },
+            },
+          },
+        },
+      })
+    ).toThrow(/Opportunity\.mappings\.toCommon is required/);
+  });
+
+  it("auto-wired toCommon rejects unknown output fields via validateOutputPaths", () => {
+    expect(() =>
+      definePlugin({
+        extensions: {
+          schemas: {
+            Opportunity: {
+              mappings: {
+                toCommon: { unknownFieldXyz: { field: "data.x" } },
+                fromCommon: autoWireFromCommonMapping,
+              },
+            },
+          },
+        },
+      })
+    ).toThrow(/unknown output fields.*"unknownFieldXyz"/);
+  });
+
+  it("preserves native schema on schemas[Name] in the auto-wired branch", () => {
+    const nativeSchema = z.object({ native_id: z.string(), native_title: z.string() });
+
+    const plugin = definePlugin({
+      extensions: {
+        schemas: {
+          Opportunity: {
+            mappings: {
+              toCommon: autoWireToCommonMapping,
+              fromCommon: autoWireFromCommonMapping,
+            },
+          },
+        },
+      },
+      schemas: {
+        Opportunity: {
+          native: nativeSchema,
+        },
+      },
+    });
+
+    expect(plugin.schemas.Opportunity.native).toBe(nativeSchema);
+  });
+
+  it("no-ops cleanly when extensions is absent entirely", () => {
+    const plugin = definePlugin({});
+    expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
+    expect(plugin.schemas.Opportunity.fromCommon).toBeUndefined();
+  });
+
+  it("no-ops cleanly when extensions.schemas has no key for this model name", () => {
+    const plugin = definePlugin({ extensions: { schemas: {} } });
+    expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
+  });
+
+  it("no-ops cleanly when extensions.schemas[Name].mappings is undefined", () => {
+    const plugin = definePlugin({
+      extensions: { schemas: { Opportunity: { mappings: undefined } } },
+    });
+    expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
   });
 });

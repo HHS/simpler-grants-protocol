@@ -14,6 +14,7 @@ import type {
 } from "./types";
 import { EXTENSIBLE_SCHEMA_MAP } from "./types";
 import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fields";
+import { buildTransforms } from "./transforms";
 
 // ############################################################################
 // Public types - SchemasInput, DefinePluginOptions, Plugin
@@ -60,8 +61,10 @@ export interface DefinePluginOptions<T extends SchemasInput = SchemasInput> {
    *
    * This is the single surface for custom field declarations.
    *
-   * Stored as-is in the PoC (no compilation, no Zod-wrap); the full SDK compiles
-   * `ObjectSchemasInput` → `ObjectSchemas` and injects the generated `common` model.
+   * `definePlugin()` compiles this into runtime schemas: `common` is built via
+   * `withCustomFields()` when `customFields` are declared; `toCommon` / `fromCommon`
+   * are auto-wired from `extensions.schemas[Name].mappings` when no explicit
+   * callables are provided. Native input Zod-wrapping remains deferred.
    */
   schemas?: T;
 }
@@ -132,12 +135,48 @@ export function definePlugin<const T extends SchemasInput>(
       specs && Object.keys(specs).length > 0
         ? withCustomFields(extensibleSchema, specs)
         : extensibleSchema;
-    schemas[name] = {
-      common,
-      native: schemasInput?.[name]?.native,
-      toCommon: schemasInput?.[name]?.toCommon,
-      fromCommon: schemasInput?.[name]?.fromCommon,
-    };
+
+    const explicitToCommon = schemasInput?.[name]?.toCommon;
+    const explicitFromCommon = schemasInput?.[name]?.fromCommon;
+    const mappings = extensions?.schemas?.[name]?.mappings;
+    const nativeSchema = schemasInput?.[name]?.native;
+
+    // Auto-wire from declarative mappings when no explicit callables are supplied.
+    // All-or-nothing: any explicit callable disables auto-wiring for this object
+    // (mirrors Python's explicit_objs vs mappings_objs logic in generate.py).
+    let toCommon = explicitToCommon;
+    let fromCommon = explicitFromCommon;
+
+    if (
+      mappings !== undefined &&
+      explicitToCommon === undefined &&
+      explicitFromCommon === undefined
+    ) {
+      if (mappings.toCommon === undefined) {
+        throw new Error(
+          `definePlugin: ${name}.mappings.toCommon is required when auto-generating transforms. ` +
+            `Either provide both mapping directions or pass explicit toCommon/fromCommon callables.`
+        );
+      }
+      if (mappings.fromCommon === undefined) {
+        throw new Error(
+          `definePlugin: ${name}.mappings.fromCommon is required when auto-generating transforms. ` +
+            `Either provide both mapping directions or pass explicit toCommon/fromCommon callables.`
+        );
+      }
+      // Pass `common` as commonModel so validateOutputPaths runs against the
+      // fully-resolved schema (base or extended). Key-existence checking is correct
+      // regardless of whether customFields were declared — this is not the same as
+      // the "base schema weakens custom-field type validation" warning in buildTransforms'
+      // JSDoc, which applies to Zod-type checking of custom field values at runtime.
+      const built = buildTransforms(mappings.toCommon, mappings.fromCommon, undefined, common);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      toCommon = built.toCommon as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fromCommon = built.fromCommon as any;
+    }
+
+    schemas[name] = { common, native: nativeSchema, toCommon, fromCommon };
   }
 
   // Cast is safe — the runtime loop mirrors the PluginSchemas<T> mapped type,

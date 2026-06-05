@@ -26,8 +26,9 @@ import { DEFAULT_HANDLERS, HandlerError, transformFromMapping } from "./transfor
  * Handler arguments are runtime-only and skipped — they may legitimately be
  * arrays, deeply nested specs, or anything else the handler accepts. The
  * walker can't detect *unknown* handler names at static analysis time (an
- * unknown key is indistinguishable from an output field name); that
- * detection is deferred to the full SDK.
+ * unknown key is indistinguishable from an output field name); detection of
+ * unknown top-level output keys is now handled by `validateOutputPaths` when
+ * `commonModel` is provided; detection at arbitrary nesting depth remains deferred.
  *
  * Sibling keys at a handler-dispatch node are rejected here. The runtime
  * walker is first-key-wins, so `{ field: "x", const: "fallback" }` would
@@ -73,6 +74,43 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
     }
     validateMapping(value, knownHandlers, childPath);
   }
+}
+
+/**
+ * Validate that every top-level output key in `mapping` that is not a known
+ * handler name is a real field on `commonModel`.
+ *
+ * Only runs when `commonModel` is an instance of `z.ZodObject` — when it is
+ * not (e.g. `ZodRecord`, `ZodUnion`), returns without error. In practice all
+ * schemas produced by `withCustomFields()` and `OpportunityBaseSchema` are
+ * `ZodObject`s (`.extend()` / `.merge()` preserve the concrete type), so the
+ * fallback is a safety net, not an expected code path.
+ *
+ * Called only for `toCommonMapping` — `fromCommonMapping` maps to native
+ * format whose shape is unknown to this layer.
+ *
+ * Cross-SDK note: Python raises `ValueError`; TypeScript uses `Error` for
+ * all structural build-time failures (consistent with `validateMapping`).
+ *
+ * @internal
+ */
+function validateOutputPaths(
+  mapping: Record<string, unknown>,
+  knownHandlers: Set<string>,
+  // Bivariant `any` at the input position matches buildTransforms's own
+  // commonModel signature and avoids a contravariant `unknown` type error.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  commonModel: z.ZodType<unknown, z.ZodTypeDef, any>
+): void {
+  if (!(commonModel instanceof z.ZodObject)) return;
+  const validNames = new Set(Object.keys(commonModel.shape));
+  const outputKeys = Object.keys(mapping).filter(k => !knownHandlers.has(k));
+  const invalid = outputKeys.filter(k => !validNames.has(k));
+  if (invalid.length === 0) return;
+  throw new Error(
+    `buildTransforms (toCommonMapping): unknown output fields ${JSON.stringify(invalid.sort())} for schema. ` +
+      `Declare them as customFields in ObjectSchemasInput or check the field name.`
+  );
 }
 
 // ############################################################################
@@ -169,6 +207,9 @@ export function buildTransforms<TNative = unknown, TCommon = unknown>(
   // fail at build time, not on first invocation.
   validateMapping(toCommonMapping, known);
   validateMapping(fromCommonMapping, known);
+  if (commonModel !== undefined) {
+    validateOutputPaths(toCommonMapping, known, commonModel);
+  }
 
   const runMapping = (
     data: unknown,
