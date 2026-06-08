@@ -45,7 +45,10 @@ interface Applications {
   getApplication(
     /** The ID of the application to get */
     @path appId: Types.uuid,
-  ): Responses.Ok<Models.ApplicationBase> | Responses.NotFound | Responses.Unauthorized;
+  ):
+    | Responses.Ok<Models.ApplicationBase>
+    | Responses.NotFound
+    | Responses.Unauthorized;
 
   // ###############################
   // Submit an application
