@@ -267,9 +267,11 @@ export interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
 /**
  * Runtime compiled type produced by `definePlugin()` — not provided directly by authors.
  *
- * In the PoC, `definePlugin()` stores `ObjectSchemasInput` as-is on the returned
- * plugin's `transformSchemas` field. Full compilation (adding `common` from the
- * base CG model, wrapping with Zod validation) is deferred to the full SDK.
+ * `definePlugin()` now compiles `ObjectSchemasInput` into this shape: `common` is
+ * injected from the base CG model (extended via `withCustomFields()` when custom
+ * fields are declared), and `toCommon` / `fromCommon` are auto-wired from declarative
+ * mappings when no explicit callables are provided. Native input Zod-wrapping remains
+ * deferred.
  */
 export interface ObjectSchemas<TNative, TCommon> {
   native: z.ZodType<TNative>;
@@ -315,8 +317,8 @@ export interface ObjectMappings {
  *
  * `mappings` carries optional declarative mappings; when present and no
  * explicit `toCommon` / `fromCommon` is supplied in
- * `DefinePluginOptions.schemas`, `definePlugin()` will auto-invoke
- * `buildTransforms()` on these. Deferred to the full SDK.
+ * `DefinePluginOptions.schemas`, `definePlugin()` auto-invokes
+ * `buildTransforms()` on these at call time.
  *
  * @remarks
  * `customFields` lives on {@link ObjectSchemasInput} (inside

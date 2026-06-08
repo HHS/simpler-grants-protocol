@@ -508,3 +508,88 @@ describe("buildTransforms — custom handlers", () => {
     );
   });
 });
+
+// ############################################################################
+// Output key validation (commonModel provided)
+// ############################################################################
+
+describe("buildTransforms — output key validation (commonModel provided)", () => {
+  it("throws when a top-level mapping key is not a field on the schema", () => {
+    expect(() =>
+      buildTransforms({ titlee: { field: "data.title" } }, {}, undefined, OpportunityBaseSchema)
+    ).toThrow(/unknown output fields.*"titlee"/);
+  });
+
+  it("accepts all valid top-level schema field names", () => {
+    expect(() =>
+      buildTransforms({ title: { field: "data.title" } }, {}, undefined, OpportunityBaseSchema)
+    ).not.toThrow();
+  });
+
+  it("accepts valid fields on a schema extended with withCustomFields()", () => {
+    const extended = withCustomFields(OpportunityBaseSchema, {
+      legacyId: { fieldType: CustomFieldType.string },
+    });
+    // Base fields remain valid on the extended schema
+    expect(() =>
+      buildTransforms({ title: { field: "data.title" } }, {}, undefined, extended)
+    ).not.toThrow();
+  });
+
+  it("does not throw when commonModel is absent", () => {
+    // No commonModel → output key validation is skipped entirely
+    expect(() => buildTransforms({ notAField: { field: "data.x" } }, {})).not.toThrow();
+  });
+
+  it("silently passes when commonModel is not a ZodObject", () => {
+    // ZodRecord is not instanceof ZodObject — permissive fallback, no throw
+    const nonObjectModel = z.record(z.unknown());
+    expect(() =>
+      buildTransforms({ anyKey: { field: "data.x" } }, {}, undefined, nonObjectModel)
+    ).not.toThrow();
+  });
+
+  it("does not validate fromCommonMapping output keys", () => {
+    // fromCommon maps to native — no commonModel shape to validate against
+    expect(() =>
+      buildTransforms(
+        { title: { field: "data.title" } },
+        { notAField: { field: "title" } },
+        undefined,
+        OpportunityBaseSchema
+      )
+    ).not.toThrow();
+  });
+
+  it("reports multiple unknown fields in the same error", () => {
+    expect(
+      () =>
+        buildTransforms(
+          { titlee: { field: "data.title" }, descripton: { field: "data.desc" } },
+          {},
+          undefined,
+          OpportunityBaseSchema
+        )
+      // Keys are sorted before joining, so "descripton" comes before "titlee"
+    ).toThrow(/unknown output fields.*"descripton".*"titlee"/);
+  });
+
+  it("rejects a custom-field name placed at the top level, even on the extended schema", () => {
+    const extended = withCustomFields(OpportunityBaseSchema, {
+      legacyId: { fieldType: CustomFieldType.string },
+    });
+    // legacyId lives under `customFields`, never as a top-level key
+    expect(() =>
+      buildTransforms({ legacyId: { field: "data.x" } }, {}, undefined, extended)
+    ).toThrow(/unknown output fields.*"legacyId"/);
+  });
+
+  it("accepts a custom field mapped under the top-level customFields key", () => {
+    const extended = withCustomFields(OpportunityBaseSchema, {
+      legacyId: { fieldType: CustomFieldType.string },
+    });
+    expect(() =>
+      buildTransforms({ customFields: { legacyId: { field: "data.x" } } }, {}, undefined, extended)
+    ).not.toThrow();
+  });
+});
