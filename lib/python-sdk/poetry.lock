@@ -244,22 +244,22 @@ toml = ["tomli ; python_full_version <= \"3.11.0a6\""]
 
 [[package]]
 name = "datamodel-code-generator"
-version = "0.59.0"
+version = "0.59.1"
 description = "Datamodel Code Generator"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "datamodel_code_generator-0.59.0-py3-none-any.whl", hash = "sha256:c8c119ab618d24a619d635fef7aa9c96b69e069a4d287c9adfc148ae28368a69"},
-    {file = "datamodel_code_generator-0.59.0.tar.gz", hash = "sha256:054e4d5568c27db5a993f6b3e1d34af53bd1f6d1b6c18b7166908b0f3dc04bd4"},
+    {file = "datamodel_code_generator-0.59.1-py3-none-any.whl", hash = "sha256:8b9391a14986a853c4b129ca3e3fd8b905fac26d1801f82f2f79a46e3e29d75f"},
+    {file = "datamodel_code_generator-0.59.1.tar.gz", hash = "sha256:aef5794f58d2e85b7a603862a922985417d6610458a8f927b1660bd0d3955df1"},
 ]
 
 [package.dependencies]
 argcomplete = ">=2.10.1,<4"
-black = ">=19.10b0"
+black = {version = ">=19.10b0", markers = "sys_platform != \"emscripten\""}
 genson = ">=1.2.1,<2"
 inflect = ">=4.1,<8"
-isort = ">=4.3.21,<9"
+isort = {version = ">=4.3.21,<9", markers = "sys_platform != \"emscripten\""}
 jinja2 = ">=2.10.1,<4"
 pydantic = [
     {version = ">=2,<3", markers = "python_version < \"3.14\""},
@@ -407,6 +407,7 @@ description = "A Python utility / library to sort Python imports."
 optional = false
 python-versions = ">=3.10.0"
 groups = ["dev"]
+markers = "sys_platform != \"emscripten\""
 files = [
     {file = "isort-7.0.0-py3-none-any.whl", hash = "sha256:1bcabac8bc3c36c7fb7b98a76c8abb18e0f841a3ba81decac7691008592499c1"},
     {file = "isort-7.0.0.tar.gz", hash = "sha256:5513527951aadb3ac4292a41a16cbc50dd1642432f5e8c20057d414bdafb4187"},
