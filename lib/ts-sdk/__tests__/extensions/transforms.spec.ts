@@ -573,4 +573,23 @@ describe("buildTransforms — output key validation (commonModel provided)", () 
       // Keys are sorted before joining, so "descripton" comes before "titlee"
     ).toThrow(/unknown output fields.*"descripton".*"titlee"/);
   });
+
+  it("rejects a custom-field name placed at the top level, even on the extended schema", () => {
+    const extended = withCustomFields(OpportunityBaseSchema, {
+      legacyId: { fieldType: CustomFieldType.string },
+    });
+    // legacyId lives under `customFields`, never as a top-level key
+    expect(() =>
+      buildTransforms({ legacyId: { field: "data.x" } }, {}, undefined, extended)
+    ).toThrow(/unknown output fields.*"legacyId"/);
+  });
+
+  it("accepts a custom field mapped under the top-level customFields key", () => {
+    const extended = withCustomFields(OpportunityBaseSchema, {
+      legacyId: { fieldType: CustomFieldType.string },
+    });
+    expect(() =>
+      buildTransforms({ customFields: { legacyId: { field: "data.x" } } }, {}, undefined, extended)
+    ).not.toThrow();
+  });
 });

@@ -11,6 +11,7 @@ Add a TypeScript proof-of-concept for the plugin transformation framework (issue
 - `PluginError` — structured error class carrying `path`, `handler`, `sourceValue`, `cause`.
 - `transformFromMapping()`, `getFromPath()`, `DEFAULT_HANDLERS` — lower-level mapping runtime pieces; `DEFAULT_HANDLERS` is a `Map<string, Handler>` of six built-in handlers (`const`, `field`, `match` / `switch` alias, `numberToString`, `stringToNumber`).
 - `definePlugin()` accepts optional `meta: PluginMeta` and `schemas: SchemasInput`. All per-object declarations (custom fields, native schema, transforms) are co-located under `schemas[Object]` — `customFields` lives on `schemas[Object].customFields` rather than on the `extensions` key. The compiled `plugin.schemas[Object].common` holds the extended Zod schema.
+- `definePlugin()` **auto-wires transforms** from declarative `extensions.schemas[Name].mappings` at call time when no explicit `toCommon`/`fromCommon` callables are provided in `schemas[Name]`. The auto-wired path also runs `validateOutputPaths()` against the resolved schema (base or extended) so key-name mismatches are caught at `definePlugin()` call time rather than at runtime. Auto-wiring is all-or-nothing per object: any explicit callable disables it for that object.
 - New supporting types: `Handler`, `SchemasInput`, `ObjectSchemasInput`, `ObjectSchemas`, `PluginMeta`, `PluginCapability`, `ObjectMappings`, `PluginExtensionsObjectConfig`, `PluginExtensions`.
 
 **Three-state null handling (ADR-0024)** for optional fields:
@@ -24,9 +25,8 @@ Add a TypeScript proof-of-concept for the plugin transformation framework (issue
 
 - `mergeExtensions` has been removed from the public surface. Consumers who previously used `mergeExtensions` to combine extension objects should merge them manually (e.g. with object spread) before passing to `definePlugin`.
 
-**Out of scope** (deferred to full SDK):
+**Deferred to full SDK:**
 
-- Auto-generation of transforms from declarative `extensions.schemas[obj].mappings` inside `definePlugin()`.
-- Always-on `commonModel` validation inside `definePlugin()` — opt-in at `buildTransforms()` for now.
+- Always-on `commonModel` validation inside `definePlugin()` — opt-in at `buildTransforms()` call site for now (pass the fully extended schema as `commonModel` to enable Zod validation on `toCommon` output).
 
 Runnable example: `pnpm --filter @common-grants/sdk example:transforms` (round-trips a synthetic grants.gov record through `toCommon` and `fromCommon` with custom `join` / `split` handlers, extended-schema validation, and three-state null preservation on `source_url: null`).
