@@ -339,8 +339,12 @@ describe("definePlugin — auto-wiring from mappings", () => {
   });
 
   it("explicit callables take priority — any explicit callable disables auto-wiring for that object", () => {
-    const explicitToCommon = vi.fn(() => ({ result: { id: "explicit" } as any, errors: [] }));
-    const explicitFromCommon = vi.fn(() => ({ result: {} as any, errors: [] }));
+    const explicitToCommon = vi.fn(
+      (_: unknown): TransformResult<unknown> => ({ result: { id: "explicit" }, errors: [] })
+    );
+    const explicitFromCommon = vi.fn(
+      (_: unknown): TransformResult<unknown> => ({ result: {}, errors: [] })
+    );
 
     const plugin = definePlugin({
       extensions: {
@@ -355,8 +359,8 @@ describe("definePlugin — auto-wiring from mappings", () => {
       },
       schemas: {
         Opportunity: {
-          toCommon: explicitToCommon as any,
-          fromCommon: explicitFromCommon as any,
+          toCommon: explicitToCommon,
+          fromCommon: explicitFromCommon,
         },
       },
     });
@@ -366,7 +370,9 @@ describe("definePlugin — auto-wiring from mappings", () => {
   });
 
   it("disables auto-wiring when only one explicit callable is provided", () => {
-    const explicitToCommon = vi.fn(() => ({ result: {} as any, errors: [] }));
+    const explicitToCommon = vi.fn(
+      (_: unknown): TransformResult<unknown> => ({ result: {}, errors: [] })
+    );
 
     const plugin = definePlugin({
       extensions: {
@@ -380,7 +386,7 @@ describe("definePlugin — auto-wiring from mappings", () => {
         },
       },
       schemas: {
-        Opportunity: { toCommon: explicitToCommon as any },
+        Opportunity: { toCommon: explicitToCommon },
       },
     });
 
