@@ -109,7 +109,9 @@ function validateOutputPaths(
   if (invalid.length === 0) return;
   throw new Error(
     `buildTransforms (toCommonMapping): unknown output fields ${JSON.stringify(invalid.sort())} for schema. ` +
-      `Declare them as customFields in ObjectSchemasInput or check the field name.`
+      `If these are custom fields, map them under the top-level "customFields" key ` +
+      `(e.g. { customFields: { yourField: ... } }), not as top-level keys, and declare them in schemas[Object].customFields. ` +
+      `Otherwise check the field name.`
   );
 }
 
