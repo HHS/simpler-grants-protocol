@@ -343,6 +343,23 @@ def test_classify_default_wrong_shape_raises_plugin_error():
     assert isinstance(exc_info.value.__cause__, ValidationError)
 
 
+def test_validate_filter_call_integer_comparison_rejects_non_integer():
+    """A registered integerComparison filter raises PluginError for a fractional value.
+
+    integerComparison validates against IntegerComparisonFilter (strict int),
+    not the looser NumberComparisonFilter.
+    """
+    spec = CustomFilterSpec(filter_type=CustomFilterType.INTEGER_COMPARISON)
+    with pytest.raises(PluginError):
+        validate_filter_call(spec, "awardCount", f.gt(100.5))
+
+
+def test_validate_filter_call_integer_comparison_passes_valid_int():
+    """A registered integerComparison filter accepts an integer value."""
+    spec = CustomFilterSpec(filter_type=CustomFilterType.INTEGER_COMPARISON)
+    validate_filter_call(spec, "awardCount", f.gt(100))
+
+
 def test_classify_default_camel_alias_wrong_shape_raises_plugin_error():
     """A wrong-shaped default filter via its camelCase alias also raises PluginError.
 

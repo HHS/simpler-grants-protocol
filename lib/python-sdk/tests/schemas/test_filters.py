@@ -29,6 +29,7 @@ from common_grants_sdk.schemas.pydantic.filters.money import (
     InvalidMoneyValueError,
 )
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
+    IntegerComparisonFilter,
     NumberArrayFilter,
     NumberComparisonFilter,
     NumberRange,
@@ -551,3 +552,33 @@ def test_boolean_comparison_filter_rejects_invalid_value():
 
     with pytest.raises(ValidationError):
         BooleanComparisonFilter(operator="eq", value=42)
+
+
+def test_integer_comparison_filter_constructs():
+    """IntegerComparisonFilter constructs with valid operator and integer value."""
+    filter_obj = IntegerComparisonFilter(operator="gt", value=100)
+    assert filter_obj.operator == ComparisonOperator.GREATER_THAN
+    assert filter_obj.value == 100
+
+
+def test_integer_comparison_filter_rejects_non_integer_float():
+    """IntegerComparisonFilter raises ValidationError for a fractional value."""
+    with pytest.raises(ValidationError):
+        IntegerComparisonFilter(operator="gt", value=100.5)
+
+
+def test_integer_comparison_filter_rejects_numeric_string():
+    """IntegerComparisonFilter raises ValidationError for a numeric string (strict int).
+
+    Mirrors the TS IntegerComparisonFilterSchema, where z.number().int()
+    rejects string input; the strict annotation disables pydantic's lax
+    str -> int coercion.
+    """
+    with pytest.raises(ValidationError):
+        IntegerComparisonFilter(operator="gt", value="100")
+
+
+def test_integer_comparison_filter_rejects_invalid_operator():
+    """IntegerComparisonFilter raises ValidationError for non-comparison operators."""
+    with pytest.raises(ValidationError):
+        IntegerComparisonFilter(operator="in", value=100)

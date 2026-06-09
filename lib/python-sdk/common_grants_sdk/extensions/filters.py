@@ -38,6 +38,7 @@ from common_grants_sdk.schemas.pydantic.filters.money import (
     MoneyRangeFilter,
 )
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
+    IntegerComparisonFilter,
     NumberArrayFilter,
     NumberComparisonFilter,
     NumberRangeFilter,
@@ -135,17 +136,16 @@ f = _FHelpers()
 # ---------------------------------------------------------------------------
 
 #: Maps each CustomFilterType to the Pydantic model used to validate operator/value shape.
-#: ``integerComparison`` reuses ``NumberComparisonFilter`` — a dedicated integer schema
-#: with int-only validation is deferred (mirrors the TS SDK, where
-#: ``integerComparison`` reuses ``NumberComparisonFilterSchema``).
-#: ``booleanComparison`` uses the SDK-level ``BooleanComparisonFilter``.
+#: ``integerComparison`` and ``booleanComparison`` use the SDK-level
+#: ``IntegerComparisonFilter`` / ``BooleanComparisonFilter`` models (parallel to the
+#: TS SDK's ``IntegerComparisonFilterSchema`` / ``BooleanComparisonFilterSchema``).
 FILTER_TYPE_SCHEMAS: dict[CustomFilterType, type[BaseModel]] = {
     CustomFilterType.STRING_COMPARISON: StringComparisonFilter,
     CustomFilterType.STRING_ARRAY: StringArrayFilter,
     CustomFilterType.NUMBER_COMPARISON: NumberComparisonFilter,
     CustomFilterType.NUMBER_ARRAY: NumberArrayFilter,
     CustomFilterType.NUMBER_RANGE: NumberRangeFilter,
-    CustomFilterType.INTEGER_COMPARISON: NumberComparisonFilter,  # reuse — see note above
+    CustomFilterType.INTEGER_COMPARISON: IntegerComparisonFilter,
     CustomFilterType.BOOLEAN_COMPARISON: BooleanComparisonFilter,
     CustomFilterType.DATE_COMPARISON: DateComparisonFilter,
     CustomFilterType.DATE_RANGE: DateRangeFilter,

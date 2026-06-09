@@ -2,7 +2,7 @@
 
 from typing import Union
 
-from pydantic import Field, field_validator
+from pydantic import Field, StrictInt, field_validator
 
 from ..base import CommonGrantsBaseModel
 from .base import (
@@ -32,6 +32,31 @@ class NumberComparisonFilter(CommonGrantsBaseModel):
     )
     value: Union[int, float] = Field(
         ..., description="The numeric value to compare against"
+    )
+
+    @field_validator("operator", mode="before")
+    @classmethod
+    def validate_operator(cls, v):
+        """Convert string to enum if needed."""
+        if isinstance(v, str):
+            return ComparisonOperator(v)
+        return v
+
+
+class IntegerComparisonFilter(CommonGrantsBaseModel):
+    """Filter that matches integers against a specific value.
+
+    Strict integer: fractional values and numeric strings are rejected
+    (mirrors the TS SDK's IntegerComparisonFilterSchema, where
+    ``z.number().int()`` rejects both).
+    """
+
+    operator: ComparisonOperator = Field(
+        ...,
+        description="The comparison operator to apply to the filter value",
+    )
+    value: StrictInt = Field(
+        ..., description="The integer value to compare against"
     )
 
     @field_validator("operator", mode="before")

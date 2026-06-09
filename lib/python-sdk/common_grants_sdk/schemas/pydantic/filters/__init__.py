@@ -21,6 +21,7 @@ __all__ = [  # noqa: RUF022
     # Boolean Filters
     "BooleanComparisonFilter",
     # Numeric Filters
+    "IntegerComparisonFilter",
     "NumberArrayFilter",
     "NumberComparisonFilter",
     "NumberRange",
@@ -54,6 +55,7 @@ from .money import (
     InvalidMoneyValueError,
 )
 from .numeric import (
+    IntegerComparisonFilter,
     NumberArrayFilter,
     NumberComparisonFilter,
     NumberRange,
