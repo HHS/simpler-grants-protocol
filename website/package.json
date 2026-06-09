@@ -81,7 +81,7 @@
     "starlight-links-validator": "^0.24.0",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
-    "wrangler": "^4.98.0"
+    "wrangler": "^4.99.0"
   },
   "overrides": {
     "js-yaml": "^4.2.0"
