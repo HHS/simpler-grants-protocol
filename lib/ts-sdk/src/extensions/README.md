@@ -35,7 +35,7 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [Routes vs. schemas — a critical distinction](#routes-vs-schemas--a-critical-distinction)
   - [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)
   - [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers)
-  - [Classifying consumer filters into the wire body](#classifying-consumer-filters-into-the-wire-body)
+  - [Classifying consumer filters into the request body](#classifying-consumer-filters-into-the-request-body)
   - [Validation — registration-time and call-time](#validation--registration-time-and-call-time)
   - [The `as const` trap](#the-as-const-trap)
 - [Best practices](#best-practices)
@@ -607,15 +607,19 @@ for (const err of out.errors) {
 
 > **Status:** Proof-of-concept (issue [#868](https://github.com/HHS/simpler-grants-protocol/issues/868), design spike [#646](https://github.com/HHS/simpler-grants-protocol/issues/646)). Feeds forthcoming ADR-0022 / ADR-0012 amendments. Contract follows [ADR-0012](https://commongrants.org/governance/adr/0012-filtering/) and [ADR-0022](https://commongrants.org/governance/adr/0022-plugin-framework/).
 
-Plugins can declare custom filter specs per route-method. At search time, a single flat consumer `filters` object is classified into the ADR-0012 wire body: default fields land as named top-level fields; custom and ad-hoc keys land under `customFilters`.
+Plugins can declare custom filter specs per route-method. At search time, a single flat consumer `filters` object is classified into the body of the search request sent to the API (the `OppFilters` shape from ADR-0012): default fields land as named top-level fields; custom and ad-hoc keys land under `customFilters`.
 
 ### Routes vs. schemas — a critical distinction
 
 > [!IMPORTANT]
-> Custom **filters** attach to resource **methods** (routes), not to schemas. Custom **fields** attach to schemas. These two extension points use different keys on `definePlugin()`:
+> Custom **filters** attach to resource **methods** (routes), not to schemas. Custom **fields** attach to schemas. These two extension points use different keys on the same `definePlugin()` call:
 >
-> - `definePlugin({ routes: { <resource>: { <method>: { filters: ... } } } })` — custom filters (this section)
-> - `definePlugin({ schemas: { <Model>: { customFields: ... } } })` — custom fields (see [Build-time with plugins](#option-2-build-time-with-plugins))
+> ```typescript
+> definePlugin({
+>   routes: { opportunities: { search: { filters: { ... } } } }, // custom filters (this section)
+>   schemas: { Opportunity: { customFields: { ... } } }, // custom fields (see "Build-time with plugins")
+> } as const);
+> ```
 >
 > The reason: filter declarations vary per route-method (e.g. `opportunities.search` may support different filters than `applications.list`), whereas custom fields are schema-level concerns shared across all operations that return the model.
 
@@ -665,11 +669,11 @@ Each filter entry is a `CustomFilterSpec`: `{ filterType: CustomFilterType; desc
 | `numberComparison`  | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `number`       |
 | `numberArray`       | `in`, `notIn`                         | `number[]`     |
 | `numberRange`       | `between`, `outside`                  | `{ min, max }` |
-| `integerComparison` | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `number`       |
+| `integerComparison` | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `number` (int) |
 | `booleanComparison` | `eq`, `neq`                           | `boolean`      |
-| `dateComparison`    | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `string` (ISO) |
+| `dateComparison`    | `gt`, `gte`, `lt`, `lte`              | `string` (ISO) |
 | `dateRange`         | `between`, `outside`                  | `{ min, max }` |
-| `moneyComparison`   | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `Money`        |
+| `moneyComparison`   | `gt`, `gte`, `lt`, `lte`              | `Money`        |
 | `moneyRange`        | `between`, `outside`                  | `{ min, max }` |
 
 The `F` namespace provides helpers that compile `{ operator, value }` filter objects without manual construction:
@@ -686,15 +690,17 @@ F.between("2025-01-01", "2025-12-31"); // { operator: "between", value: { min: "
 
 > **Cross-SDK note.** TypeScript uses `F.in` (`"in"` as an object key — valid JS). The Python sibling SDK ([#869](https://github.com/HHS/simpler-grants-protocol/issues/869)) uses `f.in_` (trailing underscore, Python convention for reserved words). This is a documented naming divergence across SDKs.
 
-### Classifying consumer filters into the wire body
+### Classifying consumer filters into the request body
 
-`classifyFilters()` accepts the plugin's `routes`, a resource name, a method name, and the consumer's flat `filters` object. It returns an `OppFilters` wire body conforming to ADR-0012:
+`definePlugin()` registers filter **declarations** — which filter names exist and what type each one is. `classifyFilters()` is the separate **search-time** step: it takes the consumer's actual filter values and produces the body of the request sent to the API. In the full SDK the client will call it internally when you invoke a search method — consumers won't call it directly. The PoC exposes it standalone because client wiring is out of scope (tracked under [#645](https://github.com/HHS/simpler-grants-protocol/issues/645)).
+
+`classifyFilters()` accepts the plugin's `routes`, a resource name, a method name, and the consumer's flat `filters` object. It returns an `OppFilters` request body conforming to ADR-0012:
 
 ```typescript
 import { classifyFilters } from "@common-grants/sdk/extensions";
 
 const consumerFilters = {
-  // Default filters → top-level named fields on the wire body
+  // Default filters → top-level named fields on the request body
   status: F.in(["open", "forecasted"]),
   closeDateRange: F.between("2025-01-01", "2025-12-31"),
 
@@ -706,13 +712,13 @@ const consumerFilters = {
   legacyTag: F.eq("conservation-2024"),
 };
 
-const wireBody = classifyFilters(
+const requestBody = classifyFilters(
   grantsGovPlugin.routes!, // routes is optional on Plugin; assert non-null when known
   "opportunities",
   "search",
   consumerFilters
 );
-// wireBody shape (ADR-0012):
+// requestBody shape (ADR-0012):
 // {
 //   status: { operator: "in", value: ["open", "forecasted"] },
 //   closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
@@ -726,7 +732,7 @@ const wireBody = classifyFilters(
 
 The three-bucket classification rule (ADR-0012):
 
-1. **Default filters** (`status`, `closeDateRange`, etc.) → named top-level fields on the wire body.
+1. **Default filters** (`status`, `closeDateRange`, etc.) → named top-level fields on the request body.
 2. **Pre-registered custom filters** (declared in `routes.*.*.filters`) → `customFilters` record, with operator/value-shape validation against the declared `filterType`.
 3. **Ad-hoc filters** (not declared, including `gov.<system>@<filterName>` namespaced keys) → `customFilters` passthrough, shape-only validated.
 
@@ -737,10 +743,13 @@ For a complete runnable example with assertions, see [`examples/custom-filters.t
 `validateRoutes()` is called at registration time. It throws `PluginError` if:
 
 - A filter spec uses an unknown `filterType` value.
-- Duplicate filter names exist within a route-method.
 - A custom filter name collides with a default filter field name (e.g. registering `"status"` would shadow the protocol's standard `status` filter).
 
-`validateFilterCall()` validates individual filters at call time. For registered filters it validates the operator and value shape against the declared `filterType`. For ad-hoc filters it applies a shape-only check (`DefaultFilterSchema`).
+`validateFilterCall()` validates individual filters at call time. For registered filters it validates the operator and value shape against the declared `filterType`. For ad-hoc filters it applies a shape-only check (`DefaultFilterSchema`). `classifyFilters()` already runs it for every key — you only call it directly when validating a single filter outside classification.
+
+In the PoC, `definePlugin()` passes `routes` through **unvalidated** — the full SDK client will run `validateRoutes()` when a plugin is attached and call-time validation inside each search. Until then, call `validateRoutes()` yourself after defining a plugin if you want registration-time errors surfaced early.
+
+> **PII note:** as with transforms, `PluginError.sourceValue` carries the raw input — here, the consumer's filter value. The [PII warning](#error-handling) above applies equally; log a redacted projection.
 
 ```typescript
 import { validateRoutes, validateFilterCall } from "@common-grants/sdk/extensions";
@@ -760,7 +769,7 @@ validateFilterCall(agencySpec, "agency", F.in(["HHS"])); // valid: in operator +
 > [!IMPORTANT]
 > Always pass `as const` to `definePlugin()` when declaring `routes`. Without it, TypeScript widens literal `filterType` values from specific strings (e.g. `"stringArray"`) to the broad `string` type, and the `TypedConsumerFilters` narrowing layer collapses to `Record<string, unknown>`. Unknown filter keys, wrong operators, and wrong value shapes then silently pass the type checker.
 
-The compile-time proof is in [`__tests__/extensions/custom-filters-types.spec.ts`](../../__tests__/extensions/custom-filters-types.spec.ts). Four live `@ts-expect-error` directives guard actual compile errors that fire with `as const`; a widening-demo block shows those same errors disappearing when the plugin is stored without preserving the `TRoutes` generic.
+The compile-time proof is in [`__tests__/extensions/custom-filters-types.spec.ts`](../../__tests__/extensions/custom-filters-types.spec.ts). Six live `@ts-expect-error` directives guard actual compile errors that fire with `as const`; a widening-demo block shows those same errors disappearing when the plugin is stored without preserving the `TRoutes` generic.
 
 ## Best practices
 
@@ -864,8 +873,8 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 | Export                                        | Kind      | Description                                                                                                                                                                                                                         | Demonstrated in                                                                     |
 | --------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [`classifyFilters()`](./custom-filters.ts)    | function  | Three-bucket classifier. Maps a flat consumer `filters` object to the ADR-0012 `OppFilters` wire body: default fields → top-level named fields; registered custom + ad-hoc → `customFilters` record.                                | [Classifying consumer filters](#classifying-consumer-filters-into-the-wire-body)    |
-| [`validateRoutes()`](./custom-filters.ts)     | function  | Registration-time validator. Throws `PluginError` on unknown `filterType`, duplicate filter names, or default-field name collisions.                                                                                                | [Validation](#validation--registration-time-and-call-time)                          |
+| [`classifyFilters()`](./custom-filters.ts)    | function  | Three-bucket classifier. Maps a flat consumer `filters` object to the ADR-0012 `OppFilters` request body: default fields → top-level named fields; registered custom + ad-hoc → `customFilters` record.                             | [Classifying consumer filters](#classifying-consumer-filters-into-the-request-body) |
+| [`validateRoutes()`](./custom-filters.ts)     | function  | Registration-time validator. Throws `PluginError` on unknown `filterType` or default-field name collisions.                                                                                                                         | [Validation](#validation--registration-time-and-call-time)                          |
 | [`validateFilterCall()`](./custom-filters.ts) | function  | Call-time validator. Validates a single filter against its declared `filterType` schema (registered) or shape-only (ad-hoc). Throws `PluginError` on mismatch.                                                                      | [Validation](#validation--registration-time-and-call-time)                          |
 | [`F`](./custom-filters.ts)                    | namespace | Helper namespace. `F.eq`, `F.neq`, `F.gt`, `F.gte`, `F.lt`, `F.lte`, `F.in`, `F.notIn`, `F.like`, `F.notLike`, `F.between`, `F.outside` — each compiles to `{ operator, value }`. Note: `F.in` is `"in"` as an object property key. | [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers) |
 | [`CustomFilterSpec`](./types.ts)              | interface | Per-filter declaration: `{ filterType: CustomFilterType; description?: string }`. Operators are derived from `filterType`; no `value` field.                                                                                        | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |

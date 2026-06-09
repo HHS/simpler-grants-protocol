@@ -6,7 +6,7 @@
  *      (status, closeDateRange), pre-registered custom filters (agency,
  *      fundingProgram), and an ad-hoc filter (legacyTag) — using `F.*` helpers.
  *      Control fields (query, maxResults, signal, schema) stay OUTSIDE `filters`.
- *   3. Calling `classifyFilters` to produce the ADR-0012 wire body:
+ *   3. Calling `classifyFilters` to produce the ADR-0012 request body:
  *      default fields at top-level, custom + ad-hoc under `customFilters`.
  *   4. A COMMENT block (not executed) demonstrating the `as const` widening
  *      trap — see custom-filters-types.spec.ts for the live compile-time proof.
@@ -15,7 +15,7 @@
  *
  * @remarks
  * The three-bucket classification rule (ADR-0012):
- *   - Default filters (status, closeDateRange, ...) → named top-level fields on the wire body.
+ *   - Default filters (status, closeDateRange, ...) → named top-level fields on the request body.
  *   - Pre-registered custom filters (agency, fundingProgram) → `customFilters` record.
  *   - Ad-hoc filters (legacyTag) → `customFilters` passthrough (shape-only validated).
  *
@@ -83,7 +83,7 @@ const searchParams = {
 
   // The flat consumer filters object
   filters: {
-    // Default filters — will land as named top-level fields on the wire body
+    // Default filters — will land as named top-level fields on the request body
     status: F.in(["open", "forecasted"]),
     closeDateRange: F.between("2025-01-01", "2025-12-31"),
 
@@ -102,26 +102,26 @@ console.log("Consumer-facing filters (flat):");
 console.log(JSON.stringify(searchParams.filters, null, 2));
 
 // ############################################################################
-// Step 3 — Classify into the ADR-0012 OppFilters wire body
+// Step 3 — Classify into the ADR-0012 OppFilters request body
 // ############################################################################
 
 // `classifyFilters` runs the three-bucket classification:
-//   1. status, closeDateRange → top-level named wire fields
+//   1. status, closeDateRange → top-level named request-body fields
 //   2. agency, fundingProgram (registered) → customFilters record
 //   3. legacyTag (ad-hoc) → customFilters passthrough
 // `grantsGovPlugin.routes` is non-null here — we declared it above as a
 // non-optional literal object. The `!` assertion removes the `undefined` from
 // the union type that `Plugin.routes?:` introduces (routes is optional in the
 // interface to support plugins that don't declare filters).
-const wireBody = classifyFilters(
+const requestBody = classifyFilters(
   grantsGovPlugin.routes!,
   "opportunities",
   "search",
   searchParams.filters
 );
 
-console.log("\n=== Step 3: Classified wire body (OppFilters) ===");
-console.log(JSON.stringify(wireBody, null, 2));
+console.log("\n=== Step 3: Classified request body (OppFilters) ===");
+console.log(JSON.stringify(requestBody, null, 2));
 
 // ############################################################################
 // Assertions — verify the three-bucket classification
@@ -133,21 +133,21 @@ function fail(message: string): never {
 }
 
 // Default filters must appear as named top-level fields
-if (!wireBody.status) fail("status should be a top-level field (default filter bucket)");
-if (!wireBody.closeDateRange)
+if (!requestBody.status) fail("status should be a top-level field (default filter bucket)");
+if (!requestBody.closeDateRange)
   fail("closeDateRange should be a top-level field (default filter bucket)");
 
 // Custom + ad-hoc filters must land in customFilters record
-if (!wireBody.customFilters) fail("customFilters should exist for registered + ad-hoc filters");
-if (!wireBody.customFilters.agency)
+if (!requestBody.customFilters) fail("customFilters should exist for registered + ad-hoc filters");
+if (!requestBody.customFilters.agency)
   fail("agency should be in customFilters (registered custom filter)");
-if (!wireBody.customFilters.fundingProgram)
+if (!requestBody.customFilters.fundingProgram)
   fail("fundingProgram should be in customFilters (registered custom filter)");
-if (!wireBody.customFilters.legacyTag)
+if (!requestBody.customFilters.legacyTag)
   fail("legacyTag should be in customFilters (ad-hoc passthrough)");
 
 // Default filter keys must NOT appear under customFilters
-if ((wireBody.customFilters as Record<string, unknown>).status)
+if ((requestBody.customFilters as Record<string, unknown>).status)
   fail("status must NOT be in customFilters — it is a default filter");
 
 console.log("\n=== Assertions passed ===");
