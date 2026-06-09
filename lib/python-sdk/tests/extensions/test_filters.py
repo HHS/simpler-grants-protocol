@@ -14,7 +14,6 @@ from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterTyp
 from common_grants_sdk.extensions.types import PluginError
 from common_grants_sdk.schemas.pydantic.filters.opportunity import OppFilters
 
-
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------
@@ -104,7 +103,9 @@ def test_f_outside():
 def test_classify_default_snake_key_lands_in_named_field():
     """Default snake_case key (e.g. "status") lands in a named OppFilters field, not customFilters."""
     consumer_filters = {"status": f.in_(["open"])}
-    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
     assert isinstance(result, OppFilters)
     assert result.status is not None
     assert result.custom_filters is None
@@ -113,7 +114,9 @@ def test_classify_default_snake_key_lands_in_named_field():
 def test_classify_default_camel_alias_lands_in_named_field():
     """THE LANDMINE: camelCase alias "closeDateRange" must land in named field, NOT customFilters."""
     consumer_filters = {"closeDateRange": f.between("2026-01-01", "2026-12-31")}
-    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
     assert isinstance(result, OppFilters)
     # The camelCase alias must normalize to the snake_case field
     assert result.close_date_range is not None
@@ -125,7 +128,9 @@ def test_classify_default_camel_alias_lands_in_named_field():
 def test_classify_registered_custom_filter_lands_in_custom_filters():
     """A registered custom filter (e.g. "agency") lands in OppFilters.custom_filters."""
     consumer_filters = {"agency": f.in_(["NSF", "NIH"])}
-    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
     assert isinstance(result, OppFilters)
     assert result.custom_filters is not None
     assert "agency" in result.custom_filters
@@ -134,7 +139,9 @@ def test_classify_registered_custom_filter_lands_in_custom_filters():
 def test_classify_adhoc_unregistered_filter_lands_in_custom_filters():
     """An unregistered ad-hoc key (e.g. "legacyTag") passes through to customFilters."""
     consumer_filters = {"legacyTag": f.eq("priority")}
-    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
     assert isinstance(result, OppFilters)
     assert result.custom_filters is not None
     assert "legacyTag" in result.custom_filters
@@ -143,7 +150,9 @@ def test_classify_adhoc_unregistered_filter_lands_in_custom_filters():
 def test_classify_escape_hatch_key_lands_in_custom_filters():
     """gov.<system>@<filter> escape-hatch keys pass through to customFilters."""
     consumer_filters = {"gov.someSystem@someFilter": f.eq("test")}
-    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
     assert isinstance(result, OppFilters)
     assert result.custom_filters is not None
     assert "gov.someSystem@someFilter" in result.custom_filters
@@ -164,7 +173,9 @@ def test_wire_body_has_default_fields_at_top_level_and_custom_filters_nested():
         "agency": f.in_(["NSF"]),
         "legacyTag": f.eq("priority"),
     }
-    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
     wire = result.model_dump(by_alias=True, exclude_none=True)
 
     # Default field appears at top level
@@ -180,7 +191,9 @@ def test_wire_body_has_default_fields_at_top_level_and_custom_filters_nested():
 def test_wire_body_no_custom_filters_key_when_all_defaults():
     """customFilters key is absent from wire body when all filters are default fields."""
     consumer_filters = {"status": f.in_(["open"])}
-    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
     wire = result.model_dump(by_alias=True, exclude_none=True)
     assert "customFilters" not in wire
 
@@ -198,9 +211,13 @@ def test_oppfilters_mixed_case_roundtrip():
     """
     consumer_filters = {
         "status": f.in_(["open", "forecasted"]),  # snake_case default
-        "closeDateRange": f.between("2026-01-01", "2026-12-31"),  # camelCase alias default
+        "closeDateRange": f.between(
+            "2026-01-01", "2026-12-31"
+        ),  # camelCase alias default
     }
-    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
     assert isinstance(result, OppFilters)
 
     # camelCase alias must land in named field
@@ -292,6 +309,7 @@ def test_validate_filter_call_registered_bad_operator_raises():
 
 def test_validate_filter_call_adhoc_invalid_shape_raises():
     """validate_filter_call raises PluginError when an ad-hoc filter has an invalid DefaultFilter shape."""
+
     # Pass None as spec (ad-hoc), with something that isn't a DefaultFilter
     class _BadShape:
         operator = "not_a_real_operator"

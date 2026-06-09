@@ -19,17 +19,36 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, ValidationError
 
-from common_grants_sdk.schemas.pydantic.filters.base import DefaultFilter
+from common_grants_sdk.schemas.pydantic.filters.base import (
+    ArrayOperator,
+    ComparisonOperator,
+    DefaultFilter,
+    EquivalenceOperator,
+    RangeOperator,
+    StringOperator,
+)
 from common_grants_sdk.schemas.pydantic.filters.boolean import BooleanComparisonFilter
-from common_grants_sdk.schemas.pydantic.filters.date import DateComparisonFilter, DateRangeFilter
-from common_grants_sdk.schemas.pydantic.filters.money import MoneyComparisonFilter, MoneyRangeFilter
+from common_grants_sdk.schemas.pydantic.filters.date import (
+    DateComparisonFilter,
+    DateRangeFilter,
+)
+from common_grants_sdk.schemas.pydantic.filters.money import (
+    MoneyComparisonFilter,
+    MoneyRangeFilter,
+)
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
     NumberArrayFilter,
     NumberComparisonFilter,
     NumberRangeFilter,
 )
-from common_grants_sdk.schemas.pydantic.filters.opportunity import OppDefaultFilters, OppFilters
-from common_grants_sdk.schemas.pydantic.filters.string import StringArrayFilter, StringComparisonFilter
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    OppDefaultFilters,
+    OppFilters,
+)
+from common_grants_sdk.schemas.pydantic.filters.string import (
+    StringArrayFilter,
+    StringComparisonFilter,
+)
 
 from .specs import CustomFilterSpec, CustomFilterType
 from .types import PluginError, PluginRoutes
@@ -52,51 +71,59 @@ class _FHelpers:
 
     def eq(self, value: Any) -> DefaultFilter:
         """Return DefaultFilter(operator="eq", value=value)."""
-        return DefaultFilter(operator="eq", value=value)
+        return DefaultFilter(operator=EquivalenceOperator.EQUAL, value=value)
 
     def neq(self, value: Any) -> DefaultFilter:
         """Return DefaultFilter(operator="neq", value=value)."""
-        return DefaultFilter(operator="neq", value=value)
+        return DefaultFilter(operator=EquivalenceOperator.NOT_EQUAL, value=value)
 
     def gt(self, value: Any) -> DefaultFilter:
         """Return DefaultFilter(operator="gt", value=value)."""
-        return DefaultFilter(operator="gt", value=value)
+        return DefaultFilter(operator=ComparisonOperator.GREATER_THAN, value=value)
 
     def gte(self, value: Any) -> DefaultFilter:
         """Return DefaultFilter(operator="gte", value=value)."""
-        return DefaultFilter(operator="gte", value=value)
+        return DefaultFilter(
+            operator=ComparisonOperator.GREATER_THAN_OR_EQUAL, value=value
+        )
 
     def lt(self, value: Any) -> DefaultFilter:
         """Return DefaultFilter(operator="lt", value=value)."""
-        return DefaultFilter(operator="lt", value=value)
+        return DefaultFilter(operator=ComparisonOperator.LESS_THAN, value=value)
 
     def lte(self, value: Any) -> DefaultFilter:
         """Return DefaultFilter(operator="lte", value=value)."""
-        return DefaultFilter(operator="lte", value=value)
+        return DefaultFilter(
+            operator=ComparisonOperator.LESS_THAN_OR_EQUAL, value=value
+        )
 
     def in_(self, value: list[Any]) -> DefaultFilter:
         """Return DefaultFilter with wire operator "in" (Python keyword workaround: f.in_)."""
-        return DefaultFilter(operator="in", value=value)
+        return DefaultFilter(operator=ArrayOperator.IN, value=value)
 
     def not_in(self, value: list[Any]) -> DefaultFilter:
         """Return DefaultFilter with wire operator "notIn" (Python f.not_in vs TS F.notIn)."""
-        return DefaultFilter(operator="notIn", value=value)
+        return DefaultFilter(operator=ArrayOperator.NOT_IN, value=value)
 
     def like(self, value: str) -> DefaultFilter:
         """Return DefaultFilter(operator="like", value=value)."""
-        return DefaultFilter(operator="like", value=value)
+        return DefaultFilter(operator=StringOperator.LIKE, value=value)
 
     def not_like(self, value: str) -> DefaultFilter:
         """Return DefaultFilter(operator="notLike", value=value)."""
-        return DefaultFilter(operator="notLike", value=value)
+        return DefaultFilter(operator=StringOperator.NOT_LIKE, value=value)
 
     def between(self, min: Any, max: Any) -> DefaultFilter:
         """Return DefaultFilter(operator="between", value={"min": min, "max": max})."""
-        return DefaultFilter(operator="between", value={"min": min, "max": max})
+        return DefaultFilter(
+            operator=RangeOperator.BETWEEN, value={"min": min, "max": max}
+        )
 
     def outside(self, min: Any, max: Any) -> DefaultFilter:
         """Return DefaultFilter(operator="outside", value={"min": min, "max": max})."""
-        return DefaultFilter(operator="outside", value={"min": min, "max": max})
+        return DefaultFilter(
+            operator=RangeOperator.OUTSIDE, value={"min": min, "max": max}
+        )
 
 
 #: Module-level singleton — use as ``f.eq(...)``, ``f.in_([...])``, etc.
@@ -194,7 +221,9 @@ def validate_routes(routes: PluginRoutes) -> None:  # noqa: C901
     """
     for resource, methods in routes.items():
         for method, filter_specs in methods.items():
-            seen: set[str] = set()  # unreachable with dict semantics; retained for a future list-of-pairs API
+            seen: set[str] = (
+                set()
+            )  # unreachable with dict semantics; retained for a future list-of-pairs API
             for filter_name, spec in filter_specs.items():
                 path = f"routes.{resource}.{method}.{filter_name}"
                 if spec.filter_type not in FILTER_TYPE_SCHEMAS:
@@ -209,7 +238,9 @@ def validate_routes(routes: PluginRoutes) -> None:  # noqa: C901
                         path=path,
                         source_value=filter_name,
                     )
-                if filter_name in seen:  # forward-looking guard; unreachable with dict semantics
+                if (
+                    filter_name in seen
+                ):  # forward-looking guard; unreachable with dict semantics
                     raise PluginError(
                         f'Duplicate filter name "{filter_name}" in {resource}.{method}',
                         path=path,
@@ -316,8 +347,8 @@ def classify_filters(
         ``OppFilters`` wire body.  Call ``.model_dump(by_alias=True, exclude_none=True)``
         for the ADR-0012 JSON wire shape.
     """
-    registered_specs: dict[str, CustomFilterSpec] = (
-        routes.get(resource, {}).get(method, {})
+    registered_specs: dict[str, CustomFilterSpec] = routes.get(resource, {}).get(
+        method, {}
     )
 
     default_fields: dict[str, Any] = {}
