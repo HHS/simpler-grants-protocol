@@ -7,7 +7,7 @@ Provides:
 - ``validate_routes(routes)`` — registration-time validator; raises PluginError.
 - ``validate_filter_call(spec, filter_name, value)`` — call-time validator; raises PluginError.
 - ``classify_filters(routes, resource, method, consumer_filters)`` — three-bucket ADR-0012
-  classifier that returns an OppFilters wire body.
+  classifier that returns an OppFilters request body.
 
 No generate.py / codegen dependency. Correctness is enforced at runtime by Pydantic v2;
 there is no compile-time key/value narrowing claim (Python has no equivalent of the TS
@@ -177,7 +177,7 @@ DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
 # without an alias) before passing them to OppFilters(**...):
 #   - snake_case keys with a camelCase alias → converted to the alias (closeDateRange)
 #   - camelCase alias keys → kept as-is (already the alias)
-#   - keys with no alias (e.g. "status") → kept as-is (snake == wire key)
+#   - keys with no alias (e.g. "status") → kept as-is (snake == request key)
 # ---------------------------------------------------------------------------
 
 # Map from camelCase alias → snake_case field name (used for DEFAULT_FILTER_NAMES check).
@@ -306,7 +306,7 @@ def classify_filters(
     method: str,
     consumer_filters: dict[str, Any],
 ) -> OppFilters:
-    """Classify consumer filter dict into the ADR-0012 OppFilters wire body.
+    """Classify consumer filter dict into the ADR-0012 OppFilters request body.
 
     Three-bucket classification:
     - Bucket 1 (default): key is in ``DEFAULT_FILTER_NAMES`` (snake or camelCase alias) →
@@ -332,8 +332,8 @@ def classify_filters(
         consumer_filters: Flat ``{name: DefaultFilter}`` dict from the consumer call site.
 
     Returns:
-        ``OppFilters`` wire body.  Call ``.model_dump(by_alias=True, exclude_none=True)``
-        for the ADR-0012 JSON wire shape.
+        ``OppFilters`` request body.  Call ``.model_dump(by_alias=True, exclude_none=True)``
+        for the JSON body of the ADR-0012 search request.
 
     Raises:
         PluginError: When any filter value fails validation — registered and ad-hoc

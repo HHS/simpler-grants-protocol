@@ -161,12 +161,12 @@ def test_classify_escape_hatch_key_lands_in_custom_filters():
 
 
 # ---------------------------------------------------------------------------
-# Wire-body shape
+# Request-body shape
 # ---------------------------------------------------------------------------
 
 
-def test_wire_body_has_default_fields_at_top_level_and_custom_filters_nested():
-    """model_dump(by_alias=True, exclude_none=True) yields ADR-0012 wire shape.
+def test_request_body_has_default_fields_at_top_level_and_custom_filters_nested():
+    """model_dump(by_alias=True, exclude_none=True) yields the ADR-0012 request-body shape.
 
     Default filters appear at top level; custom/ad-hoc appear under "customFilters".
     """
@@ -178,26 +178,26 @@ def test_wire_body_has_default_fields_at_top_level_and_custom_filters_nested():
     result = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
-    wire = result.model_dump(by_alias=True, exclude_none=True)
+    request_body = result.model_dump(by_alias=True, exclude_none=True)
 
     # Default field appears at top level
-    assert "status" in wire
+    assert "status" in request_body
     # Custom and ad-hoc filters are nested under customFilters
-    assert "customFilters" in wire
-    assert "agency" in wire["customFilters"]
-    assert "legacyTag" in wire["customFilters"]
+    assert "customFilters" in request_body
+    assert "agency" in request_body["customFilters"]
+    assert "legacyTag" in request_body["customFilters"]
     # customFilters is NOT a top-level key for a default filter
-    assert "status" not in wire.get("customFilters", {})
+    assert "status" not in request_body.get("customFilters", {})
 
 
-def test_wire_body_no_custom_filters_key_when_all_defaults():
-    """customFilters key is absent from wire body when all filters are default fields."""
+def test_request_body_no_custom_filters_key_when_all_defaults():
+    """customFilters key is absent from the request body when all filters are default fields."""
     consumer_filters = {"status": f.in_(["open"])}
     result = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
-    wire = result.model_dump(by_alias=True, exclude_none=True)
-    assert "customFilters" not in wire
+    request_body = result.model_dump(by_alias=True, exclude_none=True)
+    assert "customFilters" not in request_body
 
 
 def test_oppfilters_mixed_case_roundtrip():
@@ -205,11 +205,11 @@ def test_oppfilters_mixed_case_roundtrip():
 
     A mix of snake_case and camelCase default keys — including 'closeDateRange' as
     a camelCase alias — must normalize to the correct snake_case field names and
-    produce the correct ADR-0012 wire JSON via model_dump(by_alias=True, exclude_none=True).
+    produce the correct ADR-0012 request JSON via model_dump(by_alias=True, exclude_none=True).
 
     Asserts:
     - closeDateRange lands in its named default field (close_date_range), NOT in customFilters.
-    - wire output uses camelCase aliases (by_alias=True).
+    - request-body output uses camelCase aliases (by_alias=True).
     """
     consumer_filters = {
         "status": f.in_(["open", "forecasted"]),  # snake_case default
@@ -225,14 +225,14 @@ def test_oppfilters_mixed_case_roundtrip():
     # camelCase alias must land in named field
     assert result.close_date_range is not None
 
-    wire = result.model_dump(by_alias=True, exclude_none=True)
+    request_body = result.model_dump(by_alias=True, exclude_none=True)
 
-    # Both named fields appear at top level with their wire (alias) names
-    assert "status" in wire
-    assert "closeDateRange" in wire
+    # Both named fields appear at top level with their alias names
+    assert "status" in request_body
+    assert "closeDateRange" in request_body
 
     # closeDateRange is NOT in customFilters
-    assert "customFilters" not in wire or "closeDateRange" not in wire.get(
+    assert "customFilters" not in request_body or "closeDateRange" not in request_body.get(
         "customFilters", {}
     )
 

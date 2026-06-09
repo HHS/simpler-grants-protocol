@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Custom filters example — codegen-free ADR-0012 wire body demo.
+"""Custom filters example — codegen-free ADR-0012 request-body demo.
 
 Demonstrates route-keyed custom filter declaration, flat call-site classification,
-and the three-bucket ADR-0012 wire body (default named fields + customFilters record)
+and the three-bucket ADR-0012 request body (default named fields + customFilters record)
 using the grants.gov canonical example from #646/#869.
 
 No code generation (custom filters are a pure-runtime classifier).  The example
@@ -80,14 +80,14 @@ def main() -> None:
     }
 
     assert grants_gov.routes is not None
-    wire_body = classify_filters(
+    request_body = classify_filters(
         grants_gov.routes, "opportunities", "search", consumer_filters
     )
 
-    print("\nWire body (ADR-0012, by_alias=True, exclude_none=True, mode='json'):")
+    print("\nRequest body (ADR-0012, by_alias=True, exclude_none=True, mode='json'):")
     print(
         json.dumps(
-            wire_body.model_dump(by_alias=True, exclude_none=True, mode="json"),
+            request_body.model_dump(by_alias=True, exclude_none=True, mode="json"),
             indent=2,
         )
     )
