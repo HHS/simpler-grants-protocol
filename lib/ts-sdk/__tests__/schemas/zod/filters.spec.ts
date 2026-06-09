@@ -508,14 +508,10 @@ describe("BooleanComparisonFilter Schema", () => {
   });
 
   it("should raise an error for gt operator (not in eq|neq)", () => {
-    expect(() =>
-      BooleanComparisonFilterSchema.parse({ operator: "gt", value: true })
-    ).toThrow();
+    expect(() => BooleanComparisonFilterSchema.parse({ operator: "gt", value: true })).toThrow();
   });
 
   it("should raise an error when value is a string instead of boolean", () => {
-    expect(() =>
-      BooleanComparisonFilterSchema.parse({ operator: "eq", value: "true" })
-    ).toThrow();
+    expect(() => BooleanComparisonFilterSchema.parse({ operator: "eq", value: "true" })).toThrow();
   });
 });

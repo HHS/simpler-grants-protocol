@@ -111,7 +111,10 @@ export interface DefinePluginOptions<T extends SchemasInput = SchemasInput> {
  * caller uses `as const`. Callers that do not care about typed narrowing can ignore it
  * (the default is `PluginRoutes`).
  */
-export interface Plugin<T extends SchemasInput = SchemasInput, TRoutes extends PluginRoutes = PluginRoutes> {
+export interface Plugin<
+  T extends SchemasInput = SchemasInput,
+  TRoutes extends PluginRoutes = PluginRoutes,
+> {
   extensions?: PluginExtensions;
   schemas: PluginSchemas<T>;
   meta?: PluginMeta;
@@ -156,9 +159,10 @@ export interface Plugin<T extends SchemasInput = SchemasInput, TRoutes extends P
  * const result = plugin.schemas.Opportunity.toCommon?.(nativeData);
  * ```
  */
-export function definePlugin<const T extends SchemasInput, const TRoutes extends PluginRoutes = PluginRoutes>(
-  options: DefinePluginOptions<T> & { routes?: TRoutes }
-): Plugin<T, TRoutes> {
+export function definePlugin<
+  const T extends SchemasInput,
+  const TRoutes extends PluginRoutes = PluginRoutes,
+>(options: DefinePluginOptions<T> & { routes?: TRoutes }): Plugin<T, TRoutes> {
   const { extensions, meta, schemas: schemasInput, routes } = options;
   const schemas: Record<string, object> = {};
 

@@ -54,7 +54,12 @@ import { PluginError } from "./types";
  */
 const FILTER_TYPE_SCHEMAS: Record<
   CustomFilterType,
-  { schema: z.ZodTypeAny; operatorEnum: z.ZodEnum<[string, ...string[]]> | z.ZodUnion<[z.ZodEnum<[string, ...string[]]>, ...z.ZodEnum<[string, ...string[]]>[]]> }
+  {
+    schema: z.ZodTypeAny;
+    operatorEnum:
+      | z.ZodEnum<[string, ...string[]]>
+      | z.ZodUnion<[z.ZodEnum<[string, ...string[]]>, ...z.ZodEnum<[string, ...string[]]>[]]>;
+  }
 > = {
   stringComparison: {
     schema: StringComparisonFilterSchema,
@@ -112,9 +117,7 @@ const VALID_FILTER_TYPES = new Set<string>(Object.keys(FILTER_TYPE_SCHEMAS));
  * The default-filter field names from `OppDefaultFiltersSchema`.
  * Custom filter names must not collide with these (D-14, T-02-01).
  */
-const DEFAULT_FILTER_NAMES = new Set<string>(
-  Object.keys(OppDefaultFiltersSchema.shape)
-);
+const DEFAULT_FILTER_NAMES = new Set<string>(Object.keys(OppDefaultFiltersSchema.shape));
 
 // ############################################################################
 // Public — F helpers

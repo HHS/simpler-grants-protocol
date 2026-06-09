@@ -25,48 +25,46 @@ import { definePlugin, type CustomFilterSpec, type Plugin, type PluginRoutes } f
  * (FILTER_TYPE_SCHEMAS). They are the *compile-time* equivalents used here for
  * narrowing assertions — the runtime schemas enforce the same constraints.
  */
-type FilterValueShape<T extends CustomFilterSpec["filterType"]> =
-  T extends "stringComparison"
-    ? string
-    : T extends "stringArray"
-      ? string[]
-      : T extends "numberComparison" | "integerComparison"
-        ? number
-        : T extends "numberArray"
-          ? number[]
-          : T extends "numberRange" | "moneyRange"
-            ? { min: number; max: number }
-            : T extends "booleanComparison"
-              ? boolean
-              : T extends "dateComparison"
-                ? string
-                : T extends "dateRange"
-                  ? { min: string; max: string }
-                  : T extends "moneyComparison"
-                    ? { amount: number; currency: string }
-                    : never;
+type FilterValueShape<T extends CustomFilterSpec["filterType"]> = T extends "stringComparison"
+  ? string
+  : T extends "stringArray"
+    ? string[]
+    : T extends "numberComparison" | "integerComparison"
+      ? number
+      : T extends "numberArray"
+        ? number[]
+        : T extends "numberRange" | "moneyRange"
+          ? { min: number; max: number }
+          : T extends "booleanComparison"
+            ? boolean
+            : T extends "dateComparison"
+              ? string
+              : T extends "dateRange"
+                ? { min: string; max: string }
+                : T extends "moneyComparison"
+                  ? { amount: number; currency: string }
+                  : never;
 
 /**
  * Maps a `CustomFilterType` literal to its allowed operator literals.
  *
  * Mirrors the `FILTER_TYPE_SCHEMAS` operator enums in `custom-filters.ts`.
  */
-type FilterOperator<T extends CustomFilterSpec["filterType"]> =
-  T extends "stringComparison"
-    ? "eq" | "neq" | "like" | "notLike"
-    : T extends "stringArray" | "numberArray"
-      ? "in" | "notIn"
-      : T extends "numberComparison" | "integerComparison"
-        ? "eq" | "neq" | "gt" | "gte" | "lt" | "lte"
-        : T extends "numberRange" | "dateRange" | "moneyRange"
-          ? "between" | "outside"
-          : T extends "booleanComparison"
-            ? "eq" | "neq"
-            : T extends "dateComparison"
-              ? "gt" | "gte" | "lt" | "lte"
-              : T extends "moneyComparison"
-                ? "between" | "outside"
-                : never;
+type FilterOperator<T extends CustomFilterSpec["filterType"]> = T extends "stringComparison"
+  ? "eq" | "neq" | "like" | "notLike"
+  : T extends "stringArray" | "numberArray"
+    ? "in" | "notIn"
+    : T extends "numberComparison" | "integerComparison"
+      ? "eq" | "neq" | "gt" | "gte" | "lt" | "lte"
+      : T extends "numberRange" | "dateRange" | "moneyRange"
+        ? "between" | "outside"
+        : T extends "booleanComparison"
+          ? "eq" | "neq"
+          : T extends "dateComparison"
+            ? "gt" | "gte" | "lt" | "lte"
+            : T extends "moneyComparison"
+              ? "between" | "outside"
+              : never;
 
 /**
  * Typed `{operator, value}` pair for a single `CustomFilterSpec`.
@@ -146,7 +144,7 @@ function buildTypedFilters<
   _plugin: TPlugin,
   _resource: R,
   _method: M,
-  filters: FilterParams<RouteFilterSpecs<NonNullable<TPlugin["routes"]>, R, M>>,
+  filters: FilterParams<RouteFilterSpecs<NonNullable<TPlugin["routes"]>, R, M>>
 ): typeof filters {
   return filters;
 }
@@ -200,7 +198,9 @@ describe("custom-filters compile-time narrowing (as const)", () => {
   // An unknown key triggers: "Object literal may only specify known properties" (ts2353).
   it("unknown filter key is a compile error (asserted with @ts-expect-error)", () => {
     // @ts-expect-error -- unknown key 'notARealFilter' is not a registered filter (ts2353)
-    const bad: TypedConsumerFilters<GrantsGovSpecs> = { notARealFilter: { operator: "eq", value: "x" } };
+    const bad: TypedConsumerFilters<GrantsGovSpecs> = {
+      notARealFilter: { operator: "eq", value: "x" },
+    };
     void bad;
     expect(true).toBe(true);
   });
@@ -213,7 +213,9 @@ describe("custom-filters compile-time narrowing (as const)", () => {
   // "Type '"like"' is not assignable to type '"eq" | "neq" | "gt" | "gte" | "lt" | "lte"'."
   it("operator/filterType mismatch is a compile error (asserted with @ts-expect-error)", () => {
     // @ts-expect-error -- "like" is a string operator, not valid for numberComparison (ts2322)
-    const bad: TypedConsumerFilters<GrantsGovSpecs> = { awardCount: { operator: "like", value: 5 } };
+    const bad: TypedConsumerFilters<GrantsGovSpecs> = {
+      awardCount: { operator: "like", value: 5 },
+    };
     void bad;
     expect(true).toBe(true);
   });
@@ -224,7 +226,9 @@ describe("custom-filters compile-time narrowing (as const)", () => {
   // Passing a `string` triggers: "Type 'string' is not assignable to type 'number'."
   it("value-shape mismatch (string where number required) is a compile error (asserted with @ts-expect-error)", () => {
     // @ts-expect-error -- awardCount is numberComparison; value must be number, not string (ts2322)
-    const bad: TypedConsumerFilters<GrantsGovSpecs> = { awardCount: { operator: "eq", value: "notANumber" } };
+    const bad: TypedConsumerFilters<GrantsGovSpecs> = {
+      awardCount: { operator: "eq", value: "notANumber" },
+    };
     void bad;
     expect(true).toBe(true);
   });

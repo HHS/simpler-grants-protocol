@@ -19,7 +19,10 @@ const grantsGovRoutes: PluginRoutes = {
     search: {
       filters: {
         agency: { filterType: "stringArray", description: "Filter by funding agency" },
-        fundingProgram: { filterType: "stringComparison", description: "Filter by funding program" },
+        fundingProgram: {
+          filterType: "stringComparison",
+          description: "Filter by funding program",
+        },
       },
     },
   },
@@ -207,9 +210,9 @@ describe("classifyFilters", () => {
       // `like` operator is not valid for numberComparison (only gt/gte/lt/lte/eq/neq)
       const spec = { filterType: "numberComparison" } as const;
 
-      expect(() =>
-        validateFilterCall(spec, "amount", { operator: "like", value: "100" })
-      ).toThrow(PluginError);
+      expect(() => validateFilterCall(spec, "amount", { operator: "like", value: "100" })).toThrow(
+        PluginError
+      );
     });
 
     it("throws PluginError on value-shape mismatch for a registered stringArray filter", () => {
@@ -259,9 +262,9 @@ describe("classifyFilters", () => {
 
     it("throws PluginError for an ad-hoc filter with an invalid shape", () => {
       // Missing `operator` key — fails DefaultFilterSchema shape check (operator is required/enum)
-      expect(() =>
-        validateFilterCall(undefined, "badFilter", { value: "something" })
-      ).toThrow(PluginError);
+      expect(() => validateFilterCall(undefined, "badFilter", { value: "something" })).toThrow(
+        PluginError
+      );
     });
 
     it("throws PluginError for an ad-hoc filter with an unknown operator", () => {

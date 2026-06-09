@@ -63,7 +63,9 @@ const grantsGovPlugin = definePlugin({
 
 console.log("=== Step 1: Plugin registered ===");
 console.log(`Plugin name: ${grantsGovPlugin.meta?.name}`);
-console.log(`Registered filters: ${Object.keys(grantsGovPlugin.routes?.opportunities?.search?.filters ?? {}).join(", ")}`);
+console.log(
+  `Registered filters: ${Object.keys(grantsGovPlugin.routes?.opportunities?.search?.filters ?? {}).join(", ")}`
+);
 
 // ############################################################################
 // Step 2 — Build a unified consumer filters object
@@ -115,7 +117,7 @@ const wireBody = classifyFilters(
   grantsGovPlugin.routes!,
   "opportunities",
   "search",
-  searchParams.filters,
+  searchParams.filters
 );
 
 console.log("\n=== Step 3: Classified wire body (OppFilters) ===");
@@ -132,14 +134,17 @@ function fail(message: string): never {
 
 // Default filters must appear as named top-level fields
 if (!wireBody.status) fail("status should be a top-level field (default filter bucket)");
-if (!wireBody.closeDateRange) fail("closeDateRange should be a top-level field (default filter bucket)");
+if (!wireBody.closeDateRange)
+  fail("closeDateRange should be a top-level field (default filter bucket)");
 
 // Custom + ad-hoc filters must land in customFilters record
 if (!wireBody.customFilters) fail("customFilters should exist for registered + ad-hoc filters");
-if (!wireBody.customFilters.agency) fail("agency should be in customFilters (registered custom filter)");
+if (!wireBody.customFilters.agency)
+  fail("agency should be in customFilters (registered custom filter)");
 if (!wireBody.customFilters.fundingProgram)
   fail("fundingProgram should be in customFilters (registered custom filter)");
-if (!wireBody.customFilters.legacyTag) fail("legacyTag should be in customFilters (ad-hoc passthrough)");
+if (!wireBody.customFilters.legacyTag)
+  fail("legacyTag should be in customFilters (ad-hoc passthrough)");
 
 // Default filter keys must NOT appear under customFilters
 if ((wireBody.customFilters as Record<string, unknown>).status)
@@ -185,4 +190,6 @@ console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
 //   //   // → unknown keys, wrong operators, and wrong value shapes silently accepted
 
 console.log("\n✓ custom-filters example complete");
-console.log("  See __tests__/extensions/custom-filters-types.spec.ts for compile-time narrowing proof");
+console.log(
+  "  See __tests__/extensions/custom-filters-types.spec.ts for compile-time narrowing proof"
+);
