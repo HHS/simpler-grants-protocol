@@ -96,8 +96,11 @@ def define_plugin(
 
     routes: optional route-keyed custom-filter declarations.
         Shape: {resourceName: {methodName: {filterName: CustomFilterSpec}}}.
-        Passed through to PluginConfig.routes; validated by validate_routes()
-        (extensions/filters.py) when the filter classifier is invoked.
+        Passed through to PluginConfig.routes unvalidated. Registration-time
+        validation is explicit: call validate_routes() (extensions/filters.py)
+        on the declarations, e.g. at plugin startup. classify_filters() does
+        not invoke it (matching the TS SDK, where validateRoutes is a
+        standalone check).
     """
     return PluginConfig(
         extensions=extensions,
