@@ -18,6 +18,8 @@ __all__ = [  # noqa: RUF022
     "MoneyComparisonFilter",
     "MoneyRange",
     "MoneyRangeFilter",
+    # Boolean Filters
+    "BooleanComparisonFilter",
     # Numeric Filters
     "NumberArrayFilter",
     "NumberComparisonFilter",
@@ -39,6 +41,7 @@ from .base import (
     RangeOperator,
     StringOperator,
 )
+from .boolean import BooleanComparisonFilter
 from .date import (
     DateComparisonFilter,
     DateRange,
