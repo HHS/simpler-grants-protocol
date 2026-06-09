@@ -201,7 +201,7 @@ _SNAKE_TO_ALIAS: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 
-def validate_routes(routes: PluginRoutes) -> None:  # noqa: C901
+def validate_routes(routes: PluginRoutes) -> None:
     """Registration-time validator for a plugin's route filter declarations.
 
     Iterates every filter spec in ``routes`` and raises ``PluginError`` on:
@@ -210,10 +210,8 @@ def validate_routes(routes: PluginRoutes) -> None:  # noqa: C901
        ``DEFAULT_FILTER_NAMES`` (the escape-hatch collision check — core-shadowing
        names must use the ``gov.<system>@<filterName>`` namespace instead).
 
-    The ``seen`` guard below is a defensive forward-looking comment only:
-    a Python ``dict[str, CustomFilterSpec]`` literal cannot hold duplicate keys,
-    so iterating ``.items()`` yields each key exactly once.  The guard is retained
-    for a future list-of-pairs API and will never fire with current dict semantics.
+    Duplicate custom-filter names need no check: ``routes`` is dict-keyed, so a
+    duplicate name cannot exist by construction.
 
     Args:
         routes: Route-keyed filter declarations as ``PluginRoutes``.
@@ -223,9 +221,6 @@ def validate_routes(routes: PluginRoutes) -> None:  # noqa: C901
     """
     for resource, methods in routes.items():
         for method, filter_specs in methods.items():
-            seen: set[str] = (
-                set()
-            )  # unreachable with dict semantics; retained for a future list-of-pairs API
             for filter_name, spec in filter_specs.items():
                 path = f"routes.{resource}.{method}.{filter_name}"
                 if spec.filter_type not in FILTER_TYPE_SCHEMAS:
@@ -240,15 +235,6 @@ def validate_routes(routes: PluginRoutes) -> None:  # noqa: C901
                         path=path,
                         source_value=filter_name,
                     )
-                if (
-                    filter_name in seen
-                ):  # forward-looking guard; unreachable with dict semantics
-                    raise PluginError(
-                        f'Duplicate filter name "{filter_name}" in {resource}.{method}',
-                        path=path,
-                        source_value=filter_name,
-                    )
-                seen.add(filter_name)
 
 
 # ---------------------------------------------------------------------------
