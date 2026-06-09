@@ -94,7 +94,7 @@ def define_plugin(
     those per-object generics on the returned PluginConfig rather than widening
     them to Any.
 
-    routes: optional route-keyed custom-filter declarations (DP-06).
+    routes: optional route-keyed custom-filter declarations.
         Shape: {resourceName: {methodName: {filterName: CustomFilterSpec}}}.
         Passed through to PluginConfig.routes; validated by validate_routes()
         (extensions/filters.py) when the filter classifier is invoked.

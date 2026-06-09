@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Custom filters PoC — codegen-free ADR-0012 wire body demo.
+"""Custom filters example — codegen-free ADR-0012 wire body demo.
 
 Demonstrates route-keyed custom filter declaration, flat call-site classification,
 and the three-bucket ADR-0012 wire body (default named fields + customFilters record)
@@ -21,7 +21,7 @@ from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterTyp
 from common_grants_sdk.extensions.types import PluginError, PluginExtensionsMeta
 
 # ---------------------------------------------------------------------------
-# Plugin declaration — route-keyed custom filter specs (CFP-01, DP-06)
+# Plugin declaration — route-keyed custom filter specs
 # ---------------------------------------------------------------------------
 
 grants_gov = define_plugin(
@@ -93,7 +93,7 @@ def main() -> None:
     )
 
     # --- PluginError demo — bad call raises and is caught ---
-    _section("VALIDATION — bad operator raises PluginError (runtime guarantee, CFP-04)")
+    _section("VALIDATION — bad operator raises PluginError (runtime guarantee)")
 
     # agency is registered as STRING_ARRAY (expects ArrayOperator: in/notIn).
     # Passing f.eq(...) (EquivalenceOperator.EQUAL) triggers call-time validation failure.

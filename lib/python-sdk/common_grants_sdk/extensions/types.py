@@ -22,7 +22,7 @@ PluginCapability = Literal["customFields", "customFilters", "transforms", "clien
 # Type aliases
 Handler = Callable[[Any, Any], Any]
 
-# Route-keyed custom-filter declaration aliases (DP-06).
+# Route-keyed custom-filter declaration aliases.
 # CustomFilterSpec is referenced as a forward string to keep the TYPE_CHECKING guard
 # effective at runtime — types.py already imports from specs at module level for
 # CustomFieldSpec; the guard here covers the new CustomFilterSpec reference only.

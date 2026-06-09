@@ -201,7 +201,7 @@ def test_wire_body_no_custom_filters_key_when_all_defaults():
 
 
 def test_oppfilters_mixed_case_roundtrip():
-    """Strategy A proof (RESEARCH A4, HIGH-risk assumption, now PINNED).
+    """Alias-normalization round-trip proof.
 
     A mix of snake_case and camelCase default keys — including 'closeDateRange' as
     a camelCase alias — must normalize to the correct snake_case field names and
@@ -257,7 +257,7 @@ def test_validate_routes_unknown_filter_type_raises():
 def test_validate_routes_collision_with_default_filter_name_raises():
     """validate_routes raises PluginError when a custom filter name collides with a CORE DEFAULT name.
 
-    This is the DP-15 escape-hatch collision check. E.g. naming a custom filter "status"
+    This is the escape-hatch collision check. E.g. naming a custom filter "status"
     would shadow the core default "status" field — must be caught at registration time.
     """
     routes = {

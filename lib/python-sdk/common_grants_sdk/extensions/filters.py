@@ -9,8 +9,9 @@ Provides:
 - ``classify_filters(routes, resource, method, consumer_filters)`` — three-bucket ADR-0012
   classifier that returns an OppFilters wire body.
 
-No generate.py / codegen dependency (DP-05). Correctness is enforced at runtime by Pydantic v2
-(DP-02/DP-04); there is no compile-time key/value narrowing claim.
+No generate.py / codegen dependency. Correctness is enforced at runtime by Pydantic v2;
+there is no compile-time key/value narrowing claim (Python has no equivalent of the TS
+SDK's ``as const`` literal narrowing).
 """
 
 from __future__ import annotations
@@ -54,7 +55,7 @@ from .specs import CustomFilterSpec, CustomFilterType
 from .types import PluginError, PluginRoutes
 
 # ---------------------------------------------------------------------------
-# f.* helpers (CFP-03, DP-10)
+# f.* helpers
 # ---------------------------------------------------------------------------
 
 
@@ -64,7 +65,7 @@ class _FHelpers:
     Import as ``from common_grants_sdk.extensions import f`` and use as
     ``f.eq("open")``, ``f.in_([...])``, etc.
 
-    ``in_`` and ``not_in`` use the reserved-word workaround (DP-10):
+    ``in_`` and ``not_in`` use the reserved-word workaround:
     the Python methods are ``f.in_`` / ``f.not_in`` while the wire operator
     values are ``"in"`` / ``"notIn"`` (matching the TS SDK's ``F.in`` / ``F.notIn``).
     """
@@ -130,19 +131,21 @@ class _FHelpers:
 f = _FHelpers()
 
 # ---------------------------------------------------------------------------
-# FILTER_TYPE_SCHEMAS — call-time validation map (CFP-04)
+# FILTER_TYPE_SCHEMAS — call-time validation map
 # ---------------------------------------------------------------------------
 
 #: Maps each CustomFilterType to the Pydantic model used to validate operator/value shape.
-#: ``integerComparison`` reuses ``NumberComparisonFilter`` (CFPV-03 deferred).
-#: ``booleanComparison`` uses the new ``BooleanComparisonFilter`` from plan 01.
+#: ``integerComparison`` reuses ``NumberComparisonFilter`` — a dedicated integer schema
+#: with int-only validation is deferred (mirrors the TS SDK, where
+#: ``integerComparison`` reuses ``NumberComparisonFilterSchema``).
+#: ``booleanComparison`` uses the SDK-level ``BooleanComparisonFilter``.
 FILTER_TYPE_SCHEMAS: dict[CustomFilterType, type[BaseModel]] = {
     CustomFilterType.STRING_COMPARISON: StringComparisonFilter,
     CustomFilterType.STRING_ARRAY: StringArrayFilter,
     CustomFilterType.NUMBER_COMPARISON: NumberComparisonFilter,
     CustomFilterType.NUMBER_ARRAY: NumberArrayFilter,
     CustomFilterType.NUMBER_RANGE: NumberRangeFilter,
-    CustomFilterType.INTEGER_COMPARISON: NumberComparisonFilter,  # CFPV-03: reuse
+    CustomFilterType.INTEGER_COMPARISON: NumberComparisonFilter,  # reuse — see note above
     CustomFilterType.BOOLEAN_COMPARISON: BooleanComparisonFilter,
     CustomFilterType.DATE_COMPARISON: DateComparisonFilter,
     CustomFilterType.DATE_RANGE: DateRangeFilter,
@@ -152,28 +155,26 @@ FILTER_TYPE_SCHEMAS: dict[CustomFilterType, type[BaseModel]] = {
 
 # ---------------------------------------------------------------------------
 # DEFAULT_FILTER_NAMES — must include BOTH snake_case field names AND camelCase aliases
-# (RESEARCH Pitfall 1 / DP-15: the "landmine" for camelCase alias lookup)
 # ---------------------------------------------------------------------------
 
 #: All core default-filter names from OppDefaultFilters: snake_case field names PLUS their
 #: camelCase ``alias`` values.  Both forms are needed so that ``validate_routes`` can catch
-#: a plugin author registering a custom filter whose name shadows either form (DP-15).
+#: a plugin author registering a custom filter whose name shadows either form.
 DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
     list(OppDefaultFilters.model_fields.keys())
     + [v.alias for v in OppDefaultFilters.model_fields.values() if v.alias]
 )
 
 # ---------------------------------------------------------------------------
-# Strategy A: normalization maps for classify_filters
-# (RESEARCH A4 / Pitfall 6 — PINNED as the required construction path)
+# Alias-normalization maps for classify_filters
 #
 # OppDefaultFilters uses snake_case field names with camelCase aliases but does NOT
 # set populate_by_name=True.  Pydantic v2 therefore requires the alias form when
 # constructing OppFilters via **kwargs — passing the snake_case field name silently
 # results in None (the alias is the required construction key).
 #
-# Strategy A normalizes consumer keys to the alias (or field-name for fields without
-# an alias) before passing them to OppFilters(**...):
+# classify_filters normalizes consumer keys to the alias (or field-name for fields
+# without an alias) before passing them to OppFilters(**...):
 #   - snake_case keys with a camelCase alias → converted to the alias (closeDateRange)
 #   - camelCase alias keys → kept as-is (already the alias)
 #   - keys with no alias (e.g. "status") → kept as-is (snake == wire key)
@@ -196,7 +197,7 @@ _SNAKE_TO_ALIAS: dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
-# validate_routes — registration-time validator (CFP-05, DP-08, DP-15)
+# validate_routes — registration-time validator
 # ---------------------------------------------------------------------------
 
 
@@ -206,7 +207,8 @@ def validate_routes(routes: PluginRoutes) -> None:  # noqa: C901
     Iterates every filter spec in ``routes`` and raises ``PluginError`` on:
     1. Unknown ``filter_type`` (not in ``FILTER_TYPE_SCHEMAS``).
     2. Filter name that collides with a core default-filter name in
-       ``DEFAULT_FILTER_NAMES`` (the DP-15 escape-hatch collision check).
+       ``DEFAULT_FILTER_NAMES`` (the escape-hatch collision check — core-shadowing
+       names must use the ``gov.<system>@<filterName>`` namespace instead).
 
     The ``seen`` guard below is a defensive forward-looking comment only:
     a Python ``dict[str, CustomFilterSpec]`` literal cannot hold duplicate keys,
@@ -250,7 +252,7 @@ def validate_routes(routes: PluginRoutes) -> None:  # noqa: C901
 
 
 # ---------------------------------------------------------------------------
-# validate_filter_call — call-time validator (CFP-04, CFP-05, DP-08)
+# validate_filter_call — call-time validator
 # ---------------------------------------------------------------------------
 
 
@@ -265,8 +267,8 @@ def validate_filter_call(
     ``spec`` is provided (registered filter), or against ``DefaultFilter`` when
     ``spec`` is ``None`` (ad-hoc / escape-hatch filter).
 
-    Correctness is enforced at runtime by Pydantic v2 — the marquee finding (DP-04).
-    No compile-time key/value narrowing is claimed.
+    Correctness is enforced at runtime by Pydantic v2; no compile-time key/value
+    narrowing is claimed (Python has no equivalent of TS ``as const`` narrowing).
 
     Args:
         spec: The registered ``CustomFilterSpec`` for this filter, or ``None`` for ad-hoc.
@@ -308,7 +310,7 @@ def validate_filter_call(
 
 
 # ---------------------------------------------------------------------------
-# classify_filters — three-bucket ADR-0012 classifier (CFP-06, DP-05)
+# classify_filters — three-bucket ADR-0012 classifier
 # ---------------------------------------------------------------------------
 
 
@@ -327,15 +329,15 @@ def classify_filters(
       given resource/method → land in ``custom_filters``.
     - Bucket 3 (ad-hoc): any other key → land in ``custom_filters`` passthrough.
 
-    OppFilters is constructed via **Strategy A** (RESEARCH A4, PINNED):
-    All default consumer keys are normalized to the form that ``OppFilters(**kwargs)``
-    accepts.  Because ``OppDefaultFilters`` does NOT set ``populate_by_name=True``,
-    Pydantic v2 requires the alias form (e.g. ``closeDateRange``) for aliased fields.
-    Snake_case keys (e.g. ``close_date_range``) are therefore mapped to their alias via
-    ``_SNAKE_TO_ALIAS`` before construction.  Fields without aliases (e.g. ``status``)
-    pass through unchanged.
-    Strategy B (``model_validate`` with ``populate_by_name=True``) is **forbidden** —
-    it requires modifying ``OppFilters.model_config``, which is out of scope for the PoC.
+    Construction normalizes all default consumer keys to the form that
+    ``OppFilters(**kwargs)`` accepts.  Because ``OppDefaultFilters`` does NOT set
+    ``populate_by_name=True``, Pydantic v2 requires the alias form (e.g.
+    ``closeDateRange``) for aliased fields.  Snake_case keys (e.g.
+    ``close_date_range``) are therefore mapped to their alias via ``_SNAKE_TO_ALIAS``
+    before construction.  Fields without aliases (e.g. ``status``) pass through
+    unchanged.  The alternative — enabling ``populate_by_name=True`` on
+    ``OppFilters.model_config`` — is deliberately avoided: the classifier must not
+    modify core schema model config.
 
     Args:
         routes: Plugin route declarations (used to identify registered custom filters).
@@ -361,7 +363,7 @@ def classify_filters(
 
     for key, value in consumer_filters.items():
         if key in DEFAULT_FILTER_NAMES:
-            # Bucket 1: core default filter — Strategy A (RESEARCH A4, PINNED).
+            # Bucket 1: core default filter.
             # OppFilters requires the alias form (e.g. "closeDateRange") when constructing
             # via **kwargs because populate_by_name is not set on OppDefaultFilters.
             # Normalize: camelCase aliases stay as-is; snake_case keys are mapped to their

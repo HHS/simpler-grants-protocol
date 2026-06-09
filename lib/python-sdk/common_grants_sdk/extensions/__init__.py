@@ -48,7 +48,7 @@ __all__ = [
     "PluginExtensionsMeta",
     "PluginExtensionsSchema",
     "TransformResult",
-    # New: custom filters (plan 03)
+    # Custom filters
     "classify_filters",
     "CustomFilterSpec",
     "CustomFilterType",

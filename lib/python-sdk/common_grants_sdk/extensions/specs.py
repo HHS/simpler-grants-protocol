@@ -18,7 +18,7 @@ ConflictStrategy = Literal["error", "first_wins", "last_wins"]
 
 
 class CustomFilterType(StrEnum):
-    """11-value enum of filter types (DP-14). Uses *Comparison/*Array/*Range wire values."""
+    """11-value enum of filter types. Uses *Comparison/*Array/*Range wire values."""
 
     STRING_COMPARISON = "stringComparison"
     STRING_ARRAY = "stringArray"
@@ -37,7 +37,7 @@ class CustomFilterType(StrEnum):
 class CustomFilterSpec:
     """Per-filter declaration: filter_type constrains to a known type; description is optional.
 
-    No ``value`` field — operators are derived from filter_type at classify time (DP-07).
+    No ``value`` field — operators are derived from filter_type at classify time.
     """
 
     filter_type: CustomFilterType
