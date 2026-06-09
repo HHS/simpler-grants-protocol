@@ -554,6 +554,23 @@ def test_boolean_comparison_filter_rejects_invalid_value():
         BooleanComparisonFilter(operator="eq", value=42)
 
 
+def test_boolean_comparison_filter_rejects_coercible_values():
+    """BooleanComparisonFilter raises ValidationError for bool-coercible non-bool values.
+
+    Mirrors the TS BooleanComparisonFilterSchema, where z.boolean() rejects
+    1/0 and "true"/"false"; the strict annotation disables pydantic's lax
+    int/str -> bool coercion.
+    """
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value=1)
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value=0)
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value="true")
+
+
 def test_integer_comparison_filter_constructs():
     """IntegerComparisonFilter constructs with valid operator and integer value."""
     filter_obj = IntegerComparisonFilter(operator="gt", value=100)

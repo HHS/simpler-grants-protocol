@@ -1,19 +1,23 @@
 """Boolean filter schemas."""
 
-from pydantic import Field, field_validator
+from pydantic import Field, StrictBool, field_validator
 
 from ..base import CommonGrantsBaseModel
 from .base import EquivalenceOperator
 
 
 class BooleanComparisonFilter(CommonGrantsBaseModel):
-    """Filter that matches a boolean value for equality (eq | neq)."""
+    """Filter that matches a boolean value for equality (eq | neq).
+
+    Strict boolean: 1/0 and "true"/"false" are rejected (mirrors the TS SDK's
+    BooleanComparisonFilterSchema, where ``z.boolean()`` rejects both).
+    """
 
     operator: EquivalenceOperator = Field(
         ...,
         description="The operator to apply to the filter value",
     )
-    value: bool = Field(..., description="The boolean value to compare against")
+    value: StrictBool = Field(..., description="The boolean value to compare against")
 
     @field_validator("operator", mode="before")
     @classmethod
