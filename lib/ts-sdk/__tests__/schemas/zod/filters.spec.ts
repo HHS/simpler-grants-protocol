@@ -18,6 +18,7 @@ import {
   MoneyComparisonFilterSchema,
   MoneyRangeFilterSchema,
   BooleanComparisonFilterSchema,
+  IntegerComparisonFilterSchema,
 } from "@/schemas";
 
 // ############################################################################
@@ -268,6 +269,28 @@ describe("NumberComparisonFilter Schema", () => {
     expect(() => NumberComparisonFilterSchema.parse({ operator: "gt", value: "100" })).toThrow();
     // Missing required "value" field
     expect(() => NumberComparisonFilterSchema.parse({ operator: "gt" })).toThrow();
+  });
+});
+
+// ############################################################################
+// Integer comparison filter
+// ############################################################################
+
+describe("IntegerComparisonFilter Schema", () => {
+  it("should validate a valid IntegerComparisonFilter", () => {
+    const validFilter = { operator: "gt", value: 100 };
+    expect(IntegerComparisonFilterSchema.parse(validFilter)).toEqual(validFilter);
+  });
+
+  it("should raise an error for a non-integer value", () => {
+    expect(() => IntegerComparisonFilterSchema.parse({ operator: "gt", value: 100.5 })).toThrow();
+  });
+
+  it("should raise an error for an invalid IntegerComparisonFilter", () => {
+    // "in" is not a comparison operator (only eq, neq, gt, gte, lt, lte are allowed)
+    expect(() => IntegerComparisonFilterSchema.parse({ operator: "in", value: 100 })).toThrow();
+    // Value must be a number, not a string
+    expect(() => IntegerComparisonFilterSchema.parse({ operator: "gt", value: "100" })).toThrow();
   });
 });
 

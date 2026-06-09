@@ -55,6 +55,11 @@ export const NumberComparisonFilterSchema = z.object({
   value: z.number(),
 });
 
+export const IntegerComparisonFilterSchema = z.object({
+  operator: z.union([ComparisonOperatorsEnum, EquivalenceOperatorsEnum]),
+  value: z.number().int(),
+});
+
 export const NumberRangeFilterSchema = z.object({
   operator: RangeOperatorsEnum,
   value: z.object({

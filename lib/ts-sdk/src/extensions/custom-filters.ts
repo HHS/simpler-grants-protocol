@@ -4,15 +4,15 @@
  * Provides the classifier, validators, and F helper namespace for the custom-filters surface.
  *
  * - `classifyFilters` — transforms a flat consumer `filters` object into the
- *   ADR-0012 `OppFilters` wire body (three-bucket: default → named top-level fields;
+ *   ADR-0012 `OppFilters` request body (three-bucket: default → named top-level fields;
  *   registered custom → `customFilters`; ad-hoc → `customFilters` passthrough).
- * - `validateRoutes` — registration-time validation; rejects unknown `filterType`,
- *   duplicate names, and custom names that collide with default-filter names.
+ * - `validateRoutes` — registration-time validation; rejects unknown `filterType`
+ *   and custom names that collide with default-filter names.
  * - `validateFilterCall` — call-time validation; rejects operator/filterType mismatch
  *   and value-shape mismatches for registered filters; shape-only check for ad-hoc.
  * - `F` — helper namespace that compiles `{operator, value}` raw filter objects.
  *
- * Wire contract: ADR-0012 / OppFiltersSchema.
+ * Request-body contract: ADR-0012 / OppFiltersSchema.
  * Core-field escape hatch: `gov.<system>@<filterName>` keys pass through as custom-filter
  * keys verbatim.
  *
@@ -23,10 +23,9 @@ import { z } from "zod";
 import { DefaultFilterSchema } from "../schemas/zod/filters";
 import {
   BooleanComparisonFilterSchema,
-  ComparisonOperatorsEnum,
   DateComparisonFilterSchema,
   DateRangeFilterSchema,
-  EquivalenceOperatorsEnum,
+  IntegerComparisonFilterSchema,
   MoneyComparisonFilterSchema,
   MoneyRangeFilterSchema,
   NumberArrayFilterSchema,
@@ -40,72 +39,26 @@ import type { CustomFilterSpec, CustomFilterType, PluginRoutes, RouteDeclaration
 import { PluginError } from "./types";
 
 // ############################################################################
-// Internal — filter-type metadata map
+// Internal — filter-type schema map
 // ############################################################################
 
 /**
- * Maps each CustomFilterType to its allowed Zod schema and the operator enum
- * that determines whether a given operator is valid for that type.
- *
- * `integerComparison` reuses `NumberComparisonFilterSchema` (the Zod-level int
- * constraint is not enforced here — it uses the same schema as
- * `numberComparison`). A dedicated `IntegerComparisonFilterSchema` with `.int()`
- * would tighten this.
+ * Maps each CustomFilterType to the Zod schema that validates its
+ * `{operator, value}` pair. Each schema constrains both the allowed operator
+ * enum and the value shape, so a single parse covers both checks.
  */
-const FILTER_TYPE_SCHEMAS: Record<
-  CustomFilterType,
-  {
-    schema: z.ZodTypeAny;
-    operatorEnum:
-      | z.ZodEnum<[string, ...string[]]>
-      | z.ZodUnion<[z.ZodEnum<[string, ...string[]]>, ...z.ZodEnum<[string, ...string[]]>[]]>;
-  }
-> = {
-  stringComparison: {
-    schema: StringComparisonFilterSchema,
-    operatorEnum: z.union([EquivalenceOperatorsEnum, z.enum(["like", "notLike"])]),
-  },
-  stringArray: {
-    schema: StringArrayFilterSchema,
-    operatorEnum: z.enum(["in", "notIn"]),
-  },
-  numberComparison: {
-    schema: NumberComparisonFilterSchema,
-    operatorEnum: z.union([ComparisonOperatorsEnum, EquivalenceOperatorsEnum]),
-  },
-  numberArray: {
-    schema: NumberArrayFilterSchema,
-    operatorEnum: z.enum(["in", "notIn"]),
-  },
-  numberRange: {
-    schema: NumberRangeFilterSchema,
-    operatorEnum: z.enum(["between", "outside"]),
-  },
-  // integerComparison reuses NumberComparisonFilterSchema — see module JSDoc
-  integerComparison: {
-    schema: NumberComparisonFilterSchema,
-    operatorEnum: z.union([ComparisonOperatorsEnum, EquivalenceOperatorsEnum]),
-  },
-  booleanComparison: {
-    schema: BooleanComparisonFilterSchema,
-    operatorEnum: EquivalenceOperatorsEnum,
-  },
-  dateComparison: {
-    schema: DateComparisonFilterSchema,
-    operatorEnum: ComparisonOperatorsEnum,
-  },
-  dateRange: {
-    schema: DateRangeFilterSchema,
-    operatorEnum: z.enum(["between", "outside"]),
-  },
-  moneyComparison: {
-    schema: MoneyComparisonFilterSchema,
-    operatorEnum: ComparisonOperatorsEnum,
-  },
-  moneyRange: {
-    schema: MoneyRangeFilterSchema,
-    operatorEnum: z.enum(["between", "outside"]),
-  },
+const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
+  stringComparison: StringComparisonFilterSchema,
+  stringArray: StringArrayFilterSchema,
+  numberComparison: NumberComparisonFilterSchema,
+  numberArray: NumberArrayFilterSchema,
+  numberRange: NumberRangeFilterSchema,
+  integerComparison: IntegerComparisonFilterSchema,
+  booleanComparison: BooleanComparisonFilterSchema,
+  dateComparison: DateComparisonFilterSchema,
+  dateRange: DateRangeFilterSchema,
+  moneyComparison: MoneyComparisonFilterSchema,
+  moneyRange: MoneyRangeFilterSchema,
 };
 
 /**
@@ -179,10 +132,12 @@ export const F = {
  *
  * Throws `PluginError` on:
  * 1. Unknown `filterType` (not one of the 11 `CustomFilterType` values)
- * 2. Duplicate filter names within a route-method (guards against Object.entries bugs)
- * 3. A custom filter name that collides with a default-filter field name
+ * 2. A custom filter name that collides with a default-filter field name
  *    (`status`, `closeDateRange`, `totalFundingAvailableRange`,
  *    `minAwardAmountRange`, `maxAwardAmountRange`)
+ *
+ * Duplicate filter names within a route-method need no check: filter names are
+ * object keys, and JS object literals cannot represent duplicate keys.
  *
  * Implements ASVS L1 input validation at the plugin-author trust boundary.
  *
@@ -195,8 +150,6 @@ export function validateRoutes(routes: PluginRoutes): void {
       const filters = (declarations as RouteDeclarations).filters;
       if (!filters) continue;
 
-      const seenNames = new Set<string>();
-
       for (const [filterName, spec] of Object.entries(filters)) {
         const path = `routes.${resourceKey}.${methodKey}.filters.${filterName}`;
 
@@ -208,15 +161,6 @@ export function validateRoutes(routes: PluginRoutes): void {
             { path, sourceValue: spec }
           );
         }
-
-        // Check for duplicate filter names (within this route-method)
-        if (seenNames.has(filterName)) {
-          throw new PluginError(
-            `Duplicate filter name "${filterName}" in route ${resourceKey}.${methodKey}`,
-            { path, sourceValue: spec }
-          );
-        }
-        seenNames.add(filterName);
 
         // Check for collision with default-filter field names
         if (DEFAULT_FILTER_NAMES.has(filterName)) {
@@ -238,9 +182,9 @@ export function validateRoutes(routes: PluginRoutes): void {
 /**
  * Call-time validation for a single filter value against its registered spec.
  *
- * - For REGISTERED filters (spec provided): validates the operator against the
- *   filterType's allowed operator set, then validates the value shape against
- *   the filterType's Zod schema.
+ * - For REGISTERED filters (spec provided): validates the `{operator, value}`
+ *   pair against the filterType's Zod schema — each schema constrains both the
+ *   allowed operator enum and the value shape, so one parse covers both checks.
  * - For AD-HOC filters (spec is undefined): shape-only check against
  *   `DefaultFilterSchema` (no operator/filterType enforcement — accepted trade-off).
  *
@@ -269,8 +213,8 @@ export function validateFilterCall(
   }
 
   // Registered filter — validate against the filterType's schema
-  const typeMeta = FILTER_TYPE_SCHEMAS[spec.filterType];
-  if (!typeMeta) {
+  const schema = FILTER_TYPE_SCHEMAS[spec.filterType];
+  if (!schema) {
     // Should not reach here if validateRoutes was called first, but guard anyway
     throw new PluginError(
       `Unknown filterType "${spec.filterType}" for registered filter "${filterName}"`,
@@ -278,8 +222,8 @@ export function validateFilterCall(
     );
   }
 
-  // Validate the value shape against the filterType's full schema
-  const result = typeMeta.schema.safeParse(filterValue);
+  // One parse validates both the operator enum and the value shape
+  const result = schema.safeParse(filterValue);
   if (!result.success) {
     throw new PluginError(
       `Filter "${filterName}" (filterType: "${spec.filterType}") failed validation: ${result.error.message}`,
@@ -293,11 +237,11 @@ export function validateFilterCall(
 // ############################################################################
 
 /**
- * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters` wire body.
+ * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters` request body.
  *
  * Three-bucket classification:
  * 1. **Default filters** — keys present in `OppDefaultFiltersSchema` (e.g. `status`,
- *    `closeDateRange`) → top-level named fields on the wire body.
+ *    `closeDateRange`) → top-level named fields on the request body.
  * 2. **Registered custom filters** — keys declared in the route-method's `filters`
  *    spec → `customFilters[name]`.
  * 3. **Ad-hoc filters** — unregistered keys (not in defaults, not in spec) →
@@ -312,7 +256,7 @@ export function validateFilterCall(
  * @param resourceKey - The resource name (e.g. `"opportunities"`)
  * @param methodKey - The method name (e.g. `"search"`)
  * @param consumerFilters - The flat consumer-facing filters object
- * @returns The classified `OppFilters` wire body
+ * @returns The classified `OppFilters` request body
  */
 export function classifyFilters(
   routes: PluginRoutes,
@@ -347,11 +291,11 @@ export function classifyFilters(
     }
   }
 
-  // Build wire body — omit customFilters key entirely when empty (match nullish shape)
-  const wireBody: z.infer<typeof OppFiltersSchema> = {
+  // Build request body — omit customFilters key entirely when empty (match nullish shape)
+  const requestBody: z.infer<typeof OppFiltersSchema> = {
     ...defaultFields,
     ...(Object.keys(customFilters).length > 0 ? { customFilters } : {}),
   };
 
-  return wireBody;
+  return requestBody;
 }

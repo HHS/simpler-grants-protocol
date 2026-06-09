@@ -30,7 +30,7 @@ const grantsGovRoutes: PluginRoutes = {
 
 /** Mixed consumer filters: default + registered custom + ad-hoc */
 const mixedConsumerFilters: Record<string, unknown> = {
-  // Bucket 1 — default filter fields (top-level wire fields)
+  // Bucket 1 — default filter fields (top-level request-body fields)
   status: { operator: "in", value: ["open", "closed"] },
   closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
   // Bucket 2 — registered custom filters → customFilters record
@@ -50,7 +50,7 @@ describe("classifyFilters", () => {
   // ############################################################################
 
   describe("three-bucket classification", () => {
-    it("routes default filters to top-level named wire fields", () => {
+    it("routes default filters to top-level named request-body fields", () => {
       const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
         status: { operator: "in", value: ["open"] },
       });
@@ -76,7 +76,7 @@ describe("classifyFilters", () => {
       expect(result.customFilters?.legacyTag).toEqual({ operator: "eq", value: "legacy-2024" });
     });
 
-    it("builds exact ADR-0012 OppFilters wire body for mixed default + custom + ad-hoc input", () => {
+    it("builds exact ADR-0012 OppFilters request body for mixed default + custom + ad-hoc input", () => {
       const result = classifyFilters(
         grantsGovRoutes,
         "opportunities",
@@ -84,7 +84,7 @@ describe("classifyFilters", () => {
         mixedConsumerFilters
       );
 
-      // Assert the exact wire body shape
+      // Assert the exact request body shape
       const expected: ReturnType<typeof OppFiltersSchema.parse> = {
         status: { operator: "in", value: ["open", "closed"] },
         closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
@@ -233,6 +233,23 @@ describe("classifyFilters", () => {
       ).toThrow(PluginError);
     });
 
+    it("throws PluginError on a non-integer value for a registered integerComparison filter", () => {
+      // integerComparison enforces an integer value (IntegerComparisonFilterSchema)
+      const spec = { filterType: "integerComparison" } as const;
+
+      expect(() => validateFilterCall(spec, "awardCount", { operator: "eq", value: 2.5 })).toThrow(
+        PluginError
+      );
+    });
+
+    it("passes a valid integerComparison filter without throwing", () => {
+      const spec = { filterType: "integerComparison" } as const;
+
+      expect(() =>
+        validateFilterCall(spec, "awardCount", { operator: "eq", value: 2 })
+      ).not.toThrow();
+    });
+
     it("PluginError path includes the filter name", () => {
       const spec = { filterType: "stringArray" } as const;
 
@@ -339,7 +356,7 @@ describe("F helpers", () => {
   });
 
   it("F.* helpers produce values compatible with DefaultFilterSchema", () => {
-    // Spot-check that F helper outputs satisfy the wire schema
+    // Spot-check that F helper outputs satisfy the request-body schema
     expect(() => DefaultFilterSchema.parse(F.eq("test"))).not.toThrow();
     expect(() => DefaultFilterSchema.parse(F.in(["a", "b"]))).not.toThrow();
     expect(() => DefaultFilterSchema.parse(F.between(100, 500))).not.toThrow();
