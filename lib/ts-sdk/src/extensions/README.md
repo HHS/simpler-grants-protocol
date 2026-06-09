@@ -680,7 +680,7 @@ import { F } from "@common-grants/sdk/extensions";
 F.eq("open"); // { operator: "eq", value: "open" }
 F.in(["HHS", "DOE"]); // { operator: "in", value: ["HHS", "DOE"] }
 F.like("*Conservation*"); // { operator: "like", value: "*Conservation*" }
-F.between("2025-01-01", "2025-12-31"); // { operator: "between", value: ["2025-01-01", "2025-12-31"] }
+F.between("2025-01-01", "2025-12-31"); // { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } }
 // Full set: eq, neq, gt, gte, lt, lte, in, notIn, like, notLike, between, outside
 ```
 
@@ -715,7 +715,7 @@ const wireBody = classifyFilters(
 // wireBody shape (ADR-0012):
 // {
 //   status: { operator: "in", value: ["open", "forecasted"] },
-//   closeDateRange: { operator: "between", value: ["2025-01-01", "2025-12-31"] },
+//   closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
 //   customFilters: {
 //     agency: { operator: "in", value: ["HHS", "DOE"] },
 //     fundingProgram: { operator: "like", value: "*Conservation*" },
@@ -748,14 +748,11 @@ import { validateRoutes, validateFilterCall } from "@common-grants/sdk/extension
 // Registration-time — throws PluginError on unknown filterType or collision
 validateRoutes(grantsGovPlugin.routes!);
 
-// Call-time — throws PluginError on operator/value mismatch for registered filters
-validateFilterCall(
-  grantsGovPlugin.routes!,
-  "opportunities",
-  "search",
-  "agency",
-  F.in(["HHS"]) // valid: in operator + string array value match stringArray filterType
-);
+// Call-time — throws PluginError on operator/value mismatch for registered filters.
+// Pass the filter's CustomFilterSpec (looked up from the route-method's filters),
+// its name, and the value.
+const agencySpec = grantsGovPlugin.routes!.opportunities.search.filters!.agency;
+validateFilterCall(agencySpec, "agency", F.in(["HHS"])); // valid: in operator + string array value match the stringArray filterType
 ```
 
 ### The `as const` trap
