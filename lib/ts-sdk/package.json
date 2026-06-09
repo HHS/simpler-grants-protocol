@@ -72,7 +72,7 @@
     "check:format": "prettier --check .",
     "check:types": "tsc --noEmit",
     "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
-    "ci": "pnpm run checks && pnpm run build && pnpm run test && pnpm run example:transforms",
+    "ci": "pnpm run checks && pnpm run build && pnpm run test && pnpm run example:transforms && pnpm run example:custom-filters",
     "audit": "pnpm audit",
     "typespec": "tsp compile lib/main.tsp",
     "example:list": "tsx examples/list-opportunities.ts",
@@ -82,7 +82,8 @@
     "example:get-custom-fields": "tsx examples/get-opportunity-with-custom-fields.ts",
     "example:plugins": "tsx examples/plugins.ts",
     "example:server": "tsx examples/mock-api-server.ts",
-    "example:transforms": "tsx examples/transforms.ts"
+    "example:transforms": "tsx examples/transforms.ts",
+    "example:custom-filters": "tsx examples/custom-filters.ts"
   },
   "dependencies": {
     "zod": "catalog:"
