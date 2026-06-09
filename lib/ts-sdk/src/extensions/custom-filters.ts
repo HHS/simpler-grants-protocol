@@ -332,9 +332,11 @@ export function classifyFilters(
     const spec = registeredFilters[key] as CustomFilterSpec | undefined;
 
     if (DEFAULT_FILTER_NAMES.has(key)) {
-      // Bucket 1: default filter → top-level named field
-      // Validate call-time (using undefined spec for shape-only; default fields
-      // use their own Zod schemas from OppDefaultFiltersSchema)
+      // Bucket 1: default filter → top-level named field.
+      // Default keys get shape-only validation via DefaultFilterSchema (the same
+      // treatment as ad-hoc keys); per-field type enforcement against
+      // OppDefaultFiltersSchema is intentionally not applied here. The server
+      // validates default fields and reports any it cannot apply.
       validateFilterCall(undefined, key, value);
       (defaultFields as Record<string, unknown>)[key] = value;
     } else {
