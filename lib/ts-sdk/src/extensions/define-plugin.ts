@@ -103,13 +103,20 @@ export interface DefinePluginOptions<T extends SchemasInput = SchemasInput> {
  * - `schemas` — per-object compiled output: `common` (extended Zod schema), `native`,
  *   `toCommon`, and `fromCommon` for each extensible model
  * - `meta` — plugin identity passed through from options
+ * - `routes` — route-keyed custom filter declarations; when defined `as const`, the
+ *   literal `filterType` values are preserved so that `TypedConsumerFilters` (Plan 03)
+ *   can narrow call-site filter keys, operators, and value shapes (D-13).
+ *
+ * The second generic parameter `TRoutes` captures the literal routes type when the
+ * caller uses `as const`. Callers that do not care about typed narrowing can ignore it
+ * (the default is `PluginRoutes`).
  */
-export interface Plugin<T extends SchemasInput = SchemasInput> {
+export interface Plugin<T extends SchemasInput = SchemasInput, TRoutes extends PluginRoutes = PluginRoutes> {
   extensions?: PluginExtensions;
   schemas: PluginSchemas<T>;
   meta?: PluginMeta;
   /** Route-keyed custom filter declarations, passed through unchanged from `DefinePluginOptions.routes`. */
-  routes?: PluginRoutes;
+  routes?: TRoutes;
 }
 
 // ############################################################################
@@ -149,9 +156,9 @@ export interface Plugin<T extends SchemasInput = SchemasInput> {
  * const result = plugin.schemas.Opportunity.toCommon?.(nativeData);
  * ```
  */
-export function definePlugin<const T extends SchemasInput>(
-  options: DefinePluginOptions<T>
-): Plugin<T> {
+export function definePlugin<const T extends SchemasInput, const TRoutes extends PluginRoutes = PluginRoutes>(
+  options: DefinePluginOptions<T> & { routes?: TRoutes }
+): Plugin<T, TRoutes> {
   const { extensions, meta, schemas: schemasInput, routes } = options;
   const schemas: Record<string, object> = {};
 
@@ -210,7 +217,8 @@ export function definePlugin<const T extends SchemasInput>(
 
   // Cast is safe — the runtime loop mirrors the PluginSchemas<T> mapped type,
   // but TypeScript can't verify that from the dynamic Object.entries() iteration.
-  return { extensions, schemas, meta, routes } as Plugin<T>;
+  // The second generic TRoutes preserves the literal routes type from `as const` calls (D-13).
+  return { extensions, schemas, meta, routes } as Plugin<T, TRoutes>;
 }
 
 // ############################################################################
