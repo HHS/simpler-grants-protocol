@@ -56,15 +56,15 @@ export interface CustomFieldSpec {
 // ############################################################################
 
 /**
- * The 11-value enum of supported custom filter types (D-11).
+ * The 11-value enum of supported custom filter types.
  *
  * Each value maps 1:1 to a base filter type with auto-derived operators.
  * Operators are NOT authored — they are derived from the filterType at
  * classification time (e.g. `booleanComparison` → `eq|neq`).
  *
  * NOTE: Build against these authoritative `*Comparison` names.
- * An older draft of the Tech Spec used terse names (`"string"`, `"number"`);
- * those are WRONG — always use the full `*Comparison` / `*Array` / `*Range` form.
+ * Terse names (`"string"`, `"number"`) are NOT valid — always use the full
+ * `*Comparison` / `*Array` / `*Range` form.
  */
 export type CustomFilterType =
   | "stringComparison"
@@ -114,7 +114,7 @@ export interface RouteDeclarations {
  * Route map for custom filter declarations: resource → method → declarations.
  *
  * Passed as `routes` in `definePlugin()`. Filters attach to resource methods
- * (which vary asymmetrically across schemas), not to a schema (D-10).
+ * (which vary asymmetrically across schemas), not to a schema.
  *
  * @example
  * ```typescript

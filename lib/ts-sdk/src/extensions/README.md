@@ -724,7 +724,7 @@ const wireBody = classifyFilters(
 // }
 ```
 
-The three-bucket classification rule (ADR-0012 / D-15):
+The three-bucket classification rule (ADR-0012):
 
 1. **Default filters** (`status`, `closeDateRange`, etc.) → named top-level fields on the wire body.
 2. **Pre-registered custom filters** (declared in `routes.*.*.filters`) → `customFilters` record, with operator/value-shape validation against the declared `filterType`.

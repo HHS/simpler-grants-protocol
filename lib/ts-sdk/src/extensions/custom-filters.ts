@@ -1,20 +1,20 @@
 /**
  * Custom Filters Extension
  *
- * Provides the classifier, validators, and F helper namespace for the custom-filters PoC.
+ * Provides the classifier, validators, and F helper namespace for the custom-filters surface.
  *
  * - `classifyFilters` — transforms a flat consumer `filters` object into the
  *   ADR-0012 `OppFilters` wire body (three-bucket: default → named top-level fields;
  *   registered custom → `customFilters`; ad-hoc → `customFilters` passthrough).
  * - `validateRoutes` — registration-time validation; rejects unknown `filterType`,
- *   duplicate names, and custom names that collide with default-filter names (D-14).
+ *   duplicate names, and custom names that collide with default-filter names.
  * - `validateFilterCall` — call-time validation; rejects operator/filterType mismatch
- *   and value-shape mismatches for registered filters; shape-only check for ad-hoc (D-14).
- * - `F` — helper namespace that compiles `{operator, value}` raw filter objects (D-12).
+ *   and value-shape mismatches for registered filters; shape-only check for ad-hoc.
+ * - `F` — helper namespace that compiles `{operator, value}` raw filter objects.
  *
- * Wire contract: ADR-0012 / OppFiltersSchema (D-15).
+ * Wire contract: ADR-0012 / OppFiltersSchema.
  * Core-field escape hatch: `gov.<system>@<filterName>` keys pass through as custom-filter
- * keys verbatim (D-16).
+ * keys verbatim.
  *
  * @module @common-grants/sdk/extensions
  */
@@ -47,10 +47,10 @@ import { PluginError } from "./types";
  * Maps each CustomFilterType to its allowed Zod schema and the operator enum
  * that determines whether a given operator is valid for that type.
  *
- * `integerComparison` reuses `NumberComparisonFilterSchema` (Zod-level int
- * constraint is not enforced here — the PoC uses the same schema as
- * `numberComparison`). Finding candidate for Plan 04: a dedicated
- * `IntegerComparisonFilterSchema` with `.int()` would tighten this.
+ * `integerComparison` reuses `NumberComparisonFilterSchema` (the Zod-level int
+ * constraint is not enforced here — it uses the same schema as
+ * `numberComparison`). A dedicated `IntegerComparisonFilterSchema` with `.int()`
+ * would tighten this.
  */
 const FILTER_TYPE_SCHEMAS: Record<
   CustomFilterType,
@@ -115,7 +115,7 @@ const VALID_FILTER_TYPES = new Set<string>(Object.keys(FILTER_TYPE_SCHEMAS));
 
 /**
  * The default-filter field names from `OppDefaultFiltersSchema`.
- * Custom filter names must not collide with these (D-14, T-02-01).
+ * Custom filter names must not collide with these.
  */
 const DEFAULT_FILTER_NAMES = new Set<string>(Object.keys(OppDefaultFiltersSchema.shape));
 
@@ -124,7 +124,7 @@ const DEFAULT_FILTER_NAMES = new Set<string>(Object.keys(OppDefaultFiltersSchema
 // ############################################################################
 
 /**
- * Helper namespace for building `{operator, value}` raw filter objects (D-12).
+ * Helper namespace for building `{operator, value}` raw filter objects.
  *
  * Each helper compiles to the `DefaultFilter` wire shape accepted by ADR-0012.
  * Raw `{operator, value}` objects are also accepted by `classifyFilters` — F.*
@@ -132,7 +132,7 @@ const DEFAULT_FILTER_NAMES = new Set<string>(Object.keys(OppDefaultFiltersSchema
  *
  * NOTE: `F.in` uses the TS reserved word as an object key — valid as a property
  * key. The Python sibling uses `f.in_` to avoid the reserved-word restriction;
- * this cross-SDK naming difference is documented in the PoC findings (D-12).
+ * this cross-SDK naming difference is a documented divergence across SDKs.
  *
  * @example
  * ```typescript
@@ -185,7 +185,7 @@ export const F = {
  *    (`status`, `closeDateRange`, `totalFundingAvailableRange`,
  *    `minAwardAmountRange`, `maxAwardAmountRange`)
  *
- * Implements threat T-02-01 (ASVS L1 input validation at the plugin-author trust boundary).
+ * Implements ASVS L1 input validation at the plugin-author trust boundary.
  *
  * @param routes - The PluginRoutes declaration to validate
  * @throws {PluginError} on any constraint violation
@@ -243,9 +243,7 @@ export function validateRoutes(routes: PluginRoutes): void {
  *   filterType's allowed operator set, then validates the value shape against
  *   the filterType's Zod schema.
  * - For AD-HOC filters (spec is undefined): shape-only check against
- *   `DefaultFilterSchema` (no operator/filterType enforcement — accepted trade-off D-13).
- *
- * Implements threat T-02-02.
+ *   `DefaultFilterSchema` (no operator/filterType enforcement — accepted trade-off).
  *
  * @param spec - The registered `CustomFilterSpec` for this filter, or `undefined` for ad-hoc
  * @param filterName - The filter key (used in error `path`)
@@ -298,7 +296,7 @@ export function validateFilterCall(
 /**
  * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters` wire body.
  *
- * Three-bucket classification (D-15):
+ * Three-bucket classification:
  * 1. **Default filters** — keys present in `OppDefaultFiltersSchema` (e.g. `status`,
  *    `closeDateRange`) → top-level named fields on the wire body.
  * 2. **Registered custom filters** — keys declared in the route-method's `filters`
@@ -306,7 +304,7 @@ export function validateFilterCall(
  * 3. **Ad-hoc filters** — unregistered keys (not in defaults, not in spec) →
  *    `customFilters[name]` passthrough.
  *
- * `gov.<system>@<filterName>` namespaced keys (D-16) are treated as ad-hoc custom
+ * `gov.<system>@<filterName>` namespaced keys are treated as ad-hoc custom
  * filter keys and flow into `customFilters` verbatim — no auto-migration.
  *
  * Call-time validation (`validateFilterCall`) is run for each key during classification.

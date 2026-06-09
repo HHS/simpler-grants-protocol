@@ -69,14 +69,14 @@ export interface DefinePluginOptions<T extends SchemasInput = SchemasInput> {
    */
   schemas?: T;
   /**
-   * Route-keyed custom filter declarations (D-10).
+   * Route-keyed custom filter declarations.
    *
    * Passed through unchanged to `Plugin.routes`. Filters attach to resource
    * methods (e.g. `opportunities.search.filters`), not to a schema key — because
    * filters vary asymmetrically across methods.
    *
    * Registration-time validation (`validateRoutes`) and call-time classification
-   * (`classifyFilters`) are added in Plan 02.
+   * (`classifyFilters`) consume these declarations.
    *
    * @example
    * ```typescript
@@ -104,8 +104,8 @@ export interface DefinePluginOptions<T extends SchemasInput = SchemasInput> {
  *   `toCommon`, and `fromCommon` for each extensible model
  * - `meta` — plugin identity passed through from options
  * - `routes` — route-keyed custom filter declarations; when defined `as const`, the
- *   literal `filterType` values are preserved so that `TypedConsumerFilters` (Plan 03)
- *   can narrow call-site filter keys, operators, and value shapes (D-13).
+ *   literal `filterType` values are preserved so that `TypedConsumerFilters`
+ *   can narrow call-site filter keys, operators, and value shapes.
  *
  * The second generic parameter `TRoutes` captures the literal routes type when the
  * caller uses `as const`. Callers that do not care about typed narrowing can ignore it
@@ -221,7 +221,7 @@ export function definePlugin<
 
   // Cast is safe — the runtime loop mirrors the PluginSchemas<T> mapped type,
   // but TypeScript can't verify that from the dynamic Object.entries() iteration.
-  // The second generic TRoutes preserves the literal routes type from `as const` calls (D-13).
+  // The second generic TRoutes preserves the literal routes type from `as const` calls.
   return { extensions, schemas, meta, routes } as Plugin<T, TRoutes>;
 }
 

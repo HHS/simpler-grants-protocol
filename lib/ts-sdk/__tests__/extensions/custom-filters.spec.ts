@@ -84,7 +84,7 @@ describe("classifyFilters", () => {
         mixedConsumerFilters
       );
 
-      // Assert the exact wire body shape (D-15)
+      // Assert the exact wire body shape
       const expected: ReturnType<typeof OppFiltersSchema.parse> = {
         status: { operator: "in", value: ["open", "closed"] },
         closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
@@ -98,7 +98,7 @@ describe("classifyFilters", () => {
       expect(result).toEqual(expected);
     });
 
-    it("passes gov.<system>@<filterName> namespaced keys through to customFilters verbatim (D-16)", () => {
+    it("passes gov.<system>@<filterName> namespaced keys through to customFilters verbatim", () => {
       const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
         "gov.grants@announcementType": { operator: "eq", value: "NOFO" },
       });
@@ -172,7 +172,7 @@ describe("classifyFilters", () => {
         opportunities: {
           search: {
             filters: {
-              // `status` is a default-filter field name — collision (D-14)
+              // `status` is a default-filter field name — collision
               status: { filterType: "stringComparison" },
             },
           },

@@ -1,5 +1,5 @@
 /**
- * Compile-time type-narrowing tests for the custom-filters `as const` surface (D-13).
+ * Compile-time type-narrowing tests for the custom-filters `as const` surface.
  *
  * This file's primary purpose is to COMPILE. Passing `tsc --noEmit` (via
  * `pnpm check:types`) IS the assertion — every `@ts-expect-error` directive
@@ -118,7 +118,7 @@ export type TypedConsumerFilters<TSpecs extends Record<string, CustomFilterSpec>
  * - WITHOUT `as const`: `TSpecs` resolves to `never` (filterType widened to
  *   `string`, failing the `CustomFilterSpec` constraint) →
  *   falls back to `Record<string, unknown>`, accepting any object without
- *   type-checking keys or value shapes (the named widening trap, D-13).
+ *   type-checking keys or value shapes (the named widening trap).
  */
 type FilterParams<TSpecs> = [TSpecs] extends [never]
   ? Record<string, unknown>
@@ -133,7 +133,7 @@ type FilterParams<TSpecs> = [TSpecs] extends [never]
  *
  * The typed surface intentionally does NOT include default filters (status,
  * closeDateRange, etc.) or ad-hoc keys — those stay outside the narrowed
- * record per D-12. This function is exercised in the @ts-expect-error tests below.
+ * record. This function is exercised in the @ts-expect-error tests below.
  */
 function buildTypedFilters<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -246,7 +246,7 @@ describe("custom-filters compile-time narrowing (as const)", () => {
 });
 
 // ############################################################################
-// WITHOUT `as const` — the silent-widening trap (D-13)
+// WITHOUT `as const` — the silent-widening trap
 // ############################################################################
 
 // Widening happens when the Plugin's routes type is stored as the broad
@@ -258,10 +258,9 @@ describe("custom-filters compile-time narrowing (as const)", () => {
 // type are now ACCEPTED without error — the typed guard is gone.
 //
 // NOTE: A lint rule (e.g. a custom `prefer-as-const` for `definePlugin` calls)
-// would catch the missing `as const` at authoring time — not built in this PoC;
-// recorded as a finding candidate.
+// would catch the missing `as const` at authoring time.
 
-// Explicitly widen the plugin to `Plugin` (erases TRoutes literal type, D-13).
+// Explicitly widen the plugin to `Plugin` (erases TRoutes literal type).
 const widenedPlugin: Plugin = definePlugin({
   meta: { name: "grants.gov", version: "0.1.0", sourceSystem: "grants.gov" },
   routes: {
@@ -280,7 +279,7 @@ const widenedPlugin: Plugin = definePlugin({
   // returned as the unparameterized `Plugin` type, call-site narrowing is lost.
 } as const);
 
-describe("custom-filters WITHOUT as const — widening trap (D-13)", () => {
+describe("custom-filters WITHOUT as const — widening trap", () => {
   it("demonstrates widening: previously-rejected keys/values are accepted", () => {
     // All three lines below would be @ts-expect-error WITH the narrowed plugin type,
     // but they compile CLEAN here — because `Plugin` erases TRoutes to PluginRoutes

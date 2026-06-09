@@ -5,7 +5,7 @@
  *   2. Building a unified consumer `filters` object mixing default fields
  *      (status, closeDateRange), pre-registered custom filters (agency,
  *      fundingProgram), and an ad-hoc filter (legacyTag) — using `F.*` helpers.
- *      Control fields (query, maxResults, signal, schema) stay OUTSIDE `filters` (D-12).
+ *      Control fields (query, maxResults, signal, schema) stay OUTSIDE `filters`.
  *   3. Calling `classifyFilters` to produce the ADR-0012 wire body:
  *      default fields at top-level, custom + ad-hoc under `customFilters`.
  *   4. A COMMENT block (not executed) demonstrating the `as const` widening
@@ -14,13 +14,13 @@
  * Run with: `pnpm example:custom-filters`
  *
  * @remarks
- * The three-bucket classification rule (D-15 / ADR-0012):
+ * The three-bucket classification rule (ADR-0012):
  *   - Default filters (status, closeDateRange, ...) → named top-level fields on the wire body.
  *   - Pre-registered custom filters (agency, fundingProgram) → `customFilters` record.
  *   - Ad-hoc filters (legacyTag) → `customFilters` passthrough (shape-only validated).
  *
  * No network I/O: this example BUILDS the request body and prints it; it does NOT
- * send it over the wire (transport is out of scope per ADR-0022 / CLAUDE.md).
+ * send it over the wire — transport is not handled here.
  */
 
 import { classifyFilters, definePlugin, F } from "../src/extensions";
@@ -29,7 +29,7 @@ import { classifyFilters, definePlugin, F } from "../src/extensions";
 // Step 1 — Define the grants.gov plugin with route-keyed custom filters
 // ############################################################################
 
-// `as const` is load-bearing (D-13): it preserves literal `filterType` values so
+// `as const` is load-bearing: it preserves literal `filterType` values so
 // that TypeScript can narrow call-site filter keys, operators, and value shapes.
 // Without `as const`, `filterType` widens to `string` and the typed guard is lost.
 // See custom-filters-types.spec.ts for the compile-time proof.
@@ -74,7 +74,7 @@ console.log(
 // The consumer-facing `filters` object is flat — it mixes all three filter types
 // without the caller needing to know which bucket each belongs to.
 //
-// IMPORTANT (D-12): control fields (query, maxResults, signal, schema) stay OUTSIDE
+// IMPORTANT: control fields (query, maxResults, signal, schema) stay OUTSIDE
 // the `filters` object. The classifier handles only the filter predicates.
 const searchParams = {
   // Control fields — outside `filters`
@@ -92,7 +92,7 @@ const searchParams = {
     fundingProgram: F.like("*Conservation*"),
 
     // Ad-hoc filter (not registered in the plugin) — flows to customFilters verbatim
-    // (shape-only validated; operator/filterType not enforced for ad-hoc keys, D-13)
+    // (shape-only validated; operator/filterType not enforced for ad-hoc keys)
     legacyTag: F.eq("conservation-2024"),
   },
 };
@@ -169,7 +169,7 @@ console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
 //
 // The live compile-time proof is in:
 //   lib/ts-sdk/__tests__/extensions/custom-filters-types.spec.ts
-// (see "WITHOUT as const — widening trap (D-13)" describe block)
+// (see "WITHOUT as const — widening trap" describe block)
 //
 // Example of what NOT to do:
 //
