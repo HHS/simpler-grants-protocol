@@ -275,7 +275,7 @@ def validate_filter_call(
         except ValidationError as exc:
             raise PluginError(
                 f'Filter "{filter_name}" failed validation: {exc.error_count()} error(s)',
-                path=filter_name,
+                path=f"filters.{filter_name}",
                 source_value=value,
                 cause=exc,
             ) from exc
@@ -289,7 +289,7 @@ def validate_filter_call(
         except ValidationError as exc:
             raise PluginError(
                 f'Ad-hoc filter "{filter_name}" has an invalid DefaultFilter shape: {exc}',
-                path=filter_name,
+                path=f"filters.{filter_name}",
                 source_value=value,
                 cause=exc,
             ) from exc
@@ -332,8 +332,11 @@ def classify_filters(
         consumer_filters: Flat ``{name: DefaultFilter}`` dict from the consumer call site.
 
     Returns:
-        ``OppFilters`` request body.  Call ``.model_dump(by_alias=True, exclude_none=True)``
-        for the JSON body of the ADR-0012 search request.
+        ``OppFilters`` request body.  Call
+        ``.model_dump(by_alias=True, exclude_none=True, mode="json")`` for the JSON
+        body of the ADR-0012 search request — ``mode="json"`` is required because
+        coerced ``date`` objects and operator enums are not JSON-serializable in
+        the default python mode.
 
     Raises:
         PluginError: When any filter value fails validation — registered and ad-hoc
@@ -386,9 +389,15 @@ def classify_filters(
             customFilters=custom_buckets if custom_buckets else None,
         )
     except ValidationError as exc:
+        # Name the failing field(s) so bucket-1 errors are as pinpointed as the
+        # filters.<name> paths raised for buckets 2/3. The loc values are the
+        # alias keys used at construction (e.g. "closeDateRange").
+        failed = sorted({str(err["loc"][0]) for err in exc.errors() if err.get("loc")})
+        field_list = ", ".join(failed) if failed else "<unknown>"
         raise PluginError(
-            f"Default filter failed validation: {exc.error_count()} error(s)",
-            path=f"routes.{resource}.{method}",
+            f"Default filter(s) {field_list} failed validation: "
+            f"{exc.error_count()} error(s)",
+            path=f"filters.{failed[0]}" if len(failed) == 1 else "filters",
             source_value=default_fields,
             cause=exc,
         ) from exc
