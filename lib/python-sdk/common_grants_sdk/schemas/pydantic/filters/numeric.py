@@ -55,9 +55,7 @@ class IntegerComparisonFilter(CommonGrantsBaseModel):
         ...,
         description="The comparison operator to apply to the filter value",
     )
-    value: StrictInt = Field(
-        ..., description="The integer value to compare against"
-    )
+    value: StrictInt = Field(..., description="The integer value to compare against")
 
     @field_validator("operator", mode="before")
     @classmethod

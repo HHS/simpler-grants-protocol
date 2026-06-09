@@ -232,8 +232,9 @@ def test_oppfilters_mixed_case_roundtrip():
     assert "closeDateRange" in request_body
 
     # closeDateRange is NOT in customFilters
-    assert "customFilters" not in request_body or "closeDateRange" not in request_body.get(
-        "customFilters", {}
+    assert (
+        "customFilters" not in request_body
+        or "closeDateRange" not in request_body.get("customFilters", {})
     )
 
 
