@@ -11,6 +11,7 @@ import type {
   ObjectSchemasInput,
   PluginMeta,
   PluginExtensions,
+  PluginRoutes,
 } from "./types";
 import { EXTENSIBLE_SCHEMA_MAP } from "./types";
 import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fields";
@@ -67,6 +68,32 @@ export interface DefinePluginOptions<T extends SchemasInput = SchemasInput> {
    * callables are provided. Native input Zod-wrapping remains deferred.
    */
   schemas?: T;
+  /**
+   * Route-keyed custom filter declarations (D-10).
+   *
+   * Passed through unchanged to `Plugin.routes`. Filters attach to resource
+   * methods (e.g. `opportunities.search.filters`), not to a schema key — because
+   * filters vary asymmetrically across methods.
+   *
+   * Registration-time validation (`validateRoutes`) and call-time classification
+   * (`classifyFilters`) are added in Plan 02.
+   *
+   * @example
+   * ```typescript
+   * definePlugin({
+   *   routes: {
+   *     opportunities: {
+   *       search: {
+   *         filters: {
+   *           agency: { filterType: "stringArray" },
+   *         },
+   *       },
+   *     },
+   *   },
+   * } as const)
+   * ```
+   */
+  routes?: PluginRoutes;
 }
 
 /**
@@ -81,6 +108,8 @@ export interface Plugin<T extends SchemasInput = SchemasInput> {
   extensions?: PluginExtensions;
   schemas: PluginSchemas<T>;
   meta?: PluginMeta;
+  /** Route-keyed custom filter declarations, passed through unchanged from `DefinePluginOptions.routes`. */
+  routes?: PluginRoutes;
 }
 
 // ############################################################################
@@ -123,7 +152,7 @@ export interface Plugin<T extends SchemasInput = SchemasInput> {
 export function definePlugin<const T extends SchemasInput>(
   options: DefinePluginOptions<T>
 ): Plugin<T> {
-  const { extensions, meta, schemas: schemasInput } = options;
+  const { extensions, meta, schemas: schemasInput, routes } = options;
   const schemas: Record<string, object> = {};
 
   for (const [name, extensibleSchema] of Object.entries(EXTENSIBLE_SCHEMA_MAP) as [
@@ -181,7 +210,7 @@ export function definePlugin<const T extends SchemasInput>(
 
   // Cast is safe — the runtime loop mirrors the PluginSchemas<T> mapped type,
   // but TypeScript can't verify that from the dynamic Object.entries() iteration.
-  return { extensions, schemas, meta } as Plugin<T>;
+  return { extensions, schemas, meta, routes } as Plugin<T>;
 }
 
 // ############################################################################
