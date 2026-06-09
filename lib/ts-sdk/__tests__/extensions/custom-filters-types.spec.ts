@@ -18,65 +18,44 @@ import { definePlugin, type CustomFilterSpec, type Plugin, type PluginRoutes } f
 // Typed narrowing utilities
 // ############################################################################
 
-/**
- * Maps a `CustomFilterType` literal to its allowed value shape.
- *
- * These types correspond to the Zod schemas in `custom-filters.ts`
- * (FILTER_TYPE_SCHEMAS). They are the *compile-time* equivalents used here for
- * narrowing assertions — the runtime schemas enforce the same constraints.
- */
-type FilterValueShape<T extends CustomFilterSpec["filterType"]> = T extends "stringComparison"
-  ? string
-  : T extends "stringArray"
-    ? string[]
-    : T extends "numberComparison" | "integerComparison"
-      ? number
-      : T extends "numberArray"
-        ? number[]
-        : T extends "numberRange" | "moneyRange"
-          ? { min: number; max: number }
-          : T extends "booleanComparison"
-            ? boolean
-            : T extends "dateComparison"
-              ? string
-              : T extends "dateRange"
-                ? { min: string; max: string }
-                : T extends "moneyComparison"
-                  ? { amount: number; currency: string }
-                  : never;
+/** Compile-time mirror of `MoneySchema` — `amount` is a decimal STRING, not a number. */
+type Money = { amount: string; currency: string };
 
 /**
- * Maps a `CustomFilterType` literal to its allowed operator literals.
+ * Maps each `CustomFilterType` literal to its typed `{operator, value}` filter shape.
  *
- * Mirrors the `FILTER_TYPE_SCHEMAS` operator enums in `custom-filters.ts`.
+ * Single lookup table mirroring the Zod schemas in `src/schemas/zod/filters.ts`
+ * (via FILTER_TYPE_SCHEMAS in `custom-filters.ts`). These are the *compile-time*
+ * equivalents used here for narrowing assertions — the runtime schemas enforce
+ * the same constraints. One table (rather than separate operator/value
+ * conditional chains) keeps each row directly comparable to its schema.
  */
-type FilterOperator<T extends CustomFilterSpec["filterType"]> = T extends "stringComparison"
-  ? "eq" | "neq" | "like" | "notLike"
-  : T extends "stringArray" | "numberArray"
-    ? "in" | "notIn"
-    : T extends "numberComparison" | "integerComparison"
-      ? "eq" | "neq" | "gt" | "gte" | "lt" | "lte"
-      : T extends "numberRange" | "dateRange" | "moneyRange"
-        ? "between" | "outside"
-        : T extends "booleanComparison"
-          ? "eq" | "neq"
-          : T extends "dateComparison"
-            ? "gt" | "gte" | "lt" | "lte"
-            : T extends "moneyComparison"
-              ? "between" | "outside"
-              : never;
+interface FilterTypeMap {
+  stringComparison: { operator: "eq" | "neq" | "like" | "notLike"; value: string };
+  stringArray: { operator: "in" | "notIn"; value: string[] };
+  numberComparison: { operator: "eq" | "neq" | "gt" | "gte" | "lt" | "lte"; value: number };
+  numberArray: { operator: "in" | "notIn"; value: number[] };
+  numberRange: { operator: "between" | "outside"; value: { min: number; max: number } };
+  // TS has no integer type — int constraint is runtime-only (IntegerComparisonFilterSchema)
+  integerComparison: { operator: "eq" | "neq" | "gt" | "gte" | "lt" | "lte"; value: number };
+  booleanComparison: { operator: "eq" | "neq"; value: boolean };
+  dateComparison: { operator: "gt" | "gte" | "lt" | "lte"; value: string };
+  dateRange: { operator: "between" | "outside"; value: { min: string; max: string } };
+  moneyComparison: { operator: "gt" | "gte" | "lt" | "lte"; value: Money };
+  moneyRange: { operator: "between" | "outside"; value: { min: Money; max: Money } };
+}
 
 /**
  * Typed `{operator, value}` pair for a single `CustomFilterSpec`.
  *
- * This is the COMPILE-TIME representation of the wire filter object.
+ * This is the COMPILE-TIME representation of the request-body filter object.
  * It narrows both the operator (to only those valid for the filterType)
  * and the value (to the shape expected by the filterType's Zod schema).
+ *
+ * The indexed access doubles as a completeness guard: it fails to compile
+ * (ts2536) if `FilterTypeMap` is missing or misnames any `CustomFilterType` key.
  */
-type TypedFilter<TSpec extends CustomFilterSpec> = {
-  operator: FilterOperator<TSpec["filterType"]>;
-  value: FilterValueShape<TSpec["filterType"]>;
-};
+type TypedFilter<TSpec extends CustomFilterSpec> = FilterTypeMap[TSpec["filterType"]];
 
 /**
  * Narrows a `PluginRoutes` constant to the `filters` record for a specific
@@ -150,7 +129,7 @@ function buildTypedFilters<
 }
 
 // ############################################################################
-// WITH `as const` — the four @ts-expect-error compile-error assertions
+// WITH `as const` — the six @ts-expect-error compile-error assertions
 // ############################################################################
 
 // Define the plugin under test WITH `as const` — the load-bearing form.
@@ -170,6 +149,10 @@ const grantsGovPlugin = definePlugin({
           awardCount: {
             filterType: "numberComparison",
             description: "Filter by number of awards",
+          },
+          awardFloor: {
+            filterType: "moneyComparison",
+            description: "Filter by minimum award amount",
           },
         },
       },
@@ -244,6 +227,32 @@ describe("custom-filters compile-time narrowing (as const)", () => {
   it("array-value-shape mismatch (scalar where string[] required) is a compile error (asserted with @ts-expect-error)", () => {
     // @ts-expect-error -- agency is stringArray; value must be string[], not a scalar string (ts2322)
     const bad: TypedConsumerFilters<GrantsGovSpecs> = { agency: { operator: "in", value: "HHS" } };
+    void bad;
+    expect(true).toBe(true);
+  });
+
+  // #### (5) Range operator on a moneyComparison filter is a compile error WITH `as const` ####
+  //
+  // `awardFloor` is a `moneyComparison` filter — allowed operators are
+  // `"gt" | "gte" | "lt" | "lte"` (MoneyComparisonFilterSchema uses
+  // ComparisonOperatorsEnum only). `between` is a range operator.
+  it("range operator on moneyComparison is a compile error (asserted with @ts-expect-error)", () => {
+    const bad: TypedConsumerFilters<GrantsGovSpecs> = {
+      // @ts-expect-error -- "between" is a range operator, not valid for moneyComparison (ts2322)
+      awardFloor: { operator: "between", value: { amount: "100000.00", currency: "USD" } },
+    };
+    void bad;
+    expect(true).toBe(true);
+  });
+
+  // #### (6) Money.amount as a number is a compile error WITH `as const` ####
+  //
+  // `MoneySchema.amount` is a decimal STRING (DecimalStringSchema), not a number.
+  it("numeric Money.amount on moneyComparison is a compile error (asserted with @ts-expect-error)", () => {
+    const bad: TypedConsumerFilters<GrantsGovSpecs> = {
+      // @ts-expect-error -- Money.amount is a decimal string, not a number (ts2322)
+      awardFloor: { operator: "gt", value: { amount: 100000, currency: "USD" } },
+    };
     void bad;
     expect(true).toBe(true);
   });
