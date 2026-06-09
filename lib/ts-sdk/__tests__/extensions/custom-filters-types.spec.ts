@@ -197,8 +197,8 @@ describe("custom-filters compile-time narrowing (as const)", () => {
   // `TypedConsumerFilters<GrantsGovSpecs>` has only agency | fundingProgram | awardCount.
   // An unknown key triggers: "Object literal may only specify known properties" (ts2353).
   it("unknown filter key is a compile error (asserted with @ts-expect-error)", () => {
-    // @ts-expect-error -- unknown key 'notARealFilter' is not a registered filter (ts2353)
     const bad: TypedConsumerFilters<GrantsGovSpecs> = {
+      // @ts-expect-error -- unknown key 'notARealFilter' is not a registered filter (ts2353)
       notARealFilter: { operator: "eq", value: "x" },
     };
     void bad;
@@ -212,8 +212,8 @@ describe("custom-filters compile-time narrowing (as const)", () => {
   // valid for `stringComparison`. TypeScript reports:
   // "Type '"like"' is not assignable to type '"eq" | "neq" | "gt" | "gte" | "lt" | "lte"'."
   it("operator/filterType mismatch is a compile error (asserted with @ts-expect-error)", () => {
-    // @ts-expect-error -- "like" is a string operator, not valid for numberComparison (ts2322)
     const bad: TypedConsumerFilters<GrantsGovSpecs> = {
+      // @ts-expect-error -- "like" is a string operator, not valid for numberComparison (ts2322)
       awardCount: { operator: "like", value: 5 },
     };
     void bad;
@@ -225,8 +225,8 @@ describe("custom-filters compile-time narrowing (as const)", () => {
   // `awardCount` is a `numberComparison` filter — value must be `number`.
   // Passing a `string` triggers: "Type 'string' is not assignable to type 'number'."
   it("value-shape mismatch (string where number required) is a compile error (asserted with @ts-expect-error)", () => {
-    // @ts-expect-error -- awardCount is numberComparison; value must be number, not string (ts2322)
     const bad: TypedConsumerFilters<GrantsGovSpecs> = {
+      // @ts-expect-error -- awardCount is numberComparison; value must be number, not string (ts2322)
       awardCount: { operator: "eq", value: "notANumber" },
     };
     void bad;
