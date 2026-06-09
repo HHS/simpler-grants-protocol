@@ -245,10 +245,9 @@ def test_oppfilters_mixed_case_roundtrip():
 
 def test_validate_routes_unknown_filter_type_raises():
     """validate_routes raises PluginError when filter_type is not in FILTER_TYPE_SCHEMAS."""
-    # Manually construct a spec with a bogus filter_type bypassing the enum
-    bad_spec = CustomFilterSpec.__new__(CustomFilterSpec)
-    object.__setattr__(bad_spec, "filter_type", "unknownType")  # type: ignore[arg-type]
-    object.__setattr__(bad_spec, "description", None)
+    # Dataclasses don't validate field types at runtime, so a bogus filter_type
+    # can be passed directly (the annotation is for type checkers only).
+    bad_spec = CustomFilterSpec(filter_type="unknownType")  # type: ignore[arg-type]
 
     routes = {"opportunities": {"search": {"myFilter": bad_spec}}}
     with pytest.raises(PluginError, match="Unknown filter_type"):
