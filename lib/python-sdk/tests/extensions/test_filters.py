@@ -328,6 +328,62 @@ def test_validate_filter_call_valid_registered_does_not_raise():
     validate_filter_call(AGENCY_SPEC, "agency", valid_filter)
 
 
+def test_validate_filter_call_money_comparison_passes_valid_money():
+    """A registered moneyComparison filter accepts a comparison operator and Money value.
+
+    Money.amount is a decimal STRING ("1000000"), not a number — the shape that
+    drifted in the TS compile-time filter map and was locked there with
+    compile-error tests; covered here at the runtime layer.
+    """
+    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
+    validate_filter_call(
+        spec, "awardFloor", f.gt({"amount": "1000000", "currency": "USD"})
+    )
+
+
+def test_validate_filter_call_money_comparison_rejects_array_operator():
+    """A registered moneyComparison filter raises PluginError for an array operator."""
+    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
+    with pytest.raises(PluginError):
+        validate_filter_call(
+            spec, "awardFloor", f.in_([{"amount": "1000000", "currency": "USD"}])
+        )
+
+
+def test_validate_filter_call_money_comparison_rejects_numeric_amount():
+    """A registered moneyComparison filter raises PluginError for a numeric amount.
+
+    Money.amount is a DecimalString — a raw number is the wrong shape.
+    """
+    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
+    with pytest.raises(PluginError):
+        validate_filter_call(
+            spec, "awardFloor", f.gt({"amount": 1000.5, "currency": "USD"})
+        )
+
+
+def test_validate_filter_call_money_range_passes_valid_range():
+    """A registered moneyRange filter accepts between with {min, max} Money values."""
+    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_RANGE)
+    validate_filter_call(
+        spec,
+        "awardRange",
+        f.between(
+            {"amount": "10000", "currency": "USD"},
+            {"amount": "500000", "currency": "USD"},
+        ),
+    )
+
+
+def test_validate_filter_call_money_range_rejects_comparison_operator():
+    """A registered moneyRange filter raises PluginError for a comparison operator."""
+    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_RANGE)
+    with pytest.raises(PluginError):
+        validate_filter_call(
+            spec, "awardRange", f.gt({"amount": "10000", "currency": "USD"})
+        )
+
+
 def test_classify_default_wrong_shape_raises_plugin_error():
     """A wrong-shaped DEFAULT filter raises PluginError, not a raw pydantic ValidationError.
 
