@@ -4,6 +4,8 @@ in common_grants_sdk.extensions.filters."""
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
+
 from common_grants_sdk.extensions.filters import (
     classify_filters,
     f,
@@ -324,3 +326,33 @@ def test_validate_filter_call_valid_registered_does_not_raise():
     valid_filter = f.in_(["NSF", "NIH"])
     # Should not raise — agency is STRING_ARRAY, in_ with list is valid
     validate_filter_call(AGENCY_SPEC, "agency", valid_filter)
+
+
+def test_classify_default_wrong_shape_raises_plugin_error():
+    """A wrong-shaped DEFAULT filter raises PluginError, not a raw pydantic ValidationError.
+
+    "status" is a StringArrayFilter (ArrayOperator + list[str]); f.eq("open") is an
+    equivalence filter. The error contract must be uniform across all three buckets:
+    consumers following the documented `except PluginError` pattern must catch this.
+    """
+    with pytest.raises(PluginError) as exc_info:
+        classify_filters(
+            SAMPLE_ROUTES, "opportunities", "search", {"status": f.eq("open")}
+        )
+    # The underlying pydantic error is preserved as cause for programmatic access
+    assert isinstance(exc_info.value.__cause__, ValidationError)
+
+
+def test_classify_default_camel_alias_wrong_shape_raises_plugin_error():
+    """A wrong-shaped default filter via its camelCase alias also raises PluginError.
+
+    "closeDateRange" is a DateRangeFilter; f.eq("2026-01-01") is an equivalence
+    filter — the alias normalization path must surface the same PluginError.
+    """
+    with pytest.raises(PluginError):
+        classify_filters(
+            SAMPLE_ROUTES,
+            "opportunities",
+            "search",
+            {"closeDateRange": f.eq("2026-01-01")},
+        )

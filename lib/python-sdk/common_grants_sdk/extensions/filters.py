@@ -298,12 +298,12 @@ def validate_filter_call(
                 # Already a valid DefaultFilter instance
                 return
             DefaultFilter.model_validate(value)
-        except (ValidationError, Exception) as exc:
+        except ValidationError as exc:
             raise PluginError(
                 f'Ad-hoc filter "{filter_name}" has an invalid DefaultFilter shape: {exc}',
                 path=filter_name,
                 source_value=value,
-                cause=exc if isinstance(exc, BaseException) else None,
+                cause=exc,
             ) from exc
 
 
@@ -346,6 +346,11 @@ def classify_filters(
     Returns:
         ``OppFilters`` wire body.  Call ``.model_dump(by_alias=True, exclude_none=True)``
         for the ADR-0012 JSON wire shape.
+
+    Raises:
+        PluginError: When any filter value fails validation — registered and ad-hoc
+            values at classification time, default values at ``OppFilters``
+            construction. The error surface is uniform across all three buckets.
     """
     registered_specs: dict[str, CustomFilterSpec] = routes.get(resource, {}).get(
         method, {}
@@ -361,13 +366,16 @@ def classify_filters(
             # via **kwargs because populate_by_name is not set on OppDefaultFilters.
             # Normalize: camelCase aliases stay as-is; snake_case keys are mapped to their
             # alias; keys with no alias (e.g. "status") are passed through unchanged.
+            # No validate_filter_call here: default values are validated at the wrapped
+            # OppFilters construction below, against the named field's REAL type (e.g.
+            # status → StringArrayFilter) — stricter than the permissive DefaultFilter
+            # check, and the single validation point for this bucket.
             if key in _ALIAS_TO_SNAKE:
                 # key is already the camelCase alias → use it directly
                 opp_key = key
             else:
                 # key is snake_case → convert to alias if one exists, else keep as-is
                 opp_key = _SNAKE_TO_ALIAS.get(key, key)
-            validate_filter_call(None, key, value)
             default_fields[opp_key] = value
         elif key in registered_specs:
             # Bucket 2: registered custom filter
@@ -381,7 +389,18 @@ def classify_filters(
 
     # OppFilters requires the alias form for construction (populate_by_name is not set).
     # Use "customFilters" (the alias) rather than "custom_filters" (the field name).
-    return OppFilters(
-        **default_fields,
-        customFilters=custom_buckets if custom_buckets else None,
-    )
+    # This construction is the validation point for bucket-1 (default) values — wrap
+    # pydantic failures in PluginError so the error contract is uniform across all
+    # three buckets (consumers catch `except PluginError` regardless of bucket).
+    try:
+        return OppFilters(
+            **default_fields,
+            customFilters=custom_buckets if custom_buckets else None,
+        )
+    except ValidationError as exc:
+        raise PluginError(
+            f"Default filter failed validation: {exc.error_count()} error(s)",
+            path=f"routes.{resource}.{method}",
+            source_value=default_fields,
+            cause=exc,
+        ) from exc
