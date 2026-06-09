@@ -177,6 +177,10 @@ const grantsGovPlugin = definePlugin({
   },
 } as const);
 
+// `grantsGovPlugin` is consumed only via `typeof` in the GrantsGovSpecs type below;
+// this reference marks it as intentionally used so it is not flagged as an unused value.
+void grantsGovPlugin;
+
 // Extract the spec type for use in @ts-expect-error assertions.
 // This is the narrowed filter-specs record that TypedConsumerFilters maps over.
 type GrantsGovSpecs = RouteFilterSpecs<

@@ -157,7 +157,6 @@ export const F = {
   /** Less than or equal — `{ operator: "lte", value }` */
   lte: (value: unknown) => ({ operator: "lte" as const, value }),
   /** Array inclusion — `{ operator: "in", value: [...] }` */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   in: (value: unknown[]) => ({ operator: "in" as const, value }),
   /** Array exclusion — `{ operator: "notIn", value: [...] }` */
   notIn: (value: unknown[]) => ({ operator: "notIn" as const, value }),
