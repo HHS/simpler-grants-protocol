@@ -2,7 +2,9 @@
 
 from datetime import date
 import pytest
+from pydantic import ValidationError
 
+from common_grants_sdk.schemas.pydantic.filters.boolean import BooleanComparisonFilter
 from common_grants_sdk.schemas.pydantic.filters.base import (
     ArrayOperator,
     ComparisonOperator,
@@ -508,3 +510,44 @@ def test_number_array_filter():
     filter_obj = NumberArrayFilter(operator=ArrayOperator.IN, value=[1, 2.5, 3])
     assert filter_obj.operator == ArrayOperator.IN
     assert filter_obj.value == [1, 2.5, 3]
+
+
+def test_boolean_comparison_filter_constructs():
+    """BooleanComparisonFilter constructs with valid operator and value."""
+    filter_obj = BooleanComparisonFilter(operator="eq", value=True)
+    assert filter_obj.operator == EquivalenceOperator.EQUAL
+    assert filter_obj.value is True
+
+    filter_obj = BooleanComparisonFilter(operator="neq", value=False)
+    assert filter_obj.operator == EquivalenceOperator.NOT_EQUAL
+    assert filter_obj.value is False
+
+
+def test_boolean_comparison_filter_coerces_string_operator():
+    """BooleanComparisonFilter coerces string 'eq'/'neq' to EquivalenceOperator."""
+    filter_obj = BooleanComparisonFilter(operator="eq", value=True)
+    assert filter_obj.operator == EquivalenceOperator.EQUAL
+
+    filter_obj = BooleanComparisonFilter(operator="neq", value=True)
+    assert filter_obj.operator == EquivalenceOperator.NOT_EQUAL
+
+
+def test_boolean_comparison_filter_rejects_invalid_operator():
+    """BooleanComparisonFilter raises ValidationError for operator not in EquivalenceOperator."""
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="gt", value=True)
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="like", value=True)
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="in", value=True)
+
+
+def test_boolean_comparison_filter_rejects_invalid_value():
+    """BooleanComparisonFilter raises ValidationError for non-bool value."""
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value="not-a-bool")
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value=42)
