@@ -46,5 +46,8 @@ interface Competitions {
 
     /** The application to apply to the competition */
     @body application: Models.ApplicationBase,
-  ): Responses.Created<Models.ApplicationBase> | Responses.NotFound | Responses.Unauthorized;
+  ):
+    | Responses.Created<Models.ApplicationBase>
+    | Responses.NotFound
+    | Responses.Unauthorized;
 }

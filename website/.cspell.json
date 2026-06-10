@@ -50,7 +50,8 @@
     "HBCUs",
     "TCCUs",
     "widal001",
-    "categoricals"
+    "categoricals",
+    "withastro"
   ],
   "ignoreWords": [
     "opblock",
