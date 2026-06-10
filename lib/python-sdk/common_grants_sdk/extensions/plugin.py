@@ -83,7 +83,10 @@ def define_plugin(
     schemas: Any = None,
     routes: PluginRoutes | None = None,
 ) -> PluginConfig[Any]:
-    """Create a PluginConfig consumed by the code generator.
+    """Create a PluginConfig from plugin declarations.
+
+    Schema inputs are consumed by the code generator; route-keyed filter
+    declarations are consumed by the runtime filter engine (extensions/filters.py).
 
     No compilation occurs here — inputs are stored as-is. The code generator
     (generate.py) compiles ObjectSchemasInput → ObjectSchemas by injecting

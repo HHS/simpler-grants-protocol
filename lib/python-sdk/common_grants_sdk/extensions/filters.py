@@ -1,11 +1,12 @@
 """Pure-runtime filter engine for the CommonGrants Python SDK.
 
 Provides:
-- ``f.*`` helper module for building DefaultFilter instances.
+- ``f`` helper singleton for building DefaultFilter instances.
 - ``FILTER_TYPE_SCHEMAS`` — map from CustomFilterType to the Pydantic validation model.
 - ``DEFAULT_FILTER_NAMES`` — frozenset of all core default-filter field names (snake + alias).
 - ``validate_routes(routes)`` — registration-time validator; raises PluginError.
-- ``validate_filter_call(spec, filter_name, value)`` — call-time validator; raises PluginError.
+- ``validate_filter_call(spec, filter_name, value)`` — call-time validator; returns the
+  wire-ready DefaultFilter; raises PluginError.
 - ``classify_filters(routes, resource, method, consumer_filters)`` — three-bucket ADR-0012
   classifier that returns an OppFilters request body.
 
@@ -158,8 +159,10 @@ FILTER_TYPE_SCHEMAS: dict[CustomFilterType, type[BaseModel]] = {
 # ---------------------------------------------------------------------------
 
 #: All core default-filter names from OppDefaultFilters: snake_case field names PLUS their
-#: camelCase ``alias`` values.  Both forms are needed so that ``validate_routes`` can catch
-#: a plugin author registering a custom filter whose name shadows either form.
+#: camelCase ``alias`` values.  Both forms are needed by BOTH consumers of this set:
+#: ``validate_routes`` must catch a custom filter whose name shadows either form, and the
+#: bucket-1 membership test in ``classify_filters`` must route either key form to a named
+#: field (an alias-only set would silently drop camelCase keys into ``customFilters``).
 DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
     list(OppDefaultFilters.model_fields.keys())
     + [v.alias for v in OppDefaultFilters.model_fields.values() if v.alias]
@@ -180,7 +183,8 @@ DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
 #   - keys with no alias (e.g. "status") → kept as-is (snake == request key)
 # ---------------------------------------------------------------------------
 
-# Map from camelCase alias → snake_case field name (used for DEFAULT_FILTER_NAMES check).
+# Alias-form detection for bucket-1 normalization: only key MEMBERSHIP is used
+# ("is this key already the camelCase alias?"); the snake_case values are unused.
 _ALIAS_TO_SNAKE: dict[str, str] = {
     field_info.alias: field_name
     for field_name, field_info in OppDefaultFilters.model_fields.items()
@@ -211,7 +215,8 @@ def validate_routes(routes: PluginRoutes) -> None:
        names must use the ``gov.<system>@<filterName>`` namespace instead).
 
     Duplicate custom-filter names need no check: ``routes`` is dict-keyed, so a
-    duplicate name cannot exist by construction.
+    duplicate name cannot reach this validator (a duplicated literal key collapses
+    silently to its last occurrence at dict construction, before this runs).
 
     Args:
         routes: Route-keyed filter declarations as ``PluginRoutes``.
@@ -354,8 +359,8 @@ def classify_filters(
         ``OppFilters`` request body.  Call
         ``.model_dump(by_alias=True, exclude_none=True, mode="json")`` for the JSON
         body of the ADR-0012 search request — ``mode="json"`` is required because
-        coerced ``date`` objects and operator enums are not JSON-serializable in
-        the default python mode.
+        coerced ``date`` objects are not JSON-serializable in the default python
+        mode (operator enums are ``StrEnum`` and serialize fine either way).
 
     Raises:
         PluginError: When any filter value fails validation — registered and ad-hoc
@@ -413,9 +418,11 @@ def classify_filters(
         # under "customFilters" names the custom filter itself, not the wrapper.
         failed = sorted(
             {
-                str(err["loc"][1])
-                if len(err["loc"]) > 1 and err["loc"][0] == "customFilters"
-                else str(err["loc"][0])
+                (
+                    str(err["loc"][1])
+                    if len(err["loc"]) > 1 and err["loc"][0] == "customFilters"
+                    else str(err["loc"][0])
+                )
                 for err in exc.errors()
                 if err.get("loc")
             }

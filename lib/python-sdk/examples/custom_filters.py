@@ -66,14 +66,17 @@ def main() -> None:
     _section("CLASSIFY FILTERS — default + custom + ad-hoc (canonical grants.gov demo)")
 
     # Mixing three kinds of filters in a single flat dict:
-    #   "status"         — default core filter (snake_case key)
-    #   "closeDateRange" — default core filter (camelCase alias key — the alias-landmine case)
+    #   "status"            — default core filter (snake_case key, no alias)
+    #   "close_date_range"  — default core filter, snake_case key for an ALIASED field:
+    #                         the classifier must normalize it to "closeDateRange" in the
+    #                         wire body (an unnormalized snake key would silently land in
+    #                         customFilters — the alias landmine)
     #   "agency"         — registered custom filter (routes.opportunities.search.agency)
     #   "fundingProgram" — registered custom filter (routes.opportunities.search.fundingProgram)
     #   "legacyTag"      — ad-hoc passthrough (not registered, not a core default)
     consumer_filters = {
         "status": f.in_(["open", "forecasted"]),
-        "closeDateRange": f.between("2026-01-01", "2026-12-31"),
+        "close_date_range": f.between("2026-01-01", "2026-12-31"),
         "agency": f.in_(["NSF", "NIH"]),
         "fundingProgram": f.eq("research-grants"),
         "legacyTag": f.eq("priority"),
