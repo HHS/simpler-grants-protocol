@@ -1,7 +1,7 @@
 """Filter models for the CommonGrants API."""
 
 from enum import StrEnum
-from typing import Union
+from typing import Any, Union
 
 from pydantic import Field, field_validator
 
@@ -64,7 +64,11 @@ class DefaultFilter(CommonGrantsBaseModel):
         StringOperator,
         RangeOperator,
     ] = Field(..., description="The operator to apply to the filter value")
-    value: Union[str, int, float, list, dict] = Field(
+    # Core spec (filters/base.tsp) declares `value: unknown` — any narrowing here
+    # diverges from the contract and mutates inputs (e.g. a union without `bool`
+    # lax-coerces True → 1). Strict per-type checking belongs to the typed filter
+    # models (StringArrayFilter, IntegerComparisonFilter, ...), not this base.
+    value: Any = Field(
         ...,
         description="The value to use for the filter operation",
     )
