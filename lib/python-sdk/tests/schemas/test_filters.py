@@ -596,6 +596,44 @@ def test_integer_comparison_filter_rejects_numeric_string():
 
 
 def test_integer_comparison_filter_rejects_invalid_operator():
-    """IntegerComparisonFilter raises ValidationError for non-comparison operators."""
+    """IntegerComparisonFilter raises ValidationError for operators outside its surface.
+
+    "in" is an ArrayOperator — not in the comparison/equivalence union.
+    """
     with pytest.raises(ValidationError):
         IntegerComparisonFilter(operator="in", value=100)
+
+
+def test_numeric_comparison_filters_accept_equivalence_operators():
+    """Number and Integer comparison filters accept eq/neq.
+
+    The core spec (filters/numeric.tsp) widened the operator surface to
+    ComparisonOperators | EquivalenceOperators in protocol v0.3; the TS SDK
+    tracks it and these models must match.
+    """
+    assert NumberComparisonFilter(operator="eq", value=3).operator == "eq"
+    assert NumberComparisonFilter(operator="neq", value=3.5).operator == "neq"
+    assert IntegerComparisonFilter(operator="eq", value=3).operator == "eq"
+    assert IntegerComparisonFilter(operator="neq", value=3).operator == "neq"
+
+
+def test_integer_comparison_filter_rejects_bool():
+    """IntegerComparisonFilter raises ValidationError for True/False.
+
+    bool subclasses int in Python; StrictInt's explicit bool rejection is what
+    keeps True out (the TS side rejects it at typeof level). Without strict,
+    lax coercion turns True into 1 silently.
+    """
+    with pytest.raises(ValidationError):
+        IntegerComparisonFilter(operator="eq", value=True)
+
+
+def test_integer_comparison_filter_rejects_integral_float():
+    """IntegerComparisonFilter raises ValidationError for 100.0.
+
+    Documented cross-SDK divergence: JavaScript cannot distinguish 100.0 from
+    100, so the TS schema accepts it; StrictInt rejects it. This pin makes the
+    divergence a recorded decision rather than an accident.
+    """
+    with pytest.raises(ValidationError):
+        IntegerComparisonFilter(operator="gt", value=100.0)

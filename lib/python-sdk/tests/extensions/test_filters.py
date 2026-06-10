@@ -3,10 +3,14 @@ in common_grants_sdk.extensions.filters."""
 
 from __future__ import annotations
 
+import json
+from datetime import date
+
 import pytest
 from pydantic import ValidationError
 
 from common_grants_sdk.extensions.filters import (
+    FILTER_TYPE_SCHEMAS,
     classify_filters,
     f,
     validate_filter_call,
@@ -122,9 +126,9 @@ def test_classify_default_camel_alias_lands_in_named_field():
     assert isinstance(result, OppFilters)
     # The camelCase alias must normalize to the snake_case field
     assert result.close_date_range is not None
-    # It must NOT appear in customFilters
-    if result.custom_filters:
-        assert "closeDateRange" not in result.custom_filters
+    # It must NOT appear in customFilters (a conditional check here could
+    # never fail on the path it guards — assert the bucket is empty outright)
+    assert result.custom_filters is None
 
 
 def test_classify_registered_custom_filter_lands_in_custom_filters():
@@ -429,3 +433,193 @@ def test_classify_default_camel_alias_wrong_shape_raises_plugin_error():
             "search",
             {"closeDateRange": f.eq("2026-01-01")},
         )
+
+
+# ---------------------------------------------------------------------------
+# Wire-body integrity: the value that passed validation is the value shipped
+# ---------------------------------------------------------------------------
+
+WIRE_ROUTES = {
+    "opportunities": {
+        "search": {
+            "isOpen": CustomFilterSpec(filter_type=CustomFilterType.BOOLEAN_COMPARISON),
+            "awardCount": CustomFilterSpec(
+                filter_type=CustomFilterType.NUMBER_COMPARISON
+            ),
+        }
+    }
+}
+
+
+def test_boolean_filter_value_survives_to_wire_as_json_true():
+    """f.eq(True) serializes as JSON true, not 1.
+
+    DefaultFilter.value is Any per the core spec (filters/base.tsp `unknown`);
+    a narrowed union without bool lax-coerced True -> 1 and corrupted the wire.
+    """
+    result = classify_filters(
+        WIRE_ROUTES, "opportunities", "search", {"isOpen": f.eq(True)}
+    )
+    body = result.model_dump(by_alias=True, exclude_none=True, mode="json")
+    assert body["customFilters"]["isOpen"]["value"] is True
+
+
+def test_registered_filter_ships_validated_value_not_raw_input():
+    """The wire body carries the value that passed validation, not the raw input.
+
+    NumberComparisonFilter lax-coerces "42" -> 42.0; shipping the raw string
+    would mean the payload differs from what validation approved.
+    """
+    result = classify_filters(
+        WIRE_ROUTES, "opportunities", "search", {"awardCount": f.gt("42")}
+    )
+    body = result.model_dump(by_alias=True, exclude_none=True, mode="json")
+    assert body["customFilters"]["awardCount"]["value"] == 42.0
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")  # pydantic warns during the
+# model_dump of the mutated instance, before re-validation raises
+def test_mutated_adhoc_instance_is_revalidated_and_raises():
+    """An ad-hoc DefaultFilter mutated after construction raises instead of shipping.
+
+    The filter models are mutable; the ad-hoc branch must re-validate instances
+    rather than trust isinstance.
+    """
+    flt = f.eq("x")
+    flt.operator = "bogus"  # type: ignore[assignment]
+    with pytest.raises(PluginError):
+        classify_filters(SAMPLE_ROUTES, "opportunities", "search", {"legacy": flt})
+
+
+def test_unknown_filter_type_raises_plugin_error_not_key_error():
+    """A spec whose filter_type never passed validate_routes raises PluginError.
+
+    The uniform error contract holds even when registration-time validation was
+    skipped — consumers catching `except PluginError` must not see a KeyError.
+    """
+    spec = CustomFilterSpec(filter_type="bogusType")  # type: ignore[arg-type]
+    with pytest.raises(PluginError):
+        validate_filter_call(spec, "x", f.eq(1))
+
+
+def test_validate_filter_call_adhoc_accepts_raw_dict():
+    """Ad-hoc validation accepts a raw operator/value dict and returns a DefaultFilter."""
+    validated = validate_filter_call(None, "x", {"operator": "eq", "value": "v"})
+    assert validated.operator == "eq"
+    assert validated.value == "v"
+
+
+# ---------------------------------------------------------------------------
+# Alias normalization (snake form), serialization contract, error paths
+# ---------------------------------------------------------------------------
+
+
+def test_classify_default_snake_form_of_aliased_key_normalizes_to_alias():
+    """Snake_case key for an ALIASED field lands in the named field, not customFilters.
+
+    Exercises the _SNAKE_TO_ALIAS hit branch: without normalization,
+    OppFilters(close_date_range=...) is silently dropped by pydantic
+    (populate_by_name is not set) and the field stays None.
+    """
+    consumer_filters = {"close_date_range": f.between("2026-01-01", "2026-12-31")}
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
+    assert result.close_date_range is not None
+    assert result.custom_filters is None
+
+
+def test_request_body_mode_json_round_trip():
+    """The documented model_dump(mode="json") call yields a json.dumps-able body.
+
+    Coerced date objects only serialize in json mode — this is the ADR-0012
+    wire body the classifier exists to produce.
+    """
+    consumer_filters = {
+        "close_date_range": f.between(date(2026, 1, 1), date(2026, 12, 31)),
+        "agency": f.in_(["NSF"]),
+    }
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
+    body = json.loads(
+        json.dumps(result.model_dump(by_alias=True, exclude_none=True, mode="json"))
+    )
+    assert body["closeDateRange"]["operator"] == "between"
+    assert body["closeDateRange"]["value"]["min"] == "2026-01-01"
+    assert body["customFilters"]["agency"]["operator"] == "in"
+
+
+def test_classify_empty_filters_dict_yields_empty_body():
+    """An empty consumer dict produces an OppFilters with no customFilters entry."""
+    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", {})
+    assert result.custom_filters is None
+    body = result.model_dump(by_alias=True, exclude_none=True, mode="json")
+    assert "customFilters" not in body
+
+
+def test_filter_type_schemas_covers_every_custom_filter_type():
+    """Every CustomFilterType member has a validation model.
+
+    A catalog member without a FILTER_TYPE_SCHEMAS entry would reject valid
+    registrations in validate_routes — this assert turns that drift into a
+    CI failure at the moment the enum and the map diverge.
+    """
+    assert set(FILTER_TYPE_SCHEMAS) == set(CustomFilterType)
+
+
+def test_plugin_error_path_is_uniform_across_buckets():
+    """All three buckets raise PluginError with a filters.<name> path."""
+    with pytest.raises(PluginError) as exc1:
+        classify_filters(
+            SAMPLE_ROUTES, "opportunities", "search", {"status": f.eq("open")}
+        )
+    assert exc1.value.path == "filters.status"
+
+    with pytest.raises(PluginError) as exc2:
+        classify_filters(
+            SAMPLE_ROUTES, "opportunities", "search", {"agency": f.eq("NSF")}
+        )
+    assert exc2.value.path == "filters.agency"
+
+    with pytest.raises(PluginError) as exc3:
+        classify_filters(
+            SAMPLE_ROUTES, "opportunities", "search", {"adhoc": {"operator": "bogus"}}
+        )
+    assert exc3.value.path == "filters.adhoc"
+
+
+def test_multiple_failing_defaults_use_collective_path():
+    """Two failing default filters produce the collective path "filters"."""
+    with pytest.raises(PluginError) as exc_info:
+        classify_filters(
+            SAMPLE_ROUTES,
+            "opportunities",
+            "search",
+            {"status": f.eq("open"), "closeDateRange": f.eq("x")},
+        )
+    assert exc_info.value.path == "filters"
+
+
+@pytest.mark.parametrize(
+    ("helper", "args", "operator", "value"),
+    [
+        ("eq", ("open",), "eq", "open"),
+        ("neq", ("x",), "neq", "x"),
+        ("gt", (1,), "gt", 1),
+        ("gte", (1,), "gte", 1),
+        ("lt", (1,), "lt", 1),
+        ("lte", (1,), "lte", 1),
+        ("in_", (["a"],), "in", ["a"]),
+        ("not_in", (["a"],), "notIn", ["a"]),
+        ("like", ("%x%",), "like", "%x%"),
+        ("not_like", ("%x%",), "notLike", "%x%"),
+        ("between", (0, 1), "between", {"min": 0, "max": 1}),
+        ("outside", (0, 1), "outside", {"min": 0, "max": 1}),
+    ],
+)
+def test_f_helper_wire_values(helper, args, operator, value):
+    """Every f helper produces its documented wire operator and value shape."""
+    flt = getattr(f, helper)(*args)
+    assert flt.operator == operator
+    assert flt.value == value
