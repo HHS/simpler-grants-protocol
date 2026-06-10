@@ -8,6 +8,7 @@ from ..base import CommonGrantsBaseModel
 from .base import (
     ArrayOperator,
     ComparisonOperator,
+    EquivalenceOperator,
     RangeOperator,
 )
 
@@ -24,9 +25,13 @@ class NumberRange(CommonGrantsBaseModel):
 
 
 class NumberComparisonFilter(CommonGrantsBaseModel):
-    """Filter that matches numbers against a specific value."""
+    """Filter that matches numbers against a specific value.
 
-    operator: ComparisonOperator = Field(
+    Accepts equivalence operators (``eq``/``neq``) in addition to comparison
+    operators, per the core spec (filters/numeric.tsp, since protocol v0.3).
+    """
+
+    operator: ComparisonOperator | EquivalenceOperator = Field(
         ...,
         description="The comparison operator to apply to the filter value",
     )
@@ -39,19 +44,26 @@ class NumberComparisonFilter(CommonGrantsBaseModel):
     def validate_operator(cls, v):
         """Convert string to enum if needed."""
         if isinstance(v, str):
-            return ComparisonOperator(v)
+            if v in [op.value for op in ComparisonOperator]:
+                return ComparisonOperator(v)
+            elif v in [op.value for op in EquivalenceOperator]:
+                return EquivalenceOperator(v)
         return v
 
 
 class IntegerComparisonFilter(CommonGrantsBaseModel):
     """Filter that matches integers against a specific value.
 
-    Strict integer: fractional values and numeric strings are rejected
-    (mirrors the TS SDK's IntegerComparisonFilterSchema, where
-    ``z.number().int()`` rejects both).
+    Operator surface matches ``NumberComparisonFilter`` (comparison plus
+    ``eq``/``neq``), as in the TS SDK's IntegerComparisonFilterSchema.
+
+    Strict integer: fractional values and numeric strings are rejected, as in
+    the TS SDK (``z.number().int()``). Stricter than TS on integral floats:
+    ``100.0`` is rejected here but is indistinguishable from ``100`` in
+    JavaScript.
     """
 
-    operator: ComparisonOperator = Field(
+    operator: ComparisonOperator | EquivalenceOperator = Field(
         ...,
         description="The comparison operator to apply to the filter value",
     )
@@ -62,7 +74,10 @@ class IntegerComparisonFilter(CommonGrantsBaseModel):
     def validate_operator(cls, v):
         """Convert string to enum if needed."""
         if isinstance(v, str):
-            return ComparisonOperator(v)
+            if v in [op.value for op in ComparisonOperator]:
+                return ComparisonOperator(v)
+            elif v in [op.value for op in EquivalenceOperator]:
+                return EquivalenceOperator(v)
         return v
 
 
