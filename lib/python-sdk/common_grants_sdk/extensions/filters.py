@@ -246,12 +246,19 @@ def validate_filter_call(
     spec: Optional[CustomFilterSpec],
     filter_name: str,
     value: Any,
-) -> None:
+) -> DefaultFilter:
     """Call-time validator for a single filter value.
 
     Validates ``value`` against the Pydantic model for ``spec.filter_type`` when
     ``spec`` is provided (registered filter), or against ``DefaultFilter`` when
     ``spec`` is ``None`` (ad-hoc / escape-hatch filter).
+
+    Returns the validated filter as a ``DefaultFilter`` carrying the coerced
+    operator/value — the wire payload is exactly what passed validation, never
+    the raw input (lax coercion can differ from the input, e.g. ``"42"`` → 42.0).
+    Model instances are re-validated via ``model_dump()`` rather than trusted:
+    the filter models are mutable, so an instance that was valid at construction
+    may not be valid now.
 
     Correctness is enforced at runtime by Pydantic v2; no compile-time key/value
     narrowing is claimed (Python has no equivalent of TS ``as const`` narrowing).
@@ -261,17 +268,28 @@ def validate_filter_call(
         filter_name: The filter name (used in PluginError path).
         value: The filter value to validate (typically a ``DefaultFilter`` instance).
 
+    Returns:
+        The validated filter as a ``DefaultFilter`` with coerced operator/value.
+
     Raises:
-        PluginError: On operator/value-shape mismatch, wrapping the pydantic
-            ``ValidationError`` as ``cause``.
+        PluginError: On operator/value-shape mismatch (wrapping the pydantic
+            ``ValidationError`` as ``cause``), or on a ``spec.filter_type`` not
+            present in ``FILTER_TYPE_SCHEMAS`` — ``validate_routes`` catches the
+            latter at registration time.
     """
+    payload = value.model_dump() if isinstance(value, BaseModel) else value
     if spec is not None:
-        model_cls = FILTER_TYPE_SCHEMAS[spec.filter_type]
+        model_cls = FILTER_TYPE_SCHEMAS.get(spec.filter_type)
+        if model_cls is None:
+            raise PluginError(
+                f'Unknown filter_type "{spec.filter_type}" for filter '
+                f'"{filter_name}" — validate_routes(routes) catches this at '
+                "registration time",
+                path=f"filters.{filter_name}",
+                source_value=spec,
+            )
         try:
-            if isinstance(value, BaseModel):
-                model_cls.model_validate(value.model_dump())
-            else:
-                model_cls.model_validate(value)
+            validated = model_cls.model_validate(payload)
         except ValidationError as exc:
             raise PluginError(
                 f'Filter "{filter_name}" failed validation: {exc.error_count()} error(s)',
@@ -279,20 +297,21 @@ def validate_filter_call(
                 source_value=value,
                 cause=exc,
             ) from exc
-    else:
-        # Ad-hoc / escape-hatch: validate against DefaultFilter shape only
-        try:
-            if isinstance(value, DefaultFilter):
-                # Already a valid DefaultFilter instance
-                return
-            DefaultFilter.model_validate(value)
-        except ValidationError as exc:
-            raise PluginError(
-                f'Ad-hoc filter "{filter_name}" has an invalid DefaultFilter shape: {exc}',
-                path=f"filters.{filter_name}",
-                source_value=value,
-                cause=exc,
-            ) from exc
+        # Re-shape to DefaultFilter so the wire bucket carries the coerced
+        # operator/value. DefaultFilter.value is Any per the core spec, so
+        # nothing the typed model accepted can fail here.
+        return DefaultFilter.model_validate(validated.model_dump())
+    # Ad-hoc / escape-hatch: validate against DefaultFilter shape only
+    try:
+        return DefaultFilter.model_validate(payload)
+    except ValidationError as exc:
+        raise PluginError(
+            f'Ad-hoc filter "{filter_name}" has an invalid DefaultFilter shape: '
+            f"{exc.error_count()} error(s)",
+            path=f"filters.{filter_name}",
+            source_value=value,
+            cause=exc,
+        ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -310,7 +329,7 @@ def classify_filters(
 
     Three-bucket classification:
     - Bucket 1 (default): key is in ``DEFAULT_FILTER_NAMES`` (snake or camelCase alias) →
-      normalize to snake_case, land in a named OppFilters field.
+      normalize to the camelCase alias form, land in a named OppFilters field.
     - Bucket 2 (registered custom): key matches a registered ``CustomFilterSpec`` for the
       given resource/method → land in ``custom_filters``.
     - Bucket 3 (ad-hoc): any other key → land in ``custom_filters`` passthrough.
@@ -369,14 +388,13 @@ def classify_filters(
                 opp_key = _SNAKE_TO_ALIAS.get(key, key)
             default_fields[opp_key] = value
         elif key in registered_specs:
-            # Bucket 2: registered custom filter
+            # Bucket 2: registered custom filter — ship the validated value,
+            # never the raw input (see validate_filter_call)
             spec = registered_specs[key]
-            validate_filter_call(spec, key, value)
-            custom_buckets[key] = value
+            custom_buckets[key] = validate_filter_call(spec, key, value)
         else:
-            # Bucket 3: ad-hoc / escape-hatch passthrough
-            validate_filter_call(None, key, value)
-            custom_buckets[key] = value
+            # Bucket 3: ad-hoc / escape-hatch passthrough — ship the validated value
+            custom_buckets[key] = validate_filter_call(None, key, value)
 
     # OppFilters requires the alias form for construction (populate_by_name is not set).
     # Use "customFilters" (the alias) rather than "custom_filters" (the field name).
@@ -391,12 +409,20 @@ def classify_filters(
     except ValidationError as exc:
         # Name the failing field(s) so bucket-1 errors are as pinpointed as the
         # filters.<name> paths raised for buckets 2/3. The loc values are the
-        # alias keys used at construction (e.g. "closeDateRange").
-        failed = sorted({str(err["loc"][0]) for err in exc.errors() if err.get("loc")})
+        # alias keys used at construction (e.g. "closeDateRange"); a loc nested
+        # under "customFilters" names the custom filter itself, not the wrapper.
+        failed = sorted(
+            {
+                str(err["loc"][1])
+                if len(err["loc"]) > 1 and err["loc"][0] == "customFilters"
+                else str(err["loc"][0])
+                for err in exc.errors()
+                if err.get("loc")
+            }
+        )
         field_list = ", ".join(failed) if failed else "<unknown>"
         raise PluginError(
-            f"Default filter(s) {field_list} failed validation: "
-            f"{exc.error_count()} error(s)",
+            f"Filter(s) {field_list} failed validation: {exc.error_count()} error(s)",
             path=f"filters.{failed[0]}" if len(failed) == 1 else "filters",
             source_value=default_fields,
             cause=exc,
