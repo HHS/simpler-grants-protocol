@@ -2,7 +2,7 @@
 
 from typing import Union
 
-from pydantic import Field, StrictInt, field_validator
+from pydantic import Field, field_validator
 
 from ..base import CommonGrantsBaseModel
 from .base import (
@@ -74,36 +74,6 @@ class NumberComparisonFilter(CommonGrantsBaseModel):
     def reject_bool(cls, v):
         """Reject bool values (would lax-coerce to 1/0; see _ensure_not_bool)."""
         return _ensure_not_bool(v)
-
-
-class IntegerComparisonFilter(CommonGrantsBaseModel):
-    """Filter that matches integers against a specific value.
-
-    Operator surface matches ``NumberComparisonFilter`` (comparison plus
-    ``eq``/``neq``), as in the schema surface planned for the TS SDK.
-
-    Strict integer: fractional values and numeric strings are rejected, as Zod
-    ``z.number().int()`` does in the planned TS counterpart. Stricter than TS
-    on integral floats: ``100.0`` is rejected here but is indistinguishable
-    from ``100`` in JavaScript.
-    """
-
-    operator: ComparisonOperator | EquivalenceOperator = Field(
-        ...,
-        description="The comparison operator to apply to the filter value",
-    )
-    value: StrictInt = Field(..., description="The integer value to compare against")
-
-    @field_validator("operator", mode="before")
-    @classmethod
-    def validate_operator(cls, v):
-        """Convert string to enum if needed."""
-        if isinstance(v, str):
-            if v in [op.value for op in ComparisonOperator]:
-                return ComparisonOperator(v)
-            elif v in [op.value for op in EquivalenceOperator]:
-                return EquivalenceOperator(v)
-        return v
 
 
 class NumberRangeFilter(CommonGrantsBaseModel):

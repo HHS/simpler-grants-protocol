@@ -67,7 +67,7 @@ class DefaultFilter(CommonGrantsBaseModel):
     # Core spec (filters/base.tsp) declares `value: unknown` — any narrowing here
     # diverges from the contract and mutates inputs (e.g. a union without `bool`
     # lax-coerces True → 1). Strict per-type checking belongs to the typed filter
-    # models (StringArrayFilter, IntegerComparisonFilter, ...), not this base.
+    # models (StringArrayFilter, NumberComparisonFilter, ...), not this base.
     value: Any = Field(
         ...,
         description="The value to use for the filter operation",

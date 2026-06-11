@@ -41,7 +41,6 @@ from common_grants_sdk.schemas.pydantic.filters.money import (
     MoneyRangeFilter,
 )
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
-    IntegerComparisonFilter,
     NumberArrayFilter,
     NumberComparisonFilter,
     NumberRangeFilter,
@@ -139,9 +138,8 @@ f = _FHelpers()
 # ---------------------------------------------------------------------------
 
 #: Maps each CustomFilterType to the Pydantic model used to validate operator/value shape.
-#: ``integerComparison`` and ``booleanComparison`` use the SDK-level
-#: ``IntegerComparisonFilter`` / ``BooleanComparisonFilter`` models (designed to stay
-#: parallel to the schema surface planned for the TS custom-filters PoC).
+#: ``booleanComparison`` uses the SDK-level ``BooleanComparisonFilter`` model (the spec
+#: defines no boolean filter; the TS SDK carries the same SDK-level schema).
 #: Read-only: the catalog is closed — registering new filter types is a spec/SDK
 #: change (extend CustomFilterType + this map together), not a runtime extension point.
 FILTER_TYPE_SCHEMAS: Mapping[CustomFilterType, type[BaseModel]] = MappingProxyType(
@@ -151,7 +149,9 @@ FILTER_TYPE_SCHEMAS: Mapping[CustomFilterType, type[BaseModel]] = MappingProxyTy
         CustomFilterType.NUMBER_COMPARISON: NumberComparisonFilter,
         CustomFilterType.NUMBER_ARRAY: NumberArrayFilter,
         CustomFilterType.NUMBER_RANGE: NumberRangeFilter,
-        CustomFilterType.INTEGER_COMPARISON: IntegerComparisonFilter,
+        # integerComparison reuses NumberComparisonFilter — the spec defines no
+        # integer filter model, so the int constraint is not schema-enforced
+        CustomFilterType.INTEGER_COMPARISON: NumberComparisonFilter,
         CustomFilterType.BOOLEAN_COMPARISON: BooleanComparisonFilter,
         CustomFilterType.DATE_COMPARISON: DateComparisonFilter,
         CustomFilterType.DATE_RANGE: DateRangeFilter,

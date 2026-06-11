@@ -373,21 +373,17 @@ def test_classify_default_wrong_shape_raises_plugin_error():
     assert isinstance(exc_info.value.__cause__, ValidationError)
 
 
-def test_validate_filter_call_integer_comparison_rejects_non_integer():
-    """A registered integerComparison filter raises PluginError for a fractional value.
+def test_validate_filter_call_integer_comparison_validates_as_number():
+    """A registered integerComparison filter validates against NumberComparisonFilter.
 
-    integerComparison validates against IntegerComparisonFilter (strict int),
-    not the looser NumberComparisonFilter.
+    The spec defines no integer filter model, so the int constraint is not
+    schema-enforced (same as the TS SDK); a numeric value passes, a non-numeric
+    value fails.
     """
     spec = CustomFilterSpec(filter_type=CustomFilterType.INTEGER_COMPARISON)
-    with pytest.raises(PluginError):
-        validate_filter_call(spec, "awardCount", f.gt(100.5))
-
-
-def test_validate_filter_call_integer_comparison_passes_valid_int():
-    """A registered integerComparison filter accepts an integer value."""
-    spec = CustomFilterSpec(filter_type=CustomFilterType.INTEGER_COMPARISON)
     validate_filter_call(spec, "awardCount", f.gt(100))
+    with pytest.raises(PluginError):
+        validate_filter_call(spec, "awardCount", f.gt("not a number"))
 
 
 def test_classify_default_camel_alias_wrong_shape_raises_plugin_error():

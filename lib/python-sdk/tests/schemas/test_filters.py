@@ -29,7 +29,6 @@ from common_grants_sdk.schemas.pydantic.filters.money import (
     InvalidMoneyValueError,
 )
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
-    IntegerComparisonFilter,
     NumberArrayFilter,
     NumberComparisonFilter,
     NumberRange,
@@ -562,76 +561,27 @@ def test_boolean_comparison_filter_rejects_coercible_values():
         BooleanComparisonFilter(operator="eq", value="true")
 
 
-def test_integer_comparison_filter_constructs():
-    """IntegerComparisonFilter constructs with valid operator and integer value."""
-    filter_obj = IntegerComparisonFilter(operator="gt", value=100)
-    assert filter_obj.operator == ComparisonOperator.GREATER_THAN
-    assert filter_obj.value == 100
-
-
-def test_integer_comparison_filter_rejects_non_integer_float():
-    """IntegerComparisonFilter raises ValidationError for a fractional value."""
-    with pytest.raises(ValidationError):
-        IntegerComparisonFilter(operator="gt", value=100.5)
-
-
-def test_integer_comparison_filter_rejects_numeric_string():
-    """IntegerComparisonFilter raises ValidationError for a numeric string (strict int).
-
-    Mirrors the TS IntegerComparisonFilterSchema, where z.number().int()
-    rejects string input; the strict annotation disables pydantic's lax
-    str -> int coercion.
-    """
-    with pytest.raises(ValidationError):
-        IntegerComparisonFilter(operator="gt", value="100")
-
-
-@pytest.mark.parametrize("model", [NumberComparisonFilter, IntegerComparisonFilter])
 @pytest.mark.parametrize("operator", ["in", "between", "like"])
-def test_comparison_filters_reject_invalid_operator(model, operator):
-    """Comparison filters raise ValidationError for operators outside their surface.
+def test_number_comparison_filter_rejects_invalid_operator(operator):
+    """NumberComparisonFilter raises ValidationError for operators outside its surface.
 
-    Both models share the rewritten two-enum validate_operator dispatch whose
-    fallthrough returns unknown strings unchanged, relying on the enum-union
-    field to reject them — the rejection must hold on each model.
+    The two-enum validate_operator dispatch's fallthrough returns unknown
+    strings unchanged, relying on the enum-union field to reject them — the
+    rejection must hold.
     """
     with pytest.raises(ValidationError):
-        model(operator=operator, value=100)
+        NumberComparisonFilter(operator=operator, value=100)
 
 
-def test_numeric_comparison_filters_accept_equivalence_operators():
-    """Number and Integer comparison filters accept eq/neq.
+def test_number_comparison_filter_accepts_equivalence_operators():
+    """NumberComparisonFilter accepts eq/neq.
 
     The core spec (filters/numeric.tsp) widened the operator surface to
     ComparisonOperators | EquivalenceOperators in protocol v0.3; the TS SDK
-    tracks it and these models must match.
+    tracks it and this model must match.
     """
     assert NumberComparisonFilter(operator="eq", value=3).operator == "eq"
     assert NumberComparisonFilter(operator="neq", value=3.5).operator == "neq"
-    assert IntegerComparisonFilter(operator="eq", value=3).operator == "eq"
-    assert IntegerComparisonFilter(operator="neq", value=3).operator == "neq"
-
-
-def test_integer_comparison_filter_rejects_bool():
-    """IntegerComparisonFilter raises ValidationError for True/False.
-
-    bool subclasses int in Python; StrictInt's explicit bool rejection is what
-    keeps True out (the TS side rejects it at typeof level). Without strict,
-    lax coercion turns True into 1 silently.
-    """
-    with pytest.raises(ValidationError):
-        IntegerComparisonFilter(operator="eq", value=True)
-
-
-def test_integer_comparison_filter_rejects_integral_float():
-    """IntegerComparisonFilter raises ValidationError for 100.0.
-
-    Documented cross-SDK divergence: JavaScript cannot distinguish 100.0 from
-    100, so the TS schema accepts it; StrictInt rejects it. This pin makes the
-    divergence a recorded decision rather than an accident.
-    """
-    with pytest.raises(ValidationError):
-        IntegerComparisonFilter(operator="gt", value=100.0)
 
 
 def test_number_comparison_filter_rejects_bool():
