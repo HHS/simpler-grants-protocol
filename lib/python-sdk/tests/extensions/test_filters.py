@@ -544,6 +544,50 @@ def test_classify_default_snake_form_of_aliased_key_normalizes_to_alias():
     assert result.custom_filters is None
 
 
+def test_classify_both_forms_of_same_default_filter_raises():
+    """Supplying snake AND camel forms of one default filter raises PluginError.
+
+    Both keys normalize to "closeDateRange"; without the guard, dict
+    assignment silently drops whichever range the consumer's dict ordered
+    first (plausible when merging filter dicts from two naming conventions).
+    """
+    consumer_filters = {
+        "close_date_range": f.between("2026-01-01", "2026-06-30"),
+        "closeDateRange": f.between("2026-07-01", "2026-12-31"),
+    }
+    with pytest.raises(PluginError, match="more than once") as exc_info:
+        classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
+    assert exc_info.value.path == "filters.closeDateRange"
+
+
+@pytest.mark.parametrize(
+    ("resource", "method"),
+    [
+        ("opportunities", "list"),  # method not declared in routes
+        ("opportunity", "search"),  # resource near-miss (pluralization)
+    ],
+)
+def test_classify_unmatched_route_treats_registered_name_as_adhoc(resource, method):
+    """A (resource, method) pair with no routes entry has NO registered bucket.
+
+    "agency" is registered as STRING_ARRAY under opportunities.search only;
+    via any other route pair it is validated as permissive ad-hoc, so
+    f.eq("NSF") (invalid for STRING_ARRAY) passes through to customFilters.
+    Discriminates both levels of the routes[resource][method] lookup — a
+    regression that flattens or mis-keys it either wrongly applies the spec
+    or wrongly skips it.
+    """
+    result = classify_filters(SAMPLE_ROUTES, resource, method, {"agency": f.eq("NSF")})
+    assert result.custom_filters is not None
+    assert result.custom_filters["agency"].value == "NSF"
+
+    # ...and the same filter via the declared pair IS spec-validated and rejected
+    with pytest.raises(PluginError):
+        classify_filters(
+            SAMPLE_ROUTES, "opportunities", "search", {"agency": f.eq("NSF")}
+        )
+
+
 def test_request_body_mode_json_round_trip():
     """The documented model_dump(mode="json") call yields a json.dumps-able body.
 

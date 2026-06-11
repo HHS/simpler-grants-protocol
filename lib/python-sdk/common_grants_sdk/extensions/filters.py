@@ -183,17 +183,10 @@ DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
 #   - keys with no alias (e.g. "status") → kept as-is (snake == request key)
 # ---------------------------------------------------------------------------
 
-# Alias-form detection for bucket-1 normalization: only key MEMBERSHIP is used
-# ("is this key already the camelCase alias?"); the snake_case values are unused.
-_ALIAS_TO_SNAKE: dict[str, str] = {
-    field_info.alias: field_name
-    for field_name, field_info in OppDefaultFilters.model_fields.items()
-    if field_info.alias
-}
-
 # Map from snake_case field name → camelCase alias (used for OppFilters construction).
-# Only fields that declare an alias are included; fields without aliases use their
-# snake_case name directly as the OppFilters constructor key (no alias needed).
+# Only fields that declare an alias are included; alias-form keys and fields without
+# aliases fall through ``_SNAKE_TO_ALIAS.get(key, key)`` unchanged — one lookup
+# normalizes all three key classes.
 _SNAKE_TO_ALIAS: dict[str, str] = {
     field_name: field_info.alias
     for field_name, field_info in OppDefaultFilters.model_fields.items()
@@ -339,6 +332,13 @@ def classify_filters(
       given resource/method → land in ``custom_filters``.
     - Bucket 3 (ad-hoc): any other key → land in ``custom_filters`` passthrough.
 
+    Registered specs are looked up by the exact ``(resource, method)`` strings
+    declared in ``routes``. A non-matching pair (e.g. a pluralization typo in
+    ``resource``) yields no registered bucket at all: every non-default filter is
+    then validated only against the permissive ``DefaultFilter`` shape, exactly
+    like ad-hoc input, with no error raised. Call sites must pass the same
+    resource/method strings the plugin declared.
+
     Construction normalizes all default consumer keys to the form that
     ``OppFilters(**kwargs)`` accepts.  Because ``OppDefaultFilters`` does NOT set
     ``populate_by_name=True``, Pydantic v2 requires the alias form (e.g.
@@ -365,7 +365,9 @@ def classify_filters(
     Raises:
         PluginError: When any filter value fails validation — registered and ad-hoc
             values at classification time, default values at ``OppFilters``
-            construction. The error surface is uniform across all three buckets.
+            construction — or when the snake_case and camelCase forms of the same
+            default filter are both supplied. The error surface is uniform across
+            all three buckets.
     """
     registered_specs: dict[str, CustomFilterSpec] = routes.get(resource, {}).get(
         method, {}
@@ -385,12 +387,17 @@ def classify_filters(
             # OppFilters construction below, against the named field's REAL type (e.g.
             # status → StringArrayFilter) — stricter than the permissive DefaultFilter
             # check, and the single validation point for this bucket.
-            if key in _ALIAS_TO_SNAKE:
-                # key is already the camelCase alias → use it directly
-                opp_key = key
-            else:
-                # key is snake_case → convert to alias if one exists, else keep as-is
-                opp_key = _SNAKE_TO_ALIAS.get(key, key)
+            opp_key = _SNAKE_TO_ALIAS.get(key, key)
+            if opp_key in default_fields:
+                # Snake and camel forms of the same field normalize to one key;
+                # without this guard, plain dict assignment would silently drop
+                # whichever form the consumer's dict ordered first.
+                raise PluginError(
+                    f'Default filter "{opp_key}" was supplied more than once '
+                    "(snake_case and camelCase forms of the same filter)",
+                    path=f"filters.{opp_key}",
+                    source_value=value,
+                )
             default_fields[opp_key] = value
         elif key in registered_specs:
             # Bucket 2: registered custom filter — ship the validated value,
