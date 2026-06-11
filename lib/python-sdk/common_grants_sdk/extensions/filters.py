@@ -235,6 +235,18 @@ def validate_routes(routes: PluginRoutes) -> None:
                     )
 
 
+def _first_error_detail(exc: ValidationError) -> str:
+    """One-line summary of the first pydantic error, for PluginError messages.
+
+    The full ValidationError stays on ``cause`` for programmatic access; this
+    puts the most useful line in ``str(exc)`` so a logged message says what
+    failed, not just how many things did.
+    """
+    first = exc.errors()[0]
+    loc = ".".join(str(part) for part in first["loc"]) or "<root>"
+    return f"{first['msg']} (at {loc})"
+
+
 # ---------------------------------------------------------------------------
 # validate_filter_call — call-time validator
 # ---------------------------------------------------------------------------
@@ -290,7 +302,8 @@ def validate_filter_call(
             validated = model_cls.model_validate(payload)
         except ValidationError as exc:
             raise PluginError(
-                f'Filter "{filter_name}" failed validation: {exc.error_count()} error(s)',
+                f'Filter "{filter_name}" failed validation: '
+                f"{exc.error_count()} error(s); first: {_first_error_detail(exc)}",
                 path=f"filters.{filter_name}",
                 source_value=value,
                 cause=exc,
@@ -305,7 +318,7 @@ def validate_filter_call(
     except ValidationError as exc:
         raise PluginError(
             f'Ad-hoc filter "{filter_name}" has an invalid DefaultFilter shape: '
-            f"{exc.error_count()} error(s)",
+            f"{exc.error_count()} error(s); first: {_first_error_detail(exc)}",
             path=f"filters.{filter_name}",
             source_value=value,
             cause=exc,
@@ -421,22 +434,13 @@ def classify_filters(
     except ValidationError as exc:
         # Name the failing field(s) so bucket-1 errors are as pinpointed as the
         # filters.<name> paths raised for buckets 2/3. The loc values are the
-        # alias keys used at construction (e.g. "closeDateRange"); a loc nested
-        # under "customFilters" names the custom filter itself, not the wrapper.
-        failed = sorted(
-            {
-                (
-                    str(err["loc"][1])
-                    if len(err["loc"]) > 1 and err["loc"][0] == "customFilters"
-                    else str(err["loc"][0])
-                )
-                for err in exc.errors()
-                if err.get("loc")
-            }
-        )
+        # alias keys used at construction (e.g. "closeDateRange"); customFilters
+        # values were already validated above, so only default fields fail here.
+        failed = sorted({str(err["loc"][0]) for err in exc.errors() if err.get("loc")})
         field_list = ", ".join(failed) if failed else "<unknown>"
         raise PluginError(
-            f"Filter(s) {field_list} failed validation: {exc.error_count()} error(s)",
+            f"Filter(s) {field_list} failed validation: "
+            f"{exc.error_count()} error(s); first: {_first_error_detail(exc)}",
             path=f"filters.{failed[0]}" if len(failed) == 1 else "filters",
             source_value=default_fields,
             cause=exc,

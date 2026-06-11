@@ -108,7 +108,12 @@ def main() -> None:
     try:
         classify_filters(grants_gov.routes, "opportunities", "search", bad_filters)
     except PluginError as exc:
+        # str(exc) summarizes the first failure; the structured fields carry
+        # the full detail — exc.path names the failing filter, exc.cause is
+        # the underlying pydantic ValidationError for programmatic access.
         print(f"PluginError caught: {exc}")
+        print(f"  path:  {exc.path}")
+        print(f"  cause: {type(exc.cause).__name__}")
 
     # --- Plugin metadata ---
     _section("PLUGIN METADATA")
