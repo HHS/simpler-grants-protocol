@@ -7,12 +7,12 @@ Provides:
 - ``validate_routes(routes)`` — registration-time validator; raises PluginError.
 - ``validate_filter_call(spec, filter_name, value)`` — call-time validator; returns the
   wire-ready DefaultFilter; raises PluginError.
-- ``classify_filters(routes, resource, method, consumer_filters)`` — three-bucket ADR-0012
-  classifier that returns an OppFilters request body.
+- ``classify_filters(routes, resource, method, consumer_filters)`` — classifier producing
+  the ADR-0012 request-body shape (default named fields + ``customFilters``).
 
 No generate.py / codegen dependency. Correctness is enforced at runtime by Pydantic v2;
-there is no compile-time key/value narrowing claim (Python has no equivalent of the TS
-SDK's ``as const`` literal narrowing).
+there is no compile-time key/value narrowing claim (Python has no equivalent of TS
+``as const`` literal narrowing).
 """
 
 from __future__ import annotations
@@ -64,14 +64,14 @@ from .types import PluginError, PluginRoutes
 
 
 class _FHelpers:
-    """Helper namespace mirroring the TS ``F`` object.
+    """Helper namespace designed to mirror the ``F`` object planned for the TS SDK.
 
     Import as ``from common_grants_sdk.extensions import f`` and use as
     ``f.eq("open")``, ``f.in_([...])``, etc.
 
     ``in_`` and ``not_in`` use the reserved-word workaround:
     the Python methods are ``f.in_`` / ``f.not_in`` while the wire operator
-    values are ``"in"`` / ``"notIn"`` (matching the TS SDK's ``F.in`` / ``F.notIn``).
+    values are ``"in"`` / ``"notIn"`` (the TS surface uses ``F.in`` / ``F.notIn``).
     """
 
     def eq(self, value: Any) -> DefaultFilter:
@@ -140,8 +140,8 @@ f = _FHelpers()
 
 #: Maps each CustomFilterType to the Pydantic model used to validate operator/value shape.
 #: ``integerComparison`` and ``booleanComparison`` use the SDK-level
-#: ``IntegerComparisonFilter`` / ``BooleanComparisonFilter`` models (parallel to the
-#: TS SDK's ``IntegerComparisonFilterSchema`` / ``BooleanComparisonFilterSchema``).
+#: ``IntegerComparisonFilter`` / ``BooleanComparisonFilter`` models (designed to stay
+#: parallel to the schema surface planned for the TS custom-filters PoC).
 #: Read-only: the catalog is closed — registering new filter types is a spec/SDK
 #: change (extend CustomFilterType + this map together), not a runtime extension point.
 FILTER_TYPE_SCHEMAS: Mapping[CustomFilterType, type[BaseModel]] = MappingProxyType(
@@ -168,7 +168,7 @@ FILTER_TYPE_SCHEMAS: Mapping[CustomFilterType, type[BaseModel]] = MappingProxyTy
 #: camelCase ``alias`` values.  Both forms are needed by BOTH consumers of this set:
 #: ``validate_routes`` must catch a custom filter whose name shadows either form, and the
 #: bucket-1 membership test in ``classify_filters`` must route either key form to a named
-#: field (an alias-only set would silently drop camelCase keys into ``customFilters``).
+#: field (an alias-only set would silently drop snake_case keys into ``customFilters``).
 DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
     list(OppDefaultFilters.model_fields.keys())
     + [v.alias for v in OppDefaultFilters.model_fields.values() if v.alias]
@@ -210,8 +210,8 @@ def validate_routes(routes: PluginRoutes) -> None:
     Iterates every filter spec in ``routes`` and raises ``PluginError`` on:
     1. Unknown ``filter_type`` (not in ``FILTER_TYPE_SCHEMAS``).
     2. Filter name that collides with a core default-filter name in
-       ``DEFAULT_FILTER_NAMES`` (the escape-hatch collision check — core-shadowing
-       names must use the ``gov.<system>@<filterName>`` namespace instead).
+       ``DEFAULT_FILTER_NAMES`` (the escape-hatch collision check; a namespaced
+       key such as ``gov.<system>@<filterName>`` passes through as ad-hoc instead).
 
     Duplicate custom-filter names need no check: ``routes`` is dict-keyed, so a
     duplicate name cannot reach this validator (a duplicated literal key collapses
@@ -271,7 +271,7 @@ def validate_filter_call(
 
     Returns the validated filter as a ``DefaultFilter`` carrying the coerced
     operator/value — the wire payload is exactly what passed validation, never
-    the raw input (lax coercion can differ from the input, e.g. ``"42"`` → 42.0).
+    the raw input (lax coercion can differ from the input, e.g. ``"42"`` → ``42``).
     Model instances are re-validated via ``model_dump()`` rather than trusted:
     the filter models are mutable, so an instance that was valid at construction
     may not be valid now.
@@ -290,8 +290,8 @@ def validate_filter_call(
     Raises:
         PluginError: On operator/value-shape mismatch (wrapping the pydantic
             ``ValidationError`` as ``cause``), or on a ``spec.filter_type`` not
-            present in ``FILTER_TYPE_SCHEMAS`` — ``validate_routes`` catches the
-            latter at registration time.
+            present in ``FILTER_TYPE_SCHEMAS`` — call ``validate_routes(routes)``
+            at registration time to catch the latter earlier.
     """
     payload = value.model_dump() if isinstance(value, BaseModel) else value
     if spec is not None:
@@ -299,8 +299,8 @@ def validate_filter_call(
         if model_cls is None:
             raise PluginError(
                 f'Unknown filter_type "{spec.filter_type}" for filter '
-                f'"{filter_name}" — validate_routes(routes) catches this at '
-                "registration time",
+                f'"{filter_name}" — call validate_routes(routes) at '
+                "registration time to catch this earlier",
                 path=f"filters.{filter_name}",
                 source_value=spec,
             )
@@ -332,7 +332,7 @@ def validate_filter_call(
 
 
 # ---------------------------------------------------------------------------
-# classify_filters — three-bucket ADR-0012 classifier
+# classify_filters — ADR-0012 request-body classifier
 # ---------------------------------------------------------------------------
 
 

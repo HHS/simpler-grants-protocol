@@ -69,8 +69,8 @@ def main() -> None:
     #   "status"            — default core filter (snake_case key, no alias)
     #   "close_date_range"  — default core filter, snake_case key for an ALIASED field:
     #                         the classifier must normalize it to "closeDateRange" in the
-    #                         wire body (an unnormalized snake key would silently land in
-    #                         customFilters — the alias landmine)
+    #                         wire body (an unnormalized snake key would be silently
+    #                         dropped from the wire body — the alias landmine)
     #   "agency"         — registered custom filter (routes.opportunities.search.agency)
     #   "fundingProgram" — registered custom filter (routes.opportunities.search.fundingProgram)
     #   "legacyTag"      — ad-hoc passthrough (not registered, not a core default)

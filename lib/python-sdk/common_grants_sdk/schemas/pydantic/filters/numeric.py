@@ -80,12 +80,12 @@ class IntegerComparisonFilter(CommonGrantsBaseModel):
     """Filter that matches integers against a specific value.
 
     Operator surface matches ``NumberComparisonFilter`` (comparison plus
-    ``eq``/``neq``), as in the TS SDK's IntegerComparisonFilterSchema.
+    ``eq``/``neq``), as in the schema surface planned for the TS SDK.
 
-    Strict integer: fractional values and numeric strings are rejected, as in
-    the TS SDK (``z.number().int()``). Stricter than TS on integral floats:
-    ``100.0`` is rejected here but is indistinguishable from ``100`` in
-    JavaScript.
+    Strict integer: fractional values and numeric strings are rejected, as Zod
+    ``z.number().int()`` does in the planned TS counterpart. Stricter than TS
+    on integral floats: ``100.0`` is rejected here but is indistinguishable
+    from ``100`` in JavaScript.
     """
 
     operator: ComparisonOperator | EquivalenceOperator = Field(

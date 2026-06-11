@@ -102,8 +102,8 @@ def define_plugin(
         Passed through to PluginConfig.routes unvalidated. Registration-time
         validation is explicit: call validate_routes() (extensions/filters.py)
         on the declarations, e.g. at plugin startup. classify_filters() does
-        not invoke it (matching the TS SDK, where validateRoutes is a
-        standalone check).
+        not invoke it (matching the TS custom-filters PoC design, where route
+        validation is a standalone check).
     """
     return PluginConfig(
         extensions=extensions,

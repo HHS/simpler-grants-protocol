@@ -9,8 +9,8 @@ from .base import EquivalenceOperator
 class BooleanComparisonFilter(CommonGrantsBaseModel):
     """Filter that matches a boolean value for equality (eq | neq).
 
-    Strict boolean: 1/0 and "true"/"false" are rejected (mirrors the TS SDK's
-    BooleanComparisonFilterSchema, where ``z.boolean()`` rejects both).
+    Strict boolean: 1/0 and "true"/"false" are rejected, matching Zod
+    ``z.boolean()`` semantics in the schema surface planned for the TS SDK.
     """
 
     operator: EquivalenceOperator = Field(
