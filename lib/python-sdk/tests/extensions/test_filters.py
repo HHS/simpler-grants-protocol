@@ -467,14 +467,29 @@ def test_boolean_filter_value_survives_to_wire_as_json_true():
 def test_registered_filter_ships_validated_value_not_raw_input():
     """The wire body carries the value that passed validation, not the raw input.
 
-    NumberComparisonFilter lax-coerces "42" -> 42.0; shipping the raw string
-    would mean the payload differs from what validation approved.
+    NumberComparisonFilter lax-coerces "42" -> 42 (smart-union resolves the
+    int|float union to int first); shipping the raw string would mean the
+    payload differs from what validation approved.
     """
     result = classify_filters(
         WIRE_ROUTES, "opportunities", "search", {"awardCount": f.gt("42")}
     )
     body = result.model_dump(by_alias=True, exclude_none=True, mode="json")
-    assert body["customFilters"]["awardCount"]["value"] == 42.0
+    assert body["customFilters"]["awardCount"]["value"] == 42
+    assert isinstance(body["customFilters"]["awardCount"]["value"], int)
+
+
+def test_number_comparison_registered_filter_rejects_bool():
+    """f.eq(True) on a numberComparison-registered filter raises, never ships 1.
+
+    bool subclasses int; without an explicit rejection the int|float union
+    lax-coerces True -> 1 and the wire silently carries a number for a
+    boolean — the corruption class the DefaultFilter.value widening fixed.
+    """
+    with pytest.raises(PluginError):
+        classify_filters(
+            WIRE_ROUTES, "opportunities", "search", {"awardCount": f.eq(True)}
+        )
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")  # pydantic warns during the

@@ -637,3 +637,40 @@ def test_integer_comparison_filter_rejects_integral_float():
     """
     with pytest.raises(ValidationError):
         IntegerComparisonFilter(operator="gt", value=100.0)
+
+
+def test_number_comparison_filter_rejects_bool():
+    """NumberComparisonFilter raises ValidationError for True/False.
+
+    bool subclasses int, so the int|float union would lax-coerce True -> 1
+    and ship a number for a boolean — the same wire corruption the
+    DefaultFilter.value widening fixed, one layer down. z.number() rejects
+    booleans, so rejection also keeps the SDKs aligned.
+    """
+    with pytest.raises(ValidationError):
+        NumberComparisonFilter(operator="eq", value=True)
+
+    with pytest.raises(ValidationError):
+        NumberComparisonFilter(operator="gt", value=False)
+
+
+def test_number_array_filter_rejects_bool_items():
+    """NumberArrayFilter raises ValidationError when any item is a bool.
+
+    Same lax-coercion vector as NumberComparisonFilter: [True] would ship
+    as [1] without an explicit bool rejection.
+    """
+    with pytest.raises(ValidationError):
+        NumberArrayFilter(operator=ArrayOperator.IN, value=[1, True, 3])
+
+
+def test_number_range_rejects_bool_bounds():
+    """NumberRange raises ValidationError for a bool min or max.
+
+    Same lax-coercion vector: {"min": True, "max": 10} would ship min=1.
+    """
+    with pytest.raises(ValidationError):
+        NumberRange(min=True, max=10)
+
+    with pytest.raises(ValidationError):
+        NumberRange(min=0, max=False)
