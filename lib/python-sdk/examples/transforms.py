@@ -112,13 +112,15 @@ to_common_with_custom, from_common_with_custom = build_transforms(
                 }
             },
         },
-        "label": {
-            "join": {
-                "fields": ["data.opportunity_number", "data.opportunity_title"],
-                "sep": " — ",
-            }
-        },
         "customFields": {
+            "compositeLabel": {
+                "value": {
+                    "join": {
+                        "fields": ["data.opportunity_number", "data.opportunity_title"],
+                        "sep": " — ",
+                    }
+                },
+            },
             "legacyId": {
                 "value": {"field": "data.opportunity_id"},
             },
@@ -263,6 +265,10 @@ def main() -> None:
             if cf.applicant_types:
                 print(
                     f"    applicantTypes.value:  {cf.applicant_types.value!r}  ({type(cf.applicant_types.value).__name__})"
+                )
+            if cf.composite_label:
+                print(
+                    f"    compositeLabel.value:  {cf.composite_label.value!r}  ({type(cf.composite_label.value).__name__})"
                 )
 
     custom_native = from_common_with_custom(
