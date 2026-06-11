@@ -233,15 +233,6 @@ describe("classifyFilters", () => {
       ).toThrow(PluginError);
     });
 
-    it("throws PluginError on a non-integer value for a registered integerComparison filter", () => {
-      // integerComparison enforces an integer value (IntegerComparisonFilterSchema)
-      const spec = { filterType: "integerComparison" } as const;
-
-      expect(() => validateFilterCall(spec, "awardCount", { operator: "eq", value: 2.5 })).toThrow(
-        PluginError
-      );
-    });
-
     it("passes a valid integerComparison filter without throwing", () => {
       const spec = { filterType: "integerComparison" } as const;
 

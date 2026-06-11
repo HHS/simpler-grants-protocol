@@ -25,7 +25,6 @@ import {
   BooleanComparisonFilterSchema,
   DateComparisonFilterSchema,
   DateRangeFilterSchema,
-  IntegerComparisonFilterSchema,
   MoneyComparisonFilterSchema,
   MoneyRangeFilterSchema,
   NumberArrayFilterSchema,
@@ -53,7 +52,9 @@ const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
   numberComparison: NumberComparisonFilterSchema,
   numberArray: NumberArrayFilterSchema,
   numberRange: NumberRangeFilterSchema,
-  integerComparison: IntegerComparisonFilterSchema,
+  // integerComparison reuses NumberComparisonFilterSchema — the spec defines no
+  // integer filter model, so the int constraint is not schema-enforced
+  integerComparison: NumberComparisonFilterSchema,
   booleanComparison: BooleanComparisonFilterSchema,
   dateComparison: DateComparisonFilterSchema,
   dateRange: DateRangeFilterSchema,
