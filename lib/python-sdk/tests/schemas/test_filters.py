@@ -524,15 +524,6 @@ def test_boolean_comparison_filter_constructs():
     assert filter_obj.value is False
 
 
-def test_boolean_comparison_filter_coerces_string_operator():
-    """BooleanComparisonFilter coerces string 'eq'/'neq' to EquivalenceOperator."""
-    filter_obj = BooleanComparisonFilter(operator="eq", value=True)
-    assert filter_obj.operator == EquivalenceOperator.EQUAL
-
-    filter_obj = BooleanComparisonFilter(operator="neq", value=True)
-    assert filter_obj.operator == EquivalenceOperator.NOT_EQUAL
-
-
 def test_boolean_comparison_filter_rejects_invalid_operator():
     """BooleanComparisonFilter raises ValidationError for operator not in EquivalenceOperator."""
     with pytest.raises(ValidationError):
@@ -595,13 +586,17 @@ def test_integer_comparison_filter_rejects_numeric_string():
         IntegerComparisonFilter(operator="gt", value="100")
 
 
-def test_integer_comparison_filter_rejects_invalid_operator():
-    """IntegerComparisonFilter raises ValidationError for operators outside its surface.
+@pytest.mark.parametrize("model", [NumberComparisonFilter, IntegerComparisonFilter])
+@pytest.mark.parametrize("operator", ["in", "between", "like"])
+def test_comparison_filters_reject_invalid_operator(model, operator):
+    """Comparison filters raise ValidationError for operators outside their surface.
 
-    "in" is an ArrayOperator — not in the comparison/equivalence union.
+    Both models share the rewritten two-enum validate_operator dispatch whose
+    fallthrough returns unknown strings unchanged, relying on the enum-union
+    field to reject them — the rejection must hold on each model.
     """
     with pytest.raises(ValidationError):
-        IntegerComparisonFilter(operator="in", value=100)
+        model(operator=operator, value=100)
 
 
 def test_numeric_comparison_filters_accept_equivalence_operators():

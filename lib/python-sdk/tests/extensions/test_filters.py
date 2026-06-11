@@ -45,60 +45,32 @@ SAMPLE_ROUTES = {
 # ---------------------------------------------------------------------------
 
 
-def test_f_eq():
-    """f.eq returns DefaultFilter with operator "eq"."""
-    flt = f.eq("open")
-    assert flt.operator == "eq"
-    assert flt.value == "open"
+@pytest.mark.parametrize(
+    ("helper", "args", "operator", "value"),
+    [
+        ("eq", ("open",), "eq", "open"),
+        ("neq", ("x",), "neq", "x"),
+        ("gt", (1,), "gt", 1),
+        ("gte", (1,), "gte", 1),
+        ("lt", (1,), "lt", 1),
+        ("lte", (1,), "lte", 1),
+        ("in_", (["a"],), "in", ["a"]),
+        ("not_in", (["a"],), "notIn", ["a"]),
+        ("like", ("%x%",), "like", "%x%"),
+        ("not_like", ("%x%",), "notLike", "%x%"),
+        ("between", (0, 1), "between", {"min": 0, "max": 1}),
+        ("outside", (0, 1), "outside", {"min": 0, "max": 1}),
+    ],
+)
+def test_f_helper_wire_values(helper, args, operator, value):
+    """Every f helper produces its documented wire operator and value shape.
 
-
-def test_f_neq():
-    """f.neq returns DefaultFilter with operator "neq"."""
-    flt = f.neq("closed")
-    assert flt.operator == "neq"
-    assert flt.value == "closed"
-
-
-def test_f_gt():
-    """f.gt returns DefaultFilter with operator "gt"."""
-    flt = f.gt(100)
-    assert flt.operator == "gt"
-    assert flt.value == 100
-
-
-def test_f_like():
-    """f.like returns DefaultFilter with operator "like"."""
-    flt = f.like("%grants%")
-    assert flt.operator == "like"
-    assert flt.value == "%grants%"
-
-
-def test_f_in_uses_wire_value():
-    """f.in_ uses reserved-word workaround; wire operator is "in" (not "in_")."""
-    flt = f.in_(["NSF", "NIH"])
-    assert flt.operator == "in"
-    assert flt.value == ["NSF", "NIH"]
-
-
-def test_f_not_in_uses_camel_wire_value():
-    """f.not_in produces wire operator "notIn" (Python f.not_in vs TS F.notIn divergence)."""
-    flt = f.not_in(["archived"])
-    assert flt.operator == "notIn"
-    assert flt.value == ["archived"]
-
-
-def test_f_between():
-    """f.between produces operator "between" and {"min": a, "max": b} value."""
-    flt = f.between("2026-01-01", "2026-12-31")
-    assert flt.operator == "between"
-    assert flt.value == {"min": "2026-01-01", "max": "2026-12-31"}
-
-
-def test_f_outside():
-    """f.outside produces operator "outside" and {"min": a, "max": b} value."""
-    flt = f.outside(0, 50)
-    assert flt.operator == "outside"
-    assert flt.value == {"min": 0, "max": 50}
+    Includes the reserved-word workarounds: Python f.in_ / f.not_in produce
+    wire operators "in" / "notIn".
+    """
+    flt = getattr(f, helper)(*args)
+    assert flt.operator == operator
+    assert flt.value == value
 
 
 # ---------------------------------------------------------------------------
@@ -235,11 +207,9 @@ def test_oppfilters_mixed_case_roundtrip():
     assert "status" in request_body
     assert "closeDateRange" in request_body
 
-    # closeDateRange is NOT in customFilters
-    assert (
-        "customFilters" not in request_body
-        or "closeDateRange" not in request_body.get("customFilters", {})
-    )
+    # Nothing landed in customFilters — assert the bucket is absent outright
+    # (a conditional check could never fail on the path it guards)
+    assert "customFilters" not in request_body
 
 
 # ---------------------------------------------------------------------------
@@ -658,27 +628,3 @@ def test_multiple_failing_defaults_use_collective_path():
             {"status": f.eq("open"), "closeDateRange": f.eq("x")},
         )
     assert exc_info.value.path == "filters"
-
-
-@pytest.mark.parametrize(
-    ("helper", "args", "operator", "value"),
-    [
-        ("eq", ("open",), "eq", "open"),
-        ("neq", ("x",), "neq", "x"),
-        ("gt", (1,), "gt", 1),
-        ("gte", (1,), "gte", 1),
-        ("lt", (1,), "lt", 1),
-        ("lte", (1,), "lte", 1),
-        ("in_", (["a"],), "in", ["a"]),
-        ("not_in", (["a"],), "notIn", ["a"]),
-        ("like", ("%x%",), "like", "%x%"),
-        ("not_like", ("%x%",), "notLike", "%x%"),
-        ("between", (0, 1), "between", {"min": 0, "max": 1}),
-        ("outside", (0, 1), "outside", {"min": 0, "max": 1}),
-    ],
-)
-def test_f_helper_wire_values(helper, args, operator, value):
-    """Every f helper produces its documented wire operator and value shape."""
-    flt = getattr(f, helper)(*args)
-    assert flt.operator == operator
-    assert flt.value == value

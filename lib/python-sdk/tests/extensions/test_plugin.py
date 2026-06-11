@@ -1,6 +1,7 @@
 """Tests for plugin.py — PluginExtensions-based API."""
 
 from common_grants_sdk.extensions.plugin import Plugin, PluginConfig, define_plugin
+from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
 from common_grants_sdk.extensions.types import (
     ObjectSchemasInput,
     PluginExtensions,
@@ -23,6 +24,19 @@ def test_define_plugin_with_extensions():
     ext = PluginExtensions()
     config = define_plugin(extensions=ext)
     assert config.extensions is ext
+
+
+def test_define_plugin_routes_passthrough():
+    """define_plugin stores routes as-is on PluginConfig.routes (no validation)."""
+    routes = {
+        "opportunities": {
+            "search": {
+                "agency": CustomFilterSpec(filter_type=CustomFilterType.STRING_ARRAY)
+            }
+        }
+    }
+    config = define_plugin(routes=routes)
+    assert config.routes is routes
 
 
 def test_define_plugin_with_meta_and_schemas():
