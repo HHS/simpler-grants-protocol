@@ -217,6 +217,9 @@ def validate_routes(routes: PluginRoutes) -> None:
     duplicate name cannot reach this validator (a duplicated literal key collapses
     silently to its last occurrence at dict construction, before this runs).
 
+    Methods whose ``RouteDeclarations`` carry no ``filters`` key are skipped —
+    declaring a method with no filters is valid.
+
     Args:
         routes: Route-keyed filter declarations as ``PluginRoutes``.
 
@@ -224,9 +227,12 @@ def validate_routes(routes: PluginRoutes) -> None:
         PluginError: On the first invalid declaration found.
     """
     for resource, methods in routes.items():
-        for method, filter_specs in methods.items():
+        for method, declarations in methods.items():
+            filter_specs = declarations.get("filters")
+            if not filter_specs:
+                continue
             for filter_name, spec in filter_specs.items():
-                path = f"routes.{resource}.{method}.{filter_name}"
+                path = f"routes.{resource}.{method}.filters.{filter_name}"
                 if spec.filter_type not in FILTER_TYPE_SCHEMAS:
                     raise PluginError(
                         f'Unknown filter_type "{spec.filter_type}" for filter "{filter_name}"',
@@ -389,8 +395,9 @@ def classify_filters(
             default filter are both supplied. The error surface is uniform across
             all three buckets.
     """
-    registered_specs: dict[str, CustomFilterSpec] = routes.get(resource, {}).get(
-        method, {}
+    route_declarations = routes.get(resource, {}).get(method, {})
+    registered_specs: dict[str, CustomFilterSpec] = route_declarations.get(
+        "filters", {}
     )
 
     default_fields: dict[str, Any] = {}

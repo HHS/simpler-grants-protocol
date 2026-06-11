@@ -31,7 +31,11 @@ def test_define_plugin_routes_passthrough():
     routes = {
         "opportunities": {
             "search": {
-                "agency": CustomFilterSpec(filter_type=CustomFilterType.STRING_ARRAY)
+                "filters": {
+                    "agency": CustomFilterSpec(
+                        filter_type=CustomFilterType.STRING_ARRAY
+                    )
+                }
             }
         }
     }

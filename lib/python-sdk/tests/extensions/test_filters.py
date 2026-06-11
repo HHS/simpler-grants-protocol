@@ -33,8 +33,10 @@ FUNDING_PROGRAM_SPEC = CustomFilterSpec(
 SAMPLE_ROUTES = {
     "opportunities": {
         "search": {
-            "agency": AGENCY_SPEC,
-            "fundingProgram": FUNDING_PROGRAM_SPEC,
+            "filters": {
+                "agency": AGENCY_SPEC,
+                "fundingProgram": FUNDING_PROGRAM_SPEC,
+            }
         }
     }
 }
@@ -223,7 +225,7 @@ def test_validate_routes_unknown_filter_type_raises():
     # can be passed directly (the annotation is for type checkers only).
     bad_spec = CustomFilterSpec(filter_type="unknownType")  # type: ignore[arg-type]
 
-    routes = {"opportunities": {"search": {"myFilter": bad_spec}}}
+    routes = {"opportunities": {"search": {"filters": {"myFilter": bad_spec}}}}
     with pytest.raises(PluginError, match="Unknown filter_type"):
         validate_routes(routes)
 
@@ -237,10 +239,12 @@ def test_validate_routes_collision_with_default_filter_name_raises():
     routes = {
         "opportunities": {
             "search": {
-                "status": CustomFilterSpec(
-                    filter_type=CustomFilterType.STRING_ARRAY,
-                    description="Should collide with default",
-                ),
+                "filters": {
+                    "status": CustomFilterSpec(
+                        filter_type=CustomFilterType.STRING_ARRAY,
+                        description="Should collide with default",
+                    ),
+                }
             }
         }
     }
@@ -253,10 +257,12 @@ def test_validate_routes_collision_with_camel_alias_raises():
     routes = {
         "opportunities": {
             "search": {
-                "closeDateRange": CustomFilterSpec(
-                    filter_type=CustomFilterType.DATE_RANGE,
-                    description="Should collide with default alias",
-                ),
+                "filters": {
+                    "closeDateRange": CustomFilterSpec(
+                        filter_type=CustomFilterType.DATE_RANGE,
+                        description="Should collide with default alias",
+                    ),
+                }
             }
         }
     }
@@ -408,10 +414,14 @@ def test_classify_default_camel_alias_wrong_shape_raises_plugin_error():
 WIRE_ROUTES = {
     "opportunities": {
         "search": {
-            "isOpen": CustomFilterSpec(filter_type=CustomFilterType.BOOLEAN_COMPARISON),
-            "awardCount": CustomFilterSpec(
-                filter_type=CustomFilterType.NUMBER_COMPARISON
-            ),
+            "filters": {
+                "isOpen": CustomFilterSpec(
+                    filter_type=CustomFilterType.BOOLEAN_COMPARISON
+                ),
+                "awardCount": CustomFilterSpec(
+                    filter_type=CustomFilterType.NUMBER_COMPARISON
+                ),
+            }
         }
     }
 }

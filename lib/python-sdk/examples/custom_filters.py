@@ -34,11 +34,15 @@ grants_gov = define_plugin(
     routes={
         "opportunities": {
             "search": {
-                "agency": CustomFilterSpec(filter_type=CustomFilterType.STRING_ARRAY),
-                "fundingProgram": CustomFilterSpec(
-                    filter_type=CustomFilterType.STRING_COMPARISON,
-                    description="Program name filter",
-                ),
+                "filters": {
+                    "agency": CustomFilterSpec(
+                        filter_type=CustomFilterType.STRING_ARRAY
+                    ),
+                    "fundingProgram": CustomFilterSpec(
+                        filter_type=CustomFilterType.STRING_COMPARISON,
+                        description="Program name filter",
+                    ),
+                }
             }
         }
     },
@@ -56,9 +60,9 @@ def main() -> None:
     _section("PLUGIN ROUTES (declared)")
     if grants_gov.routes:
         for resource, methods in grants_gov.routes.items():
-            for method, filters in methods.items():
+            for method, declarations in methods.items():
                 print(f"  {resource}.{method}:")
-                for name, spec in filters.items():
+                for name, spec in declarations.get("filters", {}).items():
                     desc = f" — {spec.description}" if spec.description else ""
                     print(f"    {name}: {spec.filter_type.value}{desc}")
 
