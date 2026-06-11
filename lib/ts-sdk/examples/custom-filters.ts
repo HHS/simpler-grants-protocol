@@ -9,7 +9,7 @@
  *   3. Calling `classifyFilters` to produce the ADR-0012 request body:
  *      default fields at top-level, custom + ad-hoc under `customFilters`.
  *   4. A COMMENT block (not executed) demonstrating the `as const` widening
- *      trap — see custom-filters-types.spec.ts for the live compile-time proof.
+ *      trap — see custom-filters-types.ts for the compile-time narrowing assertions.
  *
  * Run with: `pnpm example:custom-filters`
  *
@@ -32,7 +32,7 @@ import { classifyFilters, definePlugin, F } from "../src/extensions";
 // `as const` is load-bearing: it preserves literal `filterType` values so
 // that TypeScript can narrow call-site filter keys, operators, and value shapes.
 // Without `as const`, `filterType` widens to `string` and the typed guard is lost.
-// See custom-filters-types.spec.ts for the compile-time proof.
+// See custom-filters-types.ts for the compile-time proof.
 const grantsGovPlugin = definePlugin({
   meta: {
     name: "grants.gov",
@@ -158,7 +158,7 @@ console.log("  fundingProgram → customFilters (registered custom filter)");
 console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
 
 // ############################################################################
-// Step 4 — The `as const` widening trap (comment block — live proof in spec)
+// Step 4 — The `as const` widening trap (comment block — not executed)
 // ############################################################################
 
 // If you forget `as const` on the definePlugin call, TypeScript widens the
@@ -167,9 +167,8 @@ console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
 // validate operator/value shapes at the call site — unknown keys and wrong
 // value types silently pass the type checker.
 //
-// The live compile-time proof is in:
-//   lib/ts-sdk/__tests__/extensions/custom-filters-types.spec.ts
-// (see "WITHOUT as const — widening trap" describe block)
+// The compile-time narrowing assertions (the errors that fire WITH `as const`)
+// live in: lib/ts-sdk/__tests__/extensions/custom-filters-types.ts
 //
 // Example of what NOT to do:
 //
@@ -186,10 +185,8 @@ console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
 //   // infer the literal, the typed guard collapses and the following would NOT
 //   // be caught at compile time:
 //   //   badPlugin.routes?.opportunities?.search?.filters  // type: Record<string, CustomFilterSpec>
-//   //   // → TypedConsumerFilters resolves to never → FilterParams falls back to Record<string, unknown>
+//   //   // → literal filterTypes are lost, so per-key narrowing is impossible
 //   //   // → unknown keys, wrong operators, and wrong value shapes silently accepted
 
 console.log("\n✓ custom-filters example complete");
-console.log(
-  "  See __tests__/extensions/custom-filters-types.spec.ts for compile-time narrowing proof"
-);
+console.log("  See __tests__/extensions/custom-filters-types.ts for compile-time narrowing proof");

@@ -767,9 +767,9 @@ validateFilterCall(agencySpec, "agency", F.in(["HHS"])); // valid: in operator +
 ### The `as const` trap
 
 > [!IMPORTANT]
-> Always pass `as const` to `definePlugin()` when declaring `routes`. Without it, TypeScript widens literal `filterType` values from specific strings (e.g. `"stringArray"`) to the broad `string` type, and the `TypedConsumerFilters` narrowing layer collapses to `Record<string, unknown>`. Unknown filter keys, wrong operators, and wrong value shapes then silently pass the type checker.
+> Always pass `as const` to `definePlugin()` when declaring `routes`. Without it, TypeScript widens literal `filterType` values from specific strings (e.g. `"stringArray"`) to the broad `string` type, and the `TypedConsumerFilters` narrowing layer is lost — unknown filter keys, wrong operators, and wrong value shapes then silently pass the type checker.
 
-The compile-time proof is in [`__tests__/extensions/custom-filters-types.spec.ts`](../../__tests__/extensions/custom-filters-types.spec.ts). Six live `@ts-expect-error` directives guard actual compile errors that fire with `as const`; a widening-demo block shows those same errors disappearing when the plugin is stored without preserving the `TRoutes` generic.
+The compile-time proof is in [`__tests__/extensions/custom-filters-types.ts`](../../__tests__/extensions/custom-filters-types.ts) — six `@ts-expect-error` directives guard actual compile errors that fire only while `as const` narrowing is in effect, checked by `tsc --noEmit`.
 
 ## Best practices
 
