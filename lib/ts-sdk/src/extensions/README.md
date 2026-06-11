@@ -23,7 +23,7 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [Defining a plugin](#defining-a-plugin)
   - [Publishing a plugin](#publishing-a-plugin)
 - [Using plugins with the API client](#using-plugins-with-the-api-client)
-- [Plugin transformations (PoC)](#plugin-transformations-poc)
+- [Plugin transformations](#plugin-transformations)
   - [Defining bidirectional transforms](#defining-bidirectional-transforms)
   - [Built-in mapping handlers](#built-in-mapping-handlers)
   - [Null handling](#null-handling)
@@ -31,6 +31,13 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [Validating against the extended schema](#validating-against-the-extended-schema)
   - [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)
   - [Error handling](#error-handling)
+- [Plugin custom filters](#plugin-custom-filters)
+  - [Routes vs. schemas — a critical distinction](#routes-vs-schemas--a-critical-distinction)
+  - [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)
+  - [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers)
+  - [Classifying consumer filters into the request body](#classifying-consumer-filters-into-the-request-body)
+  - [Validation — registration-time and call-time](#validation--registration-time-and-call-time)
+  - [The `as const` trap](#the-as-const-trap)
 - [Best practices](#best-practices)
   - [Export value schemas alongside your plugin](#export-value-schemas-alongside-your-plugin)
   - [Use `peerDependencies` for `@common-grants/sdk`](#use-peerdependencies-for-common-grantssdk)
@@ -39,6 +46,7 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [Plugin creation](#plugin-creation)
   - [Schema utilities](#schema-utilities)
   - [Transforms (PoC)](#transforms-poc)
+  - [Custom filters (PoC)](#custom-filters-poc)
   - [Shared types](#shared-types)
 
 ## Key concepts
@@ -400,9 +408,7 @@ const results = await client.opportunities.search({
 
 The `schema` option is accepted by `get()`, `list()`, and `search()`. When omitted, the client falls back to `OpportunityBaseSchema` (with untyped `customFields`).
 
-## Plugin transformations (PoC)
-
-> **Status:** Proof-of-concept (issue [#798](https://github.com/HHS/simpler-grants-protocol/issues/798)). Mirrors the Python PoC in [PR #810](https://github.com/HHS/simpler-grants-protocol/pull/810). Contract follows [ADR-0022](https://commongrants.org/governance/adr/0022-plugin-framework/) and [ADR-0017](https://commongrants.org/governance/adr/0017-mapping-format/).
+## Plugin transformations
 
 Plugins can declare bidirectional transforms that convert between a source system's native shape and the CommonGrants protocol. `toCommon` maps `native → CommonGrants`; `fromCommon` reverses it. Both directions are author-provided — the SDK does not invert one into the other, because many-to-one handlers (like `match`) are not reversible.
 
@@ -595,6 +601,172 @@ for (const err of out.errors) {
 
 > **PII warning (ADR-0022 Decision #9):** The SDK does **not** redact by default. `PluginError.sourceValue` and `cause` are plain enumerable fields and flow through `JSON.stringify(err)`, `util.inspect(err)`, `console.log(err)`, and any logger that enumerates own properties. `sourceValue` is populated with the entire input record passed to `toCommon` / `fromCommon` — not just the value at the failing field. Log a redacted projection instead — e.g. `{ name: err.name, message: err.message, path: err.path, handler: err.handler }`. On the Zod-validation path (when `commonModel` is passed to `buildTransforms()`), `PluginError.message` is also data-bearing — Zod's default error map embeds the rejected value into `issue.message`, which flows verbatim into `PluginError.message`. Redact `message` alongside `sourceValue` and `cause`. Full-message sanitization is tracked under [#744](https://github.com/HHS/simpler-grants-protocol/issues/744).
 
+## Plugin custom filters
+
+Plugins can declare custom filter specs per route-method. At search time, a single flat consumer `filters` object is classified into the body of the search request sent to the API (the `OppFilters` shape from ADR-0012): default fields land as named top-level fields; custom and ad-hoc keys land under `customFilters`.
+
+### Routes vs. schemas — a critical distinction
+
+> [!IMPORTANT]
+> Custom **filters** attach to resource **methods** (routes), not to schemas. Custom **fields** attach to schemas. These two extension points use different keys on the same `definePlugin()` call:
+>
+> ```typescript
+> definePlugin({
+>   routes: { opportunities: { search: { filters: { ... } } } }, // custom filters (this section)
+>   schemas: { Opportunity: { customFields: { ... } } }, // custom fields (see "Build-time with plugins")
+> } as const);
+> ```
+>
+> The reason: filter declarations vary per route-method (e.g. `opportunities.search` may support different filters than `applications.list`), whereas custom fields are schema-level concerns shared across all operations that return the model.
+
+### Declaring custom filters on a route
+
+Pass `routes` alongside (or instead of) `schemas` in `definePlugin()`. Always add `as const` — it is load-bearing for compile-time narrowing (see [The `as const` trap](#the-as-const-trap)):
+
+```typescript
+import { definePlugin } from "@common-grants/sdk/extensions";
+
+const grantsGovPlugin = definePlugin({
+  meta: {
+    name: "grants.gov",
+    version: "0.1.0",
+    sourceSystem: "grants.gov",
+    capabilities: ["customFilters"],
+  },
+  routes: {
+    opportunities: {
+      search: {
+        filters: {
+          agency: {
+            filterType: "stringArray",
+            description: "Filter by funding agency code (e.g. 'HHS', 'DOE')",
+          },
+          fundingProgram: {
+            filterType: "stringComparison",
+            description: "Filter by funding program name",
+          },
+        },
+      },
+    },
+  },
+} as const); // ← `as const` is load-bearing — see "The as const trap" below
+```
+
+Each filter entry is a `CustomFilterSpec`: `{ filterType: CustomFilterType; description?: string }`. Operators are derived from `filterType` — you do not author them.
+
+### Filter-type catalog and the `F.*` helpers
+
+`CustomFilterType` is an 11-value enum. Each value maps to a base filter schema with auto-derived operators:
+
+| `filterType`        | Operators                             | Value shape    |
+| ------------------- | ------------------------------------- | -------------- |
+| `stringComparison`  | `eq`, `neq`, `like`, `notLike`        | `string`       |
+| `stringArray`       | `in`, `notIn`                         | `string[]`     |
+| `numberComparison`  | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `number`       |
+| `numberArray`       | `in`, `notIn`                         | `number[]`     |
+| `numberRange`       | `between`, `outside`                  | `{ min, max }` |
+| `integerComparison` | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `number`       |
+| `booleanComparison` | `eq`, `neq`                           | `boolean`      |
+| `dateComparison`    | `gt`, `gte`, `lt`, `lte`              | `string` (ISO) |
+| `dateRange`         | `between`, `outside`                  | `{ min, max }` |
+| `moneyComparison`   | `gt`, `gte`, `lt`, `lte`              | `Money`        |
+| `moneyRange`        | `between`, `outside`                  | `{ min, max }` |
+
+The `F` namespace provides helpers that compile `{ operator, value }` filter objects without manual construction:
+
+```typescript
+import { F } from "@common-grants/sdk/extensions";
+
+F.eq("open"); // { operator: "eq", value: "open" }
+F.in(["HHS", "DOE"]); // { operator: "in", value: ["HHS", "DOE"] }
+F.like("*Conservation*"); // { operator: "like", value: "*Conservation*" }
+F.between("2025-01-01", "2025-12-31"); // { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } }
+// Full set: eq, neq, gt, gte, lt, lte, in, notIn, like, notLike, between, outside
+```
+
+> **Cross-SDK note.** TypeScript uses `F.in` (`"in"` as an object key — valid JS). The Python sibling SDK ([#869](https://github.com/HHS/simpler-grants-protocol/issues/869)) uses `f.in_` (trailing underscore, Python convention for reserved words). This is a documented naming divergence across SDKs.
+
+### Classifying consumer filters into the request body
+
+`definePlugin()` registers filter **declarations** — which filter names exist and what type each one is. `classifyFilters()` is the separate **search-time** step: it takes the consumer's actual filter values and produces the body of the request sent to the API. In the full SDK the client will call it internally when you invoke a search method — consumers won't call it directly. The PoC exposes it standalone because client wiring is out of scope (tracked under [#645](https://github.com/HHS/simpler-grants-protocol/issues/645)).
+
+`classifyFilters()` accepts the plugin's `routes`, a resource name, a method name, and the consumer's flat `filters` object. It returns an `OppFilters` request body conforming to ADR-0012:
+
+```typescript
+import { classifyFilters } from "@common-grants/sdk/extensions";
+
+const consumerFilters = {
+  // Default filters → top-level named fields on the request body
+  status: F.in(["open", "forecasted"]),
+  closeDateRange: F.between("2025-01-01", "2025-12-31"),
+
+  // Pre-registered custom filters → customFilters record
+  agency: F.in(["HHS", "DOE"]),
+  fundingProgram: F.like("*Conservation*"),
+
+  // Ad-hoc filter (not declared in the plugin) → customFilters passthrough
+  legacyTag: F.eq("conservation-2024"),
+};
+
+const requestBody = classifyFilters(
+  grantsGovPlugin.routes!, // routes is optional on Plugin; assert non-null when known
+  "opportunities",
+  "search",
+  consumerFilters
+);
+// requestBody shape (ADR-0012):
+// {
+//   status: { operator: "in", value: ["open", "forecasted"] },
+//   closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
+//   customFilters: {
+//     agency: { operator: "in", value: ["HHS", "DOE"] },
+//     fundingProgram: { operator: "like", value: "*Conservation*" },
+//     legacyTag: { operator: "eq", value: "conservation-2024" },
+//   }
+// }
+```
+
+The three-bucket classification rule (ADR-0012):
+
+1. **Default filters** (`status`, `closeDateRange`, etc.) → named top-level fields on the request body.
+2. **Pre-registered custom filters** (declared in `routes.*.*.filters`) → `customFilters` record, with operator/value-shape validation against the declared `filterType`.
+3. **Ad-hoc filters** (not declared, including `gov.<system>@<filterName>` namespaced keys) → `customFilters` passthrough, shape-only validated.
+
+For a complete runnable example with assertions, see [`examples/custom-filters.ts`](../../examples/custom-filters.ts) (`pnpm example:custom-filters`).
+
+### Validation — registration-time and call-time
+
+`validateRoutes()` is called at registration time. It throws `PluginError` if:
+
+- A filter spec uses an unknown `filterType` value.
+- A custom filter name collides with a default filter field name (e.g. registering `"status"` would shadow the protocol's standard `status` filter).
+
+`validateFilterCall()` validates individual filters at call time. For registered filters it validates the operator and value shape against the declared `filterType`. For ad-hoc filters it applies a shape-only check (`DefaultFilterSchema`). `classifyFilters()` already runs it for every key — you only call it directly when validating a single filter outside classification.
+
+In the PoC, `definePlugin()` passes `routes` through **unvalidated** — the full SDK client will run `validateRoutes()` when a plugin is attached and call-time validation inside each search. Until then, call `validateRoutes()` yourself after defining a plugin if you want registration-time errors surfaced early.
+
+> **PII note:** as with transforms, `PluginError.sourceValue` carries the raw input — here, the consumer's filter value. The [PII warning](#error-handling) above applies equally; log a redacted projection.
+
+```typescript
+import { validateRoutes, validateFilterCall } from "@common-grants/sdk/extensions";
+
+// Registration-time — throws PluginError on unknown filterType or collision
+validateRoutes(grantsGovPlugin.routes!);
+
+// Call-time — throws PluginError on operator/value mismatch for registered filters.
+// Pass the filter's CustomFilterSpec (looked up from the route-method's filters),
+// its name, and the value.
+const agencySpec = grantsGovPlugin.routes!.opportunities.search.filters!.agency;
+validateFilterCall(agencySpec, "agency", F.in(["HHS"])); // valid: in operator + string array value match the stringArray filterType
+```
+
+### The `as const` trap
+
+> [!IMPORTANT]
+> Always pass `as const` to `definePlugin()` when declaring `routes`. Without it, TypeScript widens literal `filterType` values from specific strings (e.g. `"stringArray"`) to the broad `string` type, and the `TypedConsumerFilters` narrowing layer is lost — unknown filter keys, wrong operators, and wrong value shapes then silently pass the type checker.
+
+The compile-time proof is in [`__tests__/extensions/custom-filters-types.ts`](../../__tests__/extensions/custom-filters-types.ts) — six `@ts-expect-error` directives guard actual compile errors that fire only while `as const` narrowing is in effect, checked by `tsc --noEmit`.
+
 ## Best practices
 
 ### Export value schemas alongside your plugin
@@ -692,6 +864,19 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 | [`PluginExtensionsObjectConfig`](./types.ts)         | interface | Per-object slot inside `PluginExtensions.schemas`: `{ mappings? }`.                                                                                                                                                                              |                                                                         |
 | [`PluginExtensions`](./types.ts)                     | interface | Serializable plugin config carrying `meta?: Partial<PluginMeta>` and per-object `schemas`.                                                                                                                                                       |                                                                         |
 | [`ClientConfig`](./types.ts)                         | type      | The per-plugin client configuration shape. Concrete shape is deferred to the full SDK.                                                                                                                                                           |                                                                         |
+
+### Custom filters (PoC)
+
+| Export                                        | Kind      | Description                                                                                                                                                                                                                         | Demonstrated in                                                                     |
+| --------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [`classifyFilters()`](./custom-filters.ts)    | function  | Three-bucket classifier. Maps a flat consumer `filters` object to the ADR-0012 `OppFilters` request body: default fields → top-level named fields; registered custom + ad-hoc → `customFilters` record.                             | [Classifying consumer filters](#classifying-consumer-filters-into-the-request-body) |
+| [`validateRoutes()`](./custom-filters.ts)     | function  | Registration-time validator. Throws `PluginError` on unknown `filterType` or default-field name collisions.                                                                                                                         | [Validation](#validation--registration-time-and-call-time)                          |
+| [`validateFilterCall()`](./custom-filters.ts) | function  | Call-time validator. Validates a single filter against its declared `filterType` schema (registered) or shape-only (ad-hoc). Throws `PluginError` on mismatch.                                                                      | [Validation](#validation--registration-time-and-call-time)                          |
+| [`F`](./custom-filters.ts)                    | namespace | Helper namespace. `F.eq`, `F.neq`, `F.gt`, `F.gte`, `F.lt`, `F.lte`, `F.in`, `F.notIn`, `F.like`, `F.notLike`, `F.between`, `F.outside` — each compiles to `{ operator, value }`. Note: `F.in` is `"in"` as an object property key. | [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers) |
+| [`CustomFilterSpec`](./types.ts)              | interface | Per-filter declaration: `{ filterType: CustomFilterType; description?: string }`. Operators are derived from `filterType`; no `value` field.                                                                                        | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
+| [`CustomFilterType`](./types.ts)              | type      | 11-value literal union: `stringComparison \| stringArray \| numberComparison \| numberArray \| numberRange \| integerComparison \| booleanComparison \| dateComparison \| dateRange \| moneyComparison \| moneyRange`.              | [Filter-type catalog](#filter-type-catalog-and-the-f-helpers)                       |
+| [`PluginRoutes`](./types.ts)                  | type      | `Record<string, Record<string, RouteDeclarations>>` — the `routes` value on `DefinePluginOptions`. Keys are resource name → method name → `RouteDeclarations`.                                                                      | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
+| [`RouteDeclarations`](./types.ts)             | interface | Per-method filter map: `{ filters?: Record<string, CustomFilterSpec> }`.                                                                                                                                                            |                                                                                     |
 
 ### Shared types
 

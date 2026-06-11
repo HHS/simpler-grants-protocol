@@ -13,6 +13,10 @@ export type { Plugin, DefinePluginOptions, SchemasInput } from "./define-plugin"
 export type { CustomFieldSpec, HasCustomFields, ExtensibleObject } from "./types";
 export { definePlugin } from "./define-plugin";
 
+// Custom filters — route-keyed filter registration + classification
+export type { CustomFilterSpec, CustomFilterType, PluginRoutes, RouteDeclarations } from "./types";
+export { classifyFilters, validateRoutes, validateFilterCall, F } from "./custom-filters";
+
 // Schema utilities — lower-level tools for working with custom fields
 export type { WithCustomFieldsResult } from "./with-custom-fields";
 export type { ExtensibleSchemaName } from "./types";

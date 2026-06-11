@@ -17,6 +17,7 @@ import {
   DateRangeFilterSchema,
   MoneyComparisonFilterSchema,
   MoneyRangeFilterSchema,
+  BooleanComparisonFilterSchema,
 } from "@/schemas";
 
 // ############################################################################
@@ -484,5 +485,33 @@ describe("MoneyRangeFilter Schema", () => {
         value: { min: { amount: "100", currency: "USD" } },
       })
     ).toThrow();
+  });
+});
+
+// ############################################################################
+// Boolean comparison filter
+// ############################################################################
+
+describe("BooleanComparisonFilter Schema", () => {
+  it("should validate eq operator with true value", () => {
+    expect(BooleanComparisonFilterSchema.parse({ operator: "eq", value: true })).toEqual({
+      operator: "eq",
+      value: true,
+    });
+  });
+
+  it("should validate neq operator with false value", () => {
+    expect(BooleanComparisonFilterSchema.parse({ operator: "neq", value: false })).toEqual({
+      operator: "neq",
+      value: false,
+    });
+  });
+
+  it("should raise an error for gt operator (not in eq|neq)", () => {
+    expect(() => BooleanComparisonFilterSchema.parse({ operator: "gt", value: true })).toThrow();
+  });
+
+  it("should raise an error when value is a string instead of boolean", () => {
+    expect(() => BooleanComparisonFilterSchema.parse({ operator: "eq", value: "true" })).toThrow();
   });
 });
