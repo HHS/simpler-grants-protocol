@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar
+from typing import Any, Callable, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .specs import CustomFieldSpec
-
-if TYPE_CHECKING:
-    from .specs import CustomFilterSpec
+from .specs import CustomFieldSpec, CustomFilterSpec
 
 TNative = TypeVar("TNative")
 TCommon = TypeVar("TCommon")
@@ -23,10 +20,7 @@ PluginCapability = Literal["customFields", "customFilters", "transforms", "clien
 Handler = Callable[[Any, Any], Any]
 
 # Route-keyed custom-filter declaration aliases.
-# CustomFilterSpec is referenced as a forward string to keep the TYPE_CHECKING guard
-# effective at runtime — types.py already imports from specs at module level for
-# CustomFieldSpec; the guard here covers the CustomFilterSpec reference only.
-RouteMethodFilters = dict[str, "CustomFilterSpec"]  # {filterName: spec}
+RouteMethodFilters = dict[str, CustomFilterSpec]  # {filterName: spec}
 RouteDeclarations = dict[str, RouteMethodFilters]  # {methodName: {filterName: spec}}
 PluginRoutes = dict[str, RouteDeclarations]  # {resourceName: {method: {name: spec}}}
 

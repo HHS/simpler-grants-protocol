@@ -33,11 +33,13 @@ class CustomFilterType(StrEnum):
     MONEY_RANGE = "moneyRange"
 
 
-@dataclass
+@dataclass(frozen=True)
 class CustomFilterSpec:
     """Per-filter declaration: filter_type constrains to a known type; description is optional.
 
-    No ``value`` field — operators are derived from filter_type at classify time.
+    Frozen: a spec is an immutable declaration; mutating one after registration
+    would bypass validate_routes. No ``value`` field — the allowed operator set
+    is enforced by the filter_type's validation model at call time.
     """
 
     filter_type: CustomFilterType

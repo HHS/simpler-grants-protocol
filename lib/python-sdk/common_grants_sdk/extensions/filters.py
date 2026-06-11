@@ -17,6 +17,8 @@ SDK's ``as const`` literal narrowing).
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any, Optional
 
 from pydantic import BaseModel, ValidationError
@@ -140,19 +142,23 @@ f = _FHelpers()
 #: ``integerComparison`` and ``booleanComparison`` use the SDK-level
 #: ``IntegerComparisonFilter`` / ``BooleanComparisonFilter`` models (parallel to the
 #: TS SDK's ``IntegerComparisonFilterSchema`` / ``BooleanComparisonFilterSchema``).
-FILTER_TYPE_SCHEMAS: dict[CustomFilterType, type[BaseModel]] = {
-    CustomFilterType.STRING_COMPARISON: StringComparisonFilter,
-    CustomFilterType.STRING_ARRAY: StringArrayFilter,
-    CustomFilterType.NUMBER_COMPARISON: NumberComparisonFilter,
-    CustomFilterType.NUMBER_ARRAY: NumberArrayFilter,
-    CustomFilterType.NUMBER_RANGE: NumberRangeFilter,
-    CustomFilterType.INTEGER_COMPARISON: IntegerComparisonFilter,
-    CustomFilterType.BOOLEAN_COMPARISON: BooleanComparisonFilter,
-    CustomFilterType.DATE_COMPARISON: DateComparisonFilter,
-    CustomFilterType.DATE_RANGE: DateRangeFilter,
-    CustomFilterType.MONEY_COMPARISON: MoneyComparisonFilter,
-    CustomFilterType.MONEY_RANGE: MoneyRangeFilter,
-}
+#: Read-only: the catalog is closed — registering new filter types is a spec/SDK
+#: change (extend CustomFilterType + this map together), not a runtime extension point.
+FILTER_TYPE_SCHEMAS: Mapping[CustomFilterType, type[BaseModel]] = MappingProxyType(
+    {
+        CustomFilterType.STRING_COMPARISON: StringComparisonFilter,
+        CustomFilterType.STRING_ARRAY: StringArrayFilter,
+        CustomFilterType.NUMBER_COMPARISON: NumberComparisonFilter,
+        CustomFilterType.NUMBER_ARRAY: NumberArrayFilter,
+        CustomFilterType.NUMBER_RANGE: NumberRangeFilter,
+        CustomFilterType.INTEGER_COMPARISON: IntegerComparisonFilter,
+        CustomFilterType.BOOLEAN_COMPARISON: BooleanComparisonFilter,
+        CustomFilterType.DATE_COMPARISON: DateComparisonFilter,
+        CustomFilterType.DATE_RANGE: DateRangeFilter,
+        CustomFilterType.MONEY_COMPARISON: MoneyComparisonFilter,
+        CustomFilterType.MONEY_RANGE: MoneyRangeFilter,
+    }
+)
 
 # ---------------------------------------------------------------------------
 # DEFAULT_FILTER_NAMES — must include BOTH snake_case field names AND camelCase aliases
@@ -334,7 +340,7 @@ def classify_filters(
     routes: PluginRoutes,
     resource: str,
     method: str,
-    consumer_filters: dict[str, Any],
+    consumer_filters: Mapping[str, DefaultFilter | dict[str, Any]],
 ) -> OppFilters:
     """Classify consumer filter dict into the ADR-0012 OppFilters request body.
 
@@ -366,7 +372,8 @@ def classify_filters(
         routes: Plugin route declarations (used to identify registered custom filters).
         resource: Resource name (e.g. ``"opportunities"``).
         method: Method name (e.g. ``"search"``).
-        consumer_filters: Flat ``{name: DefaultFilter}`` dict from the consumer call site.
+        consumer_filters: Flat ``{name: DefaultFilter}`` mapping from the consumer
+            call site (raw ``{"operator": ..., "value": ...}`` dicts also accepted).
 
     Returns:
         ``OppFilters`` request body.  Call
