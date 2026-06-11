@@ -23,7 +23,7 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [Defining a plugin](#defining-a-plugin)
   - [Publishing a plugin](#publishing-a-plugin)
 - [Using plugins with the API client](#using-plugins-with-the-api-client)
-- [Plugin transformations (PoC)](#plugin-transformations-poc)
+- [Plugin transformations](#plugin-transformations)
   - [Defining bidirectional transforms](#defining-bidirectional-transforms)
   - [Built-in mapping handlers](#built-in-mapping-handlers)
   - [Null handling](#null-handling)
@@ -31,7 +31,7 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [Validating against the extended schema](#validating-against-the-extended-schema)
   - [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)
   - [Error handling](#error-handling)
-- [Plugin custom filters (PoC)](#plugin-custom-filters-poc)
+- [Plugin custom filters](#plugin-custom-filters)
   - [Routes vs. schemas — a critical distinction](#routes-vs-schemas--a-critical-distinction)
   - [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)
   - [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers)
@@ -408,9 +408,7 @@ const results = await client.opportunities.search({
 
 The `schema` option is accepted by `get()`, `list()`, and `search()`. When omitted, the client falls back to `OpportunityBaseSchema` (with untyped `customFields`).
 
-## Plugin transformations (PoC)
-
-> **Status:** Proof-of-concept (issue [#798](https://github.com/HHS/simpler-grants-protocol/issues/798)). Mirrors the Python PoC in [PR #810](https://github.com/HHS/simpler-grants-protocol/pull/810). Contract follows [ADR-0022](https://commongrants.org/governance/adr/0022-plugin-framework/) and [ADR-0017](https://commongrants.org/governance/adr/0017-mapping-format/).
+## Plugin transformations
 
 Plugins can declare bidirectional transforms that convert between a source system's native shape and the CommonGrants protocol. `toCommon` maps `native → CommonGrants`; `fromCommon` reverses it. Both directions are author-provided — the SDK does not invert one into the other, because many-to-one handlers (like `match`) are not reversible.
 
@@ -603,9 +601,7 @@ for (const err of out.errors) {
 
 > **PII warning (ADR-0022 Decision #9):** The SDK does **not** redact by default. `PluginError.sourceValue` and `cause` are plain enumerable fields and flow through `JSON.stringify(err)`, `util.inspect(err)`, `console.log(err)`, and any logger that enumerates own properties. `sourceValue` is populated with the entire input record passed to `toCommon` / `fromCommon` — not just the value at the failing field. Log a redacted projection instead — e.g. `{ name: err.name, message: err.message, path: err.path, handler: err.handler }`. On the Zod-validation path (when `commonModel` is passed to `buildTransforms()`), `PluginError.message` is also data-bearing — Zod's default error map embeds the rejected value into `issue.message`, which flows verbatim into `PluginError.message`. Redact `message` alongside `sourceValue` and `cause`. Full-message sanitization is tracked under [#744](https://github.com/HHS/simpler-grants-protocol/issues/744).
 
-## Plugin custom filters (PoC)
-
-> **Status:** Proof-of-concept (issue [#868](https://github.com/HHS/simpler-grants-protocol/issues/868), design spike [#646](https://github.com/HHS/simpler-grants-protocol/issues/646)). Feeds forthcoming ADR-0022 / ADR-0012 amendments. Contract follows [ADR-0012](https://commongrants.org/governance/adr/0012-filtering/) and [ADR-0022](https://commongrants.org/governance/adr/0022-plugin-framework/).
+## Plugin custom filters
 
 Plugins can declare custom filter specs per route-method. At search time, a single flat consumer `filters` object is classified into the body of the search request sent to the API (the `OppFilters` shape from ADR-0012): default fields land as named top-level fields; custom and ad-hoc keys land under `customFilters`.
 
@@ -669,7 +665,7 @@ Each filter entry is a `CustomFilterSpec`: `{ filterType: CustomFilterType; desc
 | `numberComparison`  | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `number`       |
 | `numberArray`       | `in`, `notIn`                         | `number[]`     |
 | `numberRange`       | `between`, `outside`                  | `{ min, max }` |
-| `integerComparison` | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `number` (int) |
+| `integerComparison` | `eq`, `neq`, `gt`, `gte`, `lt`, `lte` | `number`       |
 | `booleanComparison` | `eq`, `neq`                           | `boolean`      |
 | `dateComparison`    | `gt`, `gte`, `lt`, `lte`              | `string` (ISO) |
 | `dateRange`         | `between`, `outside`                  | `{ min, max }` |
