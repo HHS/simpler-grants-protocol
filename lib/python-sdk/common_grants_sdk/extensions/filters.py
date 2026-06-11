@@ -357,6 +357,11 @@ def classify_filters(
       given resource/method → land in ``custom_filters``.
     - Bucket 3 (ad-hoc): any other key → land in ``custom_filters`` passthrough.
 
+    The classifier is opportunity-bound today: default names come from
+    ``OppDefaultFilters`` and the wire body is ``OppFilters``. Deriving both
+    from the declared resource is tracked in
+    https://github.com/HHS/simpler-grants-protocol/issues/896.
+
     Registered specs are looked up by the exact ``(resource, method)`` strings
     declared in ``routes``. A non-matching pair (e.g. a pluralization typo in
     ``resource``) yields no registered bucket at all: every non-default filter is
@@ -414,18 +419,18 @@ def classify_filters(
             # OppFilters construction below, against the named field's REAL type (e.g.
             # status → StringArrayFilter) — stricter than the permissive DefaultFilter
             # check, and the single validation point for this bucket.
-            opp_key = _SNAKE_TO_ALIAS.get(key, key)
-            if opp_key in default_fields:
+            alias_key = _SNAKE_TO_ALIAS.get(key, key)
+            if alias_key in default_fields:
                 # Snake and camel forms of the same field normalize to one key;
                 # without this guard, plain dict assignment would silently drop
                 # whichever form the consumer's dict ordered first.
                 raise PluginError(
-                    f'Default filter "{opp_key}" was supplied more than once '
+                    f'Default filter "{alias_key}" was supplied more than once '
                     "(snake_case and camelCase forms of the same filter)",
-                    path=f"filters.{opp_key}",
+                    path=f"filters.{alias_key}",
                     source_value=value,
                 )
-            default_fields[opp_key] = value
+            default_fields[alias_key] = value
         elif key in registered_specs:
             # Bucket 2: registered custom filter — ship the validated value,
             # never the raw input (see validate_filter_call)

@@ -27,10 +27,9 @@ RouteMethodFilters = dict[str, CustomFilterSpec]  # {filterName: spec}
 class RouteDeclarations(TypedDict):
     """Filter declarations for a single route method (e.g. ``search``).
 
-    Filters are keyed by name and the key is optional — a method may appear
-    in the route map with no filter declarations, and future declaration
-    kinds can ride alongside ``filters`` without a shape change. Mirrors the
-    TS SDK's ``RouteDeclarations`` interface.
+    ``filters`` maps filter name → ``CustomFilterSpec`` and is optional: a
+    method may appear in the route map with no declarations. Mirrors the TS
+    SDK's ``RouteDeclarations`` interface.
     """
 
     filters: NotRequired[RouteMethodFilters]
