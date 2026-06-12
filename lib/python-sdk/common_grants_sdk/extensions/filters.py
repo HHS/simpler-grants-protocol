@@ -8,11 +8,9 @@ Provides:
 - ``validate_filter_call(spec, filter_name, value)`` — call-time validator; returns the
   wire-ready DefaultFilter; raises PluginError.
 - ``classify_filters(routes, resource, method, consumer_filters)`` — classifier producing
-  the ADR-0012 request-body shape (default named fields + ``customFilters``).
+  the ``OppFilters`` search request body (default named fields + ``customFilters``).
 
-No generate.py / codegen dependency. Correctness is enforced at runtime by Pydantic v2;
-there is no compile-time key/value narrowing claim (Python has no equivalent of TS
-``as const`` literal narrowing).
+No generate.py / codegen dependency. Correctness is enforced at runtime by Pydantic v2.
 """
 
 from __future__ import annotations
@@ -63,14 +61,13 @@ from .types import PluginError, PluginRoutes
 
 
 class _FHelpers:
-    """Helper namespace designed to mirror the ``F`` object planned for the TS SDK.
+    """Helper namespace for building ``DefaultFilter`` instances.
 
     Import as ``from common_grants_sdk.extensions import f`` and use as
     ``f.eq("open")``, ``f.in_([...])``, etc.
 
-    ``in_`` and ``not_in`` use the reserved-word workaround:
-    the Python methods are ``f.in_`` / ``f.not_in`` while the wire operator
-    values are ``"in"`` / ``"notIn"`` (the TS surface uses ``F.in`` / ``F.notIn``).
+    ``in_`` and ``not_in`` avoid Python reserved words; the wire operator
+    values they emit are still ``"in"`` / ``"notIn"``.
     """
 
     def eq(self, value: Any) -> DefaultFilter:
@@ -106,7 +103,7 @@ class _FHelpers:
         return DefaultFilter(operator=ArrayOperator.IN, value=value)
 
     def not_in(self, value: list[Any]) -> DefaultFilter:
-        """Return DefaultFilter with wire operator "notIn" (Python f.not_in vs TS F.notIn)."""
+        """Return DefaultFilter with wire operator "notIn"."""
         return DefaultFilter(operator=ArrayOperator.NOT_IN, value=value)
 
     def like(self, value: str) -> DefaultFilter:
@@ -139,7 +136,7 @@ f = _FHelpers()
 
 #: Maps each CustomFilterType to the Pydantic model used to validate operator/value shape.
 #: ``booleanComparison`` uses the SDK-level ``BooleanComparisonFilter`` model (the spec
-#: defines no boolean filter; the TS SDK carries the same SDK-level schema).
+#: defines no boolean filter model).
 #: Read-only: the catalog is closed — registering new filter types is a spec/SDK
 #: change (extend CustomFilterType + this map together), not a runtime extension point.
 FILTER_TYPE_SCHEMAS: Mapping[CustomFilterType, type[BaseModel]] = MappingProxyType(
@@ -282,9 +279,6 @@ def validate_filter_call(
     the filter models are mutable, so an instance that was valid at construction
     may not be valid now.
 
-    Correctness is enforced at runtime by Pydantic v2; no compile-time key/value
-    narrowing is claimed (Python has no equivalent of TS ``as const`` narrowing).
-
     Args:
         spec: The registered ``CustomFilterSpec`` for this filter, or ``None`` for ad-hoc.
         filter_name: The filter name (used in PluginError path).
@@ -342,13 +336,16 @@ def validate_filter_call(
 # ---------------------------------------------------------------------------
 
 
+# The Opportunity binding (OppDefaultFilters / OppFilters) is a known limitation;
+# deriving both from the declared resource is tracked in
+# https://github.com/HHS/simpler-grants-protocol/issues/896.
 def classify_filters(
     routes: PluginRoutes,
     resource: str,
     method: str,
     consumer_filters: Mapping[str, DefaultFilter | dict[str, Any]],
 ) -> OppFilters:
-    """Classify consumer filter dict into the ADR-0012 OppFilters request body.
+    """Classify consumer filter dict into the ``OppFilters`` search request body.
 
     Three-bucket classification:
     - Bucket 1 (default): key is in ``DEFAULT_FILTER_NAMES`` (snake or camelCase alias) →
@@ -358,9 +355,8 @@ def classify_filters(
     - Bucket 3 (ad-hoc): any other key → land in ``custom_filters`` passthrough.
 
     The classifier is opportunity-bound today: default names come from
-    ``OppDefaultFilters`` and the wire body is ``OppFilters``. Deriving both
-    from the declared resource is tracked in
-    https://github.com/HHS/simpler-grants-protocol/issues/896.
+    ``OppDefaultFilters`` and the wire body is ``OppFilters``. A future
+    revision will derive both from the declared resource.
 
     Registered specs are looked up by the exact ``(resource, method)`` strings
     declared in ``routes``. A non-matching pair (e.g. a pluralization typo in
@@ -389,7 +385,7 @@ def classify_filters(
     Returns:
         ``OppFilters`` request body.  Call
         ``.model_dump(by_alias=True, exclude_none=True, mode="json")`` for the JSON
-        body of the ADR-0012 search request — ``mode="json"`` is required because
+        body of the search request — ``mode="json"`` is required because
         coerced ``date`` objects are not JSON-serializable in the default python
         mode (operator enums are ``StrEnum`` and serialize fine either way).
 

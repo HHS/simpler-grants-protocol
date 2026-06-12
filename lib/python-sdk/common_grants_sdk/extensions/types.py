@@ -28,8 +28,7 @@ class RouteDeclarations(TypedDict):
     """Filter declarations for a single route method (e.g. ``search``).
 
     ``filters`` maps filter name → ``CustomFilterSpec`` and is optional: a
-    method may appear in the route map with no declarations. Mirrors the TS
-    SDK's ``RouteDeclarations`` interface.
+    method may appear in the route map with no declarations.
     """
 
     filters: NotRequired[RouteMethodFilters]

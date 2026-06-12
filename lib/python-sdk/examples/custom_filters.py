@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Custom filters example — codegen-free ADR-0012 request-body demo.
+"""Custom filters example — codegen-free request-body demo.
 
 Demonstrates route-keyed custom filter declaration, flat call-site classification,
-and the three-bucket ADR-0012 request body (default named fields + customFilters record)
+and the three-bucket ``OppFilters`` request body (default named fields + customFilters record)
 using the grants.gov canonical example from #646/#869.
 
 No code generation (custom filters are a pure-runtime classifier).  The example
@@ -91,7 +91,7 @@ def main() -> None:
         grants_gov.routes, "opportunities", "search", consumer_filters
     )
 
-    print("\nRequest body (ADR-0012, by_alias=True, exclude_none=True, mode='json'):")
+    print("\nRequest body (by_alias=True, exclude_none=True, mode='json'):")
     print(
         json.dumps(
             request_body.model_dump(by_alias=True, exclude_none=True, mode="json"),
