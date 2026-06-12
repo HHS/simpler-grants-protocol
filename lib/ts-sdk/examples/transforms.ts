@@ -227,8 +227,11 @@ const { toCommon, fromCommon } = buildTransforms(
   new Map([
     ["join", joinFields],
     ["split", splitField],
-  ]),
-  ExtendedOpportunitySchema
+  ])
+  // Note: do NOT pass ExtendedOpportunitySchema here — definePlugin wraps
+  // toCommon with wrapWithSchemaValidation, which applies the schema once.
+  // Passing it here too would cause double-validation and fail on date fields
+  // (Zod's .transform() produces Date objects; a second pass expects strings).
 );
 
 // ############################################################################
@@ -236,7 +239,7 @@ const { toCommon, fromCommon } = buildTransforms(
 // ############################################################################
 
 // All per-object input — customFields, toCommon, and fromCommon — lives on
-// the same schemas[Opportunity] entry. See ObjectSchemasInput in
+// the same schemas[Opportunity] entry. See SchemaInput in
 // extensions/types.ts for details.
 const grantsGovPlugin = definePlugin({
   meta: {
@@ -263,7 +266,7 @@ const toCommonResult = grantsGovPlugin.schemas.Opportunity.toCommon?.(SOURCE_DAT
 if (!toCommonResult) fail("schemas.Opportunity.toCommon missing");
 if (toCommonResult.errors.length > 0) {
   // The source data in this example is fixed and PII-free, so embedding
-  // `e.message` here is safe. Production adopters: `PluginError.message` can
+  // `e.message` here is safe. Production adopters: `TransformError.message` can
   // carry source values on the Zod-validation path (Zod's default error map
   // embeds runtime values). See the README PII warning before copying this
   // logging shape.

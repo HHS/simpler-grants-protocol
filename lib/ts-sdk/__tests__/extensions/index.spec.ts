@@ -348,7 +348,7 @@ describe("plugin integration", () => {
         },
       },
     };
-    const legacyResult = legacyPlugin.schemas.Opportunity.common.parse(legacyData);
+    const legacyResult = legacyPlugin.schemas.Opportunity.commonSchema.parse(legacyData);
     const legacyId = getCustomFieldValue(legacyResult, "legacyId", LegacyIdValueSchema);
     expect(legacyId).toEqual({ system: "grants-v1", id: 42 });
 
@@ -368,7 +368,8 @@ describe("plugin integration", () => {
         },
       },
     };
-    const classResult = classificationPlugin.schemas.Opportunity.common.parse(classificationData);
+    const classResult =
+      classificationPlugin.schemas.Opportunity.commonSchema.parse(classificationData);
     const category = getCustomFieldValue(classResult, "category", z.string());
     const priority = getCustomFieldValue(classResult, "priority", z.number().int());
     expect(category).toBe("STEM Education");
@@ -419,7 +420,7 @@ describe("plugin integration", () => {
       },
     };
 
-    const parsed = combinedPlugin.schemas.Opportunity.common.parse(fullData);
+    const parsed = combinedPlugin.schemas.Opportunity.commonSchema.parse(fullData);
 
     // Extract all custom field values
     const legacyId = parsed.customFields?.legacyId?.value;
@@ -458,7 +459,7 @@ describe("plugin integration", () => {
       },
     };
 
-    const result = combinedPlugin.schemas.Opportunity.common.safeParse(invalidData);
+    const result = combinedPlugin.schemas.Opportunity.commonSchema.safeParse(invalidData);
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].path).toContain("customFields");

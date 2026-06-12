@@ -1,9 +1,11 @@
 /**
  * Mapping-runtime utilities for declarative bidirectional transforms.
  *
- * Used by `buildTransforms()` in `./transforms`. Re-exported by `./index`.
+ * A pure, self-contained module — usable independently of the plugin or
+ * extensions framework. Re-exported by `@common-grants/sdk/extensions` for
+ * backward compatibility.
  *
- * ## Null handling (three-state contract, ADR-0024)
+ * ## Null handling (three-state contract)
  *
  * Optional fields carry three distinct states, each preserved through every
  * built-in handler rather than collapsing `null` into `undefined`:
@@ -18,10 +20,10 @@
  * This is the canonical description — handlers below note only their own
  * departures from it.
  *
- * @module @common-grants/sdk/extensions
+ * @module @common-grants/sdk/utils
  */
 
-import type { Handler } from "./types";
+import type { Handler } from "../extensions/types";
 
 // ############################################################################
 // Public utilities - getFromPath, handlers, transformFromMapping
@@ -106,19 +108,10 @@ export function constValue(_data: unknown, value: unknown): unknown {
  * with no `field` is functionally equivalent to `const: <default>`; prefer
  * `const` for clarity when the constant case is what you want.
  *
- * Cross-SDK divergence: Python's PoC uses bare `dict.get(val, default)`, which
- * accepts non-string `val` natively and collapses `null` into `default`. This
- * handler instead preserves `null` (three-state) and fails loud with a
- * descriptive error on a malformed spec.
+ * `match` is the canonical handler name; `switch` is a convenience alias —
+ * both point at the same handler function.
  *
- * `match` is the canonical handler name; `switch` is provided as a
- * convenience alias — both point at the same handler function. (No prior SDK
- * API defined `switch`; the alias is for ergonomic preference, not a
- * backward-compatibility obligation.)
- *
- * @throws Error when `spec` is not a non-null object. The walker wraps this
- *   as a `HandlerError`; `buildTransforms` surfaces it as a `PluginError`
- *   with `handler: "match"`.
+ * @throws Error when `spec` is not a non-null object.
  */
 export function switchOnValue(data: unknown, spec: unknown): unknown {
   if (typeof spec !== "object" || spec === null || Array.isArray(spec)) {
@@ -170,24 +163,14 @@ export function numberToString(data: unknown, fieldPath: unknown): string | null
  * attempted); value → coerced via the integer / float / safe-integer rules
  * below. (See the module-level null-handling note.)
  *
- * Divergences from Python's `int(s)` semantics, both intentional:
- *
- * - `int("42.0")` raises `ValueError` in Python; this handler falls through
- *   to `Number(s)` and returns `42`. Plugin authors porting a handler that
- *   relies on the Python behavior should add their own decimal-rejecting regex.
- * - Python's `int()` is arbitrary precision; JavaScript numbers are IEEE 754
- *   doubles with a safe-integer ceiling of `Number.MAX_SAFE_INTEGER`
- *   (2^53 − 1). An integer-shaped string outside that range cannot be
- *   represented without precision loss, so this handler throws rather than
- *   silently returning a corrupted value. Plugin authors round-tripping
- *   64-bit IDs should declare the field as a string (and skip this handler)
- *   or write a custom handler that returns a `BigInt`.
- *
- * Empty and whitespace-only strings throw — `Number("")` and `Number("  ")`
- * both coerce to `0` in JavaScript, which would silently turn an
- * implicit-absent CSV cell into a real zero on the transformed side.
- * Callers who want absent input to surface as `undefined` should null the
- * field upstream.
+ * - Decimal strings like `"42.0"` fall through to `Number()` and return `42`.
+ *   Add your own decimal-rejecting regex if you need strict integer-only behavior.
+ * - Integer strings outside `Number.MAX_SAFE_INTEGER` (2^53 − 1) throw rather
+ *   than silently returning a corrupted value. Use a string field or a custom
+ *   handler returning `BigInt` for 64-bit IDs.
+ * - Empty and whitespace-only strings throw — `Number("")` coerces to `0`,
+ *   which would silently corrupt an absent field. Null the field upstream if
+ *   you want `undefined` for absent input.
  */
 export function stringToNumber(data: unknown, fieldPath: unknown): number | null | undefined {
   const val = getFromPath(data, String(fieldPath ?? ""));
@@ -222,12 +205,7 @@ export function stringToNumber(data: unknown, fieldPath: unknown): number | null
 /**
  * Raised when a handler function throws. Carries the handler name for attribution.
  *
- * `buildTransforms()` catches this and wraps it as a `PluginError`, so callers
- * of the public `toCommon` / `fromCommon` pair will not see `HandlerError`
- * directly. The class is **internal**: not re-exported from the package barrel,
- * not part of the published `package.json` `exports` map, and not a supported
- * import path for adopters. Tests that drive `transformFromMapping` itself
- * import it from the source file for `instanceof` checks; consumers of
+ * Internal — not re-exported from the package barrel. Consumers of
  * `transformFromMapping()` through the public surface should treat thrown
  * values as plain `Error`s.
  */

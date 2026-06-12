@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 from common_grants_sdk.extensions.transforms import build_transforms
-from common_grants_sdk.extensions.types import PluginError, TransformResult
+from common_grants_sdk.extensions.types import TransformError, TransformResult
 
 
 # Shared model fixtures for output-path validation tests
@@ -149,7 +149,7 @@ def test_from_common_roundtrip():
 
 
 def test_exception_surfaces_as_plugin_error_not_raised():
-    """Exceptions inside handlers surface as PluginError, not raised."""
+    """Exceptions inside handlers surface as TransformError, not raised."""
 
     def boom(data, _arg):
         raise RuntimeError("handler exploded")
@@ -162,14 +162,14 @@ def test_exception_surfaces_as_plugin_error_not_raised():
     result = to_common(SOURCE_DATA)
     assert len(result.errors) == 1
     err = result.errors[0]
-    assert isinstance(err, PluginError)
+    assert isinstance(err, TransformError)
     assert "handler exploded" in str(err)
     assert err.handler == "boom"
     assert isinstance(err.cause, RuntimeError)
     assert str(err.cause) == "handler exploded"
 
 
-# --- model_validate via common_model ---
+# --- model_validate via common_schema ---
 
 
 class _TitleModel(BaseModel):
@@ -181,12 +181,12 @@ class _StrictModel(BaseModel):
     required_field: str  # always missing from SOURCE_DATA transform output
 
 
-def test_common_model_validates_result():
-    """When common_model is provided, result is a model instance on success."""
+def test_common_schema_validates_result():
+    """When common_schema is provided, result is a model instance on success."""
     to_common, _ = build_transforms(
         {"title": {"field": "data.opportunity_title"}},
         {},
-        common_model=_TitleModel,
+        common_schema=_TitleModel,
     )
     result = to_common(SOURCE_DATA)
     assert result.errors == []
@@ -194,22 +194,22 @@ def test_common_model_validates_result():
     assert result.result.title == "Research into conservation techniques"
 
 
-def test_common_model_validation_failure():
-    """ValidationError surfaces as PluginError entries; raw dict is still returned."""
+def test_common_schema_validation_failure():
+    """ValidationError surfaces as TransformError entries; raw dict is still returned."""
     to_common, _ = build_transforms(
         {"title": {"field": "data.opportunity_title"}},
         {},
-        common_model=_StrictModel,
+        common_schema=_StrictModel,
     )
     result = to_common(SOURCE_DATA)
     assert len(result.errors) >= 1
-    assert all(isinstance(e, PluginError) for e in result.errors)
+    assert all(isinstance(e, TransformError) for e in result.errors)
     assert any("required_field" in (e.path or "") for e in result.errors)
     assert result.result["title"] == "Research into conservation techniques"
 
 
-def test_common_model_non_validation_error_is_caught() -> None:
-    """Non-ValidationError exceptions from model_validate surface as PluginError (errors-as-values contract)."""
+def test_common_schema_non_validation_error_is_caught() -> None:
+    """Non-ValidationError exceptions from model_validate surface as TransformError (errors-as-values contract)."""
 
     class _BrokenModel(BaseModel):
         title: str
@@ -221,11 +221,11 @@ def test_common_model_non_validation_error_is_caught() -> None:
     to_common, _ = build_transforms(
         {"title": {"field": "data.opportunity_title"}},
         {},
-        common_model=_BrokenModel,
+        common_schema=_BrokenModel,
     )
     result = to_common(SOURCE_DATA)
     assert len(result.errors) == 1
-    assert isinstance(result.errors[0], PluginError)
+    assert isinstance(result.errors[0], TransformError)
     assert "misconfigured root validator" in str(result.errors[0])
     # raw transformed dict is preserved so the caller can inspect it
     assert isinstance(result.result, dict)
@@ -251,7 +251,7 @@ def test_custom_handler_registered_per_call():
     assert result.result["title"] == "RESEARCH INTO CONSERVATION TECHNIQUES"
 
 
-# --- Output field-path validation (when common_model is provided) ---
+# --- Output field-path validation (when common_schema is provided) ---
 
 
 def test_unknown_output_key_raises_when_model_provided():
@@ -260,7 +260,7 @@ def test_unknown_output_key_raises_when_model_provided():
         build_transforms(
             {"title": {"field": "data.opportunity_title"}, "unknown_xyz": "literal"},
             {},
-            common_model=_CommonModel,
+            common_schema=_CommonModel,
         )
 
 
@@ -272,7 +272,7 @@ def test_custom_fields_key_is_valid_output_path():
             "custom_fields": {"legacyId": {"field": "data.opportunity_title"}},
         },
         {},
-        common_model=_CommonModelWithCustomFields,
+        common_schema=_CommonModelWithCustomFields,
     )
     result = to_common(SOURCE_DATA)
     assert result.errors == []
@@ -284,21 +284,21 @@ def test_custom_fields_key_is_valid_output_path():
     )
 
 
-def test_output_path_validation_only_applies_to_to_common():
-    """from_common output keys are not validated against common_model (they target native format)."""
+def test_output_path_validation_only_applies_to_to_common_when_only_common_schema_given():
+    """from_common output keys are not validated against common_schema (they target source system format)."""
     # from_common_mapping has keys that are NOT on _CommonModel — that's fine
     to_common, from_common = build_transforms(
         {"title": {"field": "data.opportunity_title"}},
         {"data": {"opportunity_title": {"field": "title"}}},
-        common_model=_CommonModel,
+        common_schema=_CommonModel,
     )
     result = from_common({"title": "hello"})
     assert result.errors == []
     assert result.result["data"]["opportunity_title"] == "hello"
 
 
-def test_no_output_validation_without_common_model():
-    """Without common_model, unknown output keys are allowed (no schema to validate against)."""
+def test_no_output_validation_without_common_schema():
+    """Without common_schema, unknown output keys are allowed (no schema to validate against)."""
     to_common, _ = build_transforms(
         {"any_key_is_fine": {"field": "data.opportunity_title"}},
         {},
@@ -306,3 +306,112 @@ def test_no_output_validation_without_common_model():
     result = to_common(SOURCE_DATA)
     assert result.errors == []
     assert result.result["any_key_is_fine"] == "Research into conservation techniques"
+
+
+# --- source_schema validation ---
+
+
+class _NativeModel(BaseModel):
+    native_title: str
+    native_id: str
+
+
+class _StrictNativeModel(BaseModel):
+    native_title: str
+    native_id: str  # always missing from the partial mapping tests below
+
+
+def test_source_schema_validates_from_common_result():
+    """When source_schema is provided, result is a model instance on success."""
+    _, from_common = build_transforms(
+        {},
+        {
+            "native_title": {"field": "title"},
+            "native_id": {"field": "id"},
+        },
+        source_schema=_NativeModel,
+    )
+    result = from_common({"title": "Test Opp", "id": "abc-123"})
+    assert result.errors == []
+    assert isinstance(result.result, _NativeModel)
+    assert result.result.native_title == "Test Opp"
+    assert result.result.native_id == "abc-123"
+
+
+def test_source_schema_validation_failure_surfaces_as_plugin_errors():
+    """ValidationError from source_schema surfaces as TransformError entries; raw dict still returned."""
+    _, from_common = build_transforms(
+        {},
+        # Only maps native_title — native_id will be missing, causing a ValidationError
+        {"native_title": {"field": "title"}},
+        source_schema=_StrictNativeModel,
+    )
+    result = from_common({"title": "Test Opp"})
+    assert len(result.errors) >= 1
+    assert all(isinstance(e, TransformError) for e in result.errors)
+    assert any("native_id" in (e.path or "") for e in result.errors)
+    # raw dict preserved alongside errors
+    assert result.result["native_title"] == "Test Opp"
+
+
+def test_source_schema_aggregates_all_zod_issues():
+    """All ValidationError issues are surfaced — not just the first."""
+
+    class _TwoFieldNative(BaseModel):
+        a: str
+        b: int
+
+    _, from_common = build_transforms(
+        {},
+        # Both fields will fail: a gets an int (expects str coercion ok) and b gets a non-int str
+        {"a": {"const": 123}, "b": {"const": "not-a-number"}},
+        source_schema=_TwoFieldNative,
+    )
+    result = from_common({})
+    # Pydantic may coerce `a` (int→str), but `b` ("not-a-number"→int) must fail
+    assert len(result.errors) >= 1
+    assert all(isinstance(e, TransformError) for e in result.errors)
+
+
+def test_source_schema_validates_from_common_output_keys_at_call_time():
+    """build_transforms raises at call time if a from_common output key is not on source_schema."""
+    with pytest.raises(ValueError, match="unknown_native_field"):
+        build_transforms(
+            {},
+            {"native_title": {"field": "title"}, "unknown_native_field": "literal"},
+            source_schema=_NativeModel,
+        )
+
+
+def test_from_common_output_keys_not_validated_without_source_schema():
+    """Without source_schema, from_common output keys are not validated."""
+    _, from_common = build_transforms(
+        {},
+        {"any_native_key": {"field": "title"}},
+    )
+    result = from_common({"title": "hello"})
+    assert result.errors == []
+    assert result.result["any_native_key"] == "hello"
+
+
+def test_source_schema_non_validation_error_is_caught() -> None:
+    """Non-ValidationError exceptions from model_validate on source_schema surface as TransformError."""
+
+    class _BrokenNativeModel(BaseModel):
+        native_title: str
+
+        @classmethod
+        def model_validate(cls, obj: Any, **kwargs: Any) -> "_BrokenNativeModel":
+            raise TypeError("broken native validator")
+
+    _, from_common = build_transforms(
+        {},
+        {"native_title": {"field": "title"}},
+        source_schema=_BrokenNativeModel,
+    )
+    result = from_common({"title": "Test"})
+    assert len(result.errors) == 1
+    assert isinstance(result.errors[0], TransformError)
+    assert "broken native validator" in str(result.errors[0])
+    assert isinstance(result.result, dict)
+    assert result.result["native_title"] == "Test"

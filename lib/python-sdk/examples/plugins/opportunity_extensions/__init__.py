@@ -8,7 +8,6 @@ from .generated import schemas
 
 opportunity_extensions = Plugin(
     schemas=schemas,
-    extensions=config.extensions,
     meta=config.meta,
 )
 

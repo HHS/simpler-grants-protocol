@@ -13,8 +13,8 @@ from typing import Any
 
 from common_grants_sdk.extensions import (
     CustomFieldSpec,
-    ObjectSchemasInput,
     PluginExtensionsMeta,
+    SchemaInput,
     build_transforms,
     define_plugin,
 )
@@ -144,7 +144,7 @@ config = define_plugin(
         capabilities=["customFields", "transforms"],
     ),
     schemas={
-        "Opportunity": ObjectSchemasInput(
+        "Opportunity": SchemaInput(
             custom_fields={
                 "legacyId": CustomFieldSpec(
                     field_type=CustomFieldType.INTEGER,

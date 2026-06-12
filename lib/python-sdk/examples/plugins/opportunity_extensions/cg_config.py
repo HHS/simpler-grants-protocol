@@ -9,13 +9,13 @@ Defines custom field extensions for the Opportunity schema:
 from typing import Any
 
 from common_grants_sdk import define_plugin
-from common_grants_sdk.extensions import CustomFieldSpec, ObjectSchemasInput
+from common_grants_sdk.extensions import CustomFieldSpec, SchemaInput
 from common_grants_sdk.extensions.plugin import PluginConfig
 from common_grants_sdk.schemas.pydantic.fields.custom import CustomFieldType
 
 config: PluginConfig[Any] = define_plugin(
     schemas={
-        "Opportunity": ObjectSchemasInput(
+        "Opportunity": SchemaInput(
             custom_fields={
                 "programArea": CustomFieldSpec(
                     field_type=CustomFieldType.STRING,

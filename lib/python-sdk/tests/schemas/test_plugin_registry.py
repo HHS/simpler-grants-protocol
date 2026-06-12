@@ -6,7 +6,7 @@ import pytest
 
 from common_grants_sdk.extensions import CustomFieldSpec
 from common_grants_sdk.extensions import Plugin
-from common_grants_sdk.extensions.types import ObjectSchemas
+from common_grants_sdk.extensions.types import SchemaConfig
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.schemas.pydantic.models.opp_base import OpportunityBase
 
@@ -18,19 +18,19 @@ from common_grants_sdk.schemas.pydantic.models.opp_base import OpportunityBase
 class _Schemas:
     """Minimal schemas container that mirrors the generated _Schemas class."""
 
-    Opportunity: ObjectSchemas[Any, Any]
+    Opportunity: SchemaConfig[Any, Any]
 
 
 def _make_plugin(
     field_specs: dict[str, CustomFieldSpec], model_name: str = "Opportunity"
 ) -> "Plugin[_Schemas]":
-    """Build a Plugin whose schemas.Opportunity.common is produced by with_custom_fields()."""
+    """Build a Plugin whose schemas.Opportunity.common_schema is produced by with_custom_fields()."""
     extended = OpportunityBase.with_custom_fields(
         custom_fields=field_specs,
         model_name=model_name,
     )
     s = _Schemas()
-    s.Opportunity = ObjectSchemas(native=dict, common=extended)
+    s.Opportunity = SchemaConfig(source_schema=dict, common_schema=extended)
     return Plugin(schemas=s)
 
 
@@ -85,7 +85,7 @@ def sample_payload() -> dict:
 
 
 def test_plugin_schema_is_subclass_of_opportunity_base(simple_plugin):
-    Opportunity = simple_plugin.schemas.Opportunity.common
+    Opportunity = simple_plugin.schemas.Opportunity.common_schema
 
     assert Opportunity is not OpportunityBase
     assert issubclass(Opportunity, OpportunityBase)
@@ -103,8 +103,8 @@ def test_two_plugins_produce_distinct_schemas(simple_plugin):
     )
 
     assert (
-        simple_plugin.schemas.Opportunity.common
-        is not second_plugin.schemas.Opportunity.common
+        simple_plugin.schemas.Opportunity.common_schema
+        is not second_plugin.schemas.Opportunity.common_schema
     )
 
 
@@ -116,7 +116,7 @@ def test_two_plugins_produce_distinct_schemas(simple_plugin):
 def test_plugin_schema_validates_payload_and_exposes_typed_custom_fields(
     simple_plugin, sample_payload
 ):
-    Opportunity = simple_plugin.schemas.Opportunity.common
+    Opportunity = simple_plugin.schemas.Opportunity.common_schema
 
     opp = Opportunity.model_validate(sample_payload)
 
@@ -127,7 +127,7 @@ def test_plugin_schema_validates_payload_and_exposes_typed_custom_fields(
 
 
 def test_plugin_schema_validates_custom_fields(simple_plugin, sample_payload):
-    Opportunity = simple_plugin.schemas.Opportunity.common
+    Opportunity = simple_plugin.schemas.Opportunity.common_schema
 
     opp = Opportunity.model_validate(sample_payload)
 

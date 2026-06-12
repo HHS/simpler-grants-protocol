@@ -2,22 +2,20 @@
 
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 from common_grants_sdk.extensions.types import (
-    ObjectMappings,
-    ObjectSchemas,
-    ObjectSchemasInput,
-    PluginError,
-    PluginExtensions,
     PluginExtensionsMeta,
-    PluginExtensionsSchema,
+    SchemaConfig,
+    SchemaInput,
+    SchemaMappings,
+    TransformError,
     TransformResult,
 )
 from common_grants_sdk.schemas.pydantic.fields.custom import CustomFieldType
 
-# --- PluginError ---
+# --- TransformError ---
 
 
-def test_plugin_error_is_exception_with_defaults():
-    err = PluginError("something went wrong")
+def test_transform_error_is_exception_with_defaults():
+    err = TransformError("something went wrong")
     assert isinstance(err, Exception)
     assert str(err) == "something went wrong"
     assert err.path is None
@@ -26,9 +24,9 @@ def test_plugin_error_is_exception_with_defaults():
     assert err.cause is None
 
 
-def test_plugin_error_structured_fields():
+def test_transform_error_structured_fields():
     cause = ValueError("root cause")
-    err = PluginError(
+    err = TransformError(
         "msg",
         path="status.value",
         handler="switch",
@@ -41,10 +39,10 @@ def test_plugin_error_structured_fields():
     assert err.cause is cause
 
 
-def test_plugin_error_source_value_excluded_from_str_and_repr():
+def test_transform_error_source_value_excluded_from_str_and_repr():
     """source_value must not appear in str(err) or repr(err) — PII defence per ADR-0022 Decision #9."""
     sensitive = {"ssn": "123-45-6789"}
-    err = PluginError("transform failed", source_value=sensitive)
+    err = TransformError("transform failed", source_value=sensitive)
     assert "123-45-6789" not in str(err)
     assert "123-45-6789" not in repr(err)
 
@@ -57,19 +55,19 @@ def test_transform_result():
     assert ok.result == {"title": "hello"}
     assert ok.errors == []
 
-    err = PluginError("bad")
+    err = TransformError("bad")
     partial = TransformResult(result={}, errors=[err])
     assert len(partial.errors) == 1
     assert partial.errors[0] is err
 
 
-# --- ObjectMappings ---
+# --- SchemaMappings ---
 
 
-def test_object_mappings():
-    assert ObjectMappings().to_common is None
-    assert ObjectMappings().from_common is None
-    m = ObjectMappings(toCommon={"title": "x"}, fromCommon={"x": "title"})
+def test_schema_mappings():
+    assert SchemaMappings().to_common is None
+    assert SchemaMappings().from_common is None
+    m = SchemaMappings(toCommon={"title": "x"}, fromCommon={"x": "title"})
     assert m.to_common == {"title": "x"}
     assert m.from_common == {"x": "title"}
 
@@ -78,65 +76,54 @@ def test_object_mappings():
 
 
 def test_plugin_extensions_meta():
-    assert PluginExtensionsMeta().name is None
-    assert PluginExtensionsMeta().source_system is None
-    m = PluginExtensionsMeta(sourceSystem="grants.gov")
+    m = PluginExtensionsMeta(name="grants.gov", sourceSystem="grants.gov")
+    assert m.name == "grants.gov"
     assert m.source_system == "grants.gov"
+    assert m.version is None
+    assert m.capabilities is None
 
 
-# --- PluginExtensionsSchema ---
+# --- SchemaInput ---
 
 
-def test_plugin_extensions_schema():
-    assert PluginExtensionsSchema().mappings is None
-    s = PluginExtensionsSchema(mappings=ObjectMappings(toCommon={"a": "b"}))
-    assert s.mappings.to_common == {"a": "b"}
-
-
-# --- PluginExtensions ---
-
-
-def test_plugin_extensions():
-    assert PluginExtensions().meta is None
-    assert PluginExtensions().schemas is None
-    schema = PluginExtensionsSchema(mappings=ObjectMappings(toCommon={"a": "b"}))
-    ext = PluginExtensions(schemas={"Opportunity": schema})
-    assert ext.schemas["Opportunity"].mappings is not None
-
-
-# --- ObjectSchemasInput ---
-
-
-def test_object_schemas_input():
-    assert ObjectSchemasInput().native is None
-    assert ObjectSchemasInput().custom_fields is None
-    assert ObjectSchemasInput().to_common is None
+def test_schema_input():
+    assert SchemaInput().source_schema is None
+    assert SchemaInput().custom_fields is None
+    assert SchemaInput().mappings is None
+    assert SchemaInput().to_common is None
 
     spec = CustomFieldSpec(field_type=CustomFieldType.INTEGER)
-    inp = ObjectSchemasInput(custom_fields={"legacyId": spec})
+    inp = SchemaInput(custom_fields={"legacyId": spec})
     assert inp.custom_fields == {"legacyId": spec}
+
+    m = SchemaMappings(toCommon={"title": "x"}, fromCommon={"x": "title"})
+    inp_with_mappings = SchemaInput(mappings=m)
+    assert inp_with_mappings.mappings.to_common == {"title": "x"}
 
     def passthrough(x):
         return TransformResult(result=x, errors=[])
 
-    inp2 = ObjectSchemasInput(to_common=passthrough, from_common=passthrough)
+    inp2 = SchemaInput(to_common=passthrough, from_common=passthrough)
     assert inp2.to_common is passthrough
 
 
-# --- ObjectSchemas ---
+# --- SchemaConfig ---
 
 
-def test_object_schemas():
+def test_schema_config():
     def passthrough(x):
         return TransformResult(result=x, errors=[])
 
-    schemas = ObjectSchemas(
-        native=dict, common=dict, to_common=passthrough, from_common=passthrough
+    schemas = SchemaConfig(
+        source_schema=dict,
+        common_schema=dict,
+        to_common=passthrough,
+        from_common=passthrough,
     )
-    assert schemas.native is dict
-    assert schemas.common is dict
+    assert schemas.source_schema is dict
+    assert schemas.common_schema is dict
 
     # to_common and from_common are optional — omitting them is valid
-    minimal = ObjectSchemas(native=dict, common=dict)
+    minimal = SchemaConfig(source_schema=dict, common_schema=dict)
     assert minimal.to_common is None
     assert minimal.from_common is None

@@ -89,7 +89,7 @@ def split_field(data: dict[str, Any], spec: dict[str, Any]) -> str | None:
 
 
 # Transform that uses the custom handlers and validates output against the generated
-# Opportunity model. common_model=Opportunity (from generated/schemas.py) ensures
+# Opportunity model. common_schema=Opportunity (from generated/schemas.py) ensures
 # model_validate runs against the extended class with typed custom fields
 # (legacyId, agencyName, applicantTypes), not just the base OpportunityBase.
 to_common_with_custom, from_common_with_custom = build_transforms(
@@ -141,7 +141,7 @@ to_common_with_custom, from_common_with_custom = build_transforms(
         }
     },
     handlers={"join": join_fields, "split": split_field},
-    common_model=Opportunity,
+    common_schema=Opportunity,
 )
 
 

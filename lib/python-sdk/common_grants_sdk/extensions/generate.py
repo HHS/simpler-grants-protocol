@@ -275,7 +275,7 @@ def _model_blocks(
                 spec=spec, resolved_type=resolved_type
             )
             # Use spec.name as the runtime display name if provided, otherwise fall back
-            # to the field key (the dict key in ObjectSchemasInput.custom_fields).
+            # to the field key (the dict key in SchemaInput.custom_fields).
             field_name_default = spec.name or field_key
             # repr() produces a quoted string literal safe to embed directly in source code.
             description_default = repr(spec.description) if spec.description else "None"
@@ -365,13 +365,13 @@ def _render_schemas_py(
     blocks = "\n\n\n".join(_model_blocks(custom_fields))
     mappings_only: set[str] = mappings_only_objs or set()
 
-    # Build schema assignments: each attribute is an ObjectSchemas instance so
-    # callers get a unified interface (plugin.schemas.Opportunity.common for the
+    # Build schema assignments: each attribute is a SchemaConfig instance so
+    # callers get a unified interface (plugin.schemas.Opportunity.common_schema for the
     # model class, .to_common/.from_common for transforms).
     # to_common/from_common default to None here; root __init__.py injects the
     # real callables for any object that has transforms configured.
     assignments: list[str] = [
-        f"        self.{name} = ObjectSchemas(native=dict, common={name}, to_common=None, from_common=None)"
+        f"        self.{name} = SchemaConfig(source_schema=dict, common_schema={name}, to_common=None, from_common=None)"
         for name in model_names
     ]
     for obj in sorted(mappings_only):
@@ -382,7 +382,7 @@ def _render_schemas_py(
             )
         base_class = MODEL_BASE_CLASS[obj]
         assignments.append(
-            f"        self.{obj} = ObjectSchemas(native=dict, common={base_class}, to_common=None, from_common=None)"
+            f"        self.{obj} = SchemaConfig(source_schema=dict, common_schema={base_class}, to_common=None, from_common=None)"
         )
 
     schema_assignments = "\n".join(assignments or ["        pass"])
@@ -401,7 +401,7 @@ def _render_schemas_py(
             "",
             "from pydantic import ConfigDict, Field",
             "",
-            "from common_grants_sdk.extensions.types import ObjectSchemas",
+            "from common_grants_sdk.extensions.types import SchemaConfig",
             "from common_grants_sdk.schemas.pydantic.base import CommonGrantsBaseModel",
             "from common_grants_sdk.schemas.pydantic.fields import CustomField, CustomFieldType",
             "from common_grants_sdk.schemas.pydantic.models import OpportunityBase",
@@ -459,15 +459,15 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig[Any])
         else set()
     )
     mappings_objs: set[str] = (
-        {obj for obj, s in config.extensions.schemas.items() if s.mappings is not None}
-        if config.extensions and config.extensions.schemas
+        {obj for obj, s in config.schemas.items() if s.mappings is not None}
+        if config.schemas
         else set()
     )
 
     needs_build_transforms = bool(mappings_objs - explicit_objs)
 
     # Build pre-plugin lines: inject transforms into the _Schemas object before
-    # constructing Plugin. schemas.py initialises each ObjectSchemas with
+    # constructing Plugin. schemas.py initialises each SchemaConfig with
     # to_common=None/from_common=None; we mutate those attrs here.
     inject_lines: list[str] = []
 
@@ -475,9 +475,9 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig[Any])
     for obj in sorted(mappings_objs - explicit_objs):
         inject_lines += [
             f"_{obj}_to_common, _{obj}_from_common = build_transforms(",
-            f'    to_common_mapping=config.extensions.schemas["{obj}"].mappings.to_common,',
-            f'    from_common_mapping=config.extensions.schemas["{obj}"].mappings.from_common,',
-            f"    common_model=schemas.{obj}.common,",
+            f'    to_common_mapping=config.schemas["{obj}"].mappings.to_common,',
+            f'    from_common_mapping=config.schemas["{obj}"].mappings.from_common,',
+            f"    common_schema=schemas.{obj}.common_schema,",
             ")",
             f"schemas.{obj}.to_common = _{obj}_to_common",
             f"schemas.{obj}.from_common = _{obj}_from_common",
@@ -514,7 +514,6 @@ def _render_plugin_init_py(plugin_variable_name: str, config: PluginConfig[Any])
     plugin_lines = [
         f"{plugin_variable_name} = Plugin(",
         "    schemas=schemas,",
-        "    extensions=config.extensions,",
         "    meta=config.meta,",
         ")",
     ]
@@ -565,14 +564,14 @@ def generate_plugin(plugin_dir: Path) -> Path:
     mappings_only_objs: set[str] = (
         {
             obj
-            for obj, s in config.extensions.schemas.items()
+            for obj, s in config.schemas.items()
             if s.mappings is not None and obj not in explicit_cf_objs
         }
-        if config.extensions and config.extensions.schemas
+        if config.schemas
         else set()
     )
     # Third bucket: objects in config.schemas with explicit transforms but no
-    # custom_fields and no extensions.schemas entry. They also need a pass-through
+    # custom_fields and no mappings entry. They also need a pass-through
     # entry in _Schemas or schemas.<Obj> won't exist at import time.
     transforms_only_objs: set[str] = (
         set(config.schemas.keys()) - explicit_cf_objs - mappings_only_objs
@@ -581,20 +580,14 @@ def generate_plugin(plugin_dir: Path) -> Path:
     )
 
     # Validate that auto-generated transform objects have both mapping directions.
-    # Auto-generated objects: have mappings in extensions.schemas but no explicit
-    # to_common/from_common in config.schemas.
-    if config.extensions and config.extensions.schemas:
-        explicit_schema_objs: set[str] = (
-            {
-                obj
-                for obj, s in config.schemas.items()
-                if s.to_common is not None or s.from_common is not None
-            }
-            if config.schemas
-            else set()
-        )
-        ext_schemas = config.extensions.schemas
-        for obj, schema in ext_schemas.items():
+    # Auto-generated objects: have mappings in schemas[obj] but no explicit callables.
+    if config.schemas:
+        explicit_schema_objs: set[str] = {
+            obj
+            for obj, s in config.schemas.items()
+            if s.to_common is not None or s.from_common is not None
+        }
+        for obj, schema in config.schemas.items():
             if schema.mappings is None or obj in explicit_schema_objs:
                 continue
             if schema.mappings.to_common is None:

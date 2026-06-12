@@ -29,10 +29,10 @@ def _env_with_sdk_pythonpath() -> dict[str, str]:
 
 
 def test_define_plugin_returns_config_with_schemas():
-    from common_grants_sdk.extensions.types import ObjectSchemasInput
+    from common_grants_sdk.extensions.types import SchemaInput
 
     schemas = {
-        "Opportunity": ObjectSchemasInput(
+        "Opportunity": SchemaInput(
             custom_fields={
                 "program_area": CustomFieldSpec(
                     field_type=CustomFieldType.STRING,
@@ -61,11 +61,11 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
             [
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
-                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
+                "from common_grants_sdk.extensions.types import SchemaInput",
                 "",
                 "config = define_plugin(",
                 "    schemas={",
-                '        "Opportunity": ObjectSchemasInput(',
+                '        "Opportunity": SchemaInput(',
                 "            custom_fields={",
                 '                "program_area": CustomFieldSpec(',
                 '                    field_type="string",',
@@ -105,7 +105,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
     try:
         combined_module = importlib.import_module("plugins.combined")
         combined = getattr(combined_module, "combined")
-        opp_model = combined.schemas.Opportunity.common
+        opp_model = combined.schemas.Opportunity.common_schema
 
         type_hints = get_type_hints(opp_model, include_extras=False)
         assert "custom_fields" in type_hints
@@ -139,7 +139,7 @@ def test_generate_cli_emits_plugin_and_typed_models(tmp_path: Path):
             "nonprofit",
             "city_government",
         ]
-        assert combined.schemas.Opportunity.common is opp_model
+        assert combined.schemas.Opportunity.common_schema is opp_model
     finally:
         sys.path.remove(str(tmp_path))
 
@@ -155,7 +155,7 @@ def test_generate_emits_import_for_pydantic_model_in_cg_config(tmp_path: Path):
                 "from pydantic import BaseModel",
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
-                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
+                "from common_grants_sdk.extensions.types import SchemaInput",
                 "",
                 "class AgentInfo(BaseModel):",
                 "    name: str",
@@ -163,7 +163,7 @@ def test_generate_emits_import_for_pydantic_model_in_cg_config(tmp_path: Path):
                 "",
                 "config = define_plugin(",
                 "    schemas={",
-                '        "Opportunity": ObjectSchemasInput(',
+                '        "Opportunity": SchemaInput(',
                 "            custom_fields={",
                 '                "point_of_contact": CustomFieldSpec(',
                 '                    field_type="object",',
@@ -206,11 +206,11 @@ def test_generate_emits_import_for_external_module_type(tmp_path: Path):
                 "from datetime import datetime",
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
-                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
+                "from common_grants_sdk.extensions.types import SchemaInput",
                 "",
                 "config = define_plugin(",
                 "    schemas={",
-                '        "Opportunity": ObjectSchemasInput(',
+                '        "Opportunity": SchemaInput(',
                 "            custom_fields={",
                 '                "deadline": CustomFieldSpec(',
                 '                    field_type="string",',
@@ -243,7 +243,7 @@ def test_generate_emits_import_for_external_module_type(tmp_path: Path):
 
 
 def test_generate_auto_builds_transforms_from_mappings(tmp_path):
-    """When cg_config has extensions.schemas[obj].mappings but no explicit schemas[obj],
+    """When cg_config has schemas[obj].mappings but no explicit to_common/from_common,
     the generated __init__.py calls build_transforms() automatically."""
     plugin_dir = tmp_path / "plugins" / "auto_transform"
     plugin_dir.mkdir(parents=True)
@@ -253,19 +253,17 @@ def test_generate_auto_builds_transforms_from_mappings(tmp_path):
         "\n".join(
             [
                 "from common_grants_sdk import define_plugin",
-                "from common_grants_sdk.extensions.types import PluginExtensions, PluginExtensionsSchema, ObjectMappings",
+                "from common_grants_sdk.extensions.types import SchemaInput, SchemaMappings",
                 "",
                 "config = define_plugin(",
-                "    extensions=PluginExtensions(",
-                "        schemas={",
-                '            "Opportunity": PluginExtensionsSchema(',
-                "                mappings=ObjectMappings(",
-                '                    to_common={"title": {"field": "data.title"}},',
-                "                    from_common={},",
-                "                ),",
-                "            )",
-                "        }",
-                "    ),",
+                "    schemas={",
+                '        "Opportunity": SchemaInput(',
+                "            mappings=SchemaMappings(",
+                '                to_common={"title": {"field": "data.title"}},',
+                "                from_common={},",
+                "            ),",
+                "        )",
+                "    },",
                 ")",
                 "",
             ]
@@ -279,9 +277,9 @@ def test_generate_auto_builds_transforms_from_mappings(tmp_path):
 
     init_content = (plugin_dir / "__init__.py").read_text(encoding="utf-8")
     assert "build_transforms" in init_content
-    assert 'config.extensions.schemas["Opportunity"].mappings.to_common' in init_content
+    assert 'config.schemas["Opportunity"].mappings.to_common' in init_content
     assert "_Opportunity_to_common" in init_content
-    assert "common_model=schemas.Opportunity.common" in init_content
+    assert "common_schema=schemas.Opportunity.common_schema" in init_content
 
     # Load the generated plugin and verify schemas are populated
     import importlib
@@ -319,11 +317,11 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
             [
                 "from common_grants_sdk import define_plugin",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
-                "from common_grants_sdk.extensions.types import ObjectSchemasInput",
+                "from common_grants_sdk.extensions.types import SchemaInput",
                 "",
                 "config = define_plugin(",
                 "    schemas={",
-                '        "Opportunity": ObjectSchemasInput(',
+                '        "Opportunity": SchemaInput(',
                 "            custom_fields={",
                 '                "eligibility_type": CustomFieldSpec(field_type="array"),',
                 "            },",
@@ -364,7 +362,7 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
                 '    "customFields": {"eligibility_type": {"fieldType": "array", "value": ["a"]}},',
                 "}",
                 "",
-                "opp = combined.schemas.Opportunity.common.model_validate(payload)",
+                "opp = combined.schemas.Opportunity.common_schema.model_validate(payload)",
                 "if opp.custom_fields is not None and opp.custom_fields.eligibility_type is not None:",
                 "    values = opp.custom_fields.eligibility_type.value",
                 "    reveal_type(values)",
@@ -390,7 +388,7 @@ def test_generate_models_typecheck_with_pyright_strict(tmp_path: Path):
 
 def test_generate_explicit_transforms(tmp_path):
     """When cg_config has config.schemas with explicit to_common/from_common,
-    the generated __init__.py emits ObjectSchemas with the supplied callables."""
+    the generated __init__.py wires the supplied callables via inject_transforms."""
     from common_grants_sdk.extensions.generate import generate_plugin
 
     plugin_dir = tmp_path / "plugins" / "explicit_tf"
@@ -401,7 +399,7 @@ def test_generate_explicit_transforms(tmp_path):
         "\n".join(
             [
                 "from common_grants_sdk import define_plugin",
-                "from common_grants_sdk.extensions.types import ObjectSchemasInput, TransformResult",
+                "from common_grants_sdk.extensions.types import SchemaInput, TransformResult",
                 "from common_grants_sdk.extensions import CustomFieldSpec",
                 "",
                 "def _to_common(native):",
@@ -412,7 +410,7 @@ def test_generate_explicit_transforms(tmp_path):
                 "",
                 "config = define_plugin(",
                 "    schemas={",
-                '        "Opportunity": ObjectSchemasInput(',
+                '        "Opportunity": SchemaInput(',
                 '            custom_fields={"legacyId": CustomFieldSpec(field_type="integer")},',
                 "            to_common=_to_common,",
                 "            from_common=_from_common,",
@@ -469,7 +467,7 @@ def test_generate_transforms_only_no_custom_fields(tmp_path):
         "\n".join(
             [
                 "from common_grants_sdk import define_plugin",
-                "from common_grants_sdk.extensions.types import ObjectSchemasInput, TransformResult",
+                "from common_grants_sdk.extensions.types import SchemaInput, TransformResult",
                 "",
                 "def _to_common(native):",
                 "    return TransformResult(result={'title': native.get('name', '')}, errors=[])",
@@ -479,7 +477,7 @@ def test_generate_transforms_only_no_custom_fields(tmp_path):
                 "",
                 "config = define_plugin(",
                 "    schemas={",
-                '        "Opportunity": ObjectSchemasInput(',
+                '        "Opportunity": SchemaInput(',
                 "            to_common=_to_common,",
                 "            from_common=_from_common,",
                 "        )",
@@ -495,7 +493,7 @@ def test_generate_transforms_only_no_custom_fields(tmp_path):
 
     # schemas.py must assign self.Opportunity using the base SDK class
     schemas_src = (plugin_dir / "generated" / "schemas.py").read_text(encoding="utf-8")
-    assert "self.Opportunity = ObjectSchemas" in schemas_src
+    assert "self.Opportunity = SchemaConfig" in schemas_src
     assert "OpportunityBase" in schemas_src
 
     # __init__.py must use inject_transforms (not build_transforms)
@@ -532,21 +530,17 @@ def test_generate_raises_on_missing_mapping_direction(tmp_path):
         "\n".join(
             [
                 "from common_grants_sdk import define_plugin",
-                "from common_grants_sdk.extensions.types import (",
-                "    ObjectMappings, PluginExtensions, PluginExtensionsSchema,",
-                ")",
+                "from common_grants_sdk.extensions.types import SchemaInput, SchemaMappings",
                 "",
                 "config = define_plugin(",
-                "    extensions=PluginExtensions(",
-                "        schemas={",
-                '            "Opportunity": PluginExtensionsSchema(',
-                "                mappings=ObjectMappings(",
-                '                    to_common={"title": {"field": "data.title"}},',
-                "                    # from_common intentionally omitted (None)",
-                "                ),",
-                "            )",
-                "        }",
-                "    ),",
+                "    schemas={",
+                '        "Opportunity": SchemaInput(',
+                "            mappings=SchemaMappings(",
+                '                to_common={"title": {"field": "data.title"}},',
+                "                # from_common intentionally omitted (None)",
+                "            ),",
+                "        )",
+                "    },",
                 ")",
                 "",
             ]
