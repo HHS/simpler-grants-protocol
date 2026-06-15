@@ -232,41 +232,73 @@ export class TransformError extends Error {
 // ############################################################################
 
 /**
+ * Mappings authoring path: declarative `mappings` compiled by `buildTransforms()`
+ * inside `definePlugin()`. Requires a `sourceSchema`; forbids hand-written
+ * `toCommon` / `fromCommon`.
+ */
+export interface MappingsSchemaInput {
+  /** Custom fields to attach via `withCustomFields()`. */
+  customFields?: Record<string, CustomFieldSpec>;
+  /** Source-system Zod schema (the shape a source system returns). */
+  sourceSchema: z.ZodTypeAny;
+  /** Declarative mappings compiled into transforms by `definePlugin()`. */
+  mappings: SchemaMappings;
+  toCommon?: never;
+  fromCommon?: never;
+}
+
+/**
+ * Functions authoring path: hand-written `toCommon` / `fromCommon`. Requires a
+ * `sourceSchema` and both directions; forbids declarative `mappings`.
+ *
+ * The function slots are loose on the input side (`source: any`): a flat,
+ * multi-key `definePlugin()` cannot infer a per-entry common type to check an
+ * inline function, so the parameter falls to `any`. The slot still pins the
+ * `TransformResult` envelope (a function returning a non-`TransformResult` is
+ * rejected). Authors recover full typing with the `ToCommon` / `FromCommon`
+ * helper types, and the resolved consumer-facing types are always correct.
+ */
+export interface FunctionsSchemaInput {
+  /** Custom fields to attach via `withCustomFields()`. */
+  customFields?: Record<string, CustomFieldSpec>;
+  /** Source-system Zod schema (the shape a source system returns). */
+  sourceSchema: z.ZodTypeAny;
+  mappings?: never;
+  /** Map a source record to the common-schema shape. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toCommon: (source: any) => TransformResult<unknown>;
+  /** Map a common-schema record back to the source shape. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fromCommon: (common: any) => TransformResult<unknown>;
+}
+
+/** Schema-only path: custom fields, no transforms. Forbids the other two paths. */
+export interface SchemaOnlyInput {
+  /** Custom fields to attach via `withCustomFields()`. */
+  customFields?: Record<string, CustomFieldSpec>;
+  sourceSchema?: never;
+  mappings?: never;
+  toCommon?: never;
+  fromCommon?: never;
+}
+
+/**
  * Author-provided input for a single extensible object, passed inside
  * `DefinePluginOptions.schemas`.
  *
- * Exactly one of `mappings` or explicit callables (`toCommon` / `fromCommon`)
- * may be present — providing both is a compile-time and runtime error.
+ * An exclusive choice between three paths:
+ * - {@link MappingsSchemaInput}: `sourceSchema` + declarative `mappings`.
+ * - {@link FunctionsSchemaInput}: `sourceSchema` + hand-written `toCommon` and
+ *   `fromCommon` (both required).
+ * - {@link SchemaOnlyInput}: `customFields` only, no transforms.
  *
- * `sourceSchema` is the optional Zod schema for the source system format.
- * `customFields` declares any extra fields this object exposes beyond the base
- * CommonGrants schema; `definePlugin()` applies them via `withCustomFields()`.
- *
- * `commonSchema` is intentionally absent here. It is injected by `definePlugin()`
- * during compilation, resolved from the generated model classes produced by the
- * code generator. Plugin config files cannot import from `generated/` (it is the
- * input to generation).
- *
- * When `mappings` is provided, `definePlugin()` auto-invokes `buildTransforms()`
- * at call time and wraps the result with schema validation against the compiled
- * common schema. When explicit callables are provided, `definePlugin()` wraps them
- * with the same schema validation so both paths give the same runtime guarantee.
+ * Both transform paths require a `sourceSchema`, so a transform can always be
+ * validated against the source shape. Supplying both `mappings` and functions,
+ * a single transform direction, or a transform without a `sourceSchema`, is a
+ * compile error (the `?: never` slots). `commonSchema` is intentionally absent;
+ * `definePlugin()` derives it from `customFields` during compilation.
  */
-export type SchemaInput<TSource = unknown, TCommon = unknown> =
-  | {
-      sourceSchema?: z.ZodType<TSource>;
-      customFields?: Record<string, CustomFieldSpec>;
-      mappings: SchemaMappings;
-      toCommon?: never;
-      fromCommon?: never;
-    }
-  | {
-      sourceSchema?: z.ZodType<TSource>;
-      customFields?: Record<string, CustomFieldSpec>;
-      mappings?: never;
-      toCommon?: (source: TSource) => TransformResult<TCommon>;
-      fromCommon?: (common: TCommon) => TransformResult<TSource>;
-    };
+export type SchemaInput = MappingsSchemaInput | FunctionsSchemaInput | SchemaOnlyInput;
 
 /**
  * Compiled output for a schema-only entry — no transforms configured.
