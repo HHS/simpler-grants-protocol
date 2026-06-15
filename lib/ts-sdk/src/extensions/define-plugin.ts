@@ -204,9 +204,8 @@ export function definePlugin<const T extends PluginSchemasInput>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fromCommon = built.fromCommon as any;
     } else if (hasCallables) {
-      // Explicit callables path: validate both directions. A transforms entry
-      // always carries a sourceSchema (see SchemaInput), so fromCommon output is
-      // validated against it unconditionally, mirroring toCommon against commonSchema.
+      // Explicit callables path: validate each direction's output. toCommon is
+      // checked against the commonSchema and fromCommon against the sourceSchema
       if (toCommon !== undefined) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         toCommon = wrapWithSchemaValidation(toCommon as any, commonSchema as any) as any;

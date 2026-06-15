@@ -1,12 +1,8 @@
 /**
- * Example script demonstrating bidirectional transforms through `definePlugin()`.
+ * Example script demonstrating bidirectional transforms through `definePlugin()`
+ * following three common plugin author scenarios
  *
- * Runs real data through each authoring path and verifies the round trip. It does
- * not call `buildTransforms()` directly — `definePlugin()` compiles the declarative
- * `mappings` internally. (The schema-only path, plus the schema-only / XOR
- * compile-time guarantees, are covered in `__tests__/extensions/define-plugin.spec.ts`.)
- *
- * Paths shown:
+ * Scenarios shown:
  *   1. Custom fields + declarative `mappings`   → definePlugin compiles them
  *   2. Custom fields + hand-written functions    → `ToCommon` / `FromCommon`
  *   3. Transforms with no custom fields          → base CommonGrants schema
@@ -15,7 +11,7 @@
  * Run with: `pnpm example:transforms`
  *
  * @remarks
- * The mappings path validates `toCommon` output against the extended common
+ * The mappings scenario validates `toCommon` output against the extended common
  * schema, so date strings are parsed into `Date` objects on the common side.
  * The round-trip checks below therefore assert on fields that survive verbatim
  * (ids, the three-state `source` null), not on the parsed date fields.
@@ -68,7 +64,7 @@ const SOURCE_DATA: GrantsGovSource = {
 };
 
 // Declared inline at each call below, but kept here too for the hand-written
-// path, which needs `typeof customFields` for its helper-type annotations.
+// scenario, which needs `typeof customFields` for its helper-type annotations.
 const customFields = {
   legacyId: {
     fieldType: CustomFieldType.integer,
@@ -78,11 +74,11 @@ const customFields = {
 } as const;
 
 // ############################################################################
-// Path 1 — custom fields + declarative mappings
+// Scenario 1 — custom fields + declarative mappings
 // ############################################################################
 
 // definePlugin() compiles these mappings into toCommon / fromCommon using the
-// built-in handlers (`field`, `match`, `const`). No buildTransforms() call here.
+// built-in handlers (`field`, `match`, `const`).
 const mappingsPlugin = definePlugin({
   meta: { name: "grants.gov (mappings)", sourceSystem: "grants.gov" },
   schemas: {
@@ -133,7 +129,7 @@ const mappingsPlugin = definePlugin({
 });
 
 // ############################################################################
-// Path 2 — custom fields + hand-written functions
+// Scenario 2 — custom fields + hand-written functions
 // ############################################################################
 
 // The author annotates the functions with `ToCommon` / `FromCommon`, passing the
@@ -149,7 +145,7 @@ type OpportunityTransform = {
   customFields: typeof customFields;
 };
 
-// The functions path is the override path for logic the declarative mappings
+// The functions scenario is the override for logic the declarative mappings
 // can't express — here, a status flag derived in code rather than via `match`.
 const toCommon: ToCommon<OpportunityTransform> = source => ({
   result: {
@@ -192,7 +188,7 @@ const functionsPlugin = definePlugin({
 });
 
 // ############################################################################
-// Path 3 — transforms with no custom fields
+// Scenario 3 — transforms with no custom fields
 // ############################################################################
 
 // Omit `customFields`; the common schema is the base CommonGrants Opportunity.
@@ -236,7 +232,7 @@ const noCustomFieldsPlugin = definePlugin({
 });
 
 // ############################################################################
-// Path X — mappings + functions on one entry is rejected (XOR)
+// Scenario X — mappings + functions on one entry is rejected (XOR)
 // ############################################################################
 
 // Providing both `mappings` and explicit callables is a compile error and a
@@ -254,9 +250,9 @@ function demonstrateXorIsRejected(): void {
         },
       },
     });
-    fail("path X: expected definePlugin to reject mappings + functions");
+    fail("scenario X: expected definePlugin to reject mappings + functions");
   } catch {
-    console.log("path X (XOR): mappings + functions rejected at runtime, too");
+    console.log("scenario X (XOR): mappings + functions rejected at runtime, too");
   }
 }
 
@@ -292,7 +288,7 @@ function roundTrip(
 ): void {
   // The harness drives every plugin through one shape; the resolved common
   // output type read off a built plugin is fine here (this is test plumbing, not
-  // the author-facing annotation the functions path above demonstrates).
+  // the author-facing annotation the functions scenario above demonstrates).
   type HarnessCommon = z.output<typeof mappingsPlugin.schemas.Opportunity.commonSchema>;
   const opp = plugin.schemas.Opportunity;
   const toCommonFn = opp.toCommon as (s: GrantsGovSource) => TransformResult<HarnessCommon>;
@@ -304,7 +300,7 @@ function roundTrip(
   const back = fromCommonFn(common.result);
   reportErrors(`${label} fromCommon`, back);
 
-  // The uuid round-trips verbatim in every path (unlike the parsed date fields).
+  // The uuid round-trips verbatim in every scenario (unlike the parsed date fields).
   check(
     `${label}: opportunity_uuid round-trips`,
     back.result.data.opportunity_uuid === SOURCE_DATA.data.opportunity_uuid
@@ -323,23 +319,23 @@ function roundTrip(
 function main(): void {
   console.log("=== Transforms via definePlugin ===\n");
 
-  console.log("--- Path 1: declarative mappings ---");
-  // `mappings` is kept on the entry for inspection (absent on the functions path).
+  console.log("--- Scenario 1: declarative mappings ---");
+  // `mappings` is kept on the entry for inspection (absent on the functions scenario).
   check("mappings inspectable", mappingsPlugin.schemas.Opportunity.mappings !== undefined);
   roundTrip("mappings", mappingsPlugin, { expectLegacyId: true });
 
-  console.log("\n--- Path 2: hand-written functions ---");
+  console.log("\n--- Scenario 2: hand-written functions ---");
   check(
-    "mappings absent (functions path)",
+    "mappings absent (functions scenario)",
     functionsPlugin.schemas.Opportunity.mappings === undefined
   );
   roundTrip("functions", functionsPlugin, { expectLegacyId: true });
 
-  console.log("\n--- Path 3: no custom fields ---");
+  console.log("\n--- Scenario 3: no custom fields ---");
   check("customFields absent", noCustomFieldsPlugin.schemas.Opportunity.customFields === undefined);
   roundTrip("base", noCustomFieldsPlugin, { expectLegacyId: false });
 
-  console.log("\n--- Path X: mappings XOR functions ---");
+  console.log("\n--- Scenario X: mappings XOR functions ---");
   demonstrateXorIsRejected();
 
   console.log("\n=== Example complete ===");

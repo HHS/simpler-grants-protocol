@@ -44,9 +44,10 @@ const ensureUTC = (date: string) => {
 
 /**
  * Accept a `Date` as input by normalizing it to a string before the string
- * validators run, so a caller can pass either an ISO string or a `Date`. The
- * string path keeps its strict validation unchanged; `toStr` renders a `Date`
- * in the format the inner schema expects. Output is still a `Date`.
+ * validators run, so a caller can pass either an ISO string or a `Date`. A
+ * string goes straight to the inner schema's strict validation; a `Date` is
+ * rendered by `toStr` into the string format the inner schema expects. Output
+ * is a `Date`.
  */
 const acceptDate =
   (toStr: (d: Date) => string) =>
