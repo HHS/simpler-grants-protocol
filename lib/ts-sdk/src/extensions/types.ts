@@ -305,41 +305,9 @@ export interface SchemaWithTransforms<TSource, TCommon> {
   fromCommon: (common: TCommon) => TransformResult<TSource>;
 }
 
-/**
- * Convenience type alias for a `toCommon` transform function.
- *
- * Annotate hand-written transform functions with this type to get full
- * compile-time checking on both the source input and the common output.
- * `TSource` comes from `z.infer<typeof sourceSchema>` and `TCommon` comes
- * from `z.infer<typeof extendedCommonSchema>` (the schema produced by
- * `withCustomFields()` when custom fields are declared).
- *
- * @example
- * ```ts
- * // Without custom fields — TCommon is z.infer<typeof OpportunityBaseSchema>
- * const toCommon: ToCommon<z.infer<typeof SourceSchema>, z.infer<typeof OpportunityBaseSchema>>
- *   = source => ({ result: { ... }, errors: [] });
- *
- * // With custom fields — TCommon is the extended schema type
- * const toCommon: ToCommon<z.infer<typeof SourceSchema>, z.infer<typeof ExtendedSchema>>
- *   = source => ({ result: { ... }, errors: [] });
- * ```
- */
-export type ToCommon<TSource, TCommon> = (source: TSource) => TransformResult<TCommon>;
-
-/**
- * Convenience type alias for a `fromCommon` transform function.
- *
- * Annotate hand-written transform functions with this type to get full
- * compile-time checking on both the common input and the source output.
- *
- * @example
- * ```ts
- * const fromCommon: FromCommon<z.infer<typeof SourceSchema>, z.infer<typeof OpportunityBaseSchema>>
- *   = common => ({ result: { ... }, errors: [] });
- * ```
- */
-export type FromCommon<TSource, TCommon> = (common: TCommon) => TransformResult<TSource>;
+// `ToCommon` / `FromCommon` helper types for hand-written transforms live in
+// ./transform-helpers (they depend on WithCustomFieldsResult, which would make
+// this foundation module circular).
 
 /**
  * Plugin identity and capability declaration.
