@@ -305,10 +305,6 @@ export interface SchemaWithTransforms<TSource, TCommon> {
   fromCommon: (common: TCommon) => TransformResult<TSource>;
 }
 
-// `ToCommon` / `FromCommon` helper types for hand-written transforms live in
-// ./transform-helpers (they depend on WithCustomFieldsResult, which would make
-// this foundation module circular).
-
 /**
  * Plugin identity and capability declaration.
  *
