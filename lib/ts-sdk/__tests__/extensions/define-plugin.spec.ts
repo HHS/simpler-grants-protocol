@@ -253,6 +253,22 @@ describe("definePlugin", () => {
       expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
       expect(plugin.schemas.Opportunity.fromCommon).toBeUndefined();
     });
+
+    it("does not expose transform callables as callable on a schema-only entry", () => {
+      // A customFields-only entry resolves to the schema-only shape, so calling
+      // toCommon is a compile error (not just `undefined` at runtime). The guarded
+      // block never executes; the `@ts-expect-error` fails the build if the type
+      // ever starts exposing a callable transform here.
+      const plugin = definePlugin({
+        schemas: { Opportunity: { customFields: { legacyId: { fieldType: "integer" } } } },
+      });
+      expect(plugin.schemas.Opportunity.commonSchema).toBeDefined();
+      expect(plugin.schemas.Opportunity.customFields).toBeDefined();
+      if (false as boolean) {
+        // @ts-expect-error — toCommon is not callable on a schema-only entry
+        plugin.schemas.Opportunity.toCommon({});
+      }
+    });
   });
 
   // ############################################################################
