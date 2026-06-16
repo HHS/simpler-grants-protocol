@@ -10,8 +10,8 @@
 
 import { z } from "zod";
 
-import { PluginError, type Handler, type TransformResult } from "./types";
-import { DEFAULT_HANDLERS, HandlerError, transformFromMapping } from "./transformation";
+import { TransformError, type Handler, type TransformResult } from "./types";
+import { DEFAULT_HANDLERS, HandlerError, transformFromMapping } from "../utils/transformation";
 
 // ############################################################################
 // Internal - mapping structure validation
@@ -33,9 +33,9 @@ import { DEFAULT_HANDLERS, HandlerError, transformFromMapping } from "./transfor
  * Sibling keys at a handler-dispatch node are rejected here. The runtime
  * walker is first-key-wins, so `{ field: "x", const: "fallback" }` would
  * silently drop `const` — almost always an author typo — so fail loud at
- * build time instead (parity with the Python PoC's build-time validation).
- * The low-level `transformFromMapping` walker stays lenient so programmatic
- * callers composing partial mappings aren't forced into the strict shape.
+ * build time instead. The low-level `transformFromMapping` walker stays
+ * lenient so programmatic callers composing partial mappings aren't forced
+ * into the strict shape.
  *
  * @internal
  */
@@ -53,7 +53,7 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
   }
 
   // A handler invocation must be the sole key in its node — see the function
-  // docstring above for the first-key-wins rationale and cross-SDK parity.
+  // docstring above for the first-key-wins rationale.
   const nodeKeys = Object.keys(mapping as Record<string, unknown>);
   const handlerKeys = nodeKeys.filter(k => knownHandlers.has(k));
   if (handlerKeys.length > 0 && nodeKeys.length > 1) {
@@ -86,24 +86,19 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
  * `ZodObject`s (`.extend()` / `.merge()` preserve the concrete type), so the
  * fallback is a safety net, not an expected code path.
  *
- * Called only for `toCommonMapping` — `fromCommonMapping` maps to native
- * format whose shape is unknown to this layer.
- *
- * Cross-SDK note: Python raises `ValueError`; TypeScript uses `Error` for
- * all structural build-time failures (consistent with `validateMapping`).
- *
  * @internal
  */
 function validateOutputPaths(
   mapping: Record<string, unknown>,
   knownHandlers: Set<string>,
-  // Bivariant `any` at the input position matches buildTransforms's own
-  // commonModel signature and avoids a contravariant `unknown` type error.
+  // `any` lets this accept Zod schemas whose input type differs from their
+  // output type (e.g. schemas that use .transform()). `unknown` would reject
+  // those valid schemas here.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commonModel: z.ZodType<unknown, z.ZodTypeDef, any>
+  commonSchema: z.ZodType<unknown, z.ZodTypeDef, any>
 ): void {
-  if (!(commonModel instanceof z.ZodObject)) return;
-  const validNames = new Set(Object.keys(commonModel.shape));
+  if (!(commonSchema instanceof z.ZodObject)) return;
+  const validNames = new Set(Object.keys(commonSchema.shape));
   const outputKeys = Object.keys(mapping).filter(k => !knownHandlers.has(k));
   const invalid = outputKeys.filter(k => !validNames.has(k));
   if (invalid.length === 0) return;
@@ -122,14 +117,19 @@ function validateOutputPaths(
 /**
  * Return shape of {@link buildTransforms}.
  */
-export interface BuiltTransforms<TNative, TCommon> {
-  toCommon: (native: TNative) => TransformResult<TCommon>;
-  fromCommon: (common: TCommon) => TransformResult<TNative>;
+export interface BuiltTransforms<TSource, TCommon> {
+  toCommon: (source: TSource) => TransformResult<TCommon>;
+  fromCommon: (common: TCommon) => TransformResult<TSource>;
 }
 
 /**
  * Compile a pair of declarative mapping objects into typed
  * `(toCommon, fromCommon)` callables.
+ *
+ * @internal Plugin authors should use `definePlugin({ schemas: { [Name]: { mappings } } })`
+ * instead of calling this directly. `definePlugin()` invokes `buildTransforms()`
+ * automatically from the `mappings` entry and wraps the result with schema validation.
+ * This function remains exported for unit testing and advanced use cases.
  *
  * @example
  * ```ts
@@ -160,39 +160,49 @@ export interface BuiltTransforms<TNative, TCommon> {
  * - Handler failures (a registered handler throws): the mapping walk
  *   short-circuits on the first failure, so `errors` carries exactly one
  *   `PluginError` even when several fields would have failed.
- * - Zod-validation failures (`commonModel` provided): every `ZodIssue` is
- *   flattened into a separate `PluginError`, so `errors` carries the full
- *   set.
+ * - Zod-validation failures (`commonSchema` or `sourceSchema` provided): every
+ *   `ZodIssue` is flattened into a separate `TransformError`, so `errors` carries
+ *   the full set.
  *
  * Callers writing strict-mode handling should treat any non-empty `errors`
  * as failure regardless of length.
  *
- * @param toCommonMapping - ADR-0017 mapping from native format → CommonGrants.
- * @param fromCommonMapping - ADR-0017 mapping from CommonGrants → native format.
+ * @param toCommonMapping - Declarative mapping from source system format → CommonGrants.
+ * @param fromCommonMapping - Declarative mapping from CommonGrants → source system format.
  * @param handlers - Optional custom handlers registered for this call only.
  *   Name collisions with {@link DEFAULT_HANDLERS} raise a `TypeError` at call
  *   time rather than silently shadowing the default.
- * @param commonModel - Optional Zod schema to validate `toCommon` output against.
+ * @param commonSchema - Optional Zod schema to validate `toCommon` output against.
  *   Must be the fully extended schema (e.g. result of `withCustomFields(...)`) —
  *   not the base schema. Passing the base schema silently weakens validation of
  *   typed custom fields. When provided, `safeParse()` runs on the transform
  *   result and Zod issues are flattened into `TransformResult.errors`.
- *   `PluginError.path` for Zod-flattened issues uses dot notation including
+ *   `TransformError.path` for Zod-flattened issues uses dot notation including
  *   numeric indices (e.g. `"customFields.items.0.value"`).
+ * @param sourceSchema - Optional Zod schema to validate `fromCommon` output
+ *   against. Without this, `fromCommon` casts its result to `TSource` without
+ *   any runtime check, so `TSource` provides no real safety guarantee. When
+ *   provided, `safeParse()` runs on the transform result and Zod issues are
+ *   flattened into `TransformResult.errors` using the same format as
+ *   `commonSchema`.
  *
  * @throws TypeError when custom handler names collide with built-in defaults.
  * @throws Error when either mapping is structurally malformed (sibling keys
  *   on a handler-dispatch node).
  */
-export function buildTransforms<TNative = unknown, TCommon = unknown>(
+export function buildTransforms<TSource = unknown, TCommon = unknown>(
   toCommonMapping: Record<string, unknown>,
   fromCommonMapping: Record<string, unknown>,
   handlers?: Map<string, Handler>,
-  // Bivariant `any` accepts schemas with input/output asymmetry; `unknown`
-  // would reject them at the contravariant input position.
+  // `any` lets callers pass Zod schemas that transform their input into TCommon
+  // (e.g. schemas using .transform()). `unknown` would reject those valid schemas.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commonModel?: z.ZodType<TCommon, z.ZodTypeDef, any>
-): BuiltTransforms<TNative, TCommon> {
+  commonSchema?: z.ZodType<TCommon, z.ZodTypeDef, any>,
+  // `any` lets callers pass Zod schemas that transform their input into TSource
+  // (e.g. schemas using .transform()). `unknown` would reject those valid schemas.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sourceSchema?: z.ZodType<TSource, z.ZodTypeDef, any>
+): BuiltTransforms<TSource, TCommon> {
   if (handlers) {
     const collisions = [...handlers.keys()].filter(k => DEFAULT_HANDLERS.has(k));
     if (collisions.length > 0) {
@@ -209,14 +219,17 @@ export function buildTransforms<TNative = unknown, TCommon = unknown>(
   // fail at build time, not on first invocation.
   validateMapping(toCommonMapping, known);
   validateMapping(fromCommonMapping, known);
-  if (commonModel !== undefined) {
-    validateOutputPaths(toCommonMapping, known, commonModel);
+  if (commonSchema !== undefined) {
+    validateOutputPaths(toCommonMapping, known, commonSchema);
+  }
+  if (sourceSchema !== undefined) {
+    validateOutputPaths(fromCommonMapping, known, sourceSchema);
   }
 
   const runMapping = (
     data: unknown,
     mapping: Record<string, unknown>
-  ): { ok: true; value: unknown } | { ok: false; error: PluginError } => {
+  ): { ok: true; value: unknown } | { ok: false; error: TransformError } => {
     try {
       return { ok: true, value: transformFromMapping(data, mapping, { handlers: merged }) };
     } catch (exc) {
@@ -224,7 +237,7 @@ export function buildTransforms<TNative = unknown, TCommon = unknown>(
         const cause = exc.cause;
         return {
           ok: false,
-          error: new PluginError(cause instanceof Error ? cause.message : String(cause), {
+          error: new TransformError(cause instanceof Error ? cause.message : String(cause), {
             handler: exc.handler,
             sourceValue: data,
             cause,
@@ -233,7 +246,7 @@ export function buildTransforms<TNative = unknown, TCommon = unknown>(
       }
       return {
         ok: false,
-        error: new PluginError(exc instanceof Error ? exc.message : String(exc), {
+        error: new TransformError(exc instanceof Error ? exc.message : String(exc), {
           sourceValue: data,
           cause: exc,
         }),
@@ -241,34 +254,47 @@ export function buildTransforms<TNative = unknown, TCommon = unknown>(
     }
   };
 
-  const toCommon = (native: TNative): TransformResult<TCommon> => {
-    const ran = runMapping(native, toCommonMapping);
+  const toCommon = (source: TSource): TransformResult<TCommon> => {
+    const ran = runMapping(source, toCommonMapping);
     if (!ran.ok) return { result: {} as TCommon, errors: [ran.error] };
 
-    if (commonModel === undefined) {
+    if (commonSchema === undefined) {
       return { result: ran.value as TCommon, errors: [] };
     }
 
-    const parsed = commonModel.safeParse(ran.value);
+    const parsed = commonSchema.safeParse(ran.value);
     if (parsed.success) {
       return { result: parsed.data, errors: [] };
     }
     const errors = parsed.error.issues.map(issue => {
       // Root-level issues (e.g. from `.refine()` on the schema itself) have an
-      // empty `path` — leave PluginError.path undefined so the "if known" contract
+      // empty `path` — leave TransformError.path undefined so the "if known" contract
       // in the docstring holds.
       const joined = issue.path.length > 0 ? issue.path.map(p => String(p)).join(".") : undefined;
-      return new PluginError(issue.message, { path: joined });
+      return new TransformError(issue.message, { path: joined });
     });
     // Return the raw transformed object alongside errors so callers can
     // inspect malformed data.
     return { result: ran.value as TCommon, errors };
   };
 
-  const fromCommon = (common: TCommon): TransformResult<TNative> => {
+  const fromCommon = (common: TCommon): TransformResult<TSource> => {
     const ran = runMapping(common, fromCommonMapping);
-    if (!ran.ok) return { result: {} as TNative, errors: [ran.error] };
-    return { result: ran.value as TNative, errors: [] };
+    if (!ran.ok) return { result: {} as TSource, errors: [ran.error] };
+
+    if (sourceSchema === undefined) {
+      return { result: ran.value as TSource, errors: [] };
+    }
+
+    const parsed = sourceSchema.safeParse(ran.value);
+    if (parsed.success) {
+      return { result: parsed.data, errors: [] };
+    }
+    const errors = parsed.error.issues.map(issue => {
+      const joined = issue.path.length > 0 ? issue.path.map(p => String(p)).join(".") : undefined;
+      return new TransformError(issue.message, { path: joined });
+    });
+    return { result: ran.value as TSource, errors };
   };
 
   return { toCommon, fromCommon };

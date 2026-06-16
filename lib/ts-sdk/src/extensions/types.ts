@@ -205,15 +205,7 @@ export const EXTENSIBLE_SCHEMA_MAP = {
 /**
  * Features a plugin can declare in `PluginMeta.capabilities`.
  */
-export type PluginCapability = "customFields" | "customFilters" | "transforms" | "client";
-
-/**
- * Loose configuration object for plugin-provided HTTP clients.
- *
- * Loose per-plugin client configuration. The PoC does not constrain the shape;
- * the full SDK's `client` capability work decides the precise type.
- */
-export type ClientConfig = Record<string, unknown>;
+export type PluginCapability = "customFields" | "customFilters" | "transforms";
 
 /**
  * Handler signature for transform mapping handlers.
@@ -227,13 +219,13 @@ export type ClientConfig = Record<string, unknown>;
  *
  * **Do not throw `Error`s whose `.message` embeds source data when that
  * data may contain PII.** `buildTransforms()` wraps a handler exception's
- * message verbatim into the resulting `PluginError.message`, which is
+ * message verbatim into the resulting `TransformError.message`, which is
  * enumerable on `Error.prototype` and rendered by `util.inspect` /
  * `console.log(err)`. The SDK does not redact by default —
- * `PluginError.sourceValue` and `.cause` are enumerable, and
+ * `TransformError.sourceValue` and `.cause` are enumerable, and
  * `.message` flows through verbatim. The built-in `stringToNumber` handler
  * follows this rule by throwing a generic "cannot convert source value to a
- * number" message; see the README's `PluginError` PII warning for the
+ * number" message; see the README's `TransformError` PII warning for the
  * adopter-side redaction pattern.
  */
 export type Handler = (data: unknown, arg: unknown) => unknown;
@@ -242,7 +234,7 @@ export type Handler = (data: unknown, arg: unknown) => unknown;
  * Unconditional return shape for `toCommon` / `fromCommon`.
  *
  * `result` is the transformed value (may be partial on handler error or validation
- * failure). `errors` is the aggregated `PluginError` list, empty on full success.
+ * failure). `errors` is the aggregated `TransformError` list, empty on full success.
  *
  * Consumers apply their own strict-vs-lenient rule — strict adopters treat any
  * non-empty `errors` as failure; lenient adopters use `result` despite warnings
@@ -250,7 +242,7 @@ export type Handler = (data: unknown, arg: unknown) => unknown;
  */
 export interface TransformResult<T> {
   result: T;
-  errors: PluginError[];
+  errors: TransformError[];
 }
 
 /**
@@ -281,14 +273,14 @@ export interface TransformResult<T> {
  * };
  * ```
  *
- * `PluginError.message` is data-bearing on the Zod-validation path
- * (`buildTransforms({ commonModel })`): Zod's default error map embeds the
+ * `TransformError.message` is data-bearing on the Zod-validation path
+ * (`buildTransforms({ commonSchema })`): Zod's default error map embeds the
  * received runtime value into `issue.message`, which flows verbatim into
- * `PluginError.message`. Adopters whose source data may contain PII must redact
+ * `TransformError.message`. Adopters whose source data may contain PII must redact
  * `message` alongside `sourceValue` and `cause`. Full-message sanitization is
  * tracked under #744.
  */
-export class PluginError extends Error {
+export class TransformError extends Error {
   /** Dot-notation field path where the error occurred, if known. */
   path?: string;
   /** Name of the handler that raised, if applicable. */
@@ -308,7 +300,7 @@ export class PluginError extends Error {
     }
   ) {
     super(message);
-    this.name = "PluginError";
+    this.name = "TransformError";
     this.path = options?.path;
     this.handler = options?.handler;
     this.sourceValue = options?.sourceValue;
@@ -316,49 +308,114 @@ export class PluginError extends Error {
   }
 }
 
+// ############################################################################
+// Public types - SchemaInput (author-provided), SchemaOnly, SchemaWithTransforms
+// ############################################################################
+
+/**
+ * Mappings authoring path: declarative `mappings` compiled by `buildTransforms()`
+ * inside `definePlugin()`. Requires a `sourceSchema`; forbids hand-written
+ * `toCommon` / `fromCommon`.
+ */
+export interface MappingsSchemaInput {
+  /** Custom fields to attach via `withCustomFields()`. */
+  customFields?: Record<string, CustomFieldSpec>;
+  /** Source-system Zod schema (the shape a source system returns). */
+  sourceSchema: z.ZodTypeAny;
+  /** Declarative mappings compiled into transforms by `definePlugin()`. */
+  mappings: SchemaMappings;
+  toCommon?: never;
+  fromCommon?: never;
+}
+
+/**
+ * Functions authoring path: hand-written `toCommon` / `fromCommon`. Requires a
+ * `sourceSchema` and both directions; forbids declarative `mappings`.
+ *
+ * The function slots are loose on the input side (`source: any`): a flat,
+ * multi-key `definePlugin()` cannot infer a per-entry common type to check an
+ * inline function, so the parameter falls to `any`. The slot still pins the
+ * `TransformResult` envelope (a function returning a non-`TransformResult` is
+ * rejected). Authors recover full typing with the `ToCommon` / `FromCommon`
+ * helper types, and the resolved consumer-facing types are always correct.
+ */
+export interface FunctionsSchemaInput {
+  /** Custom fields to attach via `withCustomFields()`. */
+  customFields?: Record<string, CustomFieldSpec>;
+  /** Source-system Zod schema (the shape a source system returns). */
+  sourceSchema: z.ZodTypeAny;
+  mappings?: never;
+  /** Map a source record to the common-schema shape. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toCommon: (source: any) => TransformResult<unknown>;
+  /** Map a common-schema record back to the source shape. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fromCommon: (common: any) => TransformResult<unknown>;
+}
+
+/** Schema-only path: custom fields, no transforms. Forbids the other two paths. */
+export interface SchemaOnlyInput {
+  /** Custom fields to attach via `withCustomFields()`. */
+  customFields?: Record<string, CustomFieldSpec>;
+  sourceSchema?: never;
+  mappings?: never;
+  toCommon?: never;
+  fromCommon?: never;
+}
+
 /**
  * Author-provided input for a single extensible object, passed inside
  * `DefinePluginOptions.schemas`.
  *
- * Plugin authors supply `toCommon` and `fromCommon` as plain callables — either
- * hand-written or generated via `buildTransforms()`. `native` is the optional Zod
- * schema for the source format. `customFields` declares any extra fields this
- * object exposes beyond the base CommonGrants schema; `definePlugin()` applies
- * them to the compiled schema via `withCustomFields()`.
+ * An exclusive choice between three paths:
+ * - {@link MappingsSchemaInput}: `sourceSchema` + declarative `mappings`.
+ * - {@link FunctionsSchemaInput}: `sourceSchema` + hand-written `toCommon` and
+ *   `fromCommon` (both required).
+ * - {@link SchemaOnlyInput}: `customFields` only, no transforms.
  *
- * @remarks
- * `common` is intentionally absent here. It is injected by `definePlugin()`
- * during compilation from `ObjectSchemasInput` → `ObjectSchemas`, resolved from
- * the generated model classes produced by the code generator. Plugin config
- * files cannot import from `generated/` (which is the input to generation).
- *
- * `customFields` is co-located with the transform callables so authors add a
- * single per-object entry under `DefinePluginOptions.schemas` rather than
- * splitting declarations across two top-level keys. This matches the Python SDK's
- * `ObjectSchemasInput` shape, which also carries `custom_fields` alongside
- * `to_common` / `from_common`.
+ * Both transform paths require a `sourceSchema`, so a transform can always be
+ * validated against the source shape. Supplying both `mappings` and functions,
+ * a single transform direction, or a transform without a `sourceSchema`, is a
+ * compile error (the `?: never` slots). `commonSchema` is intentionally absent;
+ * `definePlugin()` derives it from `customFields` during compilation.
  */
-export interface ObjectSchemasInput<TNative = unknown, TCommon = unknown> {
-  native?: z.ZodType<TNative>;
+export type SchemaInput = MappingsSchemaInput | FunctionsSchemaInput | SchemaOnlyInput;
+
+/**
+ * Compiled output for a schema-only entry — no transforms configured.
+ *
+ * Produced by `definePlugin()` for entries that declare only `customFields`
+ * (or nothing at all). The `commonSchema` is the fully extended Zod schema.
+ * `customFields` is kept on the entry so consumers can inspect the specs that
+ * were used to build it.
+ */
+export interface SchemaOnly<TCommon> {
+  commonSchema: z.ZodType<TCommon>;
+  /** Custom field specs that were used to extend the base schema, kept for inspection. */
   customFields?: Record<string, CustomFieldSpec>;
-  toCommon?: (native: TNative) => TransformResult<TCommon>;
-  fromCommon?: (common: TCommon) => TransformResult<TNative>;
 }
 
 /**
- * Runtime compiled type produced by `definePlugin()` — not provided directly by authors.
+ * Compiled output for a schema entry with bidirectional transforms.
  *
- * `definePlugin()` now compiles `ObjectSchemasInput` into this shape: `common` is
- * injected from the base CG model (extended via `withCustomFields()` when custom
- * fields are declared), and `toCommon` / `fromCommon` are auto-wired from declarative
- * mappings when no explicit callables are provided. Native input Zod-wrapping remains
- * deferred.
+ * Produced by `definePlugin()` for entries that declare either `mappings` or
+ * explicit `toCommon` / `fromCommon` callables. Both transform directions are
+ * always present (non-optional) — `definePlugin()` validates both directions
+ * exist before producing this type.
+ *
+ * `customFields` and `mappings` are kept for consumer inspection: `customFields`
+ * shows the specs used to extend the common schema; `mappings` is present when
+ * the author used declarative mappings (absent when hand-written functions were used).
  */
-export interface ObjectSchemas<TNative, TCommon> {
-  native: z.ZodType<TNative>;
-  common: z.ZodType<TCommon>;
-  toCommon: (native: TNative) => TransformResult<TCommon>;
-  fromCommon: (common: TCommon) => TransformResult<TNative>;
+export interface SchemaWithTransforms<TSource, TCommon> {
+  commonSchema: z.ZodType<TCommon>;
+  sourceSchema?: z.ZodType<TSource>;
+  /** Custom field specs that were used to extend the base schema, kept for inspection. */
+  customFields?: Record<string, CustomFieldSpec>;
+  /** Declarative mappings kept for inspection; absent when hand-written functions were used. */
+  mappings?: SchemaMappings;
+  toCommon: (source: TSource) => TransformResult<TCommon>;
+  fromCommon: (common: TCommon) => TransformResult<TSource>;
 }
 
 /**
@@ -374,51 +431,20 @@ export interface PluginMeta {
   name: string;
   /** Plugin version (semver, e.g. `"1.0.0"`). */
   version?: string;
-  /** Name of the native source system (e.g. `"grants.gov"`). */
+  /** Name of the source system (e.g. `"grants.gov"`). */
   sourceSystem: string;
   /** Features the plugin provides. */
   capabilities?: PluginCapability[];
 }
 
 /**
- * Declarative mapping dicts for a single object, stored in the serializable
- * extensions config.
+ * Declarative mapping dicts for a single object.
  *
  * Each direction is author-provided — `buildTransforms()` does not invert one
  * direction into the other, because many-to-one handlers like `switch` are not
  * reversible.
  */
-export interface ObjectMappings {
+export interface SchemaMappings {
   toCommon?: Record<string, unknown>;
   fromCommon?: Record<string, unknown>;
-}
-
-/**
- * Per-object config inside the serializable `PluginExtensions.schemas` dict.
- *
- * `mappings` carries optional declarative mappings; when present and no
- * explicit `toCommon` / `fromCommon` is supplied in
- * `DefinePluginOptions.schemas`, `definePlugin()` auto-invokes
- * `buildTransforms()` on these at call time.
- *
- * @remarks
- * `customFields` lives on {@link ObjectSchemasInput} (inside
- * `DefinePluginOptions.schemas[obj]`) rather than here, so authors keep
- * all per-object declarations — custom fields, native schema, and transforms
- * — in one entry. This matches the Python SDK's `ObjectSchemasInput` shape.
- * Cross-package composition of custom field declarations is done by defining
- * a combined plugin with all fields under `schemas[Object].customFields`.
- */
-export interface PluginExtensionsObjectConfig {
-  mappings?: ObjectMappings;
-}
-
-/**
- * Serializable portion of plugin config — safe to store as JSON.
- *
- * Used to store JSON-safe serializable config alongside a plugin.
- */
-export interface PluginExtensions {
-  meta?: Partial<PluginMeta>;
-  schemas?: Partial<Record<ExtensibleSchemaName, PluginExtensionsObjectConfig>>;
 }

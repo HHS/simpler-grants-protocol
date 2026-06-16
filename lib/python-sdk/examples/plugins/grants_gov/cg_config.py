@@ -9,14 +9,25 @@ Code generation (generates typed custom-field schemas):
     poetry run python -m common_grants_sdk.extensions.generate --plugin examples/plugins/grants_gov
 """
 
+from typing import Any
+
 from common_grants_sdk.extensions import (
     CustomFieldSpec,
-    ObjectSchemasInput,
     PluginExtensionsMeta,
+    SchemaInput,
     build_transforms,
     define_plugin,
 )
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
+from common_grants_sdk.utils.transformation import get_from_path
+
+
+def _join_fields(data: dict[str, Any], spec: dict[str, Any]) -> str | None:
+    sep = spec.get("sep", " ")
+    parts = [get_from_path(data, path) for path in spec.get("fields", [])]
+    values = [str(p) for p in parts if p is not None]
+    return sep.join(values) if values else None
+
 
 # ---------------------------------------------------------------------------
 # Bidirectional transforms
@@ -32,6 +43,7 @@ from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 # ---------------------------------------------------------------------------
 
 to_common, from_common = build_transforms(
+    handlers={"join": _join_fields},
     # to_common: grants.gov native → CommonGrants Opportunity
     to_common_mapping={
         "title": {"field": "data.opportunity_title"},
@@ -82,6 +94,14 @@ to_common, from_common = build_transforms(
             "priorityScore": {
                 "value": {"stringToNumber": "data.priority_score_str"},
             },
+            "compositeLabel": {
+                "value": {
+                    "join": {
+                        "fields": ["data.opportunity_number", "data.opportunity_title"],
+                        "sep": " — ",
+                    }
+                },
+            },
         },
     },
     # from_common: CommonGrants Opportunity → grants.gov native
@@ -124,7 +144,7 @@ config = define_plugin(
         capabilities=["customFields", "transforms"],
     ),
     schemas={
-        "Opportunity": ObjectSchemasInput(
+        "Opportunity": SchemaInput(
             custom_fields={
                 "legacyId": CustomFieldSpec(
                     field_type=CustomFieldType.INTEGER,
@@ -150,6 +170,11 @@ config = define_plugin(
                     field_type=CustomFieldType.NUMBER,
                     name="Priority score",
                     description="Numeric priority score coerced from a string via stringToNumber",
+                ),
+                "compositeLabel": CustomFieldSpec(
+                    field_type=CustomFieldType.STRING,
+                    name="Composite label",
+                    description="Composite label '<opportunity_number> — <opportunity_title>' for round-trip recovery",
                 ),
             },
             to_common=to_common,

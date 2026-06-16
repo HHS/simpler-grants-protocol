@@ -9,7 +9,7 @@
  */
 
 // Plugin creation — define and compose plugins
-export type { Plugin, DefinePluginOptions, SchemasInput } from "./define-plugin";
+export type { Plugin, DefinePluginOptions, PluginSchemasInput } from "./define-plugin";
 export type { CustomFieldSpec, HasCustomFields, ExtensibleObject } from "./types";
 export { definePlugin } from "./define-plugin";
 
@@ -25,21 +25,21 @@ export { getCustomFieldValue } from "./get-custom-field-value";
 
 // Transforms — bidirectional plugin transformation contract
 export type {
-  ClientConfig,
   Handler,
-  ObjectMappings,
-  ObjectSchemas,
-  ObjectSchemasInput,
+  SchemaMappings,
+  SchemaInput,
+  SchemaOnly,
+  SchemaWithTransforms,
   PluginCapability,
-  PluginExtensions,
-  PluginExtensionsObjectConfig,
   PluginMeta,
   TransformResult,
 } from "./types";
-export { PluginError } from "./types";
+export { TransformError } from "./types";
+// Helper types for annotating hand-written toCommon / fromCommon functions.
+export type { ToCommon, FromCommon, TransformTypes } from "./transform-helpers";
 export type { BuiltTransforms } from "./transforms";
 export { buildTransforms } from "./transforms";
-export type { TransformFromMappingOptions } from "./transformation";
+export type { TransformFromMappingOptions } from "../utils/transformation";
 // Individual handler functions (fieldValue, constValue, switchOnValue, etc.)
 // stay internal; reach them through DEFAULT_HANDLERS when needed.
-export { DEFAULT_HANDLERS, getFromPath, transformFromMapping } from "./transformation";
+export { DEFAULT_HANDLERS, getFromPath, transformFromMapping } from "../utils/transformation";

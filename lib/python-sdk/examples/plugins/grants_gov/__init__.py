@@ -10,7 +10,6 @@ schemas = inject_transforms(config, schemas)
 
 grants_gov = Plugin(
     schemas=schemas,
-    extensions=config.extensions,
     meta=config.meta,
 )
 

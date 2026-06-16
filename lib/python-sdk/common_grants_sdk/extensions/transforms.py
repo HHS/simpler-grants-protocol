@@ -20,9 +20,10 @@ from common_grants_sdk.utils.transformation import (
     transform_from_mapping,
 )
 
-from .types import Handler, PluginError, TransformResult
+from .types import Handler, TransformError, TransformResult
 
 TCommon = TypeVar("TCommon", bound=BaseModel)
+TSource = TypeVar("TSource", bound=BaseModel)
 
 
 def _validate_output_paths(
@@ -33,7 +34,7 @@ def _validate_output_paths(
 ) -> None:
     """Validate that top-level output keys in mapping are valid fields on model.
 
-    Called when common_model is supplied to build_transforms(). Custom fields
+    Called when common_schema is supplied to build_transforms(). Custom fields
     declared by the plugin appear as regular model fields on the generated common
     model and are therefore treated as valid output paths automatically.
 
@@ -52,7 +53,7 @@ def _validate_output_paths(
         raise ValueError(
             f"build_transforms ({direction}_mapping): unknown output {noun} "
             f"{sorted(invalid)!r} for model {model.__name__}. "
-            f"Declare them as custom_fields in ObjectSchemasInput or check the field name."
+            f"Declare them as custom_fields in SchemaInput or check the field name."
         )
 
 
@@ -106,7 +107,8 @@ def build_transforms(
     to_common_mapping: dict[str, Any],
     from_common_mapping: dict[str, Any],
     handlers: dict[str, Handler] | None = ...,
-    common_model: None = ...,
+    common_schema: None = ...,
+    source_schema: None = ...,
 ) -> tuple[
     Callable[[Any], TransformResult[Any]],
     Callable[[Any], TransformResult[Any]],
@@ -118,10 +120,37 @@ def build_transforms(
     to_common_mapping: dict[str, Any],
     from_common_mapping: dict[str, Any],
     handlers: dict[str, Handler] | None = ...,
-    common_model: type[TCommon] = ...,
+    common_schema: type[TCommon] = ...,
+    source_schema: None = ...,
 ) -> tuple[
     Callable[[Any], TransformResult[TCommon | dict[str, Any]]],
-    Callable[[Any], TransformResult[dict[str, Any]]],
+    Callable[[Any], TransformResult[Any]],
+]: ...
+
+
+@overload
+def build_transforms(
+    to_common_mapping: dict[str, Any],
+    from_common_mapping: dict[str, Any],
+    handlers: dict[str, Handler] | None = ...,
+    common_schema: None = ...,
+    source_schema: type[TSource] = ...,
+) -> tuple[
+    Callable[[Any], TransformResult[Any]],
+    Callable[[Any], TransformResult[TSource | dict[str, Any]]],
+]: ...
+
+
+@overload
+def build_transforms(
+    to_common_mapping: dict[str, Any],
+    from_common_mapping: dict[str, Any],
+    handlers: dict[str, Handler] | None = ...,
+    common_schema: type[TCommon] = ...,
+    source_schema: type[TSource] = ...,
+) -> tuple[
+    Callable[[Any], TransformResult[TCommon | dict[str, Any]]],
+    Callable[[Any], TransformResult[TSource | dict[str, Any]]],
 ]: ...
 
 
@@ -129,7 +158,8 @@ def build_transforms(
     to_common_mapping: dict[str, Any],
     from_common_mapping: dict[str, Any],
     handlers: dict[str, Handler] | None = None,
-    common_model: type[BaseModel] | None = None,
+    common_schema: type[BaseModel] | None = None,
+    source_schema: type[BaseModel] | None = None,
 ) -> tuple[
     Callable[[Any], TransformResult[Any]],
     Callable[[Any], TransformResult[Any]],
@@ -137,8 +167,8 @@ def build_transforms(
     """Generate to_common and from_common callables from mapping dicts.
 
     Args:
-        to_common_mapping: mapping from native source → CommonGrants.
-        from_common_mapping: mapping from CommonGrants → native source.
+        to_common_mapping: mapping from source system → CommonGrants.
+        from_common_mapping: mapping from CommonGrants → source system.
         handlers: Optional additional handlers registered for this call only.
             Keys must not collide with DEFAULT_HANDLERS (raises ValueError if they do).
             Each ``build_transforms()`` call gets its own isolated handler registry —
@@ -158,7 +188,7 @@ def build_transforms(
                     {},
                     handlers={"upper": handle_upper},
                 )
-        common_model: Optional Pydantic model class to validate the to_common output
+        common_schema: Optional Pydantic model class to validate the to_common output
             against. Must be the fully extended generated model class (e.g. the
             generated Opportunity from generated/schemas.py), NOT the base class
             (e.g. OpportunityBase). Passing a base class will silently weaken
@@ -168,15 +198,22 @@ def build_transforms(
             called on the transform result and any ValidationErrors are appended to
             TransformResult.errors rather than raised.
 
-            Note on result shape: when common_model is set, TransformResult.result
+            Note on result shape: when common_schema is set, TransformResult.result
             holds the validated Pydantic instance on success, or the raw transformed
             dict on ValidationError (so callers can inspect the malformed data
             alongside the errors). This is intentional — check TransformResult.errors
             before consuming TransformResult.result.
+        source_schema: Optional Pydantic model class to validate the from_common output
+            against. Without this, from_common casts its result to a plain dict with
+            no runtime check, so the return type provides no real safety guarantee.
+            When provided, model_validate is called on the transform result and any
+            ValidationErrors are appended to TransformResult.errors rather than raised.
+            The result shape follows the same convention as common_schema: a validated
+            model instance on success, or the raw dict alongside errors on failure.
 
     Returns:
         A (to_common, from_common) tuple. Each callable accepts a dict and returns
-        TransformResult[Any]. Failures surface as PluginError entries in
+        TransformResult[Any]. Failures surface as TransformError entries in
         TransformResult.errors rather than being raised.
 
     Raises:
@@ -202,15 +239,18 @@ def build_transforms(
     _validate_mapping(to_common_mapping, known)
     _validate_mapping(from_common_mapping, known)
 
-    # When common_model is provided, validate that to_common output keys are real fields
-    if common_model is not None:
-        _validate_output_paths(to_common_mapping, common_model, known, "to_common")
+    # When common_schema is provided, validate that to_common output keys are real fields
+    if common_schema is not None:
+        _validate_output_paths(to_common_mapping, common_schema, known, "to_common")
+    # When source_schema is provided, validate that from_common output keys are real fields
+    if source_schema is not None:
+        _validate_output_paths(from_common_mapping, source_schema, known, "from_common")
 
     def to_common(native: Any) -> TransformResult[Any]:
         try:
             result = transform_from_mapping(native, to_common_mapping, handlers=merged)
         except HandlerError as exc:
-            error = PluginError(
+            error = TransformError(
                 str(exc.cause),
                 path=None,
                 handler=exc.handler,
@@ -219,18 +259,18 @@ def build_transforms(
             )
             return TransformResult(result={}, errors=[error])
         except Exception as exc:
-            error = PluginError(str(exc), path=None, source_value=native, cause=exc)
+            error = TransformError(str(exc), path=None, source_value=native, cause=exc)
             return TransformResult(result={}, errors=[error])
 
-        if common_model is None:
+        if common_schema is None:
             return TransformResult(result=result, errors=[])
 
         try:
-            validated = common_model.model_validate(result)
+            validated = common_schema.model_validate(result)
             return TransformResult(result=validated, errors=[])
         except ValidationError as exc:
             errors = [
-                PluginError(
+                TransformError(
                     e["msg"],
                     path=".".join(str(loc) for loc in e["loc"]),
                 )
@@ -238,7 +278,7 @@ def build_transforms(
             ]
             return TransformResult(result=result, errors=errors)
         except Exception as exc:
-            error = PluginError(str(exc), path=None, source_value=result, cause=exc)
+            error = TransformError(str(exc), path=None, source_value=result, cause=exc)
             return TransformResult(result=result, errors=[error])
 
     def from_common(common: Any) -> TransformResult[Any]:
@@ -246,9 +286,8 @@ def build_transforms(
             result = transform_from_mapping(
                 common, from_common_mapping, handlers=merged
             )
-            return TransformResult(result=result, errors=[])
         except HandlerError as exc:
-            error = PluginError(
+            error = TransformError(
                 str(exc.cause),
                 path=None,
                 handler=exc.handler,
@@ -257,7 +296,26 @@ def build_transforms(
             )
             return TransformResult(result={}, errors=[error])
         except Exception as exc:
-            error = PluginError(str(exc), path=None, source_value=common, cause=exc)
+            error = TransformError(str(exc), path=None, source_value=common, cause=exc)
             return TransformResult(result={}, errors=[error])
+
+        if source_schema is None:
+            return TransformResult(result=result, errors=[])
+
+        try:
+            validated = source_schema.model_validate(result)
+            return TransformResult(result=validated, errors=[])
+        except ValidationError as exc:
+            errors = [
+                TransformError(
+                    e["msg"],
+                    path=".".join(str(loc) for loc in e["loc"]),
+                )
+                for e in exc.errors()
+            ]
+            return TransformResult(result=result, errors=errors)
+        except Exception as exc:
+            error = TransformError(str(exc), path=None, source_value=result, cause=exc)
+            return TransformResult(result=result, errors=[error])
 
     return to_common, from_common

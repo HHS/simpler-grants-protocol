@@ -8,25 +8,21 @@ from .specs import (
     CustomFilterSpec,
     CustomFilterType,
     SchemaExtensions,
-    merge_extensions,
 )
 from .transforms import build_transforms
 from .types import (
     Handler,
-    ObjectMappings,
-    ObjectSchemas,
-    ObjectSchemasInput,
     PluginCapability,
-    PluginError,
-    PluginExtensions,
     PluginExtensionsMeta,
-    PluginExtensionsSchema,
     PluginRoutes,
+    SchemaConfig,
+    SchemaInput,
+    SchemaMappings,
+    TransformError,
     TransformResult,
 )
 
 __all__ = [
-    # Existing exports (unchanged)
     "ConflictStrategy",
     "CustomFieldSpec",
     "Plugin",
@@ -34,19 +30,14 @@ __all__ = [
     "SchemaExtensions",
     "define_plugin",
     "inject_transforms",
-    "merge_extensions",
-    # New: build_transforms
     "build_transforms",
-    # New: ADR-0022 types
     "Handler",
-    "ObjectMappings",
-    "ObjectSchemas",
-    "ObjectSchemasInput",
     "PluginCapability",
-    "PluginError",
-    "PluginExtensions",
     "PluginExtensionsMeta",
-    "PluginExtensionsSchema",
+    "SchemaConfig",
+    "SchemaInput",
+    "SchemaMappings",
+    "TransformError",
     "TransformResult",
     # Custom filters
     "classify_filters",

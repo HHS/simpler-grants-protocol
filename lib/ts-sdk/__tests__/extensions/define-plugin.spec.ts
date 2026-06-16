@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import {
   buildTransforms,
@@ -53,11 +53,11 @@ describe("definePlugin", () => {
     });
 
     it("should preserve meta input by reference", () => {
-      const extensions = { meta: { name: "test", sourceSystem: "test" } };
+      const meta: PluginMeta = { name: "test", sourceSystem: "test" };
 
-      const plugin = definePlugin({ extensions });
+      const plugin = definePlugin({ meta });
 
-      expect(plugin.extensions).toBe(extensions);
+      expect(plugin.meta).toBe(meta);
     });
   });
 
@@ -66,7 +66,7 @@ describe("definePlugin", () => {
   // ############################################################################
 
   describe("extensible schemas", () => {
-    it("should parse payloads with custom fields via plugin.schemas.Opportunity.common", () => {
+    it("should parse payloads with custom fields via plugin.schemas.Opportunity.commonSchema", () => {
       const plugin = definePlugin({
         schemas: {
           Opportunity: {
@@ -84,7 +84,7 @@ describe("definePlugin", () => {
         },
       } as const);
 
-      const result = plugin.schemas.Opportunity.common.parse({
+      const result = plugin.schemas.Opportunity.commonSchema.parse({
         ...validOpp,
         customFields: {
           legacyId: {
@@ -119,7 +119,7 @@ describe("definePlugin", () => {
         },
       } as const);
 
-      const result = plugin.schemas.Opportunity.common.safeParse({
+      const result = plugin.schemas.Opportunity.commonSchema.safeParse({
         ...validOpp,
         customFields: {
           legacyId: {
@@ -142,7 +142,7 @@ describe("definePlugin", () => {
     it("should return base schema under .common when no customFields are provided", () => {
       const plugin = definePlugin({});
 
-      expect(plugin.schemas.Opportunity.common).toBe(OpportunityBaseSchema);
+      expect(plugin.schemas.Opportunity.commonSchema).toBe(OpportunityBaseSchema);
     });
 
     it("should return base schema under .common when customFields is empty", () => {
@@ -150,7 +150,7 @@ describe("definePlugin", () => {
         schemas: { Opportunity: { customFields: {} } },
       });
 
-      expect(plugin.schemas.Opportunity.common).toBe(OpportunityBaseSchema);
+      expect(plugin.schemas.Opportunity.commonSchema).toBe(OpportunityBaseSchema);
     });
   });
 
@@ -251,7 +251,7 @@ describe("definePlugin", () => {
   // ############################################################################
 
   describe("schemas (transforms)", () => {
-    it("preserves toCommon and fromCommon on the returned plugin schemas", () => {
+    it("exposes toCommon and fromCommon callables on the returned plugin schemas", () => {
       const { toCommon, fromCommon } = buildTransforms(
         { title: { field: "data.opportunity_title" } },
         { data: { opportunity_title: { field: "title" } } }
@@ -259,28 +259,40 @@ describe("definePlugin", () => {
 
       const plugin = definePlugin({
         schemas: {
-          Opportunity: { toCommon, fromCommon },
+          Opportunity: { sourceSchema: z.object({}).passthrough(), toCommon, fromCommon },
         },
       });
 
-      expect(plugin.schemas.Opportunity.toCommon).toBe(toCommon);
-      expect(plugin.schemas.Opportunity.fromCommon).toBe(fromCommon);
+      // definePlugin wraps callables with schema validation, so the references differ.
+      // Verify they are callable functions.
+      expect(typeof plugin.schemas.Opportunity.toCommon).toBe("function");
+      expect(typeof plugin.schemas.Opportunity.fromCommon).toBe("function");
     });
 
     it("invokes the stored transform callable via plugin.schemas", () => {
+      // Mapping must cover all required OpportunityBaseSchema fields because
+      // definePlugin wraps toCommon with commonSchema validation.
       const { toCommon, fromCommon } = buildTransforms(
-        { title: { field: "data.opportunity_title" } },
-        { data: { opportunity_title: { field: "title" } } }
+        {
+          id: { field: "native_id" },
+          title: { field: "native_title" },
+          description: { const: "Test opportunity" },
+          createdAt: { const: "2025-01-01T00:00:00Z" },
+          lastModifiedAt: { const: "2025-01-01T00:00:00Z" },
+          status: { value: { const: "open" } },
+        },
+        { native_title: { field: "title" }, native_id: { field: "id" } }
       );
 
       const plugin = definePlugin({
         schemas: {
-          Opportunity: { toCommon, fromCommon },
+          Opportunity: { sourceSchema: z.object({}).passthrough(), toCommon, fromCommon },
         },
       });
 
       const out = plugin.schemas.Opportunity.toCommon?.({
-        data: { opportunity_title: "Hello" },
+        native_id: "573525f2-8e15-4405-83fb-e6523511d893",
+        native_title: "Hello",
       }) as TransformResult<{ title: string }>;
 
       expect(out.errors).toEqual([]);
@@ -292,6 +304,59 @@ describe("definePlugin", () => {
 
       expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
       expect(plugin.schemas.Opportunity.fromCommon).toBeUndefined();
+    });
+
+    it("does not expose transform callables as callable on a schema-only entry", () => {
+      // A customFields-only entry resolves to the schema-only shape, so calling
+      // toCommon is a compile error (not just `undefined` at runtime). The guarded
+      // block never executes; the `@ts-expect-error` fails the build if the type
+      // ever starts exposing a callable transform here.
+      const plugin = definePlugin({
+        schemas: { Opportunity: { customFields: { legacyId: { fieldType: "integer" } } } },
+      });
+      expect(plugin.schemas.Opportunity.commonSchema).toBeDefined();
+      expect(plugin.schemas.Opportunity.customFields).toBeDefined();
+      if (false as boolean) {
+        // @ts-expect-error — toCommon is not callable on a schema-only entry
+        plugin.schemas.Opportunity.toCommon({});
+      }
+    });
+
+    it("rejects hand-written transforms without a sourceSchema (compile-time)", () => {
+      const noop = (): TransformResult<unknown> => ({ result: {}, errors: [] });
+      definePlugin({
+        schemas: {
+          // @ts-expect-error — the functions path requires a sourceSchema
+          Opportunity: { toCommon: noop, fromCommon: noop },
+        },
+      });
+    });
+
+    it("rejects a single transform direction (compile-time)", () => {
+      const noop = (): TransformResult<unknown> => ({ result: {}, errors: [] });
+      definePlugin({
+        schemas: {
+          // @ts-expect-error — the functions path requires both toCommon and fromCommon
+          Opportunity: { sourceSchema: z.object({}).passthrough(), toCommon: noop },
+        },
+      });
+    });
+
+    it("validates fromCommon output against the sourceSchema", () => {
+      const sourceSchema = z.object({ native_id: z.string() });
+      const plugin = definePlugin({
+        schemas: {
+          Opportunity: {
+            sourceSchema,
+            toCommon: (): TransformResult<unknown> => ({ result: validOpp, errors: [] }),
+            // Returns a source object missing the required native_id.
+            fromCommon: (): TransformResult<unknown> => ({ result: { wrong: true }, errors: [] }),
+          },
+        },
+      });
+
+      const out = plugin.schemas.Opportunity.fromCommon?.({} as never);
+      expect(out?.errors.length ?? 0).toBeGreaterThan(0);
     });
   });
 
@@ -314,7 +379,7 @@ describe("definePlugin", () => {
         },
       });
 
-      const result = plugin.schemas.Opportunity.common.parse({
+      const result = plugin.schemas.Opportunity.commonSchema.parse({
         ...validOpp,
         customFields: {
           legacyId: {
@@ -333,9 +398,8 @@ describe("definePlugin", () => {
     it("works without a schemas argument at all", () => {
       const plugin = definePlugin({});
 
-      expect(plugin.extensions).toBeUndefined();
       // Common schema defaults to base schema when no customFields provided.
-      const result = plugin.schemas.Opportunity.common.parse(validOpp);
+      const result = plugin.schemas.Opportunity.commonSchema.parse(validOpp);
       expect(result.title).toBe("Test Opportunity");
     });
   });
@@ -362,27 +426,29 @@ const autoWireFromCommonMapping = {
   native_title: { field: "title" },
   native_id: { field: "id" },
 };
+// Transform entries require a sourceSchema. The mappings runtime here doesn't use
+// it, so a permissive shape is fine for these tests.
+const autoWireSourceSchema = z.object({}).passthrough();
 
 describe("definePlugin — auto-wiring from mappings", () => {
-  it("auto-generates working toCommon/fromCommon from extensions.schemas.Opportunity.mappings", () => {
+  it("auto-generates working toCommon/fromCommon from schemas.Opportunity.mappings", () => {
     const plugin = definePlugin({
-      extensions: {
-        schemas: {
-          Opportunity: {
-            mappings: {
-              toCommon: autoWireToCommonMapping,
-              fromCommon: autoWireFromCommonMapping,
-            },
+      schemas: {
+        Opportunity: {
+          sourceSchema: autoWireSourceSchema,
+          mappings: {
+            toCommon: autoWireToCommonMapping,
+            fromCommon: autoWireFromCommonMapping,
           },
         },
       },
     });
 
-    const nativeData = {
+    const sourceData = {
       native_id: "573525f2-8e15-4405-83fb-e6523511d893",
       native_title: "Test Opp",
     };
-    const result = plugin.schemas.Opportunity.toCommon?.(nativeData);
+    const result = plugin.schemas.Opportunity.toCommon?.(sourceData);
     expect(result?.errors).toHaveLength(0);
     expect(result?.result).toMatchObject({
       id: "573525f2-8e15-4405-83fb-e6523511d893",
@@ -390,74 +456,67 @@ describe("definePlugin — auto-wiring from mappings", () => {
     });
   });
 
-  it("explicit callables take priority — any explicit callable disables auto-wiring for that object", () => {
-    const explicitToCommon = vi.fn(
-      (_: unknown): TransformResult<unknown> => ({ result: { id: "explicit" }, errors: [] })
-    );
-    const explicitFromCommon = vi.fn(
-      (_: unknown): TransformResult<unknown> => ({ result: {}, errors: [] })
-    );
+  it("throws when both mappings and explicit toCommon/fromCommon are provided (XOR constraint)", () => {
+    const explicitToCommon = (_: unknown): TransformResult<unknown> => ({
+      result: { id: "explicit" },
+      errors: [],
+    });
+    const explicitFromCommon = (_: unknown): TransformResult<unknown> => ({
+      result: {},
+      errors: [],
+    });
 
-    const plugin = definePlugin({
-      extensions: {
+    expect(() =>
+      definePlugin({
         schemas: {
           Opportunity: {
+            sourceSchema: autoWireSourceSchema,
             mappings: {
               toCommon: autoWireToCommonMapping,
               fromCommon: autoWireFromCommonMapping,
             },
+            // @ts-expect-error — intentionally testing XOR constraint: mappings + explicit callables is invalid
+            toCommon: explicitToCommon,
+            // @ts-expect-error — intentionally testing XOR constraint: mappings + explicit callables is invalid
+            fromCommon: explicitFromCommon,
           },
         },
-      },
-      schemas: {
-        Opportunity: {
-          toCommon: explicitToCommon,
-          fromCommon: explicitFromCommon,
-        },
-      },
-    });
-
-    plugin.schemas.Opportunity.toCommon?.({});
-    expect(explicitToCommon).toHaveBeenCalledOnce();
+      })
+    ).toThrow(/cannot specify both mappings and explicit toCommon\/fromCommon/);
   });
 
-  it("disables auto-wiring when only one explicit callable is provided", () => {
-    const explicitToCommon = vi.fn(
-      (_: unknown): TransformResult<unknown> => ({ result: {}, errors: [] })
-    );
+  it("throws when mappings and a single explicit callable are both provided (XOR constraint)", () => {
+    const explicitToCommon = (_: unknown): TransformResult<unknown> => ({
+      result: {},
+      errors: [],
+    });
 
-    const plugin = definePlugin({
-      extensions: {
+    expect(() =>
+      definePlugin({
         schemas: {
           Opportunity: {
+            sourceSchema: autoWireSourceSchema,
             mappings: {
               toCommon: autoWireToCommonMapping,
               fromCommon: autoWireFromCommonMapping,
             },
+            // @ts-expect-error — intentionally testing XOR constraint: mappings + explicit callable is invalid
+            toCommon: explicitToCommon,
           },
         },
-      },
-      schemas: {
-        Opportunity: { toCommon: explicitToCommon },
-      },
-    });
-
-    // fromCommon is not auto-wired because explicitToCommon disables auto-wiring
-    expect(plugin.schemas.Opportunity.fromCommon).toBeUndefined();
-    plugin.schemas.Opportunity.toCommon?.({});
-    expect(explicitToCommon).toHaveBeenCalledOnce();
+      })
+    ).toThrow(/cannot specify both mappings and explicit toCommon\/fromCommon/);
   });
 
   it("throws at definition time when mappings.fromCommon is absent", () => {
     expect(() =>
       definePlugin({
-        extensions: {
-          schemas: {
-            Opportunity: {
-              mappings: {
-                toCommon: autoWireToCommonMapping,
-                // fromCommon intentionally absent
-              },
+        schemas: {
+          Opportunity: {
+            sourceSchema: autoWireSourceSchema,
+            mappings: {
+              toCommon: autoWireToCommonMapping,
+              // fromCommon intentionally absent
             },
           },
         },
@@ -468,13 +527,12 @@ describe("definePlugin — auto-wiring from mappings", () => {
   it("throws at definition time when mappings.toCommon is absent", () => {
     expect(() =>
       definePlugin({
-        extensions: {
-          schemas: {
-            Opportunity: {
-              mappings: {
-                // toCommon intentionally absent
-                fromCommon: autoWireFromCommonMapping,
-              },
+        schemas: {
+          Opportunity: {
+            sourceSchema: autoWireSourceSchema,
+            mappings: {
+              // toCommon intentionally absent
+              fromCommon: autoWireFromCommonMapping,
             },
           },
         },
@@ -485,13 +543,12 @@ describe("definePlugin — auto-wiring from mappings", () => {
   it("auto-wired toCommon rejects unknown output fields via validateOutputPaths", () => {
     expect(() =>
       definePlugin({
-        extensions: {
-          schemas: {
-            Opportunity: {
-              mappings: {
-                toCommon: { unknownFieldXyz: { field: "data.x" } },
-                fromCommon: autoWireFromCommonMapping,
-              },
+        schemas: {
+          Opportunity: {
+            sourceSchema: autoWireSourceSchema,
+            mappings: {
+              toCommon: { unknownFieldXyz: { field: "data.x" } },
+              fromCommon: autoWireFromCommonMapping,
             },
           },
         },
@@ -499,44 +556,38 @@ describe("definePlugin — auto-wiring from mappings", () => {
     ).toThrow(/unknown output fields.*"unknownFieldXyz"/);
   });
 
-  it("preserves native schema on schemas[Name] in the auto-wired branch", () => {
-    const nativeSchema = z.object({ native_id: z.string(), native_title: z.string() });
+  it("preserves source schema on schemas[Name] in the auto-wired branch", () => {
+    const sourceSchema = z.object({ native_id: z.string(), native_title: z.string() });
 
     const plugin = definePlugin({
-      extensions: {
-        schemas: {
-          Opportunity: {
-            mappings: {
-              toCommon: autoWireToCommonMapping,
-              fromCommon: autoWireFromCommonMapping,
-            },
-          },
-        },
-      },
       schemas: {
         Opportunity: {
-          native: nativeSchema,
+          sourceSchema,
+          mappings: {
+            toCommon: autoWireToCommonMapping,
+            fromCommon: autoWireFromCommonMapping,
+          },
         },
       },
     });
 
-    expect(plugin.schemas.Opportunity.native).toBe(nativeSchema);
+    expect(plugin.schemas.Opportunity.sourceSchema).toBe(sourceSchema);
   });
 
-  it("no-ops cleanly when extensions is absent entirely", () => {
+  it("no-ops cleanly when schemas is absent entirely", () => {
     const plugin = definePlugin({});
     expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
     expect(plugin.schemas.Opportunity.fromCommon).toBeUndefined();
   });
 
-  it("no-ops cleanly when extensions.schemas has no key for this model name", () => {
-    const plugin = definePlugin({ extensions: { schemas: {} } });
+  it("no-ops cleanly when schemas has no key for this model name", () => {
+    const plugin = definePlugin({ schemas: {} });
     expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
   });
 
-  it("no-ops cleanly when extensions.schemas[Name].mappings is undefined", () => {
+  it("no-ops cleanly when schemas[Name].mappings is undefined", () => {
     const plugin = definePlugin({
-      extensions: { schemas: { Opportunity: { mappings: undefined } } },
+      schemas: { Opportunity: { mappings: undefined } },
     });
     expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
   });

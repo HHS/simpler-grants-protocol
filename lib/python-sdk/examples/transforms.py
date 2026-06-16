@@ -89,7 +89,7 @@ def split_field(data: dict[str, Any], spec: dict[str, Any]) -> str | None:
 
 
 # Transform that uses the custom handlers and validates output against the generated
-# Opportunity model. common_model=Opportunity (from generated/schemas.py) ensures
+# Opportunity model. common_schema=Opportunity (from generated/schemas.py) ensures
 # model_validate runs against the extended class with typed custom fields
 # (legacyId, agencyName, applicantTypes), not just the base OpportunityBase.
 to_common_with_custom, from_common_with_custom = build_transforms(
@@ -112,13 +112,15 @@ to_common_with_custom, from_common_with_custom = build_transforms(
                 }
             },
         },
-        "label": {
-            "join": {
-                "fields": ["data.opportunity_number", "data.opportunity_title"],
-                "sep": " — ",
-            }
-        },
         "customFields": {
+            "compositeLabel": {
+                "value": {
+                    "join": {
+                        "fields": ["data.opportunity_number", "data.opportunity_title"],
+                        "sep": " — ",
+                    }
+                },
+            },
             "legacyId": {
                 "value": {"field": "data.opportunity_id"},
             },
@@ -139,7 +141,7 @@ to_common_with_custom, from_common_with_custom = build_transforms(
         }
     },
     handlers={"join": join_fields, "split": split_field},
-    common_model=Opportunity,
+    common_schema=Opportunity,
 )
 
 
@@ -263,6 +265,10 @@ def main() -> None:
             if cf.applicant_types:
                 print(
                     f"    applicantTypes.value:  {cf.applicant_types.value!r}  ({type(cf.applicant_types.value).__name__})"
+                )
+            if cf.composite_label:
+                print(
+                    f"    compositeLabel.value:  {cf.composite_label.value!r}  ({type(cf.composite_label.value).__name__})"
                 )
 
     custom_native = from_common_with_custom(

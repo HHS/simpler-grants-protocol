@@ -73,7 +73,7 @@ function demonstrateStandalonePlugins() {
   console.log("--- Standalone plugins ---\n");
 
   // Legacy plugin schema validates and types its own fields
-  const legacyOpp = legacyPlugin.schemas.Opportunity.common.parse({
+  const legacyOpp = legacyPlugin.schemas.Opportunity.commonSchema.parse({
     ...baseData,
     customFields: {
       legacyId: {
@@ -90,7 +90,7 @@ function demonstrateStandalonePlugins() {
   console.log(`  legacyId.id:     ${legacyId?.id} (typed as number)\n`);
 
   // Classification plugin schema validates its fields
-  const classOpp = classificationPlugin.schemas.Opportunity.common.parse({
+  const classOpp = classificationPlugin.schemas.Opportunity.commonSchema.parse({
     ...baseData,
     customFields: {
       category: {
@@ -145,7 +145,7 @@ function demonstrateValidation() {
   console.log(JSON.stringify(oppData, null, 2));
   console.log();
 
-  const result = combinedPlugin.schemas.Opportunity.common.safeParse(oppData);
+  const result = combinedPlugin.schemas.Opportunity.commonSchema.safeParse(oppData);
 
   if (!result.success) {
     const issue = result.error.issues[0];

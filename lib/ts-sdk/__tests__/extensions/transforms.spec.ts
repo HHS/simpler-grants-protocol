@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { z } from "zod";
 
-import { PluginError, buildTransforms, getFromPath, withCustomFields } from "@/extensions";
+import { TransformError, buildTransforms, getFromPath, withCustomFields } from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas/zod/models";
 import { CustomFieldType } from "@/constants";
 
@@ -112,14 +112,14 @@ describe("buildTransforms — toCommon", () => {
     });
   });
 
-  it("wraps a handler exception as a PluginError carrying handler + cause", () => {
+  it("wraps a handler exception as a TransformError carrying handler + cause", () => {
     const { toCommon } = buildTransforms({ amount: { stringToNumber: "data.bogus" } }, {});
     // Use a source value that fails coercion so stringToNumber throws.
     const out = toCommon({ data: { bogus: "abc" } });
 
     expect(out.errors).toHaveLength(1);
     const [err] = out.errors;
-    expect(err).toBeInstanceOf(PluginError);
+    expect(err).toBeInstanceOf(TransformError);
     expect(err.handler).toBe("stringToNumber");
     expect(err.cause).toBeInstanceOf(Error);
     // On handler exception, result is an empty object — no partial fields.
@@ -128,10 +128,10 @@ describe("buildTransforms — toCommon", () => {
     expect(out.result).toStrictEqual({});
   });
 
-  it("short-circuits on the first HandlerError — two failing fields produce a single PluginError", () => {
+  it("short-circuits on the first HandlerError — two failing fields produce a single TransformError", () => {
     // Locks in the documented asymmetry: handler-failure mode is first-error-stops,
     // while the Zod-validation path aggregates every issue. Two `stringToNumber`
-    // calls both fail on `"abc"`, but only one PluginError surfaces.
+    // calls both fail on `"abc"`, but only one TransformError surfaces.
     const { toCommon } = buildTransforms(
       {
         a: { stringToNumber: "data.bogus_a" },
@@ -143,11 +143,11 @@ describe("buildTransforms — toCommon", () => {
     const out = toCommon({ data: { bogus_a: "abc", bogus_b: "def" } });
 
     expect(out.errors).toHaveLength(1);
-    expect(out.errors[0]).toBeInstanceOf(PluginError);
+    expect(out.errors[0]).toBeInstanceOf(TransformError);
     expect(out.errors[0].handler).toBe("stringToNumber");
   });
 
-  it("flattens Zod validation issues into PluginError[] when commonModel is provided", () => {
+  it("flattens Zod validation issues into TransformError[] when commonSchema is provided", () => {
     const { toCommon } = buildTransforms(
       // Output is intentionally missing required CG fields so Zod fails.
       { title: { field: "data.opportunity_title" } },
@@ -159,7 +159,7 @@ describe("buildTransforms — toCommon", () => {
     const out = toCommon(SOURCE_DATA);
 
     expect(out.errors.length).toBeGreaterThan(0);
-    expect(out.errors[0]).toBeInstanceOf(PluginError);
+    expect(out.errors[0]).toBeInstanceOf(TransformError);
     // Path is a non-empty dot-joined string for field-level issues, or
     // `undefined` for root-level issues from schema-wide `.refine()` calls.
     expect(
@@ -171,9 +171,9 @@ describe("buildTransforms — toCommon", () => {
     expect(out.result).toEqual({ title: "Research into conservation techniques" });
   });
 
-  it("produces one PluginError per ZodIssue (aggregation contract — not first-issue-only)", () => {
+  it("produces one TransformError per ZodIssue (aggregation contract — not first-issue-only)", () => {
     // Pin the documented asymmetry from buildTransforms() JSDoc: handler
-    // failures short-circuit (one PluginError per call), Zod failures
+    // failures short-circuit (one TransformError per call), Zod failures
     // aggregate every issue. Build a small schema that produces a
     // deterministic two-issue failure so a regression to
     // `[parsed.error.issues[0]]` would fail this test.
@@ -195,7 +195,7 @@ describe("buildTransforms — toCommon", () => {
     const out = toCommon({});
 
     expect(out.errors).toHaveLength(2);
-    expect(out.errors.every(e => e instanceof PluginError)).toBe(true);
+    expect(out.errors.every(e => e instanceof TransformError)).toBe(true);
     const paths = out.errors.map(e => e.path).sort();
     expect(paths).toEqual(["a", "b"]);
   });
@@ -268,18 +268,90 @@ describe("buildTransforms — fromCommon", () => {
     );
   });
 
-  it("wraps a handler exception as a PluginError carrying handler + cause", () => {
+  it("wraps a handler exception as a TransformError carrying handler + cause", () => {
     const { fromCommon } = buildTransforms({}, { data: { amount: { stringToNumber: "bogus" } } });
     // Use a CG-shaped value where `bogus` fails coercion so stringToNumber throws.
     const out = fromCommon({ bogus: "abc" } as never);
 
     expect(out.errors).toHaveLength(1);
     const [err] = out.errors;
-    expect(err).toBeInstanceOf(PluginError);
+    expect(err).toBeInstanceOf(TransformError);
     expect(err.handler).toBe("stringToNumber");
     expect(err.cause).toBeInstanceOf(Error);
     // Same contract as the toCommon side: literal `{}`, not null/undefined.
     expect(out.result).toStrictEqual({});
+  });
+
+  it("flattens Zod validation issues into TransformError[] when sourceSchema is provided", () => {
+    const SourceSchema = z.object({
+      native_id: z.string(),
+      native_title: z.string(),
+    });
+
+    const { fromCommon } = buildTransforms(
+      {},
+      // Only maps native_title — native_id will be missing, causing a Zod error.
+      { native_title: { field: "title" } },
+      undefined,
+      undefined,
+      SourceSchema
+    );
+
+    const out = fromCommon({ title: "Test Opp" } as never);
+
+    expect(out.errors.length).toBeGreaterThan(0);
+    expect(out.errors[0]).toBeInstanceOf(TransformError);
+    expect(out.errors.some(e => e.path === "native_id")).toBe(true);
+    // result preserves the raw transformed object so callers can inspect malformed data.
+    expect(out.result).toEqual({ native_title: "Test Opp" });
+  });
+
+  it("passes through valid fromCommon output when sourceSchema is satisfied", () => {
+    const SourceSchema = z.object({
+      native_id: z.string(),
+      native_title: z.string(),
+    });
+
+    const { fromCommon } = buildTransforms(
+      {},
+      {
+        native_id: { field: "id" },
+        native_title: { field: "title" },
+      },
+      undefined,
+      undefined,
+      SourceSchema
+    );
+
+    const out = fromCommon({ id: "abc-123", title: "Test Opp" } as never);
+
+    expect(out.errors).toEqual([]);
+    expect(out.result).toEqual({ native_id: "abc-123", native_title: "Test Opp" });
+  });
+
+  it("produces one TransformError per ZodIssue from sourceSchema (same aggregation contract as commonSchema)", () => {
+    const SourceSchema = z.object({
+      a: z.string().min(5),
+      b: z.number().int(),
+    });
+
+    const { fromCommon } = buildTransforms(
+      {},
+      {
+        a: { const: "x" },
+        b: { const: "not-a-number" },
+      },
+      undefined,
+      undefined,
+      SourceSchema
+    );
+
+    const out = fromCommon({} as never);
+
+    expect(out.errors).toHaveLength(2);
+    expect(out.errors.every(e => e instanceof TransformError)).toBe(true);
+    const paths = out.errors.map(e => e.path).sort();
+    expect(paths).toEqual(["a", "b"]);
   });
 });
 
@@ -330,7 +402,7 @@ describe("buildTransforms — null preservation (three-state)", () => {
     // SDKs already accept null on `.nullish()` fields; this
     // pins it inside the buildTransforms() Zod path so a future schema
     // change that swapped `.nullish()` for plain `.optional()` would surface
-    // here as a PluginError. `source` is `.nullish()` on OpportunityBaseSchema;
+    // here as a TransformError. `source` is `.nullish()` on OpportunityBaseSchema;
     // `description` is required (z.string()) so it can't carry the null state.
     const { toCommon } = buildTransforms(
       {
@@ -437,13 +509,13 @@ describe("buildTransforms — null preservation (three-state)", () => {
 // Custom handlers
 // ############################################################################
 
-describe("PluginError — serialization", () => {
+describe("TransformError — serialization", () => {
   // The SDK does not redact by default. Both tests
-  // assert on the same PluginError instance — one without redaction (PII
+  // assert on the same TransformError instance — one without redaction (PII
   // flows), one with the adopter-supplied projection (PII contained).
   // Forcing one shared setup keeps "redacted vs. raw is the only delta" a
   // structural property of the test code rather than just narration.
-  let err: PluginError;
+  let err: TransformError;
 
   beforeEach(() => {
     const { toCommon } = buildTransforms({ amount: { stringToNumber: "data.bogus" } }, {});
@@ -451,7 +523,7 @@ describe("PluginError — serialization", () => {
   });
 
   it("includes sourceValue and cause in JSON.stringify by default — adopters redact", () => {
-    expect(err).toBeInstanceOf(PluginError);
+    expect(err).toBeInstanceOf(TransformError);
     expect(err.sourceValue).toEqual({ data: { bogus: "abc", ssn: "PII_PAYLOAD_123" } });
     expect(err.cause).toBeInstanceOf(Error);
 
@@ -472,7 +544,7 @@ describe("PluginError — serialization", () => {
     const serialized = JSON.stringify(safe);
     expect(serialized).not.toContain("PII_PAYLOAD_123");
     expect(JSON.parse(serialized)).toEqual({
-      name: "PluginError",
+      name: "TransformError",
       message: expect.any(String),
       handler: "stringToNumber",
     });
@@ -510,10 +582,10 @@ describe("buildTransforms — custom handlers", () => {
 });
 
 // ############################################################################
-// Output key validation (commonModel provided)
+// Output key validation (commonSchema provided)
 // ############################################################################
 
-describe("buildTransforms — output key validation (commonModel provided)", () => {
+describe("buildTransforms — output key validation (commonSchema provided)", () => {
   it("throws when a top-level mapping key is not a field on the schema", () => {
     expect(() =>
       buildTransforms({ titlee: { field: "data.title" } }, {}, undefined, OpportunityBaseSchema)
@@ -536,12 +608,12 @@ describe("buildTransforms — output key validation (commonModel provided)", () 
     ).not.toThrow();
   });
 
-  it("does not throw when commonModel is absent", () => {
-    // No commonModel → output key validation is skipped entirely
+  it("does not throw when commonSchema is absent", () => {
+    // No commonSchema → output key validation is skipped entirely
     expect(() => buildTransforms({ notAField: { field: "data.x" } }, {})).not.toThrow();
   });
 
-  it("silently passes when commonModel is not a ZodObject", () => {
+  it("silently passes when commonSchema is not a ZodObject", () => {
     // ZodRecord is not instanceof ZodObject — permissive fallback, no throw
     const nonObjectModel = z.record(z.unknown());
     expect(() =>
@@ -549,8 +621,8 @@ describe("buildTransforms — output key validation (commonModel provided)", () 
     ).not.toThrow();
   });
 
-  it("does not validate fromCommonMapping output keys", () => {
-    // fromCommon maps to native — no commonModel shape to validate against
+  it("does not validate fromCommonMapping output keys when only commonSchema is provided", () => {
+    // commonSchema validates toCommon output — fromCommonMapping is not checked
     expect(() =>
       buildTransforms(
         { title: { field: "data.title" } },
@@ -559,6 +631,23 @@ describe("buildTransforms — output key validation (commonModel provided)", () 
         OpportunityBaseSchema
       )
     ).not.toThrow();
+  });
+
+  it("validates fromCommonMapping output keys when sourceSchema is a ZodObject", () => {
+    const SourceSchema = z.object({ native_title: z.string() });
+    expect(() =>
+      buildTransforms(
+        {},
+        { notANativeField: { field: "title" } },
+        undefined,
+        undefined,
+        SourceSchema
+      )
+    ).toThrow(/unknown output fields.*"notANativeField"/);
+  });
+
+  it("does not validate fromCommonMapping output keys when sourceSchema is absent", () => {
+    expect(() => buildTransforms({}, { notAField: { field: "title" } })).not.toThrow();
   });
 
   it("reports multiple unknown fields in the same error", () => {

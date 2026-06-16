@@ -5,11 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar, overload
 
-from .types import (
-    PluginExtensions,
-    PluginExtensionsMeta,
-    PluginRoutes,
-)
+from .types import PluginExtensionsMeta, PluginRoutes
 
 T = TypeVar("T")
 TSchemas = TypeVar("TSchemas")
@@ -21,20 +17,18 @@ class PluginConfig(Generic[TSchemas]):
     """Build-time plugin config produced by define_plugin() and consumed by generate.py.
 
     Generic on TSchemas so the precise type of the schemas dict is preserved — e.g.
-    PluginConfig[dict[str, ObjectSchemasInput[MyNative, MyCg]]] — rather than being
-    widened to ObjectSchemasInput[Any, Any] at the storage boundary.
+    PluginConfig[dict[str, SchemaInput[MyNative, MyCg]]] — rather than being
+    widened to SchemaInput[Any, Any] at the storage boundary.
 
     Stores inputs as-is — no compilation occurs at define_plugin() call time.
-    generate.py compiles this into a fully resolved Plugin by:
-    - Injecting the generated Pydantic model class as the common schema for each
-      ObjectSchemasInput entry (schemas[obj].native + common → ObjectSchemas).
-    - Auto-generating build_transforms() calls for any object that has
-      extensions.schemas[obj].mappings but no explicit schemas[obj] entry.
+    generate.py compiles this into a fully resolved Plugin by injecting the generated
+    Pydantic model class as the common schema for each SchemaInput entry, and
+    auto-generating build_transforms() calls for any object that has
+    schemas[obj].mappings but no explicit schemas[obj].to_common / from_common.
 
     All fields are optional so adopters can start with only what they need.
     """
 
-    extensions: PluginExtensions | None = None
     meta: PluginExtensionsMeta | None = None
     schemas: TSchemas | None = None
     routes: PluginRoutes | None = None
@@ -44,25 +38,23 @@ class PluginConfig(Generic[TSchemas]):
 class Plugin(Generic[T]):
     """Runtime plugin container assembled by generate.py after code generation.
 
-    schemas: the _Schemas object from generated/schemas.py. Each attribute is an
-        ObjectSchemas instance providing unified access to the model class and
+    schemas: the _Schemas object from generated/schemas.py. Each attribute is a
+        SchemaConfig instance providing unified access to the model class and
         transforms for that object:
-          plugin.schemas.Opportunity.common      → the Pydantic model class (includes
-                                                   any custom fields declared by the plugin)
-          plugin.schemas.Opportunity.to_common   → transform callable (or None)
-          plugin.schemas.Opportunity.from_common → transform callable (or None)
-          plugin.schemas.Opportunity.native      → the source system's type (or dict)
+          plugin.schemas.Opportunity.common_schema → the Pydantic model class (includes
+                                                     any custom fields declared by the plugin)
+          plugin.schemas.Opportunity.to_common     → transform callable (or None)
+          plugin.schemas.Opportunity.from_common   → transform callable (or None)
+          plugin.schemas.Opportunity.source_schema → the source system's type (or dict)
     """
 
     schemas: T
-    extensions: PluginExtensions | None = None
     meta: PluginExtensionsMeta | None = None
 
 
 @overload
 def define_plugin(
     meta: PluginExtensionsMeta | None = ...,
-    extensions: PluginExtensions | None = ...,
     schemas: None = ...,
     routes: PluginRoutes | None = ...,
 ) -> PluginConfig[None]: ...
@@ -71,7 +63,6 @@ def define_plugin(
 @overload
 def define_plugin(
     meta: PluginExtensionsMeta | None = ...,
-    extensions: PluginExtensions | None = ...,
     schemas: TSchemas = ...,
     routes: PluginRoutes | None = ...,
 ) -> PluginConfig[TSchemas]: ...
@@ -79,7 +70,6 @@ def define_plugin(
 
 def define_plugin(
     meta: PluginExtensionsMeta | None = None,
-    extensions: PluginExtensions | None = None,
     schemas: Any = None,
     routes: PluginRoutes | None = None,
 ) -> PluginConfig[Any]:
@@ -89,11 +79,12 @@ def define_plugin(
     declarations are consumed by the runtime filter engine (extensions/filters.py).
 
     No compilation occurs here — inputs are stored as-is. The code generator
-    (generate.py) compiles ObjectSchemasInput → ObjectSchemas by injecting
-    the common model from the generated schemas.
+    (generate.py) compiles SchemaInput → SchemaConfig by injecting
+    the common model from the generated schemas, and auto-wires build_transforms()
+    for any object that has schemas[obj].mappings but no explicit callables.
 
     The return type is generic on the schemas argument: passing a typed dict
-    (e.g. {"Opportunity": ObjectSchemasInput[MyNative, MyCg](...) }) preserves
+    (e.g. {"Opportunity": SchemaInput[MyNative, MyCg](...) }) preserves
     those per-object generics on the returned PluginConfig rather than widening
     them to Any.
 
@@ -103,9 +94,25 @@ def define_plugin(
         validation is explicit: call validate_routes() (extensions/filters.py)
         on the declarations, e.g. at plugin startup. classify_filters() does
         not invoke it; route validation is a standalone check.
+
+    Raises:
+        ValueError: If any schema entry specifies both mappings and explicit
+            to_common/from_common callables (XOR constraint).
     """
+    if schemas:
+        for obj_name, schema_input in schemas.items():
+            has_mappings = schema_input.mappings is not None
+            has_callables = (
+                schema_input.to_common is not None
+                or schema_input.from_common is not None
+            )
+            if has_mappings and has_callables:
+                raise ValueError(
+                    f"define_plugin: {obj_name} cannot specify both mappings and explicit "
+                    f"to_common/from_common. "
+                    f"Use mappings for declarative transforms or provide explicit callables, not both."
+                )
     return PluginConfig(
-        extensions=extensions,
         meta=meta,
         schemas=schemas,
         routes=routes,
@@ -118,7 +125,7 @@ def inject_transforms(
     """Wire transform callables from plugin config into the generated schemas container.
 
     Called by the generated plugin __init__.py to inject to_common/from_common
-    callables (and the native type) from cg_config into the ObjectSchemas instances
+    callables (and the native type) from cg_config into the SchemaConfig instances
     produced by the code generator.
 
     Iterates over all entries in config.schemas that have at least one callable,
@@ -158,7 +165,7 @@ def inject_transforms(
             raise ValueError(
                 f"Plugin object {obj_name!r}: from_common callable is required"
             )
-        obj_schemas.native = schema_input.native or dict
+        obj_schemas.source_schema = schema_input.source_schema or dict
         obj_schemas.to_common = schema_input.to_common
         obj_schemas.from_common = schema_input.from_common
     return schemas

@@ -57,7 +57,9 @@ api_response = {
 # Use the model returned via opportunity_extensions
 # ---------------------------------------------------------------------------
 
-opp = opportunity_extensions.schemas.Opportunity.common.model_validate(api_response)
+opp = opportunity_extensions.schemas.Opportunity.common_schema.model_validate(
+    api_response
+)
 
 assert opp.custom_fields is not None
 assert opp.custom_fields.program_area is not None
