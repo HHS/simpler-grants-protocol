@@ -196,8 +196,8 @@ export function stringToNumber(data: unknown, fieldPath: unknown): number | null
   if (Number.isFinite(f)) return f;
   // Don't embed the source value in the error message — it could be PII when
   // transforming applicant data. The handler name and cause flow into
-  // `PluginError` separately for programmatic reasoning. Adopters who need
-  // the offending value can still read it from `PluginError.sourceValue`
+  // `TransformError` separately for programmatic reasoning. Adopters who need
+  // the offending value can still read it from `TransformError.sourceValue`
   // (which carries its own PII warning).
   throw new Error("stringToNumber: cannot convert source value to a number");
 }
