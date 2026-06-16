@@ -1,6 +1,8 @@
 """Base model for funding opportunities."""
 
-from typing import Any, Optional, Type, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 from uuid import UUID
 
 from pydantic import Field, HttpUrl
@@ -14,7 +16,9 @@ from common_grants_sdk.utils.custom_fields import (
     add_custom_fields,
     get_custom_field_value,
 )
-from common_grants_sdk.extensions.specs import CustomFieldSpec
+
+if TYPE_CHECKING:
+    from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 V = TypeVar("V")  # Unbound to support both BaseModel subclasses and primitives
 

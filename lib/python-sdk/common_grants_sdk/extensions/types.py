@@ -7,10 +7,6 @@ from typing import Any, Callable, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .specs import CustomFieldSpec
-
-TSource = TypeVar("TSource")
-TCommon = TypeVar("TCommon")
 T = TypeVar("T")
 
 # Capability enum — Literal rather than StrEnum to stay JSON-safe.
@@ -18,6 +14,19 @@ PluginCapability = Literal["customFields", "customFilters", "transforms"]
 
 # Type aliases
 Handler = Callable[[Any, Any], Any]
+
+
+class PassthroughModel(BaseModel):
+    """Permissive source schema, which preserves the transformation result dict as is.
+
+    Validates only that the input is a mapping and preserves arbitrary keys
+    (``extra="allow"``) without constraining any field. Use it as the
+    ``source_schema`` on a transform entry to satisfy the source-schema
+    requirement without modeling the source-system shape (e.g. in tests or
+    early development).
+    """
+
+    model_config = ConfigDict(extra="allow")
 
 
 class TransformError(Exception):
@@ -63,20 +72,7 @@ class TransformResult(Generic[T]):
     errors: list[TransformError]
 
 
-class SchemaMappings(BaseModel):
-    """ADR-0017 declarative mapping dicts for a single object.
-
-    Each direction is author-provided — build_transforms() does not invert one into
-    the other because many-to-one handlers like switch are not reversible (Decision #6).
-    """
-
-    model_config = ConfigDict(populate_by_name=True)
-
-    to_common: dict[str, Any] | None = Field(default=None, alias="toCommon")
-    from_common: dict[str, Any] | None = Field(default=None, alias="fromCommon")
-
-
-class PluginExtensionsMeta(BaseModel):
+class PluginMeta(BaseModel):
     """Plugin identity and capability declaration.
 
     name and source_system are required so that plugin registries and
@@ -88,58 +84,8 @@ class PluginExtensionsMeta(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     name: str
-    source_system: str = Field(alias="sourceSystem")
+    source_system: str = Field(
+        validation_alias="sourceSystem", serialization_alias="sourceSystem"
+    )
     version: str | None = None
     capabilities: list[PluginCapability] | None = None
-
-
-@dataclass
-class SchemaInput(Generic[TSource, TCommon]):
-    """Input type provided by plugin authors inside define_plugin(schemas=...).
-
-    This is the single surface for all per-object declarations. Plugin authors supply
-    to_common and from_common as plain callables — either hand-written or generated
-    via build_transforms(). source_schema defaults to dict[str, Any] if omitted.
-
-    custom_fields declares any extra fields this object exposes beyond the base
-    CommonGrants schema. The code generator reads these and emits typed subclasses.
-
-    mappings holds optional declarative mappings. When present and no
-    explicit to_common / from_common is supplied, the code generator auto-invokes
-    build_transforms() on these. Explicit callables take priority and disable
-    auto-wiring for that object.
-
-    common_schema is intentionally absent here. It is injected by define_plugin() during
-    compilation from SchemaInput → SchemaConfig, resolved from the generated
-    model classes produced by the code generator. Plugin authors never set it directly —
-    cg_config.py cannot import from generated/ (it is the input to generation).
-    """
-
-    source_schema: type[TSource] | None = None
-    custom_fields: dict[str, CustomFieldSpec] | None = None
-    mappings: SchemaMappings | None = None
-    to_common: Callable[[TSource], TransformResult[TCommon]] | None = None
-    from_common: Callable[[TCommon], TransformResult[TSource]] | None = None
-
-
-@dataclass
-class SchemaConfig(Generic[TSource, TCommon]):
-    """Runtime compiled schema container for a single object (ADR-0022).
-
-    Bundles the type information and transform callables for one schema object
-    (e.g. Opportunity). Accessed via attribute lookup on the plugin's schemas
-    container: plugin.schemas.Opportunity.
-
-    source_schema: The source system's Python type (defaults to dict when not specified).
-    common_schema: The CommonGrants-format Pydantic model class produced by the generator.
-                   If the plugin declares custom_fields, this is a generated subclass of
-                   the base CG model (e.g. OpportunityBase) with those fields already
-                   baked in as typed attributes.
-    to_common:     Transforms source_data → TransformResult[common_schema] (None if not configured).
-    from_common:   Transforms common_data → TransformResult[source_schema] (None if not configured).
-    """
-
-    source_schema: type[TSource]
-    common_schema: type[TCommon]
-    to_common: Callable[[TSource], TransformResult[TCommon]] | None = None
-    from_common: Callable[[TCommon], TransformResult[TSource]] | None = None
