@@ -29,14 +29,7 @@ import { buildTransforms } from "./transforms";
  * `toCommon` / `fromCommon` callables, an optional `sourceSchema`, and optional
  * `customFields` specs. Passed as `DefinePluginOptions.schemas`.
  */
-// Each schema entry can have its own source/common type pair, which only gets
-// checked when buildTransforms() is called. `any` lets the dictionary hold
-// entries with different type parameters; a stricter type would reject valid
-// plugin configs at the point they're stored here.
-export type PluginSchemasInput = Partial<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Record<ExtensibleSchemaName, SchemaInput<any, any>>
->;
+export type PluginSchemasInput = Partial<Record<ExtensibleSchemaName, SchemaInput>>;
 
 /**
  * Options for `definePlugin()`.
@@ -211,13 +204,13 @@ export function definePlugin<const T extends PluginSchemasInput>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fromCommon = built.fromCommon as any;
     } else if (hasCallables) {
-      // Explicit callables path: wrap each callable with schema validation so the
-      // runtime guarantee matches the mappings path (both directions get validated).
+      // Explicit callables path: validate each direction's output. toCommon is
+      // checked against the commonSchema and fromCommon against the sourceSchema
       if (toCommon !== undefined) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         toCommon = wrapWithSchemaValidation(toCommon as any, commonSchema as any) as any;
       }
-      if (fromCommon !== undefined && sourceSchema !== undefined) {
+      if (fromCommon !== undefined) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         fromCommon = wrapWithSchemaValidation(fromCommon as any, sourceSchema as any) as any;
       }

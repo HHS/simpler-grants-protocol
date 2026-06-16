@@ -207,7 +207,7 @@ describe("definePlugin", () => {
 
       const plugin = definePlugin({
         schemas: {
-          Opportunity: { toCommon, fromCommon },
+          Opportunity: { sourceSchema: z.object({}).passthrough(), toCommon, fromCommon },
         },
       });
 
@@ -234,7 +234,7 @@ describe("definePlugin", () => {
 
       const plugin = definePlugin({
         schemas: {
-          Opportunity: { toCommon, fromCommon },
+          Opportunity: { sourceSchema: z.object({}).passthrough(), toCommon, fromCommon },
         },
       });
 
@@ -252,6 +252,59 @@ describe("definePlugin", () => {
 
       expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
       expect(plugin.schemas.Opportunity.fromCommon).toBeUndefined();
+    });
+
+    it("does not expose transform callables as callable on a schema-only entry", () => {
+      // A customFields-only entry resolves to the schema-only shape, so calling
+      // toCommon is a compile error (not just `undefined` at runtime). The guarded
+      // block never executes; the `@ts-expect-error` fails the build if the type
+      // ever starts exposing a callable transform here.
+      const plugin = definePlugin({
+        schemas: { Opportunity: { customFields: { legacyId: { fieldType: "integer" } } } },
+      });
+      expect(plugin.schemas.Opportunity.commonSchema).toBeDefined();
+      expect(plugin.schemas.Opportunity.customFields).toBeDefined();
+      if (false as boolean) {
+        // @ts-expect-error — toCommon is not callable on a schema-only entry
+        plugin.schemas.Opportunity.toCommon({});
+      }
+    });
+
+    it("rejects hand-written transforms without a sourceSchema (compile-time)", () => {
+      const noop = (): TransformResult<unknown> => ({ result: {}, errors: [] });
+      definePlugin({
+        schemas: {
+          // @ts-expect-error — the functions path requires a sourceSchema
+          Opportunity: { toCommon: noop, fromCommon: noop },
+        },
+      });
+    });
+
+    it("rejects a single transform direction (compile-time)", () => {
+      const noop = (): TransformResult<unknown> => ({ result: {}, errors: [] });
+      definePlugin({
+        schemas: {
+          // @ts-expect-error — the functions path requires both toCommon and fromCommon
+          Opportunity: { sourceSchema: z.object({}).passthrough(), toCommon: noop },
+        },
+      });
+    });
+
+    it("validates fromCommon output against the sourceSchema", () => {
+      const sourceSchema = z.object({ native_id: z.string() });
+      const plugin = definePlugin({
+        schemas: {
+          Opportunity: {
+            sourceSchema,
+            toCommon: (): TransformResult<unknown> => ({ result: validOpp, errors: [] }),
+            // Returns a source object missing the required native_id.
+            fromCommon: (): TransformResult<unknown> => ({ result: { wrong: true }, errors: [] }),
+          },
+        },
+      });
+
+      const out = plugin.schemas.Opportunity.fromCommon?.({} as never);
+      expect(out?.errors.length ?? 0).toBeGreaterThan(0);
     });
   });
 
@@ -321,12 +374,16 @@ const autoWireFromCommonMapping = {
   native_title: { field: "title" },
   native_id: { field: "id" },
 };
+// Transform entries require a sourceSchema. The mappings runtime here doesn't use
+// it, so a permissive shape is fine for these tests.
+const autoWireSourceSchema = z.object({}).passthrough();
 
 describe("definePlugin — auto-wiring from mappings", () => {
   it("auto-generates working toCommon/fromCommon from schemas.Opportunity.mappings", () => {
     const plugin = definePlugin({
       schemas: {
         Opportunity: {
+          sourceSchema: autoWireSourceSchema,
           mappings: {
             toCommon: autoWireToCommonMapping,
             fromCommon: autoWireFromCommonMapping,
@@ -361,6 +418,7 @@ describe("definePlugin — auto-wiring from mappings", () => {
       definePlugin({
         schemas: {
           Opportunity: {
+            sourceSchema: autoWireSourceSchema,
             mappings: {
               toCommon: autoWireToCommonMapping,
               fromCommon: autoWireFromCommonMapping,
@@ -385,6 +443,7 @@ describe("definePlugin — auto-wiring from mappings", () => {
       definePlugin({
         schemas: {
           Opportunity: {
+            sourceSchema: autoWireSourceSchema,
             mappings: {
               toCommon: autoWireToCommonMapping,
               fromCommon: autoWireFromCommonMapping,
@@ -402,6 +461,7 @@ describe("definePlugin — auto-wiring from mappings", () => {
       definePlugin({
         schemas: {
           Opportunity: {
+            sourceSchema: autoWireSourceSchema,
             mappings: {
               toCommon: autoWireToCommonMapping,
               // fromCommon intentionally absent
@@ -417,6 +477,7 @@ describe("definePlugin — auto-wiring from mappings", () => {
       definePlugin({
         schemas: {
           Opportunity: {
+            sourceSchema: autoWireSourceSchema,
             mappings: {
               // toCommon intentionally absent
               fromCommon: autoWireFromCommonMapping,
@@ -432,6 +493,7 @@ describe("definePlugin — auto-wiring from mappings", () => {
       definePlugin({
         schemas: {
           Opportunity: {
+            sourceSchema: autoWireSourceSchema,
             mappings: {
               toCommon: { unknownFieldXyz: { field: "data.x" } },
               fromCommon: autoWireFromCommonMapping,

@@ -32,6 +32,7 @@ The `@common-grants/sdk/extensions` module provides TypeScript utilities for wor
   - [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)
   - [Error handling](#error-handling)
 - [Best practices](#best-practices)
+  - [When you need `as const`](#when-you-need-as-const)
   - [Export value schemas alongside your plugin](#export-value-schemas-alongside-your-plugin)
   - [Use `peerDependencies` for `@common-grants/sdk`](#use-peerdependencies-for-common-grantssdk)
   - [Keep plugins focused](#keep-plugins-focused)
@@ -92,7 +93,7 @@ opportunity.customFields?.category?.value; // string
 
 **Key points:**
 
-- Pass `as const` to the specs object so TypeScript can infer literal `fieldType` values and preserve the specific keys.
+- `as const` on the specs is only needed when you assign them to a variable before the call; inline specs are inferred correctly without it. Forgetting it on a hoisted variable is a compile error. See [When you need `as const`](#when-you-need-as-const) for details.
 - If a `value` Zod schema is provided in the spec, the custom field's `value` property is typed according to that schema. Otherwise, a default type is inferred from `fieldType` (e.g. `"string"` -> `string`, `"integer"` -> `number`).
 - Unregistered custom fields still pass through validation but are typed as the base `CustomField` type (with `value: unknown`).
 
@@ -224,7 +225,7 @@ const myPlugin = definePlugin({
 ```
 
 > [!IMPORTANT]
-> Always pass `as const` to the options object for `definePlugin()` (and the specs object for `withCustomFields()`). Without it, TypeScript widens literal types like `"string"` to `string`, which prevents the type system from inferring the correct `value` type for each custom field.
+> Always pass `as const` to the options object for `definePlugin()` (and the specs object for `withCustomFields()`) as a safe default. Without it, TypeScript can widen literal types like `"string"` to `string`, which prevents the type system from inferring the correct `value` type for each custom field. It is strictly required only when you assign the specs to a variable before the call; see [When you need `as const`](#when-you-need-as-const) for the details.
 
 The returned `Plugin` object has two properties:
 
@@ -595,6 +596,38 @@ for (const err of out.errors) {
 
 ## Best practices
 
+### When you need `as const`
+
+**Shortcut:** if you write `fieldType` using the `CustomFieldType` enum (e.g. `CustomFieldType.integer`), you never need `as const`. Enum values are already fixed literals and don't widen. The rest of this section only matters if you type `fieldType` as a raw string literal like `"integer"`.
+
+For raw string literals, `as const` is only required when you assign the specs (or the whole options object) to a **variable** before passing them to `definePlugin()` or `withCustomFields()`. Written **inline** in the call, you don't need it.
+
+**Why:** each spec's `fieldType` needs to stay a literal (`"integer"`, `"string"`) for the type system to work. A raw string literal passed inline is kept literal for you by the function. But stored in a variable first, TypeScript infers the variable's type on its own and widens the raw literal `"integer"` to `string`. A widened `fieldType` can no longer determine the field's `value` type, so `value` falls back to `unknown`. (This only affects fields that rely on the default value type. Fields that pass an explicit `value` schema keep their type either way, but it's simplest to apply `as const` whenever you hoist raw-literal specs. Enum values, as noted above, never widen.)
+
+You typically hoist specs into a variable to reuse them, for example to feed `typeof customFields` into the `ToCommon` / `FromCommon` transform helper types.
+
+```ts
+// OK (inline, no `as const` needed):
+definePlugin({
+  schemas: { Opportunity: { customFields: { legacyId: { fieldType: "integer" } } } },
+});
+
+// Needs `as const` (specs hoisted into a variable):
+const customFields = { legacyId: { fieldType: "integer" } } as const;
+definePlugin({ schemas: { Opportunity: { customFields } } });
+```
+
+If you hoist the specs and forget `as const`, the call still fails to compile. The message is TypeScript's built-in one: the widened `fieldType` (now `string`) is no longer a valid `CustomFieldType`. Adding `as const` resolves it.
+
+```ts
+const customFields = { legacyId: { fieldType: "integer" } }; // no `as const`
+definePlugin({ schemas: { Opportunity: { customFields } } });
+// Error: Type '{ fieldType: string; ... }' is not assignable to type 'CustomFieldSpec'.
+//        Type 'string' is not assignable to type '"string" | "number" | "integer" | ...'.
+```
+
+(Adding `as const` to an inline call is harmless, just unnecessary.)
+
 ### Export value schemas alongside your plugin
 
 When you define Zod schemas for complex `value` fields, export them as named exports from your package. Downstream consumers may need these schemas for use with utilities like `getCustomFieldValue()`:
@@ -688,8 +721,9 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 | [`SchemaOnly`](./types.ts)                           | interface | Compiled output for schema-only entries: `{ commonSchema, sourceSchema? }`. Produced when no transforms are configured.                                                                                                                           |                                                                         |
 | [`SchemaWithTransforms`](./types.ts)                 | interface | Compiled output for entries with transforms: `{ commonSchema, sourceSchema?, toCommon, fromCommon }`. Produced when `mappings` or explicit callables are provided.                                                                                |                                                                         |
 | [`SchemaMappings`](./types.ts)                       | interface | Declarative `{ toCommon?, fromCommon? }` mapping dicts. Stored inside `SchemaInput.mappings`.                                                                                                                                                     |                                                                         |
-| [`ToCommon`](./types.ts)                             | type      | Helper alias for `(source: TSource) => TransformResult<TCommon>`.                                                                                                                                                                                 |                                                                         |
-| [`FromCommon`](./types.ts)                           | type      | Helper alias for `(common: TCommon) => TransformResult<TSource>`.                                                                                                                                                                                 |                                                                         |
+| [`TransformTypes`](./transform-helpers.ts)           | interface | Named argument for `ToCommon` / `FromCommon`: `{ model, sourceSchema, customFields? }`. `model` selects the base schema; the common type is resolved from `customFields`.                                                                         |                                                                         |
+| [`ToCommon`](./transform-helpers.ts)                 | type      | Helper type for a hand-written `toCommon`. Takes a `TransformTypes` arg; `source` is typed from `sourceSchema`, the return checked against the resolved common **input** type.                                                                    |                                                                         |
+| [`FromCommon`](./transform-helpers.ts)               | type      | Helper type for a hand-written `fromCommon`. Takes a `TransformTypes` arg; `common` is the resolved common **output** type, the return the source type.                                                                                           |                                                                         |
 
 ### Shared types
 

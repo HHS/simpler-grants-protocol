@@ -26,13 +26,13 @@ export type {
   SchemaInput,
   SchemaOnly,
   SchemaWithTransforms,
-  ToCommon,
-  FromCommon,
   PluginCapability,
   PluginMeta,
   TransformResult,
 } from "./types";
 export { TransformError } from "./types";
+// Helper types for annotating hand-written toCommon / fromCommon functions.
+export type { ToCommon, FromCommon, TransformTypes } from "./transform-helpers";
 export type { BuiltTransforms } from "./transforms";
 export { buildTransforms } from "./transforms";
 export type { TransformFromMappingOptions } from "../utils/transformation";
