@@ -112,7 +112,7 @@ class OpportunityFields(CustomFieldSet):
 
 
 opportunity_extensions = define_plugin(
-    PluginSchemas(Opportunity=schema(common=Opportunity[OpportunityFields])),
+    PluginSchemas(Opportunity=schema(common_schema=Opportunity[OpportunityFields])),
     meta=PluginMeta(name="opportunity extensions", source_system="hhs"),
 )
 ```
@@ -146,9 +146,9 @@ A plugin bundles custom fields and transforms for the CommonGrants schemas a sou
 
 `schema(...)` builds one schema extension. Its overloads enforce the valid shapes statically and it validates registry membership, custom-field consistency, and mapping output keys at call (import) time:
 
-- **Schema-only** — custom fields, no transforms: `schema(common=Opportunity[Fields])` returns a `SchemaOnly`. It has `parse(...)` but no `to_common`, so consumers cannot transform it.
-- **Mappings** — declarative transforms: `schema(source=Src, common=Opportunity[Fields], mappings={...})` returns a `SchemaWithTransforms`.
-- **Functions** — hand-written transforms: `schema(source=Src, common=Opportunity[Fields], to_common=fn, from_common=fn)` returns a `SchemaWithTransforms`.
+- **Schema-only** — custom fields, no transforms: `schema(common_schema=Opportunity[Fields])` returns a `SchemaOnly`. It has `parse(...)` but no `to_common`, so consumers cannot transform it.
+- **Mappings** — declarative transforms: `schema(source_schema=Src, common_schema=Opportunity[Fields], mappings={...})` returns a `SchemaWithTransforms`.
+- **Functions** — hand-written transforms: `schema(source_schema=Src, common_schema=Opportunity[Fields], to_common=fn, from_common=fn)` returns a `SchemaWithTransforms`.
 
 `common` must be a registered extensible schema (`Opportunity[...]`); an unregistered base raises `PluginDefinitionError`.
 
@@ -158,7 +158,7 @@ A plugin bundles custom fields and transforms for the CommonGrants schemas a sou
 
 ```python
 plugin = define_plugin(
-    PluginSchemas(Opportunity=schema(common=Opportunity[OpportunityFields])),
+    PluginSchemas(Opportunity=schema(common_schema=Opportunity[OpportunityFields])),
     meta=PluginMeta(name="my-system", source_system="my-system.example.gov"),
 )
 ```
@@ -213,8 +213,8 @@ from common_grants_sdk.extensions import PassthroughModel, schema
 from common_grants_sdk.schemas.pydantic.models import Opportunity
 
 ext = schema(
-    source=PassthroughModel,
-    common=Opportunity[OpportunityFields],
+    source_schema=PassthroughModel,
+    common_schema=Opportunity[OpportunityFields],
     mappings={
         "to_common": {
             "id": {"field": "opportunity_uuid"},
@@ -272,8 +272,8 @@ def from_common(common: Opportunity[OpportunityFields]) -> TransformResult[Grant
 
 
 ext = schema(
-    source=GrantsGovOpportunity,
-    common=Opportunity[OpportunityFields],
+    source_schema=GrantsGovOpportunity,
+    common_schema=Opportunity[OpportunityFields],
     to_common=to_common,
     from_common=from_common,
 )

@@ -7,7 +7,7 @@ source of truth for custom fields: ``field_type`` is derived from ``V``. A plugi
 just the ``Plugin`` ``define_plugin`` returns, so each scenario is a self-contained
 plugin in this one file.
 
-Run the consumer side with ``poetry run python examples/scenarios.py``.
+Run the consumer side with ``poetry run python examples/plugins.py``.
 """
 
 from __future__ import annotations
@@ -89,8 +89,8 @@ class GrantsGovFields(CustomFieldSet):
 mappings_plugin = define_plugin(
     PluginSchemas(
         Opportunity=schema(
-            source=PassthroughModel,
-            common=Opportunity[AgencyFields],
+            source_schema=PassthroughModel,
+            common_schema=Opportunity[AgencyFields],
             mappings={
                 "to_common": {
                     "id": {"field": "opportunity_uuid"},
@@ -192,8 +192,8 @@ def gadget_from_common(
 functions_plugin = define_plugin(
     PluginSchemas(
         Opportunity=schema(
-            source=GrantsGovOpportunity,
-            common=Opportunity[AgencyFields],
+            source_schema=GrantsGovOpportunity,
+            common_schema=Opportunity[AgencyFields],
             to_common=gadget_to_common,
             from_common=gadget_from_common,
         )
@@ -207,8 +207,8 @@ functions_plugin = define_plugin(
 base_plugin = define_plugin(
     PluginSchemas(
         Opportunity=schema(
-            source=PassthroughModel,
-            common=Opportunity[NoCustomFields],
+            source_schema=PassthroughModel,
+            common_schema=Opportunity[NoCustomFields],
             mappings={
                 "to_common": {
                     "id": {"field": "opportunity_uuid"},
@@ -241,7 +241,7 @@ base_plugin = define_plugin(
 # --- Scenario 4: custom fields only, no transforms ----------------------------
 
 opportunity_extensions = define_plugin(
-    PluginSchemas(Opportunity=schema(common=Opportunity[ExtensionFields])),
+    PluginSchemas(Opportunity=schema(common_schema=Opportunity[ExtensionFields])),
     meta=PluginMeta(name="opportunity extensions", source_system="hhs"),
 )
 
@@ -372,8 +372,8 @@ gg_from_common = cast(
 grants_gov = define_plugin(
     PluginSchemas(
         Opportunity=schema(
-            source=PassthroughModel,
-            common=Opportunity[GrantsGovFields],
+            source_schema=PassthroughModel,
+            common_schema=Opportunity[GrantsGovFields],
             to_common=gg_to_common,
             from_common=gg_from_common,
         )

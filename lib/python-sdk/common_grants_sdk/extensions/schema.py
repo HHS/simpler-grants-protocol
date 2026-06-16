@@ -294,22 +294,22 @@ class SchemaOnly(Generic[TCommon]):
 
 @overload
 def schema(
-    *, source: type[TSource], common: type[TCommon], mappings: Mappings
+    *, source_schema: type[TSource], common_schema: type[TCommon], mappings: Mappings
 ) -> SchemaWithTransforms[TSource, TCommon]: ...
 @overload
 def schema(
     *,
-    source: type[TSource],
-    common: type[TCommon],
+    source_schema: type[TSource],
+    common_schema: type[TCommon],
     to_common: Callable[[TSource], TransformResult[TCommon]],
     from_common: Callable[[TCommon], TransformResult[TSource]],
 ) -> SchemaWithTransforms[TSource, TCommon]: ...
 @overload
-def schema(*, common: type[TCommon]) -> SchemaOnly[TCommon]: ...
+def schema(*, common_schema: type[TCommon]) -> SchemaOnly[TCommon]: ...
 def schema(
     *,
-    source: Any = None,
-    common: Any,
+    source_schema: Any = None,
+    common_schema: Any,
     mappings: Optional[Mappings] = None,
     to_common: Any = None,
     from_common: Any = None,
@@ -317,15 +317,15 @@ def schema(
     """Build a schema extension. The overloads enforce, statically:
 
     - ``mappings`` XOR hand-written ``to_common`` / ``from_common`` (both = no match),
-    - a ``source`` is required whenever transforms are present,
-    - a schema-only entry (``common`` only) returns a ``SchemaOnly`` whose
+    - a ``source_schema`` is required whenever transforms are present,
+    - a schema-only entry (``common_schema`` only) returns a ``SchemaOnly`` whose
       type has no ``to_common`` (so consumers cannot transform it).
 
     Registry membership, custom-field consistency, and mapping output keys are
     validated here at call (import) time, aggregated into one ``PluginDefinitionError``.
     """
     errors: list[str] = []
-    common_origin, custom_fields_model = _resolve_common(common)
+    common_origin, custom_fields_model = _resolve_common(common_schema)
 
     schema_name = _BASE_TO_NAME.get(common_origin)
     if schema_name is None:
@@ -349,23 +349,25 @@ def schema(
         for direction in ("to_common", "from_common"):
             if direction not in mappings:
                 errors.append(f"mappings: missing `{direction}` direction")
-        if "to_common" in mappings and _is_model_class(common):
-            unknown = set(mappings["to_common"]) - _output_field_names(common)
+        if "to_common" in mappings and _is_model_class(common_schema):
+            unknown = set(mappings["to_common"]) - _output_field_names(common_schema)
             if unknown:
                 errors.append(
                     f"mappings.to_common: unknown output field(s) {sorted(unknown)} "
-                    f"for {common.__name__}"
+                    f"for {common_schema.__name__}"
                 )
         if (
             "from_common" in mappings
-            and _is_model_class(source)
-            and not _accepts_arbitrary_keys(source)
+            and _is_model_class(source_schema)
+            and not _accepts_arbitrary_keys(source_schema)
         ):
-            unknown_src = set(mappings["from_common"]) - _output_field_names(source)
+            unknown_src = set(mappings["from_common"]) - _output_field_names(
+                source_schema
+            )
             if unknown_src:
                 errors.append(
                     f"mappings.from_common: unknown source field(s) "
-                    f"{sorted(unknown_src)} for {source.__name__}"
+                    f"{sorted(unknown_src)} for {source_schema.__name__}"
                 )
 
     if errors:
@@ -380,14 +382,19 @@ def schema(
         to_fn, from_fn = build_transforms(
             mappings["to_common"],
             mappings["from_common"],
-            common_schema=common,
-            source_schema=source,
+            common_schema=common_schema,
+            source_schema=source_schema,
         )
         return SchemaWithTransforms(
-            schema_name, common, custom_fields, source, to_fn, from_fn
+            schema_name, common_schema, custom_fields, source_schema, to_fn, from_fn
         )
     if to_common is not None:
         return SchemaWithTransforms(
-            schema_name, common, custom_fields, source, to_common, from_common
+            schema_name,
+            common_schema,
+            custom_fields,
+            source_schema,
+            to_common,
+            from_common,
         )
-    return SchemaOnly(schema_name, common, custom_fields)
+    return SchemaOnly(schema_name, common_schema, custom_fields)

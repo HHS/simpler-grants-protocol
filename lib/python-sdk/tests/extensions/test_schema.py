@@ -51,8 +51,8 @@ def _mappings_extension() -> (
     SchemaWithTransforms[PassthroughModel, Opportunity[OpportunityFields]]
 ):
     return schema(
-        source=PassthroughModel,
-        common=Opportunity[OpportunityFields],
+        source_schema=PassthroughModel,
+        common_schema=Opportunity[OpportunityFields],
         mappings={
             "to_common": {
                 "id": {"field": "opportunity_uuid"},
@@ -124,7 +124,7 @@ def test_resolve_custom_field_specs_empty_for_no_container():
 
 
 def test_schema_only_returns_schema_only_extension():
-    ext = schema(common=Opportunity[OpportunityFields])
+    ext = schema(common_schema=Opportunity[OpportunityFields])
     assert isinstance(ext, SchemaOnly)
     assert ext.schema_name == "Opportunity"
     assert not hasattr(ext, "to_common")
@@ -161,8 +161,8 @@ def test_functions_returns_transform_extension():
         return TransformResult(result=PassthroughModel(), errors=[])
 
     ext = schema(
-        source=PassthroughModel,
-        common=Opportunity[NoCustomFields],
+        source_schema=PassthroughModel,
+        common_schema=Opportunity[NoCustomFields],
         to_common=to_common,
         from_common=from_common,
     )
@@ -181,7 +181,7 @@ def test_unregistered_base_raises():
     with pytest.raises(
         PluginDefinitionError, match="not a registered extensible schema"
     ):
-        schema(common=NotRegistered)
+        schema(common_schema=NotRegistered)
 
 
 def test_unextended_base_class_is_not_registered():
@@ -189,14 +189,14 @@ def test_unextended_base_class_is_not_registered():
     with pytest.raises(
         PluginDefinitionError, match="not a registered extensible schema"
     ):
-        schema(common=OpportunityBase)
+        schema(common_schema=OpportunityBase)
 
 
 def test_unknown_to_common_output_field_raises():
     with pytest.raises(PluginDefinitionError, match="unknown output field"):
         schema(
-            source=PassthroughModel,
-            common=Opportunity[NoCustomFields],
+            source_schema=PassthroughModel,
+            common_schema=Opportunity[NoCustomFields],
             mappings={
                 "to_common": {"nope": {"const": 1}},
                 "from_common": {},
@@ -207,8 +207,8 @@ def test_unknown_to_common_output_field_raises():
 def test_missing_mapping_direction_raises():
     with pytest.raises(PluginDefinitionError, match="missing `from_common`"):
         schema(
-            source=PassthroughModel,
-            common=Opportunity[NoCustomFields],
+            source_schema=PassthroughModel,
+            common_schema=Opportunity[NoCustomFields],
             mappings={"to_common": {"title": {"field": "x"}}},  # type: ignore[typeddict-item]
         )
 
@@ -235,7 +235,7 @@ def test_mappings_consumer_typed_and_round_trips() -> None:
 
 
 def test_schema_only_parse_typed() -> None:
-    ext = schema(common=Opportunity[OpportunityFields])
+    ext = schema(common_schema=Opportunity[OpportunityFields])
     parsed = ext.parse(
         {
             "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",

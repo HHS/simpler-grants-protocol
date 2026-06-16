@@ -38,7 +38,7 @@ def _meta() -> PluginMeta:
 
 
 def test_define_plugin_returns_plugin_with_schemas_and_meta():
-    ext = schema(common=Opportunity[OpportunityFields])
+    ext = schema(common_schema=Opportunity[OpportunityFields])
     plugin = define_plugin(PluginSchemas(Opportunity=ext), meta=_meta())
     assert isinstance(plugin, Plugin)
     assert plugin.schemas.Opportunity is ext
@@ -59,8 +59,8 @@ def test_omitted_schema_falls_back_to_base_schema_only_extension():
 
 def test_mappings_entry_is_a_transform_extension():
     ext = schema(
-        source=PassthroughModel,
-        common=Opportunity[NoCustomFields],
+        source_schema=PassthroughModel,
+        common_schema=Opportunity[NoCustomFields],
         mappings={
             "to_common": {"title": {"field": "opportunity_title"}},
             "from_common": {"opportunity_title": {"field": "title"}},

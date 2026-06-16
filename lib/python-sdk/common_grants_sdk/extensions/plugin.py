@@ -50,7 +50,7 @@ class PluginSchemas(Generic[_TOpportunity]):
 
     Opportunity: _TOpportunity = field(
         default_factory=lambda: cast(
-            _TOpportunity, schema(common=Opportunity[NoCustomFields])
+            _TOpportunity, schema(common_schema=Opportunity[NoCustomFields])
         )
     )
 
