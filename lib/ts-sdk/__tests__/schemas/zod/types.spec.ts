@@ -163,11 +163,16 @@ describe("ISODate Schema", () => {
     await expectZodMatchesJsonSchema(ISODateSchema, jsonSchemaId);
   });
 
+  it("accepts a Date object (normalized to YYYY-MM-DD, then parsed back to a Date)", () => {
+    const parsed = ISODateSchema.parse(new Date("2025-01-15T12:00:00Z"));
+    expect(parsed).toBeInstanceOf(Date);
+    expect(parsed.getUTCFullYear()).toBe(2025);
+    expect(parsed.getUTCDate()).toBe(15);
+  });
+
   it("should raise an error for an invalid ISODate", () => {
     // Must be in YYYY-MM-DD format
     expect(() => ISODateSchema.parse("01-01-2025")).toThrow();
-    // Must be a string, not a Date object
-    expect(() => ISODateSchema.parse(new Date())).toThrow();
     // Invalid date format
     expect(() => ISODateSchema.parse("not-a-date")).toThrow();
     // Missing parts
@@ -318,11 +323,13 @@ describe("OffsetDateTime Schema", () => {
     expect(withMsOffset2.getUTCHours()).toBe(20); // 12:00 + 8 hours = 20:00 UTC
   });
 
+  it("accepts a Date object (normalized to an ISO string, then parsed back to a Date)", () => {
+    expect(OffsetDateTimeSchema.parse(new Date("2025-01-01T00:00:00Z"))).toBeInstanceOf(Date);
+  });
+
   it("should raise an error for an invalid OffsetDateTime", () => {
     // Must be a valid ISO datetime string
     expect(() => OffsetDateTimeSchema.parse("not-a-datetime")).toThrow();
-    // Must be a string, not a Date object
-    expect(() => OffsetDateTimeSchema.parse(new Date())).toThrow();
     // Invalid datetime format (missing time)
     expect(() => OffsetDateTimeSchema.parse("2025-01-01")).toThrow();
     // Missing timezone

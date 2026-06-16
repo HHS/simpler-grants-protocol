@@ -109,7 +109,7 @@ describe("switchOnValue", () => {
     // which let a typo'd mapping like `{ match: "literal-where-spec-belongs" }`
     // produce missing fields with no error trail. New contract: throw, so the
     // walker wraps as `HandlerError` and the boundary materializes a
-    // `PluginError` with `handler: "match"`.
+    // `TransformError` with `handler: "match"`.
     expect(() => switchOnValue({ status: "posted" }, "garbage")).toThrow(/spec must be an object/);
     expect(() => switchOnValue({ status: "posted" }, null)).toThrow(/spec must be an object/);
     expect(() => switchOnValue({ status: "posted" }, 42)).toThrow(/spec must be an object/);
