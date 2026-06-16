@@ -170,6 +170,14 @@ describe("ISODate Schema", () => {
     expect(parsed.getUTCDate()).toBe(15);
   });
 
+  it("returns a validation error (not a thrown RangeError) for an invalid Date", () => {
+    // Regression: an Invalid Date is still `instanceof Date`, so toISOString()
+    // throws a RangeError inside preprocess that escapes safeParse. The guard
+    // routes an invalid Date to the string validator so safeParse stays total.
+    expect(() => ISODateSchema.safeParse(new Date("not a date"))).not.toThrow();
+    expect(ISODateSchema.safeParse(new Date("not a date")).success).toBe(false);
+  });
+
   it("should raise an error for an invalid ISODate", () => {
     // Must be in YYYY-MM-DD format
     expect(() => ISODateSchema.parse("01-01-2025")).toThrow();
@@ -325,6 +333,11 @@ describe("OffsetDateTime Schema", () => {
 
   it("accepts a Date object (normalized to an ISO string, then parsed back to a Date)", () => {
     expect(OffsetDateTimeSchema.parse(new Date("2025-01-01T00:00:00Z"))).toBeInstanceOf(Date);
+  });
+
+  it("returns a validation error (not a thrown RangeError) for an invalid Date", () => {
+    expect(() => OffsetDateTimeSchema.safeParse(new Date("not a date"))).not.toThrow();
+    expect(OffsetDateTimeSchema.safeParse(new Date("not a date")).success).toBe(false);
   });
 
   it("should raise an error for an invalid OffsetDateTime", () => {
