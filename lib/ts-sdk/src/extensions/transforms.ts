@@ -159,7 +159,7 @@ export interface BuiltTransforms<TSource, TCommon> {
  *
  * - Handler failures (a registered handler throws): the mapping walk
  *   short-circuits on the first failure, so `errors` carries exactly one
- *   `PluginError` even when several fields would have failed.
+ *   `TransformError` even when several fields would have failed.
  * - Zod-validation failures (`commonSchema` or `sourceSchema` provided): every
  *   `ZodIssue` is flattened into a separate `TransformError`, so `errors` carries
  *   the full set.
