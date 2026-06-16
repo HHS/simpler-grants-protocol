@@ -17,7 +17,7 @@ from common_grants_sdk.extensions.filters import (
     validate_routes,
 )
 from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
-from common_grants_sdk.extensions.types import PluginError
+from common_grants_sdk.extensions.types import FilterError
 from common_grants_sdk.schemas.pydantic.filters.opportunity import OppFilters
 
 # ---------------------------------------------------------------------------
@@ -215,23 +215,23 @@ def test_oppfilters_mixed_case_roundtrip():
 
 
 # ---------------------------------------------------------------------------
-# Registration-time validation (validate_routes) — RAISES PluginError
+# Registration-time validation (validate_routes) — RAISES FilterError
 # ---------------------------------------------------------------------------
 
 
 def test_validate_routes_unknown_filter_type_raises():
-    """validate_routes raises PluginError when filter_type is not in FILTER_TYPE_SCHEMAS."""
+    """validate_routes raises FilterError when filter_type is not in FILTER_TYPE_SCHEMAS."""
     # Dataclasses don't validate field types at runtime, so a bogus filter_type
     # can be passed directly (the annotation is for type checkers only).
     bad_spec = CustomFilterSpec(filter_type="unknownType")  # type: ignore[arg-type]
 
     routes = {"opportunities": {"search": {"filters": {"myFilter": bad_spec}}}}
-    with pytest.raises(PluginError, match="Unknown filter_type"):
+    with pytest.raises(FilterError, match="Unknown filter_type"):
         validate_routes(routes)
 
 
 def test_validate_routes_collision_with_default_filter_name_raises():
-    """validate_routes raises PluginError when a custom filter name collides with a CORE DEFAULT name.
+    """validate_routes raises FilterError when a custom filter name collides with a CORE DEFAULT name.
 
     This is the escape-hatch collision check. E.g. naming a custom filter "status"
     would shadow the core default "status" field — must be caught at registration time.
@@ -248,12 +248,12 @@ def test_validate_routes_collision_with_default_filter_name_raises():
             }
         }
     }
-    with pytest.raises(PluginError, match="collides"):
+    with pytest.raises(FilterError, match="collides"):
         validate_routes(routes)
 
 
 def test_validate_routes_collision_with_camel_alias_raises():
-    """validate_routes raises PluginError for camelCase alias collision (e.g. "closeDateRange")."""
+    """validate_routes raises FilterError for camelCase alias collision (e.g. "closeDateRange")."""
     routes = {
         "opportunities": {
             "search": {
@@ -266,7 +266,7 @@ def test_validate_routes_collision_with_camel_alias_raises():
             }
         }
     }
-    with pytest.raises(PluginError, match="collides"):
+    with pytest.raises(FilterError, match="collides"):
         validate_routes(routes)
 
 
@@ -277,27 +277,27 @@ def test_validate_routes_valid_routes_do_not_raise():
 
 
 # ---------------------------------------------------------------------------
-# Call-time validation (validate_filter_call) — RAISES PluginError
+# Call-time validation (validate_filter_call) — RAISES FilterError
 # ---------------------------------------------------------------------------
 
 
 def test_validate_filter_call_registered_bad_operator_raises():
-    """validate_filter_call raises PluginError when a registered filter has an operator/value mismatch."""
+    """validate_filter_call raises FilterError when a registered filter has an operator/value mismatch."""
     # AGENCY_SPEC is STRING_ARRAY — an "eq" with a scalar value is wrong for StringArrayFilter
     bad_filter = f.eq("not-an-array")
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         validate_filter_call(AGENCY_SPEC, "agency", bad_filter)
 
 
 def test_validate_filter_call_adhoc_invalid_shape_raises():
-    """validate_filter_call raises PluginError when an ad-hoc filter has an invalid DefaultFilter shape."""
+    """validate_filter_call raises FilterError when an ad-hoc filter has an invalid DefaultFilter shape."""
 
     # Pass None as spec (ad-hoc), with something that isn't a DefaultFilter
     class _BadShape:
         operator = "not_a_real_operator"
         value = object()  # not a valid value type
 
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         validate_filter_call(None, "legacyTag", _BadShape())  # type: ignore[arg-type]
 
 
@@ -322,21 +322,21 @@ def test_validate_filter_call_money_comparison_passes_valid_money():
 
 
 def test_validate_filter_call_money_comparison_rejects_array_operator():
-    """A registered moneyComparison filter raises PluginError for an array operator."""
+    """A registered moneyComparison filter raises FilterError for an array operator."""
     spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         validate_filter_call(
             spec, "awardFloor", f.in_([{"amount": "1000000", "currency": "USD"}])
         )
 
 
 def test_validate_filter_call_money_comparison_rejects_numeric_amount():
-    """A registered moneyComparison filter raises PluginError for a numeric amount.
+    """A registered moneyComparison filter raises FilterError for a numeric amount.
 
     Money.amount is a DecimalString — a raw number is the wrong shape.
     """
     spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         validate_filter_call(
             spec, "awardFloor", f.gt({"amount": 1000.5, "currency": "USD"})
         )
@@ -356,22 +356,22 @@ def test_validate_filter_call_money_range_passes_valid_range():
 
 
 def test_validate_filter_call_money_range_rejects_comparison_operator():
-    """A registered moneyRange filter raises PluginError for a comparison operator."""
+    """A registered moneyRange filter raises FilterError for a comparison operator."""
     spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_RANGE)
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         validate_filter_call(
             spec, "awardRange", f.gt({"amount": "10000", "currency": "USD"})
         )
 
 
 def test_classify_default_wrong_shape_raises_plugin_error():
-    """A wrong-shaped DEFAULT filter raises PluginError, not a raw pydantic ValidationError.
+    """A wrong-shaped DEFAULT filter raises FilterError, not a raw pydantic ValidationError.
 
     "status" is a StringArrayFilter (ArrayOperator + list[str]); f.eq("open") is an
     equivalence filter. The error contract must be uniform across all three buckets:
-    consumers following the documented `except PluginError` pattern must catch this.
+    consumers following the documented `except FilterError` pattern must catch this.
     """
-    with pytest.raises(PluginError) as exc_info:
+    with pytest.raises(FilterError) as exc_info:
         classify_filters(
             SAMPLE_ROUTES, "opportunities", "search", {"status": f.eq("open")}
         )
@@ -388,17 +388,17 @@ def test_validate_filter_call_integer_comparison_validates_as_number():
     """
     spec = CustomFilterSpec(filter_type=CustomFilterType.INTEGER_COMPARISON)
     validate_filter_call(spec, "awardCount", f.gt(100))
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         validate_filter_call(spec, "awardCount", f.gt("not a number"))
 
 
 def test_classify_default_camel_alias_wrong_shape_raises_plugin_error():
-    """A wrong-shaped default filter via its camelCase alias also raises PluginError.
+    """A wrong-shaped default filter via its camelCase alias also raises FilterError.
 
     "closeDateRange" is a DateRangeFilter; f.eq("2026-01-01") is an equivalence
-    filter — the alias normalization path must surface the same PluginError.
+    filter — the alias normalization path must surface the same FilterError.
     """
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         classify_filters(
             SAMPLE_ROUTES,
             "opportunities",
@@ -462,7 +462,7 @@ def test_number_comparison_registered_filter_rejects_bool():
     lax-coerces True -> 1 and the wire silently carries a number for a
     boolean — the corruption class the DefaultFilter.value widening fixed.
     """
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         classify_filters(
             WIRE_ROUTES, "opportunities", "search", {"awardCount": f.eq(True)}
         )
@@ -478,18 +478,18 @@ def test_mutated_adhoc_instance_is_revalidated_and_raises():
     """
     flt = f.eq("x")
     flt.operator = "bogus"  # type: ignore[assignment]
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         classify_filters(SAMPLE_ROUTES, "opportunities", "search", {"legacy": flt})
 
 
 def test_unknown_filter_type_raises_plugin_error_not_key_error():
-    """A spec whose filter_type never passed validate_routes raises PluginError.
+    """A spec whose filter_type never passed validate_routes raises FilterError.
 
     The uniform error contract holds even when registration-time validation was
-    skipped — consumers catching `except PluginError` must not see a KeyError.
+    skipped — consumers catching `except FilterError` must not see a KeyError.
     """
     spec = CustomFilterSpec(filter_type="bogusType")  # type: ignore[arg-type]
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         validate_filter_call(spec, "x", f.eq(1))
 
 
@@ -521,7 +521,7 @@ def test_classify_default_snake_form_of_aliased_key_normalizes_to_alias():
 
 
 def test_classify_both_forms_of_same_default_filter_raises():
-    """Supplying snake AND camel forms of one default filter raises PluginError.
+    """Supplying snake AND camel forms of one default filter raises FilterError.
 
     Both keys normalize to "closeDateRange"; without the guard, dict
     assignment silently drops whichever range the consumer's dict ordered
@@ -531,7 +531,7 @@ def test_classify_both_forms_of_same_default_filter_raises():
         "close_date_range": f.between("2026-01-01", "2026-06-30"),
         "closeDateRange": f.between("2026-07-01", "2026-12-31"),
     }
-    with pytest.raises(PluginError, match="more than once") as exc_info:
+    with pytest.raises(FilterError, match="more than once") as exc_info:
         classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
     assert exc_info.value.path == "filters.closeDateRange"
 
@@ -558,7 +558,7 @@ def test_classify_unmatched_route_treats_registered_name_as_adhoc(resource, meth
     assert result.custom_filters["agency"].value == "NSF"
 
     # ...and the same filter via the declared pair IS spec-validated and rejected
-    with pytest.raises(PluginError):
+    with pytest.raises(FilterError):
         classify_filters(
             SAMPLE_ROUTES, "opportunities", "search", {"agency": f.eq("NSF")}
         )
@@ -604,20 +604,20 @@ def test_filter_type_schemas_covers_every_custom_filter_type():
 
 
 def test_plugin_error_path_is_uniform_across_buckets():
-    """All three buckets raise PluginError with a filters.<name> path."""
-    with pytest.raises(PluginError) as exc1:
+    """All three buckets raise FilterError with a filters.<name> path."""
+    with pytest.raises(FilterError) as exc1:
         classify_filters(
             SAMPLE_ROUTES, "opportunities", "search", {"status": f.eq("open")}
         )
     assert exc1.value.path == "filters.status"
 
-    with pytest.raises(PluginError) as exc2:
+    with pytest.raises(FilterError) as exc2:
         classify_filters(
             SAMPLE_ROUTES, "opportunities", "search", {"agency": f.eq("NSF")}
         )
     assert exc2.value.path == "filters.agency"
 
-    with pytest.raises(PluginError) as exc3:
+    with pytest.raises(FilterError) as exc3:
         classify_filters(
             SAMPLE_ROUTES, "opportunities", "search", {"adhoc": {"operator": "bogus"}}
         )
@@ -626,7 +626,7 @@ def test_plugin_error_path_is_uniform_across_buckets():
 
 def test_multiple_failing_defaults_use_collective_path():
     """Two failing default filters produce the collective path "filters"."""
-    with pytest.raises(PluginError) as exc_info:
+    with pytest.raises(FilterError) as exc_info:
         classify_filters(
             SAMPLE_ROUTES,
             "opportunities",

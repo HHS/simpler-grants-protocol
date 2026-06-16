@@ -4,9 +4,9 @@ Provides:
 - ``f`` helper singleton for building DefaultFilter instances.
 - ``FILTER_TYPE_SCHEMAS`` — map from CustomFilterType to the Pydantic validation model.
 - ``DEFAULT_FILTER_NAMES`` — frozenset of all core default-filter field names (snake + alias).
-- ``validate_routes(routes)`` — registration-time validator; raises PluginError.
+- ``validate_routes(routes)`` — registration-time validator; raises FilterError.
 - ``validate_filter_call(spec, filter_name, value)`` — call-time validator; returns the
-  wire-ready DefaultFilter; raises PluginError.
+  wire-ready DefaultFilter; raises FilterError.
 - ``classify_filters(routes, resource, method, consumer_filters)`` — classifier producing
   the ``OppFilters`` search request body (default named fields + ``customFilters``).
 
@@ -53,7 +53,7 @@ from common_grants_sdk.schemas.pydantic.filters.string import (
 )
 
 from .specs import CustomFilterSpec, CustomFilterType
-from .types import PluginError, PluginRoutes
+from .types import FilterError, PluginRoutes
 
 # ---------------------------------------------------------------------------
 # f.* helpers
@@ -204,7 +204,7 @@ _SNAKE_TO_ALIAS: dict[str, str] = {
 def validate_routes(routes: PluginRoutes) -> None:
     """Registration-time validator for a plugin's route filter declarations.
 
-    Iterates every filter spec in ``routes`` and raises ``PluginError`` on:
+    Iterates every filter spec in ``routes`` and raises ``FilterError`` on:
     1. Unknown ``filter_type`` (not in ``FILTER_TYPE_SCHEMAS``).
     2. Filter name that collides with a core default-filter name in
        ``DEFAULT_FILTER_NAMES`` (the escape-hatch collision check; a namespaced
@@ -221,7 +221,7 @@ def validate_routes(routes: PluginRoutes) -> None:
         routes: Route-keyed filter declarations as ``PluginRoutes``.
 
     Raises:
-        PluginError: On the first invalid declaration found.
+        FilterError: On the first invalid declaration found.
     """
     for resource, methods in routes.items():
         for method, declarations in methods.items():
@@ -231,13 +231,13 @@ def validate_routes(routes: PluginRoutes) -> None:
             for filter_name, spec in filter_specs.items():
                 path = f"routes.{resource}.{method}.filters.{filter_name}"
                 if spec.filter_type not in FILTER_TYPE_SCHEMAS:
-                    raise PluginError(
+                    raise FilterError(
                         f'Unknown filter_type "{spec.filter_type}" for filter "{filter_name}"',
                         path=path,
                         source_value=spec,
                     )
                 if filter_name in DEFAULT_FILTER_NAMES:
-                    raise PluginError(
+                    raise FilterError(
                         f'Filter name "{filter_name}" collides with a default filter name',
                         path=path,
                         source_value=filter_name,
@@ -245,7 +245,7 @@ def validate_routes(routes: PluginRoutes) -> None:
 
 
 def _first_error_detail(exc: ValidationError) -> str:
-    """One-line summary of the first pydantic error, for PluginError messages.
+    """One-line summary of the first pydantic error, for FilterError messages.
 
     The full ValidationError stays on ``cause`` for programmatic access; this
     puts the most useful line in ``str(exc)`` so a logged message says what
@@ -281,14 +281,14 @@ def validate_filter_call(
 
     Args:
         spec: The registered ``CustomFilterSpec`` for this filter, or ``None`` for ad-hoc.
-        filter_name: The filter name (used in PluginError path).
+        filter_name: The filter name (used in FilterError path).
         value: The filter value to validate (typically a ``DefaultFilter`` instance).
 
     Returns:
         The validated filter as a ``DefaultFilter`` with coerced operator/value.
 
     Raises:
-        PluginError: On operator/value-shape mismatch (wrapping the pydantic
+        FilterError: On operator/value-shape mismatch (wrapping the pydantic
             ``ValidationError`` as ``cause``), or on a ``spec.filter_type`` not
             present in ``FILTER_TYPE_SCHEMAS`` — call ``validate_routes(routes)``
             at registration time to catch the latter earlier.
@@ -297,7 +297,7 @@ def validate_filter_call(
     if spec is not None:
         model_cls = FILTER_TYPE_SCHEMAS.get(spec.filter_type)
         if model_cls is None:
-            raise PluginError(
+            raise FilterError(
                 f'Unknown filter_type "{spec.filter_type}" for filter '
                 f'"{filter_name}" — call validate_routes(routes) at '
                 "registration time to catch this earlier",
@@ -307,7 +307,7 @@ def validate_filter_call(
         try:
             validated = model_cls.model_validate(payload)
         except ValidationError as exc:
-            raise PluginError(
+            raise FilterError(
                 f'Filter "{filter_name}" failed validation: '
                 f"{exc.error_count()} error(s); first: {_first_error_detail(exc)}",
                 path=f"filters.{filter_name}",
@@ -322,7 +322,7 @@ def validate_filter_call(
     try:
         return DefaultFilter.model_validate(payload)
     except ValidationError as exc:
-        raise PluginError(
+        raise FilterError(
             f'Ad-hoc filter "{filter_name}" has an invalid DefaultFilter shape: '
             f"{exc.error_count()} error(s); first: {_first_error_detail(exc)}",
             path=f"filters.{filter_name}",
@@ -390,7 +390,7 @@ def classify_filters(
         mode (operator enums are ``StrEnum`` and serialize fine either way).
 
     Raises:
-        PluginError: When any filter value fails validation — registered and ad-hoc
+        FilterError: When any filter value fails validation — registered and ad-hoc
             values at classification time, default values at ``OppFilters``
             construction — or when the snake_case and camelCase forms of the same
             default filter are both supplied. The error surface is uniform across
@@ -420,7 +420,7 @@ def classify_filters(
                 # Snake and camel forms of the same field normalize to one key;
                 # without this guard, plain dict assignment would silently drop
                 # whichever form the consumer's dict ordered first.
-                raise PluginError(
+                raise FilterError(
                     f'Default filter "{alias_key}" was supplied more than once '
                     "(snake_case and camelCase forms of the same filter)",
                     path=f"filters.{alias_key}",
@@ -439,8 +439,8 @@ def classify_filters(
     # OppFilters requires the alias form for construction (populate_by_name is not set).
     # Use "customFilters" (the alias) rather than "custom_filters" (the field name).
     # This construction is the validation point for bucket-1 (default) values — wrap
-    # pydantic failures in PluginError so the error contract is uniform across all
-    # three buckets (consumers catch `except PluginError` regardless of bucket).
+    # pydantic failures in FilterError so the error contract is uniform across all
+    # three buckets (consumers catch `except FilterError` regardless of bucket).
     try:
         return OppFilters(
             **default_fields,
@@ -453,7 +453,7 @@ def classify_filters(
         # values were already validated above, so only default fields fail here.
         failed = sorted({str(err["loc"][0]) for err in exc.errors() if err.get("loc")})
         field_list = ", ".join(failed) if failed else "<unknown>"
-        raise PluginError(
+        raise FilterError(
             f"Filter(s) {field_list} failed validation: "
             f"{exc.error_count()} error(s); first: {_first_error_detail(exc)}",
             path=f"filters.{failed[0]}" if len(failed) == 1 else "filters",

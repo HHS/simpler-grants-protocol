@@ -18,7 +18,7 @@ import json
 
 from common_grants_sdk.extensions import classify_filters, define_plugin, f
 from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
-from common_grants_sdk.extensions.types import PluginError, PluginExtensionsMeta
+from common_grants_sdk.extensions.types import FilterError, PluginExtensionsMeta
 
 # ---------------------------------------------------------------------------
 # Plugin declaration — route-keyed custom filter specs
@@ -99,8 +99,8 @@ def main() -> None:
         )
     )
 
-    # --- PluginError demo — bad call raises and is caught ---
-    _section("VALIDATION — bad operator raises PluginError (runtime guarantee)")
+    # --- FilterError demo — bad call raises and is caught ---
+    _section("VALIDATION — bad operator raises FilterError (runtime guarantee)")
 
     # agency is registered as STRING_ARRAY (expects ArrayOperator: in/notIn).
     # Passing f.eq(...) (EquivalenceOperator.EQUAL) triggers call-time validation failure.
@@ -111,11 +111,11 @@ def main() -> None:
     }
     try:
         classify_filters(grants_gov.routes, "opportunities", "search", bad_filters)
-    except PluginError as exc:
+    except FilterError as exc:
         # str(exc) summarizes the first failure; the structured fields carry
         # the full detail — exc.path names the failing filter, exc.cause is
         # the underlying pydantic ValidationError for programmatic access.
-        print(f"PluginError caught: {exc}")
+        print(f"FilterError caught: {exc}")
         print(f"  path:  {exc.path}")
         print(f"  cause: {type(exc.cause).__name__}")
 

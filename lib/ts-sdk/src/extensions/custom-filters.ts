@@ -35,7 +35,7 @@ import {
 } from "../schemas/zod/filters";
 import { OppDefaultFiltersSchema, OppFiltersSchema } from "../schemas/zod/models";
 import type { CustomFilterSpec, CustomFilterType, PluginRoutes, RouteDeclarations } from "./types";
-import { PluginError } from "./types";
+import { FilterError } from "./types";
 
 // ############################################################################
 // Internal — filter-type schema map
@@ -131,7 +131,7 @@ export const F = {
 /**
  * Registration-time validation for a `PluginRoutes` declaration.
  *
- * Throws `PluginError` on:
+ * Throws `FilterError` on:
  * 1. Unknown `filterType` (not one of the 11 `CustomFilterType` values)
  * 2. A custom filter name that collides with a default-filter field name
  *    (`status`, `closeDateRange`, `totalFundingAvailableRange`,
@@ -143,7 +143,7 @@ export const F = {
  * Implements ASVS L1 input validation at the plugin-author trust boundary.
  *
  * @param routes - The PluginRoutes declaration to validate
- * @throws {PluginError} on any constraint violation
+ * @throws {FilterError} on any constraint violation
  */
 export function validateRoutes(routes: PluginRoutes): void {
   for (const [resourceKey, methods] of Object.entries(routes)) {
@@ -156,7 +156,7 @@ export function validateRoutes(routes: PluginRoutes): void {
 
         // Check for unknown filterType
         if (!VALID_FILTER_TYPES.has(spec.filterType)) {
-          throw new PluginError(
+          throw new FilterError(
             `Unknown filterType "${spec.filterType}" for filter "${filterName}". ` +
               `Must be one of: ${[...VALID_FILTER_TYPES].join(", ")}`,
             { path, sourceValue: spec }
@@ -165,7 +165,7 @@ export function validateRoutes(routes: PluginRoutes): void {
 
         // Check for collision with default-filter field names
         if (DEFAULT_FILTER_NAMES.has(filterName)) {
-          throw new PluginError(
+          throw new FilterError(
             `Custom filter name "${filterName}" collides with a default filter field. ` +
               `Default filter names are reserved: ${[...DEFAULT_FILTER_NAMES].join(", ")}`,
             { path, sourceValue: spec }
@@ -192,7 +192,7 @@ export function validateRoutes(routes: PluginRoutes): void {
  * @param spec - The registered `CustomFilterSpec` for this filter, or `undefined` for ad-hoc
  * @param filterName - The filter key (used in error `path`)
  * @param filterValue - The raw filter value from the consumer `filters` object
- * @throws {PluginError} on operator/filterType mismatch or value-shape mismatch
+ * @throws {FilterError} on operator/filterType mismatch or value-shape mismatch
  */
 export function validateFilterCall(
   spec: CustomFilterSpec | undefined,
@@ -205,7 +205,7 @@ export function validateFilterCall(
     // Ad-hoc filter — shape-only check against DefaultFilterSchema
     const result = DefaultFilterSchema.safeParse(filterValue);
     if (!result.success) {
-      throw new PluginError(
+      throw new FilterError(
         `Ad-hoc filter "${filterName}" has an invalid shape: ${result.error.message}`,
         { path, sourceValue: filterValue }
       );
@@ -217,7 +217,7 @@ export function validateFilterCall(
   const schema = FILTER_TYPE_SCHEMAS[spec.filterType];
   if (!schema) {
     // Should not reach here if validateRoutes was called first, but guard anyway
-    throw new PluginError(
+    throw new FilterError(
       `Unknown filterType "${spec.filterType}" for registered filter "${filterName}"`,
       { path, sourceValue: filterValue }
     );
@@ -226,7 +226,7 @@ export function validateFilterCall(
   // One parse validates both the operator enum and the value shape
   const result = schema.safeParse(filterValue);
   if (!result.success) {
-    throw new PluginError(
+    throw new FilterError(
       `Filter "${filterName}" (filterType: "${spec.filterType}") failed validation: ${result.error.message}`,
       { path, sourceValue: filterValue }
     );

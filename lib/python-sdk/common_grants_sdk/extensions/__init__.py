@@ -13,6 +13,7 @@ from .transforms import build_transforms
 from .types import (
     Handler,
     PluginCapability,
+    FilterError,
     PluginExtensionsMeta,
     PluginRoutes,
     SchemaConfig,
@@ -33,6 +34,7 @@ __all__ = [
     "build_transforms",
     "Handler",
     "PluginCapability",
+    "FilterError",
     "PluginExtensionsMeta",
     "SchemaConfig",
     "SchemaInput",

@@ -66,6 +66,34 @@ class TransformError(Exception):
         self.cause = cause
 
 
+class FilterError(Exception):
+    """Structured error raised by custom-filter validation.
+
+    Raised by validate_routes (registration time) and validate_filter_call /
+    classify_filters (call time). Carries field path, handler name, source
+    value, and underlying cause so consumers can reason about failures
+    programmatically without parsing error text.
+
+    Note: source_value may contain PII. Adopters are responsible for redacting
+    it before logging or re-raising. The SDK does not redact by default.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        path: str | None = None,
+        handler: str | None = None,
+        source_value: Any = None,
+        cause: BaseException | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.path = path
+        self.handler = handler
+        self.source_value = source_value
+        self.cause = cause
+
+
 @dataclass
 class TransformResult(Generic[T]):
     """Unconditional return shape for to_common / from_common (ADR-0022 Decision #7).

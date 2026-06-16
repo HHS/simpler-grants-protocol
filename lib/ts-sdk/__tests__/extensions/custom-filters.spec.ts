@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { classifyFilters, F, validateFilterCall, validateRoutes } from "@/extensions";
-import { PluginError } from "@/extensions";
+import { FilterError } from "@/extensions";
 import type { PluginRoutes } from "@/extensions";
 import { OppFiltersSchema } from "@/schemas/zod/models";
 import { DefaultFilterSchema } from "@/schemas/zod/filters";
@@ -129,7 +129,7 @@ describe("classifyFilters", () => {
   // ############################################################################
 
   describe("registration-time validation", () => {
-    it("throws PluginError on unknown filterType", () => {
+    it("throws FilterError on unknown filterType", () => {
       const badRoutes: PluginRoutes = {
         opportunities: {
           search: {
@@ -141,10 +141,10 @@ describe("classifyFilters", () => {
         },
       };
 
-      expect(() => validateRoutes(badRoutes)).toThrow(PluginError);
+      expect(() => validateRoutes(badRoutes)).toThrow(FilterError);
     });
 
-    it("PluginError for unknown filterType includes the path and sourceValue", () => {
+    it("FilterError for unknown filterType includes the path and sourceValue", () => {
       const badRoutes: PluginRoutes = {
         opportunities: {
           search: {
@@ -158,16 +158,16 @@ describe("classifyFilters", () => {
 
       try {
         validateRoutes(badRoutes);
-        expect.fail("Expected PluginError to be thrown");
+        expect.fail("Expected FilterError to be thrown");
       } catch (err) {
-        expect(err).toBeInstanceOf(PluginError);
-        const pluginErr = err as PluginError;
+        expect(err).toBeInstanceOf(FilterError);
+        const pluginErr = err as FilterError;
         expect(pluginErr.path).toBe("routes.opportunities.search.filters.myFilter");
         expect(pluginErr.sourceValue).toMatchObject({ filterType: "unknownType" });
       }
     });
 
-    it("throws PluginError when custom filter name collides with a default filter name (status)", () => {
+    it("throws FilterError when custom filter name collides with a default filter name (status)", () => {
       const collidingRoutes: PluginRoutes = {
         opportunities: {
           search: {
@@ -179,10 +179,10 @@ describe("classifyFilters", () => {
         },
       };
 
-      expect(() => validateRoutes(collidingRoutes)).toThrow(PluginError);
+      expect(() => validateRoutes(collidingRoutes)).toThrow(FilterError);
     });
 
-    it("throws PluginError when custom filter name collides with closeDateRange", () => {
+    it("throws FilterError when custom filter name collides with closeDateRange", () => {
       const collidingRoutes: PluginRoutes = {
         opportunities: {
           search: {
@@ -193,7 +193,7 @@ describe("classifyFilters", () => {
         },
       };
 
-      expect(() => validateRoutes(collidingRoutes)).toThrow(PluginError);
+      expect(() => validateRoutes(collidingRoutes)).toThrow(FilterError);
     });
 
     it("does not throw for valid routes", () => {
@@ -206,31 +206,31 @@ describe("classifyFilters", () => {
   // ############################################################################
 
   describe("call-time validation", () => {
-    it("throws PluginError on operator/filterType mismatch for a registered filter", () => {
+    it("throws FilterError on operator/filterType mismatch for a registered filter", () => {
       // `like` operator is not valid for numberComparison (only gt/gte/lt/lte/eq/neq)
       const spec = { filterType: "numberComparison" } as const;
 
       expect(() => validateFilterCall(spec, "amount", { operator: "like", value: "100" })).toThrow(
-        PluginError
+        FilterError
       );
     });
 
-    it("throws PluginError on value-shape mismatch for a registered stringArray filter", () => {
+    it("throws FilterError on value-shape mismatch for a registered stringArray filter", () => {
       // stringArray requires value to be string[]; passing a plain string fails
       const spec = { filterType: "stringArray" } as const;
 
       expect(() =>
         validateFilterCall(spec, "agency", { operator: "in", value: "not-an-array" })
-      ).toThrow(PluginError);
+      ).toThrow(FilterError);
     });
 
-    it("throws PluginError on value-shape mismatch for a registered numberComparison filter", () => {
+    it("throws FilterError on value-shape mismatch for a registered numberComparison filter", () => {
       // numberComparison requires value to be a number; passing a string fails
       const spec = { filterType: "numberComparison" } as const;
 
       expect(() =>
         validateFilterCall(spec, "amount", { operator: "eq", value: "not-a-number" })
-      ).toThrow(PluginError);
+      ).toThrow(FilterError);
     });
 
     it("passes a valid integerComparison filter without throwing", () => {
@@ -241,15 +241,15 @@ describe("classifyFilters", () => {
       ).not.toThrow();
     });
 
-    it("PluginError path includes the filter name", () => {
+    it("FilterError path includes the filter name", () => {
       const spec = { filterType: "stringArray" } as const;
 
       try {
         validateFilterCall(spec, "agency", { operator: "in", value: "wrong" });
-        expect.fail("Expected PluginError to be thrown");
+        expect.fail("Expected FilterError to be thrown");
       } catch (err) {
-        expect(err).toBeInstanceOf(PluginError);
-        expect((err as PluginError).path).toBe("filters.agency");
+        expect(err).toBeInstanceOf(FilterError);
+        expect((err as FilterError).path).toBe("filters.agency");
       }
     });
 
@@ -268,21 +268,21 @@ describe("classifyFilters", () => {
       ).not.toThrow();
     });
 
-    it("throws PluginError for an ad-hoc filter with an invalid shape", () => {
+    it("throws FilterError for an ad-hoc filter with an invalid shape", () => {
       // Missing `operator` key — fails DefaultFilterSchema shape check (operator is required/enum)
       expect(() => validateFilterCall(undefined, "badFilter", { value: "something" })).toThrow(
-        PluginError
+        FilterError
       );
     });
 
-    it("throws PluginError for an ad-hoc filter with an unknown operator", () => {
+    it("throws FilterError for an ad-hoc filter with an unknown operator", () => {
       // `superCustomOp` is not in AllOperatorsEnum — fails DefaultFilterSchema
       expect(() =>
         validateFilterCall(undefined, "badFilter", {
           operator: "superCustomOp",
           value: "x",
         })
-      ).toThrow(PluginError);
+      ).toThrow(FilterError);
     });
   });
 });

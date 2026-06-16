@@ -308,6 +308,42 @@ export class TransformError extends Error {
   }
 }
 
+/**
+ * Structured error raised by custom-filter validation (`validateRoutes`,
+ * `validateFilterCall`, `classifyFilters`).
+ *
+ * Carries field path, handler name, source value, and underlying cause for
+ * programmatic handling. `sourceValue` and `cause` may carry PII — redact
+ * before logging.
+ */
+export class FilterError extends Error {
+  /** Dot-notation field path where the error occurred, if known. */
+  path?: string;
+  /** Name of the handler that raised, if applicable. */
+  handler?: string;
+  /** The source value that triggered the error (may contain PII — redact before logging). */
+  sourceValue?: unknown;
+  /** Underlying cause of the error, if any (may contain PII — redact before logging). */
+  cause?: unknown;
+
+  constructor(
+    message: string,
+    options?: {
+      path?: string;
+      handler?: string;
+      sourceValue?: unknown;
+      cause?: unknown;
+    }
+  ) {
+    super(message);
+    this.name = "FilterError";
+    this.path = options?.path;
+    this.handler = options?.handler;
+    this.sourceValue = options?.sourceValue;
+    this.cause = options?.cause;
+  }
+}
+
 // ############################################################################
 // Public types - SchemaInput (author-provided), SchemaOnly, SchemaWithTransforms
 // ############################################################################
