@@ -78,7 +78,7 @@
     "globals": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-astro": "^0.14.1",
-    "starlight-links-validator": "^0.24.0",
+    "starlight-links-validator": "^0.24.1",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
     "wrangler": "^4.101.0"
