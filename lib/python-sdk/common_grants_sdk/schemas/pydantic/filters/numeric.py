@@ -8,6 +8,7 @@ from ..base import CommonGrantsBaseModel
 from .base import (
     ArrayOperator,
     ComparisonOperator,
+    EquivalenceOperator,
     RangeOperator,
 )
 
@@ -16,17 +17,40 @@ from .base import (
 # ############################################################
 
 
+def _ensure_not_bool(v: object) -> object:
+    """Reject bool before union coercion.
+
+    bool subclasses int in Python, so a ``Union[int, float]`` field
+    lax-coerces ``True`` -> ``1`` and a boolean silently ships as a number —
+    the same wire corruption ``DefaultFilter.value: Any`` guards against.
+    ``z.number()`` rejects booleans, so rejection keeps the SDKs aligned.
+    """
+    if isinstance(v, bool):
+        raise ValueError("value must be a number, not a bool")
+    return v
+
+
 class NumberRange(CommonGrantsBaseModel):
     """Represents a range between two numeric values."""
 
     min: Union[int, float] = Field(..., description="The minimum value in the range")
     max: Union[int, float] = Field(..., description="The maximum value in the range")
 
+    @field_validator("min", "max", mode="before")
+    @classmethod
+    def reject_bool(cls, v):
+        """Reject bool min/max (would lax-coerce to 1/0; see _ensure_not_bool)."""
+        return _ensure_not_bool(v)
+
 
 class NumberComparisonFilter(CommonGrantsBaseModel):
-    """Filter that matches numbers against a specific value."""
+    """Filter that matches numbers against a specific value.
 
-    operator: ComparisonOperator = Field(
+    Accepts equivalence operators (``eq``/``neq``) in addition to comparison
+    operators, per the core spec (filters/numeric.tsp, since protocol v0.3).
+    """
+
+    operator: ComparisonOperator | EquivalenceOperator = Field(
         ...,
         description="The comparison operator to apply to the filter value",
     )
@@ -39,8 +63,17 @@ class NumberComparisonFilter(CommonGrantsBaseModel):
     def validate_operator(cls, v):
         """Convert string to enum if needed."""
         if isinstance(v, str):
-            return ComparisonOperator(v)
+            if v in [op.value for op in ComparisonOperator]:
+                return ComparisonOperator(v)
+            elif v in [op.value for op in EquivalenceOperator]:
+                return EquivalenceOperator(v)
         return v
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def reject_bool(cls, v):
+        """Reject bool values (would lax-coerce to 1/0; see _ensure_not_bool)."""
+        return _ensure_not_bool(v)
 
 
 class NumberRangeFilter(CommonGrantsBaseModel):
@@ -78,4 +111,13 @@ class NumberArrayFilter(CommonGrantsBaseModel):
         """Convert string to enum if needed."""
         if isinstance(v, str):
             return ArrayOperator(v)
+        return v
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def reject_bool_items(cls, v):
+        """Reject bool items (each would lax-coerce to 1/0; see _ensure_not_bool)."""
+        if isinstance(v, list):
+            for item in v:
+                _ensure_not_bool(item)
         return v

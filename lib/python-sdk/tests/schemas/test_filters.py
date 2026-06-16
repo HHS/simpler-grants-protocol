@@ -2,7 +2,9 @@
 
 from datetime import date
 import pytest
+from pydantic import ValidationError
 
+from common_grants_sdk.schemas.pydantic.filters.boolean import BooleanComparisonFilter
 from common_grants_sdk.schemas.pydantic.filters.base import (
     ArrayOperator,
     ComparisonOperator,
@@ -508,3 +510,112 @@ def test_number_array_filter():
     filter_obj = NumberArrayFilter(operator=ArrayOperator.IN, value=[1, 2.5, 3])
     assert filter_obj.operator == ArrayOperator.IN
     assert filter_obj.value == [1, 2.5, 3]
+
+
+def test_boolean_comparison_filter_constructs():
+    """BooleanComparisonFilter constructs with valid operator and value."""
+    filter_obj = BooleanComparisonFilter(operator="eq", value=True)
+    assert filter_obj.operator == EquivalenceOperator.EQUAL
+    assert filter_obj.value is True
+
+    filter_obj = BooleanComparisonFilter(operator="neq", value=False)
+    assert filter_obj.operator == EquivalenceOperator.NOT_EQUAL
+    assert filter_obj.value is False
+
+
+def test_boolean_comparison_filter_rejects_invalid_operator():
+    """BooleanComparisonFilter raises ValidationError for operator not in EquivalenceOperator."""
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="gt", value=True)
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="like", value=True)
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="in", value=True)
+
+
+def test_boolean_comparison_filter_rejects_invalid_value():
+    """BooleanComparisonFilter raises ValidationError for non-bool value."""
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value="not-a-bool")
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value=42)
+
+
+def test_boolean_comparison_filter_rejects_coercible_values():
+    """BooleanComparisonFilter raises ValidationError for bool-coercible non-bool values.
+
+    Mirrors the TS BooleanComparisonFilterSchema, where z.boolean() rejects
+    1/0 and "true"/"false"; the strict annotation disables pydantic's lax
+    int/str -> bool coercion.
+    """
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value=1)
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value=0)
+
+    with pytest.raises(ValidationError):
+        BooleanComparisonFilter(operator="eq", value="true")
+
+
+@pytest.mark.parametrize("operator", ["in", "between", "like"])
+def test_number_comparison_filter_rejects_invalid_operator(operator):
+    """NumberComparisonFilter raises ValidationError for operators outside its surface.
+
+    The two-enum validate_operator dispatch's fallthrough returns unknown
+    strings unchanged, relying on the enum-union field to reject them — the
+    rejection must hold.
+    """
+    with pytest.raises(ValidationError):
+        NumberComparisonFilter(operator=operator, value=100)
+
+
+def test_number_comparison_filter_accepts_equivalence_operators():
+    """NumberComparisonFilter accepts eq/neq.
+
+    The core spec (filters/numeric.tsp) widened the operator surface to
+    ComparisonOperators | EquivalenceOperators in protocol v0.3; the TS SDK
+    tracks it and this model must match.
+    """
+    assert NumberComparisonFilter(operator="eq", value=3).operator == "eq"
+    assert NumberComparisonFilter(operator="neq", value=3.5).operator == "neq"
+
+
+def test_number_comparison_filter_rejects_bool():
+    """NumberComparisonFilter raises ValidationError for True/False.
+
+    bool subclasses int, so the int|float union would lax-coerce True -> 1
+    and ship a number for a boolean — the same wire corruption the
+    DefaultFilter.value widening fixed, one layer down. z.number() rejects
+    booleans, so rejection also keeps the SDKs aligned.
+    """
+    with pytest.raises(ValidationError):
+        NumberComparisonFilter(operator="eq", value=True)
+
+    with pytest.raises(ValidationError):
+        NumberComparisonFilter(operator="gt", value=False)
+
+
+def test_number_array_filter_rejects_bool_items():
+    """NumberArrayFilter raises ValidationError when any item is a bool.
+
+    Same lax-coercion vector as NumberComparisonFilter: [True] would ship
+    as [1] without an explicit bool rejection.
+    """
+    with pytest.raises(ValidationError):
+        NumberArrayFilter(operator=ArrayOperator.IN, value=[1, True, 3])
+
+
+def test_number_range_rejects_bool_bounds():
+    """NumberRange raises ValidationError for a bool min or max.
+
+    Same lax-coercion vector: {"min": True, "max": 10} would ship min=1.
+    """
+    with pytest.raises(ValidationError):
+        NumberRange(min=True, max=10)
+
+    with pytest.raises(ValidationError):
+        NumberRange(min=0, max=False)

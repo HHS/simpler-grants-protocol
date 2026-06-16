@@ -8,6 +8,7 @@ from typing import Any, Generic, TypeVar, overload
 from .types import (
     PluginExtensions,
     PluginExtensionsMeta,
+    PluginRoutes,
 )
 
 T = TypeVar("T")
@@ -36,6 +37,7 @@ class PluginConfig(Generic[TSchemas]):
     extensions: PluginExtensions | None = None
     meta: PluginExtensionsMeta | None = None
     schemas: TSchemas | None = None
+    routes: PluginRoutes | None = None
 
 
 @dataclass
@@ -62,6 +64,7 @@ def define_plugin(
     meta: PluginExtensionsMeta | None = ...,
     extensions: PluginExtensions | None = ...,
     schemas: None = ...,
+    routes: PluginRoutes | None = ...,
 ) -> PluginConfig[None]: ...
 
 
@@ -70,6 +73,7 @@ def define_plugin(
     meta: PluginExtensionsMeta | None = ...,
     extensions: PluginExtensions | None = ...,
     schemas: TSchemas = ...,
+    routes: PluginRoutes | None = ...,
 ) -> PluginConfig[TSchemas]: ...
 
 
@@ -77,8 +81,12 @@ def define_plugin(
     meta: PluginExtensionsMeta | None = None,
     extensions: PluginExtensions | None = None,
     schemas: Any = None,
+    routes: PluginRoutes | None = None,
 ) -> PluginConfig[Any]:
-    """Create a PluginConfig consumed by the code generator.
+    """Create a PluginConfig from plugin declarations.
+
+    Schema inputs are consumed by the code generator; route-keyed filter
+    declarations are consumed by the runtime filter engine (extensions/filters.py).
 
     No compilation occurs here — inputs are stored as-is. The code generator
     (generate.py) compiles ObjectSchemasInput → ObjectSchemas by injecting
@@ -88,11 +96,19 @@ def define_plugin(
     (e.g. {"Opportunity": ObjectSchemasInput[MyNative, MyCg](...) }) preserves
     those per-object generics on the returned PluginConfig rather than widening
     them to Any.
+
+    routes: optional route-keyed custom-filter declarations.
+        Shape: {resourceName: {methodName: {filterName: CustomFilterSpec}}}.
+        Passed through to PluginConfig.routes unvalidated. Registration-time
+        validation is explicit: call validate_routes() (extensions/filters.py)
+        on the declarations, e.g. at plugin startup. classify_filters() does
+        not invoke it; route validation is a standalone check.
     """
     return PluginConfig(
         extensions=extensions,
         meta=meta,
         schemas=schemas,
+        routes=routes,
     )
 
 

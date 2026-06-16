@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, Literal, TypeVar
+from typing import Any, Callable, Generic, Literal, NotRequired, TypedDict, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .specs import CustomFieldSpec
+from .specs import CustomFieldSpec, CustomFilterSpec
 
 TNative = TypeVar("TNative")
 TCommon = TypeVar("TCommon")
@@ -18,6 +18,25 @@ PluginCapability = Literal["customFields", "customFilters", "transforms", "clien
 
 # Type aliases
 Handler = Callable[[Any, Any], Any]
+
+# Route-keyed custom-filter declaration types, mirroring the TS SDK shape:
+# PluginRoutes = {resourceName: {methodName: RouteDeclarations}}.
+RouteMethodFilters = dict[str, CustomFilterSpec]  # {filterName: spec}
+
+
+class RouteDeclarations(TypedDict):
+    """Filter declarations for a single route method (e.g. ``search``).
+
+    ``filters`` maps filter name → ``CustomFilterSpec`` and is optional: a
+    method may appear in the route map with no declarations.
+    """
+
+    filters: NotRequired[RouteMethodFilters]
+
+
+PluginRoutes = dict[
+    str, dict[str, RouteDeclarations]
+]  # {resource: {method: declarations}}
 
 
 class PluginError(Exception):
