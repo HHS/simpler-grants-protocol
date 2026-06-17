@@ -261,5 +261,8 @@ def transform_from_mapping(
             # ```
             return {k: transform_node(v, depth + 1) for k, v in node.items()}
 
+        # An empty dict node maps to an empty dict (not None).
+        return {}
+
     # Recursively walk the mapping until all nested transformations are applied
     return transform_node(mapping, depth)
