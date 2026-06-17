@@ -76,6 +76,21 @@ def test_define_plugin_rejects_non_extension_in_slot():
         define_plugin(bad, meta=_meta())
 
 
+def test_define_plugin_rejects_schema_name_mismatch():
+    """A slot holding an extension whose schema_name differs from the attribute name raises."""
+    # Hand-build an extension tagged with a different schema name than its slot.
+    mismatched = SchemaOnly(
+        schema_name="Program",
+        common_schema=Opportunity[NoCustomFields],
+        custom_fields={},
+    )
+    bad = PluginSchemas(Opportunity=mismatched)  # type: ignore[arg-type]
+    with pytest.raises(
+        PluginDefinitionError, match="attribute name must match the schema name"
+    ):
+        define_plugin(bad, meta=_meta())
+
+
 # ---------------------------------------------------------------------------
 # Plugin container
 # ---------------------------------------------------------------------------
