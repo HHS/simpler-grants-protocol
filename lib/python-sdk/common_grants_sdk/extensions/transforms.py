@@ -196,7 +196,7 @@ def build_transforms(
                 )
         common_schema: Optional Pydantic model class to validate the to_common output
             against. Pass the model that carries the plugin's custom fields (e.g.
-            ``Opportunity[OpportunityFields]``), not the base ``OpportunityBase``:
+            ``OpportunityBase[OpportunityFields]``), not the base ``OpportunityBase``:
             a base class only checks custom_fields against dict[str, CustomField]
             rather than the typed container. When provided, model_validate is called
             on the transform result and any ValidationErrors are appended to

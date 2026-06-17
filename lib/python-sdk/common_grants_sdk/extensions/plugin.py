@@ -13,9 +13,8 @@ from typing import Any, Generic, TypeVar, cast
 
 import typing_extensions as te
 
-from ..schemas.pydantic.models import Opportunity
+from ..schemas.pydantic.models import OpportunityBase
 from .schema import (
-    NoCustomFields,
     PluginDefinitionError,
     SchemaOnly,
     SchemaWithTransforms,
@@ -28,7 +27,7 @@ SchemasT = TypeVar("SchemasT")
 # The fallback for a schema a plugin does not extend: the base schema, no custom
 # fields, no transforms. A SchemaOnly type, so unextended slots have no
 # to_common either.
-DefaultOpportunity = SchemaOnly[Opportunity[NoCustomFields]]
+DefaultOpportunity = SchemaOnly[OpportunityBase]
 
 _TOpportunity = te.TypeVar("_TOpportunity", default=DefaultOpportunity)
 
@@ -50,7 +49,7 @@ class PluginSchemas(Generic[_TOpportunity]):
 
     Opportunity: _TOpportunity = field(
         default_factory=lambda: cast(
-            _TOpportunity, schema(common_schema=Opportunity[NoCustomFields])
+            _TOpportunity, schema(common_schema=OpportunityBase)
         )
     )
 

@@ -19,7 +19,6 @@ from pydantic import BaseModel, Field
 from common_grants_sdk.extensions import (
     CustomField,
     CustomFieldSet,
-    NoCustomFields,
     PassthroughModel,
     PluginMeta,
     PluginSchemas,
@@ -29,7 +28,7 @@ from common_grants_sdk.extensions import (
     schema,
     validate_into,
 )
-from common_grants_sdk.schemas.pydantic.models import Opportunity
+from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 from common_grants_sdk.utils.transformation import get_from_path
 
 # --- Author-declared custom-field containers ----------------------------------
@@ -90,7 +89,7 @@ mappings_plugin = define_plugin(
     PluginSchemas(
         Opportunity=schema(
             source_schema=PassthroughModel,
-            common_schema=Opportunity[AgencyFields],
+            common_schema=OpportunityBase[AgencyFields],
             mappings={
                 "to_common": {
                     "id": {"field": "opportunity_uuid"},
@@ -145,9 +144,9 @@ class GrantsGovOpportunity(BaseModel):
 
 def gadget_to_common(
     source: GrantsGovOpportunity,
-) -> TransformResult[Opportunity[AgencyFields]]:
+) -> TransformResult[OpportunityBase[AgencyFields]]:
     return validate_into(
-        Opportunity[AgencyFields],
+        OpportunityBase[AgencyFields],
         {
             "id": source.opportunity_uuid,
             "title": source.opportunity_title,
@@ -169,7 +168,7 @@ def gadget_to_common(
 
 
 def gadget_from_common(
-    common: Opportunity[AgencyFields],
+    common: OpportunityBase[AgencyFields],
 ) -> TransformResult[GrantsGovOpportunity]:
     # The make-or-break path: `common` is fully typed (agency_code.value -> str).
     agency = ""
@@ -193,7 +192,7 @@ functions_plugin = define_plugin(
     PluginSchemas(
         Opportunity=schema(
             source_schema=GrantsGovOpportunity,
-            common_schema=Opportunity[AgencyFields],
+            common_schema=OpportunityBase[AgencyFields],
             to_common=gadget_to_common,
             from_common=gadget_from_common,
         )
@@ -208,7 +207,7 @@ base_plugin = define_plugin(
     PluginSchemas(
         Opportunity=schema(
             source_schema=PassthroughModel,
-            common_schema=Opportunity[NoCustomFields],
+            common_schema=OpportunityBase,
             mappings={
                 "to_common": {
                     "id": {"field": "opportunity_uuid"},
@@ -241,7 +240,7 @@ base_plugin = define_plugin(
 # --- Scenario 4: custom fields only, no transforms ----------------------------
 
 opportunity_extensions = define_plugin(
-    PluginSchemas(Opportunity=schema(common_schema=Opportunity[ExtensionFields])),
+    PluginSchemas(Opportunity=schema(common_schema=OpportunityBase[ExtensionFields])),
     meta=PluginMeta(name="opportunity extensions", source_system="hhs"),
 )
 
@@ -260,7 +259,7 @@ def _join_fields(data: dict[str, Any], spec: dict[str, Any]) -> str | None:
 # the other because many-to-one handlers like ``match`` are not reversible.
 _gg_to_common, _gg_from_common = build_transforms(
     handlers={"join": _join_fields},
-    common_schema=Opportunity[GrantsGovFields],
+    common_schema=OpportunityBase[GrantsGovFields],
     source_schema=PassthroughModel,
     to_common_mapping={
         "id": {"field": "data.opportunity_uuid"},
@@ -361,11 +360,11 @@ _gg_to_common, _gg_from_common = build_transforms(
 # build_transforms returns loosely-typed callables (its output may be a dict on a
 # validation error). Restate the precise signatures for the typed consumer surface.
 gg_to_common = cast(
-    Callable[[PassthroughModel], TransformResult[Opportunity[GrantsGovFields]]],
+    Callable[[PassthroughModel], TransformResult[OpportunityBase[GrantsGovFields]]],
     _gg_to_common,
 )
 gg_from_common = cast(
-    Callable[[Opportunity[GrantsGovFields]], TransformResult[PassthroughModel]],
+    Callable[[OpportunityBase[GrantsGovFields]], TransformResult[PassthroughModel]],
     _gg_from_common,
 )
 
@@ -373,7 +372,7 @@ grants_gov = define_plugin(
     PluginSchemas(
         Opportunity=schema(
             source_schema=PassthroughModel,
-            common_schema=Opportunity[GrantsGovFields],
+            common_schema=OpportunityBase[GrantsGovFields],
             to_common=gg_to_common,
             from_common=gg_from_common,
         )
@@ -454,7 +453,7 @@ def main() -> None:
     res1 = mappings_plugin.schemas.Opportunity.to_common(
         PassthroughModel.model_validate(_FLAT_SOURCE)
     )
-    assert_type(res1, TransformResult[Opportunity[AgencyFields]])
+    assert_type(res1, TransformResult[OpportunityBase[AgencyFields]])
     opp1 = res1.result
     _check("no transform errors", res1.errors == [])
     _check("title mapped", opp1.title == "Conservation research")
@@ -501,7 +500,7 @@ def main() -> None:
     # Scenario 4 -- custom fields only, no transforms (schema-only)
     print("Scenario 4 -- custom fields only, no transforms")
     ext = opportunity_extensions.schemas.Opportunity
-    assert_type(ext, SchemaOnly[Opportunity[ExtensionFields]])
+    assert_type(ext, SchemaOnly[OpportunityBase[ExtensionFields]])
     parsed = ext.parse(_SCHEMA_ONLY_RECORD)
     if parsed.custom_fields and parsed.custom_fields.legacy_grant_id:
         assert_type(parsed.custom_fields.legacy_grant_id.value, int)

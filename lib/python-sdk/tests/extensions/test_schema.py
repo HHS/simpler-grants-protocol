@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field
 from common_grants_sdk.extensions import (
     CustomField,
     CustomFieldSet,
-    NoCustomFields,
     PassthroughModel,
     SchemaOnly,
     SchemaWithTransforms,
@@ -19,7 +18,7 @@ from common_grants_sdk.extensions import (
 )
 from common_grants_sdk.extensions.schema import PluginDefinitionError, _infer_field_type
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
-from common_grants_sdk.schemas.pydantic.models import Opportunity, OpportunityBase
+from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 
 
 class LegacyRef(BaseModel):
@@ -48,11 +47,11 @@ FLAT_SOURCE = {
 
 
 def _mappings_extension() -> (
-    SchemaWithTransforms[PassthroughModel, Opportunity[OpportunityFields]]
+    SchemaWithTransforms[PassthroughModel, OpportunityBase[OpportunityFields]]
 ):
     return schema(
         source_schema=PassthroughModel,
-        common_schema=Opportunity[OpportunityFields],
+        common_schema=OpportunityBase[OpportunityFields],
         mappings={
             "to_common": {
                 "id": {"field": "opportunity_uuid"},
@@ -115,7 +114,7 @@ def test_resolve_custom_field_specs_derives_from_value_type():
 
 def test_resolve_custom_field_specs_empty_for_no_container():
     assert resolve_custom_field_specs(None) == {}
-    assert resolve_custom_field_specs(NoCustomFields) == {}
+    assert resolve_custom_field_specs(CustomFieldSet) == {}
 
 
 # ---------------------------------------------------------------------------
@@ -124,7 +123,7 @@ def test_resolve_custom_field_specs_empty_for_no_container():
 
 
 def test_schema_only_returns_schema_only_extension():
-    ext = schema(common_schema=Opportunity[OpportunityFields])
+    ext = schema(common_schema=OpportunityBase[OpportunityFields])
     assert isinstance(ext, SchemaOnly)
     assert ext.schema_name == "Opportunity"
     assert not hasattr(ext, "to_common")
@@ -140,9 +139,9 @@ def test_mappings_returns_transform_extension():
 def test_functions_returns_transform_extension():
     def to_common(
         _src: PassthroughModel,
-    ) -> TransformResult[Opportunity[NoCustomFields]]:
+    ) -> TransformResult[OpportunityBase]:
         return TransformResult(
-            result=Opportunity[NoCustomFields].model_validate(
+            result=OpportunityBase.model_validate(
                 FLAT_SOURCE
                 | {
                     "id": FLAT_SOURCE["opportunity_uuid"],
@@ -156,13 +155,13 @@ def test_functions_returns_transform_extension():
         )
 
     def from_common(
-        _c: Opportunity[NoCustomFields],
+        _c: OpportunityBase,
     ) -> TransformResult[PassthroughModel]:
         return TransformResult(result=PassthroughModel(), errors=[])
 
     ext = schema(
         source_schema=PassthroughModel,
-        common_schema=Opportunity[NoCustomFields],
+        common_schema=OpportunityBase,
         to_common=to_common,
         from_common=from_common,
     )
@@ -184,19 +183,19 @@ def test_unregistered_base_raises():
         schema(common_schema=NotRegistered)
 
 
-def test_unextended_base_class_is_not_registered():
-    """Only the generic Opportunity is registered, not OpportunityBase."""
-    with pytest.raises(
-        PluginDefinitionError, match="not a registered extensible schema"
-    ):
-        schema(common_schema=OpportunityBase)
+def test_bare_opportunity_base_is_a_registered_schema_only():
+    """Bare OpportunityBase (no custom fields) is the registered base schema."""
+    ext = schema(common_schema=OpportunityBase)
+    assert isinstance(ext, SchemaOnly)
+    assert ext.schema_name == "Opportunity"
+    assert ext.custom_fields == {}
 
 
 def test_unknown_to_common_output_field_raises():
     with pytest.raises(PluginDefinitionError, match="unknown output field"):
         schema(
             source_schema=PassthroughModel,
-            common_schema=Opportunity[NoCustomFields],
+            common_schema=OpportunityBase,
             mappings={
                 "to_common": {"nope": {"const": 1}},
                 "from_common": {},
@@ -208,7 +207,7 @@ def test_missing_mapping_direction_raises():
     with pytest.raises(PluginDefinitionError, match="missing `from_common`"):
         schema(
             source_schema=PassthroughModel,
-            common_schema=Opportunity[NoCustomFields],
+            common_schema=OpportunityBase,
             mappings={"to_common": {"title": {"field": "x"}}},  # type: ignore[typeddict-item]
         )
 
@@ -220,7 +219,7 @@ def _noop(value):
 def test_functions_without_source_schema_raises():
     with pytest.raises(PluginDefinitionError, match="source_schema` is required"):
         schema(  # type: ignore[call-overload]
-            common_schema=Opportunity[NoCustomFields],
+            common_schema=OpportunityBase,
             to_common=_noop,
             from_common=_noop,
         )
@@ -229,7 +228,7 @@ def test_functions_without_source_schema_raises():
 def test_mappings_without_source_schema_raises():
     with pytest.raises(PluginDefinitionError, match="source_schema` is required"):
         schema(  # type: ignore[call-overload]
-            common_schema=Opportunity[NoCustomFields],
+            common_schema=OpportunityBase,
             mappings={
                 "to_common": {"title": {"field": "x"}},
                 "from_common": {},
@@ -243,7 +242,7 @@ def test_one_sided_callable_raises():
     ):
         schema(  # type: ignore[call-overload]
             source_schema=PassthroughModel,
-            common_schema=Opportunity[NoCustomFields],
+            common_schema=OpportunityBase,
             to_common=_noop,
         )
 
@@ -252,7 +251,7 @@ def test_mappings_and_callables_together_raises():
     with pytest.raises(PluginDefinitionError, match="cannot specify both"):
         schema(  # type: ignore[call-overload]
             source_schema=PassthroughModel,
-            common_schema=Opportunity[NoCustomFields],
+            common_schema=OpportunityBase,
             mappings={
                 "to_common": {"title": {"field": "x"}},
                 "from_common": {},
@@ -270,7 +269,7 @@ def test_mappings_and_callables_together_raises():
 def test_mappings_consumer_typed_and_round_trips() -> None:
     ext = _mappings_extension()
     res = ext.to_common(PassthroughModel.model_validate(FLAT_SOURCE))
-    assert_type(res, TransformResult[Opportunity[OpportunityFields]])
+    assert_type(res, TransformResult[OpportunityBase[OpportunityFields]])
     assert res.errors == []
     opp = res.result
     assert opp.title == "Conservation research"
@@ -284,7 +283,7 @@ def test_mappings_consumer_typed_and_round_trips() -> None:
 
 
 def test_schema_only_parse_typed() -> None:
-    ext = schema(common_schema=Opportunity[OpportunityFields])
+    ext = schema(common_schema=OpportunityBase[OpportunityFields])
     parsed = ext.parse(
         {
             "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -302,7 +301,7 @@ def test_schema_only_parse_typed() -> None:
             },
         }
     )
-    assert_type(parsed, Opportunity[OpportunityFields])
+    assert_type(parsed, OpportunityBase[OpportunityFields])
     assert parsed.custom_fields is not None
     assert parsed.custom_fields.legacy_ref is not None
     assert_type(parsed.custom_fields.legacy_ref.value.id, int)
@@ -330,7 +329,7 @@ def test_camel_case_round_trip():
             }
         },
     }
-    opp = Opportunity[OpportunityFields].model_validate(camel)
+    opp = OpportunityBase[OpportunityFields].model_validate(camel)
     # snake_case typed access
     assert opp.custom_fields is not None
     assert opp.custom_fields.agency_code is not None

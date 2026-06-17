@@ -8,7 +8,6 @@ from pydantic import Field
 from common_grants_sdk.extensions import (
     CustomField,
     CustomFieldSet,
-    NoCustomFields,
     PassthroughModel,
     Plugin,
     PluginMeta,
@@ -19,7 +18,7 @@ from common_grants_sdk.extensions import (
     schema,
 )
 from common_grants_sdk.extensions.schema import PluginDefinitionError
-from common_grants_sdk.schemas.pydantic.models import Opportunity
+from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 
 
 class OpportunityFields(CustomFieldSet):
@@ -38,7 +37,7 @@ def _meta() -> PluginMeta:
 
 
 def test_define_plugin_returns_plugin_with_schemas_and_meta():
-    ext = schema(common_schema=Opportunity[OpportunityFields])
+    ext = schema(common_schema=OpportunityBase[OpportunityFields])
     plugin = define_plugin(PluginSchemas(Opportunity=ext), meta=_meta())
     assert isinstance(plugin, Plugin)
     assert plugin.schemas.Opportunity is ext
@@ -54,13 +53,13 @@ def test_omitted_schema_falls_back_to_base_schema_only_extension():
     assert entry.schema_name == "Opportunity"
     assert entry.custom_fields == {}
     # The base schema has no custom fields declared.
-    assert entry.common_schema is Opportunity[NoCustomFields]
+    assert entry.common_schema is OpportunityBase
 
 
 def test_mappings_entry_is_a_transform_extension():
     ext = schema(
         source_schema=PassthroughModel,
-        common_schema=Opportunity[NoCustomFields],
+        common_schema=OpportunityBase,
         mappings={
             "to_common": {"title": {"field": "opportunity_title"}},
             "from_common": {"opportunity_title": {"field": "title"}},
@@ -81,7 +80,7 @@ def test_define_plugin_rejects_schema_name_mismatch():
     # Hand-build an extension tagged with a different schema name than its slot.
     mismatched = SchemaOnly(
         schema_name="Program",
-        common_schema=Opportunity[NoCustomFields],
+        common_schema=OpportunityBase,
         custom_fields={},
     )
     bad = PluginSchemas(Opportunity=mismatched)  # type: ignore[arg-type]

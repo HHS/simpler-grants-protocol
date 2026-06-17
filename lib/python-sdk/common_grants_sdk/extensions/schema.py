@@ -10,7 +10,7 @@ extension is built, aggregated into one error.
 ``CustomField[V]`` is the single source of truth for a custom field: ``field_type``
 and the inspectable value type are derived from ``V``, so they cannot drift from the
 typed declaration. The common models are generics over their custom-fields container
-(``Opportunity[OpportunityFields]``), so consumers get concrete, non-optional types.
+(``OpportunityBase[OpportunityFields]``), so consumers get concrete, non-optional types.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ from pydantic import (
 from pydantic.alias_generators import to_camel
 
 from ..schemas.pydantic.fields.custom import CustomField, CustomFieldType
-from ..schemas.pydantic.models import Opportunity
+from ..schemas.pydantic.models import OpportunityBase
 from .specs import PluginCustomFieldSpec
 from .transforms import build_transforms
 from .types import TransformError, TransformResult
@@ -46,7 +46,6 @@ __all__ = [
     "EXTENSIBLE_SCHEMA_MAP",
     "CustomField",
     "CustomFieldSet",
-    "NoCustomFields",
     "PluginDefinitionError",
     "SchemaOnly",
     "SchemaWithTransforms",
@@ -87,15 +86,11 @@ class CustomFieldSet(_CamelModel):
     """
 
 
-class NoCustomFields(CustomFieldSet):
-    """Marker for schema entries that declare no custom fields."""
-
-
 # The extensible-schema registry: the closed set of models a plugin may extend,
 # mapped to their generic base model. Add an entry when a new model gains
 # custom-field support.
 EXTENSIBLE_SCHEMA_MAP: dict[str, type[BaseModel]] = {
-    "Opportunity": Opportunity,
+    "Opportunity": OpportunityBase,
 }
 _BASE_TO_NAME: dict[type[BaseModel], str] = {
     v: k for k, v in EXTENSIBLE_SCHEMA_MAP.items()
@@ -237,7 +232,7 @@ Mappings = dict[str, Any]
 def _resolve_common(common: Any) -> tuple[Any, Any]:
     """Return ``(origin, custom_fields_model)`` for a common type.
 
-    A parameterized Pydantic generic (``Opportunity[OpportunityFields]``) is a
+    A parameterized Pydantic generic (``OpportunityBase[OpportunityFields]``) is a
     concrete subclass, so its origin/args live in ``__pydantic_generic_metadata__``.
     """
     pyd_meta = getattr(common, "__pydantic_generic_metadata__", None)
