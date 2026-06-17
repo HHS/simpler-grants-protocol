@@ -345,6 +345,25 @@ def schema(
     ):
         errors.extend(_check_custom_fields(custom_fields_model))
 
+    # Transform-shape guards. The overloads enforce these statically; these
+    # checks repeat them at runtime so dynamically-built or un-type-checked
+    # callers cannot slip through with a malformed extension.
+    has_callables = to_common is not None or from_common is not None
+    if mappings is not None and has_callables:
+        errors.append(
+            "cannot specify both `mappings` and `to_common`/`from_common`; "
+            "use mappings for declarative transforms or explicit callables, not both"
+        )
+    if has_callables and not (to_common is not None and from_common is not None):
+        errors.append(
+            "both `to_common` and `from_common` are required when either is provided"
+        )
+    if (mappings is not None or has_callables) and source_schema is None:
+        errors.append(
+            "a `source_schema` is required when transforms (mappings or "
+            "to_common/from_common) are declared"
+        )
+
     if mappings is not None:
         for direction in ("to_common", "from_common"):
             if direction not in mappings:

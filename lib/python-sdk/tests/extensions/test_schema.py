@@ -213,6 +213,55 @@ def test_missing_mapping_direction_raises():
         )
 
 
+def _noop(value):
+    return TransformResult(result=value, errors=[])
+
+
+def test_functions_without_source_schema_raises():
+    with pytest.raises(PluginDefinitionError, match="source_schema` is required"):
+        schema(  # type: ignore[call-overload]
+            common_schema=Opportunity[NoCustomFields],
+            to_common=_noop,
+            from_common=_noop,
+        )
+
+
+def test_mappings_without_source_schema_raises():
+    with pytest.raises(PluginDefinitionError, match="source_schema` is required"):
+        schema(  # type: ignore[call-overload]
+            common_schema=Opportunity[NoCustomFields],
+            mappings={
+                "to_common": {"title": {"field": "x"}},
+                "from_common": {},
+            },
+        )
+
+
+def test_one_sided_callable_raises():
+    with pytest.raises(
+        PluginDefinitionError, match="both `to_common` and `from_common`"
+    ):
+        schema(  # type: ignore[call-overload]
+            source_schema=PassthroughModel,
+            common_schema=Opportunity[NoCustomFields],
+            to_common=_noop,
+        )
+
+
+def test_mappings_and_callables_together_raises():
+    with pytest.raises(PluginDefinitionError, match="cannot specify both"):
+        schema(  # type: ignore[call-overload]
+            source_schema=PassthroughModel,
+            common_schema=Opportunity[NoCustomFields],
+            mappings={
+                "to_common": {"title": {"field": "x"}},
+                "from_common": {},
+            },
+            to_common=_noop,
+            from_common=_noop,
+        )
+
+
 # ---------------------------------------------------------------------------
 # Consumer typing + behavior (the make-or-break path)
 # ---------------------------------------------------------------------------
