@@ -36,7 +36,7 @@ from pydantic import (
 )
 from pydantic.alias_generators import to_camel
 
-from ..schemas.pydantic.fields.custom import CustomFieldType
+from ..schemas.pydantic.fields.custom import CustomField, CustomFieldType
 from ..schemas.pydantic.models import Opportunity
 from .specs import PluginCustomFieldSpec
 from .transforms import build_transforms
@@ -55,7 +55,6 @@ __all__ = [
     "validate_into",
 ]
 
-V = TypeVar("V")
 TSource = TypeVar("TSource", bound=BaseModel)
 TCommon = TypeVar("TCommon", bound=BaseModel)
 T = TypeVar("T", bound=BaseModel)
@@ -78,22 +77,14 @@ class _CamelModel(BaseModel):
     )
 
 
-class CustomField(_CamelModel, Generic[V]):
-    """A single custom field: a typed ``value`` plus its metadata.
-
-    ``CustomField[V]`` is the single source of truth -- ``field_type`` and the
-    inspectable value type are derived from ``V`` -- so authors declare a field as
-    ``Optional[CustomField[V]] = Field(default=None, description=...)`` and never
-    restate the type.
-    """
-
-    name: str
-    field_type: CustomFieldType
-    value: V
-
-
 class CustomFieldSet(_CamelModel):
-    """Base class an author subclasses to declare a schema's custom fields."""
+    """Base class an author subclasses to declare a schema's custom fields.
+
+    Each field is declared as ``Optional[CustomField[V]] = Field(default=None,
+    description=...)``. ``CustomField[V]`` is the single source of truth: its value
+    type ``V`` is the anchor from which ``field_type`` and the inspectable value type
+    are derived, so they cannot drift.
+    """
 
 
 class NoCustomFields(CustomFieldSet):
