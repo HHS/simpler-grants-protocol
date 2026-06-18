@@ -35,6 +35,7 @@ export class SchemaDocMapper {
     } catch (error) {
       throw new Error(
         `Failed to load schema documentation mapping from ${mappingPath}: ${error}`,
+        { cause: error },
       );
     }
   }
