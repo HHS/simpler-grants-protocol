@@ -12,7 +12,7 @@ import { CustomFieldType } from "@/constants";
 const SimpleSchemaWithCustomFields = z.object({
   id: z.string(),
   name: z.string(),
-  customFields: z.record(CustomFieldSchema).nullish(),
+  customFields: z.record(z.string(), CustomFieldSchema).nullish(),
 });
 
 // Custom value schemas for testing

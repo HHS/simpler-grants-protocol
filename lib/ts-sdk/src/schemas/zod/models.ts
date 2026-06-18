@@ -104,7 +104,7 @@ export const OppTimelineSchema = z
     closeDate: EventSchema.nullish(),
 
     /** An optional map of other key dates or events in the opportunity timeline */
-    otherDates: z.record(EventSchema).nullish(),
+    otherDates: z.record(z.string(), EventSchema).nullish(),
   })
   .strict();
 
@@ -139,7 +139,7 @@ export const OpportunityBaseSchema = z
     source: z.string().url().nullish(),
 
     /** Additional custom fields specific to this Opportunity */
-    customFields: z.record(CustomFieldSchema).nullish(),
+    customFields: z.record(z.string(), CustomFieldSchema).nullish(),
   })
   .merge(SystemMetadataSchema);
 
@@ -190,5 +190,5 @@ export const OppDefaultFiltersSchema = z.object({
 
 export const OppFiltersSchema = OppDefaultFiltersSchema.extend({
   /** Additional implementation-defined filters */
-  customFilters: z.record(DefaultFilterSchema).nullish(),
+  customFilters: z.record(z.string(), DefaultFilterSchema).nullish(),
 });
