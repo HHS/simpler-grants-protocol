@@ -282,9 +282,7 @@ export class Opportunities {
   async search<
     S extends OppSchema = typeof OpportunityBaseSchema,
     R extends PluginRoutes = PluginRoutes,
-  >(
-    options?: SearchOptions<S, R>
-  ): Promise<Filtered<z.infer<S>, OppFilters>> {
+  >(options?: SearchOptions<S, R>): Promise<Filtered<z.infer<S>, OppFilters>> {
     const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
 
     // Build the base search body (without pagination)
