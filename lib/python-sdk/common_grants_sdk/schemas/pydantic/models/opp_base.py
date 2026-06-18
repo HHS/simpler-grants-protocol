@@ -1,9 +1,12 @@
 """Base model for funding opportunities."""
 
-from typing import Any, Optional, Type, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Generic, Optional, Type, TypeVar
 from uuid import UUID
 
-from pydantic import Field, HttpUrl
+import typing_extensions as te
+from pydantic import ConfigDict, Field, HttpUrl
 
 from ..base import CommonGrantsBaseModel
 from ..fields import CustomField, SystemMetadata
@@ -14,13 +17,23 @@ from common_grants_sdk.utils.custom_fields import (
     add_custom_fields,
     get_custom_field_value,
 )
-from common_grants_sdk.extensions.specs import CustomFieldSpec
+
+if TYPE_CHECKING:
+    from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 V = TypeVar("V")  # Unbound to support both BaseModel subclasses and primitives
 
+# The opportunity's custom-fields container. Defaults to the protocol's untyped
+# representation (``dict[str, CustomField]``), so the bare ``OpportunityBase``
+# behaves exactly as a concrete model; plugin authors parameterize it with a typed
+# ``CustomFieldSet`` (``OpportunityBase[OpportunityFields]``) for concrete access.
+CF = te.TypeVar("CF", default="dict[str, CustomField]")
 
-class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
-    """Base model for a funding opportunity with all core fields."""
+
+class OpportunityBase(SystemMetadata, CommonGrantsBaseModel, Generic[CF]):
+    """Base model for a funding opportunity, generic over its custom-fields container."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     id: UUID = Field(..., description="Globally unique id for the opportunity")
     title: str = Field(..., description="Title or name of the funding opportunity")
@@ -42,7 +55,7 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel):
         default=None,
         description="URL for the original source of the opportunity",
     )
-    custom_fields: Optional[dict[str, CustomField]] = Field(
+    custom_fields: Optional[CF] = Field(
         default=None,
         alias="customFields",
         description="Additional custom fields specific to this opportunity",

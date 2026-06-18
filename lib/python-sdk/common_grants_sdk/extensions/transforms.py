@@ -34,12 +34,18 @@ def _validate_output_paths(
 ) -> None:
     """Validate that top-level output keys in mapping are valid fields on model.
 
-    Called when common_schema is supplied to build_transforms(). Custom fields
-    declared by the plugin appear as regular model fields on the generated common
+    Called when common_schema or source_schema is supplied to build_transforms().
+    Custom fields declared by the plugin appear as regular model fields on the common
     model and are therefore treated as valid output paths automatically.
+
+    Models configured with ``extra="allow"`` (e.g. ``PassthroughModel``) accept
+    arbitrary keys, so every output key is valid and the check is skipped.
 
     Raises ValueError if any top-level key is not a field name or alias on model.
     """
+    if model.model_config.get("extra") == "allow":
+        return
+
     valid_names: set[str] = set(model.model_fields.keys())
     for field_info in model.model_fields.values():
         if field_info.alias:
@@ -53,7 +59,7 @@ def _validate_output_paths(
         raise ValueError(
             f"build_transforms ({direction}_mapping): unknown output {noun} "
             f"{sorted(invalid)!r} for model {model.__name__}. "
-            f"Declare them as custom_fields in SchemaInput or check the field name."
+            f"Declare them on the schema's CustomFieldSet or check the field name."
         )
 
 
@@ -189,13 +195,11 @@ def build_transforms(
                     handlers={"upper": handle_upper},
                 )
         common_schema: Optional Pydantic model class to validate the to_common output
-            against. Must be the fully extended generated model class (e.g. the
-            generated Opportunity from generated/schemas.py), NOT the base class
-            (e.g. OpportunityBase). Passing a base class will silently weaken
-            validation — custom_fields will only be checked against
-            dict[str, CustomField] rather than the typed container produced by the
-            plugin's custom field declarations. When provided, model_validate is
-            called on the transform result and any ValidationErrors are appended to
+            against. Pass the model that carries the plugin's custom fields (e.g.
+            ``OpportunityBase[OpportunityFields]``), not the base ``OpportunityBase``:
+            a base class only checks custom_fields against dict[str, CustomField]
+            rather than the typed container. When provided, model_validate is called
+            on the transform result and any ValidationErrors are appended to
             TransformResult.errors rather than raised.
 
             Note on result shape: when common_schema is set, TransformResult.result

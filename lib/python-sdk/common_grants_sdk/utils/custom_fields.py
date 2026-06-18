@@ -1,9 +1,13 @@
-from typing import Optional, Any, Type, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional, Any, Type, TypeVar
 from pydantic import BaseModel, Field, create_model, ConfigDict, model_validator
 from ..schemas.pydantic.fields import CustomField, CustomFieldType
 from ..schemas.pydantic.base import CommonGrantsBaseModel
 from common_grants_sdk.utils.json import snake
-from common_grants_sdk.extensions.specs import CustomFieldSpec
+
+if TYPE_CHECKING:
+    from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 T = TypeVar("T", bound=BaseModel)  # For add_custom_fields
 V = TypeVar("V")  # For get_custom_field_value (unbound to support primitives)
