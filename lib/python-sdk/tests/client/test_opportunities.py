@@ -19,7 +19,11 @@ from common_grants_sdk.schemas.pydantic.responses import (
     OpportunitiesSearchResponse,
 )
 from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
-from common_grants_sdk.extensions.specs import CustomFieldSpec
+from common_grants_sdk.extensions.specs import (
+    CustomFieldSpec,
+    CustomFilterSpec,
+    CustomFilterType,
+)
 
 
 @pytest.fixture
@@ -757,6 +761,48 @@ class TestOpportunitySearch:
         assert call_args[1]["headers"]["Accept"] == "application/json"
         assert call_args[1]["params"]["page"] == 1
         assert call_args[1]["params"]["pageSize"] == 100
+
+    def test_search_classifies_custom_filter_bag(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """A flat custom-filter bag is classified inside search(), not by the caller."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        routes = {
+            "opportunities": {
+                "search": {
+                    "filters": {
+                        "agency": CustomFilterSpec(
+                            filter_type=CustomFilterType.STRING_ARRAY
+                        )
+                    }
+                }
+            }
+        }
+
+        client.opportunities.search(
+            search="conservation",
+            status=[OppStatusOptions.OPEN],
+            filters={
+                "agency": {"operator": "in", "value": ["HHS", "NSF"]},
+                "legacyTag": {"operator": "eq", "value": "conservation-2024"},
+            },
+            routes=routes,
+        )
+
+        sent_filters = mock_httpx_client.post.call_args[1]["json"]["filters"]
+        # default field (status shorthand) -> top-level
+        assert sent_filters["status"]["operator"] == "in"
+        # registered custom + ad-hoc -> customFilters
+        assert "agency" in sent_filters["customFilters"]
+        assert "legacyTag" in sent_filters["customFilters"]
+        # separation invariant: status not duplicated under customFilters
+        assert "status" not in sent_filters["customFilters"]
 
     def test_search_opportunities_different_page(
         self, client, mock_httpx_client, sample_search_response

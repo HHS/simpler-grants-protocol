@@ -13,6 +13,8 @@ from ..schemas.pydantic.responses import (
     Paginated,
 )
 from ..schemas.pydantic.models.opp_status import OppStatusOptions
+from ..extensions.filters import classify_filters
+from ..extensions.types import PluginRoutes
 from .types import ItemsT
 from typing import List
 
@@ -108,22 +110,31 @@ class Opportunities:
     def search(
         self,
         search: str,
-        status: List[OppStatusOptions],
+        status: List[OppStatusOptions] | None = None,
         page: int | None = None,
         page_size: int | None = None,
         schema: Type[OpportunityBase] | None = OpportunityBase,
+        filters: dict | None = None,
+        routes: PluginRoutes | None = None,
     ) -> OpportunitiesSearchResponse:
         """Search for opportunties by a query string
 
         Args:
             search: The string to search for.
-            status: List of statuses to search on.
+            status: List of statuses to search on (shorthand for the ``status``
+                default filter).
             page: Page number (1-indexed). If None, method will fetch all
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
                 client config.
             schema: OpportunityBase to support custom fields added by the caller.
-
+            filters: Flat custom-filter bag (``{name: {"operator", "value"}}``,
+                e.g. built with the ``f`` helper). Classified into the OppFilters
+                request body via ``classify_filters`` — the same role the
+                ``status`` shorthand plays. Mirrors the TS SDK's
+                ``search({ filters })``.
+            routes: The plugin's ``routes`` declaration, so registered custom
+                filters validate against their declared specs.
 
         Returns:
             OpportunitiesSearchResponse with items and pagination info
@@ -132,10 +143,20 @@ class Opportunities:
                 APIError: if the API request fails
         """
 
+        # Custom filters -> OppFilters wire body. Classification is wire-request
+        # marshalling, the same category as the ``status`` shorthand below, so it
+        # lives in the client method, not on the caller (mirrors the TS SDK).
+        filters_body: dict = {}
+        if filters:
+            filters_body = classify_filters(
+                routes or {}, "opportunities", "search", filters
+            ).model_dump(by_alias=True, exclude_none=True, mode="json")
+
+        if status:
+            filters_body["status"] = {"operator": "in", "value": status}
+
         request = {
-            "filters": {
-                "status": {"operator": "in", "value": status},
-            },
+            "filters": filters_body,
             "pagination": {"page": 1, "pageSize": 10},
             "search": search,
             "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
