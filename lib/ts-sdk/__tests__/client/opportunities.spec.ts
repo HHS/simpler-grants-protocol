@@ -3,7 +3,8 @@ import { z } from "zod";
 import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
 import { Client, Auth } from "../../src/client";
 import { OpportunityBaseSchema } from "../../src/schemas";
-import { withCustomFields } from "../../src/extensions";
+import { withCustomFields, F } from "../../src/extensions";
+import type { PluginRoutes } from "../../src/extensions";
 import { CustomFieldType } from "../../src/constants";
 
 // =============================================================================
@@ -377,6 +378,51 @@ describe("Opportunities", () => {
         operator: "in",
         value: ["open", "forecasted"],
       });
+    });
+
+    it("classifies a flat custom-filter bag into the OppFilters body when routes are supplied", async () => {
+      let capturedBody: Record<string, unknown> | undefined;
+
+      server.use(
+        http.post("/common-grants/opportunities/search", async ({ request }) => {
+          capturedBody = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [createMockOpportunity(OPP_UUID_1, "Conservation Grant", "open")],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {} },
+          });
+        })
+      );
+
+      // A plugin registering one custom filter on opportunities.search.
+      const routes: PluginRoutes = {
+        opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
+      };
+
+      await client.opportunities.search({
+        routes,
+        filters: {
+          status: F.in(["open"]), // default field → top-level
+          agency: F.in(["HHS", "NSF"]), // registered custom → customFilters
+          legacyTag: F.eq("conservation-2024"), // ad-hoc → customFilters passthrough
+        },
+      });
+
+      // Default field stays top-level; registered + ad-hoc land under customFilters.
+      expect(capturedBody?.filters).toMatchObject({
+        status: { operator: "in", value: ["open"] },
+        customFilters: {
+          agency: { operator: "in", value: ["HHS", "NSF"] },
+          legacyTag: { operator: "eq", value: "conservation-2024" },
+        },
+      });
+      // A default field must NOT be duplicated into customFilters.
+      const customFilters = (capturedBody?.filters as { customFilters?: Record<string, unknown> })
+        .customFilters;
+      expect(customFilters).not.toHaveProperty("status");
     });
 
     it("searches with only query parameter", async () => {

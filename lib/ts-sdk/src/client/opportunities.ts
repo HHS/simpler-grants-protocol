@@ -20,6 +20,8 @@ import {
   OppFiltersSchema,
 } from "../schemas";
 import { ArrayOperator } from "../constants";
+import { classifyFilters } from "../extensions/custom-filters";
+import type { PluginRoutes } from "../extensions/types";
 
 // =============================================================================
 // Schema type constraint
@@ -37,6 +39,38 @@ import { ArrayOperator } from "../constants";
  * on the output type accepts both the base schema and any extended variant.
  */
 type OppSchema = z.ZodType<OpportunityBase, z.ZodTypeDef, unknown>;
+
+// =============================================================================
+// Custom-filter bag typing (routes-driven)
+// =============================================================================
+
+/** Raw `{ operator, value }` filter object, as produced by the `F.*` helpers. */
+type RawFilter = { operator: string; value: unknown };
+
+/**
+ * The declared custom-filter names for `opportunities.search` in a routes type.
+ * `definePlugin` preserves the literal `routes` type (its `const TRoutes` generic),
+ * so a plugin defined inline yields concrete filter-name literals here.
+ */
+type SearchFilterNames<R extends PluginRoutes> = R extends {
+  opportunities: { search: { filters: infer Fs } };
+}
+  ? Extract<keyof Fs, string>
+  : never;
+
+/**
+ * Typed filter bag for `search({ filters })`.
+ *
+ * Declared filter names surface in editor autocomplete with a typed value, while
+ * arbitrary keys remain accepted — the spec supports ad-hoc (escape-hatch) filters
+ * (bucket 3 of `classifyFilters`), so an unknown key cannot be rejected at the type
+ * level without dropping ad-hoc support. Net: autocomplete + value-shape checking
+ * for declared filters; NO typo-rejection on filter names (a typo is structurally
+ * an intentional ad-hoc key). See SPIKE-FINDINGS.md.
+ */
+type CustomFilterBag<R extends PluginRoutes> = {
+  [K in SearchFilterNames<R>]?: RawFilter;
+} & Record<string, RawFilter>;
 
 // =============================================================================
 // Options types (schema in options for consistent API)
@@ -59,11 +93,21 @@ export interface ListOptions<
 /** Options for searching opportunities */
 export interface SearchOptions<
   S extends OppSchema = typeof OpportunityBaseSchema,
+  R extends PluginRoutes = PluginRoutes,
 > extends FetchManyOptions<z.infer<S>> {
   /** Text query to search for in opportunity titles and descriptions */
   query?: string;
   /** Filter by opportunity statuses */
   statuses?: OppStatusOptions[];
+  /**
+   * Flat custom-filter bag (filter name → `{ operator, value }`, e.g. built with `F.*`).
+   * Classified into the `OppFilters` request body via `classifyFilters` when present —
+   * the same per-call channel as `schema`, which types the response. Pass `routes`
+   * alongside so registered custom filters get typed names and validate against their specs.
+   */
+  filters?: CustomFilterBag<R>;
+  /** The plugin's `routes` declaration. Used to classify/validate registered custom filters. */
+  routes?: R;
   /** Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`. */
   schema?: S;
 }
@@ -235,8 +279,11 @@ export class Opportunities {
    * const typed = await client.opportunities.search({ query: "test", schema: OpportunitySchema });
    * ```
    */
-  async search<S extends OppSchema = typeof OpportunityBaseSchema>(
-    options?: SearchOptions<S>
+  async search<
+    S extends OppSchema = typeof OpportunityBaseSchema,
+    R extends PluginRoutes = PluginRoutes,
+  >(
+    options?: SearchOptions<S, R>
   ): Promise<Filtered<z.infer<S>, OppFilters>> {
     const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
 
@@ -279,15 +326,32 @@ export class Opportunities {
       body.search = options.query;
     }
 
-    // Build filters from statuses shorthand and/or explicit filters
-    if (options?.statuses?.length) {
-      const filters: OppFilters = {};
+    // Custom filters → OppFilters wire body. Classification is wire-request
+    // marshalling — the same category as the `statuses` shorthand below — so it
+    // lives in the client method, not on the caller. `routes` arrives per-call,
+    // mirroring the `schema` option that types the response.
+    let filters: OppFilters | undefined;
+    if (options?.filters) {
+      // ponytail: cast bridges the Zod-inferred OppFilters to the hand-authored
+      // OppFilters type alias; they are structurally the same shape.
+      filters = classifyFilters(
+        options.routes ?? {},
+        "opportunities",
+        "search",
+        options.filters
+      ) as OppFilters;
+    }
 
+    // statuses shorthand → status default field (augments any classified filters)
+    if (options?.statuses?.length) {
+      filters = filters ?? {};
       filters.status = {
         operator: ArrayOperator.in,
         value: options.statuses,
       };
+    }
 
+    if (filters) {
       body.filters = filters;
     }
 

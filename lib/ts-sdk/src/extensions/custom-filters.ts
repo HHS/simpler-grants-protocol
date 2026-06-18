@@ -38,15 +38,19 @@ import type { CustomFilterSpec, CustomFilterType, PluginRoutes, RouteDeclaration
 import { FilterError } from "./types";
 
 // ############################################################################
-// Internal — filter-type schema map
+// Public — filter-type catalog
 // ############################################################################
 
 /**
  * Maps each CustomFilterType to the Zod schema that validates its
  * `{operator, value}` pair. Each schema constrains both the allowed operator
  * enum and the value shape, so a single parse covers both checks.
+ *
+ * Exported read-only for consumer introspection (enumerate valid filter types,
+ * drive a UI, or validate a filter bag independently). The catalog is closed —
+ * adding a filter type is a spec/SDK change, not a runtime extension point.
  */
-const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
+export const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
   stringComparison: StringComparisonFilterSchema,
   stringArray: StringArrayFilterSchema,
   numberComparison: NumberComparisonFilterSchema,

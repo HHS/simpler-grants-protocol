@@ -1,6 +1,12 @@
 """Public extension APIs for the CommonGrants Python SDK."""
 
-from .filters import classify_filters, f, validate_filter_call, validate_routes
+from .filters import (
+    FILTER_TYPE_SCHEMAS,
+    classify_filters,
+    f,
+    validate_filter_call,
+    validate_routes,
+)
 from .plugin import Plugin, PluginConfig, define_plugin, inject_transforms
 from .specs import (
     ConflictStrategy,
@@ -42,6 +48,7 @@ __all__ = [
     "TransformError",
     "TransformResult",
     # Custom filters
+    "FILTER_TYPE_SCHEMAS",
     "classify_filters",
     "CustomFilterSpec",
     "CustomFilterType",
