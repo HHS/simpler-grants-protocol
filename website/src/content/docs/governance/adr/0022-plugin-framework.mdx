@@ -137,7 +137,9 @@ interface CustomFilterSpec {
 
 interface Plugin {
   meta?: PluginMeta;
-  schemas: Partial<Record<ExtensibleSchemaName, SchemaConfig<unknown, unknown>>>;
+  schemas: Partial<
+    Record<ExtensibleSchemaName, SchemaConfig<unknown, unknown>>
+  >;
 }
 
 // Input object for definePlugin(). Using a named-options object makes it easy to add
