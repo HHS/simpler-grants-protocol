@@ -8,7 +8,7 @@ __version__ = "0.1.0"
 
 from . import schemas
 from .client import Auth, Client, Config
-from .extensions import Plugin, PluginConfig, define_plugin
+from .extensions import Plugin, PluginSchemas, define_plugin, schema
 
 __all__ = [
     "schemas",
@@ -16,6 +16,7 @@ __all__ = [
     "Auth",
     "Config",
     "Plugin",
-    "PluginConfig",
+    "PluginSchemas",
     "define_plugin",
+    "schema",
 ]

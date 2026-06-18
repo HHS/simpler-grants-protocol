@@ -5,8 +5,9 @@ Demonstrates route-keyed custom filter declaration, flat call-site classificatio
 and the three-bucket ``OppFilters`` request body (default named fields + customFilters record)
 using the grants.gov canonical example from #646/#869.
 
-No code generation (custom filters are a pure-runtime classifier).  The example
-imports directly from ``common_grants_sdk.extensions`` — no codegen schemas needed.
+No code generation (custom filters are a pure-runtime classifier). Routes are a
+plain ``PluginRoutes`` declaration passed directly to ``classify_filters`` — the
+plugin framework (``define_plugin``) does not need to carry them.
 
 Run (from lib/python-sdk/):
     poetry run python examples/custom_filters.py
@@ -16,37 +17,34 @@ from __future__ import annotations
 
 import json
 
-from common_grants_sdk.extensions import classify_filters, define_plugin, f
+from common_grants_sdk.extensions import classify_filters, f
 from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
-from common_grants_sdk.extensions.types import FilterError, PluginExtensionsMeta
+from common_grants_sdk.extensions.types import FilterError, PluginMeta, PluginRoutes
 
 # ---------------------------------------------------------------------------
-# Plugin declaration — route-keyed custom filter specs
+# Route-keyed custom filter specs + plugin metadata
 # ---------------------------------------------------------------------------
 
-grants_gov = define_plugin(
-    meta=PluginExtensionsMeta(
-        name="grants-gov",
-        version="0.1.0",
-        sourceSystem="grants.gov",
-        capabilities=["customFilters"],
-    ),
-    routes={
-        "opportunities": {
-            "search": {
-                "filters": {
-                    "agency": CustomFilterSpec(
-                        filter_type=CustomFilterType.STRING_ARRAY
-                    ),
-                    "fundingProgram": CustomFilterSpec(
-                        filter_type=CustomFilterType.STRING_COMPARISON,
-                        description="Program name filter",
-                    ),
-                }
+meta = PluginMeta(
+    name="grants-gov",
+    version="0.1.0",
+    source_system="grants.gov",
+    capabilities=["customFilters"],
+)
+
+routes: PluginRoutes = {
+    "opportunities": {
+        "search": {
+            "filters": {
+                "agency": CustomFilterSpec(filter_type=CustomFilterType.STRING_ARRAY),
+                "fundingProgram": CustomFilterSpec(
+                    filter_type=CustomFilterType.STRING_COMPARISON,
+                    description="Program name filter",
+                ),
             }
         }
     },
-)
+}
 
 
 def _section(title: str) -> None:
@@ -58,13 +56,12 @@ def _section(title: str) -> None:
 def main() -> None:
     # --- Declared routes ---
     _section("PLUGIN ROUTES (declared)")
-    if grants_gov.routes:
-        for resource, methods in grants_gov.routes.items():
-            for method, declarations in methods.items():
-                print(f"  {resource}.{method}:")
-                for name, spec in declarations.get("filters", {}).items():
-                    desc = f" — {spec.description}" if spec.description else ""
-                    print(f"    {name}: {spec.filter_type.value}{desc}")
+    for resource, methods in routes.items():
+        for method, declarations in methods.items():
+            print(f"  {resource}.{method}:")
+            for name, spec in declarations.get("filters", {}).items():
+                desc = f" — {spec.description}" if spec.description else ""
+                print(f"    {name}: {spec.filter_type.value}{desc}")
 
     # --- Classify: default + registered custom + ad-hoc ---
     _section("CLASSIFY FILTERS — default + custom + ad-hoc (canonical grants.gov demo)")
@@ -86,10 +83,7 @@ def main() -> None:
         "legacyTag": f.eq("priority"),
     }
 
-    assert grants_gov.routes is not None
-    request_body = classify_filters(
-        grants_gov.routes, "opportunities", "search", consumer_filters
-    )
+    request_body = classify_filters(routes, "opportunities", "search", consumer_filters)
 
     print("\nRequest body (by_alias=True, exclude_none=True, mode='json'):")
     print(
@@ -110,7 +104,7 @@ def main() -> None:
         ),  # eq is not a valid STRING_ARRAY op
     }
     try:
-        classify_filters(grants_gov.routes, "opportunities", "search", bad_filters)
+        classify_filters(routes, "opportunities", "search", bad_filters)
     except FilterError as exc:
         # str(exc) summarizes the first failure; the structured fields carry
         # the full detail — exc.path names the failing filter, exc.cause is
@@ -121,11 +115,10 @@ def main() -> None:
 
     # --- Plugin metadata ---
     _section("PLUGIN METADATA")
-    if grants_gov.meta:
-        print(f"name:         {grants_gov.meta.name}")
-        print(f"version:      {grants_gov.meta.version}")
-        print(f"sourceSystem: {grants_gov.meta.source_system}")
-        print(f"capabilities: {grants_gov.meta.capabilities}")
+    print(f"name:         {meta.name}")
+    print(f"version:      {meta.version}")
+    print(f"sourceSystem: {meta.source_system}")
+    print(f"capabilities: {meta.capabilities}")
 
 
 if __name__ == "__main__":

@@ -45,14 +45,16 @@ const ensureUTC = (date: string) => {
 /**
  * Accept a `Date` as input by normalizing it to a string before the string
  * validators run, so a caller can pass either an ISO string or a `Date`. A
- * string goes straight to the inner schema's strict validation; a `Date` is
- * rendered by `toStr` into the string format the inner schema expects. Output
- * is a `Date`.
+ * string goes straight to the inner schema's strict validation; a valid `Date`
+ * is rendered by `toStr` into the string format the inner schema expects. An
+ * invalid `Date` is passed through unchanged so the inner validator rejects it,
+ * rather than throwing a `RangeError` out of `toISOString()` and escaping
+ * `safeParse`. Output is a `Date`.
  */
 const acceptDate =
   (toStr: (d: Date) => string) =>
   (val: unknown): unknown =>
-    val instanceof Date ? toStr(val) : val;
+    val instanceof Date && !isNaN(val.getTime()) ? toStr(val) : val;
 
 /** Schema for UTC datetime fields (accepts an ISO string or a `Date`; outputs a `Date`) */
 export const UTCDateTimeSchema = z.preprocess(

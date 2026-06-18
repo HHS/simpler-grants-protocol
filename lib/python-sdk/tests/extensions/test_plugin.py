@@ -1,172 +1,101 @@
-"""Tests for plugin.py — Plugin and PluginConfig API."""
+"""Tests for plugin.py -- PluginSchemas / Plugin / define_plugin assembly."""
+
+from typing import Optional
 
 import pytest
+from pydantic import Field
 
-from common_grants_sdk.extensions.plugin import Plugin, PluginConfig, define_plugin
-from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
-from common_grants_sdk.extensions.types import (
-    SchemaInput,
-    PluginExtensionsMeta,
-    TransformResult,
+from common_grants_sdk.extensions import (
+    CustomField,
+    CustomFieldSet,
+    PassthroughModel,
+    Plugin,
+    PluginMeta,
+    PluginSchemas,
+    SchemaOnly,
+    SchemaWithTransforms,
+    define_plugin,
+    schema,
 )
+from common_grants_sdk.extensions.schema import PluginDefinitionError
+from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 
 
-def test_define_plugin_no_args():
-    """define_plugin() with no args returns PluginConfig with all fields None."""
-    config = define_plugin()
-    assert isinstance(config, PluginConfig)
-    assert config.meta is None
-    assert config.schemas is None
+class OpportunityFields(CustomFieldSet):
+    agency_code: Optional[CustomField[str]] = Field(
+        default=None, description="Agency code"
+    )
 
 
-def test_define_plugin_routes_passthrough():
-    """define_plugin stores routes as-is on PluginConfig.routes (no validation)."""
-    routes = {
-        "opportunities": {
-            "search": {
-                "filters": {
-                    "agency": CustomFilterSpec(
-                        filter_type=CustomFilterType.STRING_ARRAY
-                    )
-                }
-            }
-        }
-    }
-    config = define_plugin(routes=routes)
-    assert config.routes is routes
+def _meta() -> PluginMeta:
+    return PluginMeta(name="test", source_system="test-system")
 
 
-def test_define_plugin_with_meta_and_schemas():
-    meta = PluginExtensionsMeta(name="test", source_system="test-system")
-
-    def passthrough(x):
-        return TransformResult(result=x, errors=[])
-
-    schemas = {
-        "Opportunity": SchemaInput(to_common=passthrough, from_common=passthrough)
-    }
-    config = define_plugin(meta=meta, schemas=schemas)
-    assert config.meta is meta
-    assert config.meta.name == "test"
-    assert config.schemas is schemas
+# ---------------------------------------------------------------------------
+# define_plugin assembly
+# ---------------------------------------------------------------------------
 
 
-def test_define_plugin_schemas_callable_roundtrip():
-    """config.schemas["Opportunity"].to_common(data) works."""
+def test_define_plugin_returns_plugin_with_schemas_and_meta():
+    ext = schema(common_schema=OpportunityBase[OpportunityFields])
+    plugin = define_plugin(PluginSchemas(Opportunity=ext), meta=_meta())
+    assert isinstance(plugin, Plugin)
+    assert plugin.schemas.Opportunity is ext
+    assert plugin.meta.name == "test"
+    assert plugin.meta.source_system == "test-system"
 
-    def always_transformed(_x):
-        return TransformResult(result={"transformed": True}, errors=[])
 
-    config = define_plugin(
-        schemas={
-            "Opportunity": SchemaInput(
-                to_common=always_transformed, from_common=always_transformed
-            )
+def test_omitted_schema_falls_back_to_base_schema_only_extension():
+    """An unextended PluginSchemas slot is a SchemaOnly over the base, never None."""
+    plugin = define_plugin(PluginSchemas(), meta=_meta())
+    entry = plugin.schemas.Opportunity
+    assert isinstance(entry, SchemaOnly)
+    assert entry.schema_name == "Opportunity"
+    assert entry.custom_fields == {}
+    # The base schema has no custom fields declared.
+    assert entry.common_schema is OpportunityBase
+
+
+def test_mappings_entry_is_a_transform_extension():
+    ext = schema(
+        source_schema=PassthroughModel,
+        common_schema=OpportunityBase,
+        mappings={
+            "to_common": {"title": {"field": "opportunity_title"}},
+            "from_common": {"opportunity_title": {"field": "title"}},
         },
     )
-    result = config.schemas["Opportunity"].to_common({"raw": "data"})
-    assert result.result == {"transformed": True}
-    assert result.errors == []
+    plugin = define_plugin(PluginSchemas(Opportunity=ext), meta=_meta())
+    assert isinstance(plugin.schemas.Opportunity, SchemaWithTransforms)
 
 
-def test_plugin_fields_default_to_none():
-    """Plugin.schemas holds the container; meta defaults to None."""
-    base = Plugin(schemas=object())
-    assert base.meta is None
+def test_define_plugin_rejects_non_extension_in_slot():
+    bad = PluginSchemas(Opportunity="not an extension")  # type: ignore[arg-type]
+    with pytest.raises(PluginDefinitionError, match="not a schema extension"):
+        define_plugin(bad, meta=_meta())
 
 
-def test_plugin_fields_populated():
-    meta = PluginExtensionsMeta(name="p", source_system="s")
-    full = Plugin(schemas=object(), meta=meta)
-    assert full.meta is meta
-
-
-def test_plugin_schemas_is_attribute_container():
-    """Plugin.schemas holds the _Schemas object (no generated_schemas field)."""
-    s = object()
-    p = Plugin(schemas=s)
-    assert p.schemas is s
-    assert not hasattr(p, "generated_schemas")
+def test_define_plugin_rejects_schema_name_mismatch():
+    """A slot holding an extension whose schema_name differs from the attribute name raises."""
+    # Hand-build an extension tagged with a different schema name than its slot.
+    mismatched = SchemaOnly(
+        schema_name="Program",
+        common_schema=OpportunityBase,
+        custom_fields={},
+    )
+    bad = PluginSchemas(Opportunity=mismatched)  # type: ignore[arg-type]
+    with pytest.raises(
+        PluginDefinitionError, match="attribute name must match the schema name"
+    ):
+        define_plugin(bad, meta=_meta())
 
 
 # ---------------------------------------------------------------------------
-# XOR constraint tests
+# Plugin container
 # ---------------------------------------------------------------------------
 
 
-def test_define_plugin_xor_mappings_and_both_callables_raises():
-    """Providing mappings AND both explicit callables raises ValueError."""
-    from common_grants_sdk.extensions.types import SchemaMappings
-
-    def noop(x):
-        return TransformResult(result=x, errors=[])
-
-    with pytest.raises(
-        ValueError,
-        match="cannot specify both mappings and explicit to_common/from_common",
-    ):
-        define_plugin(
-            schemas={
-                "Opportunity": SchemaInput(
-                    mappings=SchemaMappings(
-                        to_common={"title": {"field": "native_title"}},
-                        from_common={"native_title": {"field": "title"}},
-                    ),
-                    to_common=noop,
-                    from_common=noop,
-                )
-            }
-        )
-
-
-def test_define_plugin_xor_mappings_and_one_callable_raises():
-    """Providing mappings AND a single explicit callable raises ValueError."""
-    from common_grants_sdk.extensions.types import SchemaMappings
-
-    def noop(x):
-        return TransformResult(result=x, errors=[])
-
-    with pytest.raises(
-        ValueError,
-        match="cannot specify both mappings and explicit to_common/from_common",
-    ):
-        define_plugin(
-            schemas={
-                "Opportunity": SchemaInput(
-                    mappings=SchemaMappings(
-                        to_common={"title": {"field": "native_title"}},
-                        from_common={"native_title": {"field": "title"}},
-                    ),
-                    to_common=noop,
-                )
-            }
-        )
-
-
-def test_define_plugin_mappings_without_callables_is_valid():
-    """Providing mappings without explicit callables does not raise."""
-    from common_grants_sdk.extensions.types import SchemaMappings
-
-    config = define_plugin(
-        schemas={
-            "Opportunity": SchemaInput(
-                mappings=SchemaMappings(
-                    to_common={"title": {"field": "native_title"}},
-                    from_common={"native_title": {"field": "title"}},
-                )
-            )
-        }
-    )
-    assert config.schemas is not None
-
-
-def test_define_plugin_callables_without_mappings_is_valid():
-    """Providing explicit callables without mappings does not raise."""
-
-    def noop(x):
-        return TransformResult(result=x, errors=[])
-
-    config = define_plugin(
-        schemas={"Opportunity": SchemaInput(to_common=noop, from_common=noop)}
-    )
-    assert config.schemas is not None
+def test_plugin_is_frozen():
+    plugin = define_plugin(PluginSchemas(), meta=_meta())
+    with pytest.raises((AttributeError, TypeError)):
+        plugin.meta = _meta()  # type: ignore[misc]
