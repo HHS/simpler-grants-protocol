@@ -4,7 +4,7 @@
  * Checked by `tsc --noEmit` only — there is no runtime test. Each `@ts-expect-error`
  * IS an assertion: it guards a line that must fail to compile.
  *
- * Spike finding (see SPIKE-FINDINGS.md): because `definePlugin` preserves the literal
+ * Why the narrowing is partial: because `definePlugin` preserves the literal
  * `routes` type (its `const TRoutes` generic), declared filter names get autocomplete
  * and their values are type-checked. But the spec supports AD-HOC filters (an open key
  * set), so an unknown key cannot be rejected — a typo on a declared name is structurally

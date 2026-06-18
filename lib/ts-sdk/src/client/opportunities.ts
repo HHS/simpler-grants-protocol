@@ -66,7 +66,7 @@ type SearchFilterNames<R extends PluginRoutes> = R extends {
  * (bucket 3 of `classifyFilters`), so an unknown key cannot be rejected at the type
  * level without dropping ad-hoc support. Net: autocomplete + value-shape checking
  * for declared filters; NO typo-rejection on filter names (a typo is structurally
- * an intentional ad-hoc key). See SPIKE-FINDINGS.md.
+ * an intentional ad-hoc key).
  */
 type CustomFilterBag<R extends PluginRoutes> = {
   [K in SearchFilterNames<R>]?: RawFilter;
