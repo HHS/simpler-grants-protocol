@@ -7,6 +7,11 @@ from .plugin import (
     PluginSchemas,
     define_plugin,
 )
+from .routes import (
+    ResourceRoutes,
+    RouteFilters,
+    Routes,
+)
 from .schema import (
     EXTENSIBLE_SCHEMA_MAP,
     CustomField,
@@ -51,6 +56,9 @@ __all__ = [
     "PluginDefinitionError",
     "PluginMeta",
     "PluginSchemas",
+    "ResourceRoutes",
+    "RouteFilters",
+    "Routes",
     "SchemaExtensions",
     "SchemaOnly",
     "SchemaWithTransforms",

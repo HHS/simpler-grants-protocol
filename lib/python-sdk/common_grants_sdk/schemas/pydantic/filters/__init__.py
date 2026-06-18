@@ -28,9 +28,20 @@ __all__ = [  # noqa: RUF022
     # Opportunity Filters
     "OppDefaultFilters",
     "OppFilters",
+    "OpportunityFilters",
     # String Filters
     "StringArrayFilter",
     "StringComparisonFilter",
+    # Typed authoring-DX aliases (the *Range aliases stay module-local in
+    # ``.opportunity`` because ``DateRange`` / ``MoneyRange`` / ``NumberRange``
+    # are already exported here as the range *value* sub-models).
+    "BooleanComparison",
+    "DateComparison",
+    "MoneyComparison",
+    "NumberArray",
+    "NumberComparison",
+    "StringArray",
+    "StringComparison",
 ]
 
 from .base import (
@@ -60,8 +71,16 @@ from .numeric import (
     NumberRangeFilter,
 )
 from .opportunity import (
+    BooleanComparison,
+    DateComparison,
+    MoneyComparison,
+    NumberArray,
+    NumberComparison,
     OppDefaultFilters,
     OppFilters,
+    OpportunityFilters,
+    StringArray,
+    StringComparison,
 )
 from .string import (
     StringArrayFilter,
