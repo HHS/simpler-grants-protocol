@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Any, Optional
+from typing import Any, Optional, Union, overload
 
 from pydantic import BaseModel, ValidationError
 
@@ -41,6 +41,7 @@ from common_grants_sdk.schemas.pydantic.filters.money import (
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
     NumberArrayFilter,
     NumberComparisonFilter,
+    NumberRange,
     NumberRangeFilter,
 )
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
@@ -61,70 +62,204 @@ from .types import FilterError, PluginRoutes
 
 
 class _FHelpers:
-    """Helper namespace for building ``DefaultFilter`` instances.
+    """Helper namespace for building filter values, typed to the precise model.
 
     Import as ``from common_grants_sdk.extensions import f`` and use as
     ``f.eq("open")``, ``f.in_([...])``, etc.
 
-    ``in_`` and ``not_in`` avoid Python reserved words; the wire operator
-    values they emit are still ``"in"`` / ``"notIn"``.
+    Each builder is overloaded so the *static* return type is the precise filter
+    model the value implies — ``f.eq("x")`` is a ``StringComparisonFilter``,
+    ``f.eq(5)`` a ``NumberComparisonFilter``, ``f.eq(True)`` a
+    ``BooleanComparisonFilter``, ``f.in_([...])`` a ``StringArrayFilter`` /
+    ``NumberArrayFilter`` — so a typed filter bag (``OppSearchFilters``) composes
+    with ``f.*`` at the call site with no annotation. Value types that don't map
+    to a precise model (a Money dict, an ``ISODate``) fall through the final
+    overload to ``DefaultFilter``, so ad-hoc and Money/date usage still works.
+
+    At *runtime* each builder dispatches on the value type to construct the
+    matching model; the ``model_dump()`` wire shape is ``{operator, value}`` for
+    every model, identical to the old ``DefaultFilter`` output, so
+    ``classify_filters`` and the wire body are unchanged. bool is checked before
+    int/float (``bool`` is an ``int`` subclass) so ``f.eq(True)`` is a boolean
+    filter, never a number.
+
+    ``in_`` and ``not_in`` avoid Python reserved words; the wire operator values
+    they emit are still ``"in"`` / ``"notIn"``.
     """
 
-    def eq(self, value: Any) -> DefaultFilter:
-        """Return DefaultFilter(operator="eq", value=value)."""
-        return DefaultFilter(operator=EquivalenceOperator.EQUAL, value=value)
+    # --- eq / neq: bool -> Boolean, str -> String, number -> Number, else Default ---
+    # The ``bool`` overload must come first because ``bool`` is a subtype of
+    # ``int``: a literal ``True`` would otherwise match the ``int | float`` arm and
+    # be typed a NumberComparisonFilter. The overlap with the number arm (different
+    # return types over the ``bool ⊂ int`` overlap) is intentional and the runtime
+    # dispatch handles bool first, so the overlap warning is suppressed on the bool
+    # overload for both checkers.
+    @overload
+    def eq(self, value: bool) -> BooleanComparisonFilter: ...  # type: ignore[overload-overlap]  # pyright: ignore[reportOverlappingOverload]
+    @overload
+    def eq(self, value: str) -> StringComparisonFilter: ...
+    @overload
+    def eq(self, value: Union[int, float]) -> NumberComparisonFilter: ...
+    @overload
+    def eq(self, value: Any) -> DefaultFilter: ...
+    def eq(self, value: Any) -> BaseModel:
+        """Build an ``eq`` filter, typed to the value's precise model."""
+        return self._equivalence(EquivalenceOperator.EQUAL, value)
 
-    def neq(self, value: Any) -> DefaultFilter:
-        """Return DefaultFilter(operator="neq", value=value)."""
-        return DefaultFilter(operator=EquivalenceOperator.NOT_EQUAL, value=value)
+    @overload
+    def neq(self, value: bool) -> BooleanComparisonFilter: ...  # type: ignore[overload-overlap]  # pyright: ignore[reportOverlappingOverload]
+    @overload
+    def neq(self, value: str) -> StringComparisonFilter: ...
+    @overload
+    def neq(self, value: Union[int, float]) -> NumberComparisonFilter: ...
+    @overload
+    def neq(self, value: Any) -> DefaultFilter: ...
+    def neq(self, value: Any) -> BaseModel:
+        """Build a ``neq`` filter, typed to the value's precise model."""
+        return self._equivalence(EquivalenceOperator.NOT_EQUAL, value)
 
-    def gt(self, value: Any) -> DefaultFilter:
-        """Return DefaultFilter(operator="gt", value=value)."""
-        return DefaultFilter(operator=ComparisonOperator.GREATER_THAN, value=value)
+    def _equivalence(self, operator: EquivalenceOperator, value: Any) -> BaseModel:
+        # bool first: bool is an int subclass, so it must not fall into the number arm.
+        if isinstance(value, bool):
+            return BooleanComparisonFilter(operator=operator, value=value)
+        if isinstance(value, str):
+            return StringComparisonFilter(operator=operator, value=value)
+        if isinstance(value, (int, float)):
+            return NumberComparisonFilter(operator=operator, value=value)
+        return DefaultFilter(operator=operator, value=value)
 
-    def gte(self, value: Any) -> DefaultFilter:
-        """Return DefaultFilter(operator="gte", value=value)."""
-        return DefaultFilter(
-            operator=ComparisonOperator.GREATER_THAN_OR_EQUAL, value=value
+    # --- gt / gte / lt / lte: number -> Number, else Default (Money dict, date) ---
+    # The precise (number) overload intentionally overlaps the ``Any`` fallback;
+    # the precise arm is listed first so it wins for numbers, and the runtime
+    # dispatches the rest to DefaultFilter. pyright flags the precise/Any overlap
+    # (mypy does not), so it is suppressed on the first overload of each builder.
+    @overload
+    def gt(  # pyright: ignore[reportOverlappingOverload]
+        self, value: Union[int, float]
+    ) -> NumberComparisonFilter: ...
+    @overload
+    def gt(self, value: Any) -> DefaultFilter: ...
+    def gt(self, value: Any) -> BaseModel:
+        """Build a ``gt`` filter, typed to the value's precise model."""
+        return self._comparison(ComparisonOperator.GREATER_THAN, value)
+
+    @overload
+    def gte(  # pyright: ignore[reportOverlappingOverload]
+        self, value: Union[int, float]
+    ) -> NumberComparisonFilter: ...
+    @overload
+    def gte(self, value: Any) -> DefaultFilter: ...
+    def gte(self, value: Any) -> BaseModel:
+        """Build a ``gte`` filter, typed to the value's precise model."""
+        return self._comparison(ComparisonOperator.GREATER_THAN_OR_EQUAL, value)
+
+    @overload
+    def lt(  # pyright: ignore[reportOverlappingOverload]
+        self, value: Union[int, float]
+    ) -> NumberComparisonFilter: ...
+    @overload
+    def lt(self, value: Any) -> DefaultFilter: ...
+    def lt(self, value: Any) -> BaseModel:
+        """Build a ``lt`` filter, typed to the value's precise model."""
+        return self._comparison(ComparisonOperator.LESS_THAN, value)
+
+    @overload
+    def lte(  # pyright: ignore[reportOverlappingOverload]
+        self, value: Union[int, float]
+    ) -> NumberComparisonFilter: ...
+    @overload
+    def lte(self, value: Any) -> DefaultFilter: ...
+    def lte(self, value: Any) -> BaseModel:
+        """Build a ``lte`` filter, typed to the value's precise model."""
+        return self._comparison(ComparisonOperator.LESS_THAN_OR_EQUAL, value)
+
+    def _comparison(self, operator: ComparisonOperator, value: Any) -> BaseModel:
+        # Numbers map to NumberComparisonFilter; bool is excluded (it is not a
+        # comparable number here and NumberComparisonFilter rejects it). Money
+        # dicts and ISODate strings fall through to DefaultFilter, where the
+        # registered filter_type model validates them at call time.
+        if not isinstance(value, bool) and isinstance(value, (int, float)):
+            return NumberComparisonFilter(operator=operator, value=value)
+        return DefaultFilter(operator=operator, value=value)
+
+    # --- in_ / not_in: list[str] -> StringArray, list[number] -> NumberArray ---
+    @overload
+    def in_(  # pyright: ignore[reportOverlappingOverload]
+        self, value: list[str]
+    ) -> StringArrayFilter: ...
+    @overload
+    def in_(self, value: list[Union[int, float]]) -> NumberArrayFilter: ...
+    @overload
+    def in_(self, value: list[Any]) -> DefaultFilter: ...
+    def in_(self, value: list[Any]) -> BaseModel:
+        """Build an ``in`` filter (Python keyword workaround: ``f.in_``)."""
+        return self._array(ArrayOperator.IN, value)
+
+    @overload
+    def not_in(  # pyright: ignore[reportOverlappingOverload]
+        self, value: list[str]
+    ) -> StringArrayFilter: ...
+    @overload
+    def not_in(self, value: list[Union[int, float]]) -> NumberArrayFilter: ...
+    @overload
+    def not_in(self, value: list[Any]) -> DefaultFilter: ...
+    def not_in(self, value: list[Any]) -> BaseModel:
+        """Build a ``notIn`` filter."""
+        return self._array(ArrayOperator.NOT_IN, value)
+
+    def _array(self, operator: ArrayOperator, value: list[Any]) -> BaseModel:
+        # An all-string list is a StringArrayFilter; an all-number (non-bool) list
+        # is a NumberArrayFilter. Mixed / Money-dict lists fall through to
+        # DefaultFilter. An empty list is treated as a string array (the common
+        # case; the registered filter_type re-validates either way).
+        if all(isinstance(v, str) for v in value):
+            return StringArrayFilter(operator=operator, value=value)
+        if all(not isinstance(v, bool) and isinstance(v, (int, float)) for v in value):
+            return NumberArrayFilter(operator=operator, value=value)
+        return DefaultFilter(operator=operator, value=value)
+
+    # --- like / not_like: always String ---
+    def like(self, value: str) -> StringComparisonFilter:
+        """Build a ``like`` string filter."""
+        return StringComparisonFilter(operator=StringOperator.LIKE, value=value)
+
+    def not_like(self, value: str) -> StringComparisonFilter:
+        """Build a ``notLike`` string filter."""
+        return StringComparisonFilter(operator=StringOperator.NOT_LIKE, value=value)
+
+    # --- between / outside: number range -> NumberRange, else Default ---
+    @overload
+    def between(  # pyright: ignore[reportOverlappingOverload]
+        self, min: Union[int, float], max: Union[int, float]
+    ) -> NumberRangeFilter: ...
+    @overload
+    def between(self, min: Any, max: Any) -> DefaultFilter: ...
+    def between(self, min: Any, max: Any) -> BaseModel:
+        """Build a ``between`` range filter over ``{min, max}``."""
+        return self._range(RangeOperator.BETWEEN, min, max)
+
+    @overload
+    def outside(  # pyright: ignore[reportOverlappingOverload]
+        self, min: Union[int, float], max: Union[int, float]
+    ) -> NumberRangeFilter: ...
+    @overload
+    def outside(self, min: Any, max: Any) -> DefaultFilter: ...
+    def outside(self, min: Any, max: Any) -> BaseModel:
+        """Build an ``outside`` range filter over ``{min, max}``."""
+        return self._range(RangeOperator.OUTSIDE, min, max)
+
+    def _range(self, operator: RangeOperator, min: Any, max: Any) -> BaseModel:
+        # A numeric min+max is a NumberRangeFilter; date / Money ranges (whose
+        # value sub-models differ) fall through to DefaultFilter, where the
+        # registered filter_type (DATE_RANGE / MONEY_RANGE) validates the shape.
+        numeric = all(
+            not isinstance(v, bool) and isinstance(v, (int, float)) for v in (min, max)
         )
-
-    def lt(self, value: Any) -> DefaultFilter:
-        """Return DefaultFilter(operator="lt", value=value)."""
-        return DefaultFilter(operator=ComparisonOperator.LESS_THAN, value=value)
-
-    def lte(self, value: Any) -> DefaultFilter:
-        """Return DefaultFilter(operator="lte", value=value)."""
-        return DefaultFilter(
-            operator=ComparisonOperator.LESS_THAN_OR_EQUAL, value=value
-        )
-
-    def in_(self, value: list[Any]) -> DefaultFilter:
-        """Return DefaultFilter with wire operator "in" (Python keyword workaround: f.in_)."""
-        return DefaultFilter(operator=ArrayOperator.IN, value=value)
-
-    def not_in(self, value: list[Any]) -> DefaultFilter:
-        """Return DefaultFilter with wire operator "notIn"."""
-        return DefaultFilter(operator=ArrayOperator.NOT_IN, value=value)
-
-    def like(self, value: str) -> DefaultFilter:
-        """Return DefaultFilter(operator="like", value=value)."""
-        return DefaultFilter(operator=StringOperator.LIKE, value=value)
-
-    def not_like(self, value: str) -> DefaultFilter:
-        """Return DefaultFilter(operator="notLike", value=value)."""
-        return DefaultFilter(operator=StringOperator.NOT_LIKE, value=value)
-
-    def between(self, min: Any, max: Any) -> DefaultFilter:
-        """Return DefaultFilter(operator="between", value={"min": min, "max": max})."""
-        return DefaultFilter(
-            operator=RangeOperator.BETWEEN, value={"min": min, "max": max}
-        )
-
-    def outside(self, min: Any, max: Any) -> DefaultFilter:
-        """Return DefaultFilter(operator="outside", value={"min": min, "max": max})."""
-        return DefaultFilter(
-            operator=RangeOperator.OUTSIDE, value={"min": min, "max": max}
-        )
+        if numeric:
+            return NumberRangeFilter(
+                operator=operator, value=NumberRange(min=min, max=max)
+            )
+        return DefaultFilter(operator=operator, value={"min": min, "max": max})
 
 
 #: Module-level singleton — use as ``f.eq(...)``, ``f.in_([...])``, etc.
@@ -343,7 +478,7 @@ def classify_filters(
     routes: PluginRoutes,
     resource: str,
     method: str,
-    consumer_filters: Mapping[str, DefaultFilter | dict[str, Any]],
+    consumer_filters: Mapping[str, Union[BaseModel, dict[str, Any]]],
 ) -> OppFilters:
     """Classify consumer filter dict into the ``OppFilters`` search request body.
 

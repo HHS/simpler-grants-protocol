@@ -11,8 +11,15 @@ The full downstream flow an adopter writes against the SDK:
           ``classify_filters`` to build the three-bucket ``OppFilters`` request
           body (default named fields + ``customFilters`` record), sends it, and
           returns typed ``OpportunityBase`` rows.
-  CONSUMER builds a flat filter dict with the ``f.*`` builders, calls search, and
+  CONSUMER builds a filter dict with the ``f.*`` builders, calls search, and
           iterates the typed results.
+
+The ``f.*`` builders are overloaded to return the precise filter model per value
+type (``f.in_([...])`` -> ``StringArrayFilter``, ``f.gte(3)`` ->
+``NumberComparisonFilter``), so a dict built with ``f.*`` composes directly with
+the typed ``OppSearchFilters`` bag the route registered — the consumer call below
+type-checks with NO call-site annotations and each key narrows to its value model
+(the ``assert_type`` lines prove it).
 
 Transport is STUBBED here, per ADR-0022: the SDK client is a typed slot, and the
 real transport (networking, auth, retry) is a downstream-deployment concern, out
@@ -32,12 +39,13 @@ Run (from lib/python-sdk/):
 from __future__ import annotations
 
 import json
-from typing import List, Mapping, Optional, Type
+from typing import Any, List, Mapping, Optional, Type, cast
+
+from typing_extensions import assert_type
 
 from common_grants_sdk.extensions import classify_filters, f
 from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
 from common_grants_sdk.extensions.types import PluginRoutes
-from common_grants_sdk.schemas.pydantic.filters.base import DefaultFilter
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     NumberComparison,
     OpportunityFilters,
@@ -56,14 +64,10 @@ from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOption
 class OppSearchFilters(OpportunityFilters, total=False):
     """The opportunities-search filters this plugin accepts: standard + custom.
 
-    This is the typed authoring declaration (the static narrowing DX; see
-    examples/typed_filters.py for the per-key assert_type proof). The consumer
-    block below builds filters with the runtime ``f.*`` helpers instead, which
-    return ``DefaultFilter`` — so the runtime-ergonomic call site is typed
-    ``Mapping[str, DefaultFilter]``, not this TypedDict. SGP's ``f`` is not
-    overloaded to the precise per-key models (CommonBenefits' is), so the two DX
-    surfaces don't compose at one call site today — see PR #934 / the cross-SDK
-    parity note.
+    The typed authoring surface for the route. Because the ``f.*`` builders return
+    the precise per-key models, a consumer writes the filter dict with ``f.*`` and
+    it type-checks directly against this bag — no annotation, full per-key
+    narrowing (see the ``assert_type`` lines in ``demo``).
     """
 
     agency: StringArray
@@ -112,19 +116,20 @@ _CANNED_ROWS = [
 # Stubbed opportunities client (transport out-of-scope, ADR-0022)
 # ---------------------------------------------------------------------------
 class StubOpportunities:
-    """A stubbed opportunities namespace that accepts custom filters.
+    """A stubbed opportunities namespace that accepts the typed filter bag.
 
     Mirrors the production ``Opportunities`` namespace, but its ``search`` adds the
-    proposed ``filters=`` parameter (PR #934) and stubs the transport: it runs the
-    real ``classify_filters`` engine, prints the request body it would POST, and
-    returns canned, validated rows instead of making a network call.
+    proposed ``filters=`` parameter (PR #934) typed to the registered
+    ``OppSearchFilters`` bag, and stubs the transport: it runs the real
+    ``classify_filters`` engine, prints the request body it would POST, and returns
+    canned, validated rows instead of making a network call.
     """
 
     def search(
         self,
         *,
         search: str,
-        filters: Mapping[str, DefaultFilter],
+        filters: OppSearchFilters,
         status: Optional[List[OppStatusOptions]] = None,
         page: int = 1,
         page_size: int = 10,
@@ -132,16 +137,23 @@ class StubOpportunities:
     ) -> List[OpportunityBase]:
         """Search opportunities with default + custom filters.
 
-        Builds the wire body via ``classify_filters`` (default named fields route
-        to the top level; registered + ad-hoc custom filters land in
-        ``customFilters``), then returns typed rows. Raises ``FilterError`` if a
-        registered filter is called with an operator its type does not allow.
+        ``filters`` is the typed ``OppSearchFilters`` bag — the consumer gets
+        per-key autocomplete and value-type checking at the call site. The body is
+        built via ``classify_filters`` (default named fields route to the top
+        level; registered + ad-hoc custom filters land in ``customFilters``), then
+        typed rows are returned. Raises ``FilterError`` if a registered filter is
+        called with an operator its type does not allow.
 
-        ``filters`` is typed ``Mapping[str, DefaultFilter]`` — what the ``f.*``
-        builders produce and what ``classify_filters`` consumes. The typed
-        per-key authoring surface is ``OppSearchFilters`` (see module docstring).
+        The cast bridges the typed TypedDict bag to the runtime classifier's
+        ``Mapping`` parameter (a TypedDict's values widen to ``object``); this
+        boundary cast belongs in the client facade, not the consumer call site.
         """
-        request_body = classify_filters(ROUTES, "opportunities", "search", filters)
+        request_body = classify_filters(
+            ROUTES,
+            "opportunities",
+            "search",
+            cast("Mapping[str, Any]", filters),
+        )
         wire = request_body.model_dump(by_alias=True, exclude_none=True, mode="json")
         print(
             f"  POST {self.path} (page={page}, pageSize={page_size}, search={search!r})"
@@ -171,19 +183,24 @@ def demo() -> None:
 
     client = StubClient()
 
-    # A flat filter dict built with the f.* helpers (runtime ergonomics):
-    #   status      — core default filter (routes to the top-level request body)
-    #   agency      — registered custom filter      -> customFilters
-    #   awardCount  — registered custom filter      -> customFilters
-    # No annotation needed: each f.* returns DefaultFilter, so this dict infers
-    # as dict[str, DefaultFilter] on its own, which is what search() accepts.
-    filters = {
-        "status": f.in_(["open", "forecasted"]),
-        "agency": f.in_(["NSF", "NIH"]),
-        "awardCount": f.gte(3),
-    }
+    # A filter dict built with the f.* helpers. The builders return the precise
+    # per-key models, so each value narrows to exactly the type OppSearchFilters
+    # declares — the call below type-checks with NO annotation. These assert_type
+    # lines are the composition contract.
+    assert_type(f.in_(["open", "forecasted"]), StringArray)  # status / agency value
+    assert_type(f.gte(3), NumberComparison)  # awardCount value
 
-    results = client.opportunities.search(search="conservation", filters=filters)
+    # The dict composes directly against the registered bag at the call site, with
+    # no annotation: f.in_ -> StringArrayFilter matches status/agency, f.gte ->
+    # NumberComparisonFilter matches awardCount.
+    results = client.opportunities.search(
+        search="conservation",
+        filters={
+            "status": f.in_(["open", "forecasted"]),  # default -> top level
+            "agency": f.in_(["NSF", "NIH"]),  # registered custom -> customFilters
+            "awardCount": f.gte(3),  # registered custom -> customFilters
+        },
+    )
 
     print(f"\n  -> {len(results)} opportunities returned (typed OpportunityBase):")
     for opp in results:

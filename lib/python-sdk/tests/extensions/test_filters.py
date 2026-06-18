@@ -67,12 +67,18 @@ SAMPLE_ROUTES = {
 def test_f_helper_wire_values(helper, args, operator, value):
     """Every f helper produces its documented wire operator and value shape.
 
+    Asserts the JSON wire dump (the contract that classify_filters and the request
+    body depend on), not the in-memory ``.value`` — the builders now return precise
+    filter models whose ``.value`` may be a sub-model (e.g. NumberRange) while the
+    wire shape stays ``{operator, value}``.
+
     Includes the reserved-word workarounds: Python f.in_ / f.not_in produce
     wire operators "in" / "notIn".
     """
     flt = getattr(f, helper)(*args)
-    assert flt.operator == operator
-    assert flt.value == value
+    wire = flt.model_dump(by_alias=True, mode="json")
+    assert wire["operator"] == operator
+    assert wire["value"] == value
 
 
 # ---------------------------------------------------------------------------
