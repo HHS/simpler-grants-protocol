@@ -111,6 +111,12 @@ def test_missing_field_returns_none(input_data):
     assert result == {"foo": None}
 
 
+def test_empty_mapping_returns_empty_dict(input_data):
+    """An empty mapping (top-level or nested) yields an empty dict, not None."""
+    assert transform_from_mapping(input_data, {}) == {}
+    assert transform_from_mapping(input_data, {"nested": {}}) == {"nested": {}}
+
+
 def test_literal_value(input_data):
     """
     Test handling of literal values in the mapping.

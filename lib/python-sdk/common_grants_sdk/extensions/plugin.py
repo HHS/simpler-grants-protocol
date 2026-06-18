@@ -1,156 +1,91 @@
-"""Plugin configuration and composition APIs."""
+"""Plugin assembly: ``PluginSchemas``, ``Plugin``, and ``define_plugin``.
+
+A plugin maps the schema extensions an author builds with ``schema(...)`` onto the
+registered extensible schemas, keyed by registry name. Schemas a plugin does not
+extend fall back to the base schema (a ``SchemaOnly``), never ``None``, so
+consumers get fully-typed, non-optional dot access: ``plugin.schemas.Opportunity``.
+"""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Generic, TypeVar, overload
+from dataclasses import dataclass, field, fields
+from typing import Any, Generic, TypeVar, cast
 
-from .types import PluginExtensionsMeta
+import typing_extensions as te
 
-T = TypeVar("T")
-TSchemas = TypeVar("TSchemas")
-_TSchemasContainer = TypeVar("_TSchemasContainer")
+from ..schemas.pydantic.models import OpportunityBase
+from .schema import (
+    PluginDefinitionError,
+    SchemaOnly,
+    SchemaWithTransforms,
+    schema,
+)
+from .types import PluginMeta
 
+SchemasT = TypeVar("SchemasT")
 
-@dataclass(frozen=True)
-class PluginConfig(Generic[TSchemas]):
-    """Build-time plugin config produced by define_plugin() and consumed by generate.py.
+# The fallback for a schema a plugin does not extend: the base schema, no custom
+# fields, no transforms. A SchemaOnly type, so unextended slots have no
+# to_common either.
+DefaultOpportunity = SchemaOnly[OpportunityBase]
 
-    Generic on TSchemas so the precise type of the schemas dict is preserved — e.g.
-    PluginConfig[dict[str, SchemaInput[MyNative, MyCg]]] — rather than being
-    widened to SchemaInput[Any, Any] at the storage boundary.
-
-    Stores inputs as-is — no compilation occurs at define_plugin() call time.
-    generate.py compiles this into a fully resolved Plugin by injecting the generated
-    Pydantic model class as the common schema for each SchemaInput entry, and
-    auto-generating build_transforms() calls for any object that has
-    schemas[obj].mappings but no explicit schemas[obj].to_common / from_common.
-
-    All fields are optional so adopters can start with only what they need.
-    """
-
-    meta: PluginExtensionsMeta | None = None
-    schemas: TSchemas | None = None
+_TOpportunity = te.TypeVar("_TOpportunity", default=DefaultOpportunity)
 
 
 @dataclass
-class Plugin(Generic[T]):
-    """Runtime plugin container assembled by generate.py after code generation.
+class PluginSchemas(Generic[_TOpportunity]):
+    """Maps your extensions to the extensible schemas. Construct it directly.
 
-    schemas: the _Schemas object from generated/schemas.py. Each attribute is a
-        SchemaConfig instance providing unified access to the model class and
-        transforms for that object:
-          plugin.schemas.Opportunity.common_schema → the Pydantic model class (includes
-                                                     any custom fields declared by the plugin)
-          plugin.schemas.Opportunity.to_common     → transform callable (or None)
-          plugin.schemas.Opportunity.from_common   → transform callable (or None)
-          plugin.schemas.Opportunity.source_schema → the source system's type (or dict)
+    Pass one extension per schema you extend, keyed by the registered schema name.
+    Schemas you omit fall back to the base schema (a ``SchemaOnly``), never
+    ``None``. Unknown schema names are a *static* error, and each slot's type is
+    inferred concretely, so consumers get non-optional dot access::
+
+        plugin = define_plugin(PluginSchemas(Opportunity=opp_ext), meta=...)
+        plugin.schemas.Opportunity   # the extension you passed
+
+    There is one field per registered extensible schema.
     """
 
-    schemas: T
-    meta: PluginExtensionsMeta | None = None
-
-
-@overload
-def define_plugin(
-    meta: PluginExtensionsMeta | None = ...,
-    schemas: None = ...,
-) -> PluginConfig[None]: ...
-
-
-@overload
-def define_plugin(
-    meta: PluginExtensionsMeta | None = ...,
-    schemas: TSchemas = ...,
-) -> PluginConfig[TSchemas]: ...
-
-
-def define_plugin(
-    meta: PluginExtensionsMeta | None = None,
-    schemas: Any = None,
-) -> PluginConfig[Any]:
-    """Create a PluginConfig consumed by the code generator.
-
-    No compilation occurs here — inputs are stored as-is. The code generator
-    (generate.py) compiles SchemaInput → SchemaConfig by injecting
-    the common model from the generated schemas, and auto-wires build_transforms()
-    for any object that has schemas[obj].mappings but no explicit callables.
-
-    The return type is generic on the schemas argument: passing a typed dict
-    (e.g. {"Opportunity": SchemaInput[MyNative, MyCg](...) }) preserves
-    those per-object generics on the returned PluginConfig rather than widening
-    them to Any.
-
-    Raises:
-        ValueError: If any schema entry specifies both mappings and explicit
-            to_common/from_common callables (XOR constraint).
-    """
-    if schemas:
-        for obj_name, schema_input in schemas.items():
-            has_mappings = schema_input.mappings is not None
-            has_callables = (
-                schema_input.to_common is not None
-                or schema_input.from_common is not None
-            )
-            if has_mappings and has_callables:
-                raise ValueError(
-                    f"define_plugin: {obj_name} cannot specify both mappings and explicit "
-                    f"to_common/from_common. "
-                    f"Use mappings for declarative transforms or provide explicit callables, not both."
-                )
-    return PluginConfig(
-        meta=meta,
-        schemas=schemas,
+    Opportunity: _TOpportunity = field(
+        default_factory=lambda: cast(
+            _TOpportunity, schema(common_schema=OpportunityBase)
+        )
     )
 
 
-def inject_transforms(
-    config: PluginConfig[Any], schemas: _TSchemasContainer
-) -> _TSchemasContainer:
-    """Wire transform callables from plugin config into the generated schemas container.
+@dataclass(frozen=True)
+class Plugin(Generic[SchemasT]):
+    """The plugin singleton consumers import.
 
-    Called by the generated plugin __init__.py to inject to_common/from_common
-    callables (and the native type) from cg_config into the SchemaConfig instances
-    produced by the code generator.
+    ``schemas`` is a typed frozen dataclass, so ``plugin.schemas.Opportunity`` is
+    fully typed (dot access).
+    """
 
-    Iterates over all entries in config.schemas that have at least one callable,
-    validates that both directions are present, then sets the attributes on the
-    matching schemas container attribute (e.g. schemas.Opportunity).
+    schemas: SchemasT
+    meta: PluginMeta
 
-    Returns the same schemas container (mutated in place) so callers can write
-    ``schemas = inject_transforms(config, schemas)`` and retain the concrete
-    generated type rather than widening to Any.
 
-    Args:
-        config: The PluginConfig produced by define_plugin().
-        schemas: The generated _Schemas container from generated/schemas.py.
+def define_plugin(schemas: SchemasT, *, meta: PluginMeta) -> Plugin[SchemasT]:
+    """Assemble the plugin from a ``PluginSchemas`` instance and metadata.
 
-    Returns:
-        The same schemas container, with transform callables injected.
+    Each attribute name must equal the entry's ``schema_name``, so
+    ``schemas.Opportunity`` really holds the Opportunity extensible schema.
 
     Raises:
-        ValueError: If a schema with any callable is missing its counterpart,
-            or if the object name is not found in the schemas container.
+        PluginDefinitionError: If any slot does not hold a schema extension, or holds
+            one whose ``schema_name`` does not match its attribute name.
     """
-    if not config.schemas:
-        return schemas
-    for obj_name, schema_input in config.schemas.items():
-        if schema_input.to_common is None and schema_input.from_common is None:
-            continue
-        obj_schemas = getattr(schemas, obj_name, None)
-        if obj_schemas is None:
-            raise ValueError(
-                f"Plugin object {obj_name!r}: not found in generated schemas"
+    errors: list[str] = []
+    for fld in fields(cast(Any, schemas)):
+        entry = getattr(schemas, fld.name)
+        if not isinstance(entry, (SchemaWithTransforms, SchemaOnly)):
+            errors.append(f"schemas.{fld.name}: not a schema extension")
+        elif entry.schema_name != fld.name:
+            errors.append(
+                f"schemas.{fld.name}: holds the {entry.schema_name!r} extensible "
+                f"schema; the attribute name must match the schema name"
             )
-        if schema_input.to_common is None:
-            raise ValueError(
-                f"Plugin object {obj_name!r}: to_common callable is required"
-            )
-        if schema_input.from_common is None:
-            raise ValueError(
-                f"Plugin object {obj_name!r}: from_common callable is required"
-            )
-        obj_schemas.source_schema = schema_input.source_schema or dict
-        obj_schemas.to_common = schema_input.to_common
-        obj_schemas.from_common = schema_input.from_common
-    return schemas
+    if errors:
+        raise PluginDefinitionError("plugin", errors)
+    return Plugin(schemas=schemas, meta=meta)

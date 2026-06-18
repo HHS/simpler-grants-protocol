@@ -1,34 +1,59 @@
 """Public extension APIs for the CommonGrants Python SDK."""
 
-from .plugin import Plugin, PluginConfig, define_plugin, inject_transforms
-from .specs import ConflictStrategy, CustomFieldSpec, SchemaExtensions
+from .plugin import (
+    Plugin,
+    PluginMeta,
+    PluginSchemas,
+    define_plugin,
+)
+from .schema import (
+    EXTENSIBLE_SCHEMA_MAP,
+    CustomField,
+    CustomFieldSet,
+    PluginDefinitionError,
+    SchemaOnly,
+    SchemaWithTransforms,
+    resolve_custom_field_specs,
+    schema,
+    validate_into,
+)
+from .specs import (
+    ConflictStrategy,
+    CustomFieldSpec,
+    PluginCustomFieldSpec,
+    SchemaExtensions,
+)
 from .transforms import build_transforms
 from .types import (
     Handler,
+    PassthroughModel,
     PluginCapability,
-    PluginExtensionsMeta,
-    SchemaConfig,
-    SchemaInput,
-    SchemaMappings,
     TransformError,
     TransformResult,
 )
 
 __all__ = [
+    "EXTENSIBLE_SCHEMA_MAP",
     "ConflictStrategy",
+    "CustomField",
+    "CustomFieldSet",
     "CustomFieldSpec",
-    "Plugin",
-    "PluginConfig",
-    "SchemaExtensions",
-    "define_plugin",
-    "inject_transforms",
-    "build_transforms",
     "Handler",
+    "PassthroughModel",
+    "Plugin",
     "PluginCapability",
-    "PluginExtensionsMeta",
-    "SchemaConfig",
-    "SchemaInput",
-    "SchemaMappings",
+    "PluginCustomFieldSpec",
+    "PluginDefinitionError",
+    "PluginMeta",
+    "PluginSchemas",
+    "SchemaExtensions",
+    "SchemaOnly",
     "TransformError",
+    "SchemaWithTransforms",
     "TransformResult",
+    "build_transforms",
+    "define_plugin",
+    "resolve_custom_field_specs",
+    "schema",
+    "validate_into",
 ]
