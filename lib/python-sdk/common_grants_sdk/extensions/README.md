@@ -48,7 +48,7 @@ Here are some key concepts that are used to define custom fields and plugins tha
 | **`Plugin`**            | A dataclass assembled by the code generator. `.schemas` is a container object where each attribute (e.g. `.schemas.Opportunity`) is an `ObjectSchemas` instance providing the model class (`.common`), transform callables (`.to_common`, `.from_common`), and native type (`.native`). `.extensions` holds the serializable extension declarations.                                               |
 | **`PluginExtensionsMeta`**        | Optional metadata attached to a plugin: `name`, `version`, `source_system`, and `capabilities` (e.g. `["customFields", "transforms"]`).                                                                     |
 | **`build_transforms()`**| Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Each callable accepts a data dict **or a Pydantic model instance** and returns a `TransformResult`.                                                              |
-| **`TransformResult`**   | A dataclass `(result: dict, errors: list[PluginError])` returned by each transform callable. Errors are non-fatal — a partial result is always returned alongside any errors.                               |
+| **`TransformResult`**   | A dataclass `(result: dict, errors: list[TransformError])` returned by each transform callable. Errors are non-fatal — a partial result is always returned alongside any errors.                               |
 | **`ObjectSchemasInput`**| Bundles `custom_fields`, `to_common`, and `from_common` for a single object type. Passed to `define_plugin()` via the `schemas` parameter.                                                               |
 
 
