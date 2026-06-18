@@ -175,9 +175,9 @@ def demo() -> None:
     #   status      — core default filter (routes to the top-level request body)
     #   agency      — registered custom filter      -> customFilters
     #   awardCount  — registered custom filter      -> customFilters
-    # The f.* builders return DefaultFilter, so the inferred type is
-    # dict[str, DefaultFilter] — the runtime call-site type the stub accepts.
-    filters: dict[str, DefaultFilter] = {
+    # No annotation needed: each f.* returns DefaultFilter, so this dict infers
+    # as dict[str, DefaultFilter] on its own, which is what search() accepts.
+    filters = {
         "status": f.in_(["open", "forecasted"]),
         "agency": f.in_(["NSF", "NIH"]),
         "awardCount": f.gte(3),
