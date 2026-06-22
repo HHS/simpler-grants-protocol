@@ -163,12 +163,15 @@ class Opportunities:
                 )
             filters_body["status"] = {"operator": "in", "value": status}
 
-        request = {
-            "filters": filters_body,
+        request: dict = {
             "pagination": {"page": 1, "pageSize": 10},
             "search": search,
             "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
         }
+        # Omit ``filters`` entirely when empty so the wire body matches the TS SDK
+        # (which only sets the key when filters or the status shorthand are given).
+        if filters_body:
+            request["filters"] = filters_body
 
         request_data = OpportunitySearchRequest.model_validate(request)
 

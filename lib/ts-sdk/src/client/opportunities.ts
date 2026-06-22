@@ -318,7 +318,7 @@ export class Opportunities<R extends PluginRoutes = PluginRoutes> {
   // ############################################################################
 
   /** Builds the search request body from options */
-  private buildSearchBody(options?: SearchOptions<OppSchema>): OppSearchRequest {
+  private buildSearchBody(options?: SearchOptions<OppSchema, R>): OppSearchRequest {
     const body: OppSearchRequest = {};
 
     if (options?.query) {
