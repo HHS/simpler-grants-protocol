@@ -1,7 +1,9 @@
 import pytest
+from pydantic import BaseModel, ConfigDict, Field
 
 from common_grants_sdk.utils.transformation import (
     DEFAULT_HANDLERS,
+    HandlerError,
     transform_from_mapping,
 )
 
@@ -109,6 +111,12 @@ def test_missing_field_returns_none(input_data):
     assert result == {"foo": None}
 
 
+def test_empty_mapping_returns_empty_dict(input_data):
+    """An empty mapping (top-level or nested) yields an empty dict, not None."""
+    assert transform_from_mapping(input_data, {}) == {}
+    assert transform_from_mapping(input_data, {"nested": {}}) == {"nested": {}}
+
+
 def test_literal_value(input_data):
     """
     Test handling of literal values in the mapping.
@@ -179,13 +187,15 @@ def test_extend_with_concat(input_data):
     - The handler works with both field values and constants
     """
 
-    # Patch in a concat handler for this test
     def handle_concat(data, concat_spec):
         return "".join(
             str(transform_from_mapping(data, part)) for part in concat_spec["parts"]
         )
 
-    DEFAULT_HANDLERS["concat"] = handle_concat
+    handlers = {
+        **DEFAULT_HANDLERS,
+        "concat": handle_concat,
+    }
 
     mapping = {
         "opportunity_code": {
@@ -198,7 +208,7 @@ def test_extend_with_concat(input_data):
             }
         }
     }
-    result = transform_from_mapping(input_data, mapping)
+    result = transform_from_mapping(input_data, mapping, handlers=handlers)
     assert result == {"opportunity_code": "ABC-123-XYZ-001-12345"}
 
 
@@ -231,6 +241,140 @@ def test_extend_with_type_conversion(input_data):
     }
     result = transform_from_mapping(input_data, mapping, handlers=handlers)
     assert result == {"id_str": "12345"}
+
+
+def test_const_string(input_data):
+    """Test const handler returns a fixed string value."""
+    mapping = {"currency": {"const": "USD"}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"currency": "USD"}
+
+
+def test_const_number(input_data):
+    """Test const handler returns a fixed numeric value."""
+    mapping = {"version": {"const": 1}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"version": 1}
+
+
+def test_const_ignores_source_data(input_data):
+    """Test const handler is independent of source data."""
+    mapping = {"x": {"const": "fixed"}}
+    result = transform_from_mapping({}, mapping)
+    assert result == {"x": "fixed"}
+
+
+def test_match_key_alias(input_data):
+    """Test match key (ADR-0017 canonical name) works identically to switch."""
+    mapping = {
+        "status": {
+            "match": {
+                "field": "opportunity_status",
+                "case": {"posted": "open", "archived": "closed"},
+                "default": "custom",
+            }
+        }
+    }
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"status": "open"}
+
+
+def test_number_to_string(input_data):
+    """Test numberToString handler coerces a numeric field to a string."""
+    mapping = {"floor_str": {"numberToString": "summary.award_floor"}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"floor_str": "10000"}
+
+
+def test_number_to_string_missing_field(input_data):
+    """Test numberToString returns None when the field path does not exist."""
+    mapping = {"x": {"numberToString": "nonexistent.path"}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"x": None}
+
+
+def test_string_to_number_integer(input_data):
+    """Test stringToNumber handler coerces a string integer field to int."""
+    data = {**input_data, "amount_str": "50000"}
+    result = transform_from_mapping(data, {"amount": {"stringToNumber": "amount_str"}})
+    assert result == {"amount": 50000}
+    assert isinstance(result["amount"], int)
+
+
+def test_string_to_number_float(input_data):
+    """Test stringToNumber handler coerces a decimal string to float."""
+    data = {**input_data, "rate_str": "3.14"}
+    result = transform_from_mapping(data, {"rate": {"stringToNumber": "rate_str"}})
+    assert result == {"rate": 3.14}
+    assert isinstance(result["rate"], float)
+
+
+def test_string_to_number_missing_field(input_data):
+    """Test stringToNumber returns None when the field path does not exist."""
+    mapping = {"x": {"stringToNumber": "nonexistent.path"}}
+    result = transform_from_mapping(input_data, mapping)
+    assert result == {"x": None}
+
+
+def test_string_to_number_invalid_raises(input_data):
+    """Test stringToNumber raises HandlerError (wrapping ValueError) for non-numeric strings."""
+
+    data = {**input_data, "bad": "not-a-number"}
+    with pytest.raises(HandlerError) as exc_info:
+        transform_from_mapping(data, {"x": {"stringToNumber": "bad"}})
+    assert exc_info.value.handler == "stringToNumber"
+    assert isinstance(exc_info.value.cause, ValueError)
+
+
+def test_handler_error_is_value_error():
+    """HandlerError is a subclass of ValueError for backward compat with existing callers."""
+    err = HandlerError("myHandler", ValueError("bad input"))
+    assert isinstance(err, ValueError)
+    # Callers catching ValueError continue to work; callers wanting attribution catch HandlerError
+    with pytest.raises(ValueError):
+        transform_from_mapping(
+            {"bad": "not-a-number"}, {"x": {"stringToNumber": "bad"}}
+        )
+
+
+def test_pydantic_model_instance_is_normalized() -> None:
+    """transform_from_mapping accepts a Pydantic model and uses camelCase alias keys."""
+
+    class Inner(BaseModel):
+        model_config = ConfigDict(populate_by_name=True)
+        value: str
+
+    class Source(BaseModel):
+        model_config = ConfigDict(populate_by_name=True)
+        title: str
+        nested_item: Inner = Field(alias="nestedItem")
+
+    model = Source(title="hello", nestedItem=Inner(value="world"))
+    result = transform_from_mapping(
+        model,
+        {
+            "out_title": {"field": "title"},
+            "out_value": {"field": "nestedItem.value"},  # camelCase alias path
+        },
+    )
+    assert result == {"out_title": "hello", "out_value": "world"}
+
+
+def test_pydantic_model_alias_not_snake_case() -> None:
+    """Field paths must use camelCase aliases, not snake_case attribute names."""
+
+    class Source(BaseModel):
+        model_config = ConfigDict(populate_by_name=True)
+        award_floor: int = Field(alias="awardFloor")
+
+    model = Source(awardFloor=10000)
+    # camelCase alias path resolves correctly
+    result = transform_from_mapping(model, {"amount": {"field": "awardFloor"}})
+    assert result == {"amount": 10000}
+
+    # snake_case attribute name does NOT resolve (returns None)
+    result_snake = transform_from_mapping(model, {"amount": {"field": "award_floor"}})
+    assert result_snake == {"amount": None}
 
 
 def test_deeply_nested(input_data):

@@ -26,24 +26,26 @@ import {
 // Model enum constants
 // ############################################################################
 
-export const OppStatusOptions = OppStatusOptionsEnum.enum;
-export const ApplicantTypeOptions = ApplicantTypeOptionsEnum.enum;
-export const OppSortBy = OppSortByEnum.enum;
+export const OppStatusOptions: typeof OppStatusOptionsEnum.enum = OppStatusOptionsEnum.enum;
+export const ApplicantTypeOptions: typeof ApplicantTypeOptionsEnum.enum =
+  ApplicantTypeOptionsEnum.enum;
+export const OppSortBy: typeof OppSortByEnum.enum = OppSortByEnum.enum;
 
 // ############################################################################
 // Field enum constants
 // ############################################################################
 
-export const EventType = EventTypeEnum.enum;
-export const CustomFieldType = CustomFieldTypeEnum.enum;
+export const EventType: typeof EventTypeEnum.enum = EventTypeEnum.enum;
+export const CustomFieldType: typeof CustomFieldTypeEnum.enum = CustomFieldTypeEnum.enum;
 
 // ############################################################################
 // Filter operator enum constants
 // ############################################################################
 
-export const EquivalenceOperator = EquivalenceOperatorsEnum.enum;
-export const ComparisonOperator = ComparisonOperatorsEnum.enum;
-export const ArrayOperator = ArrayOperatorsEnum.enum;
-export const StringOperator = StringOperatorsEnum.enum;
-export const RangeOperator = RangeOperatorsEnum.enum;
-export const AllOperators = AllOperatorsEnum.enum;
+export const EquivalenceOperator: typeof EquivalenceOperatorsEnum.enum =
+  EquivalenceOperatorsEnum.enum;
+export const ComparisonOperator: typeof ComparisonOperatorsEnum.enum = ComparisonOperatorsEnum.enum;
+export const ArrayOperator: typeof ArrayOperatorsEnum.enum = ArrayOperatorsEnum.enum;
+export const StringOperator: typeof StringOperatorsEnum.enum = StringOperatorsEnum.enum;
+export const RangeOperator: typeof RangeOperatorsEnum.enum = RangeOperatorsEnum.enum;
+export const AllOperators: typeof AllOperatorsEnum.enum = AllOperatorsEnum.enum;

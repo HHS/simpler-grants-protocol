@@ -42,14 +42,34 @@ const ensureUTC = (date: string) => {
   );
 };
 
-/** Schema for UTC datetime fields */
-export const UTCDateTimeSchema = z.string().datetime().transform(ensureUTC);
+/**
+ * Accept a `Date` as input by normalizing it to a string before the string
+ * validators run, so a caller can pass either an ISO string or a `Date`. A
+ * string goes straight to the inner schema's strict validation; a valid `Date`
+ * is rendered by `toStr` into the string format the inner schema expects. An
+ * invalid `Date` is passed through unchanged so the inner validator rejects it,
+ * rather than throwing a `RangeError` out of `toISOString()` and escaping
+ * `safeParse`. Output is a `Date`.
+ */
+const acceptDate =
+  (toStr: (d: Date) => string) =>
+  (val: unknown): unknown =>
+    val instanceof Date && !isNaN(val.getTime()) ? toStr(val) : val;
 
-/** Schema for ISO date format: YYYY-MM-DD (parsed into a Date object at midnight UTC) */
-export const ISODateSchema = z
-  .string()
-  .date()
-  .transform(str => new Date(str));
+/** Schema for UTC datetime fields (accepts an ISO string or a `Date`; outputs a `Date`) */
+export const UTCDateTimeSchema = z.preprocess(
+  acceptDate(d => d.toISOString()),
+  z.string().datetime().transform(ensureUTC)
+);
+
+/** Schema for ISO date format: YYYY-MM-DD (accepts a YYYY-MM-DD string or a `Date`; outputs a `Date`) */
+export const ISODateSchema = z.preprocess(
+  acceptDate(d => d.toISOString().slice(0, 10)),
+  z
+    .string()
+    .date()
+    .transform(str => new Date(str))
+);
 
 /** Schema for ISO time format: HH:MM:SS with optional fractional seconds and timezone (RFC 3339 partial-time) */
 export const ISOTimeSchema = z.preprocess(val => {
@@ -61,8 +81,11 @@ export const ISOTimeSchema = z.preprocess(val => {
   return val;
 }, z.string().time());
 
-/** Schema for offset datetime fields (ISO 8601 with timezone offset, parsed into a Date object) */
-export const OffsetDateTimeSchema = z
-  .string()
-  .datetime({ offset: true })
-  .transform(str => new Date(str));
+/** Schema for offset datetime fields (accepts an ISO 8601 offset string or a `Date`; outputs a `Date`) */
+export const OffsetDateTimeSchema = z.preprocess(
+  acceptDate(d => d.toISOString()),
+  z
+    .string()
+    .datetime({ offset: true })
+    .transform(str => new Date(str))
+);

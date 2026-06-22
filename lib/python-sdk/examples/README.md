@@ -119,42 +119,46 @@ None
 ```
 
 
-# Plugin framework example
+# Plugins example
 
-This example uses the plugin framework to define four typed custom fields, generate static Pydantic models, and validate an API payload.
-
-**Step 1:** Generate the typed models (only needed once, or after changing `cg_config.py`):
+`examples/plugins.py` is a single, self-contained file that both **defines** the
+example plugins and **validates** them. It demonstrates every authoring scenario
+(custom fields + mappings, custom fields + hand-written functions, mappings with no
+custom fields, schema-only, and a realistic combined grants.gov plugin) plus
+bidirectional round-trips. There is no build step — run it directly:
 
 ```bash
 cd lib/python-sdk
-poetry run python -m common_grants_sdk.extensions.generate --plugin examples/plugins/opportunity_extensions
-cd ../../..
-```
-
-**Step 2:** Run the example:
-
-```bash
-poetry run python examples/plugin_custom_fields.py
+poetry run python examples/plugins.py
 ```
 
 **Output Example:**
 
 ```
-Title:           Community Health Innovation Grant
-Status:          open
-
-Custom fields:
-  program_area:     CFDA-93.243
-  legacy_grant_id:  98765
-  eligibility_types:['nonprofit', 'tribal', 'city_government']
-  award_ceiling:    250000.0
-
-Registered extensions:
-  program_area: string — HHS program area code (e.g. 'CFDA-93.243')
-  legacy_grant_id: integer — Numeric ID from the legacy grants management system
-  eligibility_types: array — Types of organizations eligible to apply (e.g. 'nonprofit', 'tribal')
-  award_ceiling: number — Maximum award amount in USD
+Scenario 1 -- custom fields + mappings
+  [PASS] no transform errors
+  [PASS] title mapped
+  [PASS] agency_code.value typed str == 'HHS-123'
+  [PASS] inspect: agency_code field_type derived STRING
+  [PASS] round-trips (validated source instance)
+Scenario 2 -- custom fields + hand-written functions
+  [PASS] title mapped
+  [PASS] agency_code.value == 'HHS-123'
+  [PASS] from_common -> typed source
+Scenario 3 -- mappings, no custom fields
+  [PASS] title mapped
+Scenario 4 -- custom fields only, no transforms
+  [PASS] schema-only legacy_grant_id.value typed int == 98765
+  ...
+grants.gov -- custom fields + transform with a custom handler
+  [PASS] no transform errors
+  [PASS] title mapped
+  [PASS] compositeLabel joined via custom handler
+  [PASS] from_common -> validated source instance
 ```
+
+See the [extensions README](../common_grants_sdk/extensions/README.md) for the full
+plugin and mapping-format documentation.
 
 
 ## Configuration

@@ -1,9 +1,13 @@
-from typing import Optional, Any, Type, TypeVar
-from pydantic import BaseModel, Field, create_model, ConfigDict
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional, Any, Type, TypeVar
+from pydantic import BaseModel, Field, create_model, ConfigDict, model_validator
 from ..schemas.pydantic.fields import CustomField, CustomFieldType
 from ..schemas.pydantic.base import CommonGrantsBaseModel
 from common_grants_sdk.utils.json import snake
-from common_grants_sdk.extensions.specs import CustomFieldSpec
+
+if TYPE_CHECKING:
+    from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 T = TypeVar("T", bound=BaseModel)  # For add_custom_fields
 V = TypeVar("V")  # For get_custom_field_value (unbound to support primitives)
@@ -37,10 +41,29 @@ def add_custom_fields(
     # Accumulate all field definitions
     field_defs: dict[str, Any] = create_custom_field_schema(name=name, fields=fields)
 
-    # Unknown keys ignored for now.
-    # TODO: switch extra="allow" + add validator to parse extras into CustomField
     class _CustomFieldsBase(CommonGrantsBaseModel):
-        model_config = ConfigDict(populate_by_name=True, extra="ignore")
+        model_config = ConfigDict(populate_by_name=True, extra="allow")
+
+        @model_validator(mode="before")
+        @classmethod
+        def _parse_extra_as_custom_fields(cls, values: Any) -> Any:
+            """Wrap unknown dict-valued keys as CustomField instances before validation."""
+            if not isinstance(values, dict):
+                return values
+            # Build the set of known keys: both Python attr names and their aliases
+            known: set[str] = set()
+            if hasattr(cls, "model_fields"):
+                for attr, field_info in cls.model_fields.items():
+                    known.add(attr)
+                    alias = getattr(field_info, "alias", None)
+                    if alias:
+                        known.add(alias)
+            for key, val in list(values.items()):
+                if key not in known and isinstance(val, dict) and "fieldType" in val:
+                    # Inject the key as the name if not already present
+                    enriched = {"name": key, **val}
+                    values[key] = CustomField.model_validate(enriched)
+            return values
 
     # Create container with ALL accumulated field definitions,
     # this will be used when we recreate the base pydantic model with the

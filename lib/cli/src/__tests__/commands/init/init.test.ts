@@ -27,9 +27,9 @@ describe("initCommand", () => {
     const mockListTemplates = vi
       .fn<() => Promise<string[]>>()
       .mockResolvedValue(["template1", "template2"]);
-    (DefaultInitService as Mock).mockImplementation(() => ({
-      listTemplates: mockListTemplates,
-    }));
+    (DefaultInitService as Mock).mockImplementation(function () {
+      return { listTemplates: mockListTemplates };
+    });
 
     initCommand(program);
     const cmd = program.commands.find(cmd => cmd.name() === "init");

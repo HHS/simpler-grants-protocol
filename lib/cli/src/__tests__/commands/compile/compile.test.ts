@@ -5,9 +5,9 @@ import { compileCommand } from "../../../commands/compile/compile";
 const mockCompile = vi.fn();
 
 vi.mock("../../../commands/compile/compile-service", () => ({
-  DefaultCompileService: vi.fn(() => ({
-    compile: mockCompile,
-  })),
+  DefaultCompileService: vi.fn(function () {
+    return { compile: mockCompile };
+  }),
 }));
 
 describe("compileCommand", () => {

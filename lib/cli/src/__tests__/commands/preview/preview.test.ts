@@ -7,9 +7,9 @@ const mockPreviewSpec = vi.fn();
 
 // Mock the service with consistent implementation
 vi.mock("../../../commands/preview/preview-service", () => ({
-  DefaultPreviewService: vi.fn(() => ({
-    previewSpec: mockPreviewSpec,
-  })),
+  DefaultPreviewService: vi.fn(function () {
+    return { previewSpec: mockPreviewSpec };
+  }),
 }));
 
 describe("previewCommand", () => {
