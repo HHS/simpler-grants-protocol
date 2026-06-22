@@ -14,7 +14,7 @@ from ..schemas.pydantic.responses import (
 )
 from ..schemas.pydantic.models.opp_status import OppStatusOptions
 from ..extensions.filters import classify_filters
-from ..extensions.types import PluginRoutes, FilterError
+from ..extensions.types import FilterError
 from .types import ItemsT
 from typing import List
 
@@ -115,7 +115,6 @@ class Opportunities:
         page_size: int | None = None,
         schema: Type[OpportunityBase] | None = OpportunityBase,
         filters: dict | None = None,
-        routes: PluginRoutes | None = None,
     ) -> OpportunitiesSearchResponse:
         """Search for opportunties by a query string
 
@@ -132,9 +131,8 @@ class Opportunities:
                 e.g. built with the ``f`` helper). Classified into the OppFilters
                 request body via ``classify_filters`` — the same role the
                 ``status`` shorthand plays. Mirrors the TS SDK's
-                ``search({ filters })``.
-            routes: The plugin's ``routes`` declaration, so registered custom
-                filters validate against their declared specs.
+                ``search({ filters })``. Registered custom filters validate against
+                the specs declared in the client's ``routes`` (bound at construction).
 
         Returns:
             OpportunitiesSearchResponse with items and pagination info
@@ -149,7 +147,7 @@ class Opportunities:
         filters_body: dict = {}
         if filters:
             filters_body = classify_filters(
-                routes or {}, "opportunities", "search", filters
+                self.client.routes or {}, "opportunities", "search", filters
             ).model_dump(by_alias=True, exclude_none=True, mode="json")
 
         if status:
@@ -188,18 +186,11 @@ class Opportunities:
             for item in paginated_response.items
         ]
 
-        # Convert paginated_response to dict and replace items with hydrated models
+        # Convert paginated_response to dict and replace items with hydrated models.
+        # The envelope already carries the server's real sortInfo/filterInfo (the
+        # paginated response is a Filtered), so no fabrication is needed.
         response_data = paginated_response.model_dump(by_alias=True)
         response_data["items"] = items
 
-        response_data["sortInfo"] = {
-            "sortBy": "",
-            "sortOrder": "",
-            "customSortBy": None,
-            "errros": [],
-        }
-
-        response_data["filterInfo"] = {"filters": {}, "errors": []}
-
-        # Hydrate OpportunitiesListResponse from response data
+        # Hydrate OpportunitiesSearchResponse from response data
         return OpportunitiesSearchResponse.model_validate(response_data)

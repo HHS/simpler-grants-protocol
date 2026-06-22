@@ -6,6 +6,7 @@ import { type ClientConfig, type ResolvedConfig, resolveConfig } from "./config"
 import { Auth, buildAuthHeaders, type AuthMethod } from "./auth";
 import { Opportunities } from "./opportunities";
 import type { Paginated } from "../types";
+import type { PluginRoutes } from "../extensions/types";
 
 // =============================================================================
 // Options interfaces
@@ -67,23 +68,26 @@ export interface FetchManyOptions<T = unknown> {
  * const list = await client.opportunities.list({ page: 1 });
  * ```
  */
-export class Client {
+export class Client<R extends PluginRoutes = PluginRoutes> {
   private readonly config: ResolvedConfig;
   private readonly auth: AuthMethod;
 
   /** Opportunities resource namespace */
-  public readonly opportunities: Opportunities;
+  public readonly opportunities: Opportunities<R>;
 
   // =============================================================================
   // Client constructor
   // =============================================================================
 
-  constructor(options: ClientConfig & { auth?: AuthMethod }) {
+  constructor(options: ClientConfig & { auth?: AuthMethod; routes?: R }) {
     this.config = resolveConfig(options);
     this.auth = options.auth ?? Auth.none();
 
-    // Initialize resource namespaces
-    this.opportunities = new Opportunities(this);
+    // Initialize resource namespaces. `routes` is client-bound (fixed plugin
+    // config supplied once here), so it drives the filter-name narrowing on
+    // `opportunities.search`. The `this as Client` cast avoids circular-generic
+    // variance friction between `Client<R>` and `Opportunities<R>`.
+    this.opportunities = new Opportunities<R>(this as Client, options.routes);
   }
 
   // =============================================================================

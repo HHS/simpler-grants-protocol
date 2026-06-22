@@ -400,7 +400,11 @@ def sample_get_response(sample_item_data):
 
 @pytest.fixture
 def sample_search_response(sample_item_data):
-    """Create sample search response."""
+    """Create sample search response.
+
+    Search responses are Filtered, so they carry the server's sortInfo and
+    filterInfo envelope alongside items/paginationInfo.
+    """
     return {
         "status": 200,
         "message": "Success",
@@ -411,6 +415,13 @@ def sample_search_response(sample_item_data):
             "totalItems": 2,
             "totalPages": 1,
         },
+        "sortInfo": {
+            "sortBy": "lastModifiedAt",
+            "sortOrder": "desc",
+            "customSortBy": None,
+            "errors": [],
+        },
+        "filterInfo": {"filters": {}, "errors": []},
     }
 
 
@@ -1116,6 +1127,13 @@ class TestClientSearchSomeItems:
                     "totalItems": 0,
                     "totalPages": 1,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             mock_response = Mock()
             mock_response.raise_for_status = Mock()
@@ -1228,6 +1246,13 @@ class TestClientSearchAllItems:
                     "totalItems": 5,
                     "totalPages": 3,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             page2_response = {
                 "status": 200,
@@ -1239,6 +1264,13 @@ class TestClientSearchAllItems:
                     "totalItems": 5,
                     "totalPages": 3,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             page3_response = {
                 "status": 200,
@@ -1250,6 +1282,13 @@ class TestClientSearchAllItems:
                     "totalItems": 5,
                     "totalPages": 3,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
 
             def mock_post(*args, **kwargs):
@@ -1289,6 +1328,13 @@ class TestClientSearchAllItems:
                     "totalItems": 0,
                     "totalPages": 1,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             mock_response = Mock()
             mock_response.raise_for_status = Mock()
@@ -1341,6 +1387,13 @@ class TestClientSearchAllItems:
                     "totalItems": 5,
                     "totalPages": 3,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             error_data = {"status": 500, "message": "Server error", "errors": []}
             error_response = Mock()

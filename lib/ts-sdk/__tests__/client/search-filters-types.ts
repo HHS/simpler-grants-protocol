@@ -18,8 +18,6 @@
 import { definePlugin, F } from "@/extensions";
 import { Client } from "@/client";
 
-declare const client: Client;
-
 const plugin = definePlugin({
   routes: {
     opportunities: {
@@ -33,11 +31,14 @@ const plugin = definePlugin({
   },
 } as const);
 
+// routes is client-bound: supplied once at construction, so `search` narrows
+// filter names from the client's `R` generic. Compile-only — baseUrl unused.
+const client = new Client({ routes: plugin.routes });
+
 // Compile-only — never executed.
 async function _assertions(): Promise<void> {
   // Declared filter names accepted, values built with the F.* helpers.
   await client.opportunities.search({
-    routes: plugin.routes,
     filters: {
       fundingMax: F.between(0, 100),
       agency: F.in(["HHS", "NSF"]),
@@ -46,7 +47,6 @@ async function _assertions(): Promise<void> {
 
   // Ad-hoc (unregistered) key accepted — spec escape hatch, classifyFilters bucket 3.
   await client.opportunities.search({
-    routes: plugin.routes,
     filters: { legacyTag: F.eq("conservation-2024") },
   });
 
@@ -54,20 +54,18 @@ async function _assertions(): Promise<void> {
   // because it is indistinguishable from an intentional ad-hoc key. This is the
   // documented limitation of narrowing against an open (ad-hoc-supporting) key set.
   await client.opportunities.search({
-    routes: plugin.routes,
     filters: { fundingMaxx: F.between(0, 100) },
   });
 
   // The `{ operator, value }` envelope is enforced even though keys are open.
   await client.opportunities.search({
-    routes: plugin.routes,
     filters: {
       // @ts-expect-error — a filter value must be `{ operator, value }`, not a bare string.
       fundingMax: "not-a-filter",
     },
   });
 
-  // Works with no routes/filters (back-compat: R defaults to PluginRoutes).
+  // Works with no filters (back-compat: R defaults to PluginRoutes).
   await client.opportunities.search({ query: "education", statuses: ["open"] });
 }
 

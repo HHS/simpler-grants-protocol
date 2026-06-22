@@ -11,7 +11,8 @@ from .exceptions import raise_api_error
 from .opportunities import Opportunities
 from .pagination import pagination
 from .types import ItemsT
-from ..schemas.pydantic.responses import Paginated
+from ..extensions.types import PluginRoutes
+from ..schemas.pydantic.responses import Filtered, Paginated
 
 
 class Client:
@@ -21,6 +22,7 @@ class Client:
         self,
         config: Optional[Config] = None,
         auth: Optional[Auth] = None,
+        routes: Optional[PluginRoutes] = None,
     ):
         """Initialize the CommonGrants client.
 
@@ -28,10 +30,14 @@ class Client:
             config: Optional Config instance. If None, a default Config is created.
             auth: Optional Auth instance. If None, API key authentication is used
                 with the key from config.
+            routes: Optional plugin ``routes`` declaration (fixed plugin config).
+                Bound once here and used to classify/validate registered custom
+                filters in ``opportunities.search``.
         """
         self.config = config or Config()
         self.auth = auth or Auth.api_key(self.config.api_key)
         self.http = httpx.Client(timeout=self.config.timeout)
+        self.routes = routes or {}
         self.opportunities = Opportunities(client=self)
 
     def post(self, path: str, **kwargs) -> httpx.Response:
@@ -182,7 +188,10 @@ class Client:
                 path, json=request_data, params={"page": page, "pageSize": page_size}
             )
             api_response.raise_for_status()
-            result_dict = Paginated[dict].model_validate(api_response.json())
+            # Validate into Filtered so the server's sortInfo/filterInfo (incl.
+            # filterInfo.errors per ADR-0012) survive instead of being dropped.
+            # Filtered IS-A Paginated, so the existing cast still holds.
+            result_dict = Filtered[dict, dict].model_validate(api_response.json())
             result = cast(Paginated[ItemsT], result_dict)
 
         except httpx.HTTPError as e:

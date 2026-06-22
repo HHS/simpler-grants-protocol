@@ -103,13 +103,11 @@ export interface SearchOptions<
   statuses?: OppStatusOptions[];
   /**
    * Flat custom-filter bag (filter name → `{ operator, value }`, e.g. built with `F.*`).
-   * Classified into the `OppFilters` request body via `classifyFilters` when present —
-   * the same per-call channel as `schema`, which types the response. Pass `routes`
-   * alongside so registered custom filters get typed names and validate against their specs.
+   * Classified into the `OppFilters` request body via `classifyFilters` when present.
+   * Registered custom filters get typed names and validate against the specs declared
+   * in the client's `routes` (bound once at client construction).
    */
   filters?: CustomFilterBag<R>;
-  /** The plugin's `routes` declaration. Used to classify/validate registered custom filters. */
-  routes?: R;
   /** Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`. */
   schema?: S;
 }
@@ -128,12 +126,14 @@ export interface SearchOptions<
  * const list = await client.opportunities.list();
  * ```
  */
-export class Opportunities {
+export class Opportunities<R extends PluginRoutes = PluginRoutes> {
   private readonly client: Client;
   private readonly basePath = "/common-grants/opportunities";
+  private readonly routes: R | undefined;
 
-  constructor(client: Client) {
+  constructor(client: Client, routes?: R) {
     this.client = client;
+    this.routes = routes;
   }
 
   // ############################################################################
@@ -281,10 +281,9 @@ export class Opportunities {
    * const typed = await client.opportunities.search({ query: "test", schema: OpportunitySchema });
    * ```
    */
-  async search<
-    S extends OppSchema = typeof OpportunityBaseSchema,
-    R extends PluginRoutes = PluginRoutes,
-  >(options?: SearchOptions<S, R>): Promise<Filtered<z.infer<S>, OppFilters>> {
+  async search<S extends OppSchema = typeof OpportunityBaseSchema>(
+    options?: SearchOptions<S, R>
+  ): Promise<Filtered<z.infer<S>, OppFilters>> {
     const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
 
     // Build the base search body (without pagination)
@@ -328,14 +327,14 @@ export class Opportunities {
 
     // Custom filters → OppFilters wire body. Classification is wire-request
     // marshalling — the same category as the `statuses` shorthand below — so it
-    // lives in the client method, not on the caller. `routes` arrives per-call,
-    // mirroring the `schema` option that types the response.
+    // lives in the client method, not on the caller. `routes` is bound at client
+    // construction (fixed plugin config), so it is read off the instance here.
     let filters: OppFilters | undefined;
     if (options?.filters) {
       // ponytail: cast bridges the Zod-inferred OppFilters to the hand-authored
       // OppFilters type alias; they are structurally the same shape.
       filters = classifyFilters(
-        options.routes ?? {},
+        this.routes ?? {},
         "opportunities",
         "search",
         options.filters

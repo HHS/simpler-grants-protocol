@@ -763,8 +763,38 @@ class TestOpportunitySearch:
         assert call_args[1]["params"]["page"] == 1
         assert call_args[1]["params"]["pageSize"] == 100
 
-    def test_search_classifies_custom_filter_bag(
+    def test_search_surfaces_server_filter_and_sort_info(
         self, client, mock_httpx_client, sample_search_response
+    ):
+        """search() returns the server's real filterInfo/sortInfo, not blanks.
+
+        The server reports non-fatal filtering feedback in ``filterInfo.errors``
+        (ADR-0012) and the resolved sort in ``sortInfo``. Earlier the client
+        fabricated empty envelopes, dropping that feedback; this asserts it now
+        reaches the caller.
+        """
+        sample_search_response["filterInfo"] = {
+            "filters": {},
+            "errors": ["filter 'foo' is unsupported and was ignored"],
+        }
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        response = client.opportunities.search(search="x")
+
+        assert isinstance(response, OpportunitiesSearchResponse)
+        assert response.filter_info.errors == [
+            "filter 'foo' is unsupported and was ignored"
+        ]
+        # sort_info reflects the server value, not the blanked "".
+        assert response.sort_info.sort_by == "lastModifiedAt"
+
+    def test_search_classifies_custom_filter_bag(
+        self, mock_httpx_client, sample_search_response
     ):
         """A flat custom-filter bag is classified inside search(), not by the caller."""
         mock_response = Mock()
@@ -786,6 +816,15 @@ class TestOpportunitySearch:
             }
         }
 
+        # routes is client-bound: supplied once at construction, not per call.
+        auth = Auth.api_key("test-key")
+        config = Config(
+            base_url="https://api.example.com", api_key="test-key", timeout=10.0
+        )
+        client = Client(config=config, auth=auth, routes=routes)
+        client.http = mock_httpx_client
+        client.opportunities.http = mock_httpx_client
+
         client.opportunities.search(
             search="conservation",
             status=[OppStatusOptions.OPEN],
@@ -793,7 +832,6 @@ class TestOpportunitySearch:
                 "agency": {"operator": "in", "value": ["HHS", "NSF"]},
                 "legacyTag": {"operator": "eq", "value": "conservation-2024"},
             },
-            routes=routes,
         )
 
         sent_filters = mock_httpx_client.post.call_args[1]["json"]["filters"]
@@ -828,7 +866,7 @@ class TestOpportunitySearch:
             )
 
     def test_search_propagates_filter_error_for_invalid_registered_filter(
-        self, client, mock_httpx_client, sample_search_response
+        self, mock_httpx_client, sample_search_response
     ):
         """A malformed registered filter raises FilterError out of search().
 
@@ -855,11 +893,19 @@ class TestOpportunitySearch:
             }
         }
 
+        # routes is client-bound: supplied once at construction, not per call.
+        auth = Auth.api_key("test-key")
+        config = Config(
+            base_url="https://api.example.com", api_key="test-key", timeout=10.0
+        )
+        client = Client(config=config, auth=auth, routes=routes)
+        client.http = mock_httpx_client
+        client.opportunities.http = mock_httpx_client
+
         with pytest.raises(FilterError):
             client.opportunities.search(
                 search="conservation",
                 filters={"agency": {"operator": "between", "value": 5}},
-                routes=routes,
             )
 
     def test_search_opportunities_different_page(
@@ -1246,6 +1292,13 @@ class TestOpportunitySearch:
                 "totalItems": 5,
                 "totalPages": 3,
             },
+            "sortInfo": {
+                "sortBy": "lastModifiedAt",
+                "sortOrder": "desc",
+                "customSortBy": None,
+                "errors": [],
+            },
+            "filterInfo": {"filters": {}, "errors": []},
         }
         error_data = {"status": 500, "message": "Server error", "errors": []}
         error_response = Mock()

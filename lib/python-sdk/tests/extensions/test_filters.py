@@ -407,6 +407,29 @@ def test_classify_default_camel_alias_wrong_shape_raises_plugin_error():
         )
 
 
+def test_classify_default_money_range_wrong_shape_raises_plugin_error():
+    """A wrong-shaped MoneyRangeFilter default raises FilterError.
+
+    "totalFundingAvailableRange" is a MoneyRangeFilter (RangeOperator + MoneyRange);
+    f.eq("100") is an equivalence filter with a scalar value — a valid permissive
+    DefaultFilter, but not a MoneyRangeFilter. MoneyRangeFilter is the one default
+    type the sibling tests (status -> StringArrayFilter, closeDateRange ->
+    DateRangeFilter) do not exercise. The regression this guards: if the money-range
+    defaults were validated against the permissive DefaultFilter shape instead of
+    their real type, this f.eq value would pass and a bad body would reach the server.
+    """
+    with pytest.raises(FilterError) as exc_info:
+        classify_filters(
+            SAMPLE_ROUTES,
+            "opportunities",
+            "search",
+            {"totalFundingAvailableRange": f.eq("100")},
+        )
+    # Same uniform error contract as the sibling default tests: the underlying
+    # pydantic ValidationError is preserved as the cause.
+    assert isinstance(exc_info.value.__cause__, ValidationError)
+
+
 # ---------------------------------------------------------------------------
 # Wire-body integrity: the value that passed validation is the value shipped
 # ---------------------------------------------------------------------------

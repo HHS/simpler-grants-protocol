@@ -402,8 +402,14 @@ describe("Opportunities", () => {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
 
-      await client.opportunities.search({
+      // routes is client-bound: supplied once at construction, not per call.
+      const routedClient = new Client({
+        baseUrl: "https://api.example.org",
+        auth: Auth.bearer("test-token"),
         routes,
+      });
+
+      await routedClient.opportunities.search({
         filters: {
           status: F.in(["open"]), // default field → top-level
           agency: F.in(["HHS", "NSF"]), // registered custom → customFilters
@@ -444,9 +450,14 @@ describe("Opportunities", () => {
       const routes: PluginRoutes = {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
+      // routes is client-bound: supplied once at construction, not per call.
+      const routedClient = new Client({
+        baseUrl: "https://api.example.org",
+        auth: Auth.bearer("test-token"),
+        routes,
+      });
       await expect(
-        client.opportunities.search({
-          routes,
+        routedClient.opportunities.search({
           filters: { agency: { operator: "between", value: 5 } },
         })
       ).rejects.toThrow(FilterError);
