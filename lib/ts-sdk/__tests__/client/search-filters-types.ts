@@ -6,11 +6,13 @@
  *
  * Why the narrowing is partial: because `definePlugin` preserves the literal
  * `routes` type (its `const TRoutes` generic), declared filter names get autocomplete
- * and their values are type-checked. But the spec supports AD-HOC filters (an open key
- * set), so an unknown key cannot be rejected — a typo on a declared name is structurally
- * an intentional ad-hoc filter. Narrowing therefore gives autocomplete + value-shape
- * checking, NOT typo-rejection. The two `@ts-expect-error`s below pin the part that DOES
- * hold (value-shape enforcement); the un-guarded "typo" line documents what does not.
+ * and their values are envelope-checked. But the spec supports AD-HOC filters (an open
+ * key set), so an unknown key cannot be rejected — a typo on a declared name is
+ * structurally an intentional ad-hoc filter. Narrowing therefore gives autocomplete +
+ * filter-envelope checking (`{ operator, value }` shape), NOT typo-rejection and NOT
+ * per-`filterType` value validation (that runs at runtime in `classifyFilters`). The
+ * single `@ts-expect-error` below pins the part that DOES hold (the `{ operator, value }`
+ * envelope); the un-guarded "typo" line documents what does not.
  */
 
 import { definePlugin, F } from "@/extensions";
@@ -56,7 +58,7 @@ async function _assertions(): Promise<void> {
     filters: { fundingMaxx: F.between(0, 100) },
   });
 
-  // Value SHAPE is enforced even though keys are open.
+  // The `{ operator, value }` envelope is enforced even though keys are open.
   await client.opportunities.search({
     routes: plugin.routes,
     filters: {
