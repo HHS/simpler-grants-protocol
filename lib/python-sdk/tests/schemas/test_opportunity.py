@@ -4,7 +4,12 @@ import pytest
 from datetime import datetime, date, UTC
 from uuid import uuid4
 
+from pydantic import ValidationError
+
 from common_grants_sdk.schemas.pydantic.fields import Money, EventType, SingleDateEvent
+from common_grants_sdk.schemas.pydantic.models.opp_applicant_type import (
+    ApplicantTypeOptions,
+)
 from common_grants_sdk.schemas.pydantic.models.opp_base import OpportunityBase
 from common_grants_sdk.schemas.pydantic.models.opp_funding import OppFunding
 from common_grants_sdk.schemas.pydantic.models.opp_status import (
@@ -186,3 +191,44 @@ def test_opportunity_with_custom_fields():
     assert custom_field.field_type == CustomFieldType.STRING
     assert custom_field.value == "Healthcare Innovation"
     assert str(custom_field.schema_url) == "https://example.com/schema"
+
+
+class TestAcceptedApplicantTypes:
+    def test_defaults_to_none(self, minimal_opportunity):
+        assert minimal_opportunity.accepted_applicant_types is None
+
+    def test_parses_list(self):
+        opp = OpportunityBase.model_validate(
+            {
+                "id": str(uuid4()),
+                "title": "Test",
+                "description": "Test",
+                "status": {"value": "open"},
+                "createdAt": datetime.now(UTC).isoformat(),
+                "lastModifiedAt": datetime.now(UTC).isoformat(),
+                "acceptedApplicantTypes": [
+                    {"value": "government_state"},
+                    {"value": "individual"},
+                ],
+            }
+        )
+        assert len(opp.accepted_applicant_types) == 2
+        assert (
+            opp.accepted_applicant_types[0].value
+            == ApplicantTypeOptions.government_state
+        )
+        assert opp.accepted_applicant_types[1].value == ApplicantTypeOptions.individual
+
+    def test_rejects_invalid_applicant_type(self):
+        with pytest.raises(ValidationError):
+            OpportunityBase.model_validate(
+                {
+                    "id": str(uuid4()),
+                    "title": "Test",
+                    "description": "Test",
+                    "status": {"value": "open"},
+                    "createdAt": datetime.now(UTC).isoformat(),
+                    "lastModifiedAt": datetime.now(UTC).isoformat(),
+                    "acceptedApplicantTypes": [{"value": "not_valid"}],
+                }
+            )

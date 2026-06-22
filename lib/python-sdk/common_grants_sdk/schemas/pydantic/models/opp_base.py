@@ -10,6 +10,7 @@ from pydantic import ConfigDict, Field, HttpUrl
 
 from ..base import CommonGrantsBaseModel
 from ..fields import CustomField, SystemMetadata
+from .opp_applicant_type import ApplicantType
 from .opp_funding import OppFunding
 from .opp_status import OppStatus
 from .opp_timeline import OppTimeline
@@ -59,6 +60,11 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel, Generic[CF]):
         default=None,
         alias="customFields",
         description="Additional custom fields specific to this opportunity",
+    )
+    accepted_applicant_types: Optional[list[ApplicantType]] = Field(
+        default=None,
+        alias="acceptedApplicantTypes",
+        description="The type of applicant for the opportunity",
     )
 
     @classmethod

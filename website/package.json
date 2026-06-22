@@ -34,7 +34,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@apidevtools/json-schema-ref-parser": "^15.3.6",
+    "@apidevtools/json-schema-ref-parser": "^15.4.0",
     "@astrojs/react": "^5.0.7",
     "@astrojs/starlight": "^0.39.3",
     "@jsonforms/core": "^3.8.0",
@@ -49,8 +49,8 @@
     "openapi-sampler": "^1.7.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "sharp": "^0.35.1",
-    "swagger-ui-react": "^5.32.6",
+    "sharp": "^0.35.2",
+    "swagger-ui-react": "^5.32.7",
     "tsx": "^4.22.4",
     "typescript": "catalog:",
     "typespec-versioning-changelog": "workspace:*",
@@ -81,7 +81,7 @@
     "starlight-links-validator": "^0.24.0",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
-    "wrangler": "^4.101.0"
+    "wrangler": "^4.103.0"
   },
   "overrides": {
     "js-yaml": "^4.2.0"
