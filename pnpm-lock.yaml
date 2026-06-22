@@ -10,8 +10,8 @@ catalogs:
       specifier: ^9.39.4
       version: 9.39.4
     '@types/node':
-      specifier: ^20.19.43
-      version: 20.19.43
+      specifier: ^22.19.21
+      version: 22.20.0
     '@typespec/compiler':
       specifier: ^1.13.0
       version: 1.13.0
@@ -103,17 +103,17 @@ importers:
     dependencies:
       '@typespec/compiler':
         specifier: 'catalog:'
-        version: 1.13.0(@types/node@20.19.43)
+        version: 1.13.0(@types/node@22.20.0)
       '@typespec/versioning':
         specifier: 'catalog:'
-        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
     devDependencies:
       '@eslint/js':
         specifier: 'catalog:'
         version: 9.39.4
       '@types/node':
         specifier: 'catalog:'
-        version: 20.19.43
+        version: 22.20.0
       '@typespec/prettier-plugin-typespec':
         specifier: ^1.10.0
         version: 1.10.0
@@ -134,7 +134,7 @@ importers:
         version: 8.61.1(eslint@9.39.4)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.8(@types/node@20.19.43)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+        version: 4.1.8(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
 
   lib/cli:
     dependencies:
@@ -143,7 +143,7 @@ importers:
         version: 10.1.1(openapi-types@12.1.3)
       '@typespec/compiler':
         specifier: 'catalog:'
-        version: 1.13.0(@types/node@20.19.43)
+        version: 1.13.0(@types/node@22.20.0)
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -155,7 +155,7 @@ importers:
         version: 4.22.2
       inquirer:
         specifier: ^9.3.8
-        version: 9.3.8(@types/node@20.19.43)
+        version: 9.3.8(@types/node@22.20.0)
       js-yaml:
         specifier: ^4.2.0
         version: 4.2.0
@@ -192,7 +192,7 @@ importers:
         version: 0.6.5
       '@types/node':
         specifier: 'catalog:'
-        version: 20.19.43
+        version: 22.20.0
       '@types/supertest':
         specifier: ^6.0.3
         version: 6.0.3
@@ -201,13 +201,13 @@ importers:
         version: 4.1.8
       '@typespec/json-schema':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       '@typespec/openapi3':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/versioning':
         specifier: 'catalog:'
-        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.9(vitest@4.1.8)
@@ -234,7 +234,7 @@ importers:
         version: 7.2.2
       ts-node:
         specifier: 'catalog:'
-        version: 10.9.2(@types/node@20.19.43)(typescript@5.9.3)
+        version: 10.9.2(@types/node@22.20.0)(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -243,38 +243,38 @@ importers:
         version: 8.61.1(eslint@9.39.4)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.8(@types/node@20.19.43)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+        version: 4.1.8(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
 
   lib/core:
     dependencies:
       '@typespec/compiler':
         specifier: 'catalog:'
-        version: 1.13.0(@types/node@20.19.43)
+        version: 1.13.0(@types/node@22.20.0)
       '@typespec/http':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       '@typespec/json-schema':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       '@typespec/openapi':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/openapi3':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/rest':
         specifier: 'catalog:'
-        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/versioning':
         specifier: 'catalog:'
-        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
     devDependencies:
       '@eslint/js':
         specifier: 'catalog:'
         version: 9.39.4
       '@types/node':
         specifier: 'catalog:'
-        version: 20.19.43
+        version: 22.20.0
       eslint:
         specifier: 'catalog:'
         version: 9.39.4
@@ -316,28 +316,28 @@ importers:
         version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
-        version: 20.19.43
+        version: 22.20.0
       '@typespec/compiler':
         specifier: 'catalog:'
-        version: 1.13.0(@types/node@20.19.43)
+        version: 1.13.0(@types/node@22.20.0)
       '@typespec/http':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       '@typespec/json-schema':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       '@typespec/openapi':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/openapi3':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/rest':
         specifier: 'catalog:'
-        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/versioning':
         specifier: 'catalog:'
-        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.9(vitest@4.1.8)
@@ -367,7 +367,7 @@ importers:
         version: 3.8.4
       ts-node:
         specifier: 'catalog:'
-        version: 10.9.2(@types/node@20.19.43)(typescript@5.9.3)
+        version: 10.9.2(@types/node@22.20.0)(typescript@5.9.3)
       tsx:
         specifier: ^4.22.4
         version: 4.22.4
@@ -379,7 +379,7 @@ importers:
         version: 8.61.1(eslint@9.39.4)(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.8(@types/node@20.19.43)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+        version: 4.1.8(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
 
   website:
     dependencies:
@@ -388,10 +388,10 @@ importers:
         version: 15.4.0(@types/json-schema@7.0.15)
       '@astrojs/react':
         specifier: ^5.0.7
-        version: 5.0.7(@types/node@20.19.43)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tsx@4.22.4)(yaml@2.8.3)
+        version: 5.0.7(@types/node@22.20.0)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tsx@4.22.4)(yaml@2.8.3)
       '@astrojs/starlight':
         specifier: ^0.39.3
-        version: 0.39.3(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3)
+        version: 0.39.3(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3)
       '@jsonforms/core':
         specifier: ^3.8.0
         version: 3.8.0
@@ -412,7 +412,7 @@ importers:
         version: 8.20.0
       astro:
         specifier: ^6.4.8
-        version: 6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
+        version: 6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
       js-yaml:
         specifier: ^4.2.0
         version: 4.2.0
@@ -467,31 +467,31 @@ importers:
         version: 0.6.5
       '@types/node':
         specifier: 'catalog:'
-        version: 20.19.43
+        version: 22.20.0
       '@types/swagger-ui-react':
         specifier: ^5.18.0
         version: 5.18.0
       '@typespec/compiler':
         specifier: 'catalog:'
-        version: 1.13.0(@types/node@20.19.43)
+        version: 1.13.0(@types/node@22.20.0)
       '@typespec/http':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       '@typespec/json-schema':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       '@typespec/openapi':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/openapi3':
         specifier: 'catalog:'
-        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/rest':
         specifier: 'catalog:'
-        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       '@typespec/versioning':
         specifier: 'catalog:'
-        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+        version: 0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
       cspell:
         specifier: ^8.19.4
         version: 8.19.4
@@ -512,13 +512,13 @@ importers:
         version: 0.14.1
       starlight-links-validator:
         specifier: ^0.24.0
-        version: 0.24.0(@astrojs/starlight@0.39.3(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3))(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))
+        version: 0.24.0(@astrojs/starlight@0.39.3(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3))(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))
       typescript-eslint:
         specifier: 'catalog:'
         version: 8.61.1(eslint@9.39.4)(typescript@5.9.3)
       vitest:
         specifier: catalog:website
-        version: 4.1.9(@types/node@20.19.43)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+        version: 4.1.9(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
       wrangler:
         specifier: ^4.103.0
         version: 4.103.0
@@ -2353,8 +2353,8 @@ packages:
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
 
-  '@types/node@20.19.43':
-    resolution: {integrity: sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==}
+  '@types/node@22.20.0':
+    resolution: {integrity: sha512-QWlFW2wf3nTjC13/DqRnBpR4ZO36VJH/JVBkA/vcnmbTBNQIlnObqyqZE1tUR7+Ni23Lda8R1BxMfbXRpCUx5g==}
 
   '@types/node@24.13.1':
     resolution: {integrity: sha512-RSpUJGmvsJ1ZeBehQZFhIdpsz+bIpES0nIQXko4Ybq+N+kX6XvOq3Jo+iJ82FWLdblFq85AsMikd3m35jgezYg==}
@@ -6385,12 +6385,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@5.0.6(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))':
+  '@astrojs/mdx@5.0.6(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))':
     dependencies:
       '@astrojs/markdown-remark': 7.1.2
       '@mdx-js/mdx': 3.1.1
       acorn: 8.16.0
-      astro: 6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
+      astro: 6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
       es-module-lexer: 2.1.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -6408,17 +6408,17 @@ snapshots:
     dependencies:
       prismjs: 1.30.0
 
-  '@astrojs/react@5.0.7(@types/node@20.19.43)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tsx@4.22.4)(yaml@2.8.3)':
+  '@astrojs/react@5.0.7(@types/node@22.20.0)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tsx@4.22.4)(yaml@2.8.3)':
     dependencies:
       '@astrojs/internal-helpers': 0.10.0
       '@types/react': 18.3.28
       '@types/react-dom': 18.3.7(@types/react@18.3.28)
-      '@vitejs/plugin-react': 5.2.0(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+      '@vitejs/plugin-react': 5.2.0(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
       devalue: 5.8.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       ultrahtml: 1.6.0
-      vite: 7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
+      vite: 7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -6439,17 +6439,17 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 4.4.3
 
-  '@astrojs/starlight@0.39.3(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3)':
+  '@astrojs/starlight@0.39.3(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3)':
     dependencies:
       '@astrojs/markdown-remark': 7.2.0
-      '@astrojs/mdx': 5.0.6(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))
+      '@astrojs/mdx': 5.0.6(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))
       '@astrojs/sitemap': 3.7.3
       '@pagefind/default-ui': 1.5.2
       '@types/hast': 3.0.4
       '@types/js-yaml': 4.0.9
       '@types/mdast': 4.0.4
-      astro: 6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
-      astro-expressive-code: 0.42.0(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))
+      astro: 6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
+      astro-expressive-code: 0.42.0(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.3
       hast-util-select: 6.0.4
@@ -7417,55 +7417,55 @@ snapshots:
 
   '@inquirer/ansi@2.0.7': {}
 
-  '@inquirer/checkbox@5.2.1(@types/node@20.19.43)':
+  '@inquirer/checkbox@5.2.1(@types/node@22.20.0)':
     dependencies:
       '@inquirer/ansi': 2.0.7
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
       '@inquirer/figures': 2.0.7
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
-  '@inquirer/confirm@6.1.1(@types/node@20.19.43)':
+  '@inquirer/confirm@6.1.1(@types/node@22.20.0)':
     dependencies:
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
-  '@inquirer/core@11.2.1(@types/node@20.19.43)':
+  '@inquirer/core@11.2.1(@types/node@22.20.0)':
     dependencies:
       '@inquirer/ansi': 2.0.7
       '@inquirer/figures': 2.0.7
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
       cli-width: 4.1.0
       fast-wrap-ansi: 0.2.2
       mute-stream: 3.0.0
       signal-exit: 4.1.0
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
-  '@inquirer/editor@5.2.2(@types/node@20.19.43)':
+  '@inquirer/editor@5.2.2(@types/node@22.20.0)':
     dependencies:
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
-      '@inquirer/external-editor': 3.0.3(@types/node@20.19.43)
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
+      '@inquirer/external-editor': 3.0.3(@types/node@22.20.0)
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
-  '@inquirer/expand@5.1.1(@types/node@20.19.43)':
+  '@inquirer/expand@5.1.1(@types/node@22.20.0)':
     dependencies:
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
-  '@inquirer/external-editor@1.0.3(@types/node@20.19.43)':
+  '@inquirer/external-editor@1.0.3(@types/node@22.20.0)':
     dependencies:
       chardet: 2.1.1
       iconv-lite: 0.7.2
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
   '@inquirer/external-editor@1.0.3(@types/node@25.2.3)':
     dependencies:
@@ -7474,81 +7474,81 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.2.3
 
-  '@inquirer/external-editor@3.0.3(@types/node@20.19.43)':
+  '@inquirer/external-editor@3.0.3(@types/node@22.20.0)':
     dependencies:
       chardet: 2.1.1
       iconv-lite: 0.7.2
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
   '@inquirer/figures@1.0.15': {}
 
   '@inquirer/figures@2.0.7': {}
 
-  '@inquirer/input@5.1.2(@types/node@20.19.43)':
+  '@inquirer/input@5.1.2(@types/node@22.20.0)':
     dependencies:
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
-  '@inquirer/number@4.1.1(@types/node@20.19.43)':
+  '@inquirer/number@4.1.1(@types/node@22.20.0)':
     dependencies:
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
-  '@inquirer/password@5.1.1(@types/node@20.19.43)':
-    dependencies:
-      '@inquirer/ansi': 2.0.7
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
-    optionalDependencies:
-      '@types/node': 20.19.43
-
-  '@inquirer/prompts@8.5.2(@types/node@20.19.43)':
-    dependencies:
-      '@inquirer/checkbox': 5.2.1(@types/node@20.19.43)
-      '@inquirer/confirm': 6.1.1(@types/node@20.19.43)
-      '@inquirer/editor': 5.2.2(@types/node@20.19.43)
-      '@inquirer/expand': 5.1.1(@types/node@20.19.43)
-      '@inquirer/input': 5.1.2(@types/node@20.19.43)
-      '@inquirer/number': 4.1.1(@types/node@20.19.43)
-      '@inquirer/password': 5.1.1(@types/node@20.19.43)
-      '@inquirer/rawlist': 5.3.1(@types/node@20.19.43)
-      '@inquirer/search': 4.2.1(@types/node@20.19.43)
-      '@inquirer/select': 5.2.1(@types/node@20.19.43)
-    optionalDependencies:
-      '@types/node': 20.19.43
-
-  '@inquirer/rawlist@5.3.1(@types/node@20.19.43)':
-    dependencies:
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
-    optionalDependencies:
-      '@types/node': 20.19.43
-
-  '@inquirer/search@4.2.1(@types/node@20.19.43)':
-    dependencies:
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
-      '@inquirer/figures': 2.0.7
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
-    optionalDependencies:
-      '@types/node': 20.19.43
-
-  '@inquirer/select@5.2.1(@types/node@20.19.43)':
+  '@inquirer/password@5.1.1(@types/node@22.20.0)':
     dependencies:
       '@inquirer/ansi': 2.0.7
-      '@inquirer/core': 11.2.1(@types/node@20.19.43)
-      '@inquirer/figures': 2.0.7
-      '@inquirer/type': 4.0.7(@types/node@20.19.43)
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
-  '@inquirer/type@4.0.7(@types/node@20.19.43)':
+  '@inquirer/prompts@8.5.2(@types/node@22.20.0)':
+    dependencies:
+      '@inquirer/checkbox': 5.2.1(@types/node@22.20.0)
+      '@inquirer/confirm': 6.1.1(@types/node@22.20.0)
+      '@inquirer/editor': 5.2.2(@types/node@22.20.0)
+      '@inquirer/expand': 5.1.1(@types/node@22.20.0)
+      '@inquirer/input': 5.1.2(@types/node@22.20.0)
+      '@inquirer/number': 4.1.1(@types/node@22.20.0)
+      '@inquirer/password': 5.1.1(@types/node@22.20.0)
+      '@inquirer/rawlist': 5.3.1(@types/node@22.20.0)
+      '@inquirer/search': 4.2.1(@types/node@22.20.0)
+      '@inquirer/select': 5.2.1(@types/node@22.20.0)
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
+
+  '@inquirer/rawlist@5.3.1(@types/node@22.20.0)':
+    dependencies:
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
+    optionalDependencies:
+      '@types/node': 22.20.0
+
+  '@inquirer/search@4.2.1(@types/node@22.20.0)':
+    dependencies:
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
+      '@inquirer/figures': 2.0.7
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
+    optionalDependencies:
+      '@types/node': 22.20.0
+
+  '@inquirer/select@5.2.1(@types/node@22.20.0)':
+    dependencies:
+      '@inquirer/ansi': 2.0.7
+      '@inquirer/core': 11.2.1(@types/node@22.20.0)
+      '@inquirer/figures': 2.0.7
+      '@inquirer/type': 4.0.7(@types/node@22.20.0)
+    optionalDependencies:
+      '@types/node': 22.20.0
+
+  '@inquirer/type@4.0.7(@types/node@22.20.0)':
+    optionalDependencies:
+      '@types/node': 22.20.0
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -8362,7 +8362,7 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
   '@types/chai@5.2.3':
     dependencies:
@@ -8371,7 +8371,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
   '@types/cookiejar@2.1.5': {}
 
@@ -8391,7 +8391,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.8':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
       '@types/qs': 6.15.0
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -8440,7 +8440,7 @@ snapshots:
 
   '@types/node@12.20.55': {}
 
-  '@types/node@20.19.43':
+  '@types/node@22.20.0':
     dependencies:
       undici-types: 6.21.0
 
@@ -8478,33 +8478,33 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
   '@types/send@0.17.6':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
   '@types/serve-static@1.15.10':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
       '@types/send': 0.17.6
 
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
   '@types/superagent@8.1.9':
     dependencies:
       '@types/cookiejar': 2.1.5
       '@types/methods': 1.1.4
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
       form-data: 4.0.6
 
   '@types/supertest@6.0.3':
@@ -8523,7 +8523,7 @@ snapshots:
 
   '@types/through@0.0.33':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
 
   '@types/trusted-types@2.0.7':
     optional: true
@@ -8677,14 +8677,14 @@ snapshots:
       '@typescript-eslint/types': 8.61.1
       eslint-visitor-keys: 5.0.1
 
-  '@typespec/asset-emitter@0.79.1(@typespec/compiler@1.13.0(@types/node@20.19.43))':
+  '@typespec/asset-emitter@0.79.1(@typespec/compiler@1.13.0(@types/node@22.20.0))':
     dependencies:
-      '@typespec/compiler': 1.13.0(@types/node@20.19.43)
+      '@typespec/compiler': 1.13.0(@types/node@22.20.0)
 
-  '@typespec/compiler@1.13.0(@types/node@20.19.43)':
+  '@typespec/compiler@1.13.0(@types/node@22.20.0)':
     dependencies:
       '@babel/code-frame': 7.29.7
-      '@inquirer/prompts': 8.5.2(@types/node@20.19.43)
+      '@inquirer/prompts': 8.5.2(@types/node@22.20.0)
       ajv: 8.20.0
       change-case: 5.4.4
       env-paths: 4.0.0
@@ -8702,53 +8702,53 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))':
+  '@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))':
     dependencies:
-      '@typespec/compiler': 1.13.0(@types/node@20.19.43)
+      '@typespec/compiler': 1.13.0(@types/node@22.20.0)
 
-  '@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))':
+  '@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))':
     dependencies:
-      '@typespec/asset-emitter': 0.79.1(@typespec/compiler@1.13.0(@types/node@20.19.43))
-      '@typespec/compiler': 1.13.0(@types/node@20.19.43)
+      '@typespec/asset-emitter': 0.79.1(@typespec/compiler@1.13.0(@types/node@22.20.0))
+      '@typespec/compiler': 1.13.0(@types/node@22.20.0)
       yaml: 2.8.3
 
-  '@typespec/openapi3@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))':
+  '@typespec/openapi3@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/json-schema@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))(@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))))(@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))':
     dependencies:
       '@scalar/json-magic': 0.12.15
       '@scalar/openapi-parser': 0.28.7
       '@scalar/openapi-types': 0.9.1
-      '@typespec/asset-emitter': 0.79.1(@typespec/compiler@1.13.0(@types/node@20.19.43))
-      '@typespec/compiler': 1.13.0(@types/node@20.19.43)
-      '@typespec/http': 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
-      '@typespec/openapi': 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))
+      '@typespec/asset-emitter': 0.79.1(@typespec/compiler@1.13.0(@types/node@22.20.0))
+      '@typespec/compiler': 1.13.0(@types/node@22.20.0)
+      '@typespec/http': 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
+      '@typespec/openapi': 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))
       yaml: 2.8.3
     optionalDependencies:
-      '@typespec/json-schema': 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
-      '@typespec/versioning': 0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+      '@typespec/json-schema': 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
+      '@typespec/versioning': 0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
 
-  '@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))':
+  '@typespec/openapi@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))':
     dependencies:
-      '@typespec/compiler': 1.13.0(@types/node@20.19.43)
-      '@typespec/http': 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+      '@typespec/compiler': 1.13.0(@types/node@22.20.0)
+      '@typespec/http': 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
 
   '@typespec/prettier-plugin-typespec@1.10.0':
     dependencies:
       prettier: 3.8.4
 
-  '@typespec/rest@0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43)))':
+  '@typespec/rest@0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))(@typespec/http@1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0)))':
     dependencies:
-      '@typespec/compiler': 1.13.0(@types/node@20.19.43)
-      '@typespec/http': 1.13.0(@typespec/compiler@1.13.0(@types/node@20.19.43))
+      '@typespec/compiler': 1.13.0(@types/node@22.20.0)
+      '@typespec/http': 1.13.0(@typespec/compiler@1.13.0(@types/node@22.20.0))
 
-  '@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@20.19.43))':
+  '@typespec/versioning@0.83.0(@typespec/compiler@1.13.0(@types/node@22.20.0))':
     dependencies:
-      '@typespec/compiler': 1.13.0(@types/node@20.19.43)
+      '@typespec/compiler': 1.13.0(@types/node@22.20.0)
 
   '@ungap/structured-clone@1.3.0': {}
 
   '@ungap/structured-clone@1.3.1': {}
 
-  '@vitejs/plugin-react@5.2.0(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))':
+  '@vitejs/plugin-react@5.2.0(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.7)
@@ -8756,7 +8756,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
+      vite: 7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
     transitivePeerDependencies:
       - supports-color
 
@@ -8772,7 +8772,7 @@ snapshots:
       obug: 2.1.2
       std-env: 4.0.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.8(@types/node@20.19.43)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+      vitest: 4.1.8(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
 
   '@vitest/coverage-v8@4.1.9(vitest@4.1.9)':
     dependencies:
@@ -8786,7 +8786,7 @@ snapshots:
       obug: 2.1.2
       std-env: 4.0.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.9(@types/node@20.19.43)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+      vitest: 4.1.9(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
     optional: true
 
   '@vitest/expect@4.1.8':
@@ -8807,21 +8807,21 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.8(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))':
+  '@vitest/mocker@4.1.8(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))':
     dependencies:
       '@vitest/spy': 4.1.8
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
+      vite: 7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
 
-  '@vitest/mocker@4.1.9(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))':
+  '@vitest/mocker@4.1.9(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))':
     dependencies:
       '@vitest/spy': 4.1.9
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
+      vite: 7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
 
   '@vitest/pretty-format@4.1.8':
     dependencies:
@@ -9055,12 +9055,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  astro-expressive-code@0.42.0(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)):
+  astro-expressive-code@0.42.0(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)):
     dependencies:
-      astro: 6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
+      astro: 6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
       rehype-expressive-code: 0.42.0
 
-  astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3):
+  astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3):
     dependencies:
       '@astrojs/compiler': 4.0.0
       '@astrojs/internal-helpers': 0.10.0
@@ -9112,8 +9112,8 @@ snapshots:
       unist-util-visit: 5.1.0
       unstorage: 1.17.5
       vfile: 6.0.3
-      vite: 7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
-      vitefu: 1.1.3(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+      vite: 7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
+      vitefu: 1.1.3(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
       xxhash-wasm: 1.1.0
       yargs-parser: 22.0.0
       zod: 4.4.3
@@ -9808,7 +9808,7 @@ snapshots:
       '@typescript-eslint/utils': 7.18.0(eslint@9.39.4)(typescript@5.9.3)
       eslint: 9.39.4
     optionalDependencies:
-      vitest: 4.1.8(@types/node@20.19.43)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+      vitest: 4.1.8(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -10497,9 +10497,9 @@ snapshots:
 
   inline-style-parser@0.2.7: {}
 
-  inquirer@9.3.8(@types/node@20.19.43):
+  inquirer@9.3.8(@types/node@22.20.0):
     dependencies:
-      '@inquirer/external-editor': 1.0.3(@types/node@20.19.43)
+      '@inquirer/external-editor': 1.0.3(@types/node@22.20.0)
       '@inquirer/figures': 1.0.15
       ansi-escapes: 4.3.2
       cli-width: 4.1.0
@@ -12203,11 +12203,11 @@ snapshots:
 
   stackback@0.0.2: {}
 
-  starlight-links-validator@0.24.0(@astrojs/starlight@0.39.3(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3))(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)):
+  starlight-links-validator@0.24.0(@astrojs/starlight@0.39.3(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3))(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)):
     dependencies:
-      '@astrojs/starlight': 0.39.3(astro@6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3)
+      '@astrojs/starlight': 0.39.3(astro@6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3))(typescript@5.9.3)
       '@types/picomatch': 4.0.3
-      astro: 6.4.8(@types/node@20.19.43)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
+      astro: 6.4.8(@types/node@22.20.0)(lightningcss@1.32.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.3
       is-absolute-url: 5.0.0
@@ -12504,14 +12504,14 @@ snapshots:
 
   ts-mixer@6.0.4: {}
 
-  ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3):
+  ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.12
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
       acorn: 8.16.0
       acorn-walk: 8.3.5
       arg: 4.1.3
@@ -12729,7 +12729,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3):
+  vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3):
     dependencies:
       esbuild: 0.28.1
       fdir: 6.5.0(picomatch@4.0.4)
@@ -12738,20 +12738,20 @@ snapshots:
       rollup: 4.61.1
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
       fsevents: 2.3.3
       lightningcss: 1.32.0
       tsx: 4.22.4
       yaml: 2.8.3
 
-  vitefu@1.1.3(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)):
+  vitefu@1.1.3(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)):
     optionalDependencies:
-      vite: 7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
+      vite: 7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
 
-  vitest@4.1.8(@types/node@20.19.43)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)):
+  vitest@4.1.8(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)):
     dependencies:
       '@vitest/expect': 4.1.8
-      '@vitest/mocker': 4.1.8(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+      '@vitest/mocker': 4.1.8(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
       '@vitest/pretty-format': 4.1.8
       '@vitest/runner': 4.1.8
       '@vitest/snapshot': 4.1.8
@@ -12768,18 +12768,18 @@ snapshots:
       tinyexec: 1.2.2
       tinyglobby: 0.2.16
       tinyrainbow: 3.1.0
-      vite: 7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
+      vite: 7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
       '@vitest/coverage-v8': 4.1.9(vitest@4.1.8)
     transitivePeerDependencies:
       - msw
 
-  vitest@4.1.9(@types/node@20.19.43)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)):
+  vitest@4.1.9(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)):
     dependencies:
       '@vitest/expect': 4.1.9
-      '@vitest/mocker': 4.1.9(vite@7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
+      '@vitest/mocker': 4.1.9(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3))
       '@vitest/pretty-format': 4.1.9
       '@vitest/runner': 4.1.9
       '@vitest/snapshot': 4.1.9
@@ -12796,10 +12796,10 @@ snapshots:
       tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
-      vite: 7.3.5(@types/node@20.19.43)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
+      vite: 7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.8.3)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 20.19.43
+      '@types/node': 22.20.0
       '@vitest/coverage-v8': 4.1.9(vitest@4.1.9)
     transitivePeerDependencies:
       - msw
