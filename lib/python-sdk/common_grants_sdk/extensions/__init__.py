@@ -1,12 +1,6 @@
 """Public extension APIs for the CommonGrants Python SDK."""
 
-from .filters import (
-    FILTER_TYPE_SCHEMAS,
-    classify_filters,
-    f,
-    validate_filter_call,
-    validate_routes,
-)
+from .filters import classify_filters, f, validate_filter_call, validate_routes
 from .plugin import (
     Plugin,
     PluginMeta,
@@ -68,7 +62,6 @@ __all__ = [
     "schema",
     "validate_into",
     # Custom filters
-    "FILTER_TYPE_SCHEMAS",
     "FilterError",
     "PluginRoutes",
     "classify_filters",

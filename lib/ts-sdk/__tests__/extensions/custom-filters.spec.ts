@@ -122,6 +122,19 @@ describe("classifyFilters", () => {
 
       expect(result).toEqual({});
     });
+
+    it("throws FilterError when a default filter violates its real field type (status)", () => {
+      // `status` is a StringArrayFilter (operator in/notIn, value string[]).
+      // `{ operator: "gt", value: 5 }` is a structurally valid DefaultFilter
+      // (passes the permissive shape check) but invalid for `status`. Default
+      // filters are validated against their real field type (mirrors the Python
+      // SDK), so this must fail loud client-side rather than ship to the server.
+      expect(() =>
+        classifyFilters(grantsGovRoutes, "opportunities", "search", {
+          status: { operator: "gt", value: 5 },
+        })
+      ).toThrow(FilterError);
+    });
   });
 
   // ############################################################################

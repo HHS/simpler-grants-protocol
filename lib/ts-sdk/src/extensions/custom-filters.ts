@@ -38,19 +38,15 @@ import type { CustomFilterSpec, CustomFilterType, PluginRoutes, RouteDeclaration
 import { FilterError } from "./types";
 
 // ############################################################################
-// Public — filter-type catalog
+// Internal — filter-type schema map
 // ############################################################################
 
 /**
  * Maps each CustomFilterType to the Zod schema that validates its
  * `{operator, value}` pair. Each schema constrains both the allowed operator
  * enum and the value shape, so a single parse covers both checks.
- *
- * Exported read-only for consumer introspection (enumerate valid filter types,
- * drive a UI, or validate a filter bag independently). The catalog is closed —
- * adding a filter type is a spec/SDK change, not a runtime extension point.
  */
-export const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
+const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
   stringComparison: StringComparisonFilterSchema,
   stringArray: StringArrayFilterSchema,
   numberComparison: NumberComparisonFilterSchema,
@@ -255,7 +251,9 @@ export function validateFilterCall(
  * `gov.<system>@<filterName>` namespaced keys are treated as ad-hoc custom
  * filter keys and flow into `customFilters` verbatim — no auto-migration.
  *
- * Call-time validation (`validateFilterCall`) is run for each key during classification.
+ * Validation runs for each key during classification: default fields are checked
+ * against their real field type (`OppDefaultFiltersSchema`), registered and ad-hoc
+ * keys via `validateFilterCall`.
  *
  * @param routes - The `PluginRoutes` from the plugin definition
  * @param resourceKey - The resource name (e.g. `"opportunities"`)
@@ -281,12 +279,20 @@ export function classifyFilters(
     const spec = registeredFilters[key] as CustomFilterSpec | undefined;
 
     if (DEFAULT_FILTER_NAMES.has(key)) {
-      // Bucket 1: default filter → top-level named field.
-      // Default keys get shape-only validation via DefaultFilterSchema (the same
-      // treatment as ad-hoc keys); per-field type enforcement against
-      // OppDefaultFiltersSchema is intentionally not applied here. The server
-      // validates default fields and reports any it cannot apply.
-      validateFilterCall(undefined, key, value);
+      // Bucket 1: default filter → top-level named field. Validate against the
+      // field's real type from OppDefaultFiltersSchema (e.g. status →
+      // StringArrayFilter), mirroring the Python SDK so a malformed default
+      // filter fails loud client-side instead of being deferred to the server.
+      // safeParse validates without reshaping — the original value is assigned,
+      // so the wire body is unchanged for valid input.
+      const fieldSchema = (OppDefaultFiltersSchema.shape as Record<string, z.ZodTypeAny>)[key];
+      const result = fieldSchema.safeParse(value);
+      if (!result.success) {
+        throw new FilterError(
+          `Default filter "${key}" failed validation: ${result.error.message}`,
+          { path: `filters.${key}`, sourceValue: value }
+        );
+      }
       (defaultFields as Record<string, unknown>)[key] = value;
     } else {
       // Bucket 2 (registered custom) or Bucket 3 (ad-hoc / gov.* namespaced)
