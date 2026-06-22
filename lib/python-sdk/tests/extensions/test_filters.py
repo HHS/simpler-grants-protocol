@@ -370,6 +370,22 @@ def test_validate_filter_call_money_range_rejects_comparison_operator():
         )
 
 
+def test_validate_filter_call_number_range_value_submodel_survives_to_wire():
+    """A registered numberRange filter round-trips its NumberRange sub-model to wire dict.
+
+    f.between(int, int) returns a NumberRangeFilter whose ``.value`` is a NumberRange
+    sub-model (not a plain dict); validation must accept it and model_dump must recurse
+    the sub-model to ``{min, max}``. A regression that left ``.value`` as an un-dumped
+    NumberRange object — or that dropped the int payload — would ship a non-JSON body.
+    The moneyRange analog above is covered; this pins the numeric path.
+    """
+    spec = CustomFilterSpec(filter_type=CustomFilterType.NUMBER_RANGE)
+    validated = validate_filter_call(spec, "awardCount", f.between(0, 1000))
+    wire = validated.model_dump(by_alias=True, exclude_none=True, mode="json")
+    assert wire["operator"] == "between"
+    assert wire["value"] == {"min": 0, "max": 1000}
+
+
 def test_classify_default_wrong_shape_raises_plugin_error():
     """A wrong-shaped DEFAULT filter raises FilterError, not a raw pydantic ValidationError.
 

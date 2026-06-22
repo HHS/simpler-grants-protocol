@@ -48,7 +48,6 @@ from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     OpportunityFilters,
     StringArray,
 )
-from common_grants_sdk.schemas.pydantic.filters.string import StringArrayFilter
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 from pydantic import Field
 
@@ -123,13 +122,6 @@ def demo() -> None:
     assert_type(standard.get("closeDateRange"), "DateRange | None")
     assert_type(standard.get("minAwardAmountRange"), "MoneyRange | None")
 
-    # The clean alias is the underlying Pydantic value model, so call-site values
-    # built from the alias validate at runtime.
-    print(
-        f"  [{'PASS' if StringArray is StringArrayFilter else 'FAIL'}] "
-        "StringArray alias is StringArrayFilter"
-    )
-
     # The registered keys are visible at runtime via the TypedDict's annotations.
     keys = set(get_type_hints(OppSearchFilters))
     registered_ok = {"status", "agency", "awardCount"} <= keys
@@ -143,9 +135,9 @@ def demo() -> None:
     agency = filters.get("agency")
     award = filters.get("awardCount")
     runtime_ok = (
-        isinstance(status, StringArrayFilter)
+        isinstance(status, StringArray)
         and status.value == ["open", "forecasted"]
-        and isinstance(agency, StringArrayFilter)
+        and isinstance(agency, StringArray)
         and agency.value == ["NSF", "NIH"]
         and isinstance(award, NumberComparison)
         and award.value == 3

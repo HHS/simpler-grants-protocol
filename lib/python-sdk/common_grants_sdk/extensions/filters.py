@@ -119,8 +119,7 @@ class _FHelpers:
         return self._equivalence(EquivalenceOperator.NOT_EQUAL, value)
 
     def _equivalence(self, operator: EquivalenceOperator, value: Any) -> BaseModel:
-        # bool first: bool is an int subclass, so it must not fall into the number arm.
-        if isinstance(value, bool):
+        if isinstance(value, bool):  # bool ⊂ int — must precede the number arm
             return BooleanComparisonFilter(operator=operator, value=value)
         if isinstance(value, str):
             return StringComparisonFilter(operator=operator, value=value)
