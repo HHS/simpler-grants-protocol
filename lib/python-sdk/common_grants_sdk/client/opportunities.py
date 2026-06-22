@@ -14,7 +14,7 @@ from ..schemas.pydantic.responses import (
 )
 from ..schemas.pydantic.models.opp_status import OppStatusOptions
 from ..extensions.filters import classify_filters
-from ..extensions.types import PluginRoutes
+from ..extensions.types import PluginRoutes, FilterError
 from .types import ItemsT
 from typing import List
 
@@ -153,6 +153,16 @@ class Opportunities:
             ).model_dump(by_alias=True, exclude_none=True, mode="json")
 
         if status:
+            if "status" in filters_body:
+                # Collision: ``status`` came from both the filters bag and the
+                # status shorthand. Fail loud rather than silently letting the
+                # shorthand win (mirrors the TS SDK).
+                raise FilterError(
+                    '"status" was supplied via both the status shorthand and the '
+                    "filters bag; provide only one",
+                    path="filters.status",
+                    source_value=status,
+                )
             filters_body["status"] = {"operator": "in", "value": status}
 
         request = {

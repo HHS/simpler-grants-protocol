@@ -3,7 +3,7 @@ import { z } from "zod";
 import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
 import { Client, Auth } from "../../src/client";
 import { OpportunityBaseSchema } from "../../src/schemas";
-import { withCustomFields, F } from "../../src/extensions";
+import { withCustomFields, F, FilterError } from "../../src/extensions";
 import type { PluginRoutes } from "../../src/extensions";
 import { CustomFieldType } from "../../src/constants";
 
@@ -423,6 +423,33 @@ describe("Opportunities", () => {
       const customFilters = (capturedBody?.filters as { customFilters?: Record<string, unknown> })
         .customFilters;
       expect(customFilters).not.toHaveProperty("status");
+    });
+
+    it("throws FilterError when status is supplied via both the shorthand and the filters bag", async () => {
+      // Collision: the `statuses` shorthand and a `status` key in the filters bag
+      // both target the top-level status field. Rather than silently letting the
+      // shorthand win (last-write), search() rejects so the caller picks one.
+      await expect(
+        client.opportunities.search({
+          statuses: ["open"],
+          filters: { status: F.in(["closed"]) },
+        })
+      ).rejects.toThrow(FilterError);
+    });
+
+    it("propagates FilterError when a registered filter value is invalid", async () => {
+      // A registered stringArray filter given a non-array `between` value fails
+      // classifyFilters validation; the error must surface out of search() rather
+      // than being swallowed or shipped as a malformed request body.
+      const routes: PluginRoutes = {
+        opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
+      };
+      await expect(
+        client.opportunities.search({
+          routes,
+          filters: { agency: { operator: "between", value: 5 } },
+        })
+      ).rejects.toThrow(FilterError);
     });
 
     it("searches with only query parameter", async () => {

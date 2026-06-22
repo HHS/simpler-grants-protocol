@@ -21,6 +21,7 @@ import {
 } from "../schemas";
 import { ArrayOperator } from "../constants";
 import { classifyFilters } from "../extensions/custom-filters";
+import { FilterError } from "../extensions/types";
 import type { PluginRoutes } from "../extensions/types";
 
 // =============================================================================
@@ -64,9 +65,10 @@ type SearchFilterNames<R extends PluginRoutes> = R extends {
  * Declared filter names surface in editor autocomplete with a typed value, while
  * arbitrary keys remain accepted — the spec supports ad-hoc (escape-hatch) filters
  * (bucket 3 of `classifyFilters`), so an unknown key cannot be rejected at the type
- * level without dropping ad-hoc support. Net: autocomplete + value-shape checking
- * for declared filters; NO typo-rejection on filter names (a typo is structurally
- * an intentional ad-hoc key).
+ * level without dropping ad-hoc support. Net: autocomplete + filter-envelope
+ * checking (`{ operator, value }` shape) for declared filters — per-`filterType`
+ * value validation runs at runtime in `classifyFilters`, not at the type level;
+ * NO typo-rejection on filter names (a typo is structurally an intentional ad-hoc key).
  */
 type CustomFilterBag<R extends PluginRoutes> = {
   [K in SearchFilterNames<R>]?: RawFilter;
@@ -342,6 +344,14 @@ export class Opportunities {
 
     // statuses shorthand → status default field (augments any classified filters)
     if (options?.statuses?.length) {
+      if (filters?.status !== undefined) {
+        // Collision: `status` came from both the filters bag and the statuses
+        // shorthand. Fail loud rather than silently letting the shorthand win.
+        throw new FilterError(
+          '"status" was supplied via both the statuses shorthand and the filters bag; provide only one',
+          { path: "filters.status", sourceValue: options.statuses }
+        );
+      }
       filters = filters ?? {};
       filters.status = {
         operator: ArrayOperator.in,

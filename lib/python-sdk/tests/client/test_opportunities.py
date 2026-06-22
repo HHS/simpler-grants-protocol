@@ -24,6 +24,7 @@ from common_grants_sdk.extensions.specs import (
     CustomFilterSpec,
     CustomFilterType,
 )
+from common_grants_sdk.extensions import FilterError
 
 
 @pytest.fixture
@@ -803,6 +804,63 @@ class TestOpportunitySearch:
         assert "legacyTag" in sent_filters["customFilters"]
         # separation invariant: status not duplicated under customFilters
         assert "status" not in sent_filters["customFilters"]
+
+    def test_search_raises_on_status_shorthand_and_bag_collision(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """status via both the shorthand arg and the filters bag is a collision.
+
+        Rather than silently letting the shorthand win (last-write), search()
+        raises FilterError so the caller picks one. Mirrors the TS SDK.
+        """
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        with pytest.raises(FilterError):
+            client.opportunities.search(
+                search="conservation",
+                status=[OppStatusOptions.OPEN],
+                filters={"status": {"operator": "in", "value": ["open"]}},
+            )
+
+    def test_search_propagates_filter_error_for_invalid_registered_filter(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """A malformed registered filter raises FilterError out of search().
+
+        A registered stringArray filter given a non-array ``between`` value fails
+        classify_filters validation; the error must surface out of search() rather
+        than being swallowed or shipped as a malformed request body.
+        """
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        routes = {
+            "opportunities": {
+                "search": {
+                    "filters": {
+                        "agency": CustomFilterSpec(
+                            filter_type=CustomFilterType.STRING_ARRAY
+                        )
+                    }
+                }
+            }
+        }
+
+        with pytest.raises(FilterError):
+            client.opportunities.search(
+                search="conservation",
+                filters={"agency": {"operator": "between", "value": 5}},
+                routes=routes,
+            )
 
     def test_search_opportunities_different_page(
         self, client, mock_httpx_client, sample_search_response
