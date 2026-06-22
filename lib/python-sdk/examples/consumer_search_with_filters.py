@@ -39,7 +39,7 @@ Run (from lib/python-sdk/):
 from __future__ import annotations
 
 import json
-from typing import Any, List, Mapping, Optional, Type, cast
+from typing import Any, Mapping, Optional, cast
 
 from typing_extensions import assert_type
 
@@ -130,11 +130,11 @@ class StubOpportunities:
         *,
         search: str,
         filters: OppSearchFilters,
-        status: Optional[List[OppStatusOptions]] = None,
+        status: Optional[list[OppStatusOptions]] = None,
         page: int = 1,
         page_size: int = 10,
-        schema: Type[OpportunityBase] = OpportunityBase,
-    ) -> List[OpportunityBase]:
+        schema: type[OpportunityBase] = OpportunityBase,
+    ) -> list[OpportunityBase]:
         """Search opportunities with default + custom filters.
 
         ``filters`` is the typed ``OppSearchFilters`` bag — the consumer gets

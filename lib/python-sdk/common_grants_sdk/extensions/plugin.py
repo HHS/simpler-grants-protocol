@@ -25,7 +25,7 @@ from typing import Any, Generic, TypeVar, cast
 import typing_extensions as te
 
 from ..schemas.pydantic.models import OpportunityBase
-from .routes import ResourceRoutes, RouteFilters, Routes
+from .routes import TF, ResourceRoutes, RouteFilters, Routes
 from .schema import (
     PluginDefinitionError,
     SchemaOnly,
@@ -43,8 +43,8 @@ DefaultOpportunity = SchemaOnly[OpportunityBase]
 
 _TOpportunity = te.TypeVar("_TOpportunity", default=DefaultOpportunity)
 
-# Recovered by the constrained-``self`` projection on ``search_filters_type``.
-TF = TypeVar("TF")
+# ``TF`` (the registered filters TypedDict) is imported from ``routes`` and
+# recovered by the constrained-``self`` projection on ``search_filters_type``.
 
 # The routes carrier type the plugin holds. Defaults to the standard-filters
 # carrier so an author who omits ``routes`` still gets a concrete, non-optional
@@ -114,6 +114,8 @@ class Plugin(Generic[SchemasT, _RoutesT]):
 def define_plugin(
     schemas: SchemasT,
     *,
+    # Shared module-level default: one frozen, data-less carrier reused across
+    # calls (the standard-filters projection). Frozen + data-less, so reuse is safe.
     routes: _RoutesT = cast("Any", Routes()),
     meta: PluginMeta,
 ) -> Plugin[SchemasT, _RoutesT]:

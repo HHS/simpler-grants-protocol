@@ -21,12 +21,15 @@ from common_grants_sdk.extensions import (
     schema,
 )
 from common_grants_sdk.extensions.schema import PluginDefinitionError
-from common_grants_sdk.schemas.pydantic.filters.opportunity import OpportunityFilters
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    OpportunityFilters,
+    StringArray,
+)
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 
 
 class OppSearchFilters(OpportunityFilters, total=False):
-    agency: list[str]
+    agency: StringArray
 
 
 class OpportunityFields(CustomFieldSet):
