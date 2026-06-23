@@ -76,13 +76,6 @@ class _FHelpers:
     to a precise model (a Money dict, an ``ISODate``) fall through the final
     overload to ``DefaultFilter``, so ad-hoc and Money/date usage still works.
 
-    At *runtime* each builder dispatches on the value type to construct the
-    matching model; the ``model_dump()`` wire shape is ``{operator, value}`` for
-    every model, identical to the old ``DefaultFilter`` output, so
-    ``classify_filters`` and the wire body are unchanged. bool is checked before
-    int/float (``bool`` is an ``int`` subclass) so ``f.eq(True)`` is a boolean
-    filter, never a number.
-
     ``in_`` and ``not_in`` avoid Python reserved words; the wire operator values
     they emit are still ``"in"`` / ``"notIn"``.
     """
