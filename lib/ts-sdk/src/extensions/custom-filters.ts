@@ -189,35 +189,39 @@ export function validateRoutes(routes: PluginRoutes): void {
  * - For AD-HOC filters (spec is undefined): shape-only check against
  *   `DefaultFilterSchema` (no operator/filterType enforcement — accepted trade-off).
  *
+ * Fail-soft: returns a `FilterError` describing the problem, or `undefined`
+ * when the value is valid. The caller (`classifyFilters`) collects returned
+ * errors rather than aborting the whole call.
+ *
  * @param spec - The registered `CustomFilterSpec` for this filter, or `undefined` for ad-hoc
  * @param filterName - The filter key (used in error `path`)
  * @param filterValue - The raw filter value from the consumer `filters` object
- * @throws {FilterError} on operator/filterType mismatch or value-shape mismatch
+ * @returns A `FilterError` on operator/filterType mismatch or value-shape mismatch, else `undefined`
  */
 export function validateFilterCall(
   spec: CustomFilterSpec | undefined,
   filterName: string,
   filterValue: unknown
-): void {
+): FilterError | undefined {
   const path = `filters.${filterName}`;
 
   if (spec === undefined) {
     // Ad-hoc filter — shape-only check against DefaultFilterSchema
     const result = DefaultFilterSchema.safeParse(filterValue);
     if (!result.success) {
-      throw new FilterError(
+      return new FilterError(
         `Ad-hoc filter "${filterName}" has an invalid shape: ${result.error.message}`,
         { path, sourceValue: filterValue }
       );
     }
-    return;
+    return undefined;
   }
 
   // Registered filter — validate against the filterType's schema
   const schema = FILTER_TYPE_SCHEMAS[spec.filterType];
   if (!schema) {
     // Should not reach here if validateRoutes was called first, but guard anyway
-    throw new FilterError(
+    return new FilterError(
       `Unknown filterType "${spec.filterType}" for registered filter "${filterName}"`,
       { path, sourceValue: filterValue }
     );
@@ -226,16 +230,29 @@ export function validateFilterCall(
   // One parse validates both the operator enum and the value shape
   const result = schema.safeParse(filterValue);
   if (!result.success) {
-    throw new FilterError(
+    return new FilterError(
       `Filter "${filterName}" (filterType: "${spec.filterType}") failed validation: ${result.error.message}`,
       { path, sourceValue: filterValue }
     );
   }
+
+  return undefined;
 }
 
 // ############################################################################
 // Public — classifyFilters (three-bucket classifier)
 // ############################################################################
+
+/**
+ * Fail-soft result of `classifyFilters`.
+ *
+ * `result` holds only the keys that passed validation; `errors` aggregates the
+ * `FilterError`s for keys that failed (those keys are omitted, not thrown on).
+ */
+export interface ClassifyResult {
+  result: z.infer<typeof OppFiltersSchema>;
+  errors: FilterError[];
+}
 
 /**
  * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters` request body.
@@ -253,60 +270,69 @@ export function validateFilterCall(
  *
  * Validation runs for each key during classification: default fields are checked
  * against their real field type (`OppDefaultFiltersSchema`), registered and ad-hoc
- * keys via `validateFilterCall`.
+ * keys via `validateFilterCall`. Validation is **fail-soft**: a key that fails
+ * is dropped from `result` and its `FilterError` is pushed onto `errors`; the
+ * call never throws on a bad filter. Valid keys classify normally.
  *
  * @param routes - The `PluginRoutes` from the plugin definition
  * @param resourceKey - The resource name (e.g. `"opportunities"`)
  * @param methodKey - The method name (e.g. `"search"`)
  * @param consumerFilters - The flat consumer-facing filters object
- * @returns The classified `OppFilters` request body
+ * @returns `{ result, errors }` — the valid-only request body and the collected errors
  */
 export function classifyFilters(
   routes: PluginRoutes,
   resourceKey: string,
   methodKey: string,
   consumerFilters: Record<string, unknown>
-): z.infer<typeof OppFiltersSchema> {
+): ClassifyResult {
   // Resolve registered filter specs for this route-method
   const registeredFilters: Record<string, CustomFilterSpec> =
     routes[resourceKey]?.[methodKey]?.filters ?? {};
 
   const defaultFields: Partial<z.infer<typeof OppDefaultFiltersSchema>> = {};
   const customFilters: Record<string, z.infer<typeof DefaultFilterSchema>> = {};
+  const errors: FilterError[] = [];
 
   for (const [key, value] of Object.entries(consumerFilters)) {
     // Look up registered spec (undefined for ad-hoc and gov.* namespaced keys)
     const spec = registeredFilters[key] as CustomFilterSpec | undefined;
 
     if (DEFAULT_FILTER_NAMES.has(key)) {
-      // Bucket 1: default filter → top-level named field. Validate against the
-      // field's real type from OppDefaultFiltersSchema (e.g. status →
-      // StringArrayFilter), mirroring the Python SDK so a malformed default
-      // filter fails loud client-side instead of being deferred to the server.
-      // safeParse validates without reshaping — the original value is assigned,
-      // so the wire body is unchanged for valid input.
+      // Bucket 1: default filter → top-level named field, validated against its
+      // real type from OppDefaultFiltersSchema (e.g. status → StringArrayFilter).
+      // safeParse doesn't reshape, so the original value is assigned unchanged.
+      // An invalid value is skipped and its error collected.
       const fieldSchema = (OppDefaultFiltersSchema.shape as Record<string, z.ZodTypeAny>)[key];
       const result = fieldSchema.safeParse(value);
       if (!result.success) {
-        throw new FilterError(
-          `Default filter "${key}" failed validation: ${result.error.message}`,
-          { path: `filters.${key}`, sourceValue: value }
+        errors.push(
+          new FilterError(`Default filter "${key}" failed validation: ${result.error.message}`, {
+            path: `filters.${key}`,
+            sourceValue: value,
+          })
         );
+        continue;
       }
       (defaultFields as Record<string, unknown>)[key] = value;
     } else {
       // Bucket 2 (registered custom) or Bucket 3 (ad-hoc / gov.* namespaced)
-      // Run call-time validation — passes spec if registered, undefined if ad-hoc
-      validateFilterCall(spec, key, value);
+      // Run call-time validation — passes spec if registered, undefined if ad-hoc.
+      // Fail-soft: collect the returned error and skip the key.
+      const error = validateFilterCall(spec, key, value);
+      if (error) {
+        errors.push(error);
+        continue;
+      }
       customFilters[key] = value as z.infer<typeof DefaultFilterSchema>;
     }
   }
 
   // Build request body — omit customFilters key entirely when empty (match nullish shape)
-  const requestBody: z.infer<typeof OppFiltersSchema> = {
+  const result: z.infer<typeof OppFiltersSchema> = {
     ...defaultFields,
     ...(Object.keys(customFilters).length > 0 ? { customFilters } : {}),
   };
 
-  return requestBody;
+  return { result, errors };
 }

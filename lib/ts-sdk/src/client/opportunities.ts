@@ -25,6 +25,27 @@ import { FilterError } from "../extensions/types";
 import type { PluginRoutes } from "../extensions/types";
 
 // =============================================================================
+// Client-side filter-error merge
+// =============================================================================
+
+/**
+ * Merges client-side filter errors into a search response's `filterInfo.errors`,
+ * flattened to `"{path}: {message}"` and ordered before any existing entries.
+ * Mutates and returns `response` for call-site convenience.
+ */
+function mergeFilterErrors<T, F>(
+  response: Filtered<T, F>,
+  clientErrors: FilterError[]
+): Filtered<T, F> {
+  if (clientErrors.length === 0) return response;
+
+  const flattened = clientErrors.map(e => `${e.path}: ${e.message}`);
+  const serverErrors = response.filterInfo.errors ?? [];
+  response.filterInfo.errors = [...flattened, ...serverErrors];
+  return response;
+}
+
+// =============================================================================
 // Schema type constraint
 // =============================================================================
 
@@ -286,18 +307,20 @@ export class Opportunities<R extends PluginRoutes = PluginRoutes> {
   ): Promise<Filtered<z.infer<S>, OppFilters>> {
     const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
 
-    // Build the base search body (without pagination)
-    const searchBody = this.buildSearchBody(options);
+    // Build the base search body (without pagination). Client-side filter
+    // problems are collected fail-soft into `filterErrors` rather than thrown.
+    const { body: searchBody, errors: filterErrors } = this.buildSearchBody(options);
 
     // If page is specified, fetch only that page
     if (options?.page !== undefined) {
-      return this.fetchSearchPage(
+      const page = await this.fetchSearchPage(
         searchBody,
         options.page,
         options.pageSize,
         options.signal,
         schema
       );
+      return mergeFilterErrors(page, filterErrors);
     }
 
     // Auto-paginate using fetchMany with POST method.
@@ -310,59 +333,72 @@ export class Opportunities<R extends PluginRoutes = PluginRoutes> {
       schema,
     });
 
-    return result as Filtered<z.infer<S>, OppFilters>;
+    return mergeFilterErrors(result as Filtered<z.infer<S>, OppFilters>, filterErrors);
   }
 
   // ############################################################################
   // Private helpers
   // ############################################################################
 
-  /** Builds the search request body from options */
-  private buildSearchBody(options?: SearchOptions<OppSchema, R>): OppSearchRequest {
+  /**
+   * Builds the search request body from options.
+   *
+   * Returns the wire `body` alongside the `errors` collected from client-side
+   * filter classification (fail-soft — never throws on a bad filter). `search()`
+   * merges these into the response's `filterInfo.errors`.
+   */
+  private buildSearchBody(options?: SearchOptions<OppSchema, R>): {
+    body: OppSearchRequest;
+    errors: FilterError[];
+  } {
     const body: OppSearchRequest = {};
+    const errors: FilterError[] = [];
 
     if (options?.query) {
       body.search = options.query;
     }
 
-    // Custom filters → OppFilters wire body. Classification is wire-request
-    // marshalling — the same category as the `statuses` shorthand below — so it
-    // lives in the client method, not on the caller. `routes` is bound at client
-    // construction (fixed plugin config), so it is read off the instance here.
+    // `routes` is bound once at client construction, so it's read off the
+    // instance. Fail-soft: invalid keys are dropped and their errors collected.
     let filters: OppFilters | undefined;
     if (options?.filters) {
-      // ponytail: cast bridges the Zod-inferred OppFilters to the hand-authored
-      // OppFilters type alias; they are structurally the same shape.
-      filters = classifyFilters(
+      const classified = classifyFilters(
         this.routes ?? {},
         "opportunities",
         "search",
         options.filters
-      ) as OppFilters;
+      );
+      errors.push(...classified.errors);
+      // ponytail: cast bridges the Zod-inferred OppFilters to the hand-authored
+      // OppFilters type alias; they are structurally the same shape.
+      filters = classified.result as OppFilters;
     }
 
     // statuses shorthand → status default field (augments any classified filters)
     if (options?.statuses?.length) {
       if (filters?.status !== undefined) {
-        // Collision: `status` came from both the filters bag and the statuses
-        // shorthand. Fail loud rather than silently letting the shorthand win.
-        throw new FilterError(
-          '"status" was supplied via both the statuses shorthand and the filters bag; provide only one',
-          { path: "filters.status", sourceValue: options.statuses }
+        // `status` given via both the shorthand and `filters`: `filters` wins,
+        // the shorthand is ignored, and a warning is collected (not thrown).
+        errors.push(
+          new FilterError(
+            "specified via both the statuses shorthand and the filters argument; used the filters value",
+            { path: "filters.status", sourceValue: options.statuses }
+          )
         );
+      } else {
+        filters = filters ?? {};
+        filters.status = {
+          operator: ArrayOperator.in,
+          value: options.statuses,
+        };
       }
-      filters = filters ?? {};
-      filters.status = {
-        operator: ArrayOperator.in,
-        value: options.statuses,
-      };
     }
 
     if (filters) {
       body.filters = filters;
     }
 
-    return body;
+    return { body, errors };
   }
 
   /** Fetches a single search page */

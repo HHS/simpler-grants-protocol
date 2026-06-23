@@ -24,7 +24,6 @@ from common_grants_sdk.extensions.specs import (
     CustomFilterSpec,
     CustomFilterType,
 )
-from common_grants_sdk.extensions import FilterError
 
 
 @pytest.fixture
@@ -843,13 +842,14 @@ class TestOpportunitySearch:
         # separation invariant: status not duplicated under customFilters
         assert "status" not in sent_filters["customFilters"]
 
-    def test_search_raises_on_status_shorthand_and_bag_collision(
+    def test_search_status_collision_filters_wins_and_warns(
         self, client, mock_httpx_client, sample_search_response
     ):
-        """status via both the shorthand arg and the filters bag is a collision.
+        """status via both the shorthand arg and the filters argument: filters wins.
 
-        Rather than silently letting the shorthand win (last-write), search()
-        raises FilterError so the caller picks one. Mirrors the TS SDK.
+        Fail-soft: rather than raising, search() keeps the
+        ``filters`` value, ignores the shorthand, and appends a warning to the
+        response's filterInfo.errors.
         """
         mock_response = Mock()
         mock_response.status_code = 200
@@ -858,21 +858,34 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        with pytest.raises(FilterError):
-            client.opportunities.search(
-                search="conservation",
-                status=[OppStatusOptions.OPEN],
-                filters={"status": {"operator": "in", "value": ["open"]}},
-            )
+        # filters value uses "forecasted"; shorthand uses OPEN — they must differ
+        # so the assertion on the winning value can actually fail.
+        response = client.opportunities.search(
+            search="conservation",
+            status=[OppStatusOptions.OPEN],
+            filters={"status": {"operator": "in", "value": ["forecasted"]}},
+        )
 
-    def test_search_propagates_filter_error_for_invalid_registered_filter(
+        # The SENT body carries the filters value, not the shorthand.
+        sent_filters = mock_httpx_client.post.call_args[1]["json"]["filters"]
+        assert sent_filters["status"]["value"] == ["forecasted"]
+        # The collision warning reached filterInfo.errors, dropping the word "bag".
+        assert any(
+            "filters.status" in e
+            and "specified via both the status shorthand and the filters argument; "
+            "used the filters value" in e
+            for e in response.filter_info.errors
+        )
+
+    def test_search_invalid_filter_is_dropped_and_warned_no_raise(
         self, mock_httpx_client, sample_search_response
     ):
-        """A malformed registered filter raises FilterError out of search().
+        """A malformed registered filter is fail-soft: results return, filter dropped.
 
         A registered stringArray filter given a non-array ``between`` value fails
-        classify_filters validation; the error must surface out of search() rather
-        than being swallowed or shipped as a malformed request body.
+        classify_filters validation. search() does NOT raise.
+        The invalid filter is absent from the sent body and its error surfaces in
+        filterInfo.errors; results still return.
         """
         mock_response = Mock()
         mock_response.status_code = 200
@@ -902,11 +915,66 @@ class TestOpportunitySearch:
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
-        with pytest.raises(FilterError):
-            client.opportunities.search(
-                search="conservation",
-                filters={"agency": {"operator": "between", "value": 5}},
-            )
+        response = client.opportunities.search(
+            search="conservation",
+            filters={"agency": {"operator": "between", "value": 5}},
+        )
+
+        # Results still return (no raise).
+        assert isinstance(response, OpportunitiesSearchResponse)
+        assert len(response.items) == 2
+
+        # The invalid filter is absent from the sent body. With only the one
+        # invalid filter, no filters key is sent at all.
+        sent_body = mock_httpx_client.post.call_args[1]["json"]
+        assert "agency" not in sent_body.get("filters", {}).get("customFilters", {})
+
+        # Its error surfaced in filterInfo.errors.
+        assert any("filters.agency" in e for e in response.filter_info.errors)
+
+    def test_search_invalid_filter_client_errors_precede_server_errors(
+        self, mock_httpx_client, sample_search_response
+    ):
+        """Client-side filter errors are merged AHEAD of server-provided errors."""
+        sample_search_response["filterInfo"] = {
+            "filters": {},
+            "errors": ["server: something was ignored"],
+        }
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        routes = {
+            "opportunities": {
+                "search": {
+                    "filters": {
+                        "agency": CustomFilterSpec(
+                            filter_type=CustomFilterType.STRING_ARRAY
+                        )
+                    }
+                }
+            }
+        }
+        auth = Auth.api_key("test-key")
+        config = Config(
+            base_url="https://api.example.com", api_key="test-key", timeout=10.0
+        )
+        client = Client(config=config, auth=auth, routes=routes)
+        client.http = mock_httpx_client
+        client.opportunities.http = mock_httpx_client
+
+        response = client.opportunities.search(
+            search="conservation",
+            filters={"agency": {"operator": "between", "value": 5}},
+        )
+
+        errors = response.filter_info.errors
+        # Client error first, server error last.
+        assert "filters.agency" in errors[0]
+        assert errors[-1] == "server: something was ignored"
 
     def test_search_opportunities_different_page(
         self, client, mock_httpx_client, sample_search_response

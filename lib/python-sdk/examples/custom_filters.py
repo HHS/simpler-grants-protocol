@@ -19,7 +19,7 @@ import json
 
 from common_grants_sdk.extensions import classify_filters, f
 from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
-from common_grants_sdk.extensions.types import FilterError, PluginMeta, PluginRoutes
+from common_grants_sdk.extensions.types import PluginMeta, PluginRoutes
 
 # ---------------------------------------------------------------------------
 # Route-keyed custom filter specs + plugin metadata
@@ -69,9 +69,9 @@ def main() -> None:
     # Mixing three kinds of filters in a single flat dict:
     #   "status"            — default core filter (snake_case key, no alias)
     #   "close_date_range"  — default core filter, snake_case key for an ALIASED field:
-    #                         the classifier must normalize it to "closeDateRange" in the
-    #                         wire body (an unnormalized snake key would be silently
-    #                         dropped from the wire body — the alias landmine)
+    #                         the classifier must normalize it to "closeDateRange"
+    #                         (an unnormalized snake key is silently dropped —
+    #                         the alias landmine)
     #   "agency"         — registered custom filter (routes.opportunities.search.agency)
     #   "fundingProgram" — registered custom filter (routes.opportunities.search.fundingProgram)
     #   "legacyTag"      — ad-hoc passthrough (not registered, not a core default)
@@ -83,35 +83,47 @@ def main() -> None:
         "legacyTag": f.eq("priority"),
     }
 
-    request_body = classify_filters(routes, "opportunities", "search", consumer_filters)
+    classified = classify_filters(routes, "opportunities", "search", consumer_filters)
 
     print("\nRequest body (by_alias=True, exclude_none=True, mode='json'):")
     print(
         json.dumps(
-            request_body.model_dump(by_alias=True, exclude_none=True, mode="json"),
+            classified.result.model_dump(by_alias=True, exclude_none=True, mode="json"),
             indent=2,
         )
     )
 
-    # --- FilterError demo — bad call raises and is caught ---
-    _section("VALIDATION — bad operator raises FilterError (runtime guarantee)")
+    # --- FilterError demo — bad call is fail-soft (collected, not raised) ---
+    _section("VALIDATION — bad operator collected, valid filters still applied")
 
     # agency is registered as STRING_ARRAY (expects ArrayOperator: in/notIn).
-    # Passing f.eq(...) (EquivalenceOperator.EQUAL) triggers call-time validation failure.
+    # Passing f.eq(...) (EquivalenceOperator.EQUAL) fails call-time validation.
+    # Fail-soft: classify_filters never raises on a bad
+    # filter value — the bad key is dropped from the result body and a FilterError
+    # is collected on .errors. A valid sibling filter still classifies normally.
     bad_filters = {
         "agency": f.eq(
             "wrong-operator-for-array-type"
         ),  # eq is not a valid STRING_ARRAY op
+        "legacyTag": f.eq("priority"),  # valid ad-hoc filter — survives
     }
-    try:
-        classify_filters(routes, "opportunities", "search", bad_filters)
-    except FilterError as exc:
-        # str(exc) summarizes the first failure; the structured fields carry
-        # the full detail — exc.path names the failing filter, exc.cause is
+    classified_bad = classify_filters(routes, "opportunities", "search", bad_filters)
+    for err in classified_bad.errors:
+        # str(err) summarizes the first failure; the structured fields carry
+        # the full detail — err.path names the failing filter, err.cause is
         # the underlying pydantic ValidationError for programmatic access.
-        print(f"FilterError caught: {exc}")
-        print(f"  path:  {exc.path}")
-        print(f"  cause: {type(exc.cause).__name__}")
+        print(f"FilterError collected: {err}")
+        print(f"  path:  {err.path}")
+        print(f"  cause: {type(err.cause).__name__}")
+    # The valid filter still made it into the request body.
+    print(
+        "\nValid-only request body: "
+        + json.dumps(
+            classified_bad.result.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
+        )
+    )
 
     # --- Plugin metadata ---
     _section("PLUGIN METADATA")

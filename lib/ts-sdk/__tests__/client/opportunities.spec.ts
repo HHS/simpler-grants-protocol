@@ -3,7 +3,7 @@ import { z } from "zod";
 import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
 import { Client, Auth } from "../../src/client";
 import { OpportunityBaseSchema } from "../../src/schemas";
-import { withCustomFields, F, FilterError } from "../../src/extensions";
+import { withCustomFields, F } from "../../src/extensions";
 import type { PluginRoutes } from "../../src/extensions";
 import { CustomFieldType } from "../../src/constants";
 
@@ -431,22 +431,66 @@ describe("Opportunities", () => {
       expect(customFilters).not.toHaveProperty("status");
     });
 
-    it("throws FilterError when status is supplied via both the shorthand and the filters bag", async () => {
-      // Collision: the `statuses` shorthand and a `status` key in the filters bag
-      // both target the top-level status field. Rather than silently letting the
-      // shorthand win (last-write), search() rejects so the caller picks one.
-      await expect(
-        client.opportunities.search({
-          statuses: ["open"],
-          filters: { status: F.in(["closed"]) },
+    it("resolves a status collision in favor of filters.status and surfaces a warning", async () => {
+      // `status` given via both the `statuses` shorthand and `filters.status`:
+      // `filters` wins, the shorthand is ignored, a warning is appended to
+      // filterInfo.errors, and search() must NOT throw.
+      let capturedBody: Record<string, unknown> | undefined;
+
+      server.use(
+        http.post("/common-grants/opportunities/search", async ({ request }) => {
+          capturedBody = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [createMockOpportunity(OPP_UUID_1, "Closed Grant", "closed")],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {} },
+          });
         })
-      ).rejects.toThrow(FilterError);
+      );
+
+      const result = await client.opportunities.search({
+        statuses: ["open"],
+        filters: { status: F.in(["closed"]) },
+      });
+
+      // filters.status wins — the shorthand value ["open"] is ignored.
+      expect((capturedBody?.filters as { status?: { value?: unknown } }).status).toEqual({
+        operator: "in",
+        value: ["closed"],
+      });
+
+      // The collision warning is surfaced (not thrown).
+      expect(result.filterInfo.errors).toEqual(
+        expect.arrayContaining([expect.stringContaining("filters.status")])
+      );
+      // Message reworded — no "bag" wording.
+      expect(result.filterInfo.errors?.join(" ")).not.toContain("bag");
     });
 
-    it("propagates FilterError when a registered filter value is invalid", async () => {
+    it("drops an invalid filter from the request body and surfaces its error (no throw)", async () => {
       // A registered stringArray filter given a non-array `between` value fails
-      // classifyFilters validation; the error must surface out of search() rather
-      // than being swallowed or shipped as a malformed request body.
+      // classifyFilters validation. Fail-soft: results still return, the invalid
+      // filter is absent from the sent body, and its message lands in
+      // filterInfo.errors — search() does not throw.
+      let capturedBody: Record<string, unknown> | undefined;
+
+      server.use(
+        http.post("/common-grants/opportunities/search", async ({ request }) => {
+          capturedBody = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [createMockOpportunity(OPP_UUID_1, "Conservation Grant", "open")],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {} },
+          });
+        })
+      );
+
       const routes: PluginRoutes = {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
@@ -456,11 +500,25 @@ describe("Opportunities", () => {
         auth: Auth.bearer("test-token"),
         routes,
       });
-      await expect(
-        routedClient.opportunities.search({
-          filters: { agency: { operator: "between", value: 5 } },
-        })
-      ).rejects.toThrow(FilterError);
+
+      const result = await routedClient.opportunities.search({
+        filters: { agency: { operator: "between", value: 5 } },
+      });
+
+      // Results still come back.
+      expect(result.items).toHaveLength(1);
+
+      // The invalid filter is absent from the sent body (no customFilters.agency,
+      // and no malformed filters payload shipped).
+      const sentFilters = capturedBody?.filters as
+        | { customFilters?: Record<string, unknown> }
+        | undefined;
+      expect(sentFilters?.customFilters).toBeUndefined();
+
+      // Its error message is surfaced client-side.
+      expect(result.filterInfo.errors).toEqual(
+        expect.arrayContaining([expect.stringContaining("filters.agency")])
+      );
     });
 
     it("searches with only query parameter", async () => {

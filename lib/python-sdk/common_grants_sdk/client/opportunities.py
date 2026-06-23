@@ -127,11 +127,9 @@ class Opportunities:
             page_size: Number of items per page. If None, uses the default from
                 client config.
             schema: OpportunityBase to support custom fields added by the caller.
-            filters: Flat custom-filter bag (``{name: {"operator", "value"}}``,
-                e.g. built with the ``f`` helper). Classified into the OppFilters
-                request body via ``classify_filters`` — the same role the
-                ``status`` shorthand plays. Mirrors the TS SDK's
-                ``search({ filters })``. Registered custom filters validate against
+            filters: Flat custom-filter dict (``{name: {"operator", "value"}}``,
+                e.g. built with the ``f`` helper), classified via
+                ``classify_filters``. Registered custom filters validate against
                 the specs declared in the client's ``routes`` (bound at construction).
 
         Returns:
@@ -141,35 +139,40 @@ class Opportunities:
                 APIError: if the API request fails
         """
 
-        # Custom filters -> OppFilters wire body. Classification is wire-request
-        # marshalling, the same category as the ``status`` shorthand below, so it
-        # lives in the client method, not on the caller (mirrors the TS SDK).
+        # Classify the custom-filter dict. Fail-soft: invalid filters are dropped
+        # and their errors collected here rather than raised.
         filters_body: dict = {}
+        filter_errors: list[FilterError] = []
         if filters:
-            filters_body = classify_filters(
+            classified = classify_filters(
                 self.client.routes or {}, "opportunities", "search", filters
-            ).model_dump(by_alias=True, exclude_none=True, mode="json")
+            )
+            filter_errors.extend(classified.errors)
+            filters_body = classified.result.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
 
         if status:
             if "status" in filters_body:
-                # Collision: ``status`` came from both the filters bag and the
-                # status shorthand. Fail loud rather than silently letting the
-                # shorthand win (mirrors the TS SDK).
-                raise FilterError(
-                    '"status" was supplied via both the status shorthand and the '
-                    "filters bag; provide only one",
-                    path="filters.status",
-                    source_value=status,
+                # ``status`` given via both the shorthand and ``filters``:
+                # ``filters`` wins, the shorthand is ignored, a warning collected.
+                filter_errors.append(
+                    FilterError(
+                        "specified via both the status shorthand and the filters "
+                        "argument; used the filters value",
+                        path="filters.status",
+                        source_value=status,
+                    )
                 )
-            filters_body["status"] = {"operator": "in", "value": status}
+            else:
+                filters_body["status"] = {"operator": "in", "value": status}
 
         request: dict = {
             "pagination": {"page": 1, "pageSize": 10},
             "search": search,
             "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
         }
-        # Omit ``filters`` entirely when empty so the wire body matches the TS SDK
-        # (which only sets the key when filters or the status shorthand are given).
+        # Only set the filters key when non-empty.
         if filters_body:
             request["filters"] = filters_body
 
@@ -189,11 +192,18 @@ class Opportunities:
             for item in paginated_response.items
         ]
 
-        # Convert paginated_response to dict and replace items with hydrated models.
-        # The envelope already carries the server's real sortInfo/filterInfo (the
-        # paginated response is a Filtered), so no fabrication is needed.
+        # Replace items with the hydrated models.
         response_data = paginated_response.model_dump(by_alias=True)
         response_data["items"] = items
+
+        # Merge collected client-side errors into filterInfo.errors, flattened to
+        # "{path}: {message}" and ordered before any existing entries.
+        if filter_errors:
+            filter_info = response_data.setdefault("filterInfo", {})
+            server_errors = filter_info.get("errors") or []
+            filter_info["errors"] = [
+                f"{e.path}: {e}" for e in filter_errors
+            ] + server_errors
 
         # Hydrate OpportunitiesSearchResponse from response data
         return OpportunitiesSearchResponse.model_validate(response_data)
