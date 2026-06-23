@@ -50,7 +50,7 @@ async function _assertions(): Promise<void> {
     filters: { legacyTag: F.eq("conservation-2024") },
   });
 
-  // FINDING (intentionally NO @ts-expect-error): a typo on a declared name compiles,
+  // Intentionally NO @ts-expect-error: a typo on a declared name compiles,
   // because it is indistinguishable from an intentional ad-hoc key. This is the
   // documented limitation of narrowing against an open (ad-hoc-supporting) key set.
   await client.opportunities.search({

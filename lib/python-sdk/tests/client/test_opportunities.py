@@ -869,7 +869,7 @@ class TestOpportunitySearch:
         # The SENT body carries the filters value, not the shorthand.
         sent_filters = mock_httpx_client.post.call_args[1]["json"]["filters"]
         assert sent_filters["status"]["value"] == ["forecasted"]
-        # The collision warning reached filterInfo.errors, dropping the word "bag".
+        # The collision warning reached filterInfo.errors.
         assert any(
             "filters.status" in e
             and "specified via both the status shorthand and the filters argument; "

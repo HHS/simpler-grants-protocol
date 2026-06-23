@@ -3,7 +3,7 @@ import { z } from "zod";
 import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
 import { Client, Auth } from "../../src/client";
 import { OpportunityBaseSchema } from "../../src/schemas";
-import { withCustomFields, F } from "../../src/extensions";
+import { withCustomFields, F, FilterError } from "../../src/extensions";
 import type { PluginRoutes } from "../../src/extensions";
 import { CustomFieldType } from "../../src/constants";
 
@@ -466,8 +466,6 @@ describe("Opportunities", () => {
       expect(result.filterInfo.errors).toEqual(
         expect.arrayContaining([expect.stringContaining("filters.status")])
       );
-      // Message reworded — no "bag" wording.
-      expect(result.filterInfo.errors?.join(" ")).not.toContain("bag");
     });
 
     it("drops an invalid filter from the request body and surfaces its error (no throw)", async () => {
@@ -519,6 +517,50 @@ describe("Opportunities", () => {
       expect(result.filterInfo.errors).toEqual(
         expect.arrayContaining([expect.stringContaining("filters.agency")])
       );
+    });
+
+    it("stays fail-soft when a filter is dropped and the server omits filterInfo (auto-paginate)", async () => {
+      // Auto-pagination returns the raw server envelope; if it omits filterInfo,
+      // merging the dropped-filter error must still surface, not throw.
+      server.use(
+        http.post("/common-grants/opportunities/search", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [createMockOpportunity(OPP_UUID_1, "Conservation Grant", "open")],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            // No filterInfo on the response.
+          });
+        })
+      );
+
+      const routes: PluginRoutes = {
+        opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
+      };
+      const routedClient = new Client({
+        baseUrl: "https://api.example.org",
+        auth: Auth.bearer("test-token"),
+        routes,
+      });
+
+      const result = await routedClient.opportunities.search({
+        filters: { agency: { operator: "between", value: 5 } },
+      });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.filterInfo.errors).toEqual(
+        expect.arrayContaining([expect.stringContaining("filters.agency")])
+      );
+    });
+
+    it("validates routes at construction and throws on a default-name collision", () => {
+      const badRoutes: PluginRoutes = {
+        opportunities: { search: { filters: { status: { filterType: "stringArray" } } } },
+      };
+      expect(
+        () => new Client({ baseUrl: "https://api.example.org", routes: badRoutes })
+      ).toThrow(FilterError);
     });
 
     it("searches with only query parameter", async () => {

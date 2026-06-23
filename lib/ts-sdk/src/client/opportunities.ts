@@ -40,8 +40,10 @@ function mergeFilterErrors<T, F>(
   if (clientErrors.length === 0) return response;
 
   const flattened = clientErrors.map(e => `${e.path}: ${e.message}`);
-  const serverErrors = response.filterInfo.errors ?? [];
-  response.filterInfo.errors = [...flattened, ...serverErrors];
+  // Auto-pagination returns the raw server envelope, so filterInfo can be absent
+  // on a non-conformant response; initialize rather than throw (stay fail-soft).
+  const filterInfo = (response.filterInfo ??= { filters: {} as F });
+  filterInfo.errors = [...flattened, ...(filterInfo.errors ?? [])];
   return response;
 }
 
@@ -369,8 +371,8 @@ export class Opportunities<R extends PluginRoutes = PluginRoutes> {
         options.filters
       );
       errors.push(...classified.errors);
-      // ponytail: cast bridges the Zod-inferred OppFilters to the hand-authored
-      // OppFilters type alias; they are structurally the same shape.
+      // Cast bridges the Zod-inferred OppFilters to the hand-authored OppFilters
+      // type alias; they are structurally the same shape.
       filters = classified.result as OppFilters;
     }
 

@@ -397,7 +397,7 @@ def classify_filters(
     ``ClassifyResult.errors``; the call never raises on a bad filter value.
     (Registration-time validation in ``validate_routes`` still raises.)
 
-    Opportunity-bound today — see the limitation note above the function.
+    Opportunity-bound — see the limitation note above the function.
 
     Registered specs are looked up by the exact ``(resource, method)`` strings
     declared in ``routes``. A non-matching pair (e.g. a pluralization typo in

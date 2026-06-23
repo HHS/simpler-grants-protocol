@@ -450,8 +450,8 @@ def test_classify_default_camel_alias_wrong_shape_collects_error():
     assert classified.errors[0].path == "filters.closeDateRange"
 
 
-def test_classify_default_money_range_wrong_shape_raises_plugin_error():
-    """A wrong-shaped MoneyRangeFilter default raises FilterError.
+def test_classify_default_money_range_wrong_shape_collects_error():
+    """A wrong-shaped MoneyRangeFilter default is dropped and its error collected.
 
     "totalFundingAvailableRange" is a MoneyRangeFilter (RangeOperator + MoneyRange);
     f.eq("100") is an equivalence filter with a scalar value — a valid permissive

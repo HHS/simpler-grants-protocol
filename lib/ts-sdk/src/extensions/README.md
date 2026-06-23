@@ -742,7 +742,7 @@ For a complete runnable example with assertions, see [`examples/custom-filters.t
 
 `validateFilterCall()` validates individual filters at call time. For registered filters it validates the operator and value shape against the declared `filterType`. For ad-hoc filters it applies a shape-only check (`DefaultFilterSchema`). `classifyFilters()` already runs it for every key — you only call it directly when validating a single filter outside classification.
 
-In the PoC, `definePlugin()` passes `routes` through **unvalidated** — the full SDK client will run `validateRoutes()` when a plugin is attached and call-time validation inside each search. Until then, call `validateRoutes()` yourself after defining a plugin if you want registration-time errors surfaced early.
+`definePlugin()` passes `routes` through **unvalidated**; the `Client` runs `validateRoutes()` for you when constructed with `routes` (and call-time validation runs inside each search). To surface registration errors without constructing a client, call `validateRoutes()` yourself after defining a plugin.
 
 > **PII note:** as with transforms, `FilterError.sourceValue` carries the raw input — here, the consumer's filter value. The [PII warning](#error-handling) above applies equally; log a redacted projection.
 

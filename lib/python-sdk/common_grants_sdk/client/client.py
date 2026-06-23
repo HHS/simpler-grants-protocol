@@ -11,6 +11,7 @@ from .exceptions import raise_api_error
 from .opportunities import Opportunities
 from .pagination import pagination
 from .types import ItemsT
+from ..extensions.filters import validate_routes
 from ..extensions.types import PluginRoutes
 from ..schemas.pydantic.responses import Filtered, Paginated
 
@@ -31,13 +32,18 @@ class Client:
             auth: Optional Auth instance. If None, API key authentication is used
                 with the key from config.
             routes: Optional plugin ``routes`` declaration (fixed plugin config).
-                Bound once here and used to classify/validate registered custom
+                Bound and validated once here; used to classify registered custom
                 filters in ``opportunities.search``.
+
+        Raises:
+            FilterError: If ``routes`` declares an unknown ``filter_type`` or a
+                custom filter name that collides with a default filter name.
         """
         self.config = config or Config()
         self.auth = auth or Auth.api_key(self.config.api_key)
         self.http = httpx.Client(timeout=self.config.timeout)
         self.routes = routes or {}
+        validate_routes(self.routes)
         self.opportunities = Opportunities(client=self)
 
     def post(self, path: str, **kwargs) -> httpx.Response:
