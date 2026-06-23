@@ -28,14 +28,14 @@ API endpoints that support filtering should be POST operations that accept a `fi
 - The `filters` parameter MUST be included at the root of the request body.
 - Each filter MUST conform to the `Filter` schema, which contains:
 
-| Property    | Type | Required | Description                              |
-| ----------- | ---- | -------- | ---------------------------------------- |
-| `operation` | enum | Yes      | The operation to perform on the value    |
-| `value`     | any  | Yes      | The data to use for the filter operation |
+| Property   | Type | Required | Description                               |
+| ---------- | ---- | -------- | ----------------------------------------- |
+| `operator` | enum | Yes      | The operator to apply to the filter value |
+| `value`    | any  | Yes      | The data to use for the filter operation  |
 
-- Supported operations:
+- Supported operators:
 
-| Operation | Description              | Supported `value` types                      |
+| Operator  | Description              | Supported `value` types                      |
 | --------- | ------------------------ | -------------------------------------------- |
 | `eq`      | Equal to                 | string, number, boolean, date                |
 | `neq`     | Not equal to             | string, number, boolean, date                |
@@ -63,14 +63,14 @@ An example of a request body that includes a _standard_ filter:
   "filters": {
     "title": {
       "value": "example",
-      "operation": "like"
+      "operator": "like"
     },
     "closedDateRange": {
       "value": {
         "min": "2024-01-01",
         "max": "2024-01-31"
       },
-      "operation": "between"
+      "operator": "between"
     }
   }
 }
@@ -83,12 +83,12 @@ An example of a request body that includes both _standard_ and _custom_ filters:
   "filters": {
     "title": {
       "value": "example",
-      "operation": "like"
+      "operator": "like"
     },
     "customFilters": {
       "agency": {
         "value": ["Department of Transportation"],
-        "operation": "in"
+        "operator": "in"
       }
     }
   }
