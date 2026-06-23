@@ -137,7 +137,9 @@ function extractCode(props: CodeBlockConfig): string {
 
       return content;
     } catch (error) {
-      throw new Error(`Error reading file ${props.file.path}: ${error}`);
+      throw new Error(`Error reading file ${props.file.path}: ${error}`, {
+        cause: error,
+      });
     }
   }
   throw new Error("Either code or file must be provided");

@@ -45,8 +45,8 @@ try {
 const isEnumSchema = SchemaLoader.isEnumSchema(schemaData);
 const isObjectSchema = SchemaLoader.isObjectSchema(schemaData);
 
-let tableRows: PropertyRow[] | EnumRow[] = [];
-let tableHeaders: string[] = [];
+let tableRows: PropertyRow[] | EnumRow[];
+let tableHeaders: string[];
 
 if (isEnumSchema) {
   try {
