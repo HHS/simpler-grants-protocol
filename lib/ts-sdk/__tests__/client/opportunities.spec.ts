@@ -563,6 +563,38 @@ describe("Opportunities", () => {
       ).toThrow(FilterError);
     });
 
+    it("merges client-side filter errors ahead of server-provided errors", async () => {
+      server.use(
+        http.post("/common-grants/opportunities/search", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [createMockOpportunity(OPP_UUID_1, "Conservation Grant", "open")],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {}, errors: ["server: something was ignored"] },
+          });
+        })
+      );
+
+      const routes: PluginRoutes = {
+        opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
+      };
+      const routedClient = new Client({
+        baseUrl: "https://api.example.org",
+        auth: Auth.bearer("test-token"),
+        routes,
+      });
+
+      const result = await routedClient.opportunities.search({
+        filters: { agency: { operator: "between", value: 5 } },
+      });
+
+      const errors = result.filterInfo.errors ?? [];
+      expect(errors[0]).toContain("filters.agency");
+      expect(errors[errors.length - 1]).toBe("server: something was ignored");
+    });
+
     it("searches with only query parameter", async () => {
       server.use(
         http.post("/common-grants/opportunities/search", () => {
