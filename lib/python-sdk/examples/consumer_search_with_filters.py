@@ -26,11 +26,8 @@ real transport (networking, auth, retry) is a downstream-deployment concern, out
 of scope for this repo. The stub runs the real ``classify_filters`` engine and
 prints the exact request body it WOULD send, then returns canned, validated rows.
 
-The production client's ``search`` does NOT yet accept custom filters — today
-``common_grants_sdk/client/opportunities.py:search()`` takes only ``search`` +
-``status`` and hardcodes ``filters={status}``. The ``filters=`` parameter shape
-shown here is the proposed signature being finalized (PR #934, open question 1);
-this example does not modify the production client. The stub is local.
+The ``filters=`` signature shown here lives on the local stub, not on the
+production SDK client; this example does not modify the production client.
 
 Run (from lib/python-sdk/):
     poetry run python examples/consumer_search_with_filters.py
@@ -118,11 +115,11 @@ _CANNED_ROWS = [
 class StubOpportunities:
     """A stubbed opportunities namespace that accepts the typed filter bag.
 
-    Mirrors the production ``Opportunities`` namespace, but its ``search`` adds the
-    proposed ``filters=`` parameter (PR #934) typed to the registered
-    ``OppSearchFilters`` bag, and stubs the transport: it runs the real
-    ``classify_filters`` engine, prints the request body it would POST, and returns
-    canned, validated rows instead of making a network call.
+    Mirrors the production ``Opportunities`` namespace, but its ``search`` adds a
+    ``filters=`` parameter typed to the registered ``OppSearchFilters`` bag, and
+    stubs the transport: it runs the real ``classify_filters`` engine, prints the
+    request body it would POST, and returns canned, validated rows instead of
+    making a network call.
     """
 
     def search(
