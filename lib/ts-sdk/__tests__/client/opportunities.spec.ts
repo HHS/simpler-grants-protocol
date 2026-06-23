@@ -558,9 +558,9 @@ describe("Opportunities", () => {
       const badRoutes: PluginRoutes = {
         opportunities: { search: { filters: { status: { filterType: "stringArray" } } } },
       };
-      expect(
-        () => new Client({ baseUrl: "https://api.example.org", routes: badRoutes })
-      ).toThrow(FilterError);
+      expect(() => new Client({ baseUrl: "https://api.example.org", routes: badRoutes })).toThrow(
+        FilterError
+      );
     });
 
     it("merges client-side filter errors ahead of server-provided errors", async () => {
