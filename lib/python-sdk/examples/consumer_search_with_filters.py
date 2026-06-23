@@ -21,10 +21,8 @@ the typed ``OppSearchFilters`` bag the route registered — the consumer call be
 type-checks with NO call-site annotations and each key narrows to its value model
 (the ``assert_type`` lines prove it).
 
-Transport is STUBBED here, per ADR-0022: the SDK client is a typed slot, and the
-real transport (networking, auth, retry) is a downstream-deployment concern, out
-of scope for this repo. The stub runs the real ``classify_filters`` engine and
-prints the exact request body it WOULD send, then returns canned, validated rows.
+Transport is stubbed here: the stub runs the real ``classify_filters`` engine and
+prints the exact request body it would send, then returns canned, validated rows.
 
 The ``filters=`` signature shown here lives on the local stub, not on the
 production SDK client; this example does not modify the production client.
@@ -110,7 +108,7 @@ _CANNED_ROWS = [
 
 
 # ---------------------------------------------------------------------------
-# Stubbed opportunities client (transport out-of-scope, ADR-0022)
+# Stubbed opportunities client
 # ---------------------------------------------------------------------------
 class StubOpportunities:
     """A stubbed opportunities namespace that accepts the typed filter bag.

@@ -11,10 +11,8 @@ registered search filters via ``plugin.search_filters_type()``.
 ``PluginSchemas``, ``Plugin``, and the route carriers are frozen dataclasses with
 covariant type parameters (read-only, so covariance is sound). That covariance lets
 ``search_filters_type`` recover the route's registered filter TypedDict via a single
-``self`` annotation, with no call-site type arguments. The transport layer is
-out-of-scope (ADR-0022): ``search_filters_type`` returns the *type* of the registered
-filter bag — the typed slot a downstream client facade would consume — rather than a
-client instance.
+``self`` annotation, with no call-site type arguments. ``search_filters_type``
+returns the *type* of the registered filter bag, not a client instance.
 """
 
 from __future__ import annotations
@@ -103,10 +101,6 @@ class Plugin(Generic[SchemasT, _RoutesT]):
 
             FiltersT = plugin.search_filters_type()
             filters: FiltersT = {"agency": f.in_(["NSF"])}  # per-key narrowed
-
-        The transport layer is out-of-scope (ADR-0022), so this returns the
-        filter *type* rather than a client; a downstream client facade would
-        consume this slot as ``search(filters: TF)``.
         """
         return cast("type[TF]", dict)
 

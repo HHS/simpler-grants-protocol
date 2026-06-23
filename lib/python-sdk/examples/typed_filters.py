@@ -10,11 +10,10 @@ CONSUMER: recover the registered filter type from the plugin via
 narrowing on every registered key (standard + custom), proven by the ``assert_type``
 lines below.
 
-This is the static-typing layer only. The throw-based runtime (``classify_filters`` /
-``validate_routes`` / ``f`` / ``FilterError``) is unchanged; see ``custom_filters.py``
-for the runtime classification demo. The transport layer is out-of-scope (ADR-0022):
-``search_filters_type`` returns the typed filter slot a downstream client facade would
-consume, not a client.
+This is the static-typing layer only. The runtime classifier (``classify_filters`` /
+``validate_routes`` / ``FilterError``) is unchanged; see ``custom_filters.py`` for the
+runtime classification demo. ``search_filters_type`` returns the typed filter slot,
+not a client.
 
 Run (from lib/python-sdk/):
     poetry run python examples/typed_filters.py
