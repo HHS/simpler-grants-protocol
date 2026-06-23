@@ -31,7 +31,7 @@ API endpoints that support filtering should be POST operations that accept a `fi
 | Property   | Type | Required | Description                               |
 | ---------- | ---- | -------- | ----------------------------------------- |
 | `operator` | enum | Yes      | The operator to apply to the filter value |
-| `value`    | any  | Yes      | The data to use for the filter operation  |
+| `value`    | any  | Yes      | The value to use for the filter operation |
 
 - Supported operators:
 
