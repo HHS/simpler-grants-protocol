@@ -37,13 +37,15 @@ from common_grants_sdk.extensions import (
     define_plugin,
     schema,
 )
+from common_grants_sdk.schemas.pydantic.filters import (
+    DateRangeFilter,
+    MoneyRangeFilter,
+)
 from common_grants_sdk.schemas.pydantic.filters.base import (
     ArrayOperator,
     ComparisonOperator,
 )
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
-    DateRange,
-    MoneyRange,
     NumberComparison,
     OpportunityFilters,
     StringArray,
@@ -119,8 +121,8 @@ def demo() -> None:
     # even on the bare base bag.
     standard: OpportunityFilters = {}
     assert_type(standard.get("status"), "StringArray | None")
-    assert_type(standard.get("closeDateRange"), "DateRange | None")
-    assert_type(standard.get("minAwardAmountRange"), "MoneyRange | None")
+    assert_type(standard.get("closeDateRange"), "DateRangeFilter | None")
+    assert_type(standard.get("minAwardAmountRange"), "MoneyRangeFilter | None")
 
     # The registered keys are visible at runtime via the TypedDict's annotations.
     keys = set(get_type_hints(OppSearchFilters))
@@ -147,8 +149,8 @@ def demo() -> None:
         "values validate through the registered models"
     )
 
-    # Reference the *Range aliases so the narrowing imports above are exercised.
-    _ = (DateRange, MoneyRange)
+    # Reference the range-filter imports so the narrowing assertions above are exercised.
+    _ = (DateRangeFilter, MoneyRangeFilter)
 
 
 if __name__ == "__main__":

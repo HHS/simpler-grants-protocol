@@ -6,7 +6,7 @@ from .base import DefaultFilter
 from .boolean import BooleanComparisonFilter
 from .date import DateComparisonFilter, DateRangeFilter
 from .money import MoneyComparisonFilter, MoneyRangeFilter
-from .numeric import NumberArrayFilter, NumberComparisonFilter, NumberRangeFilter
+from .numeric import NumberArrayFilter, NumberComparisonFilter
 from .string import StringArrayFilter, StringComparisonFilter
 from pydantic import BaseModel, Field
 
@@ -17,12 +17,13 @@ StringArray = StringArrayFilter
 StringComparison = StringComparisonFilter
 NumberArray = NumberArrayFilter
 NumberComparison = NumberComparisonFilter
-NumberRange = NumberRangeFilter
 DateComparison = DateComparisonFilter
-DateRange = DateRangeFilter
 MoneyComparison = MoneyComparisonFilter
-MoneyRange = MoneyRangeFilter
 BooleanComparison = BooleanComparisonFilter
+
+# Range filters have no clean alias: ``DateRange`` / ``MoneyRange`` / ``NumberRange``
+# are already the range *value* sub-models (a range filter's ``.value``), so range
+# fields are typed with the explicit ``*RangeFilter`` names to avoid the collision.
 
 
 class OppDefaultFilters(BaseModel):
@@ -80,7 +81,7 @@ class OpportunityFilters(TypedDict, total=False):
     """
 
     status: StringArray
-    closeDateRange: DateRange
-    totalFundingAvailableRange: MoneyRange
-    minAwardAmountRange: MoneyRange
-    maxAwardAmountRange: MoneyRange
+    closeDateRange: DateRangeFilter
+    totalFundingAvailableRange: MoneyRangeFilter
+    minAwardAmountRange: MoneyRangeFilter
+    maxAwardAmountRange: MoneyRangeFilter

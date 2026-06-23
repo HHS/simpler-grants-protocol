@@ -32,9 +32,9 @@ __all__ = [  # noqa: RUF022
     # String Filters
     "StringArrayFilter",
     "StringComparisonFilter",
-    # Typed authoring-DX aliases (the *Range aliases stay module-local in
-    # ``.opportunity`` because ``DateRange`` / ``MoneyRange`` / ``NumberRange``
-    # are already exported here as the range *value* sub-models).
+    # Typed authoring-DX aliases. Range filters have no clean alias: ``DateRange``
+    # / ``MoneyRange`` / ``NumberRange`` (above) are the range *value* sub-models,
+    # so range fields are typed with the explicit ``*RangeFilter`` names instead.
     "BooleanComparison",
     "DateComparison",
     "MoneyComparison",
