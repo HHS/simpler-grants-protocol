@@ -354,7 +354,7 @@ def test_source_schema_validation_failure_surfaces_as_plugin_errors():
     assert result.result["native_title"] == "Test Opp"
 
 
-def test_source_schema_aggregates_all_zod_issues():
+def test_source_schema_aggregates_all_zod_issues() -> None:
     """All ValidationError issues are surfaced — not just the first."""
 
     class _TwoFieldNative(BaseModel):

@@ -173,7 +173,7 @@ def test_functions_returns_transform_extension():
 # ---------------------------------------------------------------------------
 
 
-def test_unregistered_base_raises():
+def test_unregistered_base_raises() -> None:
     class NotRegistered(BaseModel):
         x: int
 
