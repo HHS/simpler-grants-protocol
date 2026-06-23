@@ -768,7 +768,7 @@ class TestOpportunitySearch:
         """search() returns the server's real filterInfo/sortInfo, not blanks.
 
         The server reports non-fatal filtering feedback in ``filterInfo.errors``
-        (ADR-0012) and the resolved sort in ``sortInfo``. Earlier the client
+        and the resolved sort in ``sortInfo``. Earlier the client
         fabricated empty envelopes, dropping that feedback; this asserts it now
         reaches the caller.
         """

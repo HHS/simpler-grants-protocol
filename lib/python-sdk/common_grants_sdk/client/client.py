@@ -189,7 +189,7 @@ class Client:
             )
             api_response.raise_for_status()
             # Validate into Filtered so the server's sortInfo/filterInfo (incl.
-            # filterInfo.errors per ADR-0012) survive instead of being dropped.
+            # filterInfo.errors) survive instead of being dropped.
             # Filtered IS-A Paginated, so the existing cast still holds.
             result_dict = Filtered[dict, dict].model_validate(api_response.json())
             result = cast(Paginated[ItemsT], result_dict)
