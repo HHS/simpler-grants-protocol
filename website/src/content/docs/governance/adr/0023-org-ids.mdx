@@ -38,7 +38,7 @@ The collection looks like this:
           "scope": "US",
           "kind": "government"
         },
-        "id": "98-7654321"
+        "id": "987654321"
       }
     }
   },
@@ -60,11 +60,11 @@ The collection looks like this:
         "kind": "government",
         "schema": "https://commongrants.org/registries/us-ein/schema.json"
       },
-      "id": "12-3456789",
+      "id": "123456789",
       "allIds": [
-        { "id": "12-3456789", "status": "active" },
-        { "id": "65-4321098", "status": "active" },
-        { "id": "11-1111111", "status": "archived" }
+        { "id": "123456789", "status": "active" },
+        { "id": "654321098", "status": "active" },
+        { "id": "111111111", "status": "archived" }
       ],
       "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
       "verifiedAt": "2026-03-15T00:00:00Z",
@@ -423,7 +423,7 @@ The same shape extends to other models with model-specific keys:
 List routes accept two new query parameters, `registry` and `id`, that together let consumers locate a record by any of its registered identifiers without knowing the local UUID:
 
 ```
-GET /organizations?registry=us:ein&id=12-3456789
+GET /organizations?registry=us:ein&id=123456789
 GET /opportunities?registry=us:assistance-listing&id=93.575
 GET /applications?registry=fluxx:app&id=app-98765
 ```
@@ -467,7 +467,7 @@ A pure UUID is best if:
 GET /organizations/01912a8b-7c3d-7890-abcd-ef1234567890
 
 # Cross-system lookup by registry-scoped identifier (here: the org's EIN)
-GET /organizations?registry=us:ein&id=12-3456789
+GET /organizations?registry=us:ein&id=123456789
 ```
 
 - **Pros**
@@ -520,11 +520,11 @@ A composite ID is best if:
 **Example**
 
 ```
-GET /organizations/us:ein:12-3456789
+GET /organizations/us:ein:123456789
 ```
 
 - **Pros**
-  - Readable: `us:ein:12-3456789` makes the registry and value visible in logs and URLs.
+  - Readable: `us:ein:123456789` makes the registry and value visible in logs and URLs.
   - One string carries both registry and value, so no separate field is needed.
 - **Cons**
   - Forces systems to pick one registry as canonical, which is arbitrary for orgs with multiple IDs.
@@ -565,10 +565,10 @@ A map is best if:
         "code": "us:ein",
         "url": "https://commongrants.org/registries/us-ein"
       },
-      "id": "12-3456789",
+      "id": "123456789",
       "allIds": [
-        { "id": "12-3456789", "status": "active" },
-        { "id": "98-7654321", "status": "active" }
+        { "id": "123456789", "status": "active" },
+        { "id": "987654321", "status": "active" }
       ]
     },
     "us:uei": {
@@ -584,8 +584,8 @@ A map is best if:
 
 ```ts
 const ein = org.identifiers["us:ein"];
-ein.id; // "12-3456789" (primary)
-ein.allIds.map((v) => v.id); // ["12-3456789", "98-7654321"] (every known ID)
+ein.id; // "123456789" (primary)
+ein.allIds.map((v) => v.id); // ["123456789", "987654321"] (every known ID)
 ```
 
 - **Pros**
@@ -611,8 +611,8 @@ A flat array is best if:
 ```json
 {
   "identifiers": [
-    { "scheme": "US-EIN", "id": "12-3456789" },
-    { "scheme": "US-EIN", "id": "98-7654321" },
+    { "scheme": "US-EIN", "id": "123456789" },
+    { "scheme": "US-EIN", "id": "987654321" },
     { "scheme": "US-SAM", "id": "AB0123456789" }
   ]
 }
@@ -666,7 +666,7 @@ Keying by the canonical code is best if:
         "code": "us:ein",
         "url": "https://commongrants.org/registries/us-ein"
       },
-      "id": "12-3456789"
+      "id": "123456789"
     },
     "us:uei": {
       "registry": {
@@ -723,7 +723,7 @@ A camelCase alias is best if:
         "code": "us:ein",
         "url": "https://commongrants.org/registries/us-ein"
       },
-      "id": "12-3456789"
+      "id": "123456789"
     },
     "uei": {
       "registry": {
@@ -801,7 +801,7 @@ The `registry` object holds a curated subset of the catalog entry: the fields th
       "kind": "government",
       "schema": "https://commongrants.org/registries/us-ein/schema.json"
     },
-    "id": "12-3456789",
+    "id": "123456789",
     "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
     "verifiedAt": "2026-03-15T00:00:00Z"
   }
@@ -851,7 +851,7 @@ A flat shape is best if:
   "us:ein": {
     "registry": "us:ein",
     "registryUrl": "https://commongrants.org/registries/us-ein",
-    "id": "12-3456789"
+    "id": "123456789"
   }
 }
 ```
@@ -891,7 +891,7 @@ Full decomposition is best if:
       "lookupUriTemplate": "https://apps.irs.gov/app/eos/detailsPage?ein={id}",
       "orgIdGuide": "US-EIN"
     },
-    "id": "12-3456789"
+    "id": "123456789"
   }
 }
 ```
@@ -939,11 +939,11 @@ An object array is best if:
       "code": "us:ein",
       "url": "https://commongrants.org/registries/us-ein"
     },
-    "id": "12-3456789",
+    "id": "123456789",
     "allIds": [
-      { "id": "12-3456789", "status": "active" },
-      { "id": "98-7654321", "status": "active" },
-      { "id": "11-1111111", "status": "archived" }
+      { "id": "123456789", "status": "active" },
+      { "id": "987654321", "status": "active" },
+      { "id": "111111111", "status": "archived" }
     ]
   }
 }
@@ -979,15 +979,15 @@ A flat array is best if:
       "code": "us:ein",
       "url": "https://commongrants.org/registries/us-ein"
     },
-    "id": "12-3456789",
-    "allIds": ["12-3456789", "98-7654321", "11-1111111"]
+    "id": "123456789",
+    "allIds": ["123456789", "987654321", "111111111"]
   }
 }
 ```
 
 - **Pros**
   - Simple array of strings, no object wrapper.
-  - Native `contains()` / `in` membership checks against `allIds` work directly: `"98-7654321" in ein.allIds`.
+  - Native `contains()` / `in` membership checks against `allIds` work directly: `"987654321" in ein.allIds`.
 - **Cons**
   - Can't tell which IDs are still valid and which are archived.
   - Can't tell the difference between a fiscal-sponsor case (two active EINs) and a rename history.
@@ -1035,7 +1035,7 @@ A reference with identifiers is best if:
           "scope": "US",
           "kind": "government"
         },
-        "id": "98-7654321"
+        "id": "987654321"
       }
     }
   }
@@ -1100,7 +1100,7 @@ A full summary is best if:
           "code": "us:ein",
           "url": "https://commongrants.org/registries/us-ein"
         },
-        "id": "98-7654321"
+        "id": "987654321"
       }
     },
     "addresses": {
@@ -1159,7 +1159,7 @@ CommonGrants mints one `namespace:type` code per registry and treats it as the s
       "code": "us:ein",
       "url": "https://commongrants.org/registries/us-ein"
     },
-    "id": "12-3456789"
+    "id": "123456789"
   },
   "us:uei": {
     "registry": {
@@ -1220,7 +1220,7 @@ Adopting org-id.guide codes directly is best if:
       "code": "US-EIN",
       "url": "https://commongrants.org/registries/us-ein"
     },
-    "id": "12-3456789"
+    "id": "123456789"
   },
   "US-SAM": {
     "registry": {
