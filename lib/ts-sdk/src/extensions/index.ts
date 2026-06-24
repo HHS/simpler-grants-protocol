@@ -17,7 +17,7 @@ export { definePlugin } from "./define-plugin";
 export type { CustomFilterSpec, CustomFilterType, PluginRoutes, RouteDeclarations } from "./types";
 export { FilterError } from "./types";
 export type { ClassifyResult } from "./custom-filters";
-export { classifyFilters, validateRoutes, validateFilterCall, F } from "./custom-filters";
+export { classifyFilters, validateRoutes, F } from "./custom-filters";
 
 // Schema utilities — lower-level tools for working with custom fields
 export type { WithCustomFieldsResult } from "./with-custom-fields";

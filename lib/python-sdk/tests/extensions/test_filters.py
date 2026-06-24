@@ -285,6 +285,29 @@ def test_validate_routes_collision_with_camel_alias_raises():
         validate_routes(routes)
 
 
+def test_validate_routes_unsupported_route_raises():
+    """validate_routes raises FilterError for custom filters on a non-filterable route.
+
+    Only routes whose core operation declares a ``filters`` parameter can carry
+    custom filters. ``opportunities.list`` has none, so a filter declared there is
+    a registration-time error rather than a silently-ignored declaration.
+    """
+    routes = {
+        "opportunities": {
+            "list": {
+                "filters": {
+                    "agency": CustomFilterSpec(
+                        filter_type=CustomFilterType.STRING_ARRAY,
+                        description="Not supported on list",
+                    ),
+                }
+            }
+        }
+    }
+    with pytest.raises(FilterError, match="does not support custom filters"):
+        validate_routes(routes)
+
+
 def test_validate_routes_valid_routes_do_not_raise():
     """validate_routes does not raise for a fully valid routes dict."""
     # Should not raise

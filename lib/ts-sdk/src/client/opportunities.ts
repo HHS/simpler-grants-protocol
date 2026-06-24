@@ -76,7 +76,7 @@ type RawFilter = { operator: string; value: unknown };
  * `definePlugin` preserves the literal `routes` type (its `const TRoutes` generic),
  * so a plugin defined inline yields concrete filter-name literals here.
  */
-type SearchFilterNames<R extends PluginRoutes> = R extends {
+type CustomFilterNames<R extends PluginRoutes> = R extends {
   opportunities: { search: { filters: infer Fs } };
 }
   ? Extract<keyof Fs, string>
@@ -94,7 +94,7 @@ type SearchFilterNames<R extends PluginRoutes> = R extends {
  * NO typo-rejection on filter names (a typo is structurally an intentional ad-hoc key).
  */
 type CustomFilterBag<R extends PluginRoutes> = {
-  [K in SearchFilterNames<R>]?: RawFilter;
+  [K in CustomFilterNames<R>]?: RawFilter;
 } & Record<string, RawFilter>;
 
 // =============================================================================

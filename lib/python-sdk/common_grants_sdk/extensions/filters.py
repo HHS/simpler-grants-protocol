@@ -201,6 +201,12 @@ _SNAKE_TO_ALIAS: dict[str, str] = {
 # validate_routes — registration-time validator
 # ---------------------------------------------------------------------------
 
+# (resource, method) pairs whose custom filters this client classifies. A route
+# is filter-capable when its core operation declares a ``filters`` parameter
+# (lib/core routes); this set hardcodes that subset. As more routes gain filter
+# support, derive it from the contract rather than extending this literal by hand.
+SUPPORTED_CUSTOM_FILTER_ROUTES: set[tuple[str, str]] = {("opportunities", "search")}
+
 
 def validate_routes(routes: PluginRoutes) -> None:
     """Registration-time validator for a plugin's route filter declarations.
@@ -210,6 +216,9 @@ def validate_routes(routes: PluginRoutes) -> None:
     2. Filter name that collides with a core default-filter name in
        ``DEFAULT_FILTER_NAMES`` (the escape-hatch collision check; a namespaced
        key such as ``gov.<system>@<filterName>`` passes through as ad-hoc instead).
+    3. Filters declared on a route that does not support custom filters, i.e. a
+       ``(resource, method)`` not in ``SUPPORTED_CUSTOM_FILTER_ROUTES`` (e.g.
+       ``opportunities.list``, whose core operation declares no ``filters``).
 
     Duplicate custom-filter names need no check: ``routes`` is dict-keyed, so a
     duplicate name cannot reach this validator (a duplicated literal key collapses
@@ -229,6 +238,16 @@ def validate_routes(routes: PluginRoutes) -> None:
             filter_specs = declarations.get("filters")
             if not filter_specs:
                 continue
+            if (resource, method) not in SUPPORTED_CUSTOM_FILTER_ROUTES:
+                supported = ", ".join(
+                    f"{r}.{m}" for r, m in sorted(SUPPORTED_CUSTOM_FILTER_ROUTES)
+                )
+                raise FilterError(
+                    f'Route "{resource}.{method}" does not support custom filters '
+                    f"(supported: {supported})",
+                    path=f"routes.{resource}.{method}",
+                    source_value=filter_specs,
+                )
             for filter_name, spec in filter_specs.items():
                 path = f"routes.{resource}.{method}.filters.{filter_name}"
                 if spec.filter_type not in FILTER_TYPE_SCHEMAS:
@@ -382,7 +401,7 @@ def classify_filters(
     resource: str,
     method: str,
     consumer_filters: Mapping[str, DefaultFilter | dict[str, Any]],
-) -> ClassifyResult:
+) -> ClassifyResult[OppFilters]:
     """Classify consumer filter dict into the ``OppFilters`` search request body.
 
     Three-bucket classification:
@@ -448,7 +467,7 @@ def classify_filters(
             # via **kwargs because populate_by_name is not set on OppDefaultFilters.
             # Normalize: camelCase aliases stay as-is; snake_case keys are mapped to their
             # alias; keys with no alias (e.g. "status") are passed through unchanged.
-            # Validate per-field against the named field's REAL type (e.g.
+            # Validate per-field against the named field's actual type (e.g.
             # status → StringArrayFilter) — stricter than the permissive DefaultFilter
             # check. Fail-soft: an invalid value is collected and skipped.
             alias_key = _SNAKE_TO_ALIAS.get(key, key)

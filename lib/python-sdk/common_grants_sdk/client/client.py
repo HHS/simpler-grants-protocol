@@ -36,8 +36,10 @@ class Client:
                 filters in ``opportunities.search``.
 
         Raises:
-            FilterError: If ``routes`` declares an unknown ``filter_type`` or a
-                custom filter name that collides with a default filter name.
+            FilterError: If ``routes`` declares an unknown ``filter_type``, a
+                custom filter name that collides with a default filter name, or
+                custom filters on a route that does not support them (e.g.
+                ``opportunities.list``).
         """
         self.config = config or Config()
         self.auth = auth or Auth.api_key(self.config.api_key)
@@ -190,6 +192,7 @@ class Client:
             page_size = self.config.page_size
 
         try:
+            # request_data already includes any filters assembled by the resource method.
             api_response = self.post(
                 path, json=request_data, params={"page": page, "pageSize": page_size}
             )

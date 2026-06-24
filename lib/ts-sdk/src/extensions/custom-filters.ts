@@ -73,6 +73,14 @@ const VALID_FILTER_TYPES = new Set<string>(Object.keys(FILTER_TYPE_SCHEMAS));
  */
 const DEFAULT_FILTER_NAMES = new Set<string>(Object.keys(OppDefaultFiltersSchema.shape));
 
+/**
+ * `resource.method` routes whose custom filters this client classifies. A route
+ * is filter-capable when its core operation declares a `filters` parameter
+ * (lib/core routes); this set hardcodes that subset. As more routes gain filter
+ * support, derive it from the contract rather than extending this literal by hand.
+ */
+const SUPPORTED_CUSTOM_FILTER_ROUTES = new Set<string>(["opportunities.search"]);
+
 // ############################################################################
 // Public — F helpers
 // ############################################################################
@@ -136,6 +144,9 @@ export const F = {
  * 2. A custom filter name that collides with a default-filter field name
  *    (`status`, `closeDateRange`, `totalFundingAvailableRange`,
  *    `minAwardAmountRange`, `maxAwardAmountRange`)
+ * 3. Filters declared on a route that does not support custom filters — a
+ *    `resource.method` not in `SUPPORTED_CUSTOM_FILTER_ROUTES` (e.g.
+ *    `opportunities.list`, whose core operation declares no `filters`)
  *
  * Duplicate filter names within a route-method need no check: filter names are
  * object keys, and JS object literals cannot represent duplicate keys.
@@ -150,6 +161,14 @@ export function validateRoutes(routes: PluginRoutes): void {
     for (const [methodKey, declarations] of Object.entries(methods)) {
       const filters = (declarations as RouteDeclarations).filters;
       if (!filters) continue;
+
+      if (!SUPPORTED_CUSTOM_FILTER_ROUTES.has(`${resourceKey}.${methodKey}`)) {
+        const supported = [...SUPPORTED_CUSTOM_FILTER_ROUTES].join(", ");
+        throw new FilterError(
+          `Route "${resourceKey}.${methodKey}" does not support custom filters (supported: ${supported})`,
+          { path: `routes.${resourceKey}.${methodKey}`, sourceValue: filters }
+        );
+      }
 
       for (const [filterName, spec] of Object.entries(filters)) {
         const path = `routes.${resourceKey}.${methodKey}.filters.${filterName}`;
@@ -249,8 +268,8 @@ export function validateFilterCall(
  * `result` holds only the keys that passed validation; `errors` aggregates the
  * `FilterError`s for keys that failed (those keys are omitted, not thrown on).
  */
-export interface ClassifyResult {
-  result: z.infer<typeof OppFiltersSchema>;
+export interface ClassifyResult<T = z.infer<typeof OppFiltersSchema>> {
+  result: T;
   errors: FilterError[];
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { classifyFilters, F, validateFilterCall, validateRoutes } from "@/extensions";
+import { classifyFilters, F, validateRoutes } from "@/extensions";
+import { validateFilterCall } from "@/extensions/custom-filters";
 import { FilterError } from "@/extensions";
 import type { PluginRoutes } from "@/extensions";
 import { OppFiltersSchema } from "@/schemas/zod/models";
@@ -263,6 +264,20 @@ describe("classifyFilters", () => {
       };
 
       expect(() => validateRoutes(collidingRoutes)).toThrow(FilterError);
+    });
+
+    it("throws FilterError when custom filters are declared on an unsupported route (list)", () => {
+      const unsupportedRoutes: PluginRoutes = {
+        opportunities: {
+          list: {
+            filters: {
+              agency: { filterType: "stringArray" },
+            },
+          },
+        },
+      };
+
+      expect(() => validateRoutes(unsupportedRoutes)).toThrow(FilterError);
     });
 
     it("does not throw for valid routes", () => {

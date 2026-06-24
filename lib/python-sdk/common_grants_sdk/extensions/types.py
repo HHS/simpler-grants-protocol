@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Generic,
@@ -17,9 +16,6 @@ from typing import (
 from pydantic import BaseModel, ConfigDict, Field
 
 from .specs import CustomFilterSpec
-
-if TYPE_CHECKING:
-    from common_grants_sdk.schemas.pydantic.filters.opportunity import OppFilters
 
 T = TypeVar("T")
 
@@ -118,7 +114,7 @@ class FilterError(Exception):
 
 
 @dataclass
-class ClassifyResult:
+class ClassifyResult(Generic[T]):
     """Fail-soft return shape for ``classify_filters``.
 
     ``classify_filters`` never raises on a bad call-time filter value: each
@@ -132,7 +128,7 @@ class ClassifyResult:
     plugin declaration has no result to return.
     """
 
-    result: "OppFilters"
+    result: T
     errors: list[FilterError]
 
 
