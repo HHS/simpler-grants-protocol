@@ -25,7 +25,7 @@ model NumberComparisonFilter {
 // ############################################################################
 
 /** Filters by comparing a field to an integer value */
-@Versioning.added(CommonGrants.Versions.v0_3)
+@Versioning.added(CommonGrants.Versions.v0_4)
 model IntegerComparisonFilter {
   /** The comparison operator to apply to the filter value */
   operator: ComparisonOperators | EquivalenceOperators;

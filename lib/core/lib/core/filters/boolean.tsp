@@ -7,7 +7,7 @@ namespace CommonGrants.Filters;
 // ############################################################################
 
 /** A filter that applies a comparison to a boolean value */
-@Versioning.added(CommonGrants.Versions.v0_3)
+@Versioning.added(CommonGrants.Versions.v0_4)
 model BooleanComparisonFilter {
   /** The operator to apply to the filter value */
   operator: EquivalenceOperators;
