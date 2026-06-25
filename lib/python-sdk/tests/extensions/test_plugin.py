@@ -8,9 +8,12 @@ from pydantic import Field
 from common_grants_sdk.extensions import (
     CustomField,
     CustomFieldSet,
+    CustomFilterSpec,
+    CustomFilterType,
     PassthroughModel,
     Plugin,
     PluginMeta,
+    PluginRoutes,
     PluginSchemas,
     SchemaOnly,
     SchemaWithTransforms,
@@ -99,3 +102,39 @@ def test_plugin_is_frozen():
     plugin = define_plugin(PluginSchemas(), meta=_meta())
     with pytest.raises((AttributeError, TypeError)):
         plugin.meta = _meta()  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------------
+# Route registration (PluginRoutes threaded onto the plugin)
+# ---------------------------------------------------------------------------
+
+
+def test_define_plugin_threads_routes_onto_plugin():
+    """The PluginRoutes map passed to define_plugin is threaded onto the plugin.
+
+    Regression: if define_plugin dropped ``routes=``, plugin.routes would be empty
+    and the registered custom filters would be lost.
+    """
+    registered: PluginRoutes = {
+        "opportunities": {
+            "search": {
+                "filters": {
+                    "agency": CustomFilterSpec(
+                        filter_type=CustomFilterType.STRING_ARRAY
+                    )
+                }
+            }
+        }
+    }
+    plugin = define_plugin(
+        PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
+        routes=registered,
+        meta=_meta(),
+    )
+    assert plugin.routes is registered
+
+
+def test_define_plugin_defaults_routes_to_empty_map():
+    """Omitting ``routes`` yields a concrete, non-optional empty map (never None)."""
+    plugin = define_plugin(PluginSchemas(), meta=_meta())
+    assert plugin.routes == {}

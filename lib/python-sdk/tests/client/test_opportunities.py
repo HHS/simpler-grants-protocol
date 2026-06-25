@@ -19,7 +19,11 @@ from common_grants_sdk.schemas.pydantic.responses import (
     OpportunitiesSearchResponse,
 )
 from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
-from common_grants_sdk.extensions.specs import CustomFieldSpec
+from common_grants_sdk.extensions.specs import (
+    CustomFieldSpec,
+    CustomFilterSpec,
+    CustomFilterType,
+)
 
 
 @pytest.fixture
@@ -1173,3 +1177,66 @@ class TestOpportunitySearch:
                 search="local", status=[OppStatusOptions.OPEN], page=None
             )
         assert exc_info.value.error.status == 500
+
+    def test_search_routes_custom_filters_into_request_body(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """search(filters=, routes=) lands registered custom filters in the customFilters bucket."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        routes = {
+            "opportunities": {
+                "search": {
+                    "filters": {
+                        "agency": CustomFilterSpec(
+                            filter_type=CustomFilterType.STRING_ARRAY
+                        )
+                    }
+                }
+            }
+        }
+        client.opportunities.search(
+            search="local",
+            filters={"agency": {"operator": "in", "value": ["NSF", "NIH"]}},
+            routes=routes,
+            page=1,
+        )
+
+        body = mock_httpx_client.post.call_args[1]["json"]
+        assert body["filters"]["customFilters"]["agency"]["value"] == ["NSF", "NIH"]
+
+    def test_search_date_filter_body_is_json_serializable(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """A date-valued filter must reach the wire as ISO strings, not datetime.date.
+
+        Regression: httpx encodes ``json=`` with the stdlib ``json.dumps``, which
+        raises on ``datetime.date``; the body dump must use ``mode="json"``.
+        """
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        client.opportunities.search(
+            search="local",
+            filters={
+                "closeDateRange": {
+                    "operator": "between",
+                    "value": {"min": "2026-01-01", "max": "2026-12-31"},
+                }
+            },
+            page=1,
+        )
+
+        body = mock_httpx_client.post.call_args[1]["json"]
+        # httpx encodes json= with the stdlib encoder, which rejects datetime.date.
+        json.dumps(body)
+        assert body["filters"]["closeDateRange"]["value"]["min"] == "2026-01-01"

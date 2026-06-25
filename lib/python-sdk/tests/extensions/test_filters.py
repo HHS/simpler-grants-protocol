@@ -67,12 +67,16 @@ SAMPLE_ROUTES = {
 def test_f_helper_wire_values(helper, args, operator, value):
     """Every f helper produces its documented wire operator and value shape.
 
+    Asserts the JSON wire dump, not the in-memory ``.value``: the builders return
+    precise filter models whose ``.value`` may be a sub-model (e.g. ``NumberRange``).
+
     Includes the reserved-word workarounds: Python f.in_ / f.not_in produce
     wire operators "in" / "notIn".
     """
     flt = getattr(f, helper)(*args)
-    assert flt.operator == operator
-    assert flt.value == value
+    wire = flt.model_dump(by_alias=True, mode="json")
+    assert wire["operator"] == operator
+    assert wire["value"] == value
 
 
 # ---------------------------------------------------------------------------
@@ -362,6 +366,22 @@ def test_validate_filter_call_money_range_rejects_comparison_operator():
         validate_filter_call(
             spec, "awardRange", f.gt({"amount": "10000", "currency": "USD"})
         )
+
+
+def test_validate_filter_call_number_range_value_submodel_survives_to_wire():
+    """A registered numberRange filter round-trips its NumberRange sub-model to wire dict.
+
+    f.between(int, int) returns a NumberRangeFilter whose ``.value`` is a NumberRange
+    sub-model (not a plain dict); validation must accept it and model_dump must recurse
+    the sub-model to ``{min, max}``. A regression that left ``.value`` as an un-dumped
+    NumberRange object — or that dropped the int payload — would ship a non-JSON body.
+    The moneyRange analog above is covered; this pins the numeric path.
+    """
+    spec = CustomFilterSpec(filter_type=CustomFilterType.NUMBER_RANGE)
+    validated = validate_filter_call(spec, "awardCount", f.between(0, 1000))
+    wire = validated.model_dump(by_alias=True, exclude_none=True, mode="json")
+    assert wire["operator"] == "between"
+    assert wire["value"] == {"min": 0, "max": 1000}
 
 
 def test_classify_default_wrong_shape_raises_plugin_error():

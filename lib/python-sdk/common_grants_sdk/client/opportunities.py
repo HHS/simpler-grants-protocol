@@ -13,8 +13,10 @@ from ..schemas.pydantic.responses import (
     Paginated,
 )
 from ..schemas.pydantic.models.opp_status import OppStatusOptions
+from ..extensions.filters import classify_filters
+from ..extensions.types import PluginRoutes
 from .types import ItemsT
-from typing import List
+from typing import Any, List, Mapping
 
 if TYPE_CHECKING:
     from .client import Client
@@ -108,34 +110,47 @@ class Opportunities:
     def search(
         self,
         search: str,
-        status: List[OppStatusOptions],
+        status: List[OppStatusOptions] | None = None,
+        filters: Mapping[str, Any] | None = None,
+        routes: PluginRoutes | None = None,
         page: int | None = None,
         page_size: int | None = None,
         schema: Type[OpportunityBase] | None = OpportunityBase,
     ) -> OpportunitiesSearchResponse:
-        """Search for opportunties by a query string
+        """Search for opportunities by a query string, with optional custom filters.
 
         Args:
             search: The string to search for.
-            status: List of statuses to search on.
+            status: Status shorthand; merged in as the ``status`` filter when given
+                (a ``status`` key already in ``filters`` takes precedence).
+            filters: Consumer filter dict (standard + custom keys), classified into
+                the request body via ``classify_filters``. Registered custom filters
+                land in ``customFilters``; register them via ``define_plugin(routes=...)``.
+            routes: Route-keyed custom-filter registration (e.g. ``plugin.routes``)
+                used to classify which keys are registered custom filters.
             page: Page number (1-indexed). If None, method will fetch all
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
                 client config.
             schema: OpportunityBase to support custom fields added by the caller.
 
-
         Returns:
             OpportunitiesSearchResponse with items and pagination info
 
-            Raises:
-                APIError: if the API request fails
+        Raises:
+            APIError: if the API request fails
+            FilterError: if a filter is called with an operator its type does not allow
         """
+        consumer_filters: dict[str, Any] = dict(filters or {})
+        if status is not None and "status" not in consumer_filters:
+            consumer_filters["status"] = {"operator": "in", "value": status}
+
+        opp_filters = classify_filters(
+            routes or {}, "opportunities", "search", consumer_filters
+        )
 
         request = {
-            "filters": {
-                "status": {"operator": "in", "value": status},
-            },
+            "filters": opp_filters.model_dump(by_alias=True, exclude_none=True),
             "pagination": {"page": 1, "pageSize": 10},
             "search": search,
             "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
@@ -143,10 +158,12 @@ class Opportunities:
 
         request_data = OpportunitySearchRequest.model_validate(request)
 
-        # Call client method to get paginated response
+        # Call client method to get paginated response. mode="json" so date filter
+        # values serialize to ISO strings — httpx encodes json= with stdlib json,
+        # which rejects the datetime.date objects pydantic parses dates into.
         paginated_response: Paginated[ItemsT] = self.client.search(  # type: ignore[valid-type]
             f"{self.path}/search",
-            request_data.model_dump(by_alias=True, exclude_unset=True),
+            request_data.model_dump(by_alias=True, exclude_unset=True, mode="json"),
             page=page,
             page_size=page_size,
         )
