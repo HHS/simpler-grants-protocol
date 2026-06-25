@@ -46,9 +46,9 @@ FLAT_SOURCE = {
 }
 
 
-def _mappings_extension() -> SchemaWithTransforms[
-    PassthroughModel, OpportunityBase[OpportunityFields]
-]:
+def _mappings_extension() -> (
+    SchemaWithTransforms[PassthroughModel, OpportunityBase[OpportunityFields]]
+):
     return schema(
         source_schema=PassthroughModel,
         common_schema=OpportunityBase[OpportunityFields],

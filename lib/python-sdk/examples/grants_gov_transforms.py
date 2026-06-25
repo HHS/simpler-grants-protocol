@@ -22,6 +22,7 @@ from cg_grants_gov import GrantsGovOpportunitySchema, grants_gov
 
 from common_grants_sdk.client import Client
 from common_grants_sdk.client.config import Config
+
 # =============================================================================
 # Config
 # =============================================================================
