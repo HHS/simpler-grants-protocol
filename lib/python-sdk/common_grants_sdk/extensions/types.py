@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, Literal, TypeVar
+from typing import Any, Callable, Generic, Literal, NotRequired, TypedDict, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from .specs import CustomFilterSpec
 
 T = TypeVar("T")
 
@@ -14,6 +16,25 @@ PluginCapability = Literal["customFields", "customFilters", "transforms"]
 
 # Type aliases
 Handler = Callable[[Any, Any], Any]
+
+# Route-keyed custom-filter declaration types, mirroring the TS SDK shape:
+# PluginRoutes = {resourceName: {methodName: RouteDeclarations}}.
+RouteMethodFilters = dict[str, CustomFilterSpec]  # {filterName: spec}
+
+
+class RouteDeclarations(TypedDict):
+    """Filter declarations for a single route method (e.g. ``search``).
+
+    ``filters`` maps filter name → ``CustomFilterSpec`` and is optional: a
+    method may appear in the route map with no declarations.
+    """
+
+    filters: NotRequired[RouteMethodFilters]
+
+
+PluginRoutes = dict[
+    str, dict[str, RouteDeclarations]
+]  # {resource: {method: declarations}}
 
 
 class PassthroughModel(BaseModel):
@@ -38,6 +59,34 @@ class TransformError(Exception):
     Note: source_value may contain PII when transforming applicant data.
     Adopters are responsible for redacting it before logging or re-raising.
     The SDK does not redact by default.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        path: str | None = None,
+        handler: str | None = None,
+        source_value: Any = None,
+        cause: BaseException | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.path = path
+        self.handler = handler
+        self.source_value = source_value
+        self.cause = cause
+
+
+class FilterError(Exception):
+    """Structured error raised by custom-filter validation.
+
+    Raised by validate_routes (registration time) and validate_filter_call /
+    classify_filters (call time). Carries field path, handler name, source
+    value, and underlying cause so consumers can reason about failures
+    programmatically without parsing error text.
+
+    Note: source_value may contain PII. Adopters are responsible for redacting
+    it before logging or re-raising. The SDK does not redact by default.
     """
 
     def __init__(
