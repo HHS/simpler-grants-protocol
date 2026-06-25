@@ -5,9 +5,6 @@ Fetches a real opportunity from Simpler.Grants.gov, transforms it to
 CommonGrants format via ``to_common``, then back to the source format via
 ``from_common``, and validates that key fields were preserved.
 
-Prerequisites:
-    - ../../../py-cg-grants-gov must be checked out as a sibling directory
-    - GRANTS_GOV_API_KEY environment variable must be set
 
 Run with: poetry run python examples/grants_gov_transforms.py <opportunityId>
           or set GRANTS_GOV_OPP_ID and omit the argument.
@@ -20,18 +17,7 @@ import os
 import sys
 from typing import Any
 
-# Insert the local plugin directory BEFORE any other imports so that
-# ``cg_grants_gov`` resolves to the sibling repo. The path is anchored
-# to __file__ so this works regardless of the process working directory.
-sys.path.insert(
-    0,
-    os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "../../../../py-cg-grants-gov")
-    ),
-)
-
-import httpx  # noqa: E402
-from cg_grants_gov import GrantsGovOpportunitySchema, grants_gov  # type: ignore[attr-defined]  # noqa: E402
+from cg_grants_gov import GrantsGovOpportunitySchema, grants_gov
 
 
 from common_grants_sdk.client import Client
@@ -44,7 +30,7 @@ opp_id = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("GRANTS_GOV_OPP_ID
 api_key = "two_org_user_key"
 base_url = "http://localhost:8080"
 config = Config(
-    base_url="http://localhost:8080",
+    base_url=base_url,
     api_key="two_org_user_key",
     timeout=5.0,
 )
@@ -125,7 +111,7 @@ def main() -> None:
     print("Running to_common...")
     tr1 = grants_gov.schemas.Opportunity.to_common(raw)  # type: ignore[attr-defined]
     if tr1.errors:
-        errs = "; ".join(f"[{e.path or '?'}] {e.message}" for e in tr1.errors)
+        errs = "; ".join(f"[{e.path or '?'}] {e}" for e in tr1.errors)
         print(f"  FAIL  to_common produced errors: {errs}", file=sys.stderr)
         sys.exit(1)
     common = tr1.result
@@ -135,7 +121,7 @@ def main() -> None:
     print("Running from_common...")
     tr2 = grants_gov.schemas.Opportunity.from_common(common)  # type: ignore[attr-defined]
     if tr2.errors:
-        errs = "; ".join(f"[{e.path or '?'}] {e.message}" for e in tr2.errors)
+        errs = "; ".join(f"[{e.path or '?'}] {e}" for e in tr2.errors)
         print(f"  FAIL  from_common produced errors: {errs}", file=sys.stderr)
         sys.exit(1)
     back = tr2.result

@@ -9,7 +9,6 @@
     "paths": {
       "@/*": ["./src/*"],
       "@tsp-output/*": ["./tsp-output/*"],
-      "@common-grants/cg-grants-gov": ["../../../ts-cg-grants-gov/src/index.ts"],
       "@common-grants/sdk/*": ["./src/*"]
     },
     "strict": true,
@@ -22,5 +21,5 @@
     "sourceMap": true
   },
   "include": ["src/**/*", "__tests__/**/*", "examples/**/*"],
-  "exclude": ["node_modules", "dist", "examples/grants-gov-transforms.ts"]
+  "exclude": ["node_modules", "dist"]
 }

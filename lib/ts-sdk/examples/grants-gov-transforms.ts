@@ -5,10 +5,6 @@
  * CommonGrants format via `toCommon`, then back to the source format via
  * `fromCommon`, and validates that key fields were preserved.
  *
- * Prerequisites:
- *   - ../../../ts-cg-grants-gov must be checked out as a sibling directory
- *   - GRANTS_GOV_API_KEY environment variable must be set
- *
  * Run with: pnpm example:grants-gov [opportunityId]
  *   or set GRANTS_GOV_OPP_ID and run: pnpm example:grants-gov
  */
@@ -62,9 +58,12 @@ type Diff = { path: string; raw: unknown; back: unknown };
 
 function deepDiff(a: unknown, b: unknown, path = "", diffs: Diff[] = []): Diff[] {
   if (
-    a !== null && b !== null &&
-    typeof a === "object" && typeof b === "object" &&
-    !Array.isArray(a) && !Array.isArray(b)
+    a !== null &&
+    b !== null &&
+    typeof a === "object" &&
+    typeof b === "object" &&
+    !Array.isArray(a) &&
+    !Array.isArray(b)
   ) {
     const aObj = a as Record<string, unknown>;
     const bObj = b as Record<string, unknown>;
@@ -230,8 +229,9 @@ async function main(): Promise<void> {
 
   check(
     "assistance_listings count preserved",
-    back.opportunity_assistance_listings.length === raw.opportunity_assistance_listings.length,
-    `expected ${raw.opportunity_assistance_listings.length}, got ${back.opportunity_assistance_listings.length}`
+    (back.opportunity_assistance_listings?.length ?? 0) ===
+      (raw.opportunity_assistance_listings?.length ?? 0),
+    `expected ${raw.opportunity_assistance_listings?.length ?? 0}, got ${back.opportunity_assistance_listings?.length ?? 0}`
   );
 
   // --- Full deep comparison: raw vs back ---

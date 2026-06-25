@@ -89,6 +89,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@common-grants/cg-grants-gov": "^0.2.0",
     "@common-grants/core": "workspace:*",
     "@eslint/js": "catalog:",
     "@types/js-yaml": "^4.0.9",
