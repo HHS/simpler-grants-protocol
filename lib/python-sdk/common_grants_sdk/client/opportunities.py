@@ -16,7 +16,7 @@ from ..schemas.pydantic.models.opp_status import OppStatusOptions
 from ..extensions.filters import classify_filters
 from ..extensions.types import FilterError
 from .types import ItemsT
-from typing import List
+from typing import Any, List, Mapping
 
 if TYPE_CHECKING:
     from .client import Client
@@ -114,7 +114,7 @@ class Opportunities:
         page: int | None = None,
         page_size: int | None = None,
         schema: Type[OpportunityBase] | None = OpportunityBase,
-        filters: dict | None = None,
+        filters: Mapping[str, Any] | None = None,
     ) -> OpportunitiesSearchResponse:
         """Search for opportunties by a query string
 
@@ -178,10 +178,12 @@ class Opportunities:
 
         request_data = OpportunitySearchRequest.model_validate(request)
 
-        # Call client method to get paginated response
+        # Call client method to get paginated response. mode="json" so date filter
+        # values serialize to ISO strings — httpx encodes json= with stdlib json,
+        # which rejects the datetime.date objects pydantic parses dates into.
         paginated_response: Paginated[ItemsT] = self.client.search(  # type: ignore[valid-type]
             f"{self.path}/search",
-            request_data.model_dump(by_alias=True, exclude_unset=True),
+            request_data.model_dump(by_alias=True, exclude_unset=True, mode="json"),
             page=page,
             page_size=page_size,
         )

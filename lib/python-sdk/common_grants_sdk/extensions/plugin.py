@@ -1,8 +1,9 @@
 """Plugin assembly: ``PluginSchemas``, ``Plugin``, and ``define_plugin``.
 
 A plugin maps the schema extensions an author builds with ``schema(...)`` onto the
-registered extensible schemas, keyed by registry name. Schemas a plugin does not
-extend fall back to the base schema (a ``SchemaOnly``), never ``None``, so
+registered extensible schemas, keyed by registry name, and (optionally) registers
+per-route custom filters via ``routes`` (a ``PluginRoutes`` map). Schemas a plugin
+does not extend fall back to the base schema (a ``SchemaOnly``), never ``None``, so
 consumers get fully-typed, non-optional dot access: ``plugin.schemas.Opportunity``.
 """
 
@@ -20,7 +21,7 @@ from .schema import (
     SchemaWithTransforms,
     schema,
 )
-from .types import PluginMeta
+from .types import PluginMeta, PluginRoutes
 
 SchemasT = TypeVar("SchemasT")
 
@@ -59,18 +60,30 @@ class Plugin(Generic[SchemasT]):
     """The plugin singleton consumers import.
 
     ``schemas`` is a typed frozen dataclass, so ``plugin.schemas.Opportunity`` is
-    fully typed (dot access).
+    fully typed (dot access). ``routes`` is the route-keyed custom-filter
+    registration (``PluginRoutes``) a consumer passes to ``classify_filters``.
     """
 
     schemas: SchemasT
+    routes: PluginRoutes
     meta: PluginMeta
 
 
-def define_plugin(schemas: SchemasT, *, meta: PluginMeta) -> Plugin[SchemasT]:
-    """Assemble the plugin from a ``PluginSchemas`` instance and metadata.
+def define_plugin(
+    schemas: SchemasT,
+    *,
+    routes: PluginRoutes | None = None,
+    meta: PluginMeta,
+) -> Plugin[SchemasT]:
+    """Assemble the plugin from schema extensions, optional route registrations,
+    and metadata.
 
-    Each attribute name must equal the entry's ``schema_name``, so
+    Each schema attribute name must equal the entry's ``schema_name``, so
     ``schemas.Opportunity`` really holds the Opportunity extensible schema.
+
+    ``routes`` is the route-keyed custom-filter registration (``PluginRoutes``),
+    threaded onto the returned plugin so a consumer can pass ``plugin.routes`` to
+    ``classify_filters``. Omitted, it defaults to an empty map.
 
     Raises:
         PluginDefinitionError: If any slot does not hold a schema extension, or holds
@@ -88,4 +101,4 @@ def define_plugin(schemas: SchemasT, *, meta: PluginMeta) -> Plugin[SchemasT]:
             )
     if errors:
         raise PluginDefinitionError("plugin", errors)
-    return Plugin(schemas=schemas, meta=meta)
+    return Plugin(schemas=schemas, routes=routes or {}, meta=meta)

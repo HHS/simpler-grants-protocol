@@ -31,7 +31,7 @@ We decided to:
 
 1. **Keep "plugin" as the unified term** for both the published npm/PyPI packages in the website catalog and the runtime SDK object. No change to `PluginSourceEntry` or `src/content/plugins/index.json`. The existing `definePlugin()` function is expanded to accept the full set of top-level fields described below.
 
-2. **Use functional grouping at the top level** with two keys — `meta` and `schemas` — rather than grouping by object name at the root. Client configuration, auth, and custom filters are deferred to future capabilities and are not part of the current Plugin shape.
+2. **Use functional grouping at the top level** with keys for `meta`, `schemas`, and `routes` — rather than grouping by object name at the root. Client configuration and auth are deferred to future capabilities and are not part of the current Plugin shape.
 
 3. **Use per-object grouping inside `schemas`** where it reflects real coupling: each object's source schema, CommonGrants schema, and bidirectional transforms are tightly coupled and change together.
 
@@ -46,6 +46,8 @@ We decided to:
 8. **Custom handlers are registered per utility call, not globally.** `buildTransforms()` accepts an optional `handlers` argument (`Map<string, Handler>`) for registering additional handler names. Per-call scoping keeps behavior explicit and testable; name collisions with the default set raise at `buildTransforms()` call time rather than silently shadowing them. The registry is a `Map` rather than a plain object so that handler-name lookup uses `Map.has()` — which does not walk the prototype chain — rather than `in` or own-property checks on a plain object.
 
 9. **Transformation errors carry structured context.** SDK-emitted transformation errors extend a single `PluginError` base carrying field path, handler name, source value, and underlying cause, enabling programmatic reasoning without parsing error text. The source value may contain PII when transforming applicant data; adopters are responsible for redacting it before logging or re-raising, and the SDK does not redact by default.
+
+10. **Declare custom filters per route, not per schema.** Custom filters are declared in a route-keyed `routes` map — `routes[resource][method].filters[name]` carries a `CustomFilterSpec`. Filters attach to resource methods rather than schemas because filter availability varies by method, and classification resolves a filter by resource + method — a schema-keyed map cannot express this. A filter's `filterType` determines its allowed operators (derived, not authored). The SDKs provide the route declaration in language-idiomatic typed forms.
 
 The resulting Plugin shape:
 
@@ -127,8 +129,14 @@ interface SchemaMappings {
   fromCommon?: Record<string, unknown>; // ADR-0017 mapping: CommonGrants → source
 }
 
-// Scalar types only — filters are query parameters, not schema fields
-type CustomFilterType = "string" | "number" | "integer" | "boolean";
+// filterType names a semantic filter type (e.g. "stringArray", "dateRange",
+// "moneyComparison"); each maps 1:1 to a base filter with auto-derived operators.
+// See the SDK for the enumerated set.
+type CustomFilterType =
+  | "stringComparison"
+  | "stringArray"
+  | "dateRange"
+  | "moneyComparison";
 
 interface CustomFilterSpec {
   filterType: CustomFilterType;
@@ -140,6 +148,9 @@ interface Plugin {
   schemas: Partial<
     Record<ExtensibleSchemaName, SchemaConfig<unknown, unknown>>
   >;
+  // Route-keyed custom filter declarations (Decision #10):
+  // resource → method → { filters: { name: CustomFilterSpec } }. Typed as PluginRoutes in the SDK.
+  routes?: PluginRoutes;
 }
 
 // Input object for definePlugin(). Using a named-options object makes it easy to add
@@ -149,6 +160,8 @@ interface DefinePluginOptions {
   // Plugin authors provide input schemas and transforms; definePlugin() compiles them
   // into the full SchemaConfig runtime type, extending the base schema with any customFields.
   schemas?: Partial<Record<ExtensibleSchemaName, SchemaInput>>;
+  // Route-keyed custom filter declarations, passed through to Plugin.routes unchanged.
+  routes?: PluginRoutes;
 }
 
 // Factory: all options are optional so adopters can start with only what they need
@@ -271,8 +284,10 @@ class ObjectSchemasInput(Generic[TSource, TCommon]):
     to_common: Callable[[TSource], TransformResult[TCommon]] | None = None
     from_common: Callable[[TCommon], TransformResult[TSource]] | None = None
 
-# Scalar types only — filters are query parameters, not schema fields
-CustomFilterType = Literal['string', 'number', 'integer', 'boolean']
+# filter_type names a semantic filter type (e.g. 'stringArray', 'dateRange',
+# 'moneyComparison'); each maps 1:1 to a base filter with auto-derived operators.
+# See the SDK for the enumerated set.
+CustomFilterType = Literal['stringComparison', 'stringArray', 'dateRange', 'moneyComparison']
 
 @dataclass
 class CustomFilterSpec:
@@ -558,7 +573,7 @@ print(grants_gov_plugin.meta.capabilities)    # ["customFields", "transforms"]
 ### Consequences
 
 - **Positive consequences**
-  - Top-level surface (`meta`, `schemas`) is short, closed, and stable — adding protocol objects adds a key under `schemas` only
+  - Top-level surface (`meta`, `schemas`, `routes`) is short, closed, and stable — adding protocol objects adds a key under `schemas` only
   - Per-object grouping inside `schemas` preserves the real coupling between source schema, CommonGrants schema, and bidirectional transforms — they share type signatures and change together
   - All per-object declarations (custom fields, source type, declarative mappings, and explicit callables) are co-located under `schemas.<Object>` — no split across multiple top-level keys
   - `toCommon`/`fromCommon` can be plain hand-written functions, generated via `buildTransforms()` and passed in `schemas`, or auto-generated by `definePlugin()` from mappings declared in `schemas.<Object>.mappings` — plugin authors are not required to use a declarative mapping format
@@ -568,7 +583,7 @@ print(grants_gov_plugin.meta.capabilities)    # ["customFields", "transforms"]
   - `customFields` is optional — the `customFields`-only config structure remains valid; existing plugin packages require only minimal code changes to adopt `definePlugin()`
   - All top-level Plugin fields are optional — adopters can start with only what they need and expand incrementally
 - **Negative consequences**
-  - Client configuration, auth, and custom filters are deferred to future capabilities — current Plugin shape does not support them
+  - Client configuration and auth are deferred to future capabilities — current Plugin shape does not support them
 
 ### Criteria
 
