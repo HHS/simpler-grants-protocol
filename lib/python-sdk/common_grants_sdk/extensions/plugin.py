@@ -2,17 +2,9 @@
 
 A plugin maps the schema extensions an author builds with ``schema(...)`` onto the
 registered extensible schemas, keyed by registry name, and (optionally) registers
-per-route custom filters via ``routes``. Schemas a plugin does not extend fall back
-to the base schema (a ``SchemaOnly``), never ``None``; routes a plugin does not
-register fall back to the resource's standard filters. So consumers get fully-typed,
-non-optional dot access: ``plugin.schemas.Opportunity`` and a typed projection of the
-registered search filters via ``plugin.search_filters_type()``.
-
-``PluginSchemas``, ``Plugin``, and the route carriers are frozen dataclasses with
-covariant type parameters (read-only, so covariance is sound). That covariance lets
-``search_filters_type`` recover the route's registered filter TypedDict via a single
-``self`` annotation, with no call-site type arguments. ``search_filters_type``
-returns the *type* of the registered filter bag, not a client instance.
+per-route custom filters via ``routes`` (a ``PluginRoutes`` map). Schemas a plugin
+does not extend fall back to the base schema (a ``SchemaOnly``), never ``None``, so
+consumers get fully-typed, non-optional dot access: ``plugin.schemas.Opportunity``.
 """
 
 from __future__ import annotations
@@ -23,14 +15,13 @@ from typing import Any, Generic, TypeVar, cast
 import typing_extensions as te
 
 from ..schemas.pydantic.models import OpportunityBase
-from .routes import TF, ResourceRoutes, RouteFilters, Routes
 from .schema import (
     PluginDefinitionError,
     SchemaOnly,
     SchemaWithTransforms,
     schema,
 )
-from .types import PluginMeta
+from .types import PluginMeta, PluginRoutes
 
 SchemasT = TypeVar("SchemasT")
 
@@ -40,15 +31,6 @@ SchemasT = TypeVar("SchemasT")
 DefaultOpportunity = SchemaOnly[OpportunityBase]
 
 _TOpportunity = te.TypeVar("_TOpportunity", default=DefaultOpportunity)
-
-# ``TF`` (the registered filters TypedDict) is imported from ``routes`` and
-# recovered by the constrained-``self`` projection on ``search_filters_type``.
-
-# The routes carrier type the plugin holds. Defaults to the standard-filters
-# carrier so an author who omits ``routes`` still gets a concrete, non-optional
-# ``plugin.routes`` and a standard-filters projection.
-_RDefault = ResourceRoutes[RouteFilters[Any]]
-_RoutesT = te.TypeVar("_RoutesT", default="Routes[_RDefault]")
 
 
 @dataclass
@@ -74,55 +56,34 @@ class PluginSchemas(Generic[_TOpportunity]):
 
 
 @dataclass(frozen=True)
-class Plugin(Generic[SchemasT, _RoutesT]):
+class Plugin(Generic[SchemasT]):
     """The plugin singleton consumers import.
 
-    ``schemas`` and ``routes`` are typed frozen dataclasses, so
-    ``plugin.schemas.Opportunity`` is fully typed (dot access) and
-    ``plugin.search_filters_type()`` recovers the registered search-filters
-    TypedDict — autocompleting the registered filter keys with no call-site type
-    args.
+    ``schemas`` is a typed frozen dataclass, so ``plugin.schemas.Opportunity`` is
+    fully typed (dot access). ``routes`` is the route-keyed custom-filter
+    registration (``PluginRoutes``) a consumer passes to ``classify_filters``.
     """
 
     schemas: SchemasT
-    routes: _RoutesT
+    routes: PluginRoutes
     meta: PluginMeta
-
-    def search_filters_type(
-        self: Plugin[Any, Routes[ResourceRoutes[RouteFilters[TF]]]],
-    ) -> type[TF]:
-        """Return the registered opportunities-search filters TypedDict type.
-
-        This is the typed narrowing slot. ``TF`` is recovered from the route
-        registration via the ``self`` annotation, so a consumer gets the exact
-        ``OpportunityFilters`` subclass the author registered (or the base
-        ``OpportunityFilters`` when no route was registered) with no call-site
-        type arguments::
-
-            FiltersT = plugin.search_filters_type()
-            filters: FiltersT = {"agency": f.in_(["NSF"])}  # per-key narrowed
-        """
-        return cast("type[TF]", dict)
 
 
 def define_plugin(
     schemas: SchemasT,
     *,
-    # Shared module-level default: one frozen, data-less carrier reused across
-    # calls (the standard-filters projection). Frozen + data-less, so reuse is safe.
-    routes: _RoutesT = cast("Any", Routes()),
+    routes: PluginRoutes | None = None,
     meta: PluginMeta,
-) -> Plugin[SchemasT, _RoutesT]:
+) -> Plugin[SchemasT]:
     """Assemble the plugin from schema extensions, optional route registrations,
     and metadata.
 
     Each schema attribute name must equal the entry's ``schema_name``, so
     ``schemas.Opportunity`` really holds the Opportunity extensible schema.
 
-    ``routes`` is a typed :class:`Routes` carrier (static-typing only); it is
-    threaded onto the returned plugin so ``search_filters_type`` can recover the
-    registered filter TypedDict. Omitted, it defaults to the resource's standard
-    filters.
+    ``routes`` is the route-keyed custom-filter registration (``PluginRoutes``),
+    threaded onto the returned plugin so a consumer can pass ``plugin.routes`` to
+    ``classify_filters``. Omitted, it defaults to an empty map.
 
     Raises:
         PluginDefinitionError: If any slot does not hold a schema extension, or holds
@@ -140,4 +101,4 @@ def define_plugin(
             )
     if errors:
         raise PluginDefinitionError("plugin", errors)
-    return Plugin(schemas=schemas, routes=routes, meta=meta)
+    return Plugin(schemas=schemas, routes=routes or {}, meta=meta)

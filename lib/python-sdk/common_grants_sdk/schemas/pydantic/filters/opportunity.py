@@ -66,7 +66,8 @@ class OppFilters(OppDefaultFilters):
 
 
 class OpportunityFilters(TypedDict, total=False):
-    """Standard filters for the opportunities search route (typed authoring DX).
+    """Typed authoring surface for opportunity filters — the dict consumers
+    annotate, extended to give each custom filter its own typed key.
 
     Keys are the wire names a consumer passes to ``classify_filters`` (the
     camelCase aliases of :class:`OppDefaultFilters`), each typed to its value

@@ -81,12 +81,8 @@ class _FHelpers:
     """
 
     # --- eq / neq: bool -> Boolean, str -> String, number -> Number, else Default ---
-    # The ``bool`` overload must come first because ``bool`` is a subtype of
-    # ``int``: a literal ``True`` would otherwise match the ``int | float`` arm and
-    # be typed a NumberComparisonFilter. The overlap with the number arm (different
-    # return types over the ``bool ⊂ int`` overlap) is intentional and the runtime
-    # dispatch handles bool first, so the overlap warning is suppressed on the bool
-    # overload for both checkers.
+    # bool overload first: bool ⊂ int, so a literal True would otherwise match the
+    # number arm. The intentional overlap is suppressed on the bool overload.
     @overload
     def eq(self, value: bool) -> BooleanComparisonFilter: ...  # type: ignore[overload-overlap]  # pyright: ignore[reportOverlappingOverload]
     @overload
@@ -121,10 +117,8 @@ class _FHelpers:
         return DefaultFilter(operator=operator, value=value)
 
     # --- gt / gte / lt / lte: number -> Number, else Default (Money dict, date) ---
-    # The precise (number) overload intentionally overlaps the ``Any`` fallback;
-    # the precise arm is listed first so it wins for numbers, and the runtime
-    # dispatches the rest to DefaultFilter. pyright flags the precise/Any overlap
-    # (mypy does not), so it is suppressed on the first overload of each builder.
+    # Precise (number) overload first; its intentional overlap with the Any fallback
+    # is suppressed on the first overload of each builder.
     @overload
     def gt(  # pyright: ignore[reportOverlappingOverload]
         self, value: Union[int, float]
