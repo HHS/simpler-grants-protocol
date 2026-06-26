@@ -248,7 +248,7 @@ async function main(): Promise<void> {
     pass("all fields identical after round-trip");
   }
 
-  console.log("\n=== All checks passed ===");
+  console.log("\n=== Explicit checks passed ===");
 }
 
 main().catch(err => {

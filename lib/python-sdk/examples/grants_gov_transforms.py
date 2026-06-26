@@ -32,7 +32,7 @@ api_key = "two_org_user_key"
 base_url = "http://localhost:8080"
 config = Config(
     base_url=base_url,
-    api_key="two_org_user_key",
+    api_key=api_key,
     timeout=5.0,
 )
 client = Client(config)
@@ -237,7 +237,7 @@ def main() -> None:
     else:
         print("  PASS  all fields identical after round-trip")
 
-    print("\n=== All checks passed ===")
+    print("\n=== Explicit checks passed ===")
 
 
 if __name__ == "__main__":

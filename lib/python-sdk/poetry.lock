@@ -115,7 +115,7 @@ version = "0.2.0"
 description = "CommonGrants custom fields plugin for HHS/grants.gov opportunity data"
 optional = false
 python-versions = "<4.0,>=3.11"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "cg_grants_gov-0.2.0-py3-none-any.whl", hash = "sha256:b94ea48caa474fe52f55359559e7da9e3e296d4ae9b63ee39007c2bc5576445e"},
     {file = "cg_grants_gov-0.2.0.tar.gz", hash = "sha256:29adf562d2e76c8e004dd0af6d8d0705ecd5c91d703d42116dee949b20e0e93f"},
@@ -1318,4 +1318,4 @@ tests = ["build", "coverage", "mypy", "ruff", "wheel"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "eddc36793aacb66ef59e805d51e9508fbf9015b37c61f9611f923ff9ea43673e"
+content-hash = "a8ec17ae9481810edaa92e06a9ab06a9131c85cc3c345a0548ae49c26cfbae9c"
