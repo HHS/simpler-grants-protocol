@@ -36,7 +36,7 @@ import { ArrayOperator } from "../constants";
  * even though its parsed output is still a superset of `OpportunityBase`. Constraining
  * on the output type accepts both the base schema and any extended variant.
  */
-type OppSchema = z.ZodType<OpportunityBase, z.ZodTypeDef, unknown>;
+type OppSchema = z.ZodType<OpportunityBase, unknown>;
 
 // =============================================================================
 // Options types (schema in options for consistent API)
@@ -128,9 +128,9 @@ export class Opportunities {
     }
 
     const json = await response.json();
-    const result = OkSchema(schema).parse(json);
+    const result = OkSchema(schema).parse(json) as { data: z.infer<S> };
 
-    return result.data as z.infer<S>;
+    return result.data;
   }
 
   // ############################################################################
