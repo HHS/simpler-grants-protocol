@@ -1,0 +1,956 @@
+---
+title: Organization profile syncing
+description: ADR defining how CommonGrants-adopting systems authenticate sync requests and the endpoints, operations, partial-update format, history access, acceptance semantics, and change provenance for keeping organization profiles in sync.
+tableOfContents:
+  maxHeadingLevel: 3
+---
+
+Now that organizations carry a portable identifier set ([ADR-0023](https://commongrants.org/governance/adr/0023-org-ids/)), the next step is keeping an organization's profile in sync across the systems that hold a copy of it. A platform, a state portal, and a foundation's grant management system may each store the same organization, and today there is no shared way for one to publish a change and another to pick it up.
+
+This ADR defines the wire contract for that sync: how a system proves an inbound request is authorized to act on a given organization, and what endpoints and operations a conformant system exposes. It follows the "Path 3" framing from the org-sync exploration and the transport boundary set in [ADR-0022](https://commongrants.org/governance/adr/0022-plugin-framework/): the protocol specifies shapes and guarantees, and each deployment picks its own transport (pull, push, scheduled, webhook). A plugin built against a CommonGrants-aware host is one conformant path; a standalone service that exposes the same HTTP contract is equally conformant.
+
+Two principles drive the decisions below, in order of importance:
+
+1. Preserve optionality. Avoid choices that lock a deployment into one transport, one identity provider, or one storage model.
+2. Within that constraint, make adoption as turn-key as possible.
+
+_How should CommonGrants-adopting systems keep organization profiles in sync: how does a receiving system validate that a request comes from a client with the correct permissions for a given organization, and what endpoints, operations, and update semantics does profile sync require?_
+
+## Decision
+
+:::note[The shape in one paragraph]
+A system proves authorization with an OAuth 2.0 access token carried as a JWT. The token's scopes and `org_ids` claim say which operations it may perform and which organizations it may touch, and the receiver re-checks both against its own access policy before applying anything. Profile data lives under a `/common-grants/orgs` namespace: generic endpoints for reading and writing a specific organization, plus a personalized `/me/orgs` listing for "which organizations can this token act on." Writes use `PUT` for full replacement and `PATCH` (JSON Merge Patch) for partial updates, and every write returns a status so the same contract serves both deployments that apply changes immediately and deployments that route them through approval.
+:::
+
+At a glance, the key decisions are:
+
+1. **Authentication (grant flows):** Support both OAuth 2.0 grant flows. Client Credentials for machine-to-machine sync where no human is in the loop, and Authorization Code with PKCE for delegated access where an org administrator consents.
+2. **Token format:** Access tokens are JWTs (RFC 7519) validated against the issuer's JWKS without a server-side session lookup, with a fixed set of required claims (`iss`, `sub`, `aud`, `iat`, `exp`, `scope`) and two recommended claims (`grant_type`, `org_ids`).
+3. **Permissions (scopes):** A scope vocabulary expresses operation plus optional per-organization binding (`org:read`, `org:write:{orgId}`, etc.). Receivers treat a broader scope as covering its narrower forms; the SDK does not collapse scopes client-side. An optional `org_ids` claim gives receivers an explicit organization allowlist to check in addition to the scope string.
+4. **Finding and viewing profiles:** Expose both generic resource endpoints (`GET /orgs`, `GET /orgs/{orgId}`) and a personalized listing (`GET /me/orgs`). Generic endpoints stay reusable and cacheable; the personalized endpoint answers "which organizations does this token represent," which a generic filter cannot express without the caller already knowing its own principal.
+5. **Updating a profile:** Support both `PUT` (full, idempotent replace) and `PATCH` (partial update).
+6. **Partial-update format:** `PATCH` bodies use JSON Merge Patch (RFC 7396): include a field to set it, omit it to leave it unchanged, send `null` to clear it.
+7. **Viewing changes (history):** An optional `GET /orgs/{orgId}/history` endpoint returns a version list of full snapshots, which composes with the existing dataset-version concept and tolerates snapshot squashing. A point-in-time `?at=` parameter on the main read is offered as a complementary read pattern.
+8. **Acceptance semantics:** Writes return a status (`accepted`, `denied`, `pending`, `superseded`) rather than assuming synchronous acceptance, with a denial reason when denied and a resolution hint when pending.
+9. **Change provenance:** Record the updating principal derived from the validated token (never a manually supplied body field) plus the source system, keeping human-identifying PII (names, emails) out of shared profile and history payloads.
+
+### Scope and dependencies
+
+v1 covers organization profile sync and its authentication contract. Proposals and applications are out of scope for this round. Push and webhook transport, the subscriber registry, and the initial full sync are deferred to follow-up work; the contract here is written so they can be added without breaking it.
+
+Sync depends on protocol features that are still stabilizing in the SDK, each tagged `@tag("experimental")` per [ADR-0019](https://commongrants.org/governance/adr/0019-api-route-status/) until it settles:
+
+- `IdentifierCollection` ([ADR-0023](https://commongrants.org/governance/adr/0023-org-ids/)), used as the keying mechanism for `{orgId}`.
+- `SystemMetadata` on `OrganizationBase` (`createdAt`, `lastModifiedAt`), required for cursor-based incremental pull.
+- Cursor-based pagination (`modifiedSince`), introduced alongside the page-based pagination from [ADR-0011](https://commongrants.org/governance/adr/0011-pagination/).
+- A `PATCH` route pattern, which the protocol does not yet have.
+- The sync routes themselves and the auth scope vocabulary as exported types.
+
+### Deferred to a follow-up spec
+
+This ADR settles the structural decisions. The exact request and response body shapes are deliberately left for a follow-up spec so the decisions here are not blocked on field-level debate. The follow-up will finalize:
+
+- The precise request body schemas for `PUT` and `PATCH` (beyond "full record" and "merge patch"), including how the updating principal and source system are carried.
+- The response envelope for writes (status enum, denial reason, pending/resolution fields) and the mapping of each status to an HTTP code.
+- The history response schema (version metadata fields, ordering, pagination) and the `?at=` parameter format.
+- Concrete header names for protocol-version negotiation and auth, which plugin mappings translate to each receiver's expected format.
+
+### Consequences
+
+- **Positive consequences**
+  - Authentication rests on OAuth 2.0 and JWT, so adopters reuse existing identity infrastructure rather than retrofitting a CommonGrants-specific scheme.
+  - Stateless JWT validation means a receiver can authorize a request without a network round trip to the issuer on every call.
+  - The same wire contract works whether a deployment applies changes immediately or queues them for review, because acceptance is expressed in the response rather than assumed.
+  - Generic plus personalized endpoints keep the resource model reusable and cacheable while still answering principal-relative questions.
+  - JSON Merge Patch reuses the org schema shape adopters already work with, so there is no second patch format to learn.
+  - Provenance is recorded without committing PII to shared payloads, consistent with the "publicly available identifiers only" boundary in ADR-0023.
+- **Negative consequences**
+  - Supporting two grant flows is more surface than a single flow, and delegated PKCE flows require senders to store and rotate refresh tokens server-side.
+  - JWT revocation is not immediate; a compromised token remains valid until it expires, which pushes lifetimes short and adds key-rotation operational work.
+  - JSON Merge Patch cannot target individual array elements and cannot distinguish "set this field to null" from "clear this field," so any future element-level array update would need a different mechanism.
+  - A status-driven write response is more complex for the simple case (a deployment that always applies immediately still has to return and handle a status).
+  - Keeping inline `org_ids` and scope strings in agreement, and keeping provenance free of PII, both add receiver-side enforcement logic that a naive implementation could get wrong.
+
+### Questions
+
+- **[How do clients authenticate?](#how-do-clients-authenticate)** Which OAuth grant flows does the contract require?
+- **[How are tokens validated?](#how-are-tokens-validated)** Are access tokens self-contained JWTs or opaque tokens resolved by introspection?
+- **[How are permissions expressed?](#how-are-permissions-expressed)** What does the scope vocabulary look like, and do broader scopes subsume narrower ones?
+- **[How do clients find and view profiles?](#how-do-clients-find-and-view-profiles)** Generic resource endpoints, a personalized listing, or both?
+- **[How do clients update a profile?](#how-do-clients-update-a-profile)** `PUT`, `PATCH`, or both?
+- **[What is the partial-update format?](#what-is-the-partial-update-format)** JSON Merge Patch, JSON Patch, field masks, or a combination?
+- **[How do clients view changes to a profile?](#how-do-clients-view-changes-to-a-profile)** Change log, version list, or point-in-time query?
+- **[Are changes applied immediately or queued?](#are-changes-applied-immediately-or-queued)** Synchronous, asynchronous, or a status-driven response that supports both?
+- **[How is change provenance recorded?](#how-is-change-provenance-recorded)** How much actor identity is recorded, and how is PII kept out of shared payloads?
+
+### Decision drivers
+
+- **Reuse of existing identity infrastructure:** Can adopters authenticate with the OAuth/JWT stack they already run?
+- **Stateless verification:** Can a receiver authorize a request without calling back to the issuer on the hot path?
+- **Operation-to-permission clarity:** Is it unambiguous which scope a given operation requires?
+- **Transport independence:** Does the contract avoid assuming pull, push, or any single trigger?
+- **Optionality:** Can a deployment choose its own storage, approval workflow, and history depth and still conform?
+- **Schema reuse:** Do update payloads reuse the org schema rather than introduce a parallel format?
+- **PII containment:** Does provenance stay out of payloads that are shared widely?
+- **Pattern alignment:** Does it follow existing CommonGrants conventions (identifier-set keying, pagination, route status tags)?
+
+### Options considered
+
+- **Grant flows:** client credentials only, authorization code + PKCE only, both.
+- **Token format:** self-contained JWT, opaque token + introspection, either.
+- **Scope semantics:** hierarchical subsumption, flat exact-match.
+- **Find and view:** generic endpoints only, personalized endpoints only, both.
+- **Update verb:** `PUT` only, `PATCH` only, both.
+- **Partial-update format:** JSON Merge Patch (RFC 7396), JSON Patch (RFC 6902), field masks, combination.
+- **History:** change log (field-level deltas), version list (full snapshots), point-in-time query.
+- **Acceptance:** synchronous only, asynchronous only, status-driven response.
+- **Provenance:** record actor identity directly, source plus opaque actor reference, two-tier (opaque in shared payloads, full detail access-controlled).
+
+### Endpoint summary
+
+The feature uses REST endpoints under `/common-grants/orgs`, consistent with the rest of the protocol. `{orgId}` is an `IdentifierCollection` per ADR-0023, so a caller can address an organization by any of its registered identifiers. Clients signal the protocol version they expect via a request header; servers honor it and respond with the corresponding shape, and a single deployment may satisfy multiple protocol versions on the same routes.
+
+**Required endpoints**
+
+| Verb  | Path       | Purpose                             | Scope                              |
+| ----- | ---------- | ----------------------------------- | ---------------------------------- |
+| GET   | `/`        | List accessible orgs (paginated)    | `org:list`                         |
+| GET   | `/{orgId}` | Read a single org by identifier set | `org:read` or `org:read:{orgId}`   |
+| PUT   | `/{orgId}` | Full replace, idempotent            | `org:write` or `org:write:{orgId}` |
+| PATCH | `/{orgId}` | Partial update (JSON Merge Patch)   | `org:write` or `org:write:{orgId}` |
+
+**Optional endpoints**
+
+| Verb | Path               | Purpose                           | Scope              |
+| ---- | ------------------ | --------------------------------- | ------------------ |
+| GET  | `/me/orgs`         | Orgs the current token can act on | `user:orgs`        |
+| GET  | `/{orgId}/history` | Step through historical versions  | `org.history:read` |
+
+### Scope vocabulary
+
+| Scope               | Description                                                                 |
+| ------------------- | --------------------------------------------------------------------------- |
+| `org:list`          | Enumerate accessible organizations                                          |
+| `org:read`          | Read any organization the principal has access to                           |
+| `org:read:{orgId}`  | Read one specific organization                                              |
+| `org:write`         | Write to any organization the principal has access to                       |
+| `org:write:{orgId}` | Write to one specific organization                                          |
+| `org:sync`          | Full sync cycle (read + write) across accessible orgs                       |
+| `org:sync:{orgId}`  | Full sync cycle scoped to one organization                                  |
+| `org.history:read`  | Read history and snapshot endpoints                                         |
+| `user:profile`      | Read the authenticated user's identity (delegated flows only)               |
+| `user:orgs`         | List organizations the authenticated user belongs to (delegated flows only) |
+
+### Required JWT claims
+
+<details>
+<summary>Example token payload and claim requirements</summary>
+
+```json
+{
+  "iss": "https://auth.example.com",
+  "sub": "svc_abc123",
+  "aud": "https://sync.example.com",
+  "iat": 1716000000,
+  "exp": 1716003600,
+  "scope": "org:read org:write:org_123",
+  "grant_type": "client_credentials",
+  "org_ids": ["org_123"]
+}
+```
+
+| Claim        | Required | Description                                                                                                                                           |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `iss`        | MUST     | Issuer. Receivers MUST verify it matches a trusted authorization server.                                                                              |
+| `sub`        | MUST     | Subject. The service account or user ID the token was issued to.                                                                                      |
+| `aud`        | MUST     | Audience. The receiving sync API's base URL. Receivers MUST reject tokens whose `aud` does not match theirs.                                          |
+| `iat`        | MUST     | Issued-at timestamp (Unix epoch).                                                                                                                     |
+| `exp`        | MUST     | Expiration timestamp. Receivers MUST reject expired tokens.                                                                                           |
+| `scope`      | MUST     | Space-separated list of granted scopes.                                                                                                               |
+| `grant_type` | SHOULD   | The grant flow used (`client_credentials` or `authorization_code`), so receivers can vary trust rules by flow.                                        |
+| `org_ids`    | SHOULD   | Org IDs this token may act on. Absent or empty means "all accessible orgs," which receivers MUST treat conservatively against their own access rules. |
+
+</details>
+
+### Inbound trust decision
+
+When a receiving system accepts an inbound write, it MUST apply these checks in order; a failure at any step rejects the request.
+
+1. Validate the JWT signature against the issuer's public key (via JWKS). Reject if invalid or unresolvable.
+2. Verify `iss` matches a known, trusted authorization server.
+3. Verify `aud` matches the receiver's own base URL, which prevents a token issued for one system from being replayed against another.
+4. Check `exp`. Reject expired tokens, allowing at most 60 seconds of clock skew.
+5. Verify `scope` covers the requested operation. A write needs a write-capable scope; a read needs a read-capable scope.
+6. Verify `org_ids` (if present) includes the targeted org. A token scoped to `org:write:org_123` MUST be rejected for a write against `org_456` even though the scope string looks write-capable.
+7. Apply local access policy. A cryptographically valid token does not override the receiver's own rules; if the principal in `sub` cannot modify the target org in the receiver's system, reject with `403 Forbidden`.
+
+Steps 1 through 4 establish that the token is authentic and unexpired. Steps 5 and 6 establish that it is authorized for this specific operation and organization. Step 7 keeps token validity and local authorization independent: a valid token does not by itself mean the sender is trusted to modify the receiver's data.
+
+### Operations with example payloads
+
+The org record shape follows [`OrganizationBase`](https://commongrants.org/protocol/models/organization), with the identifier set keyed per [ADR-0023](https://commongrants.org/governance/adr/0023-org-ids/). Server-assigned metadata (`datasetVersion`) appears on reads but is not supplied on writes. Field-level schemas are deferred to the follow-up spec, so these payloads are illustrative.
+
+<details>
+<summary>List accessible orgs: `GET /orgs/`</summary>
+
+Required scope: `org:list`. Pagination per [ADR-0011](https://commongrants.org/governance/adr/0011-pagination/); each item is a summary carrying its identifier set and dataset version.
+
+Request:
+
+```
+GET /common-grants/orgs?page=1&pageSize=50
+Authorization: Bearer <jwt>
+```
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+      "name": "Example Nonprofit",
+      "datasetVersion": 7,
+      "identifiers": {
+        "us:ein": { "id": "123456789" },
+        "us:uei": { "id": "AB0123456789" }
+      }
+    }
+  ],
+  "pagination": { "page": 1, "pageSize": 50, "totalItems": 1 }
+}
+```
+
+</details>
+
+<details>
+<summary>Read one org: `GET /orgs/{orgId}`</summary>
+
+Required scope: `org:read` or `org:read:{orgId}`. `{orgId}` is an identifier set, so any registered identifier resolves the record. The response is the org record at the latest version (or at a requested version; the optional `?at=` read pattern is covered under [history](#how-do-clients-view-changes-to-a-profile)).
+
+Request:
+
+```
+GET /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890
+Authorization: Bearer <jwt>
+```
+
+Response:
+
+```json
+{
+  "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+  "name": "Example Nonprofit",
+  "identifiers": {
+    "systemId": {
+      "registry": {
+        "code": "grants.gov:org",
+        "url": "https://commongrants.org/registries/grants-gov-org",
+        "scope": "grants.gov",
+        "kind": "platform"
+      },
+      "id": "01912a8b-7c3d-7890-abcd-ef1234567890"
+    },
+    "us:ein": {
+      "registry": {
+        "code": "us:ein",
+        "url": "https://commongrants.org/registries/us-ein",
+        "scope": "US",
+        "kind": "government"
+      },
+      "id": "123456789"
+    }
+  },
+  "orgType": {
+    "term": "Hospital",
+    "class": "Organization types",
+    "code": "EO000000"
+  },
+  "addresses": {
+    "primary": {
+      "street1": "456 Main St",
+      "city": "Anytown",
+      "stateOrProvince": "CA",
+      "country": "US",
+      "postalCode": "12345"
+    }
+  },
+  "phones": {
+    "primary": {
+      "countryCode": "+1",
+      "number": "444-456-1230",
+      "isMobile": true
+    }
+  },
+  "emails": { "primary": "info@example.com" },
+  "mission": "To provide support and resources to the community.",
+  "yearFounded": "2024",
+  "socials": { "website": "https://www.example.com" },
+  "datasetVersion": 7
+}
+```
+
+</details>
+
+<details>
+<summary>Replace an org: `PUT /orgs/{orgId}`</summary>
+
+Required scope: `org:write` or `org:write:{orgId}`. The body is the full org record (same shape as the read response, without server-assigned `datasetVersion`). The updating principal and source system are derived from the token and request context, not supplied as trusted body fields (see [provenance](#how-is-change-provenance-recorded)).
+
+Request:
+
+```
+PUT /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890
+Authorization: Bearer <jwt>
+Content-Type: application/json
+```
+
+```json
+{
+  "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+  "name": "Example Nonprofit",
+  "identifiers": {
+    "us:ein": {
+      "registry": {
+        "code": "us:ein",
+        "url": "https://commongrants.org/registries/us-ein",
+        "scope": "US",
+        "kind": "government"
+      },
+      "id": "123456789"
+    }
+  },
+  "orgType": {
+    "term": "Hospital",
+    "class": "Organization types",
+    "code": "EO000000"
+  },
+  "addresses": {
+    "primary": {
+      "street1": "456 Main St",
+      "city": "Anytown",
+      "stateOrProvince": "CA",
+      "country": "US",
+      "postalCode": "12345"
+    }
+  },
+  "emails": { "primary": "info@example.com" },
+  "mission": "To provide support and resources to the community.",
+  "yearFounded": "2024",
+  "socials": { "website": "https://www.example.com" }
+}
+```
+
+Response:
+
+```json
+{
+  "status": "accepted",
+  "datasetVersion": 8
+}
+```
+
+A write returns one of `accepted`, `denied`, `pending`, or `superseded` (see [acceptance semantics](#are-changes-applied-immediately-or-queued)).
+
+</details>
+
+<details>
+<summary>Update an org: `PATCH /orgs/{orgId}`</summary>
+
+Required scope: `org:write` or `org:write:{orgId}`. The body is a JSON Merge Patch (RFC 7396): include a field to set it, omit it to leave it unchanged, send `null` to clear it.
+
+Request:
+
+```
+PATCH /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890
+Authorization: Bearer <jwt>
+Content-Type: application/merge-patch+json
+```
+
+```json
+{
+  "name": "Example Nonprofit (Renamed)",
+  "mission": "To expand access to community health resources.",
+  "socials": { "website": null }
+}
+```
+
+Response:
+
+```json
+{
+  "status": "accepted",
+  "datasetVersion": 9
+}
+```
+
+</details>
+
+<details>
+<summary>View change history: `GET /orgs/{orgId}/history`</summary>
+
+Required scope: `org.history:read`. Optional endpoint; returns a version list of full snapshots, newest first. Each entry records the source system but not the human-identifying principal (see [provenance](#how-is-change-provenance-recorded)). Exact schema deferred to the follow-up spec.
+
+Request:
+
+```
+GET /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890/history
+Authorization: Bearer <jwt>
+```
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "datasetVersion": 9,
+      "modifiedAt": "2026-06-20T14:30:00Z",
+      "source": "grants.gov",
+      "snapshot": {
+        "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+        "name": "Example Nonprofit (Renamed)",
+        "mission": "To expand access to community health resources."
+      }
+    },
+    {
+      "datasetVersion": 7,
+      "modifiedAt": "2026-03-15T09:00:00Z",
+      "source": "candid",
+      "snapshot": {
+        "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+        "name": "Example Nonprofit",
+        "mission": "To provide support and resources to the community."
+      }
+    }
+  ],
+  "pagination": { "page": 1, "pageSize": 50, "totalItems": 2 }
+}
+```
+
+</details>
+
+## Evaluation
+
+### How do clients authenticate?
+
+_Which OAuth grant flows does the contract require?_
+
+#### Side-by-side comparison
+
+- ✅ Criterion met
+- ❌ Criterion not met
+- 🟡 Partially met or unsure
+
+| Criteria                                       | Both (rec.) | Client credentials only | Auth code + PKCE only |
+| ---------------------------------------------- | :---------: | :---------------------: | :-------------------: |
+| Supports unattended machine-to-machine sync    |     ✅      |           ✅            |          ❌           |
+| Supports human-consented delegated access      |     ✅      |           ❌            |          ✅           |
+| Reuses standard OAuth 2.0 infrastructure       |     ✅      |           ✅            |          ✅           |
+| Minimal number of flows to implement           |     🟡      |           ✅            |          ✅           |
+| Fits a platform syncing on behalf of many orgs |     ✅      |           ❌            |          ✅           |
+
+#### Option 1: Support both flows (recommended)
+
+:::note[Bottom line]
+Supporting both flows is best if:
+
+- we want to cover both unattended service sync and human-consented delegated access,
+- but we are willing to implement and document two flows instead of one.
+  :::
+
+Use Client Credentials when a backend service syncs with no human in the loop: the service is the principal, authenticates with its own credentials, and re-runs the flow when its token expires (no refresh token needed). Use Authorization Code with PKCE when an org administrator must consent, or when a third-party platform syncs on behalf of an org whose admin has consented. PKCE binds the authorization code to the client that requested it, so an intercepted code is useless to anyone else, and it is required for public clients (browser, CLI, mobile).
+
+In delegated flows the token represents a one-time human consent that cannot be recreated programmatically, so a refresh token is the durable record of that consent and lets a platform maintain sync across many orgs without re-prompting. Refresh tokens MUST be stored server-side by the sender and MUST NOT reach browser or client-side environments.
+
+- **Pros**
+  - Covers both the M2M and human-in-the-loop cases without a custom scheme.
+  - Lets a platform sync many orgs under delegated consent while a service syncs its own data directly.
+  - Both flows are standard OAuth 2.0, so existing identity providers and SDKs work.
+- **Cons**
+  - Two flows is more to implement, test, and document than one.
+  - Delegated flows add refresh-token storage and rotation responsibilities for senders.
+
+#### Option 2: Client credentials only
+
+:::note[Bottom line]
+Client credentials only is best if we expect sync to be exclusively service-to-service, but it cannot represent a human's consent to act on a specific org's behalf, which rules out the platform-on-behalf-of-org case.
+:::
+
+- **Pros**
+  - Single, simple flow with no consent screens or refresh tokens.
+- **Cons**
+  - No way to capture an org administrator's consent.
+  - A platform syncing on behalf of many orgs would have to model each as a service credential, losing the delegated-consent trail.
+
+#### Option 3: Authorization code + PKCE only
+
+:::note[Bottom line]
+PKCE only is best if every sync is initiated under human consent, but it forces an unnecessary consent dance onto purely automated service sync.
+:::
+
+- **Pros**
+  - Strong protection for human-initiated flows.
+- **Cons**
+  - Awkward for unattended sync, where there is no human to consent and no browser to redirect.
+
+### How are tokens validated?
+
+_Are access tokens self-contained JWTs or opaque tokens resolved by introspection?_
+
+#### Side-by-side comparison
+
+| Criteria                                          | JWT (rec.) | Opaque + introspection |
+| ------------------------------------------------- | :--------: | :--------------------: |
+| Stateless validation, no per-request callback     |     ✅     |           ❌           |
+| Reuses standard SDK and library ecosystem         |     ✅     |           🟡           |
+| Immediate revocation                              |     ❌     |           ✅           |
+| Small, opaque token string                        |     ❌     |           ✅           |
+| Claims (scope, org_ids) readable without a lookup |     ✅     |           ❌           |
+
+#### Option 1: Self-contained JWT (recommended)
+
+:::note[Bottom line]
+A JWT is best if:
+
+- we want receivers to validate and authorize a request without calling back to the issuer on every request,
+- but we are willing to accept that revocation is not immediate and to keep token lifetimes short.
+  :::
+
+Access tokens are JWTs (RFC 7519). The receiver validates the signature against the issuer's JWKS and reads `scope` and `org_ids` directly from the token to make its authorization decision, with no introspection round trip. Recommended lifetimes keep the revocation window small: 15 to 60 minutes for access tokens, refresh tokens up to a year rotated on each use, and authorization codes 60 seconds and single-use.
+
+- **Pros**
+  - Stateless: a receiver authorizes from the token alone.
+  - Broad library support across languages and frameworks.
+  - Scopes and org binding are visible in the token for the trust-decision steps.
+- **Cons**
+  - A token stays valid until it expires, so revocation is not immediate; this is mitigated by short lifetimes.
+  - Receivers must resolve and cache issuer keys and handle rotation.
+
+#### Option 2: Opaque token plus introspection
+
+:::note[Bottom line]
+Opaque tokens are best if immediate revocation is a hard requirement, but they put a network dependency on the authorization server in the path of every sync request.
+:::
+
+- **Pros**
+  - Revocation is immediate: the introspection endpoint can refuse a revoked token at once.
+  - Token strings carry no readable claims.
+- **Cons**
+  - Every request needs an introspection call (RFC 7662) unless cached, adding latency and a dependency on the issuer's availability.
+  - Less turn-key against the existing JWT-centric SDK ecosystem.
+
+### How are permissions expressed?
+
+_What does the scope vocabulary look like, and do broader scopes subsume narrower ones?_
+
+This decision settles the scope vocabulary (above) and one contested point: whether a broader scope covers its narrower forms when a receiver enforces, and whether the SDK collapses redundant scopes before sending.
+
+#### Side-by-side comparison
+
+| Criteria                                                | Hierarchical (rec.) | Flat exact-match |
+| ------------------------------------------------------- | :-----------------: | :--------------: |
+| `org:read` alone authorizes a read of an accessible org |         ✅          |        ❌        |
+| Avoids requiring both broad and narrow scope on a token |         ✅          |        ❌        |
+| Per-org binding still expressible (`org:write:{orgId}`) |         ✅          |        ✅        |
+| Simplest possible matching rule                         |         🟡          |        ✅        |
+| Predictable interaction with the `org_ids` claim        |         ✅          |        ✅        |
+
+#### Option 1: Hierarchical subsumption (recommended)
+
+:::note[Bottom line]
+Hierarchical scopes are best if:
+
+- we want a token carrying `org:read` to authorize reads without also carrying `org:read:{orgId}` for each org,
+- but we are willing to specify the subsumption rule clearly so it is not confused with client-side scope collapsing.
+  :::
+
+A broader scope covers its narrower forms when a receiver checks a request. `org:read` covers `org:read:{orgId}` for any accessible org; `org:sync` covers `org:read` and `org:write` for its accessible orgs. Implementors SHOULD NOT require both the broad and narrow scope on the same token.
+
+This is a receiver-side enforcement rule and is separate from how the SDK assembles a request. The SDK does not collapse or dedupe scopes client-side: if a caller requests both `org:read` and `org:read:{orgId}`, both strings are sent verbatim. Keeping these two behaviors named distinctly avoids the apparent contradiction between "broader subsumes narrower" (enforcement) and "scopes are additive, no normalization" (client assembly).
+
+Per-organization authorization is expressed two ways that a receiver checks together: the optional `:{orgId}` suffix on the scope string, and the `org_ids` claim. A request must satisfy both where present.
+
+:::caution[Open for review]
+The exact wording of the subsumption rule and its relationship to the `org_ids` claim should be confirmed during the follow-up spec, since the source draft states both "a broader scope subsumes narrower ones" and "scopes are always additive and there will not be normalization." The reconciliation above (subsumption on the receiver, no collapsing in the SDK) is the proposed reading.
+:::
+
+- **Pros**
+  - A principal with broad access carries one scope, not one per org.
+  - Per-org binding remains available when a token should be narrow.
+- **Cons**
+  - The receiver's matching logic is slightly more than a string-equality check.
+  - The subsumption rule has to be documented carefully to avoid being read as client-side normalization.
+
+#### Option 2: Flat exact-match
+
+:::note[Bottom line]
+Flat exact-match is best if we want the simplest possible rule, but it forces a broadly authorized token to enumerate a scope per org, which does not scale for a platform acting on many orgs.
+:::
+
+- **Pros**
+  - Matching is a literal string-set membership check.
+- **Cons**
+  - A token that can read every accessible org would need a separate `org:read:{orgId}` for each, which is unwieldy at platform scale.
+
+### How do clients find and view profiles?
+
+_Generic resource endpoints, a personalized listing, or both?_
+
+#### Side-by-side comparison
+
+| Criteria                                                  | Both (rec.) | Generic only | Personalized only |
+| --------------------------------------------------------- | :---------: | :----------: | :---------------: |
+| Reusable across frontends, admins, and cross-org tooling  |     ✅      |      ✅      |        ❌         |
+| Cacheable resource responses                              |     ✅      |      ✅      |        ❌         |
+| Answers "which orgs can this token act on"                |     ✅      |      🟡      |        ✅         |
+| Works when the principal is a service account, not a user |     ✅      |      ✅      |        🟡         |
+| Smallest endpoint surface                                 |     🟡      |      ✅      |        ✅         |
+
+#### Option 1: Both generic and personalized (recommended)
+
+:::note[Bottom line]
+Offering both is best if:
+
+- we want reusable, cacheable resource endpoints and a convenient way to ask "which orgs does this token represent,"
+- but we are willing to maintain one extra endpoint.
+  :::
+
+Generic endpoints (`GET /orgs`, `GET /orgs/{orgId}`) treat an organization as a resource addressed by its identifier set, with access enforced through the token. They stay reusable across a frontend, an admin tool, and cross-org tooling, and their responses can be cached.
+
+Layer a personalized listing on top: `GET /me/orgs` returns the organizations the current token can act on. This question is genuinely principal-relative; a generic filter cannot express it without the caller already knowing its own principal ID, which the token does not hand back as a query parameter.
+
+Use `/me` rather than `/user`, `/account`, or `/token` for the prefix. The principal behind a token may be a human (delegated PKCE flow) or a service account (client-credentials flow), and `/me` reads as "whoever this token represents" without asserting it is a user. This matches the widely used convention (Spotify and Microsoft Graph use `/me`; GitHub uses `/user`). The listing maps to the `user:orgs` scope in delegated flows; for a service principal, the equivalent listing of accessible orgs is available through `GET /orgs` under `org:list`.
+
+- **Pros**
+  - Generic endpoints keep the resource model reusable and cacheable.
+  - The personalized endpoint answers a question generic filters cannot.
+  - `/me` stays accurate whether the principal is a person or a service.
+- **Cons**
+  - One more endpoint to implement and document.
+  - Personalized responses are not cacheable, so they should stay a convenience layer rather than the primary access path.
+
+#### Option 2: Generic only
+
+:::note[Bottom line]
+Generic only is best if we want the smallest, most cacheable surface, but it leaves "which orgs can I act on" awkward to answer for a caller that does not already know its principal's org set.
+:::
+
+- **Pros**
+  - Minimal, reusable, cacheable.
+- **Cons**
+  - A newly authorized client cannot easily discover which orgs its token covers without an out-of-band hint.
+
+#### Option 3: Personalized only
+
+:::note[Bottom line]
+Personalized only is best if the API serves a single frontend, but it couples the API to that frontend, blocks caching, and breaks the admin and cross-org cases.
+:::
+
+- **Pros**
+  - Simple for a single logged-in frontend.
+- **Cons**
+  - Couples endpoints to one client and prevents reuse and caching.
+  - An admin acting across many orgs cannot pass a target org, since the endpoint only ever resolves to the caller's own principal.
+
+### How do clients update a profile?
+
+_`PUT`, `PATCH`, or both?_
+
+#### Side-by-side comparison
+
+| Criteria                                              | Both (rec.) | PUT only | PATCH only |
+| ----------------------------------------------------- | :---------: | :------: | :--------: |
+| Full idempotent replace                               |     ✅      |    ✅    |     🟡     |
+| Efficient partial update                              |     ✅      |    ❌    |     ✅     |
+| Idempotent operations                                 |     ✅      |    ✅    |     🟡     |
+| Smallest endpoint surface                             |     🟡      |    ✅    |     ✅     |
+| Avoids re-sending the full record to change one field |     ✅      |    ❌    |     ✅     |
+
+#### Option 1: Support both (recommended)
+
+:::note[Bottom line]
+Both is best if:
+
+- we want callers to replace a whole record when they hold the full state and to send a small diff when they hold one,
+- but we are willing to support two write verbs.
+  :::
+
+`PUT /{orgId}` does a full, idempotent replace, for callers that hold the complete record (a fresh full sync, a system of record publishing its canonical copy). `PATCH /{orgId}` does a partial update, for callers that only want to change a few fields. All write endpoints remain idempotent.
+
+- **Pros**
+  - Matches both real write shapes: full publish and small diff.
+  - A partial change does not require fetching and re-sending the full record.
+- **Cons**
+  - Two write paths to implement and keep consistent.
+
+#### Option 2: PUT only
+
+:::note[Bottom line]
+PUT only is best if every writer always holds the full record, but it forces a caller changing one field to send the entire profile, which is wasteful and races against concurrent edits.
+:::
+
+- **Pros**
+  - One write verb; replace semantics are simple to reason about.
+- **Cons**
+  - Changing one field means transmitting the whole record, and a stale full record can clobber concurrent changes.
+
+#### Option 3: PATCH only
+
+:::note[Bottom line]
+PATCH only is best if writes are always incremental, but a full replace then has to be expressed as a patch, which is unnatural for a system publishing its canonical copy.
+:::
+
+- **Pros**
+  - One verb, optimized for diffs.
+- **Cons**
+  - No clean idempotent full-replace; "set the record to exactly this" is harder to express.
+
+### What is the partial-update format?
+
+_JSON Merge Patch, JSON Patch, field masks, or a combination?_
+
+#### Side-by-side comparison
+
+| Criteria                                           | Merge Patch (rec.) | JSON Patch (`op`) | Field masks |
+| -------------------------------------------------- | :----------------: | :---------------: | :---------: |
+| Patch body has the same shape as the org schema    |         ✅         |        ❌         |     🟡      |
+| No separate operations format to learn             |         ✅         |        ❌         |     🟡      |
+| Distinguishes "clear field" from "leave unchanged" |         🟡         |        ✅         |     ✅      |
+| Element-level array operations                     |         ❌         |        ✅         |     ❌      |
+| Widely supported as a standard (RFC)               |         ✅         |        ✅         |     🟡      |
+
+#### Option 1: JSON Merge Patch, RFC 7396 (recommended)
+
+:::note[Bottom line]
+Merge Patch is best if:
+
+- we want the patch body to look like the org record adopters already work with, with no second format,
+- but we are willing to give up element-level array operations and accept that `null` means "clear."
+  :::
+
+The patch body mirrors the org schema: include a field to set it, omit it to leave it unchanged, send `null` to clear it. This is chosen over JSON Patch (RFC 6902) because the body has the same shape as the schema implementers already handle, whereas JSON Patch requires a separate operations array with JSON Pointer paths. Org sync does not need array-element operations, which is the main thing JSON Patch buys.
+
+```json
+{
+  "name": "Example Nonprofit (Renamed)",
+  "formerName": null
+}
+```
+
+- **Pros**
+  - Reuses the org schema shape; nothing new to learn.
+  - Compact for small diffs.
+  - Standard (RFC 7396) with `application/merge-patch+json`.
+- **Cons**
+  - Cannot target a single array element; an array field is replaced wholesale.
+  - `null` is overloaded as "clear," so "set this field to literal null" is not separately expressible.
+
+#### Option 2: JSON Patch, RFC 6902
+
+:::note[Bottom line]
+JSON Patch is best if we need element-level array operations and an explicit op log, but it adds a second format keyed off JSON Pointer paths that does not match the org schema shape.
+:::
+
+- **Pros**
+  - Explicit operations (`add`, `remove`, `replace`, `move`) including on array elements.
+  - Unambiguous about clearing versus setting null.
+- **Cons**
+  - A separate operations format with pointer paths, unlike the schema-shaped body adopters already use.
+  - More than org sync needs.
+
+#### Option 3: Field masks (Google style)
+
+:::note[Bottom line]
+Field masks are best if we want an explicit list of fields being changed alongside the values, but they add a parallel mask field and are less common in the REST/JSON ecosystem.
+:::
+
+- **Pros**
+  - An explicit `updateMask` cleanly separates "fields I am setting" from "fields I am leaving alone," including clearing.
+- **Cons**
+  - Adds a parallel mask field to keep in sync with the body.
+  - Less idiomatic for JSON REST APIs than Merge Patch.
+
+### How do clients view changes to a profile?
+
+_Change log, version list, or point-in-time query?_
+
+The history endpoint is optional, and a deployment MAY squash intermediate snapshots, so the contract does not require every intermediate version to be retrievable. That squash allowance is a key driver below.
+
+#### Side-by-side comparison
+
+| Criteria                                             | Version list (rec.) | Change log | Point-in-time `?at=` |
+| ---------------------------------------------------- | :-----------------: | :--------: | :------------------: |
+| Direct lookup of state at a known version            |         ✅          |     ❌     |          ✅          |
+| Tolerates snapshot squashing                         |         ✅          |     ❌     |          🟡          |
+| Composes with the existing dataset-version concept   |         ✅          |     🟡     |          ✅          |
+| Fine-grained "who changed which field"               |         🟡          |     ✅     |          ❌          |
+| Cheapest server-side storage                         |         🟡          |     ✅     |          ❌          |
+| Browsable history without knowing a version up front |         ✅          |     ✅     |          ❌          |
+
+#### Option 1: Version list of full snapshots (recommended)
+
+:::note[Bottom line]
+A version list is best if:
+
+- we want direct retrieval of a record at a known version and a history that tolerates squashing,
+- but we are willing to accept higher storage cost than a change log and to diff adjacent snapshots for per-field detail.
+  :::
+
+`GET /orgs/{orgId}/history` returns a list of versions, each a complete snapshot with version metadata, paired with version-addressed reads. Fetching a record at a known version is a direct lookup with no event replay, diffing two versions is "fetch both and compare," and dropping intermediate versions (the squash the contract allows) still leaves a navigable timeline. This composes with the dataset-version number the spec already returns on reads and writes.
+
+Offer a point-in-time `?at={timestamp}` parameter on the main read as a complementary pattern, since it composes naturally with the dataset-version concept and lets a consumer ask for "the record as of then" without learning a separate history shape. Examples in the wild for the version-list shape include Google Drive revisions, Confluence versions, and MediaWiki history.
+
+- **Pros**
+  - Direct version lookup, no replay.
+  - Straightforward diffing.
+  - Tolerates squashing, which the contract explicitly permits.
+  - Self-contained snapshots are resilient to schema changes over time.
+- **Cons**
+  - Higher storage cost than a change log, especially for large records that change often.
+  - Per-field "who changed what" requires comparing adjacent snapshots.
+  - Each write produces a full record rather than a delta.
+
+#### Option 2: Change log of field-level deltas
+
+:::note[Bottom line]
+A change log is best if the priority is cheap server storage and fine-grained activity tracking, but it pushes state reconstruction onto consumers and does not squash well.
+:::
+
+- **Pros**
+  - Cheapest to store: append-only events sized by activity, not record size.
+  - Easy to filter by field, actor, or time, and a natural fit for activity feeds.
+- **Cons**
+  - Reconstructing state at a point in time means replaying events from the start.
+  - Diffing two arbitrary points means folding events together.
+  - Tightly coupled to schema shape, and squashing loses individual events.
+
+#### Option 3: Point-in-time query only
+
+:::note[Bottom line]
+A point-in-time query alone is best if we want the smallest API surface and cheap consumer access to historical state, but consumers cannot browse history without already knowing a version or timestamp, and the server pays the most.
+:::
+
+- **Pros**
+  - No new endpoint; reuses the main read with an added parameter.
+  - One request returns full state at the requested moment.
+- **Cons**
+  - No way to list versions or actors, so history is not discoverable in a UI.
+  - Highest server cost, since arbitrary point-in-time answers need fine-grained snapshots or on-demand replay.
+
+### Are changes applied immediately or queued?
+
+_Synchronous, asynchronous, or a status-driven response that supports both?_
+
+#### Side-by-side comparison
+
+| Criteria                                           | Status-driven (rec.) | Synchronous only | Asynchronous only |
+| -------------------------------------------------- | :------------------: | :--------------: | :---------------: |
+| Works for deployments that apply immediately       |          ✅          |        ✅        |        ❌         |
+| Works for deployments that route through approval  |          ✅          |        ❌        |        ✅         |
+| One contract regardless of a deployment's workflow |          ✅          |        ❌        |        ❌         |
+| Simple for the always-apply case                   |          🟡          |        ✅        |        ❌         |
+| Caller can tell whether a change took effect       |          ✅          |        ✅        |        ✅         |
+
+#### Option 1: Status-driven response (recommended)
+
+:::note[Bottom line]
+A status-driven response is best if:
+
+- we want one write contract that serves both immediate-apply and approval-gated deployments,
+- but we are willing to make even the simple always-apply case return and handle a status.
+  :::
+
+A write returns a status: `accepted` (applied), `denied` (rejected), `pending` (queued, for example awaiting approval), or `superseded` (a newer change won). When the status is `denied`, the response includes a denial reason. When it is `pending`, it includes either an estimated resolution time or an indication that it is awaiting approval. This lets a receiver that applies immediately return `accepted`, and a receiver that gates changes return `pending`, under the same contract, so a sender does not need to know the receiver's workflow in advance. The mapping of each status to an HTTP code is deferred to the follow-up spec.
+
+- **Pros**
+  - One contract spans both immediate and queued deployments.
+  - The sender always learns the disposition of its write.
+  - Adding an approval workflow later does not change the contract.
+- **Cons**
+  - The always-apply case still carries status machinery it does not strictly need.
+  - The status enum and its fields need careful definition so receivers report consistently.
+
+#### Option 2: Synchronous only
+
+:::note[Bottom line]
+Synchronous only is best if no deployment ever needs review, but a deployment that wants to approve changes then has no conformant way to say "received, not yet applied."
+:::
+
+- **Pros**
+  - Simplest model: a 2xx means the change is live.
+- **Cons**
+  - No conformant representation of a queued or pending change, so approval-gated receivers cannot participate.
+
+#### Option 3: Asynchronous only
+
+:::note[Bottom line]
+Asynchronous only is best if every change is reviewed, but it forces an always-apply receiver to model a pending state it never uses.
+:::
+
+- **Pros**
+  - Natural for review-heavy workflows.
+- **Cons**
+  - Overhead for receivers that apply immediately, which must still expose a pending state and a way to learn the final outcome.
+
+### How is change provenance recorded?
+
+_How much actor identity is recorded, and how is PII kept out of shared payloads?_
+
+#### Side-by-side comparison
+
+| Criteria                                             | Two-tier (rec.) | Direct actor identity | Source + opaque ref |
+| ---------------------------------------------------- | :-------------: | :-------------------: | :-----------------: |
+| Records who made a change for debugging and audit    |       ✅        |          ✅           |         🟡          |
+| Keeps human PII out of shared profile and history    |       ✅        |          ❌           |         ✅          |
+| Provenance cannot be spoofed by the request body     |       ✅        |          🟡           |         ✅          |
+| Authorized parties can resolve the actor when needed |       ✅        |          ✅           |         ❌          |
+| Simple to implement                                  |       🟡        |          ✅           |         ✅          |
+
+#### Option 1: Two-tier provenance (recommended)
+
+:::note[Bottom line]
+Two-tier provenance is best if:
+
+- we want a recorded, tamper-resistant trail of who changed what without committing PII to widely shared payloads,
+- but we are willing to keep actor resolution behind the receiver's own access control.
+  :::
+
+Derive the updating principal from the validated token, never from a trusted body field; the source draft is explicit that the updating entity "must be verified from the auth process" and cannot be manually passed in. Record provenance as the source system plus an opaque principal reference (for example the `sub` claim or a system-assigned actor ID) plus a timestamp, and keep human-identifying PII (names, emails) out of the shared profile and history payloads. A deployment that needs to resolve an opaque reference to a person does so through its own access-controlled mechanism rather than by embedding the email in the record. The source system SHOULD also carry contact information for debugging, recorded as an organizational or system contact rather than a personal one where possible.
+
+This mirrors the caution in ADR-0023, where `verifiedBy` is documented as a system or process reference with an explicit warning to avoid PII such as a human name or email, and where the identifier collection is scoped to publicly available identifiers only.
+
+- **Pros**
+  - A real audit trail without leaking PII into shared data.
+  - Provenance is anchored to the token, so a sender cannot forge the actor.
+  - Authorized parties can still resolve the actor through a controlled path.
+- **Cons**
+  - Receivers need a way to resolve an opaque reference to a person, which is extra mechanism.
+  - "Opaque enough to be safe but useful enough to debug" takes care to define.
+
+#### Option 2: Record actor identity directly
+
+:::note[Bottom line]
+Recording the actor's email or user ID directly is best if simplicity is the only goal, but it places PII into profile and history payloads that may be shared widely.
+:::
+
+- **Pros**
+  - Simplest: store the email or user ID on each change or version.
+- **Cons**
+  - Puts PII into payloads that flow to other systems and into history.
+  - Conflicts with the publicly-available-data boundary the protocol sets elsewhere.
+
+#### Option 3: Source plus opaque reference, no resolution path
+
+:::note[Bottom line]
+Source plus an opaque reference with no resolution path is best if we never need to identify the actor, but that makes some debugging and audit questions unanswerable.
+:::
+
+- **Pros**
+  - No PII in payloads, and simple to populate.
+- **Cons**
+  - With no controlled way to resolve the reference, "who actually made this change" cannot be answered even by an authorized party.
+
+## Next steps
+
+This ADR fixes the structural decisions. The follow-up spec finalizes the field-level request and response shapes called out under [Deferred to a follow-up spec](#deferred-to-a-follow-up-spec): the `PUT` and `PATCH` bodies, the write response envelope and its HTTP status mapping, the history response schema and `?at=` format, and the concrete header names for version negotiation and auth. The two points still flagged for review are the precise scope subsumption wording against the `org_ids` claim, and the history response shape.

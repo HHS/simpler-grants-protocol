@@ -30,7 +30,7 @@ export class Paths {
   /** Absolute path to the repo root (parent of the website directory) */
   static readonly REPO_ROOT = path.resolve(Paths.WEBSITE_ROOT, "..");
 
-  // Build output directories
+  // Build output directories, using the absolute path
   static readonly CACHE_DIR = path.join(Paths.WEBSITE_ROOT, "cache");
   static readonly PUBLIC_DIR = path.join(Paths.WEBSITE_ROOT, "public");
   static readonly SCHEMAS_DIR = path.join(Paths.PUBLIC_DIR, "schemas", "yaml");
@@ -44,6 +44,11 @@ export class Paths {
   /** Extension schema path prefix relative to repo root (for SchemaFormatTabs / SchemaLoader) */
   static readonly EXTENSION_SCHEMAS_PATH_PREFIX = path
     .relative(Paths.REPO_ROOT, Paths.EXTENSION_SCHEMAS_DIR)
+    .split(path.sep)
+    .join("/");
+  /** Public directory relative to repo root ("website/public") for trimming schema URL prefixes */
+  static readonly PUBLIC_PATH_PREFIX = path
+    .relative(Paths.REPO_ROOT, Paths.PUBLIC_DIR)
     .split(path.sep)
     .join("/");
 

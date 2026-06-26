@@ -51,7 +51,9 @@
     "TCCUs",
     "widal001",
     "categoricals",
-    "withastro"
+    "withastro",
+    "PKCE",
+    "frontends"
   ],
   "ignoreWords": [
     "opblock",
