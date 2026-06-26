@@ -17,7 +17,7 @@ from common_grants_sdk.extensions.filters import (
     validate_routes,
 )
 from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
-from common_grants_sdk.extensions.types import FilterError
+from common_grants_sdk.extensions.types import ClassifyResult, FilterError
 from common_grants_sdk.schemas.pydantic.filters.opportunity import OppFilters
 
 # ---------------------------------------------------------------------------
@@ -87,9 +87,12 @@ def test_f_helper_wire_values(helper, args, operator, value):
 def test_classify_default_snake_key_lands_in_named_field():
     """Default snake_case key (e.g. "status") lands in a named OppFilters field, not customFilters."""
     consumer_filters = {"status": f.in_(["open"])}
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
+    assert isinstance(classified, ClassifyResult)
+    assert classified.errors == []
+    result = classified.result
     assert isinstance(result, OppFilters)
     assert result.status is not None
     assert result.custom_filters is None
@@ -98,9 +101,11 @@ def test_classify_default_snake_key_lands_in_named_field():
 def test_classify_default_camel_alias_lands_in_named_field():
     """THE LANDMINE: camelCase alias "closeDateRange" must land in named field, NOT customFilters."""
     consumer_filters = {"closeDateRange": f.between("2026-01-01", "2026-12-31")}
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
+    assert classified.errors == []
+    result = classified.result
     assert isinstance(result, OppFilters)
     # The camelCase alias must normalize to the snake_case field
     assert result.close_date_range is not None
@@ -112,9 +117,11 @@ def test_classify_default_camel_alias_lands_in_named_field():
 def test_classify_registered_custom_filter_lands_in_custom_filters():
     """A registered custom filter (e.g. "agency") lands in OppFilters.custom_filters."""
     consumer_filters = {"agency": f.in_(["NSF", "NIH"])}
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
+    assert classified.errors == []
+    result = classified.result
     assert isinstance(result, OppFilters)
     assert result.custom_filters is not None
     assert "agency" in result.custom_filters
@@ -123,9 +130,11 @@ def test_classify_registered_custom_filter_lands_in_custom_filters():
 def test_classify_adhoc_unregistered_filter_lands_in_custom_filters():
     """An unregistered ad-hoc key (e.g. "legacyTag") passes through to customFilters."""
     consumer_filters = {"legacyTag": f.eq("priority")}
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
+    assert classified.errors == []
+    result = classified.result
     assert isinstance(result, OppFilters)
     assert result.custom_filters is not None
     assert "legacyTag" in result.custom_filters
@@ -134,9 +143,11 @@ def test_classify_adhoc_unregistered_filter_lands_in_custom_filters():
 def test_classify_escape_hatch_key_lands_in_custom_filters():
     """gov.<system>@<filter> escape-hatch keys pass through to customFilters."""
     consumer_filters = {"gov.someSystem@someFilter": f.eq("test")}
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
+    assert classified.errors == []
+    result = classified.result
     assert isinstance(result, OppFilters)
     assert result.custom_filters is not None
     assert "gov.someSystem@someFilter" in result.custom_filters
@@ -157,10 +168,11 @@ def test_request_body_has_default_fields_at_top_level_and_custom_filters_nested(
         "agency": f.in_(["NSF"]),
         "legacyTag": f.eq("priority"),
     }
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
-    request_body = result.model_dump(by_alias=True, exclude_none=True)
+    assert classified.errors == []
+    request_body = classified.result.model_dump(by_alias=True, exclude_none=True)
 
     # Default field appears at top level
     assert "status" in request_body
@@ -175,10 +187,11 @@ def test_request_body_has_default_fields_at_top_level_and_custom_filters_nested(
 def test_request_body_no_custom_filters_key_when_all_defaults():
     """customFilters key is absent from the request body when all filters are default fields."""
     consumer_filters = {"status": f.in_(["open"])}
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
-    request_body = result.model_dump(by_alias=True, exclude_none=True)
+    assert classified.errors == []
+    request_body = classified.result.model_dump(by_alias=True, exclude_none=True)
     assert "customFilters" not in request_body
 
 
@@ -199,9 +212,11 @@ def test_oppfilters_mixed_case_roundtrip():
             "2026-01-01", "2026-12-31"
         ),  # camelCase alias default
     }
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
+    assert classified.errors == []
+    result = classified.result
     assert isinstance(result, OppFilters)
 
     # camelCase alias must land in named field
@@ -274,6 +289,29 @@ def test_validate_routes_collision_with_camel_alias_raises():
         validate_routes(routes)
 
 
+def test_validate_routes_unsupported_route_raises():
+    """validate_routes raises FilterError for custom filters on a non-filterable route.
+
+    Only routes whose core operation declares a ``filters`` parameter can carry
+    custom filters. ``opportunities.list`` has none, so a filter declared there is
+    a registration-time error rather than a silently-ignored declaration.
+    """
+    routes = {
+        "opportunities": {
+            "list": {
+                "filters": {
+                    "agency": CustomFilterSpec(
+                        filter_type=CustomFilterType.STRING_ARRAY,
+                        description="Not supported on list",
+                    ),
+                }
+            }
+        }
+    }
+    with pytest.raises(FilterError, match="does not support custom filters"):
+        validate_routes(routes)
+
+
 def test_validate_routes_valid_routes_do_not_raise():
     """validate_routes does not raise for a fully valid routes dict."""
     # Should not raise
@@ -285,31 +323,41 @@ def test_validate_routes_valid_routes_do_not_raise():
 # ---------------------------------------------------------------------------
 
 
-def test_validate_filter_call_registered_bad_operator_raises():
-    """validate_filter_call raises FilterError when a registered filter has an operator/value mismatch."""
-    # AGENCY_SPEC is STRING_ARRAY — an "eq" with a scalar value is wrong for StringArrayFilter
+def test_validate_filter_call_registered_bad_operator_returns_error():
+    """validate_filter_call returns (None, FilterError) for an operator/value mismatch.
+
+    A bad registered filter yields a FilterError, not an exception. AGENCY_SPEC
+    is STRING_ARRAY — an "eq" with a scalar value is wrong for it.
+    """
     bad_filter = f.eq("not-an-array")
-    with pytest.raises(FilterError):
-        validate_filter_call(AGENCY_SPEC, "agency", bad_filter)
+    value, error = validate_filter_call(AGENCY_SPEC, "agency", bad_filter)
+    assert value is None
+    assert isinstance(error, FilterError)
+    assert error.path == "filters.agency"
 
 
-def test_validate_filter_call_adhoc_invalid_shape_raises():
-    """validate_filter_call raises FilterError when an ad-hoc filter has an invalid DefaultFilter shape."""
+def test_validate_filter_call_adhoc_invalid_shape_returns_error():
+    """validate_filter_call returns a FilterError when an ad-hoc filter has an invalid shape."""
 
     # Pass None as spec (ad-hoc), with something that isn't a DefaultFilter
     class _BadShape:
         operator = "not_a_real_operator"
         value = object()  # not a valid value type
 
-    with pytest.raises(FilterError):
-        validate_filter_call(None, "legacyTag", _BadShape())  # type: ignore[arg-type]
+    value, error = validate_filter_call(None, "legacyTag", _BadShape())  # type: ignore[arg-type]
+    assert value is None
+    assert isinstance(error, FilterError)
+    assert error.path == "filters.legacyTag"
 
 
-def test_validate_filter_call_valid_registered_does_not_raise():
-    """validate_filter_call does not raise for a valid registered filter call."""
+def test_validate_filter_call_valid_registered_returns_value_and_no_error():
+    """validate_filter_call returns (DefaultFilter, None) for a valid registered filter call."""
     valid_filter = f.in_(["NSF", "NIH"])
-    # Should not raise — agency is STRING_ARRAY, in_ with list is valid
-    validate_filter_call(AGENCY_SPEC, "agency", valid_filter)
+    # agency is STRING_ARRAY, in_ with list is valid
+    value, error = validate_filter_call(AGENCY_SPEC, "agency", valid_filter)
+    assert error is None
+    assert value is not None
+    assert value.operator == "in"
 
 
 def test_validate_filter_call_money_comparison_passes_valid_money():
@@ -320,36 +368,40 @@ def test_validate_filter_call_money_comparison_passes_valid_money():
     compile-error tests; covered here at the runtime layer.
     """
     spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
-    validate_filter_call(
+    value, error = validate_filter_call(
         spec, "awardFloor", f.gt({"amount": "1000000", "currency": "USD"})
     )
+    assert error is None
+    assert value is not None
 
 
 def test_validate_filter_call_money_comparison_rejects_array_operator():
-    """A registered moneyComparison filter raises FilterError for an array operator."""
+    """A registered moneyComparison filter returns a FilterError for an array operator."""
     spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
-    with pytest.raises(FilterError):
-        validate_filter_call(
-            spec, "awardFloor", f.in_([{"amount": "1000000", "currency": "USD"}])
-        )
+    value, error = validate_filter_call(
+        spec, "awardFloor", f.in_([{"amount": "1000000", "currency": "USD"}])
+    )
+    assert value is None
+    assert isinstance(error, FilterError)
 
 
 def test_validate_filter_call_money_comparison_rejects_numeric_amount():
-    """A registered moneyComparison filter raises FilterError for a numeric amount.
+    """A registered moneyComparison filter returns a FilterError for a numeric amount.
 
     Money.amount is a DecimalString — a raw number is the wrong shape.
     """
     spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
-    with pytest.raises(FilterError):
-        validate_filter_call(
-            spec, "awardFloor", f.gt({"amount": 1000.5, "currency": "USD"})
-        )
+    value, error = validate_filter_call(
+        spec, "awardFloor", f.gt({"amount": 1000.5, "currency": "USD"})
+    )
+    assert value is None
+    assert isinstance(error, FilterError)
 
 
 def test_validate_filter_call_money_range_passes_valid_range():
     """A registered moneyRange filter accepts between with {min, max} Money values."""
     spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_RANGE)
-    validate_filter_call(
+    value, error = validate_filter_call(
         spec,
         "awardRange",
         f.between(
@@ -357,15 +409,18 @@ def test_validate_filter_call_money_range_passes_valid_range():
             {"amount": "500000", "currency": "USD"},
         ),
     )
+    assert error is None
+    assert value is not None
 
 
 def test_validate_filter_call_money_range_rejects_comparison_operator():
-    """A registered moneyRange filter raises FilterError for a comparison operator."""
+    """A registered moneyRange filter returns a FilterError for a comparison operator."""
     spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_RANGE)
-    with pytest.raises(FilterError):
-        validate_filter_call(
-            spec, "awardRange", f.gt({"amount": "10000", "currency": "USD"})
-        )
+    value, error = validate_filter_call(
+        spec, "awardRange", f.gt({"amount": "10000", "currency": "USD"})
+    )
+    assert value is None
+    assert isinstance(error, FilterError)
 
 
 def test_validate_filter_call_number_range_value_submodel_survives_to_wire():
@@ -378,53 +433,91 @@ def test_validate_filter_call_number_range_value_submodel_survives_to_wire():
     The moneyRange analog above is covered; this pins the numeric path.
     """
     spec = CustomFilterSpec(filter_type=CustomFilterType.NUMBER_RANGE)
-    validated = validate_filter_call(spec, "awardCount", f.between(0, 1000))
-    wire = validated.model_dump(by_alias=True, exclude_none=True, mode="json")
+    value, error = validate_filter_call(spec, "awardCount", f.between(0, 1000))
+    assert error is None
+    wire = value.model_dump(by_alias=True, exclude_none=True, mode="json")
     assert wire["operator"] == "between"
     assert wire["value"] == {"min": 0, "max": 1000}
 
 
-def test_classify_default_wrong_shape_raises_plugin_error():
-    """A wrong-shaped DEFAULT filter raises FilterError, not a raw pydantic ValidationError.
+def test_classify_default_wrong_shape_collects_error_and_omits_key():
+    """A wrong-shaped DEFAULT filter is fail-soft: omitted from result, error collected.
 
     "status" is a StringArrayFilter (ArrayOperator + list[str]); f.eq("open") is an
-    equivalence filter. The error contract must be uniform across all three buckets:
-    consumers following the documented `except FilterError` pattern must catch this.
+    equivalence filter. classify_filters no longer raises on a bad call-time filter
+    value: the bad key is dropped from the result body and a
+    single FilterError with path "filters.status" is collected.
     """
-    with pytest.raises(FilterError) as exc_info:
-        classify_filters(
-            SAMPLE_ROUTES, "opportunities", "search", {"status": f.eq("open")}
-        )
-    # The underlying pydantic error is preserved as cause for programmatic access
-    assert isinstance(exc_info.value.__cause__, ValidationError)
+    classified = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", {"status": f.eq("open")}
+    )
+    # No raise; the invalid default is absent from the result body.
+    assert classified.result.status is None
+    # Exactly one collected error, pinpointed to filters.status.
+    assert len(classified.errors) == 1
+    assert classified.errors[0].path == "filters.status"
+    # The underlying pydantic error is preserved as the structured cause.
+    assert isinstance(classified.errors[0].cause, ValidationError)
 
 
 def test_validate_filter_call_integer_comparison_validates_as_number():
     """A registered integerComparison filter validates against NumberComparisonFilter.
 
     The spec defines no integer filter model, so the int constraint is not
-    schema-enforced (same as the TS SDK); a numeric value passes, a non-numeric
+    schema-enforced; a numeric value passes, a non-numeric
     value fails.
     """
     spec = CustomFilterSpec(filter_type=CustomFilterType.INTEGER_COMPARISON)
-    validate_filter_call(spec, "awardCount", f.gt(100))
-    with pytest.raises(FilterError):
-        validate_filter_call(spec, "awardCount", f.gt("not a number"))
+    value, error = validate_filter_call(spec, "awardCount", f.gt(100))
+    assert error is None
+    assert value is not None
+    value, error = validate_filter_call(spec, "awardCount", f.gt("not a number"))
+    assert value is None
+    assert isinstance(error, FilterError)
 
 
-def test_classify_default_camel_alias_wrong_shape_raises_plugin_error():
-    """A wrong-shaped default filter via its camelCase alias also raises FilterError.
+def test_classify_default_camel_alias_wrong_shape_collects_error():
+    """A wrong-shaped default filter via its camelCase alias is fail-soft, omitted from result.
 
     "closeDateRange" is a DateRangeFilter; f.eq("2026-01-01") is an equivalence
-    filter — the alias normalization path must surface the same FilterError.
+    filter — the alias normalization path must collect a FilterError (not raise)
+    and omit the key. The error path uses the alias form.
     """
-    with pytest.raises(FilterError):
-        classify_filters(
-            SAMPLE_ROUTES,
-            "opportunities",
-            "search",
-            {"closeDateRange": f.eq("2026-01-01")},
-        )
+    classified = classify_filters(
+        SAMPLE_ROUTES,
+        "opportunities",
+        "search",
+        {"closeDateRange": f.eq("2026-01-01")},
+    )
+    assert classified.result.close_date_range is None
+    assert len(classified.errors) == 1
+    assert classified.errors[0].path == "filters.closeDateRange"
+
+
+def test_classify_default_money_range_wrong_shape_collects_error():
+    """A wrong-shaped MoneyRangeFilter default is dropped and its error collected.
+
+    "totalFundingAvailableRange" is a MoneyRangeFilter (RangeOperator + MoneyRange);
+    f.eq("100") is an equivalence filter with a scalar value — a valid permissive
+    DefaultFilter, but not a MoneyRangeFilter. MoneyRangeFilter is the one default
+    type the sibling tests (status -> StringArrayFilter, closeDateRange ->
+    DateRangeFilter) do not exercise. The regression this guards: if the money-range
+    defaults were validated against the permissive DefaultFilter shape instead of
+    their real type, this f.eq value would pass and a bad body would reach the server.
+    """
+    classified = classify_filters(
+        SAMPLE_ROUTES,
+        "opportunities",
+        "search",
+        {"totalFundingAvailableRange": f.eq("100")},
+    )
+    # Fail-soft: omitted from result, error collected (not raised).
+    assert classified.result.total_funding_available_range is None
+    assert len(classified.errors) == 1
+    assert classified.errors[0].path == "filters.totalFundingAvailableRange"
+    # Same uniform error contract as the sibling default tests: the underlying
+    # pydantic ValidationError is preserved as the structured cause.
+    assert isinstance(classified.errors[0].cause, ValidationError)
 
 
 # ---------------------------------------------------------------------------
@@ -453,69 +546,84 @@ def test_boolean_filter_value_survives_to_wire_as_json_true():
     DefaultFilter.value is Any per the core spec (filters/base.tsp `unknown`);
     a narrowed union without bool lax-coerced True -> 1 and corrupted the wire.
     """
-    result = classify_filters(
+    classified = classify_filters(
         WIRE_ROUTES, "opportunities", "search", {"isOpen": f.eq(True)}
     )
-    body = result.model_dump(by_alias=True, exclude_none=True, mode="json")
+    assert classified.errors == []
+    body = classified.result.model_dump(by_alias=True, exclude_none=True, mode="json")
     assert body["customFilters"]["isOpen"]["value"] is True
 
 
 def test_registered_filter_ships_validated_value_not_raw_input():
-    """The wire body carries the value that passed validation, not the raw input.
+    """The classifier keeps the value that passed validation, not the raw input.
 
     NumberComparisonFilter lax-coerces "42" -> 42 (smart-union resolves the
     int|float union to int first); shipping the raw string would mean the
-    payload differs from what validation approved.
+    value differs from what validation approved.
     """
-    result = classify_filters(
+    classified = classify_filters(
         WIRE_ROUTES, "opportunities", "search", {"awardCount": f.gt("42")}
     )
-    body = result.model_dump(by_alias=True, exclude_none=True, mode="json")
+    assert classified.errors == []
+    body = classified.result.model_dump(by_alias=True, exclude_none=True, mode="json")
     assert body["customFilters"]["awardCount"]["value"] == 42
     assert isinstance(body["customFilters"]["awardCount"]["value"], int)
 
 
 def test_number_comparison_registered_filter_rejects_bool():
-    """f.eq(True) on a numberComparison-registered filter raises, never ships 1.
+    """f.eq(True) on a numberComparison-registered filter is dropped, never ships 1.
 
     bool subclasses int; without an explicit rejection the int|float union
     lax-coerces True -> 1 and the wire silently carries a number for a
     boolean — the corruption class the DefaultFilter.value widening fixed.
+    Fail-soft: the bad registered filter is collected as an error and omitted
+    from customFilters rather than raising.
     """
-    with pytest.raises(FilterError):
-        classify_filters(
-            WIRE_ROUTES, "opportunities", "search", {"awardCount": f.eq(True)}
-        )
+    classified = classify_filters(
+        WIRE_ROUTES, "opportunities", "search", {"awardCount": f.eq(True)}
+    )
+    assert classified.result.custom_filters is None
+    assert len(classified.errors) == 1
+    assert classified.errors[0].path == "filters.awardCount"
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")  # pydantic warns during the
-# model_dump of the mutated instance, before re-validation raises
-def test_mutated_adhoc_instance_is_revalidated_and_raises():
-    """An ad-hoc DefaultFilter mutated after construction raises instead of shipping.
+# model_dump of the mutated instance, before re-validation collects the error
+def test_mutated_adhoc_instance_is_revalidated_and_collected():
+    """An ad-hoc DefaultFilter mutated after construction is collected, not shipped.
 
     The filter models are mutable; the ad-hoc branch must re-validate instances
-    rather than trust isinstance.
+    rather than trust isinstance. Fail-soft: the error is collected and the key
+    omitted from customFilters.
     """
     flt = f.eq("x")
     flt.operator = "bogus"  # type: ignore[assignment]
-    with pytest.raises(FilterError):
-        classify_filters(SAMPLE_ROUTES, "opportunities", "search", {"legacy": flt})
+    classified = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", {"legacy": flt}
+    )
+    assert classified.result.custom_filters is None
+    assert len(classified.errors) == 1
+    assert classified.errors[0].path == "filters.legacy"
 
 
-def test_unknown_filter_type_raises_plugin_error_not_key_error():
-    """A spec whose filter_type never passed validate_routes raises FilterError.
+def test_unknown_filter_type_returns_filter_error_not_key_error():
+    """A spec whose filter_type never passed validate_routes returns a FilterError.
 
-    The uniform error contract holds even when registration-time validation was
-    skipped — consumers catching `except FilterError` must not see a KeyError.
+    The uniform fail-soft contract holds even when registration-time validation
+    was skipped — the call-time validator must surface a FilterError, never a
+    KeyError, and never raise.
     """
     spec = CustomFilterSpec(filter_type="bogusType")  # type: ignore[arg-type]
-    with pytest.raises(FilterError):
-        validate_filter_call(spec, "x", f.eq(1))
+    value, error = validate_filter_call(spec, "x", f.eq(1))
+    assert value is None
+    assert isinstance(error, FilterError)
 
 
 def test_validate_filter_call_adhoc_accepts_raw_dict():
-    """Ad-hoc validation accepts a raw operator/value dict and returns a DefaultFilter."""
-    validated = validate_filter_call(None, "x", {"operator": "eq", "value": "v"})
+    """Ad-hoc validation accepts a raw operator/value dict and returns (DefaultFilter, None)."""
+    validated, error = validate_filter_call(None, "x", {"operator": "eq", "value": "v"})
+    assert error is None
+    assert validated is not None
     assert validated.operator == "eq"
     assert validated.value == "v"
 
@@ -533,27 +641,34 @@ def test_classify_default_snake_form_of_aliased_key_normalizes_to_alias():
     (populate_by_name is not set) and the field stays None.
     """
     consumer_filters = {"close_date_range": f.between("2026-01-01", "2026-12-31")}
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
-    assert result.close_date_range is not None
-    assert result.custom_filters is None
+    assert classified.errors == []
+    assert classified.result.close_date_range is not None
+    assert classified.result.custom_filters is None
 
 
-def test_classify_both_forms_of_same_default_filter_raises():
-    """Supplying snake AND camel forms of one default filter raises FilterError.
+def test_classify_both_forms_of_same_default_filter_collects_error():
+    """Supplying snake AND camel forms of one default filter is fail-soft.
 
-    Both keys normalize to "closeDateRange"; without the guard, dict
-    assignment silently drops whichever range the consumer's dict ordered
-    first (plausible when merging filter dicts from two naming conventions).
+    Both keys normalize to "closeDateRange". The first form is kept; the
+    duplicate is dropped and a FilterError collected (a bad call-time filter
+    never raises). Without the dedup guard, dict assignment
+    would silently drop whichever range the consumer's dict ordered first.
     """
     consumer_filters = {
         "close_date_range": f.between("2026-01-01", "2026-06-30"),
         "closeDateRange": f.between("2026-07-01", "2026-12-31"),
     }
-    with pytest.raises(FilterError, match="more than once") as exc_info:
-        classify_filters(SAMPLE_ROUTES, "opportunities", "search", consumer_filters)
-    assert exc_info.value.path == "filters.closeDateRange"
+    classified = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", consumer_filters
+    )
+    # The first-seen value is kept on the result; the duplicate is dropped.
+    assert classified.result.close_date_range is not None
+    assert len(classified.errors) == 1
+    assert classified.errors[0].path == "filters.closeDateRange"
+    assert "more than once" in str(classified.errors[0])
 
 
 @pytest.mark.parametrize(
@@ -573,32 +688,41 @@ def test_classify_unmatched_route_treats_registered_name_as_adhoc(resource, meth
     regression that flattens or mis-keys it either wrongly applies the spec
     or wrongly skips it.
     """
-    result = classify_filters(SAMPLE_ROUTES, resource, method, {"agency": f.eq("NSF")})
-    assert result.custom_filters is not None
-    assert result.custom_filters["agency"].value == "NSF"
+    classified = classify_filters(
+        SAMPLE_ROUTES, resource, method, {"agency": f.eq("NSF")}
+    )
+    assert classified.errors == []
+    assert classified.result.custom_filters is not None
+    assert classified.result.custom_filters["agency"].value == "NSF"
 
-    # ...and the same filter via the declared pair IS spec-validated and rejected
-    with pytest.raises(FilterError):
-        classify_filters(
-            SAMPLE_ROUTES, "opportunities", "search", {"agency": f.eq("NSF")}
-        )
+    # ...and the same filter via the declared pair IS spec-validated and dropped
+    # fail-soft: omitted from result, error collected (no raise).
+    declared = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", {"agency": f.eq("NSF")}
+    )
+    assert declared.result.custom_filters is None
+    assert len(declared.errors) == 1
+    assert declared.errors[0].path == "filters.agency"
 
 
 def test_request_body_mode_json_round_trip():
     """The documented model_dump(mode="json") call yields a json.dumps-able body.
 
-    Coerced date objects only serialize in json mode — this is the ADR-0012
-    wire body the classifier exists to produce.
+    Coerced date objects only serialize in json mode, which is what the
+    classifier dumps.
     """
     consumer_filters = {
         "close_date_range": f.between(date(2026, 1, 1), date(2026, 12, 31)),
         "agency": f.in_(["NSF"]),
     }
-    result = classify_filters(
+    classified = classify_filters(
         SAMPLE_ROUTES, "opportunities", "search", consumer_filters
     )
+    assert classified.errors == []
     body = json.loads(
-        json.dumps(result.model_dump(by_alias=True, exclude_none=True, mode="json"))
+        json.dumps(
+            classified.result.model_dump(by_alias=True, exclude_none=True, mode="json")
+        )
     )
     assert body["closeDateRange"]["operator"] == "between"
     assert body["closeDateRange"]["value"]["min"] == "2026-01-01"
@@ -607,9 +731,10 @@ def test_request_body_mode_json_round_trip():
 
 def test_classify_empty_filters_dict_yields_empty_body():
     """An empty consumer dict produces an OppFilters with no customFilters entry."""
-    result = classify_filters(SAMPLE_ROUTES, "opportunities", "search", {})
-    assert result.custom_filters is None
-    body = result.model_dump(by_alias=True, exclude_none=True, mode="json")
+    classified = classify_filters(SAMPLE_ROUTES, "opportunities", "search", {})
+    assert classified.errors == []
+    assert classified.result.custom_filters is None
+    body = classified.result.model_dump(by_alias=True, exclude_none=True, mode="json")
     assert "customFilters" not in body
 
 
@@ -623,34 +748,96 @@ def test_filter_type_schemas_covers_every_custom_filter_type():
     assert set(FILTER_TYPE_SCHEMAS) == set(CustomFilterType)
 
 
-def test_plugin_error_path_is_uniform_across_buckets():
-    """All three buckets raise FilterError with a filters.<name> path."""
-    with pytest.raises(FilterError) as exc1:
-        classify_filters(
-            SAMPLE_ROUTES, "opportunities", "search", {"status": f.eq("open")}
-        )
-    assert exc1.value.path == "filters.status"
+def test_collected_error_path_is_uniform_across_buckets():
+    """All three buckets collect a FilterError with a filters.<name> path, none raise."""
+    c1 = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", {"status": f.eq("open")}
+    )
+    assert len(c1.errors) == 1
+    assert c1.errors[0].path == "filters.status"
 
-    with pytest.raises(FilterError) as exc2:
-        classify_filters(
-            SAMPLE_ROUTES, "opportunities", "search", {"agency": f.eq("NSF")}
-        )
-    assert exc2.value.path == "filters.agency"
+    c2 = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", {"agency": f.eq("NSF")}
+    )
+    assert len(c2.errors) == 1
+    assert c2.errors[0].path == "filters.agency"
 
-    with pytest.raises(FilterError) as exc3:
-        classify_filters(
-            SAMPLE_ROUTES, "opportunities", "search", {"adhoc": {"operator": "bogus"}}
-        )
-    assert exc3.value.path == "filters.adhoc"
+    c3 = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "search", {"adhoc": {"operator": "bogus"}}
+    )
+    assert len(c3.errors) == 1
+    assert c3.errors[0].path == "filters.adhoc"
 
 
-def test_multiple_failing_defaults_use_collective_path():
-    """Two failing default filters produce the collective path "filters"."""
-    with pytest.raises(FilterError) as exc_info:
-        classify_filters(
-            SAMPLE_ROUTES,
-            "opportunities",
-            "search",
-            {"status": f.eq("open"), "closeDateRange": f.eq("x")},
-        )
-    assert exc_info.value.path == "filters"
+def test_multiple_failing_defaults_collect_one_error_per_key():
+    """Two failing default filters each collect their own FilterError, none raise.
+
+    Per-key fail-soft: each invalid default is dropped and pinpointed
+    individually (no single collective "filters" path), so a consumer sees
+    exactly which keys failed.
+    """
+    classified = classify_filters(
+        SAMPLE_ROUTES,
+        "opportunities",
+        "search",
+        {"status": f.eq("open"), "closeDateRange": f.eq("x")},
+    )
+    assert classified.result.status is None
+    assert classified.result.close_date_range is None
+    paths = sorted(e.path for e in classified.errors)
+    assert paths == ["filters.closeDateRange", "filters.status"]
+
+
+def test_classify_invalid_registered_and_invalid_adhoc_both_collected():
+    """An invalid registered filter AND an invalid ad-hoc filter are both collected.
+
+    Neither is shipped: both keys are omitted from customFilters and each yields
+    its own FilterError. "agency" is STRING_ARRAY (f.eq scalar is wrong); the
+    ad-hoc "adhoc" key has a bogus operator.
+    """
+    classified = classify_filters(
+        SAMPLE_ROUTES,
+        "opportunities",
+        "search",
+        {"agency": f.eq("NSF"), "adhoc": {"operator": "bogus", "value": 1}},
+    )
+    assert classified.result.custom_filters is None
+    paths = sorted(e.path for e in classified.errors)
+    assert paths == ["filters.adhoc", "filters.agency"]
+
+
+def test_classify_mixed_valid_and_invalid_keeps_valid_drops_invalid():
+    """Mixed valid + invalid filters: valid keys present in result, invalid absent.
+
+    Discriminating across all three buckets at once — a valid default (status),
+    a valid registered custom (agency), a valid ad-hoc (legacyTag), plus an
+    invalid default (closeDateRange) and an invalid registered (fundingProgram,
+    a stringComparison given an array value). The three valid keys must survive;
+    the two invalid keys must be omitted and exactly two errors collected.
+    """
+    classified = classify_filters(
+        SAMPLE_ROUTES,
+        "opportunities",
+        "search",
+        {
+            "status": f.in_(["open"]),  # valid default
+            "agency": f.in_(["NSF"]),  # valid registered (stringArray)
+            "legacyTag": f.eq("priority"),  # valid ad-hoc
+            "closeDateRange": f.eq("2026-01-01"),  # invalid default (not a range)
+            "fundingProgram": f.in_(
+                ["a", "b"]
+            ),  # invalid registered (stringComparison)
+        },
+    )
+    result = classified.result
+    # Valid keys present
+    assert result.status is not None
+    assert result.custom_filters is not None
+    assert "agency" in result.custom_filters
+    assert "legacyTag" in result.custom_filters
+    # Invalid keys absent
+    assert result.close_date_range is None
+    assert "fundingProgram" not in result.custom_filters
+    # Exactly the two invalid keys collected (count discriminates).
+    paths = sorted(e.path for e in classified.errors)
+    assert paths == ["filters.closeDateRange", "filters.fundingProgram"]

@@ -11,7 +11,9 @@ from .exceptions import raise_api_error
 from .opportunities import Opportunities
 from .pagination import pagination
 from .types import ItemsT
-from ..schemas.pydantic.responses import Paginated
+from ..extensions.filters import validate_routes
+from ..extensions.types import PluginRoutes
+from ..schemas.pydantic.responses import Filtered, Paginated
 
 
 class Client:
@@ -21,6 +23,7 @@ class Client:
         self,
         config: Optional[Config] = None,
         auth: Optional[Auth] = None,
+        routes: Optional[PluginRoutes] = None,
     ):
         """Initialize the CommonGrants client.
 
@@ -28,10 +31,21 @@ class Client:
             config: Optional Config instance. If None, a default Config is created.
             auth: Optional Auth instance. If None, API key authentication is used
                 with the key from config.
+            routes: Optional plugin ``routes`` declaration (fixed plugin config).
+                Bound and validated once here; used to classify registered custom
+                filters in ``opportunities.search``.
+
+        Raises:
+            FilterError: If ``routes`` declares an unknown ``filter_type``, a
+                custom filter name that collides with a default filter name, or
+                custom filters on a route that does not support them (e.g.
+                ``opportunities.list``).
         """
         self.config = config or Config()
         self.auth = auth or Auth.api_key(self.config.api_key)
         self.http = httpx.Client(timeout=self.config.timeout)
+        self.routes = routes or {}
+        validate_routes(self.routes)
         self.opportunities = Opportunities(client=self)
 
     def post(self, path: str, **kwargs) -> httpx.Response:
@@ -178,11 +192,15 @@ class Client:
             page_size = self.config.page_size
 
         try:
+            # request_data already includes any filters assembled by the resource method.
             api_response = self.post(
                 path, json=request_data, params={"page": page, "pageSize": page_size}
             )
             api_response.raise_for_status()
-            result_dict = Paginated[dict].model_validate(api_response.json())
+            # Validate into Filtered so the server's sortInfo/filterInfo (incl.
+            # filterInfo.errors) survive instead of being dropped.
+            # Filtered IS-A Paginated, so the existing cast still holds.
+            result_dict = Filtered[dict, dict].model_validate(api_response.json())
             result = cast(Paginated[ItemsT], result_dict)
 
         except httpx.HTTPError as e:

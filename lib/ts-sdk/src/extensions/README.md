@@ -740,23 +740,17 @@ For a complete runnable example with assertions, see [`examples/custom-filters.t
 - A filter spec uses an unknown `filterType` value.
 - A custom filter name collides with a default filter field name (e.g. registering `"status"` would shadow the protocol's standard `status` filter).
 
-`validateFilterCall()` validates individual filters at call time. For registered filters it validates the operator and value shape against the declared `filterType`. For ad-hoc filters it applies a shape-only check (`DefaultFilterSchema`). `classifyFilters()` already runs it for every key — you only call it directly when validating a single filter outside classification.
+Call-time validation runs automatically inside `classifyFilters()` for every filter key — registered filters are checked for operator/value shape against the declared `filterType`, ad-hoc filters get a shape-only check (`DefaultFilterSchema`). It is not a separate public entry point; `classifyFilters()` (invoked by each `search()`) is the call-time path.
 
-In the PoC, `definePlugin()` passes `routes` through **unvalidated** — the full SDK client will run `validateRoutes()` when a plugin is attached and call-time validation inside each search. Until then, call `validateRoutes()` yourself after defining a plugin if you want registration-time errors surfaced early.
+`definePlugin()` passes `routes` through **unvalidated**; the `Client` runs `validateRoutes()` for you when constructed with `routes` (and call-time validation runs inside each search). To surface registration errors without constructing a client, call `validateRoutes()` yourself after defining a plugin.
 
 > **PII note:** as with transforms, `FilterError.sourceValue` carries the raw input — here, the consumer's filter value. The [PII warning](#error-handling) above applies equally; log a redacted projection.
 
 ```typescript
-import { validateRoutes, validateFilterCall } from "@common-grants/sdk/extensions";
+import { validateRoutes } from "@common-grants/sdk/extensions";
 
 // Registration-time — throws FilterError on unknown filterType or collision
 validateRoutes(grantsGovPlugin.routes!);
-
-// Call-time — throws FilterError on operator/value mismatch for registered filters.
-// Pass the filter's CustomFilterSpec (looked up from the route-method's filters),
-// its name, and the value.
-const agencySpec = grantsGovPlugin.routes!.opportunities.search.filters!.agency;
-validateFilterCall(agencySpec, "agency", F.in(["HHS"])); // valid: in operator + string array value match the stringArray filterType
 ```
 
 ### The `as const` trap
@@ -899,16 +893,14 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 ### Custom filters (PoC)
 
-| Export                                        | Kind      | Description                                                                                                                                                                                                                         | Demonstrated in                                                                     |
-| --------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [`classifyFilters()`](./custom-filters.ts)    | function  | Three-bucket classifier. Maps a flat consumer `filters` object to the ADR-0012 `OppFilters` request body: default fields → top-level named fields; registered custom + ad-hoc → `customFilters` record.                             | [Classifying consumer filters](#classifying-consumer-filters-into-the-request-body) |
-| [`validateRoutes()`](./custom-filters.ts)     | function  | Registration-time validator. Throws `FilterError` on unknown `filterType` or default-field name collisions.                                                                                                                         | [Validation](#validation--registration-time-and-call-time)                          |
-| [`validateFilterCall()`](./custom-filters.ts) | function  | Call-time validator. Validates a single filter against its declared `filterType` schema (registered) or shape-only (ad-hoc). Throws `FilterError` on mismatch.                                                                      | [Validation](#validation--registration-time-and-call-time)                          |
-| [`F`](./custom-filters.ts)                    | namespace | Helper namespace. `F.eq`, `F.neq`, `F.gt`, `F.gte`, `F.lt`, `F.lte`, `F.in`, `F.notIn`, `F.like`, `F.notLike`, `F.between`, `F.outside` — each compiles to `{ operator, value }`. Note: `F.in` is `"in"` as an object property key. | [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers) |
-| [`CustomFilterSpec`](./types.ts)              | interface | Per-filter declaration: `{ filterType: CustomFilterType; description?: string }`. Operators are derived from `filterType`; no `value` field.                                                                                        | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
-| [`CustomFilterType`](./types.ts)              | type      | 11-value literal union: `stringComparison \| stringArray \| numberComparison \| numberArray \| numberRange \| integerComparison \| booleanComparison \| dateComparison \| dateRange \| moneyComparison \| moneyRange`.              | [Filter-type catalog](#filter-type-catalog-and-the-f-helpers)                       |
-| [`PluginRoutes`](./types.ts)                  | type      | `Record<string, Record<string, RouteDeclarations>>` — the `routes` value on `DefinePluginOptions`. Keys are resource name → method name → `RouteDeclarations`.                                                                      | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
-| [`RouteDeclarations`](./types.ts)             | interface | Per-method filter map: `{ filters?: Record<string, CustomFilterSpec> }`.                                                                                                                                                            |                                                                                     |
+| Export                                     | Kind      | Description                                                                                                                                                                                                            | Demonstrated in                                                                     |
+| ------------------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --- | -------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [`classifyFilters()`](./custom-filters.ts) | function  | Three-bucket classifier. Maps a flat consumer `filters` object to the ADR-0012 `OppFilters` request body: default fields → top-level named fields; registered custom + ad-hoc → `customFilters` record.                | [Classifying consumer filters](#classifying-consumer-filters-into-the-request-body) |
+| [`validateRoutes()`](./custom-filters.ts)  | function  | Registration-time validator. Throws `FilterError` on unknown `filterType` or default-field name collisions.                                                                                                            | [Validation](#validation--registration-time-and-call-time)                          |     | [`F`](./custom-filters.ts) | namespace | Helper namespace. `F.eq`, `F.neq`, `F.gt`, `F.gte`, `F.lt`, `F.lte`, `F.in`, `F.notIn`, `F.like`, `F.notLike`, `F.between`, `F.outside` — each compiles to `{ operator, value }`. Note: `F.in` is `"in"` as an object property key. | [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers) |
+| [`CustomFilterSpec`](./types.ts)           | interface | Per-filter declaration: `{ filterType: CustomFilterType; description?: string }`. Operators are derived from `filterType`; no `value` field.                                                                           | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
+| [`CustomFilterType`](./types.ts)           | type      | 11-value literal union: `stringComparison \| stringArray \| numberComparison \| numberArray \| numberRange \| integerComparison \| booleanComparison \| dateComparison \| dateRange \| moneyComparison \| moneyRange`. | [Filter-type catalog](#filter-type-catalog-and-the-f-helpers)                       |
+| [`PluginRoutes`](./types.ts)               | type      | `Record<string, Record<string, RouteDeclarations>>` — the `routes` value on `DefinePluginOptions`. Keys are resource name → method name → `RouteDeclarations`.                                                         | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
+| [`RouteDeclarations`](./types.ts)          | interface | Per-method filter map: `{ filters?: Record<string, CustomFilterSpec> }`.                                                                                                                                               |                                                                                     |
 
 ### Shared types
 

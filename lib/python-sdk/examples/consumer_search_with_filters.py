@@ -7,8 +7,9 @@ The full downstream flow an adopter writes against the SDK:
            (``define_plugin(routes=...)`` → ``plugin.routes``, a ``PluginRoutes`` map
            of ``CustomFilterSpec``), and extends the ``OpportunityFilters`` TypedDict
            so the call-site filter dict narrows per key.
-  CONSUMER builds a filter dict with the ``f.*`` builders and calls
-           ``client.opportunities.search(search=..., filters=..., routes=plugin.routes)``.
+  CONSUMER constructs the client with the registered routes
+           (``Client(config, routes=plugin.routes)``), builds a filter dict with the
+           ``f.*`` builders, and calls ``client.opportunities.search(search=..., filters=...)``.
            The client runs ``classify_filters`` to build the three-bucket request body
            (default named fields + ``customFilters`` record), POSTs it, and returns
            typed ``OpportunityBase`` rows.
@@ -95,7 +96,8 @@ def demo() -> None:
     config = Config(
         base_url="http://localhost:8000", api_key="two_orgs_user_key", timeout=5.0
     )
-    client = Client(config)
+    # Routes are bound to the client once at construction (not per search call).
+    client = Client(config, routes=plugin.routes)
 
     # A filter dict built with the f.* helpers. The builders return the precise
     # per-key models, so each value narrows to exactly the type OppSearchFilters
@@ -112,7 +114,6 @@ def demo() -> None:
     response = client.opportunities.search(
         search="conservation",
         filters=filters,
-        routes=plugin.routes,
     )
 
     print(f"  -> {len(response.items)} opportunities returned (typed OpportunityBase):")

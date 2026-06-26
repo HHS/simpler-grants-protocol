@@ -14,7 +14,7 @@ from ..schemas.pydantic.responses import (
 )
 from ..schemas.pydantic.models.opp_status import OppStatusOptions
 from ..extensions.filters import classify_filters
-from ..extensions.types import PluginRoutes
+from ..extensions.types import FilterError
 from .types import ItemsT
 from typing import Any, List, Mapping
 
@@ -111,50 +111,70 @@ class Opportunities:
         self,
         search: str,
         status: List[OppStatusOptions] | None = None,
-        filters: Mapping[str, Any] | None = None,
-        routes: PluginRoutes | None = None,
         page: int | None = None,
         page_size: int | None = None,
         schema: Type[OpportunityBase] | None = OpportunityBase,
+        filters: Mapping[str, Any] | None = None,
     ) -> OpportunitiesSearchResponse:
-        """Search for opportunities by a query string, with optional custom filters.
+        """Search for opportunties by a query string
 
         Args:
             search: The string to search for.
-            status: Status shorthand; merged in as the ``status`` filter when given
-                (a ``status`` key already in ``filters`` takes precedence).
-            filters: Consumer filter dict (standard + custom keys), classified into
-                the request body via ``classify_filters``. Registered custom filters
-                land in ``customFilters``; register them via ``define_plugin(routes=...)``.
-            routes: Route-keyed custom-filter registration (e.g. ``plugin.routes``)
-                used to classify which keys are registered custom filters.
+            status: List of statuses to search on (shorthand for the ``status``
+                default filter).
             page: Page number (1-indexed). If None, method will fetch all
                 items across all pages and aggregate them into a single response.
             page_size: Number of items per page. If None, uses the default from
                 client config.
             schema: OpportunityBase to support custom fields added by the caller.
+            filters: Flat custom-filter dict (``{name: {"operator", "value"}}``,
+                e.g. built with the ``f`` helper), classified via
+                ``classify_filters``. Registered custom filters validate against
+                the specs declared in the client's ``routes`` (bound at construction).
 
         Returns:
             OpportunitiesSearchResponse with items and pagination info
 
-        Raises:
-            APIError: if the API request fails
-            FilterError: if a filter is called with an operator its type does not allow
+            Raises:
+                APIError: if the API request fails
         """
-        consumer_filters: dict[str, Any] = dict(filters or {})
-        if status is not None and "status" not in consumer_filters:
-            consumer_filters["status"] = {"operator": "in", "value": status}
 
-        opp_filters = classify_filters(
-            routes or {}, "opportunities", "search", consumer_filters
-        )
+        # Classify the custom-filter dict. Fail-soft: invalid filters are dropped
+        # and their errors collected here rather than raised.
+        filters_body: dict = {}
+        filter_errors: list[FilterError] = []
+        if filters:
+            classified = classify_filters(
+                self.client.routes or {}, "opportunities", "search", filters
+            )
+            filter_errors.extend(classified.errors)
+            filters_body = classified.result.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
 
-        request = {
-            "filters": opp_filters.model_dump(by_alias=True, exclude_none=True),
+        if status:
+            if "status" in filters_body:
+                # ``status`` given via both the shorthand and ``filters``:
+                # ``filters`` wins, the shorthand is ignored, a warning collected.
+                filter_errors.append(
+                    FilterError(
+                        "specified via both the status shorthand and the filters "
+                        "argument; used the filters value",
+                        path="filters.status",
+                        source_value=status,
+                    )
+                )
+            else:
+                filters_body["status"] = {"operator": "in", "value": status}
+
+        request: dict = {
             "pagination": {"page": 1, "pageSize": 10},
             "search": search,
             "sorting": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
         }
+        # Only set the filters key when non-empty.
+        if filters_body:
+            request["filters"] = filters_body
 
         request_data = OpportunitySearchRequest.model_validate(request)
 
@@ -174,18 +194,18 @@ class Opportunities:
             for item in paginated_response.items
         ]
 
-        # Convert paginated_response to dict and replace items with hydrated models
+        # Replace items with the hydrated models.
         response_data = paginated_response.model_dump(by_alias=True)
         response_data["items"] = items
 
-        response_data["sortInfo"] = {
-            "sortBy": "",
-            "sortOrder": "",
-            "customSortBy": None,
-            "errros": [],
-        }
+        # Merge collected client-side errors into filterInfo.errors, flattened to
+        # "{path}: {message}" and ordered before any existing entries.
+        if filter_errors:
+            filter_info = response_data.setdefault("filterInfo", {})
+            server_errors = filter_info.get("errors") or []
+            filter_info["errors"] = [
+                f"{e.path}: {e}" for e in filter_errors
+            ] + server_errors
 
-        response_data["filterInfo"] = {"filters": {}, "errors": []}
-
-        # Hydrate OpportunitiesListResponse from response data
+        # Hydrate OpportunitiesSearchResponse from response data
         return OpportunitiesSearchResponse.model_validate(response_data)

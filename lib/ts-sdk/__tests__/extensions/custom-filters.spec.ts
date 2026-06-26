@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { classifyFilters, F, validateFilterCall, validateRoutes } from "@/extensions";
+import { classifyFilters, F, validateRoutes } from "@/extensions";
+import { validateFilterCall } from "@/extensions/custom-filters";
 import { FilterError } from "@/extensions";
 import type { PluginRoutes } from "@/extensions";
 import { OppFiltersSchema } from "@/schemas/zod/models";
@@ -51,33 +52,36 @@ describe("classifyFilters", () => {
 
   describe("three-bucket classification", () => {
     it("routes default filters to top-level named request-body fields", () => {
-      const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
         status: { operator: "in", value: ["open"] },
       });
 
       expect(result.status).toEqual({ operator: "in", value: ["open"] });
       expect(result.customFilters).toBeUndefined();
+      expect(errors).toEqual([]);
     });
 
     it("routes pre-registered custom filters to customFilters record", () => {
-      const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
         agency: { operator: "in", value: ["HHS"] },
       });
 
       expect(result.customFilters?.agency).toEqual({ operator: "in", value: ["HHS"] });
       expect(result.status).toBeUndefined();
+      expect(errors).toEqual([]);
     });
 
     it("routes ad-hoc filters to customFilters passthrough (no registration required)", () => {
-      const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
         legacyTag: { operator: "eq", value: "legacy-2024" },
       });
 
       expect(result.customFilters?.legacyTag).toEqual({ operator: "eq", value: "legacy-2024" });
+      expect(errors).toEqual([]);
     });
 
     it("builds exact ADR-0012 OppFilters request body for mixed default + custom + ad-hoc input", () => {
-      const result = classifyFilters(
+      const { result, errors } = classifyFilters(
         grantsGovRoutes,
         "opportunities",
         "search",
@@ -96,10 +100,11 @@ describe("classifyFilters", () => {
       };
 
       expect(result).toEqual(expected);
+      expect(errors).toEqual([]);
     });
 
     it("passes gov.<system>@<filterName> namespaced keys through to customFilters verbatim", () => {
-      const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      const { result } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
         "gov.grants@announcementType": { operator: "eq", value: "NOFO" },
       });
 
@@ -110,7 +115,7 @@ describe("classifyFilters", () => {
     });
 
     it("returns only top-level fields when no custom or ad-hoc filters are provided", () => {
-      const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      const { result } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
         status: { operator: "in", value: ["open"] },
       });
 
@@ -118,9 +123,74 @@ describe("classifyFilters", () => {
     });
 
     it("handles an empty filters object gracefully", () => {
-      const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {});
+      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {});
 
       expect(result).toEqual({});
+      expect(errors).toEqual([]);
+    });
+
+    // ##########################################################################
+    // Fail-soft validation (collect, don't throw)
+    // ##########################################################################
+
+    it("collects a FilterError and omits the key when a default filter violates its real field type (status)", () => {
+      // `status` is a StringArrayFilter (operator in/notIn, value string[]).
+      // `{ operator: "gt", value: 5 }` is a structurally valid DefaultFilter
+      // (passes the permissive shape check) but invalid for `status`. Default
+      // filters are validated against their real field type — a malformed one is
+      // fail-soft: dropped from `result`, surfaced in `errors`, never thrown.
+      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+        status: { operator: "gt", value: 5 },
+      });
+
+      expect(result).not.toHaveProperty("status");
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toBeInstanceOf(FilterError);
+      expect(errors[0].path).toBe("filters.status");
+    });
+
+    it("collects errors for invalid registered and ad-hoc filters, omitting both from result", () => {
+      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+        // registered stringArray given a non-array value → invalid
+        agency: { operator: "in", value: "not-an-array" },
+        // ad-hoc with a missing operator → invalid shape
+        legacyTag: { value: "no-operator" },
+      });
+
+      expect(result.customFilters).toBeUndefined();
+      expect(errors).toHaveLength(2);
+      expect(errors.map(e => e.path).sort()).toEqual(["filters.agency", "filters.legacyTag"]);
+    });
+
+    it("keeps valid keys and drops only invalid ones for mixed valid+invalid input", () => {
+      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+        // valid default
+        status: { operator: "in", value: ["open"] },
+        // invalid default (wrong operator/value for status)
+        closeDateRange: { operator: "in", value: ["nope"] },
+        // valid registered custom
+        agency: { operator: "in", value: ["HHS"] },
+        // invalid registered custom (stringArray with non-array value)
+        fundingProgram: { operator: "like", value: 12345 },
+        // valid ad-hoc
+        legacyTag: { operator: "eq", value: "legacy-2024" },
+      });
+
+      // Valid keys are present.
+      expect(result.status).toEqual({ operator: "in", value: ["open"] });
+      expect(result.customFilters?.agency).toEqual({ operator: "in", value: ["HHS"] });
+      expect(result.customFilters?.legacyTag).toEqual({ operator: "eq", value: "legacy-2024" });
+
+      // Invalid keys are absent.
+      expect(result).not.toHaveProperty("closeDateRange");
+      expect(result.customFilters).not.toHaveProperty("fundingProgram");
+
+      // errors count discriminates: exactly the two invalid keys.
+      expect(errors).toHaveLength(2);
+      expect(errors.map(e => e.path).sort()).toEqual([
+        "filters.closeDateRange",
+        "filters.fundingProgram",
+      ]);
     });
   });
 
@@ -196,6 +266,20 @@ describe("classifyFilters", () => {
       expect(() => validateRoutes(collidingRoutes)).toThrow(FilterError);
     });
 
+    it("throws FilterError when custom filters are declared on an unsupported route (list)", () => {
+      const unsupportedRoutes: PluginRoutes = {
+        opportunities: {
+          list: {
+            filters: {
+              agency: { filterType: "stringArray" },
+            },
+          },
+        },
+      };
+
+      expect(() => validateRoutes(unsupportedRoutes)).toThrow(FilterError);
+    });
+
     it("does not throw for valid routes", () => {
       expect(() => validateRoutes(grantsGovRoutes)).not.toThrow();
     });
@@ -206,83 +290,72 @@ describe("classifyFilters", () => {
   // ############################################################################
 
   describe("call-time validation", () => {
-    it("throws FilterError on operator/filterType mismatch for a registered filter", () => {
+    it("returns a FilterError on operator/filterType mismatch for a registered filter", () => {
       // `like` operator is not valid for numberComparison (only gt/gte/lt/lte/eq/neq)
       const spec = { filterType: "numberComparison" } as const;
 
-      expect(() => validateFilterCall(spec, "amount", { operator: "like", value: "100" })).toThrow(
-        FilterError
-      );
+      const err = validateFilterCall(spec, "amount", { operator: "like", value: "100" });
+      expect(err).toBeInstanceOf(FilterError);
     });
 
-    it("throws FilterError on value-shape mismatch for a registered stringArray filter", () => {
+    it("returns a FilterError on value-shape mismatch for a registered stringArray filter", () => {
       // stringArray requires value to be string[]; passing a plain string fails
       const spec = { filterType: "stringArray" } as const;
 
-      expect(() =>
-        validateFilterCall(spec, "agency", { operator: "in", value: "not-an-array" })
-      ).toThrow(FilterError);
+      const err = validateFilterCall(spec, "agency", { operator: "in", value: "not-an-array" });
+      expect(err).toBeInstanceOf(FilterError);
     });
 
-    it("throws FilterError on value-shape mismatch for a registered numberComparison filter", () => {
+    it("returns a FilterError on value-shape mismatch for a registered numberComparison filter", () => {
       // numberComparison requires value to be a number; passing a string fails
       const spec = { filterType: "numberComparison" } as const;
 
-      expect(() =>
-        validateFilterCall(spec, "amount", { operator: "eq", value: "not-a-number" })
-      ).toThrow(FilterError);
+      const err = validateFilterCall(spec, "amount", { operator: "eq", value: "not-a-number" });
+      expect(err).toBeInstanceOf(FilterError);
     });
 
-    it("passes a valid integerComparison filter without throwing", () => {
+    it("returns undefined for a valid integerComparison filter (no throw)", () => {
       const spec = { filterType: "integerComparison" } as const;
 
-      expect(() =>
-        validateFilterCall(spec, "awardCount", { operator: "eq", value: 2 })
-      ).not.toThrow();
+      expect(validateFilterCall(spec, "awardCount", { operator: "eq", value: 2 })).toBeUndefined();
     });
 
-    it("FilterError path includes the filter name", () => {
+    it("returned FilterError path includes the filter name", () => {
       const spec = { filterType: "stringArray" } as const;
 
-      try {
-        validateFilterCall(spec, "agency", { operator: "in", value: "wrong" });
-        expect.fail("Expected FilterError to be thrown");
-      } catch (err) {
-        expect(err).toBeInstanceOf(FilterError);
-        expect((err as FilterError).path).toBe("filters.agency");
-      }
+      const err = validateFilterCall(spec, "agency", { operator: "in", value: "wrong" });
+      expect(err).toBeInstanceOf(FilterError);
+      expect(err?.path).toBe("filters.agency");
     });
 
-    it("passes a valid registered filter without throwing", () => {
+    it("returns undefined for a valid registered filter (no throw)", () => {
       const spec = { filterType: "stringArray" } as const;
 
-      expect(() =>
+      expect(
         validateFilterCall(spec, "agency", { operator: "in", value: ["HHS", "DOE"] })
-      ).not.toThrow();
+      ).toBeUndefined();
     });
 
-    it("passes an ad-hoc filter through with only a shape check (no operator enforcement)", () => {
+    it("returns undefined for an ad-hoc filter with a valid shape (no operator enforcement)", () => {
       // Ad-hoc (spec=undefined) — any valid DefaultFilter shape passes
-      expect(() =>
+      expect(
         validateFilterCall(undefined, "legacyTag", { operator: "eq", value: "legacy-2024" })
-      ).not.toThrow();
+      ).toBeUndefined();
     });
 
-    it("throws FilterError for an ad-hoc filter with an invalid shape", () => {
+    it("returns a FilterError for an ad-hoc filter with an invalid shape", () => {
       // Missing `operator` key — fails DefaultFilterSchema shape check (operator is required/enum)
-      expect(() => validateFilterCall(undefined, "badFilter", { value: "something" })).toThrow(
-        FilterError
-      );
+      const err = validateFilterCall(undefined, "badFilter", { value: "something" });
+      expect(err).toBeInstanceOf(FilterError);
     });
 
-    it("throws FilterError for an ad-hoc filter with an unknown operator", () => {
+    it("returns a FilterError for an ad-hoc filter with an unknown operator", () => {
       // `superCustomOp` is not in AllOperatorsEnum — fails DefaultFilterSchema
-      expect(() =>
-        validateFilterCall(undefined, "badFilter", {
-          operator: "superCustomOp",
-          value: "x",
-        })
-      ).toThrow(FilterError);
+      const err = validateFilterCall(undefined, "badFilter", {
+        operator: "superCustomOp",
+        value: "x",
+      });
+      expect(err).toBeInstanceOf(FilterError);
     });
   });
 });

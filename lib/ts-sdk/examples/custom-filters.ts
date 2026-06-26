@@ -113,7 +113,10 @@ console.log(JSON.stringify(searchParams.filters, null, 2));
 // non-optional literal object. The `!` assertion removes the `undefined` from
 // the union type that `Plugin.routes?:` introduces (routes is optional in the
 // interface to support plugins that don't declare filters).
-const requestBody = classifyFilters(
+// `classifyFilters` is fail-soft: it returns `{ result, errors }`. `result` is
+// the OppFilters request body (valid keys only); `errors` collects any invalid
+// filters that were dropped. For this all-valid input, `errors` is empty.
+const { result: requestBody, errors } = classifyFilters(
   grantsGovPlugin.routes!,
   "opportunities",
   "search",
@@ -131,6 +134,9 @@ function fail(message: string): never {
   console.error(`ASSERTION FAILED: ${message}`);
   process.exit(1);
 }
+
+// All filters in this example are valid — no errors collected.
+if (errors.length > 0) fail(`expected no classification errors, got ${errors.length}`);
 
 // Default filters must appear as named top-level fields
 if (!requestBody.status) fail("status should be a top-level field (default filter bucket)");

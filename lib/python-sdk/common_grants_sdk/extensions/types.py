@@ -3,7 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, Literal, NotRequired, TypedDict, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Literal,
+    NotRequired,
+    TypedDict,
+    TypeVar,
+)
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -17,7 +25,7 @@ PluginCapability = Literal["customFields", "customFilters", "transforms"]
 # Type aliases
 Handler = Callable[[Any, Any], Any]
 
-# Route-keyed custom-filter declaration types, mirroring the TS SDK shape:
+# Route-keyed custom-filter declaration types:
 # PluginRoutes = {resourceName: {methodName: RouteDeclarations}}.
 RouteMethodFilters = dict[str, CustomFilterSpec]  # {filterName: spec}
 
@@ -103,6 +111,25 @@ class FilterError(Exception):
         self.handler = handler
         self.source_value = source_value
         self.cause = cause
+
+
+@dataclass
+class ClassifyResult(Generic[T]):
+    """Fail-soft return shape for ``classify_filters``.
+
+    ``classify_filters`` never raises on a bad call-time filter value: each
+    failing key is dropped from ``result`` and its :class:`FilterError` collected
+    into ``errors``.
+
+    result: classified filters, containing only the keys that passed validation.
+    errors: aggregated ``FilterError``s for keys that failed; empty on success.
+
+    Registration-time validation (``validate_routes``) still raises — a malformed
+    plugin declaration has no result to return.
+    """
+
+    result: T
+    errors: list[FilterError]
 
 
 @dataclass
