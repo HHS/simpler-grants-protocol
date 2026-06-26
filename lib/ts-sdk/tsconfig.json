@@ -8,6 +8,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@tsp-output/*": ["./tsp-output/*"],
+      "@common-grants/sdk/*": ["./src/*"],
       // json-schema-faker@0.6.x (test-only dep) ships an `exports` map with only
       // an `import` condition. Under TS 6's stricter exports resolution, this
       // CommonJS package finds no matching `require` condition and won't fall
