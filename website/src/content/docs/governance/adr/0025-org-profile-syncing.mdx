@@ -5,8 +5,6 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
-import { Tabs, TabItem } from "@astrojs/starlight/components";
-
 Now that organizations carry a portable identifier set ([ADR-0023](https://commongrants.org/governance/adr/0023-org-ids/)), the next step is keeping an organization's profile in sync across the systems that hold a copy of it. A platform, a state portal, and a foundation's grant management system may each store the same organization, and today there is no shared way for one to publish a change and another to pick it up.
 
 This ADR defines the wire contract for that sync: how a system proves an inbound request is authorized to act on a given organization, and what endpoints and operations a conformant system exposes. It follows the "Path 3" framing from the org-sync exploration and the transport boundary set in [ADR-0022](https://commongrants.org/governance/adr/0022-plugin-framework/): the protocol specifies shapes and guarantees, and each deployment picks its own transport (pull, push, scheduled, webhook). A plugin built against a CommonGrants-aware host is one conformant path; a standalone service that exposes the same HTTP contract is equally conformant.
@@ -190,15 +188,21 @@ Steps 1 through 4 establish that the token is authentic and unexpired. Steps 5 a
 
 ### Operations with example payloads
 
-<Tabs>
-  <TabItem label="List (GET /)">
+The org record shape follows [`OrganizationBase`](https://commongrants.org/protocol/models/organization), with the identifier set keyed per [ADR-0023](https://commongrants.org/governance/adr/0023-org-ids/). Server-assigned metadata (`datasetVersion`) appears on reads but is not supplied on writes. Field-level schemas are deferred to the follow-up spec, so these payloads are illustrative.
 
-Required scope: `org:list`. Pagination per [ADR-0011](https://commongrants.org/governance/adr/0011-pagination/); each record carries its identifier set and dataset version.
+<details>
+<summary>List accessible orgs: `GET /orgs/`</summary>
+
+Required scope: `org:list`. Pagination per [ADR-0011](https://commongrants.org/governance/adr/0011-pagination/); each item is a summary carrying its identifier set and dataset version.
+
+Request:
 
 ```
 GET /common-grants/orgs?page=1&pageSize=50
 Authorization: Bearer <jwt>
 ```
+
+Response:
 
 ```json
 {
@@ -207,35 +211,137 @@ Authorization: Bearer <jwt>
       "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
       "name": "Example Nonprofit",
       "datasetVersion": 7,
-      "identifiers": { "us:ein": { "id": "123456789" } }
+      "identifiers": {
+        "us:ein": { "id": "123456789" },
+        "us:uei": { "id": "AB0123456789" }
+      }
     }
   ],
   "pagination": { "page": 1, "pageSize": 50, "totalItems": 1 }
 }
 ```
 
-  </TabItem>
-  <TabItem label="Read (GET /{orgId})">
+</details>
 
-Required scope: `org:read` or `org:read:{orgId}`. `{orgId}` is an identifier set, so any registered identifier resolves the record.
+<details>
+<summary>Read one org: `GET /orgs/{orgId}`</summary>
+
+Required scope: `org:read` or `org:read:{orgId}`. `{orgId}` is an identifier set, so any registered identifier resolves the record. The response is the org record at the latest version (or at a requested version; the optional `?at=` read pattern is covered under [history](#how-do-clients-view-changes-to-a-profile)).
+
+Request:
 
 ```
 GET /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890
 Authorization: Bearer <jwt>
 ```
 
-The response is the org record at the latest version (or at a requested version; see history). The optional `?at=` read pattern is covered under [history](#how-do-clients-view-changes-to-a-profile).
+Response:
 
-  </TabItem>
-  <TabItem label="Replace (PUT /{orgId})">
+```json
+{
+  "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+  "name": "Example Nonprofit",
+  "identifiers": {
+    "systemId": {
+      "registry": {
+        "code": "grants.gov:org",
+        "url": "https://commongrants.org/registries/grants-gov-org",
+        "scope": "grants.gov",
+        "kind": "platform"
+      },
+      "id": "01912a8b-7c3d-7890-abcd-ef1234567890"
+    },
+    "us:ein": {
+      "registry": {
+        "code": "us:ein",
+        "url": "https://commongrants.org/registries/us-ein",
+        "scope": "US",
+        "kind": "government"
+      },
+      "id": "123456789"
+    }
+  },
+  "orgType": {
+    "term": "Hospital",
+    "class": "Organization types",
+    "code": "EO000000"
+  },
+  "addresses": {
+    "primary": {
+      "street1": "456 Main St",
+      "city": "Anytown",
+      "stateOrProvince": "CA",
+      "country": "US",
+      "postalCode": "12345"
+    }
+  },
+  "phones": {
+    "primary": {
+      "countryCode": "+1",
+      "number": "444-456-1230",
+      "isMobile": true
+    }
+  },
+  "emails": { "primary": "info@example.com" },
+  "mission": "To provide support and resources to the community.",
+  "yearFounded": "2024",
+  "socials": { "website": "https://www.example.com" },
+  "datasetVersion": 7
+}
+```
 
-Required scope: `org:write` or `org:write:{orgId}`. Body carries the full org record. The updating principal and source system are derived from the token and request context, not supplied as trusted body fields (see [provenance](#how-is-change-provenance-recorded)).
+</details>
+
+<details>
+<summary>Replace an org: `PUT /orgs/{orgId}`</summary>
+
+Required scope: `org:write` or `org:write:{orgId}`. The body is the full org record (same shape as the read response, without server-assigned `datasetVersion`). The updating principal and source system are derived from the token and request context, not supplied as trusted body fields (see [provenance](#how-is-change-provenance-recorded)).
+
+Request:
 
 ```
 PUT /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890
 Authorization: Bearer <jwt>
 Content-Type: application/json
 ```
+
+```json
+{
+  "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+  "name": "Example Nonprofit",
+  "identifiers": {
+    "us:ein": {
+      "registry": {
+        "code": "us:ein",
+        "url": "https://commongrants.org/registries/us-ein",
+        "scope": "US",
+        "kind": "government"
+      },
+      "id": "123456789"
+    }
+  },
+  "orgType": {
+    "term": "Hospital",
+    "class": "Organization types",
+    "code": "EO000000"
+  },
+  "addresses": {
+    "primary": {
+      "street1": "456 Main St",
+      "city": "Anytown",
+      "stateOrProvince": "CA",
+      "country": "US",
+      "postalCode": "12345"
+    }
+  },
+  "emails": { "primary": "info@example.com" },
+  "mission": "To provide support and resources to the community.",
+  "yearFounded": "2024",
+  "socials": { "website": "https://www.example.com" }
+}
+```
+
+Response:
 
 ```json
 {
@@ -246,10 +352,14 @@ Content-Type: application/json
 
 A write returns one of `accepted`, `denied`, `pending`, or `superseded` (see [acceptance semantics](#are-changes-applied-immediately-or-queued)).
 
-  </TabItem>
-  <TabItem label="Patch (PATCH /{orgId})">
+</details>
 
-Required scope: `org:write` or `org:write:{orgId}`. Body is a JSON Merge Patch (RFC 7396): include a field to set it, omit it to leave it unchanged, send `null` to clear it.
+<details>
+<summary>Update an org: `PATCH /orgs/{orgId}`</summary>
+
+Required scope: `org:write` or `org:write:{orgId}`. The body is a JSON Merge Patch (RFC 7396): include a field to set it, omit it to leave it unchanged, send `null` to clear it.
+
+Request:
 
 ```
 PATCH /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890
@@ -260,22 +370,65 @@ Content-Type: application/merge-patch+json
 ```json
 {
   "name": "Example Nonprofit (Renamed)",
-  "formerName": null
+  "mission": "To expand access to community health resources.",
+  "socials": { "website": null }
 }
 ```
 
-  </TabItem>
-  <TabItem label="History (GET /{orgId}/history)">
+Response:
 
-Required scope: `org.history:read`. Optional endpoint; returns a version list of full snapshots. Exact schema deferred to the follow-up spec.
+```json
+{
+  "status": "accepted",
+  "datasetVersion": 9
+}
+```
+
+</details>
+
+<details>
+<summary>View change history: `GET /orgs/{orgId}/history`</summary>
+
+Required scope: `org.history:read`. Optional endpoint; returns a version list of full snapshots, newest first. Each entry records the source system but not the human-identifying principal (see [provenance](#how-is-change-provenance-recorded)). Exact schema deferred to the follow-up spec.
+
+Request:
 
 ```
 GET /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890/history
 Authorization: Bearer <jwt>
 ```
 
-  </TabItem>
-</Tabs>
+Response:
+
+```json
+{
+  "items": [
+    {
+      "datasetVersion": 9,
+      "modifiedAt": "2026-06-20T14:30:00Z",
+      "source": "grants.gov",
+      "snapshot": {
+        "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+        "name": "Example Nonprofit (Renamed)",
+        "mission": "To expand access to community health resources."
+      }
+    },
+    {
+      "datasetVersion": 7,
+      "modifiedAt": "2026-03-15T09:00:00Z",
+      "source": "candid",
+      "snapshot": {
+        "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+        "name": "Example Nonprofit",
+        "mission": "To provide support and resources to the community."
+      }
+    }
+  ],
+  "pagination": { "page": 1, "pageSize": 50, "totalItems": 2 }
+}
+```
+
+</details>
 
 ## Evaluation
 
