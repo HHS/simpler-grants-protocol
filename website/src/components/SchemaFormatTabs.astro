@@ -77,10 +77,11 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
     return null;
   }
 
-  const pathPrefix = `website/${Paths.PUBLIC_DIR}/`;
+  // public/ is served at the site root, so trim "website/public/" off the stored
+  // path to get the URL. Use the relative PUBLIC_PATH_PREFIX, not absolute PUBLIC_DIR.
+  const pathPrefix = `${Paths.PUBLIC_PATH_PREFIX}/`;
   let filePath = props.file.path;
 
-  // Trim public directory prefix if present
   if (filePath.startsWith(pathPrefix)) {
     filePath = filePath.substring(pathPrefix.length);
   }
