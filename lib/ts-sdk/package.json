@@ -82,12 +82,14 @@
     "example:get-custom-fields": "tsx examples/get-opportunity-with-custom-fields.ts",
     "example:plugins": "tsx examples/plugins.ts",
     "example:server": "tsx examples/mock-api-server.ts",
-    "example:transforms": "tsx examples/transforms.ts"
+    "example:transforms": "tsx examples/transforms.ts",
+    "example:grants-gov": "tsx examples/grants-gov-transforms.ts"
   },
   "dependencies": {
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@common-grants/cg-grants-gov": "^0.2.0",
     "@common-grants/core": "workspace:*",
     "@eslint/js": "catalog:",
     "@types/js-yaml": "^4.0.9",
