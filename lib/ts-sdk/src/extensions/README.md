@@ -549,32 +549,74 @@ const out = toCommon(sourceData);
 
 ### Wiring transforms into a plugin
 
-Pass `toCommon` / `fromCommon` and `customFields` together under `schemas.<Object>`:
+There are two ways to wire transforms into a plugin entry. These are mutually exclusive — you cannot provide both `mappings` and explicit callables on the same entry.
+
+**Option A: Declarative mappings** — pass a `mappings` object and `definePlugin()` compiles `toCommon` / `fromCommon` for you:
 
 ```typescript
 const plugin = definePlugin({
   meta: {
     name: "grants.gov",
-    version: "0.1.0",
     sourceSystem: "grants.gov",
     capabilities: ["customFields", "transforms"],
   },
   schemas: {
     Opportunity: {
-      customFields: {
-        /* customFieldSpecs */
+      sourceSchema: GrantsGovOpportunity,
+      customFields: { /* customFieldSpecs */ },
+      mappings: {
+        toCommon: {
+          id:    { field: "data.opportunity_uuid" },
+          title: { field: "data.opportunity_title" },
+          status: {
+            value: {
+              match: {
+                field: "data.opportunity_status",
+                case: { posted: "open", archived: "closed" },
+                default: "custom",
+              },
+            },
+          },
+        },
+        fromCommon: {
+          data: {
+            opportunity_uuid:  { field: "id" },
+            opportunity_title: { field: "title" },
+          },
+        },
       },
+    },
+  },
+} as const);
+```
+
+**Option B: Hand-written callables** — pass `toCommon` / `fromCommon` directly for logic that declarative mappings cannot express:
+
+```typescript
+const plugin = definePlugin({
+  meta: {
+    name: "grants.gov",
+    sourceSystem: "grants.gov",
+    capabilities: ["customFields", "transforms"],
+  },
+  schemas: {
+    Opportunity: {
+      sourceSchema: GrantsGovOpportunity,
+      customFields: { /* customFieldSpecs */ },
       toCommon,
       fromCommon,
     },
   },
-});
-
-// Invoke at runtime:
-const cg = plugin.schemas.Opportunity?.toCommon?.(sourceData);
+} as const);
 ```
 
-For a complete runnable round-trip with custom handlers and `commonSchema` validation, see [`examples/transforms.ts`](../../examples/transforms.ts) (`pnpm example:transforms`).
+Both options expose the same runtime surface:
+
+```typescript
+const { result, errors } = plugin.schemas.Opportunity.toCommon(sourceData);
+```
+
+For a complete runnable round-trip covering both options, custom handlers, and `commonSchema` validation, see [`examples/transforms.ts`](../../examples/transforms.ts) (`pnpm example:transforms`).
 
 ### Error handling
 
@@ -705,7 +747,7 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 | Export                                               | Kind      | Description                                                                                                                                                                                                                                       | Demonstrated in                                                         |
 | ---------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [`buildTransforms()`](./transforms.ts)               | function  | Compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables. Positional params: `(toCommonMapping, fromCommonMapping, handlers?, commonSchema?)`. Validates mapping structure at call time; collisions with built-ins throw. | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
+| [`buildTransforms()`](./transforms.ts)               | function  | Compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables. Positional params: `(toCommonMapping, fromCommonMapping, handlers?, commonSchema?, sourceSchema?)`. Validates mapping structure at call time; collisions with built-ins throw. | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
 | [`BuiltTransforms`](./transforms.ts)                 | interface | Return shape of `buildTransforms()` — `{ toCommon, fromCommon }`.                                                                                                                                                                                 |                                                                         |
 | [`transformFromMapping()`](./transformation.ts)      | function  | Low-level mapping walker used by `buildTransforms()`. Useful if you want to drive a single mapping pass without the call-time validation or error-wrapping layer.                                                                                 |                                                                         |
 | [`TransformFromMappingOptions`](./transformation.ts) | interface | Options for `transformFromMapping()`: optional `handlers` registry (`Map<string, Handler>`).                                                                                                                                                      |                                                                         |
