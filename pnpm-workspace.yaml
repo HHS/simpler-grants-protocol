@@ -8,7 +8,7 @@ packages:
 
 catalog:
   '@eslint/js': ^10.0.1
-  '@types/node': ^22.19.21
+  '@types/node': ^22.20.0
   '@typespec/compiler': ^1.13.0
   '@typespec/http': ^1.13.0
   '@typespec/json-schema': ^1.13.0
@@ -16,17 +16,17 @@ catalog:
   '@typespec/openapi3': ^1.13.0
   '@typespec/rest': ^0.83.0
   '@typespec/versioning': ^0.83.0
-  '@vitest/coverage-v8': ^4.1.8
+  '@vitest/coverage-v8': ^4.1.9
   '@vitest/eslint-plugin': ^1.6.20
-  eslint: ^10.5.0
+  eslint: ^10.6.0
   eslint-config-prettier: ^10.1.8
   eslint-plugin-prettier: ^5.5.6
-  globals: ^17.0.0
-  prettier: ^3.8.4
+  globals: ^17.7.0
+  prettier: ^3.9.3
   ts-node: ^10.9.2
   typescript: ^5.9.3
-  typescript-eslint: ^8.61.0
-  vitest: ^4.1.8
+  typescript-eslint: ^8.62.0
+  vitest: ^4.1.9
   zod: ^3.25.76
 
 catalogs:
