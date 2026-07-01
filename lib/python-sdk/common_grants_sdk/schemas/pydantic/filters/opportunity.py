@@ -1,7 +1,10 @@
 """Schemas for the CommonGrants API."""
 
-from typing import Optional, TypedDict
+from typing import Optional
 
+from typing_extensions import TypedDict
+
+from ..base import CommonGrantsBaseModel
 from .base import DefaultFilter
 from .boolean import BooleanComparisonFilter
 from .date import DateComparisonFilter, DateRangeFilter
@@ -65,20 +68,22 @@ class OppFilters(OppDefaultFilters):
     )
 
 
-class OpportunityFilters(TypedDict, total=False):
+class OpportunityFilters(TypedDict, total=False, extra_items=CommonGrantsBaseModel):
     """Typed authoring surface for opportunity filters — the dict consumers
     annotate, extended to give each custom filter its own typed key.
 
-    Keys are the wire names a consumer passes to ``classify_filters`` (the
+    Standard keys are the wire names a consumer passes to the client (the
     camelCase aliases of :class:`OppDefaultFilters`), each typed to its value
-    model. A plugin author extends this to register custom filters for the route::
+    model. A plugin author extends this to register custom filters for a route::
 
         class OppSearchFilters(OpportunityFilters, total=False):
-            agency: StringArray
+            region: StringArray
 
-    ``total=False`` so every standard key is optional. This is the static
-    authoring surface only; the throw-based ``classify_filters`` runtime is
-    unchanged and does not consume it.
+    Open via PEP 728 ``extra_items``: any key beyond those declared is typed
+    ``CommonGrantsBaseModel`` (the common base of every filter value model), so
+    a registered custom key gets exact typing through the subclass while an
+    unregistered ad-hoc key still passes. ``total=False`` makes every standard
+    key optional.
     """
 
     status: StringArray
