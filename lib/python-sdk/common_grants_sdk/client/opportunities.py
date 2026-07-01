@@ -163,7 +163,12 @@ class Opportunities(Generic[FiltersT, ItemT]):
                     )
                 )
             else:
-                filters_body["status"] = {"operator": "in", "value": status}
+                # str values (not enum members) so filter_info.filters echoes
+                # the same shape as the classified path.
+                filters_body["status"] = {
+                    "operator": "in",
+                    "value": [s.value for s in status],
+                }
 
         request: dict[str, Any] = {
             "pagination": {"page": 1, "pageSize": 10},
@@ -189,7 +194,9 @@ class Opportunities(Generic[FiltersT, ItemT]):
         )
 
         # filter_info carries client-side filter errors ahead of any server errors.
-        # sort/filter info only survive a single-page fetch (aggregation drops them).
+        # sort/filter info are preserved through page-aggregation (pagination copies
+        # the first page's Filtered envelope); the getattr fallbacks fire only on the
+        # empty-result path, which returns a plain Paginated.
         server_filter_info = getattr(paginated, "filter_info", None)
         server_errors = list(getattr(server_filter_info, "errors", None) or [])
         filter_info: FilterInfo[Any] = FilterInfo(

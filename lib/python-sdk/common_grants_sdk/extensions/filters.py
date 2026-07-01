@@ -159,7 +159,7 @@ class _FHelpers:
         # Numbers map to NumberComparisonFilter; bool is excluded (it is not a
         # comparable number here and NumberComparisonFilter rejects it). Money
         # dicts and ISODate strings fall through to DefaultFilter, where the
-        # registered filter_type model validates them at call time.
+        # registered filter's value model validates them at call time.
         if not isinstance(value, bool) and isinstance(value, (int, float)):
             return NumberComparisonFilter(operator=operator, value=value)
         return DefaultFilter(operator=operator, value=value)
@@ -193,7 +193,7 @@ class _FHelpers:
         # An all-string list is a StringArrayFilter; an all-number (non-bool) list
         # is a NumberArrayFilter. Mixed / Money-dict lists fall through to
         # DefaultFilter. An empty list is treated as a string array (the common
-        # case; the registered filter_type re-validates either way).
+        # case; the registered filter's value model re-validates either way).
         if all(isinstance(v, str) for v in value):
             return StringArrayFilter(operator=operator, value=value)
         if all(not isinstance(v, bool) and isinstance(v, (int, float)) for v in value):
@@ -233,7 +233,7 @@ class _FHelpers:
     def _range(self, operator: RangeOperator, min: Any, max: Any) -> BaseModel:
         # A numeric min+max is a NumberRangeFilter; date / Money ranges (whose
         # value sub-models differ) fall through to DefaultFilter, where the
-        # registered filter_type (DATE_RANGE / MONEY_RANGE) validates the shape.
+        # registered filter's value model validates the shape.
         numeric = all(
             not isinstance(v, bool) and isinstance(v, (int, float)) for v in (min, max)
         )

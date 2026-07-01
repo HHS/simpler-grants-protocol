@@ -56,8 +56,9 @@ class SearchResult(Generic[ItemT]):
     errors: list[ParseFailure]
     pagination_info: PaginatedResultsInfo
     filter_info: FilterInfo[Any]
-    # None when the response was aggregated across pages (aggregation returns a
-    # plain paginated shape that carries no sort info).
+    # None only when the response carried no sort envelope (the empty-result
+    # path returns a plain Paginated); page-aggregation preserves the first
+    # page's sort_info via model_copy.
     sort_info: Optional[SortedResultsInfo] = None
 
 
