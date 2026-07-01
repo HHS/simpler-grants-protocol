@@ -43,14 +43,14 @@ The decision drivers used to evaluate the two candidate bodies:
 
 ### Side-by-side comparison
 
-| **Criterion** | **HL7/FHIR** | **OpenID Foundation (chosen)** |
-| --- | --- | --- |
-| Fit for a small body in early phase | ❌ | ✅ |
-| Authority earned through participation | 🟡 | ✅ |
-| Cross-sector neutrality | 🟡 | ✅ |
-| Process pace compatible with co-planning | ❌ | 🟡 |
-| Funding model achievable without large corporate dues | ❌ | 🟡 |
-| Adaptable as the community matures | 🟡 | ✅ |
+| **Criterion**                                         | **HL7/FHIR** | **OpenID Foundation (chosen)** |
+| ----------------------------------------------------- | ------------ | ------------------------------ |
+| Fit for a small body in early phase                   | ❌           | ✅                             |
+| Authority earned through participation                | 🟡           | ✅                             |
+| Cross-sector neutrality                               | 🟡           | ✅                             |
+| Process pace compatible with co-planning              | ❌           | 🟡                             |
+| Funding model achievable without large corporate dues | ❌           | 🟡                             |
+| Adaptable as the community matures                    | 🟡           | ✅                             |
 
 Legend: ✅ fully meets, 🟡 partially meets, ❌ does not meet.
 
