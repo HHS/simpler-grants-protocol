@@ -124,51 +124,53 @@ class Opportunities(Generic[FiltersT, ItemT]):
             schema: Per-call parse-schema override; defaults to the plugin's
                 Opportunity schema (or ``OpportunityBase`` when unbound).
             filters: Typed filter dict — registered keys are validated against the
-                plugin's route filters and standard keys against their models.
-                Validation is fail-soft: invalid values are collected into
-                ``result.filter_info.errors`` (never raised).
+                plugin's route filters and standard keys against their models. An
+                invalid value on a standard or registered filter raises
+                ``FilterError`` before any request; ad-hoc (unregistered) keys are
+                best-effort and dropped if unusable.
 
         Returns:
             ``SearchResult`` — parsed ``items``, per-row parse ``errors``, and
-            ``filter_info`` carrying filter-validation and server errors.
+            ``filter_info`` carrying the server's filter feedback.
 
         Raises:
-            APIError: If the API request fails
+            APIError: If the API request fails.
+            FilterError: If a standard or registered filter — or the ``status``
+                shorthand — is given an invalid or conflicting value.
         """
         resolved = self._schema(schema)
 
-        # Classify the custom-filter dict. Fail-soft: invalid filters are dropped
-        # and their errors collected rather than raised.
+        # Raise on an invalid standard/registered filter value rather than
+        # collecting it: filter_info.errors is reserved for server errors. The
+        # classifier stays fail-soft; ad-hoc keys are best-effort (dropped).
         filters_body: dict[str, Any] = {}
-        filter_errors: list[FilterError] = []
         if filters:
             classified = classify_filters(
                 self.client.routes, "opportunities", "search", filters
             )
-            filter_errors.extend(classified.errors)
+            strict_error = next((e for e in classified.errors if e.strict), None)
+            if strict_error is not None:
+                raise strict_error
             filters_body = classified.result.model_dump(
                 by_alias=True, exclude_none=True, mode="json"
             )
 
         if status:
             if "status" in filters_body:
-                # ``status`` given via both the shorthand and ``filters``: the
-                # filters value wins, the shorthand is ignored, a warning collected.
-                filter_errors.append(
-                    FilterError(
-                        "specified via both the status shorthand and the filters "
-                        "argument; used the filters value",
-                        path="filters.status",
-                        source_value=status,
-                    )
+                # ``status`` given via both the shorthand and ``filters``:
+                # conflicting input to a standard filter — raise, don't guess.
+                raise FilterError(
+                    "status specified via both the status shorthand and the "
+                    "filters argument; pass it through only one of them",
+                    path="filters.status",
+                    source_value=status,
                 )
-            else:
-                # str values (not enum members) so filter_info.filters echoes
-                # the same shape as the classified path.
-                filters_body["status"] = {
-                    "operator": "in",
-                    "value": [s.value for s in status],
-                }
+            # str values (not enum members) so filter_info.filters echoes
+            # the same shape as the classified path.
+            filters_body["status"] = {
+                "operator": "in",
+                "value": [s.value for s in status],
+            }
 
         request: dict[str, Any] = {
             "pagination": {"page": 1, "pageSize": 10},
@@ -193,15 +195,16 @@ class Opportunities(Generic[FiltersT, ItemT]):
             cast("list[dict[str, Any]]", list(paginated.items)), resolved
         )
 
-        # filter_info carries client-side filter errors ahead of any server errors.
-        # sort/filter info are preserved through page-aggregation (pagination copies
-        # the first page's Filtered envelope); the getattr fallbacks fire only on the
-        # empty-result path, which returns a plain Paginated.
+        # filter_info carries the server's filter feedback only — client-side
+        # filter problems already raised above. sort/filter info are preserved
+        # through page-aggregation (pagination copies the first page's Filtered
+        # envelope); the getattr fallbacks fire only on the empty-result path,
+        # which returns a plain Paginated.
         server_filter_info = getattr(paginated, "filter_info", None)
         server_errors = list(getattr(server_filter_info, "errors", None) or [])
         filter_info: FilterInfo[Any] = FilterInfo(
             filters=filters_body,
-            errors=[f"{e.path}: {e}" for e in filter_errors] + server_errors,
+            errors=server_errors,
         )
 
         return SearchResult(

@@ -568,26 +568,31 @@ def classify_filters(
                         "(snake_case and camelCase forms of the same filter)",
                         path=f"filters.{alias_key}",
                         source_value=value,
+                        strict=True,
                     )
                 )
                 continue
             validated, error = _validate_default_field(alias_key, value)
             if error is not None:
+                # Standard filter — the SDK owns its contract; mark strict so the
+                # resource client raises rather than fail-softing.
+                error.strict = True
                 errors.append(error)
                 continue
             default_fields[alias_key] = validated
         elif key in registered:
             # Bucket 2: registered custom filter — validate against the value
             # model recovered from the route's TypedDict; ship the validated
-            # value, never the raw input. Fail-soft: collect and skip.
+            # value, never the raw input. Fail-soft here; strict for the client.
             validated, error = validate_filter_call(registered[key], key, value)
             if error is not None:
+                error.strict = True
                 errors.append(error)
                 continue
             custom_buckets[key] = validated  # type: ignore[assignment]
         else:
             # Bucket 3: ad-hoc / escape-hatch passthrough — ship the validated value.
-            # Fail-soft: collect the error and skip the key.
+            # Fail-soft: collect the (non-strict) error and skip the key.
             validated, error = validate_filter_call(None, key, value)
             if error is not None:
                 errors.append(error)

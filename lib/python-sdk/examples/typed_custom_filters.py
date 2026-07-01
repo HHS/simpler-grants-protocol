@@ -6,15 +6,20 @@ filter once, assembles a plugin, and a consumer gets a fully-typed client from
 site, and responses parse with the custom fields by default.
 
 The ``_typecheck`` function below is never executed; it exists so pyright verifies
-the consumer's typing (``assert_type``). The unhappy path (a route typo, a wrong
-filter value) lives in ``typed_custom_filters_failures.py``.
+the consumer's typing (``assert_type``). The unhappy path has two halves:
+- static (a route typo, a wrong filter value) lives in
+  ``typed_custom_filters_failures.py`` — run pyright against it.
+- runtime (an invalid value on a standard/registered filter raises before any
+  request) is ``demo_invalid_filter_raises`` below — runnable without an API::
+
+      poetry run python -c "import examples.typed_custom_filters as e; e.demo_invalid_filter_raises()"
 
 Run live against an API: ``poetry run python examples/typed_custom_filters.py``.
 """
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, cast
 
 from pydantic import Field
 from typing_extensions import assert_type
@@ -85,6 +90,31 @@ def _typecheck() -> None:
             assert_type(
                 fields.program_code.value, str
             )  # typed str from CustomField[str]
+
+
+def demo_invalid_filter_raises() -> None:
+    """Runtime unhappy-path check: an invalid registered-filter value raises.
+
+    Needs no API — the client validates and raises before any request goes out.
+    ``region`` is a StringArray filter, so a scalar ``between`` value is invalid.
+    """
+    from common_grants_sdk.extensions import FilterError
+
+    # Dummy config is never used to connect — the guard raises before any request.
+    client = opportunity_plugin.get_client(
+        Config(base_url="https://example.invalid", api_key="unused")
+    )
+    # cast: a real consumer's dynamic/untyped filter dict bypasses the static
+    # check; the runtime guard is the backstop that still catches the bad value.
+    bad_filters = cast(
+        OppSearchFilters, {"region": {"operator": "between", "value": 5}}
+    )
+    try:
+        client.opportunities.search(filters=bad_filters)
+    except FilterError as exc:
+        print("raised as expected:", exc.path, "-", exc)
+        return
+    raise AssertionError("expected FilterError on an invalid registered filter value")
 
 
 def main() -> None:

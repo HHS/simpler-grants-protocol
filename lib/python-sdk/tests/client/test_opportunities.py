@@ -18,7 +18,7 @@ from common_grants_sdk.client import (
 )
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
-from common_grants_sdk.extensions import PluginRoutes, ResourceRoutes
+from common_grants_sdk.extensions import FilterError, PluginRoutes, ResourceRoutes
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
@@ -865,57 +865,38 @@ class TestOpportunitySearch:
         # separation invariant: status not duplicated under customFilters
         assert "status" not in sent_filters["customFilters"]
 
-    def test_search_status_collision_filters_wins_and_warns(
+    def test_search_status_collision_raises(
         self, client, mock_httpx_client, sample_search_response
     ):
-        """status via both the shorthand arg and the filters argument: filters wins.
+        """status via both the shorthand arg and the filters argument raises.
 
-        Fail-soft: rather than raising, search() keeps the
-        ``filters`` value, ignores the shorthand, and appends a warning to the
-        response's filterInfo.errors.
+        Conflicting input to the standard ``status`` filter is a client bug:
+        search() raises a ``FilterError`` rather than silently picking one and
+        stashing a warning in ``filter_info.errors`` (reserved for server errors).
+        No request is sent.
         """
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.text = json.dumps(sample_search_response)
-        mock_response.json = Mock(return_value=sample_search_response)
-        mock_response.raise_for_status = Mock()
-        mock_httpx_client.post = Mock(return_value=mock_response)
+        mock_httpx_client.post = Mock()
 
-        # filters value uses "forecasted"; shorthand uses OPEN — they must differ
-        # so the assertion on the winning value can actually fail.
-        response = client.opportunities.search(
-            search="conservation",
-            status=[OppStatusOptions.OPEN],
-            filters={"status": {"operator": "in", "value": ["forecasted"]}},
-        )
+        with pytest.raises(FilterError, match="specified via both"):
+            client.opportunities.search(
+                search="conservation",
+                status=[OppStatusOptions.OPEN],
+                filters={"status": {"operator": "in", "value": ["forecasted"]}},
+            )
 
-        # The SENT body carries the filters value, not the shorthand.
-        sent_filters = mock_httpx_client.post.call_args[1]["json"]["filters"]
-        assert sent_filters["status"]["value"] == ["forecasted"]
-        # The collision warning reached filterInfo.errors.
-        assert any(
-            "filters.status" in e
-            and "specified via both the status shorthand and the filters argument; "
-            "used the filters value" in e
-            for e in response.filter_info.errors
-        )
+        # The raise happens before any request goes out.
+        mock_httpx_client.post.assert_not_called()
 
-    def test_search_invalid_filter_is_dropped_and_warned_no_raise(
+    def test_search_invalid_registered_filter_raises(
         self, mock_httpx_client, sample_search_response
     ):
-        """A malformed registered filter is fail-soft: results return, filter dropped.
+        """An invalid value on a registered custom filter raises (AC6).
 
         A registered stringArray filter given a non-array ``between`` value fails
-        classify_filters validation. search() does NOT raise.
-        The invalid filter is absent from the sent body and its error surfaces in
-        filterInfo.errors; results still return.
+        classify validation. search() raises rather than dropping it into
+        ``filter_info.errors``, and sends no request.
         """
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.text = json.dumps(sample_search_response)
-        mock_response.json = Mock(return_value=sample_search_response)
-        mock_response.raise_for_status = Mock()
-        mock_httpx_client.post = Mock(return_value=mock_response)
+        mock_httpx_client.post = Mock()
 
         # routes is client-bound: supplied once at construction, not per call.
         auth = Auth.api_key("test-key")
@@ -926,27 +907,67 @@ class TestOpportunitySearch:
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
+        with pytest.raises(FilterError) as exc_info:
+            client.opportunities.search(
+                search="conservation",
+                filters={"agency": {"operator": "between", "value": 5}},
+            )
+        assert exc_info.value.path == "filters.agency"
+        mock_httpx_client.post.assert_not_called()
+
+    def test_search_invalid_standard_filter_raises(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """An invalid value on a standard filter raises (AC6).
+
+        The standard ``status`` filter is a stringArray; a ``between`` operator
+        with a scalar value fails validation and search() raises — no request.
+        """
+        mock_httpx_client.post = Mock()
+
+        with pytest.raises(FilterError) as exc_info:
+            client.opportunities.search(
+                search="conservation",
+                filters={"status": {"operator": "between", "value": 5}},
+            )
+        assert exc_info.value.path == "filters.status"
+        mock_httpx_client.post.assert_not_called()
+
+    def test_search_invalid_adhoc_filter_passes_through_no_raise(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """A malformed ad-hoc (unregistered) filter is best-effort, not fatal (AC6).
+
+        Ad-hoc keys live in the untyped escape hatch: an unusable value is dropped
+        rather than raised (only standard/registered filters raise). Results return.
+        """
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        # No routes: "legacyTag" is neither standard nor registered -> ad-hoc.
         response = client.opportunities.search(
             search="conservation",
-            filters={"agency": {"operator": "between", "value": 5}},
+            filters={"legacyTag": "not-a-filter"},
         )
 
-        # Results still return (no raise).
         assert isinstance(response, SearchResult)
         assert len(response.items) == 2
-
-        # The invalid filter is absent from the sent body. With only the one
-        # invalid filter, no filters key is sent at all.
+        # Dropped from the sent body (never reached the wire).
         sent_body = mock_httpx_client.post.call_args[1]["json"]
-        assert "agency" not in sent_body.get("filters", {}).get("customFilters", {})
+        assert "legacyTag" not in sent_body.get("filters", {}).get("customFilters", {})
 
-        # Its error surfaced in filterInfo.errors.
-        assert any("filters.agency" in e for e in response.filter_info.errors)
-
-    def test_search_invalid_filter_client_errors_precede_server_errors(
+    def test_search_filter_info_errors_are_server_only(
         self, mock_httpx_client, sample_search_response
     ):
-        """Client-side filter errors are merged AHEAD of server-provided errors."""
+        """``filter_info.errors`` carries server-returned errors only.
+
+        With a valid registered filter and server-side filter feedback, the client
+        surfaces the server errors verbatim and injects none of its own.
+        """
         sample_search_response["filterInfo"] = {
             "filters": {},
             "errors": ["server: something was ignored"],
@@ -968,13 +989,10 @@ class TestOpportunitySearch:
 
         response = client.opportunities.search(
             search="conservation",
-            filters={"agency": {"operator": "between", "value": 5}},
+            filters={"agency": {"operator": "in", "value": ["HHS", "NSF"]}},
         )
 
-        errors = response.filter_info.errors
-        # Client error first, server error last.
-        assert "filters.agency" in errors[0]
-        assert errors[-1] == "server: something was ignored"
+        assert response.filter_info.errors == ["server: something was ignored"]
 
     def test_search_opportunities_different_page(
         self, client, mock_httpx_client, sample_search_response

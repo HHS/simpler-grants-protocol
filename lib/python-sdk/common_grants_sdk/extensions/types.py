@@ -104,6 +104,10 @@ class FilterError(Exception):
 
     Note: source_value may contain PII. Adopters are responsible for redacting
     it before logging or re-raising. The SDK does not redact by default.
+
+    ``strict`` marks a failure on a typed filter — a standard or registered
+    custom filter, whose contract the SDK owns. The resource client raises on
+    strict failures; non-strict (ad-hoc / passthrough) failures stay fail-soft.
     """
 
     def __init__(
@@ -114,12 +118,14 @@ class FilterError(Exception):
         handler: str | None = None,
         source_value: Any = None,
         cause: BaseException | None = None,
+        strict: bool = False,
     ) -> None:
         super().__init__(message)
         self.path = path
         self.handler = handler
         self.source_value = source_value
         self.cause = cause
+        self.strict = strict
 
 
 @dataclass
