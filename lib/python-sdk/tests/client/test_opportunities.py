@@ -9,21 +9,33 @@ from uuid import uuid4
 import httpx
 from pydantic import ValidationError
 
-from common_grants_sdk.client import Client, Auth
+from common_grants_sdk.client import (
+    Client,
+    Auth,
+    ListResult,
+    ParseFailure,
+    SearchResult,
+)
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
+from common_grants_sdk.extensions import PluginRoutes, ResourceRoutes
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
-from common_grants_sdk.schemas.pydantic.responses import (
-    OpportunitiesListResponse,
-    OpportunitiesSearchResponse,
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    OpportunityFilters,
+    StringArray,
 )
 from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
-from common_grants_sdk.extensions.specs import (
-    CustomFieldSpec,
-    CustomFilterSpec,
-    CustomFilterType,
-)
+from common_grants_sdk.extensions.specs import CustomFieldSpec
+
+
+class OppSearchFilters(OpportunityFilters, total=False):
+    """Route filter TypedDict registering ``agency`` as a stringArray custom filter."""
+
+    agency: StringArray
+
+
+AGENCY_ROUTES = PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters))
 
 
 @pytest.fixture
@@ -276,7 +288,7 @@ class TestOpportunityList:
 
         response = client.opportunities.list(page=1, schema=opp_base)
 
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         assert response.pagination_info.page == 1
@@ -450,7 +462,7 @@ class TestOpportunityList:
 
     def test_list_opportunities_validation_error(self, client, mock_httpx_client):
         """Test listing opportunities with validation error."""
-        # Valid JSON but doesn't match OpportunitiesListResponse schema
+        # Valid JSON but doesn't match the paginated list response schema
         invalid_data = {"invalid": "data"}
         mock_response = Mock()
         mock_response.status_code = 200
@@ -483,7 +495,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         response = client.opportunities.list(page=None)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         # When fetching all, pagination info should reflect aggregated result
@@ -560,7 +572,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(side_effect=mock_get)
 
         response = client.opportunities.list(page=None)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         # Should have all 5 items from all 3 pages
         assert len(response.items) == 5
         assert all(isinstance(item, OpportunityBase) for item in response.items)
@@ -622,7 +634,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(side_effect=mock_get)
 
         response = client.opportunities.list(page=None, page_size=3)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         assert len(response.items) == 4
         assert response.pagination_info.page_size == 4
 
@@ -653,7 +665,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         response = client.opportunities.list(page=None)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         assert len(response.items) == 0
         assert response.pagination_info.total_items == 0
         assert response.pagination_info.total_pages == 1
@@ -748,7 +760,7 @@ class TestOpportunitySearch:
             search="local", status=[OppStatusOptions.OPEN], schema=opp_base
         )
 
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         assert response.items[0].get_custom_field_value("legacy_id", int) == 12345
@@ -762,15 +774,36 @@ class TestOpportunitySearch:
         assert call_args[1]["params"]["page"] == 1
         assert call_args[1]["params"]["pageSize"] == 100
 
-    def test_search_surfaces_server_filter_and_sort_info(
+    def test_search_partial_parse_partitions_items_and_errors(
         self, client, mock_httpx_client, sample_search_response
     ):
-        """search() returns the server's real filterInfo/sortInfo, not blanks.
+        """A malformed row is collected into result.errors (not raised); the valid
+        rows still return in result.items — per-row fail-soft parsing."""
+        good_row = sample_search_response["items"][0]
+        sample_search_response["items"] = [good_row, {"id": "not-a-uuid"}]
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
 
-        The server reports non-fatal filtering feedback in ``filterInfo.errors``
-        and the resolved sort in ``sortInfo``. Earlier the client
-        fabricated empty envelopes, dropping that feedback; this asserts it now
-        reaches the caller.
+        response = client.opportunities.search(search="x", page=1)
+
+        assert isinstance(response, SearchResult)
+        assert len(response.items) == 1
+        assert len(response.errors) == 1
+        assert isinstance(response.errors[0], ParseFailure)
+        assert response.errors[0].index == 1
+
+    def test_search_surfaces_server_filter_info(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """search() returns the server's real filterInfo.errors, not blanks.
+
+        The server reports non-fatal filtering feedback in ``filterInfo.errors``.
+        Earlier the client fabricated an empty envelope, dropping that feedback;
+        this asserts it now reaches the caller via ``SearchResult.filter_info``.
         """
         sample_search_response["filterInfo"] = {
             "filters": {},
@@ -785,12 +818,10 @@ class TestOpportunitySearch:
 
         response = client.opportunities.search(search="x")
 
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert response.filter_info.errors == [
             "filter 'foo' is unsupported and was ignored"
         ]
-        # sort_info reflects the server value, not the blanked "".
-        assert response.sort_info.sort_by == "lastModifiedAt"
 
     def test_search_classifies_custom_filter_bag(
         self, mock_httpx_client, sample_search_response
@@ -803,24 +834,12 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        routes = {
-            "opportunities": {
-                "search": {
-                    "filters": {
-                        "agency": CustomFilterSpec(
-                            filter_type=CustomFilterType.STRING_ARRAY
-                        )
-                    }
-                }
-            }
-        }
-
         # routes is client-bound: supplied once at construction, not per call.
         auth = Auth.api_key("test-key")
         config = Config(
             base_url="https://api.example.com", api_key="test-key", timeout=10.0
         )
-        client = Client(config=config, auth=auth, routes=routes)
+        client = Client(config=config, auth=auth, routes=AGENCY_ROUTES)
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
@@ -894,24 +913,12 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        routes = {
-            "opportunities": {
-                "search": {
-                    "filters": {
-                        "agency": CustomFilterSpec(
-                            filter_type=CustomFilterType.STRING_ARRAY
-                        )
-                    }
-                }
-            }
-        }
-
         # routes is client-bound: supplied once at construction, not per call.
         auth = Auth.api_key("test-key")
         config = Config(
             base_url="https://api.example.com", api_key="test-key", timeout=10.0
         )
-        client = Client(config=config, auth=auth, routes=routes)
+        client = Client(config=config, auth=auth, routes=AGENCY_ROUTES)
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
@@ -921,7 +928,7 @@ class TestOpportunitySearch:
         )
 
         # Results still return (no raise).
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert len(response.items) == 2
 
         # The invalid filter is absent from the sent body. With only the one
@@ -947,22 +954,11 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        routes = {
-            "opportunities": {
-                "search": {
-                    "filters": {
-                        "agency": CustomFilterSpec(
-                            filter_type=CustomFilterType.STRING_ARRAY
-                        )
-                    }
-                }
-            }
-        }
         auth = Auth.api_key("test-key")
         config = Config(
             base_url="https://api.example.com", api_key="test-key", timeout=10.0
         )
-        client = Client(config=config, auth=auth, routes=routes)
+        client = Client(config=config, auth=auth, routes=AGENCY_ROUTES)
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
@@ -1152,7 +1148,7 @@ class TestOpportunitySearch:
 
     def test_search_opportunities_validation_error(self, client, mock_httpx_client):
         """Test searching opportunities with validation error."""
-        # Valid JSON but doesn't match OpportunitiesListResponse schema
+        # Valid JSON but doesn't match the paginated list response schema
         invalid_data = {"invalid": "data"}
         mock_response = Mock()
         mock_response.status_code = 200
@@ -1193,7 +1189,7 @@ class TestOpportunitySearch:
         response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=None
         )
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         # When fetching all, pagination info should reflect aggregated result
@@ -1293,7 +1289,7 @@ class TestOpportunitySearch:
         response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=None
         )
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         # Should have all 5 items from all 3 pages
         assert len(response.items) == 5
         assert all(isinstance(item, OpportunityBase) for item in response.items)
@@ -1341,7 +1337,7 @@ class TestOpportunitySearch:
         response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=None
         )
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert len(response.items) == 0
         assert response.pagination_info.total_items == 0
         assert response.pagination_info.total_pages == 1

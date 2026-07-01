@@ -16,7 +16,6 @@ from typing_extensions import TypeVar
 
 from ..schemas.pydantic.pagination import PaginatedResultsInfo
 from ..schemas.pydantic.responses.success import FilterInfo
-from ..schemas.pydantic.sorting import SortedResultsInfo
 
 ItemT = TypeVar("ItemT", bound=BaseModel)
 
@@ -55,7 +54,6 @@ class SearchResult(Generic[ItemT]):
     items: list[ItemT]
     errors: list[ParseFailure]
     pagination_info: PaginatedResultsInfo
-    sort_info: SortedResultsInfo
     filter_info: FilterInfo[Any]
 
 

@@ -21,8 +21,6 @@ from .schema import (
 from .specs import (
     ConflictStrategy,
     CustomFieldSpec,
-    CustomFilterSpec,
-    CustomFilterType,
     PluginCustomFieldSpec,
     SchemaExtensions,
 )
@@ -34,6 +32,7 @@ from .types import (
     PassthroughModel,
     PluginCapability,
     PluginRoutes,
+    ResourceRoutes,
     TransformError,
     TransformResult,
 )
@@ -66,9 +65,8 @@ __all__ = [
     "ClassifyResult",
     "FilterError",
     "PluginRoutes",
+    "ResourceRoutes",
     "classify_filters",
-    "CustomFilterSpec",
-    "CustomFilterType",
     "f",
     "validate_routes",
 ]

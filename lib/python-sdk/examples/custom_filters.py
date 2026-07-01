@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Custom filters example — codegen-free request-body demo.
 
-Demonstrates route-keyed custom filter declaration, flat call-site classification,
-and the three-bucket ``OppFilters`` request body (default named fields + customFilters record)
-using the grants.gov canonical example from #646/#869.
+Demonstrates typed route registration, flat call-site classification, and the
+three-bucket ``OppFilters`` request body (default named fields + customFilters
+record) using the grants.gov canonical example from #646/#869.
 
 No code generation (custom filters are a pure-runtime classifier). Routes are a
-plain ``PluginRoutes`` declaration passed directly to ``classify_filters`` — the
-plugin framework (``define_plugin``) does not need to carry them.
+typed ``PluginRoutes`` carrier — the author extends ``OpportunityFilters`` with
+one typed key per custom filter, so ``classify_filters`` recovers each key's
+value model from the TypedDict.
 
 Run (from lib/python-sdk/):
     poetry run python examples/custom_filters.py
@@ -17,12 +18,21 @@ from __future__ import annotations
 
 import json
 
-from common_grants_sdk.extensions import classify_filters, f
-from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
-from common_grants_sdk.extensions.types import PluginMeta, PluginRoutes
+from common_grants_sdk.extensions import (
+    PluginRoutes,
+    ResourceRoutes,
+    classify_filters,
+    f,
+)
+from common_grants_sdk.extensions.types import PluginMeta
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    OpportunityFilters,
+    StringArray,
+    StringComparison,
+)
 
 # ---------------------------------------------------------------------------
-# Route-keyed custom filter specs + plugin metadata
+# Typed route registration + plugin metadata
 # ---------------------------------------------------------------------------
 
 meta = PluginMeta(
@@ -32,19 +42,21 @@ meta = PluginMeta(
     capabilities=["customFilters"],
 )
 
-routes: PluginRoutes = {
-    "opportunities": {
-        "search": {
-            "filters": {
-                "agency": CustomFilterSpec(filter_type=CustomFilterType.STRING_ARRAY),
-                "fundingProgram": CustomFilterSpec(
-                    filter_type=CustomFilterType.STRING_COMPARISON,
-                    description="Program name filter",
-                ),
-            }
-        }
-    },
-}
+
+class OppSearchFilters(OpportunityFilters, total=False):
+    """The custom filters this plugin accepts on opportunities.search.
+
+    Each key's annotation *is* its Pydantic value model, so the call-site value
+    validates against it and the classifier recovers it from the TypedDict.
+    """
+
+    agency: StringArray
+    fundingProgram: StringComparison
+
+
+routes: PluginRoutes = PluginRoutes(
+    opportunities=ResourceRoutes(search=OppSearchFilters)
+)
 
 
 def _section(title: str) -> None:
@@ -56,12 +68,9 @@ def _section(title: str) -> None:
 def main() -> None:
     # --- Declared routes ---
     _section("PLUGIN ROUTES (declared)")
-    for resource, methods in routes.items():
-        for method, declarations in methods.items():
-            print(f"  {resource}.{method}:")
-            for name, spec in declarations.get("filters", {}).items():
-                desc = f" — {spec.description}" if spec.description else ""
-                print(f"    {name}: {spec.filter_type.value}{desc}")
+    print("  opportunities.search custom filters:")
+    print("    agency: StringArray")
+    print("    fundingProgram: StringComparison — Program name filter")
 
     # --- Classify: default + registered custom + ad-hoc ---
     _section("CLASSIFY FILTERS — default + custom + ad-hoc (canonical grants.gov demo)")
@@ -72,8 +81,8 @@ def main() -> None:
     #                         the classifier must normalize it to "closeDateRange"
     #                         (an unnormalized snake key is silently dropped —
     #                         the alias landmine)
-    #   "agency"         — registered custom filter (routes.opportunities.search.agency)
-    #   "fundingProgram" — registered custom filter (routes.opportunities.search.fundingProgram)
+    #   "agency"         — registered custom filter (opportunities.search.agency)
+    #   "fundingProgram" — registered custom filter (opportunities.search.fundingProgram)
     #   "legacyTag"      — ad-hoc passthrough (not registered, not a core default)
     consumer_filters = {
         "status": f.in_(["open", "forecasted"]),
@@ -96,7 +105,7 @@ def main() -> None:
     # --- FilterError demo — bad call is fail-soft (collected, not raised) ---
     _section("VALIDATION — bad operator collected, valid filters still applied")
 
-    # agency is registered as STRING_ARRAY (expects ArrayOperator: in/notIn).
+    # agency is registered as StringArray (expects ArrayOperator: in/notIn).
     # Passing f.eq(...) (EquivalenceOperator.EQUAL) fails call-time validation.
     # Fail-soft: classify_filters never raises on a bad
     # filter value — the bad key is dropped from the result body and a FilterError
@@ -104,7 +113,7 @@ def main() -> None:
     bad_filters = {
         "agency": f.eq(
             "wrong-operator-for-array-type"
-        ),  # eq is not a valid STRING_ARRAY op
+        ),  # eq is not a valid StringArray op
         "legacyTag": f.eq("priority"),  # valid ad-hoc filter — survives
     }
     classified_bad = classify_filters(routes, "opportunities", "search", bad_filters)

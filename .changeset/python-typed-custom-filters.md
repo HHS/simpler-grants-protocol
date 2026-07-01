@@ -2,8 +2,8 @@
 "common-grants-sdk": minor
 ---
 
-Add codegen-free typed custom-filter authoring and client-side filtered search to the Python SDK.
+Typed custom-filter authoring and consumption for the Python SDK.
 
-- `OpportunityFilters` (a `TypedDict`) is the typed authoring surface for opportunity-search filters: a consumer annotates their filter dict with it — or a `total=False` subclass — to get per-key autocomplete and value-type narrowing, and to give each custom filter its own typed key. Clean value aliases (`StringArray`, `NumberComparison`, `DateComparison`, …) read at the call site.
-- `define_plugin(routes=...)` accepts a route-keyed `PluginRoutes` map of `CustomFilterSpec` (`routes[resource][method].filters[name]`, per ADR-0022 Decision #10) and threads it onto `plugin.routes`.
-- `Opportunities.search()` gains optional `filters` and `routes` parameters: the consumer's filter dict is classified via `classify_filters` into the three-bucket search body (default named fields + a `customFilters` record) and POSTed, returning typed `OpportunityBase` rows. `status` is now an optional shorthand merged into the filter set.
+- `OpportunityFilters` is now an open `TypedDict` (PEP 728 `extra_items`): standard filter keys are typed to their value models, a `total=False` subclass gives each registered custom filter its own typed key, and unregistered keys still pass through. One source of truth for both registration and the consumer's `search(filters=...)` call site. Clean value aliases (`StringArray`, `NumberComparison`, `DateComparison`, …) read at the call site.
+- `define_plugin(routes=...)` takes typed route carriers — `PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters))` — so a misspelled route/method is a type error, replacing the stringly-typed route dict.
+- `Plugin.get_client(config)` returns a client already scoped with the plugin's routes and schemas: `opportunities.search()` / `.list()` parse responses with the plugin's custom fields by default and return `SearchResult` / `ListResult` that partition successfully parsed `items` from per-row parse `errors`, so one malformed row no longer fails the batch. Filter-value validation stays fail-soft (collected into `filter_info.errors`).

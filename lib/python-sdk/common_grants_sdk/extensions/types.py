@@ -8,14 +8,13 @@ from typing import (
     Callable,
     Generic,
     Literal,
-    NotRequired,
-    TypedDict,
-    TypeVar,
+    Mapping,
 )
 
 from pydantic import BaseModel, ConfigDict, Field
+from typing_extensions import TypeVar
 
-from .specs import CustomFilterSpec
+from ..schemas.pydantic.filters.opportunity import OpportunityFilters
 
 T = TypeVar("T")
 
@@ -25,24 +24,34 @@ PluginCapability = Literal["customFields", "customFilters", "transforms"]
 # Type aliases
 Handler = Callable[[Any, Any], Any]
 
-# Route-keyed custom-filter declaration types:
-# PluginRoutes = {resourceName: {methodName: RouteDeclarations}}.
-RouteMethodFilters = dict[str, CustomFilterSpec]  # {filterName: spec}
+# Custom-filter registration is a typed carrier: an author writes
+# ``PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters))`` where the
+# ``search`` slot holds the filter TypedDict class directly. A misspelled
+# resource/method is a type error; registered keys are recovered at runtime with
+# ``get_type_hints(route.search)``.
+FiltersT = TypeVar("FiltersT", bound=Mapping[str, Any], default=OpportunityFilters)
 
 
-class RouteDeclarations(TypedDict):
-    """Filter declarations for a single route method (e.g. ``search``).
+@dataclass(frozen=True)
+class ResourceRoutes(Generic[FiltersT]):
+    """Custom-filter registration for one resource's routes.
 
-    ``filters`` maps filter name → ``CustomFilterSpec`` and is optional: a
-    method may appear in the route map with no declarations.
+    ``search`` holds the filter TypedDict class an author defined (e.g.
+    ``OppSearchFilters``), or ``None`` when the resource registers no custom
+    filters. A single resource (opportunities) is supported today.
     """
 
-    filters: NotRequired[RouteMethodFilters]
+    search: type[FiltersT] | None = None
 
 
-PluginRoutes = dict[
-    str, dict[str, RouteDeclarations]
-]  # {resource: {method: declarations}}
+@dataclass(frozen=True)
+class PluginRoutes(Generic[FiltersT]):
+    """Typed route registration passed to ``define_plugin(routes=...)``.
+
+    One slot per filter-capable resource (opportunities today).
+    """
+
+    opportunities: ResourceRoutes[FiltersT]
 
 
 class PassthroughModel(BaseModel):
