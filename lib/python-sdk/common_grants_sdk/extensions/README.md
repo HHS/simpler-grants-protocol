@@ -24,9 +24,13 @@ There is no build step. Plugins are plain Python: you declare custom fields as a
   - [Consuming a plugin](#consuming-a-plugin)
   - [Publishing a plugin](#publishing-a-plugin)
 - [Bidirectional transforms](#bidirectional-transforms)
-  - [Declarative mappings](#declarative-mappings)
-  - [Hand-written functions](#hand-written-functions)
-  - [Mapping format](#mapping-format)
+  - [Defining bidirectional transforms](#defining-bidirectional-transforms)
+  - [Built-in mapping handlers](#built-in-mapping-handlers)
+  - [Null handling](#null-handling)
+  - [Custom handlers](#custom-handlers)
+  - [Validating against the extended schema](#validating-against-the-extended-schema)
+  - [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)
+  - [Error handling](#error-handling)
 - [Using plugins with the API client](#using-plugins-with-the-api-client)
 - [Best practices](#best-practices)
 
@@ -202,25 +206,150 @@ print(opp.custom_fields.program_area.value)  # typed as str
 
 ## Bidirectional transforms
 
-A `SchemaWithTransforms` maps between a source system's native format and the CommonGrants format. Both directions are always author-provided: `build_transforms()` does not invert one mapping from the other, because many-to-one handlers like `match` are not reversible.
+Plugins can declare bidirectional transforms that convert between a source system's native format and the CommonGrants format. `to_common` maps native → CommonGrants; `from_common` reverses it. Both directions are always author-provided — `build_transforms()` does not invert one mapping from the other, because many-to-one handlers like `match` are not reversible.
 
-### Declarative mappings
+### Defining bidirectional transforms
 
-Pass `mappings` to `schema(...)` and the SDK compiles them into typed, validated `to_common` / `from_common` callables:
+Use `build_transforms()` to compile a pair of mapping dicts into callables:
+
+```python
+from common_grants_sdk.extensions import build_transforms
+
+to_common, from_common = build_transforms(
+    # to_common_mapping: native → CommonGrants
+    to_common_mapping={
+        "id":             {"field": "opportunity_uuid"},
+        "title":          {"field": "opportunity_title"},
+        "createdAt":      {"field": "created_at"},
+        "lastModifiedAt": {"field": "last_modified_at"},
+        "status": {
+            "value": {
+                "match": {
+                    "field": "opportunity_status",
+                    "case": {"posted": "open", "archived": "closed", "forecasted": "forecasted"},
+                    "default": "custom",
+                }
+            }
+        },
+    },
+    # from_common_mapping: CommonGrants → native
+    from_common_mapping={
+        "opportunity_uuid":  {"field": "id"},
+        "opportunity_title": {"field": "title"},
+    },
+)
+
+result = to_common(source_data)
+if not result.errors:
+    use(result.result)
+```
+
+Each callable returns a `TransformResult` of `(result, errors)` unconditionally. Failures surface as `TransformError` entries in `errors` rather than being raised — callers choose their own strict-vs-lenient policy.
+
+### Built-in mapping handlers
+
+Mapping dicts are nested objects where keys are either output field names or registered handler names. A handler-keyed node dispatches the handler with `(data, handler_arg)`. Bare non-dict values are treated as literals.
+
+| Handler          | Spec shape                                                          | Behavior                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `field`          | `{"field": "dot.notation.path"}`                                   | Extracts a value from the source via dot-notation. Terminal `None` is preserved; absent / intermediate-`None` returns `None`. See [Null handling](#null-handling). |
+| `const`          | `{"const": <literal>}`                                             | Returns the literal value, ignoring source data.                                                                                               |
+| `match`          | `{"match": {"field": "...", "case": {...}, "default": "..."}}`     | Case-based lookup on a source field value. `None` source passes through unchanged; opt-in target-side translation via `case: {"null": ...}`.   |
+| `switch`         | Same as `match`                                                     | Convenience alias for `match` — both point at the same handler function.                                                                       |
+| `numberToString` | `{"numberToString": "dot.notation.path"}`                          | Extracts a value and coerces to string. Returns `None` on `None` source ("doesn't apply"); absent → `None`.                                   |
+| `stringToNumber` | `{"stringToNumber": "dot.notation.path"}`                          | Extracts a string and coerces to `int` when possible, falls back to `float`. Returns `None` on `None` source; absent → `None`. Raises on non-numeric input. |
+
+When the source is a real (non-passthrough) model, mapping output keys may use either the model's field names or their camelCase aliases (e.g. `createdAt`). Field paths in `from_common` read from the common model using its camelCase alias names (e.g. `status.value`, `customFields.agencyCode.value`).
+
+### Null handling
+
+Optional values carry three distinct states, each of which should be preserved through the transform:
+
+| State      | Meaning                                                                                  | Handler output      |
+| ---------- | ---------------------------------------------------------------------------------------- | ------------------- |
+| **absent** | "Not provided" — the publisher did not supply this data                                  | key omitted         |
+| **`None`** | "Doesn't apply" — the publisher actively asserts the field is irrelevant for this record | key present, `None` |
+| **value**  | "Has a value"                                                                            | coerced value       |
+
+`match` / `switch` passes a `None` source through unchanged by default. To translate it to a target-side sentinel, add a `"null"` key to the `case` dict:
+
+```python
+# status=None on input → status=None on output  (publisher's "doesn't apply" survives)
+{"match": {"field": "status", "case": {"posted": "open", "archived": "closed"}, "default": "custom"}}
+
+# status=None on input → status="n_a" on output  (author-chosen translation)
+{"match": {"field": "status", "case": {"posted": "open", "null": "n_a"}, "default": "custom"}}
+```
+
+`default` is **not** consulted for `None` source — `default` belongs to "unrecognized value," not to "publisher asserts irrelevant." The opt-in `"null"` case key is the only path from a `None` source to a non-`None` target.
+
+**For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `None` for both "not provided" and "doesn't apply" as appropriate — the walker writes `None` returns as a present key, so the output object distinguishes the three states the same way the wire does.
+
+> **Note:** The coercing handlers (`numberToString`, `stringToNumber`) currently collapse a `None` source into the "not provided" path rather than preserving it as `None`. This is a known divergence; bringing them to full parity is a pending follow-up.
+
+### Custom handlers
+
+Register additional handlers per `build_transforms()` call by passing a `handlers` dict. Name collisions with built-ins raise at call time. Custom handlers should follow the three-state contract from [Null handling](#null-handling) above:
+
+```python
+from common_grants_sdk.extensions import build_transforms
+
+# `join` is a special case: string concatenation has no meaningful null
+# behavior, so this drops both absent and None source values. This is
+# appropriate for `join` specifically — most coercing handlers should
+# preserve None on None source rather than collapsing it.
+def join_fields(data: dict, spec: dict) -> str | None:
+    parts = [
+        str(v) for field in spec.get("fields", [])
+        if (v := data.get(field)) is not None
+    ]
+    return spec.get("sep", " ").join(parts) if parts else None
+
+
+to_common, from_common = build_transforms(
+    to_common_mapping={"label": {"join": {"fields": ["first_name", "last_name"], "sep": " "}}},
+    from_common_mapping={},
+    handlers={"join": join_fields},
+)
+```
+
+Custom handlers are scoped to their `build_transforms()` call and are not visible to any other call.
+
+### Validating against the extended schema
+
+Pass `common_schema` and/or `source_schema` to `build_transforms()` to validate transform output at runtime. Always pass the **fully parameterized schema** (e.g. `OpportunityBase[OpportunityFields]`), not the bare base — the bare base only validates `custom_fields` as a plain dict and silently weakens typed field checks:
+
+```python
+from common_grants_sdk.extensions import build_transforms
+
+to_common, from_common = build_transforms(
+    to_common_mapping={...},
+    from_common_mapping={...},
+    common_schema=OpportunityBase[OpportunityFields],  # validates to_common output
+    source_schema=GrantsGovOpportunity,                # validates from_common output
+)
+
+out = to_common(source_data)
+# On validation failure, out.result holds the raw transformed dict so
+# callers can inspect malformed data alongside out.errors.
+```
+
+### Wiring transforms into a plugin
+
+There are two ways to wire transforms into a plugin entry. These are mutually exclusive — you cannot provide both `mappings` and explicit callables on the same entry.
+
+**Option A: Declarative mappings** — pass a `mappings` dict to `schema(...)` and the SDK compiles `to_common` / `from_common` for you:
 
 ```python
 from common_grants_sdk.extensions import PassthroughModel, schema
-from common_grants_sdk.schemas.pydantic.models import Opportunity
 
 ext = schema(
     source_schema=PassthroughModel,
     common_schema=OpportunityBase[OpportunityFields],
     mappings={
         "to_common": {
-            "id": {"field": "opportunity_uuid"},
+            "id":    {"field": "opportunity_uuid"},
             "title": {"field": "opportunity_title"},
-            "createdAt": {"field": "created_at"},
-            "lastModifiedAt": {"field": "last_modified_at"},
             "status": {
                 "value": {
                     "match": {
@@ -232,8 +361,8 @@ ext = schema(
             },
             "customFields": {
                 "agencyCode": {
-                    "value": {"field": "agency_code"},
-                    "name": {"const": "agencyCode"},
+                    "value":     {"field": "agency_code"},
+                    "name":      {"const": "agencyCode"},
                     "fieldType": {"const": "string"},
                 }
             },
@@ -249,18 +378,15 @@ ext = schema(
 
 `PassthroughModel` is a permissive source schema (`extra="allow"`) for when you do not want to model the source shape. Because it accepts arbitrary keys, output-path validation is skipped for it.
 
-### Hand-written functions
-
-When the transform is more than a mapping (e.g. it needs a custom handler or arbitrary Python), write the callables yourself and pass them via the functions overload. Use `validate_into` so the result is validated into the target model and any failure is routed to `TransformResult.errors`:
+**Option B: Hand-written callables** — write the functions yourself and pass them via the functions overload for logic that declarative mappings cannot express. Use `validate_into` so the result is validated into the target model and any failure is routed to `TransformResult.errors`:
 
 ```python
 from common_grants_sdk.extensions import TransformResult, schema, validate_into
-from common_grants_sdk.schemas.pydantic.models import Opportunity
 
 
 def to_common(source: GrantsGovOpportunity) -> TransformResult[OpportunityBase[OpportunityFields]]:
     return validate_into(OpportunityBase[OpportunityFields], {
-        "id": source.opportunity_uuid,
+        "id":    source.opportunity_uuid,
         "title": source.opportunity_title,
         # ...
     })
@@ -279,38 +405,62 @@ ext = schema(
 )
 ```
 
-Hand-written functions own their own validation. In Python, returning a `TransformResult[Model]` means returning an actual Pydantic instance, which is validated on construction (and `validate_into` makes that ergonomic and routes errors). The SDK does not re-wrap them.
+Hand-written functions own their own validation. `validate_into` constructs the target Pydantic model and routes any `ValidationError` into `TransformResult.errors` rather than raising. The SDK does not re-wrap them.
 
-When you need custom handlers, compile with `build_transforms()` directly and pass the callables to the functions overload:
+When you need custom handlers alongside hand-written functions, compile with `build_transforms()` directly and pass the callables to `schema(...)`:
 
 ```python
 from common_grants_sdk.extensions import build_transforms
 
 to_common, from_common = build_transforms(
-    handlers={"join": _join_fields},
-    common_schema=OpportunityBase[OpportunityFields],
-    source_schema=PassthroughModel,
     to_common_mapping={...},
     from_common_mapping={...},
+    handlers={"join": join_fields},
+    common_schema=OpportunityBase[OpportunityFields],
+    source_schema=GrantsGovOpportunity,
+)
+
+ext = schema(
+    source_schema=GrantsGovOpportunity,
+    common_schema=OpportunityBase[OpportunityFields],
+    to_common=to_common,
+    from_common=from_common,
 )
 ```
 
-### Mapping format
+Both options expose the same runtime surface:
 
-A mapping dict describes how to build an output object from a source object. Each leaf node is either a literal value or a single-key dict that invokes a named handler.
+```python
+result = plugin.schemas.Opportunity.to_common(source_data)
+```
 
-| Handler | Syntax | Description |
-| --- | --- | --- |
-| `const` | `{"const": "USD"}` | A fixed literal, ignoring source data |
-| `field` | `{"field": "data.summary.award_floor"}` | Extract a value via a dot-notation path |
-| `match` | `{"match": {"field": "...", "case": {...}, "default": "..."}}` | Case-based lookup on a field value |
-| `switch` | `{"switch": {...}}` | Alias for `match` |
-| `numberToString` | `{"numberToString": "data.opportunity_id"}` | Extract a number and coerce to a string |
-| `stringToNumber` | `{"stringToNumber": "data.priority_score_str"}` | Extract a string and coerce to `int`/`float` |
+For a complete runnable round-trip covering both options and custom handlers, see [`examples/grants_gov_transforms.py`](../../../examples/grants_gov_transforms.py).
 
-Bare non-dict values are treated as literals. Register custom handlers by passing a `handlers` dict to `build_transforms()`; they are scoped to that call and cannot override built-in handler names.
+### Error handling
 
-When the source is a real (non-passthrough) model, mapping output keys may use either the model's field names or their camelCase aliases (e.g. `createdAt`). Field paths in `from_common` read from the common model, so they use its camelCase alias names (e.g. `status.value`, `customFields.agencyCode.value`).
+`TransformError` carries structured context — `path`, `handler`, `source_value`, `cause` — so callers can reason about failures programmatically without parsing error text:
+
+```python
+result = to_common(source_data)
+if result.errors:
+    for err in result.errors:
+        # Build a redacted projection — source_value carries input data by design.
+        # See the PII warning below before logging the full error.
+        safe = {"message": str(err), "path": err.path, "handler": err.handler}
+        print(safe)
+```
+
+`TransformError` properties:
+
+| Property       | Type                | Description                                                      |
+| -------------- | ------------------- | ---------------------------------------------------------------- |
+| `message`      | `str`               | Human-readable description of the failure.                       |
+| `path`         | `str \| None`       | Dot-notation path to the failing field, when known.              |
+| `handler`      | `str \| None`       | Handler name that threw, when applicable.                        |
+| `source_value` | `Any`               | The full input record passed to the transform (see PII warning). |
+| `cause`        | `Exception \| None` | The original exception.                                          |
+
+> **PII warning:** The SDK does **not** redact by default. `TransformError.source_value` and `cause` are plain attributes and will appear in any logger that prints the error object. `source_value` is populated with the entire input record passed to `to_common` / `from_common` — not just the value at the failing field. Log a redacted projection instead — e.g. `{"message": str(err), "path": err.path, "handler": err.handler}`.
 
 ## Using plugins with the API client
 
