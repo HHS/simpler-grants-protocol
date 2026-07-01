@@ -1,8 +1,20 @@
-"""Main HTTP client for the CommonGrants API."""
+"""HTTP client for the CommonGrants API.
+
+``BaseClient`` is the transport plumbing (auth headers, paginated GET/POST). The
+generic ``Client`` layers the typed resource facade on top: it binds a plugin's
+route filters (``FiltersT``) and Opportunity schema (``ItemT``) so
+``client.opportunities.search(filters=...)`` is typed and responses parse with the
+plugin's custom fields by default. Construct one directly, or via
+``plugin.get_client(...)``.
+"""
+
+from __future__ import annotations
 
 import httpx
-from typing import Any, Optional, cast
+from typing import Any, Generic, Optional, cast
 from uuid import UUID
+
+import typing_extensions as te
 
 from .auth import Auth
 from .config import Config
@@ -12,54 +24,53 @@ from .opportunities import Opportunities
 from .pagination import pagination
 from .types import ItemsT
 from ..extensions.filters import validate_routes
-from ..extensions.types import PluginRoutes
+from ..extensions.plugin import PluginSchemas
+from ..extensions.types import FiltersT, PluginRoutes, ResourceRoutes
+from ..schemas.pydantic.models import OpportunityBase
 from ..schemas.pydantic.responses import Filtered, Paginated
 
+# Bound is OpportunityBase[Any] (the custom-fields parameter is invariant, so a
+# bare OpportunityBase bound would reject OpportunityBase[OppCustomFields]).
+ItemT = te.TypeVar(
+    "ItemT", bound="OpportunityBase[Any]", default="OpportunityBase[Any]"
+)
 
-class Client:
-    """HTTP client for interacting with the CommonGrants API."""
+
+def _resolve_opportunity_schema(
+    schemas: Optional[PluginSchemas[Any]],
+) -> type[OpportunityBase]:
+    """The Opportunity model a client parses into by default.
+
+    Reads the common model bound to the plugin's Opportunity schema slot; falls
+    back to the base ``OpportunityBase`` when no schemas are bound.
+    """
+    if schemas is None:
+        return OpportunityBase
+    common = getattr(getattr(schemas, "Opportunity", None), "common_schema", None)
+    return common if isinstance(common, type) else OpportunityBase
+
+
+class BaseClient:
+    """Transport plumbing for the CommonGrants API (auth + paginated GET/POST)."""
 
     def __init__(
         self,
         config: Optional[Config] = None,
         auth: Optional[Auth] = None,
-        routes: Optional[PluginRoutes] = None,
     ):
-        """Initialize the CommonGrants client.
+        """Initialize the transport layer.
 
         Args:
             config: Optional Config instance. If None, a default Config is created.
             auth: Optional Auth instance. If None, API key authentication is used
                 with the key from config.
-            routes: Optional plugin ``routes`` declaration (fixed plugin config).
-                Bound and validated once here; used to classify registered custom
-                filters in ``opportunities.search``.
-
-        Raises:
-            FilterError: If ``routes`` declares an unknown ``filter_type``, a
-                custom filter name that collides with a default filter name, or
-                custom filters on a route that does not support them (e.g.
-                ``opportunities.list``).
         """
         self.config = config or Config()
         self.auth = auth or Auth.api_key(self.config.api_key)
         self.http = httpx.Client(timeout=self.config.timeout)
-        self.routes = routes or {}
-        validate_routes(self.routes)
-        self.opportunities = Opportunities(client=self)
 
     def post(self, path: str, **kwargs) -> httpx.Response:
-        """Simple wrapper around self.http.post.
-
-        Automatically adds authentication headers to the request.
-
-        Args:
-            path: end point path (should start with /)
-            **kwargs: Additional arguments to pass to httpx.post (e.g., json, data, params)
-
-        Returns:
-            httpx.Response instance
-        """
+        """Wrapper around ``self.http.post`` that adds auth headers."""
         return self.http.post(
             self.url(path),
             headers=self.auth.get_headers(),
@@ -67,17 +78,7 @@ class Client:
         )
 
     def get(self, path: str, **kwargs) -> httpx.Response:
-        """Simple wrapper around self.http.get.
-
-        Automatically adds authentication headers to the request.
-
-        Args:
-            path: end point path (should start with /)
-            **kwargs: Additional arguments to pass to httpx.get (e.g., params, headers)
-
-        Returns:
-            httpx.Response instance
-        """
+        """Wrapper around ``self.http.get`` that adds auth headers."""
         return self.http.get(
             self.url(path),
             headers=self.auth.get_headers(),
@@ -89,16 +90,7 @@ class Client:
         path: str,
         item_id: str | UUID,
     ) -> SuccessResponse:
-        """Get a specific item by ID from an endpoint.
-
-        Makes a GET request to {path}/{item_id}.
-
-        Args:
-            path: end point path (should start with /)
-            item_id: The item ID (string or UUID)
-
-        Returns:
-            SuccessResponse instance with status, message, and data fields.
+        """Get a specific item by ID (GET ``{path}/{item_id}``).
 
         Raises:
             APIError: If the API request fails
@@ -121,23 +113,9 @@ class Client:
         page_size: int | None = None,
         params: dict[str, Any] | None = None,
     ) -> Paginated[ItemsT]:
-        """Fetch a set of items from an endpoint using a GET request.
+        """Fetch a set of items via GET, with pagination.
 
-        Args:
-            path: end point path (should start with /)
-            page: Page number (1-indexed). If None, method will fetch all
-                items across all pages and aggregate them into a single response.
-                When fetching all pages, the number of items is limited by
-                config.list_items_limit.
-            page_size: Number of items per page. If None, uses the default from
-                client config.
-            params: Additional parameters to pass to the API. These are merged
-                with pagination parameters (page, pageSize).
-
-        Returns:
-            Paginated[ItemsT] instance. When page is None, the response contains
-            all items aggregated from all pages (up to list_items_limit), with
-            pagination_info summarizing the aggregated result.
+        When page is None, aggregates all pages up to ``config.list_items_limit``.
 
         Raises:
             APIError: If the API request fails
@@ -168,21 +146,9 @@ class Client:
         page: int | None = None,
         page_size: int | None = None,
     ) -> Paginated[ItemsT]:
-        """Fetch a set of items from an endpoint based on request data using a POST request.
+        """Fetch a set of items via POST, with pagination.
 
-        Args:
-            path: end point path (should start with /)
-            request_data: search specific request data (sent in request body as form data)
-            page: Page number (1-indexed). If None, will fetch all items across all pages
-                and aggregate them into a single response. When fetching all pages, the
-                number of items is limited by config.list_items_limit.
-            page_size: Number of items per page. If None, uses the default from
-                client config.
-
-        Returns:
-            Paginated[ItemsT] instance. When page is None, the response contains
-            all items aggregated from all pages (up to list_items_limit), with
-            pagination_info summarizing the aggregated result.
+        When page is None, aggregates all pages up to ``config.list_items_limit``.
 
         Raises:
             APIError: If the API request fails
@@ -209,17 +175,7 @@ class Client:
         return result
 
     def url(self, path: str) -> str:
-        """Construct a full URL from base URL and path.
-
-        Trailing slashes are automatically stripped from the base URL before
-        concatenation.
-
-        Args:
-            path: end point path (should start with /)
-
-        Returns:
-            Complete URL string
-        """
+        """Construct a full URL from base URL and path (trailing slash stripped)."""
         base = self.config.base_url.rstrip("/")
         return f"{base}{path}"
 
@@ -228,16 +184,53 @@ class Client:
         self.http.close()
 
     def __enter__(self):
-        """Context manager entry.
-
-        Returns:
-            The Client instance
-        """
+        """Context manager entry; returns the client instance."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit.
-
-        Automatically closes the HTTP client when exiting the context.
-        """
+        """Context manager exit; closes the HTTP client."""
         self.close()
+
+
+class Client(BaseClient, Generic[FiltersT, ItemT]):
+    """Typed resource facade over :class:`BaseClient`.
+
+    Binds a plugin's route filters and Opportunity schema, exposing the typed
+    ``opportunities`` resource. Prefer ``plugin.get_client(...)`` over constructing
+    this directly.
+    """
+
+    def __init__(
+        self,
+        config: Optional[Config] = None,
+        auth: Optional[Auth] = None,
+        routes: Optional[PluginRoutes[Any]] = None,
+        schemas: Optional[PluginSchemas[Any]] = None,
+    ):
+        """Initialize the client.
+
+        Args:
+            config: Optional Config instance.
+            auth: Optional Auth instance.
+            routes: Optional typed ``PluginRoutes`` carrier (fixed plugin config).
+                Bound and validated once here; used to classify registered custom
+                filters in ``opportunities.search``.
+            schemas: Optional ``PluginSchemas``; its Opportunity common model
+                becomes the default parse schema for ``opportunities`` responses.
+
+        Raises:
+            FilterError: If ``routes`` registers a filter whose value type is not a
+                filter value model.
+        """
+        super().__init__(config=config, auth=auth)
+        self.routes: PluginRoutes[Any] = (
+            routes
+            if routes is not None
+            else PluginRoutes(opportunities=ResourceRoutes())
+        )
+        validate_routes(self.routes)
+        self.schemas = schemas
+        self._opportunity_schema: type[OpportunityBase] = _resolve_opportunity_schema(
+            schemas
+        )
+        self.opportunities: Opportunities[FiltersT, ItemT] = Opportunities(client=self)

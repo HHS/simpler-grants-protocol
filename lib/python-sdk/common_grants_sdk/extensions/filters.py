@@ -1,15 +1,17 @@
 """Pure-runtime filter engine for the CommonGrants Python SDK.
 
 Provides:
-- ``f`` helper singleton for building DefaultFilter instances.
-- ``FILTER_TYPE_SCHEMAS`` — map from CustomFilterType to the Pydantic validation model.
+- ``f`` helper singleton for building filter value models.
 - ``DEFAULT_FILTER_NAMES`` — frozenset of all core default-filter field names (snake + alias).
 - ``validate_routes(routes)`` — registration-time validator; raises FilterError.
-- ``validate_filter_call(spec, filter_name, value)`` — call-time validator; fail-soft,
-  returns ``(wire-ready DefaultFilter, None)`` on success or ``(None, FilterError)``.
+- ``validate_filter_call(model_cls, filter_name, value)`` — call-time validator; fail-soft.
+  Validates against ``model_cls`` (a registered filter's value model) or ``DefaultFilter``
+  when ``model_cls`` is ``None``; returns ``(wire-ready DefaultFilter, None)`` on success
+  or ``(None, FilterError)``.
 - ``classify_filters(routes, resource, method, consumer_filters)`` — fail-soft classifier
   producing a ``ClassifyResult`` (the valid-only ``OppFilters`` search request body plus
-  the collected ``FilterError``s; never raises on a bad call-time filter value).
+  the collected ``FilterError``s; never raises on a bad call-time filter value). Registered
+  custom filters are recovered from the route's TypedDict via ``get_type_hints``.
 
 No generate.py / codegen dependency. Correctness is enforced at runtime by Pydantic v2.
 """
@@ -17,11 +19,12 @@ No generate.py / codegen dependency. Correctness is enforced at runtime by Pydan
 from __future__ import annotations
 
 from collections.abc import Mapping
-from types import MappingProxyType
-from typing import Any, Optional, Union, overload
+from dataclasses import fields
+from typing import Any, Optional, Union, get_type_hints, overload
 
 from pydantic import BaseModel, ValidationError
 
+from common_grants_sdk.schemas.pydantic.base import CommonGrantsBaseModel
 from common_grants_sdk.schemas.pydantic.filters.base import (
     ArrayOperator,
     ComparisonOperator,
@@ -31,14 +34,6 @@ from common_grants_sdk.schemas.pydantic.filters.base import (
     StringOperator,
 )
 from common_grants_sdk.schemas.pydantic.filters.boolean import BooleanComparisonFilter
-from common_grants_sdk.schemas.pydantic.filters.date import (
-    DateComparisonFilter,
-    DateRangeFilter,
-)
-from common_grants_sdk.schemas.pydantic.filters.money import (
-    MoneyComparisonFilter,
-    MoneyRangeFilter,
-)
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
     NumberArrayFilter,
     NumberComparisonFilter,
@@ -48,13 +43,13 @@ from common_grants_sdk.schemas.pydantic.filters.numeric import (
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     OppDefaultFilters,
     OppFilters,
+    OpportunityFilters,
 )
 from common_grants_sdk.schemas.pydantic.filters.string import (
     StringArrayFilter,
     StringComparisonFilter,
 )
 
-from .specs import CustomFilterSpec, CustomFilterType
 from .types import ClassifyResult, FilterError, PluginRoutes
 
 # ---------------------------------------------------------------------------
@@ -164,7 +159,7 @@ class _FHelpers:
         # Numbers map to NumberComparisonFilter; bool is excluded (it is not a
         # comparable number here and NumberComparisonFilter rejects it). Money
         # dicts and ISODate strings fall through to DefaultFilter, where the
-        # registered filter_type model validates them at call time.
+        # registered filter's value model validates them at call time.
         if not isinstance(value, bool) and isinstance(value, (int, float)):
             return NumberComparisonFilter(operator=operator, value=value)
         return DefaultFilter(operator=operator, value=value)
@@ -198,7 +193,7 @@ class _FHelpers:
         # An all-string list is a StringArrayFilter; an all-number (non-bool) list
         # is a NumberArrayFilter. Mixed / Money-dict lists fall through to
         # DefaultFilter. An empty list is treated as a string array (the common
-        # case; the registered filter_type re-validates either way).
+        # case; the registered filter's value model re-validates either way).
         if all(isinstance(v, str) for v in value):
             return StringArrayFilter(operator=operator, value=value)
         if all(not isinstance(v, bool) and isinstance(v, (int, float)) for v in value):
@@ -238,7 +233,7 @@ class _FHelpers:
     def _range(self, operator: RangeOperator, min: Any, max: Any) -> BaseModel:
         # A numeric min+max is a NumberRangeFilter; date / Money ranges (whose
         # value sub-models differ) fall through to DefaultFilter, where the
-        # registered filter_type (DATE_RANGE / MONEY_RANGE) validates the shape.
+        # registered filter's value model validates the shape.
         numeric = all(
             not isinstance(v, bool) and isinstance(v, (int, float)) for v in (min, max)
         )
@@ -251,33 +246,6 @@ class _FHelpers:
 
 #: Module-level singleton — use as ``f.eq(...)``, ``f.in_([...])``, etc.
 f = _FHelpers()
-
-# ---------------------------------------------------------------------------
-# FILTER_TYPE_SCHEMAS — call-time validation map
-# ---------------------------------------------------------------------------
-
-#: Maps each CustomFilterType to the Pydantic model used to validate operator/value shape.
-#: ``booleanComparison`` uses the SDK-level ``BooleanComparisonFilter`` model (the spec
-#: defines no boolean filter model).
-#: Read-only: the catalog is closed — registering new filter types is a spec/SDK
-#: change (extend CustomFilterType + this map together), not a runtime extension point.
-FILTER_TYPE_SCHEMAS: Mapping[CustomFilterType, type[BaseModel]] = MappingProxyType(
-    {
-        CustomFilterType.STRING_COMPARISON: StringComparisonFilter,
-        CustomFilterType.STRING_ARRAY: StringArrayFilter,
-        CustomFilterType.NUMBER_COMPARISON: NumberComparisonFilter,
-        CustomFilterType.NUMBER_ARRAY: NumberArrayFilter,
-        CustomFilterType.NUMBER_RANGE: NumberRangeFilter,
-        # integerComparison reuses NumberComparisonFilter — the spec defines no
-        # integer filter model, so the int constraint is not schema-enforced
-        CustomFilterType.INTEGER_COMPARISON: NumberComparisonFilter,
-        CustomFilterType.BOOLEAN_COMPARISON: BooleanComparisonFilter,
-        CustomFilterType.DATE_COMPARISON: DateComparisonFilter,
-        CustomFilterType.DATE_RANGE: DateRangeFilter,
-        CustomFilterType.MONEY_COMPARISON: MoneyComparisonFilter,
-        CustomFilterType.MONEY_RANGE: MoneyRangeFilter,
-    }
-)
 
 # ---------------------------------------------------------------------------
 # DEFAULT_FILTER_NAMES — must include BOTH snake_case field names AND camelCase aliases
@@ -319,69 +287,79 @@ _SNAKE_TO_ALIAS: dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
-# validate_routes — registration-time validator
+# Registered-filter recovery + validate_routes (registration-time validator)
 # ---------------------------------------------------------------------------
 
-# (resource, method) pairs whose custom filters this client classifies. A route
-# is filter-capable when its core operation declares a ``filters`` parameter
-# (lib/core routes); this set hardcodes that subset. As more routes gain filter
-# support, derive it from the contract rather than extending this literal by hand.
-SUPPORTED_CUSTOM_FILTER_ROUTES: set[tuple[str, str]] = {("opportunities", "search")}
+
+def _registered_filter_models(route_td: Any) -> dict[str, type[BaseModel]]:
+    """Recover a route's registered custom filters from its filter TypedDict.
+
+    ``route_td`` is the TypedDict class an author put in the route slot (e.g.
+    ``OppSearchFilters``), or ``None``. Returns ``{filterName: value model}`` for
+    every key the author declared beyond the standard ``OpportunityFilters`` keys.
+    Non-model annotations are skipped here; ``validate_routes`` (run at ``Client``
+    construction) rejects them, so a caller who invokes ``classify_filters`` directly
+    on unvalidated routes gets silent skipping rather than a raise.
+    """
+    if route_td is None:
+        return {}
+    standard = set(get_type_hints(OpportunityFilters))
+    return {
+        name: ann
+        for name, ann in get_type_hints(route_td).items()
+        if name not in standard and isinstance(ann, type) and issubclass(ann, BaseModel)
+    }
 
 
-def validate_routes(routes: PluginRoutes) -> None:
-    """Registration-time validator for a plugin's route filter declarations.
+def validate_routes(routes: PluginRoutes[Any]) -> None:
+    """Registration-time validator for a plugin's typed route carriers.
 
-    Iterates every filter spec in ``routes`` and raises ``FilterError`` on:
-    1. Unknown ``filter_type`` (not in ``FILTER_TYPE_SCHEMAS``).
-    2. Filter name that collides with a core default-filter name in
-       ``DEFAULT_FILTER_NAMES`` (the escape-hatch collision check; a namespaced
-       key such as ``gov.<system>@<filterName>`` passes through as ad-hoc instead).
-    3. Filters declared on a route that does not support custom filters, i.e. a
-       ``(resource, method)`` not in ``SUPPORTED_CUSTOM_FILTER_ROUTES`` (e.g.
-       ``opportunities.list``, whose core operation declares no ``filters``).
+    The typed carriers make a misspelled resource/method a *static* error. Two
+    runtime checks remain:
 
-    Duplicate custom-filter names need no check: ``routes`` is dict-keyed, so a
-    duplicate name cannot reach this validator (a duplicated literal key collapses
-    silently to its last occurrence at dict construction, before this runs).
-
-    Methods whose ``RouteDeclarations`` carry no ``filters`` key are skipped —
-    declaring a method with no filters is valid.
+    1. A registered custom filter's value type must be a filter value model (a
+       ``CommonGrantsBaseModel`` subclass) — a mistyped TypedDict value (e.g.
+       ``region: int``) would otherwise fail opaquely at call time.
+    2. A route TypedDict must not redeclare a standard ``OpportunityFilters`` key
+       with a different value type. Authors get the standard keys for free; a
+       re-typed standard key (e.g. ``status: StringComparisonFilter``) creates a
+       static/runtime mismatch — the call site sees the override, but
+       classification validates against the real standard field type.
 
     Args:
-        routes: Route-keyed filter declarations as ``PluginRoutes``.
+        routes: Typed route registration (``PluginRoutes``).
 
     Raises:
-        FilterError: On the first invalid declaration found.
+        FilterError: On the first offending declaration.
     """
-    for resource, methods in routes.items():
-        for method, declarations in methods.items():
-            filter_specs = declarations.get("filters")
-            if not filter_specs:
+    standard_hints = get_type_hints(OpportunityFilters)
+    for resource_field in fields(routes):
+        resource_routes = getattr(routes, resource_field.name)
+        for method_field in fields(resource_routes):
+            route_td = getattr(resource_routes, method_field.name)
+            if route_td is None:
                 continue
-            if (resource, method) not in SUPPORTED_CUSTOM_FILTER_ROUTES:
-                supported = ", ".join(
-                    f"{r}.{m}" for r, m in sorted(SUPPORTED_CUSTOM_FILTER_ROUTES)
-                )
-                raise FilterError(
-                    f'Route "{resource}.{method}" does not support custom filters '
-                    f"(supported: {supported})",
-                    path=f"routes.{resource}.{method}",
-                    source_value=filter_specs,
-                )
-            for filter_name, spec in filter_specs.items():
-                path = f"routes.{resource}.{method}.filters.{filter_name}"
-                if spec.filter_type not in FILTER_TYPE_SCHEMAS:
+            path_prefix = f"routes.{resource_field.name}.{method_field.name}"
+            for name, ann in get_type_hints(route_td).items():
+                if name in standard_hints:
+                    if ann is not standard_hints[name]:
+                        raise FilterError(
+                            f'Filter "{name}" on '
+                            f"{resource_field.name}.{method_field.name} redeclares a "
+                            "standard filter with a different type",
+                            path=f"{path_prefix}.{name}",
+                            source_value=ann,
+                        )
+                    continue
+                if not (
+                    isinstance(ann, type) and issubclass(ann, CommonGrantsBaseModel)
+                ):
                     raise FilterError(
-                        f'Unknown filter_type "{spec.filter_type}" for filter "{filter_name}"',
-                        path=path,
-                        source_value=spec,
-                    )
-                if filter_name in DEFAULT_FILTER_NAMES:
-                    raise FilterError(
-                        f'Filter name "{filter_name}" collides with a default filter name',
-                        path=path,
-                        source_value=filter_name,
+                        f'Registered filter "{name}" on '
+                        f"{resource_field.name}.{method_field.name} must be a filter "
+                        "value model (a CommonGrantsBaseModel subclass)",
+                        path=f"{path_prefix}.{name}",
+                        source_value=ann,
                     )
 
 
@@ -403,15 +381,15 @@ def _first_error_detail(exc: ValidationError) -> str:
 
 
 def validate_filter_call(
-    spec: Optional[CustomFilterSpec],
+    model_cls: Optional[type[BaseModel]],
     filter_name: str,
     value: Any,
 ) -> tuple[Optional[DefaultFilter], Optional[FilterError]]:
     """Call-time validator for a single filter value (fail-soft).
 
-    Validates ``value`` against the Pydantic model for ``spec.filter_type`` when
-    ``spec`` is provided (registered filter), or against ``DefaultFilter`` when
-    ``spec`` is ``None`` (ad-hoc / escape-hatch filter).
+    Validates ``value`` against ``model_cls`` when provided (a registered filter's
+    value model, recovered from the route's TypedDict), or against ``DefaultFilter``
+    when ``model_cls`` is ``None`` (ad-hoc / escape-hatch filter).
 
     Never raises: returns ``(validated_filter, None)`` on success or
     ``(None, FilterError)`` on failure. The caller collects the error and skips
@@ -424,28 +402,16 @@ def validate_filter_call(
     be valid now.
 
     Args:
-        spec: The registered ``CustomFilterSpec`` for this filter, or ``None`` for ad-hoc.
+        model_cls: The registered filter's value model, or ``None`` for ad-hoc.
         filter_name: The filter name (used in FilterError path).
         value: The filter value to validate (typically a ``DefaultFilter`` instance).
 
     Returns:
         ``(DefaultFilter, None)`` when the value is valid, else ``(None, FilterError)``.
-        The error wraps the pydantic ``ValidationError`` as ``cause``. An unknown
-        ``spec.filter_type`` (not in ``FILTER_TYPE_SCHEMAS``) also returns a
-        ``FilterError`` — call ``validate_routes(routes)`` at registration time to
-        catch that earlier.
+        The error wraps the pydantic ``ValidationError`` as ``cause``.
     """
     payload = value.model_dump() if isinstance(value, BaseModel) else value
-    if spec is not None:
-        model_cls = FILTER_TYPE_SCHEMAS.get(spec.filter_type)
-        if model_cls is None:
-            return None, FilterError(
-                f'Unknown filter_type "{spec.filter_type}" for filter '
-                f'"{filter_name}" — call validate_routes(routes) at '
-                "registration time to catch this earlier",
-                path=f"filters.{filter_name}",
-                source_value=spec,
-            )
+    if model_cls is not None:
         try:
             validated = model_cls.model_validate(payload)
         except ValidationError as exc:
@@ -518,7 +484,7 @@ def _validate_default_field(
 # deriving both from the declared resource is tracked in
 # https://github.com/HHS/simpler-grants-protocol/issues/896.
 def classify_filters(
-    routes: PluginRoutes,
+    routes: PluginRoutes[Any],
     resource: str,
     method: str,
     consumer_filters: Mapping[str, Union[BaseModel, dict[str, Any]]],
@@ -528,8 +494,8 @@ def classify_filters(
     Three-bucket classification:
     - Bucket 1 (default): key is in ``DEFAULT_FILTER_NAMES`` (snake or camelCase alias) →
       normalize to the camelCase alias form, land in a named OppFilters field.
-    - Bucket 2 (registered custom): key matches a registered ``CustomFilterSpec`` for the
-      given resource/method → land in ``custom_filters``.
+    - Bucket 2 (registered custom): key matches a filter registered on the route's
+      TypedDict for the given resource/method → land in ``custom_filters``.
     - Bucket 3 (ad-hoc): any other key → land in ``custom_filters`` passthrough.
 
     Validation is **fail-soft**: a key that fails its call-time validation is
@@ -572,10 +538,9 @@ def classify_filters(
         coerced ``date`` objects are not JSON-serializable in the default python
         mode (operator enums are ``StrEnum`` and serialize fine either way).
     """
-    route_declarations = routes.get(resource, {}).get(method, {})
-    registered_specs: dict[str, CustomFilterSpec] = route_declarations.get(
-        "filters", {}
-    )
+    route = getattr(routes, resource, None)
+    route_td = getattr(route, method, None) if route is not None else None
+    registered = _registered_filter_models(route_td)
 
     default_fields: dict[str, Any] = {}
     custom_buckets: dict[str, DefaultFilter] = {}
@@ -603,27 +568,31 @@ def classify_filters(
                         "(snake_case and camelCase forms of the same filter)",
                         path=f"filters.{alias_key}",
                         source_value=value,
+                        strict=True,
                     )
                 )
                 continue
             validated, error = _validate_default_field(alias_key, value)
             if error is not None:
+                # Standard filter — the SDK owns its contract; mark strict so the
+                # resource client raises rather than fail-softing.
+                error.strict = True
                 errors.append(error)
                 continue
             default_fields[alias_key] = validated
-        elif key in registered_specs:
-            # Bucket 2: registered custom filter — ship the validated value,
-            # never the raw input (see validate_filter_call). Fail-soft: collect
-            # the error and skip the key.
-            spec = registered_specs[key]
-            validated, error = validate_filter_call(spec, key, value)
+        elif key in registered:
+            # Bucket 2: registered custom filter — validate against the value
+            # model recovered from the route's TypedDict; ship the validated
+            # value, never the raw input. Fail-soft here; strict for the client.
+            validated, error = validate_filter_call(registered[key], key, value)
             if error is not None:
+                error.strict = True
                 errors.append(error)
                 continue
             custom_buckets[key] = validated  # type: ignore[assignment]
         else:
             # Bucket 3: ad-hoc / escape-hatch passthrough — ship the validated value.
-            # Fail-soft: collect the error and skip the key.
+            # Fail-soft: collect the (non-strict) error and skip the key.
             validated, error = validate_filter_call(None, key, value)
             if error is not None:
                 errors.append(error)

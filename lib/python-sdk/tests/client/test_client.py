@@ -12,8 +12,12 @@ from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.schemas.pydantic.pagination import PaginatedResultsInfo
 from common_grants_sdk.schemas.pydantic.responses import Paginated
-from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
+from common_grants_sdk.extensions import PluginRoutes, ResourceRoutes
 from common_grants_sdk.extensions.types import FilterError
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    OpportunityFilters,
+    StringArray,
+)
 from pydantic import ValidationError
 
 
@@ -31,23 +35,42 @@ class TestClient:
             assert isinstance(client.opportunities, type(client.opportunities))
 
     def test_client_initialization_validates_routes(self):
-        """Client validates routes at construction and raises on a bad declaration."""
+        """Client validates routes at construction and raises on a bad declaration.
+
+        The typed carrier makes a misspelled resource/method a static error, so the
+        only remaining runtime check is that a registered custom filter's value type
+        is a filter value model. A TypedDict whose custom key is annotated with a
+        non-model type (``region: int``) is the genuinely-invalid registration.
+        """
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
-            # "status" collides with the default status filter name.
-            bad_routes = {
-                "opportunities": {
-                    "search": {
-                        "filters": {
-                            "status": CustomFilterSpec(
-                                filter_type=CustomFilterType.STRING_ARRAY
-                            )
-                        }
-                    }
-                }
-            }
+
+            class BadFilters(OpportunityFilters, total=False):
+                region: int  # not a filter value model
+
             with pytest.raises(FilterError):
-                Client(config=config, routes=bad_routes)
+                Client(
+                    config=config,
+                    routes=PluginRoutes(
+                        opportunities=ResourceRoutes(search=BadFilters)
+                    ),
+                )
+
+    def test_client_initialization_accepts_valid_routes(self):
+        """A valid typed routes carrier is accepted at construction (no raise)."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+
+            class OppSearchFilters(OpportunityFilters, total=False):
+                region: StringArray
+
+            client = Client(
+                config=config,
+                routes=PluginRoutes(
+                    opportunities=ResourceRoutes(search=OppSearchFilters)
+                ),
+            )
+            assert client.routes.opportunities.search is OppSearchFilters
 
     def test_client_initialization_defaults_auth(self, monkeypatch):
         """Test client initialization with default auth from config."""

@@ -8,19 +8,22 @@ from pydantic import Field
 from common_grants_sdk.extensions import (
     CustomField,
     CustomFieldSet,
-    CustomFilterSpec,
-    CustomFilterType,
     PassthroughModel,
     Plugin,
     PluginMeta,
     PluginRoutes,
     PluginSchemas,
+    ResourceRoutes,
     SchemaOnly,
     SchemaWithTransforms,
     define_plugin,
     schema,
 )
 from common_grants_sdk.extensions.schema import PluginDefinitionError
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    OpportunityFilters,
+    StringArray,
+)
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 
 
@@ -109,32 +112,33 @@ def test_plugin_is_frozen():
 # ---------------------------------------------------------------------------
 
 
-def test_define_plugin_threads_routes_onto_plugin():
-    """The PluginRoutes map passed to define_plugin is threaded onto the plugin.
+class OppSearchFilters(OpportunityFilters, total=False):
+    """A route filter TypedDict registering one custom filter (agency)."""
 
-    Regression: if define_plugin dropped ``routes=``, plugin.routes would be empty
-    and the registered custom filters would be lost.
+    agency: StringArray
+
+
+def test_define_plugin_threads_routes_onto_plugin():
+    """The PluginRoutes carrier passed to define_plugin is threaded onto the plugin.
+
+    Regression: if define_plugin dropped ``routes=``, plugin.routes would default
+    to the empty carrier and the registered custom filters would be lost.
     """
-    registered: PluginRoutes = {
-        "opportunities": {
-            "search": {
-                "filters": {
-                    "agency": CustomFilterSpec(
-                        filter_type=CustomFilterType.STRING_ARRAY
-                    )
-                }
-            }
-        }
-    }
+    registered: PluginRoutes = PluginRoutes(
+        opportunities=ResourceRoutes(search=OppSearchFilters)
+    )
     plugin = define_plugin(
         PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
         routes=registered,
         meta=_meta(),
     )
     assert plugin.routes is registered
+    assert plugin.routes.opportunities.search is OppSearchFilters
 
 
-def test_define_plugin_defaults_routes_to_empty_map():
-    """Omitting ``routes`` yields a concrete, non-optional empty map (never None)."""
+def test_define_plugin_defaults_routes_to_empty_carrier():
+    """Omitting ``routes`` yields a concrete, non-optional empty carrier (never None)."""
     plugin = define_plugin(PluginSchemas(), meta=_meta())
-    assert plugin.routes == {}
+    assert isinstance(plugin.routes, PluginRoutes)
+    # The empty carrier registers no custom filters.
+    assert plugin.routes.opportunities.search is None

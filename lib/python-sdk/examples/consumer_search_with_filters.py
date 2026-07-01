@@ -3,10 +3,11 @@
 
 The full downstream flow an adopter writes against the SDK:
 
-  AUTHOR   registers the custom filters a route accepts on the plugin
-           (``define_plugin(routes=...)`` → ``plugin.routes``, a ``PluginRoutes`` map
-           of ``CustomFilterSpec``), and extends the ``OpportunityFilters`` TypedDict
-           so the call-site filter dict narrows per key.
+  AUTHOR   registers the custom filters a route accepts on the plugin by extending
+           the ``OpportunityFilters`` TypedDict (one typed key per custom filter) and
+           passing the carrier as ``define_plugin(routes=...)`` → ``plugin.routes``, a
+           ``PluginRoutes`` carrier. The typed dict also narrows the call-site filter
+           dict per key.
   CONSUMER constructs the client with the registered routes
            (``Client(config, routes=plugin.routes)``), builds a filter dict with the
            ``f.*`` builders, and calls ``client.opportunities.search(search=..., filters=...)``.
@@ -35,10 +36,10 @@ from typing_extensions import assert_type
 from common_grants_sdk.client import Client
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.extensions import (
-    CustomFilterSpec,
-    CustomFilterType,
     PluginMeta,
+    PluginRoutes,
     PluginSchemas,
+    ResourceRoutes,
     define_plugin,
     f,
     schema,
@@ -65,24 +66,11 @@ class OppSearchFilters(OpportunityFilters, total=False):
 
 
 # Route registration the client's classifier consumes (see define_plugin(routes=...)).
-# Each custom filter's value shape is enforced at call time by its filter_type model.
+# The OppSearchFilters TypedDict IS the registration: each custom filter's value
+# shape is its declared annotation, enforced against the call-site value at call time.
 plugin = define_plugin(
     PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
-    routes={
-        "opportunities": {
-            "search": {
-                "filters": {
-                    "agency": CustomFilterSpec(
-                        filter_type=CustomFilterType.STRING_ARRAY
-                    ),
-                    "awardCount": CustomFilterSpec(
-                        filter_type=CustomFilterType.NUMBER_COMPARISON,
-                        description="Number of awards expected",
-                    ),
-                }
-            }
-        }
-    },
+    routes=PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters)),
     meta=PluginMeta(name="grants.gov", source_system="grants.gov"),
 )
 
