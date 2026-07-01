@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 
-from common_grants_sdk.client.results import ParseFailure, parse_batch
+from common_grants_sdk.client import ParseFailure, parse_batch
 
 
 class _Row(BaseModel):
