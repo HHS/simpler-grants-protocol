@@ -268,6 +268,30 @@ def test_validate_routes_non_model_filter_type_raises():
         validate_routes(routes)
 
 
+def test_validate_routes_redeclared_standard_key_wrong_type_raises():
+    """validate_routes raises when a route TypedDict redeclares a standard key with
+    a different value type — the call site would see the override while classify
+    validates against the real standard field type (a static/runtime mismatch)."""
+
+    class RedeclaresStatus(OpportunityFilters, total=False):
+        status: StringComparison  # standard "status" is a StringArray filter
+
+    routes = PluginRoutes(opportunities=ResourceRoutes(search=RedeclaresStatus))
+    with pytest.raises(FilterError):
+        validate_routes(routes)
+
+
+def test_validate_routes_redeclared_standard_key_same_type_ok():
+    """Redeclaring a standard key with its SAME type is a harmless no-op override."""
+
+    class RedeclaresStatusSame(OpportunityFilters, total=False):
+        status: StringArray  # same as the standard type
+
+    validate_routes(
+        PluginRoutes(opportunities=ResourceRoutes(search=RedeclaresStatusSame))
+    )
+
+
 def test_validate_routes_valid_routes_do_not_raise():
     """validate_routes does not raise for a fully valid typed routes carrier."""
     # Should not raise

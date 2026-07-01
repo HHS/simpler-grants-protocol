@@ -202,4 +202,5 @@ class Opportunities(Generic[FiltersT, ItemT]):
             errors=parse_errors,
             pagination_info=paginated.pagination_info,
             filter_info=filter_info,
+            sort_info=getattr(paginated, "sort_info", None),
         )

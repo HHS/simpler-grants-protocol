@@ -297,8 +297,9 @@ def _registered_filter_models(route_td: Any) -> dict[str, type[BaseModel]]:
     ``route_td`` is the TypedDict class an author put in the route slot (e.g.
     ``OppSearchFilters``), or ``None``. Returns ``{filterName: value model}`` for
     every key the author declared beyond the standard ``OpportunityFilters`` keys.
-    Non-model annotations are skipped here (``validate_routes`` rejects them at
-    registration time).
+    Non-model annotations are skipped here; ``validate_routes`` (run at ``Client``
+    construction) rejects them, so a caller who invokes ``classify_filters`` directly
+    on unvalidated routes gets silent skipping rather than a raise.
     """
     if route_td is None:
         return {}
@@ -313,28 +314,42 @@ def _registered_filter_models(route_td: Any) -> dict[str, type[BaseModel]]:
 def validate_routes(routes: PluginRoutes[Any]) -> None:
     """Registration-time validator for a plugin's typed route carriers.
 
-    The typed carriers make a misspelled resource/method a *static* error, so the
-    only meaningful runtime check left is that each registered custom filter's
-    value type is an actual filter value model (a ``CommonGrantsBaseModel``
-    subclass). A mistyped TypedDict value (e.g. ``region: int``) would otherwise
-    fail opaquely at call time; this surfaces it at registration.
+    The typed carriers make a misspelled resource/method a *static* error. Two
+    runtime checks remain:
+
+    1. A registered custom filter's value type must be a filter value model (a
+       ``CommonGrantsBaseModel`` subclass) — a mistyped TypedDict value (e.g.
+       ``region: int``) would otherwise fail opaquely at call time.
+    2. A route TypedDict must not redeclare a standard ``OpportunityFilters`` key
+       with a different value type. Authors get the standard keys for free; a
+       re-typed standard key (e.g. ``status: StringComparisonFilter``) creates a
+       static/runtime mismatch — the call site sees the override, but
+       classification validates against the real standard field type.
 
     Args:
         routes: Typed route registration (``PluginRoutes``).
 
     Raises:
-        FilterError: On the first registered filter whose value type is not a
-            filter value model.
+        FilterError: On the first offending declaration.
     """
-    standard = set(get_type_hints(OpportunityFilters))
+    standard_hints = get_type_hints(OpportunityFilters)
     for resource_field in fields(routes):
         resource_routes = getattr(routes, resource_field.name)
         for method_field in fields(resource_routes):
             route_td = getattr(resource_routes, method_field.name)
             if route_td is None:
                 continue
+            path_prefix = f"routes.{resource_field.name}.{method_field.name}"
             for name, ann in get_type_hints(route_td).items():
-                if name in standard:
+                if name in standard_hints:
+                    if ann is not standard_hints[name]:
+                        raise FilterError(
+                            f'Filter "{name}" on '
+                            f"{resource_field.name}.{method_field.name} redeclares a "
+                            "standard filter with a different type",
+                            path=f"{path_prefix}.{name}",
+                            source_value=ann,
+                        )
                     continue
                 if not (
                     isinstance(ann, type) and issubclass(ann, CommonGrantsBaseModel)
@@ -343,8 +358,7 @@ def validate_routes(routes: PluginRoutes[Any]) -> None:
                         f'Registered filter "{name}" on '
                         f"{resource_field.name}.{method_field.name} must be a filter "
                         "value model (a CommonGrantsBaseModel subclass)",
-                        path=f"routes.{resource_field.name}."
-                        f"{method_field.name}.{name}",
+                        path=f"{path_prefix}.{name}",
                         source_value=ann,
                     )
 

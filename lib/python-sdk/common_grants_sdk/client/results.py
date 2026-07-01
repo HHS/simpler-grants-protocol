@@ -9,13 +9,14 @@ which carries filter-validation and server-reported errors.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any, Generic, Optional
 
 from pydantic import BaseModel, ValidationError
 from typing_extensions import TypeVar
 
 from ..schemas.pydantic.pagination import PaginatedResultsInfo
 from ..schemas.pydantic.responses.success import FilterInfo
+from ..schemas.pydantic.sorting import SortedResultsInfo
 
 ItemT = TypeVar("ItemT", bound=BaseModel)
 
@@ -55,6 +56,9 @@ class SearchResult(Generic[ItemT]):
     errors: list[ParseFailure]
     pagination_info: PaginatedResultsInfo
     filter_info: FilterInfo[Any]
+    # None when the response was aggregated across pages (aggregation returns a
+    # plain paginated shape that carries no sort info).
+    sort_info: Optional[SortedResultsInfo] = None
 
 
 def parse_batch(

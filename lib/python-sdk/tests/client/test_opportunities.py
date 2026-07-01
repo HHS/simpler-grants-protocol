@@ -795,6 +795,10 @@ class TestOpportunitySearch:
         assert len(response.errors) == 1
         assert isinstance(response.errors[0], ParseFailure)
         assert response.errors[0].index == 1
+        # sort_info survives a single-page fetch (regression guard: it must not be
+        # silently dropped from SearchResult).
+        assert response.sort_info is not None
+        assert response.sort_info.sort_by == "lastModifiedAt"
 
     def test_search_surfaces_server_filter_info(
         self, client, mock_httpx_client, sample_search_response

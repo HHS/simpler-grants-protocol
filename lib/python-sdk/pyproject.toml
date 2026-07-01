@@ -24,6 +24,10 @@ tomlkit = ">=0.13.3,<0.16.0"
 tomlq = "^0.1.0"
 datamodel-code-generator = ">=0.43.1,<0.65.0"
 
+[tool.pytest.ini_options]
+# Put the package root on sys.path so tests can import the runnable examples/.
+pythonpath = ["."]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
