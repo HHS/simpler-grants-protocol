@@ -23,7 +23,7 @@ ruff = ">=0.11,<0.16"
 tomlkit = ">=0.13.3,<0.16.0"
 tomlq = "^0.1.0"
 types-pyyaml = "^6.0.12.20250915"
-datamodel-code-generator = ">=0.43.1,<0.66.0"
+datamodel-code-generator = ">=0.43.1,<0.67.0"
 
 [build-system]
 requires = ["poetry-core"]
