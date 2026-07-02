@@ -34,7 +34,14 @@ import {
   StringComparisonFilterSchema,
 } from "../schemas/zod/filters";
 import { OppDefaultFiltersSchema, OppFiltersSchema } from "../schemas/zod/models";
-import type { CustomFilterSpec, CustomFilterType, PluginRoutes, RouteDeclarations } from "./types";
+import type {
+  CustomFilterSpec,
+  CustomFilterType,
+  PluginRoutes,
+  ResourceName,
+  RouteDeclarations,
+  RouteMethod,
+} from "./types";
 import { FilterError } from "./types";
 
 // ############################################################################
@@ -305,9 +312,10 @@ export function classifyFilters(
   methodKey: string,
   consumerFilters: Record<string, unknown>
 ): ClassifyResult {
-  // Resolve registered filter specs for this route-method
+  // Resolve registered filter specs for this route-method. The selectors are
+  // runtime strings; cast them rather than widening the routes map.
   const registeredFilters: Record<string, CustomFilterSpec> =
-    routes[resourceKey]?.[methodKey]?.filters ?? {};
+    routes[resourceKey as ResourceName]?.[methodKey as RouteMethod]?.filters ?? {};
 
   const defaultFields: Partial<z.infer<typeof OppDefaultFiltersSchema>> = {};
   const customFilters: Record<string, z.infer<typeof DefaultFilterSchema>> = {};

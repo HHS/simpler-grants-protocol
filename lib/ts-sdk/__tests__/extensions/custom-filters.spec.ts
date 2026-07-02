@@ -267,7 +267,9 @@ describe("classifyFilters", () => {
     });
 
     it("throws FilterError when custom filters are declared on an unsupported route (list)", () => {
-      const unsupportedRoutes: PluginRoutes = {
+      // `list` is no longer expressible in PluginRoutes (closed RouteMethod union);
+      // cast through unknown to exercise the runtime backstop plain-JS callers hit.
+      const unsupportedRoutes = {
         opportunities: {
           list: {
             filters: {
@@ -275,7 +277,7 @@ describe("classifyFilters", () => {
             },
           },
         },
-      };
+      } as unknown as PluginRoutes;
 
       expect(() => validateRoutes(unsupportedRoutes)).toThrow(FilterError);
     });
