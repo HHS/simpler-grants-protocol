@@ -741,7 +741,8 @@ This is a common pattern in existing APIs, where you `POST` to create an object 
 - [Stripe](https://docs.stripe.com/api/refunds/object) models a refund or a payment intent this way,
 - [Gerrit](https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html) uses a literal `/changes/` collection whose entries each have a status,
 - GitHub does the same with pull requests,
-- the broader async convention returns [`202 Accepted`](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.3.3) with a status monitor to poll, as in [Google's long-running operations](https://google.aip.dev/151) and the [Microsoft REST guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/graph/patterns/long-running-operations.md).
+
+The broader async convention returns [`202 Accepted`](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.3.3) with a status monitor to poll, as in [Google's long-running operations](https://google.aip.dev/151) and the [Microsoft REST guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/graph/patterns/long-running-operations.md).
 
 - **Pros**
   - Gives a trusted writer a familiar `PATCH` and an external proposer a reviewable submission, without forcing either into the other's shape.
