@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
 import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
 import { Client, Auth } from "../../src/client";
+import type { CustomFilterBag } from "../../src/client";
 import { OpportunityBaseSchema } from "../../src/schemas";
 import { withCustomFields, F, FilterError } from "../../src/extensions";
 import type { PluginRoutes } from "../../src/extensions";
@@ -500,7 +501,11 @@ describe("Opportunities", () => {
       });
 
       const result = await routedClient.opportunities.search({
-        filters: { agency: { operator: "between", value: 5 } },
+        // Wrong value family on a registered filter is a compile error now;
+        // cast to exercise the runtime path plain-JS callers hit.
+        filters: { agency: { operator: "between", value: 5 } } as unknown as CustomFilterBag<
+          typeof routes
+        >,
       });
 
       // Results still come back.
@@ -545,7 +550,11 @@ describe("Opportunities", () => {
       });
 
       const result = await routedClient.opportunities.search({
-        filters: { agency: { operator: "between", value: 5 } },
+        // Wrong value family on a registered filter is a compile error now;
+        // cast to exercise the runtime path plain-JS callers hit.
+        filters: { agency: { operator: "between", value: 5 } } as unknown as CustomFilterBag<
+          typeof routes
+        >,
       });
 
       expect(result.items).toHaveLength(1);
@@ -587,7 +596,11 @@ describe("Opportunities", () => {
       });
 
       const result = await routedClient.opportunities.search({
-        filters: { agency: { operator: "between", value: 5 } },
+        // Wrong value family on a registered filter is a compile error now;
+        // cast to exercise the runtime path plain-JS callers hit.
+        filters: { agency: { operator: "between", value: 5 } } as unknown as CustomFilterBag<
+          typeof routes
+        >,
       });
 
       const errors = result.filterInfo.errors ?? [];

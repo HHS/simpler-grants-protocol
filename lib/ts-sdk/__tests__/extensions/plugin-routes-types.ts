@@ -8,7 +8,8 @@
  * unused (ts2578), and the type-check gate fails.
  */
 
-import { definePlugin } from "@/extensions";
+import { definePlugin, F } from "@/extensions";
+import type { CustomFilterBag } from "@/client";
 
 // A misspelled resource key is a compile error.
 definePlugin({
@@ -38,3 +39,31 @@ definePlugin({
     },
   },
 } as const);
+
+// ############################################################################
+// Registered filter values are typed by their declared filterType
+// ############################################################################
+
+const regionPlugin = definePlugin({
+  routes: {
+    opportunities: {
+      search: { filters: { region: { filterType: "stringArray" } } },
+    },
+  },
+} as const);
+
+type RegionBag = CustomFilterBag<NonNullable<typeof regionPlugin.routes>>;
+
+// Registered key accepts its declared value family.
+const ok: RegionBag = { region: F.in(["US-CA", "US-NY"]) };
+
+// @ts-expect-error - region is a stringArray filter; eq is an equivalence operator
+const wrongOperator: RegionBag = { region: F.eq("US-CA") };
+
+// Ad-hoc keys still pass through (typed as the raw `{operator, value}` shape).
+const adHoc: RegionBag = { somethingElse: F.eq("x") };
+
+void regionPlugin;
+void ok;
+void wrongOperator;
+void adHoc;

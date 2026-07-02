@@ -45,15 +45,16 @@ import type {
 import { FilterError } from "./types";
 
 // ############################################################################
-// Internal — filter-type schema map
+// Public — filter-type schema map
 // ############################################################################
 
 /**
  * Maps each CustomFilterType to the Zod schema that validates its
  * `{operator, value}` pair. Each schema constrains both the allowed operator
  * enum and the value shape, so a single parse covers both checks.
+ * Literal-typed (`as const`) so `CustomFilterInput` can project per-type inputs.
  */
-const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
+export const FILTER_TYPE_SCHEMAS = {
   stringComparison: StringComparisonFilterSchema,
   stringArray: StringArrayFilterSchema,
   numberComparison: NumberComparisonFilterSchema,
@@ -67,7 +68,12 @@ const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
   dateRange: DateRangeFilterSchema,
   moneyComparison: MoneyComparisonFilterSchema,
   moneyRange: MoneyRangeFilterSchema,
-};
+} as const satisfies Record<CustomFilterType, z.ZodTypeAny>;
+
+/** Input type accepted for a registered custom filter of the given filterType. */
+export type CustomFilterInput<FT extends CustomFilterType> = z.input<
+  (typeof FILTER_TYPE_SCHEMAS)[FT]
+>;
 
 /**
  * All 11 valid CustomFilterType values — used for unknown-filterType detection.
@@ -114,29 +120,29 @@ const SUPPORTED_CUSTOM_FILTER_ROUTES = new Set<string>(["opportunities.search"])
  */
 export const F = {
   /** Equals — `{ operator: "eq", value }` */
-  eq: (value: unknown) => ({ operator: "eq" as const, value }),
+  eq: <V>(value: V) => ({ operator: "eq" as const, value }),
   /** Not equals — `{ operator: "neq", value }` */
-  neq: (value: unknown) => ({ operator: "neq" as const, value }),
+  neq: <V>(value: V) => ({ operator: "neq" as const, value }),
   /** Greater than — `{ operator: "gt", value }` */
-  gt: (value: unknown) => ({ operator: "gt" as const, value }),
+  gt: <V>(value: V) => ({ operator: "gt" as const, value }),
   /** Greater than or equal — `{ operator: "gte", value }` */
-  gte: (value: unknown) => ({ operator: "gte" as const, value }),
+  gte: <V>(value: V) => ({ operator: "gte" as const, value }),
   /** Less than — `{ operator: "lt", value }` */
-  lt: (value: unknown) => ({ operator: "lt" as const, value }),
+  lt: <V>(value: V) => ({ operator: "lt" as const, value }),
   /** Less than or equal — `{ operator: "lte", value }` */
-  lte: (value: unknown) => ({ operator: "lte" as const, value }),
+  lte: <V>(value: V) => ({ operator: "lte" as const, value }),
   /** Array inclusion — `{ operator: "in", value: [...] }` */
-  in: (value: unknown[]) => ({ operator: "in" as const, value }),
+  in: <V>(value: V[]) => ({ operator: "in" as const, value }),
   /** Array exclusion — `{ operator: "notIn", value: [...] }` */
-  notIn: (value: unknown[]) => ({ operator: "notIn" as const, value }),
+  notIn: <V>(value: V[]) => ({ operator: "notIn" as const, value }),
   /** String pattern match — `{ operator: "like", value }` */
   like: (value: string) => ({ operator: "like" as const, value }),
   /** String pattern non-match — `{ operator: "notLike", value }` */
   notLike: (value: string) => ({ operator: "notLike" as const, value }),
   /** Range (inclusive) — `{ operator: "between", value: { min, max } }` */
-  between: (min: unknown, max: unknown) => ({ operator: "between" as const, value: { min, max } }),
+  between: <V>(min: V, max: V) => ({ operator: "between" as const, value: { min, max } }),
   /** Range (exclusive) — `{ operator: "outside", value: { min, max } }` */
-  outside: (min: unknown, max: unknown) => ({ operator: "outside" as const, value: { min, max } }),
+  outside: <V>(min: V, max: V) => ({ operator: "outside" as const, value: { min, max } }),
 };
 
 // ############################################################################

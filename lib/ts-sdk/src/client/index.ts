@@ -17,6 +17,7 @@
 export { Client, type FetchManyOptions } from "./client";
 export {
   Opportunities,
+  type CustomFilterBag,
   type GetOptions,
   type ListOptions,
   type SearchOptions,

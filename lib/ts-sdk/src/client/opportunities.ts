@@ -21,8 +21,9 @@ import {
 } from "../schemas";
 import { ArrayOperator } from "../constants";
 import { classifyFilters } from "../extensions/custom-filters";
+import type { CustomFilterInput } from "../extensions/custom-filters";
 import { FilterError } from "../extensions/types";
-import type { PluginRoutes } from "../extensions/types";
+import type { CustomFilterType, PluginRoutes } from "../extensions/types";
 
 // =============================================================================
 // Client-side filter-error merge
@@ -72,29 +73,35 @@ type OppSchema = z.ZodType<OpportunityBase, z.ZodTypeDef, unknown>;
 type RawFilter = { operator: string; value: unknown };
 
 /**
- * The declared custom-filter names for `opportunities.search` in a routes type.
+ * The declared filter specs for `opportunities.search` in a routes type.
  * `definePlugin` preserves the literal `routes` type (its `const TRoutes` generic),
- * so a plugin defined inline yields concrete filter-name literals here.
+ * so a plugin defined inline yields concrete filter-name and filterType literals here.
  */
-type CustomFilterNames<R extends PluginRoutes> = R extends {
+type RouteFilters<R extends PluginRoutes> = R extends {
   opportunities: { search: { filters: infer Fs } };
 }
-  ? Extract<keyof Fs, string>
+  ? Fs
   : never;
+
+/** The declared custom-filter names for `opportunities.search` in a routes type. */
+type CustomFilterNames<R extends PluginRoutes> = Extract<keyof RouteFilters<R>, string>;
 
 /**
  * Typed filter bag for `search({ filters })`.
  *
- * Declared filter names surface in editor autocomplete with a typed value, while
- * arbitrary keys remain accepted — the spec supports ad-hoc (escape-hatch) filters
- * (bucket 3 of `classifyFilters`), so an unknown key cannot be rejected at the type
- * level without dropping ad-hoc support. Net: autocomplete + filter-envelope
- * checking (`{ operator, value }` shape) for declared filters — per-`filterType`
- * value validation runs at runtime in `classifyFilters`, not at the type level;
- * NO typo-rejection on filter names (a typo is structurally an intentional ad-hoc key).
+ * Declared filter names surface in editor autocomplete with the value typed by
+ * their declared `filterType` (a wrong value family is a compile error), while
+ * arbitrary keys remain accepted — the spec supports ad-hoc (escape-hatch) filters,
+ * so an unknown key cannot be rejected at the type level without dropping ad-hoc
+ * support (a typo is structurally an intentional ad-hoc key). Runtime validation
+ * backstops both cases.
  */
-type CustomFilterBag<R extends PluginRoutes> = {
-  [K in CustomFilterNames<R>]?: RawFilter;
+export type CustomFilterBag<R extends PluginRoutes> = {
+  [K in CustomFilterNames<R>]?: RouteFilters<R>[K] extends {
+    filterType: infer FT extends CustomFilterType;
+  }
+    ? CustomFilterInput<FT>
+    : RawFilter;
 } & Record<string, RawFilter>;
 
 // =============================================================================
