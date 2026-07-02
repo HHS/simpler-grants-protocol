@@ -5,11 +5,11 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
-Organizations often manage profiles across multiple grant systems, like Grants.gov, Candid, Temelio, and Fluxx. But today, when information about an organization changes (e.g. website or address) they need to make the same update to their profile in each system. CommonGrants would like to provide a standardized mechanism synchronizing these changes across systems automatically.
+Organizations often manage profiles across multiple grant systems, like Grants.gov, Candid, Temelio, and Fluxx. But today, when information about an organization changes (e.g. website or address), they need to make the same update to their profile in each system. CommonGrants would like to provide a standardized mechanism synchronizing these changes across systems automatically.
 
 [ADR-0023](/governance/adr/0023-org-ids/) introduced a pattern for matching organizations across platforms using their `identifiers` collection, and this ADR builds on this pattern by defining the standard API contract for making and reviewing changes to a given organization's profile once it's been matched to a record in another system.
 
-Th proposed contract remains intentionally agnostic about the architectural pattern used to synchronize changes across systems (pub-sub, webhooks, batch processing, etc) with the goal of supporting multiple patterns concurrently. Instead, it focuses on defining things like: How can API clients view and make changes to a given organizations profile? And how do we confirm they have the necessary permissions to do so?
+The proposed contract remains intentionally agnostic about the architectural pattern used to synchronize changes across systems (pub-sub, webhooks, batch processing, etc.) with the goal of supporting multiple patterns concurrently. Instead, it focuses on defining things like: How can API clients view and make changes to a given organization's profile? And how do we confirm they have the necessary permissions to do so?
 
 ## Decision
 
@@ -43,7 +43,7 @@ Here is a brief summary of the API contract this ADR proposes:
 - **Authentication:** Support both OAuth 2.0 flows. Use Client Credentials for service-to-service operations, and Authorization Code with PKCE when an org admin needs to grant access on a user's behalf.
 - **Token format:** Access tokens are self-contained JWTs (RFC 7519), so a receiver can validate one against the issuer's JWKS without a separate lookup. The required claims are `iss sub aud iat exp scope`, and `grant_type` and a namespaced `org_id` are recommended.
 - **Permissions:** Scopes identify the operations permitted on a resource (e.g. `org:read` and `org:write`) and by default apply to all organizations a `sub` can access. Tokens that include a namespaced `org_id` claim are restricted to that org, and granting different levels of access to multiple organizations requires a separate token per org.
-- **Updating a profile:** Support a direct `PATCH /orgs/{orgId}` and a `POST /orgs/{orgId}/changes` submission, both of which append to the same changes ledger. A `PATCH` requires `org:write`, is accepted immediately, and is intended for changes from trusted clients. A `POST /changes` requires `org.changes:write`, submits a change that can be accepted or rejected, and is intended for changes from external systems. An adopter can support one or both operations and grant access to them independently.
+- **Updating a profile:** Support a direct `PATCH /orgs/{orgId}` and a `POST /orgs/{orgId}/changes` submission, both of which append to the same change ledger. A `PATCH` requires `org:write`, is accepted immediately, and is intended for changes from trusted clients. A `POST /changes` requires `org.changes:write`, submits a change that can be accepted or rejected, and is intended for changes from external systems. An adopter can support one or both operations and grant access to them independently.
 - **Partial-update format:** Use JSON Merge Patch (RFC 7396): include a field to set it, leave it out to keep it unchanged, or send `null` to clear its value.
 - **Viewing historical changes:** Offer an optional `GET /orgs/{orgId}/changes` that returns a list of changes, each optionally including both its Merge Patch payload and a full snapshot with the change applied, plus an optional `?at=` parameter on the `GET /orgs/{orgId}` for a point-in-time snapshot.
 - **Acceptance:** Both operations return a change with a `status`. A `PATCH` is always `accepted` immediately, and its `snapshot` is the updated record; a `POST /changes` may be `accepted`, `denied`, `pending`, or `superseded`. Both are listed by the `GET /orgs/{orgId}/changes` endpoint.
@@ -206,7 +206,7 @@ Response:
 <details>
 <summary>Update an org: `PATCH /orgs/{orgId}`</summary>
 
-Required scope: `org:write`. The body is a JSON Merge Patch (RFC 7396): include a field to set it, leave it out to keep it unchanged, or send `null` to clear it. The receiver figures out who made the change and which system it came from based on the token and request context, rather than fields in the request body (see [provenance](#provenance)).
+Required scope: `org:write`. The body is a JSON Merge Patch (RFC 7396): include a field to set it, leave it out to keep it unchanged, or send `null` to clear it. The receiver determines who made the change and which system it came from using the token and request context, not fields in the request body (see [provenance](#provenance)).
 
 Request:
 
@@ -257,7 +257,7 @@ To submit a change that may be reviewed before it takes effect, use [`POST /orgs
 <details>
 <summary>Submit a change: `POST /orgs/{orgId}/changes`</summary>
 
-Required scope: `org.changes:write`. Creates a change from a JSON Merge Patch body. A receiver that applies it right away returns `accepted`; one that routes it through review returns `pending` with a `Location` header for the new change (see [acceptance semantics](#acceptance)). A direct `PATCH /orgs/{orgId}` is the shorthand for the apply-now case, and both land in `GET /orgs/{orgId}/changes`. The exact request envelope is left to the follow-up spec.
+Required scope: `org.changes:write`. Creates a change from a JSON Merge Patch body. A receiver that applies it right away returns `accepted`; one that routes it through review returns `pending` with a `Location` header for the new change (see [acceptance semantics](#acceptance)). A direct `PATCH /orgs/{orgId}` covers the apply-now case, and both operations appear in `GET /orgs/{orgId}/changes`. The exact request envelope is left to the follow-up spec.
 
 Request:
 
@@ -401,7 +401,7 @@ Before it accepts a change request, a receiving system runs these checks in orde
 2. Verify `iss` is a known, trusted authorization server.
 3. Verify `aud` matches the receiver's own base URL (stops a token for one system being replayed against another).
 4. Check `exp`; reject expired tokens, allowing at most 60 seconds of clock skew.
-5. Verify `scope` covers the operation: a direct `PATCH` needs `org:write` (or `org:sync`), a `POST /changes` submission needs `org.changes:write`, and a read needs `org:read`.
+5. Verify `scope` covers the operation: a direct `PATCH` needs `org:write`, a `POST /changes` submission needs `org.changes:write`, and a read needs `org:read`.
 6. Check `org_id`. When the token includes an `org_id`, verify it matches the target org: a token bound to one `Organization.id` is rejected for a request against any other, even if its `scope` is write-capable. When the token omits `org_id`, it isn't limited to one org, so the receiver relies on the scope plus its local access policy (step 7) to decide which orgs the subject may touch.
 7. Apply local access policy. A valid token does not override the receiver's rules; if `sub` cannot modify the target org locally, reject with `403 Forbidden`.
 
@@ -410,17 +410,17 @@ Before it accepts a change request, a receiving system runs these checks in orde
 This ADR outlines the basic API contract, but the following details will need to be determined when this contract is added to the next version of the CommonGrants API spec:
 
 - The exact request and response bodies for each of the proposed routes and operations.
-- How HTTP statuses map to the change request status for `POST /changes` and `PATCH` operations
-- The content and shape of new schemas like a change record
-- Which filters can be supported as query params, and which should be reserved for a `POST /search` endpoint
-- How a client obtains a token a given receiver will accept, where each system issues its own tokens to registered clients
-- Whether to adopt a hardening profile like [FAPI](https://openid.net/wg/fapi/) on top of OAuth 2.0 and JWT
+- How HTTP statuses map to the change request status for `POST /changes` and `PATCH` operations.
+- The content and shape of new schemas like a change record.
+- Which filters can be supported as query params, and which should be reserved for a `POST /search` endpoint.
+- How a client obtains a token a given receiver will accept, where each system issues its own tokens to registered clients.
+- Whether to adopt a hardening profile like [FAPI](https://openid.net/wg/fapi/) on top of OAuth 2.0 and JWT.
 
 A few things are also out of scope for this decision, mostly centered around the transport mechanisms for synchronizing changes across systems, as mentioned above:
 
-- Outlining push and webhook transport options
-- Defining the pattern for registering or publishing to subscribers
-- Describing the full sync protocol two systems run when they first connect
+- Outlining push and webhook transport options.
+- Defining the pattern for registering or publishing to subscribers.
+- Describing the full sync protocol two systems run when they first connect.
 
 ## Evaluation
 
@@ -445,8 +445,11 @@ _Which OAuth grant flows should the contract support?_
 #### Option 1: Support both flows (recommended)
 
 :::note[Bottom line]
-Supporting both flows is the right call if we want to cover both unattended service sync and access a human has consented to, and we're okay implementing and documenting two flows instead of one.
-:::
+Supporting both flows is the best fit if we
+
+- want to cover both unattended service sync and access a human has consented to,
+- but are willing to build and document two flows instead of one.
+  :::
 
 Use [Client Credentials](https://datatracker.ietf.org/doc/html/rfc6749#section-4.4) when a backend service syncs on its own. The service authenticates as itself and reruns the flow when its token expires, with no refresh token:
 
@@ -468,7 +471,7 @@ GET /authorize?response_type=code
 &code_challenge_method=S256
 ```
 
-Here the token stands in for a one-time human consent that can't be recreated in code, so the refresh token becomes the durable record of that consent and lets a platform keep syncing without re-prompting. Senders MUST keep refresh tokens server-side and MUST NOT let them reach a browser or other client-side environment.
+In this flow the token represents a one-time human consent, so the refresh token becomes the lasting record of that consent and lets a platform keep syncing without re-prompting. Senders MUST keep refresh tokens server-side and MUST NOT let them reach a browser or other client-side environment.
 
 - **Pros**
   - Covers both the machine-to-machine and human-in-the-loop cases without a custom scheme.
@@ -481,8 +484,11 @@ Here the token stands in for a one-time human consent that can't be recreated in
 #### Option 2: Client credentials only
 
 :::note[Bottom line]
-Client credentials only works if we expect sync to be purely service-to-service, but it can't represent a human consenting to act on a specific org's behalf, which rules out the platform-on-behalf-of-org case.
-:::
+Client Credentials alone works if we
+
+- only ever need service-to-service sync,
+- but are willing to give up representing an org admin's consent, which rules out syncing on an org's behalf.
+  :::
 
 - **Pros**
   - A single, simple flow with no consent screens or refresh tokens.
@@ -493,8 +499,11 @@ Client credentials only works if we expect sync to be purely service-to-service,
 #### Option 3: Authorization code + PKCE only
 
 :::note[Bottom line]
-PKCE only works if every sync starts with a human consenting, but it forces an awkward consent step onto purely automated service sync.
-:::
+Authorization Code with PKCE alone works if we
+
+- want every sync to start with a human's consent,
+- but are willing to force an awkward consent step onto automated service sync.
+  :::
 
 - **Pros**
   - Strong protection for human-initiated flows.
@@ -518,10 +527,17 @@ _Are access tokens self-contained JWTs, or opaque strings a receiver has to look
 #### Option 1: Self-contained JWT (recommended)
 
 :::note[Bottom line]
-A JWT is the right call if we want a receiver to validate and authorize a request without calling back to the issuer every time, and we're okay accepting that revocation isn't immediate and keeping token lifetimes short.
-:::
+A self-contained JWT is the best fit if we
 
-Access tokens are JWTs ([RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)). A receiver checks the signature against the issuer's JWKS and reads `scope` and `org_id` straight from the token (the payload shown under [Required JWT claims](#required-jwt-claims)) to make its decision, with no extra round trip. Short lifetimes keep the revocation window small: 15 to 60 minutes for access tokens, refresh tokens up to a year and rotated on each use, and authorization codes good for 60 seconds and a single use.
+- want a receiver to validate and authorize a request without calling back to the issuer,
+- but are willing to accept that revocation isn't immediate and relies on short token lifetimes.
+  :::
+
+Access tokens are JWTs ([RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)). A receiver checks the signature against the issuer's JWKS and reads `scope` and `org_id` straight from the token (the payload shown under [Required JWT claims](#required-jwt-claims)) to make its decision, with no extra round trip. Short lifetimes keep the revocation window small:
+
+- access tokens live 15 to 60 minutes,
+- refresh tokens live up to a year and rotate on each use,
+- authorization codes are good for 60 seconds and a single use.
 
 - **Pros**
   - A receiver authorizes from the token alone.
@@ -534,8 +550,11 @@ Access tokens are JWTs ([RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519
 #### Option 2: Opaque token plus introspection
 
 :::note[Bottom line]
-Opaque tokens are the right call if immediate revocation is a hard requirement, but they put a network call to the authorization server in the path of every sync request.
-:::
+An opaque token works if we
+
+- absolutely need the ability to revoke a token immediately,
+- but are willing to add an extra verification call to every request.
+  :::
 
 The token is a random string with no readable claims, so a receiver validates it by calling the issuer's introspection endpoint ([RFC 7662](https://datatracker.ietf.org/doc/html/rfc7662)) on each request:
 
@@ -551,7 +570,7 @@ token=a1b2c3d4e5f6g7h8
   - The token string contains no readable claims.
 - **Cons**
   - Every request needs an introspection call (RFC 7662) unless it's cached, which adds latency and a dependency on the issuer being up.
-  - Less turn-key against the JWT-centric SDK ecosystem adopters already use.
+  - Less well supported by the JWT-centric SDK ecosystem adopters already use.
 
 ### Permissions
 
@@ -576,8 +595,11 @@ All three options keep the organization ID out of the scope string, which is wha
 #### Option 1: One token per organization (recommended)
 
 :::note[Bottom line]
-One token per org is the right call if we want the standard, widely understood model where a token is bound to a single organization, and we're okay with a client that syncs several orgs using a separate token for each.
-:::
+One token per org is the best fit if we
+
+- want to follow the standard, widely understood models for restricting tokens to organizations,
+- but are willing to require clients that sync several orgs to create a separate token for each org.
+  :::
 
 A token is bound to one organization through a namespaced `org_id` claim set to that org's `Organization.id` UUID:
 
@@ -588,23 +610,31 @@ A token is bound to one organization through a namespaced `org_id` claim set to 
 }
 ```
 
-This mirrors how the big providers scope a token to a tenant: [Auth0's Organizations](https://auth0.com/docs/manage-users/organizations) feature issues a token with a single `org_id` (plus `org_name`), and [Microsoft Entra](https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference) names a single tenant in `tid`. [GitHub](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens/managing-your-personal-access-tokens) arrives at the same shape from the other direction, where a fine-grained token is limited to a single organization and the org is a property of the token rather than a scope string. We namespace the claim following the [collision-safe convention Auth0 requires for custom claims](https://auth0.com/docs/secure/tokens/json-web-tokens/create-custom-claims).
+This mirrors how established providers scope a token to a tenant:
 
-A token can also omit `org_id` entirely to act on every organization the subject can access, with the receiver resolving which those are from its own policy. This is how a client lists or reads across orgs without enumerating org IDs in the token, the same shape [Google](https://developers.google.com/identity/protocols/oauth2/scopes) uses, where the token names operations and the resource server resolves the accessible resources. A no-`org_id` token with `org:write` can update any accessible org, which a receiver may choose to restrict.
+- [Auth0's Organizations](https://auth0.com/docs/manage-users/organizations) feature issues a token with a single `org_id` (plus `org_name`)
+- [Microsoft Entra](https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference) names a single tenant in `tid`
+- [GitHub](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens/managing-your-personal-access-tokens) follows the same model, where a fine-grained token is limited to a single organization and the org is a property of the token rather than a scope string.
+
+We decided to namespace the claim with `https://commongrants.org` following the [collision-safe convention that Auth0 requires for custom claims](https://auth0.com/docs/secure/tokens/json-web-tokens/create-custom-claims).
+
+If a token omits the `org_id` claim, then its scopes apply to every organization the subject can access, based on the permissions that subject already has in the receiving API. This allows clients to do things like list and read multiple orgs without having to create several tokens, each with its own `org_id` claim. [Google](https://developers.google.com/identity/protocols/oauth2/scopes) follows a similar pattern, in which the token names only the supported operations and the resource server resolves the records against which a client can perform those operations.
 
 - **Pros**
   - Matches a widely understood model (Auth0 `org_id`, Microsoft `tid`, GitHub per-org tokens).
   - The token stays small no matter how many orgs a client manages.
-  - Per-org access levels need no extra machinery; they're just separate tokens.
-  - Nothing to reconcile, since one token names exactly one org.
+  - Keeps token scopes conceptually simple by applying a single set of permissions to either a single org or all orgs that a client can access.
 - **Cons**
-  - A client that syncs many orgs manages a separate token for each.
+  - A client that syncs many orgs with different permissions needs a separate token for each.
 
 #### Option 2: One multi-org token with uniform access
 
 :::note[Bottom line]
-A single token with an `org_ids` list works if we want one token to cover many orgs at once, but the same scopes then apply to every org in the list, and it's a custom claim with no standard behind it.
-:::
+A single token with an `org_ids` list works if we
+
+- want one token to cover many orgs at once,
+- but are willing to apply the same scopes to every org in the list and rely on a custom claim that lacks industry precedent.
+  :::
 
 A single token names several org IDs, with its scopes applying uniformly to all of them:
 
@@ -627,8 +657,11 @@ A single token names several org IDs, with its scopes applying uniformly to all 
 #### Option 3: One multi-org token with per-org levels (RFC 9396)
 
 :::note[Bottom line]
-RFC 9396 `authorization_details` is the right call if we need one token to express different access levels for different orgs, but it's heavier for issuers and receivers and isn't universally supported.
-:::
+RFC 9396 `authorization_details` works if we
+
+- need one token to express different access levels for different orgs,
+- but are willing to adopt a format that's more complex to send and parse and isn't universally supported.
+  :::
 
 [RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396) defines an `authorization_details` claim: a JSON array where each entry binds an action set to a specific resource, using the standard `type`, `identifier`, and `actions` fields. It's built for exactly the mixed case (read one org, write another) and coexists with scopes rather than replacing them:
 
@@ -679,8 +712,11 @@ Both write paths append to the same change ledger (`GET /orgs/{orgId}/changes`);
 #### Option 1: Support both, over one ledger (recommended)
 
 :::note[Bottom line]
-Supporting both is the right call if we want a simple, familiar `PATCH` for trusted direct edits and a safer `POST /changes` for reviewable proposals, both landing in one auditable ledger, and we're okay building two write entry points instead of one. Adopters expose either or both.
-:::
+Supporting both is the best fit if we
+
+- want a simple, familiar `PATCH` for trusted direct edits and a safer `POST /changes` for reviewable proposals, both landing in one ledger,
+- but are willing to build two write entry points instead of one.
+  :::
 
 A `PATCH /orgs/{orgId}` is the direct path: the receiver applies the edit and records it as an `accepted` change behind the scenes. A `POST /orgs/{orgId}/changes` is the reviewable path: the change is created with its own ID and status and can sit as `pending` until a receiver approves it.
 
@@ -692,12 +728,23 @@ POST /orgs/{orgId}/changes
 { "id": "ch_01912a8b", "status": "pending", "patch": { "mission": "..." } }
 ```
 
-Both take the same JSON Merge Patch body and both show up in `GET /orgs/{orgId}/changes`, so history is uniform no matter how a write arrived. The two paths use different scopes (`org:write` for `PATCH`, `org.changes:write` for `POST /changes`, mirroring `org.changes:read`), so a deployment can grant a partner the ability to propose changes without granting direct-write access. A deployment that only makes trusted in-system edits can expose just `PATCH`; one that only accepts changesets from outside can expose just `POST /changes`; a system doing both exposes both. This mirrors the two OAuth flows: one contract, and adopters use the entry points that fit.
+Both take the same JSON Merge Patch body and both show up in `GET /orgs/{orgId}/changes`, so history is uniform no matter how a write arrived. The two paths use different scopes (`org:write` for `PATCH`, `org.changes:write` for `POST /changes`, mirroring `org.changes:read`), so a deployment can grant a partner the ability to propose changes without granting direct-write access. A deployment can expose whichever entry points fit its trust model:
 
-The `POST /changes` shape is well-trodden. The most familiar version is a payment or an order: you `POST` to create it and get back an object with an `id` and a `status` you check later, exactly how [Stripe](https://docs.stripe.com/api/refunds/object) models a refund or a payment intent. [Gerrit](https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html) applies the same idea to profile-style edits with a literal `/changes/` collection whose entries each have a status, GitHub does it with pull requests, and the broader async convention returns [`202 Accepted`](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.3.3) with a status monitor to poll (as in [Google's long-running operations](https://google.aip.dev/151) and the [Microsoft REST guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/graph/patterns/long-running-operations.md)).
+- just `PATCH`, if it only makes trusted in-system edits,
+- just `POST /changes`, if it only accepts changesets from outside,
+- or both.
+
+This mirrors the two OAuth flows: one contract, and adopters use the entry points that fit.
+
+This is a common pattern in existing APIs, where you `POST` to create an object and get back an `id` and a `status` to check later:
+
+- [Stripe](https://docs.stripe.com/api/refunds/object) models a refund or a payment intent this way,
+- [Gerrit](https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html) uses a literal `/changes/` collection whose entries each have a status,
+- GitHub does the same with pull requests,
+- the broader async convention returns [`202 Accepted`](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.3.3) with a status monitor to poll, as in [Google's long-running operations](https://google.aip.dev/151) and the [Microsoft REST guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/graph/patterns/long-running-operations.md).
 
 - **Pros**
-  - A trusted writer gets a terse, familiar `PATCH`; an external proposer gets a reviewable submission, without forcing either into the other's shape.
+  - Gives a trusted writer a familiar `PATCH` and an external proposer a reviewable submission, without forcing either into the other's shape.
   - Every write, whichever path, appends to one ledger, so provenance and history stay uniform.
   - Adopters implement only the entry points their trust model needs.
 - **Cons**
@@ -707,8 +754,11 @@ The `POST /changes` shape is well-trodden. The most familiar version is a paymen
 #### Option 2: Direct `PATCH` only
 
 :::note[Bottom line]
-`PATCH` alone is the right call if every writer is trusted to apply edits directly, but it gives an external system no way to propose a change for review, only to apply one.
-:::
+A direct `PATCH` alone works if we
+
+- can trust every writer to apply edits directly,
+- but are willing to give external systems no way to propose a change for review, only to apply one.
+  :::
 
 - **Pros**
   - The smallest, most familiar write surface: one verb, applied immediately.
@@ -719,8 +769,11 @@ The `POST /changes` shape is well-trodden. The most familiar version is a paymen
 #### Option 3: `POST /changes` only
 
 :::note[Bottom line]
-Routing every write through `POST /changes` is the right call if we want one uniform, reviewable write path, but it puts create-then-check ceremony on even the simplest trusted edit.
-:::
+Routing every write through `POST /changes` works if we
+
+- want a single, uniform write path,
+- but are willing to add a create-then-check step to even the simplest trusted edit.
+  :::
 
 - **Pros**
   - A single write path to build and secure, with no direct-mutation verb to reconcile.
@@ -731,8 +784,11 @@ Routing every write through `POST /changes` is the right call if we want one uni
 #### Option 4: `PUT` full replace (not offered)
 
 :::note[Bottom line]
-`PUT` only works if every writer always has the complete, canonical record. A strict replace clears fields the sender doesn't model, which is the cross-system hazard this contract exists to avoid, so it isn't offered as a write path.
-:::
+A full `PUT` replace works only if
+
+- every writer always has the complete, canonical record,
+- but we're unwilling to risk a strict replace clearing fields the sender doesn't model, the cross-system data loss this contract exists to prevent, so it isn't offered.
+  :::
 
 Different systems won't support the same set of optional fields. If System A knows only `name` and `mission`, a full `PUT` wipes whatever System B populated but System A doesn't model; a `PATCH` (or a `POST /changes` with a merge patch) touches only the fields it sends:
 
@@ -769,8 +825,11 @@ _JSON Merge Patch, JSON Patch, field masks, or a combination?_
 #### Option 1: JSON Merge Patch, RFC 7396 (recommended)
 
 :::note[Bottom line]
-Merge Patch is the right call if we want the patch body to look like the org record adopters already work with, and we're okay giving up element-level array edits and letting `null` mean "clear."
-:::
+JSON Merge Patch is the best fit if we
+
+- want the patch body to look like the org record adopters already work with,
+- but are willing to give up editing a single array element and let `null` mean "clear."
+  :::
 
 The patch body looks just like the org record: include a field to set it, leave it out to keep it unchanged, or send `null` to clear it. Sent as `application/merge-patch+json` ([RFC 7396](https://datatracker.ietf.org/doc/html/rfc7396)):
 
@@ -794,8 +853,11 @@ This sets `mission`, clears `socials.website`, and leaves every other field unto
 #### Option 2: JSON Patch, RFC 6902
 
 :::note[Bottom line]
-JSON Patch is the right call if we need element-level array edits and an explicit list of operations, but it adds a second format keyed off JSON Pointer paths that doesn't match the org record shape.
-:::
+JSON Patch works if we
+
+- need element-level array edits and an explicit list of operations,
+- but are willing to introduce a second format, keyed off JSON Pointer paths, that doesn't match the org record shape.
+  :::
 
 The same change is a list of operations keyed off JSON Pointer paths ([RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902)), sent as `application/json-patch+json`:
 
@@ -820,8 +882,11 @@ The same change is a list of operations keyed off JSON Pointer paths ([RFC 6902]
 #### Option 3: Field masks (Google style)
 
 :::note[Bottom line]
-Field masks are the right call if we want an explicit list of the fields being changed alongside the values, but they add a parallel mask field and are less common in the REST/JSON world.
-:::
+Field masks work if we
+
+- want a change to name the fields it touches alongside the values,
+- but are willing to maintain a parallel mask field and adopt a pattern that's less common in REST/JSON APIs.
+  :::
 
 The changed fields are named in a mask alongside the values, following [Google's field mask convention](https://google.aip.dev/161):
 
@@ -861,8 +926,11 @@ The changes endpoint is optional, and a deployment MAY squash intermediate snaps
 #### Option 1: Version list of full snapshots (recommended)
 
 :::note[Bottom line]
-A version list is the right call if we want direct retrieval of a record at a known version and a history that tolerates squashing, and we're okay with more storage than a change log and diffing snapshots for per-field detail.
-:::
+A list of full snapshots is the best fit if we
+
+- want consumers to retrieve a record at a known version and a history that tolerates squashing,
+- but are willing to store more than a change log and derive per-field detail by diffing snapshots.
+  :::
 
 `GET /orgs/{orgId}/changes` returns a list of changes, each with its version metadata and, optionally, both the Merge Patch that was submitted and a full snapshot with it applied (the full payload is shown under [View changes](#operations-with-example-payloads)):
 
@@ -875,7 +943,13 @@ A version list is the right call if we want direct retrieval of a record at a kn
 }
 ```
 
-Fetching a record at a known version is a direct lookup with no event replay, diffing two versions is "fetch both and compare," and dropping intermediate versions (the squash the contract allows) still leaves a navigable timeline. This composes with the dataset-version number reads and writes already return. An optional `?at={timestamp}` parameter on the read is a complementary pattern: it lets a consumer ask for "the record as of then" without learning a separate history shape. The version-list shape is common in the wild, like [Google Drive revisions](https://developers.google.com/drive/api/reference/rest/v3/revisions), Confluence versions, and MediaWiki history.
+With full snapshots:
+
+- fetching a record at a known version is a direct lookup, with no event replay,
+- diffing two versions is "fetch both and compare,"
+- dropping intermediate versions (the squash the contract allows) still leaves a navigable timeline.
+
+This composes with the dataset-version number reads and writes already return. An optional `?at={timestamp}` parameter on the read is a complementary pattern: it lets a consumer ask for "the record as of then" without learning a separate history shape. The version-list shape is common in the wild, like [Google Drive revisions](https://developers.google.com/drive/api/reference/rest/v3/revisions), Confluence versions, and MediaWiki history.
 
 - **Pros**
   - Direct version lookup, no replay.
@@ -889,8 +963,11 @@ Fetching a record at a known version is a direct lookup with no event replay, di
 #### Option 2: Change log of field-level deltas
 
 :::note[Bottom line]
-A change log is the right call if the priority is cheap storage and fine-grained activity tracking, but it pushes state reconstruction onto consumers and doesn't squash well.
-:::
+A change log works if we
+
+- prioritize cheap storage and fine-grained activity tracking,
+- but are willing to push state reconstruction onto consumers and give up clean squashing.
+  :::
 
 History is a stream of field-level deltas, sized by activity rather than record size:
 
@@ -914,8 +991,11 @@ History is a stream of field-level deltas, sized by activity rather than record 
 #### Option 3: Point-in-time query only
 
 :::note[Bottom line]
-A point-in-time query alone is the right call if we want the smallest surface and cheap access to historical state, but consumers can't browse history without already knowing a version or timestamp, and the server pays the most.
-:::
+A point-in-time query alone works if we
+
+- prioritize a small surface and cheap access to historical state,
+- but are willing to keep consumers from browsing history without a known version or timestamp, and to put the most load on the server.
+  :::
 
 There's no history list; a consumer reads the main endpoint with an `?at=` timestamp and gets the full record as of that moment:
 
@@ -950,8 +1030,11 @@ Every write returns a change with a `status`. A `PATCH` is always `accepted` on 
 #### Option 1: Status supports both outcomes (recommended)
 
 :::note[Bottom line]
-Letting a change's `status` represent either an immediate result or a queued review is the right call if we want one contract for both immediate-apply and approval-gated deployments, and we're okay with a receiver that always applies immediately still returning a `status`.
-:::
+A change `status` that can represent either an immediate result or a queued review is the best fit if we
+
+- want one contract to serve both immediate-apply and approval-gated deployments,
+- but are willing to have a receiver that always applies immediately still return a `status`.
+  :::
 
 A change comes back with a `status` in `data`, so the same shape works whether the receiver applies it or queues it for review.
 
@@ -974,14 +1057,17 @@ The full set is `accepted` (applied), `denied` (rejected, with a reason), `pendi
   - The submitter always learns what happened to its change.
   - Adding an approval workflow later doesn't change the contract.
 - **Cons**
-  - A receiver that always applies immediately still returns a `status` it may not need, though it can steer trusted clients to `PATCH`.
+  - A receiver that always applies immediately still returns a `status` it may not need, though it can point trusted clients to `PATCH`.
   - The status values and their fields need careful definition so receivers report them consistently.
 
 #### Option 2: Always immediate
 
 :::note[Bottom line]
-Resolving every change on submission works if no deployment ever needs review, but then `POST /changes` can never say "received, not yet applied" and adds little over `PATCH`.
-:::
+Resolving every change on submission works if we
+
+- can assume no deployment ever needs review,
+- but are willing to give up representing a queued change, leaving `POST /changes` little different from `PATCH`.
+  :::
 
 - **Pros**
   - Simplest model: a change is `accepted` (or `denied`) the moment it's submitted.
@@ -991,8 +1077,11 @@ Resolving every change on submission works if no deployment ever needs review, b
 #### Option 3: Always queued
 
 :::note[Bottom line]
-Queuing every change works if all changes are reviewed, but it forces a receiver that would apply immediately to model a `pending` state it never uses.
-:::
+Queuing every change works if we
+
+- want every change to go through review,
+- but are willing to force immediate-apply receivers to model a `pending` state they never use.
+  :::
 
 - **Pros**
   - Natural for review-heavy workflows.
@@ -1021,8 +1110,11 @@ Provenance here means who made a change and which system it came from. What a re
 #### Option 1: Derived from the JWT claims (recommended)
 
 :::note[Bottom line]
-Deriving provenance from the validated token is the right call if we want a trail a sender can't forge, and we're okay resolving who made a change from the token's own identity rather than a self-declared body field.
-:::
+Deriving provenance from the validated token is the best fit if we
+
+- want a trail a sender can't forge,
+- but are willing to identify the actor only as specifically as the token's own identity allows, rather than through a self-declared body field.
+  :::
 
 The receiver takes the acting identity from the validated JWT (`sub`, plus the consenting user it represents in a delegated flow) and the source system from request context. The `PATCH` body contains only profile fields, never a self-declared actor, so a sender can't claim to be someone else. If a change needs to be attributed to a specific end user rather than a service account, that comes from a delegated token whose `sub` is that user (or a dedicated actor claim), still signed by the authorization server.
 
@@ -1036,8 +1128,11 @@ The receiver takes the acting identity from the validated JWT (`sub`, plus the c
 #### Option 2: Included in the request body (not recommended)
 
 :::note[Bottom line]
-Taking provenance from the request body is simplest for a sender that wants to attribute a change to an arbitrary actor, but the receiver has no way to trust it: anyone who can send a write can set it to anything.
-:::
+Taking provenance from the request body works if we
+
+- want to let a sender attribute a change to any actor it chooses,
+- but are willing to accept a value the receiver can't trust, since anyone who can write can set it to anything.
+  :::
 
 The sender declares who made the change alongside the profile fields:
 
