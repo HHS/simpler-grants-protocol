@@ -439,7 +439,7 @@ _Which OAuth grant flows should the contract support?_
 | Supports unattended machine-to-machine sync    |     ✅      |           ✅            |          ❌           |
 | Supports human-consented delegated access      |     ✅      |           ❌            |          ✅           |
 | Reuses standard OAuth 2.0 infrastructure       |     ✅      |           ✅            |          ✅           |
-| Minimal number of flows to implement           |     🟡      |           ✅            |          ✅           |
+| Minimal number of flows to implement           |     ❌      |           ✅            |          ✅           |
 | Fits a platform syncing on behalf of many orgs |     ✅      |           ❌            |          ✅           |
 
 #### Option 1: Support both flows (recommended)
