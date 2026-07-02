@@ -9,10 +9,29 @@
  *   3. Calling `categorizeFilters` to produce the ADR-0012 request body:
  *      default fields at top-level, custom + ad-hoc under `customFilters` —
  *      an invalid value on any key throws `FilterError` before a body is built.
- *   4. A COMMENT block (not executed) demonstrating the `as const` widening
+ *   4. Building a plugin-bound client via `plugin.getClient()` and showing the
+ *      fail-fast guard: an invalid registered filter value rejects BEFORE any
+ *      HTTP request (so this step needs no server).
+ *   5. A COMMENT block (not executed) demonstrating the `as const` widening
  *      trap — see custom-filters-types.ts for the compile-time narrowing assertions.
  *
  * Run with: `pnpm example:custom-filters`
+ *
+ * Reviewer notes — unhappy paths (where each guard is proven):
+ *   - Route/method typo in definePlugin() → COMPILE error:
+ *     __tests__/extensions/plugin-routes-types.ts (`@ts-expect-error` gates).
+ *   - Invalid route registration (e.g. a name colliding with a default filter)
+ *     → runtime FilterError at definition time:
+ *     __tests__/extensions/get-client.spec.ts ("definePlugin throws FilterError ...").
+ *   - Wrong value family on a registered filter → COMPILE error
+ *     (plugin-routes-types.ts) AND runtime FilterError BEFORE any request
+ *     (demonstrated below in Step 5; asserted in get-client.spec.ts and
+ *     opportunities.spec.ts).
+ *   - Invalid standard filter value → FilterError before the request
+ *     (__tests__/extensions/custom-filters.spec.ts, categorizeFilters suite).
+ *   - Malformed row in a search/list response → lands in `result.errors` as a
+ *     ParseFailure (index + raw) instead of throwing the page
+ *     (opportunities.spec.ts partition tests; `onParseError: "throw"` opts out).
  *
  * @remarks
  * The three-bucket classification rule (ADR-0012):
@@ -174,7 +193,43 @@ console.log("  fundingProgram → customFilters (registered custom filter)");
 console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
 
 // ############################################################################
-// Step 4 — The `as const` widening trap (comment block — not executed)
+// Step 5 — plugin.getClient(): the consumer path
+// ############################################################################
+
+// The client is pre-bound to the plugin: responses parse with the plugin's
+// compiled schema by default, and `search({ filters })` types the registered
+// filter names. Against a live API (e.g. `pnpm example:server`), the consumer
+// flow looks like:
+//
+//   const result = await client.opportunities.search({
+//     filters: { agency: F.in(["HHS"]) },
+//   });
+//   for (const opp of result.items) console.log(opp.title);        // valid rows
+//   for (const err of result.errors) console.log(err.index, err.raw); // ParseFailure rows
+//
+// (Executed versions live in __tests__/extensions/get-client.spec.ts.)
+const client = grantsGovPlugin.getClient({ baseUrl: "http://localhost:8000" });
+
+// Fail-fast without a server: an invalid registered value throws BEFORE any
+// HTTP request is made, so this rejects even though nothing is listening.
+void (async () => {
+  try {
+    await client.opportunities.search({
+      // Wrong value family for a stringArray filter — also a compile error;
+      // the cast simulates a plain-JS caller hitting the runtime backstop.
+      filters: { agency: { operator: "eq", value: 42 } } as never,
+    });
+    fail("expected search() to reject with FilterError before any request");
+  } catch (e) {
+    if (!(e instanceof FilterError)) throw e;
+    console.log("\n=== Step 5: getClient fail-fast demo ===");
+    console.log(`search() rejected before any request (expected): ${e.message.split("\n")[0]}`);
+    console.log("\n✓ getClient consumer path complete");
+  }
+})();
+
+// ############################################################################
+// Step 6 — The `as const` widening trap (comment block — not executed)
 // ############################################################################
 
 // If you forget `as const` on the definePlugin call, TypeScript widens the
