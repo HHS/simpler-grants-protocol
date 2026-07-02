@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
 import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
-import { Client, Auth } from "../../src/client";
+import { Client, Auth, Opportunities, BatchParseError } from "../../src/client";
 import type { CustomFilterBag } from "../../src/client";
 import { OpportunityBaseSchema } from "../../src/schemas";
-import { withCustomFields, F, FilterError } from "../../src/extensions";
+import { withCustomFields, F, FilterError, validateRoutes } from "../../src/extensions";
 import type { PluginRoutes } from "../../src/extensions";
 import { CustomFieldType } from "../../src/constants";
 
@@ -403,14 +403,15 @@ describe("Opportunities", () => {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
 
-      // routes is client-bound: supplied once at construction, not per call.
-      const routedClient = new Client({
-        baseUrl: "https://api.example.org",
-        auth: Auth.bearer("test-token"),
-        routes,
-      });
+      // routes are resource-bound: supplied once at construction, not per call
+      // (plugin.getClient() does this wiring for consumers).
+      const routedOpps = new Opportunities(
+        new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
+        undefined,
+        routes
+      );
 
-      await routedClient.opportunities.search({
+      await routedOpps.search({
         filters: {
           status: F.in(["open"]), // default field → top-level
           agency: F.in(["HHS", "NSF"]), // registered custom → customFilters
@@ -432,58 +433,49 @@ describe("Opportunities", () => {
       expect(customFilters).not.toHaveProperty("status");
     });
 
-    it("resolves a status collision in favor of filters.status and surfaces a warning", async () => {
-      // `status` given via both the `statuses` shorthand and `filters.status`:
-      // `filters` wins, the shorthand is ignored, a warning is appended to
-      // filterInfo.errors, and search() must NOT throw.
-      let capturedBody: Record<string, unknown> | undefined;
+    it("throws FilterError when status is given via both the shorthand and filters", async () => {
+      // `status` given via both the `statuses` shorthand and `filters.status` is
+      // a conflicting instruction: search() throws before any request is sent.
+      let requested = false;
 
       server.use(
-        http.post("/common-grants/opportunities/search", async ({ request }) => {
-          capturedBody = (await request.json()) as Record<string, unknown>;
+        http.post("/common-grants/opportunities/search", () => {
+          requested = true;
           return HttpResponse.json({
             status: 200,
             message: "Success",
-            items: [createMockOpportunity(OPP_UUID_1, "Closed Grant", "closed")],
-            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+            items: [],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 0, totalPages: 1 },
             sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
             filterInfo: { filters: {} },
           });
         })
       );
 
-      const result = await client.opportunities.search({
-        statuses: ["open"],
-        filters: { status: F.in(["closed"]) },
-      });
+      await expect(
+        client.opportunities.search({
+          statuses: ["open"],
+          filters: { status: F.in(["closed"]) },
+        })
+      ).rejects.toThrow(FilterError);
 
-      // filters.status wins — the shorthand value ["open"] is ignored.
-      expect((capturedBody?.filters as { status?: { value?: unknown } }).status).toEqual({
-        operator: "in",
-        value: ["closed"],
-      });
-
-      // The collision warning is surfaced (not thrown).
-      expect(result.filterInfo.errors).toEqual(
-        expect.arrayContaining([expect.stringContaining("filters.status")])
-      );
+      expect(requested).toBe(false);
     });
 
-    it("drops an invalid filter from the request body and surfaces its error (no throw)", async () => {
+    it("rejects with FilterError on an invalid registered filter value before any request", async () => {
       // A registered stringArray filter given a non-array `between` value fails
-      // classifyFilters validation. Fail-soft: results still return, the invalid
-      // filter is absent from the sent body, and its message lands in
-      // filterInfo.errors — search() does not throw.
-      let capturedBody: Record<string, unknown> | undefined;
+      // categorizeFilters validation. Fail-fast: search() throws and no HTTP
+      // request is made.
+      let requested = false;
 
       server.use(
-        http.post("/common-grants/opportunities/search", async ({ request }) => {
-          capturedBody = (await request.json()) as Record<string, unknown>;
+        http.post("/common-grants/opportunities/search", () => {
+          requested = true;
           return HttpResponse.json({
             status: 200,
             message: "Success",
-            items: [createMockOpportunity(OPP_UUID_1, "Conservation Grant", "open")],
-            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+            items: [],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 0, totalPages: 1 },
             sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
             filterInfo: { filters: {} },
           });
@@ -493,40 +485,28 @@ describe("Opportunities", () => {
       const routes: PluginRoutes = {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
-      // routes is client-bound: supplied once at construction, not per call.
-      const routedClient = new Client({
-        baseUrl: "https://api.example.org",
-        auth: Auth.bearer("test-token"),
-        routes,
-      });
-
-      const result = await routedClient.opportunities.search({
-        // Wrong value family on a registered filter is a compile error now;
-        // cast to exercise the runtime path plain-JS callers hit.
-        filters: { agency: { operator: "between", value: 5 } } as unknown as CustomFilterBag<
-          typeof routes
-        >,
-      });
-
-      // Results still come back.
-      expect(result.items).toHaveLength(1);
-
-      // The invalid filter is absent from the sent body (no customFilters.agency,
-      // and no malformed filters payload shipped).
-      const sentFilters = capturedBody?.filters as
-        | { customFilters?: Record<string, unknown> }
-        | undefined;
-      expect(sentFilters?.customFilters).toBeUndefined();
-
-      // Its error message is surfaced client-side.
-      expect(result.filterInfo.errors).toEqual(
-        expect.arrayContaining([expect.stringContaining("filters.agency")])
+      const routedOpps = new Opportunities(
+        new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
+        undefined,
+        routes
       );
+
+      await expect(
+        routedOpps.search({
+          // Wrong value family on a registered filter is a compile error too;
+          // cast to exercise the runtime backstop plain-JS callers hit.
+          filters: { agency: { operator: "between", value: 5 } } as unknown as CustomFilterBag<
+            typeof routes
+          >,
+        })
+      ).rejects.toThrow(FilterError);
+
+      expect(requested).toBe(false);
     });
 
-    it("stays fail-soft when a filter is dropped and the server omits filterInfo (auto-paginate)", async () => {
-      // Auto-pagination returns the raw server envelope; if it omits filterInfo,
-      // merging the dropped-filter error must still surface, not throw.
+    it("passes the server envelope through unchanged when filterInfo is absent (auto-paginate)", async () => {
+      // Auto-pagination returns the raw server envelope; the client no longer
+      // injects its own filterInfo, so an absent filterInfo stays absent.
       server.use(
         http.post("/common-grants/opportunities/search", () => {
           return HttpResponse.json({
@@ -543,36 +523,28 @@ describe("Opportunities", () => {
       const routes: PluginRoutes = {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
-      const routedClient = new Client({
-        baseUrl: "https://api.example.org",
-        auth: Auth.bearer("test-token"),
-        routes,
-      });
+      const routedOpps = new Opportunities(
+        new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
+        undefined,
+        routes
+      );
 
-      const result = await routedClient.opportunities.search({
-        // Wrong value family on a registered filter is a compile error now;
-        // cast to exercise the runtime path plain-JS callers hit.
-        filters: { agency: { operator: "between", value: 5 } } as unknown as CustomFilterBag<
-          typeof routes
-        >,
+      const result = await routedOpps.search({
+        filters: { agency: F.in(["HHS"]) },
       });
 
       expect(result.items).toHaveLength(1);
-      expect(result.filterInfo.errors).toEqual(
-        expect.arrayContaining([expect.stringContaining("filters.agency")])
-      );
+      expect(result.filterInfo).toBeUndefined();
     });
 
-    it("validates routes at construction and throws on a default-name collision", () => {
+    it("validateRoutes throws on a default-name collision (runtime backstop)", () => {
       const badRoutes: PluginRoutes = {
         opportunities: { search: { filters: { status: { filterType: "stringArray" } } } },
       };
-      expect(() => new Client({ baseUrl: "https://api.example.org", routes: badRoutes })).toThrow(
-        FilterError
-      );
+      expect(() => validateRoutes(badRoutes)).toThrow(FilterError);
     });
 
-    it("merges client-side filter errors ahead of server-provided errors", async () => {
+    it("passes server-returned filterInfo.errors through unmodified", async () => {
       server.use(
         http.post("/common-grants/opportunities/search", () => {
           return HttpResponse.json({
@@ -589,23 +561,63 @@ describe("Opportunities", () => {
       const routes: PluginRoutes = {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
-      const routedClient = new Client({
-        baseUrl: "https://api.example.org",
-        auth: Auth.bearer("test-token"),
-        routes,
+      const routedOpps = new Opportunities(
+        new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
+        undefined,
+        routes
+      );
+
+      const result = await routedOpps.search({
+        filters: { agency: F.in(["HHS"]) },
       });
 
-      const result = await routedClient.opportunities.search({
-        // Wrong value family on a registered filter is a compile error now;
-        // cast to exercise the runtime path plain-JS callers hit.
-        filters: { agency: { operator: "between", value: 5 } } as unknown as CustomFilterBag<
-          typeof routes
-        >,
-      });
+      // filterInfo.errors carries server-returned errors only, untouched.
+      expect(result.filterInfo.errors).toEqual(["server: something was ignored"]);
+    });
 
-      const errors = result.filterInfo.errors ?? [];
-      expect(errors[0]).toContain("filters.agency");
-      expect(errors[errors.length - 1]).toBe("server: something was ignored");
+    it("partitions a malformed row into result.errors and keeps valid rows in items", async () => {
+      const goodOpp = createMockOpportunity(OPP_UUID_1, "Conservation Grant", "open");
+      const badRow = { id: "not-a-uuid", title: 42 };
+
+      server.use(
+        http.post("/common-grants/opportunities/search", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [goodOpp, badRow],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 2, totalPages: 1 },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {} },
+          });
+        })
+      );
+
+      const result = await client.opportunities.search({ page: 1 });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].title).toBe("Conservation Grant");
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].index).toBe(1);
+      expect(result.errors[0].raw).toEqual(badRow);
+    });
+
+    it('rejects with BatchParseError on a malformed row under onParseError: "throw"', async () => {
+      server.use(
+        http.post("/common-grants/opportunities/search", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [{ id: "not-a-uuid", title: 42 }],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {} },
+          });
+        })
+      );
+
+      await expect(client.opportunities.search({ page: 1, onParseError: "throw" })).rejects.toThrow(
+        BatchParseError
+      );
     });
 
     it("searches with only query parameter", async () => {

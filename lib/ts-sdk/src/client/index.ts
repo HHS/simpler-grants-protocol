@@ -21,7 +21,9 @@ export {
   type GetOptions,
   type ListOptions,
   type SearchOptions,
-} from "./opportunities";
+} from "./resources/opportunities";
+export { Resource } from "./resources/base";
+export { RESOURCE_REGISTRY } from "./resources/registry";
 export { Auth, type AuthMethod } from "./auth";
 export { type ClientConfig, type ResolvedConfig } from "./config";
 export { parseBatch, BatchParseError } from "./results";

@@ -4,11 +4,10 @@
 
 import { type ClientConfig, type ResolvedConfig, resolveConfig } from "./config";
 import { Auth, buildAuthHeaders, type AuthMethod } from "./auth";
-import { Opportunities } from "./opportunities";
-import { validateRoutes } from "../extensions/custom-filters";
+import { Opportunities } from "./resources/opportunities";
+import { EXTENSIBLE_SCHEMA_MAP } from "../extensions/types";
 import { parseBatch, type OnParseError, type ParseFailure } from "./results";
 import type { Paginated } from "../types";
-import type { PluginRoutes } from "../extensions/types";
 import type { z } from "zod";
 
 // =============================================================================
@@ -73,27 +72,24 @@ export interface FetchManyOptions<T = unknown> {
  * const list = await client.opportunities.list({ page: 1 });
  * ```
  */
-export class Client<R extends PluginRoutes = PluginRoutes> {
+export class Client {
   private readonly config: ResolvedConfig;
   private readonly auth: AuthMethod;
 
   /** Opportunities resource namespace */
-  public readonly opportunities: Opportunities<R>;
+  // resource-slot: default (base-schema, no registered filters) resource surface;
+  // plugin-typed resources are bound via plugin.getClient()
+  public readonly opportunities: Opportunities;
 
   // =============================================================================
   // Client constructor
   // =============================================================================
 
-  constructor(options: ClientConfig & { auth?: AuthMethod; routes?: R }) {
+  constructor(options: ClientConfig & { auth?: AuthMethod }) {
     this.config = resolveConfig(options);
     this.auth = options.auth ?? Auth.none();
 
-    // `routes` is client-bound (fixed plugin config supplied once here), so it
-    // validates at construction and drives the filter-name narrowing on
-    // `opportunities.search`. The `this as Client` cast avoids circular-generic
-    // variance friction between `Client<R>` and `Opportunities<R>`.
-    if (options.routes) validateRoutes(options.routes);
-    this.opportunities = new Opportunities<R>(this as Client, options.routes);
+    this.opportunities = new Opportunities(this, EXTENSIBLE_SCHEMA_MAP.Opportunity);
   }
 
   // =============================================================================
