@@ -434,7 +434,7 @@ Both options expose the same runtime surface:
 result = plugin.schemas.Opportunity.to_common(source_data)
 ```
 
-For a complete runnable round-trip covering both options and custom handlers, see [`examples/grants_gov_transforms.py`](../../../examples/grants_gov_transforms.py).
+For a complete runnable round-trip covering both options and custom handlers, see [`examples/grants_gov_transforms.py`](../../examples/grants_gov_transforms.py).
 
 ### Error handling
 
