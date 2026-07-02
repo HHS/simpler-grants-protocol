@@ -24,3 +24,5 @@ export {
 } from "./opportunities";
 export { Auth, type AuthMethod } from "./auth";
 export { type ClientConfig, type ResolvedConfig } from "./config";
+export { parseBatch, BatchParseError } from "./results";
+export type { ParseFailure, OnParseError, ListResult, SearchResult } from "./results";
