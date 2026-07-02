@@ -321,7 +321,7 @@ export class TransformError extends Error {
 
 /**
  * Structured error raised by custom-filter validation (`validateRoutes`,
- * `validateFilterCall`, `classifyFilters`).
+ * `validateFilterCall`, `categorizeFilters`).
  *
  * Carries field path, handler name, source value, and underlying cause for
  * programmatic handling. `sourceValue` and `cause` may carry PII — redact

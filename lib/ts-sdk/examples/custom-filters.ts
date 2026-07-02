@@ -6,8 +6,9 @@
  *      (status, closeDateRange), pre-registered custom filters (agency,
  *      fundingProgram), and an ad-hoc filter (legacyTag) — using `F.*` helpers.
  *      Control fields (query, maxResults, signal, schema) stay OUTSIDE `filters`.
- *   3. Calling `classifyFilters` to produce the ADR-0012 request body:
- *      default fields at top-level, custom + ad-hoc under `customFilters`.
+ *   3. Calling `categorizeFilters` to produce the ADR-0012 request body:
+ *      default fields at top-level, custom + ad-hoc under `customFilters` —
+ *      an invalid value on any key throws `FilterError` before a body is built.
  *   4. A COMMENT block (not executed) demonstrating the `as const` widening
  *      trap — see custom-filters-types.ts for the compile-time narrowing assertions.
  *
@@ -23,7 +24,7 @@
  * send it over the wire — transport is not handled here.
  */
 
-import { classifyFilters, definePlugin, F } from "../src/extensions";
+import { categorizeFilters, definePlugin, F, FilterError } from "../src/extensions";
 
 // ############################################################################
 // Step 1 — Define the grants.gov plugin with route-keyed custom filters
@@ -105,7 +106,7 @@ console.log(JSON.stringify(searchParams.filters, null, 2));
 // Step 3 — Classify into the ADR-0012 OppFilters request body
 // ############################################################################
 
-// `classifyFilters` runs the three-bucket classification:
+// `categorizeFilters` runs the three-bucket classification:
 //   1. status, closeDateRange → top-level named request-body fields
 //   2. agency, fundingProgram (registered) → customFilters record
 //   3. legacyTag (ad-hoc) → customFilters passthrough
@@ -113,10 +114,9 @@ console.log(JSON.stringify(searchParams.filters, null, 2));
 // non-optional literal object. The `!` assertion removes the `undefined` from
 // the union type that `Plugin.routes?:` introduces (routes is optional in the
 // interface to support plugins that don't declare filters).
-// `classifyFilters` is fail-soft: it returns `{ result, errors }`. `result` is
-// the OppFilters request body (valid keys only); `errors` collects any invalid
-// filters that were dropped. For this all-valid input, `errors` is empty.
-const { result: requestBody, errors } = classifyFilters(
+// `categorizeFilters` is fail-fast: an invalid value on any key — standard,
+// registered, or ad-hoc — throws `FilterError` before a request body exists.
+const requestBody = categorizeFilters(
   grantsGovPlugin.routes!,
   "opportunities",
   "search",
@@ -135,9 +135,6 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-// All filters in this example are valid — no errors collected.
-if (errors.length > 0) fail(`expected no classification errors, got ${errors.length}`);
-
 // Default filters must appear as named top-level fields
 if (!requestBody.status) fail("status should be a top-level field (default filter bucket)");
 if (!requestBody.closeDateRange)
@@ -155,6 +152,19 @@ if (!requestBody.customFilters.legacyTag)
 // Default filter keys must NOT appear under customFilters
 if ((requestBody.customFilters as Record<string, unknown>).status)
   fail("status must NOT be in customFilters — it is a default filter");
+
+// Fail-fast demo: a wrong value family on a registered filter throws
+// FilterError before any request body is produced.
+try {
+  categorizeFilters(grantsGovPlugin.routes!, "opportunities", "search", {
+    agency: { operator: "eq", value: 42 }, // agency is a stringArray filter
+  });
+  fail("expected categorizeFilters to throw FilterError for an invalid registered value");
+} catch (e) {
+  if (!(e instanceof FilterError)) throw e;
+  console.log(`\n=== Fail-fast demo ===`);
+  console.log(`FilterError (expected): ${e.message.split("\n")[0]}`);
+}
 
 console.log("\n=== Assertions passed ===");
 console.log("  status        → top-level (default filter bucket)");

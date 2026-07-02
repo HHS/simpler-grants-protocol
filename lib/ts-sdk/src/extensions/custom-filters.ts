@@ -3,9 +3,10 @@
  *
  * Provides the classifier, validators, and F helper namespace for the custom-filters surface.
  *
- * - `classifyFilters` — transforms a flat consumer `filters` object into the
+ * - `categorizeFilters` — transforms a flat consumer `filters` object into the
  *   ADR-0012 `OppFilters` request body (three-bucket: default → named top-level fields;
- *   registered custom → `customFilters`; ad-hoc → `customFilters` passthrough).
+ *   registered custom → `customFilters`; ad-hoc → `customFilters` passthrough),
+ *   throwing `FilterError` on the first invalid value.
  * - `validateRoutes` — registration-time validation; rejects unknown `filterType`
  *   and custom names that collide with default-filter names.
  * - `validateFilterCall` — call-time validation; rejects operator/filterType mismatch
@@ -102,7 +103,7 @@ const SUPPORTED_CUSTOM_FILTER_ROUTES = new Set<string>(["opportunities.search"])
  * Helper namespace for building `{operator, value}` raw filter objects.
  *
  * Each helper compiles to the `DefaultFilter` wire shape accepted by ADR-0012.
- * Raw `{operator, value}` objects are also accepted by `classifyFilters` — F.*
+ * Raw `{operator, value}` objects are also accepted by `categorizeFilters` — F.*
  * is a convenience layer, not a requirement.
  *
  * NOTE: `F.in` uses the TS reserved word as an object key — valid as a property
@@ -222,7 +223,7 @@ export function validateRoutes(routes: PluginRoutes): void {
  *   `DefaultFilterSchema` (no operator/filterType enforcement — accepted trade-off).
  *
  * Fail-soft: returns a `FilterError` describing the problem, or `undefined`
- * when the value is valid. The caller (`classifyFilters`) collects returned
+ * when the value is valid. The caller (`categorizeFilters`) throws returned
  * errors rather than aborting the whole call.
  *
  * @param spec - The registered `CustomFilterSpec` for this filter, or `undefined` for ad-hoc
@@ -272,105 +273,6 @@ export function validateFilterCall(
 }
 
 // ############################################################################
-// Public — classifyFilters (three-bucket classifier)
-// ############################################################################
-
-/**
- * Fail-soft result of `classifyFilters`.
- *
- * `result` holds only the keys that passed validation; `errors` aggregates the
- * `FilterError`s for keys that failed (those keys are omitted, not thrown on).
- */
-export interface ClassifyResult<T = z.infer<typeof OppFiltersSchema>> {
-  result: T;
-  errors: FilterError[];
-}
-
-/**
- * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters` request body.
- *
- * Three-bucket classification:
- * 1. **Default filters** — keys present in `OppDefaultFiltersSchema` (e.g. `status`,
- *    `closeDateRange`) → top-level named fields on the request body.
- * 2. **Registered custom filters** — keys declared in the route-method's `filters`
- *    spec → `customFilters[name]`.
- * 3. **Ad-hoc filters** — unregistered keys (not in defaults, not in spec) →
- *    `customFilters[name]` passthrough.
- *
- * `gov.<system>@<filterName>` namespaced keys are treated as ad-hoc custom
- * filter keys and flow into `customFilters` verbatim — no auto-migration.
- *
- * Validation runs for each key during classification: default fields are checked
- * against their real field type (`OppDefaultFiltersSchema`), registered and ad-hoc
- * keys via `validateFilterCall`. Validation is **fail-soft**: a key that fails
- * is dropped from `result` and its `FilterError` is pushed onto `errors`; the
- * call never throws on a bad filter. Valid keys classify normally.
- *
- * @param routes - The `PluginRoutes` from the plugin definition
- * @param resourceKey - The resource name (e.g. `"opportunities"`)
- * @param methodKey - The method name (e.g. `"search"`)
- * @param consumerFilters - The flat consumer-facing filters object
- * @returns `{ result, errors }` — the valid-only request body and the collected errors
- */
-export function classifyFilters(
-  routes: PluginRoutes,
-  resourceKey: string,
-  methodKey: string,
-  consumerFilters: Record<string, unknown>
-): ClassifyResult {
-  // Resolve registered filter specs for this route-method. The selectors are
-  // runtime strings; cast them rather than widening the routes map.
-  const registeredFilters: Record<string, CustomFilterSpec> =
-    routes[resourceKey as ResourceName]?.[methodKey as RouteMethod]?.filters ?? {};
-
-  const defaultFields: Partial<z.infer<typeof OppDefaultFiltersSchema>> = {};
-  const customFilters: Record<string, z.infer<typeof DefaultFilterSchema>> = {};
-  const errors: FilterError[] = [];
-
-  for (const [key, value] of Object.entries(consumerFilters)) {
-    // Look up registered spec (undefined for ad-hoc and gov.* namespaced keys)
-    const spec = registeredFilters[key] as CustomFilterSpec | undefined;
-
-    if (DEFAULT_FILTER_NAMES.has(key)) {
-      // Bucket 1: default filter → top-level named field, validated against its
-      // real type from OppDefaultFiltersSchema (e.g. status → StringArrayFilter).
-      // safeParse doesn't reshape, so the original value is assigned unchanged.
-      // An invalid value is skipped and its error collected.
-      const fieldSchema = (OppDefaultFiltersSchema.shape as Record<string, z.ZodTypeAny>)[key];
-      const result = fieldSchema.safeParse(value);
-      if (!result.success) {
-        errors.push(
-          new FilterError(`Default filter "${key}" failed validation: ${result.error.message}`, {
-            path: `filters.${key}`,
-            sourceValue: value,
-          })
-        );
-        continue;
-      }
-      (defaultFields as Record<string, unknown>)[key] = value;
-    } else {
-      // Bucket 2 (registered custom) or Bucket 3 (ad-hoc / gov.* namespaced)
-      // Run call-time validation — passes spec if registered, undefined if ad-hoc.
-      // Fail-soft: collect the returned error and skip the key.
-      const error = validateFilterCall(spec, key, value);
-      if (error) {
-        errors.push(error);
-        continue;
-      }
-      customFilters[key] = value as z.infer<typeof DefaultFilterSchema>;
-    }
-  }
-
-  // Build request body — omit customFilters key entirely when empty (match nullish shape)
-  const result: z.infer<typeof OppFiltersSchema> = {
-    ...defaultFields,
-    ...(Object.keys(customFilters).length > 0 ? { customFilters } : {}),
-  };
-
-  return { result, errors };
-}
-
-// ############################################################################
 // Public — categorizeFilters (fail-fast classifier)
 // ############################################################################
 
@@ -378,7 +280,7 @@ export function classifyFilters(
  * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters`
  * request body, throwing on the first invalid value instead of dropping it.
  *
- * Same three-bucket classification as `classifyFilters` (defaults → top-level
+ * Three-bucket classification (defaults → top-level
  * fields; registered + ad-hoc → `customFilters`), but validation is fail-fast:
  * any invalid value — standard, registered, or ad-hoc — throws before a request
  * body is produced. Well-formed ad-hoc (unregistered) keys still pass through.
