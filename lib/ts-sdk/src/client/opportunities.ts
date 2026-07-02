@@ -342,7 +342,7 @@ export class Opportunities<R extends PluginRoutes = PluginRoutes> {
       schema,
     });
 
-    return mergeFilterErrors(result as Filtered<z.infer<S>, OppFilters>, filterErrors);
+    return mergeFilterErrors(result as unknown as Filtered<z.infer<S>, OppFilters>, filterErrors);
   }
 
   // ############################################################################
