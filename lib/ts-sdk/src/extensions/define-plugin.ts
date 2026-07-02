@@ -18,6 +18,11 @@ import type {
 import { EXTENSIBLE_SCHEMA_MAP, TransformError } from "./types";
 import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fields";
 import { buildTransforms } from "./transforms";
+import { validateRoutes } from "./custom-filters";
+import { buildClientForPlugin } from "../client/resources/builder";
+import type { BuiltClient } from "../client/resources/builder";
+import type { ClientConfig } from "../client/config";
+import type { AuthMethod } from "../client/auth";
 
 // ############################################################################
 // Public types - PluginSchemasInput, DefinePluginOptions, Plugin
@@ -106,6 +111,12 @@ export interface Plugin<
   meta?: PluginMeta;
   /** Route-keyed custom filter declarations, passed through unchanged from `DefinePluginOptions.routes`. */
   routes?: TRoutes;
+  /**
+   * Builds a client pre-bound to this plugin: responses parse with the plugin's
+   * compiled schemas by default, and `search({ filters })` types the registered
+   * filter names — no constructor `routes` or per-call `schema` needed.
+   */
+  getClient(config?: ClientConfig & { auth?: AuthMethod }): BuiltClient<T, TRoutes>;
 }
 
 // ############################################################################
@@ -183,6 +194,11 @@ export function definePlugin<
   const TRoutes extends PluginRoutes = PluginRoutes,
 >(options: DefinePluginOptions<T> & { routes?: TRoutes }): Plugin<T, TRoutes> {
   const { meta, schemas: schemasInput, routes } = options;
+
+  // Runtime backstop for plain-JS authors: a misspelled route or an invalid
+  // filter registration throws here, at the definition site.
+  if (routes) validateRoutes(routes);
+
   const schemas: Record<string, object> = {};
 
   for (const [name, extensibleSchema] of Object.entries(EXTENSIBLE_SCHEMA_MAP) as [
@@ -271,7 +287,15 @@ export function definePlugin<
   // Cast is safe — the runtime loop mirrors the PluginSchemas<T> mapped type,
   // but TypeScript can't verify that from the dynamic Object.entries() iteration.
   // The second generic TRoutes preserves the literal routes type from `as const` calls.
-  return { schemas, meta, routes } as Plugin<T, TRoutes>;
+  const plugin = {
+    schemas,
+    meta,
+    routes,
+    getClient(config?: ClientConfig & { auth?: AuthMethod }) {
+      return buildClientForPlugin(plugin, config);
+    },
+  } as Plugin<T, TRoutes>;
+  return plugin;
 }
 
 // ############################################################################

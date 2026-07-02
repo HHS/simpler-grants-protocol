@@ -67,3 +67,39 @@ void regionPlugin;
 void ok;
 void wrongOperator;
 void adHoc;
+
+// ############################################################################
+// getClient projection: item + filter types flow from the plugin
+// ############################################################################
+
+const typedPlugin = definePlugin({
+  schemas: {
+    Opportunity: { customFields: { programCode: { fieldType: "string" } } },
+  },
+  routes: {
+    opportunities: {
+      search: { filters: { region: { filterType: "stringArray" } } },
+    },
+  },
+} as const);
+const builtClient = typedPlugin.getClient({ baseUrl: "http://localhost" });
+
+declare const searchResult: Awaited<ReturnType<typeof builtClient.opportunities.search>>;
+const item = searchResult.items[0];
+
+// Item type is projected from the plugin's custom fields (string), not any.
+// If the projection ever collapses to `any`, this directive reports unused
+// and the type gate fails.
+// @ts-expect-error - programCode value is a string, not a number
+const asNumber: number = item.customFields?.programCode?.value;
+void asNumber;
+
+// Registered filter keys are typed on the built client:
+void builtClient.opportunities.search({ filters: { region: F.in(["US-CA"]) } });
+// @ts-expect-error - region is a stringArray filter; eq is not valid for it
+void builtClient.opportunities.search({ filters: { region: F.eq("US-CA") } });
+
+// Per-row failures are typed on the result:
+declare const failure: (typeof searchResult.errors)[number];
+const failureIndex: number = failure.index;
+void failureIndex;

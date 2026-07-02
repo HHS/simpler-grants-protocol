@@ -24,6 +24,8 @@ export {
 } from "./resources/opportunities";
 export { Resource } from "./resources/base";
 export { RESOURCE_REGISTRY } from "./resources/registry";
+export { buildClientForPlugin } from "./resources/builder";
+export type { BuiltClient } from "./resources/builder";
 export { Auth, type AuthMethod } from "./auth";
 export { type ClientConfig, type ResolvedConfig } from "./config";
 export { parseBatch, BatchParseError } from "./results";
