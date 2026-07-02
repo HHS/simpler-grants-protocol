@@ -401,7 +401,7 @@ The `schema` option is accepted by `get()`, `list()`, and `search()`. When omitt
 
 ## Plugin transformations (PoC)
 
-> **Status:** Proof-of-concept (issue [#798](https://github.com/HHS/simpler-grants-protocol/issues/798)). Mirrors the Python PoC in [PR #810](https://github.com/HHS/simpler-grants-protocol/pull/810). Contract follows [ADR-0022](https://commongrants.org/governance/adr/0022-plugin-framework/) and [ADR-0017](https://commongrants.org/governance/adr/0017-mapping-format/).
+> **Status:** Proof-of-concept.
 
 Plugins can declare bidirectional transforms that convert between a source system's native shape and the CommonGrants protocol. `toCommon` maps `native → CommonGrants`; `fromCommon` reverses it. Both directions are author-provided — the SDK does not invert one into the other, because many-to-one handlers (like `match`) are not reversible.
 
@@ -462,7 +462,7 @@ Mapping objects are nested literals where keys are either output field names or 
 
 ### Null handling
 
-The transforms layer respects [ADR-0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/)'s three-state contract for optional fields. Optional values carry three distinct states on the wire, each preserved through the transform:
+Optional values carry three distinct states on the wire, each preserved through the transform:
 
 | State      | Meaning                                                                                  | Handler output |
 | ---------- | ---------------------------------------------------------------------------------------- | -------------- |
@@ -490,7 +490,7 @@ To translate "doesn't apply" into a target-side sentinel (e.g. an `n_a` status t
 
 **For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `undefined` for "not provided," return `null` for "doesn't apply," return a value otherwise. The walker omits keys whose handler returned `undefined` and writes `null` returns as a real, present `null` — so the output object distinguishes the three states the same way the wire does: absent → key omitted, `null` → present `null`, value → present value. Consumers can check for key presence to tell "not provided" from "doesn't apply."
 
-> **Cross-SDK note.** The TS PoC leads on [ADR-0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/) alignment: it preserves the three-state distinction (absent / `null` / value) at the transform layer. The Python PoC ([#810](https://github.com/HHS/simpler-grants-protocol/pull/810)) predates ADR-0024 and still collapses `None` source into the "not provided" path for the coercing handlers — bringing the Python handlers to parity is a pending follow-up.
+> **Cross-SDK note.** The TypeScript SDK preserves the three-state distinction (absent / `null` / value) at the transform layer. The Python SDK currently collapses `None` source into the "not provided" path for the coercing handlers — bringing them to parity is a pending follow-up.
 
 ### Custom handlers
 
@@ -549,18 +549,61 @@ const out = toCommon(sourceData);
 
 ### Wiring transforms into a plugin
 
-Pass `toCommon` / `fromCommon` and `customFields` together under `schemas.<Object>`:
+There are two ways to wire transforms into a plugin entry. These are mutually exclusive — you cannot provide both `mappings` and explicit callables on the same entry.
+
+**Option A: Declarative mappings** — pass a `mappings` object and `definePlugin()` compiles `toCommon` / `fromCommon` for you:
 
 ```typescript
 const plugin = definePlugin({
   meta: {
     name: "grants.gov",
-    version: "0.1.0",
     sourceSystem: "grants.gov",
     capabilities: ["customFields", "transforms"],
   },
   schemas: {
     Opportunity: {
+      sourceSchema: GrantsGovOpportunity,
+      customFields: {
+        /* customFieldSpecs */
+      },
+      mappings: {
+        toCommon: {
+          id: { field: "data.opportunity_uuid" },
+          title: { field: "data.opportunity_title" },
+          status: {
+            value: {
+              match: {
+                field: "data.opportunity_status",
+                case: { posted: "open", archived: "closed" },
+                default: "custom",
+              },
+            },
+          },
+        },
+        fromCommon: {
+          data: {
+            opportunity_uuid: { field: "id" },
+            opportunity_title: { field: "title" },
+          },
+        },
+      },
+    },
+  },
+} as const);
+```
+
+**Option B: Hand-written callables** — pass `toCommon` / `fromCommon` directly for logic that declarative mappings cannot express:
+
+```typescript
+const plugin = definePlugin({
+  meta: {
+    name: "grants.gov",
+    sourceSystem: "grants.gov",
+    capabilities: ["customFields", "transforms"],
+  },
+  schemas: {
+    Opportunity: {
+      sourceSchema: GrantsGovOpportunity,
       customFields: {
         /* customFieldSpecs */
       },
@@ -568,13 +611,16 @@ const plugin = definePlugin({
       fromCommon,
     },
   },
-});
-
-// Invoke at runtime:
-const cg = plugin.schemas.Opportunity?.toCommon?.(sourceData);
+} as const);
 ```
 
-For a complete runnable round-trip with custom handlers and `commonSchema` validation, see [`examples/transforms.ts`](../../examples/transforms.ts) (`pnpm example:transforms`).
+Both options expose the same runtime surface:
+
+```typescript
+const { result, errors } = plugin.schemas.Opportunity.toCommon(sourceData);
+```
+
+For a complete runnable round-trip covering both options, custom handlers, and `commonSchema` validation, see [`examples/transforms.ts`](../../examples/transforms.ts) (`pnpm example:transforms`).
 
 ### Error handling
 
@@ -583,16 +629,24 @@ For a complete runnable round-trip with custom handlers and `commonSchema` valid
 ```typescript
 const out = toCommon(sourceData);
 for (const err of out.errors) {
-  // Build a redacted projection — err.sourceValue / err.cause carry input data
-  // by design; the projection enumerates only safe
-  // fields. On the Zod-validation path err.message is also data-bearing —
-  // see the PII warning below for the full picture and tracking issue.
-  const safe = { name: err.name, message: err.message, path: err.path, handler: err.handler };
+  // Build a redacted projection — sourceValue carries the full input record.
+  // See the PII warning below before logging the full error object.
+  const safe = { name: err.name, path: err.path, handler: err.handler };
   console.warn(safe);
 }
 ```
 
-> **PII warning (ADR-0022 Decision #9):** The SDK does **not** redact by default. `TransformError.sourceValue` and `cause` are plain enumerable fields and flow through `JSON.stringify(err)`, `util.inspect(err)`, `console.log(err)`, and any logger that enumerates own properties. `sourceValue` is populated with the entire input record passed to `toCommon` / `fromCommon` — not just the value at the failing field. Log a redacted projection instead — e.g. `{ name: err.name, message: err.message, path: err.path, handler: err.handler }`. On the Zod-validation path (when `commonSchema` is passed to `buildTransforms()`), `TransformError.message` is also data-bearing — Zod's default error map embeds the rejected value into `issue.message`, which flows verbatim into `TransformError.message`. Redact `message` alongside `sourceValue` and `cause`. Full-message sanitization is tracked under [#744](https://github.com/HHS/simpler-grants-protocol/issues/744).
+`TransformError` properties:
+
+| Property      | Type                  | Description                                                      |
+| ------------- | --------------------- | ---------------------------------------------------------------- |
+| `message`     | `string`              | Human-readable description of the failure.                       |
+| `path`        | `string \| undefined` | Dot-notation path to the failing field, when known.              |
+| `handler`     | `string \| undefined` | Handler name that threw, when applicable.                        |
+| `sourceValue` | `unknown`             | The full input record passed to the transform (see PII warning). |
+| `cause`       | `unknown`             | The original exception.                                          |
+
+> **PII warning:** The SDK does **not** redact by default. `TransformError.sourceValue` and `cause` are plain enumerable fields and flow through `JSON.stringify(err)`, `util.inspect(err)`, `console.log(err)`, and any logger that enumerates own properties. `sourceValue` is populated with the entire input record passed to `toCommon` / `fromCommon` — not just the value at the failing field. On the Zod-validation path (when `commonSchema` is passed to `buildTransforms()`), `TransformError.message` is also data-bearing — Zod's default error map embeds the rejected value into `issue.message`. Log a redacted projection instead — e.g. `{ name: err.name, path: err.path, handler: err.handler }`.
 
 ## Best practices
 
@@ -703,27 +757,27 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 ### Transforms (PoC)
 
-| Export                                               | Kind      | Description                                                                                                                                                                                                                                       | Demonstrated in                                                         |
-| ---------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [`buildTransforms()`](./transforms.ts)               | function  | Compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables. Positional params: `(toCommonMapping, fromCommonMapping, handlers?, commonSchema?)`. Validates mapping structure at call time; collisions with built-ins throw. | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
-| [`BuiltTransforms`](./transforms.ts)                 | interface | Return shape of `buildTransforms()` — `{ toCommon, fromCommon }`.                                                                                                                                                                                 |                                                                         |
-| [`transformFromMapping()`](./transformation.ts)      | function  | Low-level mapping walker used by `buildTransforms()`. Useful if you want to drive a single mapping pass without the call-time validation or error-wrapping layer.                                                                                 |                                                                         |
-| [`TransformFromMappingOptions`](./transformation.ts) | interface | Options for `transformFromMapping()`: optional `handlers` registry (`Map<string, Handler>`).                                                                                                                                                      |                                                                         |
-| [`DEFAULT_HANDLERS`](./transformation.ts)            | const     | `Map<string, Handler>` of built-in handlers: `const`, `field`, `match`, `numberToString`, `stringToNumber`, `switch`.                                                                                                                             | [Built-in mapping handlers](#built-in-mapping-handlers)                 |
-| [`getFromPath()`](./transformation.ts)               | function  | Walks an object via dot-notation; returns `undefined` (or a provided default) when the path is missing or traverses a non-object.                                                                                                                 |                                                                         |
-| [`TransformResult`](./types.ts)                      | interface | Unconditional return shape `{ result, errors }` for `toCommon` / `fromCommon`.                                                                                                                                                                    | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
-| [`TransformError`](./types.ts)                       | class     | Structured transformation error carrying `path`, `handler`, `sourceValue`, `cause`. Extends `Error`.                                                                                                                                              | [Error handling](#error-handling)                                       |
-| [`Handler`](./types.ts)                              | type      | Signature for mapping handler functions: `(data, arg) => unknown`.                                                                                                                                                                                | [Custom handlers](#custom-handlers)                                     |
-| [`PluginMeta`](./types.ts)                           | interface | Plugin identity: `name` (required), `sourceSystem` (required), optional `version` and `capabilities`.                                                                                                                                             | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
-| [`PluginCapability`](./types.ts)                     | type      | Literal union of capability names: `"customFields" \| "customFilters" \| "transforms"`.                                                                                                                                                           |                                                                         |
-| [`PluginSchemasInput`](./define-plugin.ts)           | type      | Map from extensible model name to `SchemaInput`. The shape of `DefinePluginOptions.schemas`.                                                                                                                                                      | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
-| [`SchemaInput`](./types.ts)                          | type      | Author-provided input per object: `{ sourceSchema?, customFields?, mappings? }` or `{ sourceSchema?, customFields?, toCommon?, fromCommon? }`. XOR: `mappings` and explicit callables cannot both be present.                                     | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
-| [`SchemaOnly`](./types.ts)                           | interface | Compiled output for schema-only entries: `{ commonSchema, sourceSchema? }`. Produced when no transforms are configured.                                                                                                                           |                                                                         |
-| [`SchemaWithTransforms`](./types.ts)                 | interface | Compiled output for entries with transforms: `{ commonSchema, sourceSchema?, toCommon, fromCommon }`. Produced when `mappings` or explicit callables are provided.                                                                                |                                                                         |
-| [`SchemaMappings`](./types.ts)                       | interface | Declarative `{ toCommon?, fromCommon? }` mapping dicts. Stored inside `SchemaInput.mappings`.                                                                                                                                                     |                                                                         |
-| [`TransformTypes`](./transform-helpers.ts)           | interface | Named argument for `ToCommon` / `FromCommon`: `{ model, sourceSchema, customFields? }`. `model` selects the base schema; the common type is resolved from `customFields`.                                                                         |                                                                         |
-| [`ToCommon`](./transform-helpers.ts)                 | type      | Helper type for a hand-written `toCommon`. Takes a `TransformTypes` arg; `source` is typed from `sourceSchema`, the return checked against the resolved common **input** type.                                                                    |                                                                         |
-| [`FromCommon`](./transform-helpers.ts)               | type      | Helper type for a hand-written `fromCommon`. Takes a `TransformTypes` arg; `common` is the resolved common **output** type, the return the source type.                                                                                           |                                                                         |
+| Export                                               | Kind      | Description                                                                                                                                                                                                                                                      | Demonstrated in                                                         |
+| ---------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [`buildTransforms()`](./transforms.ts)               | function  | Compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables. Positional params: `(toCommonMapping, fromCommonMapping, handlers?, commonSchema?, sourceSchema?)`. Validates mapping structure at call time; collisions with built-ins throw. | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
+| [`BuiltTransforms`](./transforms.ts)                 | interface | Return shape of `buildTransforms()` — `{ toCommon, fromCommon }`.                                                                                                                                                                                                |                                                                         |
+| [`transformFromMapping()`](./transformation.ts)      | function  | Low-level mapping walker used by `buildTransforms()`. Useful if you want to drive a single mapping pass without the call-time validation or error-wrapping layer.                                                                                                |                                                                         |
+| [`TransformFromMappingOptions`](./transformation.ts) | interface | Options for `transformFromMapping()`: optional `handlers` registry (`Map<string, Handler>`).                                                                                                                                                                     |                                                                         |
+| [`DEFAULT_HANDLERS`](./transformation.ts)            | const     | `Map<string, Handler>` of built-in handlers: `const`, `field`, `match`, `numberToString`, `stringToNumber`, `switch`.                                                                                                                                            | [Built-in mapping handlers](#built-in-mapping-handlers)                 |
+| [`getFromPath()`](./transformation.ts)               | function  | Walks an object via dot-notation; returns `undefined` (or a provided default) when the path is missing or traverses a non-object.                                                                                                                                |                                                                         |
+| [`TransformResult`](./types.ts)                      | interface | Unconditional return shape `{ result, errors }` for `toCommon` / `fromCommon`.                                                                                                                                                                                   | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
+| [`TransformError`](./types.ts)                       | class     | Structured transformation error carrying `path`, `handler`, `sourceValue`, `cause`. Extends `Error`.                                                                                                                                                             | [Error handling](#error-handling)                                       |
+| [`Handler`](./types.ts)                              | type      | Signature for mapping handler functions: `(data, arg) => unknown`.                                                                                                                                                                                               | [Custom handlers](#custom-handlers)                                     |
+| [`PluginMeta`](./types.ts)                           | interface | Plugin identity: `name` (required), `sourceSystem` (required), optional `version` and `capabilities`.                                                                                                                                                            | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
+| [`PluginCapability`](./types.ts)                     | type      | Literal union of capability names: `"customFields" \| "customFilters" \| "transforms"`.                                                                                                                                                                          |                                                                         |
+| [`PluginSchemasInput`](./define-plugin.ts)           | type      | Map from extensible model name to `SchemaInput`. The shape of `DefinePluginOptions.schemas`.                                                                                                                                                                     | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
+| [`SchemaInput`](./types.ts)                          | type      | Author-provided input per object: `{ sourceSchema?, customFields?, mappings? }` or `{ sourceSchema?, customFields?, toCommon?, fromCommon? }`. XOR: `mappings` and explicit callables cannot both be present.                                                    | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
+| [`SchemaOnly`](./types.ts)                           | interface | Compiled output for schema-only entries: `{ commonSchema, sourceSchema? }`. Produced when no transforms are configured.                                                                                                                                          |                                                                         |
+| [`SchemaWithTransforms`](./types.ts)                 | interface | Compiled output for entries with transforms: `{ commonSchema, sourceSchema?, toCommon, fromCommon }`. Produced when `mappings` or explicit callables are provided.                                                                                               |                                                                         |
+| [`SchemaMappings`](./types.ts)                       | interface | Declarative `{ toCommon?, fromCommon? }` mapping dicts. Stored inside `SchemaInput.mappings`.                                                                                                                                                                    |                                                                         |
+| [`TransformTypes`](./transform-helpers.ts)           | interface | Named argument for `ToCommon` / `FromCommon`: `{ model, sourceSchema, customFields? }`. `model` selects the base schema; the common type is resolved from `customFields`.                                                                                        |                                                                         |
+| [`ToCommon`](./transform-helpers.ts)                 | type      | Helper type for a hand-written `toCommon`. Takes a `TransformTypes` arg; `source` is typed from `sourceSchema`, the return checked against the resolved common **input** type.                                                                                   |                                                                         |
+| [`FromCommon`](./transform-helpers.ts)               | type      | Helper type for a hand-written `fromCommon`. Takes a `TransformTypes` arg; `common` is the resolved common **output** type, the return the source type.                                                                                                          |                                                                         |
 
 ### Shared types
 
