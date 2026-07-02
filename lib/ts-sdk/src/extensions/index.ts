@@ -25,7 +25,13 @@ export type {
 } from "./types";
 export { RESOURCE_NAMES, FilterError } from "./types";
 export type { ClassifyResult, CustomFilterInput } from "./custom-filters";
-export { classifyFilters, validateRoutes, F, FILTER_TYPE_SCHEMAS } from "./custom-filters";
+export {
+  categorizeFilters,
+  classifyFilters,
+  validateRoutes,
+  F,
+  FILTER_TYPE_SCHEMAS,
+} from "./custom-filters";
 
 // Schema utilities — lower-level tools for working with custom fields
 export type { WithCustomFieldsResult } from "./with-custom-fields";

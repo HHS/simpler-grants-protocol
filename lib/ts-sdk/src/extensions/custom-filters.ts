@@ -369,3 +369,73 @@ export function classifyFilters(
 
   return { result, errors };
 }
+
+// ############################################################################
+// Public — categorizeFilters (fail-fast classifier)
+// ############################################################################
+
+/**
+ * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters`
+ * request body, throwing on the first invalid value instead of dropping it.
+ *
+ * Same three-bucket classification as `classifyFilters` (defaults → top-level
+ * fields; registered + ad-hoc → `customFilters`), but validation is fail-fast:
+ * any invalid value — standard, registered, or ad-hoc — throws before a request
+ * body is produced. Well-formed ad-hoc (unregistered) keys still pass through.
+ *
+ * @param routes - The `PluginRoutes` from the plugin definition
+ * @param resourceKey - The resource name (e.g. `"opportunities"`)
+ * @param methodKey - The method name (e.g. `"search"`)
+ * @param consumerFilters - The flat consumer-facing filters object
+ * @returns The classified `OppFilters` request body
+ * @throws FilterError on the first invalid filter value
+ */
+export function categorizeFilters(
+  routes: PluginRoutes,
+  resourceKey: string,
+  methodKey: string,
+  consumerFilters: Record<string, unknown>
+): z.infer<typeof OppFiltersSchema> {
+  // Resolve registered filter specs for this route-method. The selectors are
+  // runtime strings; cast them rather than widening the routes map.
+  const registeredFilters: Record<string, CustomFilterSpec> =
+    routes[resourceKey as ResourceName]?.[methodKey as RouteMethod]?.filters ?? {};
+
+  const defaultFields: Partial<z.infer<typeof OppDefaultFiltersSchema>> = {};
+  const customFilters: Record<string, z.infer<typeof DefaultFilterSchema>> = {};
+
+  for (const [key, value] of Object.entries(consumerFilters)) {
+    const spec = registeredFilters[key] as CustomFilterSpec | undefined;
+
+    if (DEFAULT_FILTER_NAMES.has(key)) {
+      // Bucket 1: default filter → top-level named field, validated against its
+      // real type from OppDefaultFiltersSchema. An invalid value throws.
+      const fieldSchema = (OppDefaultFiltersSchema.shape as Record<string, z.ZodTypeAny>)[key];
+      const result = fieldSchema.safeParse(value);
+      if (!result.success) {
+        throw new FilterError(
+          `Default filter "${key}" failed validation: ${result.error.message}`,
+          {
+            path: `filters.${key}`,
+            sourceValue: value,
+          }
+        );
+      }
+      (defaultFields as Record<string, unknown>)[key] = value;
+    } else {
+      // Bucket 2 (registered custom) or Bucket 3 (ad-hoc / gov.* namespaced).
+      // An invalid value throws — including a malformed ad-hoc shape.
+      const error = validateFilterCall(spec, key, value);
+      if (error) {
+        throw error;
+      }
+      customFilters[key] = value as z.infer<typeof DefaultFilterSchema>;
+    }
+  }
+
+  // Omit customFilters key entirely when empty (match nullish shape)
+  return {
+    ...defaultFields,
+    ...(Object.keys(customFilters).length > 0 ? { customFilters } : {}),
+  };
+}

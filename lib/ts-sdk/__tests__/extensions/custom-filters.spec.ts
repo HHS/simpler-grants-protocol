@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyFilters, F, validateRoutes } from "@/extensions";
+import { categorizeFilters, classifyFilters, F, validateRoutes } from "@/extensions";
 import { validateFilterCall } from "@/extensions/custom-filters";
 import { FilterError } from "@/extensions";
 import type { PluginRoutes } from "@/extensions";
@@ -426,5 +426,62 @@ describe("F helpers", () => {
     expect(() => DefaultFilterSchema.parse(F.eq("test"))).not.toThrow();
     expect(() => DefaultFilterSchema.parse(F.in(["a", "b"]))).not.toThrow();
     expect(() => DefaultFilterSchema.parse(F.between(100, 500))).not.toThrow();
+  });
+});
+
+// ############################################################################
+// categorizeFilters (fail-fast classifier)
+// ############################################################################
+
+describe("categorizeFilters", () => {
+  it("classifies defaults top-level and registered/ad-hoc under customFilters", () => {
+    const result = categorizeFilters(grantsGovRoutes, "opportunities", "search", {
+      status: { operator: "in", value: ["open"] },
+      agency: F.in(["NSF"]),
+      adHocKey: F.eq("x"),
+    });
+    expect(result.status).toEqual({ operator: "in", value: ["open"] });
+    expect(result.customFilters).toMatchObject({
+      agency: { operator: "in", value: ["NSF"] },
+      adHocKey: { operator: "eq", value: "x" },
+    });
+  });
+
+  it("throws FilterError on an invalid standard filter value", () => {
+    expect(() =>
+      categorizeFilters(grantsGovRoutes, "opportunities", "search", {
+        status: { operator: "bogus", value: 1 },
+      })
+    ).toThrow(FilterError);
+  });
+
+  it("throws FilterError on a wrong-typed registered filter value", () => {
+    expect(() =>
+      categorizeFilters(grantsGovRoutes, "opportunities", "search", {
+        agency: { operator: "eq", value: "NSF" },
+      })
+    ).toThrow(FilterError);
+  });
+
+  it("throws FilterError on a malformed ad-hoc filter value", () => {
+    expect(() =>
+      categorizeFilters(grantsGovRoutes, "opportunities", "search", {
+        adHocKey: { notAFilter: true },
+      })
+    ).toThrow(FilterError);
+  });
+
+  it("passes well-formed ad-hoc filters through without throwing", () => {
+    const result = categorizeFilters(grantsGovRoutes, "opportunities", "search", {
+      adHocKey: F.between(1, 10),
+    });
+    expect(result.customFilters?.adHocKey).toBeDefined();
+  });
+
+  it("omits customFilters entirely when only defaults are present", () => {
+    const result = categorizeFilters(grantsGovRoutes, "opportunities", "search", {
+      status: { operator: "in", value: ["open"] },
+    });
+    expect(result.customFilters).toBeUndefined();
   });
 });
