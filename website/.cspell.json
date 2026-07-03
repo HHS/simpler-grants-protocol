@@ -16,6 +16,7 @@
     "CDFI",
     "CFDA",
     "Diátaxis",
+    "FAPI",
     "FATA",
     "FHIR",
     "Fluxx",
@@ -23,6 +24,7 @@
     "funder",
     "funders",
     "geospatial",
+    "Gerrit",
     "IATI",
     "interoperating",
     "namespacing",
@@ -36,6 +38,7 @@
     "rescope",
     "rescoped",
     "RJSF",
+    "Temelio",
     "tiktok",
     "transpiles",
     "tspconfig",
@@ -51,7 +54,9 @@
     "TCCUs",
     "widal001",
     "categoricals",
-    "withastro"
+    "withastro",
+    "PKCE",
+    "frontends"
   ],
   "ignoreWords": [
     "opblock",
