@@ -1016,7 +1016,7 @@ GET /orgs/{orgId}?at=2026-03-15T00:00:00Z
 
 _Does a change resolve immediately, or can its `status` also represent a queued review?_
 
-Every write returns a change with a `status`. A `PATCH` is always `accepted` on the spot; the question is whether a `POST /changes` submission can also come back `pending` for later review, or whether every change has to resolve immediately.
+Every successful write returns a change record with a `status` attribute. A 2xx `PATCH` response always has `status: accepted`, since these updates are made directly by trusted clients, following `PATCH` semantics. The main question is whether a `POST /changes` submission can also come back `pending` for later review, or whether every change should be resolved immediately.
 
 #### Side-by-side comparison
 
