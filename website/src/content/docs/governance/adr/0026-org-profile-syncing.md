@@ -23,7 +23,7 @@ Here is a brief summary of the API contract this ADR proposes:
   - Update an org profile: `PATCH /common-grants/orgs/{orgId}`
   - Propose an org profile change: `POST /common-grants/orgs/{orgId}/changes`
   - View an org's profile changes: `GET /common-grants/orgs/{orgId}/changes`
-- Changes are either accepted immediately (via `PATCH`) or staged for review (via `POST /changes`), and both sets of changes can be accessed via the `GET /changes` endpoint.
+- API servers can choose to either support `PATCH` operations where changes are accepted immediately, `POST /changes` operations where changes are staged for review, or support both but limit clients to specific operations by scope (e.g. trusted clients can `PATCH` or `POST`, but external systems can only `POST`)
 
 :::
 
