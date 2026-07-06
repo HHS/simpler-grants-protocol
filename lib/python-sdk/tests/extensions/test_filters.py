@@ -9,37 +9,49 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from common_grants_sdk.extensions import PluginRoutes, ResourceRoutes
 from common_grants_sdk.extensions.filters import (
-    FILTER_TYPE_SCHEMAS,
     classify_filters,
     f,
     validate_filter_call,
     validate_routes,
 )
-from common_grants_sdk.extensions.specs import CustomFilterSpec, CustomFilterType
 from common_grants_sdk.extensions.types import ClassifyResult, FilterError
-from common_grants_sdk.schemas.pydantic.filters.opportunity import OppFilters
+from common_grants_sdk.schemas.pydantic.filters.money import (
+    MoneyComparisonFilter,
+    MoneyRangeFilter,
+)
+from common_grants_sdk.schemas.pydantic.filters.numeric import (
+    NumberComparisonFilter,
+    NumberRangeFilter,
+)
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    BooleanComparison,
+    NumberComparison,
+    OpportunityFilters,
+    OppFilters,
+    StringArray,
+    StringComparison,
+)
+from common_grants_sdk.schemas.pydantic.filters.string import StringArrayFilter
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------
 
-AGENCY_SPEC = CustomFilterSpec(filter_type=CustomFilterType.STRING_ARRAY)
-FUNDING_PROGRAM_SPEC = CustomFilterSpec(
-    filter_type=CustomFilterType.STRING_COMPARISON,
-    description="Program name filter",
-)
 
-SAMPLE_ROUTES = {
-    "opportunities": {
-        "search": {
-            "filters": {
-                "agency": AGENCY_SPEC,
-                "fundingProgram": FUNDING_PROGRAM_SPEC,
-            }
-        }
-    }
-}
+class OppSearchFilters(OpportunityFilters, total=False):
+    """The registered custom filters for opportunities.search.
+
+    ``agency`` is a stringArray filter; ``fundingProgram`` a stringComparison —
+    each key's value model *is* its declared type, recovered at classify time.
+    """
+
+    agency: StringArray
+    fundingProgram: StringComparison
+
+
+SAMPLE_ROUTES = PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters))
 
 
 # ---------------------------------------------------------------------------
@@ -238,99 +250,72 @@ def test_oppfilters_mixed_case_roundtrip():
 # ---------------------------------------------------------------------------
 
 
-def test_validate_routes_unknown_filter_type_raises():
-    """validate_routes raises FilterError when filter_type is not in FILTER_TYPE_SCHEMAS."""
-    # Dataclasses don't validate field types at runtime, so a bogus filter_type
-    # can be passed directly (the annotation is for type checkers only).
-    bad_spec = CustomFilterSpec(filter_type="unknownType")  # type: ignore[arg-type]
+def test_validate_routes_non_model_filter_type_raises():
+    """validate_routes raises FilterError when a registered custom filter's value
+    type is not a filter value model.
 
-    routes = {"opportunities": {"search": {"filters": {"myFilter": bad_spec}}}}
-    with pytest.raises(FilterError, match="Unknown filter_type"):
-        validate_routes(routes)
-
-
-def test_validate_routes_collision_with_default_filter_name_raises():
-    """validate_routes raises FilterError when a custom filter name collides with a CORE DEFAULT name.
-
-    This is the escape-hatch collision check. E.g. naming a custom filter "status"
-    would shadow the core default "status" field — must be caught at registration time.
+    The typed carrier makes a misspelled resource/method a *static* error, so the
+    only meaningful runtime check left is that each registered key is annotated
+    with a ``CommonGrantsBaseModel`` subclass. A ``region: int`` annotation is the
+    genuinely-invalid registration this surfaces at registration time.
     """
-    routes = {
-        "opportunities": {
-            "search": {
-                "filters": {
-                    "status": CustomFilterSpec(
-                        filter_type=CustomFilterType.STRING_ARRAY,
-                        description="Should collide with default",
-                    ),
-                }
-            }
-        }
-    }
-    with pytest.raises(FilterError, match="collides"):
+
+    class BadFilters(OpportunityFilters, total=False):
+        region: int  # not a filter value model
+
+    routes = PluginRoutes(opportunities=ResourceRoutes(search=BadFilters))
+    with pytest.raises(FilterError):
         validate_routes(routes)
 
 
-def test_validate_routes_collision_with_camel_alias_raises():
-    """validate_routes raises FilterError for camelCase alias collision (e.g. "closeDateRange")."""
-    routes = {
-        "opportunities": {
-            "search": {
-                "filters": {
-                    "closeDateRange": CustomFilterSpec(
-                        filter_type=CustomFilterType.DATE_RANGE,
-                        description="Should collide with default alias",
-                    ),
-                }
-            }
-        }
-    }
-    with pytest.raises(FilterError, match="collides"):
+def test_validate_routes_redeclared_standard_key_wrong_type_raises():
+    """validate_routes raises when a route TypedDict redeclares a standard key with
+    a different value type — the call site would see the override while classify
+    validates against the real standard field type (a static/runtime mismatch)."""
+
+    class RedeclaresStatus(OpportunityFilters, total=False):
+        status: StringComparison  # standard "status" is a StringArray filter
+
+    routes = PluginRoutes(opportunities=ResourceRoutes(search=RedeclaresStatus))
+    with pytest.raises(FilterError):
         validate_routes(routes)
 
 
-def test_validate_routes_unsupported_route_raises():
-    """validate_routes raises FilterError for custom filters on a non-filterable route.
+def test_validate_routes_redeclared_standard_key_same_type_ok():
+    """Redeclaring a standard key with its SAME type is a harmless no-op override."""
 
-    Only routes whose core operation declares a ``filters`` parameter can carry
-    custom filters. ``opportunities.list`` has none, so a filter declared there is
-    a registration-time error rather than a silently-ignored declaration.
-    """
-    routes = {
-        "opportunities": {
-            "list": {
-                "filters": {
-                    "agency": CustomFilterSpec(
-                        filter_type=CustomFilterType.STRING_ARRAY,
-                        description="Not supported on list",
-                    ),
-                }
-            }
-        }
-    }
-    with pytest.raises(FilterError, match="does not support custom filters"):
-        validate_routes(routes)
+    class RedeclaresStatusSame(OpportunityFilters, total=False):
+        status: StringArray  # same as the standard type
+
+    validate_routes(
+        PluginRoutes(opportunities=ResourceRoutes(search=RedeclaresStatusSame))
+    )
 
 
 def test_validate_routes_valid_routes_do_not_raise():
-    """validate_routes does not raise for a fully valid routes dict."""
+    """validate_routes does not raise for a fully valid typed routes carrier."""
     # Should not raise
     validate_routes(SAMPLE_ROUTES)
 
 
+def test_validate_routes_empty_carrier_does_not_raise():
+    """The empty carrier (no registered filters) passes validation silently."""
+    validate_routes(PluginRoutes(opportunities=ResourceRoutes()))
+
+
 # ---------------------------------------------------------------------------
-# Call-time validation (validate_filter_call) — RAISES FilterError
+# Call-time validation (validate_filter_call) — fail-soft
 # ---------------------------------------------------------------------------
 
 
 def test_validate_filter_call_registered_bad_operator_returns_error():
     """validate_filter_call returns (None, FilterError) for an operator/value mismatch.
 
-    A bad registered filter yields a FilterError, not an exception. AGENCY_SPEC
-    is STRING_ARRAY — an "eq" with a scalar value is wrong for it.
+    A bad registered filter yields a FilterError, not an exception. agency is
+    validated against StringArrayFilter — an "eq" with a scalar value is wrong for it.
     """
     bad_filter = f.eq("not-an-array")
-    value, error = validate_filter_call(AGENCY_SPEC, "agency", bad_filter)
+    value, error = validate_filter_call(StringArrayFilter, "agency", bad_filter)
     assert value is None
     assert isinstance(error, FilterError)
     assert error.path == "filters.agency"
@@ -339,7 +324,7 @@ def test_validate_filter_call_registered_bad_operator_returns_error():
 def test_validate_filter_call_adhoc_invalid_shape_returns_error():
     """validate_filter_call returns a FilterError when an ad-hoc filter has an invalid shape."""
 
-    # Pass None as spec (ad-hoc), with something that isn't a DefaultFilter
+    # Pass None as model_cls (ad-hoc), with something that isn't a DefaultFilter
     class _BadShape:
         operator = "not_a_real_operator"
         value = object()  # not a valid value type
@@ -353,56 +338,56 @@ def test_validate_filter_call_adhoc_invalid_shape_returns_error():
 def test_validate_filter_call_valid_registered_returns_value_and_no_error():
     """validate_filter_call returns (DefaultFilter, None) for a valid registered filter call."""
     valid_filter = f.in_(["NSF", "NIH"])
-    # agency is STRING_ARRAY, in_ with list is valid
-    value, error = validate_filter_call(AGENCY_SPEC, "agency", valid_filter)
+    # agency is StringArrayFilter, in_ with list is valid
+    value, error = validate_filter_call(StringArrayFilter, "agency", valid_filter)
     assert error is None
     assert value is not None
     assert value.operator == "in"
 
 
 def test_validate_filter_call_money_comparison_passes_valid_money():
-    """A registered moneyComparison filter accepts a comparison operator and Money value.
+    """A moneyComparison filter accepts a comparison operator and Money value.
 
     Money.amount is a decimal STRING ("1000000"), not a number — the shape that
     drifted in the TS compile-time filter map and was locked there with
     compile-error tests; covered here at the runtime layer.
     """
-    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
     value, error = validate_filter_call(
-        spec, "awardFloor", f.gt({"amount": "1000000", "currency": "USD"})
+        MoneyComparisonFilter,
+        "awardFloor",
+        f.gt({"amount": "1000000", "currency": "USD"}),
     )
     assert error is None
     assert value is not None
 
 
 def test_validate_filter_call_money_comparison_rejects_array_operator():
-    """A registered moneyComparison filter returns a FilterError for an array operator."""
-    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
+    """A moneyComparison filter returns a FilterError for an array operator."""
     value, error = validate_filter_call(
-        spec, "awardFloor", f.in_([{"amount": "1000000", "currency": "USD"}])
+        MoneyComparisonFilter,
+        "awardFloor",
+        f.in_([{"amount": "1000000", "currency": "USD"}]),
     )
     assert value is None
     assert isinstance(error, FilterError)
 
 
 def test_validate_filter_call_money_comparison_rejects_numeric_amount():
-    """A registered moneyComparison filter returns a FilterError for a numeric amount.
+    """A moneyComparison filter returns a FilterError for a numeric amount.
 
     Money.amount is a DecimalString — a raw number is the wrong shape.
     """
-    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_COMPARISON)
     value, error = validate_filter_call(
-        spec, "awardFloor", f.gt({"amount": 1000.5, "currency": "USD"})
+        MoneyComparisonFilter, "awardFloor", f.gt({"amount": 1000.5, "currency": "USD"})
     )
     assert value is None
     assert isinstance(error, FilterError)
 
 
 def test_validate_filter_call_money_range_passes_valid_range():
-    """A registered moneyRange filter accepts between with {min, max} Money values."""
-    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_RANGE)
+    """A moneyRange filter accepts between with {min, max} Money values."""
     value, error = validate_filter_call(
-        spec,
+        MoneyRangeFilter,
         "awardRange",
         f.between(
             {"amount": "10000", "currency": "USD"},
@@ -414,17 +399,16 @@ def test_validate_filter_call_money_range_passes_valid_range():
 
 
 def test_validate_filter_call_money_range_rejects_comparison_operator():
-    """A registered moneyRange filter returns a FilterError for a comparison operator."""
-    spec = CustomFilterSpec(filter_type=CustomFilterType.MONEY_RANGE)
+    """A moneyRange filter returns a FilterError for a comparison operator."""
     value, error = validate_filter_call(
-        spec, "awardRange", f.gt({"amount": "10000", "currency": "USD"})
+        MoneyRangeFilter, "awardRange", f.gt({"amount": "10000", "currency": "USD"})
     )
     assert value is None
     assert isinstance(error, FilterError)
 
 
 def test_validate_filter_call_number_range_value_submodel_survives_to_wire():
-    """A registered numberRange filter round-trips its NumberRange sub-model to wire dict.
+    """A numberRange filter round-trips its NumberRange sub-model to wire dict.
 
     f.between(int, int) returns a NumberRangeFilter whose ``.value`` is a NumberRange
     sub-model (not a plain dict); validation must accept it and model_dump must recurse
@@ -432,8 +416,9 @@ def test_validate_filter_call_number_range_value_submodel_survives_to_wire():
     NumberRange object — or that dropped the int payload — would ship a non-JSON body.
     The moneyRange analog above is covered; this pins the numeric path.
     """
-    spec = CustomFilterSpec(filter_type=CustomFilterType.NUMBER_RANGE)
-    value, error = validate_filter_call(spec, "awardCount", f.between(0, 1000))
+    value, error = validate_filter_call(
+        NumberRangeFilter, "awardCount", f.between(0, 1000)
+    )
     assert error is None
     wire = value.model_dump(by_alias=True, exclude_none=True, mode="json")
     assert wire["operator"] == "between"
@@ -460,18 +445,17 @@ def test_classify_default_wrong_shape_collects_error_and_omits_key():
     assert isinstance(classified.errors[0].cause, ValidationError)
 
 
-def test_validate_filter_call_integer_comparison_validates_as_number():
-    """A registered integerComparison filter validates against NumberComparisonFilter.
+def test_validate_filter_call_number_comparison_validates_as_number():
+    """A numberComparison filter validates against NumberComparisonFilter.
 
-    The spec defines no integer filter model, so the int constraint is not
-    schema-enforced; a numeric value passes, a non-numeric
-    value fails.
+    A numeric value passes; a non-numeric value fails.
     """
-    spec = CustomFilterSpec(filter_type=CustomFilterType.INTEGER_COMPARISON)
-    value, error = validate_filter_call(spec, "awardCount", f.gt(100))
+    value, error = validate_filter_call(NumberComparisonFilter, "awardCount", f.gt(100))
     assert error is None
     assert value is not None
-    value, error = validate_filter_call(spec, "awardCount", f.gt("not a number"))
+    value, error = validate_filter_call(
+        NumberComparisonFilter, "awardCount", f.gt("not a number")
+    )
     assert value is None
     assert isinstance(error, FilterError)
 
@@ -524,20 +508,15 @@ def test_classify_default_money_range_wrong_shape_collects_error():
 # Wire-body integrity: the value that passed validation is the value shipped
 # ---------------------------------------------------------------------------
 
-WIRE_ROUTES = {
-    "opportunities": {
-        "search": {
-            "filters": {
-                "isOpen": CustomFilterSpec(
-                    filter_type=CustomFilterType.BOOLEAN_COMPARISON
-                ),
-                "awardCount": CustomFilterSpec(
-                    filter_type=CustomFilterType.NUMBER_COMPARISON
-                ),
-            }
-        }
-    }
-}
+
+class WireFilters(OpportunityFilters, total=False):
+    """Registered wire-integrity filters: a boolean and a number comparison."""
+
+    isOpen: BooleanComparison
+    awardCount: NumberComparison
+
+
+WIRE_ROUTES = PluginRoutes(opportunities=ResourceRoutes(search=WireFilters))
 
 
 def test_boolean_filter_value_survives_to_wire_as_json_true():
@@ -606,19 +585,6 @@ def test_mutated_adhoc_instance_is_revalidated_and_collected():
     assert classified.errors[0].path == "filters.legacy"
 
 
-def test_unknown_filter_type_returns_filter_error_not_key_error():
-    """A spec whose filter_type never passed validate_routes returns a FilterError.
-
-    The uniform fail-soft contract holds even when registration-time validation
-    was skipped — the call-time validator must surface a FilterError, never a
-    KeyError, and never raise.
-    """
-    spec = CustomFilterSpec(filter_type="bogusType")  # type: ignore[arg-type]
-    value, error = validate_filter_call(spec, "x", f.eq(1))
-    assert value is None
-    assert isinstance(error, FilterError)
-
-
 def test_validate_filter_call_adhoc_accepts_raw_dict():
     """Ad-hoc validation accepts a raw operator/value dict and returns (DefaultFilter, None)."""
     validated, error = validate_filter_call(None, "x", {"operator": "eq", "value": "v"})
@@ -681,9 +647,9 @@ def test_classify_both_forms_of_same_default_filter_collects_error():
 def test_classify_unmatched_route_treats_registered_name_as_adhoc(resource, method):
     """A (resource, method) pair with no routes entry has NO registered bucket.
 
-    "agency" is registered as STRING_ARRAY under opportunities.search only;
+    "agency" is registered as a stringArray under opportunities.search only;
     via any other route pair it is validated as permissive ad-hoc, so
-    f.eq("NSF") (invalid for STRING_ARRAY) passes through to customFilters.
+    f.eq("NSF") (invalid for stringArray) passes through to customFilters.
     Discriminates both levels of the routes[resource][method] lookup — a
     regression that flattens or mis-keys it either wrongly applies the spec
     or wrongly skips it.
@@ -738,16 +704,6 @@ def test_classify_empty_filters_dict_yields_empty_body():
     assert "customFilters" not in body
 
 
-def test_filter_type_schemas_covers_every_custom_filter_type():
-    """Every CustomFilterType member has a validation model.
-
-    A catalog member without a FILTER_TYPE_SCHEMAS entry would reject valid
-    registrations in validate_routes — this assert turns that drift into a
-    CI failure at the moment the enum and the map diverge.
-    """
-    assert set(FILTER_TYPE_SCHEMAS) == set(CustomFilterType)
-
-
 def test_collected_error_path_is_uniform_across_buckets():
     """All three buckets collect a FilterError with a filters.<name> path, none raise."""
     c1 = classify_filters(
@@ -792,7 +748,7 @@ def test_classify_invalid_registered_and_invalid_adhoc_both_collected():
     """An invalid registered filter AND an invalid ad-hoc filter are both collected.
 
     Neither is shipped: both keys are omitted from customFilters and each yields
-    its own FilterError. "agency" is STRING_ARRAY (f.eq scalar is wrong); the
+    its own FilterError. "agency" is a stringArray (f.eq scalar is wrong); the
     ad-hoc "adhoc" key has a bogus operator.
     """
     classified = classify_filters(

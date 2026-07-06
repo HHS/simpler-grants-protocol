@@ -9,21 +9,33 @@ from uuid import uuid4
 import httpx
 from pydantic import ValidationError
 
-from common_grants_sdk.client import Client, Auth
+from common_grants_sdk.client import (
+    Client,
+    Auth,
+    ListResult,
+    ParseFailure,
+    SearchResult,
+)
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
+from common_grants_sdk.extensions import FilterError, PluginRoutes, ResourceRoutes
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
-from common_grants_sdk.schemas.pydantic.responses import (
-    OpportunitiesListResponse,
-    OpportunitiesSearchResponse,
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    OpportunityFilters,
+    StringArray,
 )
 from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
-from common_grants_sdk.extensions.specs import (
-    CustomFieldSpec,
-    CustomFilterSpec,
-    CustomFilterType,
-)
+from common_grants_sdk.extensions.specs import CustomFieldSpec
+
+
+class OppSearchFilters(OpportunityFilters, total=False):
+    """Route filter TypedDict registering ``agency`` as a stringArray custom filter."""
+
+    agency: StringArray
+
+
+AGENCY_ROUTES = PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters))
 
 
 @pytest.fixture
@@ -276,7 +288,7 @@ class TestOpportunityList:
 
         response = client.opportunities.list(page=1, schema=opp_base)
 
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         assert response.pagination_info.page == 1
@@ -450,7 +462,7 @@ class TestOpportunityList:
 
     def test_list_opportunities_validation_error(self, client, mock_httpx_client):
         """Test listing opportunities with validation error."""
-        # Valid JSON but doesn't match OpportunitiesListResponse schema
+        # Valid JSON but doesn't match the paginated list response schema
         invalid_data = {"invalid": "data"}
         mock_response = Mock()
         mock_response.status_code = 200
@@ -483,7 +495,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         response = client.opportunities.list(page=None)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         # When fetching all, pagination info should reflect aggregated result
@@ -560,7 +572,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(side_effect=mock_get)
 
         response = client.opportunities.list(page=None)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         # Should have all 5 items from all 3 pages
         assert len(response.items) == 5
         assert all(isinstance(item, OpportunityBase) for item in response.items)
@@ -622,7 +634,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(side_effect=mock_get)
 
         response = client.opportunities.list(page=None, page_size=3)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         assert len(response.items) == 4
         assert response.pagination_info.page_size == 4
 
@@ -653,7 +665,7 @@ class TestOpportunityList:
         mock_httpx_client.get = Mock(return_value=mock_response)
 
         response = client.opportunities.list(page=None)
-        assert isinstance(response, OpportunitiesListResponse)
+        assert isinstance(response, ListResult)
         assert len(response.items) == 0
         assert response.pagination_info.total_items == 0
         assert response.pagination_info.total_pages == 1
@@ -748,7 +760,7 @@ class TestOpportunitySearch:
             search="local", status=[OppStatusOptions.OPEN], schema=opp_base
         )
 
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         assert response.items[0].get_custom_field_value("legacy_id", int) == 12345
@@ -762,15 +774,40 @@ class TestOpportunitySearch:
         assert call_args[1]["params"]["page"] == 1
         assert call_args[1]["params"]["pageSize"] == 100
 
-    def test_search_surfaces_server_filter_and_sort_info(
+    def test_search_partial_parse_partitions_items_and_errors(
         self, client, mock_httpx_client, sample_search_response
     ):
-        """search() returns the server's real filterInfo/sortInfo, not blanks.
+        """A malformed row is collected into result.errors (not raised); the valid
+        rows still return in result.items — per-row fail-soft parsing."""
+        good_row = sample_search_response["items"][0]
+        sample_search_response["items"] = [good_row, {"id": "not-a-uuid"}]
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
 
-        The server reports non-fatal filtering feedback in ``filterInfo.errors``
-        and the resolved sort in ``sortInfo``. Earlier the client
-        fabricated empty envelopes, dropping that feedback; this asserts it now
-        reaches the caller.
+        response = client.opportunities.search(search="x", page=1)
+
+        assert isinstance(response, SearchResult)
+        assert len(response.items) == 1
+        assert len(response.errors) == 1
+        assert isinstance(response.errors[0], ParseFailure)
+        assert response.errors[0].index == 1
+        # sort_info survives a single-page fetch (regression guard: it must not be
+        # silently dropped from SearchResult).
+        assert response.sort_info is not None
+        assert response.sort_info.sort_by == "lastModifiedAt"
+
+    def test_search_surfaces_server_filter_info(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """search() returns the server's real filterInfo.errors, not blanks.
+
+        The server reports non-fatal filtering feedback in ``filterInfo.errors``.
+        Earlier the client fabricated an empty envelope, dropping that feedback;
+        this asserts it now reaches the caller via ``SearchResult.filter_info``.
         """
         sample_search_response["filterInfo"] = {
             "filters": {},
@@ -785,12 +822,10 @@ class TestOpportunitySearch:
 
         response = client.opportunities.search(search="x")
 
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert response.filter_info.errors == [
             "filter 'foo' is unsupported and was ignored"
         ]
-        # sort_info reflects the server value, not the blanked "".
-        assert response.sort_info.sort_by == "lastModifiedAt"
 
     def test_search_classifies_custom_filter_bag(
         self, mock_httpx_client, sample_search_response
@@ -803,24 +838,12 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        routes = {
-            "opportunities": {
-                "search": {
-                    "filters": {
-                        "agency": CustomFilterSpec(
-                            filter_type=CustomFilterType.STRING_ARRAY
-                        )
-                    }
-                }
-            }
-        }
-
         # routes is client-bound: supplied once at construction, not per call.
         auth = Auth.api_key("test-key")
         config = Config(
             base_url="https://api.example.com", api_key="test-key", timeout=10.0
         )
-        client = Client(config=config, auth=auth, routes=routes)
+        client = Client(config=config, auth=auth, routes=AGENCY_ROUTES)
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
@@ -842,100 +865,109 @@ class TestOpportunitySearch:
         # separation invariant: status not duplicated under customFilters
         assert "status" not in sent_filters["customFilters"]
 
-    def test_search_status_collision_filters_wins_and_warns(
+    def test_search_status_collision_raises(
         self, client, mock_httpx_client, sample_search_response
     ):
-        """status via both the shorthand arg and the filters argument: filters wins.
+        """status via both the shorthand arg and the filters argument raises.
 
-        Fail-soft: rather than raising, search() keeps the
-        ``filters`` value, ignores the shorthand, and appends a warning to the
-        response's filterInfo.errors.
+        Conflicting input to the standard ``status`` filter is a client bug:
+        search() raises a ``FilterError`` rather than silently picking one and
+        stashing a warning in ``filter_info.errors`` (reserved for server errors).
+        No request is sent.
         """
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.text = json.dumps(sample_search_response)
-        mock_response.json = Mock(return_value=sample_search_response)
-        mock_response.raise_for_status = Mock()
-        mock_httpx_client.post = Mock(return_value=mock_response)
+        mock_httpx_client.post = Mock()
 
-        # filters value uses "forecasted"; shorthand uses OPEN — they must differ
-        # so the assertion on the winning value can actually fail.
-        response = client.opportunities.search(
-            search="conservation",
-            status=[OppStatusOptions.OPEN],
-            filters={"status": {"operator": "in", "value": ["forecasted"]}},
-        )
+        with pytest.raises(FilterError, match="specified via both"):
+            client.opportunities.search(
+                search="conservation",
+                status=[OppStatusOptions.OPEN],
+                filters={"status": {"operator": "in", "value": ["forecasted"]}},
+            )
 
-        # The SENT body carries the filters value, not the shorthand.
-        sent_filters = mock_httpx_client.post.call_args[1]["json"]["filters"]
-        assert sent_filters["status"]["value"] == ["forecasted"]
-        # The collision warning reached filterInfo.errors.
-        assert any(
-            "filters.status" in e
-            and "specified via both the status shorthand and the filters argument; "
-            "used the filters value" in e
-            for e in response.filter_info.errors
-        )
+        # The raise happens before any request goes out.
+        mock_httpx_client.post.assert_not_called()
 
-    def test_search_invalid_filter_is_dropped_and_warned_no_raise(
+    def test_search_invalid_registered_filter_raises(
         self, mock_httpx_client, sample_search_response
     ):
-        """A malformed registered filter is fail-soft: results return, filter dropped.
+        """An invalid value on a registered custom filter raises (AC6).
 
         A registered stringArray filter given a non-array ``between`` value fails
-        classify_filters validation. search() does NOT raise.
-        The invalid filter is absent from the sent body and its error surfaces in
-        filterInfo.errors; results still return.
+        classify validation. search() raises rather than dropping it into
+        ``filter_info.errors``, and sends no request.
         """
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.text = json.dumps(sample_search_response)
-        mock_response.json = Mock(return_value=sample_search_response)
-        mock_response.raise_for_status = Mock()
-        mock_httpx_client.post = Mock(return_value=mock_response)
-
-        routes = {
-            "opportunities": {
-                "search": {
-                    "filters": {
-                        "agency": CustomFilterSpec(
-                            filter_type=CustomFilterType.STRING_ARRAY
-                        )
-                    }
-                }
-            }
-        }
+        mock_httpx_client.post = Mock()
 
         # routes is client-bound: supplied once at construction, not per call.
         auth = Auth.api_key("test-key")
         config = Config(
             base_url="https://api.example.com", api_key="test-key", timeout=10.0
         )
-        client = Client(config=config, auth=auth, routes=routes)
+        client = Client(config=config, auth=auth, routes=AGENCY_ROUTES)
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
+        with pytest.raises(FilterError) as exc_info:
+            client.opportunities.search(
+                search="conservation",
+                filters={"agency": {"operator": "between", "value": 5}},
+            )
+        assert exc_info.value.path == "filters.agency"
+        mock_httpx_client.post.assert_not_called()
+
+    def test_search_invalid_standard_filter_raises(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """An invalid value on a standard filter raises (AC6).
+
+        The standard ``status`` filter is a stringArray; a ``between`` operator
+        with a scalar value fails validation and search() raises — no request.
+        """
+        mock_httpx_client.post = Mock()
+
+        with pytest.raises(FilterError) as exc_info:
+            client.opportunities.search(
+                search="conservation",
+                filters={"status": {"operator": "between", "value": 5}},
+            )
+        assert exc_info.value.path == "filters.status"
+        mock_httpx_client.post.assert_not_called()
+
+    def test_search_invalid_adhoc_filter_passes_through_no_raise(
+        self, client, mock_httpx_client, sample_search_response
+    ):
+        """A malformed ad-hoc (unregistered) filter is best-effort, not fatal (AC6).
+
+        Ad-hoc keys live in the untyped escape hatch: an unusable value is dropped
+        rather than raised (only standard/registered filters raise). Results return.
+        """
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps(sample_search_response)
+        mock_response.json = Mock(return_value=sample_search_response)
+        mock_response.raise_for_status = Mock()
+        mock_httpx_client.post = Mock(return_value=mock_response)
+
+        # No routes: "legacyTag" is neither standard nor registered -> ad-hoc.
         response = client.opportunities.search(
             search="conservation",
-            filters={"agency": {"operator": "between", "value": 5}},
+            filters={"legacyTag": "not-a-filter"},
         )
 
-        # Results still return (no raise).
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert len(response.items) == 2
-
-        # The invalid filter is absent from the sent body. With only the one
-        # invalid filter, no filters key is sent at all.
+        # Dropped from the sent body (never reached the wire).
         sent_body = mock_httpx_client.post.call_args[1]["json"]
-        assert "agency" not in sent_body.get("filters", {}).get("customFilters", {})
+        assert "legacyTag" not in sent_body.get("filters", {}).get("customFilters", {})
 
-        # Its error surfaced in filterInfo.errors.
-        assert any("filters.agency" in e for e in response.filter_info.errors)
-
-    def test_search_invalid_filter_client_errors_precede_server_errors(
+    def test_search_filter_info_errors_are_server_only(
         self, mock_httpx_client, sample_search_response
     ):
-        """Client-side filter errors are merged AHEAD of server-provided errors."""
+        """``filter_info.errors`` carries server-returned errors only.
+
+        With a valid registered filter and server-side filter feedback, the client
+        surfaces the server errors verbatim and injects none of its own.
+        """
         sample_search_response["filterInfo"] = {
             "filters": {},
             "errors": ["server: something was ignored"],
@@ -947,34 +979,20 @@ class TestOpportunitySearch:
         mock_response.raise_for_status = Mock()
         mock_httpx_client.post = Mock(return_value=mock_response)
 
-        routes = {
-            "opportunities": {
-                "search": {
-                    "filters": {
-                        "agency": CustomFilterSpec(
-                            filter_type=CustomFilterType.STRING_ARRAY
-                        )
-                    }
-                }
-            }
-        }
         auth = Auth.api_key("test-key")
         config = Config(
             base_url="https://api.example.com", api_key="test-key", timeout=10.0
         )
-        client = Client(config=config, auth=auth, routes=routes)
+        client = Client(config=config, auth=auth, routes=AGENCY_ROUTES)
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
         response = client.opportunities.search(
             search="conservation",
-            filters={"agency": {"operator": "between", "value": 5}},
+            filters={"agency": {"operator": "in", "value": ["HHS", "NSF"]}},
         )
 
-        errors = response.filter_info.errors
-        # Client error first, server error last.
-        assert "filters.agency" in errors[0]
-        assert errors[-1] == "server: something was ignored"
+        assert response.filter_info.errors == ["server: something was ignored"]
 
     def test_search_opportunities_different_page(
         self, client, mock_httpx_client, sample_search_response
@@ -1152,7 +1170,7 @@ class TestOpportunitySearch:
 
     def test_search_opportunities_validation_error(self, client, mock_httpx_client):
         """Test searching opportunities with validation error."""
-        # Valid JSON but doesn't match OpportunitiesListResponse schema
+        # Valid JSON but doesn't match the paginated list response schema
         invalid_data = {"invalid": "data"}
         mock_response = Mock()
         mock_response.status_code = 200
@@ -1193,7 +1211,7 @@ class TestOpportunitySearch:
         response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=None
         )
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert len(response.items) == 2
         assert all(isinstance(item, OpportunityBase) for item in response.items)
         # When fetching all, pagination info should reflect aggregated result
@@ -1293,7 +1311,7 @@ class TestOpportunitySearch:
         response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=None
         )
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         # Should have all 5 items from all 3 pages
         assert len(response.items) == 5
         assert all(isinstance(item, OpportunityBase) for item in response.items)
@@ -1341,7 +1359,7 @@ class TestOpportunitySearch:
         response = client.opportunities.search(
             search="local", status=[OppStatusOptions.OPEN], page=None
         )
-        assert isinstance(response, OpportunitiesSearchResponse)
+        assert isinstance(response, SearchResult)
         assert len(response.items) == 0
         assert response.pagination_info.total_items == 0
         assert response.pagination_info.total_pages == 1

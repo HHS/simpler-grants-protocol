@@ -51,9 +51,9 @@ poetry run ruff check .
 
 #### Type Checking
 
-Verify types with MyPy:
+Verify types with pyright (basic mode; tests are excluded from the gate — see `pyrightconfig.json`):
 ```bash
-poetry run mypy .
+poetry run pyright
 ```
 
 ## Release runbook
