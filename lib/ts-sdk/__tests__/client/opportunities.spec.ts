@@ -112,6 +112,14 @@ const client = new Client({
   auth: Auth.bearer("test-token"),
 });
 
+/** Opportunities bound to routes over a fresh authed client (the plugin.getClient() shape). */
+const makeRoutedOpportunities = (routes: PluginRoutes) =>
+  new Opportunities(
+    new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
+    undefined,
+    routes
+  );
+
 // =============================================================================
 // Opportunities resource tests
 // =============================================================================
@@ -375,7 +383,7 @@ describe("Opportunities", () => {
       expect(result.items[0].title).toBe("Education Grant");
       expect(result.paginationInfo.totalItems).toBe(2);
       expect(result.sortInfo.sortBy).toBe("lastModifiedAt");
-      expect(result.filterInfo.filters.status).toEqual({
+      expect(result.filterInfo?.filters.status).toEqual({
         operator: "in",
         value: ["open", "forecasted"],
       });
@@ -405,11 +413,7 @@ describe("Opportunities", () => {
 
       // routes are resource-bound: supplied once at construction, not per call
       // (plugin.getClient() does this wiring for consumers).
-      const routedOpps = new Opportunities(
-        new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
-        undefined,
-        routes
-      );
+      const routedOpps = makeRoutedOpportunities(routes);
 
       await routedOpps.search({
         filters: {
@@ -485,11 +489,7 @@ describe("Opportunities", () => {
       const routes: PluginRoutes = {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
-      const routedOpps = new Opportunities(
-        new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
-        undefined,
-        routes
-      );
+      const routedOpps = makeRoutedOpportunities(routes);
 
       await expect(
         routedOpps.search({
@@ -523,11 +523,7 @@ describe("Opportunities", () => {
       const routes: PluginRoutes = {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
-      const routedOpps = new Opportunities(
-        new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
-        undefined,
-        routes
-      );
+      const routedOpps = makeRoutedOpportunities(routes);
 
       const result = await routedOpps.search({
         filters: { agency: F.in(["HHS"]) },
@@ -542,6 +538,13 @@ describe("Opportunities", () => {
         opportunities: { search: { filters: { status: { filterType: "stringArray" } } } },
       };
       expect(() => validateRoutes(badRoutes)).toThrow(FilterError);
+    });
+
+    it("throws FilterError on direct construction with invalid routes (bypassing definePlugin)", () => {
+      const badRoutes: PluginRoutes = {
+        opportunities: { search: { filters: { status: { filterType: "stringArray" } } } },
+      };
+      expect(() => makeRoutedOpportunities(badRoutes)).toThrow(FilterError);
     });
 
     it("passes server-returned filterInfo.errors through unmodified", async () => {
@@ -561,18 +564,14 @@ describe("Opportunities", () => {
       const routes: PluginRoutes = {
         opportunities: { search: { filters: { agency: { filterType: "stringArray" } } } },
       };
-      const routedOpps = new Opportunities(
-        new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
-        undefined,
-        routes
-      );
+      const routedOpps = makeRoutedOpportunities(routes);
 
       const result = await routedOpps.search({
         filters: { agency: F.in(["HHS"]) },
       });
 
       // filterInfo.errors carries server-returned errors only, untouched.
-      expect(result.filterInfo.errors).toEqual(["server: something was ignored"]);
+      expect(result.filterInfo?.errors).toEqual(["server: something was ignored"]);
     });
 
     it("partitions a malformed row into result.errors and keeps valid rows in items", async () => {
@@ -682,7 +681,7 @@ describe("Opportunities", () => {
       const result = await client.opportunities.search({ statuses: ["open"] });
 
       expect(result.items).toHaveLength(1);
-      expect(result.filterInfo.filters.status).toEqual({
+      expect(result.filterInfo?.filters.status).toEqual({
         operator: "in",
         value: ["open"],
       });
@@ -841,7 +840,7 @@ describe("Opportunities", () => {
 
       // Should preserve sortInfo and filterInfo from first page
       expect(result.sortInfo.sortBy).toBe("lastModifiedAt");
-      expect(result.filterInfo.filters.status).toEqual({
+      expect(result.filterInfo?.filters.status).toEqual({
         operator: "in",
         value: ["open"],
       });

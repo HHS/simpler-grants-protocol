@@ -13,13 +13,13 @@ import {
   OppFiltersSchema,
 } from "../../schemas";
 import { ArrayOperator } from "../../constants";
-import { categorizeFilters } from "../../extensions/custom-filters";
+import { categorizeFilters, validateRoutes } from "../../extensions/custom-filters";
 import type { CustomFilterInput } from "../../extensions/custom-filters";
 import { FilterError } from "../../extensions/types";
 import type { CustomFilterType, PluginRoutes } from "../../extensions/types";
-import { Resource } from "./base";
 import { parseBatch } from "../results";
-import type { ListResult, SearchResult } from "../results";
+import type { ListResult, OnParseError, SearchResult } from "../results";
+import { Resource } from "./base";
 
 // =============================================================================
 // Schema type constraint
@@ -102,7 +102,11 @@ export interface SearchOptions<
 > extends FetchManyOptions<z.infer<S>> {
   /** Text query to search for in opportunity titles and descriptions */
   query?: string;
-  /** Filter by opportunity statuses */
+  /**
+   * Filter by opportunity statuses (shorthand for the `status` filter).
+   * @deprecated Pass status through `filters` instead; this shorthand will be
+   * removed in a future release.
+   */
   statuses?: OppStatusOptions[];
   /**
    * Flat custom-filter bag (filter name → `{ operator, value }`, e.g. built with `F.*`).
@@ -140,6 +144,10 @@ export class Opportunities<
       boundSchema ?? (OpportunityBaseSchema as unknown as z.ZodType<TItem, z.ZodTypeDef, unknown>),
       routes
     );
+    // Backstop for direct construction (bypassing definePlugin): an invalid
+    // registration — e.g. a filter named after a default field — throws here
+    // instead of silently shadowing the default bucket at classification time.
+    if (routes) validateRoutes(routes);
   }
 
   /** Per-call override wins; otherwise the bound (plugin or base) schema. */
@@ -181,7 +189,7 @@ export class Opportunities<
     options?: GetOptions<S>
   ): Promise<z.infer<S>> {
     const schema = this.resolveSchema(options?.schema);
-    const response = await this.client.get(`${this.basePath}/${id}`);
+    const response = await this.client.get(`${this.basePath}/${encodeURIComponent(id)}`);
 
     if (!response.ok) {
       throw new Error(`Failed to get opportunity ${id}: ${response.status} ${response.statusText}`);
@@ -271,7 +279,8 @@ export class Opportunities<
    *
    * Filter validation is fail-fast: an invalid value on any filter — standard,
    * registered custom, or ad-hoc — throws `FilterError` before the request is
-   * sent. `filterInfo.errors` on the response carries server-returned errors only.
+   * sent. A caught `FilterError`'s `.sourceValue` may carry PII; redact before
+   * logging. `filterInfo.errors` on the response carries server-returned errors only.
    * Rows are parsed individually: valid rows land in `items`, per-row failures
    * in `errors` (set `onParseError: "throw"` to fail hard on the first bad row).
    *
@@ -365,14 +374,7 @@ export class Opportunities<
 
     let filters: OppFilters | undefined;
     if (options?.filters) {
-      // Cast bridges the Zod-inferred OppFilters to the hand-authored OppFilters
-      // type alias; they are structurally the same shape.
-      filters = categorizeFilters(
-        this.routes ?? {},
-        "opportunities",
-        "search",
-        options.filters
-      ) as OppFilters;
+      filters = categorizeFilters(this.routes ?? {}, "opportunities", "search", options.filters);
     }
 
     // statuses shorthand → status default field (augments any classified filters)
@@ -404,7 +406,7 @@ export class Opportunities<
     pageSize: number | undefined,
     signal: AbortSignal | undefined,
     schema: S,
-    onParseError?: "collect" | "throw"
+    onParseError?: OnParseError
   ): Promise<SearchResult<z.infer<S>>> {
     const requestBody: OppSearchRequest = {
       ...searchBody,

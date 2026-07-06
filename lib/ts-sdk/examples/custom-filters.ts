@@ -17,22 +17,6 @@
  *
  * Run with: `pnpm example:custom-filters`
  *
- * Reviewer notes — unhappy paths (where each guard is proven):
- *   - Route/method typo in definePlugin() → COMPILE error:
- *     __tests__/extensions/plugin-routes-types.ts (`@ts-expect-error` gates).
- *   - Invalid route registration (e.g. a name colliding with a default filter)
- *     → runtime FilterError at definition time:
- *     __tests__/extensions/get-client.spec.ts ("definePlugin throws FilterError ...").
- *   - Wrong value family on a registered filter → COMPILE error
- *     (plugin-routes-types.ts) AND runtime FilterError BEFORE any request
- *     (demonstrated below in Step 5; asserted in get-client.spec.ts and
- *     opportunities.spec.ts).
- *   - Invalid standard filter value → FilterError before the request
- *     (__tests__/extensions/custom-filters.spec.ts, categorizeFilters suite).
- *   - Malformed row in a search/list response → lands in `result.errors` as a
- *     ParseFailure (index + raw) instead of throwing the page
- *     (opportunities.spec.ts partition tests; `onParseError: "throw"` opts out).
- *
  * @remarks
  * The three-bucket classification rule (ADR-0012):
  *   - Default filters (status, closeDateRange, ...) → named top-level fields on the request body.
@@ -205,14 +189,17 @@ console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
 //     filters: { agency: F.in(["HHS"]) },
 //   });
 //   for (const opp of result.items) console.log(opp.title);        // valid rows
-//   for (const err of result.errors) console.log(err.index, err.raw); // ParseFailure rows
+//   // ParseFailure rows — err.raw may carry PII; log a redacted projection
+//   for (const err of result.errors) console.log(err.index, err.error.message);
 //
 // (Executed versions live in __tests__/extensions/get-client.spec.ts.)
 const client = grantsGovPlugin.getClient({ baseUrl: "http://localhost:8000" });
 
 // Fail-fast without a server: an invalid registered value throws BEFORE any
 // HTTP request is made, so this rejects even though nothing is listening.
-void (async () => {
+// (Async so this file compiles under CommonJS module settings — no top-level
+// await; the final logs chain off it below so output order matches source order.)
+async function step5FailFastDemo(): Promise<void> {
   try {
     await client.opportunities.search({
       // Wrong value family for a stringArray filter — also a compile error;
@@ -226,7 +213,7 @@ void (async () => {
     console.log(`search() rejected before any request (expected): ${e.message.split("\n")[0]}`);
     console.log("\n✓ getClient consumer path complete");
   }
-})();
+}
 
 // ############################################################################
 // Step 6 — The `as const` widening trap (comment block — not executed)
@@ -259,5 +246,10 @@ void (async () => {
 //   //   // → literal filterTypes are lost, so per-key narrowing is impossible
 //   //   // → unknown keys, wrong operators, and wrong value shapes silently accepted
 
-console.log("\n✓ custom-filters example complete");
-console.log("  See __tests__/extensions/custom-filters-types.ts for compile-time narrowing proof");
+// Chained after Step 5 settles: the completion banner provably prints last.
+void step5FailFastDemo().then(() => {
+  console.log("\n✓ custom-filters example complete");
+  console.log(
+    "  See __tests__/extensions/custom-filters-types.ts for compile-time narrowing proof"
+  );
+});

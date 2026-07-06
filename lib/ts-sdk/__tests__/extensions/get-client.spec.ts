@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
 import { http, HttpResponse, setupServer } from "../utils/mock-fetch";
 import { definePlugin, F, FilterError } from "../../src/extensions";
+import { Auth } from "../../src/client";
 import type { CustomFilterBag, ListResult } from "../../src/client";
 import { OpportunityBaseSchema } from "../../src/schemas";
 import { withCustomFields } from "../../src/extensions";
@@ -98,6 +99,25 @@ describe("plugin.getClient", () => {
     expect(list.items[0].customFields?.programCode?.value).toBe("STEM-ED");
   });
 
+  it("passes auth through to the underlying transport", async () => {
+    let capturedAuth: string | null = null;
+
+    server.use(
+      http.get("/common-grants/opportunities/:id", ({ request }) => {
+        capturedAuth = request.headers.get("authorization");
+        return HttpResponse.json({ status: 200, message: "Success", data: mockOpp });
+      })
+    );
+
+    const client = plugin.getClient({
+      baseUrl: "https://api.example.org",
+      auth: Auth.bearer("test-token"),
+    });
+    await client.opportunities.get(mockOpp.id);
+
+    expect(capturedAuth).toBe("Bearer test-token");
+  });
+
   it("throws FilterError on an invalid registered filter value before any request", async () => {
     let requested = false;
 
@@ -133,6 +153,10 @@ describe("plugin.getClient", () => {
         },
       } as const)
     ).toThrow(FilterError);
+  });
+
+  it("definePlugin accepts an explicitly-undefined resource route value", () => {
+    expect(() => definePlugin({ routes: { opportunities: undefined } } as const)).not.toThrow();
   });
 
   it("per-call schema override still wins over the plugin-bound default", async () => {

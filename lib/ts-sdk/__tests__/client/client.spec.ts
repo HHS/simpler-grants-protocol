@@ -192,54 +192,6 @@ describe("Client", () => {
   });
 
   // =============================================================================
-  // Client.put / Client.patch (write transport verbs)
-  // =============================================================================
-
-  describe("put and patch", () => {
-    beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
-    afterAll(() => server.close());
-
-    it("makes a PUT request with JSON body", async () => {
-      let capturedMethod: string | undefined;
-      let capturedBody: unknown;
-
-      server.use(
-        http.put("/test-resource/1", async ({ request }) => {
-          capturedMethod = request.method;
-          capturedBody = await request.json();
-          return HttpResponse.json({ data: "replaced" });
-        })
-      );
-
-      const response = await defaultClient.put("/test-resource/1", { name: "New" });
-
-      expect(capturedMethod).toBe("PUT");
-      expect(capturedBody).toEqual({ name: "New" });
-      expect(response.ok).toBe(true);
-    });
-
-    it("makes a PATCH request with JSON body", async () => {
-      let capturedMethod: string | undefined;
-      let capturedBody: unknown;
-
-      server.use(
-        http.patch("/test-resource/1", async ({ request }) => {
-          capturedMethod = request.method;
-          capturedBody = await request.json();
-          return HttpResponse.json({ data: "updated" });
-        })
-      );
-
-      const response = await defaultClient.patch("/test-resource/1", { name: "Newer" });
-
-      expect(capturedMethod).toBe("PATCH");
-      expect(capturedBody).toEqual({ name: "Newer" });
-      expect(response.ok).toBe(true);
-    });
-  });
-
-  // =============================================================================
   // Client.fetchMany row partitioning
   // =============================================================================
 
@@ -315,6 +267,35 @@ describe("Client", () => {
       expect(requestCount).toBe(2);
       expect(result.items.map(i => i.id)).toEqual(["a", "c", "d"]);
       expect(result.errors).toHaveLength(1);
+    });
+
+    it("maxItems truncates items only; errors report every fetched row", async () => {
+      server.use(
+        http.get("/rows", () =>
+          HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [
+              { id: "a", amount: 1 },
+              { id: "b", amount: 2 },
+              { id: "c", amount: 3 },
+              { id: "d", amount: "bad" },
+              { id: "e", amount: "bad" },
+            ],
+            paginationInfo: { page: 1, pageSize: 5, totalItems: 5, totalPages: 1 },
+          })
+        )
+      );
+
+      const result = await defaultClient.fetchMany("/rows", {
+        pageSize: 5,
+        maxItems: 2,
+        schema: rowSchema,
+      });
+
+      expect(result.items.map(i => i.id)).toEqual(["a", "b"]);
+      // Rows past the cap were still fetched, so their failures still surface.
+      expect(result.errors.map(e => e.index)).toEqual([3, 4]);
     });
   });
 

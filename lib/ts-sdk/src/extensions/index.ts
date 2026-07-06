@@ -23,9 +23,9 @@ export type {
   RouteMethod,
   RouteMethods,
 } from "./types";
-export { RESOURCE_NAMES, FilterError } from "./types";
+export { FilterError } from "./types";
 export type { CustomFilterInput } from "./custom-filters";
-export { categorizeFilters, validateRoutes, F, FILTER_TYPE_SCHEMAS } from "./custom-filters";
+export { categorizeFilters, validateRoutes, F } from "./custom-filters";
 
 // Schema utilities — lower-level tools for working with custom fields
 export type { WithCustomFieldsResult } from "./with-custom-fields";

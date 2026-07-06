@@ -10,7 +10,15 @@
 import { z } from "zod";
 import { Filtered, OppFilters, Paginated } from "../types";
 
-/** One response row that failed schema validation, with its position and raw payload. */
+/**
+ * One response row that failed schema validation, with its position and raw payload.
+ *
+ * `index` is the row's position within its own page's raw rows, not the
+ * aggregated `items` array.
+ *
+ * `raw` is the entire unvalidated row and may carry PII (e.g. in
+ * `customFields`) — redact before logging, as with `TransformError.sourceValue`.
+ */
 export interface ParseFailure {
   index: number;
   raw: unknown;
@@ -51,5 +59,13 @@ export function parseBatch<T>(
 /** Paginated result whose `items` are valid rows only; per-row failures land in `errors`. */
 export type ListResult<T> = Paginated<T> & { errors: ParseFailure[] };
 
-/** Search result: filtered envelope plus per-row parse failures. */
-export type SearchResult<T, F = OppFilters> = Filtered<T, F> & { errors: ParseFailure[] };
+/**
+ * Search result: filtered envelope plus per-row parse failures.
+ *
+ * `filterInfo` is optional because auto-pagination passes the server envelope
+ * through unchanged, and a server may omit it.
+ */
+export type SearchResult<T, F = OppFilters> = Omit<Filtered<T, F>, "filterInfo"> & {
+  filterInfo?: Filtered<T, F>["filterInfo"];
+  errors: ParseFailure[];
+};

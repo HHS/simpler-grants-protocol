@@ -172,8 +172,10 @@ export const F = {
  */
 export function validateRoutes(routes: PluginRoutes): void {
   for (const [resourceKey, methods] of Object.entries(routes)) {
+    // Partial<Record<...>> admits explicitly-undefined values; skip them.
+    if (!methods) continue;
     for (const [methodKey, declarations] of Object.entries(methods)) {
-      const filters = (declarations as RouteDeclarations).filters;
+      const filters = (declarations as RouteDeclarations | undefined)?.filters;
       if (!filters) continue;
 
       if (!SUPPORTED_CUSTOM_FILTER_ROUTES.has(`${resourceKey}.${methodKey}`)) {
@@ -186,6 +188,10 @@ export function validateRoutes(routes: PluginRoutes): void {
 
       for (const [filterName, spec] of Object.entries(filters)) {
         const path = `routes.${resourceKey}.${methodKey}.filters.${filterName}`;
+
+        // Plain-JS callers can pass explicitly-undefined specs; skip them like
+        // the resource and method levels above.
+        if (!spec) continue;
 
         // Check for unknown filterType
         if (!VALID_FILTER_TYPES.has(spec.filterType)) {

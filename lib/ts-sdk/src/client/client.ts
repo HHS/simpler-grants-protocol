@@ -76,9 +76,8 @@ export class Client {
   private readonly config: ResolvedConfig;
   private readonly auth: AuthMethod;
 
-  /** Opportunities resource namespace */
-  // resource-slot: default (base-schema, no registered filters) resource surface;
-  // plugin-typed resources are bound via plugin.getClient()
+  /** Opportunities resource namespace (base schema; plugin-typed via plugin.getClient()) */
+  // resource-slot
   public readonly opportunities: Opportunities;
 
   // =============================================================================
@@ -268,7 +267,8 @@ export class Client {
     const firstPageJson = firstResult.json;
     const allItems: T[] = [...firstResult.items.slice(0, maxItems)];
     // Per-row parse failures aggregate across pages; each failure's `index` is
-    // relative to its own page's rows.
+    // relative to its own page's rows. Failures are reported for every fetched
+    // row — including rows past the maxItems cap, which truncates items only.
     const allErrors: ParseFailure[] = [...firstResult.errors];
 
     // Fetch remaining pages, up to maxItems.

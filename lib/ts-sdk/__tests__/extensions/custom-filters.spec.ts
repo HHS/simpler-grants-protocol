@@ -137,6 +137,21 @@ describe("route and filter-call validation", () => {
     it("does not throw for valid routes", () => {
       expect(() => validateRoutes(grantsGovRoutes)).not.toThrow();
     });
+
+    it("skips explicitly-undefined resource, method, and filter-spec values (no raw TypeError)", () => {
+      // Partial<Record<...>> admits explicit undefined; a conditional-route
+      // pattern like `{ opportunities: hasFilters ? {...} : undefined }` must
+      // not crash Object.entries.
+      expect(() => validateRoutes({ opportunities: undefined })).not.toThrow();
+      expect(() => validateRoutes({ opportunities: { search: undefined } })).not.toThrow();
+      // Filter-spec values are only undefined for plain-JS callers (the record
+      // value type is not Partial), but the backstop must not raw-TypeError.
+      expect(() =>
+        validateRoutes({
+          opportunities: { search: { filters: { agency: undefined } } },
+        } as unknown as PluginRoutes)
+      ).not.toThrow();
+    });
   });
 
   // ############################################################################

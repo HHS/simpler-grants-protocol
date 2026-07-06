@@ -111,8 +111,7 @@ export interface RouteDeclarations {
 }
 
 /** Resource names the SDK exposes. Grows as API resources land. */
-export const RESOURCE_NAMES = ["opportunities"] as const;
-export type ResourceName = (typeof RESOURCE_NAMES)[number];
+export type ResourceName = "opportunities";
 
 /** Route methods that accept custom filters. Widen only when a method actually takes filters. */
 export type RouteMethod = "search";

@@ -8,7 +8,6 @@ import { z } from "zod";
 import { Client } from "../client";
 import { Opportunities } from "./opportunities";
 import { RESOURCE_REGISTRY } from "./registry";
-import { EXTENSIBLE_SCHEMA_MAP } from "../../extensions/types";
 import type { PluginRoutes, ResourceName } from "../../extensions/types";
 import type { Plugin, PluginSchemasInput } from "../../extensions/define-plugin";
 import type { ClientConfig } from "../config";
@@ -40,9 +39,9 @@ export type BuiltClient<T extends PluginSchemasInput, TRoutes extends PluginRout
 
 /**
  * Builds a client from a plugin: constructs the transport `Client`, then
- * overlays each registry resource slot with a plugin-bound instance (the
- * plugin's compiled schema as the default parse schema, its routes for
- * filter classification).
+ * overlays each resource slot with a plugin-bound instance (the plugin's
+ * compiled schema as the default parse schema, its routes for filter
+ * classification).
  */
 export function buildClientForPlugin<T extends PluginSchemasInput, TRoutes extends PluginRoutes>(
   plugin: Plugin<T, TRoutes>,
@@ -50,17 +49,23 @@ export function buildClientForPlugin<T extends PluginSchemasInput, TRoutes exten
 ): BuiltClient<T, TRoutes> {
   const client = new Client(config);
 
-  for (const [name, entry] of Object.entries(RESOURCE_REGISTRY)) {
-    const boundSchema = (plugin.schemas[entry.schemaName]?.commonSchema ??
-      EXTENSIBLE_SCHEMA_MAP[entry.schemaName]) as z.ZodType<OpportunityBase, z.ZodTypeDef, unknown>;
-    (client as unknown as Record<string, unknown>)[name] = new entry.resourceClass(
-      client,
-      boundSchema,
-      plugin.routes
-    );
-  }
+  // resource-slot: build each slot from the registry, so adding a resource
+  // (organizations, applications, awards) is a registry entry + a typed slot.
+  // definePlugin populates a compiled schema for every extensible model, so the
+  // registry's schema binding always resolves here.
+  const { resourceClass, schemaName } = RESOURCE_REGISTRY.opportunities;
+  const oppSchema = plugin.schemas[schemaName].commonSchema as z.ZodType<
+    OpportunityBase,
+    z.ZodTypeDef,
+    unknown
+  >;
+  (client as unknown as { opportunities: Opportunities }).opportunities = new resourceClass(
+    client,
+    oppSchema,
+    plugin.routes
+  );
 
-  // Single cast boundary: runtime assembly is registry-driven; BuiltClient
-  // projects the plugin's item + filter types.
+  // Second of the two cast points (the slot assignment above is the other):
+  // BuiltClient projects the plugin's item + filter types.
   return client as unknown as BuiltClient<T, TRoutes>;
 }

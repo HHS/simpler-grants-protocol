@@ -5,7 +5,6 @@
  */
 
 import { Opportunities } from "./opportunities";
-import { RESOURCE_NAMES } from "../../extensions/types";
 import type { ExtensibleSchemaName, ResourceName } from "../../extensions/types";
 
 interface ResourceRegistryEntry {
@@ -18,9 +17,8 @@ export const RESOURCE_REGISTRY = {
   opportunities: { resourceClass: Opportunities, schemaName: "Opportunity" },
 } as const satisfies Record<ResourceName, ResourceRegistryEntry>;
 
-/** Compile-time seam guard: extensions' `RESOURCE_NAMES` and this registry must not drift. */
+/** Compile-time seam guard: `ResourceName` and this registry's keys must not drift. */
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 const _registryMatchesResourceNames: Equal<ResourceName, keyof typeof RESOURCE_REGISTRY> = true;
 void _registryMatchesResourceNames;
-void RESOURCE_NAMES;
