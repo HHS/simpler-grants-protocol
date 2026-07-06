@@ -1,5 +1,9 @@
 {
-  "include": ["common_grants_sdk", "examples/typed_custom_filters.py"],
+  "include": [
+    "common_grants_sdk",
+    "examples/typed_custom_filters.py",
+    "examples/consumer_search_with_filters.py"
+  ],
   "exclude": ["tests", "**/__pycache__", "generated"],
   "typeCheckingMode": "basic",
   "pythonVersion": "3.11"
