@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: IntegerComparisonFilter.yaml
+type: object
+properties:
+  operator:
+    anyOf:
+      - $ref: ComparisonOperators.yaml
+      - $ref: EquivalenceOperators.yaml
+    description: The comparison operator to apply to the filter value
+  value:
+    type: integer
+    examples:
+      - 100
+    description: The value to use for the filter operation
+required:
+  - operator
+  - value
+unevaluatedProperties:
+  not: {}
+description: Filters by comparing a field to an integer value
