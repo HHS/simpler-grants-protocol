@@ -196,15 +196,17 @@ class Client(BaseClient, Generic[FiltersT, ItemT]):
     """Typed resource facade over :class:`BaseClient`.
 
     Binds a plugin's route filters and Opportunity schema, exposing the typed
-    ``opportunities`` resource. Prefer ``plugin.get_client(...)`` over constructing
-    this directly.
+    ``opportunities`` resource. Construct one via ``plugin.get_client(...)``: that
+    binds the plugin's registered filters (``FiltersT``) and Opportunity schema
+    (``ItemT``) so ``opportunities.search`` is typed and responses parse with the
+    plugin's custom fields. Constructing ``Client`` directly leaves those generics
+    unbound (standard filters only, base ``OpportunityBase`` rows).
     """
 
     def __init__(
         self,
         config: Optional[Config] = None,
         auth: Optional[Auth] = None,
-        routes: Optional[PluginRoutes[Any]] = None,
         schemas: Optional[PluginSchemas[Any]] = None,
     ):
         """Initialize the client.
@@ -212,25 +214,28 @@ class Client(BaseClient, Generic[FiltersT, ItemT]):
         Args:
             config: Optional Config instance.
             auth: Optional Auth instance.
-            routes: Optional typed ``PluginRoutes`` carrier (fixed plugin config).
-                Bound and validated once here; used to classify registered custom
-                filters in ``opportunities.search``.
             schemas: Optional ``PluginSchemas``; its Opportunity common model
                 becomes the default parse schema for ``opportunities`` responses.
-
-        Raises:
-            FilterError: If ``routes`` registers a filter whose value type is not a
-                filter value model.
         """
         super().__init__(config=config, auth=auth)
-        self.routes: PluginRoutes[Any] = (
-            routes
-            if routes is not None
-            else PluginRoutes(opportunities=ResourceRoutes())
-        )
-        validate_routes(self.routes)
+        self._routes: PluginRoutes[Any] = PluginRoutes(opportunities=ResourceRoutes())
         self.schemas = schemas
         self._opportunity_schema: type[OpportunityBase] = _resolve_opportunity_schema(
             schemas
         )
         self.opportunities: Opportunities[FiltersT, ItemT] = Opportunities(client=self)
+
+    def _bind_routes(self, routes: PluginRoutes[Any]) -> None:
+        """Scope this client to a plugin's registered custom filters.
+
+        Internal hook called by ``plugin.get_client``: it validates the route
+        registration and stores it for ``opportunities.search`` to classify
+        registered custom filters. Build scoped clients via ``get_client`` rather
+        than calling this directly.
+
+        Raises:
+            FilterError: If ``routes`` registers a filter whose value type is not a
+                filter value model.
+        """
+        validate_routes(routes)
+        self._routes = routes

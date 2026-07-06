@@ -110,7 +110,7 @@ class Plugin(Generic[SchemasT, FiltersT]):
         """Return a client pre-scoped with this plugin's routes and schemas.
 
         Consumers call ``plugin.get_client(config)`` instead of constructing a
-        client and passing ``routes=`` / ``schemas=`` by hand. The returned
+        client and binding the plugin's schemas/routes by hand. The returned
         client types ``opportunities.search(filters=...)`` by the plugin's
         registered filters and parses responses with its Opportunity schema.
         """
@@ -120,12 +120,9 @@ class Plugin(Generic[SchemasT, FiltersT]):
 
         # self.schemas/self.routes are opaque here (SchemasT); the overloads above
         # carry the precise Client[FiltersT, ItemT] the caller sees.
-        return Client(
-            config=config,
-            auth=auth,
-            routes=cast("Any", self.routes),
-            schemas=cast("Any", self.schemas),
-        )
+        client = Client(config=config, auth=auth, schemas=cast("Any", self.schemas))
+        client._bind_routes(cast("Any", self.routes))
+        return client
 
 
 def define_plugin(
