@@ -60,6 +60,8 @@ export default defineConfig({
             "/question-bank/**",
             "/plugins",
             "/plugins/**",
+            "/registries",
+            "/registries/**",
           ],
         }),
       ],
@@ -102,6 +104,23 @@ export default defineConfig({
           ],
         },
         {
+          label: "Catalogs",
+          items: [
+            {
+              label: "Custom fields",
+              link: "custom-fields",
+            },
+            {
+              label: "Plugins",
+              link: "plugins",
+            },
+            {
+              label: "ID registries",
+              link: "registries",
+            },
+          ],
+        },
+        {
           label: "Protocol",
           items: [
             {
@@ -111,14 +130,6 @@ export default defineConfig({
             {
               label: "OpenAPI docs",
               link: "protocol/api-docs",
-            },
-            {
-              label: "Custom field catalog",
-              link: "custom-fields",
-            },
-            {
-              label: "Plugins",
-              link: "plugins",
             },
             {
               label: "Types",
