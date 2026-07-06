@@ -119,6 +119,8 @@ class Opportunities(Generic[FiltersT, ItemT]):
         Args:
             search: The query string.
             status: Statuses to filter on (shorthand for the ``status`` filter).
+                Deprecated — pass status through ``filters`` instead; this
+                shorthand will be removed in a future release.
             page: Page number (1-indexed). If None, fetches all pages.
             page_size: Number of items per page. If None, uses the client default.
             schema: Per-call parse-schema override; defaults to the plugin's
