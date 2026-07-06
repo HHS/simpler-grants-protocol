@@ -120,7 +120,8 @@ class Plugin(Generic[SchemasT, FiltersT]):
 
         # self.schemas/self.routes are opaque here (SchemasT); the overloads above
         # carry the precise Client[FiltersT, ItemT] the caller sees.
-        client = Client(config=config, auth=auth, schemas=cast("Any", self.schemas))
+        client = Client(config=config, auth=auth)
+        client._bind_schemas(cast("Any", self.schemas))
         client._bind_routes(cast("Any", self.routes))
         return client
 

@@ -207,21 +207,18 @@ class Client(BaseClient, Generic[FiltersT, ItemT]):
         self,
         config: Optional[Config] = None,
         auth: Optional[Auth] = None,
-        schemas: Optional[PluginSchemas[Any]] = None,
     ):
         """Initialize the client.
 
         Args:
             config: Optional Config instance.
             auth: Optional Auth instance.
-            schemas: Optional ``PluginSchemas``; its Opportunity common model
-                becomes the default parse schema for ``opportunities`` responses.
         """
         super().__init__(config=config, auth=auth)
         self._routes: PluginRoutes[Any] = PluginRoutes(opportunities=ResourceRoutes())
-        self.schemas = schemas
+        self._schemas: Optional[PluginSchemas[Any]] = None
         self._opportunity_schema: type[OpportunityBase] = _resolve_opportunity_schema(
-            schemas
+            None
         )
         self.opportunities: Opportunities[FiltersT, ItemT] = Opportunities(client=self)
 
@@ -239,3 +236,13 @@ class Client(BaseClient, Generic[FiltersT, ItemT]):
         """
         validate_routes(routes)
         self._routes = routes
+
+    def _bind_schemas(self, schemas: Optional[PluginSchemas[Any]]) -> None:
+        """Bind a plugin's schema extensions as the default parse schemas.
+
+        Internal hook called by ``plugin.get_client``: the Opportunity common
+        model becomes the default schema ``opportunities`` responses parse into.
+        Build scoped clients via ``get_client`` rather than calling this directly.
+        """
+        self._schemas = schemas
+        self._opportunity_schema = _resolve_opportunity_schema(schemas)
