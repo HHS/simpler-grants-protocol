@@ -1,10 +1,14 @@
 {
-  "include": [
-    "common_grants_sdk",
-    "examples/typed_custom_filters.py",
-    "examples/consumer_search_with_filters.py"
+  "include": ["common_grants_sdk", "examples"],
+  "exclude": [
+    "tests",
+    "**/__pycache__",
+    "generated",
+    "examples/typed_custom_filters_failures.py",
+    "**/node_modules",
+    "**/.*",
+    ".venv"
   ],
-  "exclude": ["tests", "**/__pycache__", "generated"],
   "typeCheckingMode": "basic",
   "pythonVersion": "3.11"
 }
