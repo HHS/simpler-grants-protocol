@@ -3,7 +3,7 @@
  *
  * Provides the classifier, validators, and F helper namespace for the custom-filters surface.
  *
- * - `categorizeFilters` — transforms a flat consumer `filters` object into the
+ * - `classifyFilters` — transforms a flat consumer `filters` object into the
  *   ADR-0012 `OppFilters` request body (three-bucket: default → named top-level fields;
  *   registered custom → `customFilters`; ad-hoc → `customFilters` passthrough),
  *   throwing `FilterError` on the first invalid value.
@@ -103,7 +103,7 @@ const SUPPORTED_CUSTOM_FILTER_ROUTES = new Set<string>(["opportunities.search"])
  * Helper namespace for building `{operator, value}` raw filter objects.
  *
  * Each helper compiles to the `DefaultFilter` wire shape accepted by ADR-0012.
- * Raw `{operator, value}` objects are also accepted by `categorizeFilters` — F.*
+ * Raw `{operator, value}` objects are also accepted by `classifyFilters` — F.*
  * is a convenience layer, not a requirement.
  *
  * NOTE: `F.in` uses the TS reserved word as an object key — valid as a property
@@ -229,7 +229,7 @@ export function validateRoutes(routes: PluginRoutes): void {
  *   `DefaultFilterSchema` (no operator/filterType enforcement — accepted trade-off).
  *
  * Fail-soft: returns a `FilterError` describing the problem, or `undefined`
- * when the value is valid. The caller (`categorizeFilters`) throws returned
+ * when the value is valid. The caller (`classifyFilters`) throws returned
  * errors rather than aborting the whole call.
  *
  * @param spec - The registered `CustomFilterSpec` for this filter, or `undefined` for ad-hoc
@@ -279,7 +279,7 @@ export function validateFilterCall(
 }
 
 // ############################################################################
-// Public — categorizeFilters (fail-fast classifier)
+// Public — classifyFilters (fail-fast classifier)
 // ############################################################################
 
 /**
@@ -298,7 +298,7 @@ export function validateFilterCall(
  * @returns The classified `OppFilters` request body
  * @throws FilterError on the first invalid filter value
  */
-export function categorizeFilters(
+export function classifyFilters(
   routes: PluginRoutes,
   resourceKey: string,
   methodKey: string,

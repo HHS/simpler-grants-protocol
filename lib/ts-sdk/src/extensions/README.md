@@ -694,12 +694,12 @@ F.between("2025-01-01", "2025-12-31"); // { operator: "between", value: { min: "
 
 ### Classifying consumer filters into the request body
 
-`definePlugin()` registers filter **declarations** — which filter names exist and what type each one is. `categorizeFilters()` is the separate **search-time** step: it takes the consumer's actual filter values and produces the body of the request sent to the API. The client calls it internally on every `search()`; consumers normally never call it directly.
+`definePlugin()` registers filter **declarations** — which filter names exist and what type each one is. `classifyFilters()` is the separate **search-time** step: it takes the consumer's actual filter values and produces the body of the request sent to the API. The client calls it internally on every `search()`; consumers normally never call it directly.
 
-`categorizeFilters()` accepts the plugin's `routes`, a resource name, a method name, and the consumer's flat `filters` object. It returns an `OppFilters` request body conforming to ADR-0012 — and it is **fail-fast**: an invalid value on any key (standard, registered, or ad-hoc) throws `FilterError` before a request body exists:
+`classifyFilters()` accepts the plugin's `routes`, a resource name, a method name, and the consumer's flat `filters` object. It returns an `OppFilters` request body conforming to ADR-0012 — and it is **fail-fast**: an invalid value on any key (standard, registered, or ad-hoc) throws `FilterError` before a request body exists:
 
 ```typescript
-import { categorizeFilters } from "@common-grants/sdk/extensions";
+import { classifyFilters } from "@common-grants/sdk/extensions";
 
 const consumerFilters = {
   // Default filters → top-level named fields on the request body
@@ -714,7 +714,7 @@ const consumerFilters = {
   legacyTag: F.eq("conservation-2024"),
 };
 
-const requestBody = categorizeFilters(
+const requestBody = classifyFilters(
   grantsGovPlugin.routes!, // routes is optional on Plugin; assert non-null when known
   "opportunities",
   "search",
@@ -747,7 +747,7 @@ For a complete runnable example with assertions, see [`examples/custom-filters.t
 - A filter spec uses an unknown `filterType` value.
 - A custom filter name collides with a default filter field name (e.g. registering `"status"` would shadow the protocol's standard `status` filter).
 
-Call-time validation runs automatically inside `categorizeFilters()` for every filter key — registered filters are checked for operator/value shape against the declared `filterType`, ad-hoc filters get a shape-only check (`DefaultFilterSchema`). Any failure **throws `FilterError` before the request is sent**; `filterInfo.errors` on the response carries server-returned errors only.
+Call-time validation runs automatically inside `classifyFilters()` for every filter key — registered filters are checked for operator/value shape against the declared `filterType`, ad-hoc filters get a shape-only check (`DefaultFilterSchema`). Any failure **throws `FilterError` before the request is sent**; `filterInfo.errors` on the response carries server-returned errors only.
 
 `definePlugin()` runs `validateRoutes()` at definition time, so a misspelled route or an invalid filter registration throws at the definition site (the compile-time closed route keys catch the same mistakes for TypeScript authors).
 
@@ -900,15 +900,15 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 ### Custom filters
 
-| Export                                       | Kind      | Description                                                                                                                                                                                                                                                         | Demonstrated in                                                                     |
-| -------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [`categorizeFilters()`](./custom-filters.ts) | function  | Fail-fast three-bucket classifier. Maps a flat consumer `filters` object to the ADR-0012 `OppFilters` request body (default fields → top-level named fields; registered custom + ad-hoc → `customFilters` record); throws `FilterError` on the first invalid value. | [Classifying consumer filters](#classifying-consumer-filters-into-the-request-body) |
-| [`validateRoutes()`](./custom-filters.ts)    | function  | Registration-time validator. Throws `FilterError` on unknown `filterType` or default-field name collisions.                                                                                                                                                         | [Validation](#validation--registration-time-and-call-time)                          |
-| [`F`](./custom-filters.ts)                   | namespace | Helper namespace. `F.eq`, `F.neq`, `F.gt`, `F.gte`, `F.lt`, `F.lte`, `F.in`, `F.notIn`, `F.like`, `F.notLike`, `F.between`, `F.outside` — each compiles to `{ operator, value }`. Note: `F.in` is `"in"` as an object property key.                                 | [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers) |
-| [`CustomFilterSpec`](./types.ts)             | interface | Per-filter declaration: `{ filterType: CustomFilterType; description?: string }`. Operators are derived from `filterType`; no `value` field.                                                                                                                        | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
-| [`CustomFilterType`](./types.ts)             | type      | 11-value literal union: `stringComparison \| stringArray \| numberComparison \| numberArray \| numberRange \| integerComparison \| booleanComparison \| dateComparison \| dateRange \| moneyComparison \| moneyRange`.                                              | [Filter-type catalog](#filter-type-catalog-and-the-f-helpers)                       |
-| [`PluginRoutes`](./types.ts)                 | type      | `Partial<Record<ResourceName, RouteMethods>>` — the `routes` value on `DefinePluginOptions`. Both key levels are closed unions, so a misspelled resource or method is a compile error.                                                                              | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
-| [`RouteDeclarations`](./types.ts)            | interface | Per-method filter map: `{ filters?: Record<string, CustomFilterSpec> }`.                                                                                                                                                                                            |                                                                                     |
+| Export                                     | Kind      | Description                                                                                                                                                                                                                                                         | Demonstrated in                                                                     |
+| ------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [`classifyFilters()`](./custom-filters.ts) | function  | Fail-fast three-bucket classifier. Maps a flat consumer `filters` object to the ADR-0012 `OppFilters` request body (default fields → top-level named fields; registered custom + ad-hoc → `customFilters` record); throws `FilterError` on the first invalid value. | [Classifying consumer filters](#classifying-consumer-filters-into-the-request-body) |
+| [`validateRoutes()`](./custom-filters.ts)  | function  | Registration-time validator. Throws `FilterError` on unknown `filterType` or default-field name collisions.                                                                                                                                                         | [Validation](#validation--registration-time-and-call-time)                          |
+| [`F`](./custom-filters.ts)                 | namespace | Helper namespace. `F.eq`, `F.neq`, `F.gt`, `F.gte`, `F.lt`, `F.lte`, `F.in`, `F.notIn`, `F.like`, `F.notLike`, `F.between`, `F.outside` — each compiles to `{ operator, value }`. Note: `F.in` is `"in"` as an object property key.                                 | [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers) |
+| [`CustomFilterSpec`](./types.ts)           | interface | Per-filter declaration: `{ filterType: CustomFilterType; description?: string }`. Operators are derived from `filterType`; no `value` field.                                                                                                                        | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
+| [`CustomFilterType`](./types.ts)           | type      | 11-value literal union: `stringComparison \| stringArray \| numberComparison \| numberArray \| numberRange \| integerComparison \| booleanComparison \| dateComparison \| dateRange \| moneyComparison \| moneyRange`.                                              | [Filter-type catalog](#filter-type-catalog-and-the-f-helpers)                       |
+| [`PluginRoutes`](./types.ts)               | type      | `Partial<Record<ResourceName, RouteMethods>>` — the `routes` value on `DefinePluginOptions`. Both key levels are closed unions, so a misspelled resource or method is a compile error.                                                                              | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
+| [`RouteDeclarations`](./types.ts)          | interface | Per-method filter map: `{ filters?: Record<string, CustomFilterSpec> }`.                                                                                                                                                                                            |                                                                                     |
 
 ### Shared types
 

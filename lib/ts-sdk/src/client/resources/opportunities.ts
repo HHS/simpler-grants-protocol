@@ -13,7 +13,7 @@ import {
   OppFiltersSchema,
 } from "../../schemas";
 import { ArrayOperator } from "../../constants";
-import { categorizeFilters, validateRoutes } from "../../extensions/custom-filters";
+import { classifyFilters, validateRoutes } from "../../extensions/custom-filters";
 import type { CustomFilterInput } from "../../extensions/custom-filters";
 import { FilterError } from "../../extensions/types";
 import type { CustomFilterType, PluginRoutes } from "../../extensions/types";
@@ -110,7 +110,7 @@ export interface SearchOptions<
   statuses?: OppStatusOptions[];
   /**
    * Flat custom-filter bag (filter name → `{ operator, value }`, e.g. built with `F.*`).
-   * Classified into the `OppFilters` request body via `categorizeFilters` when present;
+   * Classified into the `OppFilters` request body via `classifyFilters` when present;
    * an invalid value on any key throws `FilterError` before the request is sent.
    */
   filters?: CustomFilterBag<R>;
@@ -362,7 +362,7 @@ export class Opportunities<
   /**
    * Builds the search request body from options.
    *
-   * Filter classification is fail-fast: `categorizeFilters` throws `FilterError`
+   * Filter classification is fail-fast: `classifyFilters` throws `FilterError`
    * on the first invalid value, so a body is only produced for valid input.
    */
   private buildSearchBody(options?: SearchOptions<OppSchema, R>): OppSearchRequest {
@@ -374,7 +374,7 @@ export class Opportunities<
 
     let filters: OppFilters | undefined;
     if (options?.filters) {
-      filters = categorizeFilters(this.routes ?? {}, "opportunities", "search", options.filters);
+      filters = classifyFilters(this.routes ?? {}, "opportunities", "search", options.filters);
     }
 
     // statuses shorthand → status default field (augments any classified filters)

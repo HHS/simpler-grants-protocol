@@ -69,7 +69,7 @@ export interface DefinePluginOptions<T extends PluginSchemasInput = PluginSchema
    * filters vary asymmetrically across methods.
    *
    * Registration-time validation (`validateRoutes`) and call-time classification
-   * (`categorizeFilters`) consume these declarations.
+   * (`classifyFilters`) consume these declarations.
    *
    * @example
    * ```typescript

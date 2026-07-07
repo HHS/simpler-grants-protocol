@@ -468,7 +468,7 @@ describe("Opportunities", () => {
 
     it("rejects with FilterError on an invalid registered filter value before any request", async () => {
       // A registered stringArray filter given a non-array `between` value fails
-      // categorizeFilters validation. Fail-fast: search() throws and no HTTP
+      // classifyFilters validation. Fail-fast: search() throws and no HTTP
       // request is made.
       let requested = false;
 

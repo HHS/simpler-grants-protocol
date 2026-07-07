@@ -11,7 +11,7 @@
  * unknown key cannot be rejected — a typo on a declared name is structurally an
  * intentional ad-hoc filter. Narrowing therefore gives autocomplete + per-`filterType`
  * value checking on declared names, NOT typo-rejection (that ends up ad-hoc, validated
- * at runtime by `categorizeFilters`). The un-guarded "typo" line documents the limit.
+ * at runtime by `classifyFilters`). The un-guarded "typo" line documents the limit.
  */
 
 import { definePlugin, F } from "@/extensions";
@@ -50,7 +50,7 @@ async function _assertions(): Promise<void> {
     },
   });
 
-  // Ad-hoc (unregistered) key accepted — spec escape hatch (categorizeFilters bucket 3).
+  // Ad-hoc (unregistered) key accepted — spec escape hatch (classifyFilters bucket 3).
   await opportunities.search({
     filters: { legacyTag: F.eq("conservation-2024") },
   });
