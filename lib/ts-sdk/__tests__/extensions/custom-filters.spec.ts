@@ -205,26 +205,54 @@ describe("route and filter-call validation", () => {
       ).toBeUndefined();
     });
 
-    it("returns undefined for an ad-hoc filter with a valid shape (no operator enforcement)", () => {
-      // Ad-hoc (spec=undefined) — any valid DefaultFilter shape passes
+    it("returns undefined for an ad-hoc filter with a coherent operator/value pair", () => {
+      // Ad-hoc (spec=undefined) — operator pairs with the right value structure
       expect(
         validateFilterCall(undefined, "legacyTag", { operator: "eq", value: "legacy-2024" })
+      ).toBeUndefined();
+      expect(
+        validateFilterCall(undefined, "regions", { operator: "in", value: ["US-CA", "US-NY"] })
+      ).toBeUndefined();
+      expect(
+        validateFilterCall(undefined, "amountRange", {
+          operator: "between",
+          value: { min: 100, max: 500 },
+        })
       ).toBeUndefined();
     });
 
     it("returns a FilterError for an ad-hoc filter with an invalid shape", () => {
-      // Missing `operator` key — fails DefaultFilterSchema shape check (operator is required/enum)
+      // Missing `operator` key — no branch of AdHocFilterSchema matches
       const err = validateFilterCall(undefined, "badFilter", { value: "something" });
       expect(err).toBeInstanceOf(FilterError);
     });
 
     it("returns a FilterError for an ad-hoc filter with an unknown operator", () => {
-      // `superCustomOp` is not in AllOperatorsEnum — fails DefaultFilterSchema
+      // `superCustomOp` is not a known operator — no branch matches
       const err = validateFilterCall(undefined, "badFilter", {
         operator: "superCustomOp",
         value: "x",
       });
       expect(err).toBeInstanceOf(FilterError);
+    });
+
+    it("returns a FilterError for an ad-hoc operator/value mismatch", () => {
+      // `in` needs an array value
+      expect(
+        validateFilterCall(undefined, "regions", { operator: "in", value: "US-CA" })
+      ).toBeInstanceOf(FilterError);
+      // `between` needs a { min, max } object, not a scalar
+      expect(
+        validateFilterCall(undefined, "amountRange", { operator: "between", value: 500 })
+      ).toBeInstanceOf(FilterError);
+      // `like` needs a string
+      expect(
+        validateFilterCall(undefined, "title", { operator: "like", value: 42 })
+      ).toBeInstanceOf(FilterError);
+      // `eq` needs a scalar, not an array
+      expect(
+        validateFilterCall(undefined, "code", { operator: "eq", value: ["A", "B"] })
+      ).toBeInstanceOf(FilterError);
     });
   });
 });
@@ -343,6 +371,15 @@ describe("classifyFilters", () => {
       adHocKey: F.between(1, 10),
     });
     expect(result.customFilters?.adHocKey).toBeDefined();
+  });
+
+  it("throws FilterError on an ad-hoc operator/value mismatch", () => {
+    expect(() =>
+      classifyFilters(grantsGovRoutes, "opportunities", "search", {
+        // `in` requires an array value
+        adHocKey: { operator: "in", value: "not-an-array" },
+      })
+    ).toThrow(FilterError);
   });
 
   it("omits customFilters entirely when only defaults are present", () => {
