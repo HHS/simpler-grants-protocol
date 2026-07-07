@@ -11,10 +11,8 @@ const detailHref = `/registries/${registry.slug}`;
 
 // Blob of code segments and issuer so the free-text search matches on them.
 const searchTags = [
-  registry.schema,
+  registry.code,
   registry.object,
-  registry.scope,
-  registry.prop,
   registry.kind,
   registry.status,
   registry.issuer ?? "",
