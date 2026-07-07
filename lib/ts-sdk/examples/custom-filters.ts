@@ -7,8 +7,12 @@
  *      fundingProgram), and an ad-hoc filter (legacyTag) — using `F.*` helpers.
  *      Control fields (query, maxResults, signal, schema) stay OUTSIDE `filters`.
  *   3. Calling `classifyFilters` to produce the ADR-0012 request body:
- *      default fields at top-level, custom + ad-hoc under `customFilters`.
- *   4. A COMMENT block (not executed) demonstrating the `as const` widening
+ *      default fields at top-level, custom + ad-hoc under `customFilters` —
+ *      an invalid value on any key throws `FilterError` before a body is built.
+ *   4. Building a plugin-bound client via `plugin.getClient()` and showing the
+ *      fail-fast guard: an invalid registered filter value rejects BEFORE any
+ *      HTTP request (so this step needs no server).
+ *   5. A COMMENT block (not executed) demonstrating the `as const` widening
  *      trap — see custom-filters-types.ts for the compile-time narrowing assertions.
  *
  * Run with: `pnpm example:custom-filters`
@@ -23,7 +27,7 @@
  * send it over the wire — transport is not handled here.
  */
 
-import { classifyFilters, definePlugin, F } from "../src/extensions";
+import { classifyFilters, definePlugin, F, FilterError } from "../src/extensions";
 
 // ############################################################################
 // Step 1 — Define the grants.gov plugin with route-keyed custom filters
@@ -113,10 +117,9 @@ console.log(JSON.stringify(searchParams.filters, null, 2));
 // non-optional literal object. The `!` assertion removes the `undefined` from
 // the union type that `Plugin.routes?:` introduces (routes is optional in the
 // interface to support plugins that don't declare filters).
-// `classifyFilters` is fail-soft: it returns `{ result, errors }`. `result` is
-// the OppFilters request body (valid keys only); `errors` collects any invalid
-// filters that were dropped. For this all-valid input, `errors` is empty.
-const { result: requestBody, errors } = classifyFilters(
+// `classifyFilters` is fail-fast: an invalid value on any key — standard,
+// registered, or ad-hoc — throws `FilterError` before a request body exists.
+const requestBody = classifyFilters(
   grantsGovPlugin.routes!,
   "opportunities",
   "search",
@@ -134,9 +137,6 @@ function fail(message: string): never {
   console.error(`ASSERTION FAILED: ${message}`);
   process.exit(1);
 }
-
-// All filters in this example are valid — no errors collected.
-if (errors.length > 0) fail(`expected no classification errors, got ${errors.length}`);
 
 // Default filters must appear as named top-level fields
 if (!requestBody.status) fail("status should be a top-level field (default filter bucket)");
@@ -156,6 +156,19 @@ if (!requestBody.customFilters.legacyTag)
 if ((requestBody.customFilters as Record<string, unknown>).status)
   fail("status must NOT be in customFilters — it is a default filter");
 
+// Fail-fast demo: a wrong value family on a registered filter throws
+// FilterError before any request body is produced.
+try {
+  classifyFilters(grantsGovPlugin.routes!, "opportunities", "search", {
+    agency: { operator: "eq", value: 42 }, // agency is a stringArray filter
+  });
+  fail("expected classifyFilters to throw FilterError for an invalid registered value");
+} catch (e) {
+  if (!(e instanceof FilterError)) throw e;
+  console.log(`\n=== Fail-fast demo ===`);
+  console.log(`FilterError (expected): ${e.message.split("\n")[0]}`);
+}
+
 console.log("\n=== Assertions passed ===");
 console.log("  status        → top-level (default filter bucket)");
 console.log("  closeDateRange → top-level (default filter bucket)");
@@ -164,7 +177,46 @@ console.log("  fundingProgram → customFilters (registered custom filter)");
 console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
 
 // ############################################################################
-// Step 4 — The `as const` widening trap (comment block — not executed)
+// Step 5 — plugin.getClient(): the consumer path
+// ############################################################################
+
+// The client is pre-bound to the plugin: responses parse with the plugin's
+// compiled schema by default, and `search({ filters })` types the registered
+// filter names. Against a live API (e.g. `pnpm example:server`), the consumer
+// flow looks like:
+//
+//   const result = await client.opportunities.search({
+//     filters: { agency: F.in(["HHS"]) },
+//   });
+//   for (const opp of result.items) console.log(opp.title);        // valid rows
+//   // ParseFailure rows — err.raw may carry PII; log a redacted projection
+//   for (const err of result.errors) console.log(err.index, err.error.message);
+//
+// (Executed versions live in __tests__/extensions/get-client.spec.ts.)
+const client = grantsGovPlugin.getClient({ baseUrl: "http://localhost:8000" });
+
+// Fail-fast without a server: an invalid registered value throws BEFORE any
+// HTTP request is made, so this rejects even though nothing is listening.
+// (Async so this file compiles under CommonJS module settings — no top-level
+// await; the final logs chain off it below so output order matches source order.)
+async function step5FailFastDemo(): Promise<void> {
+  try {
+    await client.opportunities.search({
+      // Wrong value family for a stringArray filter — also a compile error;
+      // the cast simulates a plain-JS caller hitting the runtime backstop.
+      filters: { agency: { operator: "eq", value: 42 } } as never,
+    });
+    fail("expected search() to reject with FilterError before any request");
+  } catch (e) {
+    if (!(e instanceof FilterError)) throw e;
+    console.log("\n=== Step 5: getClient fail-fast demo ===");
+    console.log(`search() rejected before any request (expected): ${e.message.split("\n")[0]}`);
+    console.log("\n✓ getClient consumer path complete");
+  }
+}
+
+// ############################################################################
+// Step 6 — The `as const` widening trap (comment block — not executed)
 // ############################################################################
 
 // If you forget `as const` on the definePlugin call, TypeScript widens the
@@ -194,5 +246,10 @@ console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
 //   //   // → literal filterTypes are lost, so per-key narrowing is impossible
 //   //   // → unknown keys, wrong operators, and wrong value shapes silently accepted
 
-console.log("\n✓ custom-filters example complete");
-console.log("  See __tests__/extensions/custom-filters-types.ts for compile-time narrowing proof");
+// Chained after Step 5 settles: the completion banner provably prints last.
+void step5FailFastDemo().then(() => {
+  console.log("\n✓ custom-filters example complete");
+  console.log(
+    "  See __tests__/extensions/custom-filters-types.ts for compile-time narrowing proof"
+  );
+});

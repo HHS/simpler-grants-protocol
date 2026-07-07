@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { z } from "zod";
 import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
-import { Client, Auth } from "../../src/client";
+import { Client, Auth, BatchParseError } from "../../src/client";
 
 // =============================================================================
 // Mock data helpers
@@ -191,6 +192,114 @@ describe("Client", () => {
   });
 
   // =============================================================================
+  // Client.fetchMany row partitioning
+  // =============================================================================
+
+  describe("fetchMany row partitioning", () => {
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
+    const rowSchema = z.object({ id: z.string(), amount: z.number() });
+
+    const mixedRowsHandler = () =>
+      HttpResponse.json({
+        status: 200,
+        message: "Success",
+        items: [
+          { id: "a", amount: 1 },
+          { id: "b", amount: "bad" },
+          { id: "c", amount: 3 },
+        ],
+        paginationInfo: { page: 1, pageSize: 3, totalItems: 3, totalPages: 1 },
+      });
+
+    it("partitions bad rows into errors instead of throwing", async () => {
+      server.use(http.get("/rows", mixedRowsHandler));
+
+      const result = await defaultClient.fetchMany("/rows", { schema: rowSchema });
+
+      expect(result.items).toEqual([
+        { id: "a", amount: 1 },
+        { id: "c", amount: 3 },
+      ]);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].index).toBe(1);
+      expect(result.errors[0].raw).toEqual({ id: "b", amount: "bad" });
+    });
+
+    it('throws BatchParseError under onParseError: "throw"', async () => {
+      server.use(http.get("/rows", mixedRowsHandler));
+
+      await expect(
+        defaultClient.fetchMany("/rows", { schema: rowSchema, onParseError: "throw" })
+      ).rejects.toThrow(BatchParseError);
+    });
+
+    it("uses the raw row count, not the parsed count, to decide the last page", async () => {
+      let requestCount = 0;
+
+      server.use(
+        http.get("/rows", ({ request }) => {
+          requestCount++;
+          const url = new URL(request.url);
+          const page = Number(url.searchParams.get("page") ?? "1");
+          const pages: Record<number, unknown[]> = {
+            1: [
+              { id: "a", amount: 1 },
+              { id: "bad", amount: "x" },
+              { id: "c", amount: 3 },
+            ],
+            2: [{ id: "d", amount: 4 }],
+          };
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: pages[page] ?? [],
+            paginationInfo: { page, pageSize: 3, totalItems: 4, totalPages: 2 },
+          });
+        })
+      );
+
+      const result = await defaultClient.fetchMany("/rows", { pageSize: 3, schema: rowSchema });
+
+      // A parse-shrunk page (2 of 3 rows valid) must not read as the last page.
+      expect(requestCount).toBe(2);
+      expect(result.items.map(i => i.id)).toEqual(["a", "c", "d"]);
+      expect(result.errors).toHaveLength(1);
+    });
+
+    it("maxItems truncates items only; errors report every fetched row", async () => {
+      server.use(
+        http.get("/rows", () =>
+          HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [
+              { id: "a", amount: 1 },
+              { id: "b", amount: 2 },
+              { id: "c", amount: 3 },
+              { id: "d", amount: "bad" },
+              { id: "e", amount: "bad" },
+            ],
+            paginationInfo: { page: 1, pageSize: 5, totalItems: 5, totalPages: 1 },
+          })
+        )
+      );
+
+      const result = await defaultClient.fetchMany("/rows", {
+        pageSize: 5,
+        maxItems: 2,
+        schema: rowSchema,
+      });
+
+      expect(result.items.map(i => i.id)).toEqual(["a", "b"]);
+      // Rows past the cap were still fetched, so their failures still surface.
+      expect(result.errors.map(e => e.index)).toEqual([3, 4]);
+    });
+  });
+
+  // =============================================================================
   // Client.fetchMany (auto-pagination)
   // =============================================================================
 
@@ -374,7 +483,7 @@ describe("Client", () => {
       await expect(defaultClient.fetchMany("/test-items", { pageSize: 5 })).rejects.toThrow("500");
     });
 
-    it("calls schema.parse for each item when provided", async () => {
+    it("calls schema.safeParse for each item when provided", async () => {
       const parseCalls: unknown[] = [];
 
       server.use(
@@ -391,9 +500,12 @@ describe("Client", () => {
         "/test-items",
         {
           schema: {
-            parse: (item: unknown) => {
+            safeParse: (item: unknown) => {
               parseCalls.push(item);
-              return { ...(item as { id: string; name: string }), parsed: true as const };
+              return {
+                success: true as const,
+                data: { ...(item as { id: string; name: string }), parsed: true as const },
+              };
             },
           },
         }
@@ -437,28 +549,6 @@ describe("Client", () => {
       expect(result.message).toBe("Partial Content");
       expect((result as Record<string, unknown>).extraField).toBe("preserved");
       expect(result.items).toHaveLength(3);
-    });
-
-    it("throws when schema.parse throws (validation failure)", async () => {
-      server.use(
-        http.get(
-          "/test-items",
-          createPaginatedHandler({
-            items: generateMockItems(3),
-            defaultPageSize: 10,
-          })
-        )
-      );
-
-      await expect(
-        defaultClient.fetchMany("/test-items", {
-          schema: {
-            parse: () => {
-              throw new Error("Validation failed");
-            },
-          },
-        })
-      ).rejects.toThrow("Validation failed");
     });
   });
 });

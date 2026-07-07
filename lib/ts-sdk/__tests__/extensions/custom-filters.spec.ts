@@ -42,158 +42,10 @@ const mixedConsumerFilters: Record<string, unknown> = {
 };
 
 // ############################################################################
-// classifyFilters tests
+// validateRoutes / validateFilterCall tests
 // ############################################################################
 
-describe("classifyFilters", () => {
-  // ############################################################################
-  // Three-bucket classification
-  // ############################################################################
-
-  describe("three-bucket classification", () => {
-    it("routes default filters to top-level named request-body fields", () => {
-      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
-        status: { operator: "in", value: ["open"] },
-      });
-
-      expect(result.status).toEqual({ operator: "in", value: ["open"] });
-      expect(result.customFilters).toBeUndefined();
-      expect(errors).toEqual([]);
-    });
-
-    it("routes pre-registered custom filters to customFilters record", () => {
-      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
-        agency: { operator: "in", value: ["HHS"] },
-      });
-
-      expect(result.customFilters?.agency).toEqual({ operator: "in", value: ["HHS"] });
-      expect(result.status).toBeUndefined();
-      expect(errors).toEqual([]);
-    });
-
-    it("routes ad-hoc filters to customFilters passthrough (no registration required)", () => {
-      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
-        legacyTag: { operator: "eq", value: "legacy-2024" },
-      });
-
-      expect(result.customFilters?.legacyTag).toEqual({ operator: "eq", value: "legacy-2024" });
-      expect(errors).toEqual([]);
-    });
-
-    it("builds exact ADR-0012 OppFilters request body for mixed default + custom + ad-hoc input", () => {
-      const { result, errors } = classifyFilters(
-        grantsGovRoutes,
-        "opportunities",
-        "search",
-        mixedConsumerFilters
-      );
-
-      // Assert the exact request body shape
-      const expected: ReturnType<typeof OppFiltersSchema.parse> = {
-        status: { operator: "in", value: ["open", "closed"] },
-        closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
-        customFilters: {
-          agency: { operator: "in", value: ["HHS", "DOE"] },
-          fundingProgram: { operator: "like", value: "SBIR%" },
-          legacyTag: { operator: "eq", value: "legacy-2024" },
-        },
-      };
-
-      expect(result).toEqual(expected);
-      expect(errors).toEqual([]);
-    });
-
-    it("passes gov.<system>@<filterName> namespaced keys through to customFilters verbatim", () => {
-      const { result } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
-        "gov.grants@announcementType": { operator: "eq", value: "NOFO" },
-      });
-
-      expect(result.customFilters?.["gov.grants@announcementType"]).toEqual({
-        operator: "eq",
-        value: "NOFO",
-      });
-    });
-
-    it("returns only top-level fields when no custom or ad-hoc filters are provided", () => {
-      const { result } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
-        status: { operator: "in", value: ["open"] },
-      });
-
-      expect(result).not.toHaveProperty("customFilters");
-    });
-
-    it("handles an empty filters object gracefully", () => {
-      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {});
-
-      expect(result).toEqual({});
-      expect(errors).toEqual([]);
-    });
-
-    // ##########################################################################
-    // Fail-soft validation (collect, don't throw)
-    // ##########################################################################
-
-    it("collects a FilterError and omits the key when a default filter violates its real field type (status)", () => {
-      // `status` is a StringArrayFilter (operator in/notIn, value string[]).
-      // `{ operator: "gt", value: 5 }` is a structurally valid DefaultFilter
-      // (passes the permissive shape check) but invalid for `status`. Default
-      // filters are validated against their real field type — a malformed one is
-      // fail-soft: dropped from `result`, surfaced in `errors`, never thrown.
-      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
-        status: { operator: "gt", value: 5 },
-      });
-
-      expect(result).not.toHaveProperty("status");
-      expect(errors).toHaveLength(1);
-      expect(errors[0]).toBeInstanceOf(FilterError);
-      expect(errors[0].path).toBe("filters.status");
-    });
-
-    it("collects errors for invalid registered and ad-hoc filters, omitting both from result", () => {
-      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
-        // registered stringArray given a non-array value → invalid
-        agency: { operator: "in", value: "not-an-array" },
-        // ad-hoc with a missing operator → invalid shape
-        legacyTag: { value: "no-operator" },
-      });
-
-      expect(result.customFilters).toBeUndefined();
-      expect(errors).toHaveLength(2);
-      expect(errors.map(e => e.path).sort()).toEqual(["filters.agency", "filters.legacyTag"]);
-    });
-
-    it("keeps valid keys and drops only invalid ones for mixed valid+invalid input", () => {
-      const { result, errors } = classifyFilters(grantsGovRoutes, "opportunities", "search", {
-        // valid default
-        status: { operator: "in", value: ["open"] },
-        // invalid default (wrong operator/value for status)
-        closeDateRange: { operator: "in", value: ["nope"] },
-        // valid registered custom
-        agency: { operator: "in", value: ["HHS"] },
-        // invalid registered custom (stringArray with non-array value)
-        fundingProgram: { operator: "like", value: 12345 },
-        // valid ad-hoc
-        legacyTag: { operator: "eq", value: "legacy-2024" },
-      });
-
-      // Valid keys are present.
-      expect(result.status).toEqual({ operator: "in", value: ["open"] });
-      expect(result.customFilters?.agency).toEqual({ operator: "in", value: ["HHS"] });
-      expect(result.customFilters?.legacyTag).toEqual({ operator: "eq", value: "legacy-2024" });
-
-      // Invalid keys are absent.
-      expect(result).not.toHaveProperty("closeDateRange");
-      expect(result.customFilters).not.toHaveProperty("fundingProgram");
-
-      // errors count discriminates: exactly the two invalid keys.
-      expect(errors).toHaveLength(2);
-      expect(errors.map(e => e.path).sort()).toEqual([
-        "filters.closeDateRange",
-        "filters.fundingProgram",
-      ]);
-    });
-  });
-
+describe("route and filter-call validation", () => {
   // ############################################################################
   // Registration-time validation (validateRoutes)
   // ############################################################################
@@ -267,7 +119,9 @@ describe("classifyFilters", () => {
     });
 
     it("throws FilterError when custom filters are declared on an unsupported route (list)", () => {
-      const unsupportedRoutes: PluginRoutes = {
+      // `list` is no longer expressible in PluginRoutes (closed RouteMethod union);
+      // cast through unknown to exercise the runtime backstop plain-JS callers hit.
+      const unsupportedRoutes = {
         opportunities: {
           list: {
             filters: {
@@ -275,13 +129,28 @@ describe("classifyFilters", () => {
             },
           },
         },
-      };
+      } as unknown as PluginRoutes;
 
       expect(() => validateRoutes(unsupportedRoutes)).toThrow(FilterError);
     });
 
     it("does not throw for valid routes", () => {
       expect(() => validateRoutes(grantsGovRoutes)).not.toThrow();
+    });
+
+    it("skips explicitly-undefined resource, method, and filter-spec values (no raw TypeError)", () => {
+      // Partial<Record<...>> admits explicit undefined; a conditional-route
+      // pattern like `{ opportunities: hasFilters ? {...} : undefined }` must
+      // not crash Object.entries.
+      expect(() => validateRoutes({ opportunities: undefined })).not.toThrow();
+      expect(() => validateRoutes({ opportunities: { search: undefined } })).not.toThrow();
+      // Filter-spec values are only undefined for plain-JS callers (the record
+      // value type is not Partial), but the backstop must not raw-TypeError.
+      expect(() =>
+        validateRoutes({
+          opportunities: { search: { filters: { agency: undefined } } },
+        } as unknown as PluginRoutes)
+      ).not.toThrow();
     });
   });
 
@@ -424,5 +293,99 @@ describe("F helpers", () => {
     expect(() => DefaultFilterSchema.parse(F.eq("test"))).not.toThrow();
     expect(() => DefaultFilterSchema.parse(F.in(["a", "b"]))).not.toThrow();
     expect(() => DefaultFilterSchema.parse(F.between(100, 500))).not.toThrow();
+  });
+});
+
+// ############################################################################
+// classifyFilters (fail-fast classifier)
+// ############################################################################
+
+describe("classifyFilters", () => {
+  it("classifies defaults top-level and registered/ad-hoc under customFilters", () => {
+    const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      status: { operator: "in", value: ["open"] },
+      agency: F.in(["NSF"]),
+      adHocKey: F.eq("x"),
+    });
+    expect(result.status).toEqual({ operator: "in", value: ["open"] });
+    expect(result.customFilters).toMatchObject({
+      agency: { operator: "in", value: ["NSF"] },
+      adHocKey: { operator: "eq", value: "x" },
+    });
+  });
+
+  it("throws FilterError on an invalid standard filter value", () => {
+    expect(() =>
+      classifyFilters(grantsGovRoutes, "opportunities", "search", {
+        status: { operator: "bogus", value: 1 },
+      })
+    ).toThrow(FilterError);
+  });
+
+  it("throws FilterError on a wrong-typed registered filter value", () => {
+    expect(() =>
+      classifyFilters(grantsGovRoutes, "opportunities", "search", {
+        agency: { operator: "eq", value: "NSF" },
+      })
+    ).toThrow(FilterError);
+  });
+
+  it("throws FilterError on a malformed ad-hoc filter value", () => {
+    expect(() =>
+      classifyFilters(grantsGovRoutes, "opportunities", "search", {
+        adHocKey: { notAFilter: true },
+      })
+    ).toThrow(FilterError);
+  });
+
+  it("passes well-formed ad-hoc filters through without throwing", () => {
+    const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      adHocKey: F.between(1, 10),
+    });
+    expect(result.customFilters?.adHocKey).toBeDefined();
+  });
+
+  it("omits customFilters entirely when only defaults are present", () => {
+    const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      status: { operator: "in", value: ["open"] },
+    });
+    expect(result.customFilters).toBeUndefined();
+  });
+
+  it("builds the exact ADR-0012 OppFilters request body for mixed default + custom + ad-hoc input", () => {
+    const result = classifyFilters(
+      grantsGovRoutes,
+      "opportunities",
+      "search",
+      mixedConsumerFilters
+    );
+
+    const expected: ReturnType<typeof OppFiltersSchema.parse> = {
+      status: { operator: "in", value: ["open", "closed"] },
+      closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
+      customFilters: {
+        agency: { operator: "in", value: ["HHS", "DOE"] },
+        fundingProgram: { operator: "like", value: "SBIR%" },
+        legacyTag: { operator: "eq", value: "legacy-2024" },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  it("passes gov.<system>@<filterName> namespaced keys through to customFilters verbatim", () => {
+    const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      "gov.grants@announcementType": { operator: "eq", value: "NOFO" },
+    });
+
+    expect(result.customFilters?.["gov.grants@announcementType"]).toEqual({
+      operator: "eq",
+      value: "NOFO",
+    });
+  });
+
+  it("handles an empty filters object gracefully", () => {
+    const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {});
+    expect(result).toEqual({});
   });
 });

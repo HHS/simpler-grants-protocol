@@ -110,11 +110,21 @@ export interface RouteDeclarations {
   filters?: Record<string, CustomFilterSpec>;
 }
 
+/** Resource names the SDK exposes. Grows as API resources land. */
+export type ResourceName = "opportunities";
+
+/** Route methods that accept custom filters. Widen only when a method actually takes filters. */
+export type RouteMethod = "search";
+
+/** Method → declarations map for a single resource. */
+export type RouteMethods = Partial<Record<RouteMethod, RouteDeclarations>>;
+
 /**
  * Route map for custom filter declarations: resource → method → declarations.
  *
  * Passed as `routes` in `definePlugin()`. Filters attach to resource methods
- * (which vary asymmetrically across schemas), not to a schema.
+ * (which vary asymmetrically across schemas), not to a schema. Both key levels
+ * are closed unions, so a misspelled resource or method is a compile error.
  *
  * @example
  * ```typescript
@@ -130,7 +140,7 @@ export interface RouteDeclarations {
  * };
  * ```
  */
-export type PluginRoutes = Record<string, Record<string, RouteDeclarations>>;
+export type PluginRoutes = Partial<Record<ResourceName, RouteMethods>>;
 
 // ############################################################################
 // Public types - HasCustomFields, ExtensibleObject

@@ -4,10 +4,11 @@
 
 import { type ClientConfig, type ResolvedConfig, resolveConfig } from "./config";
 import { Auth, buildAuthHeaders, type AuthMethod } from "./auth";
-import { Opportunities } from "./opportunities";
-import { validateRoutes } from "../extensions/custom-filters";
+import { Opportunities } from "./resources/opportunities";
+import { EXTENSIBLE_SCHEMA_MAP } from "../extensions/types";
+import { parseBatch, type OnParseError, type ParseFailure } from "./results";
 import type { Paginated } from "../types";
-import type { PluginRoutes } from "../extensions/types";
+import type { z } from "zod";
 
 // =============================================================================
 // Options interfaces
@@ -41,8 +42,10 @@ export interface FetchManyOptions<T = unknown> {
   method?: "GET" | "POST";
   /** Request body for POST requests (pagination will be merged in) */
   body?: Record<string, unknown>;
-  /** Schema to parse/validate each item (any object with a `.parse()` method, e.g. a Zod schema) */
-  schema?: { parse: (data: unknown) => T };
+  /** Schema to parse/validate each item (any object with a `.safeParse()` method, e.g. a Zod schema) */
+  schema?: { safeParse: (data: unknown) => z.SafeParseReturnType<unknown, T> };
+  /** Row-parse failure handling: partition into `errors` (default) or throw on first failure */
+  onParseError?: OnParseError;
 }
 
 // =============================================================================
@@ -69,27 +72,23 @@ export interface FetchManyOptions<T = unknown> {
  * const list = await client.opportunities.list({ page: 1 });
  * ```
  */
-export class Client<R extends PluginRoutes = PluginRoutes> {
+export class Client {
   private readonly config: ResolvedConfig;
   private readonly auth: AuthMethod;
 
-  /** Opportunities resource namespace */
-  public readonly opportunities: Opportunities<R>;
+  /** Opportunities resource namespace (base schema; plugin-typed via plugin.getClient()) */
+  // resource-slot
+  public readonly opportunities: Opportunities;
 
   // =============================================================================
   // Client constructor
   // =============================================================================
 
-  constructor(options: ClientConfig & { auth?: AuthMethod; routes?: R }) {
+  constructor(options: ClientConfig & { auth?: AuthMethod }) {
     this.config = resolveConfig(options);
     this.auth = options.auth ?? Auth.none();
 
-    // `routes` is client-bound (fixed plugin config supplied once here), so it
-    // validates at construction and drives the filter-name narrowing on
-    // `opportunities.search`. The `this as Client` cast avoids circular-generic
-    // variance friction between `Client<R>` and `Opportunities<R>`.
-    if (options.routes) validateRoutes(options.routes);
-    this.opportunities = new Opportunities<R>(this as Client, options.routes);
+    this.opportunities = new Opportunities(this, EXTENSIBLE_SCHEMA_MAP.Opportunity);
   }
 
   // =============================================================================
@@ -195,6 +194,42 @@ export class Client<R extends PluginRoutes = PluginRoutes> {
   }
 
   // =============================================================================
+  // Client.put / Client.patch - write request helpers
+  // =============================================================================
+
+  /**
+   * Makes an authenticated PUT request to the API.
+   *
+   * @param path - API path (will be appended to baseUrl)
+   * @param body - Request body (will be JSON stringified)
+   * @param options - Request options
+   * @returns Fetch Response
+   */
+  async put(path: string, body: unknown, options?: PostOptions): Promise<Response> {
+    return this.fetch(path, {
+      method: "PUT",
+      body: JSON.stringify(body),
+      signal: options?.signal,
+    });
+  }
+
+  /**
+   * Makes an authenticated PATCH request to the API.
+   *
+   * @param path - API path (will be appended to baseUrl)
+   * @param body - Request body (will be JSON stringified)
+   * @param options - Request options
+   * @returns Fetch Response
+   */
+  async patch(path: string, body: unknown, options?: PostOptions): Promise<Response> {
+    return this.fetch(path, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      signal: options?.signal,
+    });
+  }
+
+  // =============================================================================
   // Client.fetchMany - auto-pagination
   // =============================================================================
 
@@ -217,7 +252,10 @@ export class Client<R extends PluginRoutes = PluginRoutes> {
    * });
    * ```
    */
-  async fetchMany<T>(path: string, options?: FetchManyOptions<T>): Promise<Paginated<T>> {
+  async fetchMany<T>(
+    path: string,
+    options?: FetchManyOptions<T>
+  ): Promise<Paginated<T> & { errors: ParseFailure[] }> {
     // Set defaults.
     const pageSize = options?.pageSize ?? this.config.pageSize;
     const maxItems = options?.maxItems ?? this.config.maxItems;
@@ -228,6 +266,10 @@ export class Client<R extends PluginRoutes = PluginRoutes> {
     const firstResult = await this.fetchOnePage<T>(path, method, startPage, pageSize, options);
     const firstPageJson = firstResult.json;
     const allItems: T[] = [...firstResult.items.slice(0, maxItems)];
+    // Per-row parse failures aggregate across pages; each failure's `index` is
+    // relative to its own page's rows. Failures are reported for every fetched
+    // row — including rows past the maxItems cap, which truncates items only.
+    const allErrors: ParseFailure[] = [...firstResult.errors];
 
     // Fetch remaining pages, up to maxItems.
     let currentPage = startPage + 1;
@@ -237,6 +279,7 @@ export class Client<R extends PluginRoutes = PluginRoutes> {
       // Add items up to maxItems limit.
       const remainingCapacity = maxItems - allItems.length;
       allItems.push(...result.items.slice(0, remainingCapacity));
+      allErrors.push(...result.errors);
 
       // Stop if we've fetched all available items.
       if (result.isLastPage || allItems.length >= maxItems) break;
@@ -247,12 +290,13 @@ export class Client<R extends PluginRoutes = PluginRoutes> {
     return {
       ...firstPageJson,
       items: allItems,
+      errors: allErrors,
       paginationInfo: {
         ...firstPageJson.paginationInfo,
         page: 1,
         pageSize: allItems.length,
       },
-    } as Paginated<T>;
+    } as Paginated<T> & { errors: ParseFailure[] };
   }
 
   // =============================================================================
@@ -272,6 +316,7 @@ export class Client<R extends PluginRoutes = PluginRoutes> {
   ): Promise<{
     json: Paginated<unknown>;
     items: T[];
+    errors: ParseFailure[];
     isLastPage: boolean;
     totalPages: number | undefined;
   }> {
@@ -298,22 +343,24 @@ export class Client<R extends PluginRoutes = PluginRoutes> {
       throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
     }
 
-    // Parse/validate items if schema is provided
+    // Parse/validate items if schema is provided; valid rows partition into
+    // `items`, per-row failures into `errors` (or throw under "throw").
     const json = (await response.json()) as Paginated<unknown>;
     const { items: rawItems, paginationInfo } = json;
-    const items: T[] = options?.schema
-      ? rawItems.map(item => options.schema!.parse(item))
-      : (rawItems as T[]);
+    const { items, errors } = options?.schema
+      ? parseBatch(options.schema, rawItems, options?.onParseError ?? "collect")
+      : { items: rawItems as T[], errors: [] as ParseFailure[] };
 
-    // Determine if this is the last page.
+    // Determine if this is the last page from the RAW row count — a
+    // parse-shrunk page must not read as the last page.
     const totalPages = paginationInfo.totalPages ?? undefined;
     const isLastPage =
-      items.length < pageSize ||
+      rawItems.length < pageSize ||
       (totalPages !== undefined && currentPage >= totalPages) ||
-      items.length === 0;
+      rawItems.length === 0;
 
     // Return the results.
-    return { json, items, isLastPage, totalPages };
+    return { json, items, errors, isLastPage, totalPages };
   }
 
   /** Constructs the full URL for an API path. */

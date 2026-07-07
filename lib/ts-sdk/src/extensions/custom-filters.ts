@@ -5,7 +5,8 @@
  *
  * - `classifyFilters` — transforms a flat consumer `filters` object into the
  *   ADR-0012 `OppFilters` request body (three-bucket: default → named top-level fields;
- *   registered custom → `customFilters`; ad-hoc → `customFilters` passthrough).
+ *   registered custom → `customFilters`; ad-hoc → `customFilters` passthrough),
+ *   throwing `FilterError` on the first invalid value.
  * - `validateRoutes` — registration-time validation; rejects unknown `filterType`
  *   and custom names that collide with default-filter names.
  * - `validateFilterCall` — call-time validation; rejects operator/filterType mismatch
@@ -34,19 +35,27 @@ import {
   StringComparisonFilterSchema,
 } from "../schemas/zod/filters";
 import { OppDefaultFiltersSchema, OppFiltersSchema } from "../schemas/zod/models";
-import type { CustomFilterSpec, CustomFilterType, PluginRoutes, RouteDeclarations } from "./types";
+import type {
+  CustomFilterSpec,
+  CustomFilterType,
+  PluginRoutes,
+  ResourceName,
+  RouteDeclarations,
+  RouteMethod,
+} from "./types";
 import { FilterError } from "./types";
 
 // ############################################################################
-// Internal — filter-type schema map
+// Public — filter-type schema map
 // ############################################################################
 
 /**
  * Maps each CustomFilterType to the Zod schema that validates its
  * `{operator, value}` pair. Each schema constrains both the allowed operator
  * enum and the value shape, so a single parse covers both checks.
+ * Literal-typed (`as const`) so `CustomFilterInput` can project per-type inputs.
  */
-const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
+export const FILTER_TYPE_SCHEMAS = {
   stringComparison: StringComparisonFilterSchema,
   stringArray: StringArrayFilterSchema,
   numberComparison: NumberComparisonFilterSchema,
@@ -60,7 +69,12 @@ const FILTER_TYPE_SCHEMAS: Record<CustomFilterType, z.ZodTypeAny> = {
   dateRange: DateRangeFilterSchema,
   moneyComparison: MoneyComparisonFilterSchema,
   moneyRange: MoneyRangeFilterSchema,
-};
+} as const satisfies Record<CustomFilterType, z.ZodTypeAny>;
+
+/** Input type accepted for a registered custom filter of the given filterType. */
+export type CustomFilterInput<FT extends CustomFilterType> = z.input<
+  (typeof FILTER_TYPE_SCHEMAS)[FT]
+>;
 
 /**
  * All 11 valid CustomFilterType values — used for unknown-filterType detection.
@@ -107,29 +121,29 @@ const SUPPORTED_CUSTOM_FILTER_ROUTES = new Set<string>(["opportunities.search"])
  */
 export const F = {
   /** Equals — `{ operator: "eq", value }` */
-  eq: (value: unknown) => ({ operator: "eq" as const, value }),
+  eq: <V>(value: V) => ({ operator: "eq" as const, value }),
   /** Not equals — `{ operator: "neq", value }` */
-  neq: (value: unknown) => ({ operator: "neq" as const, value }),
+  neq: <V>(value: V) => ({ operator: "neq" as const, value }),
   /** Greater than — `{ operator: "gt", value }` */
-  gt: (value: unknown) => ({ operator: "gt" as const, value }),
+  gt: <V>(value: V) => ({ operator: "gt" as const, value }),
   /** Greater than or equal — `{ operator: "gte", value }` */
-  gte: (value: unknown) => ({ operator: "gte" as const, value }),
+  gte: <V>(value: V) => ({ operator: "gte" as const, value }),
   /** Less than — `{ operator: "lt", value }` */
-  lt: (value: unknown) => ({ operator: "lt" as const, value }),
+  lt: <V>(value: V) => ({ operator: "lt" as const, value }),
   /** Less than or equal — `{ operator: "lte", value }` */
-  lte: (value: unknown) => ({ operator: "lte" as const, value }),
+  lte: <V>(value: V) => ({ operator: "lte" as const, value }),
   /** Array inclusion — `{ operator: "in", value: [...] }` */
-  in: (value: unknown[]) => ({ operator: "in" as const, value }),
+  in: <V>(value: V[]) => ({ operator: "in" as const, value }),
   /** Array exclusion — `{ operator: "notIn", value: [...] }` */
-  notIn: (value: unknown[]) => ({ operator: "notIn" as const, value }),
+  notIn: <V>(value: V[]) => ({ operator: "notIn" as const, value }),
   /** String pattern match — `{ operator: "like", value }` */
   like: (value: string) => ({ operator: "like" as const, value }),
   /** String pattern non-match — `{ operator: "notLike", value }` */
   notLike: (value: string) => ({ operator: "notLike" as const, value }),
   /** Range (inclusive) — `{ operator: "between", value: { min, max } }` */
-  between: (min: unknown, max: unknown) => ({ operator: "between" as const, value: { min, max } }),
+  between: <V>(min: V, max: V) => ({ operator: "between" as const, value: { min, max } }),
   /** Range (exclusive) — `{ operator: "outside", value: { min, max } }` */
-  outside: (min: unknown, max: unknown) => ({ operator: "outside" as const, value: { min, max } }),
+  outside: <V>(min: V, max: V) => ({ operator: "outside" as const, value: { min, max } }),
 };
 
 // ############################################################################
@@ -158,8 +172,10 @@ export const F = {
  */
 export function validateRoutes(routes: PluginRoutes): void {
   for (const [resourceKey, methods] of Object.entries(routes)) {
+    // Partial<Record<...>> admits explicitly-undefined values; skip them.
+    if (!methods) continue;
     for (const [methodKey, declarations] of Object.entries(methods)) {
-      const filters = (declarations as RouteDeclarations).filters;
+      const filters = (declarations as RouteDeclarations | undefined)?.filters;
       if (!filters) continue;
 
       if (!SUPPORTED_CUSTOM_FILTER_ROUTES.has(`${resourceKey}.${methodKey}`)) {
@@ -172,6 +188,10 @@ export function validateRoutes(routes: PluginRoutes): void {
 
       for (const [filterName, spec] of Object.entries(filters)) {
         const path = `routes.${resourceKey}.${methodKey}.filters.${filterName}`;
+
+        // Plain-JS callers can pass explicitly-undefined specs; skip them like
+        // the resource and method levels above.
+        if (!spec) continue;
 
         // Check for unknown filterType
         if (!VALID_FILTER_TYPES.has(spec.filterType)) {
@@ -209,7 +229,7 @@ export function validateRoutes(routes: PluginRoutes): void {
  *   `DefaultFilterSchema` (no operator/filterType enforcement — accepted trade-off).
  *
  * Fail-soft: returns a `FilterError` describing the problem, or `undefined`
- * when the value is valid. The caller (`classifyFilters`) collects returned
+ * when the value is valid. The caller (`classifyFilters`) throws returned
  * errors rather than aborting the whole call.
  *
  * @param spec - The registered `CustomFilterSpec` for this filter, or `undefined` for ad-hoc
@@ -259,99 +279,71 @@ export function validateFilterCall(
 }
 
 // ############################################################################
-// Public — classifyFilters (three-bucket classifier)
+// Public — classifyFilters (fail-fast classifier)
 // ############################################################################
 
 /**
- * Fail-soft result of `classifyFilters`.
+ * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters`
+ * request body, throwing on the first invalid value instead of dropping it.
  *
- * `result` holds only the keys that passed validation; `errors` aggregates the
- * `FilterError`s for keys that failed (those keys are omitted, not thrown on).
- */
-export interface ClassifyResult<T = z.infer<typeof OppFiltersSchema>> {
-  result: T;
-  errors: FilterError[];
-}
-
-/**
- * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters` request body.
- *
- * Three-bucket classification:
- * 1. **Default filters** — keys present in `OppDefaultFiltersSchema` (e.g. `status`,
- *    `closeDateRange`) → top-level named fields on the request body.
- * 2. **Registered custom filters** — keys declared in the route-method's `filters`
- *    spec → `customFilters[name]`.
- * 3. **Ad-hoc filters** — unregistered keys (not in defaults, not in spec) →
- *    `customFilters[name]` passthrough.
- *
- * `gov.<system>@<filterName>` namespaced keys are treated as ad-hoc custom
- * filter keys and flow into `customFilters` verbatim — no auto-migration.
- *
- * Validation runs for each key during classification: default fields are checked
- * against their real field type (`OppDefaultFiltersSchema`), registered and ad-hoc
- * keys via `validateFilterCall`. Validation is **fail-soft**: a key that fails
- * is dropped from `result` and its `FilterError` is pushed onto `errors`; the
- * call never throws on a bad filter. Valid keys classify normally.
+ * Three-bucket classification (defaults → top-level
+ * fields; registered + ad-hoc → `customFilters`), but validation is fail-fast:
+ * any invalid value — standard, registered, or ad-hoc — throws before a request
+ * body is produced. Well-formed ad-hoc (unregistered) keys still pass through.
  *
  * @param routes - The `PluginRoutes` from the plugin definition
  * @param resourceKey - The resource name (e.g. `"opportunities"`)
  * @param methodKey - The method name (e.g. `"search"`)
  * @param consumerFilters - The flat consumer-facing filters object
- * @returns `{ result, errors }` — the valid-only request body and the collected errors
+ * @returns The classified `OppFilters` request body
+ * @throws FilterError on the first invalid filter value
  */
 export function classifyFilters(
   routes: PluginRoutes,
   resourceKey: string,
   methodKey: string,
   consumerFilters: Record<string, unknown>
-): ClassifyResult {
-  // Resolve registered filter specs for this route-method
+): z.infer<typeof OppFiltersSchema> {
+  // Resolve registered filter specs for this route-method. The selectors are
+  // runtime strings; cast them rather than widening the routes map.
   const registeredFilters: Record<string, CustomFilterSpec> =
-    routes[resourceKey]?.[methodKey]?.filters ?? {};
+    routes[resourceKey as ResourceName]?.[methodKey as RouteMethod]?.filters ?? {};
 
   const defaultFields: Partial<z.infer<typeof OppDefaultFiltersSchema>> = {};
   const customFilters: Record<string, z.infer<typeof DefaultFilterSchema>> = {};
-  const errors: FilterError[] = [];
 
   for (const [key, value] of Object.entries(consumerFilters)) {
-    // Look up registered spec (undefined for ad-hoc and gov.* namespaced keys)
     const spec = registeredFilters[key] as CustomFilterSpec | undefined;
 
     if (DEFAULT_FILTER_NAMES.has(key)) {
       // Bucket 1: default filter → top-level named field, validated against its
-      // real type from OppDefaultFiltersSchema (e.g. status → StringArrayFilter).
-      // safeParse doesn't reshape, so the original value is assigned unchanged.
-      // An invalid value is skipped and its error collected.
+      // real type from OppDefaultFiltersSchema. An invalid value throws.
       const fieldSchema = (OppDefaultFiltersSchema.shape as Record<string, z.ZodTypeAny>)[key];
       const result = fieldSchema.safeParse(value);
       if (!result.success) {
-        errors.push(
-          new FilterError(`Default filter "${key}" failed validation: ${result.error.message}`, {
+        throw new FilterError(
+          `Default filter "${key}" failed validation: ${result.error.message}`,
+          {
             path: `filters.${key}`,
             sourceValue: value,
-          })
+          }
         );
-        continue;
       }
       (defaultFields as Record<string, unknown>)[key] = value;
     } else {
-      // Bucket 2 (registered custom) or Bucket 3 (ad-hoc / gov.* namespaced)
-      // Run call-time validation — passes spec if registered, undefined if ad-hoc.
-      // Fail-soft: collect the returned error and skip the key.
+      // Bucket 2 (registered custom) or Bucket 3 (ad-hoc / gov.* namespaced).
+      // An invalid value throws — including a malformed ad-hoc shape.
       const error = validateFilterCall(spec, key, value);
       if (error) {
-        errors.push(error);
-        continue;
+        throw error;
       }
       customFilters[key] = value as z.infer<typeof DefaultFilterSchema>;
     }
   }
 
-  // Build request body — omit customFilters key entirely when empty (match nullish shape)
-  const result: z.infer<typeof OppFiltersSchema> = {
+  // Omit customFilters key entirely when empty (match nullish shape)
+  return {
     ...defaultFields,
     ...(Object.keys(customFilters).length > 0 ? { customFilters } : {}),
   };
-
-  return { result, errors };
 }
