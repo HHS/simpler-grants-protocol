@@ -1,5 +1,11 @@
 # @common-grants/cli
 
+## 0.3.7
+
+### Patch Changes
+
+- 01ea935: Bump js-yaml from 4.2.0 to 4.3.0 (runtime dependency), picking up the backported `maxTotalMergeKeys` loader option that bounds the number of keys processed by YAML merge (`<<`) per parse.
+
 ## 0.3.6
 
 ### Patch Changes
