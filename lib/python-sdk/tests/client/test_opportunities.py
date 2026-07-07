@@ -18,7 +18,15 @@ from common_grants_sdk.client import (
 )
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
-from common_grants_sdk.extensions import FilterError, PluginRoutes, ResourceRoutes
+from common_grants_sdk.extensions import (
+    FilterError,
+    PluginMeta,
+    PluginRoutes,
+    PluginSchemas,
+    ResourceRoutes,
+    define_plugin,
+    schema,
+)
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
@@ -36,6 +44,14 @@ class OppSearchFilters(OpportunityFilters, total=False):
 
 
 AGENCY_ROUTES = PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters))
+
+# A plugin scoped to AGENCY_ROUTES: get_client() is the public path to a client
+# whose opportunities.search classifies the registered ``agency`` custom filter.
+AGENCY_PLUGIN = define_plugin(
+    PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
+    routes=AGENCY_ROUTES,
+    meta=PluginMeta(name="test", source_system="test"),
+)
 
 
 @pytest.fixture
@@ -843,7 +859,7 @@ class TestOpportunitySearch:
         config = Config(
             base_url="https://api.example.com", api_key="test-key", timeout=10.0
         )
-        client = Client(config=config, auth=auth, routes=AGENCY_ROUTES)
+        client = AGENCY_PLUGIN.get_client(config, auth)
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
@@ -903,7 +919,7 @@ class TestOpportunitySearch:
         config = Config(
             base_url="https://api.example.com", api_key="test-key", timeout=10.0
         )
-        client = Client(config=config, auth=auth, routes=AGENCY_ROUTES)
+        client = AGENCY_PLUGIN.get_client(config, auth)
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 
@@ -983,7 +999,7 @@ class TestOpportunitySearch:
         config = Config(
             base_url="https://api.example.com", api_key="test-key", timeout=10.0
         )
-        client = Client(config=config, auth=auth, routes=AGENCY_ROUTES)
+        client = AGENCY_PLUGIN.get_client(config, auth)
         client.http = mock_httpx_client
         client.opportunities.http = mock_httpx_client
 

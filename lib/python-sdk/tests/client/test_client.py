@@ -12,8 +12,16 @@ from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.schemas.pydantic.pagination import PaginatedResultsInfo
 from common_grants_sdk.schemas.pydantic.responses import Paginated
-from common_grants_sdk.extensions import PluginRoutes, ResourceRoutes
+from common_grants_sdk.extensions import (
+    PluginMeta,
+    PluginRoutes,
+    PluginSchemas,
+    ResourceRoutes,
+    define_plugin,
+    schema,
+)
 from common_grants_sdk.extensions.types import FilterError
+from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     OpportunityFilters,
     StringArray,
@@ -34,8 +42,8 @@ class TestClient:
             assert client.auth == auth
             assert isinstance(client.opportunities, type(client.opportunities))
 
-    def test_client_initialization_validates_routes(self):
-        """Client validates routes at construction and raises on a bad declaration.
+    def test_get_client_validates_routes(self):
+        """get_client validates routes when binding and raises on a bad declaration.
 
         The typed carrier makes a misspelled resource/method a static error, so the
         only remaining runtime check is that a registered custom filter's value type
@@ -48,29 +56,31 @@ class TestClient:
             class BadFilters(OpportunityFilters, total=False):
                 region: int  # not a filter value model
 
+            plugin = define_plugin(
+                PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
+                routes=PluginRoutes(opportunities=ResourceRoutes(search=BadFilters)),
+                meta=PluginMeta(name="t", source_system="t"),
+            )
             with pytest.raises(FilterError):
-                Client(
-                    config=config,
-                    routes=PluginRoutes(
-                        opportunities=ResourceRoutes(search=BadFilters)
-                    ),
-                )
+                plugin.get_client(config)
 
-    def test_client_initialization_accepts_valid_routes(self):
-        """A valid typed routes carrier is accepted at construction (no raise)."""
+    def test_get_client_accepts_valid_routes(self):
+        """A valid typed routes carrier binds through get_client (no raise)."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
 
             class OppSearchFilters(OpportunityFilters, total=False):
                 region: StringArray
 
-            client = Client(
-                config=config,
+            plugin = define_plugin(
+                PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
                 routes=PluginRoutes(
                     opportunities=ResourceRoutes(search=OppSearchFilters)
                 ),
+                meta=PluginMeta(name="t", source_system="t"),
             )
-            assert client.routes.opportunities.search is OppSearchFilters
+            client = plugin.get_client(config)
+            assert client._routes.opportunities.search is OppSearchFilters
 
     def test_client_initialization_defaults_auth(self, monkeypatch):
         """Test client initialization with default auth from config."""

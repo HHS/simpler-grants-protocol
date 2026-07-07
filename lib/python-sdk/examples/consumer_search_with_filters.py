@@ -8,12 +8,13 @@ The full downstream flow an adopter writes against the SDK:
            passing the carrier as ``define_plugin(routes=...)`` → ``plugin.routes``, a
            ``PluginRoutes`` carrier. The typed dict also narrows the call-site filter
            dict per key.
-  CONSUMER constructs the client with the registered routes
-           (``Client(config, routes=plugin.routes)``), builds a filter dict with the
-           ``f.*`` builders, and calls ``client.opportunities.search(search=..., filters=...)``.
-           The client runs ``classify_filters`` to build the three-bucket request body
-           (default named fields + ``customFilters`` record), POSTs it, and returns
-           typed ``OpportunityBase`` rows.
+  CONSUMER gets a pre-scoped client from ``plugin.get_client(config)`` (routes and
+           schemas already bound), builds a filter dict with the ``f.*`` builders, and
+           calls ``client.opportunities.search(search=..., filters=...)``. The client
+           runs ``classify_filters`` to build the three-bucket request body (default
+           named fields + ``customFilters`` record), POSTs it, and returns typed
+           ``OpportunityBase`` rows. Because ``get_client`` binds the plugin's registered
+           ``OppSearchFilters``, ``search(filters=...)`` narrows to it per key.
 
 The ``f.*`` builders return the precise filter model per value type
 (``f.in_([...])`` -> ``StringArrayFilter``, ``f.gte(3)`` -> ``NumberComparisonFilter``),
@@ -33,7 +34,6 @@ from __future__ import annotations
 
 from typing_extensions import assert_type
 
-from common_grants_sdk.client import Client
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.extensions import (
     PluginMeta,
@@ -84,8 +84,9 @@ def demo() -> None:
     config = Config(
         base_url="http://localhost:8000", api_key="two_orgs_user_key", timeout=5.0
     )
-    # Routes are bound to the client once at construction (not per search call).
-    client = Client(config, routes=plugin.routes)
+    # get_client binds the plugin's routes and schemas: search(filters=...) is typed
+    # by OppSearchFilters and responses parse with the plugin's Opportunity schema.
+    client = plugin.get_client(config)
 
     # A filter dict built with the f.* helpers. The builders return the precise
     # per-key models, so each value narrows to exactly the type OppSearchFilters

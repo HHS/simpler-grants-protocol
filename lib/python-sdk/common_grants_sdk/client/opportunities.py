@@ -148,7 +148,7 @@ class Opportunities(Generic[FiltersT, ItemT]):
         filters_body: dict[str, Any] = {}
         if filters:
             classified = classify_filters(
-                self.client.routes, "opportunities", "search", filters
+                self.client._routes, "opportunities", "search", filters
             )
             strict_error = next((e for e in classified.errors if e.strict), None)
             if strict_error is not None:

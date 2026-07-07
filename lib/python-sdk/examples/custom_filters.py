@@ -54,7 +54,7 @@ class OppSearchFilters(OpportunityFilters, total=False):
     fundingProgram: StringComparison
 
 
-routes: PluginRoutes = PluginRoutes(
+routes: PluginRoutes[OppSearchFilters] = PluginRoutes(
     opportunities=ResourceRoutes(search=OppSearchFilters)
 )
 
