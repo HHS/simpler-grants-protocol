@@ -4,7 +4,7 @@ description: ADR documenting the governance approach for the CommonGrants protoc
 ---
 
 :::caution[Superseded]
-This ADR has been superseded by [ADR 0021: Community Stewardship Model](/governance/adr/0021-community-stewardship/). The newer ADR provides a detailed evaluation of stewardship options and transition criteria.
+This ADR has been superseded by [ADR 0025: Stewardship governance model](/governance/adr/0025-stewardship-governance-model/), which defines the participation-based governance model for CommonGrants stewardship.
 :::
 
 The CommonGrants protocol requires a governance model to ensure its evolution is guided by a structured, transparent, and inclusive decision-making process. The governance model should balance early-stage innovation with long-term stability and adoption.

@@ -231,7 +231,6 @@ def transform_from_mapping(
 
         # Walk through each key in the current node
         for k, v in node.items():
-
             # If the key is a reserved word, call the matching handler function
             # on the value and return the result.
             # Node: `{ "field": "opportunity_status" }`

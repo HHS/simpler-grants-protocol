@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/cli",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "engines": {
     "node": ">=22.0.0"
   },
@@ -64,7 +64,7 @@
     "commander": "^12.1.0",
     "express": "^4.22.2",
     "inquirer": "^9.3.8",
-    "js-yaml": "^4.2.0",
+    "js-yaml": "^4.3.0",
     "json-schema-merge-allof": "^0.8.1",
     "openapi-types": "^12.1.3",
     "swagger-ui-express": "^5.0.1",
@@ -84,10 +84,10 @@
     "@typespec/openapi3": "catalog:",
     "@typespec/versioning": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "@vitest/eslint-plugin": "catalog:",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-prettier": "catalog:",
-    "eslint-plugin-vitest": "catalog:",
     "prettier": "catalog:",
     "prettier-linter-helpers": "^1.0.1",
     "supertest": "^7.2.2",

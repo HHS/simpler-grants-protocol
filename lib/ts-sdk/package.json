@@ -83,12 +83,14 @@
     "example:plugins": "tsx examples/plugins.ts",
     "example:server": "tsx examples/mock-api-server.ts",
     "example:transforms": "tsx examples/transforms.ts",
-    "example:custom-filters": "tsx examples/custom-filters.ts"
+    "example:custom-filters": "tsx examples/custom-filters.ts",
+    "example:grants-gov": "tsx examples/grants-gov-transforms.ts"
   },
   "dependencies": {
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@common-grants/cg-grants-gov": "^0.2.0",
     "@common-grants/core": "workspace:*",
     "@eslint/js": "catalog:",
     "@types/js-yaml": "^4.0.9",
@@ -106,11 +108,11 @@
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-prettier": "catalog:",
-    "js-yaml": "^4.2.0",
+    "js-yaml": "^4.3.0",
     "json-schema-faker": "^0.6.2",
     "prettier": "catalog:",
     "ts-node": "catalog:",
-    "tsx": "^4.22.4",
+    "tsx": "^4.22.5",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:"
