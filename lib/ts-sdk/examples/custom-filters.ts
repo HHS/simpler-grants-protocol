@@ -1,255 +1,236 @@
 /**
- * Example script demonstrating custom-filters registration and classification. Shows:
- *   1. Defining a grants.gov plugin with route-keyed custom filter specs via
- *      `definePlugin({ routes: { ... } } as const)`.
- *   2. Building a unified consumer `filters` object mixing default fields
- *      (status, closeDateRange), pre-registered custom filters (agency,
- *      fundingProgram), and an ad-hoc filter (legacyTag) — using `F.*` helpers.
- *      Control fields (query, maxResults, signal, schema) stay OUTSIDE `filters`.
- *   3. Calling `classifyFilters` to produce the ADR-0012 request body:
- *      default fields at top-level, custom + ad-hoc under `customFilters` —
- *      an invalid value on any key throws `FilterError` before a body is built.
- *   4. Building a plugin-bound client via `plugin.getClient()` and showing the
- *      fail-fast guard: an invalid registered filter value rejects BEFORE any
- *      HTTP request (so this step needs no server).
- *   5. A COMMENT block (not executed) demonstrating the `as const` widening
- *      trap — see custom-filters-types.ts for the compile-time narrowing assertions.
+ * Example: the custom-filters authoring and consumer surface, end to end.
+ *
+ * Three scenarios, each isolated in its own function:
+ *
+ *   1. Happy path (mock server): define a plugin with a custom field and a
+ *      registered custom filter, build a client with `plugin.getClient()`, and
+ *      search with a mix of default, registered, and ad-hoc filters.
+ *   2. Authoring error: `definePlugin()` rejects an invalid registration
+ *      (a filter named after a default field; an unknown filterType).
+ *   3. Consumer error: `search()` rejects a bad filter value with `FilterError`
+ *      before any HTTP request, for both a registered filter (wrong value
+ *      family) and an ad-hoc filter (operator/value structure mismatch).
  *
  * Run with: `pnpm example:custom-filters`
  *
- * @remarks
- * The three-bucket classification rule (ADR-0012):
- *   - Default filters (status, closeDateRange, ...) → named top-level fields on the request body.
- *   - Pre-registered custom filters (agency, fundingProgram) → `customFilters` record.
- *   - Ad-hoc filters (legacyTag) → `customFilters` passthrough (shape-only validated).
+ * Scenario 1 talks to the mock server; start it first in another terminal with
+ * `pnpm example:server`. If it is not running, scenario 1 is skipped and the two
+ * offline scenarios still run.
  *
- * No network I/O: this example BUILDS the request body and prints it; it does NOT
- * send it over the wire — transport is not handled here.
+ * Filter buckets (ADR-0012):
+ *   - Default filters (status, closeDateRange, ...) -> named top-level fields.
+ *   - Registered custom filters (region) -> `customFilters` record, validated
+ *     against their declared filterType.
+ *   - Ad-hoc filters (any other key) -> `customFilters` passthrough, validated
+ *     for operator/value structure only (no element-type check).
  */
 
-import { classifyFilters, definePlugin, F, FilterError } from "../src/extensions";
+import { definePlugin, F, FilterError } from "../src/extensions";
 
-// ############################################################################
-// Step 1 — Define the grants.gov plugin with route-keyed custom filters
-// ############################################################################
+const BASE_URL = "http://localhost:8000";
 
-// `as const` is load-bearing: it preserves literal `filterType` values so
-// that TypeScript can narrow call-site filter keys, operators, and value shapes.
-// Without `as const`, `filterType` widens to `string` and the typed guard is lost.
-// See custom-filters-types.ts for the compile-time proof.
+// `as const` is load-bearing: it preserves the literal `filterType` values so
+// `search({ filters })` can narrow filter names, operators, and value shapes.
 const grantsGovPlugin = definePlugin({
   meta: {
     name: "grants.gov",
     version: "0.1.0",
     sourceSystem: "grants.gov",
-    capabilities: ["customFilters"],
+    capabilities: ["customFields", "customFilters"],
+  },
+  schemas: {
+    Opportunity: {
+      customFields: {
+        programCode: { fieldType: "string", description: "Funding program code" },
+      },
+    },
   },
   routes: {
     opportunities: {
       search: {
         filters: {
-          agency: {
+          region: {
             filterType: "stringArray",
-            description: "Filter by funding agency code (e.g. 'HHS', 'DOE')",
+            description: "Filter by region code (e.g. 'US-CA')",
           },
-          fundingProgram: {
-            filterType: "stringComparison",
-            description: "Filter by funding program name",
-          },
-          // NOTE: `as const` is what makes these `filterType` values
-          // literal strings ("stringArray", "stringComparison") instead of
-          // widened `string`. Without it, the typed narrowing layer collapses.
         },
       },
     },
   },
 } as const);
 
-console.log("=== Step 1: Plugin registered ===");
-console.log(`Plugin name: ${grantsGovPlugin.meta?.name}`);
-console.log(
-  `Registered filters: ${Object.keys(grantsGovPlugin.routes?.opportunities?.search?.filters ?? {}).join(", ")}`
-);
-
-// ############################################################################
-// Step 2 — Build a unified consumer filters object
-// ############################################################################
-
-// The consumer-facing `filters` object is flat — it mixes all three filter types
-// without the caller needing to know which bucket each belongs to.
-//
-// IMPORTANT: control fields (query, maxResults, signal, schema) stay OUTSIDE
-// the `filters` object. The classifier handles only the filter predicates.
-const searchParams = {
-  // Control fields — outside `filters`
-  query: "conservation research",
-  maxResults: 25,
-
-  // The flat consumer filters object
-  filters: {
-    // Default filters — will land as named top-level fields on the request body
-    status: F.in(["open", "forecasted"]),
-    closeDateRange: F.between("2025-01-01", "2025-12-31"),
-
-    // Pre-registered custom filters — will land in customFilters record
-    agency: F.in(["HHS", "DOE", "NSF"]),
-    fundingProgram: F.like("*Conservation*"),
-
-    // Ad-hoc filter (not registered in the plugin) — flows to customFilters verbatim
-    // (shape-only validated; operator/filterType not enforced for ad-hoc keys)
-    legacyTag: F.eq("conservation-2024"),
-  },
-};
-
-console.log("\n=== Step 2: Consumer filters built ===");
-console.log("Consumer-facing filters (flat):");
-console.log(JSON.stringify(searchParams.filters, null, 2));
-
-// ############################################################################
-// Step 3 — Classify into the ADR-0012 OppFilters request body
-// ############################################################################
-
-// `classifyFilters` runs the three-bucket classification:
-//   1. status, closeDateRange → top-level named request-body fields
-//   2. agency, fundingProgram (registered) → customFilters record
-//   3. legacyTag (ad-hoc) → customFilters passthrough
-// `grantsGovPlugin.routes` is non-null here — we declared it above as a
-// non-optional literal object. The `!` assertion removes the `undefined` from
-// the union type that `Plugin.routes?:` introduces (routes is optional in the
-// interface to support plugins that don't declare filters).
-// `classifyFilters` is fail-fast: an invalid value on any key — standard,
-// registered, or ad-hoc — throws `FilterError` before a request body exists.
-const requestBody = classifyFilters(
-  grantsGovPlugin.routes!,
-  "opportunities",
-  "search",
-  searchParams.filters
-);
-
-console.log("\n=== Step 3: Classified request body (OppFilters) ===");
-console.log(JSON.stringify(requestBody, null, 2));
-
-// ############################################################################
-// Assertions — verify the three-bucket classification
-// ############################################################################
-
-function fail(message: string): never {
-  console.error(`ASSERTION FAILED: ${message}`);
-  process.exit(1);
+function assert(condition: unknown, message: string): asserts condition {
+  if (!condition) {
+    console.error(`ASSERTION FAILED: ${message}`);
+    process.exit(1);
+  }
 }
 
-// Default filters must appear as named top-level fields
-if (!requestBody.status) fail("status should be a top-level field (default filter bucket)");
-if (!requestBody.closeDateRange)
-  fail("closeDateRange should be a top-level field (default filter bucket)");
-
-// Custom + ad-hoc filters must land in customFilters record
-if (!requestBody.customFilters) fail("customFilters should exist for registered + ad-hoc filters");
-if (!requestBody.customFilters.agency)
-  fail("agency should be in customFilters (registered custom filter)");
-if (!requestBody.customFilters.fundingProgram)
-  fail("fundingProgram should be in customFilters (registered custom filter)");
-if (!requestBody.customFilters.legacyTag)
-  fail("legacyTag should be in customFilters (ad-hoc passthrough)");
-
-// Default filter keys must NOT appear under customFilters
-if ((requestBody.customFilters as Record<string, unknown>).status)
-  fail("status must NOT be in customFilters — it is a default filter");
-
-// Fail-fast demo: a wrong value family on a registered filter throws
-// FilterError before any request body is produced.
-try {
-  classifyFilters(grantsGovPlugin.routes!, "opportunities", "search", {
-    agency: { operator: "eq", value: 42 }, // agency is a stringArray filter
-  });
-  fail("expected classifyFilters to throw FilterError for an invalid registered value");
-} catch (e) {
-  if (!(e instanceof FilterError)) throw e;
-  console.log(`\n=== Fail-fast demo ===`);
-  console.log(`FilterError (expected): ${e.message.split("\n")[0]}`);
+/** Collapse a (possibly multi-line) error message to a single readable line. */
+function oneLine(message: string, max = 140): string {
+  const collapsed = message.replace(/\s+/g, " ").trim();
+  return collapsed.length > max ? `${collapsed.slice(0, max)}...` : collapsed;
 }
 
-console.log("\n=== Assertions passed ===");
-console.log("  status        → top-level (default filter bucket)");
-console.log("  closeDateRange → top-level (default filter bucket)");
-console.log("  agency        → customFilters (registered custom filter)");
-console.log("  fundingProgram → customFilters (registered custom filter)");
-console.log("  legacyTag     → customFilters (ad-hoc passthrough)");
-
 // ############################################################################
-// Step 5 — plugin.getClient(): the consumer path
+// Scenario 1 — Happy path (mock server)
 // ############################################################################
 
-// The client is pre-bound to the plugin: responses parse with the plugin's
-// compiled schema by default, and `search({ filters })` types the registered
-// filter names. Against a live API (e.g. `pnpm example:server`), the consumer
-// flow looks like:
-//
-//   const result = await client.opportunities.search({
-//     filters: { agency: F.in(["HHS"]) },
-//   });
-//   for (const opp of result.items) console.log(opp.title);        // valid rows
-//   // ParseFailure rows — err.raw may carry PII; log a redacted projection
-//   for (const err of result.errors) console.log(err.index, err.error.message);
-//
-// (Executed versions live in __tests__/extensions/get-client.spec.ts.)
-const client = grantsGovPlugin.getClient({ baseUrl: "http://localhost:8000" });
+async function happyPath(): Promise<void> {
+  console.log("=== Scenario 1: happy path (mock server) ===");
 
-// Fail-fast without a server: an invalid registered value throws BEFORE any
-// HTTP request is made, so this rejects even though nothing is listening.
-// (Async so this file compiles under CommonJS module settings — no top-level
-// await; the final logs chain off it below so output order matches source order.)
-async function step5FailFastDemo(): Promise<void> {
+  const client = grantsGovPlugin.getClient({ baseUrl: BASE_URL });
+
+  // A flat filters bag mixing all three buckets. The registered `region` key
+  // autocompletes and type-checks its value; `status` is a default field;
+  // `fundingType` is an ad-hoc passthrough.
+  const filters = {
+    status: F.in(["open"]), // default filter -> top-level field
+    region: F.in(["US-CA", "US-NY"]), // registered custom filter -> customFilters
+    fundingType: F.eq("grant"), // ad-hoc, well-formed -> customFilters passthrough
+  };
+
   try {
-    await client.opportunities.search({
-      // Wrong value family for a stringArray filter — also a compile error;
-      // the cast simulates a plain-JS caller hitting the runtime backstop.
-      filters: { agency: { operator: "eq", value: 42 } } as never,
-    });
-    fail("expected search() to reject with FilterError before any request");
+    const result = await client.opportunities.search({ filters });
+
+    console.log(`  items returned: ${result.items.length}`);
+    console.log(`  per-row parse failures: ${result.errors.length}`);
+    if (result.items[0]) {
+      // The plugin schema is bound by default, so customFields are typed without
+      // passing a per-call schema.
+      const programCode = result.items[0].customFields?.programCode?.value;
+      console.log(`  first opportunity: ${result.items[0].title}`);
+      console.log(`  first programCode custom field: ${programCode ?? "(none)"}`);
+    }
+    // The mock server echoes the received filters, so we can confirm the
+    // registered (region) and ad-hoc (fundingType) filters reached the wire.
+    console.log(`  filters received by server: ${JSON.stringify(result.filterInfo?.filters)}`);
   } catch (e) {
-    if (!(e instanceof FilterError)) throw e;
-    console.log("\n=== Step 5: getClient fail-fast demo ===");
-    console.log(`search() rejected before any request (expected): ${e.message.split("\n")[0]}`);
-    console.log("\n✓ getClient consumer path complete");
+    // A missing server should not fail the example; the offline scenarios below
+    // assert behavior deterministically without a server.
+    console.log(`  (skipped: could not reach ${BASE_URL}; run \`pnpm example:server\` first)`);
+    console.log(`   ${(e as Error).message}`);
   }
 }
 
 // ############################################################################
-// Step 6 — The `as const` widening trap (comment block — not executed)
+// Scenario 2 — Authoring error (definePlugin rejects a bad registration)
 // ############################################################################
 
-// If you forget `as const` on the definePlugin call, TypeScript widens the
-// `filterType` values from literal strings to the broad `string` type. The
-// TypedConsumerFilters narrowing layer then cannot distinguish filter keys or
-// validate operator/value shapes at the call site — unknown keys and wrong
-// value types silently pass the type checker.
-//
-// The compile-time narrowing assertions (the errors that fire WITH `as const`)
-// live in: lib/ts-sdk/__tests__/extensions/custom-filters-types.ts
-//
-// Example of what NOT to do:
-//
-//   const badPlugin = definePlugin({
-//     routes: {
-//       opportunities: {
-//         search: { filters: { agency: { filterType: "stringArray" } } },
-//       },
-//     },
-//   }); // ← MISSING `as const`
-//
-//   // When `badPlugin` is stored as `Plugin` (no TRoutes generic),
-//   // or when `as const` is omitted and the function's const-generic cannot
-//   // infer the literal, the typed guard collapses and the following would NOT
-//   // be caught at compile time:
-//   //   badPlugin.routes?.opportunities?.search?.filters  // type: Record<string, CustomFilterSpec>
-//   //   // → literal filterTypes are lost, so per-key narrowing is impossible
-//   //   // → unknown keys, wrong operators, and wrong value shapes silently accepted
+function authoringErrors(): void {
+  console.log("\n=== Scenario 2: authoring errors (definePlugin) ===");
 
-// Chained after Step 5 settles: the completion banner provably prints last.
-void step5FailFastDemo().then(() => {
+  // 2a. A custom filter named after a default field (`status`) is rejected:
+  // it would otherwise shadow the default bucket at classification time.
+  try {
+    definePlugin({
+      routes: {
+        opportunities: { search: { filters: { status: { filterType: "stringArray" } } } },
+      },
+    } as const);
+    assert(false, "expected definePlugin to reject a default-name collision");
+  } catch (e) {
+    if (!(e instanceof FilterError)) throw e;
+    console.log(`  default-name collision rejected: ${oneLine(e.message)}`);
+  }
+
+  // 2b. An unknown filterType is rejected. A typed author gets a compile error
+  // here; the cast simulates a plain-JS author hitting the runtime backstop.
+  try {
+    definePlugin({
+      routes: {
+        opportunities: {
+          search: { filters: { region: { filterType: "strin" as never } } },
+        },
+      },
+    } as const);
+    assert(false, "expected definePlugin to reject an unknown filterType");
+  } catch (e) {
+    if (!(e instanceof FilterError)) throw e;
+    console.log(`  unknown filterType rejected: ${oneLine(e.message)}`);
+  }
+
+  // 2c. A misspelled resource name. Route keys are a closed union, so this is a
+  // compile error (the `@ts-expect-error` below proves the type checker flags
+  // it); an untyped caller hits the runtime backstop and throws the same way.
+  try {
+    definePlugin({
+      routes: {
+        // @ts-expect-error - "opportunties" is not a known resource name
+        opportunties: { search: { filters: { region: { filterType: "stringArray" } } } },
+      },
+    } as const);
+    assert(false, "expected definePlugin to reject a misspelled resource");
+  } catch (e) {
+    if (!(e instanceof FilterError)) throw e;
+    console.log(`  misspelled resource rejected: ${oneLine(e.message)}`);
+  }
+
+  // 2d. A misspelled method name is caught the same way: a compile error, with
+  // a runtime backstop for untyped callers.
+  try {
+    definePlugin({
+      routes: {
+        opportunities: {
+          // @ts-expect-error - "serach" is not a known route method
+          serach: { filters: { region: { filterType: "stringArray" } } },
+        },
+      },
+    } as const);
+    assert(false, "expected definePlugin to reject a misspelled method");
+  } catch (e) {
+    if (!(e instanceof FilterError)) throw e;
+    console.log(`  misspelled method rejected: ${oneLine(e.message)}`);
+  }
+}
+
+// ############################################################################
+// Scenario 3 — Consumer error (search rejects a bad value before any request)
+// ############################################################################
+
+async function consumerErrors(): Promise<void> {
+  console.log("\n=== Scenario 3: consumer errors (search, no request sent) ===");
+
+  const client = grantsGovPlugin.getClient({ baseUrl: BASE_URL });
+
+  // 3a. A registered filter with the wrong value family. `region` is a
+  // stringArray, so `F.eq()` (a scalar) is a compile error; the cast simulates
+  // a plain-JS caller hitting the runtime backstop.
+  try {
+    await client.opportunities.search({
+      filters: { region: F.eq("US-CA") } as never,
+    });
+    assert(false, "expected a FilterError for a wrong registered value family");
+  } catch (e) {
+    if (!(e instanceof FilterError)) throw e;
+    console.log(`  registered wrong value family rejected: ${oneLine(e.message)}`);
+  }
+
+  // 3b. An ad-hoc filter with an incoherent operator/value pair. `in` requires
+  // an array value; a scalar is rejected. Ad-hoc keys are accepted at the type
+  // level (they support arbitrary escape-hatch filters), so this is caught at
+  // runtime rather than compile time.
+  try {
+    await client.opportunities.search({
+      filters: { fundingType: { operator: "in", value: "grant" } },
+    });
+    assert(false, "expected a FilterError for an ad-hoc operator/value mismatch");
+  } catch (e) {
+    if (!(e instanceof FilterError)) throw e;
+    console.log(`  ad-hoc operator/value mismatch rejected: ${oneLine(e.message)}`);
+  }
+}
+
+// ############################################################################
+// Run all scenarios in source order
+// ############################################################################
+
+async function main(): Promise<void> {
+  await happyPath();
+  authoringErrors();
+  await consumerErrors();
   console.log("\n✓ custom-filters example complete");
-  console.log(
-    "  See __tests__/extensions/custom-filters-types.ts for compile-time narrowing proof"
-  );
-});
+}
+
+void main();
