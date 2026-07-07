@@ -17,7 +17,8 @@ import os
 import sys
 from typing import Any
 
-from cg_grants_gov import GrantsGovOpportunitySchema, grants_gov
+from cg_grants_gov import grants_gov
+from cg_grants_gov.models import GrantsGovOpportunitySchema
 
 
 from common_grants_sdk.client import Client
