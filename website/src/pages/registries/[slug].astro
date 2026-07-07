@@ -1,0 +1,34 @@
+---
+import { loadAllRegistries, getRegistrySlugs } from "@/lib/registries";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import RegistryDetails from "@/components/registries/RegistryDetails.astro";
+import type { GetStaticPaths } from "astro";
+
+export interface Props {
+  code: string;
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  return getRegistrySlugs().map(({ code, slug }) => ({
+    params: { slug },
+    props: { code },
+  }));
+};
+
+const { code } = Astro.props;
+const registry = loadAllRegistries()[code];
+
+if (!registry) {
+  throw new Error(`Registry "${code}" not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: registry.name,
+    description: registry.description,
+    tableOfContents: false,
+  }}
+>
+  <RegistryDetails registry={registry} />
+</StarlightPage>
