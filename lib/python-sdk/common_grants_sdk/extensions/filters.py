@@ -297,9 +297,10 @@ def _registered_filter_models(route_td: Any) -> dict[str, type[BaseModel]]:
     ``route_td`` is the TypedDict class an author put in the route slot (e.g.
     ``OppSearchFilters``), or ``None``. Returns ``{filterName: value model}`` for
     every key the author declared beyond the standard ``OpportunityFilters`` keys.
-    Non-model annotations are skipped here; ``validate_routes`` (run at ``Client``
-    construction) rejects them, so a caller who invokes ``classify_filters`` directly
-    on unvalidated routes gets silent skipping rather than a raise.
+    Non-model annotations are skipped here; ``validate_routes`` (run when
+    ``plugin.get_client`` binds routes) rejects them, so a caller who invokes
+    ``classify_filters`` directly on unvalidated routes gets silent skipping rather
+    than a raise.
     """
     if route_td is None:
         return {}

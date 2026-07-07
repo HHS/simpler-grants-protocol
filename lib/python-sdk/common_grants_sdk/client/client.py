@@ -1,11 +1,12 @@
 """HTTP client for the CommonGrants API.
 
 ``BaseClient`` is the transport plumbing (auth headers, paginated GET/POST). The
-generic ``Client`` layers the typed resource facade on top: it binds a plugin's
-route filters (``FiltersT``) and Opportunity schema (``ItemT``) so
+generic ``Client`` layers the typed resource facade on top. Scope it to a plugin
+with ``plugin.get_client(...)``: that binds the plugin's route filters
+(``FiltersT``) and Opportunity schema (``ItemT``) so
 ``client.opportunities.search(filters=...)`` is typed and responses parse with the
-plugin's custom fields by default. Construct one directly, or via
-``plugin.get_client(...)``.
+plugin's custom fields by default. Constructing ``Client`` directly gives an
+unscoped client (standard filters only, base ``OpportunityBase`` rows).
 """
 
 from __future__ import annotations
