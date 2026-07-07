@@ -215,6 +215,22 @@ export function validateRoutes(routes: PluginRoutes): void {
   }
 }
 
+/** The value shape each operator expects, used to explain an ad-hoc mismatch. */
+const AD_HOC_VALUE_EXPECTATION: Record<string, string> = {
+  eq: "a scalar value",
+  neq: "a scalar value",
+  gt: "a scalar value",
+  gte: "a scalar value",
+  lt: "a scalar value",
+  lte: "a scalar value",
+  in: "an array value",
+  notIn: "an array value",
+  like: "a string value",
+  notLike: "a string value",
+  between: "a { min, max } object",
+  outside: "a { min, max } object",
+};
+
 // ############################################################################
 // Public — validateFilterCall (call-time validation)
 // ############################################################################
@@ -225,8 +241,10 @@ export function validateRoutes(routes: PluginRoutes): void {
  * - For REGISTERED filters (spec provided): validates the `{operator, value}`
  *   pair against the filterType's Zod schema — each schema constrains both the
  *   allowed operator enum and the value shape, so one parse covers both checks.
- * - For AD-HOC filters (spec is undefined): shape-only check against
- *   `DefaultFilterSchema` (no operator/filterType enforcement — accepted trade-off).
+ * - For AD-HOC filters (spec is undefined): the `{operator, value}` pair must be
+ *   well-formed for some known filterType (checked against `FILTER_TYPE_SCHEMAS`,
+ *   the same map registered filters use). The element type is not pinned to one
+ *   type, since ad-hoc filters carry no `filterType`.
  *
  * Fail-soft: returns a `FilterError` describing the problem, or `undefined`
  * when the value is valid. The caller (`classifyFilters`) throws returned
@@ -245,11 +263,27 @@ export function validateFilterCall(
   const path = `filters.${filterName}`;
 
   if (spec === undefined) {
-    // Ad-hoc filter — shape-only check against DefaultFilterSchema
-    const result = DefaultFilterSchema.safeParse(filterValue);
-    if (!result.success) {
+    // Ad-hoc filter — no declared filterType, so accept it when its
+    // {operator, value} is well-formed for SOME known filterType. This reuses
+    // FILTER_TYPE_SCHEMAS (the single source of truth) rather than a parallel
+    // schema, and picks up new filter types automatically.
+    const matchesKnownType = Object.values(FILTER_TYPE_SCHEMAS).some(
+      schema => schema.safeParse(filterValue).success
+    );
+    if (!matchesKnownType) {
+      // Derive a targeted message from the operator rather than surfacing the
+      // combined Zod error across every candidate schema.
+      const operator = (filterValue as { operator?: unknown } | null)?.operator;
+      let detail: string;
+      if (typeof operator !== "string") {
+        detail = "expected a { operator, value } object";
+      } else if (!(operator in AD_HOC_VALUE_EXPECTATION)) {
+        detail = `operator "${operator}" is not a known filter operator`;
+      } else {
+        detail = `operator "${operator}" expects ${AD_HOC_VALUE_EXPECTATION[operator]}`;
+      }
       return new FilterError(
-        `Ad-hoc filter "${filterName}" has an invalid shape: ${result.error.message}`,
+        `Ad-hoc filter "${filterName}" has an invalid operator/value combination: ${detail}`,
         { path, sourceValue: filterValue }
       );
     }
