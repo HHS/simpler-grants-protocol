@@ -3,6 +3,8 @@ title: Community Stewardship Group
 description: The organizations participating in the CommonGrants Community Stewardship Group.
 ---
 
+import { LinkCard } from "@astrojs/starlight/components";
+
 The Community Stewardship Group brings together organizations from across the grants ecosystem who are helping shape the future of CommonGrants. These are partners collaborating with us on the protocol, its tooling, and the path toward community governance.
 
 We are grateful to everyone building this in the open with us, and the group continues to grow. Interested in getting involved? You can [vote on priorities](https://commongrants.fider.io) on our co-planning board or [get in touch](https://forms.gle/XUJuEnNtaZkdc1MQ6).
@@ -84,15 +86,23 @@ We are grateful to everyone building this in the open with us, and the group con
   >
     <img src="/community-logos/temelio.svg" alt="Temelio" />
   </a>
+  <div class="csg-cta">
+    <LinkCard
+      title="Want to see your organization here?"
+      href="https://forms.gle/XUJuEnNtaZkdc1MQ6"
+      description="Get in touch to join the Community Stewardship Group."
+    />
+  </div>
 </div>
 
-[360Giving](https://www.360giving.org) is also part of the Community Stewardship Group.
+{/* prettier-ignore */}
+<p><a href="https://www.360giving.org" target="_blank" rel="noopener">360Giving</a> is also part of the Community Stewardship Group.</p>
 
 <style>
   {`
 .csg-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-top: 1.5rem;
 }
@@ -125,6 +135,13 @@ We are grateful to everyone building this in the open with us, and the group con
 }
 .csg-card img.csg-emblem {
   max-height: 92px;
+}
+.csg-cta {
+  grid-column: span 2;
+  display: flex;
+}
+.csg-cta > * {
+  width: 100%;
 }
 .csg-name {
   font-weight: 600;
