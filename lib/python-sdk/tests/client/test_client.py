@@ -42,27 +42,40 @@ class TestClient:
             assert client.auth == auth
             assert isinstance(client.opportunities, type(client.opportunities))
 
-    def test_get_client_validates_routes(self):
-        """get_client validates routes when binding and raises on a bad declaration.
+    def test_define_plugin_validates_routes(self):
+        """define_plugin validates routes at definition, so a bad registration
+        fails for the author before a consumer ever builds a client.
 
         The typed carrier makes a misspelled resource/method a static error, so the
-        only remaining runtime check is that a registered custom filter's value type
-        is a filter value model. A TypedDict whose custom key is annotated with a
-        non-model type (``region: int``) is the genuinely-invalid registration.
+        remaining runtime check is that a registered custom filter's value type is a
+        valid filter model. A custom key annotated with a non-filter type
+        (``region: int``) is the genuinely-invalid registration.
         """
+
+        class BadFilters(OpportunityFilters, total=False):
+            region: int  # not a filter value model
+
+        with pytest.raises(FilterError):
+            define_plugin(
+                PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
+                routes=PluginRoutes(opportunities=ResourceRoutes(search=BadFilters)),
+                meta=PluginMeta(name="t", source_system="t"),
+            )
+
+    def test_bind_routes_backstops_bad_routes(self):
+        """_bind_routes re-validates as a backstop for hand-built clients that
+        bypass define_plugin's definition-time check."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
 
             class BadFilters(OpportunityFilters, total=False):
                 region: int  # not a filter value model
 
-            plugin = define_plugin(
-                PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
-                routes=PluginRoutes(opportunities=ResourceRoutes(search=BadFilters)),
-                meta=PluginMeta(name="t", source_system="t"),
-            )
+            client = Client(config=config)
             with pytest.raises(FilterError):
-                plugin.get_client(config)
+                client._bind_routes(
+                    PluginRoutes(opportunities=ResourceRoutes(search=BadFilters))
+                )
 
     def test_get_client_accepts_valid_routes(self):
         """A valid typed routes carrier binds through get_client (no raise)."""
