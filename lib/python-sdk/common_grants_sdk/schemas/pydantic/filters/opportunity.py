@@ -8,6 +8,7 @@ from ..base import CommonGrantsBaseModel
 from .base import DefaultFilter
 from .boolean import BooleanComparisonFilter
 from .date import DateComparisonFilter, DateRangeFilter
+from .integer import IntegerComparisonFilter
 from .money import MoneyComparisonFilter, MoneyRangeFilter
 from .numeric import NumberArrayFilter, NumberComparisonFilter
 from .string import StringArrayFilter, StringComparisonFilter
@@ -20,6 +21,7 @@ StringArray = StringArrayFilter
 StringComparison = StringComparisonFilter
 NumberArray = NumberArrayFilter
 NumberComparison = NumberComparisonFilter
+IntegerComparison = IntegerComparisonFilter
 DateComparison = DateComparisonFilter
 MoneyComparison = MoneyComparisonFilter
 BooleanComparison = BooleanComparisonFilter
