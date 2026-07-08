@@ -408,8 +408,8 @@ def validate_routes(routes: PluginRoutes[Any]) -> None:
                 if not _is_filter_model(ann):
                     raise FilterError(
                         f'Registered filter "{name}" on '
-                        f"{resource_field.name}.{method_field.name} must be a known "
-                        "filter value model (e.g. StringArray, NumberComparison)",
+                        f"{resource_field.name}.{method_field.name} must be a valid "
+                        "filter model (e.g. StringArray, NumberComparison)",
                         path=f"{path_prefix}.{name}",
                         source_value=ann,
                     )
