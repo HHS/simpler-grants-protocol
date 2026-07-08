@@ -1,133 +1,210 @@
 #!/usr/bin/env python3
-"""Custom filters example — codegen-free request-body demo.
+"""Custom filters — the plugin author and consumer experience, end to end.
 
-Demonstrates typed route registration, flat call-site classification, and the
-three-bucket ``OppFilters`` request body (default named fields + customFilters
-record) using the grants.gov canonical example from #646/#869.
+Three scenarios, each in its own function:
 
-No code generation (custom filters are a pure-runtime classifier). Routes are a
-typed ``PluginRoutes`` carrier — the author extends ``OpportunityFilters`` with
-one typed key per custom filter, so ``classify_filters`` recovers each key's
-value model from the TypedDict.
+  1. Happy path (mock server): define a plugin with a custom field and a
+     registered custom filter, build a client with plugin.get_client(), and search
+     with a mix of standard, registered, and ad-hoc filters.
+  2. Authoring errors: define_plugin rejects a filter registered with a type that
+     is not a filter, and a misspelled resource or method is caught when the route
+     carrier is built.
+  3. Consumer errors: search rejects a bad filter value before any request is sent
+     — the wrong kind of value for a registered filter, and an ad-hoc value that
+     does not fit its operator.
 
-Run (from lib/python-sdk/):
+Some of these mistakes are also flagged by your IDE (pyright). The lines marked
+``# type: ignore`` are the ones the type checker flags; the example suppresses the
+type error only so it can also show the runtime guard firing on the same mistake.
+examples/typed_custom_filters_failures.py asserts the type errors on their own —
+run pyright against that file to see them fire.
+
+Scenario 1 talks to the mock server. Start it first in another terminal:
+
+    poetry run python examples/mock_api_server.py
+
+If it is not running, scenario 1 is skipped and the two offline scenarios still
+run:
+
     poetry run python examples/custom_filters.py
+
+Filter buckets (ADR-0012):
+  - Standard filters (status, closeDateRange, ...) become named top-level fields.
+  - Registered custom filters (region) go under customFilters, validated against
+    the type the plugin declared for them.
+  - Ad-hoc filters (any other key) go under customFilters, validated against the
+    filter models the SDK knows.
 """
 
 from __future__ import annotations
 
 import json
+from typing import Optional
 
+import httpx
+from pydantic import Field
+
+from common_grants_sdk.client import Config
+from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.extensions import (
+    CustomField,
+    CustomFieldSet,
     FilterError,
+    PluginMeta,
     PluginRoutes,
+    PluginSchemas,
     ResourceRoutes,
-    classify_filters,
+    define_plugin,
     f,
+    schema,
 )
-from common_grants_sdk.extensions.types import PluginMeta
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     OpportunityFilters,
     StringArray,
-    StringComparison,
 )
+from common_grants_sdk.schemas.pydantic.models import OpportunityBase
 
-# ---------------------------------------------------------------------------
-# Typed route registration + plugin metadata
-# ---------------------------------------------------------------------------
+BASE_URL = "http://localhost:8000"
 
-meta = PluginMeta(
-    name="grants-gov",
-    version="0.1.0",
-    source_system="grants.gov",
-    capabilities=["customFilters"],
-)
+
+class OppCustomFields(CustomFieldSet):
+    """Custom fields the plugin adds to every opportunity it returns."""
+
+    program_code: Optional[CustomField[str]] = Field(
+        default=None, description="Funding program code carried from the source system."
+    )
 
 
 class OppSearchFilters(OpportunityFilters, total=False):
-    """The custom filters this plugin accepts on opportunities.search.
+    """The custom filters this plugin registers on opportunities.search."""
 
-    Each key's annotation *is* its Pydantic value model, so the call-site value
-    validates against it and the classifier recovers it from the TypedDict.
-    """
-
-    agency: StringArray
-    fundingProgram: StringComparison
+    region: StringArray
 
 
-routes: PluginRoutes[OppSearchFilters] = PluginRoutes(
-    opportunities=ResourceRoutes(search=OppSearchFilters)
+opportunity_plugin = define_plugin(
+    PluginSchemas(Opportunity=schema(common_schema=OpportunityBase[OppCustomFields])),
+    routes=PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters)),
+    meta=PluginMeta(name="grants-gov", source_system="grants.gov"),
 )
 
 
-def _section(title: str) -> None:
-    print(f"\n{'=' * 60}")
-    print(title)
-    print("=" * 60)
+# ---------------------------------------------------------------------------
+# Scenario 1 — happy path (mock server)
+# ---------------------------------------------------------------------------
+
+
+def happy_path() -> None:
+    print("=== Scenario 1: happy path (mock server) ===")
+    client = opportunity_plugin.get_client(Config(base_url=BASE_URL, api_key="unused"))
+
+    # One flat filter dict mixing all three buckets: "status" is a standard
+    # filter, "region" is the registered custom filter, and "fundingType" is an
+    # ad-hoc filter the plugin did not register.
+    filters: OppSearchFilters = {
+        "status": f.in_(["open"]),
+        "region": f.in_(["US-CA", "US-NY"]),
+        "fundingType": f.eq("grant"),
+    }
+
+    try:
+        result = client.opportunities.search(filters=filters)
+    except (APIError, httpx.HTTPError):
+        print(
+            f"  (skipped: could not reach {BASE_URL}; start it with "
+            "`poetry run python examples/mock_api_server.py`)"
+        )
+        return
+
+    print(f"  items returned: {len(result.items)}")
+    print(f"  per-row parse failures: {len(result.errors)}")
+    if result.items:
+        opp = result.items[0]
+        program_code = None
+        if opp.custom_fields is not None and opp.custom_fields.program_code is not None:
+            program_code = opp.custom_fields.program_code.value
+        print(f"  first opportunity: {opp.title}")
+        print(f"  first program code: {program_code or '(none)'}")
+    # The client reports the filters it classified and sent, so all three buckets
+    # are visible: status at the top level, region and fundingType under
+    # customFilters.
+    print(f"  filters sent to the server: {json.dumps(result.filter_info.filters)}")
+
+
+# ---------------------------------------------------------------------------
+# Scenario 2 — authoring errors (define_plugin / the route carrier)
+# ---------------------------------------------------------------------------
+
+
+def authoring_errors() -> None:
+    print("\n=== Scenario 2: authoring errors ===")
+
+    # A filter registered with a type that is not a filter is rejected when the
+    # plugin author defines the plugin, rather than later when a consumer builds a
+    # client.
+    class BadRegionFilters(OpportunityFilters, total=False):
+        region: int  # not a filter value model
+
+    try:
+        define_plugin(
+            PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
+            routes=PluginRoutes(opportunities=ResourceRoutes(search=BadRegionFilters)),
+            meta=PluginMeta(name="grants-gov", source_system="grants.gov"),
+        )
+        raise AssertionError("expected define_plugin to reject a non-filter type")
+    except FilterError as e:
+        print(f"  non-filter registration rejected: {e.path} - {e}")
+
+    # A misspelled resource. PluginRoutes has no "opportunites" field, so your IDE
+    # flags the line below, and the typed carrier rejects it at runtime too.
+    try:
+        PluginRoutes(opportunites=ResourceRoutes(search=OppSearchFilters))  # type: ignore
+        raise AssertionError("expected a misspelled resource to be rejected")
+    except TypeError as e:
+        print(f"  misspelled resource rejected: {e}")
+
+    # A misspelled method. ResourceRoutes has no "serach" field — flagged by your
+    # IDE, rejected at runtime.
+    try:
+        ResourceRoutes(serach=OppSearchFilters)  # type: ignore
+        raise AssertionError("expected a misspelled method to be rejected")
+    except TypeError as e:
+        print(f"  misspelled method rejected: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Scenario 3 — consumer errors (search rejects a bad value before any request)
+# ---------------------------------------------------------------------------
+
+
+def consumer_errors() -> None:
+    print("\n=== Scenario 3: consumer errors (search, no request sent) ===")
+    client = opportunity_plugin.get_client(Config(base_url=BASE_URL, api_key="unused"))
+
+    # A registered filter given the wrong kind of value. "region" is a string
+    # array filter, so f.eq (a scalar comparison) is flagged by your IDE; the
+    # runtime guard rejects it before any request too.
+    try:
+        client.opportunities.search(filters={"region": f.eq("US-CA")})  # type: ignore
+        raise AssertionError("expected a FilterError for a wrong region value")
+    except FilterError as e:
+        print(f"  registered filter, wrong kind of value: {e.path} - {e}")
+
+    # An ad-hoc filter whose value does not fit its operator. "in" expects a list,
+    # so the plain string is flagged by your IDE and rejected at runtime.
+    try:
+        client.opportunities.search(
+            filters={"fundingType": {"operator": "in", "value": "grant"}}  # type: ignore
+        )
+        raise AssertionError("expected a FilterError for an ad-hoc value mismatch")
+    except FilterError as e:
+        print(f"  ad-hoc filter, value does not fit operator: {e.path} - {e}")
 
 
 def main() -> None:
-    # --- Declared routes ---
-    _section("PLUGIN ROUTES (declared)")
-    print("  opportunities.search custom filters:")
-    print("    agency: StringArray")
-    print("    fundingProgram: StringComparison — Program name filter")
-
-    # --- Classify: default + registered custom + ad-hoc ---
-    _section("CLASSIFY FILTERS — default + custom + ad-hoc (canonical grants.gov demo)")
-
-    # Mixing three kinds of filters in a single flat dict:
-    #   "status"            — default core filter (snake_case key, no alias)
-    #   "close_date_range"  — default core filter, snake_case key for an ALIASED field:
-    #                         the classifier must normalize it to "closeDateRange"
-    #                         (an unnormalized snake key is silently dropped —
-    #                         the alias landmine)
-    #   "agency"         — registered custom filter (opportunities.search.agency)
-    #   "fundingProgram" — registered custom filter (opportunities.search.fundingProgram)
-    #   "legacyTag"      — ad-hoc passthrough (not registered, not a core default)
-    consumer_filters = {
-        "status": f.in_(["open", "forecasted"]),
-        "close_date_range": f.between("2026-01-01", "2026-12-31"),
-        "agency": f.in_(["NSF", "NIH"]),
-        "fundingProgram": f.eq("research-grants"),
-        "legacyTag": f.eq("priority"),
-    }
-
-    request_body = classify_filters(routes, "opportunities", "search", consumer_filters)
-
-    print("\nRequest body (by_alias=True, exclude_none=True, mode='json'):")
-    print(
-        json.dumps(
-            request_body.model_dump(by_alias=True, exclude_none=True, mode="json"),
-            indent=2,
-        )
-    )
-
-    # --- Validation — an invalid filter raises before a request body is built ---
-    _section("VALIDATION — an invalid filter raises before a request is built")
-
-    # classify_filters validates every filter and raises FilterError on the first
-    # invalid one, so it never produces a partial request body. Here "agency" is
-    # registered as a StringArray, which expects an array operator (in or notIn), so
-    # passing f.eq(...) does not fit it. The error names the filter that failed and
-    # carries the underlying pydantic error for programmatic handling.
-    bad_filters = {
-        "agency": f.eq("an equivalence operator does not fit an array filter"),
-        "legacyTag": f.eq("priority"),
-    }
-    try:
-        classify_filters(routes, "opportunities", "search", bad_filters)
-    except FilterError as err:
-        print(f"FilterError raised: {err}")
-        print(f"  path:  {err.path}")
-        print(f"  cause: {type(err.cause).__name__}")
-
-    # --- Plugin metadata ---
-    _section("PLUGIN METADATA")
-    print(f"name:         {meta.name}")
-    print(f"version:      {meta.version}")
-    print(f"sourceSystem: {meta.source_system}")
-    print(f"capabilities: {meta.capabilities}")
+    happy_path()
+    authoring_errors()
+    consumer_errors()
+    print("\n✓ custom filters example complete")
 
 
 if __name__ == "__main__":
