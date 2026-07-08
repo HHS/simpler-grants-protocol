@@ -66,14 +66,13 @@ def main() -> None:
     # The request body the client will POST. Shown here (via classify_filters,
     # which get_client runs internally) so the customFilters split is visible
     # without a live endpoint: status stays top-level, the four customs land in
-    # customFilters.
-    classified = classify_filters(grants_gov.routes, "opportunities", "search", filters)
-    body = classified.result.model_dump(by_alias=True, exclude_none=True, mode="json")
+    # customFilters. classify_filters returns the body directly and raises
+    # FilterError on a bad value (fail-fast) — these filters are all valid.
+    body = classify_filters(grants_gov.routes, "opportunities", "search", filters).model_dump(
+        by_alias=True, exclude_none=True, mode="json"
+    )
     print("Request body (default fields + customFilters):")
     print(json.dumps(body, indent=2), "\n")
-    if classified.errors:
-        print(f"  FAIL  filter validation: {classified.errors}", file=sys.stderr)
-        sys.exit(1)
 
     # get_client binds the plugin's routes + schemas: search(filters=...) is typed
     # by the registered filters and rows parse as grants.gov opportunities.
