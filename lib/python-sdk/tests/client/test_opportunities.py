@@ -949,32 +949,25 @@ class TestOpportunitySearch:
         assert exc_info.value.path == "filters.status"
         mock_httpx_client.post.assert_not_called()
 
-    def test_search_invalid_adhoc_filter_passes_through_no_raise(
-        self, client, mock_httpx_client, sample_search_response
-    ):
-        """A malformed ad-hoc (unregistered) filter is best-effort, not fatal (AC6).
+    def test_search_invalid_adhoc_filter_raises(self, client, mock_httpx_client):
+        """An invalid ad-hoc (unregistered) filter raises FilterError before any request.
 
-        Ad-hoc keys live in the untyped escape hatch: an unusable value is dropped
-        rather than raised (only standard/registered filters raise). Results return.
+        Ad-hoc keys are validated against the valid filter models, so a value that
+        does not fit its operator (here "in" with a plain string instead of a list)
+        raises rather than being sent to the server. Silently dropping it would
+        widen the consumer's search without telling them.
         """
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.text = json.dumps(sample_search_response)
-        mock_response.json = Mock(return_value=sample_search_response)
-        mock_response.raise_for_status = Mock()
-        mock_httpx_client.post = Mock(return_value=mock_response)
+        mock_httpx_client.post = Mock()
 
-        # No routes: "legacyTag" is neither standard nor registered -> ad-hoc.
-        response = client.opportunities.search(
-            search="conservation",
-            filters={"legacyTag": "not-a-filter"},
-        )
+        # No routes: "legacyTag" is neither standard nor registered, so it is ad-hoc.
+        with pytest.raises(FilterError):
+            client.opportunities.search(
+                search="conservation",
+                filters={"legacyTag": {"operator": "in", "value": "NSF"}},
+            )
 
-        assert isinstance(response, SearchResult)
-        assert len(response.items) == 2
-        # Dropped from the sent body (never reached the wire).
-        sent_body = mock_httpx_client.post.call_args[1]["json"]
-        assert "legacyTag" not in sent_body.get("filters", {}).get("customFilters", {})
+        # The request is never sent.
+        mock_httpx_client.post.assert_not_called()
 
     def test_search_filter_info_errors_are_server_only(
         self, mock_httpx_client, sample_search_response
