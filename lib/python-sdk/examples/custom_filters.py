@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 
 from common_grants_sdk.extensions import (
+    FilterError,
     PluginRoutes,
     ResourceRoutes,
     classify_filters,
@@ -92,47 +93,34 @@ def main() -> None:
         "legacyTag": f.eq("priority"),
     }
 
-    classified = classify_filters(routes, "opportunities", "search", consumer_filters)
+    request_body = classify_filters(routes, "opportunities", "search", consumer_filters)
 
     print("\nRequest body (by_alias=True, exclude_none=True, mode='json'):")
     print(
         json.dumps(
-            classified.result.model_dump(by_alias=True, exclude_none=True, mode="json"),
+            request_body.model_dump(by_alias=True, exclude_none=True, mode="json"),
             indent=2,
         )
     )
 
-    # --- FilterError demo — bad call is fail-soft (collected, not raised) ---
-    _section("VALIDATION — bad operator collected, valid filters still applied")
+    # --- Validation — an invalid filter raises before a request body is built ---
+    _section("VALIDATION — an invalid filter raises before a request is built")
 
-    # agency is registered as StringArray (expects ArrayOperator: in/notIn).
-    # Passing f.eq(...) (EquivalenceOperator.EQUAL) fails call-time validation.
-    # Fail-soft: classify_filters never raises on a bad
-    # filter value — the bad key is dropped from the result body and a FilterError
-    # is collected on .errors. A valid sibling filter still classifies normally.
+    # classify_filters validates every filter and raises FilterError on the first
+    # invalid one, so it never produces a partial request body. Here "agency" is
+    # registered as a StringArray, which expects an array operator (in or notIn), so
+    # passing f.eq(...) does not fit it. The error names the filter that failed and
+    # carries the underlying pydantic error for programmatic handling.
     bad_filters = {
-        "agency": f.eq(
-            "wrong-operator-for-array-type"
-        ),  # eq is not a valid StringArray op
-        "legacyTag": f.eq("priority"),  # valid ad-hoc filter — survives
+        "agency": f.eq("an equivalence operator does not fit an array filter"),
+        "legacyTag": f.eq("priority"),
     }
-    classified_bad = classify_filters(routes, "opportunities", "search", bad_filters)
-    for err in classified_bad.errors:
-        # str(err) summarizes the first failure; the structured fields carry
-        # the full detail — err.path names the failing filter, err.cause is
-        # the underlying pydantic ValidationError for programmatic access.
-        print(f"FilterError collected: {err}")
+    try:
+        classify_filters(routes, "opportunities", "search", bad_filters)
+    except FilterError as err:
+        print(f"FilterError raised: {err}")
         print(f"  path:  {err.path}")
         print(f"  cause: {type(err.cause).__name__}")
-    # The valid filter still made it into the request body.
-    print(
-        "\nValid-only request body: "
-        + json.dumps(
-            classified_bad.result.model_dump(
-                by_alias=True, exclude_none=True, mode="json"
-            )
-        )
-    )
 
     # --- Plugin metadata ---
     _section("PLUGIN METADATA")
