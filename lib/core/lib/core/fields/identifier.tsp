@@ -85,13 +85,13 @@ model Identifier is IdentifierT<string, string>;
 model SystemId is IdentifierT<Types.uuid>;
 
 // #########################################################
-// Identifiers
+// Identifier Collection
 // #########################################################
 
 /** A collection of identifiers associated with a record. */
 @example(Examples.Identifier.collection)
 @Versioning.added(CommonGrants.Versions.v0_4)
-model Identifiers {
+model IdentifierCollection {
   /** The hosting system's own identifier for this record. */
   systemId?: SystemId;
 
