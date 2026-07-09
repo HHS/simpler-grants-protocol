@@ -16,8 +16,12 @@ namespace QuestionBank.FiscalSponsorDetails;
   "x-mapping-from-cg",
   #{
     name: #{ field: "organizations.otherOrgs.fiscalSponsor.name" },
-    ein: #{ field: "organizations.otherOrgs.fiscalSponsor.ein" },
-    uei: #{ field: "organizations.otherOrgs.fiscalSponsor.uei" },
+    ein: #{
+      field: "organizations.otherOrgs.fiscalSponsor.identifiers.org:us:ein.id",
+    },
+    uei: #{
+      field: "organizations.otherOrgs.fiscalSponsor.identifiers.org:us:uei.id",
+    },
     address: #{
       street1: #{
         field: "organizations.otherOrgs.fiscalSponsor.addresses.primary.street1",
@@ -62,8 +66,10 @@ namespace QuestionBank.FiscalSponsorDetails;
       otherOrgs: #{
         fiscalSponsor: #{
           name: #{ field: "name" },
-          ein: #{ field: "ein" },
-          uei: #{ field: "uei" },
+          identifiers: #{
+            `org:us:ein`: #{ id: #{ field: "ein" } },
+            `org:us:uei`: #{ id: #{ field: "uei" } },
+          },
           addresses: #{
             primary: #{
               street1: #{ field: "address.street1" },
