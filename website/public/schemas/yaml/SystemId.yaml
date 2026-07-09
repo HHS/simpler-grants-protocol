@@ -1,0 +1,74 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SystemId.yaml
+type: object
+properties:
+  registry:
+    type: object
+    properties:
+      code:
+        type: string
+        description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+      url:
+        type: string
+        format: uri
+        description: Link to the catalog entry for this registry.
+      schema:
+        type: string
+        format: uri
+        description: JSON schema for validating the identifier format.
+    required:
+      - code
+    unevaluatedProperties:
+      not: {}
+    description: Registry-level facts shared by every record in this registry.
+  id:
+    $ref: uuid.yaml
+    description: |-
+      The primary identifier string, when the registry has a single canonical value.
+
+      May be omitted for registries with no natural primary; consumers should read
+      `allIds` in that case.
+  allIds:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          $ref: uuid.yaml
+          description: The identifier string.
+        status:
+          $ref: IdentifierStatus.yaml
+          description: Whether the identifier is currently valid or retired.
+      required:
+        - id
+        - status
+      unevaluatedProperties:
+        not: {}
+    description: Every known identifier for this record in this registry, including archived values.
+  uri:
+    type: string
+    format: uri
+    description: Link to this record in the registry's lookup service.
+  verifiedAt:
+    type: string
+    format: date-time
+    description: When this identifier was last verified.
+  verifiedBy:
+    type: string
+    description: |-
+      Reference to the system, service, or process that verified the identifier
+      (e.g. `irs.gov`, `system:manual-review`).
+required:
+  - registry
+unevaluatedProperties:
+  not: {}
+examples:
+  - registry:
+      code: org:grants.gov:system
+      url: https://commongrants.org/registries/org-grants-gov-system
+    id: 01912a8b-7c3d-7890-abcd-ef1234567890
+description: |-
+  The hosting system's own identifier for a record.
+
+  The identifier value is the record's UUID within the hosting system; the
+  registry code names that system (e.g. `org:grants.gov:system`).

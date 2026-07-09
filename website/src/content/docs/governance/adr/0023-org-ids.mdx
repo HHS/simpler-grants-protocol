@@ -13,7 +13,7 @@ _How should the protocol represent the set of identifiers associated with an org
 
 ## Decision
 
-The protocol adopts an identification system that supports both uniquely identifying a record _within_ a given system and matching records _across_ multiple systems. To do this, it replaces the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `Identifiers` collection will be reused across other core models, with each model extending it with its own base identifiers.
+The protocol adopts an identification system that supports both uniquely identifying a record _within_ a given system and matching records _across_ multiple systems. To do this, it replaces the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `IdentifierCollection` collection will be reused across other core models, with each model extending it with its own base identifiers.
 
 :::caution[Important: publicly available identifiers only]
 
@@ -99,7 +99,7 @@ At a glance, the key decisions for this identification system are:
 ### Consequences
 
 - **Positive consequences**
-  - One reusable `Identifier` / `Identifiers` pair across every core model, with model-specific keys on each extension.
+  - One reusable `Identifier` / `IdentifierCollection` pair across every core model, with model-specific keys on each extension.
   - Multiple IDs per registry are represented explicitly, with active, additional, and archived cases distinguishable.
   - Consistent with existing patterns (`AddressCollection`, `customFields`).
   - Nesting the `registry` object visually groups registry-level facts and points to the catalog entry via `registry.url`, so consumers can always find the source of truth.
@@ -119,9 +119,9 @@ At a glance, the key decisions for this identification system are:
 
 ### Identifier key hierarchy
 
-Each `Identifiers` collection has two tiers of keys:
+Each `IdentifierCollection` collection has two tiers of keys:
 
-- **Base identifiers** are defined by `@common-grants/core` at the root of each model's `Identifiers` extension (e.g. `org:us:ein`, `org:us:uei`, `org:xi:duns` on `OrgIds`). Each one has an identifier-specific JSON schema that extends the generic `Identifier` schema, plus a registered entry in the CommonGrants registry catalog. Every CommonGrants-compliant system is expected to recognize them for that model.
+- **Base identifiers** are defined by `@common-grants/core` at the root of each model's `IdentifierCollection` extension (e.g. `org:us:ein`, `org:us:uei`, `org:xi:duns` on `OrgIds`). Each one has an identifier-specific JSON schema that extends the generic `Identifier` schema, plus a registered entry in the CommonGrants registry catalog. Every CommonGrants-compliant system is expected to recognize them for that model.
 - **`otherIds`** is a catch-all map for identifiers the protocol does not define. Adopters can publish any identifier here keyed by its `<schema>:<scope>:<prop>` code (e.g. `org:candid:bridge`, `org:fluxx:system`). Entries need only conform to the generic `Identifier` schema. They may optionally be listed in the CommonGrants registry catalog, but the key itself is not reserved or validated by the protocol.
 
 **When to use each:**
@@ -140,7 +140,7 @@ Cataloging an `otherIds` entry turns a one-off extension into a shared ID regist
 
 _Stage 2: Promote to a base identifier (maintainer-driven)_
 
-A registry that has seen enough adoption can later be promoted out of `otherIds` and into a base identifier slot on one or more models. Because base identifiers add reserved keys to a model's `Identifiers` extension, promotion ships as a minor release of `@common-grants/core` and becomes part of the protocol every compliant system is expected to recognize. That release requirement is what makes this stage maintainer-driven for now.
+A registry that has seen enough adoption can later be promoted out of `otherIds` and into a base identifier slot on one or more models. Because base identifiers add reserved keys to a model's `IdentifierCollection` extension, promotion ships as a minor release of `@common-grants/core` and becomes part of the protocol every compliant system is expected to recognize. That release requirement is what makes this stage maintainer-driven for now.
 
 :::note
 The exact promotion mechanics (criteria, RFC process, community ownership) will be defined in a future version of the contributor guide. The important point here is that the path exists and that any cataloged registry is a candidate for it.
@@ -256,10 +256,10 @@ Identifier:
 </details>
 
 <details>
-<summary>Identifiers</summary>
+<summary>IdentifierCollection</summary>
 
 ```yaml
-Identifiers:
+IdentifierCollection:
   type: object
   properties:
     systemId:
@@ -280,7 +280,7 @@ Identifiers:
 ```yaml
 OrgIds:
   allOf:
-    - $ref: "#/components/schemas/Identifiers"
+    - $ref: "#/components/schemas/IdentifierCollection"
     - type: object
       properties:
         "org:us:ein":

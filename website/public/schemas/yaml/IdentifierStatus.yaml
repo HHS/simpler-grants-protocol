@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: IdentifierStatus.yaml
+type: string
+enum:
+  - active
+  - archived
+description: The lifecycle status of an identifier value.

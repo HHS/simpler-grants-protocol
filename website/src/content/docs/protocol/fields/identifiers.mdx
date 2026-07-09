@@ -25,13 +25,13 @@ systemId:
       path: "lib/core/lib/core/fields/identifier.tsp"
       startLine: 78
       endLine: 85
-identifiers:
+identifierCollection:
   example:
     file:
-      path: "website/public/schemas/yaml/Identifiers.yaml"
+      path: "website/public/schemas/yaml/IdentifierCollection.yaml"
   jsonSchema:
     file:
-      path: "website/public/schemas/yaml/Identifiers.yaml"
+      path: "website/public/schemas/yaml/IdentifierCollection.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/fields/identifier.tsp"
@@ -92,7 +92,7 @@ through their `systemId` field.
 
 <SchemaChangelog schema="SystemId" />
 
-## Identifiers
+## IdentifierCollection
 
 A collection of identifiers associated with a record, keyed by registry code. Includes the
 hosting system's own [SystemId](#systemid) under `systemId` and an `otherIds` extension
@@ -102,16 +102,16 @@ extend it with their base identifiers.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.identifiers.jsonSchema.file.path} />
+<SchemaTable filePath={frontmatter.identifierCollection.jsonSchema.file.path} />
 
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.identifiers.example}
-  jsonSchema={frontmatter.identifiers.jsonSchema}
-  typeSpec={frontmatter.identifiers.typeSpec}
+  example={frontmatter.identifierCollection.example}
+  jsonSchema={frontmatter.identifierCollection.jsonSchema}
+  typeSpec={frontmatter.identifierCollection.typeSpec}
 />
 
 ### Changelog
 
-<SchemaChangelog schema="Identifiers" />
+<SchemaChangelog schema="IdentifierCollection" />
