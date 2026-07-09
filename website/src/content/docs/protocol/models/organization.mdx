@@ -15,9 +15,29 @@ organizationBase:
           "code": "UC000000",
           "description": "Nonprofit organization"
         },
-        "ein": "19-1234567",
-        "uei": "ABCD123456789",
-        "duns": "123456789",
+        "identifiers": {
+          "org:us:ein": {
+            "registry": {
+              "code": "org:us:ein",
+              "url": "https://commongrants.org/registries/org-us-ein"
+            },
+            "id": "191234567"
+          },
+          "org:us:uei": {
+            "registry": {
+              "code": "org:us:uei",
+              "url": "https://commongrants.org/registries/org-us-uei"
+            },
+            "id": "ABCD12345678"
+          },
+          "org:xi:duns": {
+            "registry": {
+              "code": "org:xi:duns",
+              "url": "https://commongrants.org/registries/org-xi-duns"
+            },
+            "id": "123456789"
+          }
+        },
         "addresses": {
           "primary": {
             "street1": "456 Main St",
@@ -97,7 +117,55 @@ organizationBase:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
       startLine: 5
-      endLine: 47
+      endLine: 54
+orgIds:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgIds.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgIds.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 75
+      endLine: 90
+orgIdEin:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgIdEin.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgIdEin.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 60
+      endLine: 63
+orgIdUei:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgIdUei.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgIdUei.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 65
+      endLine: 68
+orgIdDuns:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgIdDuns.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgIdDuns.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 70
+      endLine: 73
 orgSocialLinks:
   example:
     code: |
@@ -119,11 +187,12 @@ orgSocialLinks:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 53
-      endLine: 77
+      startLine: 80
+      endLine: 105
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
 import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## OrganizationBase
@@ -137,9 +206,7 @@ An organization that can apply to or host funding opportunities.
 | id           | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The organization's unique identifier.                                        |
 | name         | [string](/protocol/types/string#string)                                                | Yes      | The organization's legal name as registered with relevant authorities.       |
 | orgType      | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                                          | No       | The organization's type within the Philanthropy Classification System (PCS). |
-| ein          | [employerTaxId](/protocol/types/string#employertaxid)                                  | No       | The organization's Employer Identification Number (EIN).                     |
-| uei          | [samUEI](/protocol/types/string#samuei)                                                | No       | The organization's Unique Entity Identifier (UEI).                           |
-| duns         | [duns](/protocol/types/string#duns)                                                    | No       | The organization's Data Universal Numbering System (DUNS) number.            |
+| identifiers  | [OrgIds](#orgids)                                                                      | No       | Identifiers associated with the organization, keyed by registry code.        |
 | addresses    | [AddressCollection](/protocol/fields/address#addresscollection)                        | No       | Collection of physical addresses associated with the organization.           |
 | phones       | [PhoneCollection](/protocol/fields/phone#phonecollection)                              | No       | Collection of phone numbers associated with the organization.                |
 | emails       | [EmailCollection](/protocol/fields/email#emailcollection)                              | No       | Collection of email addresses associated with the organization.              |
@@ -159,6 +226,95 @@ An organization that can apply to or host funding opportunities.
 ### Changelog
 
 <SchemaChangelog schema="OrganizationBase" />
+
+## OrgIds
+
+A collection of identifiers associated with an organization, keyed by registry code. It
+extends the generic [Identifiers](/protocol/fields/identifiers#identifiers) collection with
+the base identifiers CommonGrants defines for organizations. Additional registries can be
+published under `otherIds`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgIds.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgIds.example}
+  jsonSchema={frontmatter.orgIds.jsonSchema}
+  typeSpec={frontmatter.orgIds.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgIds" />
+
+## OrgIdEin
+
+An organization's Employer Identification Number (EIN), assigned by the IRS. It pins
+`registry.code` to `org:us:ein` and constrains the identifier value to the
+[employerTaxId](/protocol/types/string) format.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgIdEin.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgIdEin.example}
+  jsonSchema={frontmatter.orgIdEin.jsonSchema}
+  typeSpec={frontmatter.orgIdEin.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgIdEin" />
+
+## OrgIdUei
+
+An organization's Unique Entity Identifier (UEI) from SAM.gov. It pins `registry.code` to
+`org:us:uei` and constrains the identifier value to the
+[samUEI](/protocol/types/string) format.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgIdUei.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgIdUei.example}
+  jsonSchema={frontmatter.orgIdUei.jsonSchema}
+  typeSpec={frontmatter.orgIdUei.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgIdUei" />
+
+## OrgIdDuns
+
+An organization's Data Universal Numbering System (DUNS) number. It pins `registry.code` to
+`org:xi:duns` and constrains the identifier value to the
+[duns](/protocol/types/string) format.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgIdDuns.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgIdDuns.example}
+  jsonSchema={frontmatter.orgIdDuns.jsonSchema}
+  typeSpec={frontmatter.orgIdDuns.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgIdDuns" />
 
 ## OrgSocialLinks
 

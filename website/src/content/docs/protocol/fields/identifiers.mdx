@@ -1,0 +1,117 @@
+---
+title: Identifiers
+description: Models for representing registry-issued identifiers on a record
+identifier:
+  example:
+    file:
+      path: "website/public/schemas/yaml/Identifier.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Identifier.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/identifier.tsp"
+      startLine: 17
+      endLine: 76
+systemId:
+  example:
+    file:
+      path: "website/public/schemas/yaml/SystemId.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/SystemId.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/identifier.tsp"
+      startLine: 78
+      endLine: 85
+identifiers:
+  example:
+    file:
+      path: "website/public/schemas/yaml/Identifiers.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Identifiers.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/identifier.tsp"
+      startLine: 91
+      endLine: 102
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
+
+An identifier issued to a record by a registry, such as an organization's EIN or UEI.
+
+The base `Identifier` accepts any string value and any registry code. Model-specific
+identifiers (for example `OrgIdEin`) are named instantiations of the `IdentifierT<Id, Code>`
+template, which constrains the identifier value to a registry-specific format and pins
+`registry.code` to a specific registry while keeping the same shape as the base schema.
+Identifiers are keyed by their canonical CommonGrants registry code
+(`<schema>:<scope>:<prop>`, e.g. `org:us:ein`), which links to a catalog entry via
+`registry.url`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.identifier.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.identifier.example}
+  jsonSchema={frontmatter.identifier.jsonSchema}
+  typeSpec={frontmatter.identifier.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="Identifier" />
+
+## SystemId
+
+The hosting system's own identifier for a record. It constrains the identifier value to a
+[uuid](/protocol/types/string#uuid), the record's UUID within the hosting system, while the
+`registry.code` names that system (e.g. `org:grants.gov:system`). Collections reference it
+through their `systemId` field.
+
+### Table
+
+<SchemaTable filePath={frontmatter.systemId.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.systemId.example}
+  jsonSchema={frontmatter.systemId.jsonSchema}
+  typeSpec={frontmatter.systemId.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="SystemId" />
+
+## Identifiers
+
+A collection of identifiers associated with a record, keyed by registry code. Includes the
+hosting system's own [SystemId](#systemid) under `systemId` and an `otherIds` extension
+point for registries the protocol does not define as a base identifier on the model.
+Model-specific collections (for example [OrgIds](/protocol/models/organization#orgids))
+extend it with their base identifiers.
+
+### Table
+
+<SchemaTable filePath={frontmatter.identifiers.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.identifiers.example}
+  jsonSchema={frontmatter.identifiers.jsonSchema}
+  typeSpec={frontmatter.identifiers.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="Identifiers" />
