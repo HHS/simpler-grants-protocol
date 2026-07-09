@@ -84,7 +84,8 @@
     "example:server": "tsx examples/mock-api-server.ts",
     "example:transforms": "tsx examples/transforms.ts",
     "example:custom-filters": "tsx examples/custom-filters.ts",
-    "example:grants-gov": "tsx examples/grants-gov-transforms.ts"
+    "example:grants-gov": "tsx examples/grants-gov-transforms.ts",
+    "example:grants-gov-custom-filters": "tsx examples/grants-gov-custom-filters.ts"
   },
   "dependencies": {
     "zod": "catalog:"
