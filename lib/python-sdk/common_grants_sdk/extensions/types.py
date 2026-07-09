@@ -104,10 +104,6 @@ class FilterError(Exception):
 
     Note: source_value may contain PII. Adopters are responsible for redacting
     it before logging or re-raising. The SDK does not redact by default.
-
-    ``strict`` marks a failure on a typed filter — a standard or registered
-    custom filter, whose contract the SDK owns. The resource client raises on
-    strict failures; non-strict (ad-hoc / passthrough) failures stay fail-soft.
     """
 
     def __init__(
@@ -118,33 +114,12 @@ class FilterError(Exception):
         handler: str | None = None,
         source_value: Any = None,
         cause: BaseException | None = None,
-        strict: bool = False,
     ) -> None:
         super().__init__(message)
         self.path = path
         self.handler = handler
         self.source_value = source_value
         self.cause = cause
-        self.strict = strict
-
-
-@dataclass
-class ClassifyResult(Generic[T]):
-    """Fail-soft return shape for ``classify_filters``.
-
-    ``classify_filters`` never raises on a bad call-time filter value: each
-    failing key is dropped from ``result`` and its :class:`FilterError` collected
-    into ``errors``.
-
-    result: classified filters, containing only the keys that passed validation.
-    errors: aggregated ``FilterError``s for keys that failed; empty on success.
-
-    Registration-time validation (``validate_routes``) still raises — a malformed
-    plugin declaration has no result to return.
-    """
-
-    result: T
-    errors: list[FilterError]
 
 
 @dataclass

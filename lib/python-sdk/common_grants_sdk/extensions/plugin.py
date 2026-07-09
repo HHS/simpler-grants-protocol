@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, Generic, Optional, cast, overload
 import typing_extensions as te
 
 from ..schemas.pydantic.models import OpportunityBase
+from .filters import validate_routes
 from .schema import (
     PluginDefinitionError,
     SchemaOnly,
@@ -145,6 +146,9 @@ def define_plugin(
     Raises:
         PluginDefinitionError: If any slot does not hold a schema extension, or holds
             one whose ``schema_name`` does not match its attribute name.
+        FilterError: If ``routes`` registers a filter whose value type is not a known
+            filter value model (validated here so the author catches it at definition,
+            not the consumer at ``get_client``).
     """
     errors: list[str] = []
     for fld in fields(cast(Any, schemas)):
@@ -161,4 +165,9 @@ def define_plugin(
     resolved_routes: PluginRoutes[Any] = (
         routes if routes is not None else PluginRoutes(opportunities=ResourceRoutes())
     )
+    # Validate the routes here, when the plugin is defined, so that a plugin author
+    # sees an invalid filter registration right away instead of a consumer running
+    # into it later when they build a client. The client validates the routes again
+    # when it binds them, which covers clients built without define_plugin.
+    validate_routes(resolved_routes)
     return Plugin(schemas=schemas, routes=resolved_routes, meta=meta)

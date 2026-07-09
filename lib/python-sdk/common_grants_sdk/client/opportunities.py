@@ -126,10 +126,9 @@ class Opportunities(Generic[FiltersT, ItemT]):
             schema: Per-call parse-schema override; defaults to the plugin's
                 Opportunity schema (or ``OpportunityBase`` when unbound).
             filters: Typed filter dict — registered keys are validated against the
-                plugin's route filters and standard keys against their models. An
-                invalid value on a standard or registered filter raises
-                ``FilterError`` before any request; ad-hoc (unregistered) keys are
-                best-effort and dropped if unusable.
+                plugin's route filters, standard keys against their models, and
+                ad-hoc (unregistered) keys against the known-filter-model union. Any
+                invalid value raises ``FilterError`` before a request is sent.
 
         Returns:
             ``SearchResult`` — parsed ``items``, per-row parse ``errors``, and
@@ -137,23 +136,21 @@ class Opportunities(Generic[FiltersT, ItemT]):
 
         Raises:
             APIError: If the API request fails.
-            FilterError: If a standard or registered filter — or the ``status``
-                shorthand — is given an invalid or conflicting value.
+            FilterError: If any filter value — or the ``status`` shorthand — is
+                invalid or conflicting.
         """
         resolved = self._schema(schema)
 
-        # Raise on an invalid standard/registered filter value rather than
-        # collecting it: filter_info.errors is reserved for server errors. The
-        # classifier stays fail-soft; ad-hoc keys are best-effort (dropped).
+        # classify_filters raises FilterError on the first invalid filter value,
+        # whether it is a standard, registered, or ad-hoc filter, before any request
+        # is sent. The filter_info.errors field is reserved for errors the server
+        # reports about the filters it received.
         filters_body: dict[str, Any] = {}
         if filters:
             classified = classify_filters(
                 self.client._routes, "opportunities", "search", filters
             )
-            strict_error = next((e for e in classified.errors if e.strict), None)
-            if strict_error is not None:
-                raise strict_error
-            filters_body = classified.result.model_dump(
+            filters_body = classified.model_dump(
                 by_alias=True, exclude_none=True, mode="json"
             )
 

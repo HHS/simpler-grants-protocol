@@ -26,7 +26,6 @@ from .specs import (
 )
 from .transforms import build_transforms
 from .types import (
-    ClassifyResult,
     FilterError,
     Handler,
     PassthroughModel,
@@ -62,7 +61,6 @@ __all__ = [
     "schema",
     "validate_into",
     # Custom filters
-    "ClassifyResult",
     "FilterError",
     "PluginRoutes",
     "ResourceRoutes",

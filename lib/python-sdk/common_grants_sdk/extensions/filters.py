@@ -2,16 +2,19 @@
 
 Provides:
 - ``f`` helper singleton for building filter value models.
+- ``VALID_FILTER_MODELS`` — the filter models that can be used as registered or
+  ad-hoc custom filters (single source of truth for route validation and ad-hoc
+  classification).
 - ``DEFAULT_FILTER_NAMES`` — frozenset of all core default-filter field names (snake + alias).
 - ``validate_routes(routes)`` — registration-time validator; raises FilterError.
-- ``validate_filter_call(model_cls, filter_name, value)`` — call-time validator; fail-soft.
-  Validates against ``model_cls`` (a registered filter's value model) or ``DefaultFilter``
-  when ``model_cls`` is ``None``; returns ``(wire-ready DefaultFilter, None)`` on success
-  or ``(None, FilterError)``.
-- ``classify_filters(routes, resource, method, consumer_filters)`` — fail-soft classifier
-  producing a ``ClassifyResult`` (the valid-only ``OppFilters`` search request body plus
-  the collected ``FilterError``s; never raises on a bad call-time filter value). Registered
-  custom filters are recovered from the route's TypedDict via ``get_type_hints``.
+- ``validate_filter_call(model_cls, filter_name, value)`` — call-time validator.
+  Validates against ``model_cls`` (a registered filter's value model) or the
+  ``VALID_FILTER_MODELS`` union when ``model_cls`` is ``None``; returns
+  ``(wire-ready DefaultFilter, None)`` on success or ``(None, FilterError)``.
+- ``classify_filters(routes, resource, method, consumer_filters)`` — fail-fast classifier
+  producing the ``OppFilters`` search request body; raises ``FilterError`` on the first
+  invalid filter value (standard, registered, or ad-hoc). Registered custom filters are
+  recovered from the route's TypedDict via ``get_type_hints``.
 
 No generate.py / codegen dependency. Correctness is enforced at runtime by Pydantic v2.
 """
@@ -34,6 +37,15 @@ from common_grants_sdk.schemas.pydantic.filters.base import (
     StringOperator,
 )
 from common_grants_sdk.schemas.pydantic.filters.boolean import BooleanComparisonFilter
+from common_grants_sdk.schemas.pydantic.filters.date import (
+    DateComparisonFilter,
+    DateRangeFilter,
+)
+from common_grants_sdk.schemas.pydantic.filters.integer import IntegerComparisonFilter
+from common_grants_sdk.schemas.pydantic.filters.money import (
+    MoneyComparisonFilter,
+    MoneyRangeFilter,
+)
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
     NumberArrayFilter,
     NumberComparisonFilter,
@@ -50,7 +62,38 @@ from common_grants_sdk.schemas.pydantic.filters.string import (
     StringComparisonFilter,
 )
 
-from .types import ClassifyResult, FilterError, PluginRoutes
+from .types import FilterError, PluginRoutes
+
+# ---------------------------------------------------------------------------
+# Valid filter models (single source of truth)
+# ---------------------------------------------------------------------------
+
+#: The set of filter models that can be used as registered or ad-hoc custom
+#: filters, one for each core filter family. This is the single source of truth
+#: for two checks:
+#:
+#:  - ``validate_routes`` requires that every registered filter is annotated with
+#:    one of these models, so a route that registers a filter with any other type
+#:    is rejected when the plugin is defined.
+#:  - The classifier requires that an unregistered (ad-hoc) filter validates
+#:    against one of these models. This is what lets the SDK reject a filter whose
+#:    value does not match its operator, for example ``{"operator": "in", "value":
+#:    "x"}``, where "in" expects a list but the value is a plain string.
+#:
+#: When the API adds a new filter family, add its model here.
+VALID_FILTER_MODELS: tuple[type[CommonGrantsBaseModel], ...] = (
+    StringComparisonFilter,
+    StringArrayFilter,
+    NumberComparisonFilter,
+    NumberArrayFilter,
+    NumberRangeFilter,
+    IntegerComparisonFilter,
+    BooleanComparisonFilter,
+    DateComparisonFilter,
+    DateRangeFilter,
+    MoneyComparisonFilter,
+    MoneyRangeFilter,
+)
 
 # ---------------------------------------------------------------------------
 # f.* helpers
@@ -291,16 +334,21 @@ _SNAKE_TO_ALIAS: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 
+def _is_filter_model(ann: Any) -> bool:
+    """True if ``ann`` is one of the valid filter models (or a subclass)."""
+    return isinstance(ann, type) and issubclass(ann, VALID_FILTER_MODELS)
+
+
 def _registered_filter_models(route_td: Any) -> dict[str, type[BaseModel]]:
     """Recover a route's registered custom filters from its filter TypedDict.
 
     ``route_td`` is the TypedDict class an author put in the route slot (e.g.
     ``OppSearchFilters``), or ``None``. Returns ``{filterName: value model}`` for
     every key the author declared beyond the standard ``OpportunityFilters`` keys.
-    Non-model annotations are skipped here; ``validate_routes`` (run when
-    ``plugin.get_client`` binds routes) rejects them, so a caller who invokes
-    ``classify_filters`` directly on unvalidated routes gets silent skipping rather
-    than a raise.
+    Non-filter annotations are skipped here; ``validate_routes`` (run at
+    ``define_plugin`` and when ``plugin.get_client`` binds routes) rejects them, so
+    a caller who invokes ``classify_filters`` directly on unvalidated routes gets
+    silent skipping rather than a raise.
     """
     if route_td is None:
         return {}
@@ -308,7 +356,7 @@ def _registered_filter_models(route_td: Any) -> dict[str, type[BaseModel]]:
     return {
         name: ann
         for name, ann in get_type_hints(route_td).items()
-        if name not in standard and isinstance(ann, type) and issubclass(ann, BaseModel)
+        if name not in standard and _is_filter_model(ann)
     }
 
 
@@ -318,14 +366,19 @@ def validate_routes(routes: PluginRoutes[Any]) -> None:
     The typed carriers make a misspelled resource/method a *static* error. Two
     runtime checks remain:
 
-    1. A registered custom filter's value type must be a filter value model (a
-       ``CommonGrantsBaseModel`` subclass) — a mistyped TypedDict value (e.g.
-       ``region: int``) would otherwise fail opaquely at call time.
+    1. A registered custom filter's value type must be one of the valid filter
+       models (``VALID_FILTER_MODELS``) — a mistyped TypedDict value (e.g.
+       ``region: int`` or a non-filter model like ``region: OpportunityBase``)
+       would otherwise fail opaquely at call time.
     2. A route TypedDict must not redeclare a standard ``OpportunityFilters`` key
        with a different value type. Authors get the standard keys for free; a
        re-typed standard key (e.g. ``status: StringComparisonFilter``) creates a
        static/runtime mismatch — the call site sees the override, but
        classification validates against the real standard field type.
+
+    Runs at ``define_plugin`` (so the author catches a bad registration at
+    definition) and again when ``plugin.get_client`` binds routes (backstop for
+    hand-built clients).
 
     Args:
         routes: Typed route registration (``PluginRoutes``).
@@ -352,13 +405,11 @@ def validate_routes(routes: PluginRoutes[Any]) -> None:
                             source_value=ann,
                         )
                     continue
-                if not (
-                    isinstance(ann, type) and issubclass(ann, CommonGrantsBaseModel)
-                ):
+                if not _is_filter_model(ann):
                     raise FilterError(
                         f'Registered filter "{name}" on '
-                        f"{resource_field.name}.{method_field.name} must be a filter "
-                        "value model (a CommonGrantsBaseModel subclass)",
+                        f"{resource_field.name}.{method_field.name} must be a valid "
+                        "filter model (e.g. StringArray, NumberComparison)",
                         path=f"{path_prefix}.{name}",
                         source_value=ann,
                     )
@@ -381,20 +432,51 @@ def _first_error_detail(exc: ValidationError) -> str:
 # ---------------------------------------------------------------------------
 
 
+#: Describes the value each operator expects. Used to build a readable message
+#: when an unregistered (ad-hoc) filter does not match any valid filter model.
+AD_HOC_VALUE_EXPECTATION: dict[str, str] = {
+    "eq": "a scalar value",
+    "neq": "a scalar value",
+    "gt": "a scalar value",
+    "gte": "a scalar value",
+    "lt": "a scalar value",
+    "lte": "a scalar value",
+    "in": "an array value",
+    "notIn": "an array value",
+    "like": "a string value",
+    "notLike": "a string value",
+    "between": "a { min, max } object",
+    "outside": "a { min, max } object",
+}
+
+
+def _adhoc_detail(payload: Any) -> str:
+    """Explain why an ad-hoc {operator, value} matched no valid filter model."""
+    operator = payload.get("operator") if isinstance(payload, dict) else None
+    if not isinstance(operator, str):
+        return "expected a { operator, value } object"
+    expectation = AD_HOC_VALUE_EXPECTATION.get(operator)
+    if expectation is None:
+        return f'operator "{operator}" is not a known filter operator'
+    return f'operator "{operator}" expects {expectation}'
+
+
 def validate_filter_call(
     model_cls: Optional[type[BaseModel]],
     filter_name: str,
     value: Any,
 ) -> tuple[Optional[DefaultFilter], Optional[FilterError]]:
-    """Call-time validator for a single filter value (fail-soft).
+    """Call-time validator for a single filter value.
 
     Validates ``value`` against ``model_cls`` when provided (a registered filter's
-    value model, recovered from the route's TypedDict), or against ``DefaultFilter``
-    when ``model_cls`` is ``None`` (ad-hoc / escape-hatch filter).
+    value model, recovered from the route's TypedDict), or against the
+    ``VALID_FILTER_MODELS`` union when ``model_cls`` is ``None`` (ad-hoc /
+    escape-hatch filter): the ``{operator, value}`` pair must be well-formed for
+    some valid filter model.
 
-    Never raises: returns ``(validated_filter, None)`` on success or
-    ``(None, FilterError)`` on failure. The caller collects the error and skips
-    the key rather than aborting the whole call.
+    Never raises itself: returns ``(validated_filter, None)`` on success or
+    ``(None, FilterError)`` on failure. The caller (``classify_filters``) raises
+    the returned error (fail-fast) before any request is sent.
 
     On success the returned filter carries the coerced operator/value, never the
     raw input — lax coercion can differ from the input (e.g. ``"42"`` → ``42``).
@@ -427,17 +509,22 @@ def validate_filter_call(
         # operator/value. DefaultFilter.value is Any per the core spec, so
         # nothing the typed model accepted can fail here.
         return DefaultFilter.model_validate(validated.model_dump()), None
-    # Ad-hoc / escape-hatch: validate against DefaultFilter shape only
-    try:
-        return DefaultFilter.model_validate(payload), None
-    except ValidationError as exc:
-        return None, FilterError(
-            f'Ad-hoc filter "{filter_name}" has an invalid DefaultFilter shape: '
-            f"{exc.error_count()} error(s); first: {_first_error_detail(exc)}",
-            path=f"filters.{filter_name}",
-            source_value=value,
-            cause=exc,
-        )
+    # Ad-hoc filter: there is no registered model for this key, so accept it only
+    # if its operator and value together match one of the valid filter models. This
+    # rejects a value that does not fit its operator, for example "in" with a plain
+    # string instead of a list, instead of letting it pass through unchecked.
+    for model in VALID_FILTER_MODELS:
+        try:
+            validated = model.model_validate(payload)
+        except ValidationError:
+            continue
+        return DefaultFilter.model_validate(validated.model_dump()), None
+    return None, FilterError(
+        f'Ad-hoc filter "{filter_name}" has an invalid operator/value combination: '
+        f"{_adhoc_detail(payload)}",
+        path=f"filters.{filter_name}",
+        source_value=value,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -489,7 +576,7 @@ def classify_filters(
     resource: str,
     method: str,
     consumer_filters: Mapping[str, Union[BaseModel, dict[str, Any]]],
-) -> ClassifyResult[OppFilters]:
+) -> OppFilters:
     """Classify consumer filter dict into the ``OppFilters`` search request body.
 
     Three-bucket classification:
@@ -499,19 +586,19 @@ def classify_filters(
       TypedDict for the given resource/method → land in ``custom_filters``.
     - Bucket 3 (ad-hoc): any other key → land in ``custom_filters`` passthrough.
 
-    Validation is **fail-soft**: a key that fails its call-time validation is
-    dropped from the result and its ``FilterError`` collected into
-    ``ClassifyResult.errors``; the call never raises on a bad filter value.
-    (Registration-time validation in ``validate_routes`` still raises.)
+    Validation is **fail-fast**: the first key that fails its call-time validation
+    raises ``FilterError`` before a request body is produced — a standard,
+    registered, or ad-hoc value alike. A malformed value never silently widens the
+    consumer's search. (Registration-time validation in ``validate_routes`` also
+    raises.)
 
     Opportunity-bound — see the limitation note above the function.
 
     Registered specs are looked up by the exact ``(resource, method)`` strings
     declared in ``routes``. A non-matching pair (e.g. a pluralization typo in
     ``resource``) yields no registered bucket at all: every non-default filter is
-    then validated only against the permissive ``DefaultFilter`` shape, exactly
-    like ad-hoc input. Call sites must pass the same resource/method strings the
-    plugin declared.
+    then validated against the known-model union, exactly like ad-hoc input. Call
+    sites must pass the same resource/method strings the plugin declared.
 
     Construction normalizes all default consumer keys to the form that
     ``OppFilters(**kwargs)`` accepts.  Because ``OppDefaultFilters`` does NOT set
@@ -531,13 +618,14 @@ def classify_filters(
             call site (raw ``{"operator": ..., "value": ...}`` dicts also accepted).
 
     Returns:
-        ``ClassifyResult`` — ``.result`` is the valid-only ``OppFilters`` request
-        body; ``.errors`` is the collected list of ``FilterError``s for keys that
-        failed (empty on full success). Call
-        ``.result.model_dump(by_alias=True, exclude_none=True, mode="json")`` for
-        the JSON body of the search request — ``mode="json"`` is required because
-        coerced ``date`` objects are not JSON-serializable in the default python
-        mode (operator enums are ``StrEnum`` and serialize fine either way).
+        The ``OppFilters`` request body. Call
+        ``.model_dump(by_alias=True, exclude_none=True, mode="json")`` for the JSON
+        body of the search request — ``mode="json"`` is required because coerced
+        ``date`` objects are not JSON-serializable in the default python mode
+        (operator enums are ``StrEnum`` and serialize fine either way).
+
+    Raises:
+        FilterError: On the first invalid filter value (standard, registered, or ad-hoc).
     """
     route = getattr(routes, resource, None)
     route_td = getattr(route, method, None) if route is not None else None
@@ -545,67 +633,48 @@ def classify_filters(
 
     default_fields: dict[str, Any] = {}
     custom_buckets: dict[str, DefaultFilter] = {}
-    errors: list[FilterError] = []
 
     for key, value in consumer_filters.items():
         if key in DEFAULT_FILTER_NAMES:
-            # Bucket 1: core default filter.
-            # OppFilters requires the alias form (e.g. "closeDateRange") when constructing
-            # via **kwargs because populate_by_name is not set on OppDefaultFilters.
-            # Normalize: camelCase aliases stay as-is; snake_case keys are mapped to their
-            # alias; keys with no alias (e.g. "status") are passed through unchanged.
-            # Validate per-field against the named field's actual type (e.g.
-            # status → StringArrayFilter) — stricter than the permissive DefaultFilter
-            # check. Fail-soft: an invalid value is collected and skipped.
+            # Bucket 1: a standard filter. Validate it against the type declared for
+            # that field (for example, "status" is validated as a StringArrayFilter).
+            # OppFilters is constructed with keyword arguments and does not set
+            # populate_by_name, so a snake_case key is first converted to its alias.
+            # Keys that are already in alias form, and keys that have no alias, pass
+            # through unchanged.
             alias_key = _SNAKE_TO_ALIAS.get(key, key)
             if alias_key in default_fields:
-                # Snake and camel forms of the same field normalize to one key;
-                # without this guard, plain dict assignment would silently drop
-                # whichever form the consumer's dict ordered first. Fail-soft:
-                # keep the first-seen value, drop the duplicate, collect a warning.
-                errors.append(
-                    FilterError(
-                        f'Default filter "{alias_key}" was supplied more than once '
-                        "(snake_case and camelCase forms of the same filter)",
-                        path=f"filters.{alias_key}",
-                        source_value=value,
-                        strict=True,
-                    )
+                # Snake and camel forms of the same field normalize to one key.
+                raise FilterError(
+                    f'Default filter "{alias_key}" was supplied more than once '
+                    "(snake_case and camelCase forms of the same filter)",
+                    path=f"filters.{alias_key}",
+                    source_value=value,
                 )
-                continue
             validated, error = _validate_default_field(alias_key, value)
             if error is not None:
-                # Standard filter — the SDK owns its contract; mark strict so the
-                # resource client raises rather than fail-softing.
-                error.strict = True
-                errors.append(error)
-                continue
+                raise error
             default_fields[alias_key] = validated
         elif key in registered:
-            # Bucket 2: registered custom filter — validate against the value
-            # model recovered from the route's TypedDict; ship the validated
-            # value, never the raw input. Fail-soft here; strict for the client.
+            # Bucket 2: a filter the plugin registered for this route. Validate it
+            # against the model the plugin declared for this key, and keep the
+            # validated value.
             validated, error = validate_filter_call(registered[key], key, value)
             if error is not None:
-                error.strict = True
-                errors.append(error)
-                continue
+                raise error
             custom_buckets[key] = validated  # type: ignore[assignment]
         else:
-            # Bucket 3: ad-hoc / escape-hatch passthrough — ship the validated value.
-            # Fail-soft: collect the (non-strict) error and skip the key.
+            # Bucket 3: a filter the plugin did not register. Validate it against the
+            # valid filter models so that a value that does not fit its operator is
+            # rejected instead of quietly passing through to the request.
             validated, error = validate_filter_call(None, key, value)
             if error is not None:
-                errors.append(error)
-                continue
+                raise error
             custom_buckets[key] = validated  # type: ignore[assignment]
 
     # OppFilters requires the alias form for construction (populate_by_name is not set).
     # Use "customFilters" (the alias) rather than "custom_filters" (the field name).
-    # Every value in default_fields / custom_buckets already passed validation
-    # above, so this construction cannot fail on a value-shape error.
-    result = OppFilters(
+    return OppFilters(
         **default_fields,
         customFilters=custom_buckets if custom_buckets else None,
     )
-    return ClassifyResult(result=result, errors=errors)
