@@ -34,7 +34,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@apidevtools/json-schema-ref-parser": "^15.4.0",
+    "@apidevtools/json-schema-ref-parser": "^15.5.0",
     "@astrojs/react": "^5.0.7",
     "@astrojs/starlight": "^0.39.3",
     "@jsonforms/core": "^3.8.0",
