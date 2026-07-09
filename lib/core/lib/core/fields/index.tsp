@@ -3,6 +3,7 @@ import "./metadata.tsp";
 import "./money.tsp";
 import "./event.tsp";
 import "./address.tsp";
+import "./identifier.tsp";
 import "./name.tsp";
 import "./phone.tsp";
 import "./pcs.tsp";
