@@ -25,15 +25,12 @@ enum IdentifierStatus {
 @Versioning.added(CommonGrants.Versions.v0_4)
 model IdentifierT<Id extends string = string, Code extends string = string> {
   /** Registry-level facts shared by every record in this registry. */
-  registry: {
+  registry?: {
     /** Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`). */
-    code: Code;
+    code?: Code;
 
     /** Link to the catalog entry for this registry. */
     url?: url;
-
-    /** JSON schema for validating the identifier format. */
-    schema?: url;
   };
 
   /** The primary identifier string, when the registry has a single canonical value.
@@ -51,17 +48,6 @@ model IdentifierT<Id extends string = string, Code extends string = string> {
     /** Whether the identifier is currently valid or retired. */
     status: IdentifierStatus;
   }>;
-
-  /** Link to this record in the registry's lookup service. */
-  uri?: url;
-
-  /** When this identifier was last verified. */
-  verifiedAt?: utcDateTime;
-
-  /** Reference to the system, service, or process that verified the identifier
-   * (e.g. `irs.gov`, `system:manual-review`).
-   */
-  verifiedBy?: string;
 }
 
 /** An identifier issued to a record by a registry.

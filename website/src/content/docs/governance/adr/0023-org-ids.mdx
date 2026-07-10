@@ -51,18 +51,14 @@ The collection looks like this:
     "org:us:ein": {
       "registry": {
         "code": "org:us:ein",
-        "url": "https://commongrants.org/registries/org-us-ein",
-        "schema": "https://commongrants.org/registries/org-us-ein/schema.json"
+        "url": "https://commongrants.org/registries/org-us-ein"
       },
       "id": "123456789",
       "allIds": [
         { "id": "123456789", "status": "active" },
         { "id": "654321098", "status": "active" },
         { "id": "111111111", "status": "archived" }
-      ],
-      "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
-      "verifiedAt": "2026-03-15T00:00:00Z",
-      "verifiedBy": "irs.gov"
+      ]
     },
     "org:us:uei": {
       "registry": {
@@ -77,8 +73,7 @@ The collection looks like this:
           "code": "org:candid:bridge",
           "url": "https://commongrants.org/registries/org-candid-bridge"
         },
-        "id": "1234567",
-        "uri": "https://www.guidestar.org/profile/1234567"
+        "id": "1234567"
       }
     }
   }
@@ -90,7 +85,7 @@ At a glance, the key decisions for this identification system are:
 1. **Top-level ID:** A pure UUID on each resource, with the hosting system's own ID also surfaced inside the collection as `systemId`.
 2. **Collection structure:** A map keyed by registry code, with a catch-all `otherIds` map for extensions.
 3. **Map key format:** The registry's canonical three-part CommonGrants code, `<schema>:<scope>:<prop>` (`org:us:ein`, `org:us:uei`, `org:xi:duns`), used as both the map key and `registry.code`.
-4. **Identifier metadata structure:** A nested hybrid shape, kept deliberately small on the wire. Registry-level facts live in a nested `registry` object with a required `code` plus optional `url` (linking to the catalog entry) and `schema`. Instance-level facts (`id`, `allIds`, `uri`, `verifiedAt`, `verifiedBy`) stay at the top level, and `id` itself is optional. Richer registry metadata (scope, kind, issuer, human-readable name, lookup template, etc.) lives entirely in the external CommonGrants registry catalog reachable through `registry.url`, rather than being duplicated inline on every record.
+4. **Identifier metadata structure:** A nested hybrid shape, kept deliberately small on the wire. Registry-level facts live in a nested `registry` object holding the `code` plus an optional `url` linking to the catalog entry. Instance-level facts (`id`, `allIds`) stay at the top level. Every field is optional, so a payload carries only what a given system knows about a record. Richer registry metadata (scope, kind, issuer, human-readable name, lookup template, validation schema, etc.) lives entirely in the external CommonGrants registry catalog reachable through `registry.url`, rather than being duplicated inline on every record.
 5. **Multiple IDs per registry:** `id` for the primary, plus an optional `allIds` array of `{ id, status }` objects covering every known ID for this registry (the primary included), so consumers can do membership checks against `allIds` alone.
 6. **Parent organization:** `parent` carries `id`, `name`, and optionally an embedded `identifiers` collection. Parent identifiers do not leak into the child's collection.
 7. **Registry code format:** A single uniform three-part `<schema>:<scope>:<prop>` code (`org:us:ein`, `org:xi:duns`, `org:grants.gov:system`) minted and owned by CommonGrants for every registry, used as both the map key and `registry.code`. `schema` is the CommonGrants model the identifier applies to (`org`, `opp`, `app`, `awd`), `scope` is the jurisdiction or namespace (`us`, `xi`, `grants.gov`), and `prop` is the identifier property (`ein`, `uei`, or `system` for a platform's own record ID). The equivalent org-id.guide code (when one exists) is recorded as an `orgIdGuide` cross-reference in the catalog, not used as the code itself.
@@ -103,7 +98,7 @@ At a glance, the key decisions for this identification system are:
   - Multiple IDs per registry are represented explicitly, with active, additional, and archived cases distinguishable.
   - Consistent with existing patterns (`AddressCollection`, `customFields`).
   - Nesting the `registry` object visually groups registry-level facts and points to the catalog entry via `registry.url`, so consumers can always find the source of truth.
-  - The optional `registry.schema` URI lets new identifier types define their own validation without protocol changes.
+  - Per-registry validation schemas live in the catalog (reachable via `registry.url`), so new identifier types can define their own validation without bloating every payload or requiring protocol changes.
   - `systemId` makes each collection self-contained: a consumer can match across systems without inspecting the top-level `id` separately.
   - Registry codes are CommonGrants-owned and uniform, so they stay stable across org-id.guide renames and apply the same rule to registries org-id.guide does not cover.
   - The map key equals `registry.code`, so there is one canonical string per registry rather than a separate alias to maintain.
@@ -204,11 +199,6 @@ Identifier:
           type: string
           format: uri
           description: Link to the catalog entry for this registry
-        schema:
-          type: string
-          format: uri
-          description: JSON schema for validating the identifier format
-      required: [code]
     id:
       type: string
       description: |
@@ -234,23 +224,6 @@ Identifier:
             enum: [active, archived]
             description: Whether the identifier is currently valid or retired
         required: [id, status]
-    uri:
-      type: string
-      format: uri
-      description: Link to this record in the registry's lookup service
-    verifiedAt:
-      type: string
-      format: date-time
-      description: When this identifier was last verified
-    verifiedBy:
-      type: string
-      description: |
-        Reference to the system, service, or process that performed the verification
-        (e.g. "irs.gov", "candid.org", "system:manual-review"). Be mindful of PII such
-        as a human name or email address. The exact format and vocabulary for this
-        field may be tightened during implementation.
-  required:
-    - registry
 ```
 
 </details>
@@ -769,8 +742,7 @@ The `registry` object holds a curated subset of the catalog entry: the fields th
       "schema": "https://commongrants.org/registries/org-us-ein/schema.json"
     },
     "id": "123456789",
-    "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
-    "verifiedAt": "2026-03-15T00:00:00Z"
+    "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789"
   }
 }
 ```

@@ -12,12 +12,6 @@ properties:
         type: string
         format: uri
         description: Link to the catalog entry for this registry.
-      schema:
-        type: string
-        format: uri
-        description: JSON schema for validating the identifier format.
-    required:
-      - code
     unevaluatedProperties:
       not: {}
     description: Registry-level facts shared by every record in this registry.
@@ -45,21 +39,6 @@ properties:
       unevaluatedProperties:
         not: {}
     description: Every known identifier for this record in this registry, including archived values.
-  uri:
-    type: string
-    format: uri
-    description: Link to this record in the registry's lookup service.
-  verifiedAt:
-    type: string
-    format: date-time
-    description: When this identifier was last verified.
-  verifiedBy:
-    type: string
-    description: |-
-      Reference to the system, service, or process that verified the identifier
-      (e.g. `irs.gov`, `system:manual-review`).
-required:
-  - registry
 unevaluatedProperties:
   not: {}
 examples:
