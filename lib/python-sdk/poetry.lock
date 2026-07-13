@@ -259,14 +259,14 @@ toml = ["tomli ; python_full_version <= \"3.11.0a6\""]
 
 [[package]]
 name = "datamodel-code-generator"
-version = "0.66.1"
+version = "0.68.1"
 description = "Datamodel Code Generator"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "datamodel_code_generator-0.66.1-py3-none-any.whl", hash = "sha256:3bf7618e2695e6859993ccb94da7f1dd47971b8eb97ab1b95a094db85abb90a9"},
-    {file = "datamodel_code_generator-0.66.1.tar.gz", hash = "sha256:a177bb66e168c8b64469cbb00f9aa2bb4628801e456be075dcfcc4b5f661d2ec"},
+    {file = "datamodel_code_generator-0.68.1-py3-none-any.whl", hash = "sha256:2784ad944f25579be874d40e7f28ee5e7ab2d4457a08612393c7fd02ea7b7f21"},
+    {file = "datamodel_code_generator-0.68.1.tar.gz", hash = "sha256:3a9f0c501670b35d6ea1764b3ff6c552f1f594c7ee3ed9cab5b3b72f75ff092d"},
 ]
 
 [package.dependencies]
@@ -1102,6 +1102,18 @@ files = [
 typing_extensions = ">=4.14.0"
 
 [[package]]
+name = "types-pyyaml"
+version = "6.0.12.20260518"
+description = "Typing stubs for PyYAML"
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+files = [
+    {file = "types_pyyaml-6.0.12.20260518-py3-none-any.whl", hash = "sha256:d2150f75a231c9fe9c7463bd29487d93e60bac90400287351384bc2284eba7cd"},
+    {file = "types_pyyaml-6.0.12.20260518.tar.gz", hash = "sha256:d917f83fb38462550338c1297faedd860b3ec83912b96b1e3d73255f7473e466"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
@@ -1167,4 +1179,4 @@ tests = ["build", "coverage", "mypy", "ruff", "wheel"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "19b781bb45c2b4fd814fe01484e38e69105ecb4927cb3bb177546733dd200d6d"
+content-hash = "11df6430677eb39f66ce108be249495d744a5da8626e6e6d2e1e1cbdde5ae1dc"
