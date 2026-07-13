@@ -56,7 +56,7 @@ async function main(): Promise<void> {
   // getClient binds the plugin's routes + schemas: search({ filters }) is typed
   // by the registered filters and rows parse as grants.gov opportunities.
   const client = plugin.getClient({ baseUrl, auth: Auth.apiKey("two_org_user_key") });
-  const result = await client.opportunities.search({ search: searchTerm, filters });
+  const result = await client.opportunities.search({ query: searchTerm, filters });
 
   console.log(`${result.items.length} opportunit(y/ies) matched:`);
   for (const opp of result.items) {

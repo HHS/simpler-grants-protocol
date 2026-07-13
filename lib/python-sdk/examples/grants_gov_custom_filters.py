@@ -68,9 +68,9 @@ def main() -> None:
     # without a live endpoint: status stays top-level, the four customs land in
     # customFilters. classify_filters returns the body directly and raises
     # FilterError on a bad value (fail-fast) — these filters are all valid.
-    body = classify_filters(grants_gov.routes, "opportunities", "search", filters).model_dump(
-        by_alias=True, exclude_none=True, mode="json"
-    )
+    body = classify_filters(
+        grants_gov.routes, "opportunities", "search", filters
+    ).model_dump(by_alias=True, exclude_none=True, mode="json")
     print("Request body (default fields + customFilters):")
     print(json.dumps(body, indent=2), "\n")
 
