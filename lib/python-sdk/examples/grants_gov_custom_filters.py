@@ -27,7 +27,7 @@ from __future__ import annotations
 import json
 import sys
 
-from cg_grants_gov import grants_gov
+from cg_grants_gov import OppSearchFilters, grants_gov
 
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.extensions import classify_filters, f
@@ -54,8 +54,9 @@ def main() -> None:
 
     # A consumer's flat filter dict: one default core filter + four grants.gov
     # customs. Each f.* builder returns the precise value model the registered
-    # filter expects.
-    filters = {
+    # filter expects; the OppSearchFilters annotation is what makes
+    # search(filters=...) typecheck against the plugin's registered filters.
+    filters: OppSearchFilters = {
         "status": f.in_(["open", "forecasted"]),
         "agency": f.in_(["HHS", "USDA"]),
         "applicantType": f.in_(["government_state", "government_county"]),
