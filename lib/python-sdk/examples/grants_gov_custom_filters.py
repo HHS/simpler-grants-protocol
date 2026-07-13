@@ -58,7 +58,7 @@ def main() -> None:
     filters = {
         "status": f.in_(["open", "forecasted"]),
         "agency": f.in_(["HHS", "USDA"]),
-        "applicantType": f.in_(["state_governments", "county_governments"]),
+        "applicantType": f.in_(["government_state", "government_county"]),
         "fundingInstrument": f.in_(["grant", "cooperative_agreement"]),
         "costSharing": f.eq(False),
     }

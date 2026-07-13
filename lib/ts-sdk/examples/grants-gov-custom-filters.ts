@@ -34,7 +34,7 @@ const baseUrl = "http://localhost:8080";
 const filters = {
   status: F.in(["open", "forecasted"]),
   agency: F.in(["HHS", "USDA"]),
-  applicantType: F.in(["state_governments", "county_governments"]),
+  applicantType: F.in(["government_state", "government_county"]),
   fundingInstrument: F.in(["grant", "cooperative_agreement"]),
   costSharing: F.eq(false),
 };
