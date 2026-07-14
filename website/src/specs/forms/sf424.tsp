@@ -234,7 +234,7 @@ model SF424 {
   /** Primary applicant organization */
   @example(#{
     name: "Example Research Institute",
-    ein: "12-3456789",
+    ein: "123456789",
     uei: "ABC123DEF456",
     address: #{
       street1: "123 Research Way",

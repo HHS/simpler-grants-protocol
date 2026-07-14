@@ -75,6 +75,38 @@ describe("Models - Log @added()", () => {
     });
   });
 
+  it("should log a single entry when a model is `is` a versioned template", async () => {
+    // A model defined via `is` on a versioned template inherits the template's
+    // @added in addition to its own, so the version can be reported twice. The
+    // model is still added only once, so the log should collapse to one entry.
+    const code = `
+    @versioned(Versions)
+    namespace Service {
+      enum Versions {
+        v1,
+        v2,
+      }
+
+      @added(Versions.v2)
+      model Base<Id extends string = string> {
+        id?: Id;
+      }
+
+      @added(Versions.v2)
+      model ${USER_MODEL} is Base<string>;
+    }
+    `;
+
+    await emitAndValidate(code, {
+      Base: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, "Base")],
+      },
+      [USER_MODEL]: {
+        [V2_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
+    });
+  });
+
   it("should exclude versions that have no changes", async () => {
     const code = `
       @versioned(Versions)

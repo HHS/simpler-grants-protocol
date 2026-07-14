@@ -34,9 +34,7 @@ The collection looks like this:
       "org:us:ein": {
         "registry": {
           "code": "org:us:ein",
-          "url": "https://commongrants.org/registries/org-us-ein",
-          "scope": "US",
-          "kind": "government"
+          "url": "https://commongrants.org/registries/org-us-ein"
         },
         "id": "987654321"
       }
@@ -46,36 +44,26 @@ The collection looks like this:
     "systemId": {
       "registry": {
         "code": "org:grants.gov:system",
-        "url": "https://commongrants.org/registries/org-grants-gov-system",
-        "scope": "grants.gov",
-        "kind": "platform"
+        "url": "https://commongrants.org/registries/org-grants-gov-system"
       },
       "id": "01912a8b-7c3d-7890-abcd-ef1234567890"
     },
     "org:us:ein": {
       "registry": {
         "code": "org:us:ein",
-        "url": "https://commongrants.org/registries/org-us-ein",
-        "scope": "US",
-        "kind": "government",
-        "schema": "https://commongrants.org/registries/org-us-ein/schema.json"
+        "url": "https://commongrants.org/registries/org-us-ein"
       },
       "id": "123456789",
       "allIds": [
         { "id": "123456789", "status": "active" },
         { "id": "654321098", "status": "active" },
         { "id": "111111111", "status": "archived" }
-      ],
-      "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
-      "verifiedAt": "2026-03-15T00:00:00Z",
-      "verifiedBy": "irs.gov"
+      ]
     },
     "org:us:uei": {
       "registry": {
         "code": "org:us:uei",
-        "url": "https://commongrants.org/registries/org-us-uei",
-        "scope": "US",
-        "kind": "government"
+        "url": "https://commongrants.org/registries/org-us-uei"
       },
       "id": "AB0123456789"
     },
@@ -83,12 +71,9 @@ The collection looks like this:
       "org:candid:bridge": {
         "registry": {
           "code": "org:candid:bridge",
-          "url": "https://commongrants.org/registries/org-candid-bridge",
-          "scope": "candid",
-          "kind": "commercial"
+          "url": "https://commongrants.org/registries/org-candid-bridge"
         },
-        "id": "1234567",
-        "uri": "https://www.guidestar.org/profile/1234567"
+        "id": "1234567"
       }
     }
   }
@@ -100,7 +85,7 @@ At a glance, the key decisions for this identification system are:
 1. **Top-level ID:** A pure UUID on each resource, with the hosting system's own ID also surfaced inside the collection as `systemId`.
 2. **Collection structure:** A map keyed by registry code, with a catch-all `otherIds` map for extensions.
 3. **Map key format:** The registry's canonical three-part CommonGrants code, `<schema>:<scope>:<prop>` (`org:us:ein`, `org:us:uei`, `org:xi:duns`), used as both the map key and `registry.code`.
-4. **Identifier metadata structure:** A nested hybrid shape. Registry-level facts (the same for every record in the registry) live in a nested `registry` object with required `code` and `url` (linking to the catalog entry) plus optional `scope`, `kind`, and `schema`. Instance-level facts (`id`, `allIds`, `uri`, `verifiedAt`, `verifiedBy`) stay at the top level. Richer registry metadata (issuer, human-readable name, lookup template, etc.) lives in the external CommonGrants registry catalog reachable through `registry.url`.
+4. **Identifier metadata structure:** A nested hybrid shape, kept deliberately small on the wire. Registry-level facts live in a nested `registry` object holding the `code` plus an optional `url` linking to the catalog entry. Instance-level facts (`id`, `allIds`) stay at the top level. Every field is optional, so a payload carries only what a given system knows about a record. Richer registry metadata (scope, kind, issuer, human-readable name, lookup template, validation schema, etc.) lives entirely in the external CommonGrants registry catalog reachable through `registry.url`, rather than being duplicated inline on every record.
 5. **Multiple IDs per registry:** `id` for the primary, plus an optional `allIds` array of `{ id, status }` objects covering every known ID for this registry (the primary included), so consumers can do membership checks against `allIds` alone.
 6. **Parent organization:** `parent` carries `id`, `name`, and optionally an embedded `identifiers` collection. Parent identifiers do not leak into the child's collection.
 7. **Registry code format:** A single uniform three-part `<schema>:<scope>:<prop>` code (`org:us:ein`, `org:xi:duns`, `org:grants.gov:system`) minted and owned by CommonGrants for every registry, used as both the map key and `registry.code`. `schema` is the CommonGrants model the identifier applies to (`org`, `opp`, `app`, `awd`), `scope` is the jurisdiction or namespace (`us`, `xi`, `grants.gov`), and `prop` is the identifier property (`ein`, `uei`, or `system` for a platform's own record ID). The equivalent org-id.guide code (when one exists) is recorded as an `orgIdGuide` cross-reference in the catalog, not used as the code itself.
@@ -113,7 +98,7 @@ At a glance, the key decisions for this identification system are:
   - Multiple IDs per registry are represented explicitly, with active, additional, and archived cases distinguishable.
   - Consistent with existing patterns (`AddressCollection`, `customFields`).
   - Nesting the `registry` object visually groups registry-level facts and points to the catalog entry via `registry.url`, so consumers can always find the source of truth.
-  - The optional `registry.schema` URI lets new identifier types define their own validation without protocol changes.
+  - Per-registry validation schemas live in the catalog (reachable via `registry.url`), so new identifier types can define their own validation without bloating every payload or requiring protocol changes.
   - `systemId` makes each collection self-contained: a consumer can match across systems without inspecting the top-level `id` separately.
   - Registry codes are CommonGrants-owned and uniform, so they stay stable across org-id.guide renames and apply the same rule to registries org-id.guide does not cover.
   - The map key equals `registry.code`, so there is one canonical string per registry rather than a separate alias to maintain.
@@ -129,9 +114,9 @@ At a glance, the key decisions for this identification system are:
 
 ### Identifier key hierarchy
 
-Each `IdentifierCollection` has two tiers of keys:
+Each `IdentifierCollection` collection has two tiers of keys:
 
-- **Base identifiers** are defined by `@common-grants/core` at the root of each model's `IdentifierCollection` extension (e.g. `org:us:ein`, `org:us:uei`, `org:xi:duns` on `OrgIdentifierCollection`). Each one has an identifier-specific JSON schema that extends the generic `Identifier` schema, plus a registered entry in the CommonGrants registry catalog. Every CommonGrants-compliant system is expected to recognize them for that model.
+- **Base identifiers** are defined by `@common-grants/core` at the root of each model's `IdentifierCollection` extension (e.g. `org:us:ein`, `org:us:uei`, `org:xi:duns` on `OrgIds`). Each one has an identifier-specific JSON schema that extends the generic `Identifier` schema, plus a registered entry in the CommonGrants registry catalog. Every CommonGrants-compliant system is expected to recognize them for that model.
 - **`otherIds`** is a catch-all map for identifiers the protocol does not define. Adopters can publish any identifier here keyed by its `<schema>:<scope>:<prop>` code (e.g. `org:candid:bridge`, `org:fluxx:system`). Entries need only conform to the generic `Identifier` schema. They may optionally be listed in the CommonGrants registry catalog, but the key itself is not reserved or validated by the protocol.
 
 **When to use each:**
@@ -204,8 +189,8 @@ Identifier:
       type: object
       description: |
         Registry-level facts that are the same for every record in this registry.
-        A subset of the corresponding catalog entry; consumers can fetch the full
-        entry via `registry.url`.
+        A minimal pointer to the corresponding catalog entry; consumers can fetch
+        the full entry (scope, kind, issuer, lookup template, etc.) via `registry.url`.
       properties:
         code:
           type: string
@@ -214,26 +199,12 @@ Identifier:
           type: string
           format: uri
           description: Link to the catalog entry for this registry
-        scope:
-          type: string
-          description: Jurisdiction or namespace the registry applies within (e.g. "US", "GB", "grants.gov")
-        kind:
-          type: string
-          enum: [government, commercial, platform, system]
-          description: |
-            Classification of the registry:
-            - government: issued by a government authority (EIN, UEI)
-            - commercial: issued by a commercial data provider (DUNS, Candid Bridge)
-            - platform: assigned by a CommonGrants-compliant system
-            - system: assigned by a non-CommonGrants system
-        schema:
-          type: string
-          format: uri
-          description: JSON schema for validating the identifier format
-      required: [code, url]
     id:
       type: string
-      description: Primary current identifier string
+      description: |
+        Primary current identifier string. Optional: may be omitted for registries
+        with no natural primary value (e.g. a program with multiple assistance
+        listing numbers), in which case consumers read `allIds`.
     allIds:
       type: array
       description: |
@@ -253,24 +224,6 @@ Identifier:
             enum: [active, archived]
             description: Whether the identifier is currently valid or retired
         required: [id, status]
-    uri:
-      type: string
-      format: uri
-      description: Link to this record in the registry's lookup service
-    verifiedAt:
-      type: string
-      format: date-time
-      description: When this identifier was last verified
-    verifiedBy:
-      type: string
-      description: |
-        Reference to the system, service, or process that performed the verification
-        (e.g. "irs.gov", "candid.org", "system:manual-review"). Be mindful of PII such
-        as a human name or email address. The exact format and vocabulary for this
-        field may be tightened during implementation.
-  required:
-    - registry
-    - id
 ```
 
 </details>
@@ -295,10 +248,10 @@ IdentifierCollection:
 </details>
 
 <details>
-<summary>OrgIdentifierCollection (model-specific extension)</summary>
+<summary>OrgIds (model-specific extension)</summary>
 
 ```yaml
-OrgIdentifierCollection:
+OrgIds:
   allOf:
     - $ref: "#/components/schemas/IdentifierCollection"
     - type: object
@@ -328,27 +281,21 @@ The same shape extends to other models with model-specific keys:
     "systemId": {
       "registry": {
         "code": "opp:grants.gov:system",
-        "url": "https://commongrants.org/registries/opp-grants-gov-system",
-        "scope": "grants.gov",
-        "kind": "platform"
+        "url": "https://commongrants.org/registries/opp-grants-gov-system"
       },
       "id": "01912a8b-7c3d-7892-abcd-ef1234567892"
     },
     "opp:us:fon": {
       "registry": {
         "code": "opp:us:fon",
-        "url": "https://commongrants.org/registries/opp-us-fon",
-        "scope": "grants.gov",
-        "kind": "platform"
+        "url": "https://commongrants.org/registries/opp-us-fon"
       },
       "id": "HHS-2026-ACF-OCC-YD-0001"
     },
     "opp:us:aln": {
       "registry": {
         "code": "opp:us:aln",
-        "url": "https://commongrants.org/registries/opp-us-aln",
-        "scope": "US",
-        "kind": "government"
+        "url": "https://commongrants.org/registries/opp-us-aln"
       },
       "id": "93.575"
     }
@@ -366,9 +313,7 @@ The same shape extends to other models with model-specific keys:
     "systemId": {
       "registry": {
         "code": "app:fluxx:system",
-        "url": "https://commongrants.org/registries/app-fluxx-system",
-        "scope": "fluxx",
-        "kind": "system"
+        "url": "https://commongrants.org/registries/app-fluxx-system"
       },
       "id": "01912a8b-7c3d-7893-abcd-ef1234567893"
     },
@@ -376,9 +321,7 @@ The same shape extends to other models with model-specific keys:
       "app:grants.gov:tracking": {
         "registry": {
           "code": "app:grants.gov:tracking",
-          "url": "https://commongrants.org/registries/app-grants-gov-tracking",
-          "scope": "grants.gov",
-          "kind": "platform"
+          "url": "https://commongrants.org/registries/app-grants-gov-tracking"
         },
         "id": "GRANT12345678"
       }
@@ -397,18 +340,14 @@ The same shape extends to other models with model-specific keys:
     "systemId": {
       "registry": {
         "code": "awd:grants.gov:system",
-        "url": "https://commongrants.org/registries/awd-grants-gov-system",
-        "scope": "grants.gov",
-        "kind": "platform"
+        "url": "https://commongrants.org/registries/awd-grants-gov-system"
       },
       "id": "01912a8b-7c3d-7894-abcd-ef1234567894"
     },
     "awd:us:fain": {
       "registry": {
         "code": "awd:us:fain",
-        "url": "https://commongrants.org/registries/awd-us-fain",
-        "scope": "US",
-        "kind": "government"
+        "url": "https://commongrants.org/registries/awd-us-fain"
       },
       "id": "ABC12345"
     }
@@ -803,8 +742,7 @@ The `registry` object holds a curated subset of the catalog entry: the fields th
       "schema": "https://commongrants.org/registries/org-us-ein/schema.json"
     },
     "id": "123456789",
-    "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789",
-    "verifiedAt": "2026-03-15T00:00:00Z"
+    "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789"
   }
 }
 ```

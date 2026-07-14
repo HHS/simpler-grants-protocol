@@ -12,11 +12,17 @@ namespace QuestionBank.OrgDuns;
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
-  #{ duns: #{ field: "organizations.primary.duns" } }
+  #{ duns: #{ field: "organizations.primary.identifiers.org:xi:duns.id" } }
 )
 @extension(
   "x-mapping-to-cg",
-  #{ organizations: #{ primary: #{ duns: #{ field: "duns" } } } }
+  #{
+    organizations: #{
+      primary: #{
+        identifiers: #{ `org:xi:duns`: #{ id: #{ field: "duns" } } },
+      },
+    },
+  }
 )
 @extension(
   "x-ui-schema",
