@@ -13,7 +13,7 @@ _How should the protocol represent the set of identifiers associated with an org
 
 ## Decision
 
-The protocol adopts an identification system that supports both uniquely identifying a record _within_ a given system and matching records _across_ multiple systems. To do this, it replaces the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `IdentifierCollection` collection will be reused across other core models, with each model extending it with its own base identifiers.
+The protocol adopts an identification system that supports both uniquely identifying a record _within_ a given system and matching records _across_ multiple systems. To do this, it replaces the hardcoded `ein`, `uei`, and `duns` fields on `OrganizationBase` with a generic `identifiers` collection. The same `IdentifierCollection` field will be reused across other core models, with each model extending it with its own base identifiers.
 
 :::caution[Important: publicly available identifiers only]
 
