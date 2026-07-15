@@ -135,18 +135,6 @@ model AwdRef {
 // Award recipient
 // #########################################################
 
-/** Whether the award recipient is an organization, an individual, or a custom type.
- * - `organization`: The award was made to an organization
- * - `individual`: The award was made to an individual
- * - `custom`: A custom recipient type
- */
-@Versioning.added(CommonGrants.Versions.v0_4)
-enum AwdRecipientType {
-  organization,
-  individual,
-  custom,
-}
-
 /** An individual who received an award, when the recipient is a person rather than an organization. */
 @Versioning.added(CommonGrants.Versions.v0_4)
 model AwdRecipientIndividual {
@@ -205,9 +193,6 @@ model AwardBase {
   /** The individual who received the award, if the recipient is a person */
   recipientIndividual?: AwdRecipientIndividual;
 
-  /** Whether the recipient is an organization, individual, or custom type */
-  recipientType?: AwdRecipientType;
-
   /** Parent award, for amendments or multi-tranche awards */
   parent?: AwdRef;
 
@@ -241,10 +226,6 @@ model AwdDefaultFilters extends Record<Filters.DefaultFilter> {
     value: #["awarded", "completed"],
   })
   status?: Filters.StringArrayFilter;
-
-  /** `recipientType` matches one of the following values */
-  @example(#{ operator: Filters.ArrayOperators.in, value: #["organization"] })
-  recipientType?: Filters.StringArrayFilter;
 
   /** `opportunity.id` matches one of the following values */
   @example(#{
@@ -372,7 +353,6 @@ namespace Examples.Award {
     opportunity: Examples.Opportunity.ref,
     funders: Examples.OrgRef.funders,
     recipientOrganizations: Examples.OrgRef.recipients,
-    recipientType: AwdRecipientType.organization,
     source: "https://www.usaspending.gov/award/ASST_NON_H80CS00001",
     createdAt: utcDateTime.fromISO("2026-03-01T00:00:00Z"),
     lastModifiedAt: utcDateTime.fromISO("2026-06-01T00:00:00Z"),
