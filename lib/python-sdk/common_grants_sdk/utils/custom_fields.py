@@ -160,7 +160,7 @@ def create_custom_field_schema(
         CustomFieldForAttr = create_model(
             _create_model_name(name=name, key=key),
             __base__=CustomField,
-            # pin expected type (wire key "fieldType" comes from the base alias generator)
+            # pin expected type
             field_type=(
                 CustomFieldType,
                 Field(default=field.field_type),

@@ -6,12 +6,9 @@ from pydantic.alias_generators import to_camel
 
 from common_grants_sdk.utils.transformation import transform_from_mapping
 
-# camelCase wire naming as a reusable config: validation and serialization use
-# the to_camel alias while populate_by_name keeps snake_case construction
-# working (and type-checking, since static checkers fall back to field names
-# when aliases come from a generator). Field-level alias settings override the
-# generator for irregular wire names. Used by CommonGrantsBaseModel and by the
-# wire models that do not extend it (sorting, pagination, filters).
+# Generated (not field-level) aliases keep snake_case construction type-checking:
+# static checkers fall back to field names when the alias comes from a generator.
+# Field-level alias settings still override for irregular wire names.
 CAMEL_ALIASES = AliasGenerator(
     validation_alias=to_camel,
     serialization_alias=to_camel,

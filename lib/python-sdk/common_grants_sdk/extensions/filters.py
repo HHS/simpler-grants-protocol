@@ -309,22 +309,7 @@ DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
     ]
 )
 
-# ---------------------------------------------------------------------------
-# Alias-normalization maps for classify_filters
-#
-# Consumers may pass either the snake_case field name or the camelCase wire
-# alias.  classify_filters normalizes keys to the wire alias (or field-name for
-# fields without one) before passing them to OppFilters(**...):
-#   - snake_case keys with a camelCase alias → converted to the alias (closeDateRange)
-#   - camelCase alias keys → kept as-is (already the alias)
-#   - keys with no alias (e.g. "status") → kept as-is (snake == request key)
-# ---------------------------------------------------------------------------
-
-# Map from snake_case field name → camelCase wire alias (used for OppFilters
-# construction).  Reads ``serialization_alias`` before bare ``alias`` so fields on
-# either alias style resolve; fields without an alias and alias-form keys fall
-# through ``_SNAKE_TO_ALIAS.get(key, key)`` unchanged — one lookup normalizes all
-# three key classes.
+# snake_case field name → camelCase wire alias, for OppFilters construction.
 _SNAKE_TO_ALIAS: dict[str, str] = {
     field_name: wire_name
     for field_name, field_info in OppDefaultFilters.model_fields.items()
