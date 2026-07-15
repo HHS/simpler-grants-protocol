@@ -6,11 +6,8 @@ namespace CommonGrants.Models;
 @example(Examples.Organization.exampleOrg)
 @Versioning.added(CommonGrants.Versions.v0_2)
 model OrganizationBase {
-  /** The organization's unique identifier. */
-  id: Types.uuid;
-
-  /** The organization's legal name as registered with relevant authorities. */
-  name: string;
+  // Identity fields shared with the OrgRef reference model
+  ...OrgRef;
 
   /** The organization's type within the Philanthropy Classification System (PCS). */
   orgType?: Fields.PCSOrgType;
@@ -26,10 +23,6 @@ model OrganizationBase {
   /** The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses. */
   @Versioning.removed(CommonGrants.Versions.v0_4)
   duns?: Types.duns;
-
-  /** Identifiers associated with the organization, keyed by registry code. */
-  @Versioning.added(CommonGrants.Versions.v0_4)
-  identifiers?: OrgIds;
 
   /** Collection of physical addresses associated with the organization. */
   addresses?: Fields.AddressCollection;
@@ -87,6 +80,44 @@ model OrgIds extends Fields.IdentifierCollection {
 
   /** The organization's Data Universal Numbering System (DUNS) number. */
   `org:xi:duns`?: OrgIdDuns;
+}
+
+// #########################################################
+// Organization references
+// #########################################################
+
+/** A reference to an organization, previewing the key fields a consumer needs
+ * to identify it and look it up or join it to another response. Appears
+ * wherever another record points to an organization, such as an award's funder
+ * or recipient.
+ */
+@example(Examples.OrgRef.funder)
+@Versioning.added(CommonGrants.Versions.v0_2)
+model OrgRef {
+  /** The organization's unique identifier. */
+  @visibility(Lifecycle.Read)
+  id: Types.uuid;
+
+  /** The organization's legal name as registered with relevant authorities. */
+  name: string;
+
+  /** Identifiers associated with the organization, keyed by registry code. */
+  @Versioning.added(CommonGrants.Versions.v0_4)
+  identifiers?: OrgIds;
+}
+
+/** A group of organization references, with a primary organization and
+ * optional others. Appears wherever several organizations share a role on a
+ * record, such as an award's funders or recipient organizations.
+ */
+@example(Examples.OrgRef.funders)
+@Versioning.added(CommonGrants.Versions.v0_4)
+model OrgRefCollection {
+  /** The primary organization in the collection. */
+  primary: OrgRef;
+
+  /** Other organizations in the collection, keyed by an implementation-defined role. */
+  otherOrgs?: Record<OrgRef>;
 }
 
 // #########################################################
@@ -186,4 +217,31 @@ namespace Examples.OrgId {
     },
     id: "123456789",
   };
+}
+
+namespace Examples.OrgRef {
+  const funder = #{
+    id: "018f2e77-4b5c-7d2e-9f3a-bcdef1234567",
+    name: "Health Resources and Services Administration",
+    identifiers: #{
+      otherIds: #{
+        `org:grants.gov:agency`: #{
+          registry: #{ code: "org:grants.gov:agency" },
+          id: "HRSA",
+        },
+      },
+    },
+  };
+
+  const recipient = #{
+    id: "018f2e77-6d7e-7f4a-9b5c-def123456789",
+    name: "Riverside Community Health Center",
+    identifiers: #{
+      `org:us:ein`: #{ registry: #{ code: "org:us:ein" }, id: "123456789" },
+    },
+  };
+
+  const funders = #{ primary: funder };
+
+  const recipients = #{ primary: recipient };
 }

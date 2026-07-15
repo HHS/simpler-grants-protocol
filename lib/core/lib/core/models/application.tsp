@@ -1,14 +1,28 @@
 namespace CommonGrants.Models;
 
+/** A reference to an application, previewing the key fields a consumer needs
+ * to identify it and look it up or join it to another response. Appears
+ * wherever another record points to an application, such as the application
+ * an award resulted from.
+ */
+@example(Examples.Application.ref)
+@Versioning.added(CommonGrants.Versions.v0_2)
+model AppRef {
+  /** The unique identifier for the application */
+  @visibility(Lifecycle.Read)
+  id: Types.uuid;
+
+  /** The title of the application */
+  @Versioning.renamedFrom(CommonGrants.Versions.v0_4, "name")
+  title: string;
+}
+
 /** The base model for an application to a competition for a funding opportunity */
 @example(Examples.Application.applicationBase)
 @Versioning.added(CommonGrants.Versions.v0_2)
 model ApplicationBase {
-  /** The unique identifier for the application */
-  id: Types.uuid;
-
-  /** The name of the application */
-  name: string;
+  // Identity fields shared with the AppRef reference model
+  ...AppRef;
 
   /** The unique identifier for the competition */
   competitionId: Types.uuid;
@@ -167,6 +181,11 @@ model AppSorting extends Sorting.SortBodyParams {
 // #########################################################
 
 namespace Examples.Application {
+  const ref = #{
+    id: "123e4567-e89b-12d3-a456-426614174000",
+    title: "My Application",
+  };
+
   const submittedStatus = #{
     value: AppStatusOptions.submitted,
     description: "The application has been submitted.",
@@ -207,7 +226,7 @@ namespace Examples.Application {
 
   const applicationBase = #{
     id: "123e4567-e89b-12d3-a456-426614174000",
-    name: "My Application",
+    title: "My Application",
     competitionId: "123e4567-e89b-12d3-a456-426614174000",
     opportunityId: "ad3b469a-d89a-42d3-c439-6c1234567890",
     formResponses: #{ formA: formResponse },
