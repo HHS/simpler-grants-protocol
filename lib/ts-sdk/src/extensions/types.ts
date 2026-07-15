@@ -72,7 +72,6 @@ export type CustomFilterType =
   | "numberComparison"
   | "numberArray"
   | "numberRange"
-  | "integerComparison"
   | "booleanComparison"
   | "dateComparison"
   | "dateRange"
