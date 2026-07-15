@@ -21,21 +21,6 @@ model NumberComparisonFilter {
 }
 
 // ############################################################################
-// Integer comparison filter
-// ############################################################################
-
-/** Filters by comparing a field to an integer value */
-@Versioning.added(CommonGrants.Versions.v0_4)
-model IntegerComparisonFilter {
-  /** The comparison operator to apply to the filter value */
-  operator: ComparisonOperators | EquivalenceOperators;
-
-  /** The value to use for the filter operation */
-  @example(100)
-  value: integer;
-}
-
-// ############################################################################
 // Number range filter
 // ############################################################################
 

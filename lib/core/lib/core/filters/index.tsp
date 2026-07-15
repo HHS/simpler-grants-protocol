@@ -1,5 +1,4 @@
 import "./base.tsp";
-import "./boolean.tsp";
 import "./date.tsp";
 import "./numeric.tsp";
 import "./money.tsp";
