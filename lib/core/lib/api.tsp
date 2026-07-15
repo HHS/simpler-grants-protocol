@@ -53,6 +53,7 @@ using Versioning;
   "Opportunities",
   #{ description: "Endpoints related to funding opportunities" }
 )
+@tagMetadata("Awards", #{ description: "Endpoints related to grant awards" })
 @route("/common-grants") // Prefixes all routes with `/common-grants/`
 namespace CommonGrants.API;
 
@@ -76,6 +77,26 @@ namespace Opportunities {
   op read is Router.read;
 
   @tag("optional")
+  op search is Router.search;
+}
+
+// #########################################################
+// Awards
+// #########################################################
+
+@tag("Awards")
+@tag("experimental")
+@route("/awards")
+namespace Awards {
+  alias Router = Routes.Awards;
+
+  @added(Versions.v0_4)
+  op list is Router.list;
+
+  @added(Versions.v0_4)
+  op read is Router.read;
+
+  @added(Versions.v0_4)
   op search is Router.search;
 }
 
