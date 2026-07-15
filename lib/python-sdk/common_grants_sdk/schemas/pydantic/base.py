@@ -12,6 +12,9 @@ class CommonGrantsBaseModel(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
         strict=False,  # Coerces strings to enums, datetimes, etc.
+        # Accept snake_case field names alongside their camelCase wire aliases
+        # in constructors and validation; serialization still uses the aliases.
+        populate_by_name=True,
     )
 
     def dump(self) -> dict:

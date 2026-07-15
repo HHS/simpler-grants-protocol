@@ -301,32 +301,34 @@ f = _FHelpers()
 #: field (an alias-only set would silently drop snake_case keys into ``customFilters``).
 DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
     list(OppDefaultFilters.model_fields.keys())
-    + [v.alias for v in OppDefaultFilters.model_fields.values() if v.alias]
+    + [
+        name
+        for v in OppDefaultFilters.model_fields.values()
+        for name in (v.alias, v.validation_alias, v.serialization_alias)
+        if isinstance(name, str)
+    ]
 )
 
 # ---------------------------------------------------------------------------
 # Alias-normalization maps for classify_filters
 #
-# OppDefaultFilters uses snake_case field names with camelCase aliases but does NOT
-# set populate_by_name=True.  Pydantic v2 therefore requires the alias form when
-# constructing OppFilters via **kwargs — passing the snake_case field name silently
-# results in None (the alias is the required construction key).
-#
-# classify_filters normalizes consumer keys to the alias (or field-name for fields
-# without an alias) before passing them to OppFilters(**...):
+# Consumers may pass either the snake_case field name or the camelCase wire
+# alias.  classify_filters normalizes keys to the wire alias (or field-name for
+# fields without one) before passing them to OppFilters(**...):
 #   - snake_case keys with a camelCase alias → converted to the alias (closeDateRange)
 #   - camelCase alias keys → kept as-is (already the alias)
 #   - keys with no alias (e.g. "status") → kept as-is (snake == request key)
 # ---------------------------------------------------------------------------
 
-# Map from snake_case field name → camelCase alias (used for OppFilters construction).
-# Only fields that declare an alias are included; alias-form keys and fields without
-# aliases fall through ``_SNAKE_TO_ALIAS.get(key, key)`` unchanged — one lookup
-# normalizes all three key classes.
+# Map from snake_case field name → camelCase wire alias (used for OppFilters
+# construction).  Reads ``serialization_alias`` before bare ``alias`` so fields on
+# either alias style resolve; fields without an alias and alias-form keys fall
+# through ``_SNAKE_TO_ALIAS.get(key, key)`` unchanged — one lookup normalizes all
+# three key classes.
 _SNAKE_TO_ALIAS: dict[str, str] = {
-    field_name: field_info.alias
+    field_name: wire_name
     for field_name, field_info in OppDefaultFilters.model_fields.items()
-    if field_info.alias
+    if (wire_name := field_info.serialization_alias or field_info.alias)
 }
 
 # ---------------------------------------------------------------------------

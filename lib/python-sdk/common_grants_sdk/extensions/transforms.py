@@ -48,8 +48,13 @@ def _validate_output_paths(
 
     valid_names: set[str] = set(model.model_fields.keys())
     for field_info in model.model_fields.values():
-        if field_info.alias:
-            valid_names.add(field_info.alias)
+        for alias in (
+            field_info.alias,
+            field_info.validation_alias,
+            field_info.serialization_alias,
+        ):
+            if isinstance(alias, str):
+                valid_names.add(alias)
 
     # Top-level handler invocations (rare but structurally valid) are not output keys
     output_keys = {k for k in mapping if k not in known_handlers}

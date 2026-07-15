@@ -29,7 +29,8 @@ class EventBase(CommonGrantsBaseModel):
     )
     event_type: EventType = Field(
         ...,
-        alias="eventType",
+        validation_alias="eventType",
+        serialization_alias="eventType",
         description="Type of event",
     )
     description: Optional[str] = Field(
@@ -44,7 +45,8 @@ class SingleDateEvent(EventBase):
 
     event_type: Literal[EventType.SINGLE_DATE] = Field(
         EventType.SINGLE_DATE,
-        alias="eventType",
+        validation_alias="eventType",
+        serialization_alias="eventType",
     )
     date: ISODate = Field(
         ...,
@@ -62,26 +64,31 @@ class DateRangeEvent(EventBase):
 
     event_type: Literal[EventType.DATE_RANGE] = Field(
         EventType.DATE_RANGE,
-        alias="eventType",
+        validation_alias="eventType",
+        serialization_alias="eventType",
     )
     start_date: ISODate = Field(
         ...,
-        alias="startDate",
+        validation_alias="startDate",
+        serialization_alias="startDate",
         description="Start date of the event in ISO 8601 format: YYYY-MM-DD",
     )
     start_time: Optional[ISOTime] = Field(
         default=None,
-        alias="startTime",
+        validation_alias="startTime",
+        serialization_alias="startTime",
         description="Start time of the event in ISO 8601 format: HH:MM:SS",
     )
     end_date: ISODate = Field(
         ...,
-        alias="endDate",
+        validation_alias="endDate",
+        serialization_alias="endDate",
         description="End date of the event in ISO 8601 format: YYYY-MM-DD",
     )
     end_time: Optional[ISOTime] = Field(
         default=None,
-        alias="endTime",
+        validation_alias="endTime",
+        serialization_alias="endTime",
         description="End time of the event in ISO 8601 format: HH:MM:SS",
     )
 
@@ -92,7 +99,8 @@ class OtherEvent(EventBase):
 
     event_type: Literal[EventType.OTHER] = Field(
         EventType.OTHER,
-        alias="eventType",
+        validation_alias="eventType",
+        serialization_alias="eventType",
     )
     details: Optional[str] = Field(
         default=None,
