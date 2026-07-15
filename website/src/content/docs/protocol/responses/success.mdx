@@ -15,32 +15,32 @@ ok:
         }
       }
   jsonSchema:
-    code: |
-      $schema: https://json-schema.org/draft/2020-12/schema
-      $id: Ok.yaml
-      type: object
-      properties:
-        status:
-          type: integer
-          minimum: 200
-          default: 200
-          description: The HTTP status code
-        message:
-          type: string
-          default: "Success"
-          description: The message to return
-        data:
-          type: object
-          description: The data to return
-      required:
-        - status
-        - message
-        - data
+    file:
+      path: "website/public/schemas/yaml/Ok.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 40
-      endLine: 48
+      startLine: 29
+      endLine: 34
+created:
+  example:
+    code: |
+      {
+        "status": 201,
+        "message": "Created",
+        "data": {
+          "id": "123",
+          "name": "Test 1"
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Created.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/responses/success.tsp"
+      startLine: 240
+      endLine: 245
 success:
   example:
     file:
@@ -117,7 +117,7 @@ A 200 response with data.
 
 ### Usage
 
-Here's an example of how to use the `Ok` response within a an API operation:
+Use the `OkT<T>` template to define a 200 response with typed data within an API operation:
 
 ```typespec
 import "@common-grants/core";
@@ -134,5 +134,55 @@ model TestModel {
 @summary("Get test")
 @doc("Get a test model")
 @get
-op getTest(): Ok<TestModel>;
+op getTest(): OkT<TestModel>;
 ```
+
+### Changelog
+
+<SchemaChangelog schema="Ok" />
+
+## Created
+
+A 201 response with data.
+
+### Table
+
+| Parameter | Type                                       | Description           |
+| --------- | ------------------------------------------ | --------------------- |
+| status    | [integer](/protocol/types/numeric#integer) | The HTTP status code  |
+| message   | [string](/protocol/types/string#string)    | The message to return |
+| data      | any                                        | The data to return    |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.created.example}
+  jsonSchema={frontmatter.created.jsonSchema}
+  typeSpec={frontmatter.created.typeSpec}
+/>
+
+### Usage
+
+Use the `CreatedT<T>` template to define a 201 response with typed data within an API operation:
+
+```typespec
+import "@common-grants/core";
+import "@typespec/http";
+
+using TypeSpec.Http;
+using CommonGrants.Responses;
+
+model TestModel {
+  id: string;
+  name: string;
+}
+
+@summary("Create test")
+@doc("Create a test model")
+@post
+op createTest(@body body: TestModel): CreatedT<TestModel>;
+```
+
+### Changelog
+
+<SchemaChangelog schema="Created" />

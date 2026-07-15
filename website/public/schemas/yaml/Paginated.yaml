@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Paginated.yaml
+type: object
+properties:
+  items:
+    type: array
+    items: {}
+    description: Items from the current page
+  paginationInfo:
+    $ref: PaginatedResultsInfo.yaml
+    description: Details about the paginated results
+required:
+  - items
+  - paginationInfo
+allOf:
+  - $ref: Success.yaml
+unevaluatedProperties:
+  not: {}
+description: A 200 response with a paginated list of items
