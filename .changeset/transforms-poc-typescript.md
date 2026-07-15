@@ -2,7 +2,7 @@
 "@common-grants/sdk": minor
 ---
 
-Add a TypeScript proof-of-concept for the plugin transformation framework (issue #798), mirroring the Python PoC in PR #810. Plugin authors can now compile declarative mapping objects into typed `(toCommon, fromCommon)` callables, validate `toCommon` output against an extended Zod schema, and attach those callables to a plugin via `definePlugin({ schemas })`.
+Add the plugin transformation framework to the TypeScript SDK. Plugin authors can compile declarative mapping objects into typed `(toCommon, fromCommon)` callables, validate `toCommon` output against an extended Zod schema, and attach those callables to a plugin via `definePlugin({ schemas })`.
 
 **New public surface (under `@common-grants/sdk/extensions`):**
 
@@ -24,9 +24,5 @@ Add a TypeScript proof-of-concept for the plugin transformation framework (issue
 **Removed:**
 
 - `mergeExtensions` has been removed from the public surface. Consumers who previously used `mergeExtensions` to combine extension objects should merge them manually (e.g. with object spread) before passing to `definePlugin`.
-
-**Deferred to full SDK:**
-
-- Always-on `commonModel` validation inside `definePlugin()` — opt-in at `buildTransforms()` call site for now (pass the fully extended schema as `commonModel` to enable Zod validation on `toCommon` output).
 
 Runnable example: `pnpm --filter @common-grants/sdk example:transforms` (round-trips a synthetic grants.gov record through `toCommon` and `fromCommon` with custom `join` / `split` handlers, extended-schema validation, and three-state null preservation on `source_url: null`).
