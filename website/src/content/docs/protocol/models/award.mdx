@@ -13,8 +13,8 @@ awardBase:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/award.tsp"
-      startLine: 167
-      endLine: 219
+      startLine: 155
+      endLine: 204
 awdRef:
   example:
     file:
@@ -75,18 +75,6 @@ awdTimeline:
       path: "lib/core/lib/core/models/award.tsp"
       startLine: 72
       endLine: 87
-awdRecipientType:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwdRecipientType.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwdRecipientType.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 138
-      endLine: 148
 awdRecipientIndividual:
   example:
     file:
@@ -97,8 +85,8 @@ awdRecipientIndividual:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/award.tsp"
-      startLine: 150
-      endLine: 161
+      startLine: 138
+      endLine: 149
 awdIds:
   example:
     file:
@@ -111,6 +99,18 @@ awdIds:
       path: "lib/core/lib/core/models/award.tsp"
       startLine: 98
       endLine: 108
+awdIdFain:
+  example:
+    file:
+      path: "website/public/schemas/yaml/AwdIdFain.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/AwdIdFain.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/award.tsp"
+      startLine: 93
+      endLine: 96
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -237,26 +237,6 @@ Key dates in the award's timeline, such as the award date and period of performa
 
 <SchemaChangelog schema="AwdTimeline" />
 
-## AwdRecipientType
-
-Whether the award recipient is an organization, an individual, or a custom type.
-
-### Table
-
-<SchemaTable filePath={frontmatter.awdRecipientType.jsonSchema.file.path} />
-
-### Formats
-
-<SchemaFormatTabs
-  example={frontmatter.awdRecipientType.example}
-  jsonSchema={frontmatter.awdRecipientType.jsonSchema}
-  typeSpec={frontmatter.awdRecipientType.typeSpec}
-/>
-
-### Changelog
-
-<SchemaChangelog schema="AwdRecipientType" />
-
 ## AwdRecipientIndividual
 
 An individual who received an award, when the recipient is a person rather than an organization.
@@ -298,3 +278,23 @@ System and registry-specific identifiers for an award, such as its FAIN.
 ### Changelog
 
 <SchemaChangelog schema="AwdIds" />
+
+## AwdIdFain
+
+An award's Federal Award Identification Number (FAIN), assigned by the awarding agency. It pins `registry.code` to `awd:us:fain`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.awdIdFain.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.awdIdFain.example}
+  jsonSchema={frontmatter.awdIdFain.jsonSchema}
+  typeSpec={frontmatter.awdIdFain.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="AwdIdFain" />

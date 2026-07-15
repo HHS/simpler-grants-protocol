@@ -4,7 +4,8 @@ import "swagger-ui-react/swagger-ui.css";
 
 // Available OpenAPI versions
 const availableVersions = [
-  { version: "0.3.0", label: "v0.3.0 (Latest)" },
+  { version: "0.4.0", label: "v0.4.0 (Latest)" },
+  { version: "0.3.0", label: "v0.3.0" },
   { version: "0.2.0", label: "v0.2.0" },
   { version: "0.1.0", label: "v0.1.0" },
 ];

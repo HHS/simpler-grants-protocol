@@ -10,13 +10,6 @@ properties:
           - awarded
           - completed
     description: "`status.value` matches one of the following values"
-  recipientType:
-    $ref: StringArrayFilter.yaml
-    examples:
-      - operator: in
-        value:
-          - organization
-    description: "`recipientType` matches one of the following values"
   opportunityId:
     $ref: StringArrayFilter.yaml
     examples:

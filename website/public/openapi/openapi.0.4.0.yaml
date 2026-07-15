@@ -1793,10 +1793,6 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.AwdRecipientIndividual'
           description: The individual who received the award, if the recipient is a person
-        recipientType:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.AwdRecipientType'
-          description: Whether the recipient is an organization, individual, or custom type
         parent:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.AwdRef'
@@ -1877,7 +1873,6 @@ components:
                 registry:
                   code: org:us:ein
                 id: '123456789'
-        recipientType: organization
         source: https://www.usaspending.gov/award/ASST_NON_H80CS00001
         createdAt: '2026-03-01T00:00:00Z'
         lastModifiedAt: '2026-06-01T00:00:00Z'
@@ -1893,14 +1888,6 @@ components:
             value:
               - awarded
               - completed
-        recipientType:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
-          description: '`recipientType` matches one of the following values'
-          example:
-            operator: in
-            value:
-              - organization
         opportunityId:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
@@ -1952,14 +1939,6 @@ components:
             value:
               - awarded
               - completed
-        recipientType:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
-          description: '`recipientType` matches one of the following values'
-          example:
-            operator: in
-            value:
-              - organization
         opportunityId:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
@@ -2115,17 +2094,6 @@ components:
             $ref: '#/components/schemas/CommonGrants.Fields.CustomField'
           description: Custom fields about the individual recipient.
       description: An individual who received an award, when the recipient is a person rather than an organization.
-    CommonGrants.Models.AwdRecipientType:
-      type: string
-      enum:
-        - organization
-        - individual
-        - custom
-      description: |-
-        Whether the award recipient is an organization, an individual, or a custom type.
-        - `organization`: The award was made to an organization
-        - `individual`: The award was made to an individual
-        - `custom`: A custom recipient type
     CommonGrants.Models.AwdRef:
       type: object
       required:

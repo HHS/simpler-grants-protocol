@@ -42,9 +42,6 @@ properties:
   recipientIndividual:
     $ref: AwdRecipientIndividual.yaml
     description: The individual who received the award, if the recipient is a person
-  recipientType:
-    $ref: AwdRecipientType.yaml
-    description: Whether the recipient is an organization, individual, or custom type
   parent:
     $ref: AwdRef.yaml
     description: Parent award, for amendments or multi-tranche awards
@@ -130,7 +127,6 @@ examples:
             registry:
               code: org:us:ein
             id: "123456789"
-    recipientType: organization
     source: https://www.usaspending.gov/award/ASST_NON_H80CS00001
     createdAt: 2026-03-01T00:00:00Z
     lastModifiedAt: 2026-06-01T00:00:00Z
