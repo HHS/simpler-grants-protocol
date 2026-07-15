@@ -8,6 +8,9 @@ properties:
   name:
     type: string
     description: The organization's legal name as registered with relevant authorities.
+  identifiers:
+    $ref: OrgIds.yaml
+    description: Identifiers associated with the organization, keyed by registry code.
   orgType:
     $ref: PCSOrgType.yaml
     description: The organization's type within the Philanthropy Classification System (PCS).
@@ -20,9 +23,6 @@ properties:
   duns:
     $ref: duns.yaml
     description: The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses.
-  identifiers:
-    $ref: OrgIds.yaml
-    description: Identifiers associated with the organization, keyed by registry code.
   addresses:
     $ref: AddressCollection.yaml
     description: Collection of physical addresses associated with the organization.

@@ -117,7 +117,7 @@ organizationBase:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
       startLine: 5
-      endLine: 54
+      endLine: 47
 orgIds:
   example:
     file:
@@ -128,8 +128,8 @@ orgIds:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 75
-      endLine: 90
+      startLine: 68
+      endLine: 83
 orgIdEin:
   example:
     file:
@@ -140,8 +140,8 @@ orgIdEin:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 60
-      endLine: 63
+      startLine: 53
+      endLine: 56
 orgIdUei:
   example:
     file:
@@ -152,8 +152,8 @@ orgIdUei:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 65
-      endLine: 68
+      startLine: 58
+      endLine: 61
 orgIdDuns:
   example:
     file:
@@ -164,8 +164,32 @@ orgIdDuns:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 70
-      endLine: 73
+      startLine: 63
+      endLine: 66
+orgRef:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgRef.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgRef.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 89
+      endLine: 107
+orgRefCollection:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgRefCollection.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgRefCollection.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 109
+      endLine: 121
 orgSocialLinks:
   example:
     code: |
@@ -187,8 +211,8 @@ orgSocialLinks:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 96
-      endLine: 120
+      startLine: 127
+      endLine: 151
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -315,6 +339,46 @@ An organization's Data Universal Numbering System (DUNS) number. It pins `regist
 ### Changelog
 
 <SchemaChangelog schema="OrgIdDuns" />
+
+## OrgRef
+
+A reference to an organization, previewing the key fields a consumer needs to identify it and look it up or join it to another response. Appears wherever another record points to an organization, such as an [award's](/protocol/models/award) funder or recipient.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgRef.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgRef.example}
+  jsonSchema={frontmatter.orgRef.jsonSchema}
+  typeSpec={frontmatter.orgRef.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgRef" />
+
+## OrgRefCollection
+
+A group of organization references, with a primary organization and optional others. Appears wherever several organizations share a role on a record, such as an award's funders or recipient organizations.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgRefCollection.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgRefCollection.example}
+  jsonSchema={frontmatter.orgRefCollection.jsonSchema}
+  typeSpec={frontmatter.orgRefCollection.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgRefCollection" />
 
 ## OrgSocialLinks
 
