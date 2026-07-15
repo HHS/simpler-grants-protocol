@@ -55,9 +55,13 @@ def add_custom_fields(
             if hasattr(cls, "model_fields"):
                 for attr, field_info in cls.model_fields.items():
                     known.add(attr)
-                    alias = getattr(field_info, "alias", None)
-                    if alias:
-                        known.add(alias)
+                    for alias in (
+                        getattr(field_info, "alias", None),
+                        getattr(field_info, "validation_alias", None),
+                        getattr(field_info, "serialization_alias", None),
+                    ):
+                        if isinstance(alias, str):
+                            known.add(alias)
             for key, val in list(values.items()):
                 if key not in known and isinstance(val, dict) and "fieldType" in val:
                     # Inject the key as the name if not already present

@@ -587,15 +587,10 @@ def classify_filters(
     then validated against the known-model union, exactly like ad-hoc input. Call
     sites must pass the same resource/method strings the plugin declared.
 
-    Construction normalizes all default consumer keys to the form that
-    ``OppFilters(**kwargs)`` accepts.  Because ``OppDefaultFilters`` does NOT set
-    ``populate_by_name=True``, Pydantic v2 requires the alias form (e.g.
-    ``closeDateRange``) for aliased fields.  Snake_case keys (e.g.
-    ``close_date_range``) are therefore mapped to their alias via ``_SNAKE_TO_ALIAS``
-    before construction.  Fields without aliases (e.g. ``status``) pass through
-    unchanged.  The alternative — enabling ``populate_by_name=True`` on
-    ``OppFilters.model_config`` — is deliberately avoided: the classifier must not
-    modify core schema model config.
+    Default consumer keys are normalized to the wire alias via ``_SNAKE_TO_ALIAS``
+    before ``OppFilters(**kwargs)`` construction. ``populate_by_name`` would accept
+    either form directly, but normalizing first collapses a snake_case key and its
+    camelCase alias onto one kwarg instead of passing pydantic both.
 
     Args:
         routes: Plugin route declarations (used to identify registered custom filters).
@@ -625,10 +620,6 @@ def classify_filters(
         if key in DEFAULT_FILTER_NAMES:
             # Bucket 1: a standard filter. Validate it against the type declared for
             # that field (for example, "status" is validated as a StringArrayFilter).
-            # OppFilters is constructed with keyword arguments and does not set
-            # populate_by_name, so a snake_case key is first converted to its alias.
-            # Keys that are already in alias form, and keys that have no alias, pass
-            # through unchanged.
             alias_key = _SNAKE_TO_ALIAS.get(key, key)
             if alias_key in default_fields:
                 # Snake and camel forms of the same field normalize to one key.
@@ -659,7 +650,6 @@ def classify_filters(
                 raise error
             custom_buckets[key] = validated  # type: ignore[assignment]
 
-    # OppFilters requires the alias form for construction (populate_by_name is not set).
     return OppFilters(
         **default_fields,
         custom_filters=custom_buckets if custom_buckets else None,
