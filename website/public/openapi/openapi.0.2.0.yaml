@@ -1008,13 +1008,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.AppStatusOptions'
-          description: The status of the application, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the application
       example:
         value: submitted
@@ -1042,13 +1042,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.ApplicantTypeOptions'
-          description: The type of applicant
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: The custom value for the applicant type
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: The description of the applicant type
+          description: A human-readable description of the value
       description: The type of applicant eligible to apply for funding
       example:
         value: individual
@@ -1275,7 +1275,6 @@ components:
         instructions: Competition 1 instructions
         status:
           value: open
-          customValue: custom
           description: Competition is open for applications
         keyDates:
           openDate:
@@ -1553,17 +1552,16 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.CompetitionStatusOptions'
-          description: The status of the competition, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the competition
       example:
         value: open
-        customValue: custom
         description: Competition is open for applications
     CommonGrants.Models.CompetitionStatusOptions:
       type: string
@@ -1746,13 +1744,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.FormResponseStatusOptions'
-          description: The status of the form response, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the form response
       example:
         value: inProgress
@@ -2138,13 +2136,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppStatusOptions'
-          description: The status of the opportunity, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the opportunity
       example:
         value: open

@@ -33,16 +33,7 @@ model FormResponseBase {
 /** The status of the form response */
 @example(Examples.FormResponse.inProgressStatus)
 @Versioning.added(CommonGrants.Versions.v0_2)
-model FormResponseStatus {
-  /** The status of the form response, from a predefined set of options */
-  value: FormResponseStatusOptions;
-
-  /** A custom value for the status */
-  customValue?: string;
-
-  /** A human-readable description of the status */
-  description?: string;
-}
+model FormResponseStatus is Fields.ExtensibleEnumT<FormResponseStatusOptions>;
 
 // #########################################################
 // FormResponseStatusOptions
@@ -59,6 +50,9 @@ enum FormResponseStatusOptions {
   notStarted,
   inProgress,
   complete,
+
+  @Versioning.added(CommonGrants.Versions.v0_4)
+  custom,
 }
 
 // #########################################################

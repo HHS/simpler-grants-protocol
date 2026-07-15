@@ -776,13 +776,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppStatusOptions'
-          description: The status of the opportunity, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the opportunity
       example:
         value: open
