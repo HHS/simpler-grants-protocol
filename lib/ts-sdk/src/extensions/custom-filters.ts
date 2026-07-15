@@ -61,9 +61,6 @@ export const FILTER_TYPE_SCHEMAS = {
   numberComparison: NumberComparisonFilterSchema,
   numberArray: NumberArrayFilterSchema,
   numberRange: NumberRangeFilterSchema,
-  // integerComparison reuses NumberComparisonFilterSchema — the spec defines no
-  // integer filter model, so the int constraint is not schema-enforced
-  integerComparison: NumberComparisonFilterSchema,
   booleanComparison: BooleanComparisonFilterSchema,
   dateComparison: DateComparisonFilterSchema,
   dateRange: DateRangeFilterSchema,

@@ -41,7 +41,6 @@ from common_grants_sdk.schemas.pydantic.filters.date import (
     DateComparisonFilter,
     DateRangeFilter,
 )
-from common_grants_sdk.schemas.pydantic.filters.integer import IntegerComparisonFilter
 from common_grants_sdk.schemas.pydantic.filters.money import (
     MoneyComparisonFilter,
     MoneyRangeFilter,
@@ -87,7 +86,6 @@ VALID_FILTER_MODELS: tuple[type[CommonGrantsBaseModel], ...] = (
     NumberComparisonFilter,
     NumberArrayFilter,
     NumberRangeFilter,
-    IntegerComparisonFilter,
     BooleanComparisonFilter,
     DateComparisonFilter,
     DateRangeFilter,

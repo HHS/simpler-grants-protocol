@@ -183,12 +183,6 @@ describe("route and filter-call validation", () => {
       expect(err).toBeInstanceOf(FilterError);
     });
 
-    it("returns undefined for a valid integerComparison filter (no throw)", () => {
-      const spec = { filterType: "integerComparison" } as const;
-
-      expect(validateFilterCall(spec, "awardCount", { operator: "eq", value: 2 })).toBeUndefined();
-    });
-
     it("returned FilterError path includes the filter name", () => {
       const spec = { filterType: "stringArray" } as const;
 

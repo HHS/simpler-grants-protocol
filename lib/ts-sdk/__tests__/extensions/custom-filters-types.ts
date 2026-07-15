@@ -30,9 +30,6 @@ interface FilterTypeMap {
   numberComparison: { operator: "eq" | "neq" | "gt" | "gte" | "lt" | "lte"; value: number };
   numberArray: { operator: "in" | "notIn"; value: number[] };
   numberRange: { operator: "between" | "outside"; value: { min: number; max: number } };
-  // TS has no integer type — the spec defines no integer filter model, so the
-  // value is a plain number at runtime too (NumberComparisonFilterSchema)
-  integerComparison: { operator: "eq" | "neq" | "gt" | "gte" | "lt" | "lte"; value: number };
   booleanComparison: { operator: "eq" | "neq"; value: boolean };
   dateComparison: { operator: "gt" | "gte" | "lt" | "lte"; value: string };
   dateRange: { operator: "between" | "outside"; value: { min: string; max: string } };
