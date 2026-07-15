@@ -2,6 +2,9 @@ import "../pagination.tsp";
 import "../sorting.tsp";
 import "@typespec/http";
 
+// Templated models aren't emitted as standalone JSON schemas, so each response
+// family pairs a non-templated model (emitted, documented) with a `T`-suffixed
+// template (used by routes). Shared `*Base` models keep the pairs in sync.
 namespace CommonGrants.Responses;
 
 // ############################################################################
@@ -23,8 +26,7 @@ model Success {
 
 /** A 200 response with data of an unspecified shape
  *
- * Templates aren't emitted as standalone JSON schemas, so this non-templated
- * model documents the response shape. Routes use the typed `OkT<T>` variant.
+ * Routes use the typed `OkT<T>` variant.
  */
 @doc("A 200 response with data")
 @Versioning.added(CommonGrants.Versions.v0_1)
@@ -64,9 +66,6 @@ model OkT<T> extends Success {
 // ############################################################################
 
 /** Body properties shared by `Paginated` and `PaginatedT<T>`
- *
- * Spread into both models to keep the non-templated schema and the templated
- * route response in sync.
  *
  * @template T The schema for the value of the `"items"` property in this response
  */
@@ -159,7 +158,7 @@ model Sorted extends Success {
  */
 @doc("A paginated list of typed items with a sort order")
 @Versioning.added(CommonGrants.Versions.v0_1)
-model SortedT<T> {
+model SortedT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
@@ -248,6 +247,7 @@ model Created extends Success {
  *
  * @template T The schema for the value of the `"data"` property in this response
  */
+@doc("A 201 response with typed data")
 @Versioning.added(CommonGrants.Versions.v0_1)
 model CreatedT<T> extends Success {
   // Inherit the 201 status code
