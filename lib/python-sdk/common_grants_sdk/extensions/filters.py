@@ -675,8 +675,7 @@ def classify_filters(
             custom_buckets[key] = validated  # type: ignore[assignment]
 
     # OppFilters requires the alias form for construction (populate_by_name is not set).
-    # Use "customFilters" (the alias) rather than "custom_filters" (the field name).
     return OppFilters(
         **default_fields,
-        customFilters=custom_buckets if custom_buckets else None,
+        custom_filters=custom_buckets if custom_buckets else None,
     )

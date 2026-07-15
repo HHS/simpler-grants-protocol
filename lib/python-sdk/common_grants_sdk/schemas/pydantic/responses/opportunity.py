@@ -16,7 +16,6 @@ class OpportunitiesListResponse(DefaultResponse):
     pagination_info: PaginatedResultsInfo = Field(
         ...,
         description="The pagination details",
-        alias="paginationInfo",
     )
 
     model_config = {"populate_by_name": True}
@@ -29,17 +28,14 @@ class OpportunitiesSearchResponse(DefaultResponse):
     pagination_info: PaginatedResultsInfo = Field(
         ...,
         description="The pagination details",
-        alias="paginationInfo",
     )
     sort_info: SortedResultsInfo = Field(
         ...,
         description="The sorting details",
-        alias="sortInfo",
     )
     filter_info: FilterInfo[dict] = Field(
         ...,
         description="The filter details",
-        alias="filterInfo",
     )
 
     model_config = {"populate_by_name": True}

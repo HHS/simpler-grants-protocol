@@ -49,7 +49,6 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel, Generic[CF]):
     )
     key_dates: Optional[OppTimeline] = Field(
         default=None,
-        alias="keyDates",
         description="Key dates for the opportunity, such as when the application opens and closes",
     )
     source: Optional[HttpUrl] = Field(
@@ -58,12 +57,10 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel, Generic[CF]):
     )
     custom_fields: Optional[CF] = Field(
         default=None,
-        alias="customFields",
         description="Additional custom fields specific to this opportunity",
     )
     accepted_applicant_types: Optional[list[ApplicantType]] = Field(
         default=None,
-        alias="acceptedApplicantTypes",
         description="The type of applicant for the opportunity",
     )
 

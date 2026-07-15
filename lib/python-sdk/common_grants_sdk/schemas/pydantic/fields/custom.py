@@ -44,8 +44,6 @@ class CustomField(CommonGrantsBaseModel, Generic[V]):
     )
     field_type: CustomFieldType = Field(
         ...,
-        validation_alias="fieldType",
-        serialization_alias="fieldType",
         description="The JSON schema type to use when de-serializing the `value` field",
     )
     schema_url: Optional[HttpUrl] = Field(

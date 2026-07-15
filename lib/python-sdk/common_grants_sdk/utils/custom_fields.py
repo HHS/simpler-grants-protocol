@@ -80,7 +80,7 @@ def add_custom_fields(
         __base__=cls,
         custom_fields=(
             Optional[CustomFieldsContainer],
-            Field(default=None, alias="customFields"),
+            Field(default=None),
         ),
     )
 
@@ -160,10 +160,10 @@ def create_custom_field_schema(
         CustomFieldForAttr = create_model(
             _create_model_name(name=name, key=key),
             __base__=CustomField,
-            # pin expected type (still accepts wire key "fieldType" via alias)
+            # pin expected type (wire key "fieldType" comes from the base alias generator)
             field_type=(
                 CustomFieldType,
-                Field(default=field.field_type, alias="fieldType"),
+                Field(default=field.field_type),
             ),
             # pin name and description from spec
             name=(str, Field(default=field.name or key)),

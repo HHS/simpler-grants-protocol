@@ -1,9 +1,25 @@
 import json
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import AliasGenerator, BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 from common_grants_sdk.utils.transformation import transform_from_mapping
+
+# camelCase wire naming as a reusable config: validation and serialization use
+# the to_camel alias while populate_by_name keeps snake_case construction
+# working (and type-checking, since static checkers fall back to field names
+# when aliases come from a generator). Field-level alias settings override the
+# generator for irregular wire names. Used by CommonGrantsBaseModel and by the
+# wire models that do not extend it (sorting, pagination, filters).
+CAMEL_ALIASES = AliasGenerator(
+    validation_alias=to_camel,
+    serialization_alias=to_camel,
+)
+CAMEL_WIRE_CONFIG = ConfigDict(
+    populate_by_name=True,
+    alias_generator=CAMEL_ALIASES,
+)
 
 
 class CommonGrantsBaseModel(BaseModel):
@@ -12,9 +28,8 @@ class CommonGrantsBaseModel(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
         strict=False,  # Coerces strings to enums, datetimes, etc.
-        # Accept snake_case field names alongside their camelCase wire aliases
-        # in constructors and validation; serialization still uses the aliases.
         populate_by_name=True,
+        alias_generator=CAMEL_ALIASES,
     )
 
     def dump(self) -> dict:
