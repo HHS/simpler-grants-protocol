@@ -26,6 +26,22 @@ TCommon = TypeVar("TCommon", bound=BaseModel)
 TSource = TypeVar("TSource", bound=BaseModel)
 
 
+def _valid_field_names(model: type[BaseModel]) -> set[str]:
+    """Field names plus every string alias on a model's fields.
+
+    Wire names may be declared via ``alias`` or via split ``validation_alias``/
+    ``serialization_alias`` pairs (e.g. the Event models); all three count as
+    valid mapping keys. Non-string alias metadata (AliasChoices/AliasPath) is
+    ignored.
+    """
+    names: set[str] = set(model.model_fields.keys())
+    for info in model.model_fields.values():
+        for alias in (info.alias, info.validation_alias, info.serialization_alias):
+            if isinstance(alias, str):
+                names.add(alias)
+    return names
+
+
 def _validate_output_paths(
     mapping: dict[str, Any],
     model: type[BaseModel],
@@ -46,10 +62,7 @@ def _validate_output_paths(
     if model.model_config.get("extra") == "allow":
         return
 
-    valid_names: set[str] = set(model.model_fields.keys())
-    for field_info in model.model_fields.values():
-        if field_info.alias:
-            valid_names.add(field_info.alias)
+    valid_names = _valid_field_names(model)
 
     # Top-level handler invocations (rare but structurally valid) are not output keys
     output_keys = {k for k in mapping if k not in known_handlers}

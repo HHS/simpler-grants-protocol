@@ -15,6 +15,7 @@ from common_grants_sdk.schemas.pydantic.fields import (
     CustomFieldType,
     SystemMetadata,
 )
+from common_grants_sdk.schemas.pydantic.fields.event import EventBase
 from common_grants_sdk.schemas.pydantic.types import validate_decimal_string
 
 
@@ -182,6 +183,74 @@ def test_event_union_validation():
         name="Test Other", event_type=EventType.OTHER, details="Test details"
     )
     assert isinstance(other_event, OtherEvent)
+
+
+def test_event_snake_case_construction():
+    """Snake_case constructor kwargs are consumed, not silently ignored."""
+    # A supplied event_type is preserved (EventBase has no default to fall back to)
+    event = EventBase(name="Deadline", event_type=EventType.DATE_RANGE)
+    assert event.event_type == EventType.DATE_RANGE
+
+    # SingleDateEvent keeps the supplied snake_case event_type at runtime
+    event = SingleDateEvent(
+        name="Test Event", event_type=EventType.SINGLE_DATE, date=date(2024, 1, 1)
+    )
+    assert event.event_type == EventType.SINGLE_DATE
+
+    # A mismatched snake_case event_type must raise, not be dropped in favor of
+    # the subclass default (the silent-fallback bug this guards against)
+    with pytest.raises(ValidationError):
+        SingleDateEvent(
+            name="Test Event",
+            event_type=EventType.OTHER,  # type: ignore[arg-type]
+            date=date(2024, 1, 1),
+        )
+
+    # DateRangeEvent accepts snake_case date/time kwargs
+    event = DateRangeEvent(
+        name="Test Range Event",
+        event_type=EventType.DATE_RANGE,
+        start_date=date(2024, 1, 1),
+        start_time=time(9, 0),
+        end_date=date(2024, 1, 31),
+        end_time=time(17, 0),
+    )
+    assert event.start_date == date(2024, 1, 1)
+    assert event.start_time == time(9, 0)
+    assert event.end_date == date(2024, 1, 31)
+    assert event.end_time == time(17, 0)
+
+
+def test_event_camel_case_wire_compatibility():
+    """CamelCase wire names still validate and serialize unchanged."""
+    event = DateRangeEvent.model_validate(
+        {
+            "name": "Test Range Event",
+            "eventType": "dateRange",
+            "startDate": "2024-01-01",
+            "startTime": "09:00:00",
+            "endDate": "2024-01-31",
+            "endTime": "17:00:00",
+        }
+    )
+    assert event.event_type == EventType.DATE_RANGE
+    assert event.start_date == date(2024, 1, 1)
+    assert event.end_date == date(2024, 1, 31)
+
+    assert event.model_dump(by_alias=True, mode="json") == {
+        "name": "Test Range Event",
+        "eventType": "dateRange",
+        "startDate": "2024-01-01",
+        "startTime": "09:00:00",
+        "endDate": "2024-01-31",
+        "endTime": "17:00:00",
+        "description": None,
+    }
+
+    single = SingleDateEvent.model_validate(
+        {"name": "Posted", "eventType": "singleDate", "date": "2024-01-01"}
+    )
+    assert single.model_dump(by_alias=True, mode="json")["eventType"] == "singleDate"
 
 
 def test_custom_field_validation():

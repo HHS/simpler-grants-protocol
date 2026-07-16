@@ -264,6 +264,49 @@ def test_unknown_output_key_raises_when_model_provided():
         )
 
 
+def test_output_path_accepts_split_alias_wire_keys():
+    """Alias discovery covers validation_alias/serialization_alias, not just alias=.
+
+    EventBase declares its camelCase wire names via split aliases, so the
+    established ``eventType`` output key must stay valid for build_transforms.
+    """
+    from common_grants_sdk.schemas.pydantic.fields.event import EventBase
+
+    build_transforms(
+        {
+            "name": {"field": "data.opportunity_title"},
+            "eventType": "singleDate",
+        },
+        {},
+        common_schema=EventBase,
+    )
+
+    # The snake_case field name itself also remains a valid output key
+    build_transforms(
+        {
+            "name": {"field": "data.opportunity_title"},
+            "event_type": "singleDate",
+        },
+        {},
+        common_schema=EventBase,
+    )
+
+
+def test_output_path_accepts_legacy_bare_alias():
+    """Models still using bare alias= keep both field-name and alias output keys."""
+    from pydantic import Field
+
+    class _LegacyAliased(BaseModel):
+        event_type: str = Field(alias="eventType")
+        plain: str = ""
+
+    build_transforms(
+        {"eventType": "singleDate", "plain": "x", "event_type": "singleDate"},
+        {},
+        common_schema=_LegacyAliased,
+    )
+
+
 def test_custom_fields_key_is_valid_output_path():
     """custom_fields is accepted as a top-level output key when the model declares it."""
     to_common, _ = build_transforms(

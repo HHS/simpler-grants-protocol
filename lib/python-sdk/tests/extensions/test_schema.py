@@ -203,6 +203,32 @@ def test_unknown_to_common_output_field_raises():
         )
 
 
+def test_from_common_mapping_accepts_split_alias_source_keys():
+    """Alias discovery on the source model covers split aliases and legacy alias=."""
+
+    class _SplitAliasSource(BaseModel):
+        event_type: str = Field(
+            default="",
+            validation_alias="eventType",
+            serialization_alias="eventType",
+        )
+        legacy: str = Field(default="", alias="legacyName")
+        plain: str = ""
+
+    schema(
+        source_schema=_SplitAliasSource,
+        common_schema=OpportunityBase,
+        mappings={
+            "to_common": {"title": {"field": "plain"}},
+            "from_common": {
+                "eventType": {"field": "title"},
+                "legacyName": {"field": "title"},
+                "plain": {"field": "title"},
+            },
+        },
+    )
+
+
 def test_missing_mapping_direction_raises():
     with pytest.raises(PluginDefinitionError, match="missing `from_common`"):
         schema(

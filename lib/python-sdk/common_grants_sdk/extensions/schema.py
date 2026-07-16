@@ -40,7 +40,7 @@ from pydantic.alias_generators import to_camel
 from ..schemas.pydantic.fields.custom import CustomField, CustomFieldType
 from ..schemas.pydantic.models import OpportunityBase
 from .specs import PluginCustomFieldSpec
-from .transforms import build_transforms
+from .transforms import _valid_field_names, build_transforms
 from .types import TransformError, TransformResult
 
 __all__ = [
@@ -215,11 +215,7 @@ def validate_into(model: type[T], data: Any) -> TransformResult[T]:
 
 def _output_field_names(model: type[BaseModel]) -> set[str]:
     """Valid top-level output keys for a model: field names plus their aliases."""
-    names: set[str] = set(model.model_fields.keys())
-    for info in model.model_fields.values():
-        if info.alias:
-            names.add(info.alias)
-    return names
+    return _valid_field_names(model)
 
 
 def _accepts_arbitrary_keys(model: type[BaseModel]) -> bool:
