@@ -12,11 +12,16 @@ permissions:
 jobs:
   version:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
+        with:
+          # Full history: Changesets deepens a shallow clone (git fetch --deepen)
+          # to find each changeset's adding commit, which can hang in CI.
+          fetch-depth: 0
 
       - name: Install Node.js
         uses: actions/setup-node@v6
@@ -66,7 +71,14 @@ jobs:
             exit 0
           else
             echo "found_py=true" >> $GITHUB_OUTPUT
-            echo "py_changelog=$PY_CHANGELOG" >> $GITHUB_OUTPUT
+            # Multiple changesets can bump common-grants-sdk (e.g. a feature +
+            # a fix landing in the same release), so PY_CHANGELOG may be
+            # multiline — write it via the heredoc form, not key=value.
+            {
+              echo "py_changelog<<EOF"
+              echo "$PY_CHANGELOG"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
           fi
 
       - name: Bump version for Python package

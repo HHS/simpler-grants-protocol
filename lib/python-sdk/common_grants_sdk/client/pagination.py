@@ -67,6 +67,7 @@ def pagination(single_page_func: Callable) -> Callable:
 
         # Otherwise, fetch all pages
         items: list[dict] = []
+        first_response: Paginated[ItemsT] | None = None
         latest_response: Paginated[ItemsT] | None = None
 
         current_page = 1
@@ -85,6 +86,8 @@ def pagination(single_page_func: Callable) -> Callable:
                 *bound.args, **bound.kwargs
             )
             items.extend(cast(list[dict], page_response.items))
+            if first_response is None:
+                first_response = page_response
             latest_response = page_response
 
             # Break if max items is reached or no more pages
@@ -102,17 +105,33 @@ def pagination(single_page_func: Callable) -> Callable:
         # Trim items array to not exceed max items limit
         items = items[: self.config.list_items_limit]
 
-        # Build aggregated response
+        aggregated_pagination_info = PaginatedResultsInfo(
+            page=1,
+            pageSize=len(items) or page_size,
+            totalItems=len(items),
+            totalPages=1,
+        )
+
+        # Build aggregated response. Copy the first page's response so any extra
+        # envelope fields (search -> Filtered's sortInfo/filterInfo) are preserved;
+        # this is a no-op for plain Paginated (list), which has no such fields.
+        if first_response is not None:
+            return cast(
+                Paginated[ItemsT],
+                first_response.model_copy(
+                    update={
+                        "items": cast(list[ItemsT], items),
+                        "pagination_info": aggregated_pagination_info,
+                    }
+                ),
+            )
+
+        # No response was fetched (e.g. empty result set with no pages).
         return Paginated[ItemsT](
             status=latest_response.status if latest_response else 200,
             message=latest_response.message if latest_response else "Success",
             items=cast(list[ItemsT], items),
-            paginationInfo=PaginatedResultsInfo(
-                page=1,
-                pageSize=len(items) or page_size,
-                totalItems=len(items),
-                totalPages=1,
-            ),
+            paginationInfo=aggregated_pagination_info,
         )
 
     return wrapper
