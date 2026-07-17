@@ -30,8 +30,9 @@ interface Applications {
     /** The ID of the organization to start an application for, if applying on behalf of an organization */
     organizationId?: Types.uuid,
 
-    /** The name of the application */
-    name: string,
+    /** The title of the application */
+    @Versioning.renamedFrom(Versions.v0_4, "name")
+    title: string,
   ): Responses.Created<Models.ApplicationBase> | Responses.Unauthorized;
 
   // ###############################

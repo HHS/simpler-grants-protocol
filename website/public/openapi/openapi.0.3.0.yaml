@@ -149,7 +149,7 @@ paths:
                   description: The ID of the organization to start an application for, if applying on behalf of an organization
                 name:
                   type: string
-                  description: The name of the application
+                  description: The title of the application
               required:
                 - competitionId
                 - name

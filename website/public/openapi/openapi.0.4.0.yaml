@@ -149,12 +149,12 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/CommonGrants.Types.uuid'
                   description: The ID of the organization to start an application for, if applying on behalf of an organization
-                name:
+                title:
                   type: string
-                  description: The name of the application
+                  description: The title of the application
               required:
                 - competitionId
-                - name
+                - title
   /common-grants/applications/{appId}:
     get:
       operationId: Applications_getApplication
