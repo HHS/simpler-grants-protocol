@@ -436,8 +436,8 @@ importers:
         specifier: ^0.35.3
         version: 0.35.3(@types/node@22.20.0)
       swagger-ui-react:
-        specifier: ^5.32.8
-        version: 5.32.8(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^5.32.9
+        version: 5.32.9(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -524,8 +524,8 @@ importers:
         specifier: catalog:website
         version: 4.1.9(@types/node@22.20.0)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@22.20.0)(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.8.3))
       wrangler:
-        specifier: ^4.111.0
-        version: 4.111.0
+        specifier: ^4.112.0
+        version: 4.112.0
 
 packages:
 
@@ -805,32 +805,32 @@ packages:
       workerd:
         optional: true
 
-  '@cloudflare/workerd-darwin-64@1.20260710.1':
-    resolution: {integrity: sha512-OqJl2eWF5+y9jarMm3YqqCTUe7Hd4ihogX5jyRU8iaAgOVyDr/Bk6aXpPCVUi1/MHzO93a18R/TmSTtzmB0sQw==}
+  '@cloudflare/workerd-darwin-64@1.20260714.1':
+    resolution: {integrity: sha512-ZWXqAN8G7Cx9hMRQuk+59ziJhR3j1F4iO+Qs8aHdfKZ3Dq5Yi/57xvkJTgCGBnW1YU/L78r8f6HEy51bwbTpNw==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [darwin]
 
-  '@cloudflare/workerd-darwin-arm64@1.20260710.1':
-    resolution: {integrity: sha512-MYBqWgUblO+VlGvO73zYsH3hB9tdRj+yLyt5IHDFWryipb2l1efmNiWtAOkIhSRfypqLYGFrfpaDm2Hg00XVKw==}
+  '@cloudflare/workerd-darwin-arm64@1.20260714.1':
+    resolution: {integrity: sha512-tueWxWC3wyCbMG6zRAxsMXX0YLgrRWbiAPYFQ2uJ7dUH8G+5E7UTWaQS9B1HdJ0bpKFW1NWxhs1o2noKVFSUYg==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [darwin]
 
-  '@cloudflare/workerd-linux-64@1.20260710.1':
-    resolution: {integrity: sha512-lVWUgqI8qrkqvaCBGElu1kdaUFdAvaS2RD8K4qkCFP9hI3f5TCXumEs5qWSeZkvKum0+X/uJZ5hBFWsYI5SmoQ==}
+  '@cloudflare/workerd-linux-64@1.20260714.1':
+    resolution: {integrity: sha512-1VChTZRb0l0F7R4e1G5RtLKV4oFi6x+rQgxh2+yu887j3l/3TLgatuv1L8/5zhc9gKEhATTxOh0e52Rtd9dDWQ==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [linux]
 
-  '@cloudflare/workerd-linux-arm64@1.20260710.1':
-    resolution: {integrity: sha512-kDwDPItBjAI4JL0df9Fma2N+Qggbm77IB/DnroAkEGQ79fpR80sYMyuB/ZQKyjEk9f48Ocq7HCCLq59qVSyNqA==}
+  '@cloudflare/workerd-linux-arm64@1.20260714.1':
+    resolution: {integrity: sha512-rMm3G+NirG2UdgHIRDdF1asNC6FqgIzZzkRG+VDhhDGcVxAQwvrMT1E38BivEvHr3G04MB4AfhcOczX0+GtRkQ==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [linux]
 
-  '@cloudflare/workerd-windows-64@1.20260710.1':
-    resolution: {integrity: sha512-GcLHy1oN1dfK6g1Z7UDV9f5xMGyTfPwcjWQ0sfWKH31IsoEVCRapnj3IC0PoIrDbnoo6irGPP0CwVs3WzdTajw==}
+  '@cloudflare/workerd-windows-64@1.20260714.1':
+    resolution: {integrity: sha512-cGqnU3Hg2YZS/k3SAqrMp1DjpdsyFde72tWltdl6ZT9+SFz/Zrk/8gyTU1TcxC4YApXeNVH5TyU5cOGPgUJ0pg==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
@@ -2315,6 +2315,9 @@ packages:
   '@types/hast@3.0.4':
     resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
 
+  '@types/hast@3.0.5':
+    resolution: {integrity: sha512-rp/ezSWaD1m44dPKICGhiskI13nVr7qTloFwDa/IYkhhf5nzwP+zIQcIJh3WIFSBOy/H1PzB40jPjMDksN4F+g==}
+
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==}
 
@@ -3296,8 +3299,8 @@ packages:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
 
-  dompurify@3.4.11:
-    resolution: {integrity: sha512-zhlUV12GsaRzMsf9q5M254YhA4+VuF0fG+QFqu6aYpoGlKtz+w8//jBcGVYBgQkR5GHjUomejY84AV+/uPbWdw==}
+  dompurify@3.4.12:
+    resolution: {integrity: sha512-zQvGet8Z2sWbQhCmfFz/T5QWH2oBmjnqK3qvOjaqaNLrLEF912WamU+ohnTp0TCep/MFVHpdJuCZEdFOdTnEFg==}
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
@@ -4521,8 +4524,8 @@ packages:
     resolution: {integrity: sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==}
     engines: {node: '>=6'}
 
-  miniflare@4.20260710.0:
-    resolution: {integrity: sha512-x1LLRkU6o1p7hiKrB0TRnL0MJn6xFOT+/vrlEQINz5cRDKLP8ru4hBqWTIvXAetzr1acKAnmAaG84pQ4W/K14g==}
+  miniflare@4.20260714.0:
+    resolution: {integrity: sha512-MYlTCLdWCPqvrYY2uLwOjXwmglXuiHE3TGGkbOW4BwjUPa1r07E0iuHwrNDIs/sxK21r+o90Jx58AV2KeNdJZw==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
@@ -4934,10 +4937,10 @@ packages:
     resolution: {integrity: sha512-s4VSOf6yN0rvbRZGxs8Om5CWj6seneMwK3oDb4lWDH0UPhWcxwOWw5+qk24bxq87szX1ydrwylIOp2uG1ojUpA==}
     engines: {node: '>= 0.8'}
 
-  react-copy-to-clipboard@5.1.0:
-    resolution: {integrity: sha512-k61RsNgAayIJNoy9yDsYzDe/yAZAzEbEgcz3DZMhF686LEyukcE1hzurxe85JandPUG+yTfGVFzuEw3xt8WP/A==}
+  react-copy-to-clipboard@5.1.1:
+    resolution: {integrity: sha512-s+HrzLyJBxrpGTYXF15dTgMjAJpEPZT/Yp6NytAtZMRngejxt6Pt5WrfFxLAcsqUDU6sY1Jz6tyHwIicE1U2Xg==}
     peerDependencies:
-      react: ^15.3.0 || 16 || 17 || 18
+      react: '>=15.3.0'
 
   react-debounce-input@3.3.0:
     resolution: {integrity: sha512-VEqkvs8JvY/IIZvh71Z0TC+mdbxERvYF33RcebnodlsUZ8RSgyKe2VWaHXv4+/8aoOgXLxWrdsYs2hDhcwbUgA==}
@@ -5428,8 +5431,8 @@ packages:
     peerDependencies:
       express: '>=4.0.0 || >=5.0.0-beta'
 
-  swagger-ui-react@5.32.8:
-    resolution: {integrity: sha512-Cstx4Tq8fT5l2TBxHxts8pG+ks0qKSkuO1pwUwgrQQiZ241Mqs+KUODLVIonsYXL/gqX143rkcipUa4d0Rid7w==}
+  swagger-ui-react@5.32.9:
+    resolution: {integrity: sha512-zs6PG4G6XEWG2evKHSwx32nWXIlk48a9Hw9YS9hlt55O5W0FM1cpltMrM/AnU+mohdnV7oEx0ap2TaG3fbfLIA==}
     peerDependencies:
       react: '>=16.8.0 <20'
       react-dom: '>=16.8.0 <20'
@@ -6002,17 +6005,17 @@ packages:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
     engines: {node: '>=0.10.0'}
 
-  workerd@1.20260710.1:
-    resolution: {integrity: sha512-U2sBPPrb9U97sBKnnMN6Kv8p65903P35nwMkPE9vSH/bRuRqkZ3a1EjUw3jV28RhiyXpkLF77Evzw8XimFxyTw==}
+  workerd@1.20260714.1:
+    resolution: {integrity: sha512-oIbQzfdyl9UQUnG6XLegcSq0Mgt/7WKDbFOoqGgOWCS+/fhyGB460uKEgdAQQ9RHCO/ttcNCX/KiMIQzdoeu3Q==}
     engines: {node: '>=16'}
     hasBin: true
 
-  wrangler@4.111.0:
-    resolution: {integrity: sha512-bffpI9EyrnpKkF/1S+RaIv8oRD93GtbsA7TlfWwOsGJGB7VO3jVbdGzpC9TU7Bqom3z7jUxcte4Z9MPhaQ4HoQ==}
+  wrangler@4.112.0:
+    resolution: {integrity: sha512-5H+XUD0TySCv1LuktFHDIEOkboH2nTfQs+35L+USt3MtntjDTMVIJprLgQcL2WBjulOyjxpd1vyTiSTJVW5MjQ==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
-      '@cloudflare/workers-types': ^5.20260710.1
+      '@cloudflare/workers-types': ^5.20260714.1
     peerDependenciesMeta:
       '@cloudflare/workers-types':
         optional: true
@@ -6666,25 +6669,25 @@ snapshots:
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
-  '@cloudflare/unenv-preset@2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260710.1)':
+  '@cloudflare/unenv-preset@2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260714.1)':
     dependencies:
       unenv: 2.0.0-rc.24
     optionalDependencies:
-      workerd: 1.20260710.1
+      workerd: 1.20260714.1
 
-  '@cloudflare/workerd-darwin-64@1.20260710.1':
+  '@cloudflare/workerd-darwin-64@1.20260714.1':
     optional: true
 
-  '@cloudflare/workerd-darwin-arm64@1.20260710.1':
+  '@cloudflare/workerd-darwin-arm64@1.20260714.1':
     optional: true
 
-  '@cloudflare/workerd-linux-64@1.20260710.1':
+  '@cloudflare/workerd-linux-64@1.20260714.1':
     optional: true
 
-  '@cloudflare/workerd-linux-arm64@1.20260710.1':
+  '@cloudflare/workerd-linux-arm64@1.20260714.1':
     optional: true
 
-  '@cloudflare/workerd-windows-64@1.20260710.1':
+  '@cloudflare/workerd-windows-64@1.20260714.1':
     optional: true
 
   '@common-grants/cg-grants-gov@0.2.0(@common-grants/sdk@0.5.0)':
@@ -7736,7 +7739,7 @@ snapshots:
     dependencies:
       '@shikijs/types': 4.2.0
       '@shikijs/vscode-textmate': 10.0.2
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
 
   '@shikijs/themes@4.2.0':
     dependencies:
@@ -8272,6 +8275,10 @@ snapshots:
       '@types/serve-static': 1.15.10
 
   '@types/hast@3.0.4':
+    dependencies:
+      '@types/unist': 3.0.3
+
+  '@types/hast@3.0.5':
     dependencies:
       '@types/unist': 3.0.3
 
@@ -9419,7 +9426,7 @@ snapshots:
     dependencies:
       domelementtype: 2.3.0
 
-  dompurify@3.4.11:
+  dompurify@3.4.12:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
@@ -10019,7 +10026,7 @@ snapshots:
 
   hast-util-embedded@3.0.0:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       hast-util-is-element: 3.0.0
 
   hast-util-format@1.1.0:
@@ -10058,15 +10065,15 @@ snapshots:
 
   hast-util-is-body-ok-link@3.0.1:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
 
   hast-util-is-element@3.0.0:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
 
   hast-util-minify-whitespace@1.0.1:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       hast-util-embedded: 3.0.0
       hast-util-is-element: 3.0.0
       hast-util-whitespace: 3.0.0
@@ -10078,7 +10085,7 @@ snapshots:
 
   hast-util-phrasing@3.0.1:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       hast-util-embedded: 3.0.0
       hast-util-has-property: 3.0.0
       hast-util-is-body-ok-link: 3.0.1
@@ -10086,7 +10093,7 @@ snapshots:
 
   hast-util-raw@9.1.0:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       '@types/unist': 3.0.3
       '@ungap/structured-clone': 1.3.1
       hast-util-from-parse5: 8.0.3
@@ -10122,7 +10129,7 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.9
       '@types/estree-jsx': 1.0.5
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       comma-separated-tokens: 2.0.3
       devlop: 1.1.0
       estree-util-attach-comments: 3.0.0
@@ -10156,7 +10163,7 @@ snapshots:
   hast-util-to-jsx-runtime@2.3.6:
     dependencies:
       '@types/estree': 1.0.9
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       '@types/unist': 3.0.3
       comma-separated-tokens: 2.0.3
       devlop: 1.1.0
@@ -10175,7 +10182,7 @@ snapshots:
 
   hast-util-to-parse5@8.0.1:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       comma-separated-tokens: 2.0.3
       devlop: 1.1.0
       property-information: 7.2.0
@@ -10663,7 +10670,7 @@ snapshots:
   mdast-util-mdx-expression@2.0.1:
     dependencies:
       '@types/estree-jsx': 1.0.5
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       '@types/mdast': 4.0.4
       devlop: 1.1.0
       mdast-util-from-markdown: 2.0.3
@@ -10701,7 +10708,7 @@ snapshots:
   mdast-util-mdxjs-esm@2.0.1:
     dependencies:
       '@types/estree-jsx': 1.0.5
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       '@types/mdast': 4.0.4
       devlop: 1.1.0
       mdast-util-from-markdown: 2.0.3
@@ -11045,12 +11052,12 @@ snapshots:
 
   mimic-fn@2.1.0: {}
 
-  miniflare@4.20260710.0:
+  miniflare@4.20260714.0:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.34.5
       undici: 7.28.0
-      workerd: 1.20260710.1
+      workerd: 1.20260714.1
       ws: 8.21.0
       youch: 4.1.0-beta.10
     transitivePeerDependencies:
@@ -11421,7 +11428,7 @@ snapshots:
       iconv-lite: 0.4.24
       unpipe: 1.0.0
 
-  react-copy-to-clipboard@5.1.0(react@18.3.1):
+  react-copy-to-clipboard@5.1.1(react@18.3.1):
     dependencies:
       copy-to-clipboard: 3.3.3
       prop-types: 15.8.1
@@ -11535,7 +11542,7 @@ snapshots:
 
   refractor@5.0.0:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       '@types/prismjs': 1.26.6
       hastscript: 9.0.1
       parse-entities: 4.0.2
@@ -11574,7 +11581,7 @@ snapshots:
   rehype-recma@1.0.0:
     dependencies:
       '@types/estree': 1.0.9
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       hast-util-to-estree: 3.1.3
     transitivePeerDependencies:
       - supports-color
@@ -12127,7 +12134,7 @@ snapshots:
       express: 4.22.2
       swagger-ui-dist: 5.32.1
 
-  swagger-ui-react@5.32.8(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  swagger-ui-react@5.32.9(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/runtime-corejs3': 7.29.7
       '@scarf/scarf': 1.4.0
@@ -12136,7 +12143,7 @@ snapshots:
       classnames: 2.5.1
       css.escape: 1.5.1
       deep-extend: 0.6.0
-      dompurify: 3.4.11
+      dompurify: 3.4.12
       ieee754: 1.2.1
       immutable: 3.8.3
       js-file-download: 0.4.12
@@ -12146,7 +12153,7 @@ snapshots:
       randexp: 0.5.3
       randombytes: 2.1.0
       react: 18.3.1
-      react-copy-to-clipboard: 5.1.0(react@18.3.1)
+      react-copy-to-clipboard: 5.1.1(react@18.3.1)
       react-debounce-input: 3.3.0(react@18.3.1)
       react-dom: 18.3.1(react@18.3.1)
       react-immutable-proptypes: 2.2.0(immutable@3.8.3)
@@ -12668,24 +12675,24 @@ snapshots:
 
   word-wrap@1.2.5: {}
 
-  workerd@1.20260710.1:
+  workerd@1.20260714.1:
     optionalDependencies:
-      '@cloudflare/workerd-darwin-64': 1.20260710.1
-      '@cloudflare/workerd-darwin-arm64': 1.20260710.1
-      '@cloudflare/workerd-linux-64': 1.20260710.1
-      '@cloudflare/workerd-linux-arm64': 1.20260710.1
-      '@cloudflare/workerd-windows-64': 1.20260710.1
+      '@cloudflare/workerd-darwin-64': 1.20260714.1
+      '@cloudflare/workerd-darwin-arm64': 1.20260714.1
+      '@cloudflare/workerd-linux-64': 1.20260714.1
+      '@cloudflare/workerd-linux-arm64': 1.20260714.1
+      '@cloudflare/workerd-windows-64': 1.20260714.1
 
-  wrangler@4.111.0:
+  wrangler@4.112.0:
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
-      '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260710.1)
+      '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260714.1)
       blake3-wasm: 2.1.5
       esbuild: 0.28.1
-      miniflare: 4.20260710.0
+      miniflare: 4.20260714.0
       path-to-regexp: 6.3.0
       unenv: 2.0.0-rc.24
-      workerd: 1.20260710.1
+      workerd: 1.20260714.1
     optionalDependencies:
       fsevents: 2.3.3
     transitivePeerDependencies:
