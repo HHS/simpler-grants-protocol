@@ -1,0 +1,25 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OppRef.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: Globally unique id for the opportunity
+  title:
+    type: string
+    examples:
+      - Small business grant program
+    description: Title or name of the funding opportunity
+required:
+  - id
+  - title
+unevaluatedProperties:
+  not: {}
+examples:
+  - id: 018f2e77-3a4b-7c1d-9e2f-abcdef123456
+    title: Health Center Capital Improvement Program
+description: |-
+  A reference to an opportunity, previewing the key fields a consumer needs
+  to identify it and look it up or join it to another response. Appears
+  wherever another record points to an opportunity, such as the opportunity
+  an award resulted from.

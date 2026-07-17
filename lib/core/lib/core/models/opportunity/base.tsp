@@ -42,13 +42,8 @@ using Types;
 @doc("A funding opportunity")
 @Versioning.added(CommonGrants.Versions.v0_1)
 model OpportunityBase {
-  /** Globally unique id for the opportunity */
-  @visibility(Lifecycle.Read)
-  id: uuid;
-
-  /** Title or name of the funding opportunity */
-  @example("Small business grant program")
-  title: string;
+  // Identity fields shared with the OppRef reference model
+  ...OppRef;
 
   /** Status of the opportunity */
   status: OppStatus;
@@ -78,6 +73,27 @@ model OpportunityBase {
 }
 
 // ########################################
+// Opportunity reference
+// ########################################
+
+/** A reference to an opportunity, previewing the key fields a consumer needs
+ * to identify it and look it up or join it to another response. Appears
+ * wherever another record points to an opportunity, such as the opportunity
+ * an award resulted from.
+ */
+@example(Examples.Opportunity.ref)
+@Versioning.added(CommonGrants.Versions.v0_1)
+model OppRef {
+  /** Globally unique id for the opportunity */
+  @visibility(Lifecycle.Read)
+  id: uuid;
+
+  /** Title or name of the funding opportunity */
+  @example("Small business grant program")
+  title: string;
+}
+
+// ########################################
 // Opportunity details
 // ########################################
 
@@ -86,4 +102,16 @@ model OpportunityBase {
 model OpportunityDetails extends OpportunityBase {
   /** The competitions associated with the opportunity */
   competitions?: CompetitionBase[];
+}
+
+// ########################################
+// Model examples
+// ########################################
+
+/** Examples of the OppRef model */
+namespace Examples.Opportunity {
+  const ref = #{
+    id: "018f2e77-3a4b-7c1d-9e2f-abcdef123456",
+    title: "Health Center Capital Improvement Program",
+  };
 }
