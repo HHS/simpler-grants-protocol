@@ -1,0 +1,91 @@
+---
+title: Authentication and scopes
+description: How clients authenticate to the organization syncing routes and the scopes those routes require.
+sidebar:
+  order: 6
+---
+
+The organization profile syncing routes are authenticated with OAuth 2.0 and JSON Web Tokens (JWTs). This page summarizes the authentication model and the scope vocabulary those routes use. The full rationale, alternatives, and security analysis live in [ADR-0026](/governance/adr/0026-org-profile-syncing/).
+
+Every deployment issues its own tokens to its own registered clients. The flow URLs shown in the OpenAPI security scheme are illustrative placeholders that each deployment replaces with its own authorization server.
+
+## Authenticating a request
+
+A client presents an access token as a bearer token on each request:
+
+```
+GET /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890
+Authorization: Bearer <jwt>
+```
+
+The token is a self-contained JWT ([RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)). A receiver validates it against the issuer's public keys (JWKS) and reads the granted scopes and organization binding straight from the token, with no callback to the issuer.
+
+### Obtaining a token
+
+The contract supports two OAuth 2.0 flows, and a deployment can offer either or both:
+
+- **Client credentials**, for a backend service that syncs on its own behalf. The service authenticates as itself and reruns the flow when its token expires.
+- **Authorization code with PKCE**, for when an organization admin consents, or when a platform syncs on an organization's behalf.
+
+## Scopes
+
+Scopes name the operations a token is permitted to perform. They do not name a specific organization; which organization a token can act on comes from its `org_id` claim (see [Binding a token to an organization](#binding-a-token-to-an-organization)).
+
+| Scope               | Description                                               |
+| ------------------- | --------------------------------------------------------- |
+| `org:list`          | Enumerate accessible organizations                        |
+| `org:read`          | Read organization profiles                                |
+| `org:write`         | Apply a direct edit (`PATCH /orgs/{orgId}`)               |
+| `org.changes:read`  | Read the changes feed (patches and snapshots)             |
+| `org.changes:write` | Submit a change for review (`POST /orgs/{orgId}/changes`) |
+
+Each route requires one scope:
+
+| Route                                  | Scope               |
+| -------------------------------------- | ------------------- |
+| `GET /orgs`                            | `org:list`          |
+| `GET /orgs/{orgId}`                    | `org:read`          |
+| `PATCH /orgs/{orgId}`                  | `org:write`         |
+| `POST /orgs/{orgId}/changes`           | `org.changes:write` |
+| `GET /orgs/{orgId}/changes`            | `org.changes:read`  |
+| `GET /orgs/{orgId}/changes/{changeId}` | `org.changes:read`  |
+
+A deployment can grant these independently. For example, it can let an external partner propose changes (`org.changes:write`) without granting direct write access (`org:write`).
+
+## Binding a token to an organization
+
+A token is limited to one organization through a namespaced `org_id` claim set to that organization's `Organization.id` UUID:
+
+```json
+{
+  "scope": "org:read org:write",
+  "https://commongrants.org/org_id": "01912a8b-7c3d-7890-abcd-ef1234567890"
+}
+```
+
+A token that omits `org_id` can exercise its scopes against every organization the subject can access, subject to the receiver's own access policy. This is how a single token lists or reads across organizations without enumerating them. A client that syncs several organizations with different permissions uses a separate token per organization.
+
+## Required JWT claims
+
+| Claim        | Required | Description                                                                                                                                           |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `iss`        | MUST     | Issuer. The receiver verifies it matches a trusted authorization server.                                                                              |
+| `sub`        | MUST     | Subject. The service account or user the token was issued to.                                                                                         |
+| `aud`        | MUST     | Audience. The receiving sync API's base URL. The receiver rejects tokens whose `aud` does not match its own.                                          |
+| `iat`        | MUST     | Issued-at timestamp.                                                                                                                                  |
+| `exp`        | MUST     | Expiration timestamp. The receiver rejects expired tokens.                                                                                            |
+| `scope`      | MUST     | Space-separated list of granted operation scopes.                                                                                                     |
+| `grant_type` | SHOULD   | The flow used (`client_credentials` or `authorization_code`), so a receiver can vary trust rules by flow.                                             |
+| `org_id`     | SHOULD   | The organization this token is limited to, namespaced as `https://commongrants.org/org_id`. Omit to act on every organization the subject can access. |
+
+## Inbound trust decision
+
+Before accepting a request, a receiver runs these checks in order, and a failure at any step rejects the request:
+
+1. Validate the JWT signature against the issuer's JWKS.
+2. Verify `iss` is a known, trusted authorization server.
+3. Verify `aud` matches the receiver's own base URL.
+4. Check `exp`, allowing at most a small amount of clock skew.
+5. Verify `scope` covers the operation (a `PATCH` needs `org:write`, a `POST /changes` needs `org.changes:write`, a read needs `org:read`).
+6. Check `org_id`. When present, verify it matches the target organization. When absent, rely on `scope` plus local access policy.
+7. Apply local access policy. A valid token does not override the receiver's own rules; if the subject cannot act on the target organization locally, reject with `403 Forbidden`.
