@@ -1,0 +1,133 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwardBase.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: Globally unique id for the award
+  title:
+    type: string
+    examples:
+      - Community Health Center Capital Improvement Grant
+    description: Title or name of the award
+  identifiers:
+    $ref: AwdIds.yaml
+    description: System and registry-specific identifiers for the award
+  description:
+    type: string
+    examples:
+      - Supports facility upgrades at federally qualified health centers.
+    description: Description of the award's purpose
+  status:
+    $ref: AwdStatus.yaml
+    description: Lifecycle status of the award
+  funding:
+    $ref: AwdFunding.yaml
+    description: Requested, awarded, and disbursed amounts
+  keyDates:
+    $ref: AwdTimeline.yaml
+    description: Award date and period of performance
+  opportunity:
+    $ref: OppRef.yaml
+    description: The opportunity this award resulted from
+  application:
+    $ref: AppRef.yaml
+    description: The application this award resulted from
+  funders:
+    $ref: OrgRefCollection.yaml
+    description: Organization(s) that funded the award
+  recipientOrganizations:
+    $ref: OrgRefCollection.yaml
+    description: Organization(s) that received the award, if the recipient is an organization
+  recipientIndividual:
+    $ref: AwdRecipientIndividual.yaml
+    description: The individual who received the award, if the recipient is a person
+  parent:
+    $ref: AwdRef.yaml
+    description: Parent award, for amendments or multi-tranche awards
+  source:
+    type: string
+    format: uri
+    description: URL for the canonical source record of the award
+  createdAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was created.
+  lastModifiedAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was last modified.
+required:
+  - id
+  - title
+  - description
+  - status
+  - createdAt
+  - lastModifiedAt
+unevaluatedProperties:
+  not: {}
+examples:
+  - id: 01912a8b-7c3d-7894-abcd-ef1234567890
+    title: Community Health Center Capital Improvement Grant
+    identifiers:
+      systemId:
+        registry:
+          code: awd:grants.gov:system
+        id: 01912a8b-7c3d-7894-abcd-ef1234567890
+      awd:us:fain:
+        registry:
+          code: awd:us:fain
+          url: https://commongrants.org/registries/awd-us-fain
+        id: H80CS00001
+    description: Supports facility upgrades at federally qualified health centers.
+    status:
+      value: awarded
+      description: Award has been issued and funds are being disbursed.
+    funding:
+      requestedAmount:
+        amount: "500000.00"
+        currency: USD
+      awardedAmount:
+        amount: "450000.00"
+        currency: USD
+      disbursedAmount:
+        amount: "150000.00"
+        currency: USD
+    keyDates:
+      awardDate:
+        name: Award date
+        eventType: singleDate
+        date: 2026-03-01
+        description: The date the award was issued.
+      periodOfPerformance:
+        name: Period of performance
+        eventType: dateRange
+        startDate: 2026-04-01
+        endDate: 2027-03-31
+        description: The period during which the funded work is performed.
+    opportunity:
+      id: 018f2e77-3a4b-7c1d-9e2f-abcdef123456
+      title: Health Center Capital Improvement Program
+    funders:
+      primary:
+        id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567
+        name: Health Resources and Services Administration
+        identifiers:
+          otherIds:
+            org:grants.gov:agency:
+              registry:
+                code: org:grants.gov:agency
+              id: HRSA
+    recipientOrganizations:
+      primary:
+        id: 018f2e77-6d7e-7f4a-9b5c-def123456789
+        name: Riverside Community Health Center
+        identifiers:
+          org:us:ein:
+            registry:
+              code: org:us:ein
+            id: "123456789"
+    source: https://www.usaspending.gov/award/ASST_NON_H80CS00001
+    createdAt: 2026-03-01T00:00:00Z
+    lastModifiedAt: 2026-06-01T00:00:00Z
+description: A grant award

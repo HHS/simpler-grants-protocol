@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwdIds.yaml
+type: object
+properties:
+  awd:us:fain:
+    $ref: AwdIdFain.yaml
+    description: The award's Federal Award Identification Number (FAIN).
+allOf:
+  - $ref: IdentifierCollection.yaml
+unevaluatedProperties:
+  not: {}
+examples:
+  - systemId:
+      registry:
+        code: awd:grants.gov:system
+      id: 01912a8b-7c3d-7894-abcd-ef1234567890
+    awd:us:fain:
+      registry:
+        code: awd:us:fain
+        url: https://commongrants.org/registries/awd-us-fain
+      id: H80CS00001
+description: |-
+  A collection of identifiers associated with an award.
+
+  Extends the generic identifier collection with the base identifiers CommonGrants
+  defines for awards. Additional registries can be published under `otherIds`.

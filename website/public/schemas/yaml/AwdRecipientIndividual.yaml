@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwdRecipientIndividual.yaml
+type: object
+properties:
+  name:
+    $ref: Name.yaml
+    description: The individual's name.
+  identifiers:
+    $ref: IdentifierCollection.yaml
+    description: Identifiers associated with the individual, keyed by registry code.
+  customFields:
+    $ref: "#/$defs/RecordCustomField"
+    description: Custom fields about the individual recipient.
+unevaluatedProperties:
+  not: {}
+description: An individual who received an award, when the recipient is a person rather than an organization.
+$defs:
+  RecordCustomField:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: CustomField.yaml

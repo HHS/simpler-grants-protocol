@@ -14,8 +14,6 @@ tags:
     description: Endpoints related to competitions, which are distinct application processes for the same funding opportunity
   - name: Applications
     description: Endpoints related to submitting applications for a given competition
-  - name: Application Reviews
-    description: Endpoints related to reviewing applications for a given competition
   - name: Forms
     description: Endpoints related to forms
   - name: required
@@ -74,7 +72,7 @@ paths:
                   description: The ID of the organization to start an application for, if applying on behalf of an organization
                 name:
                   type: string
-                  description: The name of the application
+                  description: The title of the application
               required:
                 - competitionId
                 - name
@@ -1089,9 +1087,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
           description: The unique identifier for the application
+          readOnly: true
         name:
           type: string
-          description: The name of the application
+          description: The title of the application
         competitionId:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
@@ -1132,7 +1131,6 @@ components:
       description: The base model for an application to a competition for a funding opportunity
       example:
         id: 123e4567-e89b-12d3-a456-426614174000
-        name: My Application
         competitionId: 123e4567-e89b-12d3-a456-426614174000
         formResponses:
           formA:

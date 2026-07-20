@@ -8,6 +8,8 @@ info:
     it must implement all of the routes with the "required" tag in this specification.
   version: 0.4.0
 tags:
+  - name: Awards
+    description: Endpoints related to grant awards
   - name: Opportunities
     description: Endpoints related to funding opportunities
   - name: Competitions
@@ -147,12 +149,12 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/CommonGrants.Types.uuid'
                   description: The ID of the organization to start an application for, if applying on behalf of an organization
-                name:
+                title:
                   type: string
-                  description: The name of the application
+                  description: The title of the application
               required:
                 - competitionId
-                - name
+                - title
   /common-grants/applications/{appId}:
     get:
       operationId: Applications_getApplication
@@ -327,6 +329,165 @@ paths:
                 $ref: '#/components/schemas/CommonGrants.Responses.ApplicationSubmissionError'
       tags:
         - Applications
+        - experimental
+  /common-grants/awards:
+    get:
+      operationId: Awards_list
+      summary: List awards
+      description: Get a paginated list of awards, sorted by `lastModifiedAt` with most recent first.
+      parameters:
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
+      responses:
+        '200':
+          description: A 200 response with a paginated list of items
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - paginationInfo
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.AwardBase'
+                    description: Items from the current page
+                  paginationInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+                    description: Details about the paginated results
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with a paginated list of items
+      tags:
+        - Awards
+        - experimental
+  /common-grants/awards/search:
+    post:
+      operationId: Awards_search
+      summary: Search awards
+      description: Search for awards based on the provided filters.
+      parameters: []
+      responses:
+        '200':
+          description: A paginated list of items with a filter
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - paginationInfo
+                  - status
+                  - message
+                  - sortInfo
+                  - filterInfo
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.AwardBase'
+                    description: Items from the current page
+                  paginationInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+                    description: Details about the paginated results
+                  status:
+                    type: integer
+                    format: int32
+                    example: 200
+                  message:
+                    type: string
+                    example: Success
+                  sortInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
+                    description: The sort order of the items
+                  filterInfo:
+                    type: object
+                    properties:
+                      filters:
+                        $ref: '#/components/schemas/CommonGrants.Models.AwdFilters'
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                        description: Non-fatal errors that occurred during filtering
+                    required:
+                      - filters
+                    description: The filters applied to the response items
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A paginated list of items with a filter
+      tags:
+        - Awards
+        - experimental
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: string
+                  description: Award search query
+                  example: Community health center
+                filters:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Models.AwdFilters'
+                  description: |-
+                    Filters to apply to the award search
+
+                    Multiple filter conditions will be combined with AND logic, so that
+                    results only include awards that match all of the provided filters.
+                sorting:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Models.AwdSorting'
+                  description: The sort order to apply to the results
+                pagination:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedBodyParams'
+                  description: Pagination instructions for the results
+  /common-grants/awards/{awdId}:
+    get:
+      operationId: Awards_read
+      summary: View award details
+      description: View details about an award.
+      parameters:
+        - name: awdId
+          in: path
+          required: true
+          description: The ID of the award to view
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.AwardBase'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Awards
         - experimental
   /common-grants/competitions/{compId}:
     get:
@@ -783,6 +944,91 @@ components:
         mimeType: application/pdf
         createdAt: '2025-01-01T17:01:01'
         lastModifiedAt: '2025-01-02T17:30:00'
+    CommonGrants.Fields.Identifier:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              description: Link to the catalog entry for this registry.
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          type: string
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          description: Every known identifier for this record in this registry, including archived values.
+      description: |-
+        An identifier issued to a record by a registry.
+
+        Accepts any string value and any registry code. Model-specific collections use
+        registry-typed instantiations of `IdentifierT` (e.g. `OrgIdEin`) for their base
+        identifiers, and this generic form for extension identifiers under `otherIds`.
+      example:
+        registry:
+          code: org:us:ein
+          url: https://commongrants.org/registries/org-us-ein
+        id: '123456789'
+        allIds:
+          - id: '123456789'
+            status: active
+          - id: '987654321'
+            status: archived
+    CommonGrants.Fields.IdentifierCollection:
+      type: object
+      properties:
+        systemId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.SystemId'
+          description: The hosting system's own identifier for this record.
+        otherIds:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.Identifier'
+          description: |-
+            Additional identifiers keyed by their registry code, for registries the
+            protocol does not define as a base identifier on the model.
+      description: A collection of identifiers associated with a record.
+      example:
+        systemId:
+          registry:
+            code: org:grants.gov:system
+            url: https://commongrants.org/registries/org-grants-gov-system
+          id: 01912a8b-7c3d-7890-abcd-ef1234567890
+        otherIds:
+          org:candid:bridge:
+            registry:
+              code: org:candid:bridge
+            id: '1234567'
+    CommonGrants.Fields.IdentifierStatus:
+      type: string
+      enum:
+        - active
+        - archived
+      description: The lifecycle status of an identifier value.
     CommonGrants.Fields.Money:
       type: object
       required:
@@ -800,6 +1046,34 @@ components:
       example:
         amount: '-50.50'
         currency: USD
+    CommonGrants.Fields.Name:
+      type: object
+      required:
+        - firstName
+        - lastName
+      properties:
+        prefix:
+          type: string
+          description: Honorific prefix (e.g., Mr., Mrs., Dr., Prof.).
+        firstName:
+          type: string
+          description: The person's first or given name.
+        middleName:
+          type: string
+          description: The person's middle name or names.
+        lastName:
+          type: string
+          description: The person's last name or family name.
+        suffix:
+          type: string
+          description: Name suffix (e.g., Jr., Sr., III, Ph.D.).
+      description: A person's name.
+      example:
+        prefix: Dr.
+        firstName: Jane
+        middleName: Edward
+        lastName: Doe
+        suffix: Jr.
     CommonGrants.Fields.OtherEvent:
       type: object
       required:
@@ -853,6 +1127,55 @@ components:
         date: '2024-12-31'
         time: '17:00:00'
         description: Opportunity closes for all applications
+    CommonGrants.Fields.SystemId:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              description: Link to the catalog entry for this registry.
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          description: Every known identifier for this record in this registry, including archived values.
+      description: |-
+        The hosting system's own identifier for a record.
+
+        The identifier value is the record's UUID within the hosting system; the
+        registry code names that system (e.g. `org:grants.gov:system`).
+      example:
+        registry:
+          code: org:grants.gov:system
+          url: https://commongrants.org/registries/org-grants-gov-system
+        id: 01912a8b-7c3d-7890-abcd-ef1234567890
     CommonGrants.Filters.AllOperators:
       type: string
       enum:
@@ -1160,6 +1483,28 @@ components:
             message: Country is required
         createdAt: '2021-01-01T00:00:00Z'
         lastModifiedAt: '2021-01-01T00:00:00Z'
+    CommonGrants.Models.AppRef:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The unique identifier for the application
+          readOnly: true
+        title:
+          type: string
+          description: The title of the application
+      description: |-
+        A reference to an application, previewing the key fields a consumer needs
+        to identify it and look it up or join it to another response. Appears
+        wherever another record points to an application, such as the application
+        an award resulted from.
+      example:
+        id: 123e4567-e89b-12d3-a456-426614174000
+        title: My Application
     CommonGrants.Models.AppSortBy:
       type: string
       enum:
@@ -1262,7 +1607,7 @@ components:
       type: object
       required:
         - id
-        - name
+        - title
         - competitionId
         - opportunityId
         - formResponses
@@ -1274,9 +1619,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
           description: The unique identifier for the application
-        name:
+          readOnly: true
+        title:
           type: string
-          description: The name of the application
+          description: The title of the application
         competitionId:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
@@ -1321,7 +1667,7 @@ components:
       description: The base model for an application to a competition for a funding opportunity
       example:
         id: 123e4567-e89b-12d3-a456-426614174000
-        name: My Application
+        title: My Application
         competitionId: 123e4567-e89b-12d3-a456-426614174000
         opportunityId: ad3b469a-d89a-42d3-c439-6c1234567890
         formResponses:
@@ -1388,6 +1734,489 @@ components:
               createdAt: '2025-01-01T17:01:01'
               lastModifiedAt: '2025-01-02T17:30:00'
             description: The zip file for the application
+    CommonGrants.Models.AwardBase:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - status
+        - createdAt
+        - lastModifiedAt
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: Globally unique id for the award
+          readOnly: true
+        title:
+          type: string
+          description: Title or name of the award
+          example: Community Health Center Capital Improvement Grant
+        identifiers:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdIds'
+          description: System and registry-specific identifiers for the award
+        description:
+          type: string
+          description: Description of the award's purpose
+          example: Supports facility upgrades at federally qualified health centers.
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdStatus'
+          description: Lifecycle status of the award
+        funding:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdFunding'
+          description: Requested, awarded, and disbursed amounts
+        keyDates:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdTimeline'
+          description: Award date and period of performance
+        opportunity:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OppRef'
+          description: The opportunity this award resulted from
+        application:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AppRef'
+          description: The application this award resulted from
+        funders:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRefCollection'
+          description: Organization(s) that funded the award
+        recipientOrganizations:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRefCollection'
+          description: Organization(s) that received the award, if the recipient is an organization
+        recipientIndividual:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdRecipientIndividual'
+          description: The individual who received the award, if the recipient is a person
+        parent:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdRef'
+          description: Parent award, for amendments or multi-tranche awards
+        source:
+          type: string
+          format: uri
+          description: URL for the canonical source record of the award
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was created.
+          readOnly: true
+        lastModifiedAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was last modified.
+          readOnly: true
+      description: A grant award
+      example:
+        id: 01912a8b-7c3d-7894-abcd-ef1234567890
+        title: Community Health Center Capital Improvement Grant
+        identifiers:
+          systemId:
+            registry:
+              code: awd:grants.gov:system
+            id: 01912a8b-7c3d-7894-abcd-ef1234567890
+          awd:us:fain:
+            registry:
+              code: awd:us:fain
+              url: https://commongrants.org/registries/awd-us-fain
+            id: H80CS00001
+        description: Supports facility upgrades at federally qualified health centers.
+        status:
+          value: awarded
+          description: Award has been issued and funds are being disbursed.
+        funding:
+          requestedAmount:
+            amount: '500000.00'
+            currency: USD
+          awardedAmount:
+            amount: '450000.00'
+            currency: USD
+          disbursedAmount:
+            amount: '150000.00'
+            currency: USD
+        keyDates:
+          awardDate:
+            name: Award date
+            eventType: singleDate
+            date: '2026-03-01'
+            description: The date the award was issued.
+          periodOfPerformance:
+            name: Period of performance
+            eventType: dateRange
+            startDate: '2026-04-01'
+            endDate: '2027-03-31'
+            description: The period during which the funded work is performed.
+        opportunity:
+          id: 018f2e77-3a4b-7c1d-9e2f-abcdef123456
+          title: Health Center Capital Improvement Program
+        funders:
+          primary:
+            id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567
+            name: Health Resources and Services Administration
+            identifiers:
+              otherIds:
+                org:grants.gov:agency:
+                  registry:
+                    code: org:grants.gov:agency
+                  id: HRSA
+        recipientOrganizations:
+          primary:
+            id: 018f2e77-6d7e-7f4a-9b5c-def123456789
+            name: Riverside Community Health Center
+            identifiers:
+              org:us:ein:
+                registry:
+                  code: org:us:ein
+                id: '123456789'
+        source: https://www.usaspending.gov/award/ASST_NON_H80CS00001
+        createdAt: '2026-03-01T00:00:00Z'
+        lastModifiedAt: '2026-06-01T00:00:00Z'
+    CommonGrants.Models.AwdDefaultFilters:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - awarded
+              - completed
+        opportunityId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`opportunity.id` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - 018f2e77-3a4b-7c1d-9e2f-abcdef123456
+        awardDateRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`keyDates.awardDate` is between the given range'
+          example:
+            operator: between
+            value:
+              min: '2026-01-01'
+              max: '2026-12-31'
+        awardedAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.awardedAmount` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '100000'
+                currency: USD
+              max:
+                amount: '500000'
+                currency: USD
+      allOf:
+        - type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Filters.DefaultFilter'
+      description: The standard set of filters supported for award searches
+    CommonGrants.Models.AwdFilters:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`status.value` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - awarded
+              - completed
+        opportunityId:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.StringArrayFilter'
+          description: '`opportunity.id` matches one of the following values'
+          example:
+            operator: in
+            value:
+              - 018f2e77-3a4b-7c1d-9e2f-abcdef123456
+        awardDateRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.DateRangeFilter'
+          description: '`keyDates.awardDate` is between the given range'
+          example:
+            operator: between
+            value:
+              min: '2026-01-01'
+              max: '2026-12-31'
+        awardedAmountRange:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Filters.MoneyRangeFilter'
+          description: |-
+            `funding.awardedAmount` is between the given range
+
+            Funding amounts that are denominated in a different currency will
+            be excluded from the search.
+          example:
+            operator: between
+            value:
+              min:
+                amount: '100000'
+                currency: USD
+              max:
+                amount: '500000'
+                currency: USD
+        customFilters:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Filters.DefaultFilter'
+          description: Additional implementation-defined filters to apply to the search
+      description: Filters to apply when searching for awards
+    CommonGrants.Models.AwdFunding:
+      type: object
+      properties:
+        details:
+          type: string
+          description: Details about the award's funding that don't fit other fields
+        requestedAmount:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          description: Amount of funding requested by the recipient
+        awardedAmount:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          description: Amount of funding awarded to the recipient
+        disbursedAmount:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Money'
+          description: Amount of funding disbursed to the recipient so far
+      description: Financial details about the award, including the amounts requested, awarded, and disbursed
+      example:
+        requestedAmount:
+          amount: '500000.00'
+          currency: USD
+        awardedAmount:
+          amount: '450000.00'
+          currency: USD
+        disbursedAmount:
+          amount: '150000.00'
+          currency: USD
+    CommonGrants.Models.AwdIdFain:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - awd:us:fain
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              description: Link to the catalog entry for this registry.
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          type: string
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          description: Every known identifier for this record in this registry, including archived values.
+      description: An award's Federal Award Identification Number (FAIN), assigned by the awarding agency.
+      example:
+        registry:
+          code: awd:us:fain
+          url: https://commongrants.org/registries/awd-us-fain
+        id: H80CS00001
+    CommonGrants.Models.AwdIds:
+      type: object
+      properties:
+        awd:us:fain:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdIdFain'
+          description: The award's Federal Award Identification Number (FAIN).
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierCollection'
+      description: |-
+        A collection of identifiers associated with an award.
+
+        Extends the generic identifier collection with the base identifiers CommonGrants
+        defines for awards. Additional registries can be published under `otherIds`.
+      example:
+        systemId:
+          registry:
+            code: awd:grants.gov:system
+          id: 01912a8b-7c3d-7894-abcd-ef1234567890
+        awd:us:fain:
+          registry:
+            code: awd:us:fain
+            url: https://commongrants.org/registries/awd-us-fain
+          id: H80CS00001
+    CommonGrants.Models.AwdRecipientIndividual:
+      type: object
+      properties:
+        name:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Name'
+          description: The individual's name.
+        identifiers:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierCollection'
+          description: Identifiers associated with the individual, keyed by registry code.
+        customFields:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.CustomField'
+          description: Custom fields about the individual recipient.
+      description: An individual who received an award, when the recipient is a person rather than an organization.
+    CommonGrants.Models.AwdRef:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: Globally unique id for the award
+          readOnly: true
+        title:
+          type: string
+          description: Title or name of the award
+          example: Community Health Center Capital Improvement Grant
+        identifiers:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdIds'
+          description: System and registry-specific identifiers for the award
+      description: |-
+        A reference to an award, previewing the key fields a consumer needs to
+        identify it and look it up or join it to another response. Appears wherever
+        another record points to an award, such as a parent award for an amendment
+        or tranche.
+      example:
+        id: 01912a8b-7c3d-7894-abcd-ef1234567890
+        title: Community Health Center Capital Improvement Grant
+        identifiers:
+          systemId:
+            registry:
+              code: awd:grants.gov:system
+            id: 01912a8b-7c3d-7894-abcd-ef1234567890
+          awd:us:fain:
+            registry:
+              code: awd:us:fain
+              url: https://commongrants.org/registries/awd-us-fain
+            id: H80CS00001
+    CommonGrants.Models.AwdSortBy:
+      type: string
+      enum:
+        - lastModifiedAt
+        - createdAt
+        - title
+        - status.value
+        - keyDates.awardDate
+        - funding.awardedAmount
+        - custom
+    CommonGrants.Models.AwdSorting:
+      type: object
+      required:
+        - sortBy
+      properties:
+        sortBy:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdSortBy'
+          description: The field to sort by
+          example: lastModifiedAt
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Sorting.SortBodyParams'
+    CommonGrants.Models.AwdStatus:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.AwdStatusOptions'
+          description: The status of the award, from a predefined set of options
+        customValue:
+          type: string
+          description: A custom value for the status
+        description:
+          type: string
+          description: A human-readable description of the status
+      description: The status of the award
+      example:
+        value: awarded
+        description: Award has been issued and funds are being disbursed.
+    CommonGrants.Models.AwdStatusOptions:
+      type: string
+      enum:
+        - awarded
+        - completed
+        - cancelled
+        - custom
+      description: |-
+        The set of values accepted for award status:
+        - `awarded`: The award has been issued and funds are being disbursed
+        - `completed`: The award's period of performance has ended
+        - `cancelled`: The award was cancelled or terminated
+        - `custom`: A custom status
+    CommonGrants.Models.AwdTimeline:
+      type: object
+      properties:
+        awardDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: The date (and time) on which the award was issued
+        periodOfPerformance:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: The period during which the funded work is expected to be performed
+        otherDates:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.Event'
+          description: |-
+            An optional map of other key dates or events in the award timeline
+
+            Examples might include a reporting deadline, close-out date, etc.
+      description: Key dates in the award's timeline, such as the award date and period of performance
+      example:
+        awardDate:
+          name: Award date
+          eventType: singleDate
+          date: '2026-03-01'
+          description: The date the award was issued.
+        periodOfPerformance:
+          name: Period of performance
+          eventType: dateRange
+          startDate: '2026-04-01'
+          endDate: '2027-03-31'
+          description: The period during which the funded work is performed.
     CommonGrants.Models.CompetitionBase:
       type: object
       required:
@@ -2296,6 +3125,29 @@ components:
         minAwardCount: 5
         maxAwardCount: 20
         estimatedAwardCount: 10
+    CommonGrants.Models.OppRef:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: Globally unique id for the opportunity
+          readOnly: true
+        title:
+          type: string
+          description: Title or name of the funding opportunity
+          example: Small business grant program
+      description: |-
+        A reference to an opportunity, previewing the key fields a consumer needs
+        to identify it and look it up or join it to another response. Appears
+        wherever another record points to an opportunity, such as the opportunity
+        an award resulted from.
+      example:
+        id: 018f2e77-3a4b-7c1d-9e2f-abcdef123456
+        title: Health Center Capital Improvement Program
     CommonGrants.Models.OppSortBy:
       type: string
       enum:
@@ -2480,6 +3332,229 @@ components:
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Models.OpportunityBase'
       description: A funding opportunity with additional details, like available competitions.
+    CommonGrants.Models.OrgIdDuns:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - org:xi:duns
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              description: Link to the catalog entry for this registry.
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.duns'
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Types.duns'
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          description: Every known identifier for this record in this registry, including archived values.
+      description: An organization's Data Universal Numbering System (DUNS) number.
+      example:
+        registry:
+          code: org:xi:duns
+          url: https://commongrants.org/registries/org-xi-duns
+        id: '123456789'
+    CommonGrants.Models.OrgIdEin:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - org:us:ein
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              description: Link to the catalog entry for this registry.
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          description: Every known identifier for this record in this registry, including archived values.
+      description: An organization's Employer Identification Number (EIN), assigned by the IRS.
+      example:
+        registry:
+          code: org:us:ein
+          url: https://commongrants.org/registries/org-us-ein
+        id: '123456789'
+    CommonGrants.Models.OrgIdUei:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - org:us:uei
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              description: Link to the catalog entry for this registry.
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          description: Every known identifier for this record in this registry, including archived values.
+      description: An organization's Unique Entity Identifier (UEI) from SAM.gov.
+      example:
+        registry:
+          code: org:us:uei
+          url: https://commongrants.org/registries/org-us-uei
+        id: AB0123456789
+    CommonGrants.Models.OrgIds:
+      type: object
+      properties:
+        org:us:ein:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgIdEin'
+          description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+        org:us:uei:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgIdUei'
+          description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+        org:xi:duns:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgIdDuns'
+          description: The organization's Data Universal Numbering System (DUNS) number.
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierCollection'
+      description: |-
+        A collection of identifiers associated with an organization.
+
+        Extends the generic identifier collection with the base identifiers CommonGrants
+        defines for organizations. Additional registries can be published under `otherIds`.
+    CommonGrants.Models.OrgRef:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The organization's unique identifier.
+          readOnly: true
+        name:
+          type: string
+          description: The organization's legal name as registered with relevant authorities.
+        identifiers:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
+          description: Identifiers associated with the organization, keyed by registry code.
+      description: |-
+        A reference to an organization, previewing the key fields a consumer needs
+        to identify it and look it up or join it to another response. Appears
+        wherever another record points to an organization, such as an award's funder
+        or recipient.
+      example:
+        id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567
+        name: Health Resources and Services Administration
+        identifiers:
+          otherIds:
+            org:grants.gov:agency:
+              registry:
+                code: org:grants.gov:agency
+              id: HRSA
+    CommonGrants.Models.OrgRefCollection:
+      type: object
+      required:
+        - primary
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+          description: The primary organization in the collection.
+        otherOrgs:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+          description: Other organizations in the collection, keyed by an implementation-defined role.
+      description: |-
+        A group of organization references, with a primary organization and
+        optional others. Appears wherever several organizations share a role on a
+        record, such as an award's funders or recipient organizations.
+      example:
+        primary:
+          id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567
+          name: Health Resources and Services Administration
+          identifiers:
+            otherIds:
+              org:grants.gov:agency:
+                registry:
+                  code: org:grants.gov:agency
+                id: HRSA
     CommonGrants.Pagination.PaginatedBodyParams:
       type: object
       properties:
@@ -2627,6 +3702,16 @@ components:
       pattern: ^-?[0-9]+\.?[0-9]*$
       description: A decimal number (with variable scale) encoded as a string, to avoid floating point issues
       example: '-100.5'
+    CommonGrants.Types.duns:
+      type: string
+      pattern: ^[0-9]{9}$
+      description: A Data Universal Numbering System (DUNS) number, normalized to nine digits
+      example: '123456789'
+    CommonGrants.Types.employerTaxId:
+      type: string
+      pattern: ^[0-9]{9}$
+      description: An Employer Identification Number (EIN) issued by the IRS, normalized to nine digits
+      example: '123456789'
     CommonGrants.Types.isoDate:
       type: string
       format: date
@@ -2637,6 +3722,11 @@ components:
       format: time
       description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
       example: '17:00:00'
+    CommonGrants.Types.samUEI:
+      type: string
+      pattern: ^[A-HJ-NP-Z0-9]{12}$
+      description: A Unique Entity Identifier (UEI) issued by SAM.gov
+      example: AB0123456789
     CommonGrants.Types.uuid:
       type: string
       format: uuid

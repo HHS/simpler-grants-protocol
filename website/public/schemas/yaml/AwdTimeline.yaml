@@ -1,0 +1,37 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwdTimeline.yaml
+type: object
+properties:
+  awardDate:
+    $ref: Event.yaml
+    description: The date (and time) on which the award was issued
+  periodOfPerformance:
+    $ref: Event.yaml
+    description: The period during which the funded work is expected to be performed
+  otherDates:
+    $ref: "#/$defs/RecordEvent"
+    description: |-
+      An optional map of other key dates or events in the award timeline
+
+      Examples might include a reporting deadline, close-out date, etc.
+unevaluatedProperties:
+  not: {}
+examples:
+  - awardDate:
+      name: Award date
+      eventType: singleDate
+      date: 2026-03-01
+      description: The date the award was issued.
+    periodOfPerformance:
+      name: Period of performance
+      eventType: dateRange
+      startDate: 2026-04-01
+      endDate: 2027-03-31
+      description: The period during which the funded work is performed.
+description: Key dates in the award's timeline, such as the award date and period of performance
+$defs:
+  RecordEvent:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: Event.yaml
