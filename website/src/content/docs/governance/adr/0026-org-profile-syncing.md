@@ -231,8 +231,8 @@ Response: `200 OK`. Like every write, the result is a change in the standard env
   "status": 200,
   "message": "Change applied",
   "data": {
-    "id": "ch_01912a8b",
-    "status": "accepted",
+    "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+    "status": { "value": "accepted" },
     "datasetVersion": 9,
     "patch": {
       "name": "Example Nonprofit (Renamed)",
@@ -278,7 +278,7 @@ Response: `202 Accepted`, with the change in the standard envelope. A receiver t
 
 ```
 202 Accepted
-Location: /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890/changes/ch_01912a8b
+Location: /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890/changes/01926d3f-8a2b-7c4e-9d01-23456789abcd
 ```
 
 ```json
@@ -286,8 +286,8 @@ Location: /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890/changes/ch_01
   "status": 202,
   "message": "Change accepted for review",
   "data": {
-    "id": "ch_01912a8b",
-    "status": "pending",
+    "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+    "status": { "value": "pending" },
     "patch": {
       "mission": "To expand access to community health resources.",
       "socials": { "website": null }
@@ -316,10 +316,10 @@ Response:
 {
   "items": [
     {
-      "id": "ch_01912a8b",
-      "status": "accepted",
+      "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+      "status": { "value": "accepted" },
       "datasetVersion": 9,
-      "modifiedAt": "2026-06-20T14:30:00Z",
+      "lastModifiedAt": "2026-06-20T14:30:00Z",
       "source": "grants.gov",
       "patch": {
         "name": "Example Nonprofit (Renamed)",
@@ -332,10 +332,10 @@ Response:
       }
     },
     {
-      "id": "ch_00a7f2c1",
-      "status": "accepted",
+      "id": "01925c1a-4b3d-7e8f-a012-3456789bcdef",
+      "status": { "value": "accepted" },
       "datasetVersion": 7,
-      "modifiedAt": "2026-03-15T09:00:00Z",
+      "lastModifiedAt": "2026-03-15T09:00:00Z",
       "source": "candid",
       "snapshot": {
         "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
@@ -723,9 +723,9 @@ A `PATCH /orgs/{orgId}` is the direct path: the receiver applies the edit and re
 ```
 POST /orgs/{orgId}/changes
 → 202 Accepted
-  Location: /orgs/{orgId}/changes/ch_01912a8b
+  Location: /orgs/{orgId}/changes/01926d3f-8a2b-7c4e-9d01-23456789abcd
 
-{ "id": "ch_01912a8b", "status": "pending", "patch": { "mission": "..." } }
+{ "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd", "status": { "value": "pending" }, "patch": { "mission": "..." } }
 ```
 
 Both take the same JSON Merge Patch body and both show up in `GET /orgs/{orgId}/changes`, so history is uniform no matter how a write arrived. The two paths use different scopes (`org:write` for `PATCH`, `org.changes:write` for `POST /changes`, mirroring `org.changes:read`), so a deployment can grant a partner the ability to propose changes without granting direct-write access. A deployment can expose whichever entry points fit its trust model:
@@ -938,7 +938,7 @@ A list of full snapshots is the best fit if we
 ```json
 {
   "datasetVersion": 9,
-  "modifiedAt": "2026-06-20T14:30:00Z",
+  "lastModifiedAt": "2026-06-20T14:30:00Z",
   "patch": { "mission": "..." },
   "snapshot": { "name": "...", "mission": "..." }
 }
@@ -1042,13 +1042,20 @@ A change comes back with a `status` in `data`, so the same shape works whether t
 Applied immediately:
 
 ```json
-{ "id": "ch_01912a8b", "status": "accepted", "datasetVersion": 9 }
+{
+  "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+  "status": { "value": "accepted" },
+  "datasetVersion": 9
+}
 ```
 
 Queued for review:
 
 ```json
-{ "id": "ch_01912a8b", "status": "pending" }
+{
+  "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+  "status": { "value": "pending" }
+}
 ```
 
 The full set is `accepted` (applied), `denied` (rejected, with a reason), `pending` (queued for review), or `superseded` (a newer change won), so a submitter doesn't have to know the receiver's workflow ahead of time. A `PATCH` is always `accepted` immediately, so this really governs the `POST /changes` path. How each status maps to an HTTP code is left to the follow-up spec.
