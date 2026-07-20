@@ -168,3 +168,29 @@ model Created<T> extends Success {
   /** Response data */
   data: T;
 }
+
+// ############################################################################
+// 202 response
+// ############################################################################
+
+/** A 202 response with data
+ *
+ * Returned when a request is accepted for processing but may not be applied
+ * immediately, such as a change submitted for review. The `Location` header
+ * points to the accepted resource when one is available.
+ *
+ * @template T The schema for the value of the `"data"` property in this response
+ */
+@doc("A 202 response with data")
+@Versioning.added(CommonGrants.Versions.v0_4)
+model Accepted<T> extends Success {
+  // Inherit the 202 status code
+  ...Http.AcceptedResponse;
+
+  /** URL where the accepted resource can be retrieved */
+  @Http.header("Location")
+  location?: url;
+
+  /** Response data */
+  data: T;
+}
