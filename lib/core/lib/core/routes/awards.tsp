@@ -51,7 +51,7 @@ interface Awards {
   @list
   list<T extends Models.AwardBase = Models.AwardBase>(
     ...Pagination.PaginatedQueryParams,
-  ): Responses.Paginated<T>;
+  ): Responses.PaginatedT<T>;
 
   // ##############################
   // View an award
@@ -69,7 +69,7 @@ interface Awards {
     /** The ID of the award to view */
     @path
     awdId: Types.uuid,
-  ): Responses.Ok<T> | Responses.NotFound;
+  ): Responses.OkT<T> | Responses.NotFound;
 
   // ###############################
   // Search awards
@@ -101,5 +101,5 @@ interface Awards {
 
     /** Pagination instructions for the results */
     pagination?: Pagination.PaginatedBodyParams,
-  ): Responses.Filtered<T, Models.AwdFilters>;
+  ): Responses.FilteredT<T, Models.AwdFilters>;
 }

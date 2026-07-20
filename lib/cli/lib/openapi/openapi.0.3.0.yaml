@@ -8,6 +8,8 @@ info:
     it must implement all of the routes with the "required" tag in this specification.
   version: 0.3.0
 tags:
+  - name: Awards
+    description: Endpoints related to grant awards
   - name: Opportunities
     description: Endpoints related to funding opportunities
   - name: Competitions
@@ -140,7 +142,7 @@ paths:
                   description: The ID of the organization to start an application for, if applying on behalf of an organization
                 name:
                   type: string
-                  description: The name of the application
+                  description: The title of the application
               required:
                 - competitionId
                 - name
@@ -1256,9 +1258,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
           description: The unique identifier for the application
+          readOnly: true
         name:
           type: string
-          description: The name of the application
+          description: The title of the application
         competitionId:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
@@ -1303,7 +1306,6 @@ components:
       description: The base model for an application to a competition for a funding opportunity
       example:
         id: 123e4567-e89b-12d3-a456-426614174000
-        name: My Application
         competitionId: 123e4567-e89b-12d3-a456-426614174000
         opportunityId: ad3b469a-d89a-42d3-c439-6c1234567890
         formResponses:

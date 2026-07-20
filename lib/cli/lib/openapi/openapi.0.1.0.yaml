@@ -8,6 +8,8 @@ info:
     it must implement all of the routes with the "required" tag in this specification.
   version: 0.1.0
 tags:
+  - name: Awards
+    description: Endpoints related to grant awards
   - name: Opportunities
     description: Endpoints related to funding opportunities
   - name: Competitions
