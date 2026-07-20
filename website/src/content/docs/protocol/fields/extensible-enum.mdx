@@ -33,6 +33,26 @@ Fields like [OppStatus](/protocol/models/opportunity/#oppstatus),
 [ApplicantType](/protocol/models/applicant-type/) follow this pattern via the
 [`ExtensibleEnumT<T>`](#extensibleenumt) template.
 
+## ExtensibleEnumT
+
+The templated model, which constrains `value` to a given enum. Use this to define new
+extensible enum fields so they stay consistent with the rest of the protocol:
+
+```typespec
+enum OppStatusOptions {
+  forecasted,
+  open,
+  closed,
+  custom,
+}
+
+model OppStatus is Fields.ExtensibleEnumT<OppStatusOptions>;
+```
+
+### Formats
+
+<SchemaFormatTabs typeSpec={frontmatter.extensibleEnumT.typeSpec} />
+
 ## ExtensibleEnum
 
 The untyped base model, for cases where the value set is open-ended and a typed
@@ -57,23 +77,3 @@ constraint isn't appropriate.
 ### Changelog
 
 <SchemaChangelog schema="ExtensibleEnum" />
-
-## ExtensibleEnumT
-
-A templated variant that constrains `value` to a given enum. Use this to define new
-extensible enum fields so they stay consistent with the rest of the protocol:
-
-```typespec
-enum OppStatusOptions {
-  forecasted,
-  open,
-  closed,
-  custom,
-}
-
-model OppStatus is Fields.ExtensibleEnumT<OppStatusOptions>;
-```
-
-### Formats
-
-<SchemaFormatTabs typeSpec={frontmatter.extensibleEnumT.typeSpec} />
