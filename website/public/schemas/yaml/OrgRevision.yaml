@@ -1,0 +1,124 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgRevision.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: Globally unique id for the revision
+  status:
+    $ref: RevisionStatus.yaml
+    description: The lifecycle status of the change
+  source:
+    type: string
+    description: The source system the change came from
+  patch:
+    $ref: OrgPatchData.yaml
+    description: The merge patch that was submitted
+  snapshot:
+    $ref: OrganizationBase.yaml
+    description: A full snapshot of the record with the change applied
+  createdAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was created.
+  lastModifiedAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was last modified.
+required:
+  - id
+  - status
+  - createdAt
+  - lastModifiedAt
+unevaluatedProperties:
+  not: {}
+examples:
+  - id: 01912a8b-7c3d-7890-abcd-ef1234567890
+    status:
+      value: accepted
+      description: The change was applied.
+    source: grants.gov
+    patch:
+      mission: To provide support and resources to the community.
+    snapshot:
+      id: 083b4567-e89d-42c8-a439-6c1234567890
+      name: Example Organization
+      orgType:
+        term: Hospital
+        class: Organization types
+        description: Institutions with the primary purpose of providing in-patient physical and mental health services...
+        code: EO000000
+      identifiers:
+        org:us:ein:
+          registry:
+            code: org:us:ein
+            url: https://commongrants.org/registries/org-us-ein
+          id: "123456789"
+        org:us:uei:
+          registry:
+            code: org:us:uei
+            url: https://commongrants.org/registries/org-us-uei
+          id: AB0123456789
+      addresses:
+        primary:
+          street1: 456 Main St
+          street2: Suite 100
+          city: Anytown
+          stateOrProvince: CA
+          country: US
+          postalCode: "12345"
+        otherAddresses:
+          satellite:
+            street1: 456 Main St
+            street2: Suite 100
+            city: Anytown
+            stateOrProvince: CA
+            country: US
+            postalCode: "12345"
+          international:
+            street1: 123 Rue Principale
+            city: Montreal
+            stateOrProvince: QC
+            country: CA
+            postalCode: H2Y 1C6
+      phones:
+        primary:
+          countryCode: "+1"
+          number: 444-456-1230
+          isMobile: true
+        fax:
+          countryCode: "+1"
+          number: 555-123-4567
+          extension: "123"
+          isMobile: false
+        otherPhones:
+          support:
+            countryCode: "+1"
+            number: 333-456-1230
+            isMobile: false
+          marketing:
+            countryCode: "+1"
+            number: 444-456-1230
+            isMobile: true
+      emails:
+        primary: info@example.com
+        otherEmails:
+          support: support@example.com
+          marketing: marketing@example.com
+      mission: To provide support and resources to the community.
+      yearFounded: "2024"
+      socials:
+        website: https://www.example.com
+        facebook: https://www.facebook.com/example
+        twitterOrX: https://x.com/example
+        instagram: https://www.instagram.com/example
+        linkedin: https://www.linkedin.com/company/example
+        otherSocials:
+          youtube: https://www.youtube.com/example
+    createdAt: 2026-06-20T14:30:00Z
+    lastModifiedAt: 2026-06-20T14:30:00Z
+description: |-
+  A single change to an organization profile, recorded in the change ledger.
+
+  The `patch` is an `OrgPatchData` merge patch, and the `snapshot` is the
+  organization profile with that change applied.

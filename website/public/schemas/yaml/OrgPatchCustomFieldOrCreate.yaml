@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgPatchCustomFieldOrCreate.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: Name of the custom field
+  fieldType:
+    $ref: CustomFieldType.yaml
+    description: The JSON schema type to use when de-serializing the `value` field
+  schema:
+    anyOf:
+      - type: string
+        format: uri
+      - type: "null"
+    description: Link to the full JSON schema for this custom field
+  value:
+    description: Value of the custom field
+  description:
+    anyOf:
+      - type: string
+      - type: "null"
+    description: Description of the custom field's purpose
+unevaluatedProperties:
+  not: {}
+examples:
+  - name: eligibilityType
+    fieldType: array
+    value:
+      - nonprofit
+      - academic
+    description: Types of eligible organizations
+  - name: programArea
+    fieldType: string
+    value: Healthcare Innovation
+    description: Primary focus area of the grant program
+    schema: https://example.com/program-areas.json
+description: A custom field on a model

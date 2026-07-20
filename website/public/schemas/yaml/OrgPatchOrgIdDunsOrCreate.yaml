@@ -1,0 +1,60 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgPatchOrgIdDunsOrCreate.yaml
+type: object
+properties:
+  registry:
+    anyOf:
+      - type: object
+        properties:
+          code:
+            anyOf:
+              - type: string
+                const: org:xi:duns
+              - type: "null"
+            description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+          url:
+            anyOf:
+              - type: string
+                format: uri
+              - type: "null"
+            description: Link to the catalog entry for this registry.
+        unevaluatedProperties:
+          not: {}
+      - type: "null"
+    description: Registry-level facts shared by every record in this registry.
+  id:
+    anyOf:
+      - $ref: duns.yaml
+      - type: "null"
+    description: |-
+      The primary identifier string, when the registry has a single canonical value.
+
+      May be omitted for registries with no natural primary; consumers should read
+      `allIds` in that case.
+  allIds:
+    anyOf:
+      - type: array
+        items:
+          type: object
+          properties:
+            id:
+              $ref: duns.yaml
+              description: The identifier string.
+            status:
+              $ref: IdentifierStatus.yaml
+              description: Whether the identifier is currently valid or retired.
+          required:
+            - id
+            - status
+          unevaluatedProperties:
+            not: {}
+      - type: "null"
+    description: Every known identifier for this record in this registry, including archived values.
+unevaluatedProperties:
+  not: {}
+examples:
+  - registry:
+      code: org:xi:duns
+      url: https://commongrants.org/registries/org-xi-duns
+    id: "123456789"
+description: An organization's Data Universal Numbering System (DUNS) number.

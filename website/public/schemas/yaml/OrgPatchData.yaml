@@ -1,0 +1,74 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgPatchData.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: The organization's legal name as registered with relevant authorities.
+  identifiers:
+    anyOf:
+      - $ref: OrgPatchOrgIdsOrCreate.yaml
+      - type: "null"
+    description: Identifiers associated with the organization, keyed by registry code.
+  orgType:
+    anyOf:
+      - $ref: OrgPatchPCSOrgTypeOrCreate.yaml
+      - type: "null"
+    description: The organization's type within the Philanthropy Classification System (PCS).
+  addresses:
+    anyOf:
+      - $ref: OrgPatchAddressCollectionOrCreate.yaml
+      - type: "null"
+    description: Collection of physical addresses associated with the organization.
+  phones:
+    anyOf:
+      - $ref: OrgPatchPhoneCollectionOrCreate.yaml
+      - type: "null"
+    description: Collection of phone numbers associated with the organization.
+  emails:
+    anyOf:
+      - $ref: OrgPatchEmailCollectionOrCreate.yaml
+      - type: "null"
+    description: Collection of email addresses associated with the organization.
+  mission:
+    anyOf:
+      - type: string
+      - type: "null"
+    description: The organization's mission statement.
+  yearFounded:
+    anyOf:
+      - $ref: calendarYear.yaml
+      - type: "null"
+    description: The calendar year the organization was founded.
+  socials:
+    anyOf:
+      - $ref: OrgPatchOrgSocialLinksOrCreate.yaml
+      - type: "null"
+    description: Collection of the organization's social media and web presence links.
+  customFields:
+    anyOf:
+      - $ref: "#/$defs/OrgPatchRecordOrCreateCustomField"
+      - type: "null"
+    description: Custom fields for the organization.
+unevaluatedProperties:
+  not: {}
+examples:
+  - name: Example Nonprofit (Renamed)
+    mission: To expand access to community health resources.
+    yearFounded: null
+    socials:
+      website: null
+    emails:
+      primary: info@example.org
+description: |-
+  A JSON Merge Patch (RFC 7396) body for updating an organization profile.
+
+  Derived from `OrganizationBase`: every field is optional, fields that can
+  be cleared accept `null` to unset them, and read-only fields like `id` are excluded.
+  Sent as `application/merge-patch+json`.
+$defs:
+  OrgPatchRecordOrCreateCustomField:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: OrgPatchCustomFieldOrCreate.yaml

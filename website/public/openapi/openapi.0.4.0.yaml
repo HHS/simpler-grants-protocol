@@ -8,6 +8,8 @@ info:
     it must implement all of the routes with the "required" tag in this specification.
   version: 0.4.0
 tags:
+  - name: Organizations
+    description: Endpoints related to viewing and syncing organization profiles
   - name: Awards
     description: Endpoints related to grant awards
   - name: Opportunities
@@ -756,6 +758,339 @@ paths:
       tags:
         - Opportunities
         - required
+  /common-grants/orgs:
+    get:
+      operationId: Organizations_list
+      summary: List organizations
+      description: Get a paginated list of organizations. Requires the `org:list` scope.
+      parameters:
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
+        - name: registry
+          in: query
+          required: false
+          description: Registry code of an external identifier to filter by (e.g. `us:ein`)
+          schema:
+            type: string
+          explode: false
+        - name: id
+          in: query
+          required: false
+          description: Identifier value within the given registry to filter by
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: A 200 response with a paginated list of items
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - paginationInfo
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.OrganizationBase'
+                    description: Items from the current page
+                  paginationInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+                    description: Details about the paginated results
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with a paginated list of items
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Organizations
+        - experimental
+      security:
+        - OAuth2Auth:
+            - org:list
+  /common-grants/orgs/{orgId}:
+    get:
+      operationId: Organizations_read
+      summary: View an organization profile
+      description: View an organization profile by its UUID. Requires the `org:read` scope.
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: The UUID of the organization to view
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - name: at
+          in: query
+          required: false
+          description: Return the profile as of the given point in time
+          schema:
+            type: string
+            format: date-time
+          explode: false
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.OrganizationBase'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Organizations
+        - experimental
+      security:
+        - OAuth2Auth:
+            - org:read
+    patch:
+      operationId: Organizations_update
+      summary: Update an organization profile
+      description: Apply a direct JSON Merge Patch edit to an organization profile, recorded as an accepted change. Requires the `org:write` scope.
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: The UUID of the organization to update
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.OrgRevision'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Organizations
+        - experimental
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/CommonGrants.Models.OrgPatchData'
+        description: JSON Merge Patch body for the organization profile
+      security:
+        - OAuth2Auth:
+            - org:write
+  /common-grants/orgs/{orgId}/changes:
+    post:
+      operationId: Organizations_submitChange
+      summary: Submit an organization profile change
+      description: Submit a change to an organization profile, which a receiver may apply immediately or queue for review. Requires the `org.changes:write` scope.
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: The UUID of the organization to change
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '202':
+          description: A 202 response with data
+          headers:
+            Location:
+              required: false
+              description: URL where the accepted resource can be retrieved
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.OrgRevision'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 202 response with data
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Organizations
+        - experimental
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/CommonGrants.Models.OrgPatchData'
+        description: JSON Merge Patch body for the organization profile
+      security:
+        - OAuth2Auth:
+            - org.changes:write
+    get:
+      operationId: Organizations_listChanges
+      summary: List organization profile changes
+      description: Get a paginated list of changes to an organization profile, newest first. Requires the `org.changes:read` scope.
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: The UUID of the organization whose changes to list
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
+        - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
+      responses:
+        '200':
+          description: A 200 response with a paginated list of items
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - paginationInfo
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.OrgRevision'
+                    description: Items from the current page
+                  paginationInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+                    description: Details about the paginated results
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with a paginated list of items
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Organizations
+        - experimental
+      security:
+        - OAuth2Auth:
+            - org.changes:read
+  /common-grants/orgs/{orgId}/changes/{changeId}:
+    get:
+      operationId: Organizations_viewChange
+      summary: View an organization profile change
+      description: View a single change to an organization profile by its id. Requires the `org.changes:read` scope.
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: The UUID of the organization the change belongs to
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - name: changeId
+          in: path
+          required: true
+          description: The id of the change to view
+          schema:
+            $ref: '#/components/schemas/CommonGrants.Types.uuid'
+      responses:
+        '200':
+          description: A 200 response with data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.OrgRevision'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with data
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      tags:
+        - Organizations
+        - experimental
+      security:
+        - OAuth2Auth:
+            - org.changes:read
 components:
   parameters:
     CommonGrants.Pagination.PaginatedQueryParams.page:
@@ -781,6 +1116,87 @@ components:
         default: 100
       explode: false
   schemas:
+    CommonGrants.Fields.Address:
+      type: object
+      required:
+        - street1
+        - city
+        - stateOrProvince
+        - country
+        - postalCode
+      properties:
+        street1:
+          type: string
+          description: The primary street address line.
+        street2:
+          type: string
+          description: Additional street address information (e.g., apartment number, suite, etc.).
+        city:
+          type: string
+          description: The city or municipality name.
+        stateOrProvince:
+          type: string
+          description: The state, province, or region name.
+        country:
+          type: string
+          description: The country name or ISO country code.
+        postalCode:
+          type: string
+          description: The postal or ZIP code for the address.
+        latitude:
+          type: number
+          description: The latitude coordinate of the address location.
+        longitude:
+          type: number
+          description: The longitude coordinate of the address location.
+        geography:
+          type: object
+          additionalProperties: {}
+          description: Additional geospatial data in GeoJSON format.
+      description: A mailing address.
+      example:
+        street1: 123 Main St
+        city: Anytown
+        stateOrProvince: CA
+        country: US
+        postalCode: '12345'
+    CommonGrants.Fields.AddressCollection:
+      type: object
+      required:
+        - primary
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Address'
+          description: The primary address for a person or organization.
+        otherAddresses:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.Address'
+          description: Additional addresses keyed by a descriptive label (e.g., "work", "home", "international").
+      description: A collection of addresses.
+      example:
+        primary:
+          street1: 456 Main St
+          street2: Suite 100
+          city: Anytown
+          stateOrProvince: CA
+          country: US
+          postalCode: '12345'
+        otherAddresses:
+          satellite:
+            street1: 456 Main St
+            street2: Suite 100
+            city: Anytown
+            stateOrProvince: CA
+            country: US
+            postalCode: '12345'
+          international:
+            street1: 123 Rue Principale
+            city: Montreal
+            stateOrProvince: QC
+            country: CA
+            postalCode: H2Y 1C6
     CommonGrants.Fields.CustomField:
       type: object
       required:
@@ -860,6 +1276,27 @@ components:
         endDate: '2024-01-31'
         endTime: '17:00:00'
         description: Primary application period for the grant opportunity
+    CommonGrants.Fields.EmailCollection:
+      type: object
+      required:
+        - primary
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.email'
+          description: The primary email address for a person or organization.
+        otherEmails:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Types.email'
+          description: Additional email addresses keyed by a descriptive label (e.g., "work", "personal", "support").
+      description: A collection of email addresses.
+      example:
+        primary: john.doe@example.com
+        otherEmails:
+          work: john.doe@work.com
+          personal: john.doe@gmail.com
+          school: john.doe@school.edu
     CommonGrants.Fields.Event:
       anyOf:
         - $ref: '#/components/schemas/CommonGrants.Fields.SingleDateEvent'
@@ -1074,6 +1511,210 @@ components:
         middleName: Edward
         lastName: Doe
         suffix: Jr.
+    CommonGrants.Fields.OrgPatchAddressCollectionOrCreate:
+      type: object
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchAddressOrCreate'
+          description: The primary address for a person or organization.
+        otherAddresses:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchAddressOrCreate'
+          nullable: true
+          description: Additional addresses keyed by a descriptive label (e.g., "work", "home", "international").
+      description: A collection of addresses.
+      example:
+        primary:
+          street1: 456 Main St
+          street2: Suite 100
+          city: Anytown
+          stateOrProvince: CA
+          country: US
+          postalCode: '12345'
+        otherAddresses:
+          satellite:
+            street1: 456 Main St
+            street2: Suite 100
+            city: Anytown
+            stateOrProvince: CA
+            country: US
+            postalCode: '12345'
+          international:
+            street1: 123 Rue Principale
+            city: Montreal
+            stateOrProvince: QC
+            country: CA
+            postalCode: H2Y 1C6
+    CommonGrants.Fields.OrgPatchAddressOrCreate:
+      type: object
+      properties:
+        street1:
+          type: string
+          description: The primary street address line.
+        street2:
+          type: string
+          nullable: true
+          description: Additional street address information (e.g., apartment number, suite, etc.).
+        city:
+          type: string
+          description: The city or municipality name.
+        stateOrProvince:
+          type: string
+          description: The state, province, or region name.
+        country:
+          type: string
+          description: The country name or ISO country code.
+        postalCode:
+          type: string
+          description: The postal or ZIP code for the address.
+        latitude:
+          type: number
+          nullable: true
+          description: The latitude coordinate of the address location.
+        longitude:
+          type: number
+          nullable: true
+          description: The longitude coordinate of the address location.
+        geography:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          description: Additional geospatial data in GeoJSON format.
+      description: A mailing address.
+      example:
+        street1: 123 Main St
+        city: Anytown
+        stateOrProvince: CA
+        country: US
+        postalCode: '12345'
+    CommonGrants.Fields.OrgPatchCustomFieldOrCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the custom field
+        fieldType:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.CustomFieldType'
+          description: The JSON schema type to use when de-serializing the `value` field
+        schema:
+          type: string
+          format: uri
+          nullable: true
+          description: Link to the full JSON schema for this custom field
+        value:
+          description: Value of the custom field
+        description:
+          type: string
+          nullable: true
+          description: Description of the custom field's purpose
+      description: A custom field on a model
+      example:
+        name: eligibilityType
+        fieldType: array
+        value:
+          - nonprofit
+          - academic
+        description: Types of eligible organizations
+    CommonGrants.Fields.OrgPatchEmailCollectionOrCreate:
+      type: object
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.email'
+          description: The primary email address for a person or organization.
+        otherEmails:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Types.email'
+          nullable: true
+          description: Additional email addresses keyed by a descriptive label (e.g., "work", "personal", "support").
+      description: A collection of email addresses.
+      example:
+        primary: john.doe@example.com
+        otherEmails:
+          work: john.doe@work.com
+          personal: john.doe@gmail.com
+          school: john.doe@school.edu
+    CommonGrants.Fields.OrgPatchPCSOrgTypeOrCreate:
+      type: object
+      properties:
+        class:
+          type: string
+          enum:
+            - Organization types
+          description: The PCS term for the organization type.
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.PCSTerm'
+      description: |-
+        A Philanthropy Classification System (PCS) term for organization types.
+
+        See https://taxonomy.candid.org/organization-type for more information.
+    CommonGrants.Fields.OrgPatchPhoneCollectionOrCreate:
+      type: object
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneOrCreate'
+          description: The person's primary phone number.
+        fax:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneOrCreate'
+          nullable: true
+          description: The person's fax number, if applicable.
+        otherPhones:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneOrCreate'
+          nullable: true
+          description: Additional phone numbers not covered by the standard fields.
+      description: A collection of phone numbers for a person.
+      example:
+        primary:
+          countryCode: '+1'
+          number: 444-456-1230
+          isMobile: true
+        fax:
+          countryCode: '+1'
+          number: 555-123-4567
+          extension: '123'
+          isMobile: false
+        otherPhones:
+          support:
+            countryCode: '+1'
+            number: 333-456-1230
+            isMobile: false
+          marketing:
+            countryCode: '+1'
+            number: 444-456-1230
+            isMobile: true
+    CommonGrants.Fields.OrgPatchPhoneOrCreate:
+      type: object
+      properties:
+        countryCode:
+          type: string
+          pattern: ^\+[1-9][0-9]{0,3}$
+          description: The international country code (e.g., "+1" for US/Canada).
+        number:
+          type: string
+          description: The local phone number without the country code.
+        extension:
+          type: string
+          nullable: true
+          description: Optional extension number for the phone line.
+        isMobile:
+          type: boolean
+          nullable: true
+          description: Indicates whether this is a mobile/cell phone number.
+      description: A phone number.
+      example:
+        countryCode: '+1'
+        number: 555-123-4567
+        extension: '123'
+        isMobile: false
     CommonGrants.Fields.OtherEvent:
       type: object
       required:
@@ -1099,6 +1740,198 @@ components:
         eventType: other
         details: Every other Tuesday at 10:00 AM during the application period
         description: Info sessions for the opportunity
+    CommonGrants.Fields.PCSClass:
+      type: string
+      enum:
+        - Organization types
+        - Subjects
+        - Population groups
+        - Transaction types
+        - Support strategies
+      description: The class to which the PCS term belongs.
+    CommonGrants.Fields.PCSOrgType:
+      type: object
+      required:
+        - class
+      properties:
+        class:
+          type: string
+          enum:
+            - Organization types
+          description: The PCS term for the organization type.
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.PCSTerm'
+      description: |-
+        A Philanthropy Classification System (PCS) term for organization types.
+
+        See https://taxonomy.candid.org/organization-type for more information.
+    CommonGrants.Fields.PCSPopulation:
+      type: object
+      required:
+        - class
+      properties:
+        class:
+          type: string
+          enum:
+            - Population groups
+          description: The PCS term for the population.
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.PCSTerm'
+      description: |-
+        A Philanthropy Classification System (PCS) term for populations served.
+
+        See https://taxonomy.candid.org/populations for more information.
+    CommonGrants.Fields.PCSSubject:
+      type: object
+      required:
+        - class
+      properties:
+        class:
+          type: string
+          enum:
+            - Subjects
+          description: The PCS term for the subject.
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.PCSTerm'
+      description: |-
+        A Philanthropy Classification System (PCS) term for the subject of the grant.
+
+        See https://taxonomy.candid.org/subjects for more information.
+    CommonGrants.Fields.PCSSupportStrategy:
+      type: object
+      required:
+        - class
+      properties:
+        class:
+          type: string
+          enum:
+            - Support strategies
+          description: The PCS term for the support strategy.
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.PCSTerm'
+      description: |-
+        A Philanthropy Classification System (PCS) term for support strategies.
+
+        See https://taxonomy.candid.org/support-strategies for more information.
+    CommonGrants.Fields.PCSTerm:
+      type: object
+      required:
+        - term
+        - class
+        - code
+      properties:
+        term:
+          type: string
+          description: The plain language PCS term.
+        class:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.PCSClass'
+          description: The class to which the PCS term belongs.
+        code:
+          type: string
+          pattern: ^[A-Z]{2}[0-9]{6}$
+          description: The code for this PCS term.
+          example: UC000000
+        description:
+          type: string
+          description: Description of the PCS term
+      description: |-
+        A Philanthropy Classification System (PCS) term.
+
+        The PCS is a hierarchical classification system for categorizing data related to
+        philanthropic activities. It supports the following classes:
+        - Organization types
+        - Subjects
+        - Population groups
+        - Transaction types
+        - Support strategies
+
+        See https://taxonomy.candid.org/ for more information.
+      example:
+        term: Hospital
+        class: Organization types
+        description: Institutions with the primary purpose of providing in-patient physical and mental health services...
+        code: EO000000
+    CommonGrants.Fields.PCSTransactionType:
+      type: object
+      required:
+        - class
+      properties:
+        class:
+          type: string
+          enum:
+            - Transaction types
+          description: The PCS term for the transaction type.
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.PCSTerm'
+      description: |-
+        A Philanthropy Classification System (PCS) term for transaction types.
+
+        See https://taxonomy.candid.org/transaction-types for more information.
+    CommonGrants.Fields.Phone:
+      type: object
+      required:
+        - countryCode
+        - number
+      properties:
+        countryCode:
+          type: string
+          pattern: ^\+[1-9][0-9]{0,3}$
+          description: The international country code (e.g., "+1" for US/Canada).
+        number:
+          type: string
+          description: The local phone number without the country code.
+        extension:
+          type: string
+          description: Optional extension number for the phone line.
+        isMobile:
+          type: boolean
+          description: Indicates whether this is a mobile/cell phone number.
+          default: false
+      description: A phone number.
+      example:
+        countryCode: '+1'
+        number: 555-123-4567
+        extension: '123'
+        isMobile: false
+    CommonGrants.Fields.PhoneCollection:
+      type: object
+      required:
+        - primary
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Phone'
+          description: The person's primary phone number.
+        fax:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.Phone'
+          description: The person's fax number, if applicable.
+        otherPhones:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.Phone'
+          description: Additional phone numbers not covered by the standard fields.
+      description: A collection of phone numbers for a person.
+      example:
+        primary:
+          countryCode: '+1'
+          number: 444-456-1230
+          isMobile: true
+        fax:
+          countryCode: '+1'
+          number: 555-123-4567
+          extension: '123'
+          isMobile: false
+        otherPhones:
+          support:
+            countryCode: '+1'
+            number: 333-456-1230
+            isMobile: false
+          marketing:
+            countryCode: '+1'
+            number: 444-456-1230
+            isMobile: true
     CommonGrants.Fields.SingleDateEvent:
       type: object
       required:
@@ -3496,6 +4329,314 @@ components:
 
         Extends the generic identifier collection with the base identifiers CommonGrants
         defines for organizations. Additional registries can be published under `otherIds`.
+    CommonGrants.Models.OrgPatchData:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The organization's legal name as registered with relevant authorities.
+        identifiers:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdsOrCreate'
+          nullable: true
+          description: Identifiers associated with the organization, keyed by registry code.
+        orgType:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPCSOrgTypeOrCreate'
+          nullable: true
+          description: The organization's type within the Philanthropy Classification System (PCS).
+        addresses:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchAddressCollectionOrCreate'
+          nullable: true
+          description: Collection of physical addresses associated with the organization.
+        phones:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneCollectionOrCreate'
+          nullable: true
+          description: Collection of phone numbers associated with the organization.
+        emails:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchEmailCollectionOrCreate'
+          nullable: true
+          description: Collection of email addresses associated with the organization.
+        mission:
+          type: string
+          nullable: true
+          description: The organization's mission statement.
+        yearFounded:
+          type: string
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.calendarYear'
+          nullable: true
+          description: The calendar year the organization was founded.
+        socials:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgSocialLinksOrCreate'
+          nullable: true
+          description: Collection of the organization's social media and web presence links.
+        customFields:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchCustomFieldOrCreate'
+          nullable: true
+          description: Custom fields for the organization.
+      description: |-
+        A JSON Merge Patch (RFC 7396) body for updating an organization profile.
+
+        Derived from `OrganizationBase`: every field is optional, fields that can
+        be cleared accept `null` to unset them, and read-only fields like `id` are excluded.
+        Sent as `application/merge-patch+json`.
+      example:
+        name: Example Nonprofit (Renamed)
+        mission: To expand access to community health resources.
+        yearFounded: null
+        socials:
+          website: null
+        emails:
+          primary: info@example.org
+    CommonGrants.Models.OrgPatchOrgIdDunsOrCreate:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - org:xi:duns
+              nullable: true
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              nullable: true
+              description: Link to the catalog entry for this registry.
+          nullable: true
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          type: string
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.duns'
+          nullable: true
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Types.duns'
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          nullable: true
+          description: Every known identifier for this record in this registry, including archived values.
+      description: An organization's Data Universal Numbering System (DUNS) number.
+      example:
+        registry:
+          code: org:xi:duns
+          url: https://commongrants.org/registries/org-xi-duns
+        id: '123456789'
+    CommonGrants.Models.OrgPatchOrgIdEinOrCreate:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - org:us:ein
+              nullable: true
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              nullable: true
+              description: Link to the catalog entry for this registry.
+          nullable: true
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          type: string
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
+          nullable: true
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          nullable: true
+          description: Every known identifier for this record in this registry, including archived values.
+      description: An organization's Employer Identification Number (EIN), assigned by the IRS.
+      example:
+        registry:
+          code: org:us:ein
+          url: https://commongrants.org/registries/org-us-ein
+        id: '123456789'
+    CommonGrants.Models.OrgPatchOrgIdUeiOrCreate:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - org:us:uei
+              nullable: true
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              nullable: true
+              description: Link to the catalog entry for this registry.
+          nullable: true
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          type: string
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
+          nullable: true
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          nullable: true
+          description: Every known identifier for this record in this registry, including archived values.
+      description: An organization's Unique Entity Identifier (UEI) from SAM.gov.
+      example:
+        registry:
+          code: org:us:uei
+          url: https://commongrants.org/registries/org-us-uei
+        id: AB0123456789
+    CommonGrants.Models.OrgPatchOrgIdsOrCreate:
+      type: object
+      properties:
+        org:us:ein:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdEinOrCreate'
+          nullable: true
+          description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+        org:us:uei:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdUeiOrCreate'
+          nullable: true
+          description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+        org:xi:duns:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdDunsOrCreate'
+          nullable: true
+          description: The organization's Data Universal Numbering System (DUNS) number.
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierCollection'
+      description: |-
+        A collection of identifiers associated with an organization.
+
+        Extends the generic identifier collection with the base identifiers CommonGrants
+        defines for organizations. Additional registries can be published under `otherIds`.
+    CommonGrants.Models.OrgPatchOrgSocialLinksOrCreate:
+      type: object
+      properties:
+        website:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's primary website URL.
+        facebook:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's Facebook profile URL.
+        twitterOrX:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's Twitter/X profile URL.
+        bluesky:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's BlueSky profile URL.
+        instagram:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's Instagram profile URL.
+        linkedin:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's LinkedIn profile URL.
+        otherSocials:
+          type: object
+          additionalProperties:
+            type: string
+            format: uri
+          nullable: true
+          description: Additional social media profiles not covered by the standard fields.
+      description: A collection of social media and web presence links for an organization.
+      example:
+        website: https://www.example.com
+        facebook: https://www.facebook.com/example
+        twitterOrX: https://x.com/example
+        instagram: https://www.instagram.com/example
+        linkedin: https://www.linkedin.com/company/example
+        otherSocials:
+          youtube: https://www.youtube.com/example
     CommonGrants.Models.OrgRef:
       type: object
       required:
@@ -3556,6 +4697,346 @@ components:
                 registry:
                   code: org:grants.gov:agency
                 id: HRSA
+    CommonGrants.Models.OrgRevision:
+      type: object
+      required:
+        - id
+        - status
+        - createdAt
+        - lastModifiedAt
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: Globally unique id for the revision
+          readOnly: true
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.RevisionStatus'
+          description: The lifecycle status of the change
+        source:
+          type: string
+          description: The source system the change came from
+        patch:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchData'
+          description: The merge patch that was submitted
+        snapshot:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrganizationBase'
+          description: A full snapshot of the record with the change applied
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was created.
+          readOnly: true
+        lastModifiedAt:
+          type: string
+          format: date-time
+          description: The timestamp (in UTC) at which the record was last modified.
+          readOnly: true
+      description: |-
+        A single change to an organization profile, recorded in the change ledger.
+
+        The `patch` is an `OrgPatchData` merge patch, and the `snapshot` is the
+        organization profile with that change applied.
+      example:
+        id: 01912a8b-7c3d-7890-abcd-ef1234567890
+        status:
+          value: accepted
+          description: The change was applied.
+        source: grants.gov
+        patch:
+          mission: To provide support and resources to the community.
+        snapshot:
+          id: 083b4567-e89d-42c8-a439-6c1234567890
+          name: Example Organization
+          orgType:
+            term: Hospital
+            class: Organization types
+            description: Institutions with the primary purpose of providing in-patient physical and mental health services...
+            code: EO000000
+          identifiers:
+            org:us:ein:
+              registry:
+                code: org:us:ein
+                url: https://commongrants.org/registries/org-us-ein
+              id: '123456789'
+            org:us:uei:
+              registry:
+                code: org:us:uei
+                url: https://commongrants.org/registries/org-us-uei
+              id: AB0123456789
+          addresses:
+            primary:
+              street1: 456 Main St
+              street2: Suite 100
+              city: Anytown
+              stateOrProvince: CA
+              country: US
+              postalCode: '12345'
+            otherAddresses:
+              satellite:
+                street1: 456 Main St
+                street2: Suite 100
+                city: Anytown
+                stateOrProvince: CA
+                country: US
+                postalCode: '12345'
+              international:
+                street1: 123 Rue Principale
+                city: Montreal
+                stateOrProvince: QC
+                country: CA
+                postalCode: H2Y 1C6
+          phones:
+            primary:
+              countryCode: '+1'
+              number: 444-456-1230
+              isMobile: true
+            fax:
+              countryCode: '+1'
+              number: 555-123-4567
+              extension: '123'
+              isMobile: false
+            otherPhones:
+              support:
+                countryCode: '+1'
+                number: 333-456-1230
+                isMobile: false
+              marketing:
+                countryCode: '+1'
+                number: 444-456-1230
+                isMobile: true
+          emails:
+            primary: info@example.com
+            otherEmails:
+              support: support@example.com
+              marketing: marketing@example.com
+          mission: To provide support and resources to the community.
+          yearFounded: '2024'
+          socials:
+            website: https://www.example.com
+            facebook: https://www.facebook.com/example
+            twitterOrX: https://x.com/example
+            instagram: https://www.instagram.com/example
+            linkedin: https://www.linkedin.com/company/example
+            otherSocials:
+              youtube: https://www.youtube.com/example
+        createdAt: '2026-06-20T14:30:00Z'
+        lastModifiedAt: '2026-06-20T14:30:00Z'
+    CommonGrants.Models.OrgSocialLinks:
+      type: object
+      properties:
+        website:
+          type: string
+          format: uri
+          description: The organization's primary website URL.
+        facebook:
+          type: string
+          format: uri
+          description: The organization's Facebook profile URL.
+        twitterOrX:
+          type: string
+          format: uri
+          description: The organization's Twitter/X profile URL.
+        bluesky:
+          type: string
+          format: uri
+          description: The organization's BlueSky profile URL.
+        instagram:
+          type: string
+          format: uri
+          description: The organization's Instagram profile URL.
+        linkedin:
+          type: string
+          format: uri
+          description: The organization's LinkedIn profile URL.
+        otherSocials:
+          type: object
+          additionalProperties:
+            type: string
+            format: uri
+          description: Additional social media profiles not covered by the standard fields.
+      description: A collection of social media and web presence links for an organization.
+      example:
+        website: https://www.example.com
+        facebook: https://www.facebook.com/example
+        twitterOrX: https://x.com/example
+        instagram: https://www.instagram.com/example
+        linkedin: https://www.linkedin.com/company/example
+        otherSocials:
+          youtube: https://www.youtube.com/example
+    CommonGrants.Models.OrganizationBase:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The organization's unique identifier.
+          readOnly: true
+        name:
+          type: string
+          description: The organization's legal name as registered with relevant authorities.
+        identifiers:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
+          description: Identifiers associated with the organization, keyed by registry code.
+        orgType:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.PCSOrgType'
+          description: The organization's type within the Philanthropy Classification System (PCS).
+        addresses:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.AddressCollection'
+          description: Collection of physical addresses associated with the organization.
+        phones:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.PhoneCollection'
+          description: Collection of phone numbers associated with the organization.
+        emails:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.EmailCollection'
+          description: Collection of email addresses associated with the organization.
+        mission:
+          type: string
+          description: The organization's mission statement.
+        yearFounded:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.calendarYear'
+          description: The calendar year the organization was founded.
+        socials:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgSocialLinks'
+          description: Collection of the organization's social media and web presence links.
+        customFields:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Fields.CustomField'
+          description: Custom fields for the organization.
+      description: An organization that can apply for grants.
+      example:
+        id: 083b4567-e89d-42c8-a439-6c1234567890
+        name: Example Organization
+        orgType:
+          term: Hospital
+          class: Organization types
+          description: Institutions with the primary purpose of providing in-patient physical and mental health services...
+          code: EO000000
+        identifiers:
+          org:us:ein:
+            registry:
+              code: org:us:ein
+              url: https://commongrants.org/registries/org-us-ein
+            id: '123456789'
+          org:us:uei:
+            registry:
+              code: org:us:uei
+              url: https://commongrants.org/registries/org-us-uei
+            id: AB0123456789
+        addresses:
+          primary:
+            street1: 456 Main St
+            street2: Suite 100
+            city: Anytown
+            stateOrProvince: CA
+            country: US
+            postalCode: '12345'
+          otherAddresses:
+            satellite:
+              street1: 456 Main St
+              street2: Suite 100
+              city: Anytown
+              stateOrProvince: CA
+              country: US
+              postalCode: '12345'
+            international:
+              street1: 123 Rue Principale
+              city: Montreal
+              stateOrProvince: QC
+              country: CA
+              postalCode: H2Y 1C6
+        phones:
+          primary:
+            countryCode: '+1'
+            number: 444-456-1230
+            isMobile: true
+          fax:
+            countryCode: '+1'
+            number: 555-123-4567
+            extension: '123'
+            isMobile: false
+          otherPhones:
+            support:
+              countryCode: '+1'
+              number: 333-456-1230
+              isMobile: false
+            marketing:
+              countryCode: '+1'
+              number: 444-456-1230
+              isMobile: true
+        emails:
+          primary: info@example.com
+          otherEmails:
+            support: support@example.com
+            marketing: marketing@example.com
+        mission: To provide support and resources to the community.
+        yearFounded: '2024'
+        socials:
+          website: https://www.example.com
+          facebook: https://www.facebook.com/example
+          twitterOrX: https://x.com/example
+          instagram: https://www.instagram.com/example
+          linkedin: https://www.linkedin.com/company/example
+          otherSocials:
+            youtube: https://www.youtube.com/example
+    CommonGrants.Models.RevisionStatus:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.RevisionStatusOptions'
+          description: The status of the revision, from a predefined set of options
+        customValue:
+          type: string
+          description: A custom value for the status
+        description:
+          type: string
+          description: A human-readable description of the status
+      description: |-
+        The status of a revision, including its lifecycle state and an optional
+        human-readable description.
+      example:
+        value: custom
+        customValue: escalated
+        description: The change was escalated for additional review.
+    CommonGrants.Models.RevisionStatusOptions:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - denied
+        - superseded
+        - custom
+      description: |-
+        The set of values accepted for a revision's status:
+        - `pending`: Non-terminal. The change is queued for review.
+        - `accepted`: Terminal. The change was applied, either immediately via a
+        direct `PATCH` or after a `pending` change was approved.
+        - `denied`: Terminal. The change was rejected, with a reason.
+        - `superseded`: Terminal. A competing change was accepted first, so this
+        change no longer applies.
+        - `custom`: An implementation-defined status. The receiver documents whether
+        it is terminal.
+
+        A revision moves once from `pending` into a terminal state; a terminal
+        revision is never restated. How a receiver resolves a `pending` change (a
+        human review, a policy engine, a batch job) is out of scope for this contract.
     CommonGrants.Pagination.PaginatedBodyParams:
       type: object
       properties:
@@ -3698,6 +5179,11 @@ components:
             type: string
           description: Non-fatal errors that occurred during sorting
       description: Information about the sort order of the items returned
+    CommonGrants.Types.calendarYear:
+      type: string
+      pattern: ^[0-9]{4}$
+      description: A calendar year
+      example: '2025'
     CommonGrants.Types.decimalString:
       type: string
       pattern: ^-?[0-9]+\.?[0-9]*$
@@ -3708,6 +5194,11 @@ components:
       pattern: ^[0-9]{9}$
       description: A Data Universal Numbering System (DUNS) number, normalized to nine digits
       example: '123456789'
+    CommonGrants.Types.email:
+      type: string
+      format: email
+      description: An email address
+      example: test@example.com
     CommonGrants.Types.employerTaxId:
       type: string
       pattern: ^[0-9]{9}$
@@ -3733,3 +5224,24 @@ components:
       format: uuid
       description: A universally unique identifier
       example: 30a12e5e-5940-4c08-921c-17a8960fcf4b
+  securitySchemes:
+    OAuth2Auth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.example.com/oauth/token
+          scopes:
+            org:list: ''
+            org:read: ''
+            org:write: ''
+            org.changes:write: ''
+            org.changes:read: ''
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/authorize
+          tokenUrl: https://auth.example.com/oauth/token
+          scopes:
+            org:list: ''
+            org:read: ''
+            org:write: ''
+            org.changes:write: ''
+            org.changes:read: ''

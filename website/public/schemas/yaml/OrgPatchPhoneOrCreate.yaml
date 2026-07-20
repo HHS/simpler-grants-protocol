@@ -1,0 +1,32 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgPatchPhoneOrCreate.yaml
+type: object
+properties:
+  countryCode:
+    type: string
+    pattern: ^\+[1-9][0-9]{0,3}$
+    description: The international country code (e.g., "+1" for US/Canada).
+  number:
+    type: string
+    description: The local phone number without the country code.
+  extension:
+    anyOf:
+      - type: string
+      - type: "null"
+    description: Optional extension number for the phone line.
+  isMobile:
+    anyOf:
+      - type: boolean
+      - type: "null"
+    description: Indicates whether this is a mobile/cell phone number.
+unevaluatedProperties:
+  not: {}
+examples:
+  - countryCode: "+1"
+    number: 555-123-4567
+    extension: "123"
+    isMobile: false
+  - countryCode: "+1"
+    number: 444-456-1230
+    isMobile: true
+description: A phone number.
