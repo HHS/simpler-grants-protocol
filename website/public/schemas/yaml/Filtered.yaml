@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Filtered.yaml
+type: object
+properties:
+  items:
+    type: array
+    items: {}
+    description: Items from the current page
+  paginationInfo:
+    $ref: PaginatedResultsInfo.yaml
+    description: Details about the paginated results
+  sortInfo:
+    $ref: SortedResultsInfo.yaml
+    description: The sort order of the items
+  filterInfo:
+    type: object
+    properties:
+      filters: {}
+      errors:
+        type: array
+        items:
+          type: string
+        description: Non-fatal errors that occurred during filtering
+    required:
+      - filters
+    unevaluatedProperties:
+      not: {}
+    description: The filters applied to the response items
+required:
+  - items
+  - paginationInfo
+  - sortInfo
+  - filterInfo
+allOf:
+  - $ref: Success.yaml
+unevaluatedProperties:
+  not: {}
+description: A paginated list of items with a filter
