@@ -52,6 +52,96 @@ export interface CustomFieldSpec {
 }
 
 // ############################################################################
+// Public types - CustomFilterType, CustomFilterSpec, RouteDeclarations, PluginRoutes
+// ############################################################################
+
+/**
+ * The 11-value enum of supported custom filter types.
+ *
+ * Each value maps 1:1 to a base filter type with auto-derived operators.
+ * Operators are NOT authored — they are derived from the filterType at
+ * classification time (e.g. `booleanComparison` → `eq|neq`).
+ *
+ * NOTE: Build against these authoritative `*Comparison` names.
+ * Terse names (`"string"`, `"number"`) are NOT valid — always use the full
+ * `*Comparison` / `*Array` / `*Range` form.
+ */
+export type CustomFilterType =
+  | "stringComparison"
+  | "stringArray"
+  | "numberComparison"
+  | "numberArray"
+  | "numberRange"
+  | "booleanComparison"
+  | "dateComparison"
+  | "dateRange"
+  | "moneyComparison"
+  | "moneyRange";
+
+/**
+ * Specification for a custom filter to be registered on a route method.
+ *
+ * The record key is the filter name; no separate `name` field is needed.
+ * Operators are auto-derived from `filterType`; no Zod value schema is
+ * authored here (contrast with `CustomFieldSpec.value`).
+ *
+ * @example
+ * ```typescript
+ * const agencyFilter: CustomFilterSpec = {
+ *   filterType: "stringArray",
+ *   description: "Filter by funding agency",
+ * };
+ * ```
+ */
+export interface CustomFilterSpec {
+  /** The filter type — determines the allowed operators and value shape */
+  filterType: CustomFilterType;
+  /** Optional human-readable description of the filter */
+  description?: string;
+}
+
+/**
+ * Filter declarations for a single route method (e.g. `search`).
+ *
+ * Filters are keyed by name; the record value is a `CustomFilterSpec`.
+ */
+export interface RouteDeclarations {
+  filters?: Record<string, CustomFilterSpec>;
+}
+
+/** Resource names the SDK exposes. Grows as API resources land. */
+export type ResourceName = "opportunities";
+
+/** Route methods that accept custom filters. Widen only when a method actually takes filters. */
+export type RouteMethod = "search";
+
+/** Method → declarations map for a single resource. */
+export type RouteMethods = Partial<Record<RouteMethod, RouteDeclarations>>;
+
+/**
+ * Route map for custom filter declarations: resource → method → declarations.
+ *
+ * Passed as `routes` in `definePlugin()`. Filters attach to resource methods
+ * (which vary asymmetrically across schemas), not to a schema. Both key levels
+ * are closed unions, so a misspelled resource or method is a compile error.
+ *
+ * @example
+ * ```typescript
+ * const routes: PluginRoutes = {
+ *   opportunities: {
+ *     search: {
+ *       filters: {
+ *         agency: { filterType: "stringArray" },
+ *         fundingProgram: { filterType: "stringComparison" },
+ *       },
+ *     },
+ *   },
+ * };
+ * ```
+ */
+export type PluginRoutes = Partial<Record<ResourceName, RouteMethods>>;
+
+// ############################################################################
 // Public types - HasCustomFields, ExtensibleObject
 // ############################################################################
 
@@ -216,6 +306,42 @@ export class TransformError extends Error {
   ) {
     super(message);
     this.name = "TransformError";
+    this.path = options?.path;
+    this.handler = options?.handler;
+    this.sourceValue = options?.sourceValue;
+    this.cause = options?.cause;
+  }
+}
+
+/**
+ * Structured error raised by custom-filter validation (`validateRoutes`,
+ * `validateFilterCall`, `classifyFilters`).
+ *
+ * Carries field path, handler name, source value, and underlying cause for
+ * programmatic handling. `sourceValue` and `cause` may carry PII — redact
+ * before logging.
+ */
+export class FilterError extends Error {
+  /** Dot-notation field path where the error occurred, if known. */
+  path?: string;
+  /** Name of the handler that raised, if applicable. */
+  handler?: string;
+  /** The source value that triggered the error (may contain PII — redact before logging). */
+  sourceValue?: unknown;
+  /** Underlying cause of the error, if any (may contain PII — redact before logging). */
+  cause?: unknown;
+
+  constructor(
+    message: string,
+    options?: {
+      path?: string;
+      handler?: string;
+      sourceValue?: unknown;
+      cause?: unknown;
+    }
+  ) {
+    super(message);
+    this.name = "FilterError";
     this.path = options?.path;
     this.handler = options?.handler;
     this.sourceValue = options?.sourceValue;

@@ -1,0 +1,15 @@
+{
+  "include": ["common_grants_sdk", "examples"],
+  "exclude": [
+    "tests",
+    "**/__pycache__",
+    "generated",
+    "examples/typed_custom_filters_failures.py",
+    "examples/grants_gov_transforms.py",
+    "**/node_modules",
+    "**/.*",
+    ".venv"
+  ],
+  "typeCheckingMode": "basic",
+  "pythonVersion": "3.11"
+}

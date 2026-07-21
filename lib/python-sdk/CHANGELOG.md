@@ -1,5 +1,22 @@
 # common-grants-sdk
 
+## 0.8.0
+
+### Minor Changes
+
+- 5a9d09f: Typed custom-filter authoring and consumption for the Python SDK.
+
+  - `OpportunityFilters` is now an open `TypedDict` (PEP 728 `extra_items`): standard filter keys are typed to their value models, a `total=False` subclass gives each registered custom filter its own typed key, and unregistered keys still pass through. One source of truth for both registration and the consumer's `search(filters=...)` call site. Clean value aliases (`StringArray`, `NumberComparison`, `DateComparison`, …) read at the call site.
+  - `define_plugin(routes=...)` takes typed route carriers — `PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters))` — so a misspelled route/method is a type error, replacing the stringly-typed route dict.
+  - `Plugin.get_client(config)` returns a client already scoped with the plugin's routes and schemas: `opportunities.search()` / `.list()` parse responses with the plugin's custom fields by default and return `SearchResult` / `ListResult` that partition successfully parsed `items` from per-row parse `errors`, so one malformed row no longer fails the batch.
+  - `opportunities.search()` raises `FilterError` on an invalid value for both standard and custom filters (e.g. `{ "operator": "in", "value": "open" }` since `in` should be paired with an array rather than a scalar value).
+
+### Patch Changes
+
+- 5a9d09f: Ship a PEP 561 `py.typed` marker so downstream type checkers use the SDK's inline type annotations.
+
+  The package is fully type-annotated but shipped no marker, so `mypy` treated every `common_grants_sdk` import as untyped (`import-untyped`, "missing library stubs or py.typed marker") and consumers got no type-checking from the SDK. Adding the marker brings the Python SDK to parity with the TypeScript SDK, which already ships its `.d.ts` types.
+
 ## 0.7.0
 
 ### Minor Changes

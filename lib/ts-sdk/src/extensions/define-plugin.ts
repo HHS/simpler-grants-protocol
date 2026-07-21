@@ -12,11 +12,17 @@ import type {
   SchemaInput,
   SchemaMappings,
   PluginMeta,
+  PluginRoutes,
   TransformResult,
 } from "./types";
 import { EXTENSIBLE_SCHEMA_MAP, TransformError } from "./types";
 import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fields";
 import { buildTransforms } from "./transforms";
+import { validateRoutes } from "./custom-filters";
+import { buildClientForPlugin } from "../client/resources/builder";
+import type { BuiltClient } from "../client/resources/builder";
+import type { ClientConfig } from "../client/config";
+import type { AuthMethod } from "../client/auth";
 
 // ############################################################################
 // Public types - PluginSchemasInput, DefinePluginOptions, Plugin
@@ -55,6 +61,32 @@ export interface DefinePluginOptions<T extends PluginSchemasInput = PluginSchema
    * both `mappings` and explicit callables is a runtime error.
    */
   schemas?: T;
+  /**
+   * Route-keyed custom filter declarations.
+   *
+   * Passed through unchanged to `Plugin.routes`. Filters attach to resource
+   * methods (e.g. `opportunities.search.filters`), not to a schema key — because
+   * filters vary asymmetrically across methods.
+   *
+   * Registration-time validation (`validateRoutes`) and call-time classification
+   * (`classifyFilters`) consume these declarations.
+   *
+   * @example
+   * ```typescript
+   * definePlugin({
+   *   routes: {
+   *     opportunities: {
+   *       search: {
+   *         filters: {
+   *           agency: { filterType: "stringArray" },
+   *         },
+   *       },
+   *     },
+   *   },
+   * } as const)
+   * ```
+   */
+  routes?: PluginRoutes;
 }
 
 /**
@@ -63,10 +95,28 @@ export interface DefinePluginOptions<T extends PluginSchemasInput = PluginSchema
  * - `schemas` — per-object compiled output: `commonSchema` (extended Zod schema),
  *   `sourceSchema`, `toCommon`, and `fromCommon` for each extensible model
  * - `meta` — plugin identity passed through from options
+ * - `routes` — route-keyed custom filter declarations; when defined `as const`, the
+ *   literal `filterType` values are preserved so that `TypedConsumerFilters`
+ *   can narrow call-site filter keys, operators, and value shapes.
+ *
+ * The second generic parameter `TRoutes` captures the literal routes type when the
+ * caller uses `as const`. Callers that do not care about typed narrowing can ignore it
+ * (the default is `PluginRoutes`).
  */
-export interface Plugin<T extends PluginSchemasInput = PluginSchemasInput> {
+export interface Plugin<
+  T extends PluginSchemasInput = PluginSchemasInput,
+  TRoutes extends PluginRoutes = PluginRoutes,
+> {
   schemas: PluginSchemas<T>;
   meta?: PluginMeta;
+  /** Route-keyed custom filter declarations, passed through unchanged from `DefinePluginOptions.routes`. */
+  routes?: TRoutes;
+  /**
+   * Builds a client pre-bound to this plugin: responses parse with the plugin's
+   * compiled schemas by default, and `search({ filters })` types the registered
+   * filter names — no constructor `routes` or per-call `schema` needed.
+   */
+  getClient(config?: ClientConfig & { auth?: AuthMethod }): BuiltClient<T, TRoutes>;
 }
 
 // ############################################################################
@@ -139,10 +189,16 @@ function wrapWithSchemaValidation<TIn, TOut>(
  * const result = plugin.schemas.Opportunity.toCommon?.(sourceData);
  * ```
  */
-export function definePlugin<const T extends PluginSchemasInput>(
-  options: DefinePluginOptions<T>
-): Plugin<T> {
-  const { meta, schemas: schemasInput } = options;
+export function definePlugin<
+  const T extends PluginSchemasInput,
+  const TRoutes extends PluginRoutes = PluginRoutes,
+>(options: DefinePluginOptions<T> & { routes?: TRoutes }): Plugin<T, TRoutes> {
+  const { meta, schemas: schemasInput, routes } = options;
+
+  // Runtime backstop for plain-JS authors: a misspelled route or an invalid
+  // filter registration throws here, at the definition site.
+  if (routes) validateRoutes(routes);
+
   const schemas: Record<string, object> = {};
 
   for (const [name, extensibleSchema] of Object.entries(EXTENSIBLE_SCHEMA_MAP) as [
@@ -230,7 +286,16 @@ export function definePlugin<const T extends PluginSchemasInput>(
 
   // Cast is safe — the runtime loop mirrors the PluginSchemas<T> mapped type,
   // but TypeScript can't verify that from the dynamic Object.entries() iteration.
-  return { schemas, meta } as Plugin<T>;
+  // The second generic TRoutes preserves the literal routes type from `as const` calls.
+  const plugin = {
+    schemas,
+    meta,
+    routes,
+    getClient(config?: ClientConfig & { auth?: AuthMethod }) {
+      return buildClientForPlugin(plugin, config);
+    },
+  } as Plugin<T, TRoutes>;
+  return plugin;
 }
 
 // ############################################################################

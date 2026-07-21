@@ -8,7 +8,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@tsp-output/*": ["./tsp-output/*"]
+      "@tsp-output/*": ["./tsp-output/*"],
+      "@common-grants/sdk/*": ["./src/*"]
     },
     "strict": true,
     "esModuleInterop": true,

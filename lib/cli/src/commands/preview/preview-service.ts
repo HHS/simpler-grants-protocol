@@ -54,16 +54,20 @@ export class DefaultPreviewService {
         // Check if the error is a file not found error
         if (error.message.includes("ENOENT")) {
           throw new Error(
-            `File not found: ${specPath}\nPlease check that the file exists and you have the correct path.`
+            `File not found: ${specPath}\nPlease check that the file exists and you have the correct path.`,
+            { cause: error }
           );
         }
         // For YAML parsing errors, provide a more helpful message
         if (error.message.includes("yaml")) {
           throw new Error(
-            `Failed to parse OpenAPI specification: The file is not valid YAML/JSON format.\nError: ${error.message}`
+            `Failed to parse OpenAPI specification: The file is not valid YAML/JSON format.\nError: ${error.message}`,
+            { cause: error }
           );
         }
-        throw new Error(`Failed to load OpenAPI specification: ${error.message}`);
+        throw new Error(`Failed to load OpenAPI specification: ${error.message}`, {
+          cause: error,
+        });
       }
       throw error;
     }
