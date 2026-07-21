@@ -5,7 +5,7 @@ import * as zodModels from "@/schemas/zod/models";
 
 describe("extensible schema coverage", () => {
   it("every schema with customFields should be in EXTENSIBLE_SCHEMA_MAP", () => {
-    const registeredSchemas = new Set<z.AnyZodObject>(Object.values(EXTENSIBLE_SCHEMA_MAP));
+    const registeredSchemas = new Set<z.ZodObject>(Object.values(EXTENSIBLE_SCHEMA_MAP));
 
     for (const [name, value] of Object.entries(zodModels)) {
       if (!(value instanceof z.ZodObject)) continue;

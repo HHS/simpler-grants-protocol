@@ -187,7 +187,7 @@ describe("Fuzz Testing Helper", () => {
       const emailSchema = z.string().email();
       const zodSchema = z.object({
         primary: emailSchema,
-        otherEmails: z.record(emailSchema).optional(),
+        otherEmails: z.record(z.string(), emailSchema).optional(),
       });
 
       const result = await checkZodMatchesJsonSchema(zodSchema, "EmailCollection.yaml");

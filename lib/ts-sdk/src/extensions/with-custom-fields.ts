@@ -102,7 +102,7 @@ export function withCustomFields<
   if (!("customFields" in schemaShape)) {
     throw new Error(
       "Cannot register custom fields on a schema that doesn't support them. " +
-        "The base schema must include a 'customFields' property (e.g., customFields: z.record(z.unknown()).nullish())"
+        "The base schema must include a 'customFields' property (e.g., customFields: z.record(z.string(), z.unknown()).nullish())"
     );
   }
 
@@ -146,7 +146,7 @@ const DEFAULT_VALUE_SCHEMAS: Record<CustomFieldType, z.ZodTypeAny> = {
   number: z.number(),
   integer: z.number().int(),
   boolean: z.boolean(),
-  object: z.record(z.unknown()),
+  object: z.record(z.string(), z.unknown()),
   array: z.array(z.unknown()),
 };
 

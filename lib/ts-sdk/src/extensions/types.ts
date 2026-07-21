@@ -148,7 +148,7 @@ export type PluginRoutes = Partial<Record<ResourceName, RouteMethods>>;
 /**
  * The expected Zod type for a `customFields` property on an extensible schema.
  *
- * Matches `z.record(CustomFieldSchema).nullish()`, which is the pattern used
+ * Matches `z.record(z.string(), CustomFieldSchema).nullish()`, which is the pattern used
  * by all base schemas in the SDK. The type is intentionally permissive about
  * the wrapping order (e.g. `.nullish()` vs `.optional().nullable()`) by
  * constraining only the output type.
@@ -164,11 +164,7 @@ type CustomFieldsZodType = z.ZodType<Record<string, CustomField> | null | undefi
  * Used to constrain the `baseSchema` parameter of `withCustomFields()` so that
  * schemas without a properly typed `customFields` are rejected at compile time.
  */
-export type HasCustomFields = z.ZodObject<
-  { customFields: CustomFieldsZodType } & z.ZodRawShape,
-  z.UnknownKeysParam,
-  z.ZodTypeAny
->;
+export type HasCustomFields = z.ZodObject<{ customFields: CustomFieldsZodType } & z.ZodRawShape>;
 
 /**
  * An object with an optional `customFields` property.

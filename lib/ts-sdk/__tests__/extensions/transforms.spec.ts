@@ -615,7 +615,7 @@ describe("buildTransforms — output key validation (commonSchema provided)", ()
 
   it("silently passes when commonSchema is not a ZodObject", () => {
     // ZodRecord is not instanceof ZodObject — permissive fallback, no throw
-    const nonObjectModel = z.record(z.unknown());
+    const nonObjectModel = z.record(z.string(), z.unknown());
     expect(() =>
       buildTransforms({ anyKey: { field: "data.x" } }, {}, undefined, nonObjectModel)
     ).not.toThrow();

@@ -43,7 +43,7 @@ export interface FetchManyOptions<T = unknown> {
   /** Request body for POST requests (pagination will be merged in) */
   body?: Record<string, unknown>;
   /** Schema to parse/validate each item (any object with a `.safeParse()` method, e.g. a Zod schema) */
-  schema?: { safeParse: (data: unknown) => z.SafeParseReturnType<unknown, T> };
+  schema?: { safeParse: (data: unknown) => z.ZodSafeParseResult<T> };
   /** Row-parse failure handling: partition into `errors` (default) or throw on first failure */
   onParseError?: OnParseError;
 }

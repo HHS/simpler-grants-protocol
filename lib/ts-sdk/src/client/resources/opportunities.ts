@@ -36,7 +36,7 @@ import { Resource } from "./base";
  * even though its parsed output is still a superset of `OpportunityBase`. Constraining
  * on the output type accepts both the base schema and any extended variant.
  */
-type OppSchema = z.ZodType<OpportunityBase, z.ZodTypeDef, unknown>;
+type OppSchema = z.ZodType<OpportunityBase, unknown>;
 
 // =============================================================================
 // Custom-filter bag typing (routes-driven)
@@ -138,10 +138,10 @@ export class Opportunities<
 > extends Resource<TItem> {
   private readonly basePath = "/common-grants/opportunities";
 
-  constructor(client: Client, boundSchema?: z.ZodType<TItem, z.ZodTypeDef, unknown>, routes?: R) {
+  constructor(client: Client, boundSchema?: z.ZodType<TItem, unknown>, routes?: R) {
     super(
       client,
-      boundSchema ?? (OpportunityBaseSchema as unknown as z.ZodType<TItem, z.ZodTypeDef, unknown>),
+      boundSchema ?? (OpportunityBaseSchema as unknown as z.ZodType<TItem, unknown>),
       routes
     );
     // Backstop for direct construction (bypassing definePlugin): an invalid
@@ -184,7 +184,7 @@ export class Opportunities<
    * console.log(typed.customFields?.legacyId?.value); // typed as number
    * ```
    */
-  async get<S extends OppSchema = z.ZodType<TItem, z.ZodTypeDef, unknown>>(
+  async get<S extends OppSchema = z.ZodType<TItem, unknown>>(
     id: string,
     options?: GetOptions<S>
   ): Promise<z.infer<S>> {
@@ -196,9 +196,9 @@ export class Opportunities<
     }
 
     const json = await response.json();
-    const result = OkSchema(schema).parse(json);
+    const result = OkSchema(schema).parse(json) as { data: z.infer<S> };
 
-    return result.data as z.infer<S>;
+    return result.data;
   }
 
   // ############################################################################
@@ -231,7 +231,7 @@ export class Opportunities<
    * const typed = await client.opportunities.list({ schema: OpportunitySchema });
    * ```
    */
-  async list<S extends OppSchema = z.ZodType<TItem, z.ZodTypeDef, unknown>>(
+  async list<S extends OppSchema = z.ZodType<TItem, unknown>>(
     options?: ListOptions<S>
   ): Promise<ListResult<z.infer<S>>> {
     const schema = this.resolveSchema(options?.schema);
@@ -321,7 +321,7 @@ export class Opportunities<
    * const typed = await client.opportunities.search({ query: "test", schema: OpportunitySchema });
    * ```
    */
-  async search<S extends OppSchema = z.ZodType<TItem, z.ZodTypeDef, unknown>>(
+  async search<S extends OppSchema = z.ZodType<TItem, unknown>>(
     options?: SearchOptions<S, R>
   ): Promise<SearchResult<z.infer<S>>> {
     const schema = this.resolveSchema(options?.schema);

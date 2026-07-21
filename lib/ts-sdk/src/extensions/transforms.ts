@@ -95,7 +95,7 @@ function validateOutputPaths(
   // output type (e.g. schemas that use .transform()). `unknown` would reject
   // those valid schemas here.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commonSchema: z.ZodType<unknown, z.ZodTypeDef, any>
+  commonSchema: z.ZodType<unknown, any>
 ): void {
   if (!(commonSchema instanceof z.ZodObject)) return;
   const validNames = new Set(Object.keys(commonSchema.shape));
@@ -197,11 +197,11 @@ export function buildTransforms<TSource = unknown, TCommon = unknown>(
   // `any` lets callers pass Zod schemas that transform their input into TCommon
   // (e.g. schemas using .transform()). `unknown` would reject those valid schemas.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commonSchema?: z.ZodType<TCommon, z.ZodTypeDef, any>,
+  commonSchema?: z.ZodType<TCommon, any>,
   // `any` lets callers pass Zod schemas that transform their input into TSource
   // (e.g. schemas using .transform()). `unknown` would reject those valid schemas.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sourceSchema?: z.ZodType<TSource, z.ZodTypeDef, any>
+  sourceSchema?: z.ZodType<TSource, any>
 ): BuiltTransforms<TSource, TCommon> {
   if (handlers) {
     const collisions = [...handlers.keys()].filter(k => DEFAULT_HANDLERS.has(k));
