@@ -54,11 +54,7 @@ export function buildClientForPlugin<T extends PluginSchemasInput, TRoutes exten
   // definePlugin populates a compiled schema for every extensible model, so the
   // registry's schema binding always resolves here.
   const { resourceClass, schemaName } = RESOURCE_REGISTRY.opportunities;
-  const oppSchema = plugin.schemas[schemaName].commonSchema as z.ZodType<
-    OpportunityBase,
-    z.ZodTypeDef,
-    unknown
-  >;
+  const oppSchema = plugin.schemas[schemaName].commonSchema as z.ZodType<OpportunityBase, unknown>;
   (client as unknown as { opportunities: Opportunities }).opportunities = new resourceClass(
     client,
     oppSchema,

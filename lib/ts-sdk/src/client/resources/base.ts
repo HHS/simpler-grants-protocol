@@ -10,7 +10,7 @@ import type { PluginRoutes } from "../../extensions/types";
 export abstract class Resource<TItem> {
   constructor(
     protected readonly client: Client,
-    protected readonly boundSchema: z.ZodType<TItem, z.ZodTypeDef, unknown>,
+    protected readonly boundSchema: z.ZodType<TItem, unknown>,
     protected readonly routes?: PluginRoutes
   ) {}
 
@@ -25,7 +25,7 @@ export abstract class Resource<TItem> {
     body: unknown,
     opts: {
       requestSchema?: z.ZodTypeAny;
-      responseSchema: z.ZodType<TRes, z.ZodTypeDef, unknown>;
+      responseSchema: z.ZodType<TRes, unknown>;
     }
   ): Promise<TRes> {
     const payload: unknown = opts.requestSchema ? opts.requestSchema.parse(body) : body;
