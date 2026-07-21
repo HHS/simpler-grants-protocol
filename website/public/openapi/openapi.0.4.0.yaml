@@ -782,6 +782,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '403':
+          description: Access is forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
       tags:
         - Organizations
         - experimental
@@ -831,6 +837,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '403':
+          description: Access is forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
           content:
@@ -873,6 +885,12 @@ paths:
                 description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '403':
+          description: Access is forbidden.
           content:
             application/json:
               schema:
@@ -938,6 +956,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '403':
+          description: Access is forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
           content:
@@ -999,6 +1023,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '403':
+          description: Access is forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
           content:
@@ -1048,6 +1078,12 @@ paths:
                 description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '403':
+          description: Access is forbidden.
           content:
             application/json:
               schema:

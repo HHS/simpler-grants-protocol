@@ -61,7 +61,7 @@ interface Organizations {
 
     /** Identifier value within the given registry to filter by */
     @query id?: string,
-  ): Responses.PaginatedT<T> | Responses.Unauthorized;
+  ): Responses.PaginatedT<T> | Responses.Unauthorized | Responses.Forbidden;
 
   // ##############################
   // View an organization
@@ -85,7 +85,11 @@ interface Organizations {
 
     /** Return the profile as of the given point in time */
     @query at?: utcDateTime,
-  ): Responses.OkT<T> | Responses.NotFound | Responses.Unauthorized;
+  ):
+    | Responses.OkT<T>
+    | Responses.NotFound
+    | Responses.Unauthorized
+    | Responses.Forbidden;
 
   // ###############################
   // Update an organization
@@ -111,7 +115,8 @@ interface Organizations {
   ):
     | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
-    | Responses.Unauthorized;
+    | Responses.Unauthorized
+    | Responses.Forbidden;
 
   // ###############################
   // Submit a change
@@ -139,7 +144,8 @@ interface Organizations {
   ):
     | Responses.AcceptedT<Models.OrgRevision>
     | Responses.NotFound
-    | Responses.Unauthorized;
+    | Responses.Unauthorized
+    | Responses.Forbidden;
 
   // ###############################
   // List changes
@@ -165,7 +171,8 @@ interface Organizations {
   ):
     | Responses.PaginatedT<Models.OrgRevision>
     | Responses.NotFound
-    | Responses.Unauthorized;
+    | Responses.Unauthorized
+    | Responses.Forbidden;
 
   // ###############################
   // View a change
@@ -193,5 +200,6 @@ interface Organizations {
   ):
     | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
-    | Responses.Unauthorized;
+    | Responses.Unauthorized
+    | Responses.Forbidden;
 }
