@@ -12,6 +12,12 @@
 export type { Plugin, DefinePluginOptions, PluginSchemasInput } from "./define-plugin";
 export type { CustomFieldSpec, HasCustomFields, ExtensibleObject } from "./types";
 export { definePlugin } from "./define-plugin";
+export type {
+  PluginDescriptorV1,
+  PluginRouteDescriptor,
+  PluginSchemaDescriptor,
+} from "./describe-plugin";
+export { describePlugin, PLUGIN_DESCRIPTOR_VERSION } from "./describe-plugin";
 
 // Custom filters — route-keyed filter registration + classification
 export type {
