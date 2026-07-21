@@ -128,7 +128,7 @@ Response:
       }
     }
   ],
-  "pagination": { "page": 1, "pageSize": 50, "totalItems": 1 }
+  "paginationInfo": { "page": 1, "pageSize": 50, "totalItems": 1 }
 }
 ```
 
@@ -344,7 +344,7 @@ Response:
       }
     }
   ],
-  "pagination": { "page": 1, "pageSize": 50, "totalItems": 2 }
+  "paginationInfo": { "page": 1, "pageSize": 50, "totalItems": 2 }
 }
 ```
 
