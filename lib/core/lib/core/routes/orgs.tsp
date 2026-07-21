@@ -61,7 +61,7 @@ interface Organizations {
 
     /** Identifier value within the given registry to filter by */
     @query id?: string,
-  ): Responses.Paginated<T> | Responses.Unauthorized;
+  ): Responses.PaginatedT<T> | Responses.Unauthorized;
 
   // ##############################
   // View an organization
@@ -85,7 +85,7 @@ interface Organizations {
 
     /** Return the profile as of the given point in time */
     @query at?: utcDateTime,
-  ): Responses.Ok<T> | Responses.NotFound | Responses.Unauthorized;
+  ): Responses.OkT<T> | Responses.NotFound | Responses.Unauthorized;
 
   // ###############################
   // Update an organization
@@ -109,7 +109,7 @@ interface Organizations {
     @body
     patch: Models.OrgPatchData,
   ):
-    | Responses.Ok<Models.OrgRevision>
+    | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized;
 
@@ -137,7 +137,7 @@ interface Organizations {
     @body
     patch: Models.OrgPatchData,
   ):
-    | Responses.Accepted<Models.OrgRevision>
+    | Responses.AcceptedT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized;
 
@@ -163,7 +163,7 @@ interface Organizations {
 
     ...Pagination.PaginatedQueryParams,
   ):
-    | Responses.Paginated<Models.OrgRevision>
+    | Responses.PaginatedT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized;
 
@@ -191,7 +191,7 @@ interface Organizations {
     @path
     changeId: Types.uuid,
   ):
-    | Responses.Ok<Models.OrgRevision>
+    | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized;
 }

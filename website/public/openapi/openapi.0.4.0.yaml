@@ -755,7 +755,7 @@ paths:
           explode: false
       responses:
         '200':
-          description: A 200 response with a paginated list of items
+          description: A 200 response with a paginated list of typed items
           content:
             application/json:
               schema:
@@ -775,7 +775,7 @@ paths:
                     description: Details about the paginated results
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with a paginated list of items
+                description: A 200 response with a paginated list of typed items
         '401':
           description: Access is unauthorized.
           content:
@@ -810,7 +810,7 @@ paths:
           explode: false
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -824,7 +824,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -856,7 +856,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -870,7 +870,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -910,7 +910,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '202':
-          description: A 202 response with data
+          description: A 202 response with typed data
           headers:
             Location:
               required: false
@@ -931,7 +931,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 202 response with data
+                description: A 202 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -972,7 +972,7 @@ paths:
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
       responses:
         '200':
-          description: A 200 response with a paginated list of items
+          description: A 200 response with a paginated list of typed items
           content:
             application/json:
               schema:
@@ -992,7 +992,7 @@ paths:
                     description: Details about the paginated results
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with a paginated list of items
+                description: A 200 response with a paginated list of typed items
         '401':
           description: Access is unauthorized.
           content:
@@ -1031,7 +1031,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -1045,7 +1045,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -5052,6 +5052,16 @@ components:
           description: Total number of pages
           example: 5
       description: Details about the paginated results
+    CommonGrants.Responses.Accepted:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          description: Response data
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A 202 response with data
     CommonGrants.Responses.ApplicationSubmissionError:
       type: object
       required:

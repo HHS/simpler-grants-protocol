@@ -261,7 +261,18 @@ model CreatedT<T> extends Success {
 // 202 response
 // ############################################################################
 
-/** A 202 response with data
+/** A 202 response with data of an unspecified shape
+ *
+ * Routes use the typed `AcceptedT<T>` variant.
+ */
+@doc("A 202 response with data")
+@Versioning.added(CommonGrants.Versions.v0_4)
+model Accepted extends Success {
+  /** Response data */
+  data: unknown;
+}
+
+/** Template for a 202 response with typed data
  *
  * Returned when a request is accepted for processing but may not be applied
  * immediately, such as a change submitted for review. The `Location` header
@@ -269,9 +280,9 @@ model CreatedT<T> extends Success {
  *
  * @template T The schema for the value of the `"data"` property in this response
  */
-@doc("A 202 response with data")
+@doc("A 202 response with typed data")
 @Versioning.added(CommonGrants.Versions.v0_4)
-model Accepted<T> extends Success {
+model AcceptedT<T> extends Success {
   // Inherit the 202 status code
   ...Http.AcceptedResponse;
 
