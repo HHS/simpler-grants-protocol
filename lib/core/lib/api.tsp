@@ -143,7 +143,7 @@ namespace Organizations {
   alias Router = Routes.Organizations;
 
   @added(Versions.v0_4)
-  @useAuth(OrgSyncAuth<["org:list"]>)
+  @useAuth(OrgSyncAuth<["org:read"]>)
   op list is Router.list;
 
   @added(Versions.v0_4)

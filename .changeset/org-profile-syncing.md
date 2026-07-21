@@ -19,7 +19,7 @@ systems, following the contract in ADR-0026:
   that are accepted for review.
 
 Adds six experimental routes under `/common-grants/orgs`, each requiring an
-OAuth 2.0 scope: `GET /orgs` (`org:list`), `GET /orgs/{orgId}` (`org:read`),
+OAuth 2.0 scope: `GET /orgs` (`org:read`), `GET /orgs/{orgId}` (`org:read`),
 `PATCH /orgs/{orgId}` (`org:write`), `POST /orgs/{orgId}/changes`
 (`org.changes:write`), `GET /orgs/{orgId}/changes` (`org.changes:read`), and
 `GET /orgs/{orgId}/changes/{changeId}` (`org.changes:read`). The routes declare
