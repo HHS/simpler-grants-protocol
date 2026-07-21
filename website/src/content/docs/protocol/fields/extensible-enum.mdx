@@ -11,14 +11,14 @@ extensibleEnum:
   typeSpec:
     file:
       path: "lib/core/lib/core/fields/extensible-enum.tsp"
-      startLine: 7
-      endLine: 24
+      startLine: 39
+      endLine: 47
 extensibleEnumT:
   typeSpec:
     file:
       path: "lib/core/lib/core/fields/extensible-enum.tsp"
-      startLine: 26
-      endLine: 55
+      startLine: 7
+      endLine: 37
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -55,16 +55,16 @@ model OppStatus is Fields.ExtensibleEnumT<OppStatusOptions>;
 
 ## ExtensibleEnum
 
-The untyped base model, for cases where the value set is open-ended and a typed
-constraint isn't appropriate.
+The base model for this pattern, derived from the template with an unconstrained
+`value`. Its JSON schema is the published shape of the pattern.
 
 ### Table
 
-| Property    | Type                                    | Required | Description                                                                   |
-| ----------- | --------------------------------------- | -------- | ----------------------------------------------------------------------------- |
-| value       | any                                     | Yes      | The selected value. May be from a predefined set of options or a custom value |
-| customValue | [string](/protocol/types/string#string) | No       | A custom value, used when the selected value does not fit a predefined option |
-| description | [string](/protocol/types/string#string) | No       | A human-readable description of the value                                     |
+| Property    | Type                                    | Required | Description                                                         |
+| ----------- | --------------------------------------- | -------- | ------------------------------------------------------------------- |
+| value       | any                                     | Yes      | The selected value, from a predefined set of options                |
+| customValue | [string](/protocol/types/string#string) | No       | A custom value, used when the selected value is the `custom` option |
+| description | [string](/protocol/types/string#string) | No       | A human-readable description of the value                           |
 
 ### Formats
 

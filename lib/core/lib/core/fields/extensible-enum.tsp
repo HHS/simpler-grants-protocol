@@ -4,32 +4,14 @@ namespace CommonGrants.Fields;
 // Model definitions
 // ########################################
 
-/** A value from an open-ended set of options: a `value` of unspecified shape,
- * an optional `customValue` for caller-defined options, and an optional
- * free-form `description`. Use this when the value set is open-ended and a
- * typed constraint isn't appropriate. For typed variants, see `ExtensibleEnumT<T>`.
- */
-@example(Examples.ExtensibleEnum.customStatus)
-@doc("A value from an open-ended set of options")
-@Versioning.added(CommonGrants.Versions.v0_4)
-model ExtensibleEnum {
-  /** The selected value. May be from a predefined set of options or a custom value */
-  value: unknown;
-
-  /** A custom value, used when the selected value does not fit a predefined option */
-  customValue?: string;
-
-  /** A human-readable description of the value */
-  description?: string;
-}
-
-/** A typed extensible enum: `value` is constrained to a caller-supplied enum (or
- * other type), with a free-form `description` for annotation or custom-value
- * details.
+/** Template for defining extensible enum fields: constrains `value` to a set of
+ * options (typically an enum that includes a `custom` option) while keeping the
+ * shared `customValue` + `description` properties. Use this to define new
+ * extensible enum fields so they stay consistent with the rest of the protocol.
  *
  * @template T The type (typically an enum) accepted for `value`.
  *
- * @example How to instantiate a typed extensible enum
+ * @example How to define a new extensible enum field
  *
  * ```typespec
  * enum OppStatusOptions {
@@ -53,6 +35,16 @@ model ExtensibleEnumT<T> {
   /** A human-readable description of the value */
   description?: string;
 }
+
+/** A value chosen from a known set of options that can also be extended with a
+ * custom value when none of the predefined options fit: the chosen `value` is
+ * paired with an optional `customValue` and a free-form `description`. To define
+ * a typed field that follows this pattern, use `ExtensibleEnumT<T>`.
+ */
+@example(Examples.ExtensibleEnum.customStatus)
+@doc("A value from a predefined set of options that can be extended with a custom value when needed")
+@Versioning.added(CommonGrants.Versions.v0_4)
+model ExtensibleEnum is ExtensibleEnumT<unknown>;
 
 // ########################################
 // Model examples
