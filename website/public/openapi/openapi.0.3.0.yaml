@@ -47,7 +47,7 @@ paths:
           explode: false
       responses:
         '200':
-          description: A paginated list of items with a filter
+          description: A paginated list of typed items with a typed filter
           content:
             application/json:
               schema:
@@ -55,8 +55,6 @@ paths:
                 required:
                   - items
                   - paginationInfo
-                  - status
-                  - message
                   - sortInfo
                   - filterInfo
                 properties:
@@ -69,13 +67,6 @@ paths:
                     allOf:
                       - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
                     description: Details about the paginated results
-                  status:
-                    type: integer
-                    format: int32
-                    example: 200
-                  message:
-                    type: string
-                    example: Success
                   sortInfo:
                     allOf:
                       - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
@@ -95,7 +86,7 @@ paths:
                     description: The filters applied to the response items
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A paginated list of items with a filter
+                description: A paginated list of typed items with a typed filter
       tags:
         - Applications
         - experimental
@@ -108,7 +99,7 @@ paths:
       parameters: []
       responses:
         '201':
-          description: A 201 response with data
+          description: A 201 response with typed data
           content:
             application/json:
               schema:
@@ -122,7 +113,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 201 response with data
+                description: A 201 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -167,7 +158,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -181,7 +172,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -217,7 +208,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -231,7 +222,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
       tags:
         - Applications
         - experimental
@@ -262,7 +253,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -276,7 +267,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
       tags:
         - Applications
         - experimental
@@ -294,7 +285,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -306,7 +297,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -346,7 +337,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -360,7 +351,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '404':
           description: The server cannot find the requested resource.
           content:
@@ -380,7 +371,7 @@ paths:
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
       responses:
         '200':
-          description: A 200 response with a paginated list of items
+          description: A 200 response with a paginated list of typed items
           content:
             application/json:
               schema:
@@ -400,7 +391,7 @@ paths:
                     description: Details about the paginated results
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with a paginated list of items
+                description: A 200 response with a paginated list of typed items
       tags:
         - Forms
         - experimental
@@ -418,7 +409,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -432,7 +423,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
       tags:
         - Forms
         - experimental
@@ -446,7 +437,7 @@ paths:
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
       responses:
         '200':
-          description: A 200 response with a paginated list of items
+          description: A 200 response with a paginated list of typed items
           content:
             application/json:
               schema:
@@ -466,7 +457,7 @@ paths:
                     description: Details about the paginated results
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with a paginated list of items
+                description: A 200 response with a paginated list of typed items
       tags:
         - Opportunities
         - required
@@ -478,7 +469,7 @@ paths:
       parameters: []
       responses:
         '200':
-          description: A paginated list of items with a filter
+          description: A paginated list of typed items with a typed filter
           content:
             application/json:
               schema:
@@ -486,8 +477,6 @@ paths:
                 required:
                   - items
                   - paginationInfo
-                  - status
-                  - message
                   - sortInfo
                   - filterInfo
                 properties:
@@ -500,13 +489,6 @@ paths:
                     allOf:
                       - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
                     description: Details about the paginated results
-                  status:
-                    type: integer
-                    format: int32
-                    example: 200
-                  message:
-                    type: string
-                    example: Success
                   sortInfo:
                     allOf:
                       - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
@@ -526,7 +508,7 @@ paths:
                     description: The filters applied to the response items
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A paginated list of items with a filter
+                description: A paginated list of typed items with a typed filter
       tags:
         - Opportunities
         - optional
@@ -571,7 +553,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -585,7 +567,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '404':
           description: The server cannot find the requested resource.
           content:
@@ -2542,6 +2524,16 @@ components:
         errors:
           - field: formA.name
             message: Name is required
+    CommonGrants.Responses.Created:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          description: Response data
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A 201 response with data
     CommonGrants.Responses.Error:
       type: object
       required:
@@ -2562,6 +2554,90 @@ components:
           items: {}
           description: List of errors
       description: A non-2xx response schema
+    CommonGrants.Responses.Filtered:
+      type: object
+      required:
+        - items
+        - paginationInfo
+        - sortInfo
+        - filterInfo
+      properties:
+        items:
+          type: array
+          items: {}
+          description: Items from the current page
+        paginationInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+          description: Details about the paginated results
+        sortInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
+          description: The sort order of the items
+        filterInfo:
+          type: object
+          properties:
+            filters: {}
+            errors:
+              type: array
+              items:
+                type: string
+              description: Non-fatal errors that occurred during filtering
+          required:
+            - filters
+          description: The filters applied to the response items
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A paginated list of items with a filter
+    CommonGrants.Responses.Ok:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          description: Response data
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A 200 response with data
+    CommonGrants.Responses.Paginated:
+      type: object
+      required:
+        - items
+        - paginationInfo
+      properties:
+        items:
+          type: array
+          items: {}
+          description: Items from the current page
+        paginationInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+          description: Details about the paginated results
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A 200 response with a paginated list of items
+    CommonGrants.Responses.Sorted:
+      type: object
+      required:
+        - items
+        - paginationInfo
+        - sortInfo
+      properties:
+        items:
+          type: array
+          items: {}
+          description: Items from the current page
+        paginationInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+          description: Details about the paginated results
+        sortInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
+          description: The sort order of the items
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A paginated list of items with a sort order
     CommonGrants.Responses.Success:
       type: object
       required:

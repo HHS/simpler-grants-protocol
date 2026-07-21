@@ -1,0 +1,23 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Sorted.yaml
+type: object
+properties:
+  items:
+    type: array
+    items: {}
+    description: Items from the current page
+  paginationInfo:
+    $ref: PaginatedResultsInfo.yaml
+    description: Details about the paginated results
+  sortInfo:
+    $ref: SortedResultsInfo.yaml
+    description: The sort order of the items
+required:
+  - items
+  - paginationInfo
+  - sortInfo
+allOf:
+  - $ref: Success.yaml
+unevaluatedProperties:
+  not: {}
+description: A paginated list of items with a sort order

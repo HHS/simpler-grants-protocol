@@ -2,6 +2,9 @@ import "../pagination.tsp";
 import "../sorting.tsp";
 import "@typespec/http";
 
+// Templated models aren't emitted as standalone JSON schemas, so each response
+// family pairs a non-templated model (emitted, documented) with a `T`-suffixed
+// template (used by routes). Shared `*Base` models keep the pairs in sync.
 namespace CommonGrants.Responses;
 
 // ############################################################################
@@ -21,7 +24,18 @@ model Success {
 // 200 response
 // ############################################################################
 
-/** Template for a 200 response with data
+/** A 200 response with data of an unspecified shape
+ *
+ * Routes use the typed `OkT<T>` variant.
+ */
+@doc("A 200 response with data")
+@Versioning.added(CommonGrants.Versions.v0_1)
+model Ok extends Success {
+  /** Response data */
+  data: unknown;
+}
+
+/** Template for a 200 response with typed data
  *
  * @template T The schema for the value of the `"data"` property in this response
  * @example How to specify a custom 200 response model
@@ -33,13 +47,13 @@ model Success {
  *   description: string;
  * }
  *
- * // Pass that model to the `Ok` template
- * alias CustomModel200 = Responses.Ok<CustomModel>;
+ * // Pass that model to the `OkT` template
+ * alias CustomModel200 = Responses.OkT<CustomModel>;
  * ```
  */
-@doc("A 200 response with data")
+@doc("A 200 response with typed data")
 @Versioning.added(CommonGrants.Versions.v0_1)
-model Ok<T> extends Success {
+model OkT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
@@ -51,7 +65,31 @@ model Ok<T> extends Success {
 // 200 paginated response
 // ############################################################################
 
-/** Template for a 200 response with paginated list of items
+/** Body properties shared by `Paginated` and `PaginatedT<T>`
+ *
+ * @template T The schema for the value of the `"items"` property in this response
+ */
+@Versioning.added(CommonGrants.Versions.v0_1)
+model PaginatedBase<T> {
+  /** Items from the current page */
+  @pageItems
+  items: T[];
+
+  /** Details about the paginated results */
+  paginationInfo: Pagination.PaginatedResultsInfo;
+}
+
+/** A 200 response with a paginated list of items of an unspecified shape
+ *
+ * Routes use the typed `PaginatedT<T>` variant.
+ */
+@doc("A 200 response with a paginated list of items")
+@Versioning.added(CommonGrants.Versions.v0_1)
+model Paginated extends Success {
+  ...PaginatedBase<unknown>;
+}
+
+/** Template for a 200 response with a paginated list of typed items
  *
  * @template T The schema for the value of the `"items"` property in this response
  * @example How to specify a custom paginated response model
@@ -63,29 +101,46 @@ model Ok<T> extends Success {
  *   description: string;
  * }
  *
- * // Pass that model to the `Ok` template
- * alias CustomModelResponse = Responses.Paginated<CustomModel>;
+ * // Pass that model to the `PaginatedT` template
+ * alias CustomModelResponse = Responses.PaginatedT<CustomModel>;
  * ```
  */
-@doc("A 200 response with a paginated list of items")
+@doc("A 200 response with a paginated list of typed items")
 @Versioning.added(CommonGrants.Versions.v0_1)
-model Paginated<T> extends Success {
+model PaginatedT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
-  /** Items from the current page */
-  @pageItems
-  items: T[];
-
-  /** Details about the paginated results */
-  paginationInfo: Pagination.PaginatedResultsInfo;
+  ...PaginatedBase<T>;
 }
 
 // ############################################################################
 // 200 sorted response
 // ############################################################################
 
-/** A paginated list of items with a sort order
+/** Body properties shared by `Sorted` and `SortedT<T>`
+ *
+ * @template T The schema for the value of the `"items"` property in this response
+ */
+@Versioning.added(CommonGrants.Versions.v0_1)
+model SortedBase<T> {
+  ...PaginatedBase<T>;
+
+  /** The sort order of the items */
+  sortInfo: Sorting.SortedResultsInfo;
+}
+
+/** A paginated list of items of an unspecified shape with a sort order
+ *
+ * Routes use the typed `SortedT<T>` variant.
+ */
+@doc("A paginated list of items with a sort order")
+@Versioning.added(CommonGrants.Versions.v0_1)
+model Sorted extends Success {
+  ...SortedBase<unknown>;
+}
+
+/** Template for a paginated list of typed items with a sort order
  *
  * @template T The schema for the value of the `"items"` property in this response
  * @example How to specify a custom sorted response model
@@ -97,25 +152,52 @@ model Paginated<T> extends Success {
  *   description: string;
  * }
  *
- * // Pass that model to the `Sorted` template
- * alias CustomModelSortedResponse = Responses.Sorted<CustomModel>;
+ * // Pass that model to the `SortedT` template
+ * alias CustomModelSortedResponse = Responses.SortedT<CustomModel>;
  * ```
  */
-@doc("A paginated list of items with a sort order")
+@doc("A paginated list of typed items with a sort order")
 @Versioning.added(CommonGrants.Versions.v0_1)
-model Sorted<T> {
-  // Inherit the properties of the Paginated response
-  ...Paginated<T>;
+model SortedT<T> extends Success {
+  // Inherit the 200 status code
+  ...Http.OkResponse;
 
-  /** The sort order of the items */
-  sortInfo: Sorting.SortedResultsInfo;
+  ...SortedBase<T>;
 }
 
 // ############################################################################
 // 200 filtered response
 // ############################################################################
 
-/** A paginated list of items with a filter
+/** Body properties shared by `Filtered` and `FilteredT<ItemsT, FilterT>`
+ *
+ * @template ItemsT The schema for the value of the `"items"` property in this response
+ * @template FilterT The schema for the value of the `"filter"` property in this response
+ */
+@Versioning.added(CommonGrants.Versions.v0_1)
+model FilteredBase<ItemsT, FilterT> {
+  ...SortedBase<ItemsT>;
+
+  /** The filters applied to the response items */
+  filterInfo: {
+    filters: FilterT;
+
+    /** Non-fatal errors that occurred during filtering */
+    errors?: string[];
+  };
+}
+
+/** A paginated list of items of an unspecified shape with a filter
+ *
+ * Routes use the typed `FilteredT<ItemsT, FilterT>` variant.
+ */
+@doc("A paginated list of items with a filter")
+@Versioning.added(CommonGrants.Versions.v0_1)
+model Filtered extends Success {
+  ...FilteredBase<unknown, unknown>;
+}
+
+/** Template for a paginated list of typed items with a typed filter
  *
  * @template ItemsT The schema for the value of the `"items"` property in this response
  * @template FilterT The schema for the value of the `"filter"` property in this response
@@ -133,35 +215,41 @@ model Sorted<T> {
  *   lastModifiedAt: Filters.DateComparisonFilter;
  * }
  *
- * // Pass that model to the `Filtered` template
- * alias CustomModelFilteredResponse = Responses.Filtered<CustomModel, CustomFilter>;
+ * // Pass that model to the `FilteredT` template
+ * alias CustomModelFilteredResponse = Responses.FilteredT<CustomModel, CustomFilter>;
  * ```
  */
-@doc("A paginated list of items with a filter")
+@doc("A paginated list of typed items with a typed filter")
 @Versioning.added(CommonGrants.Versions.v0_1)
-model Filtered<ItemsT, FilterT> extends Success {
-  // Inherit the properties of the Sorted response
-  ...Sorted<ItemsT>;
+model FilteredT<ItemsT, FilterT> extends Success {
+  // Inherit the 200 status code
+  ...Http.OkResponse;
 
-  /** The filters applied to the response items */
-  filterInfo: {
-    filters: FilterT;
-
-    /** Non-fatal errors that occurred during filtering */
-    errors?: string[];
-  };
+  ...FilteredBase<ItemsT, FilterT>;
 }
 
 // ############################################################################
 // 201 response
 // ############################################################################
 
-/** A 201 response with data
+/** A 201 response with data of an unspecified shape
+ *
+ * Routes use the typed `CreatedT<T>` variant.
+ */
+@doc("A 201 response with data")
+@Versioning.added(CommonGrants.Versions.v0_1)
+model Created extends Success {
+  /** Response data */
+  data: unknown;
+}
+
+/** A 201 response with typed data
  *
  * @template T The schema for the value of the `"data"` property in this response
  */
+@doc("A 201 response with typed data")
 @Versioning.added(CommonGrants.Versions.v0_1)
-model Created<T> extends Success {
+model CreatedT<T> extends Success {
   // Inherit the 201 status code
   ...Http.CreatedResponse;
 

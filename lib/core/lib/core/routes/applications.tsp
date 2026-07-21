@@ -33,7 +33,7 @@ interface Applications {
     /** The title of the application */
     @Versioning.renamedFrom(Versions.v0_4, "name")
     title: string,
-  ): Responses.Created<Models.ApplicationBase> | Responses.Unauthorized;
+  ): Responses.CreatedT<Models.ApplicationBase> | Responses.Unauthorized;
 
   // ###############################
   // Get an application
@@ -47,7 +47,7 @@ interface Applications {
     /** The ID of the application to get */
     @path appId: Types.uuid,
   ):
-    | Responses.Ok<Models.ApplicationBase>
+    | Responses.OkT<Models.ApplicationBase>
     | Responses.NotFound
     | Responses.Unauthorized;
 
@@ -63,7 +63,7 @@ interface Applications {
     /** The ID of the application to submit */
     @path appId: Types.uuid,
   ):
-    | Responses.Ok<unknown>
+    | Responses.OkT<unknown>
     | Responses.ApplicationSubmissionError
     | Responses.NotFound
     | Responses.Unauthorized;
@@ -82,5 +82,5 @@ interface Applications {
 
     /** The sorting to apply to the search */
     @query sorting: Models.AppSorting,
-  ): Responses.Filtered<Models.ApplicationBase, Models.AppFilters>;
+  ): Responses.FilteredT<Models.ApplicationBase, Models.AppFilters>;
 }
