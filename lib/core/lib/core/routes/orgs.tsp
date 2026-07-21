@@ -45,7 +45,7 @@ interface Organizations {
   /** `GET /orgs/` Get a paginated list of organizations
    *
    * Requires the `org:read` scope. To look up an organization by an external
-   * identifier, filter with `registry` and `id`, like `?registry=us:ein&id=123456789`.
+   * identifier, filter with `registry` and `id`, like `?registry=org:us:ein&id=123456789`.
    *
    * @template T Type of the paginated response model.
    * Must be an extension of Models.OrganizationBase. Default is Models.OrganizationBase.
