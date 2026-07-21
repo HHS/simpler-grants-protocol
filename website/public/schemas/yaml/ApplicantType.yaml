@@ -4,13 +4,13 @@ type: object
 properties:
   value:
     $ref: ApplicantTypeOptions.yaml
-    description: The type of applicant
+    description: The selected value, from a predefined set of options
   customValue:
     type: string
-    description: The custom value for the applicant type
+    description: A custom value, used when the selected value is the `custom` option
   description:
     type: string
-    description: The description of the applicant type
+    description: A human-readable description of the value
 required:
   - value
 unevaluatedProperties:

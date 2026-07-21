@@ -57,16 +57,7 @@ model ApplicationBase {
 /** The status of the application */
 @example(Examples.Application.submittedStatus)
 @Versioning.added(CommonGrants.Versions.v0_2)
-model AppStatus {
-  /** The status of the application, from a predefined set of options */
-  value: AppStatusOptions;
-
-  /** A custom value for the status */
-  customValue?: string;
-
-  /** A human-readable description of the status */
-  description?: string;
-}
+model AppStatus is Fields.ExtensibleEnumT<AppStatusOptions>;
 
 // #########################################################
 // AppStatusOptions

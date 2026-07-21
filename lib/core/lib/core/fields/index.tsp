@@ -1,4 +1,5 @@
 import "./custom-field.tsp";
+import "./extensible-enum.tsp";
 import "./metadata.tsp";
 import "./money.tsp";
 import "./event.tsp";
