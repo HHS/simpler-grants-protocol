@@ -107,9 +107,9 @@ def pagination(single_page_func: Callable) -> Callable:
 
         aggregated_pagination_info = PaginatedResultsInfo(
             page=1,
-            pageSize=len(items) or page_size,
-            totalItems=len(items),
-            totalPages=1,
+            page_size=len(items) or page_size,
+            total_items=len(items),
+            total_pages=1,
         )
 
         # Build aggregated response. Copy the first page's response so any extra
@@ -131,7 +131,7 @@ def pagination(single_page_func: Callable) -> Callable:
             status=latest_response.status if latest_response else 200,
             message=latest_response.message if latest_response else "Success",
             items=cast(list[ItemsT], items),
-            paginationInfo=aggregated_pagination_info,
+            pagination_info=aggregated_pagination_info,
         )
 
     return wrapper

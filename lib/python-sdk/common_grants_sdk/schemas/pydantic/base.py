@@ -1,9 +1,22 @@
 import json
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import AliasGenerator, BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 from common_grants_sdk.utils.transformation import transform_from_mapping
+
+# Generated (not field-level) aliases keep snake_case construction type-checking:
+# static checkers fall back to field names when the alias comes from a generator.
+# Field-level alias settings still override for irregular wire names.
+CAMEL_ALIASES = AliasGenerator(
+    validation_alias=to_camel,
+    serialization_alias=to_camel,
+)
+CAMEL_WIRE_CONFIG = ConfigDict(
+    populate_by_name=True,
+    alias_generator=CAMEL_ALIASES,
+)
 
 
 class CommonGrantsBaseModel(BaseModel):
@@ -12,6 +25,8 @@ class CommonGrantsBaseModel(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
         strict=False,  # Coerces strings to enums, datetimes, etc.
+        populate_by_name=True,
+        alias_generator=CAMEL_ALIASES,
     )
 
     def dump(self) -> dict:

@@ -36,7 +36,6 @@ class Paginated(Success, Generic[ItemsT]):
     pagination_info: PaginatedResultsInfo = Field(
         ...,
         description="Details about the paginated results",
-        alias="paginationInfo",
     )
 
     model_config = {"populate_by_name": True}
@@ -48,7 +47,6 @@ class Sorted(Paginated[ItemsT], Generic[ItemsT]):
     sort_info: SortedResultsInfo = Field(
         ...,
         description="The sort order of the items",
-        alias="sortInfo",
     )
 
     model_config = {"populate_by_name": True}
@@ -72,7 +70,6 @@ class Filtered(Sorted[ItemsT], Generic[ItemsT, FilterT]):
     filter_info: FilterInfo[FilterT] = Field(
         ...,
         description="The filters applied to the response items",
-        alias="filterInfo",
     )
 
     model_config = {"populate_by_name": True}

@@ -13,16 +13,13 @@ class OppTimeline(CommonGrantsBaseModel):
 
     post_date: Optional[Event] = Field(
         default=None,
-        alias="postDate",
         description="The date (and time) at which the opportunity is posted",
     )
     close_date: Optional[Event] = Field(
         default=None,
-        alias="closeDate",
         description="The date (and time) at which the opportunity closes",
     )
     other_dates: Optional[dict[str, Event]] = Field(
         default=None,
-        alias="otherDates",
         description="An optional map of other key dates or events in the opportunity timeline",
     )
