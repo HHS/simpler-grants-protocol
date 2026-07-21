@@ -5,6 +5,7 @@ enum:
   - notStarted
   - inProgress
   - complete
+  - custom
 description: |-
   The set of values accepted for form response status:
   - `notStarted`: The form response has not been started

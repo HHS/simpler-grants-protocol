@@ -1,9 +1,8 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: CompetitionStatus.yaml
+$id: ExtensibleEnum.yaml
 type: object
 properties:
   value:
-    $ref: CompetitionStatusOptions.yaml
     description: The selected value, from a predefined set of options
   customValue:
     type: string
@@ -16,6 +15,7 @@ required:
 unevaluatedProperties:
   not: {}
 examples:
-  - value: open
-    description: Competition is open for applications
-description: The status of the competition
+  - value: custom
+    customValue: underReview
+    description: The application is under review by the program team
+description: A value from a predefined set of options that can be extended with a custom value when needed

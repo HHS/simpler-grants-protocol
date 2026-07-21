@@ -1,0 +1,79 @@
+---
+title: ExtensibleEnum
+description: A value from a predefined set of options, with support for custom values
+extensibleEnum:
+  example:
+    file:
+      path: "website/public/schemas/yaml/ExtensibleEnum.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/ExtensibleEnum.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/extensible-enum.tsp"
+      startLine: 39
+      endLine: 47
+extensibleEnumT:
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/fields/extensible-enum.tsp"
+      startLine: 7
+      endLine: 37
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
+
+A standard pattern for enum fields that accept custom values: the `value` property is chosen
+from a predefined set of options (usually including a `custom` option), with an optional
+`customValue` and `description` to document caller-defined values in a structured way.
+
+Fields like [OppStatus](/protocol/models/opportunity/#oppstatus),
+[AppStatus](/protocol/models/application/#appstatus), and
+[ApplicantType](/protocol/models/applicant-type/) follow this pattern via the
+[`ExtensibleEnumT<T>`](#extensibleenumt) template.
+
+## ExtensibleEnumT
+
+The templated model, which constrains `value` to a given enum. Use this to define new
+extensible enum fields so they stay consistent with the rest of the protocol:
+
+```typespec
+enum OppStatusOptions {
+  forecasted,
+  open,
+  closed,
+  custom,
+}
+
+model OppStatus is Fields.ExtensibleEnumT<OppStatusOptions>;
+```
+
+### Formats
+
+<SchemaFormatTabs typeSpec={frontmatter.extensibleEnumT.typeSpec} />
+
+## ExtensibleEnum
+
+The base model for this pattern, derived from the template with an unconstrained
+`value`. Its JSON schema is the published shape of the pattern.
+
+### Table
+
+| Property    | Type                                    | Required | Description                                                         |
+| ----------- | --------------------------------------- | -------- | ------------------------------------------------------------------- |
+| value       | any                                     | Yes      | The selected value, from a predefined set of options                |
+| customValue | [string](/protocol/types/string#string) | No       | A custom value, used when the selected value is the `custom` option |
+| description | [string](/protocol/types/string#string) | No       | A human-readable description of the value                           |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.extensibleEnum.example}
+  jsonSchema={frontmatter.extensibleEnum.jsonSchema}
+  typeSpec={frontmatter.extensibleEnum.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="ExtensibleEnum" />
