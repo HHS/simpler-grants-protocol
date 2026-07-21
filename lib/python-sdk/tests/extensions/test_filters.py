@@ -11,14 +11,12 @@ from pydantic import ValidationError
 
 from common_grants_sdk.extensions import PluginRoutes, ResourceRoutes
 from common_grants_sdk.extensions.filters import (
-    VALID_FILTER_MODELS,
     classify_filters,
     f,
     validate_filter_call,
     validate_routes,
 )
 from common_grants_sdk.extensions.types import FilterError
-from common_grants_sdk.schemas.pydantic.filters.integer import IntegerComparisonFilter
 from common_grants_sdk.schemas.pydantic.filters.money import (
     MoneyComparisonFilter,
     MoneyRangeFilter,
@@ -29,7 +27,6 @@ from common_grants_sdk.schemas.pydantic.filters.numeric import (
 )
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     BooleanComparison,
-    IntegerComparison,
     NumberComparison,
     OpportunityFilters,
     OppFilters,
@@ -98,11 +95,6 @@ def test_f_helper_wire_values(helper, args, operator, value):
 # ---------------------------------------------------------------------------
 
 
-def test_valid_filter_models_includes_integer_comparison():
-    """IntegerComparisonFilter is registered as one of the valid filter models."""
-    assert IntegerComparisonFilter in VALID_FILTER_MODELS
-
-
 # ---------------------------------------------------------------------------
 # classify_filters: three-bucket classification (happy paths)
 # ---------------------------------------------------------------------------
@@ -159,20 +151,6 @@ def test_classify_escape_hatch_key_lands_in_custom_filters():
     )
     assert result.custom_filters is not None
     assert "gov.someSystem@someFilter" in result.custom_filters
-
-
-def test_classify_registered_integer_comparison_filter():
-    """A registered integerComparison filter validates and lands in customFilters."""
-
-    class IntFilters(OpportunityFilters, total=False):
-        awardCount: IntegerComparison
-
-    routes = PluginRoutes(opportunities=ResourceRoutes(search=IntFilters))
-    result = classify_filters(
-        routes, "opportunities", "search", {"awardCount": f.gt(5)}
-    )
-    assert result.custom_filters is not None
-    assert "awardCount" in result.custom_filters
 
 
 # ---------------------------------------------------------------------------
@@ -641,19 +619,6 @@ def test_validate_filter_call_adhoc_incompatible_value_returns_error():
     assert value is None
     assert isinstance(error, FilterError)
     assert error.path == "filters.legacyTag"
-
-
-def test_validate_filter_call_integer_comparison_rejects_non_integer():
-    """An integerComparison filter accepts an integer and rejects a non-integer value."""
-    value, error = validate_filter_call(IntegerComparisonFilter, "awardCount", f.gt(5))
-    assert error is None
-    assert value is not None
-
-    value, error = validate_filter_call(
-        IntegerComparisonFilter, "awardCount", {"operator": "gt", "value": 3.5}
-    )
-    assert value is None
-    assert isinstance(error, FilterError)
 
 
 def test_validate_filter_call_money_comparison_passes_valid_money():

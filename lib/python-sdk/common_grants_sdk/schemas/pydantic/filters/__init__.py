@@ -21,7 +21,6 @@ __all__ = [  # noqa: RUF022
     # Boolean Filters
     "BooleanComparisonFilter",
     # Integer Filters
-    "IntegerComparisonFilter",
     # Numeric Filters
     "NumberArrayFilter",
     "NumberComparisonFilter",
@@ -39,7 +38,6 @@ __all__ = [  # noqa: RUF022
     # so range fields are typed with the explicit ``*RangeFilter`` names instead.
     "BooleanComparison",
     "DateComparison",
-    "IntegerComparison",
     "MoneyComparison",
     "NumberArray",
     "NumberComparison",
@@ -61,7 +59,6 @@ from .date import (
     DateRange,
     DateRangeFilter,
 )
-from .integer import IntegerComparisonFilter
 from .money import (
     MoneyComparisonFilter,
     MoneyRange,
@@ -77,7 +74,6 @@ from .numeric import (
 from .opportunity import (
     BooleanComparison,
     DateComparison,
-    IntegerComparison,
     MoneyComparison,
     NumberArray,
     NumberComparison,
