@@ -33,8 +33,7 @@ Scopes name the operations a token is permitted to perform. They do not name a s
 
 | Scope               | Description                                               |
 | ------------------- | --------------------------------------------------------- |
-| `org:list`          | Enumerate accessible organizations                        |
-| `org:read`          | Read organization profiles                                |
+| `org:read`          | Read organization profiles (list and view)                |
 | `org:write`         | Apply a direct edit (`PATCH /orgs/{orgId}`)               |
 | `org.changes:read`  | Read the changes feed (patches and snapshots)             |
 | `org.changes:write` | Submit a change for review (`POST /orgs/{orgId}/changes`) |
@@ -43,7 +42,7 @@ Each route requires one scope:
 
 | Route                                  | Scope               |
 | -------------------------------------- | ------------------- |
-| `GET /orgs`                            | `org:list`          |
+| `GET /orgs`                            | `org:read`          |
 | `GET /orgs/{orgId}`                    | `org:read`          |
 | `PATCH /orgs/{orgId}`                  | `org:write`         |
 | `POST /orgs/{orgId}/changes`           | `org.changes:write` |

@@ -762,7 +762,7 @@ paths:
     get:
       operationId: Organizations_list
       summary: List organizations
-      description: Get a paginated list of organizations. Requires the `org:list` scope.
+      description: Get a paginated list of organizations. Requires the `org:read` scope.
       parameters:
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
@@ -814,7 +814,7 @@ paths:
         - experimental
       security:
         - OAuth2Auth:
-            - org:list
+            - org:read
   /common-grants/orgs/{orgId}:
     get:
       operationId: Organizations_read
@@ -5231,7 +5231,6 @@ components:
         clientCredentials:
           tokenUrl: https://auth.example.com/oauth/token
           scopes:
-            org:list: ''
             org:read: ''
             org:write: ''
             org.changes:write: ''
@@ -5240,7 +5239,6 @@ components:
           authorizationUrl: https://auth.example.com/authorize
           tokenUrl: https://auth.example.com/oauth/token
           scopes:
-            org:list: ''
             org:read: ''
             org:write: ''
             org.changes:write: ''

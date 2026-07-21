@@ -85,7 +85,7 @@ Successful responses use the standard CommonGrants envelope: `Responses.Ok<T>` w
 
 | Verb | Path            | Purpose              | Scope      |
 | ---- | --------------- | -------------------- | ---------- |
-| GET  | `/orgs`         | List orgs            | `org:list` |
+| GET  | `/orgs`         | List orgs            | `org:read` |
 | GET  | `/orgs/{orgId}` | Read one org by UUID | `org:read` |
 
 **Write endpoints (a deployment SHOULD support at least one)**
@@ -104,7 +104,7 @@ Successful responses use the standard CommonGrants envelope: `Responses.Ok<T>` w
 <details>
 <summary>List orgs: `GET /orgs`</summary>
 
-Required scope: `org:list`. By default this returns every organization the caller can view, which is likely the full set for a public directory. Results are paginated per [ADR-0011](/governance/adr/0011-pagination/), and each item is a summary that includes the org's identifier collection. To look up an org by an external identifier, filter with `registry` and `id`, like `?registry=us:ein&id=123456789` (see [ADR-0023](/governance/adr/0023-org-ids/)).
+Required scope: `org:read`. By default this returns every organization the caller can view, which is likely the full set for a public directory. Results are paginated per [ADR-0011](/governance/adr/0011-pagination/), and each item is an organization record, including its identifier collection. To look up an org by an external identifier, filter with `registry` and `id`, like `?registry=us:ein&id=123456789` (see [ADR-0023](/governance/adr/0023-org-ids/)).
 
 Request:
 
@@ -352,12 +352,11 @@ Response:
 
 ### Scope vocabulary
 
-Scopes only name operations. Which organization a token can act on comes from its `org_id` claim, not from the scope string. A token that omits `org_id` can exercise its scopes against every organization the subject can access, so `org:read` or `org:list` with no `org_id` reads or enumerates all of them, as far as the receiver's own policy allows.
+Scopes only name operations. Which organization a token can act on comes from its `org_id` claim, not from the scope string. A token that omits `org_id` can exercise its scopes against every organization the subject can access, so `org:read` with no `org_id` reads all of them, as far as the receiver's own policy allows.
 
 | Scope               | Description                                               |
 | ------------------- | --------------------------------------------------------- |
-| `org:list`          | Enumerate accessible organizations                        |
-| `org:read`          | Read organization profiles                                |
+| `org:read`          | Read organization profiles (list and view)                |
 | `org:write`         | Apply a direct edit (`PATCH /orgs/{orgId}`)               |
 | `org.changes:read`  | Read the changes feed (patches and snapshots)             |
 | `org.changes:write` | Submit a change for review (`POST /orgs/{orgId}/changes`) |
