@@ -81,6 +81,7 @@ overrides:
   esbuild@>=0.17.0 <0.28.1: '>=0.28.1'
   fast-uri@<3.1.2: '>=3.1.2'
   form-data@>=4.0.0 <4.0.6: '>=4.0.6'
+  js-yaml@>=4.0.0 <4.3.0: '>=4.3.0'
   lodash@>=4.0.0 <=4.17.23: '>=4.18.0'
   qs@<6.15.2: '>=6.15.2'
   undici@>=7.23.0 <7.28.0: 7.28.0
@@ -158,8 +159,8 @@ importers:
         specifier: ^9.3.8
         version: 9.3.8(@types/node@22.20.0)
       js-yaml:
-        specifier: ^4.2.0
-        version: 4.2.0
+        specifier: '>=4.3.0'
+        version: 4.3.0
       json-schema-merge-allof:
         specifier: ^0.8.1
         version: 0.8.1
@@ -361,8 +362,8 @@ importers:
         specifier: 'catalog:'
         version: 5.5.6(eslint-config-prettier@10.1.8(eslint@10.5.0))(eslint@10.5.0)(prettier@3.8.4)
       js-yaml:
-        specifier: ^4.2.0
-        version: 4.2.0
+        specifier: '>=4.3.0'
+        version: 4.3.0
       json-schema-faker:
         specifier: ^0.6.2
         version: 0.6.2
@@ -418,8 +419,8 @@ importers:
         specifier: ^7.1.3
         version: 7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@22.20.0)(rollup@4.61.1)(tsx@4.22.4)(yaml@2.8.3)
       js-yaml:
-        specifier: ^4.2.0
-        version: 4.2.0
+        specifier: ^4.3.0
+        version: 4.3.0
       json-schema-merge-allof:
         specifier: ^0.8.1
         version: 0.8.1
@@ -4519,8 +4520,8 @@ packages:
     resolution: {integrity: sha512-PMSmkqxr106Xa156c2M265Z+FTrPl+oxd/rgOQy2tijQeK5TxQ43psO1ZCwhVOSdnn+RzkzlRz/eY4BgJBYVpg==}
     hasBin: true
 
-  js-yaml@4.2.0:
-    resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
+  js-yaml@4.3.0:
+    resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
   jsesc@3.1.0:
@@ -6721,12 +6722,12 @@ snapshots:
     dependencies:
       '@jsdevtools/ono': 7.1.3
       '@types/json-schema': 7.0.15
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
 
   '@apidevtools/json-schema-ref-parser@15.4.0(@types/json-schema@7.0.15)':
     dependencies:
       '@types/json-schema': 7.0.15
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
 
   '@apidevtools/openapi-schemas@2.1.0': {}
 
@@ -6816,7 +6817,7 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       picomatch: 4.0.4
       retext-smartypants: 6.2.0
       shiki: 4.2.0
@@ -6961,7 +6962,7 @@ snapshots:
       hast-util-to-string: 3.0.1
       hastscript: 9.0.1
       i18next: 26.3.1(typescript@5.9.3)
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       klona: 2.0.6
       magic-string: 0.30.21
       mdast-util-directive: 3.1.0
@@ -7304,7 +7305,7 @@ snapshots:
   '@changesets/parse@0.4.3':
     dependencies:
       '@changesets/types': 6.1.0
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
 
   '@changesets/pre@2.0.2':
     dependencies:
@@ -9734,7 +9735,7 @@ snapshots:
       github-slugger: 2.0.0
       html-escaper: 3.0.3
       http-cache-semantics: 4.2.0
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       jsonc-parser: 3.3.1
       magic-string: 0.30.21
       magicast: 0.5.3
@@ -11245,7 +11246,7 @@ snapshots:
       argparse: 1.0.10
       esprima: 4.0.1
 
-  js-yaml@4.2.0:
+  js-yaml@4.3.0:
     dependencies:
       argparse: 2.0.1
 
@@ -13115,7 +13116,7 @@ snapshots:
       '@swaggerexpert/cookie': 2.0.2
       deepmerge: 4.3.1
       fast-json-patch: 3.1.1
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       neotraverse: 0.6.18
       node-abort-controller: 3.1.1
       openapi-path-templating: 2.2.1
@@ -13148,7 +13149,7 @@ snapshots:
       ieee754: 1.2.1
       immutable: 3.8.3
       js-file-download: 0.4.12
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       lodash: 4.18.1
       prop-types: 15.8.1
       randexp: 0.5.3
