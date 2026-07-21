@@ -5,11 +5,15 @@
     "lib": ["ES2020"],
     "types": ["node"],
     "outDir": "./dist",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@tsp-output/*": ["./tsp-output/*"],
-      "@common-grants/sdk/*": ["./src/*"]
+      "@common-grants/sdk/*": ["./src/*"],
+      // json-schema-faker@0.6.x (test-only dep) ships an `exports` map with only
+      // an `import` condition. Under TS 6's stricter exports resolution, this
+      // CommonJS package finds no matching `require` condition and won't fall
+      // back to the top-level `types` field, so point types at the bundled .d.ts.
+      "json-schema-faker": ["./node_modules/json-schema-faker/dist/index.d.ts"]
     },
     "strict": true,
     "esModuleInterop": true,
