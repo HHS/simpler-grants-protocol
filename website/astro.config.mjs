@@ -99,6 +99,7 @@ export default defineConfig({
           items: [
             { label: "Getting started", link: "getting-started" },
             { label: "About CommonGrants", link: "about" },
+            { label: "Community stewardship group", link: "community" },
           ],
         },
         {

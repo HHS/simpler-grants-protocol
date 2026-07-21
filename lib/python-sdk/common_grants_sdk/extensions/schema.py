@@ -23,6 +23,7 @@ from typing import (
     Optional,
     TypeGuard,
     TypeVar,
+    cast,
     get_args,
     get_origin,
     overload,
@@ -390,16 +391,23 @@ def schema(
             common_schema=common_schema,
             source_schema=source_schema,
         )
+        # impl params are Any by design — the overloads above are the static
+        # contract; cast the ctor args pyright can't reconcile with its generics.
         return SchemaWithTransforms(
-            schema_name, common_schema, custom_fields, source_schema, to_fn, from_fn
+            schema_name,
+            common_schema,
+            custom_fields,
+            cast(Any, source_schema),
+            to_fn,
+            cast(Any, from_fn),
         )
     if to_common is not None:
         return SchemaWithTransforms(
             schema_name,
             common_schema,
             custom_fields,
-            source_schema,
+            cast(Any, source_schema),
             to_common,
-            from_common,
+            cast(Any, from_common),
         )
     return SchemaOnly(schema_name, common_schema, custom_fields)

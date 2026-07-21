@@ -726,6 +726,7 @@ components:
         mapping:
           dateRange: '#/components/schemas/CommonGrants.Fields.DateRangeEvent'
           other: '#/components/schemas/CommonGrants.Fields.OtherEvent'
+          singleDate: '#/components/schemas/CommonGrants.Fields.SingleDateEvent'
       description: Base model for all events
     CommonGrants.Fields.EventType:
       type: string

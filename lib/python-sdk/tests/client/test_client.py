@@ -12,6 +12,20 @@ from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.schemas.pydantic.pagination import PaginatedResultsInfo
 from common_grants_sdk.schemas.pydantic.responses import Paginated
+from common_grants_sdk.extensions import (
+    PluginMeta,
+    PluginRoutes,
+    PluginSchemas,
+    ResourceRoutes,
+    define_plugin,
+    schema,
+)
+from common_grants_sdk.extensions.types import FilterError
+from common_grants_sdk.schemas.pydantic.models import OpportunityBase
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    OpportunityFilters,
+    StringArray,
+)
 from pydantic import ValidationError
 
 
@@ -27,6 +41,59 @@ class TestClient:
             assert client.config.base_url == "https://api.example.com"
             assert client.auth == auth
             assert isinstance(client.opportunities, type(client.opportunities))
+
+    def test_define_plugin_validates_routes(self):
+        """define_plugin validates routes at definition, so a bad registration
+        fails for the author before a consumer ever builds a client.
+
+        The typed carrier makes a misspelled resource/method a static error, so the
+        remaining runtime check is that a registered custom filter's value type is a
+        valid filter model. A custom key annotated with a non-filter type
+        (``region: int``) is the genuinely-invalid registration.
+        """
+
+        class BadFilters(OpportunityFilters, total=False):
+            region: int  # not a filter value model
+
+        with pytest.raises(FilterError):
+            define_plugin(
+                PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
+                routes=PluginRoutes(opportunities=ResourceRoutes(search=BadFilters)),
+                meta=PluginMeta(name="t", source_system="t"),
+            )
+
+    def test_bind_routes_backstops_bad_routes(self):
+        """_bind_routes re-validates as a backstop for hand-built clients that
+        bypass define_plugin's definition-time check."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+
+            class BadFilters(OpportunityFilters, total=False):
+                region: int  # not a filter value model
+
+            client = Client(config=config)
+            with pytest.raises(FilterError):
+                client._bind_routes(
+                    PluginRoutes(opportunities=ResourceRoutes(search=BadFilters))
+                )
+
+    def test_get_client_accepts_valid_routes(self):
+        """A valid typed routes carrier binds through get_client (no raise)."""
+        with patch("common_grants_sdk.client.client.httpx.Client"):
+            config = Config(base_url="https://api.example.com", api_key="test-key")
+
+            class OppSearchFilters(OpportunityFilters, total=False):
+                region: StringArray
+
+            plugin = define_plugin(
+                PluginSchemas(Opportunity=schema(common_schema=OpportunityBase)),
+                routes=PluginRoutes(
+                    opportunities=ResourceRoutes(search=OppSearchFilters)
+                ),
+                meta=PluginMeta(name="t", source_system="t"),
+            )
+            client = plugin.get_client(config)
+            assert client._routes.opportunities.search is OppSearchFilters
 
     def test_client_initialization_defaults_auth(self, monkeypatch):
         """Test client initialization with default auth from config."""
@@ -400,7 +467,11 @@ def sample_get_response(sample_item_data):
 
 @pytest.fixture
 def sample_search_response(sample_item_data):
-    """Create sample search response."""
+    """Create sample search response.
+
+    Search responses are Filtered, so they carry the server's sortInfo and
+    filterInfo envelope alongside items/paginationInfo.
+    """
     return {
         "status": 200,
         "message": "Success",
@@ -411,6 +482,13 @@ def sample_search_response(sample_item_data):
             "totalItems": 2,
             "totalPages": 1,
         },
+        "sortInfo": {
+            "sortBy": "lastModifiedAt",
+            "sortOrder": "desc",
+            "customSortBy": None,
+            "errors": [],
+        },
+        "filterInfo": {"filters": {}, "errors": []},
     }
 
 
@@ -1116,6 +1194,13 @@ class TestClientSearchSomeItems:
                     "totalItems": 0,
                     "totalPages": 1,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             mock_response = Mock()
             mock_response.raise_for_status = Mock()
@@ -1228,6 +1313,13 @@ class TestClientSearchAllItems:
                     "totalItems": 5,
                     "totalPages": 3,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             page2_response = {
                 "status": 200,
@@ -1239,6 +1331,13 @@ class TestClientSearchAllItems:
                     "totalItems": 5,
                     "totalPages": 3,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             page3_response = {
                 "status": 200,
@@ -1250,6 +1349,13 @@ class TestClientSearchAllItems:
                     "totalItems": 5,
                     "totalPages": 3,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
 
             def mock_post(*args, **kwargs):
@@ -1289,6 +1395,13 @@ class TestClientSearchAllItems:
                     "totalItems": 0,
                     "totalPages": 1,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             mock_response = Mock()
             mock_response.raise_for_status = Mock()
@@ -1341,6 +1454,13 @@ class TestClientSearchAllItems:
                     "totalItems": 5,
                     "totalPages": 3,
                 },
+                "sortInfo": {
+                    "sortBy": "lastModifiedAt",
+                    "sortOrder": "desc",
+                    "customSortBy": None,
+                    "errors": [],
+                },
+                "filterInfo": {"filters": {}, "errors": []},
             }
             error_data = {"status": 500, "message": "Server error", "errors": []}
             error_response = Mock()

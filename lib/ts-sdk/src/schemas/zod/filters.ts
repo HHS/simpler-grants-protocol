@@ -106,3 +106,12 @@ export const MoneyRangeFilterSchema = z.object({
     max: MoneySchema,
   }),
 });
+
+// ############################################################################
+// Boolean filters
+// ############################################################################
+
+export const BooleanComparisonFilterSchema = z.object({
+  operator: EquivalenceOperatorsEnum,
+  value: z.boolean(),
+});

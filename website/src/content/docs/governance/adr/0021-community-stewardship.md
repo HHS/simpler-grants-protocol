@@ -3,6 +3,10 @@ title: "Community Stewardship Model"
 description: "ADR documenting the decision to pursue a phased transition to community stewardship with a neutral host and participation-based governance"
 ---
 
+:::note[Detailed governance model]
+The detailed governance mechanics for this stewardship model are defined in [ADR 0025: Stewardship governance model](/governance/adr/0025-stewardship-governance-model/).
+:::
+
 The CommonGrants protocol requires a stewardship model that supports early-stage development while enabling long-term sustainability, neutrality, and broad adoption across the grants ecosystem. As the protocol matures beyond its initial federal use case, we need to determine who should host and steward the protocol over time and how stewardship authority should be allocated among participating stakeholders.
 
 ## Decision

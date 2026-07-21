@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { buildTransforms, definePlugin, type PluginMeta, type TransformResult } from "@/extensions";
+import {
+  buildTransforms,
+  definePlugin,
+  type PluginMeta,
+  type TransformResult,
+  type PluginRoutes,
+} from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas/zod/models";
 import { CustomFieldType } from "@/constants";
 
@@ -191,6 +197,52 @@ describe("definePlugin", () => {
       const plugin = definePlugin({});
 
       expect(plugin.meta).toBeUndefined();
+    });
+  });
+
+  // ############################################################################
+  // routes
+  // ############################################################################
+
+  describe("routes", () => {
+    it("passes routes through to plugin.routes unchanged", () => {
+      const routes: PluginRoutes = {
+        opportunities: {
+          search: {
+            filters: {
+              agency: { filterType: "stringArray" },
+              fundingProgram: { filterType: "stringComparison", description: "Filter by program" },
+            },
+          },
+        },
+      };
+
+      const plugin = definePlugin({ routes } as const);
+
+      expect(plugin.routes).toBe(routes);
+    });
+
+    it("plugin.routes is undefined when routes not provided", () => {
+      const plugin = definePlugin({});
+
+      expect(plugin.routes).toBeUndefined();
+    });
+
+    it("routes are accessible for later filter classification (structure round-trip)", () => {
+      const plugin = definePlugin({
+        routes: {
+          opportunities: {
+            search: {
+              filters: {
+                agency: { filterType: "stringArray" },
+              },
+            },
+          },
+        },
+      } as const);
+
+      const filterSpec = plugin.routes?.opportunities?.search?.filters?.agency;
+      expect(filterSpec?.filterType).toBe("stringArray");
     });
   });
 

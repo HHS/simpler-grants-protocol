@@ -24,6 +24,11 @@ jobs:
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v9
 
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
       - name: Install dependencies
         run: make install
 
