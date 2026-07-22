@@ -50,7 +50,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.35.3",
-    "swagger-ui-react": "^5.32.9",
+    "swagger-ui-react": "^5.32.11",
     "tsx": "^4.23.1",
     "typescript": "catalog:",
     "typespec-versioning-changelog": "workspace:*",
@@ -81,7 +81,7 @@
     "starlight-links-validator": "^0.24.0",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
-    "wrangler": "^4.112.0"
+    "wrangler": "^4.113.0"
   },
   "overrides": {
     "js-yaml": "^4.3.0"
