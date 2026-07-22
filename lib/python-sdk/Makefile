@@ -23,6 +23,6 @@ check-lint:
 	$(RUNTIME_PREFIX) ruff check .
 
 check-types:
-	$(RUNTIME_PREFIX) mypy .
+	$(RUNTIME_PREFIX) pyright
 
 checks: check-format check-lint check-types

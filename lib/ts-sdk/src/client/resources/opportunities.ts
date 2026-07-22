@@ -3,23 +3,23 @@
  */
 
 import { z } from "zod";
-import type { Client, FetchManyOptions } from "./client";
-import type {
-  OpportunityBase,
-  OppStatusOptions,
-  OppFilters,
-  OppSearchRequest,
-  Paginated,
-  Filtered,
-} from "../types";
+import type { Client, FetchManyOptions } from "../client";
+import type { OpportunityBase, OppStatusOptions, OppFilters, OppSearchRequest } from "../../types";
 import {
   OkSchema,
   PaginatedSchema,
   FilteredSchema,
   OpportunityBaseSchema,
   OppFiltersSchema,
-} from "../schemas";
-import { ArrayOperator } from "../constants";
+} from "../../schemas";
+import { ArrayOperator } from "../../constants";
+import { classifyFilters, validateRoutes } from "../../extensions/custom-filters";
+import type { CustomFilterInput } from "../../extensions/custom-filters";
+import { FilterError } from "../../extensions/types";
+import type { CustomFilterType, PluginRoutes } from "../../extensions/types";
+import { parseBatch } from "../results";
+import type { ListResult, OnParseError, SearchResult } from "../results";
+import { Resource } from "./base";
 
 // =============================================================================
 // Schema type constraint
@@ -39,12 +39,51 @@ import { ArrayOperator } from "../constants";
 type OppSchema = z.ZodType<OpportunityBase, z.ZodTypeDef, unknown>;
 
 // =============================================================================
+// Custom-filter bag typing (routes-driven)
+// =============================================================================
+
+/** Raw `{ operator, value }` filter object, as produced by the `F.*` helpers. */
+type RawFilter = { operator: string; value: unknown };
+
+/**
+ * The declared filter specs for `opportunities.search` in a routes type.
+ * `definePlugin` preserves the literal `routes` type (its `const TRoutes` generic),
+ * so a plugin defined inline yields concrete filter-name and filterType literals here.
+ */
+type RouteFilters<R extends PluginRoutes> = R extends {
+  opportunities: { search: { filters: infer Fs } };
+}
+  ? Fs
+  : never;
+
+/** The declared custom-filter names for `opportunities.search` in a routes type. */
+type CustomFilterNames<R extends PluginRoutes> = Extract<keyof RouteFilters<R>, string>;
+
+/**
+ * Typed filter bag for `search({ filters })`.
+ *
+ * Declared filter names surface in editor autocomplete with the value typed by
+ * their declared `filterType` (a wrong value family is a compile error), while
+ * arbitrary keys remain accepted — the spec supports ad-hoc (escape-hatch) filters,
+ * so an unknown key cannot be rejected at the type level without dropping ad-hoc
+ * support (a typo is structurally an intentional ad-hoc key). Runtime validation
+ * backstops both cases.
+ */
+export type CustomFilterBag<R extends PluginRoutes> = {
+  [K in CustomFilterNames<R>]?: RouteFilters<R>[K] extends {
+    filterType: infer FT extends CustomFilterType;
+  }
+    ? CustomFilterInput<FT>
+    : RawFilter;
+} & Record<string, RawFilter>;
+
+// =============================================================================
 // Options types (schema in options for consistent API)
 // =============================================================================
 
 /** Options for getting a single opportunity */
 export interface GetOptions<S extends OppSchema = typeof OpportunityBaseSchema> {
-  /** Zod schema to parse and type the response. Defaults to `OpportunityBaseSchema`. */
+  /** Zod schema to parse and type the response. Defaults to the bound (plugin or base) schema. */
   schema?: S;
 }
 
@@ -52,19 +91,30 @@ export interface GetOptions<S extends OppSchema = typeof OpportunityBaseSchema> 
 export interface ListOptions<
   S extends OppSchema = typeof OpportunityBaseSchema,
 > extends FetchManyOptions<z.infer<S>> {
-  /** Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`. */
+  /** Zod schema to parse and type each item. Defaults to the bound (plugin or base) schema. */
   schema?: S;
 }
 
 /** Options for searching opportunities */
 export interface SearchOptions<
   S extends OppSchema = typeof OpportunityBaseSchema,
+  R extends PluginRoutes = PluginRoutes,
 > extends FetchManyOptions<z.infer<S>> {
   /** Text query to search for in opportunity titles and descriptions */
   query?: string;
-  /** Filter by opportunity statuses */
+  /**
+   * Filter by opportunity statuses (shorthand for the `status` filter).
+   * @deprecated Pass status through `filters` instead; this shorthand will be
+   * removed in a future release.
+   */
   statuses?: OppStatusOptions[];
-  /** Zod schema to parse and type each item. Defaults to `OpportunityBaseSchema`. */
+  /**
+   * Flat custom-filter bag (filter name → `{ operator, value }`, e.g. built with `F.*`).
+   * Classified into the `OppFilters` request body via `classifyFilters` when present;
+   * an invalid value on any key throws `FilterError` before the request is sent.
+   */
+  filters?: CustomFilterBag<R>;
+  /** Zod schema to parse and type each item. Defaults to the bound (plugin or base) schema. */
   schema?: S;
 }
 
@@ -82,12 +132,27 @@ export interface SearchOptions<
  * const list = await client.opportunities.list();
  * ```
  */
-export class Opportunities {
-  private readonly client: Client;
+export class Opportunities<
+  R extends PluginRoutes = PluginRoutes,
+  TItem extends OpportunityBase = OpportunityBase,
+> extends Resource<TItem> {
   private readonly basePath = "/common-grants/opportunities";
 
-  constructor(client: Client) {
-    this.client = client;
+  constructor(client: Client, boundSchema?: z.ZodType<TItem, z.ZodTypeDef, unknown>, routes?: R) {
+    super(
+      client,
+      boundSchema ?? (OpportunityBaseSchema as unknown as z.ZodType<TItem, z.ZodTypeDef, unknown>),
+      routes
+    );
+    // Backstop for direct construction (bypassing definePlugin): an invalid
+    // registration — e.g. a filter named after a default field — throws here
+    // instead of silently shadowing the default bucket at classification time.
+    if (routes) validateRoutes(routes);
+  }
+
+  /** Per-call override wins; otherwise the bound (plugin or base) schema. */
+  private resolveSchema<S extends OppSchema>(override?: S): S {
+    return override ?? (this.boundSchema as unknown as S);
   }
 
   // ############################################################################
@@ -97,10 +162,13 @@ export class Opportunities {
   /**
    * Get a specific opportunity by ID.
    *
+   * A single requested entity that does not parse is a real error, so `get()`
+   * is fail-hard: a malformed response throws.
+   *
    * @param id - The opportunity ID
    * @param options - Optional settings; use `schema` for typed custom field access.
    * @returns The opportunity data
-   * @throws {Error} If the request fails
+   * @throws {Error} If the request fails or the response does not parse
    *
    * @example
    * ```ts
@@ -116,12 +184,12 @@ export class Opportunities {
    * console.log(typed.customFields?.legacyId?.value); // typed as number
    * ```
    */
-  async get<S extends OppSchema = typeof OpportunityBaseSchema>(
+  async get<S extends OppSchema = z.ZodType<TItem, z.ZodTypeDef, unknown>>(
     id: string,
     options?: GetOptions<S>
   ): Promise<z.infer<S>> {
-    const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
-    const response = await this.client.get(`${this.basePath}/${id}`);
+    const schema = this.resolveSchema(options?.schema);
+    const response = await this.client.get(`${this.basePath}/${encodeURIComponent(id)}`);
 
     if (!response.ok) {
       throw new Error(`Failed to get opportunity ${id}: ${response.status} ${response.statusText}`);
@@ -140,9 +208,12 @@ export class Opportunities {
   /**
    * List opportunities with auto-pagination by default.
    *
+   * Rows are parsed individually: valid rows land in `items`, per-row failures
+   * in `errors` (set `onParseError: "throw"` to fail hard on the first bad row).
+   *
    * @param options - Pagination and schema options. If `page` is specified, fetches only that page.
    *                  Use `schema` for typed custom field access.
-   * @returns Paginated list of opportunities
+   * @returns Paginated list of opportunities plus per-row parse failures
    * @throws {Error} If the request fails
    *
    * @example
@@ -160,10 +231,10 @@ export class Opportunities {
    * const typed = await client.opportunities.list({ schema: OpportunitySchema });
    * ```
    */
-  async list<S extends OppSchema = typeof OpportunityBaseSchema>(
+  async list<S extends OppSchema = z.ZodType<TItem, z.ZodTypeDef, unknown>>(
     options?: ListOptions<S>
-  ): Promise<Paginated<z.infer<S>>> {
-    const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
+  ): Promise<ListResult<z.infer<S>>> {
+    const schema = this.resolveSchema(options?.schema);
 
     // If page is specified, fetch only that page
     if (options?.page !== undefined) {
@@ -180,14 +251,21 @@ export class Opportunities {
       }
 
       const json = await response.json();
-      return PaginatedSchema(schema).parse(json) as Paginated<z.infer<S>>;
+      // Validate the envelope with raw rows, then partition rows individually.
+      const envelope = PaginatedSchema(z.unknown()).parse(json);
+      const { items, errors } = parseBatch(
+        schema,
+        envelope.items as unknown[],
+        options?.onParseError ?? "collect"
+      );
+      return { ...envelope, items, errors } as ListResult<z.infer<S>>;
     }
 
     // Auto-paginate by default
     return this.client.fetchMany(this.basePath, {
       ...options,
       schema,
-    });
+    }) as Promise<ListResult<z.infer<S>>>;
   }
 
   // ############################################################################
@@ -199,8 +277,16 @@ export class Opportunities {
    *
    * Supports auto-pagination by default. If `page` is specified, only fetches that page.
    *
+   * Filter validation is fail-fast: an invalid value on any filter — standard,
+   * registered custom, or ad-hoc — throws `FilterError` before the request is
+   * sent. A caught `FilterError`'s `.sourceValue` may carry PII; redact before
+   * logging. `filterInfo.errors` on the response carries server-returned errors only.
+   * Rows are parsed individually: valid rows land in `items`, per-row failures
+   * in `errors` (set `onParseError: "throw"` to fail hard on the first bad row).
+   *
    * @param options - Search options including query text, status filters, pagination, and schema
-   * @returns Filtered list of opportunities
+   * @returns Filtered list of opportunities plus per-row parse failures
+   * @throws {FilterError} If a filter value is invalid (before any request)
    * @throws {Error} If the request fails
    *
    * @example
@@ -235,12 +321,13 @@ export class Opportunities {
    * const typed = await client.opportunities.search({ query: "test", schema: OpportunitySchema });
    * ```
    */
-  async search<S extends OppSchema = typeof OpportunityBaseSchema>(
-    options?: SearchOptions<S>
-  ): Promise<Filtered<z.infer<S>, OppFilters>> {
-    const schema = options?.schema ?? (OpportunityBaseSchema as unknown as S);
+  async search<S extends OppSchema = z.ZodType<TItem, z.ZodTypeDef, unknown>>(
+    options?: SearchOptions<S, R>
+  ): Promise<SearchResult<z.infer<S>>> {
+    const schema = this.resolveSchema(options?.schema);
 
-    // Build the base search body (without pagination)
+    // Build the base search body (without pagination). Invalid filter values
+    // throw FilterError here — before any request is sent.
     const searchBody = this.buildSearchBody(options);
 
     // If page is specified, fetch only that page
@@ -250,7 +337,8 @@ export class Opportunities {
         options.page,
         options.pageSize,
         options.signal,
-        schema
+        schema,
+        options?.onParseError
       );
     }
 
@@ -264,30 +352,47 @@ export class Opportunities {
       schema,
     });
 
-    return result as Filtered<z.infer<S>, OppFilters>;
+    return result as unknown as SearchResult<z.infer<S>>;
   }
 
   // ############################################################################
   // Private helpers
   // ############################################################################
 
-  /** Builds the search request body from options */
-  private buildSearchBody(options?: SearchOptions<OppSchema>): OppSearchRequest {
+  /**
+   * Builds the search request body from options.
+   *
+   * Filter classification is fail-fast: `classifyFilters` throws `FilterError`
+   * on the first invalid value, so a body is only produced for valid input.
+   */
+  private buildSearchBody(options?: SearchOptions<OppSchema, R>): OppSearchRequest {
     const body: OppSearchRequest = {};
 
     if (options?.query) {
       body.search = options.query;
     }
 
-    // Build filters from statuses shorthand and/or explicit filters
-    if (options?.statuses?.length) {
-      const filters: OppFilters = {};
+    let filters: OppFilters | undefined;
+    if (options?.filters) {
+      filters = classifyFilters(this.routes ?? {}, "opportunities", "search", options.filters);
+    }
 
+    // statuses shorthand → status default field (augments any classified filters)
+    if (options?.statuses?.length) {
+      if (filters?.status !== undefined) {
+        throw new FilterError(
+          "specified via both the statuses shorthand and the filters argument; pass one or the other",
+          { path: "filters.status", sourceValue: options.statuses }
+        );
+      }
+      filters = filters ?? {};
       filters.status = {
         operator: ArrayOperator.in,
         value: options.statuses,
       };
+    }
 
+    if (filters) {
       body.filters = filters;
     }
 
@@ -298,10 +403,11 @@ export class Opportunities {
   private async fetchSearchPage<S extends OppSchema>(
     searchBody: OppSearchRequest,
     page: number,
-    pageSize?: number,
-    signal?: AbortSignal,
-    schema: S = OpportunityBaseSchema as unknown as S
-  ): Promise<Filtered<z.infer<S>, OppFilters>> {
+    pageSize: number | undefined,
+    signal: AbortSignal | undefined,
+    schema: S,
+    onParseError?: OnParseError
+  ): Promise<SearchResult<z.infer<S>>> {
     const requestBody: OppSearchRequest = {
       ...searchBody,
       pagination: {
@@ -317,6 +423,14 @@ export class Opportunities {
     }
 
     const json = await response.json();
-    return FilteredSchema(schema, OppFiltersSchema).parse(json) as Filtered<z.infer<S>, OppFilters>;
+    // Validate the envelope with raw rows, then partition rows individually.
+    // filterInfo passes through exactly as the server returned it.
+    const envelope = FilteredSchema(z.unknown(), OppFiltersSchema).parse(json);
+    const { items, errors } = parseBatch(
+      schema,
+      envelope.items as unknown[],
+      onParseError ?? "collect"
+    );
+    return { ...envelope, items, errors } as unknown as SearchResult<z.infer<S>>;
   }
 }

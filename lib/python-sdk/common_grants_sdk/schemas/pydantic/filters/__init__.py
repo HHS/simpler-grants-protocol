@@ -18,6 +18,9 @@ __all__ = [  # noqa: RUF022
     "MoneyComparisonFilter",
     "MoneyRange",
     "MoneyRangeFilter",
+    # Boolean Filters
+    "BooleanComparisonFilter",
+    # Integer Filters
     # Numeric Filters
     "NumberArrayFilter",
     "NumberComparisonFilter",
@@ -26,9 +29,20 @@ __all__ = [  # noqa: RUF022
     # Opportunity Filters
     "OppDefaultFilters",
     "OppFilters",
+    "OpportunityFilters",
     # String Filters
     "StringArrayFilter",
     "StringComparisonFilter",
+    # Typed authoring-DX aliases. Range filters have no clean alias: ``DateRange``
+    # / ``MoneyRange`` / ``NumberRange`` (above) are the range *value* sub-models,
+    # so range fields are typed with the explicit ``*RangeFilter`` names instead.
+    "BooleanComparison",
+    "DateComparison",
+    "MoneyComparison",
+    "NumberArray",
+    "NumberComparison",
+    "StringArray",
+    "StringComparison",
 ]
 
 from .base import (
@@ -39,6 +53,7 @@ from .base import (
     RangeOperator,
     StringOperator,
 )
+from .boolean import BooleanComparisonFilter
 from .date import (
     DateComparisonFilter,
     DateRange,
@@ -57,8 +72,16 @@ from .numeric import (
     NumberRangeFilter,
 )
 from .opportunity import (
+    BooleanComparison,
+    DateComparison,
+    MoneyComparison,
+    NumberArray,
+    NumberComparison,
     OppDefaultFilters,
     OppFilters,
+    OpportunityFilters,
+    StringArray,
+    StringComparison,
 )
 from .string import (
     StringArrayFilter,

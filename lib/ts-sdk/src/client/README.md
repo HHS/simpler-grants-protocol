@@ -204,11 +204,11 @@ const response = await client.fetch("/custom/endpoint", {
 
 ### Opportunities resource
 
-| Method                                                         | Route                                      | Description                                                                             |
-| -------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [`client.opportunities.get(id, options?)`](./opportunities.ts) | `GET /common-grants/opportunities/{id}`    | Fetch a single opportunity by ID. Accepts an optional `schema` for typed custom fields. |
-| [`client.opportunities.list(options?)`](./opportunities.ts)    | `GET /common-grants/opportunities`         | List opportunities with auto-pagination. Pass `page` to fetch a specific page instead.  |
-| [`client.opportunities.search(options?)`](./opportunities.ts)  | `POST /common-grants/opportunities/search` | Search with text query, status filters, and auto-pagination.                            |
+| Method                                                                   | Route                                      | Description                                                                             |
+| ------------------------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| [`client.opportunities.get(id, options?)`](./resources/opportunities.ts) | `GET /common-grants/opportunities/{id}`    | Fetch a single opportunity by ID. Accepts an optional `schema` for typed custom fields. |
+| [`client.opportunities.list(options?)`](./resources/opportunities.ts)    | `GET /common-grants/opportunities`         | List opportunities with auto-pagination. Pass `page` to fetch a specific page instead.  |
+| [`client.opportunities.search(options?)`](./resources/opportunities.ts)  | `POST /common-grants/opportunities/search` | Search with text query, status filters, and auto-pagination.                            |
 
 ### Auth namespace
 

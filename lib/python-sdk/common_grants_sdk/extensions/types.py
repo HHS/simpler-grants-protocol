@@ -3,9 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, Literal, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Literal,
+    Mapping,
+)
 
 from pydantic import BaseModel, ConfigDict, Field
+from typing_extensions import TypeVar
+
+from ..schemas.pydantic.filters.opportunity import OpportunityFilters
 
 T = TypeVar("T")
 
@@ -14,6 +23,35 @@ PluginCapability = Literal["customFields", "customFilters", "transforms"]
 
 # Type aliases
 Handler = Callable[[Any, Any], Any]
+
+# Custom-filter registration is a typed carrier: an author writes
+# ``PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters))`` where the
+# ``search`` slot holds the filter TypedDict class directly. A misspelled
+# resource/method is a type error; registered keys are recovered at runtime with
+# ``get_type_hints(route.search)``.
+FiltersT = TypeVar("FiltersT", bound=Mapping[str, Any], default=OpportunityFilters)
+
+
+@dataclass(frozen=True)
+class ResourceRoutes(Generic[FiltersT]):
+    """Custom-filter registration for one resource's routes.
+
+    ``search`` holds the filter TypedDict class an author defined (e.g.
+    ``OppSearchFilters``), or ``None`` when the resource registers no custom
+    filters. A single resource (opportunities) is supported today.
+    """
+
+    search: type[FiltersT] | None = None
+
+
+@dataclass(frozen=True)
+class PluginRoutes(Generic[FiltersT]):
+    """Typed route registration passed to ``define_plugin(routes=...)``.
+
+    One slot per filter-capable resource (opportunities today).
+    """
+
+    opportunities: ResourceRoutes[FiltersT]
 
 
 class PassthroughModel(BaseModel):
@@ -38,6 +76,34 @@ class TransformError(Exception):
     Note: source_value may contain PII when transforming applicant data.
     Adopters are responsible for redacting it before logging or re-raising.
     The SDK does not redact by default.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        path: str | None = None,
+        handler: str | None = None,
+        source_value: Any = None,
+        cause: BaseException | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.path = path
+        self.handler = handler
+        self.source_value = source_value
+        self.cause = cause
+
+
+class FilterError(Exception):
+    """Structured error raised by custom-filter validation.
+
+    Raised by validate_routes (registration time) and validate_filter_call /
+    classify_filters (call time). Carries field path, handler name, source
+    value, and underlying cause so consumers can reason about failures
+    programmatically without parsing error text.
+
+    Note: source_value may contain PII. Adopters are responsible for redacting
+    it before logging or re-raising. The SDK does not redact by default.
     """
 
     def __init__(
