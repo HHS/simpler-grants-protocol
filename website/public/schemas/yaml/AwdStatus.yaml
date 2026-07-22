@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwdStatus.yaml
+type: object
+properties:
+  value:
+    $ref: AwdStatusOptions.yaml
+    description: The status of the award, from a predefined set of options
+  customValue:
+    type: string
+    description: A custom value for the status
+  description:
+    type: string
+    description: A human-readable description of the status
+required:
+  - value
+unevaluatedProperties:
+  not: {}
+examples:
+  - value: awarded
+    description: Award has been issued and funds are being disbursed.
+  - value: custom
+    customValue: suspended
+    description: Disbursements are paused pending a compliance review.
+description: The status of the award

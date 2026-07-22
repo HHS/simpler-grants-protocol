@@ -8,7 +8,7 @@ applicationBase:
     code: |
       {
         "id": "083b4567-e89d-42c8-a439-6c1234567890",
-        "name": "Example Application",
+        "title": "Example Application",
         "competitionId": "083b4567-e89d-42c8-a439-6c1234567890",
         "formResponses": {
           // Form responses would be here
@@ -34,8 +34,20 @@ applicationBase:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
+      startLine: 20
+      endLine: 51
+appRef:
+  example:
+    file:
+      path: "website/public/schemas/yaml/AppRef.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/AppRef.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/application.tsp"
       startLine: 3
-      endLine: 37
+      endLine: 18
 appStatus:
   example:
     code: |
@@ -49,8 +61,8 @@ appStatus:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 43
-      endLine: 55
+      startLine: 57
+      endLine: 60
 appStatusOptions:
   example:
     code: '"submitted"'
@@ -60,8 +72,8 @@ appStatusOptions:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 61
-      endLine: 75
+      startLine: 66
+      endLine: 80
 appFormResponse:
   example:
     code: |
@@ -95,8 +107,8 @@ appFormResponse:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/application.tsp"
-      startLine: 81
-      endLine: 90
+      startLine: 86
+      endLine: 95
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -122,6 +134,26 @@ Base model for an application to a funding opportunity.
 ### Changelog
 
 <SchemaChangelog schema="ApplicationBase" />
+
+## AppRef
+
+A reference to an application, previewing the key fields a consumer needs to identify it and look it up or join it to another response. Appears wherever another record points to an application, such as the application an [award](/protocol/models/award) resulted from.
+
+### Table
+
+<SchemaTable filePath={frontmatter.appRef.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.appRef.example}
+  jsonSchema={frontmatter.appRef.jsonSchema}
+  typeSpec={frontmatter.appRef.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="AppRef" />
 
 ## AppStatus
 

@@ -3,7 +3,10 @@ import "@typespec/json-schema";
 // Import individual schemas to provide a consistent interface
 // and make them available throughout the namespace
 import "./opportunity/index.tsp";
+import "./award.tsp";
 import "./organization.tsp";
+import "./revision.tsp";
+import "./organization-sync.tsp";
 import "./person.tsp";
 import "./proposal.tsp";
 import "./application.tsp";

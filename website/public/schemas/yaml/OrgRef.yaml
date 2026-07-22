@@ -1,0 +1,32 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgRef.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: The organization's unique identifier.
+  name:
+    type: string
+    description: The organization's legal name as registered with relevant authorities.
+  identifiers:
+    $ref: OrgIds.yaml
+    description: Identifiers associated with the organization, keyed by registry code.
+required:
+  - id
+  - name
+unevaluatedProperties:
+  not: {}
+examples:
+  - id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567
+    name: Health Resources and Services Administration
+    identifiers:
+      otherIds:
+        org:grants.gov:agency:
+          registry:
+            code: org:grants.gov:agency
+          id: HRSA
+description: |-
+  A reference to an organization, previewing the key fields a consumer needs
+  to identify it and look it up or join it to another response. Appears
+  wherever another record points to an organization, such as an award's funder
+  or recipient.

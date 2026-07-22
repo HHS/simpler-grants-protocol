@@ -1,0 +1,59 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Revision.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: Globally unique id for the revision
+  status:
+    $ref: RevisionStatus.yaml
+    description: The lifecycle status of the change
+  source:
+    type: string
+    description: The source system the change came from
+  patch:
+    description: The merge patch that was submitted
+  snapshot:
+    description: A full snapshot of the record with the change applied
+  createdAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was created.
+  lastModifiedAt:
+    type: string
+    format: date-time
+    description: The timestamp (in UTC) at which the record was last modified.
+required:
+  - id
+  - status
+  - createdAt
+  - lastModifiedAt
+unevaluatedProperties:
+  not: {}
+examples:
+  - id: 01912a8b-7c3d-7890-abcd-ef1234567890
+    status:
+      value: accepted
+      description: The change was applied.
+    source: grants.gov
+    patch:
+      mission: To expand access to community health resources.
+    snapshot:
+      id: 01912a8b-7c3d-7890-abcd-ef1234567890
+      name: Example Nonprofit
+      mission: To expand access to community health resources.
+    createdAt: 2026-06-20T14:30:00Z
+    lastModifiedAt: 2026-06-20T14:30:00Z
+description: |-
+  A record of a single change to a resource.
+
+  A revision captures the merge patch that was submitted, a snapshot of the
+  record with the change applied, and the lifecycle status of the change.
+  Revisions make up a change ledger: `createdAt` marks when the change was
+  submitted and orders the ledger, while `lastModifiedAt` marks when the
+  `status` last changed. The submission facts (`patch` and `source`) never
+  change, but the `status` can transition until it reaches a terminal state.
+
+  Here `patch` and `snapshot` are open objects. A concrete resource binds its
+  own types with `RevisionT` (see `OrgRevision`, which binds `OrganizationBase`
+  and `OrgPatchData`).

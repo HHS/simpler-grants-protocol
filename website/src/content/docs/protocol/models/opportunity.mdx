@@ -14,7 +14,7 @@ opportunityBase:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
       startLine: 42
-      endLine: 78
+      endLine: 73
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_base.py"
@@ -35,8 +35,20 @@ opportunityDetails:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 84
-      endLine: 89
+      startLine: 100
+      endLine: 105
+oppRef:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OppRef.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OppRef.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/opportunity/base.tsp"
+      startLine: 79
+      endLine: 94
 oppStatus:
   example:
     file:
@@ -48,7 +60,7 @@ oppStatus:
     file:
       path: "lib/core/lib/core/models/opportunity/status.tsp"
       startLine: 25
-      endLine: 38
+      endLine: 29
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_status.py"
@@ -173,6 +185,26 @@ A funding opportunity with additional details, like available competitions.
 ### Changelog
 
 <SchemaChangelog schema="OpportunityDetails" />
+
+## OppRef
+
+A reference to an opportunity, previewing the key fields a consumer needs to identify it and look it up or join it to another response. Appears wherever another record points to an opportunity, such as the opportunity an [award](/protocol/models/award) resulted from.
+
+### Table
+
+<SchemaTable filePath={frontmatter.oppRef.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.oppRef.example}
+  jsonSchema={frontmatter.oppRef.jsonSchema}
+  typeSpec={frontmatter.oppRef.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OppRef" />
 
 ## OppStatus
 

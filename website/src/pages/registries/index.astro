@@ -1,0 +1,82 @@
+---
+import { loadAllRegistries, getFilterOptions } from "@/lib/registries";
+import CatalogPage from "@/layouts/CatalogPage.astro";
+import RegistryCard from "@/components/registries/RegistryCard.astro";
+
+const registries = loadAllRegistries();
+const {
+  schemas: allSchemas,
+  scopes: allScopes,
+  kinds: allKinds,
+  statuses: allStatuses,
+} = getFilterOptions();
+---
+
+<CatalogPage
+  title="ID Registry Catalog"
+  description="A searchable index of the registries that issue identifiers used across CommonGrants models"
+  searchLabel="Search registries"
+  searchPlaceholder="Search by code, name, issuer, or object..."
+  filters={[
+    {
+      id: "schema-filter",
+      label: "Schema",
+      options: allSchemas,
+      dataAttribute: "schema",
+      placeholder: "Any schema",
+    },
+    {
+      id: "scope-filter",
+      label: "Scope",
+      options: allScopes,
+      dataAttribute: "scope",
+      placeholder: "Any scope",
+    },
+    {
+      id: "kind-filter",
+      label: "Kind",
+      options: allKinds,
+      dataAttribute: "kind",
+      placeholder: "Any kind",
+    },
+    {
+      id: "status-filter",
+      label: "Status",
+      options: allStatuses,
+      dataAttribute: "status",
+      placeholder: "Any status",
+    },
+  ]}
+  noResultsMessage="No registries match your search criteria."
+  stats={[
+    { count: Object.keys(registries).length, label: "registries" },
+    { count: allSchemas.length, label: "schemas" },
+    { count: allKinds.length, label: "kinds" },
+  ]}
+>
+  <p slot="intro" class="intro">
+    Each registry issues an identifier used to match records across systems.
+    Registries are keyed by a three-part <code
+      >&lt;schema&gt;:&lt;scope&gt;:&lt;prop&gt;</code
+    >
+    code (for example, <code>org:us:ein</code> for the Organization schema), which
+    doubles as the map key in an identifier collection. For the full rationale, see{
+      " "
+    }
+    <a href="/governance/adr/0023-org-ids/"
+      >ADR-0023: Organization identifiers</a
+    >.
+  </p>
+  {
+    Object.values(registries)
+      .sort((a, b) => a.code.localeCompare(b.code))
+      .map((registry) => <RegistryCard registry={registry} />)
+  }
+</CatalogPage>
+
+<style>
+  .intro {
+    margin-bottom: 2rem;
+    color: var(--sl-color-gray-2);
+  }
+</style>

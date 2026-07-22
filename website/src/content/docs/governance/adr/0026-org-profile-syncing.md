@@ -85,7 +85,7 @@ Successful responses use the standard CommonGrants envelope: `Responses.Ok<T>` w
 
 | Verb | Path            | Purpose              | Scope      |
 | ---- | --------------- | -------------------- | ---------- |
-| GET  | `/orgs`         | List orgs            | `org:list` |
+| GET  | `/orgs`         | List orgs            | `org:read` |
 | GET  | `/orgs/{orgId}` | Read one org by UUID | `org:read` |
 
 **Write endpoints (a deployment SHOULD support at least one)**
@@ -104,7 +104,7 @@ Successful responses use the standard CommonGrants envelope: `Responses.Ok<T>` w
 <details>
 <summary>List orgs: `GET /orgs`</summary>
 
-Required scope: `org:list`. By default this returns every organization the caller can view, which is likely the full set for a public directory. Results are paginated per [ADR-0011](/governance/adr/0011-pagination/), and each item is a summary that includes the org's identifier collection. To look up an org by an external identifier, filter with `registry` and `id`, like `?registry=us:ein&id=123456789` (see [ADR-0023](/governance/adr/0023-org-ids/)).
+Required scope: `org:read`. By default this returns every organization the caller can view, which is likely the full set for a public directory. Results are paginated per [ADR-0011](/governance/adr/0011-pagination/), and each item is an organization record, including its identifier collection. To look up an org by an external identifier, filter with `registry` and `id`, like `?registry=us:ein&id=123456789` (see [ADR-0023](/governance/adr/0023-org-ids/)).
 
 Request:
 
@@ -128,7 +128,7 @@ Response:
       }
     }
   ],
-  "pagination": { "page": 1, "pageSize": 50, "totalItems": 1 }
+  "paginationInfo": { "page": 1, "pageSize": 50, "totalItems": 1 }
 }
 ```
 
@@ -231,8 +231,8 @@ Response: `200 OK`. Like every write, the result is a change in the standard env
   "status": 200,
   "message": "Change applied",
   "data": {
-    "id": "ch_01912a8b",
-    "status": "accepted",
+    "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+    "status": { "value": "accepted" },
     "datasetVersion": 9,
     "patch": {
       "name": "Example Nonprofit (Renamed)",
@@ -278,7 +278,7 @@ Response: `202 Accepted`, with the change in the standard envelope. A receiver t
 
 ```
 202 Accepted
-Location: /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890/changes/ch_01912a8b
+Location: /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890/changes/01926d3f-8a2b-7c4e-9d01-23456789abcd
 ```
 
 ```json
@@ -286,8 +286,8 @@ Location: /common-grants/orgs/01912a8b-7c3d-7890-abcd-ef1234567890/changes/ch_01
   "status": 202,
   "message": "Change accepted for review",
   "data": {
-    "id": "ch_01912a8b",
-    "status": "pending",
+    "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+    "status": { "value": "pending" },
     "patch": {
       "mission": "To expand access to community health resources.",
       "socials": { "website": null }
@@ -316,10 +316,10 @@ Response:
 {
   "items": [
     {
-      "id": "ch_01912a8b",
-      "status": "accepted",
+      "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+      "status": { "value": "accepted" },
       "datasetVersion": 9,
-      "modifiedAt": "2026-06-20T14:30:00Z",
+      "lastModifiedAt": "2026-06-20T14:30:00Z",
       "source": "grants.gov",
       "patch": {
         "name": "Example Nonprofit (Renamed)",
@@ -332,10 +332,10 @@ Response:
       }
     },
     {
-      "id": "ch_00a7f2c1",
-      "status": "accepted",
+      "id": "01925c1a-4b3d-7e8f-a012-3456789bcdef",
+      "status": { "value": "accepted" },
       "datasetVersion": 7,
-      "modifiedAt": "2026-03-15T09:00:00Z",
+      "lastModifiedAt": "2026-03-15T09:00:00Z",
       "source": "candid",
       "snapshot": {
         "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
@@ -344,7 +344,7 @@ Response:
       }
     }
   ],
-  "pagination": { "page": 1, "pageSize": 50, "totalItems": 2 }
+  "paginationInfo": { "page": 1, "pageSize": 50, "totalItems": 2 }
 }
 ```
 
@@ -352,12 +352,11 @@ Response:
 
 ### Scope vocabulary
 
-Scopes only name operations. Which organization a token can act on comes from its `org_id` claim, not from the scope string. A token that omits `org_id` can exercise its scopes against every organization the subject can access, so `org:read` or `org:list` with no `org_id` reads or enumerates all of them, as far as the receiver's own policy allows.
+Scopes only name operations. Which organization a token can act on comes from its `org_id` claim, not from the scope string. A token that omits `org_id` can exercise its scopes against every organization the subject can access, so `org:read` with no `org_id` reads all of them, as far as the receiver's own policy allows.
 
 | Scope               | Description                                               |
 | ------------------- | --------------------------------------------------------- |
-| `org:list`          | Enumerate accessible organizations                        |
-| `org:read`          | Read organization profiles                                |
+| `org:read`          | Read organization profiles (list and view)                |
 | `org:write`         | Apply a direct edit (`PATCH /orgs/{orgId}`)               |
 | `org.changes:read`  | Read the changes feed (patches and snapshots)             |
 | `org.changes:write` | Submit a change for review (`POST /orgs/{orgId}/changes`) |
@@ -723,9 +722,9 @@ A `PATCH /orgs/{orgId}` is the direct path: the receiver applies the edit and re
 ```
 POST /orgs/{orgId}/changes
 → 202 Accepted
-  Location: /orgs/{orgId}/changes/ch_01912a8b
+  Location: /orgs/{orgId}/changes/01926d3f-8a2b-7c4e-9d01-23456789abcd
 
-{ "id": "ch_01912a8b", "status": "pending", "patch": { "mission": "..." } }
+{ "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd", "status": { "value": "pending" }, "patch": { "mission": "..." } }
 ```
 
 Both take the same JSON Merge Patch body and both show up in `GET /orgs/{orgId}/changes`, so history is uniform no matter how a write arrived. The two paths use different scopes (`org:write` for `PATCH`, `org.changes:write` for `POST /changes`, mirroring `org.changes:read`), so a deployment can grant a partner the ability to propose changes without granting direct-write access. A deployment can expose whichever entry points fit its trust model:
@@ -938,7 +937,7 @@ A list of full snapshots is the best fit if we
 ```json
 {
   "datasetVersion": 9,
-  "modifiedAt": "2026-06-20T14:30:00Z",
+  "lastModifiedAt": "2026-06-20T14:30:00Z",
   "patch": { "mission": "..." },
   "snapshot": { "name": "...", "mission": "..." }
 }
@@ -1042,13 +1041,20 @@ A change comes back with a `status` in `data`, so the same shape works whether t
 Applied immediately:
 
 ```json
-{ "id": "ch_01912a8b", "status": "accepted", "datasetVersion": 9 }
+{
+  "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+  "status": { "value": "accepted" },
+  "datasetVersion": 9
+}
 ```
 
 Queued for review:
 
 ```json
-{ "id": "ch_01912a8b", "status": "pending" }
+{
+  "id": "01926d3f-8a2b-7c4e-9d01-23456789abcd",
+  "status": { "value": "pending" }
+}
 ```
 
 The full set is `accepted` (applied), `denied` (rejected, with a reason), `pending` (queued for review), or `superseded` (a newer change won), so a submitter doesn't have to know the receiver's workflow ahead of time. A `PATCH` is always `accepted` immediately, so this really governs the `POST /changes` path. How each status maps to an HTTP code is left to the follow-up spec.

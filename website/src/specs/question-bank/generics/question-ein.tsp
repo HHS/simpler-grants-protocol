@@ -24,7 +24,7 @@ namespace QuestionBank.QuestionEin;
     ],
   }
 )
-@example(#{ ein: "12-3456789" })
+@example(#{ ein: "123456789" })
 model QuestionEin {
   /** Employer Identification Number */
   ein: employerTaxId;

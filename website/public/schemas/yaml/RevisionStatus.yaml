@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RevisionStatus.yaml
+type: object
+properties:
+  value:
+    $ref: RevisionStatusOptions.yaml
+    description: The status of the revision, from a predefined set of options
+  customValue:
+    type: string
+    description: A custom value for the status
+  description:
+    type: string
+    description: A human-readable description of the status
+required:
+  - value
+unevaluatedProperties:
+  not: {}
+examples:
+  - value: custom
+    customValue: escalated
+    description: The change was escalated for additional review.
+  - value: accepted
+    description: The change was applied.
+description: |-
+  The status of a revision, including its lifecycle state and an optional
+  human-readable description.

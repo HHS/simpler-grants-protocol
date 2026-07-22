@@ -22,6 +22,32 @@ export function getVersionString(version: Version): string {
 }
 
 /**
+ * Deduplicate a list of versions by their version string.
+ *
+ * A model or property defined via `is`/`extends` on a versioned base inherits
+ * the base's `@added`/`@removed` decorators in addition to its own, so
+ * `getAddedOnVersions`/`getRemovedOnVersions` can report the same version more
+ * than once. An entity can only be added or removed once per version, so
+ * collapse the duplicates while preserving order.
+ *
+ * @param versions - The versions to deduplicate
+ * @returns The versions with duplicate version strings removed
+ */
+export function dedupeVersions(versions: readonly Version[]): Version[] {
+  const seen = new Set<string>();
+  const result: Version[] = [];
+  for (const version of versions) {
+    const versionString = getVersionString(version);
+    if (seen.has(versionString)) {
+      continue;
+    }
+    seen.add(versionString);
+    result.push(version);
+  }
+  return result;
+}
+
+/**
  * Get or create a changes array for a specific schema and version.
  * If changes for the version already exist, return that array.
  * Otherwise, create a new empty array and return it.

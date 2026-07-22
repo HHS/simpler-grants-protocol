@@ -46,42 +46,13 @@ filtered:
         }
       }
   jsonSchema:
-    code: |
-      $schema: https://json-schema.org/draft/2020-12/schema
-      $id: Filtered.yaml
-      type: object
-      properties:
-        items:
-          type: array
-          description: Items from the current page
-        paginationInfo:
-          $ref: PaginatedResultsInfo.yaml
-        sortInfo:
-          $ref: SortedResultsInfo.yaml
-        filterInfo:
-          type: object
-          description: The filters applied to the response items
-          properties:
-            filters:
-              type: object
-              description: The filters applied to the response items
-            errors:
-              type: array
-              items:
-                type: string
-              description: Non-fatal errors that occurred during filtering
-      allOf:
-        - $ref: Success.yaml
-      required:
-        - items
-        - paginationInfo
-        - sortInfo
-        - filterInfo
+    file:
+      path: "website/public/schemas/yaml/Filtered.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 140
-      endLine: 153
+      startLine: 177
+      endLine: 198
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
@@ -121,3 +92,34 @@ A 200 response with a paginated list of filtered items.
   python={frontmatter.filtered.python}
   typescript={frontmatter.filtered.typescript}
 />
+
+### Usage
+
+Use the `FilteredT<ItemsT, FilterT>` template to define a 200 response with a paginated list of filtered, typed items within an API operation:
+
+```typespec
+import "@common-grants/core";
+import "@typespec/http";
+
+using TypeSpec.Http;
+using CommonGrants.Pagination;
+using CommonGrants.Responses;
+
+model TestModel {
+  id: string;
+  name: string;
+}
+
+model TestFilter extends Record<Filters.DefaultFilter> {
+  lastModifiedAt: Filters.DateComparisonFilter;
+}
+
+@summary("Search test models")
+@doc("Get a paginated list of test models matching a filter")
+@post
+op searchTest(...PaginatedBodyParams): FilteredT<TestModel, TestFilter>;
+```
+
+### Changelog
+
+<SchemaChangelog schema="Filtered" />

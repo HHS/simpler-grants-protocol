@@ -1,0 +1,50 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgIdUei.yaml
+type: object
+properties:
+  registry:
+    type: object
+    properties:
+      code:
+        type: string
+        const: org:us:uei
+        description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+      url:
+        type: string
+        format: uri
+        description: Link to the catalog entry for this registry.
+    unevaluatedProperties:
+      not: {}
+    description: Registry-level facts shared by every record in this registry.
+  id:
+    $ref: samUEI.yaml
+    description: |-
+      The primary identifier string, when the registry has a single canonical value.
+
+      May be omitted for registries with no natural primary; consumers should read
+      `allIds` in that case.
+  allIds:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          $ref: samUEI.yaml
+          description: The identifier string.
+        status:
+          $ref: IdentifierStatus.yaml
+          description: Whether the identifier is currently valid or retired.
+      required:
+        - id
+        - status
+      unevaluatedProperties:
+        not: {}
+    description: Every known identifier for this record in this registry, including archived values.
+unevaluatedProperties:
+  not: {}
+examples:
+  - registry:
+      code: org:us:uei
+      url: https://commongrants.org/registries/org-us-uei
+    id: AB0123456789
+description: An organization's Unique Entity Identifier (UEI) from SAM.gov.

@@ -127,9 +127,17 @@ examples:
           class: Organization types
           description: Institutions with the primary purpose of providing in-patient physical and mental health services...
           code: EO000000
-        ein: 12-3456789
-        uei: AB1234567890
-        duns: "123456789012"
+        identifiers:
+          org:us:ein:
+            registry:
+              code: org:us:ein
+              url: https://commongrants.org/registries/org-us-ein
+            id: "123456789"
+          org:us:uei:
+            registry:
+              code: org:us:uei
+              url: https://commongrants.org/registries/org-us-uei
+            id: AB0123456789
         addresses:
           primary:
             street1: 456 Main St
@@ -195,9 +203,17 @@ examples:
             class: Organization types
             description: Institutions with the primary purpose of providing in-patient physical and mental health services...
             code: EO000000
-          ein: 12-3456789
-          uei: AB1234567890
-          duns: "123456789012"
+          identifiers:
+            org:us:ein:
+              registry:
+                code: org:us:ein
+                url: https://commongrants.org/registries/org-us-ein
+              id: "123456789"
+            org:us:uei:
+              registry:
+                code: org:us:uei
+                url: https://commongrants.org/registries/org-us-uei
+              id: AB0123456789
           addresses:
             primary:
               street1: 456 Main St
@@ -262,9 +278,17 @@ examples:
             class: Organization types
             description: Institutions with the primary purpose of providing in-patient physical and mental health services...
             code: EO000000
-          ein: 12-3456789
-          uei: AB1234567890
-          duns: "123456789012"
+          identifiers:
+            org:us:ein:
+              registry:
+                code: org:us:ein
+                url: https://commongrants.org/registries/org-us-ein
+              id: "123456789"
+            org:us:uei:
+              registry:
+                code: org:us:uei
+                url: https://commongrants.org/registries/org-us-uei
+              id: AB0123456789
           addresses:
             primary:
               street1: 456 Main St

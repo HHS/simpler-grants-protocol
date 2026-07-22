@@ -14,8 +14,6 @@ tags:
     description: Endpoints related to competitions, which are distinct application processes for the same funding opportunity
   - name: Applications
     description: Endpoints related to submitting applications for a given competition
-  - name: Application Reviews
-    description: Endpoints related to reviewing applications for a given competition
   - name: Forms
     description: Endpoints related to forms
   - name: required
@@ -33,7 +31,7 @@ paths:
       parameters: []
       responses:
         '201':
-          description: A 201 response with data
+          description: A 201 response with typed data
           content:
             application/json:
               schema:
@@ -47,7 +45,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 201 response with data
+                description: A 201 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -74,7 +72,7 @@ paths:
                   description: The ID of the organization to start an application for, if applying on behalf of an organization
                 name:
                   type: string
-                  description: The name of the application
+                  description: The title of the application
               required:
                 - competitionId
                 - name
@@ -92,7 +90,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -106,7 +104,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -142,7 +140,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -156,7 +154,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
       tags:
         - Applications
         - experimental
@@ -187,7 +185,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -201,7 +199,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
       tags:
         - Applications
         - experimental
@@ -219,7 +217,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -231,7 +229,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
           content:
@@ -271,7 +269,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -285,7 +283,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '404':
           description: The server cannot find the requested resource.
           content:
@@ -305,7 +303,7 @@ paths:
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
       responses:
         '200':
-          description: A 200 response with a paginated list of items
+          description: A 200 response with a paginated list of typed items
           content:
             application/json:
               schema:
@@ -325,7 +323,7 @@ paths:
                     description: Details about the paginated results
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with a paginated list of items
+                description: A 200 response with a paginated list of typed items
       tags:
         - Forms
         - experimental
@@ -343,7 +341,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -357,7 +355,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
       tags:
         - Forms
         - experimental
@@ -371,7 +369,7 @@ paths:
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
       responses:
         '200':
-          description: A 200 response with a paginated list of items
+          description: A 200 response with a paginated list of typed items
           content:
             application/json:
               schema:
@@ -391,7 +389,7 @@ paths:
                     description: Details about the paginated results
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with a paginated list of items
+                description: A 200 response with a paginated list of typed items
       tags:
         - Opportunities
         - required
@@ -403,7 +401,7 @@ paths:
       parameters: []
       responses:
         '200':
-          description: A paginated list of items with a filter
+          description: A paginated list of typed items with a typed filter
           content:
             application/json:
               schema:
@@ -411,8 +409,6 @@ paths:
                 required:
                   - items
                   - paginationInfo
-                  - status
-                  - message
                   - sortInfo
                   - filterInfo
                 properties:
@@ -425,13 +421,6 @@ paths:
                     allOf:
                       - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
                     description: Details about the paginated results
-                  status:
-                    type: integer
-                    format: int32
-                    example: 200
-                  message:
-                    type: string
-                    example: Success
                   sortInfo:
                     allOf:
                       - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
@@ -451,7 +440,7 @@ paths:
                     description: The filters applied to the response items
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A paginated list of items with a filter
+                description: A paginated list of typed items with a typed filter
       tags:
         - Opportunities
         - optional
@@ -496,7 +485,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
       responses:
         '200':
-          description: A 200 response with data
+          description: A 200 response with typed data
           content:
             application/json:
               schema:
@@ -510,7 +499,7 @@ paths:
                     description: Response data
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with data
+                description: A 200 response with typed data
         '404':
           description: The server cannot find the requested resource.
           content:
@@ -1008,13 +997,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.AppStatusOptions'
-          description: The status of the application, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the application
       example:
         value: submitted
@@ -1042,13 +1031,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.ApplicantTypeOptions'
-          description: The type of applicant
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: The custom value for the applicant type
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: The description of the applicant type
+          description: A human-readable description of the value
       description: The type of applicant eligible to apply for funding
       example:
         value: individual
@@ -1089,9 +1078,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
           description: The unique identifier for the application
+          readOnly: true
         name:
           type: string
-          description: The name of the application
+          description: The title of the application
         competitionId:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
@@ -1132,7 +1122,6 @@ components:
       description: The base model for an application to a competition for a funding opportunity
       example:
         id: 123e4567-e89b-12d3-a456-426614174000
-        name: My Application
         competitionId: 123e4567-e89b-12d3-a456-426614174000
         formResponses:
           formA:
@@ -1275,7 +1264,6 @@ components:
         instructions: Competition 1 instructions
         status:
           value: open
-          customValue: custom
           description: Competition is open for applications
         keyDates:
           openDate:
@@ -1553,17 +1541,16 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.CompetitionStatusOptions'
-          description: The status of the competition, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the competition
       example:
         value: open
-        customValue: custom
         description: Competition is open for applications
     CommonGrants.Models.CompetitionStatusOptions:
       type: string
@@ -1746,13 +1733,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.FormResponseStatusOptions'
-          description: The status of the form response, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the form response
       example:
         value: inProgress
@@ -2138,13 +2125,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppStatusOptions'
-          description: The status of the opportunity, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the opportunity
       example:
         value: open
@@ -2350,6 +2337,16 @@ components:
         errors:
           - field: formA.name
             message: Name is required
+    CommonGrants.Responses.Created:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          description: Response data
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A 201 response with data
     CommonGrants.Responses.Error:
       type: object
       required:
@@ -2370,6 +2367,90 @@ components:
           items: {}
           description: List of errors
       description: A non-2xx response schema
+    CommonGrants.Responses.Filtered:
+      type: object
+      required:
+        - items
+        - paginationInfo
+        - sortInfo
+        - filterInfo
+      properties:
+        items:
+          type: array
+          items: {}
+          description: Items from the current page
+        paginationInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+          description: Details about the paginated results
+        sortInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
+          description: The sort order of the items
+        filterInfo:
+          type: object
+          properties:
+            filters: {}
+            errors:
+              type: array
+              items:
+                type: string
+              description: Non-fatal errors that occurred during filtering
+          required:
+            - filters
+          description: The filters applied to the response items
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A paginated list of items with a filter
+    CommonGrants.Responses.Ok:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          description: Response data
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A 200 response with data
+    CommonGrants.Responses.Paginated:
+      type: object
+      required:
+        - items
+        - paginationInfo
+      properties:
+        items:
+          type: array
+          items: {}
+          description: Items from the current page
+        paginationInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+          description: Details about the paginated results
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A 200 response with a paginated list of items
+    CommonGrants.Responses.Sorted:
+      type: object
+      required:
+        - items
+        - paginationInfo
+        - sortInfo
+      properties:
+        items:
+          type: array
+          items: {}
+          description: Items from the current page
+        paginationInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+          description: Details about the paginated results
+        sortInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
+          description: The sort order of the items
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A paginated list of items with a sort order
     CommonGrants.Responses.Success:
       type: object
       required:

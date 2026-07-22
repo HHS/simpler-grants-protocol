@@ -37,22 +37,21 @@ scalar uuid extends string;
 @Versioning.added(CommonGrants.Versions.v0_2)
 scalar email extends string;
 
-/** An Employer Identification Number (EIN) issued by the IRS */
-@example("12-3456789")
-@pattern("^[0-9]{2}-[0-9]{7}$")
+/** An Employer Identification Number (EIN) issued by the IRS, normalized to nine digits */
+@example("123456789")
+@pattern("^[0-9]{9}$")
 @Versioning.added(CommonGrants.Versions.v0_2)
 scalar employerTaxId extends string;
 
 /** A Unique Entity Identifier (UEI) issued by SAM.gov */
-@example("12ABC34DEF56")
-@pattern("^[A-z0-9]{12}$")
+@example("AB0123456789")
+@pattern("^[A-HJ-NP-Z0-9]{12}$")
 @Versioning.added(CommonGrants.Versions.v0_2)
 scalar samUEI extends string;
 
-/** A Data Universal Numbering System (DUNS) number */
+/** A Data Universal Numbering System (DUNS) number, normalized to nine digits */
 @example("123456789")
-@example("12-345-6789")
-@example("123456789-1234")
+@pattern("^[0-9]{9}$")
 @Versioning.added(CommonGrants.Versions.v0_2)
 scalar duns extends string;
 

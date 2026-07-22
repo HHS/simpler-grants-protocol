@@ -15,32 +15,51 @@ ok:
         }
       }
   jsonSchema:
-    code: |
-      $schema: https://json-schema.org/draft/2020-12/schema
-      $id: Ok.yaml
-      type: object
-      properties:
-        status:
-          type: integer
-          minimum: 200
-          default: 200
-          description: The HTTP status code
-        message:
-          type: string
-          default: "Success"
-          description: The message to return
-        data:
-          type: object
-          description: The data to return
-      required:
-        - status
-        - message
-        - data
+    file:
+      path: "website/public/schemas/yaml/Ok.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 40
-      endLine: 48
+      startLine: 31
+      endLine: 36
+created:
+  example:
+    code: |
+      {
+        "status": 201,
+        "message": "Created",
+        "data": {
+          "id": "123",
+          "name": "Test 1"
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Created.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/responses/success.tsp"
+      startLine: 239
+      endLine: 244
+accepted:
+  example:
+    code: |
+      {
+        "status": 202,
+        "message": "Accepted",
+        "data": {
+          "id": "123",
+          "name": "Test 1"
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Accepted.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/responses/success.tsp"
+      startLine: 268
+      endLine: 273
 success:
   example:
     file:
@@ -51,8 +70,8 @@ success:
   typeSpec:
     file:
       path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 11
-      endLine: 19
+      startLine: 14
+      endLine: 21
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
@@ -117,7 +136,7 @@ A 200 response with data.
 
 ### Usage
 
-Here's an example of how to use the `Ok` response within a an API operation:
+Use the `OkT<T>` template to define a 200 response with typed data within an API operation:
 
 ```typespec
 import "@common-grants/core";
@@ -134,5 +153,103 @@ model TestModel {
 @summary("Get test")
 @doc("Get a test model")
 @get
-op getTest(): Ok<TestModel>;
+op getTest(): OkT<TestModel>;
 ```
+
+### Changelog
+
+<SchemaChangelog schema="Ok" />
+
+## Created
+
+A 201 response with data.
+
+### Table
+
+| Parameter | Type                                       | Description           |
+| --------- | ------------------------------------------ | --------------------- |
+| status    | [integer](/protocol/types/numeric#integer) | The HTTP status code  |
+| message   | [string](/protocol/types/string#string)    | The message to return |
+| data      | any                                        | The data to return    |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.created.example}
+  jsonSchema={frontmatter.created.jsonSchema}
+  typeSpec={frontmatter.created.typeSpec}
+/>
+
+### Usage
+
+Use the `CreatedT<T>` template to define a 201 response with typed data within an API operation:
+
+```typespec
+import "@common-grants/core";
+import "@typespec/http";
+
+using TypeSpec.Http;
+using CommonGrants.Responses;
+
+model TestModel {
+  id: string;
+  name: string;
+}
+
+@summary("Create test")
+@doc("Create a test model")
+@post
+op createTest(@body body: TestModel): CreatedT<TestModel>;
+```
+
+### Changelog
+
+<SchemaChangelog schema="Created" />
+
+## Accepted
+
+A 202 response with data.
+
+Returned when a request is accepted for processing but may not be applied immediately, such as a change submitted for review. The typed `AcceptedT<T>` variant also sets a `Location` header that points to the accepted resource when one is available.
+
+### Table
+
+| Parameter | Type                                       | Description           |
+| --------- | ------------------------------------------ | --------------------- |
+| status    | [integer](/protocol/types/numeric#integer) | The HTTP status code  |
+| message   | [string](/protocol/types/string#string)    | The message to return |
+| data      | any                                        | The data to return    |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.accepted.example}
+  jsonSchema={frontmatter.accepted.jsonSchema}
+  typeSpec={frontmatter.accepted.typeSpec}
+/>
+
+### Usage
+
+Use the `AcceptedT<T>` template to define a 202 response with typed data within an API operation:
+
+```typespec
+import "@common-grants/core";
+import "@typespec/http";
+
+using TypeSpec.Http;
+using CommonGrants.Responses;
+
+model TestModel {
+  id: string;
+  name: string;
+}
+
+@summary("Submit test")
+@doc("Submit a test model for processing")
+@post
+op submitTest(@body body: TestModel): AcceptedT<TestModel>;
+```
+
+### Changelog
+
+<SchemaChangelog schema="Accepted" />
