@@ -164,6 +164,10 @@ export default defineConfig({
               label: "Sorting",
               link: "protocol/sorting",
             },
+            {
+              label: "Authentication and scopes",
+              link: "protocol/auth",
+            },
           ],
         },
         {

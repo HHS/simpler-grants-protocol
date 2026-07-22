@@ -28,6 +28,7 @@ model Error {
 }
 
 alias Unauthorized = Error & Http.UnauthorizedResponse;
+alias Forbidden = Error & Http.ForbiddenResponse;
 alias NotFound = Error & Http.NotFoundResponse;
 
 @example(#{

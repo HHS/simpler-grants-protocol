@@ -1,0 +1,23 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RevisionStatusOptions.yaml
+type: string
+enum:
+  - pending
+  - accepted
+  - denied
+  - superseded
+  - custom
+description: |-
+  The set of values accepted for a revision's status:
+  - `pending`: Non-terminal. The change is queued for review.
+  - `accepted`: Terminal. The change was applied, either immediately via a
+  direct `PATCH` or after a `pending` change was approved.
+  - `denied`: Terminal. The change was rejected, with a reason.
+  - `superseded`: Terminal. A competing change was accepted first, so this
+  change no longer applies.
+  - `custom`: An implementation-defined status. The receiver documents whether
+  it is terminal.
+
+  A revision moves once from `pending` into a terminal state; a terminal
+  revision is never restated. How a receiver resolves a `pending` change (a
+  human review, a policy engine, a batch job) is out of scope for this contract.

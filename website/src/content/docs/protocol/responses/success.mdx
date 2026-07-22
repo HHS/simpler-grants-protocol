@@ -41,6 +41,25 @@ created:
       path: "lib/core/lib/core/responses/success.tsp"
       startLine: 239
       endLine: 244
+accepted:
+  example:
+    code: |
+      {
+        "status": 202,
+        "message": "Accepted",
+        "data": {
+          "id": "123",
+          "name": "Test 1"
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Accepted.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/responses/success.tsp"
+      startLine: 268
+      endLine: 273
 success:
   example:
     file:
@@ -186,3 +205,51 @@ op createTest(@body body: TestModel): CreatedT<TestModel>;
 ### Changelog
 
 <SchemaChangelog schema="Created" />
+
+## Accepted
+
+A 202 response with data.
+
+Returned when a request is accepted for processing but may not be applied immediately, such as a change submitted for review. The typed `AcceptedT<T>` variant also sets a `Location` header that points to the accepted resource when one is available.
+
+### Table
+
+| Parameter | Type                                       | Description           |
+| --------- | ------------------------------------------ | --------------------- |
+| status    | [integer](/protocol/types/numeric#integer) | The HTTP status code  |
+| message   | [string](/protocol/types/string#string)    | The message to return |
+| data      | any                                        | The data to return    |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.accepted.example}
+  jsonSchema={frontmatter.accepted.jsonSchema}
+  typeSpec={frontmatter.accepted.typeSpec}
+/>
+
+### Usage
+
+Use the `AcceptedT<T>` template to define a 202 response with typed data within an API operation:
+
+```typespec
+import "@common-grants/core";
+import "@typespec/http";
+
+using TypeSpec.Http;
+using CommonGrants.Responses;
+
+model TestModel {
+  id: string;
+  name: string;
+}
+
+@summary("Submit test")
+@doc("Submit a test model for processing")
+@post
+op submitTest(@body body: TestModel): AcceptedT<TestModel>;
+```
+
+### Changelog
+
+<SchemaChangelog schema="Accepted" />

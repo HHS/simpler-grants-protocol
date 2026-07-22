@@ -1,0 +1,150 @@
+---
+title: Revision
+description: Data models for a record of a change to a resource
+sidebar:
+  order: 13
+revision:
+  example:
+    file:
+      path: "website/public/schemas/yaml/Revision.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/Revision.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/revision.tsp"
+      startLine: 57
+      endLine: 107
+revisionStatus:
+  example:
+    file:
+      path: "website/public/schemas/yaml/RevisionStatus.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/RevisionStatus.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/revision.tsp"
+      startLine: 36
+      endLine: 51
+revisionStatusOptions:
+  example:
+    file:
+      path: "website/public/schemas/yaml/RevisionStatusOptions.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/RevisionStatusOptions.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/revision.tsp"
+      startLine: 13
+      endLine: 34
+orgRevision:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgRevision.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgRevision.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization-sync.tsp"
+      startLine: 45
+      endLine: 52
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
+
+A revision is a record of a single change to a resource. It captures the merge patch that was submitted, a snapshot of the record with the change applied, and the lifecycle status of the change. Revisions make up the change ledger used for [organization profile syncing](/protocol/models/organization#orgpatchdata): every write, whether a direct `PATCH` or a submitted `POST /changes`, records a revision, and `GET /orgs/{orgId}/changes` lists them newest first. A revision's submission facts (its `patch` and `source`) never change, but its `status` can transition until it reaches a terminal state.
+
+`createdAt` marks when the change was submitted and orders the ledger, while `lastModifiedAt` marks when the `status` last changed.
+
+## Revision
+
+The generic, untyped record of a change, where `patch` and `snapshot` are open objects. It is defined as a template, `RevisionT<SnapshotT, PatchT>`, that a concrete resource binds to its own snapshot and patch types (see [OrgRevision](#orgrevision)).
+
+### Table
+
+<SchemaTable filePath={frontmatter.revision.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.revision.example}
+  jsonSchema={frontmatter.revision.jsonSchema}
+  typeSpec={frontmatter.revision.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="Revision" />
+
+## RevisionStatus
+
+The lifecycle status of a change, with a `value` from a fixed set of options, an optional `customValue` for implementation-defined states, and an optional human-readable `description`.
+
+A change moves once from the non-terminal `pending` state into one of three terminal states. A direct `PATCH` is created already `accepted`. A terminal revision is never restated, so an `accepted` change never later becomes `superseded`.
+
+| Status       | Terminal | Reached by                                                        |
+| ------------ | -------- | ----------------------------------------------------------------- |
+| `pending`    | No       | `POST /orgs/{orgId}/changes` when the receiver queues for review  |
+| `accepted`   | Yes      | `PATCH` (applied immediately), or a `pending` change approved     |
+| `denied`     | Yes      | a `pending` change rejected (carries a reason)                    |
+| `superseded` | Yes      | a `pending` change made moot by a competing change accepted first |
+| `custom`     | —        | an implementation-defined state; the receiver documents it        |
+
+How a receiver resolves a `pending` change (a human review, a policy engine, a batch job) is out of scope for this contract, so there is no review endpoint. The receiver drives the transition and reports the outcome through the change's `status`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.revisionStatus.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.revisionStatus.example}
+  jsonSchema={frontmatter.revisionStatus.jsonSchema}
+  typeSpec={frontmatter.revisionStatus.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="RevisionStatus" />
+
+## RevisionStatusOptions
+
+The fixed set of values a [RevisionStatus](#revisionstatus) can take: `pending`, `accepted`, `denied`, `superseded`, and `custom`.
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.revisionStatusOptions.example}
+  jsonSchema={frontmatter.revisionStatusOptions.jsonSchema}
+  typeSpec={frontmatter.revisionStatusOptions.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="RevisionStatusOptions" />
+
+## OrgRevision
+
+A [Revision](#revision) bound to organization profiles, where `patch` is an [OrgPatchData](/protocol/models/organization#orgpatchdata) merge patch and `snapshot` is an [OrganizationBase](/protocol/models/organization#organizationbase) with that change applied. Returned by the organization write and changes routes.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgRevision.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgRevision.example}
+  jsonSchema={frontmatter.orgRevision.jsonSchema}
+  typeSpec={frontmatter.orgRevision.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgRevision" />

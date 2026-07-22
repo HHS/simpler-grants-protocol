@@ -213,6 +213,18 @@ orgSocialLinks:
       path: "lib/core/lib/core/models/organization.tsp"
       startLine: 127
       endLine: 151
+orgPatchData:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgPatchData.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgPatchData.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization-sync.tsp"
+      startLine: 28
+      endLine: 43
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -407,3 +419,23 @@ A collection of social media and web presence links for an organization.
 ### Changelog
 
 <SchemaChangelog schema="OrgSocialLinks" />
+
+## OrgPatchData
+
+A [JSON Merge Patch](https://www.rfc-editor.org/rfc/rfc7396) body for updating an organization profile, used by the `PATCH /orgs/{orgId}` and `POST /orgs/{orgId}/changes` routes. It is derived from [OrganizationBase](#organizationbase): every field is optional, so a client sends only the fields it wants to change, clearable fields accept `null` to remove them, and read-only fields like `id` are excluded. Nested objects are themselves partial, so `{ "socials": { "website": null } }` clears just the website and leaves the other links untouched. Sent with a `Content-Type` of `application/merge-patch+json`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgPatchData.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgPatchData.example}
+  jsonSchema={frontmatter.orgPatchData.jsonSchema}
+  typeSpec={frontmatter.orgPatchData.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgPatchData" />

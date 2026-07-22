@@ -5,6 +5,8 @@ import "@typespec/json-schema";
 import "./opportunity/index.tsp";
 import "./award.tsp";
 import "./organization.tsp";
+import "./revision.tsp";
+import "./organization-sync.tsp";
 import "./person.tsp";
 import "./proposal.tsp";
 import "./application.tsp";
