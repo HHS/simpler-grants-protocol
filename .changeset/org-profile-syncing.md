@@ -15,8 +15,9 @@ systems, following the contract in ADR-0026:
   `RevisionStatus`, and the status options (`pending`, `accepted`, `denied`,
   `superseded`, `custom`). `OrgRevision` binds it to `OrganizationBase` and
   `OrgPatchData`.
-- `Responses.Accepted<T>`, a `202` envelope with a `Location` header for changes
-  that are accepted for review.
+- `Responses.AcceptedT<T>`, a `202` envelope with a `Location` header for
+  changes that are accepted for review, plus its non-templated `Accepted`
+  schema and the `Responses.Forbidden` error alias the org routes return.
 
 Adds six experimental routes under `/common-grants/orgs`, each requiring an
 OAuth 2.0 scope: `GET /orgs` (`org:read`), `GET /orgs/{orgId}` (`org:read`),
