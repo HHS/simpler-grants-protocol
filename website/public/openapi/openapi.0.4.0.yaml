@@ -742,7 +742,7 @@ paths:
         - name: registry
           in: query
           required: false
-          description: Registry code of an external identifier to filter by (e.g. `us:ein`)
+          description: Registry code of an external identifier to filter by (e.g. `org:us:ein`)
           schema:
             type: string
           explode: false

@@ -104,7 +104,7 @@ Successful responses use the standard CommonGrants envelope: `Responses.Ok<T>` w
 <details>
 <summary>List orgs: `GET /orgs`</summary>
 
-Required scope: `org:read`. By default this returns every organization the caller can view, which is likely the full set for a public directory. Results are paginated per [ADR-0011](/governance/adr/0011-pagination/), and each item is an organization record, including its identifier collection. To look up an org by an external identifier, filter with `registry` and `id`, like `?registry=us:ein&id=123456789` (see [ADR-0023](/governance/adr/0023-org-ids/)).
+Required scope: `org:read`. By default this returns every organization the caller can view, which is likely the full set for a public directory. Results are paginated per [ADR-0011](/governance/adr/0011-pagination/), and each item is an organization record, including its identifier collection. To look up an org by an external identifier, filter with `registry` and `id`, like `?registry=org:us:ein&id=123456789` (see [ADR-0023](/governance/adr/0023-org-ids/)).
 
 Request:
 
@@ -123,8 +123,8 @@ Response:
       "name": "Example Nonprofit",
       "datasetVersion": 7,
       "identifiers": {
-        "us:ein": { "id": "123456789" },
-        "us:uei": { "id": "AB0123456789" }
+        "org:us:ein": { "id": "123456789" },
+        "org:us:uei": { "id": "AB0123456789" }
       }
     }
   ],
@@ -155,17 +155,17 @@ Response:
   "identifiers": {
     "systemId": {
       "registry": {
-        "code": "grants.gov:org",
-        "url": "/registries/grants-gov-org",
+        "code": "org:grants.gov:system",
+        "url": "/registries/org-grants-gov-system",
         "scope": "grants.gov",
         "kind": "platform"
       },
       "id": "01912a8b-7c3d-7890-abcd-ef1234567890"
     },
-    "us:ein": {
+    "org:us:ein": {
       "registry": {
-        "code": "us:ein",
-        "url": "/registries/us-ein",
+        "code": "org:us:ein",
+        "url": "/registries/org-us-ein",
         "scope": "US",
         "kind": "government"
       },
