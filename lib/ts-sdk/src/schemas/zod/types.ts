@@ -56,6 +56,20 @@ const acceptDate =
   (val: unknown): unknown =>
     val instanceof Date && !isNaN(val.getTime()) ? toStr(val) : val;
 
+/**
+ * A `Date` whose `toJSON()` emits the date-only wire format (`YYYY-MM-DD`)
+ * so values parsed by `ISODateSchema` round-trip through `JSON.stringify`.
+ * Copies (e.g. `structuredClone()` or `new Date(value)`) are ordinary
+ * `Date`s and lose this behavior.
+ */
+class PlainDate extends Date {
+  override toJSON(): string;
+  override toJSON(): string | null {
+    const value = super.toJSON();
+    return value === null ? null : value.slice(0, 10);
+  }
+}
+
 /** Schema for UTC datetime fields (accepts an ISO string or a `Date`; outputs a `Date`) */
 export const UTCDateTimeSchema = z.preprocess(
   acceptDate(d => d.toISOString()),
@@ -68,7 +82,7 @@ export const ISODateSchema = z.preprocess(
   z
     .string()
     .date()
-    .transform(str => new Date(str))
+    .transform<Date>(str => new PlainDate(str))
 );
 
 /** Schema for ISO time format: HH:MM:SS with optional fractional seconds and timezone (RFC 3339 partial-time) */
