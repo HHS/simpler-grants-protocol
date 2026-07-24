@@ -55,6 +55,18 @@ describe("SingleDateEvent Schema", () => {
     expect(parsed.eventType).toBe("singleDate");
   });
 
+  it("should round-trip through JSON", () => {
+    const parsed = SingleDateEventSchema.parse({
+      name: "Test Event",
+      eventType: "singleDate",
+      date: "2025-01-01",
+    });
+    const serialized = JSON.parse(JSON.stringify(parsed));
+
+    expect(serialized.date).toBe("2025-01-01");
+    expect(SingleDateEventSchema.safeParse(serialized).success).toBe(true);
+  });
+
   it("should match singleDateEvent.yaml", async () => {
     await expectZodMatchesJsonSchema(SingleDateEventSchema, jsonSchemaId);
   });

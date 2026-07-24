@@ -1,5 +1,11 @@
 # @common-grants/sdk
 
+## 0.6.1
+
+### Patch Changes
+
+- ea2b181: Serialize parsed plain dates as `YYYY-MM-DD` when converting SDK values to JSON.
+
 ## 0.6.0
 
 ### Minor Changes
