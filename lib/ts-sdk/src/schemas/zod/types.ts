@@ -56,6 +56,12 @@ const acceptDate =
   (val: unknown): unknown =>
     val instanceof Date && !isNaN(val.getTime()) ? toStr(val) : val;
 
+/**
+ * A `Date` whose `toJSON()` emits the date-only wire format (`YYYY-MM-DD`)
+ * so values parsed by `ISODateSchema` round-trip through `JSON.stringify`.
+ * Copies (e.g. `structuredClone()` or `new Date(value)`) are ordinary
+ * `Date`s and lose this behavior.
+ */
 class PlainDate extends Date {
   override toJSON(): string;
   override toJSON(): string | null {
