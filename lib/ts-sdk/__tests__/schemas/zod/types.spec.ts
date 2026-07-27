@@ -137,6 +137,15 @@ describe("ISODate Schema", () => {
     expect(parsed.getUTCSeconds()).toBe(0);
   });
 
+  it("should round-trip through JSON as a plain date", () => {
+    const parsed = ISODateSchema.parse("2025-01-01");
+    const serialized = JSON.parse(JSON.stringify(parsed));
+
+    expect(serialized).toBe("2025-01-01");
+    expect(ISODateSchema.parse(serialized)).toBeInstanceOf(Date);
+    expect(ISODateSchema.safeParse("2025-01-01T00:00:00.000Z").success).toBe(false);
+  });
+
   it("should handle edge dates", () => {
     // Leap year date
     const leapYear = "2024-02-29";
