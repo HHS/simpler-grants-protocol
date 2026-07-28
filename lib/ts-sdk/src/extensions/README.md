@@ -716,7 +716,7 @@ Each filter entry is a `CustomFilterSpec`: `{ filterType: CustomFilterType; desc
 
 ### Filter-type catalog and the `F.*` helpers
 
-`CustomFilterType` is an 11-value enum. Each value maps to a base filter schema with auto-derived operators:
+`CustomFilterType` is a 10-value enum. Each value maps to a base filter schema with auto-derived operators:
 
 | `filterType`        | Operators                             | Value shape    |
 | ------------------- | ------------------------------------- | -------------- |
@@ -743,7 +743,7 @@ F.between("2025-01-01", "2025-12-31"); // { operator: "between", value: { min: "
 // Full set: eq, neq, gt, gte, lt, lte, in, notIn, like, notLike, between, outside
 ```
 
-> **Cross-SDK note.** TypeScript uses `F.in` (`"in"` as an object key — valid JS). The Python sibling SDK ([#869](https://github.com/HHS/simpler-grants-protocol/issues/869)) uses `f.in_` (trailing underscore, Python convention for reserved words). This is a documented naming divergence across SDKs.
+> **Cross-SDK note.** TypeScript uses `F.in` (`"in"` as an object key — valid JS). The Python SDK uses `f.in_` (trailing underscore, Python convention for reserved words), and declares filters by _annotating_ a TypedDict subclass rather than by writing a `filterType` string. See the [Python extensions README](../../../python-sdk/common_grants_sdk/extensions/README.md#plugin-custom-filters). These are documented naming and authoring-shape divergences; the wire contract is identical.
 
 ### Classifying consumer filters into the request body
 

@@ -42,36 +42,55 @@ for (const opp of opportunities.items) {
 
 ### Kitchen sink example
 
-This example shows how the SDK's modules work together: fetching data with the client, validating it with schemas, using type-safe constants, and accessing typed custom fields via a plugin.
+This example shows how the SDK's modules work together: declaring a plugin with typed custom fields and a custom filter, getting a pre-bound client from it, searching with both standard and custom filters, and validating standalone data with schemas.
 
 ```ts
-import { Client, Auth } from "@common-grants/sdk/client";
+import { Auth } from "@common-grants/sdk/client";
 import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
 import type { OpportunityBase } from "@common-grants/sdk/types";
-import { OppStatusOptions } from "@common-grants/sdk/constants";
-import { definePlugin } from "@common-grants/sdk/extensions";
+import { definePlugin, F } from "@common-grants/sdk/extensions";
 
-// Define a plugin with typed custom fields
+// Define a plugin: custom fields attach to schemas, custom filters to routes.
+// `as const` is load-bearing — without it TypeScript widens the literal
+// `fieldType` / `filterType` values and the typing you want is lost.
 const myPlugin = definePlugin({
-  extensions: {
+  meta: {
+    name: "my-system",
+    sourceSystem: "my-system.example.gov",
+    capabilities: ["customFields", "customFilters"],
+  },
+  schemas: {
     Opportunity: {
-      category: { fieldType: "string", description: "Grant category" },
-      legacyId: { fieldType: "integer", description: "Legacy system ID" },
+      customFields: {
+        category: { fieldType: "string", description: "Grant category" },
+        legacyId: { fieldType: "integer", description: "Legacy system ID" },
+      },
+    },
+  },
+  routes: {
+    opportunities: {
+      search: {
+        filters: {
+          agency: { filterType: "stringArray", description: "Funding agency code" },
+        },
+      },
     },
   },
 } as const);
 
-// Create a client
-const client = new Client({
+// A plugin-bound client parses responses with the plugin's schemas and types
+// `search({ filters })` by the filters it registered — no per-call `schema`.
+const client = myPlugin.getClient({
   baseUrl: "https://api.example.org",
   auth: Auth.bearer("your-jwt-token"),
 });
 
-// Fetch opportunities with typed custom fields
 const results = await client.opportunities.search({
   query: "education",
-  statuses: [OppStatusOptions.open],
-  schema: myPlugin.schemas.Opportunity,
+  filters: {
+    status: F.in(["open"]), // standard filter → top-level request field
+    agency: F.in(["HHS"]), // registered custom filter → customFilters
+  },
 });
 
 for (const opp of results.items) {
