@@ -1,4 +1,39 @@
 /**
+ * The filter types a plugin may declare. Mirrors CustomFilterType in
+ * lib/ts-sdk/src/extensions/types.ts — keep the two in sync.
+ */
+export type CustomFilterType =
+  | "stringComparison"
+  | "stringArray"
+  | "numberComparison"
+  | "numberArray"
+  | "numberRange"
+  | "booleanComparison"
+  | "dateComparison"
+  | "dateRange"
+  | "moneyComparison"
+  | "moneyRange";
+
+/**
+ * A single filter as declared in index.json, keyed by filter name.
+ * Operators are derived from filterType by the SDK, never authored here.
+ */
+export interface PluginFilterSpec {
+  filterType: CustomFilterType;
+  /** Authored for the website; plugins declare filterType only */
+  description?: string;
+}
+
+/**
+ * Filter declarations nested resource -> method -> filter name, matching the
+ * PluginRoutes shape plugins pass to definePlugin().
+ */
+export type PluginFilterDeclarations = Record<
+  string,
+  Record<string, Record<string, PluginFilterSpec>>
+>;
+
+/**
  * Plugin entry as stored in src/content/plugins/index.json (source of truth).
  * Maintainers edit this file; url/language/version are fetched at build time.
  */
@@ -13,6 +48,8 @@ export interface PluginSourceEntry {
   /** Optional fallback repo URL if the package registry doesn't provide one */
   repoUrl?: string;
   fields: Record<string, string[]>;
+  /** Omitted entirely by plugins that declare no custom filters */
+  filters?: PluginFilterDeclarations;
 }
 
 /**
@@ -41,6 +78,22 @@ export interface ResolvedPluginField {
 }
 
 /**
+ * A single custom filter flattened out of the nested declarations.
+ */
+export interface ResolvedPluginFilter {
+  /** The filter's name (key in the declarations) */
+  name: string;
+  filterType: CustomFilterType;
+  description: string;
+  /** Resource the filter attaches to (e.g. "opportunities") */
+  resource: string;
+  /** Route method the filter attaches to (e.g. "search") */
+  method: string;
+  /** Docs link for the filter type; see filter-docs.ts */
+  docsHref: string;
+}
+
+/**
  * A fully resolved plugin: cache metadata + joined field definitions.
  */
 export interface Plugin extends PluginCacheEntry {
@@ -48,4 +101,6 @@ export interface Plugin extends PluginCacheEntry {
   id: string;
   /** Field definitions resolved from the custom-fields catalog */
   resolvedFields: ResolvedPluginField[];
+  /** Filters flattened from the entry's nested declarations */
+  resolvedFilters: ResolvedPluginFilter[];
 }
