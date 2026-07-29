@@ -6,7 +6,8 @@
     "*.svg",
     "src/content/forms/",
     "cache/",
-    ".docs/"
+    ".docs/",
+    "public/mockServiceWorker.js"
   ],
   "dictionaryDefinitions": [],
   "dictionaries": [],
