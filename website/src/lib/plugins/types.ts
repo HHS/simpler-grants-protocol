@@ -25,8 +25,12 @@ export interface PluginFilterSpec {
 }
 
 /**
- * Filter declarations nested resource -> method -> filter name, matching the
- * PluginRoutes shape plugins pass to definePlugin().
+ * Filter declarations nested resource -> method -> filter name.
+ *
+ * A catalog shape, not either SDK's authoring shape: the TS SDK wraps the
+ * filter map in a `filters` key, and the Python SDK puts a TypedDict class in
+ * the method slot. Copy a plugin's routes declaration here verbatim and its
+ * filters are skipped as unknown.
  */
 export type PluginFilterDeclarations = Record<
   string,

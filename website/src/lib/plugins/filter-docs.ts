@@ -25,9 +25,15 @@ const DOCS_HREF: Record<CustomFilterType, string> = {
   moneyRange: "/protocol/filters/money#moneyrangefilter",
 };
 
-/** Narrows a filterType read from index.json, which is untyped JSON. */
+/**
+ * Narrows a filterType read from index.json, which is untyped JSON.
+ *
+ * Own-property check, not `in`: `in` walks the prototype chain, so a typo'd
+ * "constructor" or "toString" would pass and filterDocsHref would return a
+ * function as the href.
+ */
 export function isCustomFilterType(value: string): value is CustomFilterType {
-  return value in DOCS_HREF;
+  return Object.hasOwn(DOCS_HREF, value);
 }
 
 /** Returns the docs link for a filter type. */
