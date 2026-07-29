@@ -2,17 +2,20 @@
  * The filter types a plugin may declare. Mirrors CustomFilterType in
  * lib/ts-sdk/src/extensions/types.ts — keep the two in sync.
  */
-export type CustomFilterType =
-  | "stringComparison"
-  | "stringArray"
-  | "numberComparison"
-  | "numberArray"
-  | "numberRange"
-  | "booleanComparison"
-  | "dateComparison"
-  | "dateRange"
-  | "moneyComparison"
-  | "moneyRange";
+export const CUSTOM_FILTER_TYPES = [
+  "stringComparison",
+  "stringArray",
+  "numberComparison",
+  "numberArray",
+  "numberRange",
+  "booleanComparison",
+  "dateComparison",
+  "dateRange",
+  "moneyComparison",
+  "moneyRange",
+] as const;
+
+export type CustomFilterType = (typeof CUSTOM_FILTER_TYPES)[number];
 
 /**
  * A single filter as declared in index.json, keyed by filter name.
