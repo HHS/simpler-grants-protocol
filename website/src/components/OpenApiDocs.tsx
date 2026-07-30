@@ -21,6 +21,12 @@ interface OpenApiDocsProps {
    * `/protocol/api-docs` page's submit buttons disabled.
    */
   enableTryItOut?: boolean;
+  /**
+   * Called with the resolved version on mount and on every dropdown change.
+   * Lets a wrapper (e.g. MockPlayground) regenerate MSW handlers for the
+   * selected spec version. Optional — the shipping page omits it.
+   */
+  onVersionChange?: (version: string) => void;
 }
 
 // #########################################################
@@ -81,6 +87,7 @@ const styles = {
 export default function OpenApiDocs({
   className,
   enableTryItOut = false,
+  onVersionChange,
 }: OpenApiDocsProps) {
   // #########################################################
   // Set up state management
@@ -102,6 +109,9 @@ export default function OpenApiDocs({
       setSelectedVersion(versionFromUrl);
       setKey((prev) => prev + 1); // Force SwaggerUI to re-render
     }
+
+    // Report the resolved initial version so a wrapper can prime its handlers.
+    onVersionChange?.(versionFromUrl);
   }, []); // Empty dependency array - only run on mount
 
   // #########################################################
@@ -112,6 +122,7 @@ export default function OpenApiDocs({
     setSelectedVersion(newVersion);
     setKey((prev) => prev + 1); // Force SwaggerUI to re-render
     updateUrlParams(newVersion);
+    onVersionChange?.(newVersion);
   };
 
   return (
