@@ -51,8 +51,9 @@ import type { OpportunityBase } from "@common-grants/sdk/types";
 import { definePlugin, F } from "@common-grants/sdk/extensions";
 
 // Define a plugin: custom fields attach to schemas, custom filters to routes.
-// `as const` is load-bearing — without it TypeScript widens the literal
-// `fieldType` / `filterType` values and the typing you want is lost.
+// Keep the `as const` — it is strictly required when the specs are assigned to
+// a variable before the call, and harmless inline. Repo convention is to
+// always include it.
 const myPlugin = definePlugin({
   meta: {
     name: "my-system",

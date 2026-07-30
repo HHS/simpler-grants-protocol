@@ -1,7 +1,8 @@
 """Negative type fixtures — these SHOULD fail pyright.
 
 Reviewers validate the unhappy path (the guards the happy-path example relies on)
-by running pyright against this file directly::
+by temporarily removing this file's entry from ``pyrightconfig.json``'s ``exclude``
+list (pyright skips excluded files even when named directly) and running::
 
     cd lib/python-sdk && poetry run pyright examples/typed_custom_filters_failures.py
 

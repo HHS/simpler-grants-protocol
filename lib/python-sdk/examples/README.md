@@ -4,7 +4,7 @@ This folder contains example scripts demonstrating how to use the CommonGrants P
 
 ## Prerequisites
 
-You can run these examples against a mock API (no backend required), the California Grants FastAPI example, or a remote API.
+You can run these examples against a mock API (no backend required), the Pennsylvania Grants FastAPI example, or a remote API.
 
 ### Option A: Mock API (easiest, no Python/FastAPI)
 
@@ -18,9 +18,9 @@ pnpm example:server
 Then in another terminal run any example. The mock server listens on `http://localhost:8000` and serves list, get, and search with sample data including custom fields.
 
 
-### Option B: Pennslyvania Grants FastAPI API
+### Option B: Pennsylvania Grants FastAPI API
 
-By default the examples use `http://localhost:8000`. To use the Pennslyvania Grants example API instead of the mock server:
+By default the examples use `http://localhost:8000`. To use the Pennsylvania Grants example API instead of the mock server:
 
 From the repository root:
 
@@ -37,15 +37,12 @@ make dev
 To connect to a remote CommonGrants-compatible API instead of localhost, set the following environment variables:
 
 ```bash
-export CG_BASE_URL="https://your-api-endpoint.com"
+export CG_API_BASE_URL="https://your-api-endpoint.com"
 export CG_API_KEY="your-api-key"
 ```
 
-Then install the SDK dependencies from the `lib/ts-sdk` directory:
-
-```bash
-pnpm install
-```
+The environment variables only apply to scripts that construct `Config()` with no
+arguments — see [Configuration](#configuration) below.
 
 
 ## Running the Examples
@@ -178,7 +175,10 @@ poetry run python examples/custom_filters.py
 
 ```
 === Scenario 1: happy path (mock server) ===
-  items returned: 3
+  items returned: 1
+  per-row parse failures: 0
+  first opportunity: STEM Education Grant Program
+  first program code: STEM-ED
   filters sent to the server: {"status": {"operator": "in", "value": ["open"]}, "customFilters": {"region": ..., "fundingType": ...}}
 
 === Scenario 2: authoring errors ===
@@ -200,11 +200,16 @@ poetry run python -c "import examples.typed_custom_filters as e; e.demo_invalid_
 
 The matching negative type fixtures live in
 `examples/typed_custom_filters_failures.py`. That file is *meant* to fail type
-checking — run pyright against it directly to see the guards fire:
+checking, so it sits in `pyrightconfig.json`'s `exclude` list to keep the type
+gate green — and pyright skips excluded files even when they are named directly
+on the command line. To see the guards fire, temporarily remove the
+`"examples/typed_custom_filters_failures.py"` entry from `exclude` and run:
 
 ```bash
 poetry run pyright examples/typed_custom_filters_failures.py
 ```
+
+Expected: 3 errors, all on the lines marked `# EXPECT-ERROR`.
 
 `examples/consumer_search_with_filters.py` is the full downstream consumer flow —
 plugin author registers filters, consumer builds a filter dict with the `f.*`
@@ -234,9 +239,10 @@ or set the environment variables below and construct `Config()` with no argument
 `base_url` and `api_key` have no fallback default: `Config()` raises `ValueError`
 when neither the argument nor the environment variable is set.
 
-**Example:**
+**Example** — `examples/typed_custom_filters.py` constructs `Config()` with no
+arguments, so it picks the environment values up (with the mock server running):
 
 ```bash
-CG_API_BASE_URL="https://api.example.com" CG_API_KEY="my-secret-key" \
-  poetry run python examples/list_opportunities.py
+CG_API_BASE_URL="http://localhost:8000" CG_API_KEY="my-secret-key" \
+  poetry run python examples/typed_custom_filters.py
 ```

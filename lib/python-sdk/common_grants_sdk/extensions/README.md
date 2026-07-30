@@ -484,7 +484,7 @@ Custom **filters** attach to resource **methods** (routes). Custom **fields** at
 
 ```python
 define_plugin(
-    PluginSchemas(Opportunity=schema(common_schema=OpportunityBase[OppFields])),  # custom fields
+    PluginSchemas(Opportunity=schema(common_schema=OpportunityBase[OpportunityFields])),  # custom fields
     routes=PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters)),   # custom filters
     meta=PluginMeta(name="grants.gov", source_system="grants.gov"),
 )
@@ -605,7 +605,7 @@ The three-bucket classification rule (ADR-0012):
 
 1. **Standard filters** (`status`, `closeDateRange`, …) → named top-level fields, validated against the real field type on `OppDefaultFilters` (`status` is checked as a `StringArray`, not as a permissive `DefaultFilter`). Either key form works — `closeDateRange` or `close_date_range` — but supplying both forms of the same filter is an error.
 2. **Registered custom filters** (declared on the route's TypedDict) → the `customFilters` record, validated against the model the plugin declared.
-3. **Ad-hoc filters** (anything else) → `customFilters` passthrough, validated against the union of the ten known models — so a value that does not fit its operator, such as `{"operator": "in", "value": "grant"}`, is still rejected rather than quietly forwarded.
+3. **Ad-hoc filters** (anything else) → `customFilters` passthrough, validated against the union of the models in the [filter-type catalog](#filter-type-catalog-and-the-f-helpers) — so a value that does not fit its operator, such as `{"operator": "in", "value": "grant"}`, is still rejected rather than quietly forwarded.
 
 To build a request body without a client, call `classify_filters` directly:
 
@@ -626,7 +626,7 @@ Registered filters are looked up by the **exact** `(resource, method)` strings t
 
 `validate_routes(...)` runs when the plugin is defined, and again when `plugin.get_client()` binds routes, so an authoring mistake surfaces for the author rather than for a consumer later. It raises `FilterError` if:
 
-- a registered filter is annotated with something that is not one of the ten value models (`region: int`, or a non-filter model), or
+- a registered filter is annotated with something that is not one of the [catalog's value models](#filter-type-catalog-and-the-f-helpers) (`region: int`, or a non-filter model), or
 - a route redeclares a standard `OpportunityFilters` key with a different type — authors get the standard keys for free, and re-typing one creates a static/runtime mismatch.
 
 Call-time validation runs inside `classify_filters` for every key and is **fail-fast**: the first invalid value raises `FilterError` before any request body exists, so a malformed filter can never silently widen a consumer's search. This holds for standard, registered, and ad-hoc keys alike. `filter_info.errors` on a response carries server-reported filter feedback only.
