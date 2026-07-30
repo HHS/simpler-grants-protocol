@@ -9,11 +9,18 @@ const availableVersions = [
   { version: "0.1.0", label: "v0.1.0" },
 ];
 
-// Get the default version (latest)
-const defaultVersion = availableVersions[0].version;
+// Get the default version (latest). Exported so callers that pre-load a spec
+// (e.g. MockPlayground's MSW handler) stay in sync with the version rendered.
+export const defaultVersion = availableVersions[0].version;
 
 interface OpenApiDocsProps {
   className?: string;
+  /**
+   * When true, enables Swagger UI's "Try it out" by passing the default
+   * `supportedSubmitMethods`. Defaults to false, keeping the shipping
+   * `/protocol/api-docs` page's submit buttons disabled.
+   */
+  enableTryItOut?: boolean;
 }
 
 // #########################################################
@@ -71,7 +78,10 @@ const styles = {
   },
 };
 
-export default function OpenApiDocs({ className }: OpenApiDocsProps) {
+export default function OpenApiDocs({
+  className,
+  enableTryItOut = false,
+}: OpenApiDocsProps) {
   // #########################################################
   // Set up state management
   // #########################################################
@@ -128,7 +138,7 @@ export default function OpenApiDocs({ className }: OpenApiDocsProps) {
           <SwaggerUI
             key={key}
             url={`/openapi/openapi.${selectedVersion}.yaml`}
-            supportedSubmitMethods={[]}
+            supportedSubmitMethods={enableTryItOut ? undefined : []}
           />
         )}
       </div>
