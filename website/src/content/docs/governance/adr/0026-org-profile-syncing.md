@@ -79,7 +79,7 @@ Here is a brief summary of the API contract this ADR proposes:
 
 Every endpoint sits under `/common-grants/orgs`, and the path-based `{orgId}` refers to the organization's system-specific UUID (`Organization.id`). A client that only knows an external identifier, like an EIN, UEI, or platform ID, can look up the UUID via a filter query param on `GET /orgs` (see [ADR-0023](/governance/adr/0023-org-ids/)). The org record follows [`OrganizationBase`](/protocol/models/organization). Server-assigned fields like `datasetVersion` appear in response bodies but are ignored in request bodies, and since field-level schemas still need to be finalized in the follow-up spec, the payloads below are just illustrative.
 
-Successful responses use the standard CommonGrants envelope: `Responses.Ok<T>` wraps a single resource as `{ status, message, data }` and `Responses.Paginated<T>` wraps a list as `{ status, message, items, pagination }`, where the envelope's `status` is the HTTP status code. The read and list examples below show only the `data`/`items` payload; the write examples show the full envelope, since a write returns a change whose own lifecycle `status` (`accepted`, `pending`, and so on) sits inside `data`.
+Successful responses use the standard CommonGrants envelope: `Responses.OkT<T>` wraps a single resource as `{ status, message, data }` and `Responses.PaginatedT<T>` wraps a list as `{ status, message, items, pagination }`, where the envelope's `status` is the HTTP status code. The read and list examples below show only the `data`/`items` payload; the write examples show the full envelope, since a write returns a change whose own lifecycle `status` (`accepted`, `pending`, and so on) sits inside `data`.
 
 **Required endpoints**
 
@@ -104,7 +104,7 @@ Successful responses use the standard CommonGrants envelope: `Responses.Ok<T>` w
 <details>
 <summary>List orgs: `GET /orgs`</summary>
 
-Required scope: `org:read`. By default this returns every organization the caller can view, which is likely the full set for a public directory. Results are paginated per [ADR-0011](/governance/adr/0011-pagination/), and each item is an organization record, including its identifier collection. To look up an org by an external identifier, filter with `registry` and `id`, like `?registry=us:ein&id=123456789` (see [ADR-0023](/governance/adr/0023-org-ids/)).
+Required scope: `org:read`. By default this returns every organization the caller can view, which is likely the full set for a public directory. Results are paginated per [ADR-0011](/governance/adr/0011-pagination/), and each item is an organization record, including its identifier collection. To look up an org by an external identifier, filter with `registry` and `id`, like `?registry=org:us:ein&id=123456789` (see [ADR-0023](/governance/adr/0023-org-ids/)).
 
 Request:
 
@@ -123,8 +123,8 @@ Response:
       "name": "Example Nonprofit",
       "datasetVersion": 7,
       "identifiers": {
-        "us:ein": { "id": "123456789" },
-        "us:uei": { "id": "AB0123456789" }
+        "org:us:ein": { "id": "123456789" },
+        "org:us:uei": { "id": "AB0123456789" }
       }
     }
   ],
@@ -155,19 +155,15 @@ Response:
   "identifiers": {
     "systemId": {
       "registry": {
-        "code": "grants.gov:org",
-        "url": "/registries/grants-gov-org",
-        "scope": "grants.gov",
-        "kind": "platform"
+        "code": "org:grants.gov:system",
+        "url": "https://commongrants.org/registries/org-grants-gov-system"
       },
       "id": "01912a8b-7c3d-7890-abcd-ef1234567890"
     },
-    "us:ein": {
+    "org:us:ein": {
       "registry": {
-        "code": "us:ein",
-        "url": "/registries/us-ein",
-        "scope": "US",
-        "kind": "government"
+        "code": "org:us:ein",
+        "url": "https://commongrants.org/registries/org-us-ein"
       },
       "id": "123456789"
     }

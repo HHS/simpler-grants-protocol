@@ -56,7 +56,7 @@ interface Organizations {
   list<T extends Models.OrganizationBase = Models.OrganizationBase>(
     ...Pagination.PaginatedQueryParams,
 
-    /** Registry code of an external identifier to filter by (e.g. `us:ein`) */
+    /** Registry code of an external identifier to filter by (e.g. `org:us:ein`) */
     @query registry?: string,
 
     /** Identifier value within the given registry to filter by */
