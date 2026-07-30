@@ -2,7 +2,14 @@ import { readFileSync } from "fs";
 import pluginsIndex from "@/content/plugins/index.json";
 import { loadAllCustomFields } from "@/lib/custom-fields";
 import { Paths } from "@/lib/schema/paths";
-import type { Plugin, PluginCacheEntry, ResolvedPluginField } from "./types";
+import { filterDocsHref, isCustomFilterType } from "./filter-docs";
+import type {
+  Plugin,
+  PluginCacheEntry,
+  PluginFilterDeclarations,
+  ResolvedPluginField,
+  ResolvedPluginFilter,
+} from "./types";
 
 // =============================================================================
 // PRIVATE HELPERS
@@ -11,13 +18,47 @@ import type { Plugin, PluginCacheEntry, ResolvedPluginField } from "./types";
 /** Cache for loaded plugins */
 let pluginsCache: Plugin[] | null = null;
 
+/** Flattens resource -> method -> name declarations into a renderable list. */
+function resolveCustomFilters(
+  pluginId: string,
+  declarations: PluginFilterDeclarations = {},
+): ResolvedPluginFilter[] {
+  const resolved: ResolvedPluginFilter[] = [];
+
+  for (const [resource, methods] of Object.entries(declarations)) {
+    for (const [method, filters] of Object.entries(methods)) {
+      for (const [name, spec] of Object.entries(filters)) {
+        if (!isCustomFilterType(spec.filterType)) {
+          console.error(
+            `Plugin "${pluginId}" declares filter "${name}" with unknown ` +
+              `filterType "${spec.filterType}". Type must be one of the ` +
+              `CustomFilterType values in src/lib/plugins/types.ts.`,
+          );
+          continue;
+        }
+        resolved.push({
+          name,
+          filterType: spec.filterType,
+          description: spec.description ?? "",
+          resource,
+          method,
+          docsHref: filterDocsHref(spec.filterType),
+        });
+      }
+    }
+  }
+
+  return resolved;
+}
+
 // =============================================================================
 // CORE LOADERS
 // =============================================================================
 
 /**
  * Loads all plugins from the generated metadata cache (with caching).
- * Resolves each plugin's field IDs against the custom-fields catalog.
+ * Resolves each plugin's field IDs against the custom-fields catalog and
+ * flattens its filter declarations.
  *
  * Requires `pnpm generate:plugin-metadata` to have been run first.
  */
@@ -56,7 +97,12 @@ export function loadAllPlugins(): Plugin[] {
       [],
     );
 
-    return { id, ...entry, resolvedFields };
+    return {
+      id,
+      ...entry,
+      resolvedFields,
+      resolvedFilters: resolveCustomFilters(id, entry.filters),
+    };
   });
 
   return pluginsCache;
