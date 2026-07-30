@@ -2,7 +2,7 @@
 
 This directory contains independently versioned packages for the Simpler Grants Protocol, supporting both Python and Node.js.
 
-Versioning is managed via [Changesets](https://github.com/changesets/changesets), using native support for Node.js and a Poetry-based workflow for Python packages.
+Versioning is managed via [release-please](https://github.com/googleapis/release-please), driven by the conventional-commit history on `main`. There is no separate versioning file to author: the squashed commit title of each merged PR determines whether and how each package's version bumps.
 
 ---
 
@@ -10,11 +10,11 @@ Versioning is managed via [Changesets](https://github.com/changesets/changesets)
 
 This setup enables:
 
-- Independent versioning of Python and Node.js packages  
-- Semantic version tracking via Changesets  
-- Automated changelog generation  
-- Git tagging per package  
-- Optional GitHub release creation from tags  
+- Independent versioning of Python and Node.js packages
+- Version bumps derived from conventional commits (no manual bookkeeping)
+- Automated changelog generation
+- Git tagging and GitHub release creation per package
+- Automated publishing to npm / PyPI when a Release PR is merged
 
 ---
 
@@ -22,125 +22,82 @@ This setup enables:
 
 ```
 lib/
-├── core/                  # Node package stub
+├── core/                  # Node package
 │   ├── package.json
-│   └── index.js
-├── cli/                   # Node package stub
+│   └── CHANGELOG.md       # Auto-maintained by release-please
+├── cli/                   # Node package
 │   ├── package.json
-│   └── index.js
+│   └── CHANGELOG.md
+├── ts-sdk/                # Node package
+│   ├── package.json
+│   └── CHANGELOG.md
 └── python-sdk/            # Python package
-    ├── package.json       # Required for Changesets detection
-    ├── pyproject.toml     # Python project metadata
-    ├── CHANGELOG.md       # Auto-maintained by Changesets
+    ├── pyproject.toml     # Python project metadata (owns the version)
+    ├── CHANGELOG.md
     └── common_grants_sdk/ # SDK source code
 ```
 
 ---
 
-## Versioning Overview
+## How releases work
 
-### Node Packages
-
-- Versioning is handled automatically by Changesets when `pnpm changeset version` is run
-- Applies the following changes:
-  - Bumps version in `package.json`
-  - Updates or creates `CHANGELOG.md`
-  - Creates a Git tag (e.g. `core@1.0.0`)
-
-### Python Packages
-
-- Versioning is handled by CI using Poetry, based on `.changeset/*.md` content
-- Applies the following changes:
-  - Bumps version in `pyproject.toml`
-  - Bumps version in `package.json`
-  - Updates or creates `CHANGELOG.md`
-  - Creates a Git tag (e.g. `common_grants_sdk@0.3.1`)
-
----
-
-## Developer Instructions
-
-### Step 1: Make Your Code Changes
+### Step 1: Make your code changes
 
 Modify the appropriate files under any `lib/` package.
 
-### Step 2: Generate a Changeset
+### Step 2: Title your PR with a conventional commit
 
-Run this from the root directory `simpler-grants-protocol/`:
+The PR title becomes the squashed commit subject on `main`, which release-please parses. The type determines the version bump for every package whose files the PR touches:
 
-```bash
-pnpm changeset
-```
+| PR title | Bump |
+|----------|------|
+| `fix(core): handle empty filter values` | patch |
+| `feat(ts-sdk): add transform helpers` | minor |
+| `feat(cli)!: drop Node 20 support` | major (minor while packages are pre-1.0) |
+| `chore: ...`, `ci: ...`, `test: ...` | no release |
+| `docs: ...`, `refactor: ...`, `build: ...` | no bump by itself; listed in the changelog of the next release |
 
-Follow the CLI prompts:
+A `BREAKING CHANGE:` footer in the squashed commit body also triggers a breaking bump.
 
-- Select the package(s) affected (e.g. `common_grants_sdk`)
-- Choose version bump type (patch, minor, major)
-- Provide a short summary
+### Step 3: Merge the PR
 
-This will create a Markdown file in `.changeset/` like:
+Once the PR is merged into `main`, the `release-please.yml` workflow updates (or opens) a **Release PR** for each affected package. The Release PR accumulates every releasable commit since the package's last release, and contains the version bump (`package.json` for Node packages, `pyproject.toml` and `common_grants_sdk/__init__.py` for Python) plus the generated `CHANGELOG.md` entry.
 
-```markdown
----
-"common_grants_sdk": patch
----
+Nothing is published at this point — merges can stack in the Release PR until the team is ready to ship.
 
-Fix logic bug in base class method
-```
+### Step 4: Merge the Release PR to publish
 
-### Step 3: Commit the Changes
+Merging a package's Release PR:
 
-Include code changes and the `.changeset/*.md` file in a PR.
+1. Tags `main` with the new version (e.g. `@common-grants/core@0.4.0`, `common-grants-sdk@0.9.0`)
+2. Creates the GitHub release with the changelog entry as its notes
+3. Triggers the package's deploy workflow, publishing to npm (Node packages) or PyPI (Python SDK)
 
-### Step 4: Merge the PR
+### Re-running a failed publish
 
-Once the PR is merged into `main`, the `ci-package-bump-version.yml` GitHub Action will:
-
-- **Python Packages**
-  - Determine bump type from `.changeset/*.md`
-  - Use Poetry to bump the version and update files
-  - Create a Git tag (e.g. `common_grants_sdk@0.3.1`)
-
-- **Node Packages**
-  - Run `pnpm changeset version`
-  - Apply version and changelog updates
-  - Create Git tags (e.g. `core@1.0.0`)
-
-### Step 5: (Optional) Trigger GitHub Release from Tag
-
-To manually generate a GitHub Release from a tag:
-
-1. Go to the **Actions** tab on GitHub
-2. Select **Create GitHub Release from Tag**
-3. Click **Run workflow**
-4. Enter or select a tag (e.g. `common_grants_sdk@0.3.1`)
-5. Click **Run workflow** to generate the release
+The per-package deploy workflows (`cd-deploy-lib-*.yml`) keep a `workflow_dispatch` trigger. To retry a publish for an existing tag, run the matching workflow from the **Actions** tab and enter the release tag.
 
 ---
 
 ## Manual Validation Checklist
 
-After a PR is merged and the `version.yml` workflow runs:
+After merging a Release PR:
 
-1. **Confirm version bump**
-   - For Python packages: check `pyproject.toml` and `package.json` under `lib/python-sdk/`
-   - For Node packages: check `package.json` under each affected package (e.g. `lib/core/`, `lib/cli/`)
+1. **Confirm the tag and GitHub release**
+   - Go to GitHub > Code > Tags and verify the new per-package tag exists
+   - Verify a GitHub release with changelog notes was created for that tag
 
-2. **Confirm changelog**
-   - Open the `CHANGELOG.md` for each affected package
-   - Example path: `lib/python-sdk/CHANGELOG.md`
-   - Ensure the top entry reflects the correct version and summary
+2. **Confirm the published artifact**
+   - Node packages: check the new version on npm (`@common-grants/core`, `@common-grants/cli`, `@common-grants/sdk`)
+   - Python SDK: check the new version on PyPI (`common-grants-sdk`)
 
-3. **Confirm Git tag**
-   - Go to GitHub > Code > Tags
-   - Verify that a tag was created for each updated package (e.g. `common_grants_sdk@0.3.1`, `core@1.0.0`)
-
-4. **Confirm version commit**
-   - Check the commit history for a message like `chore: bump version [skip ci]` from `github-actions[bot]`
+3. **Confirm changelog**
+   - Open the `CHANGELOG.md` for the released package and ensure the top entry reflects the new version
 
 ---
 
 ## Notes
 
-- Python packages must include a `package.json` file to satisfy Changesets requirements
-- All version bumps are driven by the existence and content of `.changeset/*.md` files
+- Per-package versions are tracked in `.release-please-manifest.json`; release-please config lives in `release-please-config.json` (both at the repo root).
+- The Python SDK's version lives only in `pyproject.toml` (mirrored into `common_grants_sdk/__init__.py` by release-please); it has no `package.json`.
+- `lib/changelog-emitter` is private and excluded from releases.
