@@ -1,0 +1,19 @@
+name: "CI - PR Title"
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      # PR titles become the squashed commit subject on main, which
+      # release-please parses to decide version bumps and changelog entries.
+      - name: Validate conventional-commit PR title
+        uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

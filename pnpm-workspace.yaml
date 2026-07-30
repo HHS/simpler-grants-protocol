@@ -1,7 +1,6 @@
 packages:
   - lib/cli
   - lib/core
-  - lib/python-sdk
   - lib/changelog-emitter
   - lib/ts-sdk
   - website
