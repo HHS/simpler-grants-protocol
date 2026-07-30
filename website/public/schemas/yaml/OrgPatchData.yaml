@@ -5,31 +5,6 @@ properties:
   name:
     type: string
     description: The organization's legal name as registered with relevant authorities.
-  identifiers:
-    anyOf:
-      - $ref: OrgPatchOrgIdsOrCreate.yaml
-      - type: "null"
-    description: Identifiers associated with the organization, keyed by registry code.
-  orgType:
-    anyOf:
-      - $ref: OrgPatchPCSOrgTypeOrCreate.yaml
-      - type: "null"
-    description: The organization's type within the Philanthropy Classification System (PCS).
-  addresses:
-    anyOf:
-      - $ref: OrgPatchAddressCollectionOrCreate.yaml
-      - type: "null"
-    description: Collection of physical addresses associated with the organization.
-  phones:
-    anyOf:
-      - $ref: OrgPatchPhoneCollectionOrCreate.yaml
-      - type: "null"
-    description: Collection of phone numbers associated with the organization.
-  emails:
-    anyOf:
-      - $ref: OrgPatchEmailCollectionOrCreate.yaml
-      - type: "null"
-    description: Collection of email addresses associated with the organization.
   mission:
     anyOf:
       - type: string
@@ -40,14 +15,44 @@ properties:
       - $ref: calendarYear.yaml
       - type: "null"
     description: The calendar year the organization was founded.
+  identifiers:
+    anyOf:
+      - $ref: "#/$defs/OrgPatchOrgIdsOrCreate"
+      - type: "null"
+    description: Identifiers associated with the organization, keyed by registry code.
+  orgType:
+    anyOf:
+      - $ref: "#/$defs/OrgPatchPCSOrgTypeOrCreate"
+      - type: "null"
+    description: The organization's type within the Philanthropy Classification System (PCS).
+  addresses:
+    anyOf:
+      - $ref: "#/$defs/OrgPatchAddressCollectionOrCreate"
+      - type: "null"
+    description: Collection of physical addresses associated with the organization.
+  phones:
+    anyOf:
+      - $ref: "#/$defs/OrgPatchPhoneCollectionOrCreate"
+      - type: "null"
+    description: Collection of phone numbers associated with the organization.
+  emails:
+    anyOf:
+      - $ref: "#/$defs/OrgPatchEmailCollectionOrCreate"
+      - type: "null"
+    description: Collection of email addresses associated with the organization.
   socials:
     anyOf:
-      - $ref: OrgPatchOrgSocialLinksOrCreate.yaml
+      - $ref: "#/$defs/OrgPatchOrgSocialLinksOrCreate"
       - type: "null"
     description: Collection of the organization's social media and web presence links.
   customFields:
     anyOf:
-      - $ref: "#/$defs/OrgPatchRecordOrCreateCustomField"
+      - type: object
+        properties: {}
+        unevaluatedProperties:
+          anyOf:
+            - $ref: OrgPatchCustomFieldOrCreate.yaml
+            - type: "null"
       - type: "null"
     description: Custom fields for the organization.
 unevaluatedProperties:
@@ -60,15 +65,197 @@ examples:
       website: null
     emails:
       primary: info@example.org
+    customFields:
+      legacyCode: null
 description: |-
   A JSON Merge Patch (RFC 7396) body for updating an organization profile.
 
   Derived from `OrganizationBase`: every field is optional, fields that can
-  be cleared accept `null` to unset them, and read-only fields like `id` are excluded.
+  be cleared accept `null` to unset them, record keys can be deleted by
+  setting them to `null`, and read-only fields like `id` are excluded.
   Sent as `application/merge-patch+json`.
 $defs:
-  OrgPatchRecordOrCreateCustomField:
+  OrgPatchOrgIdsOrCreate:
     type: object
-    properties: {}
+    properties:
+      org:us:ein:
+        anyOf:
+          - $ref: OrgPatchOrgIdEinOrCreate.yaml
+          - type: "null"
+        description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+      org:us:uei:
+        anyOf:
+          - $ref: OrgPatchOrgIdUeiOrCreate.yaml
+          - type: "null"
+        description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+      org:xi:duns:
+        anyOf:
+          - $ref: OrgPatchOrgIdDunsOrCreate.yaml
+          - type: "null"
+        description: The organization's Data Universal Numbering System (DUNS) number.
+      systemId:
+        anyOf:
+          - $ref: OrgPatchSystemIdOrCreate.yaml
+          - type: "null"
+        description: The hosting system's own identifier for this record.
+      otherIds:
+        anyOf:
+          - type: object
+            properties: {}
+            unevaluatedProperties:
+              anyOf:
+                - $ref: OrgPatchIdentifierOrCreate.yaml
+                - type: "null"
+          - type: "null"
+        description: |-
+          Additional identifiers keyed by their registry code, for registries the
+          protocol does not define as a base identifier on the model.
     unevaluatedProperties:
-      $ref: OrgPatchCustomFieldOrCreate.yaml
+      not: {}
+    description: |-
+      A collection of identifiers associated with an organization.
+
+      Extends the generic identifier collection with the base identifiers CommonGrants
+      defines for organizations. Additional registries can be published under `otherIds`.
+  OrgPatchPCSOrgTypeOrCreate:
+    type: object
+    properties:
+      class:
+        type: string
+        const: Organization types
+        description: The PCS term for the organization type.
+      term:
+        type: string
+        description: The plain language PCS term.
+      code:
+        type: string
+        examples:
+          - UC000000
+        pattern: ^[A-Z]{2}[0-9]{6}$
+        description: The code for this PCS term.
+      description:
+        anyOf:
+          - type: string
+          - type: "null"
+        description: Description of the PCS term
+    unevaluatedProperties:
+      not: {}
+    description: |-
+      A Philanthropy Classification System (PCS) term for organization types.
+
+      See https://taxonomy.candid.org/organization-type for more information.
+  OrgPatchAddressCollectionOrCreate:
+    type: object
+    properties:
+      primary:
+        $ref: OrgPatchAddressOrCreate.yaml
+        description: The primary address for a person or organization.
+      otherAddresses:
+        anyOf:
+          - type: object
+            properties: {}
+            unevaluatedProperties:
+              anyOf:
+                - $ref: OrgPatchAddressOrCreate.yaml
+                - type: "null"
+          - type: "null"
+        description: Additional addresses keyed by a descriptive label (e.g., "work", "home", "international").
+    unevaluatedProperties:
+      not: {}
+    description: A collection of addresses.
+  OrgPatchPhoneCollectionOrCreate:
+    type: object
+    properties:
+      primary:
+        $ref: OrgPatchPhoneOrCreate.yaml
+        description: The person's primary phone number.
+      fax:
+        anyOf:
+          - $ref: OrgPatchPhoneOrCreate.yaml
+          - type: "null"
+        description: The person's fax number, if applicable.
+      otherPhones:
+        anyOf:
+          - type: object
+            properties: {}
+            unevaluatedProperties:
+              anyOf:
+                - $ref: OrgPatchPhoneOrCreate.yaml
+                - type: "null"
+          - type: "null"
+        description: Additional phone numbers not covered by the standard fields.
+    unevaluatedProperties:
+      not: {}
+    description: A collection of phone numbers for a person.
+  OrgPatchEmailCollectionOrCreate:
+    type: object
+    properties:
+      primary:
+        $ref: email.yaml
+        description: The primary email address for a person or organization.
+      otherEmails:
+        anyOf:
+          - type: object
+            properties: {}
+            unevaluatedProperties:
+              anyOf:
+                - $ref: email.yaml
+                - type: "null"
+          - type: "null"
+        description: Additional email addresses keyed by a descriptive label (e.g., "work", "personal", "support").
+    unevaluatedProperties:
+      not: {}
+    description: A collection of email addresses.
+  OrgPatchOrgSocialLinksOrCreate:
+    type: object
+    properties:
+      website:
+        anyOf:
+          - type: string
+            format: uri
+          - type: "null"
+        description: The organization's primary website URL.
+      facebook:
+        anyOf:
+          - type: string
+            format: uri
+          - type: "null"
+        description: The organization's Facebook profile URL.
+      twitterOrX:
+        anyOf:
+          - type: string
+            format: uri
+          - type: "null"
+        description: The organization's Twitter/X profile URL.
+      bluesky:
+        anyOf:
+          - type: string
+            format: uri
+          - type: "null"
+        description: The organization's BlueSky profile URL.
+      instagram:
+        anyOf:
+          - type: string
+            format: uri
+          - type: "null"
+        description: The organization's Instagram profile URL.
+      linkedin:
+        anyOf:
+          - type: string
+            format: uri
+          - type: "null"
+        description: The organization's LinkedIn profile URL.
+      otherSocials:
+        anyOf:
+          - type: object
+            properties: {}
+            unevaluatedProperties:
+              anyOf:
+                - type: string
+                  format: uri
+                - type: "null"
+          - type: "null"
+        description: Additional social media profiles not covered by the standard fields.
+    unevaluatedProperties:
+      not: {}
+    description: A collection of social media and web presence links for an organization.
