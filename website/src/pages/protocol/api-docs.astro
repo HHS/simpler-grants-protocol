@@ -55,6 +55,7 @@ const availableVersions = [
 
 <script>
   import { SwaggerUIBundle } from "swagger-ui-dist";
+  import { resolveVersion } from "@/lib/api-docs-version";
 
   const render = (version: string): void => {
     SwaggerUIBundle({
@@ -81,19 +82,12 @@ const availableVersions = [
   const select = document.querySelector<HTMLSelectElement>("#version-select");
   if (select) {
     const availableVersions = Array.from(select.options, (o) => o.value);
-    const defaultVersion = availableVersions[0];
-
-    // Accept both "0.2.0" and the "v0.2.0" deep-link form used by internal
-    // links; fall back to the latest version for a missing/unknown value.
-    const getValidVersion = (version: string): string => {
-      const normalized = version.replace(/^v/, "");
-      return availableVersions.includes(normalized)
-        ? normalized
-        : defaultVersion;
-    };
 
     const params = new URLSearchParams(window.location.search);
-    const initialVersion = getValidVersion(params.get("version") ?? "");
+    const initialVersion = resolveVersion(
+      params.get("version") ?? "",
+      availableVersions,
+    );
     select.value = initialVersion;
     render(initialVersion);
 
