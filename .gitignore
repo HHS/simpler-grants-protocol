@@ -1,12 +1,15 @@
 # Nodejs modules
 node_modules/
 
-# pnpm 
+# pnpm
 .pnpm-store/
 .pnpm-debug.log
 
 # AI
 .cursor
+.claude
+CLAUDE.md
+PLAN.md
 
 # Environment variables
 .env
@@ -16,3 +19,5 @@ node_modules/
 
 # Local tooling configuration
 .tool-versions
+
+mock-playground-adr.md
