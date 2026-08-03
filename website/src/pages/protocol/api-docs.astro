@@ -43,6 +43,12 @@ const availableVersions = [
     border: none;
   }
 
+  /* Starlight caps content at `--sl-content-width` (45rem) for readable prose,
+     which cramps the dense Swagger panel. Let it span the full column instead. */
+  :global(.sl-container) {
+    max-width: 100%;
+  }
+
   .version-selector label {
     display: flex;
     flex-direction: column;
