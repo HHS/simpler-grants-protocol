@@ -17,7 +17,10 @@ import "@typespec/versioning";
  * name of the model it mirrors so the generated `OrgPatch{name}` schemas keep
  * stable names. If a mirrored model gains or loses a field, the change flows
  * through spread automatically; only the record-typed fields are redeclared
- * here and must be kept in sync by hand.
+ * here and must be kept in sync by hand. The same applies one level down: a
+ * leaf type reached from these mirrors (`Address`, `Phone`, `Identifier`,
+ * `CustomField`) needs a mirror of its own if it ever gains `extends`.
+ * `website/src/lib/schema/org-patch-data.test.ts` fails if either slips.
  */
 namespace CommonGrants.Patch {
   /** A collection of identifiers associated with an organization.

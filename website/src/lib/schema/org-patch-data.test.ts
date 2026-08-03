@@ -45,8 +45,28 @@ describe("OrgPatchData merge-patch schema", () => {
         { socials: { otherSocials: { youtube: null } } },
       ],
       [
+        "deletes an otherAddresses key",
+        { addresses: { otherAddresses: { work: null } } },
+      ],
+      [
+        "deletes an otherPhones key",
+        { phones: { otherPhones: { mobile: null } } },
+      ],
+      [
+        "deletes an otherEmails key",
+        { emails: { otherEmails: { work: null } } },
+      ],
+      [
         "clears the inherited systemId field",
         { identifiers: { systemId: null } },
+      ],
+      [
+        "clears an inherited PCSTerm field on orgType",
+        { orgType: { description: null } },
+      ],
+      [
+        "patches orgType without its other PCSTerm fields",
+        { orgType: { code: "AB123456" } },
       ],
       ["deletes a base identifier", { identifiers: { "org:us:ein": null } }],
       ["clears a whole field", { customFields: null }],
@@ -93,6 +113,16 @@ describe("OrgPatchData merge-patch schema", () => {
         "unknown property inside a customFields entry",
         { customFields: { foo: { bogus: true } } },
       ],
+      ["unknown property inside addresses", { addresses: { bogus: true } }],
+      [
+        "wrong type inside an otherPhones entry",
+        { phones: { otherPhones: { mobile: { number: 123 } } } },
+      ],
+      ["malformed orgType code", { orgType: { code: "nope" } }],
+      [
+        "null for the non-clearable orgType term field",
+        { orgType: { term: null } },
+      ],
     ];
 
     it.each(invalid)("%s", (_name, patch) => {
@@ -100,7 +130,100 @@ describe("OrgPatchData merge-patch schema", () => {
     });
   });
 
-  it("covers every writable OrganizationBase field (drift guard)", () => {
+  /**
+   * The two invariants below are asserted structurally over every emitted
+   * `OrgPatch*` schema rather than against a hand-listed set of fields, because
+   * the `Patch` mirrors in `organization-sync.tsp` are maintained by hand: a
+   * field added to one of the mirrored base models flows in through spread but
+   * does not pick up the adjustment its type needs. Checking the emitted shape
+   * means these need no per-model upkeep as the base models change.
+   */
+  type Node = Record<string, unknown>;
+  const isObj = (v: unknown): v is Node =>
+    typeof v === "object" && v !== null && !Array.isArray(v);
+
+  /** Visit every schema node in every emitted `OrgPatch*` schema. */
+  const eachSchemaNode = (visit: (node: Node, where: string) => void) => {
+    let seen = 0;
+    const walk = (node: unknown, where: string) => {
+      if (Array.isArray(node)) {
+        node.forEach((n, i) => walk(n, `${where}[${i}]`));
+        return;
+      }
+      if (!isObj(node)) return;
+      seen += 1;
+      visit(node, where);
+      for (const [key, value] of Object.entries(node))
+        walk(value, `${where}/${key}`);
+    };
+    for (const file of fs.readdirSync(Paths.SCHEMAS_DIR)) {
+      if (!file.startsWith("OrgPatch") || !file.endsWith(".yaml")) continue;
+      walk(
+        yaml.load(fs.readFileSync(path.join(Paths.SCHEMAS_DIR, file), "utf-8")),
+        file,
+      );
+    }
+    // Guards against a silently-broken walk making either assertion vacuous.
+    expect(seen).toBeGreaterThan(0);
+  };
+
+  // Root cause 1: a record member with no `null` branch rejects RFC 7396
+  // per-key deletion.
+  it("every record member accepts null (per-key deletion)", () => {
+    // A sealed model emits `unevaluatedProperties: {not: {}}`. A record emits
+    // its value schema there instead, and declares no properties of its own.
+    const isSealed = (v: unknown) =>
+      isObj(v) && isObj(v.not) && Object.keys(v.not).length === 0;
+
+    const isRecord = (n: Node) =>
+      n.type === "object" &&
+      "unevaluatedProperties" in n &&
+      !isSealed(n.unevaluatedProperties) &&
+      Object.keys(isObj(n.properties) ? n.properties : {}).length === 0;
+
+    const permitsNull = (v: unknown): boolean => {
+      if (!isObj(v)) return false;
+      if (Object.keys(v).length === 0) return true; // {} accepts any value
+      if (v.type === "null") return true;
+      if (Array.isArray(v.type) && v.type.includes("null")) return true;
+      return ["anyOf", "oneOf"].some(
+        (kw) =>
+          Array.isArray(v[kw]) &&
+          (v[kw] as unknown[]).some((b) => isObj(b) && b.type === "null"),
+      );
+    };
+
+    const records: string[] = [];
+    const violations: string[] = [];
+    eachSchemaNode((node, where) => {
+      if (!isRecord(node)) return;
+      records.push(where);
+      if (!permitsNull(node.unevaluatedProperties)) violations.push(where);
+    });
+
+    expect(violations).toEqual([]);
+    // Six record members plus Address.geography.
+    expect(records.length).toBeGreaterThanOrEqual(7);
+  });
+
+  // Root cause 2: inheriting a read schema through `allOf` pulls in fields that
+  // skipped the merge-patch transform, so they stay required and non-clearable.
+  it("never inherits an un-patched read schema via allOf", () => {
+    const violations: string[] = [];
+    eachSchemaNode((node, where) => {
+      if (!Array.isArray(node.allOf)) return;
+      node.allOf.forEach((branch, i) => {
+        const ref = isObj(branch) ? branch.$ref : undefined;
+        if (typeof ref !== "string" || ref.startsWith("#")) return;
+        if (!path.basename(ref).startsWith("OrgPatch"))
+          violations.push(`${where}/allOf[${i}] -> ${ref}`);
+      });
+    });
+
+    expect(violations).toEqual([]);
+  });
+
+  it("covers every writable OrganizationBase top-level field (drift guard)", () => {
     const load = (name: string) =>
       yaml.load(
         fs.readFileSync(path.join(Paths.SCHEMAS_DIR, name), "utf-8"),
