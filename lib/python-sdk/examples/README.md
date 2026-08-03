@@ -201,15 +201,16 @@ poetry run python -c "import examples.typed_custom_filters as e; e.demo_invalid_
 The matching negative type fixtures live in
 `examples/typed_custom_filters_failures.py`. That file is *meant* to fail type
 checking, so it sits in `pyrightconfig.json`'s `exclude` list to keep the type
-gate green — and pyright skips excluded files even when they are named directly
-on the command line. To see the guards fire, temporarily remove the
-`"examples/typed_custom_filters_failures.py"` entry from `exclude` and run:
+gate green; it is checked instead through its own config
+(`pyrightconfig.fixtures.json`). To see the guards fire, run:
 
 ```bash
-poetry run pyright examples/typed_custom_filters_failures.py
+make check-fixtures
 ```
 
-Expected: 3 errors, all on the lines marked `# EXPECT-ERROR`.
+The target passes only when pyright reports exactly one error per
+`# EXPECT-ERROR` marker — a guard that stops firing and a new unintended error
+both fail it. It runs as part of `make checks`.
 
 `examples/consumer_search_with_filters.py` is the full downstream consumer flow —
 plugin author registers filters, consumer builds a filter dict with the `f.*`
