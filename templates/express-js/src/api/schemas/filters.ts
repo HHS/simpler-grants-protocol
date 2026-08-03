@@ -99,7 +99,7 @@ export type NumberArrayFilter = z.infer<typeof numberArrayFilterSchema>;
 
 const dateSchema = z.union([
   z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // ISO date
-  z.string().datetime(), // UTC or offset datetime
+  z.iso.datetime(), // UTC or offset datetime
 ]);
 
 export const dateComparisonFilterSchema = z.object({

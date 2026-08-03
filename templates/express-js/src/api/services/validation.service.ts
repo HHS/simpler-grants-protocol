@@ -24,7 +24,7 @@ export class ValidationService {
       if (error instanceof z.ZodError) {
         throw new ApiError(
           400,
-          `Invalid opportunity data: ${error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+          `Invalid opportunity data: ${error.issues.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")}`
         );
       }
       throw error;
@@ -47,7 +47,7 @@ export class ValidationService {
       if (error instanceof z.ZodError) {
         throw new ApiError(
           400,
-          `Invalid search parameters: ${error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+          `Invalid search parameters: ${error.issues.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")}`
         );
       }
       throw error;
@@ -66,7 +66,7 @@ export class ValidationService {
       if (error instanceof z.ZodError) {
         throw new ApiError(
           400,
-          `Invalid pagination parameters: ${error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+          `Invalid pagination parameters: ${error.issues.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")}`
         );
       }
       throw error;
