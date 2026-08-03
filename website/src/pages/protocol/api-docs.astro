@@ -49,6 +49,14 @@ const availableVersions = [
     max-width: 100%;
   }
 
+  /* Swagger's dark theme paints its own background (#1c2022) onto `<html>`,
+     which shows through behind Starlight's darker body. Restore Starlight's bg.
+     `!important` is needed: same specificity and cascade layer as Swagger's rule,
+     so the winner would otherwise hinge on bundle order. */
+  :global(html.dark-mode) {
+    background: var(--sl-color-bg) !important;
+  }
+
   .version-selector label {
     display: flex;
     flex-direction: column;
