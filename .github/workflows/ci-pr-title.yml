@@ -4,16 +4,29 @@ on:
   pull_request:
     types: [opened, edited, synchronize]
 
-permissions:
-  pull-requests: read
+# Reads the title from the event payload, so no token scopes are needed.
+permissions: {}
 
 jobs:
   lint-pr-title:
     runs-on: ubuntu-latest
     steps:
-      # PR titles become the squashed commit subject on main, which
-      # release-please parses to decide version bumps and changelog entries.
+      # PR titles become the squashed commit subject on main, which release-please
+      # parses to decide version bumps and changelog entries. The accepted types are
+      # exactly the ones listed in release-please-config.json's changelog-sections:
+      # a type release-please doesn't recognize produces no changelog entry, so it
+      # skips the release entirely and the change ships unversioned with no error.
+      # Keep this list and changelog-sections in sync.
       - name: Validate conventional-commit PR title
-        uses: amannn/action-semantic-pull-request@v6
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Via env, never inlined into the script — the title is untrusted input.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|perf|revert|docs|refactor|build|chore|ci|test)(\([a-zA-Z0-9._/-]+\))?!?:\ .+ ]]; then
+            echo "::error::PR title must follow Conventional Commits: 'type(scope): description'"
+            echo "Allowed types: feat, fix, perf, revert, docs, refactor, build, chore, ci, test"
+            echo "Append '!' for a breaking change, e.g. 'feat(cli)!: drop Node 20 support'."
+            echo "Got: $PR_TITLE"
+            exit 1
+          fi
+          echo "OK: $PR_TITLE"

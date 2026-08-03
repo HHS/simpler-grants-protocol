@@ -132,7 +132,7 @@ PR titles must follow the [Conventional Commits](https://www.conventionalcommits
 | `fix` | Patch release | `fix(ts-sdk): preserve plain dates in JSON` |
 | `feat` | Minor release | `feat(core): add award schemas` |
 | `feat!` or `fix!` (or a `BREAKING CHANGE:` footer) | Breaking release (minor while pre-1.0) | `feat(cli)!: drop Node 20 support` |
-| `docs`, `refactor`, `build` | No release by itself; appears in the next release's changelog | `docs(website): clarify filter usage` |
+| `perf`, `revert`, `docs`, `refactor`, `build` | Patch release | `docs(website): clarify filter usage` |
 | `chore`, `ci`, `test` | No release; hidden from changelogs | `chore(deps): bump the runtime group` |
 
 The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). See [lib/README.md](lib/README.md) for how releases are cut from this history.
