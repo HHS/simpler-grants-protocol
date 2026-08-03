@@ -48,6 +48,5 @@ jobs:
         # PRs into HOLD-* batching branches or other non-main bases. The HOLD → main
         # checkpoint PR re-runs this audit, so anything live at merge time is gated
         # at the actionable boundary.
-        #
         if: github.base_ref == 'main' || github.ref == 'refs/heads/main'
         run: pnpm --filter @common-grants/cli run audit
