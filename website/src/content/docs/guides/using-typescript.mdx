@@ -179,7 +179,7 @@ export const opportunityBaseSchema = z
     /** Additional custom fields specific to this opportunity */
     customFields: oppCustomFieldsSchema.optional(),
   })
-  .merge(systemMetadataSchema);
+  .extend(systemMetadataSchema.shape);
 
 export type OpportunityBase = z.infer<typeof opportunityBaseSchema>;
 ```
@@ -231,7 +231,7 @@ export type OppCustomFields = z.infer<typeof oppCustomFieldsSchema>;
 export const opportunityBaseSchema = z
   .object({
     /** Globally unique id for the opportunity */
-    id: z.string().uuid(),
+    id: z.uuid(),
 
     /** Title or name of the funding opportunity */
     title: z.string(),
@@ -249,12 +249,12 @@ export const opportunityBaseSchema = z
     keyDates: oppTimelineSchema,
 
     /** URL for the original source of the opportunity */
-    source: z.string().url().optional(),
+    source: z.url().optional(),
 
     /** Additional custom fields specific to this opportunity */
     customFields: oppCustomFieldsSchema.optional(),
   })
-  .merge(systemMetadataSchema);
+  .extend(systemMetadataSchema.shape);
 
 export type OpportunityBase = z.infer<typeof opportunityBaseSchema>;
 ```

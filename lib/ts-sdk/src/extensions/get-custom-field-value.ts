@@ -66,7 +66,7 @@ import type { ExtensibleObject } from "./types";
  * getCustomFieldValue(invalid, "legacyId", LegacyIdValueSchema); // throws ZodError
  * ```
  */
-export function getCustomFieldValue<T extends z.ZodTypeAny>(
+export function getCustomFieldValue<T extends z.ZodType>(
   obj: ExtensibleObject,
   key: string,
   valueType: T

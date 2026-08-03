@@ -12,7 +12,7 @@ import { z } from "zod";
 // String types
 // ############################################################################
 
-export const UuidSchema = z.string().uuid();
+export const UuidSchema = z.uuid();
 
 // ############################################################################
 // Numeric types
@@ -73,16 +73,13 @@ class PlainDate extends Date {
 /** Schema for UTC datetime fields (accepts an ISO string or a `Date`; outputs a `Date`) */
 export const UTCDateTimeSchema = z.preprocess(
   acceptDate(d => d.toISOString()),
-  z.string().datetime().transform(ensureUTC)
+  z.iso.datetime().transform(ensureUTC)
 );
 
 /** Schema for ISO date format: YYYY-MM-DD (accepts a YYYY-MM-DD string or a `Date`; outputs a `Date`) */
 export const ISODateSchema = z.preprocess(
   acceptDate(d => d.toISOString().slice(0, 10)),
-  z
-    .string()
-    .date()
-    .transform<Date>(str => new PlainDate(str))
+  z.iso.date().transform<Date>(str => new PlainDate(str))
 );
 
 /** Schema for ISO time format: HH:MM:SS with optional fractional seconds and timezone (RFC 3339 partial-time) */
@@ -93,13 +90,10 @@ export const ISOTimeSchema = z.preprocess(val => {
     return val.replace(/(Z|[+-]\d{2}:\d{2})$/, "");
   }
   return val;
-}, z.string().time());
+}, z.iso.time());
 
 /** Schema for offset datetime fields (accepts an ISO 8601 offset string or a `Date`; outputs a `Date`) */
 export const OffsetDateTimeSchema = z.preprocess(
   acceptDate(d => d.toISOString()),
-  z
-    .string()
-    .datetime({ offset: true })
-    .transform(str => new Date(str))
+  z.iso.datetime({ offset: true }).transform(str => new Date(str))
 );

@@ -24,7 +24,7 @@ export abstract class Resource<TItem> {
     path: string,
     body: unknown,
     opts: {
-      requestSchema?: z.ZodTypeAny;
+      requestSchema?: z.ZodType;
       responseSchema: z.ZodType<TRes, unknown>;
     }
   ): Promise<TRes> {

@@ -83,7 +83,7 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
  * Only runs when `commonModel` is an instance of `z.ZodObject` — when it is
  * not (e.g. `ZodRecord`, `ZodUnion`), returns without error. In practice all
  * schemas produced by `withCustomFields()` and `OpportunityBaseSchema` are
- * `ZodObject`s (`.extend()` / `.merge()` preserve the concrete type), so the
+ * `ZodObject`s (`.extend()` preserves the concrete type), so the
  * fallback is a safety net, not an expected code path.
  *
  * @internal

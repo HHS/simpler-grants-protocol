@@ -9,7 +9,7 @@ describe("Fuzz Testing Helper", () => {
 
   describe("checkZodMatchesJsonSchema", () => {
     it("should validate a matching UUID schema", async () => {
-      const zodSchema = z.string().uuid();
+      const zodSchema = z.uuid();
       const result = await checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
 
       expect(result.passed).toBe(true);
@@ -19,7 +19,7 @@ describe("Fuzz Testing Helper", () => {
     });
 
     it("should validate a matching email schema", async () => {
-      const zodSchema = z.string().email();
+      const zodSchema = z.email();
       const result = await checkZodMatchesJsonSchema(zodSchema, "email.yaml");
 
       expect(result.passed).toBe(true);
@@ -169,7 +169,7 @@ describe("Fuzz Testing Helper", () => {
         name: z.string(),
         fieldType: z.enum(["string", "number", "integer", "boolean", "object", "array"]),
         value: z.unknown(),
-        schema: z.string().url().optional(),
+        schema: z.url().optional(),
         description: z.string().optional(),
       });
 
@@ -184,7 +184,7 @@ describe("Fuzz Testing Helper", () => {
     it("should validate EmailCollection schema with $ref to email", async () => {
       // EmailCollection.yaml has $ref to email.yaml in multiple places
       // This tests nested $ref resolution in complex object structures
-      const emailSchema = z.string().email();
+      const emailSchema = z.email();
       const zodSchema = z.object({
         primary: emailSchema,
         otherEmails: z.record(z.string(), emailSchema).optional(),
@@ -205,7 +205,7 @@ describe("Fuzz Testing Helper", () => {
 
   describe("Integration Tests", () => {
     it("should work end-to-end with a real schema", async () => {
-      const zodSchema = z.string().uuid();
+      const zodSchema = z.uuid();
       const result = await checkZodMatchesJsonSchema(zodSchema, "uuid.yaml");
 
       expect(result.totalTests).toBe(SAMPLE_SIZE);
@@ -214,8 +214,8 @@ describe("Fuzz Testing Helper", () => {
     });
 
     it("should validate multiple schemas in sequence", async () => {
-      const uuidSchema = z.string().uuid();
-      const emailSchema = z.string().email();
+      const uuidSchema = z.uuid();
+      const emailSchema = z.email();
 
       const uuidResult = await checkZodMatchesJsonSchema(uuidSchema, "uuid.yaml");
       const emailResult = await checkZodMatchesJsonSchema(emailSchema, "email.yaml");

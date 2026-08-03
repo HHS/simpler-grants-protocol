@@ -136,12 +136,12 @@ export const OpportunityBaseSchema = z
     acceptedApplicantTypes: z.array(ApplicantTypeSchema).nullish(),
 
     /** URL for the original source of the Opportunity */
-    source: z.string().url().nullish(),
+    source: z.url().nullish(),
 
     /** Additional custom fields specific to this Opportunity */
     customFields: z.record(z.string(), CustomFieldSchema).nullish(),
   })
-  .merge(SystemMetadataSchema);
+  .extend(SystemMetadataSchema.shape);
 
 // ############################################################################
 // Search models

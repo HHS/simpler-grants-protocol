@@ -46,7 +46,7 @@ export interface CustomFieldSpec {
   /** The JSON schema type for the field */
   fieldType: CustomFieldType;
   /** Optional Zod schema to validate the value property. Defaults based on fieldType */
-  value?: z.ZodTypeAny;
+  value?: z.ZodType;
   /** Optional description; used as the default for CustomField.description when present */
   description?: string;
 }
@@ -362,7 +362,7 @@ export interface MappingsSchemaInput {
   /** Custom fields to attach via `withCustomFields()`. */
   customFields?: Record<string, CustomFieldSpec>;
   /** Source-system Zod schema (the shape a source system returns). */
-  sourceSchema: z.ZodTypeAny;
+  sourceSchema: z.ZodType;
   /** Declarative mappings compiled into transforms by `definePlugin()`. */
   mappings: SchemaMappings;
   toCommon?: never;
@@ -384,7 +384,7 @@ export interface FunctionsSchemaInput {
   /** Custom fields to attach via `withCustomFields()`. */
   customFields?: Record<string, CustomFieldSpec>;
   /** Source-system Zod schema (the shape a source system returns). */
-  sourceSchema: z.ZodTypeAny;
+  sourceSchema: z.ZodType;
   mappings?: never;
   /** Map a source record to the common-schema shape. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

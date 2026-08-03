@@ -1,4 +1,4 @@
-import { ZodSchema } from "zod";
+import { ZodType } from "zod";
 import { ajv, validate as validateWithAjv } from "./ajv-validator";
 import { generate } from "json-schema-faker";
 
@@ -130,7 +130,7 @@ function hashString(str: string): number {
  * @returns The result of the fuzz test comparison
  */
 export async function checkZodMatchesJsonSchema(
-  zodSchema: ZodSchema,
+  zodSchema: ZodType,
   jsonSchemaId: string,
   seed: number = DEFAULT_SEED
 ): Promise<FuzzTestResult> {
