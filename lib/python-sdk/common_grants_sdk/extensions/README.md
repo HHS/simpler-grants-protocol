@@ -59,8 +59,6 @@ There is no build step. Plugins are plain Python: you declare custom fields as a
 | **Custom filter** | A filter a plugin registers for one resource *method*, beyond the protocol's standard filters. Declared as a typed key on an `OpportunityFilters` subclass; lands under `customFilters` on the search request body. |
 | **`PluginRoutes` / `ResourceRoutes`** | The typed carriers passed to `define_plugin(routes=...)`. One slot per filter-capable resource and method, so a misspelled `resource` or `method` is a type error rather than a silently ignored registration. |
 | **`f`** | The helper singleton for building filter values — `f.eq(...)`, `f.in_([...])`, `f.between(...)`. Overloaded so each builder's static return type is the precise filter model the value implies. |
-| **`classify_filters()`** | The search-time step that sorts a consumer's flat `filters` dict into the ADR-0012 request body: standard filters as named fields, registered and ad-hoc keys under `customFilters`. Called for you by the client. |
-| **`validate_routes()`** | Registration-time validator for a plugin's route declarations. Runs at `define_plugin` so authoring mistakes surface for the author. |
 | **`FilterError`** | Structured error raised by filter validation, at registration time and call time. Carries `path`, `source_value`, and `cause`. |
 
 ## Declaring custom fields
@@ -572,11 +570,11 @@ Each builder is overloaded so its *static* return type is the precise model the 
 
 Values that do not map to a precise model — a `Money` dict, an ISO date string — fall through to `DefaultFilter`. That is deliberate, not a gap: the registered filter's own value model still validates them at call time, so a `DateComparison`-typed filter is checked even though `f.gt("2025-01-01")` is statically a `DefaultFilter`.
 
-> **Naming note.** `f.in_` and `f.not_in` carry trailing underscores because `in` and `not` are Python keywords; the wire operators they emit are still `in` and `notIn`. The TypeScript SDK spells the same helpers `F.in` / `F.notIn` (valid as JS object keys). This is a deliberate, documented naming divergence between the SDKs — the wire contract is identical.
+> **Naming note.** `f.in_` and `f.not_in` carry trailing underscores because `in` and `not` are Python keywords; the wire operators they emit are still `in` and `notIn`.
 
 ### Classifying consumer filters into the request body
 
-`define_plugin(...)` registers filter *declarations* — which names exist and what type each one is. `classify_filters(...)` is the separate **search-time** step that turns a consumer's actual filter values into the request body. The client calls it internally on every `search()`, so consumers normally never call it directly:
+`define_plugin(...)` registers filter *declarations* — which names exist and what type each one is. At search time, the client turns the consumer's actual filter values into the request body — consumers just pass `filters` to `search()`:
 
 ```python
 from common_grants_sdk.client import Config
@@ -607,29 +605,16 @@ The three-bucket classification rule (ADR-0012):
 2. **Registered custom filters** (declared on the route's TypedDict) → the `customFilters` record, validated against the model the plugin declared.
 3. **Ad-hoc filters** (anything else) → `customFilters` passthrough, validated against the union of the models in the [filter-type catalog](#filter-type-catalog-and-the-f-helpers) — so a value that does not fit its operator, such as `{"operator": "in", "value": "grant"}`, is still rejected rather than quietly forwarded.
 
-To build a request body without a client, call `classify_filters` directly:
-
-```python
-from common_grants_sdk.extensions import classify_filters
-
-body = classify_filters(
-    grants_gov_plugin.routes, "opportunities", "search", {"agency": f.in_(["HHS"])}
-)
-body.model_dump(by_alias=True, exclude_none=True, mode="json")
-```
-
-`mode="json"` is required — coerced `date` objects are not JSON-serializable in Pydantic's default python mode.
-
 Registered filters are looked up by the **exact** `(resource, method)` strings the plugin declared. A non-matching pair (a pluralization typo, say) yields no registered bucket at all, and every non-standard filter is then validated as if it were ad-hoc.
 
 ### Validation — registration time and call time
 
-`validate_routes(...)` runs when the plugin is defined, and again when `plugin.get_client()` binds routes, so an authoring mistake surfaces for the author rather than for a consumer later. It raises `FilterError` if:
+Route declarations are validated when the plugin is defined, and again when `plugin.get_client()` binds routes, so an authoring mistake surfaces for the author rather than for a consumer later. `define_plugin(...)` raises `FilterError` if:
 
 - a registered filter is annotated with something that is not one of the [catalog's value models](#filter-type-catalog-and-the-f-helpers) (`region: int`, or a non-filter model), or
 - a route redeclares a standard `OpportunityFilters` key with a different type — authors get the standard keys for free, and re-typing one creates a static/runtime mismatch.
 
-Call-time validation runs inside `classify_filters` for every key and is **fail-fast**: the first invalid value raises `FilterError` before any request body exists, so a malformed filter can never silently widen a consumer's search. This holds for standard, registered, and ad-hoc keys alike. `filter_info.errors` on a response carries server-reported filter feedback only.
+Call-time validation runs on every `search()` for every key and is **fail-fast**: the first invalid value raises `FilterError` before any request body exists, so a malformed filter can never silently widen a consumer's search. This holds for standard, registered, and ad-hoc keys alike. `filter_info.errors` on a response carries server-reported filter feedback only.
 
 `FilterError` carries the same structured context as `TransformError`:
 

@@ -138,22 +138,22 @@ The SDK is organized into modules, each with its own documentation:
 
 | Module | Description |
 |---|---|
-| [Client](common_grants_sdk/client/README.md) | HTTP client with auth, pagination, and low-level HTTP methods |
-| [Schemas](common_grants_sdk/schemas/README.md) | Pydantic models, validation, and generic response schemas |
-| [Extensions](common_grants_sdk/extensions/README.md) | Custom fields and plugin framework |
+| [Client](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/client/README.md) | HTTP client with auth, pagination, and low-level HTTP methods |
+| [Schemas](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/schemas/README.md) | Pydantic models, validation, and generic response schemas |
+| [Extensions](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) | Custom fields and plugin framework |
 
 ### API Client
 
-HTTP client with built-in authentication, auto-pagination, and environment variable configuration. See the [Client guide](common_grants_sdk/client/README.md) for setup, authentication, and usage examples.
+HTTP client with built-in authentication, auto-pagination, and environment variable configuration. See the [Client guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/client/README.md) for setup, authentication, and usage examples.
 
 ### Schemas and Validation
 
-[Pydantic v2](https://docs.pydantic.dev/) models for validating and parsing CommonGrants data, along with type-safe enum constants. See the [Schemas guide](common_grants_sdk/schemas/README.md) for validation examples, type safety patterns, and the full API reference.
+[Pydantic v2](https://docs.pydantic.dev/) models for validating and parsing CommonGrants data, along with type-safe enum constants. See the [Schemas guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/schemas/README.md) for validation examples, type safety patterns, and the full API reference.
 
 ### Extensions and Plugins
 
-Extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc or as reusable plugins. See the [Extensions guide](common_grants_sdk/extensions/README.md) for the full guide.
+Extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc or as reusable plugins. See the [Extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) for the full guide.
 
 ## License
 
-See [LICENSE](../../LICENSE.md)
+See [LICENSE](https://github.com/HHS/simpler-grants-protocol/blob/main/LICENSE.md)
