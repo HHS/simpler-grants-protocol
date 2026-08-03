@@ -86,7 +86,7 @@ The `website` catalog has its own `vitest` version (`^4.x`). The update script i
 
 ## Release expectations
 
-Version bumps are driven by [release-please](https://github.com/googleapis/release-please) from the merged PR's conventional-commit title — there is no separate file to add. What matters is choosing the right type: `chore(deps)` does **not** trigger a release, while `fix(deps)` (or `fix(<scope>)`) does.
+Version bumps are driven by [release-please](https://github.com/googleapis/release-please) from the merged PR's conventional-commit title — there is no separate file to add. What matters is choosing the right type: `chore(deps)` does **not** trigger a release (unless marked breaking with `!`), while `fix(deps)` (or `fix(<scope>)`) does.
 
 Most dependency PRs should stay `chore(deps)`. Use a releasing type only when a **production dependency changes in a published package**:
 

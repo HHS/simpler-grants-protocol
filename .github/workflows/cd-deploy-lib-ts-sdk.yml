@@ -34,14 +34,19 @@ jobs:
         with:
           ref: ${{ inputs.release_tag }}
 
-      # Guards the manual workflow_dispatch fallback against a mistyped ref
-      # (a branch, or another package's tag).
+      # Rejects a mistyped or spoofed ref (a branch, or another package's tag).
+      # release-please's own tag always passes, so this only ever fires on the
+      # manual workflow_dispatch fallback.
       - name: Validate release tag
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          if [[ "$RELEASE_TAG" != "@common-grants/sdk@"* ]]; then
-            echo "::error::release_tag must start with '@common-grants/sdk@'. Got: $RELEASE_TAG"
+          if [[ ! "$RELEASE_TAG" =~ ^@common-grants/sdk@[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::release_tag must look like '@common-grants/sdk@X.Y.Z'. Got: $RELEASE_TAG"
+            exit 1
+          fi
+          if ! git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo "::error::release_tag is not an existing tag. Got: $RELEASE_TAG"
             exit 1
           fi
 
@@ -67,6 +72,8 @@ jobs:
         run: pnpm publish --access public --no-git-checks
 
       - name: Notify completion
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           echo "TypeScript SDK package deployed to npm"
-          echo "Tag: ${{ inputs.release_tag }}"
+          echo "Tag: $RELEASE_TAG"

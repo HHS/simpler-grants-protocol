@@ -140,7 +140,7 @@ Option 3 is best if:
 - **Pros**
   - No forgettable artifact; every squashed commit is parsed.
   - Per-package Release PRs give batching and independent release timing.
-  - Native Python release type; version lives only in `pyproject.toml`.
+  - Native Python release type; the version is edited only in `pyproject.toml` (release-please mirrors it into `common_grants_sdk/__init__.py` on each release).
   - Bumps via PR, so branch protections can stay enabled.
   - Existing `name@version` tag format is preserved exactly.
 - **Cons**
