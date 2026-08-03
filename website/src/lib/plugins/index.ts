@@ -1,5 +1,9 @@
 // Types
-export type { ResolvedPluginField, Plugin } from "./types";
+export type {
+  ResolvedPluginField,
+  ResolvedPluginFilter,
+  Plugin,
+} from "./types";
 
 // Loader functions
 export { loadAllPlugins, getPluginIds, getFilterOptions } from "./loader";
