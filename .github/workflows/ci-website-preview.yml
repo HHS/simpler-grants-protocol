@@ -78,11 +78,8 @@ jobs:
         run: pnpm run test
 
       - name: Audit dependencies
-        # Calls the npm bulk advisory endpoint directly as a workaround for
-        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
-        # revert to `pnpm run audit:high` once pnpm ships native support.
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js --level high
+        run: pnpm run audit:high
 
   # Deploy the built artifact to a per-PR Cloudflare Worker. Decoupled from
   # the test/check/audit outcome (via artifact_ready) so previews stay

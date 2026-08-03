@@ -44,8 +44,5 @@ jobs:
         # checkpoint PR re-runs this audit, so anything live at merge time is gated
         # at the actionable boundary.
         #
-        # Calls the npm bulk advisory endpoint directly as a workaround for
-        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
-        # revert to `pnpm --filter typespec-versioning-changelog run audit` once pnpm ships native support.
         if: github.base_ref == 'main' || github.ref == 'refs/heads/main'
-        run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js --filter typespec-versioning-changelog
+        run: pnpm --filter typespec-versioning-changelog run audit
