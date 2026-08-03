@@ -7,6 +7,7 @@ on:
       - pnpm-lock.yaml
       - .github/dependabot.yml
       - .github/workflows/ci-catalog-validation.yml
+      - .github/scripts/audit-deps.js
   workflow_dispatch:
 
 jobs:
@@ -32,10 +33,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Audit dependencies
+        # This is the dependency gate for PRs: any dep change in any workspace
+        # package updates the root lockfile, which triggers this workflow.
+        # --recursive audits every workspace project (plain `pnpm list` at the
+        # root only covers the root importer).
+        #
         # Calls the npm bulk advisory endpoint directly as a workaround for
         # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
         # revert to `pnpm audit` once pnpm ships native support.
-        run: node .github/scripts/audit-deps.js --level moderate
+        run: node .github/scripts/audit-deps.js --recursive --level moderate
 
       - name: CI — core
         run: pnpm run ci:core

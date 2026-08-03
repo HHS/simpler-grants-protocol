@@ -13,6 +13,7 @@
 // Options:
 //   --level <severity>    Minimum severity to fail on (low|moderate|high|critical). Default: low
 //   --filter <pattern>    pnpm workspace filter (e.g. @common-grants/cli)
+//   --recursive           Audit every workspace project, not just the one in cwd
 //   --ignore-ghsa <id>    GHSA ID to ignore (can be repeated)
 //
 // Requires pnpm on PATH. Remove this script once pnpm ships
@@ -36,6 +37,7 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const args = process.argv.slice(2);
 let level = 'low';
 let filter = '';
+let recursive = false;
 const ignoreGhsas = new Set();
 
 for (let i = 0; i < args.length; i++) {
@@ -45,6 +47,9 @@ for (let i = 0; i < args.length; i++) {
       break;
     case '--filter':
       filter = args[++i];
+      break;
+    case '--recursive':
+      recursive = true;
       break;
     case '--ignore-ghsa':
       ignoreGhsas.add(args[++i]);
@@ -68,9 +73,12 @@ const severityGate = new Set(SEVERITY_ORDER.slice(threshold));
 // 1. Collect all transitive dependencies via pnpm
 // ---------------------------------------------------------------------------
 
+// Plain `pnpm list` only covers the project in cwd — at the workspace root
+// that is just the root importer, which has almost no deps. --recursive is
+// required for a genuinely workspace-wide audit.
 const listCmd = filter
   ? `pnpm list --filter ${filter} --json --depth=Infinity`
-  : 'pnpm list --json --depth=Infinity';
+  : `pnpm list ${recursive ? '-r ' : ''}--json --depth=Infinity`;
 
 let raw;
 try {
