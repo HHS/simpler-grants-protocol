@@ -133,7 +133,7 @@ Option 3 is best if:
   1. **Regular change:** Merge a PR titled `fix(ts-sdk): ...` or `feat(core): ...`; the affected package's Release PR is opened or updated automatically.
   2. **Stacking changes:** Merge several PRs; they accumulate in the open Release PR until the team merges it.
   3. **Release:** Merge the Release PR; tagging, GitHub release, and npm/PyPI publish happen automatically.
-  4. **Merge without release-worthy changes:** `chore:`/`ci:`/`test:` commits do not open Release PRs.
+  4. **Merge without release-worthy changes:** `chore:`/`ci:`/`test:` commits do not open Release PRs (unless marked breaking with `!`).
 
 #### Tradeoffs
 

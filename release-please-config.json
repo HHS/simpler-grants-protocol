@@ -38,8 +38,7 @@
       "release-type": "python",
       "package-name": "common-grants-sdk",
       "component": "common-grants-sdk",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": ["common_grants_sdk/__init__.py"]
+      "changelog-path": "CHANGELOG.md"
     }
   }
 }

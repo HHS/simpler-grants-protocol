@@ -4,7 +4,7 @@ CommonGrants Python SDK
 A Python implementation of the CommonGrants protocol.
 """
 
-__version__ = "0.8.0"  # x-release-please-version
+__version__ = "0.8.0"
 
 from . import schemas
 from .client import Auth, Client, Config

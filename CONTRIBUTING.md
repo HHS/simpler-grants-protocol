@@ -133,9 +133,9 @@ PR titles must follow the [Conventional Commits](https://www.conventionalcommits
 | `feat` | Minor release | `feat(core): add award schemas` |
 | `feat!` or `fix!` (or a `BREAKING CHANGE:` footer) | Breaking release (minor while pre-1.0) | `feat(cli)!: drop Node 20 support` |
 | `perf`, `revert`, `docs`, `refactor`, `build` | Patch release | `docs(website): clarify filter usage` |
-| `chore`, `ci`, `test` | No release; hidden from changelogs | `chore(deps): bump the runtime group` |
+| `chore`, `ci`, `test` | No release; hidden from changelogs (a `!` marker still cuts a breaking release) | `chore(deps): bump the runtime group` |
 
-The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). See [lib/README.md](lib/README.md) for how releases are cut from this history.
+The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this check — retitle it `revert: <description>` before merging. See [lib/README.md](lib/README.md) for how releases are cut from this history.
 
 ## Getting started
 

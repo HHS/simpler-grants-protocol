@@ -54,7 +54,7 @@ The PR title becomes the squashed commit subject on `main`, which release-please
 | `fix(core): handle empty filter values` | patch |
 | `feat(ts-sdk): add transform helpers` | minor |
 | `feat(cli)!: drop Node 20 support` | major (minor while packages are pre-1.0) |
-| `chore: ...`, `ci: ...`, `test: ...` | no release |
+| `chore: ...`, `ci: ...`, `test: ...` | no release (a breaking `!` marker still releases) |
 | `perf: ...`, `revert: ...`, `docs: ...`, `refactor: ...`, `build: ...` | patch |
 
 A `BREAKING CHANGE:` footer in the squashed commit body also triggers a breaking bump.
