@@ -34,6 +34,15 @@ const availableVersions = [
     max-width: 480px;
   }
 
+  /* Swagger renders the version pill as `<pre class="version">`, and Starlight's
+     global code-block styling gives every `pre` a `1px solid var(--sl-color-gray-5)`
+     border that bleeds onto the pill. Swagger's own CSS never resets it, so strip
+     it here. Scoped-component styles can't reach Swagger's JS-injected DOM, hence
+     `:global`. */
+  :global(.swagger-ui .version) {
+    border: none;
+  }
+
   .version-selector label {
     display: flex;
     flex-direction: column;
