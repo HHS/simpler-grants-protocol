@@ -83,6 +83,7 @@ overrides:
   lodash@>=4.0.0 <=4.17.23: '>=4.18.0'
   qs@<6.15.2: '>=6.15.2'
   sharp@<0.35.0: '>=0.35.0'
+  swagger-ui-dist@<5.32.12: '>=5.32.12'
   undici@>=7.23.0 <7.28.0: 7.28.0
   vite@>=6.0.0 <=6.4.2: '>=6.4.3'
   vite@>=7.0.0 <=7.3.1: '>=7.3.2'
@@ -5242,9 +5243,6 @@ packages:
     resolution: {integrity: sha512-ekx94z1rRc5LDi6oSUaeRnYhd0UOJxdtQCL2rF8xpWxD3TPAsISWOrxezqGovqS38GRZOdpDfvQe3ts6F7nsng==}
     engines: {node: '>=16'}
     hasBin: true
-
-  swagger-ui-dist@5.32.1:
-    resolution: {integrity: sha512-6HQoo7+j8PA2QqP5kgAb9dl1uxUjvR0SAoL/WUp1sTEvm0F6D5npgU2OGCLwl++bIInqGlEUQ2mpuZRZYtyCzQ==}
 
   swagger-ui-dist@5.32.12:
     resolution: {integrity: sha512-ceXE+KNc5LXafhh36trB6nxK+U2EIKUWzHT7sBiMosf2eJLAefalYnTwMouQBmSyED6m7Yz+GYZEcL+Glt3sww==}
@@ -11331,10 +11329,6 @@ snapshots:
       picocolors: 1.1.1
       sax: 1.6.0
 
-  swagger-ui-dist@5.32.1:
-    dependencies:
-      '@scarf/scarf': 1.4.0
-
   swagger-ui-dist@5.32.12:
     dependencies:
       '@scarf/scarf': 1.4.0
@@ -11342,7 +11336,7 @@ snapshots:
   swagger-ui-express@5.0.1(express@4.22.2):
     dependencies:
       express: 4.22.2
-      swagger-ui-dist: 5.32.1
+      swagger-ui-dist: 5.32.12
 
   synckit@0.11.13:
     dependencies:
