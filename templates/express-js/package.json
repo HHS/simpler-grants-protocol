@@ -32,6 +32,7 @@
     "cors": "^2.8.6",
     "express": "^4.22.2",
     "js-yaml": "^4.3.1",
+    "lodash": "4.17.20",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.1",
     "zod": "^3.25.76"
