@@ -436,8 +436,8 @@ importers:
         specifier: ^0.35.3
         version: 0.35.3(@types/node@22.20.0)
       swagger-ui-dist:
-        specifier: ^5.32.1
-        version: 5.32.1
+        specifier: ^5.32.12
+        version: 5.32.12
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -5233,8 +5233,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  swagger-ui-dist@5.32.1:
-    resolution: {integrity: sha512-6HQoo7+j8PA2QqP5kgAb9dl1uxUjvR0SAoL/WUp1sTEvm0F6D5npgU2OGCLwl++bIInqGlEUQ2mpuZRZYtyCzQ==}
+  swagger-ui-dist@5.32.12:
+    resolution: {integrity: sha512-ceXE+KNc5LXafhh36trB6nxK+U2EIKUWzHT7sBiMosf2eJLAefalYnTwMouQBmSyED6m7Yz+GYZEcL+Glt3sww==}
 
   swagger-ui-express@5.0.1:
     resolution: {integrity: sha512-SrNU3RiBGTLLmFU8GIJdOdanJTl4TOmT27tt3bWWHppqYmAZ6IDuEuBvMU6nZq0zLEe6b/1rACXCgLZqO6ZfrA==}
@@ -11300,14 +11300,14 @@ snapshots:
       picocolors: 1.1.1
       sax: 1.6.0
 
-  swagger-ui-dist@5.32.1:
+  swagger-ui-dist@5.32.12:
     dependencies:
       '@scarf/scarf': 1.4.0
 
   swagger-ui-express@5.0.1(express@4.22.2):
     dependencies:
       express: 4.22.2
-      swagger-ui-dist: 5.32.1
+      swagger-ui-dist: 5.32.12
 
   synckit@0.11.13:
     dependencies:
