@@ -29,24 +29,22 @@ jobs:
         working-directory: ./lib/cli
 
     steps:
+      # The refs/tags/ qualifier pins the checkout to the tag namespace — a
+      # branch with the same name can't be substituted, and a nonexistent tag
+      # fails the checkout outright.
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.release_tag }}
+          ref: refs/tags/${{ inputs.release_tag }}
 
-      # Rejects a mistyped or spoofed ref (a branch, or another package's tag).
-      # release-please's own tag always passes, so this only ever fires on the
-      # manual workflow_dispatch fallback.
+      # Rejects another package's tag or a malformed version on the manual
+      # workflow_dispatch fallback; release-please's own tag always passes.
       - name: Validate release tag
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          if [[ ! "$RELEASE_TAG" =~ ^@common-grants/cli@[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ! "$RELEASE_TAG" =~ ^@common-grants/cli@[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
             echo "::error::release_tag must look like '@common-grants/cli@X.Y.Z'. Got: $RELEASE_TAG"
-            exit 1
-          fi
-          if ! git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
-            echo "::error::release_tag is not an existing tag. Got: $RELEASE_TAG"
             exit 1
           fi
 
