@@ -4,6 +4,12 @@ on:
   pull_request:
     types: [opened, edited, synchronize]
 
+# Every title or body edit fires a run, so supersede rather than queue them; only
+# the newest title is worth checking.
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 # Reads the title from the event payload, so no token scopes are needed.
 permissions: {}
 
