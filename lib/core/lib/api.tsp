@@ -31,6 +31,13 @@ using Versioning;
   }
 )
 @tagMetadata("Forms", #{ description: "Endpoints related to forms" })
+@tagMetadata("Awards", #{ description: "Endpoints related to grant awards" })
+@tagMetadata(
+  "Organizations",
+  #{
+    description: "Endpoints related to viewing and syncing organization profiles",
+  }
+)
 @tagMetadata(
   "Application Reviews",
   #{
@@ -52,13 +59,6 @@ using Versioning;
 @tagMetadata(
   "Opportunities",
   #{ description: "Endpoints related to funding opportunities" }
-)
-@tagMetadata("Awards", #{ description: "Endpoints related to grant awards" })
-@tagMetadata(
-  "Organizations",
-  #{
-    description: "Endpoints related to viewing and syncing organization profiles",
-  }
 )
 @route("/common-grants") // Prefixes all routes with `/common-grants/`
 namespace CommonGrants.API;
