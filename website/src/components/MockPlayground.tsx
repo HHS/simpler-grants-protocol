@@ -6,6 +6,8 @@ import {
   buildHandlersFromSpec,
   type OpenApiSpec,
 } from "@/lib/mock/spec-handlers";
+import { buildOpportunityHandlers } from "@/lib/mock/opportunities/handlers";
+import type { Version } from "@/lib/mock/opportunities/fixtures";
 
 /**
  * Throwaway MSW playground (#1034-T3): starts a Mock Service Worker and answers
@@ -67,11 +69,14 @@ export default function MockPlayground() {
       const spec = yaml.load(await response.text(), {
         schema: yaml.CORE_SCHEMA,
       }) as OpenApiSpec;
-      const handlers = await buildHandlersFromSpec(spec);
+      const specHandlers = await buildHandlersFromSpec(spec);
+      const opportunityHandlers = buildOpportunityHandlers(version as Version);
 
       // Skip if unmounted or superseded by a newer version toggle.
       if (cancelledRef.current || token !== versionTokenRef.current) return;
-      worker.resetHandlers(...handlers);
+      // Opportunity handlers first: MSW resolves first-match-wins, so they
+      // override the generated `fromOpenApi` handlers for the same paths.
+      worker.resetHandlers(...opportunityHandlers, ...specHandlers);
       setError(null);
     } catch (err) {
       if (cancelledRef.current || token !== versionTokenRef.current) return;

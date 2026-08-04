@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import yaml from "js-yaml";
+import type { HttpHandler } from "msw";
 import { buildHandlersFromSpec } from "@/lib/mock/spec-handlers";
+import { buildOpportunityHandlers } from "@/lib/mock/opportunities/handlers";
+import { OPPORTUNITY_FIXTURES } from "@/lib/mock/opportunities/fixtures";
 
 interface OpenApiSpec {
   paths: Record<string, unknown>;
@@ -55,4 +58,78 @@ describe("buildHandlersFromSpec", () => {
       expect(typeof body.paginationInfo).toBe("object");
     },
   );
+
+  it("returns byte-identical bodies across two calls to the same generated (non-opportunity) handler", async () => {
+    const spec = loadSpec("0.3.0");
+
+    const handlers = await buildHandlersFromSpec(spec);
+    const handler = handlers.find(
+      (h) => String(h.info.path) === "/common-grants/opportunities",
+    );
+    expect(handler).toBeDefined();
+
+    const firstResult = await handler!.run({
+      request: new Request(OPPORTUNITIES_URL),
+      requestId: "test-memoization-1",
+      resolutionContext: { baseUrl: "http://localhost/" },
+    });
+    const secondResult = await handler!.run({
+      request: new Request(OPPORTUNITIES_URL),
+      requestId: "test-memoization-2",
+      resolutionContext: { baseUrl: "http://localhost/" },
+    });
+
+    expect(firstResult).not.toBeNull();
+    expect(secondResult).not.toBeNull();
+
+    const firstBody = (await firstResult!.response!.json()) as Record<
+      string,
+      unknown
+    >;
+    const secondBody = (await secondResult!.response!.json()) as Record<
+      string,
+      unknown
+    >;
+
+    expect(JSON.stringify(secondBody)).toBe(JSON.stringify(firstBody));
+  });
+
+  it("opportunity path resolves to the hand-authored handler, not the generated one", async () => {
+    const spec = loadSpec("0.3.0");
+    const specHandlers = await buildHandlersFromSpec(spec);
+    const opportunityHandlers = buildOpportunityHandlers("0.3.0");
+
+    // Production order (MockPlayground.handleVersionChange): hand-authored
+    // opportunity handlers registered before the generated `fromOpenApi` set,
+    // so MSW's first-match-wins semantics let them override the generated
+    // opportunity detail handler.
+    const combinedHandlers: HttpHandler[] = [
+      ...opportunityHandlers,
+      ...specHandlers,
+    ];
+
+    const oppId = OPPORTUNITY_FIXTURES[0].id;
+    const request = new Request(
+      `http://localhost/common-grants/opportunities/${oppId}`,
+    );
+    const resolutionContext = { baseUrl: "http://localhost/" };
+
+    let winner: HttpHandler | undefined;
+    for (const handler of combinedHandlers) {
+      const parsedResult = await handler.parse({ request, resolutionContext });
+      const matches = await handler.predicate({
+        request,
+        parsedResult,
+        resolutionContext,
+      });
+      if (matches) {
+        winner = handler;
+        break;
+      }
+    }
+
+    expect(winner).toBeDefined();
+    expect(opportunityHandlers).toContain(winner);
+    expect(specHandlers).not.toContain(winner);
+  });
 });
