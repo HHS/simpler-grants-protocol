@@ -69,8 +69,11 @@ function replayResponse(cached: CachedResponse): Response {
  * accessible off the public `HttpHandler` type, hence the cast) and returns the
  * same array. The cache lives in this closure, so a fresh call to
  * `buildHandlersFromSpec` (e.g. on a version swap) starts a fresh cache.
+ *
+ * Exported for tests — production code reaches it through
+ * `buildHandlersFromSpec`.
  */
-function memoize(handlers: HttpHandler[]): HttpHandler[] {
+export function memoize(handlers: HttpHandler[]): HttpHandler[] {
   const cache = new Map<string, Promise<CachedResponse | undefined>>();
 
   for (const handler of handlers) {
@@ -81,8 +84,16 @@ function memoize(handlers: HttpHandler[]): HttpHandler[] {
       const key = await requestCacheKey(info.request);
       let cached = cache.get(key);
       if (!cached) {
-        cached = Promise.resolve(original(info)).then((result) =>
-          result instanceof Response ? snapshotResponse(result) : undefined,
+        cached = Promise.resolve(original(info)).then(
+          (result) =>
+            result instanceof Response ? snapshotResponse(result) : undefined,
+          (error: unknown) => {
+            // Don't let a one-off resolver failure poison the key: evict it so
+            // the next request retries, and rethrow so MSW reports it as it
+            // would without memoization.
+            cache.delete(key);
+            throw error;
+          },
         );
         cache.set(key, cached);
       }

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { HttpHandler } from "msw";
 import { buildOpportunityHandlers } from "@/lib/mock/opportunities/handlers";
 import {
+  CANONICAL_OPPORTUNITY_ID,
   OPPORTUNITY_FIXTURES,
   type Version,
 } from "@/lib/mock/opportunities/fixtures";
@@ -57,7 +58,7 @@ describe("buildOpportunityHandlers", () => {
       expect(body.paginationInfo).toEqual({
         page: 1,
         pageSize: 100,
-        totalItems: 10,
+        totalItems: OPPORTUNITY_FIXTURES.length,
         totalPages: 1,
       });
     });
@@ -95,12 +96,12 @@ describe("buildOpportunityHandlers", () => {
       expect(body.paginationInfo).toEqual({
         page: 999,
         pageSize: 100,
-        totalItems: 10,
+        totalItems: OPPORTUNITY_FIXTURES.length,
         totalPages: 1,
       });
     });
 
-    it("clamps pageSize to 100 when a larger value is requested", async () => {
+    it("honors a pageSize above the default, since the spec declares no maximum", async () => {
       const handlers = buildOpportunityHandlers("0.3.0");
 
       const handler = handlers.find(
@@ -110,7 +111,7 @@ describe("buildOpportunityHandlers", () => {
 
       const result = await handler!.run({
         request: new Request(`${OPPORTUNITIES_URL}?pageSize=9999`),
-        requestId: "test-list-pagesize-too-large",
+        requestId: "test-list-pagesize-above-default",
         resolutionContext: { baseUrl: "http://localhost/" },
       });
 
@@ -118,15 +119,20 @@ describe("buildOpportunityHandlers", () => {
       expect(result!.response?.status).toBe(200);
 
       const body = (await result!.response!.json()) as {
-        paginationInfo: { pageSize: number };
+        paginationInfo: { pageSize: number; totalPages: number };
       };
 
-      expect(body.paginationInfo.pageSize).toBe(100);
+      expect(body.paginationInfo.pageSize).toBe(9999);
+      expect(body.paginationInfo.totalPages).toBe(1);
     });
 
-    it.each([0, -5])(
-      "clamps pageSize to at least 1 when pageSize=%i is requested",
-      async (pageSizeValue) => {
+    it.each([
+      ["pageSize", "0"],
+      ["pageSize", "-5"],
+      ["page", "0"],
+    ])(
+      "returns 400 with the protocol Error shape when %s=%s falls below the spec minimum",
+      async (param, value) => {
         const handlers = buildOpportunityHandlers("0.3.0");
 
         const handler = handlers.find(
@@ -135,25 +141,29 @@ describe("buildOpportunityHandlers", () => {
         expect(handler).toBeDefined();
 
         const result = await handler!.run({
-          request: new Request(
-            `${OPPORTUNITIES_URL}?pageSize=${pageSizeValue}`,
-          ),
-          requestId: `test-list-pagesize-${pageSizeValue}`,
+          request: new Request(`${OPPORTUNITIES_URL}?${param}=${value}`),
+          requestId: `test-list-${param}-${value}`,
           resolutionContext: { baseUrl: "http://localhost/" },
         });
 
         expect(result).not.toBeNull();
-        expect(result!.response?.status).toBe(200);
+        expect(result!.response?.status).toBe(400);
 
         const body = (await result!.response!.json()) as {
-          paginationInfo: { pageSize: number };
+          status: number;
+          message: string;
+          errors: Array<{ field: string; message: string }>;
         };
 
-        expect(body.paginationInfo.pageSize).toBeGreaterThanOrEqual(1);
+        expect(body.status).toBe(400);
+        expect(typeof body.message).toBe("string");
+        expect(body.errors).toEqual([
+          { field: param, message: "Must be at least 1" },
+        ]);
       },
     );
 
-    it("falls back to the default pageSize when a non-numeric value is requested", async () => {
+    it("returns 400 when a pagination param is present but not an integer", async () => {
       const handlers = buildOpportunityHandlers("0.3.0");
 
       const handler = handlers.find(
@@ -168,12 +178,38 @@ describe("buildOpportunityHandlers", () => {
       });
 
       expect(result).not.toBeNull();
+      expect(result!.response?.status).toBe(400);
+
+      const body = (await result!.response!.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+
+      expect(body.errors).toHaveLength(1);
+      expect(body.errors[0].field).toBe("pageSize");
+      expect(body.errors[0].message).toContain("integer");
+    });
+
+    it("applies both spec defaults when the pagination params are omitted entirely", async () => {
+      const handlers = buildOpportunityHandlers("0.3.0");
+
+      const handler = handlers.find(
+        (h) => String(h.info.path) === "/common-grants/opportunities",
+      );
+      expect(handler).toBeDefined();
+
+      const result = await handler!.run({
+        request: new Request(OPPORTUNITIES_URL),
+        requestId: "test-list-pagination-defaults",
+        resolutionContext: { baseUrl: "http://localhost/" },
+      });
+
       expect(result!.response?.status).toBe(200);
 
       const body = (await result!.response!.json()) as {
-        paginationInfo: { pageSize: number };
+        paginationInfo: { page: number; pageSize: number };
       };
 
+      expect(body.paginationInfo.page).toBe(1);
       expect(body.paginationInfo.pageSize).toBe(100);
     });
   });
@@ -184,6 +220,39 @@ describe("buildOpportunityHandlers", () => {
     // projection) so this test can't pass by accident on a record where the
     // two shapes happen to coincide.
     const STEM_ID = "573525f2-8e15-4405-83fb-e6523511d893";
+
+    // Swagger UI pre-fills the `oppId` box with the specs' `Types.uuid`
+    // example, so this is the request a visitor sends when they click "Try it
+    // out" and then "Execute" without touching anything. It must not 404.
+    it.each(VERSIONS)(
+      "answers 200 for the id Swagger UI pre-fills, for v%s",
+      async (version) => {
+        const handlers = buildOpportunityHandlers(version);
+
+        const detailHandler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities/:oppId",
+        );
+        expect(detailHandler).toBeDefined();
+
+        const result = await detailHandler!.run({
+          request: new Request(
+            `http://localhost/common-grants/opportunities/${CANONICAL_OPPORTUNITY_ID}`,
+          ),
+          requestId: `test-detail-canonical-${version}`,
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
+
+        expect(result!.response?.status).toBe(200);
+
+        const body = (await result!.response!.json()) as {
+          data: { id: string; title: string };
+        };
+
+        expect(body.data.id).toBe(CANONICAL_OPPORTUNITY_ID);
+        // The values the spec's own "Example Value" pane advertises.
+        expect(body.data.title).toBe("Small business grant program");
+      },
+    );
 
     it("echoes the requested oppId and matches the list item's shared fields, while adding the detail-only competitions field", async () => {
       const handlers = buildOpportunityHandlers("0.3.0");
@@ -665,9 +734,9 @@ describe("buildOpportunityHandlers", () => {
       const handlers = buildOpportunityHandlers("0.3.0");
 
       // Bound chosen against the real fixture data (see fixtures.ts): splits
-      // the 10 records' `funding.maxAwardAmount` values (25k, 30k, 50k, 60k,
-      // 75k, 100k, 120k, 250k, 500k, 2M) into 6 inside [50000, 250000] and 4
-      // outside it, so neither half is degenerate.
+      // the records' `funding.maxAwardAmount` values (25k, 30k, 50k, 50k, 60k,
+      // 75k, 100k, 120k, 250k, 500k, 2M) across [50000, 250000], so neither
+      // half is degenerate.
       const bound = {
         min: { amount: "50000.00", currency: "USD" },
         max: { amount: "250000.00", currency: "USD" },
@@ -733,10 +802,9 @@ describe("buildOpportunityHandlers", () => {
         page: 1,
         pageSize: 100,
         totalItems: 0,
-        // The handler falls back to `totalPages: 1` (via `|| 1`) rather than
-        // 0 when there are no matching items, even though
-        // Math.ceil(0 / pageSize) is 0.
-        totalPages: 1,
+        // An empty result set reports zero pages, matching how the list
+        // endpoint derives `totalPages` (both go through `paginationInfo()`).
+        totalPages: 0,
       });
 
       expect(body.sortInfo).toBeTypeOf("object");
@@ -781,7 +849,7 @@ describe("buildOpportunityHandlers", () => {
 
       // The currency mismatch excludes the record unconditionally, before the
       // operator is even considered, so `outside` also returns zero items
-      // rather than inverting to all 10.
+      // rather than inverting to the whole fixture set.
       expect(outsideBody.items).toHaveLength(0);
     });
 
@@ -896,10 +964,10 @@ describe("buildOpportunityHandlers", () => {
     it("filters using only the given bound when a maxAwardAmountRange filter omits max", async () => {
       const handlers = buildOpportunityHandlers("0.3.0");
 
-      // Bound chosen against the real fixture data (see fixtures.ts): the 10
-      // records' `funding.maxAwardAmount` values (25k, 30k, 50k, 60k, 75k,
-      // 100k, 120k, 250k, 500k, 2M) split into 8 at-or-above 50000 and 2
-      // below it, so this is a proper, non-degenerate subset.
+      // Bound chosen against the real fixture data (see fixtures.ts): the
+      // records' `funding.maxAwardAmount` values (25k, 30k, 50k, 50k, 60k,
+      // 75k, 100k, 120k, 250k, 500k, 2M) split into those at-or-above 50000
+      // and two below it, so this is a proper, non-degenerate subset.
       const body = await runSearch(handlers, {
         filters: {
           maxAwardAmountRange: {
@@ -929,6 +997,127 @@ describe("buildOpportunityHandlers", () => {
           Number(fullItem!.funding!.maxAwardAmount!.amount),
         ).toBeGreaterThanOrEqual(50000);
       }
+    });
+
+    // A malformed bound used to be dropped silently, which answered a
+    // filtered request with the entire unfiltered set — the response
+    // contradicting the filter the caller sent.
+    it.each([
+      [
+        "closeDateRange",
+        { operator: "between", value: { min: "not-a-date" } },
+        "filters.closeDateRange.value.min",
+      ],
+      [
+        "maxAwardAmountRange",
+        {
+          operator: "between",
+          value: { max: { amount: "lots", currency: "USD" } },
+        },
+        "filters.maxAwardAmountRange.value.max",
+      ],
+      [
+        "totalFundingAvailableRange",
+        { operator: "between", value: { min: "50000.00" } },
+        "filters.totalFundingAvailableRange.value.min",
+      ],
+    ])(
+      "returns 400 rather than silently dropping a malformed %s bound",
+      async (field, filter, expectedErrorField) => {
+        const handlers = buildOpportunityHandlers("0.3.0");
+
+        const handler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities/search",
+        );
+        expect(handler).toBeDefined();
+
+        const result = await handler!.run({
+          request: new Request(SEARCH_URL, {
+            method: "POST",
+            body: JSON.stringify({ filters: { [field]: filter } }),
+            headers: { "Content-Type": "application/json" },
+          }),
+          requestId: `test-search-bad-bound-${field}`,
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
+
+        expect(result!.response?.status).toBe(400);
+
+        const body = (await result!.response!.json()) as {
+          status: number;
+          message: string;
+          errors: Array<{ field: string; message: string }>;
+        };
+
+        expect(body.status).toBe(400);
+        expect(body.errors.map((error) => error.field)).toContain(
+          expectedErrorField,
+        );
+      },
+    );
+
+    it("reports unapplied customFilters via filterInfo.errors", async () => {
+      const handlers = buildOpportunityHandlers("0.3.0");
+
+      const body = await runSearch(handlers, {
+        filters: {
+          customFilters: {
+            agency: { operator: "in", value: ["NSF"] },
+            region: { operator: "in", value: ["Northeast"] },
+          },
+        },
+      });
+
+      // Echoed, but explicitly not applied — so the echo can't be read as
+      // "these narrowed the results".
+      expect(body.items).toHaveLength(OPPORTUNITY_FIXTURES.length);
+      expect(body.filterInfo.filters.customFilters).toEqual({
+        agency: { operator: "in", value: ["NSF"] },
+        region: { operator: "in", value: ["Northeast"] },
+      });
+      expect(body.filterInfo.errors).toHaveLength(1);
+      expect(body.filterInfo.errors![0]).toContain("agency");
+      expect(body.filterInfo.errors![0]).toContain("region");
+    });
+
+    it("omits filterInfo.errors when every filter sent was applied", async () => {
+      const handlers = buildOpportunityHandlers("0.3.0");
+
+      const body = await runSearch(handlers, {
+        filters: { status: { operator: "in", value: ["open"] } },
+      });
+
+      expect(body.filterInfo.errors).toBeUndefined();
+    });
+
+    it("returns 400 for a body pagination value below the spec minimum", async () => {
+      const handlers = buildOpportunityHandlers("0.3.0");
+
+      const handler = handlers.find(
+        (h) => String(h.info.path) === "/common-grants/opportunities/search",
+      );
+      expect(handler).toBeDefined();
+
+      const result = await handler!.run({
+        request: new Request(SEARCH_URL, {
+          method: "POST",
+          body: JSON.stringify({ pagination: { page: 0, pageSize: -1 } }),
+          headers: { "Content-Type": "application/json" },
+        }),
+        requestId: "test-search-bad-pagination",
+        resolutionContext: { baseUrl: "http://localhost/" },
+      });
+
+      expect(result!.response?.status).toBe(400);
+
+      const body = (await result!.response!.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+
+      expect(body.errors.map((error) => error.field)).toEqual([
+        "pagination.page",
+        "pagination.pageSize",
+      ]);
     });
   });
 });

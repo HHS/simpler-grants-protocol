@@ -5,8 +5,10 @@
  * (#1034-T5/T6) draw from, so the list, detail, and search endpoints stay
  * mutually consistent and return the same body on every call. Values are
  * assembled from the TypeSpec `@example` decorators under
- * `lib/core/lib/core/models/opportunity/` (semantic, not faker noise), and the
- * first three records are carried over verbatim (id + title) from
+ * `lib/core/lib/core/models/opportunity/` (semantic, not faker noise). The
+ * first record reproduces the spec's own published example (see
+ * `CANONICAL_OPPORTUNITY_ID`) so the docs pane and the live response agree, and
+ * the next three are carried over verbatim (id + title) from
  * `lib/ts-sdk/examples/mock-api-server.ts` so cross-repo examples stay
  * recognizable.
  *
@@ -18,8 +20,21 @@
  *    for v0.1 and from any `list`-variant projection.
  */
 
-/** Supported protocol versions, matching the OpenApiDocs dropdown. */
-export type Version = "0.1.0" | "0.2.0" | "0.3.0";
+/**
+ * Protocol versions this fixture knows how to shape, matching the OpenApiDocs
+ * dropdown. Adding a version to that dropdown without adding it here is caught
+ * by `isSupportedVersion`, which keeps the playground from silently falling
+ * back to randomly-generated opportunity data.
+ */
+export const SUPPORTED_VERSIONS = ["0.1.0", "0.2.0", "0.3.0"] as const;
+
+/** A protocol version the opportunity handlers can shape responses for. */
+export type Version = (typeof SUPPORTED_VERSIONS)[number];
+
+/** Narrows an arbitrary version string to a `Version`. */
+export function isSupportedVersion(value: string): value is Version {
+  return (SUPPORTED_VERSIONS as readonly string[]).includes(value);
+}
 
 /** Which endpoint shape to project: the list returns `OpportunityBase`, the
  * single-item read returns `OpportunityDetails` (v0.2+). */
@@ -38,7 +53,7 @@ export interface OppStatus {
   description?: string;
 }
 
-/** A single-date event (the only `Event` variant the fixture uses). */
+/** A single-date event (mirrors the `singleDate` variant of `Fields.Event`). */
 export interface SingleDateEvent {
   name: string;
   eventType: "singleDate";
@@ -47,11 +62,41 @@ export interface SingleDateEvent {
   description?: string;
 }
 
-/** Key dates for an opportunity (mirrors `Models.OppTimeline`). */
+/** A date-range event (mirrors the `dateRange` variant of `Fields.Event`). */
+export interface DateRangeEvent {
+  name: string;
+  eventType: "dateRange";
+  startDate: string;
+  startTime?: string;
+  endDate: string;
+  endTime?: string;
+  description?: string;
+}
+
+/** A free-form event (mirrors the `other` variant of `Fields.Event`). */
+export interface OtherEvent {
+  name: string;
+  eventType: "other";
+  details?: string;
+  description?: string;
+}
+
+/**
+ * Any `Fields.Event` variant. Named `TimelineEvent` rather than `Event` so it
+ * doesn't shadow the DOM global in files that use both.
+ */
+export type TimelineEvent = SingleDateEvent | DateRangeEvent | OtherEvent;
+
+/**
+ * Key dates for an opportunity (mirrors `Models.OppTimeline`). `postDate` and
+ * `closeDate` are narrowed to `SingleDateEvent` — the protocol allows any
+ * `Event` variant, but the close-date filter and sort read `.date`, so the
+ * fixture only ever uses single dates for those two.
+ */
 export interface OppTimeline {
   postDate?: SingleDateEvent;
   closeDate?: SingleDateEvent;
-  otherDates?: Record<string, SingleDateEvent>;
+  otherDates?: Record<string, TimelineEvent>;
 }
 
 /** Funding details for an opportunity (mirrors `Models.OppFunding`). */
@@ -95,7 +140,7 @@ export interface CompetitionStatus {
 export interface CompetitionTimeline {
   openDate?: SingleDateEvent;
   closeDate?: SingleDateEvent;
-  otherDates?: Record<string, SingleDateEvent>;
+  otherDates?: Record<string, TimelineEvent>;
 }
 
 /**
@@ -171,12 +216,129 @@ const programCode = (value: string): CustomField => ({
 });
 
 /**
- * The fixture set: 10 opportunities spanning all four statuses, a range of
+ * The id the specs publish as the `example` on `CommonGrants.Types.uuid`, which
+ * Swagger UI pre-fills into the `oppId` box when a visitor clicks "Try it out"
+ * on `GET /common-grants/opportunities/{oppId}`. A fixture record MUST carry
+ * this id, or the very first Execute a visitor runs — with the field untouched
+ * — answers 404. It is also the id used throughout the rendered "Example Value"
+ * panes, so the record carrying it mirrors those documented values field for
+ * field.
+ */
+export const CANONICAL_OPPORTUNITY_ID = "30a12e5e-5940-4c08-921c-17a8960fcf4b";
+
+/**
+ * A well-formed UUID deliberately absent from the fixture, reserved as the
+ * playground's 404 demo. Documented on the mock-playground page.
+ */
+export const RESERVED_MISSING_OPPORTUNITY_ID =
+  "00000000-0000-0000-0000-000000000000";
+
+/**
+ * The fixture set: 11 opportunities spanning all four statuses, a range of
  * funding amounts, and varied close dates so filtering and sorting visibly
  * change results. Sorted newest-first by `lastModifiedAt` to match the list
  * endpoint's default ordering.
  */
 export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
+  // ---- The spec's own documented example (see CANONICAL_OPPORTUNITY_ID) ----
+  {
+    // Field values here are copied verbatim from the `@example` decorators the
+    // spec renders in Swagger UI's "Example Value" pane for this endpoint
+    // (`Types.uuid`, `OpportunityBase.title`/`.description`, `OppStatus`,
+    // `OppFunding`, `OppTimeline`), so the documented example and the mock's
+    // live response agree field for field. Do not "fix" the 2024 dates against
+    // the `open` status — matching the published example is the point.
+    id: CANONICAL_OPPORTUNITY_ID,
+    title: "Small business grant program",
+    status: {
+      value: "open",
+      description: "The opportunity is currently accepting applications",
+    },
+    description:
+      "This program provides funding to small businesses to help them grow and create jobs",
+    funding: {
+      totalAmountAvailable: usd("1000000.00"),
+      minAwardAmount: usd("10000.00"),
+      maxAwardAmount: usd("50000.00"),
+      minAwardCount: 5,
+      maxAwardCount: 20,
+      estimatedAwardCount: 10,
+    },
+    keyDates: {
+      postDate: {
+        name: "Opportunity posted date",
+        eventType: "singleDate",
+        date: "2024-01-15",
+        description: "Opportunity is posted publicly",
+      },
+      closeDate: {
+        name: "Opportunity close date",
+        eventType: "singleDate",
+        date: "2024-12-31",
+        time: "17:00:00",
+        description: "Opportunity closes for all applications",
+      },
+      otherDates: {
+        anticipatedAward: {
+          name: "Anticipated award date",
+          eventType: "singleDate",
+          date: "2025-03-15",
+          description:
+            "When we expect to announce awards for this opportunity.",
+        },
+        applicationPeriod: {
+          name: "Application period",
+          eventType: "dateRange",
+          startDate: "2024-01-01",
+          endDate: "2024-01-31",
+          endTime: "17:00:00",
+          description: "Primary application period for the grant opportunity",
+        },
+        performancePeriod: {
+          name: "Period of Performance",
+          eventType: "dateRange",
+          startDate: "2024-01-01",
+          endDate: "2024-12-31",
+          description: "Period of performance for the grant",
+        },
+        infoSessions: {
+          name: "Info sessions",
+          eventType: "other",
+          details: "Every other Tuesday",
+          description: "Info sessions for the opportunity",
+        },
+      },
+    },
+    acceptedApplicantTypes: [
+      {
+        value: "for_profit_small_business",
+        description: "For-profit small businesses",
+      },
+    ],
+    source: "https://grants.example.gov/opportunities/small-business",
+    customFields: {
+      legacyId: legacyId(12344),
+      programCode: programCode("SMALL-BIZ"),
+    },
+    competitions: [
+      {
+        id: "c0a1b2c3-d4e5-4f60-8a1b-2c3d4e5f6a60",
+        opportunityId: CANONICAL_OPPORTUNITY_ID,
+        title: "Small business grant program — 2024 Cycle",
+        description: "The primary application cycle for the 2024 program year.",
+        status: { value: "open", description: "Accepting applications" },
+        keyDates: {
+          closeDate: closeOn("2024-12-31"),
+        },
+      },
+    ],
+    // No `@example` exists for the readOnly audit timestamps; these are chosen
+    // so this record sorts first under the list endpoint's default
+    // `lastModifiedAt desc` ordering, putting the documented example at the top
+    // of the list response.
+    createdAt: "2024-01-15T00:00:00Z",
+    lastModifiedAt: "2025-06-01T00:00:00Z",
+  },
   // ---- Carried over from lib/ts-sdk/examples/mock-api-server.ts (id + title) ----
   {
     id: "573525f2-8e15-4405-83fb-e6523511d893",

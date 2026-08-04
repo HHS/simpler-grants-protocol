@@ -1,9 +1,9 @@
 import { http, HttpResponse, type HttpHandler } from "msw";
 import {
-  OPPORTUNITY_FIXTURES,
   allForVersion,
   getById,
   shapeOpportunityForVersion,
+  type Money,
   type Opportunity,
   type Version,
 } from "./fixtures";
@@ -12,9 +12,11 @@ const LIST_PATH = "/common-grants/opportunities";
 const DETAIL_PATH = "/common-grants/opportunities/:oppId";
 const SEARCH_PATH = "/common-grants/opportunities/search";
 
+/** Spec defaults for `Pagination.PaginatedQueryParams` / `PaginatedBodyParams`. */
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 100;
-const MAX_PAGE_SIZE = 100;
+/** Both params declare `minimum: 1` and no maximum. */
+const MIN_PAGE_VALUE = 1;
 
 /** Wire values of `Models.OppSortBy` (`lib/core/lib/core/models/opportunity/search.tsp`). */
 const VALID_SORT_BY = new Set([
@@ -34,25 +36,40 @@ const VALID_SORT_ORDER = new Set(["asc", "desc"]);
 const VALID_ARRAY_OPERATORS = new Set(["in", "notIn"]);
 const VALID_RANGE_OPERATORS = new Set(["between", "outside"]);
 
+/**
+ * The filter/sort/pagination shapes below describe what a *well-formed* request
+ * body looks like. Bodies arrive as untrusted JSON, so the search handler
+ * validates every field — operator, bound presence, and bound value — and
+ * answers 400 before any of these types are relied on.
+ */
 interface StringArrayFilter {
   operator: string;
   value: string[];
 }
 
-interface RangeFilter {
+interface DateRangeFilter {
   operator: string;
-  value: {
-    min: string | { amount: string; currency: string };
-    max: string | { amount: string; currency: string };
-  };
+  value: { min?: string; max?: string };
 }
+
+interface MoneyRangeFilter {
+  operator: string;
+  value: { min?: Money; max?: Money };
+}
+
+/** The money-range filter fields of `Models.OppFilters`. */
+const MONEY_RANGE_FIELDS = [
+  "totalFundingAvailableRange",
+  "minAwardAmountRange",
+  "maxAwardAmountRange",
+] as const;
 
 interface OppFilters {
   status?: StringArrayFilter;
-  closeDateRange?: RangeFilter;
-  totalFundingAvailableRange?: RangeFilter;
-  minAwardAmountRange?: RangeFilter;
-  maxAwardAmountRange?: RangeFilter;
+  closeDateRange?: DateRangeFilter;
+  totalFundingAvailableRange?: MoneyRangeFilter;
+  minAwardAmountRange?: MoneyRangeFilter;
+  maxAwardAmountRange?: MoneyRangeFilter;
   customFilters?: Record<string, unknown>;
 }
 
@@ -77,7 +94,8 @@ interface FieldError {
 
 function moneyAmount(value: unknown): number | undefined {
   if (value && typeof value === "object" && "amount" in value) {
-    return Number((value as { amount: string }).amount);
+    const amount = Number((value as { amount: string }).amount);
+    return Number.isFinite(amount) ? amount : undefined;
   }
   return undefined;
 }
@@ -86,6 +104,16 @@ function dateTime(value: unknown): number | undefined {
   if (typeof value !== "string") return undefined;
   const ms = new Date(value).getTime();
   return Number.isNaN(ms) ? undefined : ms;
+}
+
+/** True if `value` is a `Money` object whose `amount` parses as a number. */
+function isMoney(value: unknown): value is Money {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as Money).currency === "string" &&
+    moneyAmount(value) !== undefined
+  );
 }
 
 /** Applies a `StringArrayFilter` (`in`/`notIn`) over the `status.value` field. */
@@ -106,17 +134,11 @@ function applyStatusFilter(
  */
 function applyDateRangeFilter(
   items: Opportunity[],
-  filter: RangeFilter,
+  filter: DateRangeFilter,
   getValue: (opp: Opportunity) => number | undefined,
 ): Opportunity[] {
-  const min =
-    filter.value.min !== undefined
-      ? dateTime(filter.value.min as string)
-      : undefined;
-  const max =
-    filter.value.max !== undefined
-      ? dateTime(filter.value.max as string)
-      : undefined;
+  const min = dateTime(filter.value.min);
+  const max = dateTime(filter.value.max);
 
   return items.filter((opp) => {
     const value = getValue(opp);
@@ -138,20 +160,13 @@ function applyDateRangeFilter(
  */
 function applyMoneyRangeFilter(
   items: Opportunity[],
-  filter: RangeFilter,
-  getMoney: (
-    opp: Opportunity,
-  ) => { amount: string; currency: string } | undefined,
+  filter: MoneyRangeFilter,
+  getMoney: (opp: Opportunity) => Money | undefined,
 ): Opportunity[] {
-  const minBound = filter.value.min as
-    | { amount: string; currency: string }
-    | undefined;
-  const maxBound = filter.value.max as
-    | { amount: string; currency: string }
-    | undefined;
+  const { min: minBound, max: maxBound } = filter.value;
   const currency = minBound?.currency ?? maxBound?.currency;
-  const min = minBound ? Number(minBound.amount) : undefined;
-  const max = maxBound ? Number(maxBound.amount) : undefined;
+  const min = moneyAmount(minBound);
+  const max = moneyAmount(maxBound);
 
   return items.filter((opp) => {
     const money = getMoney(opp);
@@ -200,26 +215,89 @@ function compare(a: string | number, b: string | number): number {
 }
 
 /**
- * Resolves `page`/`pageSize` per the spec's defaults (page=1, pageSize=100)
- * and bounds (both >= 1, pageSize <= 100). A missing or non-numeric raw value
- * falls back to its default; a present, well-formed value outside the valid
- * range is clamped to the nearest bound rather than replaced by the default
- * (e.g. a requested `pageSize=0` becomes 1, not 100).
+ * Orders items by `sortBy`, breaking ties on `id`. The tiebreaker makes the
+ * ordering a total order: without it, records sharing a sort value (two
+ * opportunities with the same `funding.maxAwardAmount`, say) keep their
+ * incoming order under a stable sort, so `desc` would not be the exact reverse
+ * of `asc`. Negating the composed comparator — tiebreaker included — is what
+ * makes the two directions mirror each other exactly.
  */
+function orderBy(
+  items: Opportunity[],
+  sortBy: string,
+  sortOrder: string,
+): Opportunity[] {
+  return [...items].sort((a, b) => {
+    const result =
+      compare(sortKey(a, sortBy), sortKey(b, sortBy)) || compare(a.id, b.id);
+    return sortOrder === "asc" ? result : -result;
+  });
+}
+
+/** A resolved pagination pair, or the validation errors that blocked it. */
+type PaginationResult =
+  | { ok: true; page: number; pageSize: number }
+  | { ok: false; errors: FieldError[] };
+
+/**
+ * Resolves one pagination param against the spec
+ * (`Pagination.PaginatedQueryParams` / `PaginatedBodyParams`): an optional
+ * `integer` with `minimum: 1`, defaulting to 1 (`page`) / 100 (`pageSize`), and
+ * **no** declared maximum.
+ *
+ * An absent value takes the default. A present value that isn't an integer, or
+ * that falls below the minimum, is a validation error rather than something to
+ * silently clamp — clamping would answer a request the caller didn't make, and
+ * surfacing it as a 400 gives the playground another error case to demonstrate.
+ *
+ * @param raw - The value as received: a query string, a JSON body value, or
+ * `undefined`/`""` when the caller omitted it.
+ * @param field - Dotted path used in the `{field, message}` error entry.
+ * @param fallback - The spec default for this param.
+ */
+function resolvePaginationParam(
+  raw: string | number | undefined,
+  field: string,
+  fallback: number,
+  errors: FieldError[],
+): number {
+  if (raw === undefined || raw === "") return fallback;
+
+  const value = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isInteger(value)) {
+    errors.push({ field, message: `Must be an integer, received: ${raw}` });
+    return fallback;
+  }
+  if (value < MIN_PAGE_VALUE) {
+    errors.push({ field, message: `Must be at least ${MIN_PAGE_VALUE}` });
+    return fallback;
+  }
+  return value;
+}
+
+/** Resolves both pagination params, collecting every validation error at once. */
 function resolvePagination(
-  rawPage: number,
-  rawPageSize: number,
-): { page: number; pageSize: number } {
-  return {
-    page: Math.max(1, Number.isFinite(rawPage) ? rawPage : DEFAULT_PAGE),
-    pageSize: Math.max(
-      1,
-      Math.min(
-        MAX_PAGE_SIZE,
-        Number.isFinite(rawPageSize) ? rawPageSize : DEFAULT_PAGE_SIZE,
-      ),
-    ),
-  };
+  rawPage: string | number | undefined,
+  rawPageSize: string | number | undefined,
+  fieldPrefix = "",
+): PaginationResult {
+  const errors: FieldError[] = [];
+  const page = resolvePaginationParam(
+    rawPage,
+    `${fieldPrefix}page`,
+    DEFAULT_PAGE,
+    errors,
+  );
+  const pageSize = resolvePaginationParam(
+    rawPageSize,
+    `${fieldPrefix}pageSize`,
+    DEFAULT_PAGE_SIZE,
+    errors,
+  );
+
+  return errors.length > 0
+    ? { ok: false, errors }
+    : { ok: true, page, pageSize };
 }
 
 /**
@@ -245,6 +323,20 @@ function successResponse(body: Record<string, unknown>): Response {
 }
 
 /**
+ * Builds `Pagination.PaginatedResultsInfo`. Shared by the list and search
+ * endpoints so `totalPages` is derived the same way on both — an empty result
+ * set reports zero pages, not one.
+ */
+function paginationInfo(page: number, pageSize: number, totalItems: number) {
+  return {
+    page,
+    pageSize,
+    totalItems,
+    totalPages: Math.ceil(totalItems / pageSize),
+  };
+}
+
+/**
  * Deterministic, fixture-backed MSW handlers for the CommonGrants opportunity
  * list and detail endpoints (#1034-T5). Bodies are static projections of
  * `OPPORTUNITY_FIXTURES`, so repeat calls return identical results, and the
@@ -258,26 +350,26 @@ export function buildOpportunityHandlers(version: Version): HttpHandler[] {
   return [
     http.get(LIST_PATH, ({ request }) => {
       const url = new URL(request.url);
-      const { page, pageSize } = resolvePagination(
-        parseInt(url.searchParams.get("page") ?? "", 10),
-        parseInt(url.searchParams.get("pageSize") ?? "", 10),
+      const pagination = resolvePagination(
+        url.searchParams.get("page") ?? undefined,
+        url.searchParams.get("pageSize") ?? undefined,
       );
+      if (!pagination.ok) {
+        return errorResponse(
+          400,
+          "Invalid pagination parameters",
+          pagination.errors,
+        );
+      }
+      const { page, pageSize } = pagination;
 
-      const sorted = allForVersion(version).sort(
-        (a, b) =>
-          -compare(sortKey(a, "lastModifiedAt"), sortKey(b, "lastModifiedAt")),
-      );
+      const sorted = orderBy(allForVersion(version), "lastModifiedAt", "desc");
       const start = (page - 1) * pageSize;
       const items = sorted.slice(start, start + pageSize);
 
       return successResponse({
         items,
-        paginationInfo: {
-          page,
-          pageSize,
-          totalItems: OPPORTUNITY_FIXTURES.length,
-          totalPages: Math.ceil(OPPORTUNITY_FIXTURES.length / pageSize),
-        },
+        paginationInfo: paginationInfo(page, pageSize, sorted.length),
       });
     }),
 
@@ -346,12 +438,7 @@ export function buildOpportunityHandlers(version: Version): HttpHandler[] {
           });
         }
       }
-      for (const field of [
-        "closeDateRange",
-        "totalFundingAvailableRange",
-        "minAwardAmountRange",
-        "maxAwardAmountRange",
-      ] as const) {
+      for (const field of ["closeDateRange", ...MONEY_RANGE_FIELDS] as const) {
         const filter = filters[field];
         if (!filter) continue;
         if (!VALID_RANGE_OPERATORS.has(filter.operator)) {
@@ -359,7 +446,9 @@ export function buildOpportunityHandlers(version: Version): HttpHandler[] {
             field: `filters.${field}.operator`,
             message: `Unknown range operator: ${String(filter.operator)}`,
           });
-        } else if (
+          continue;
+        }
+        if (
           !filter.value ||
           typeof filter.value !== "object" ||
           (filter.value.min === undefined && filter.value.max === undefined)
@@ -368,8 +457,39 @@ export function buildOpportunityHandlers(version: Version): HttpHandler[] {
             field: `filters.${field}.value`,
             message: "Must include at least one of min or max",
           });
+          continue;
+        }
+        // Validate the bounds themselves, not just their presence. An
+        // malformed bound used to be silently dropped, which returned a
+        // result set that contradicted the filter the caller asked for.
+        const isDateRange = field === "closeDateRange";
+        for (const bound of ["min", "max"] as const) {
+          const value = filter.value[bound];
+          if (value === undefined) continue;
+          if (isDateRange ? dateTime(value) === undefined : !isMoney(value)) {
+            errors.push({
+              field: `filters.${field}.value.${bound}`,
+              message: isDateRange
+                ? `Must be a valid ISO 8601 date, received: ${JSON.stringify(value)}`
+                : `Must be a Money object with a numeric amount and a currency, received: ${JSON.stringify(value)}`,
+            });
+          }
         }
       }
+
+      const pagination = resolvePagination(
+        body.pagination?.page,
+        body.pagination?.pageSize,
+        "pagination.",
+      );
+      if (!pagination.ok) {
+        errors.push(...pagination.errors);
+      }
+      // The defaults here are unreachable: an invalid pagination pair pushed
+      // errors above, and the guard below returns before they are used.
+      const { page, pageSize } = pagination.ok
+        ? pagination
+        : { page: DEFAULT_PAGE, pageSize: DEFAULT_PAGE_SIZE };
 
       if (errors.length > 0) {
         return errorResponse(400, "Invalid search request", errors);
@@ -425,28 +545,27 @@ export function buildOpportunityHandlers(version: Version): HttpHandler[] {
             : "Custom sort requested without customSortBy; results are unsorted.",
         );
       } else {
-        items = [...items].sort((a, b) => {
-          const result = compare(sortKey(a, sortBy), sortKey(b, sortBy));
-          return sortOrder === "asc" ? result : -result;
-        });
+        items = orderBy(items, sortBy, sortOrder);
       }
 
-      const { page, pageSize } = resolvePagination(
-        body.pagination?.page ?? NaN,
-        body.pagination?.pageSize ?? NaN,
-      );
+      // `filterInfo.errors` is the spec's channel for "non-fatal errors that
+      // occurred during filtering". `customFilters` are implementation-defined,
+      // so this mock echoes them but can't apply them — say so rather than
+      // letting the echo imply they narrowed the results.
+      const filterErrors: string[] = [];
+      const customFilterNames = Object.keys(filters.customFilters ?? {});
+      if (customFilterNames.length > 0) {
+        filterErrors.push(
+          `Custom filters are not supported by this mock and were not applied: ${customFilterNames.join(", ")}.`,
+        );
+      }
+
       const start = (page - 1) * pageSize;
-      const totalItems = items.length;
       const pageItems = items.slice(start, start + pageSize);
 
       return successResponse({
         items: pageItems,
-        paginationInfo: {
-          page,
-          pageSize,
-          totalItems,
-          totalPages: Math.ceil(totalItems / pageSize) || 1,
-        },
+        paginationInfo: paginationInfo(page, pageSize, items.length),
         sortInfo: {
           sortBy,
           ...(sorting?.customSortBy !== undefined
@@ -457,6 +576,7 @@ export function buildOpportunityHandlers(version: Version): HttpHandler[] {
         },
         filterInfo: {
           filters,
+          ...(filterErrors.length > 0 ? { errors: filterErrors } : {}),
         },
       });
     }),

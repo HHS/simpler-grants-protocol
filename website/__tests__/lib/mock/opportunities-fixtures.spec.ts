@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
+  CANONICAL_OPPORTUNITY_ID,
   OPPORTUNITY_FIXTURES,
+  RESERVED_MISSING_OPPORTUNITY_ID,
+  SUPPORTED_VERSIONS,
+  isSupportedVersion,
   shapeOpportunityForVersion,
   getById,
   allForVersion,
@@ -13,6 +17,41 @@ describe("OPPORTUNITY_FIXTURES", () => {
   it("contains between 8 and 12 detail-shaped records", () => {
     expect(OPPORTUNITY_FIXTURES.length).toBeGreaterThanOrEqual(8);
     expect(OPPORTUNITY_FIXTURES.length).toBeLessThanOrEqual(12);
+  });
+
+  // Swagger UI pre-fills the `oppId` box with the specs' `Types.uuid` example.
+  // If no fixture carries that id, the first Execute a visitor runs — with the
+  // field untouched — answers 404 instead of the documented record.
+  it("carries the id the specs publish as their uuid example", () => {
+    const canonical = getById(CANONICAL_OPPORTUNITY_ID);
+
+    expect(canonical).toBeDefined();
+    expect(canonical!.title).toBe("Small business grant program");
+    expect(canonical!.description).toBe(
+      "This program provides funding to small businesses to help them grow and create jobs",
+    );
+    expect(canonical!.status).toEqual({
+      value: "open",
+      description: "The opportunity is currently accepting applications",
+    });
+    expect(canonical!.funding?.totalAmountAvailable).toEqual({
+      amount: "1000000.00",
+      currency: "USD",
+    });
+  });
+
+  it("sorts the documented example first under the list endpoint's default ordering", () => {
+    const newestFirst = [...OPPORTUNITY_FIXTURES].sort(
+      (a, b) =>
+        new Date(b.lastModifiedAt).getTime() -
+        new Date(a.lastModifiedAt).getTime(),
+    );
+
+    expect(newestFirst[0].id).toBe(CANONICAL_OPPORTUNITY_ID);
+  });
+
+  it("leaves the reserved 404 id absent from the fixture set", () => {
+    expect(getById(RESERVED_MISSING_OPPORTUNITY_ID)).toBeUndefined();
   });
 
   it("gives every record the OpportunityBase-emitted shape", () => {
@@ -113,5 +152,15 @@ describe("getById", () => {
 
   it("returns undefined for an unknown id", () => {
     expect(getById("does-not-exist")).toBeUndefined();
+  });
+});
+
+describe("isSupportedVersion", () => {
+  it.each(SUPPORTED_VERSIONS)("accepts the supported version %s", (version) => {
+    expect(isSupportedVersion(version)).toBe(true);
+  });
+
+  it("rejects a version the fixture cannot shape", () => {
+    expect(isSupportedVersion("0.4.0")).toBe(false);
   });
 });

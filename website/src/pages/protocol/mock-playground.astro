@@ -5,6 +5,37 @@
 // page (not in the nav), so starlight-links-validator needs no exclude entry.
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import MockPlayground from "@/components/MockPlayground";
+import {
+  CANONICAL_OPPORTUNITY_ID,
+  RESERVED_MISSING_OPPORTUNITY_ID,
+} from "@/lib/mock/opportunities/fixtures";
+
+// Reserved inputs that produce a non-2xx response, surfaced on the page so the
+// error cases are discoverable rather than something you stumble into.
+const errorCases = [
+  {
+    request: `GET /common-grants/opportunities/${RESERVED_MISSING_OPPORTUNITY_ID}`,
+    result: "404 — a well-formed UUID that matches no opportunity",
+  },
+  {
+    request: "GET /common-grants/opportunities/not-a-uuid",
+    result: "400 — path parameter fails the uuid format",
+  },
+  {
+    request: "GET /common-grants/opportunities?pageSize=0",
+    result: "400 — page and pageSize both declare minimum: 1",
+  },
+  {
+    request:
+      'POST /common-grants/opportunities/search — sorting.sortBy: "nope"',
+    result: "400 — value outside the OppSortBy enum",
+  },
+  {
+    request:
+      'POST /common-grants/opportunities/search — filters.closeDateRange.value.min: "not-a-date"',
+    result: "400 — filter bound is not a valid date",
+  },
+];
 ---
 
 <style>
@@ -21,6 +52,31 @@ import MockPlayground from "@/components/MockPlayground";
     color: var(--sl-color-text) !important;
     font-family: sans-serif !important;
     background-color: var(--sl-color-background) !important;
+  }
+
+  /* ######################################################### */
+  /* Intro / error-affordance guide */
+  /* ######################################################### */
+
+  /* The .sl-container padding reset above is page-wide, so the intro supplies
+     its own gutter to line up with the Swagger UI content below it. */
+  .playground-intro {
+    padding: 1.5rem 2rem 0;
+  }
+
+  .playground-intro h2 {
+    font-size: 1.1rem;
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .playground-intro table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .playground-intro code {
+    white-space: nowrap;
   }
 
   /* ######################################################### */
@@ -325,5 +381,63 @@ import MockPlayground from "@/components/MockPlayground";
 <StarlightPage
   frontmatter={{ title: "Mock playground", tableOfContents: false }}
 >
+  <section class="playground-intro">
+    <p>
+      Every endpoint below answers from a mock running in your browser — no
+      server involved. Hit <strong>Try it out</strong>, then <strong
+        >Execute</strong
+      >.
+    </p>
+
+    <h2>What to expect</h2>
+    <ul>
+      <li>
+        The three opportunity endpoints are backed by a fixed set of 11 records,
+        so repeat calls return the same body, and an <code>id</code> from
+        <code>GET /common-grants/opportunities</code> resolves to that same record
+        through <code>GET /common-grants/opportunities/{"{oppId}"}</code>. The
+        pre-filled <code>oppId</code> (<code>{CANONICAL_OPPORTUNITY_ID}</code>)
+        is the record the spec publishes as its own example.
+      </li>
+      <li>
+        Search applies the <code>status</code>, close-date, and funding-range
+        filters and the <code>OppSortBy</code> sort orders for real — results never
+        contradict what you asked for.
+      </li>
+      <li>
+        Every other endpoint is generated from the response schema. Those bodies
+        are placeholder data, held stable for the rest of this page visit but
+        reshuffled on reload.
+      </li>
+    </ul>
+
+    <h2>Error responses to try</h2>
+    <p>
+      Each returns the protocol's <code>{"{ status, message, errors[] }"}</code> error
+      envelope. Swagger UI labels the 400s "Undocumented" because the specs declare
+      only 200 and 404 for these routes.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Request</th>
+          <th>Response</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          errorCases.map((errorCase) => (
+            <tr>
+              <td>
+                <code>{errorCase.request}</code>
+              </td>
+              <td>{errorCase.result}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </section>
+
   <MockPlayground client:only="react" />
 </StarlightPage>

@@ -7,9 +7,6 @@ node_modules/
 
 # AI
 .cursor
-.claude
-CLAUDE.md
-PLAN.md
 
 # Environment variables
 .env
@@ -19,5 +16,3 @@ PLAN.md
 
 # Local tooling configuration
 .tool-versions
-
-mock-playground-adr.md

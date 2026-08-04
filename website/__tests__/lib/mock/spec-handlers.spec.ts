@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import yaml from "js-yaml";
-import type { HttpHandler } from "msw";
-import { buildHandlersFromSpec } from "@/lib/mock/spec-handlers";
+import { http, HttpResponse, type HttpHandler } from "msw";
+import { buildHandlersFromSpec, memoize } from "@/lib/mock/spec-handlers";
 import { buildOpportunityHandlers } from "@/lib/mock/opportunities/handlers";
 import { OPPORTUNITY_FIXTURES } from "@/lib/mock/opportunities/fixtures";
 
@@ -131,5 +131,62 @@ describe("buildHandlersFromSpec", () => {
     expect(winner).toBeDefined();
     expect(opportunityHandlers).toContain(winner);
     expect(specHandlers).not.toContain(winner);
+  });
+});
+
+describe("memoize", () => {
+  const resolutionContext = { baseUrl: "http://localhost/" };
+
+  it("evicts a failed request instead of replaying the failure forever", async () => {
+    let calls = 0;
+    const [handler] = memoize([
+      http.get("/flaky", () => {
+        calls += 1;
+        if (calls === 1) throw new Error("resolver blew up");
+        return HttpResponse.json({ calls });
+      }),
+    ]);
+
+    // The failure propagates, as it would without memoization...
+    await expect(
+      handler.run({
+        request: new Request("http://localhost/flaky"),
+        requestId: "test-memoize-failure-1",
+        resolutionContext,
+      }),
+    ).rejects.toThrow("resolver blew up");
+
+    // ...but it isn't cached, so the same request can still succeed later.
+    const retry = await handler.run({
+      request: new Request("http://localhost/flaky"),
+      requestId: "test-memoize-failure-2",
+      resolutionContext,
+    });
+
+    expect(retry!.response?.status).toBe(200);
+    expect(await retry!.response!.json()).toEqual({ calls: 2 });
+  });
+
+  it("keys the cache on the request body, not just the URL", async () => {
+    let calls = 0;
+    const [handler] = memoize([
+      http.post("/echo", () => HttpResponse.json({ calls: ++calls })),
+    ]);
+
+    const post = (body: string, requestId: string) =>
+      handler.run({
+        request: new Request("http://localhost/echo", { method: "POST", body }),
+        requestId,
+        resolutionContext,
+      });
+
+    const first = await post('{"a":1}', "test-memoize-body-1");
+    const repeat = await post('{"a":1}', "test-memoize-body-2");
+    const different = await post('{"a":2}', "test-memoize-body-3");
+
+    expect(await repeat!.response!.json()).toEqual(
+      await first!.response!.json(),
+    );
+    expect(await different!.response!.json()).toEqual({ calls: 2 });
   });
 });

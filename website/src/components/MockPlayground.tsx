@@ -7,7 +7,7 @@ import {
   type OpenApiSpec,
 } from "@/lib/mock/spec-handlers";
 import { buildOpportunityHandlers } from "@/lib/mock/opportunities/handlers";
-import type { Version } from "@/lib/mock/opportunities/fixtures";
+import { isSupportedVersion } from "@/lib/mock/opportunities/fixtures";
 
 /**
  * Throwaway MSW playground (#1034-T3): starts a Mock Service Worker and answers
@@ -70,14 +70,24 @@ export default function MockPlayground() {
         schema: yaml.CORE_SCHEMA,
       }) as OpenApiSpec;
       const specHandlers = await buildHandlersFromSpec(spec);
-      const opportunityHandlers = buildOpportunityHandlers(version as Version);
+      // A version in the dropdown that the fixture doesn't know how to shape
+      // would otherwise be cast through silently and served with the newest
+      // version's shape. Fall back to the generated handlers and say so, rather
+      // than quietly regressing to randomly-generated opportunity data.
+      const opportunityHandlers = isSupportedVersion(version)
+        ? buildOpportunityHandlers(version)
+        : [];
 
       // Skip if unmounted or superseded by a newer version toggle.
       if (cancelledRef.current || token !== versionTokenRef.current) return;
       // Opportunity handlers first: MSW resolves first-match-wins, so they
       // override the generated `fromOpenApi` handlers for the same paths.
       worker.resetHandlers(...opportunityHandlers, ...specHandlers);
-      setError(null);
+      setError(
+        isSupportedVersion(version)
+          ? null
+          : `No opportunity fixture for v${version} — opportunity endpoints fall back to generated (non-deterministic) responses.`,
+      );
     } catch (err) {
       if (cancelledRef.current || token !== versionTokenRef.current) return;
       console.warn(
