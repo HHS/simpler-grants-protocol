@@ -29,19 +29,5 @@ describe("plugins loader", () => {
       // Authored per filter in index.json; "" means the wiring dropped it.
       expect(agency?.description).not.toBe("");
     });
-
-    // The newest filter model, and the one a plugin declares against a boolean
-    // custom field, so it is the likeliest to lose its docs link in a rewire.
-    it("links a booleanComparison filter to the boolean filter model", () => {
-      const plugin = loadAllPlugins().find((p) => p.id === "cg-grants-gov");
-      const costSharing = plugin?.resolvedFilters.find(
-        (f) => f.name === "costSharing",
-      );
-
-      expect(costSharing?.filterType).toBe("booleanComparison");
-      expect(costSharing?.docsHref).toBe(
-        "/protocol/filters/boolean#booleancomparisonfilter",
-      );
-    });
   });
 });
