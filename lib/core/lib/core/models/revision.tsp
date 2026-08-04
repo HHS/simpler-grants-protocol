@@ -39,16 +39,7 @@ enum RevisionStatusOptions {
 @example(Examples.Revision.acceptedStatus)
 @example(Examples.Revision.customStatus)
 @Versioning.added(CommonGrants.Versions.v0_4)
-model RevisionStatus {
-  /** The status of the revision, from a predefined set of options */
-  value: RevisionStatusOptions;
-
-  /** A custom value for the status */
-  customValue?: string;
-
-  /** A human-readable description of the status */
-  description?: string;
-}
+model RevisionStatus is Fields.ExtensibleEnumT<RevisionStatusOptions>;
 
 // #########################################################
 // Revision
