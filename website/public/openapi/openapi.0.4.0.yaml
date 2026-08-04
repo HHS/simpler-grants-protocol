@@ -8,10 +8,6 @@ info:
     it must implement all of the routes with the "required" tag in this specification.
   version: 0.4.0
 tags:
-  - name: Organizations
-    description: Endpoints related to viewing and syncing organization profiles
-  - name: Awards
-    description: Endpoints related to grant awards
   - name: Opportunities
     description: Endpoints related to funding opportunities
   - name: Competitions
@@ -20,6 +16,10 @@ tags:
     description: Endpoints related to submitting applications for a given competition
   - name: Application Reviews
     description: Endpoints related to reviewing applications for a given competition
+  - name: Organizations
+    description: Endpoints related to viewing and syncing organization profiles
+  - name: Awards
+    description: Endpoints related to grant awards
   - name: Forms
     description: Endpoints related to forms
   - name: required
