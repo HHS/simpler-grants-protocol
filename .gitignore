@@ -1,7 +1,7 @@
 # Nodejs modules
 node_modules/
 
-# pnpm
+# pnpm 
 .pnpm-store/
 .pnpm-debug.log
 
