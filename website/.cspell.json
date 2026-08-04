@@ -76,6 +76,7 @@
     "numberarrayfilter",
     "moneycomparisonfilter",
     "moneyrangefilter",
+    "booleancomparisonfilter",
     "dataclass",
     "dataclasses",
     "datecomparisonfilter",

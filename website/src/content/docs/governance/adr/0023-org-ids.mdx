@@ -711,11 +711,11 @@ All three options below share the same principle: registry-level facts (the same
 | ---------------------------------------------- | :------------------: | :--: | :--------------: |
 | Explicit pointer to the catalog entry          |          ✅          |  ✅  |        ✅        |
 | Registry vs. instance fields visually grouped  |          ✅          |  ❌  |        ✅        |
-| Inline filtering by scope or kind              |          ✅          |  ❌  |        ✅        |
-| Per-registry schema validation                 |          ✅          |  ❌  |        ✅        |
+| Inline filtering by scope or kind              |          ❌          |  ❌  |        ✅        |
+| Per-registry schema validation                 |          ❌          |  ❌  |        ✅        |
 | Avoids duplicating catalog metadata per record |          ✅          |  ✅  |        ❌        |
-| Payload brevity                                |          🟡          |  ✅  |        ❌        |
-| Fully self-contained without a catalog         |          🟡          |  ❌  |        ✅        |
+| Payload brevity                                |          ✅          |  ✅  |        ❌        |
+| Fully self-contained without a catalog         |          ❌          |  ❌  |        ✅        |
 | Few required fields                            |          ✅          |  ✅  |        ❌        |
 
 #### Option 1: Nested hybrid (recommended)
@@ -723,11 +723,11 @@ All three options below share the same principle: registry-level facts (the same
 :::note[Bottom line]
 The nested hybrid shape is best if:
 
-- we want payloads to carry just enough registry context for filtering and validation, with a clear pointer to the catalog for everything else,
+- we want payloads to name the registry and point at the catalog for everything else,
 - but we're willing to nest registry-level fields under a `registry` object instead of keeping the shape flat.
   :::
 
-The `registry` object holds a curated subset of the catalog entry: the fields that are useful in payload (filtering, validation, identification) plus a `url` linking back to the full catalog entry. Required fields are kept minimal (`code` and `url`); the rest are optional. Per-instance fields stay at the top level.
+The `registry` object holds only the facts needed to name the registry in payload: its canonical `code` plus a `url` linking to the full catalog entry. Every other registry-level fact lives in the catalog. Both fields are optional, so a payload carries only what the publishing system knows. Per-instance fields stay at the top level.
 
 **Example**
 
@@ -736,13 +736,9 @@ The `registry` object holds a curated subset of the catalog entry: the fields th
   "org:us:ein": {
     "registry": {
       "code": "org:us:ein",
-      "url": "https://commongrants.org/registries/org-us-ein",
-      "scope": "US",
-      "kind": "government",
-      "schema": "https://commongrants.org/registries/org-us-ein/schema.json"
+      "url": "https://commongrants.org/registries/org-us-ein"
     },
-    "id": "123456789",
-    "uri": "https://apps.irs.gov/app/eos/detailsPage?ein=123456789"
+    "id": "123456789"
   }
 }
 ```
@@ -765,14 +761,13 @@ source: https://org-id.guide/list/US-EIN
 - **Pros**
   - `registry.url` gives consumers an explicit pointer to the catalog entry, removing ambiguity about how inline and catalog fields relate.
   - Nesting visually groups registry-level vs. instance-level facts, mirroring the catalog shape.
-  - `scope` and `kind` are available inline for filtering and UI decisions (e.g. "show all government-issued IDs") without a catalog fetch.
-  - `schema` supports per-registry validation in JSON Schema.
-  - Required surface stays minimal: only `registry.code`, `registry.url`, and `id` are required; everything else is optional.
-  - Verbose metadata (full name, issuer, lookup template) stays in the catalog so payloads don't bloat.
+  - Registry-level facts can be added under `registry` later without reshaping the instance-level fields around them.
+  - Nothing is required, so a system that only knows a record's ID in a registry can publish exactly that.
+  - All registry metadata (name, scope, kind, issuer, schema, lookup template) stays in the catalog so payloads don't bloat.
 - **Cons**
   - One extra level of access (`identifier.registry.code` vs. a flat `identifier.registry`).
-  - Inline registry fields can drift from the catalog if not kept in sync.
-  - `scope` and `kind` are technically derivable from `registry.code` via the catalog, so they are redundant.
+  - Any registry fact beyond the code requires a catalog lookup, so scope- or kind-based filtering can't be done from the payload alone.
+  - `registry.url` duplicates a location the catalog already owns, so it can drift if an entry moves.
 
 #### Option 2: Flat with `registryUrl`
 
@@ -970,9 +965,7 @@ A reference with identifiers is best if:
       "org:us:ein": {
         "registry": {
           "code": "org:us:ein",
-          "url": "https://commongrants.org/registries/org-us-ein",
-          "scope": "US",
-          "kind": "government"
+          "url": "https://commongrants.org/registries/org-us-ein"
         },
         "id": "987654321"
       }

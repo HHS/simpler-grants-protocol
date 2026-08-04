@@ -33,16 +33,7 @@ enum AwdStatusOptions {
 @example(Examples.Award.customStatus)
 @example(Examples.Award.status)
 @Versioning.added(CommonGrants.Versions.v0_4)
-model AwdStatus {
-  /** The status of the award, from a predefined set of options */
-  value: AwdStatusOptions;
-
-  /** A custom value for the status */
-  customValue?: string;
-
-  /** A human-readable description of the status */
-  description?: string;
-}
+model AwdStatus is Fields.ExtensibleEnumT<AwdStatusOptions>;
 
 // #########################################################
 // AwdFunding

@@ -3007,13 +3007,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.AwdStatusOptions'
-          description: The status of the award, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: The status of the award
       example:
         value: awarded
@@ -4942,13 +4942,13 @@ components:
         value:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.RevisionStatusOptions'
-          description: The status of the revision, from a predefined set of options
+          description: The selected value, from a predefined set of options
         customValue:
           type: string
-          description: A custom value for the status
+          description: A custom value, used when the selected value is the `custom` option
         description:
           type: string
-          description: A human-readable description of the status
+          description: A human-readable description of the value
       description: |-
         The status of a revision, including its lifecycle state and an optional
         human-readable description.
