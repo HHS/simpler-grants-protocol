@@ -9,11 +9,24 @@ const availableVersions = [
   { version: "0.1.0", label: "v0.1.0" },
 ];
 
-// Get the default version (latest)
-const defaultVersion = availableVersions[0].version;
+// Get the default version (latest). Exported so callers that pre-load a spec
+// (e.g. MockPlayground's MSW handler) stay in sync with the version rendered.
+export const defaultVersion = availableVersions[0].version;
 
 interface OpenApiDocsProps {
   className?: string;
+  /**
+   * When true, enables Swagger UI's "Try it out" by passing the default
+   * `supportedSubmitMethods`. Defaults to false, keeping the shipping
+   * `/protocol/api-docs` page's submit buttons disabled.
+   */
+  enableTryItOut?: boolean;
+  /**
+   * Called with the resolved version on mount and on every dropdown change.
+   * Lets a wrapper (e.g. MockPlayground) regenerate MSW handlers for the
+   * selected spec version. Optional — the shipping page omits it.
+   */
+  onVersionChange?: (version: string) => void;
 }
 
 // #########################################################
@@ -71,7 +84,11 @@ const styles = {
   },
 };
 
-export default function OpenApiDocs({ className }: OpenApiDocsProps) {
+export default function OpenApiDocs({
+  className,
+  enableTryItOut = false,
+  onVersionChange,
+}: OpenApiDocsProps) {
   // #########################################################
   // Set up state management
   // #########################################################
@@ -92,6 +109,9 @@ export default function OpenApiDocs({ className }: OpenApiDocsProps) {
       setSelectedVersion(versionFromUrl);
       setKey((prev) => prev + 1); // Force SwaggerUI to re-render
     }
+
+    // Report the resolved initial version so a wrapper can prime its handlers.
+    onVersionChange?.(versionFromUrl);
   }, []); // Empty dependency array - only run on mount
 
   // #########################################################
@@ -102,6 +122,7 @@ export default function OpenApiDocs({ className }: OpenApiDocsProps) {
     setSelectedVersion(newVersion);
     setKey((prev) => prev + 1); // Force SwaggerUI to re-render
     updateUrlParams(newVersion);
+    onVersionChange?.(newVersion);
   };
 
   return (
@@ -128,7 +149,7 @@ export default function OpenApiDocs({ className }: OpenApiDocsProps) {
           <SwaggerUI
             key={key}
             url={`/openapi/openapi.${selectedVersion}.yaml`}
-            supportedSubmitMethods={[]}
+            supportedSubmitMethods={enableTryItOut ? undefined : []}
           />
         )}
       </div>

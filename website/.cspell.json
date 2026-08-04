@@ -6,7 +6,8 @@
     "*.svg",
     "src/content/forms/",
     "cache/",
-    ".docs/"
+    ".docs/",
+    "public/mockServiceWorker.js"
   ],
   "dictionaryDefinitions": [],
   "dictionaries": [],
@@ -46,6 +47,7 @@
     "tspconfig",
     "typespec",
     "underrepresents",
+    "underserved",
     "USCDI",
     "rescope",
     "rescoped",
