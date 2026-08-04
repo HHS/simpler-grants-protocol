@@ -1,323 +1,127 @@
 ---
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
-import OpenApiDocs from "@/components/OpenApiDocs";
+import "swagger-ui-dist/swagger-ui.css";
+
+// Available OpenAPI versions (mirror of the emitted specs in public/openapi/)
+const availableVersions = [
+  { version: "0.4.0", label: "v0.4.0 (Latest)" },
+  { version: "0.3.0", label: "v0.3.0" },
+  { version: "0.2.0", label: "v0.2.0" },
+  { version: "0.1.0", label: "v0.1.0" },
+];
 ---
 
+<StarlightPage frontmatter={{ title: "OpenAPI docs", tableOfContents: false }}>
+  <div class="version-selector">
+    <label>
+      API Version
+      <select id="version-select">
+        {
+          availableVersions.map(({ version, label }) => (
+            <option value={version}>{label}</option>
+          ))
+        }
+      </select>
+    </label>
+  </div>
+
+  <div id="swagger-ui"></div>
+</StarlightPage>
+
 <style>
-  /* ######################################################### */
-  /* Base container styles */
-  /* ######################################################### */
+  /* Layout for the version selector only — Swagger's own styles (incl. its
+     built-in dark theme) handle the panel itself. */
+  .version-selector {
+    max-width: 480px;
+  }
 
+  /* Swagger renders the version pill as `<pre class="version">`, and Starlight's
+     global code-block styling gives every `pre` a `1px solid var(--sl-color-gray-5)`
+     border that bleeds onto the pill. Swagger's own CSS never resets it, so strip
+     it here. Scoped-component styles can't reach Swagger's JS-injected DOM, hence
+     `:global`. */
+  :global(.swagger-ui .version) {
+    border: none;
+  }
+
+  /* Starlight caps content at `--sl-content-width` (45rem) for readable prose,
+     which cramps the dense Swagger panel. Let it span the full column instead. */
   :global(.sl-container) {
-    padding: 0 !important;
-    max-width: 100% !important;
+    max-width: 100%;
   }
 
-  :global(.swagger-ui) {
-    color: var(--sl-color-text) !important;
-    font-family: sans-serif !important;
-    background-color: var(--sl-color-background) !important;
+  /* Swagger's dark theme paints its own background (#1c2022) onto both `<html>`
+     and the `.swagger-ui` panel, which reads as a lighter block against
+     Starlight's darker body. Restore Starlight's bg on both. */
+  :global(html.dark-mode),
+  :global(html.dark-mode .swagger-ui) {
+    background: var(--sl-color-bg) !important;
   }
 
-  /* ######################################################### */
-  /* Version selector styles */
-  /* ######################################################### */
-
-  :global(.version-selector) {
+  .version-selector label {
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 2rem;
-    background-color: var(--sl-color-background);
-    border-bottom: 1px solid var(--sl-color-border);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  :global(.version-selector label) {
+    flex-direction: column;
+    gap: 0.5rem;
     font-weight: 600;
     color: var(--sl-color-text);
-    margin: 0;
   }
 
-  :global(.version-selector select) {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--sl-color-border);
-    border-radius: 0.375rem;
-    background-color: var(--sl-color-background);
-    color: var(--sl-color-text);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: border-color 0.15s ease-in;
-  }
-
-  :global(.version-selector select:hover) {
-    border-color: var(--sl-color-text-accent);
-  }
-
-  :global(.version-selector select:focus) {
-    outline: none;
-    border-color: var(--sl-color-text-accent);
-    box-shadow: 0 0 0 2px var(--sl-color-accent-low);
-  }
-
-  /* ######################################################### */
-  /* Basic text elements */
-  /* ######################################################### */
-
-  :global(.swagger-ui p) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui a) {
-    background-color: transparent !important;
-    color: var(--sl-color-text) !important;
-    transition: color 0.15s ease-in !important;
-  }
-
-  :global(.swagger-ui hr) {
-    border-color: var(--sl-color-border) !important;
-  }
-
-  /* ######################################################### */
-  /* Info section */
-  /* ######################################################### */
-
-  :global(.swagger-ui .info .title) {
-    margin-top: 0 !important;
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .url) {
-    color: var(--sl-color-text-accent) !important;
-    text-decoration: underline !important;
-  }
-
-  /* ######################################################### */
-  /* Operation block styles */
-  /* ######################################################### */
-
-  :global(.swagger-ui .opblock-summary-path) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .opblock-summary-description) {
-    color: var(--sl-color-text) !important;
-  }
-
-  /* ######################################################### */
-  /* Model styles */
-  /* ######################################################### */
-
-  :global(.swagger-ui .model-title) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .model-description) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .model .description) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .model) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .model .property) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .model .property-type) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .model .property-description) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .model .property-name) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .models-control) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .models-control h3) {
-    color: var(--sl-color-text) !important;
-  }
-
-  /* ######################################################### */
-  /* Toggle arrow styles */
-  /* ######################################################### */
-
-  :global(.swagger-ui .arrow) {
-    fill: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .model-toggle:after) {
-    background: none !important;
-    -webkit-mask: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z'/></svg>")
-      50% no-repeat !important;
-    mask: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z'/></svg>")
-      50% no-repeat !important;
-    background-color: var(--sl-color-text) !important;
-  }
-
-  /* ######################################################### */
-  /* Table styles */
-  /* ######################################################### */
-
-  :global(.swagger-ui .table-container th) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .table-container td) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .table-container tr) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .table) {
-    color: var(--sl-color-text) !important;
-  }
-
-  /* ######################################################### */
-  /* Parameters table styles */
-  /* ######################################################### */
-
-  :global(.swagger-ui .parameters .col_header) {
-    color: var(--sl-color-text) !important;
-    font-weight: 600 !important;
-  }
-
-  :global(.swagger-ui .parameters .parameters-col_name) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .parameters .parameters-col_description) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .parameters .parameter__name) {
-    color: var(--sl-color-text) !important;
-    font-weight: 500 !important;
-  }
-
-  :global(.swagger-ui .parameters .parameter__type) {
-    color: var(--sl-color-gray-3) !important;
-  }
-
-  :global(.swagger-ui .parameters .prop-format) {
-    color: var(--sl-color-gray-2) !important;
-  }
-
-  :global(.swagger-ui .parameters .parameter__in) {
-    color: var(--sl-color-gray-2) !important;
-    font-size: 0.9em !important;
-  }
-
-  :global(.swagger-ui .parameters .parameter__default) {
-    color: var(--sl-color-gray-3) !important;
-  }
-
-  :global(.swagger-ui .parameters .parameter__default i) {
-    color: var(--sl-color-gray-2) !important;
-  }
-
-  :global(.swagger-ui .parameters input) {
-    color: var(--sl-color-text) !important;
-    background-color: var(--sl-color-background) !important;
-    border-color: var(--sl-color-border) !important;
-  }
-
-  /* ######################################################### */
-  /* Responses table styles */
-  /* ######################################################### */
-
-  :global(.swagger-ui .responses-table .col_header) {
-    color: var(--sl-color-text) !important;
-    font-weight: 600 !important;
-  }
-
-  :global(.swagger-ui .responses-table .response-col_status) {
-    color: var(--sl-color-text) !important;
-    font-weight: 500 !important;
-  }
-
-  :global(.swagger-ui .responses-table .response-col_description) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .responses-table .response-col_links) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .responses-table .response-control-media-type__title) {
-    color: var(--sl-color-gray-2) !important;
-    font-size: 0.9em !important;
-  }
-
-  :global(
-    .swagger-ui .responses-table .response-control-media-type__accept-message
-  ) {
-    color: var(--sl-color-gray-2) !important;
-    font-size: 0.9em !important;
-  }
-
-  :global(.swagger-ui .responses-table .tablinks) {
-    color: var(--sl-color-gray-3) !important;
-  }
-
-  :global(.swagger-ui .responses-table .tablinks.active) {
-    color: var(--sl-color-text-accent) !important;
-    font-weight: 500 !important;
-  }
-
-  :global(.swagger-ui .responses-table i) {
-    color: var(--sl-color-gray-2) !important;
-  }
-
-  /* ######################################################### */
-  /* Tab styles */
-  /* ######################################################### */
-
-  :global(.swagger-ui .tab) {
-    color: var(--sl-color-text) !important;
-  }
-
-  :global(.swagger-ui .tablinks) {
-    color: var(--sl-color-gray-3) !important;
-    background: none !important;
-    border: none !important;
-    padding: 0.5em 1em !important;
-    cursor: pointer !important;
-  }
-
-  :global(.swagger-ui .tablinks.active) {
-    color: var(--sl-color-text-accent) !important;
-    font-weight: 500 !important;
-    border-bottom: 2px solid var(--sl-color-text-accent) !important;
-  }
-
-  :global(.swagger-ui .tablinks:hover) {
-    color: var(--sl-color-text) !important;
-  }
-
-  /* ######################################################### */
-  /* Version styles */
-  /* ######################################################### */
-
-  :global(.swagger-ui .version) {
-    border: none !important;
+  .version-selector select {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--sl-color-gray-5);
+    font-size: 16px;
+    font-family: system-ui, sans-serif;
+    background: var(--sl-color-black);
+    color: var(--sl-color-white);
   }
 </style>
 
-<StarlightPage frontmatter={{ title: "OpenAPI docs", tableOfContents: false }}>
-  <OpenApiDocs client:load />
-</StarlightPage>
+<script>
+  import { SwaggerUIBundle } from "swagger-ui-dist";
+  import { resolveVersion } from "@/lib/api-docs-version";
+
+  const render = (version: string): void => {
+    SwaggerUIBundle({
+      url: `/openapi/openapi.${version}.yaml`,
+      dom_id: "#swagger-ui",
+      supportedSubmitMethods: [],
+      deepLinking: true,
+    });
+  };
+
+  // Mirror Starlight's theme onto Swagger's built-in `.dark-mode` class so the
+  // panel follows the site's light/dark toggle without any CSS overrides.
+  const html = document.documentElement;
+  const syncTheme = () =>
+    html.classList.toggle("dark-mode", html.dataset.theme === "dark");
+  syncTheme();
+  new MutationObserver(syncTheme).observe(html, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+
+  // Render the version from the ?version= deep link (or the default), then keep
+  // the URL in sync as the selection changes. The rendered <option>s are the
+  // single source of truth for the known versions.
+  const select = document.querySelector<HTMLSelectElement>("#version-select");
+  if (select) {
+    const availableVersions = Array.from(select.options, (o) => o.value);
+
+    const params = new URLSearchParams(window.location.search);
+    const initialVersion = resolveVersion(
+      params.get("version") ?? "",
+      availableVersions,
+    );
+    select.value = initialVersion;
+    render(initialVersion);
+
+    select.addEventListener("change", () => {
+      const version = select.value;
+      const url = new URL(window.location.href);
+      url.searchParams.set("version", version);
+      window.history.replaceState({}, "", url.toString());
+      render(version);
+    });
+  }
+</script>
