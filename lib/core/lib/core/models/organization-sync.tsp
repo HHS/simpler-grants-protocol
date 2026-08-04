@@ -82,16 +82,14 @@ namespace CommonGrants.Patch {
     /** Additional social media profiles not covered by the standard fields. */
     otherSocials?: Record<url | null>;
   }
-}
 
-namespace CommonGrants {
   /** The writable fields of an organization profile.
    *
    * Spreads `OrganizationBase` without its model-level example, so the
    * merge-patch derivation below validates cleanly. The `ein`, `uei`, and `duns`
    * fields are omitted because they are removed as of v0.4, the version at which
    * these syncing models are added, so they never coexist with a patch. The
-   * sub-model fields are redeclared against the `Patch` mirrors above so the
+   * sub-model fields are redeclared against the mirrors above so the
    * merge-patch transformation sees flattened models and deletable record keys.
    * This is a compile-time source for `OrgPatchData` and is not emitted as a
    * standalone schema.
@@ -152,7 +150,7 @@ namespace CommonGrants.Models {
   @Versioning.added(CommonGrants.Versions.v0_4)
   model OrgPatchData
     is TypeSpec.Http.MergePatchUpdate<
-      CommonGrants.OrgProfileWritable,
+      CommonGrants.Patch.OrgProfileWritable,
       "OrgPatch{name}"
     >;
 
