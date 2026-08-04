@@ -14,6 +14,7 @@ const SEARCH_PATH = "/common-grants/opportunities/search";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 100;
+const MAX_PAGE_SIZE = 100;
 
 /** Wire values of `Models.OppSortBy` (`lib/core/lib/core/models/opportunity/search.tsp`). */
 const VALID_SORT_BY = new Set([
@@ -198,7 +199,34 @@ function compare(a: string | number, b: string | number): number {
   return a - b;
 }
 
-/** RFC 4122 UUID (any version/variant), matching the protocol's `uuid` format. */
+/**
+ * Resolves `page`/`pageSize` per the spec's defaults (page=1, pageSize=100)
+ * and bounds (both >= 1, pageSize <= 100). A missing or non-numeric raw value
+ * falls back to its default; a present, well-formed value outside the valid
+ * range is clamped to the nearest bound rather than replaced by the default
+ * (e.g. a requested `pageSize=0` becomes 1, not 100).
+ */
+function resolvePagination(
+  rawPage: number,
+  rawPageSize: number,
+): { page: number; pageSize: number } {
+  return {
+    page: Math.max(1, Number.isFinite(rawPage) ? rawPage : DEFAULT_PAGE),
+    pageSize: Math.max(
+      1,
+      Math.min(
+        MAX_PAGE_SIZE,
+        Number.isFinite(rawPageSize) ? rawPageSize : DEFAULT_PAGE_SIZE,
+      ),
+    ),
+  };
+}
+
+/**
+ * UUID-shaped value (8-4-4-4-12 hex, matching the protocol's `uuid` format).
+ * Not a full RFC 4122 conformance check — it deliberately accepts the nil
+ * UUID (`00000000-…`), used as this suite's "well-formed but unknown" case.
+ */
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -209,6 +237,11 @@ function errorResponse(
   errors: unknown[],
 ): Response {
   return HttpResponse.json({ status, message, errors }, { status });
+}
+
+/** Builds the protocol success envelope (`status: 200`, `message`, plus the endpoint-specific body). */
+function successResponse(body: Record<string, unknown>): Response {
+  return HttpResponse.json({ status: 200, message: "Success", ...body });
 }
 
 /**
@@ -225,33 +258,19 @@ export function buildOpportunityHandlers(version: Version): HttpHandler[] {
   return [
     http.get(LIST_PATH, ({ request }) => {
       const url = new URL(request.url);
-      const page = Math.max(
-        1,
-        parseInt(url.searchParams.get("page") ?? String(DEFAULT_PAGE), 10) ||
-          DEFAULT_PAGE,
-      );
-      const pageSize = Math.max(
-        1,
-        Math.min(
-          100,
-          parseInt(
-            url.searchParams.get("pageSize") ?? String(DEFAULT_PAGE_SIZE),
-            10,
-          ) || DEFAULT_PAGE_SIZE,
-        ),
+      const { page, pageSize } = resolvePagination(
+        parseInt(url.searchParams.get("page") ?? "", 10),
+        parseInt(url.searchParams.get("pageSize") ?? "", 10),
       );
 
       const sorted = allForVersion(version).sort(
         (a, b) =>
-          new Date(b.lastModifiedAt).getTime() -
-          new Date(a.lastModifiedAt).getTime(),
+          -compare(sortKey(a, "lastModifiedAt"), sortKey(b, "lastModifiedAt")),
       );
       const start = (page - 1) * pageSize;
       const items = sorted.slice(start, start + pageSize);
 
-      return HttpResponse.json({
-        status: 200,
-        message: "Success",
+      return successResponse({
         items,
         paginationInfo: {
           page,
@@ -278,9 +297,7 @@ export function buildOpportunityHandlers(version: Version): HttpHandler[] {
         ]);
       }
 
-      return HttpResponse.json({
-        status: 200,
-        message: "Success",
+      return successResponse({
         data: shapeOpportunityForVersion(opp, version, "detail"),
       });
     }),
@@ -414,18 +431,15 @@ export function buildOpportunityHandlers(version: Version): HttpHandler[] {
         });
       }
 
-      const page = Math.max(1, body.pagination?.page ?? DEFAULT_PAGE);
-      const pageSize = Math.max(
-        1,
-        Math.min(100, body.pagination?.pageSize ?? DEFAULT_PAGE_SIZE),
+      const { page, pageSize } = resolvePagination(
+        body.pagination?.page ?? NaN,
+        body.pagination?.pageSize ?? NaN,
       );
       const start = (page - 1) * pageSize;
       const totalItems = items.length;
       const pageItems = items.slice(start, start + pageSize);
 
-      return HttpResponse.json({
-        status: 200,
-        message: "Success",
+      return successResponse({
         items: pageItems,
         paginationInfo: {
           page,

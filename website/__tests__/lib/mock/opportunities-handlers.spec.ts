@@ -57,6 +57,121 @@ describe("buildOpportunityHandlers", () => {
         totalPages: 1,
       });
     });
+
+    it("returns an empty items array with valid paginationInfo when page is past the end", async () => {
+      const handlers = buildOpportunityHandlers("0.3.0");
+
+      const handler = handlers.find(
+        (h) => String(h.info.path) === "/common-grants/opportunities",
+      );
+      expect(handler).toBeDefined();
+
+      const result = await handler!.run({
+        request: new Request(`${OPPORTUNITIES_URL}?page=999`),
+        requestId: "test-list-page-past-end",
+        resolutionContext: { baseUrl: "http://localhost/" },
+      });
+
+      expect(result).not.toBeNull();
+      expect(result!.response?.status).toBe(200);
+
+      const body = (await result!.response!.json()) as {
+        items: unknown[];
+        paginationInfo: {
+          page: number;
+          pageSize: number;
+          totalItems: number;
+          totalPages: number;
+        };
+      };
+
+      expect(Array.isArray(body.items)).toBe(true);
+      expect(body.items).toHaveLength(0);
+
+      expect(body.paginationInfo).toEqual({
+        page: 999,
+        pageSize: 100,
+        totalItems: 10,
+        totalPages: 1,
+      });
+    });
+
+    it("clamps pageSize to 100 when a larger value is requested", async () => {
+      const handlers = buildOpportunityHandlers("0.3.0");
+
+      const handler = handlers.find(
+        (h) => String(h.info.path) === "/common-grants/opportunities",
+      );
+      expect(handler).toBeDefined();
+
+      const result = await handler!.run({
+        request: new Request(`${OPPORTUNITIES_URL}?pageSize=9999`),
+        requestId: "test-list-pagesize-too-large",
+        resolutionContext: { baseUrl: "http://localhost/" },
+      });
+
+      expect(result).not.toBeNull();
+      expect(result!.response?.status).toBe(200);
+
+      const body = (await result!.response!.json()) as {
+        paginationInfo: { pageSize: number };
+      };
+
+      expect(body.paginationInfo.pageSize).toBe(100);
+    });
+
+    it.each([0, -5])(
+      "clamps pageSize to at least 1 when pageSize=%i is requested",
+      async (pageSizeValue) => {
+        const handlers = buildOpportunityHandlers("0.3.0");
+
+        const handler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities",
+        );
+        expect(handler).toBeDefined();
+
+        const result = await handler!.run({
+          request: new Request(
+            `${OPPORTUNITIES_URL}?pageSize=${pageSizeValue}`,
+          ),
+          requestId: `test-list-pagesize-${pageSizeValue}`,
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
+
+        expect(result).not.toBeNull();
+        expect(result!.response?.status).toBe(200);
+
+        const body = (await result!.response!.json()) as {
+          paginationInfo: { pageSize: number };
+        };
+
+        expect(body.paginationInfo.pageSize).toBeGreaterThanOrEqual(1);
+      },
+    );
+
+    it("falls back to the default pageSize when a non-numeric value is requested", async () => {
+      const handlers = buildOpportunityHandlers("0.3.0");
+
+      const handler = handlers.find(
+        (h) => String(h.info.path) === "/common-grants/opportunities",
+      );
+      expect(handler).toBeDefined();
+
+      const result = await handler!.run({
+        request: new Request(`${OPPORTUNITIES_URL}?pageSize=abc`),
+        requestId: "test-list-pagesize-non-numeric",
+        resolutionContext: { baseUrl: "http://localhost/" },
+      });
+
+      expect(result).not.toBeNull();
+      expect(result!.response?.status).toBe(200);
+
+      const body = (await result!.response!.json()) as {
+        paginationInfo: { pageSize: number };
+      };
+
+      expect(body.paginationInfo.pageSize).toBe(100);
+    });
   });
 
   describe("GET /common-grants/opportunities/:oppId (detail)", () => {
