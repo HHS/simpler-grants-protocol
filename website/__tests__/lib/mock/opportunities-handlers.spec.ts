@@ -1,9 +1,13 @@
 import { describe, it, expect } from "vitest";
 import type { HttpHandler } from "msw";
 import { buildOpportunityHandlers } from "@/lib/mock/opportunities/handlers";
-import { OPPORTUNITY_FIXTURES } from "@/lib/mock/opportunities/fixtures";
+import {
+  OPPORTUNITY_FIXTURES,
+  type Version,
+} from "@/lib/mock/opportunities/fixtures";
 
 const OPPORTUNITIES_URL = "http://localhost/common-grants/opportunities";
+const VERSIONS: Version[] = ["0.1.0", "0.2.0", "0.3.0"];
 
 describe("buildOpportunityHandlers", () => {
   describe("GET /common-grants/opportunities (list)", () => {
@@ -237,76 +241,82 @@ describe("buildOpportunityHandlers", () => {
       expect(detailBody.data.competitions).toBeDefined();
     });
 
-    it("returns 404 with the protocol Error shape for a well-formed but unknown UUID", async () => {
-      const handlers = buildOpportunityHandlers("0.3.0");
+    it.each(VERSIONS)(
+      "returns 404 with the protocol Error shape for a well-formed but unknown UUID, for v%s",
+      async (version) => {
+        const handlers = buildOpportunityHandlers(version);
 
-      const detailHandler = handlers.find(
-        (h) => String(h.info.path) === "/common-grants/opportunities/:oppId",
-      );
-      expect(detailHandler).toBeDefined();
+        const detailHandler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities/:oppId",
+        );
+        expect(detailHandler).toBeDefined();
 
-      const UNKNOWN_ID = "00000000-0000-0000-0000-000000000000";
+        const UNKNOWN_ID = "00000000-0000-0000-0000-000000000000";
 
-      const result = await detailHandler!.run({
-        request: new Request(
-          `http://localhost/common-grants/opportunities/${UNKNOWN_ID}`,
-        ),
-        requestId: "test-detail-unknown",
-        resolutionContext: { baseUrl: "http://localhost/" },
-      });
+        const result = await detailHandler!.run({
+          request: new Request(
+            `http://localhost/common-grants/opportunities/${UNKNOWN_ID}`,
+          ),
+          requestId: "test-detail-unknown",
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
 
-      expect(result).not.toBeNull();
-      expect(result!.response?.status).toBe(404);
+        expect(result).not.toBeNull();
+        expect(result!.response?.status).toBe(404);
 
-      const body = (await result!.response!.json()) as {
-        status: number;
-        message: string;
-        errors: unknown[];
-      };
+        const body = (await result!.response!.json()) as {
+          status: number;
+          message: string;
+          errors: unknown[];
+        };
 
-      expect(body.status).toBe(404);
-      expect(typeof body.message).toBe("string");
-      expect(body.message.length).toBeGreaterThan(0);
-      expect(Array.isArray(body.errors)).toBe(true);
-      expect(body.errors.length).toBeGreaterThan(0);
-    });
+        expect(body.status).toBe(404);
+        expect(typeof body.message).toBe("string");
+        expect(body.message.length).toBeGreaterThan(0);
+        expect(Array.isArray(body.errors)).toBe(true);
+        expect(body.errors.length).toBeGreaterThan(0);
+      },
+    );
 
-    it("returns 400 with a field-level validation error for a malformed (non-UUID) oppId", async () => {
-      const handlers = buildOpportunityHandlers("0.3.0");
+    it.each(VERSIONS)(
+      "returns 400 with a field-level validation error for a malformed (non-UUID) oppId, for v%s",
+      async (version) => {
+        const handlers = buildOpportunityHandlers(version);
 
-      const detailHandler = handlers.find(
-        (h) => String(h.info.path) === "/common-grants/opportunities/:oppId",
-      );
-      expect(detailHandler).toBeDefined();
+        const detailHandler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities/:oppId",
+        );
+        expect(detailHandler).toBeDefined();
 
-      const result = await detailHandler!.run({
-        request: new Request(
-          "http://localhost/common-grants/opportunities/not-a-uuid",
-        ),
-        requestId: "test-detail-malformed",
-        resolutionContext: { baseUrl: "http://localhost/" },
-      });
+        const result = await detailHandler!.run({
+          request: new Request(
+            "http://localhost/common-grants/opportunities/not-a-uuid",
+          ),
+          requestId: "test-detail-malformed",
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
 
-      expect(result).not.toBeNull();
-      expect(result!.response?.status).toBe(400);
+        expect(result).not.toBeNull();
+        expect(result!.response?.status).toBe(400);
 
-      const body = (await result!.response!.json()) as {
-        status: number;
-        message: string;
-        errors: Array<{ field: string; message: string }>;
-      };
+        const body = (await result!.response!.json()) as {
+          status: number;
+          message: string;
+          errors: Array<{ field: string; message: string }>;
+        };
 
-      expect(body.status).toBe(400);
-      expect(typeof body.message).toBe("string");
-      expect(body.message.length).toBeGreaterThan(0);
-      expect(Array.isArray(body.errors)).toBe(true);
-      expect(body.errors.length).toBeGreaterThan(0);
+        expect(body.status).toBe(400);
+        expect(typeof body.message).toBe("string");
+        expect(body.message.length).toBeGreaterThan(0);
+        expect(Array.isArray(body.errors)).toBe(true);
+        expect(body.errors.length).toBeGreaterThan(0);
 
-      const oppIdError = body.errors.find((error) => error.field === "oppId");
-      expect(oppIdError).toBeDefined();
-      expect(typeof oppIdError!.message).toBe("string");
-      expect(oppIdError!.message.length).toBeGreaterThan(0);
-    });
+        const oppIdError = body.errors.find((error) => error.field === "oppId");
+        expect(oppIdError).toBeDefined();
+        expect(typeof oppIdError!.message).toBe("string");
+        expect(oppIdError!.message.length).toBeGreaterThan(0);
+      },
+    );
 
     it("omits competitions and acceptedApplicantTypes from a v0.1 detail response", async () => {
       const handlers = buildOpportunityHandlers("0.1.0");
@@ -340,60 +350,122 @@ describe("buildOpportunityHandlers", () => {
   });
 
   describe("determinism", () => {
-    it("returns identical bodies across two calls to the list endpoint", async () => {
-      const handlers = buildOpportunityHandlers("0.3.0");
+    it.each(VERSIONS)(
+      "returns identical bodies across two calls to the list endpoint for v%s",
+      async (version) => {
+        const handlers = buildOpportunityHandlers(version);
 
-      const listHandler = handlers.find(
-        (h) => String(h.info.path) === "/common-grants/opportunities",
-      );
-      expect(listHandler).toBeDefined();
+        const listHandler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities",
+        );
+        expect(listHandler).toBeDefined();
 
-      const resultA = await listHandler!.run({
-        request: new Request(OPPORTUNITIES_URL),
-        requestId: "test-determinism-list-a",
-        resolutionContext: { baseUrl: "http://localhost/" },
-      });
-      const resultB = await listHandler!.run({
-        request: new Request(OPPORTUNITIES_URL),
-        requestId: "test-determinism-list-b",
-        resolutionContext: { baseUrl: "http://localhost/" },
-      });
+        const resultA = await listHandler!.run({
+          request: new Request(OPPORTUNITIES_URL),
+          requestId: "test-determinism-list-a",
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
+        const resultB = await listHandler!.run({
+          request: new Request(OPPORTUNITIES_URL),
+          requestId: "test-determinism-list-b",
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
 
-      const bodyA = await resultA!.response!.json();
-      const bodyB = await resultB!.response!.json();
+        const bodyA = await resultA!.response!.json();
+        const bodyB = await resultB!.response!.json();
 
-      expect(bodyA).toEqual(bodyB);
-    });
+        expect(bodyA).toEqual(bodyB);
+      },
+    );
 
-    it("returns identical bodies across two calls to the detail endpoint for the same oppId", async () => {
-      const STEM_ID = "573525f2-8e15-4405-83fb-e6523511d893";
-      const handlers = buildOpportunityHandlers("0.3.0");
+    it.each(VERSIONS)(
+      "returns identical bodies across two calls to the detail endpoint for the same oppId for v%s",
+      async (version) => {
+        const STEM_ID = "573525f2-8e15-4405-83fb-e6523511d893";
+        const handlers = buildOpportunityHandlers(version);
 
-      const detailHandler = handlers.find(
-        (h) => String(h.info.path) === "/common-grants/opportunities/:oppId",
-      );
-      expect(detailHandler).toBeDefined();
+        const detailHandler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities/:oppId",
+        );
+        expect(detailHandler).toBeDefined();
 
-      const resultA = await detailHandler!.run({
-        request: new Request(
-          `http://localhost/common-grants/opportunities/${STEM_ID}`,
-        ),
-        requestId: "test-determinism-detail-a",
-        resolutionContext: { baseUrl: "http://localhost/" },
-      });
-      const resultB = await detailHandler!.run({
-        request: new Request(
-          `http://localhost/common-grants/opportunities/${STEM_ID}`,
-        ),
-        requestId: "test-determinism-detail-b",
-        resolutionContext: { baseUrl: "http://localhost/" },
-      });
+        const resultA = await detailHandler!.run({
+          request: new Request(
+            `http://localhost/common-grants/opportunities/${STEM_ID}`,
+          ),
+          requestId: "test-determinism-detail-a",
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
+        const resultB = await detailHandler!.run({
+          request: new Request(
+            `http://localhost/common-grants/opportunities/${STEM_ID}`,
+          ),
+          requestId: "test-determinism-detail-b",
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
 
-      const bodyA = await resultA!.response!.json();
-      const bodyB = await resultB!.response!.json();
+        const bodyA = await resultA!.response!.json();
+        const bodyB = await resultB!.response!.json();
 
-      expect(bodyA).toEqual(bodyB);
-    });
+        expect(bodyA).toEqual(bodyB);
+      },
+    );
+
+    it.each(VERSIONS)(
+      "list→detail: every field on the list item deep-equals the corresponding detail field, and the detail echoes the requested id, for v%s",
+      async (version) => {
+        const STEM_ID = "573525f2-8e15-4405-83fb-e6523511d893";
+        const handlers = buildOpportunityHandlers(version);
+
+        const listHandler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities",
+        );
+        expect(listHandler).toBeDefined();
+
+        const detailHandler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities/:oppId",
+        );
+        expect(detailHandler).toBeDefined();
+
+        const listResult = await listHandler!.run({
+          request: new Request(OPPORTUNITIES_URL),
+          requestId: "test-list-for-detail-consistency",
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
+
+        const listBody = (await listResult!.response!.json()) as {
+          items: Array<Record<string, unknown> & { id: string }>;
+        };
+        const listItem = listBody.items.find((item) => item.id === STEM_ID);
+        expect(listItem).toBeDefined();
+
+        const detailResult = await detailHandler!.run({
+          request: new Request(
+            `http://localhost/common-grants/opportunities/${STEM_ID}`,
+          ),
+          requestId: "test-detail-for-consistency",
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
+
+        expect(detailResult).not.toBeNull();
+        expect(detailResult!.response?.status).toBe(200);
+
+        const detailBody = (await detailResult!.response!.json()) as {
+          status: number;
+          message: string;
+          data: Record<string, unknown> & { id: string };
+        };
+
+        expect(detailBody.status).toBe(200);
+        // id echo: the returned record's id matches the requested :oppId.
+        expect(detailBody.data.id).toBe(STEM_ID);
+        // consistency: every field the list projection carries matches the
+        // detail record's value for that same field (same underlying record).
+        for (const [field, value] of Object.entries(listItem!)) {
+          expect(detailBody.data[field]).toEqual(value);
+        }
+      },
+    );
   });
 
   describe("POST /common-grants/opportunities/search", () => {
@@ -434,90 +506,99 @@ describe("buildOpportunityHandlers", () => {
       };
     }
 
-    it("filters to a proper subset matching the status filter, relative to the unfiltered result set", async () => {
-      const handlers = buildOpportunityHandlers("0.3.0");
+    it.each(VERSIONS)(
+      "filters to a proper subset matching the status filter, relative to the unfiltered result set, for v%s",
+      async (version) => {
+        const handlers = buildOpportunityHandlers(version);
 
-      const unfilteredBody = await runSearch(handlers, {});
-      expect(Array.isArray(unfilteredBody.items)).toBe(true);
-      expect(unfilteredBody.items.length).toBe(OPPORTUNITY_FIXTURES.length);
+        const unfilteredBody = await runSearch(handlers, {});
+        expect(Array.isArray(unfilteredBody.items)).toBe(true);
+        expect(unfilteredBody.items.length).toBe(OPPORTUNITY_FIXTURES.length);
 
-      const inBody = await runSearch(handlers, {
-        filters: { status: { operator: "in", value: ["open"] } },
-      });
+        const inBody = await runSearch(handlers, {
+          filters: { status: { operator: "in", value: ["open"] } },
+        });
 
-      expect(inBody.items.length).toBeLessThan(OPPORTUNITY_FIXTURES.length);
-      for (const item of inBody.items) {
-        expect(item.status.value).toBe("open");
-      }
+        expect(inBody.items.length).toBeLessThan(OPPORTUNITY_FIXTURES.length);
+        for (const item of inBody.items) {
+          expect(item.status.value).toBe("open");
+        }
 
-      const notInBody = await runSearch(handlers, {
-        filters: { status: { operator: "notIn", value: ["open"] } },
-      });
+        const notInBody = await runSearch(handlers, {
+          filters: { status: { operator: "notIn", value: ["open"] } },
+        });
 
-      for (const item of notInBody.items) {
-        expect(item.status.value).not.toBe("open");
-      }
-    });
+        for (const item of notInBody.items) {
+          expect(item.status.value).not.toBe("open");
+        }
+      },
+    );
 
-    it("reorders items in reverse when sortOrder flips from asc to desc, for the same sortBy field", async () => {
-      const handlers = buildOpportunityHandlers("0.3.0");
+    it.each(VERSIONS)(
+      "reorders items in reverse when sortOrder flips from asc to desc, for the same sortBy field, for v%s",
+      async (version) => {
+        const handlers = buildOpportunityHandlers(version);
 
-      // `funding.maxAwardAmount` is present (and distinct) on every fixture
-      // record, so this sort key has no ties/undefined-handling ambiguity.
-      const ascBody = await runSearch(handlers, {
-        sorting: { sortBy: "funding.maxAwardAmount", sortOrder: "asc" },
-      });
-      const descBody = await runSearch(handlers, {
-        sorting: { sortBy: "funding.maxAwardAmount", sortOrder: "desc" },
-      });
+        // `funding.maxAwardAmount` is present (and distinct) on every fixture
+        // record, so this sort key has no ties/undefined-handling ambiguity.
+        const ascBody = await runSearch(handlers, {
+          sorting: { sortBy: "funding.maxAwardAmount", sortOrder: "asc" },
+        });
+        const descBody = await runSearch(handlers, {
+          sorting: { sortBy: "funding.maxAwardAmount", sortOrder: "desc" },
+        });
 
-      const ascIds = ascBody.items.map((item) => item.id);
-      const descIds = descBody.items.map((item) => item.id);
+        const ascIds = ascBody.items.map((item) => item.id);
+        const descIds = descBody.items.map((item) => item.id);
 
-      // Guard against a no-op sort implementation trivially "passing" by both
-      // orderings being identical (e.g. both left in fixture/insertion order).
-      expect(ascIds).not.toEqual(descIds);
-      expect(ascIds).toEqual([...descIds].reverse());
-    });
+        // Guard against a no-op sort implementation trivially "passing" by both
+        // orderings being identical (e.g. both left in fixture/insertion order).
+        expect(ascIds).not.toEqual(descIds);
+        expect(ascIds).toEqual([...descIds].reverse());
+      },
+    );
 
-    it("returns 400 with the protocol Error shape for an unknown sortBy value", async () => {
-      const handlers = buildOpportunityHandlers("0.3.0");
+    it.each(VERSIONS)(
+      "returns 400 with the protocol Error shape for an unknown sortBy value, for v%s",
+      async (version) => {
+        const handlers = buildOpportunityHandlers(version);
 
-      const handler = handlers.find(
-        (h) => String(h.info.path) === "/common-grants/opportunities/search",
-      );
-      expect(handler).toBeDefined();
+        const handler = handlers.find(
+          (h) => String(h.info.path) === "/common-grants/opportunities/search",
+        );
+        expect(handler).toBeDefined();
 
-      const result = await handler!.run({
-        request: new Request(SEARCH_URL, {
-          method: "POST",
-          body: JSON.stringify({
-            sorting: { sortBy: "not_a_real_sort_field" },
+        const result = await handler!.run({
+          request: new Request(SEARCH_URL, {
+            method: "POST",
+            body: JSON.stringify({
+              sorting: { sortBy: "not_a_real_sort_field" },
+            }),
+            headers: { "Content-Type": "application/json" },
           }),
-          headers: { "Content-Type": "application/json" },
-        }),
-        requestId: "test-search-invalid-sortby",
-        resolutionContext: { baseUrl: "http://localhost/" },
-      });
+          requestId: "test-search-invalid-sortby",
+          resolutionContext: { baseUrl: "http://localhost/" },
+        });
 
-      expect(result).not.toBeNull();
-      expect(result!.response?.status).toBe(400);
+        expect(result).not.toBeNull();
+        expect(result!.response?.status).toBe(400);
 
-      const body = (await result!.response!.json()) as {
-        status: number;
-        message: string;
-        errors: Array<{ field: string; message: string }>;
-      };
+        const body = (await result!.response!.json()) as {
+          status: number;
+          message: string;
+          errors: Array<{ field: string; message: string }>;
+        };
 
-      expect(body.status).toBe(400);
-      expect(typeof body.message).toBe("string");
-      expect(body.message.length).toBeGreaterThan(0);
-      expect(Array.isArray(body.errors)).toBe(true);
-      expect(body.errors.length).toBeGreaterThan(0);
+        expect(body.status).toBe(400);
+        expect(typeof body.message).toBe("string");
+        expect(body.message.length).toBeGreaterThan(0);
+        expect(Array.isArray(body.errors)).toBe(true);
+        expect(body.errors.length).toBeGreaterThan(0);
 
-      const sortByError = body.errors.find((error) => "field" in error);
-      expect(sortByError).toBeDefined();
-    });
+        const sortByError = body.errors.find((error) => "field" in error);
+        expect(sortByError).toBeDefined();
+      },
+    );
 
     it("echoes customFilters in filterInfo.filters without letting them narrow results beyond the applied status filter", async () => {
       const handlers = buildOpportunityHandlers("0.3.0");
