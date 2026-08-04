@@ -1520,42 +1520,6 @@ components:
         middleName: Edward
         lastName: Doe
         suffix: Jr.
-    CommonGrants.Fields.OrgPatchAddressCollectionOrCreate:
-      type: object
-      properties:
-        primary:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchAddressOrCreate'
-          description: The primary address for a person or organization.
-        otherAddresses:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchAddressOrCreate'
-          nullable: true
-          description: Additional addresses keyed by a descriptive label (e.g., "work", "home", "international").
-      description: A collection of addresses.
-      example:
-        primary:
-          street1: 456 Main St
-          street2: Suite 100
-          city: Anytown
-          stateOrProvince: CA
-          country: US
-          postalCode: '12345'
-        otherAddresses:
-          satellite:
-            street1: 456 Main St
-            street2: Suite 100
-            city: Anytown
-            stateOrProvince: CA
-            country: US
-            postalCode: '12345'
-          international:
-            street1: 123 Rue Principale
-            city: Montreal
-            stateOrProvince: QC
-            country: CA
-            postalCode: H2Y 1C6
     CommonGrants.Fields.OrgPatchAddressOrCreate:
       type: object
       properties:
@@ -1627,79 +1591,64 @@ components:
           - nonprofit
           - academic
         description: Types of eligible organizations
-    CommonGrants.Fields.OrgPatchEmailCollectionOrCreate:
+    CommonGrants.Fields.OrgPatchIdentifierOrCreate:
       type: object
       properties:
-        primary:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Types.email'
-          description: The primary email address for a person or organization.
-        otherEmails:
+        registry:
           type: object
-          additionalProperties:
-            $ref: '#/components/schemas/CommonGrants.Types.email'
+          properties:
+            code:
+              type: string
+              nullable: true
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              nullable: true
+              description: Link to the catalog entry for this registry.
           nullable: true
-          description: Additional email addresses keyed by a descriptive label (e.g., "work", "personal", "support").
-      description: A collection of email addresses.
-      example:
-        primary: john.doe@example.com
-        otherEmails:
-          work: john.doe@work.com
-          personal: john.doe@gmail.com
-          school: john.doe@school.edu
-    CommonGrants.Fields.OrgPatchPCSOrgTypeOrCreate:
-      type: object
-      properties:
-        class:
+          description: Registry-level facts shared by every record in this registry.
+        id:
           type: string
-          enum:
-            - Organization types
-          description: The PCS term for the organization type.
-      allOf:
-        - $ref: '#/components/schemas/CommonGrants.Fields.PCSTerm'
-      description: |-
-        A Philanthropy Classification System (PCS) term for organization types.
+          nullable: true
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
 
-        See https://taxonomy.candid.org/organization-type for more information.
-    CommonGrants.Fields.OrgPatchPhoneCollectionOrCreate:
-      type: object
-      properties:
-        primary:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneOrCreate'
-          description: The person's primary phone number.
-        fax:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneOrCreate'
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
           nullable: true
-          description: The person's fax number, if applicable.
-        otherPhones:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneOrCreate'
-          nullable: true
-          description: Additional phone numbers not covered by the standard fields.
-      description: A collection of phone numbers for a person.
+          description: Every known identifier for this record in this registry, including archived values.
+      description: |-
+        An identifier issued to a record by a registry.
+
+        Accepts any string value and any registry code. Model-specific collections use
+        registry-typed instantiations of `IdentifierT` (e.g. `OrgIdEin`) for their base
+        identifiers, and this generic form for extension identifiers under `otherIds`.
       example:
-        primary:
-          countryCode: '+1'
-          number: 444-456-1230
-          isMobile: true
-        fax:
-          countryCode: '+1'
-          number: 555-123-4567
-          extension: '123'
-          isMobile: false
-        otherPhones:
-          support:
-            countryCode: '+1'
-            number: 333-456-1230
-            isMobile: false
-          marketing:
-            countryCode: '+1'
-            number: 444-456-1230
-            isMobile: true
+        registry:
+          code: org:us:ein
+          url: https://commongrants.org/registries/org-us-ein
+        id: '123456789'
+        allIds:
+          - id: '123456789'
+            status: active
+          - id: '987654321'
+            status: archived
     CommonGrants.Fields.OrgPatchPhoneOrCreate:
       type: object
       properties:
@@ -1724,6 +1673,61 @@ components:
         number: 555-123-4567
         extension: '123'
         isMobile: false
+    CommonGrants.Fields.OrgPatchSystemIdOrCreate:
+      type: object
+      properties:
+        registry:
+          type: object
+          properties:
+            code:
+              type: string
+              nullable: true
+              description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+            url:
+              type: string
+              format: uri
+              nullable: true
+              description: Link to the catalog entry for this registry.
+          nullable: true
+          description: Registry-level facts shared by every record in this registry.
+        id:
+          type: string
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          nullable: true
+          description: |-
+            The primary identifier string, when the registry has a single canonical value.
+
+            May be omitted for registries with no natural primary; consumers should read
+            `allIds` in that case.
+        allIds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                description: The identifier string.
+              status:
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                description: Whether the identifier is currently valid or retired.
+            required:
+              - id
+              - status
+          nullable: true
+          description: Every known identifier for this record in this registry, including archived values.
+      description: |-
+        The hosting system's own identifier for a record.
+
+        The identifier value is the record's UUID within the hosting system; the
+        registry code names that system (e.g. `org:grants.gov:system`).
+      example:
+        registry:
+          code: org:grants.gov:system
+          url: https://commongrants.org/registries/org-grants-gov-system
+        id: 01912a8b-7c3d-7890-abcd-ef1234567890
     CommonGrants.Fields.OtherEvent:
       type: object
       required:
@@ -4343,36 +4347,6 @@ components:
         name:
           type: string
           description: The organization's legal name as registered with relevant authorities.
-        identifiers:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdsOrCreate'
-          nullable: true
-          description: Identifiers associated with the organization, keyed by registry code.
-        orgType:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPCSOrgTypeOrCreate'
-          nullable: true
-          description: The organization's type within the Philanthropy Classification System (PCS).
-        addresses:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchAddressCollectionOrCreate'
-          nullable: true
-          description: Collection of physical addresses associated with the organization.
-        phones:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneCollectionOrCreate'
-          nullable: true
-          description: Collection of phone numbers associated with the organization.
-        emails:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchEmailCollectionOrCreate'
-          nullable: true
-          description: Collection of email addresses associated with the organization.
         mission:
           type: string
           nullable: true
@@ -4383,23 +4357,57 @@ components:
             - $ref: '#/components/schemas/CommonGrants.Types.calendarYear'
           nullable: true
           description: The calendar year the organization was founded.
+        identifiers:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgIdsOrCreate'
+          nullable: true
+          description: Identifiers associated with the organization, keyed by registry code.
+        orgType:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchPCSOrgTypeOrCreate'
+          nullable: true
+          description: The organization's type within the Philanthropy Classification System (PCS).
+        addresses:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchAddressCollectionOrCreate'
+          nullable: true
+          description: Collection of physical addresses associated with the organization.
+        phones:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchPhoneCollectionOrCreate'
+          nullable: true
+          description: Collection of phone numbers associated with the organization.
+        emails:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchEmailCollectionOrCreate'
+          nullable: true
+          description: Collection of email addresses associated with the organization.
         socials:
           type: object
           allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgSocialLinksOrCreate'
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgSocialLinksOrCreate'
           nullable: true
           description: Collection of the organization's social media and web presence links.
         customFields:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchCustomFieldOrCreate'
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchCustomFieldOrCreate'
+            nullable: true
           nullable: true
           description: Custom fields for the organization.
       description: |-
         A JSON Merge Patch (RFC 7396) body for updating an organization profile.
 
         Derived from `OrganizationBase`: every field is optional, fields that can
-        be cleared accept `null` to unset them, and read-only fields like `id` are excluded.
+        be cleared accept `null` to unset them, record keys can be deleted by
+        setting them to `null`, and read-only fields like `id` are excluded.
         Sent as `application/merge-patch+json`.
       example:
         name: Example Nonprofit (Renamed)
@@ -4409,6 +4417,8 @@ components:
           website: null
         emails:
           primary: info@example.org
+        customFields:
+          legacyCode: null
     CommonGrants.Models.OrgPatchOrgIdDunsOrCreate:
       type: object
       properties:
@@ -4568,83 +4578,6 @@ components:
           code: org:us:uei
           url: https://commongrants.org/registries/org-us-uei
         id: AB0123456789
-    CommonGrants.Models.OrgPatchOrgIdsOrCreate:
-      type: object
-      properties:
-        org:us:ein:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdEinOrCreate'
-          nullable: true
-          description: The organization's Employer Identification Number (EIN), assigned by the IRS.
-        org:us:uei:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdUeiOrCreate'
-          nullable: true
-          description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
-        org:xi:duns:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdDunsOrCreate'
-          nullable: true
-          description: The organization's Data Universal Numbering System (DUNS) number.
-      allOf:
-        - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierCollection'
-      description: |-
-        A collection of identifiers associated with an organization.
-
-        Extends the generic identifier collection with the base identifiers CommonGrants
-        defines for organizations. Additional registries can be published under `otherIds`.
-    CommonGrants.Models.OrgPatchOrgSocialLinksOrCreate:
-      type: object
-      properties:
-        website:
-          type: string
-          format: uri
-          nullable: true
-          description: The organization's primary website URL.
-        facebook:
-          type: string
-          format: uri
-          nullable: true
-          description: The organization's Facebook profile URL.
-        twitterOrX:
-          type: string
-          format: uri
-          nullable: true
-          description: The organization's Twitter/X profile URL.
-        bluesky:
-          type: string
-          format: uri
-          nullable: true
-          description: The organization's BlueSky profile URL.
-        instagram:
-          type: string
-          format: uri
-          nullable: true
-          description: The organization's Instagram profile URL.
-        linkedin:
-          type: string
-          format: uri
-          nullable: true
-          description: The organization's LinkedIn profile URL.
-        otherSocials:
-          type: object
-          additionalProperties:
-            type: string
-            format: uri
-          nullable: true
-          description: Additional social media profiles not covered by the standard fields.
-      description: A collection of social media and web presence links for an organization.
-      example:
-        website: https://www.example.com
-        facebook: https://www.facebook.com/example
-        twitterOrX: https://x.com/example
-        instagram: https://www.instagram.com/example
-        linkedin: https://www.linkedin.com/company/example
-        otherSocials:
-          youtube: https://www.youtube.com/example
     CommonGrants.Models.OrgRef:
       type: object
       required:
@@ -5087,6 +5020,172 @@ components:
           description: Total number of pages
           example: 5
       description: Details about the paginated results
+    CommonGrants.Patch.OrgPatchAddressCollectionOrCreate:
+      type: object
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchAddressOrCreate'
+          description: The primary address for a person or organization.
+        otherAddresses:
+          type: object
+          additionalProperties:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchAddressOrCreate'
+            nullable: true
+          nullable: true
+          description: Additional addresses keyed by a descriptive label (e.g., "work", "home", "international").
+      description: A collection of addresses.
+    CommonGrants.Patch.OrgPatchEmailCollectionOrCreate:
+      type: object
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.email'
+          description: The primary email address for a person or organization.
+        otherEmails:
+          type: object
+          additionalProperties:
+            type: string
+            allOf:
+              - $ref: '#/components/schemas/CommonGrants.Types.email'
+            nullable: true
+          nullable: true
+          description: Additional email addresses keyed by a descriptive label (e.g., "work", "personal", "support").
+      description: A collection of email addresses.
+    CommonGrants.Patch.OrgPatchOrgIdsOrCreate:
+      type: object
+      properties:
+        org:us:ein:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdEinOrCreate'
+          nullable: true
+          description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+        org:us:uei:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdUeiOrCreate'
+          nullable: true
+          description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+        org:xi:duns:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdDunsOrCreate'
+          nullable: true
+          description: The organization's Data Universal Numbering System (DUNS) number.
+        systemId:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchSystemIdOrCreate'
+          nullable: true
+          description: The hosting system's own identifier for this record.
+        otherIds:
+          type: object
+          additionalProperties:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchIdentifierOrCreate'
+            nullable: true
+          nullable: true
+          description: |-
+            Additional identifiers keyed by their registry code, for registries the
+            protocol does not define as a base identifier on the model.
+      description: |-
+        A collection of identifiers associated with an organization.
+
+        Extends the generic identifier collection with the base identifiers CommonGrants
+        defines for organizations. Additional registries can be published under `otherIds`.
+    CommonGrants.Patch.OrgPatchOrgSocialLinksOrCreate:
+      type: object
+      properties:
+        website:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's primary website URL.
+        facebook:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's Facebook profile URL.
+        twitterOrX:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's Twitter/X profile URL.
+        bluesky:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's BlueSky profile URL.
+        instagram:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's Instagram profile URL.
+        linkedin:
+          type: string
+          format: uri
+          nullable: true
+          description: The organization's LinkedIn profile URL.
+        otherSocials:
+          type: object
+          additionalProperties:
+            type: string
+            format: uri
+            nullable: true
+          nullable: true
+          description: Additional social media profiles not covered by the standard fields.
+      description: A collection of social media and web presence links for an organization.
+    CommonGrants.Patch.OrgPatchPCSOrgTypeOrCreate:
+      type: object
+      properties:
+        class:
+          type: string
+          enum:
+            - Organization types
+          description: The PCS term for the organization type.
+        term:
+          type: string
+          description: The plain language PCS term.
+        code:
+          type: string
+          pattern: ^[A-Z]{2}[0-9]{6}$
+          description: The code for this PCS term.
+          example: UC000000
+        description:
+          type: string
+          nullable: true
+          description: Description of the PCS term
+      description: |-
+        A Philanthropy Classification System (PCS) term for organization types.
+
+        See https://taxonomy.candid.org/organization-type for more information.
+    CommonGrants.Patch.OrgPatchPhoneCollectionOrCreate:
+      type: object
+      properties:
+        primary:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneOrCreate'
+          description: The person's primary phone number.
+        fax:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneOrCreate'
+          nullable: true
+          description: The person's fax number, if applicable.
+        otherPhones:
+          type: object
+          additionalProperties:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchPhoneOrCreate'
+            nullable: true
+          nullable: true
+          description: Additional phone numbers not covered by the standard fields.
+      description: A collection of phone numbers for a person.
     CommonGrants.Responses.Accepted:
       type: object
       required:
