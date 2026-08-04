@@ -100,4 +100,4 @@ After merging a Release PR:
 
 - Per-package versions are tracked in `.release-please-manifest.json`; release-please config lives in `release-please-config.json` (both at the repo root).
 - The Python SDK's version lives only in `pyproject.toml` (mirrored into `common_grants_sdk/__init__.py` by release-please); it has no `package.json`.
-- `lib/changelog-emitter` is private and excluded from releases.
+- `lib/changelog-emitter` is unpublished and excluded from releases by omission from `release-please-config.json`.

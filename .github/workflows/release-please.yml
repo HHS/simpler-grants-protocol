@@ -39,7 +39,8 @@ jobs:
     uses: ./.github/workflows/cd-deploy-lib-core.yml
     with:
       release_tag: ${{ needs.release-please.outputs.core_tag }}
-    secrets: inherit
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-cli:
     needs: release-please
@@ -47,7 +48,8 @@ jobs:
     uses: ./.github/workflows/cd-deploy-lib-cli.yml
     with:
       release_tag: ${{ needs.release-please.outputs.cli_tag }}
-    secrets: inherit
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-ts-sdk:
     needs: release-please
@@ -55,7 +57,8 @@ jobs:
     uses: ./.github/workflows/cd-deploy-lib-ts-sdk.yml
     with:
       release_tag: ${{ needs.release-please.outputs.ts_sdk_tag }}
-    secrets: inherit
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-py-sdk:
     needs: release-please
@@ -63,4 +66,5 @@ jobs:
     uses: ./.github/workflows/cd-deploy-lib-pysdk.yml
     with:
       release_tag: ${{ needs.release-please.outputs.py_sdk_tag }}
-    secrets: inherit
+    secrets:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}

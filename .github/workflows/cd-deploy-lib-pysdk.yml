@@ -8,6 +8,9 @@ on:
         description: "Release tag (e.g., common-grants-sdk@0.3.0)"
         required: true
         type: string
+    secrets:
+      PYPI_TOKEN:
+        required: true
   # Manual fallback for re-running a publish against an existing tag
   workflow_dispatch:
     inputs:
