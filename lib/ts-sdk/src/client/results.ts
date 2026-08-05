@@ -37,7 +37,7 @@ export class BatchParseError extends Error {
 export type OnParseError = "collect" | "throw";
 
 export function parseBatch<T>(
-  schema: { safeParse(data: unknown): z.SafeParseReturnType<unknown, T> },
+  schema: { safeParse(data: unknown): z.ZodSafeParseResult<T> },
   rows: unknown[],
   onParseError: OnParseError = "collect"
 ): { items: T[]; errors: ParseFailure[] } {

@@ -245,7 +245,7 @@ describe("ISOTime Schema", () => {
 
   it("should handle non-string input in preprocess", () => {
     // Test the else branch in preprocess (non-string input)
-    // Note: This will fail at the z.string().time() validation, but we're testing the preprocess branch
+    // Note: This will fail at the z.iso.time() validation, but we're testing the preprocess branch
     // The preprocess should return the value as-is if it's not a string
     expect(() => ISOTimeSchema.parse(123)).toThrow();
     expect(() => ISOTimeSchema.parse(null)).toThrow();

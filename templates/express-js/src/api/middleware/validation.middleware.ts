@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const handleValidationError = (error: unknown) => {
   if (error instanceof z.ZodError) {
-    const message = error.errors.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
+    const message = error.issues.map(err => `${err.path.join(".")}: ${err.message}`).join(", ");
     throw new ApiError(400, `Validation error: ${message}`);
   }
   throw error;

@@ -35,7 +35,7 @@ import {
 // imported from wherever the source-system types live.
 const GrantsGovOpportunity = z.object({
   data: z.object({
-    opportunity_uuid: z.string().uuid(),
+    opportunity_uuid: z.uuid(),
     opportunity_id: z.number().int(),
     opportunity_title: z.string(),
     opportunity_description: z.string(),
@@ -43,7 +43,7 @@ const GrantsGovOpportunity = z.object({
     // `source_url: null` below is the publisher actively asserting "doesn't
     // apply" (three-state null). The transforms preserve it as `null` end to end
     // rather than collapsing it to absent.
-    source_url: z.string().url().nullish(),
+    source_url: z.url().nullish(),
     created_at: z.string(),
     last_modified_at: z.string(),
   }),

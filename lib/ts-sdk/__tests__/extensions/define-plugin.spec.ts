@@ -259,7 +259,7 @@ describe("definePlugin", () => {
 
       const plugin = definePlugin({
         schemas: {
-          Opportunity: { sourceSchema: z.object({}).passthrough(), toCommon, fromCommon },
+          Opportunity: { sourceSchema: z.object({}).loose(), toCommon, fromCommon },
         },
       });
 
@@ -286,7 +286,7 @@ describe("definePlugin", () => {
 
       const plugin = definePlugin({
         schemas: {
-          Opportunity: { sourceSchema: z.object({}).passthrough(), toCommon, fromCommon },
+          Opportunity: { sourceSchema: z.object({}).loose(), toCommon, fromCommon },
         },
       });
 
@@ -337,7 +337,7 @@ describe("definePlugin", () => {
       definePlugin({
         schemas: {
           // @ts-expect-error — the functions path requires both toCommon and fromCommon
-          Opportunity: { sourceSchema: z.object({}).passthrough(), toCommon: noop },
+          Opportunity: { sourceSchema: z.object({}).loose(), toCommon: noop },
         },
       });
     });
@@ -428,7 +428,7 @@ const autoWireFromCommonMapping = {
 };
 // Transform entries require a sourceSchema. The mappings runtime here doesn't use
 // it, so a permissive shape is fine for these tests.
-const autoWireSourceSchema = z.object({}).passthrough();
+const autoWireSourceSchema = z.object({}).loose();
 
 describe("definePlugin — auto-wiring from mappings", () => {
   it("auto-generates working toCommon/fromCommon from schemas.Opportunity.mappings", () => {

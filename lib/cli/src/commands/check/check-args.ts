@@ -32,7 +32,7 @@ export const availableVersions = getAvailableBaseVersions();
  * Positional arguments that must be passed to the `check api` command.
  */
 export const CheckApiArgsSchema = z.object({
-  apiUrl: z.string().url(),
+  apiUrl: z.url(),
   specPath: z
     .string()
     .endsWith(".json")
