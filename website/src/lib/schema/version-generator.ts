@@ -260,26 +260,33 @@ function generateSchemaForVersion(
     versionedSchema.$id = `${nameInVersion}.yaml`;
   }
 
-  // Get fields that should be removed (added after target version)
+  // Determine which fields don't exist in the target version. The JSON Schema
+  // emitter ignores @typespec/versioning and emits a union of every field across
+  // all versions (see microsoft/typespec#2051, tracked here in HHS #370), so we
+  // reconstruct each version from the changelog: drop fields added after the
+  // target version, and drop fields removed at or before it.
   const fieldsToRemove = new Set<string>();
 
   if (schemaLogs) {
     for (const version of Object.keys(schemaLogs).sort()) {
-      if (compareVersions(version, targetVersion) > 0) {
-        const changes = schemaLogs[version];
-        for (const change of changes) {
-          if (
-            change.action === Action.Added &&
-            change.targetKind === TargetType.ModelProperty
-          ) {
-            fieldsToRemove.add(change.currTargetName || "");
-          }
+      const changes = schemaLogs[version];
+      const isAfterTarget = compareVersions(version, targetVersion) > 0;
+      const isAtOrBeforeTarget = compareVersions(version, targetVersion) <= 0;
+      for (const change of changes) {
+        if (change.targetKind !== TargetType.ModelProperty) {
+          continue;
+        }
+        if (isAfterTarget && change.action === Action.Added) {
+          fieldsToRemove.add(change.currTargetName || "");
+        }
+        if (isAtOrBeforeTarget && change.action === Action.Removed) {
+          fieldsToRemove.add(change.currTargetName || "");
         }
       }
     }
   }
 
-  // Remove fields that didn't exist yet
+  // Remove fields that didn't exist in this version
   if (versionedSchema.properties) {
     for (const fieldName of fieldsToRemove) {
       delete versionedSchema.properties[fieldName];

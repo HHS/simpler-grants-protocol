@@ -1,0 +1,119 @@
+{
+  "org:us:ein": {
+    "name": "Employer Identification Number",
+    "description": "Nine-digit tax identifier the IRS assigns to U.S. organizations. Widely used to match organizations across federal award data.",
+    "kind": "government",
+    "status": "base",
+    "models": ["Organization"],
+    "issuer": "US Internal Revenue Service",
+    "orgIdGuide": "US-EIN",
+    "source": "https://org-id.guide/list/US-EIN",
+    "lookupUriTemplate": "https://apps.irs.gov/app/eos/detailsPage?ein={id}",
+    "format": {
+      "pattern": "^\\d{9}$",
+      "example": "123456789",
+      "normalization": [
+        "Strip the hyphen before storing (12-3456789 becomes 123456789)."
+      ]
+    }
+  },
+  "org:us:uei": {
+    "name": "Unique Entity Identifier",
+    "description": "Twelve-character alphanumeric identifier issued through SAM.gov, replacing DUNS as the primary U.S. federal entity identifier.",
+    "kind": "government",
+    "status": "base",
+    "models": ["Organization"],
+    "issuer": "US General Services Administration (SAM.gov)",
+    "orgIdGuide": "US-SAM",
+    "source": "https://org-id.guide/list/US-SAM",
+    "lookupUriTemplate": "https://sam.gov/entity/{id}",
+    "format": {
+      "pattern": "^[A-HJ-NP-Z0-9]{12}$",
+      "example": "AB0123456789",
+      "normalization": [
+        "Twelve uppercase alphanumeric characters; excludes the letters O and I. Cast to uppercase before storing or comparing."
+      ]
+    }
+  },
+  "org:xi:duns": {
+    "name": "DUNS Number",
+    "description": "Nine-digit identifier issued by Dun & Bradstreet. Formerly the primary U.S. federal entity identifier; retained for historical matching.",
+    "kind": "commercial",
+    "status": "base",
+    "models": ["Organization"],
+    "issuer": "Dun & Bradstreet",
+    "orgIdGuide": "XI-DUNS",
+    "source": "https://org-id.guide/list/XI-DUNS",
+    "format": {
+      "pattern": "^\\d{9}$",
+      "example": "123456789",
+      "normalization": ["Strip hyphens and spaces before storing."]
+    }
+  },
+  "opp:us:aln": {
+    "name": "Assistance Listing Number",
+    "description": "Program identifier from the U.S. federal assistance listings (formerly the CFDA number). Ties an opportunity to its funding program.",
+    "kind": "government",
+    "status": "base",
+    "models": ["Opportunity"],
+    "issuer": "US General Services Administration (SAM.gov)",
+    "source": "https://sam.gov/content/assistance-listings",
+    "format": {
+      "pattern": "^\\d{2}\\.[0-9A-Z]{3}[A-Z]?$",
+      "example": "93.575",
+      "normalization": [
+        "Two-digit numeric agency prefix, then a three-character program code. Historically numeric (93.575); new listings may use alphanumeric codes as of March 2026 (e.g. 31.A1A). Some programs append a single uppercase subprogram letter (e.g. 84.063P)."
+      ]
+    }
+  },
+  "opp:us:fon": {
+    "name": "Federal Opportunity Number",
+    "description": "Agency-assigned funding opportunity number that appears on the published notice of funding opportunity. Format varies by agency.",
+    "kind": "government",
+    "status": "base",
+    "models": ["Opportunity"],
+    "issuer": "US federal awarding agencies",
+    "source": "https://www.grants.gov",
+    "format": {
+      "example": "HHS-2026-ACF-OCC-YD-0001"
+    }
+  },
+  "awd:us:fain": {
+    "name": "Federal Award Identification Number",
+    "description": "Identifier the awarding agency assigns to a specific federal award. Reported to USAspending and used to track award activity.",
+    "kind": "government",
+    "status": "base",
+    "models": ["Award"],
+    "issuer": "US federal awarding agencies",
+    "source": "https://www.usaspending.gov",
+    "format": {
+      "example": "ABC12345"
+    }
+  },
+  "org:grants.gov:system": {
+    "name": "Grants.gov Organization ID",
+    "description": "System-assigned identifier for an organization within Grants.gov. Locates and updates the organization record in that platform.",
+    "kind": "platform",
+    "status": "extension",
+    "models": ["Organization"],
+    "issuer": "Grants.gov",
+    "source": "https://www.grants.gov",
+    "format": {
+      "format": "uuid",
+      "example": "01912a8b-7c3d-7890-abcd-ef1234567890"
+    }
+  },
+  "opp:grants.gov:system": {
+    "name": "Grants.gov Opportunity ID",
+    "description": "System-assigned identifier for an opportunity within Grants.gov. Locates and updates the opportunity record in that platform.",
+    "kind": "platform",
+    "status": "extension",
+    "models": ["Opportunity"],
+    "issuer": "Grants.gov",
+    "source": "https://www.grants.gov",
+    "format": {
+      "format": "uuid",
+      "example": "01912a8b-7c3d-7892-abcd-ef1234567892"
+    }
+  }
+}

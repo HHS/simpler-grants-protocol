@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwdRef.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: Globally unique id for the award
+  title:
+    type: string
+    examples:
+      - Community Health Center Capital Improvement Grant
+    description: Title or name of the award
+  identifiers:
+    $ref: AwdIds.yaml
+    description: System and registry-specific identifiers for the award
+required:
+  - id
+  - title
+unevaluatedProperties:
+  not: {}
+examples:
+  - id: 01912a8b-7c3d-7894-abcd-ef1234567890
+    title: Community Health Center Capital Improvement Grant
+    identifiers:
+      systemId:
+        registry:
+          code: awd:grants.gov:system
+        id: 01912a8b-7c3d-7894-abcd-ef1234567890
+      awd:us:fain:
+        registry:
+          code: awd:us:fain
+          url: https://commongrants.org/registries/awd-us-fain
+        id: H80CS00001
+description: |-
+  A reference to an award, previewing the key fields a consumer needs to
+  identify it and look it up or join it to another response. Appears wherever
+  another record points to an award, such as a parent award for an amendment
+  or tranche.

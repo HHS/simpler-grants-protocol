@@ -31,6 +31,13 @@ using Versioning;
   }
 )
 @tagMetadata("Forms", #{ description: "Endpoints related to forms" })
+@tagMetadata("Awards", #{ description: "Endpoints related to grant awards" })
+@tagMetadata(
+  "Organizations",
+  #{
+    description: "Endpoints related to viewing and syncing organization profiles",
+  }
+)
 @tagMetadata(
   "Application Reviews",
   #{
@@ -57,6 +64,32 @@ using Versioning;
 namespace CommonGrants.API;
 
 // #########################################################
+// Authentication
+// #########################################################
+
+/** OAuth 2.0 authentication for organization profile syncing, following
+ * ADR-0026. Supports the client credentials and authorization code (with PKCE)
+ * flows. The flow URLs below are illustrative placeholders that each deployment
+ * overrides with its own authorization server. JWT claim requirements (such as
+ * a namespaced `org_id`) are documented in ADR-0026, not encoded here.
+ *
+ * @template Scopes The scopes an operation requires.
+ */
+alias OrgSyncAuth<Scopes extends string[]> = OAuth2Auth<[
+  {
+    type: OAuth2FlowType.clientCredentials;
+    tokenUrl: "https://auth.example.com/oauth/token";
+    scopes: Scopes;
+  },
+  {
+    type: OAuth2FlowType.authorizationCode;
+    authorizationUrl: "https://auth.example.com/authorize";
+    tokenUrl: "https://auth.example.com/oauth/token";
+    scopes: Scopes;
+  }
+]>;
+
+// #########################################################
 // Opportunities
 // #########################################################
 
@@ -71,12 +104,67 @@ namespace Opportunities {
   @tag("required")
   @returnTypeChangedFrom(
     CommonGrants.Versions.v0_2,
-    Responses.Ok<Models.OpportunityBase> | Responses.NotFound
+    Responses.OkT<Models.OpportunityBase> | Responses.NotFound
   )
   op read is Router.read;
 
   @tag("optional")
   op search is Router.search;
+}
+
+// #########################################################
+// Awards
+// #########################################################
+
+@tag("Awards")
+@tag("experimental")
+@route("/awards")
+namespace Awards {
+  alias Router = Routes.Awards;
+
+  @added(Versions.v0_4)
+  op list is Router.list;
+
+  @added(Versions.v0_4)
+  op read is Router.read;
+
+  @added(Versions.v0_4)
+  op search is Router.search;
+}
+
+// #########################################################
+// Organizations
+// #########################################################
+
+@tag("Organizations")
+@tag("experimental")
+@route("/orgs")
+namespace Organizations {
+  alias Router = Routes.Organizations;
+
+  @added(Versions.v0_4)
+  @useAuth(OrgSyncAuth<["org:read"]>)
+  op list is Router.list;
+
+  @added(Versions.v0_4)
+  @useAuth(OrgSyncAuth<["org:read"]>)
+  op read is Router.read;
+
+  @added(Versions.v0_4)
+  @useAuth(OrgSyncAuth<["org:write"]>)
+  op update is Router.update;
+
+  @added(Versions.v0_4)
+  @useAuth(OrgSyncAuth<["org.changes:write"]>)
+  op submitChange is Router.submitChange;
+
+  @added(Versions.v0_4)
+  @useAuth(OrgSyncAuth<["org.changes:read"]>)
+  op listChanges is Router.listChanges;
+
+  @added(Versions.v0_4)
+  @useAuth(OrgSyncAuth<["org.changes:read"]>)
+  op viewChange is Router.viewChange;
 }
 
 // #########################################################

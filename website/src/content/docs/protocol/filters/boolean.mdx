@@ -1,0 +1,54 @@
+---
+title: Boolean filters
+description: Filters that can be applied to boolean fields.
+booleanComparisonFilter:
+  example:
+    file:
+      path: "website/public/schemas/yaml/BooleanComparisonFilter.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/BooleanComparisonFilter.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/filters/boolean.tsp"
+      startLine: 9
+      endLine: 18
+  python:
+    file:
+      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/boolean.py"
+      startLine: 9
+      endLine: 31
+  typescript:
+    file:
+      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
+      startLine: 114
+      endLine: 117
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
+
+## BooleanComparisonFilter
+
+A filter that applies a comparison to a boolean value.
+
+### Table
+
+| Property | Type                                                                | Description                               |
+| -------- | ------------------------------------------------------------------- | ----------------------------------------- |
+| operator | [EquivalenceOperators](/protocol/filters/base#equivalenceoperators) | The operator to apply to the filter value |
+| value    | [boolean](/protocol/types/other#boolean)                            | The value to use for the filter operation |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.booleanComparisonFilter.example}
+  jsonSchema={frontmatter.booleanComparisonFilter.jsonSchema}
+  typeSpec={frontmatter.booleanComparisonFilter.typeSpec}
+  python={frontmatter.booleanComparisonFilter.python}
+  typescript={frontmatter.booleanComparisonFilter.typescript}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="BooleanComparisonFilter" />
