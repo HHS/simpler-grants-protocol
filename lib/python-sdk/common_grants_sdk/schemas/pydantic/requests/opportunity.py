@@ -21,5 +21,5 @@ class OpportunitySearchRequest(BaseModel):
         default_factory=OppFilters,
         description="Filters to apply to the opportunity search",
     )
-    sorting: OppSorting = OppSorting(sortBy=OppSortBy.LAST_MODIFIED_AT)
+    sorting: OppSorting = OppSorting(sort_by=OppSortBy.LAST_MODIFIED_AT)
     pagination: PaginatedBodyParams = PaginatedBodyParams()
