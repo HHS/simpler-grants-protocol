@@ -1,0 +1,14 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwdStatusOptions.yaml
+type: string
+enum:
+  - awarded
+  - completed
+  - cancelled
+  - custom
+description: |-
+  The set of values accepted for award status:
+  - `awarded`: The award has been issued and funds are being disbursed
+  - `completed`: The award's period of performance has ended
+  - `cancelled`: The award was cancelled or terminated
+  - `custom`: A custom status

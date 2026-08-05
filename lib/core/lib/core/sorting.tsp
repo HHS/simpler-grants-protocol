@@ -12,7 +12,7 @@ using TypeSpec.JsonSchema;
  *
  * @route("/foo/")
  * @get
- * op list(sorting: Sorting.SortQueryParams): Responses.Sorted<MyModel>;
+ * op list(sorting: Sorting.SortQueryParams): Responses.SortedT<MyModel>;
  * ```
  */
 @jsonSchema

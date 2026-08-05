@@ -2,8 +2,8 @@
 
 ### Prerequisites
 
-- Node.js 20 or higher
-- pnpm 10.18.0 or higher
+- Node.js 22.13 or higher
+- pnpm 11 or higher
 
 ### Development commands
 

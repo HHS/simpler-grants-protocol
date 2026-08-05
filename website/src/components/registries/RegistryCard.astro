@@ -1,0 +1,81 @@
+---
+import type { Registry } from "@/lib/registries";
+import CatalogCard from "@/components/catalog/CatalogCard.astro";
+
+interface Props {
+  registry: Registry;
+}
+
+const { registry } = Astro.props;
+const detailHref = `/registries/${registry.slug}`;
+
+// Blob of code segments and issuer so the free-text search matches on them.
+const searchTags = [
+  registry.code,
+  registry.object,
+  registry.kind,
+  registry.status,
+  registry.issuer ?? "",
+  ...registry.models,
+].join(",");
+---
+
+<CatalogCard
+  href={detailHref}
+  title={registry.code}
+  description={registry.description}
+  dataAttributes={{
+    name: registry.name,
+    description: registry.description,
+    tags: searchTags,
+    schema: registry.schemaLabel,
+    scope: registry.scope,
+    kind: registry.kind,
+    status: registry.status,
+  }}
+>
+  <div class="card-name">{registry.name}</div>
+
+  <div class="card-pills">
+    <span class="pill pill-kind">{registry.kind}</span>
+    <span class="pill">{registry.object}</span>
+    <span class="pill">{registry.scope}</span>
+    {registry.status === "base" && <span class="pill pill-base">base</span>}
+  </div>
+</CatalogCard>
+
+<style>
+  .card-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--sl-color-white);
+    margin-bottom: 0.5rem;
+  }
+
+  .card-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .pill {
+    padding: 0.375rem 0.75rem;
+    background: var(--sl-color-blue-low);
+    color: var(--sl-color-blue-high);
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-family: monospace;
+    font-weight: 500;
+  }
+
+  .pill-kind {
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-accent-high);
+  }
+
+  .pill-base {
+    background: var(--sl-color-green-low, var(--sl-color-gray-6));
+    color: var(--sl-color-green-high, var(--sl-color-white));
+  }
+</style>

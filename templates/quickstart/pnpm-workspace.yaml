@@ -1,0 +1,9 @@
+# Config for this standalone template (pnpm 11+ reads settings from
+# pnpm-workspace.yaml, not the package.json "pnpm" field).
+# Overrides are security floors for transitive deps; remove each once the
+# parent dep chain resolves past the floor on its own.
+overrides:
+  "ajv@>=7 <8.18.0": "8.18.0"
+  "picomatch@>=2 <2.3.2": "2.3.2"
+  "tar@<7.5.21": "7.5.21"
+  "yaml@>=2 <2.8.3": "2.8.3"

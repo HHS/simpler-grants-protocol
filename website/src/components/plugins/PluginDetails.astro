@@ -3,6 +3,7 @@ import type { Plugin } from "@/lib/plugins";
 import { LinkButton, CardGrid } from "@astrojs/starlight/components";
 import { loadAllCustomFields } from "@/lib/custom-fields";
 import CustomFieldCard from "@/components/custom-fields/CustomFieldCard.astro";
+import CustomFilterCard from "@/components/plugins/CustomFilterCard.astro";
 
 interface Props {
   plugin: Plugin;
@@ -69,6 +70,24 @@ const pluginFields = plugin.resolvedFields
       {pluginFields.map((field) => <CustomFieldCard field={field} />)}
     </CardGrid>
   </section>
+
+  <!-- Custom Filters Section -->
+  {
+    plugin.resolvedFilters.length > 0 && (
+      <section class="section">
+        <h2>Custom Filters</h2>
+        <p class="section-description">
+          This plugin accepts {plugin.resolvedFilters.length} custom filters
+          beyond the CommonGrants base filters:
+        </p>
+        <CardGrid>
+          {plugin.resolvedFilters.map((filter) => (
+            <CustomFilterCard filter={filter} />
+          ))}
+        </CardGrid>
+      </section>
+    )
+  }
 
   <!-- Actions -->
   <div class="actions">

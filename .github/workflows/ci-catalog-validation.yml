@@ -32,10 +32,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Audit dependencies
-        # Calls the npm bulk advisory endpoint directly as a workaround for
-        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
-        # revert to `pnpm audit` once pnpm ships native support.
-        run: node .github/scripts/audit-deps.js --level moderate
+        run: pnpm audit --audit-level=moderate
 
       - name: CI — core
         run: pnpm run ci:core
