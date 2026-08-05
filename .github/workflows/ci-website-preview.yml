@@ -17,9 +17,9 @@ env:
   CLOUDFLARE_WORKERS_DOMAIN: billy-daly.workers.dev
 
 jobs:
-  # Install, build, and run checks/tests/audit. All post-build steps are
-  # sequential but each runs regardless of the previous step's pass/fail so
-  # lint, test, and audit failures all surface in a single CI run.
+  # Install, build, and run checks/tests. All post-build steps are sequential
+  # but each runs regardless of the previous step's pass/fail so lint and test
+  # failures all surface in a single CI run.
   validate:
     runs-on: ubuntu-latest
     outputs:
