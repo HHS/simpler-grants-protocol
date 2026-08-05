@@ -137,7 +137,7 @@ function wrapWithSchemaValidation<TIn, TOut>(
   // `any` lets this accept schemas with .transform() whose input type differs
   // from the output type. `unknown` would reject those valid schemas here.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: z.ZodType<TOut, z.ZodTypeDef, any>
+  schema: z.ZodType<TOut, any>
 ): (input: TIn) => TransformResult<TOut> {
   return (input: TIn): TransformResult<TOut> => {
     const result = fn(input);

@@ -102,12 +102,12 @@ export function withCustomFields<
   if (!("customFields" in schemaShape)) {
     throw new Error(
       "Cannot register custom fields on a schema that doesn't support them. " +
-        "The base schema must include a 'customFields' property (e.g., customFields: z.record(z.unknown()).nullish())"
+        "The base schema must include a 'customFields' property (e.g., customFields: z.record(z.string(), z.unknown()).nullish())"
     );
   }
 
   // Build typed schema for each spec; record key is the field name
-  const typedFieldSchemas: Record<string, z.ZodTypeAny> = {};
+  const typedFieldSchemas: Record<string, z.ZodType> = {};
 
   for (const [key, spec] of Object.entries(specs)) {
     typedFieldSchemas[key] = CustomFieldSchema.extend({
@@ -123,7 +123,7 @@ export function withCustomFields<
 
   // Create new customFields schema with passthrough for unknown fields
   // Use nullish() to match the base schema's customFields: z.record(...).nullish()
-  const customFieldsSchema = z.object(typedFieldSchemas).passthrough().nullish();
+  const customFieldsSchema = z.object(typedFieldSchemas).loose().nullish();
 
   // Extend base schema with new customFields
   const result = baseSchema.extend({
@@ -141,12 +141,12 @@ export function withCustomFields<
  * Default Zod schemas for each CustomFieldType.
  * Used when a value schema is not provided in a CustomFieldSpec.
  */
-const DEFAULT_VALUE_SCHEMAS: Record<CustomFieldType, z.ZodTypeAny> = {
+const DEFAULT_VALUE_SCHEMAS: Record<CustomFieldType, z.ZodType> = {
   string: z.string(),
   number: z.number(),
   integer: z.number().int(),
   boolean: z.boolean(),
-  object: z.record(z.unknown()),
+  object: z.record(z.string(), z.unknown()),
   array: z.array(z.unknown()),
 };
 
@@ -154,7 +154,7 @@ const DEFAULT_VALUE_SCHEMAS: Record<CustomFieldType, z.ZodTypeAny> = {
  * Gets the value schema for a custom field spec.
  * Returns the provided value schema or a default based on fieldType.
  */
-function getValueSchema(spec: CustomFieldSpec): z.ZodTypeAny {
+function getValueSchema(spec: CustomFieldSpec): z.ZodType {
   return spec.value ?? DEFAULT_VALUE_SCHEMAS[spec.fieldType];
 }
 
@@ -173,7 +173,7 @@ function getValueSchema(spec: CustomFieldSpec): z.ZodTypeAny {
  *   const schemas = {};
  *   for (const [name, spec] of Object.entries(specs)) { schemas[name] = ... }
  *
- * TypeScript only sees `Record<string, z.ZodTypeAny>`, losing all specific
+ * TypeScript only sees `Record<string, z.ZodType>`, losing all specific
  * key-value type information.
  *
  * These type utilities bridge that gap by operating at the TYPE level instead
@@ -223,7 +223,7 @@ type DefaultFieldTypeMap = {
  * ```
  */
 /** Infers the value type from a spec's explicit value schema, if one is provided. */
-type InferFromValueSchema<T extends CustomFieldSpec> = T["value"] extends z.ZodTypeAny
+type InferFromValueSchema<T extends CustomFieldSpec> = T["value"] extends z.ZodType
   ? z.infer<T["value"]>
   : never;
 
@@ -233,7 +233,7 @@ type DefaultValueType<T extends CustomFieldSpec> = T["fieldType"] extends keyof 
   : unknown;
 
 /** Composes the two helpers: use explicit schema if available, else default. */
-type InferValueType<T extends CustomFieldSpec> = T["value"] extends z.ZodTypeAny
+type InferValueType<T extends CustomFieldSpec> = T["value"] extends z.ZodType
   ? InferFromValueSchema<T>
   : DefaultValueType<T>;
 

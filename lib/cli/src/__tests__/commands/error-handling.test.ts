@@ -54,7 +54,7 @@ describe("Command Error Handling", () => {
 
       expect(mockConsoleError).toHaveBeenCalledWith(
         "Validation error:",
-        expect.stringContaining("Invalid url")
+        expect.stringContaining("Invalid URL")
       );
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });

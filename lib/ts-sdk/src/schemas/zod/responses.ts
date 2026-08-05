@@ -45,7 +45,7 @@ export const SuccessSchema = z.object({
  * const CustomModel200Schema = OkSchema(CustomModelSchema);
  * ```
  */
-export const OkSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+export const OkSchema = <T extends z.ZodType>(dataSchema: T) =>
   SuccessSchema.extend({
     /** Response data */
     data: dataSchema,
@@ -68,7 +68,7 @@ export const OkSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
  * const CustomModelResponseSchema = PaginatedSchema(CustomModelSchema);
  * ```
  */
-export const PaginatedSchema = <T extends z.ZodTypeAny>(itemsSchema: T) =>
+export const PaginatedSchema = <T extends z.ZodType>(itemsSchema: T) =>
   SuccessSchema.extend({
     /** Items from the current page */
     items: z.array(itemsSchema),
@@ -94,7 +94,7 @@ export const PaginatedSchema = <T extends z.ZodTypeAny>(itemsSchema: T) =>
  * const CustomModelSortedResponseSchema = SortedSchema(CustomModelSchema);
  * ```
  */
-export const SortedSchema = <T extends z.ZodTypeAny>(itemsSchema: T) =>
+export const SortedSchema = <T extends z.ZodType>(itemsSchema: T) =>
   PaginatedSchema(itemsSchema).extend({
     /** The sort order of the items */
     sortInfo: SortedResultsInfoSchema,
@@ -123,7 +123,7 @@ export const SortedSchema = <T extends z.ZodTypeAny>(itemsSchema: T) =>
  * const CustomModelFilteredResponseSchema = FilteredSchema(CustomModelSchema, CustomFilterSchema);
  * ```
  */
-export const FilteredSchema = <ItemsT extends z.ZodTypeAny, FilterT extends z.ZodTypeAny>(
+export const FilteredSchema = <ItemsT extends z.ZodType, FilterT extends z.ZodType>(
   itemsSchema: ItemsT,
   filterSchema: FilterT
 ) =>
@@ -156,7 +156,7 @@ export const FilteredSchema = <ItemsT extends z.ZodTypeAny, FilterT extends z.Zo
  * const CustomModel201Schema = CreatedSchema(CustomModelSchema);
  * ```
  */
-export const CreatedSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+export const CreatedSchema = <T extends z.ZodType>(dataSchema: T) =>
   SuccessSchema.extend({
     /** Response data */
     data: dataSchema,

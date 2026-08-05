@@ -26,7 +26,7 @@ const TagsValueSchema = z.array(z.string());
 const MetadataValueSchema = z.object({
   version: z.number(),
   source: z.string(),
-  importedAt: z.string().datetime(),
+  importedAt: z.iso.datetime(),
 });
 
 // Create an extended schema with typed custom fields

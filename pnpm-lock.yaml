@@ -67,8 +67,8 @@ catalogs:
       specifier: ^4.1.8
       version: 4.1.9
     zod:
-      specifier: ^3.25.76
-      version: 3.25.76
+      specifier: ^4.4.3
+      version: 4.4.3
   website:
     vitest:
       specifier: ^4.1.9
@@ -177,7 +177,7 @@ importers:
         version: 5.0.1(express@4.22.2(supports-color@10.2.2))
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: 4.4.3
     devDependencies:
       '@common-grants/core':
         specifier: workspace:*
@@ -310,7 +310,7 @@ importers:
     dependencies:
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: 4.4.3
     devDependencies:
       '@common-grants/cg-grants-gov':
         specifier: ^0.2.0
@@ -455,7 +455,7 @@ importers:
         version: link:../lib/changelog-emitter
       zod:
         specifier: 'catalog:'
-        version: 3.25.76
+        version: 4.4.3
     devDependencies:
       '@astrojs/check':
         specifier: ^0.9.9
