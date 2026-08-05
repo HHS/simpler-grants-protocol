@@ -33,7 +33,7 @@ We will adopt [release-please](https://github.com/googleapis/release-please) in 
 - Conventional-commit PR titles become mandatory and release-facing; a mistyped title puts a change in the wrong category (or omits it entirely), so a CI title check is required.
 - Contributors must know which commit types map to which version bumps.
 - Commits that do not follow the conventional format are invisible to release-please, so changelog entries for the period before adoption may under-report.
-- A commit's type applies to every package whose files it touches; PRs that span packages need deliberate scoping.
+- A commit's type applies to every package whose files it touches, so a PR spanning `lib/core/` and `lib/ts-sdk/` opens a Release PR for both at that type's level. That is usually correct — both packages changed — but a PR needs splitting when the packages warrant different bumps, such as a `feat` in one alongside a mechanical regeneration in the other. See [PR title format](https://github.com/HHS/simpler-grants-protocol/blob/main/CONTRIBUTING.md#pr-title-format).
 
 ## Criteria
 

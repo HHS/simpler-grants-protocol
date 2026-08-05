@@ -132,10 +132,14 @@ PR titles must follow the [Conventional Commits](https://www.conventionalcommits
 | `fix` | Patch release | `fix(ts-sdk): preserve plain dates in JSON` |
 | `feat` | Minor release | `feat(core): add award schemas` |
 | `feat!` or `fix!` (or a `BREAKING CHANGE:` footer) | Breaking release (minor while pre-1.0) | `feat(cli)!: drop Node 20 support` |
-| `perf`, `revert`, `docs`, `refactor`, `build` | Patch release | `docs(website): clarify filter usage` |
+| `perf`, `revert`, `docs`, `refactor`, `build` | Patch release | `docs(core): clarify filter usage` |
 | `chore`, `ci`, `test` | No release; hidden from changelogs (a `!` marker still cuts a breaking release) | `chore(deps): bump the runtime group` |
 
-The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this check — retitle it `revert: <description>` before merging. See [lib/README.md](lib/README.md) for how releases are cut from this history.
+The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). Releases are scoped by path rather than by that scope: only files under `lib/core/`, `lib/cli/`, `lib/ts-sdk/`, or `lib/python-sdk/` can trigger one, so `docs(website): ...` releases nothing. Inside those paths a releasing type does release the package — `docs` included, since `README.md` ships in the published artifact. Use `chore` for a package's internal notes that shouldn't ship.
+
+A PR touching two packages bumps both at the title's type. That is usually right, since both packages changed; split the PR when they warrant different bumps, such as a `feat` in `lib/core/` alongside a mechanical regeneration in `lib/ts-sdk/`.
+
+GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this check — retitle it `revert: <description>` before merging. release-please cannot parse `Revert "..."` either, so a revert merged under that title would ship with no version bump and no error. See [lib/README.md](lib/README.md) for how releases are cut from this history.
 
 ## Getting started
 
