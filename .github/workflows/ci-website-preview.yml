@@ -78,11 +78,8 @@ jobs:
         run: pnpm run test
 
       - name: Audit dependencies
-        # Calls the npm bulk advisory endpoint directly as a workaround for
-        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
-        # revert to `pnpm run audit:high` once pnpm ships native support.
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js --level high
+        run: pnpm run audit:high
 
   # Deploy the built artifact to a per-PR Cloudflare Worker. Decoupled from
   # the test/check/audit outcome (via artifact_ready) so previews stay
@@ -122,8 +119,8 @@ jobs:
         # just to get wrangler on PATH. Pin to major @4 to match the devDep in
         # website/package.json and avoid silent v5+ drift.
         # --allow-build list: wrangler pulls in workerd/esbuild/sharp, each of
-        # which wants to run a postinstall build; pnpm 10's default rejects
-        # those unless explicitly allowed.
+        # which wants to run a postinstall build; pnpm's default rejects those
+        # unless explicitly allowed.
         run: pnpm --allow-build=workerd --allow-build=esbuild --allow-build=sharp dlx wrangler@4 deploy --name cg-pr-${{ github.event.pull_request.number }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

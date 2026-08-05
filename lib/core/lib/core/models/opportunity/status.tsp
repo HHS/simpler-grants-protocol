@@ -26,16 +26,7 @@ enum OppStatusOptions {
 @example(Examples.OppStatus.custom)
 @example(Examples.OppStatus.default)
 @Versioning.added(CommonGrants.Versions.v0_1)
-model OppStatus {
-  /** The status of the opportunity, from a predefined set of options */
-  value: OppStatusOptions;
-
-  /** A custom value for the status */
-  customValue?: string;
-
-  /** A human-readable description of the status */
-  description?: string;
-}
+model OppStatus is Fields.ExtensibleEnumT<OppStatusOptions>;
 
 // ########################################
 // Opportunity status model examples
