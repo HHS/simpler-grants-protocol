@@ -1,0 +1,70 @@
+name: "Release Please"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          manifest-file: .release-please-manifest.json
+          config-file: release-please-config.json
+    outputs:
+      core_released: ${{ steps.release.outputs['lib/core--release_created'] }}
+      core_tag: ${{ steps.release.outputs['lib/core--tag_name'] }}
+      cli_released: ${{ steps.release.outputs['lib/cli--release_created'] }}
+      cli_tag: ${{ steps.release.outputs['lib/cli--tag_name'] }}
+      ts_sdk_released: ${{ steps.release.outputs['lib/ts-sdk--release_created'] }}
+      ts_sdk_tag: ${{ steps.release.outputs['lib/ts-sdk--tag_name'] }}
+      py_sdk_released: ${{ steps.release.outputs['lib/python-sdk--release_created'] }}
+      py_sdk_tag: ${{ steps.release.outputs['lib/python-sdk--tag_name'] }}
+
+  # Publishes fan out from the outputs above. Tags and releases created with
+  # GITHUB_TOKEN do not trigger other workflows, so the deploys must be called
+  # from this run rather than via `on: release`.
+  publish-core:
+    needs: release-please
+    if: needs.release-please.outputs.core_released == 'true'
+    uses: ./.github/workflows/cd-deploy-lib-core.yml
+    with:
+      release_tag: ${{ needs.release-please.outputs.core_tag }}
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-cli:
+    needs: release-please
+    if: needs.release-please.outputs.cli_released == 'true'
+    uses: ./.github/workflows/cd-deploy-lib-cli.yml
+    with:
+      release_tag: ${{ needs.release-please.outputs.cli_tag }}
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-ts-sdk:
+    needs: release-please
+    if: needs.release-please.outputs.ts_sdk_released == 'true'
+    uses: ./.github/workflows/cd-deploy-lib-ts-sdk.yml
+    with:
+      release_tag: ${{ needs.release-please.outputs.ts_sdk_tag }}
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-py-sdk:
+    needs: release-please
+    if: needs.release-please.outputs.py_sdk_released == 'true'
+    uses: ./.github/workflows/cd-deploy-lib-pysdk.yml
+    with:
+      release_tag: ${{ needs.release-please.outputs.py_sdk_tag }}
+    secrets:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}

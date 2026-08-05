@@ -1060,33 +1060,6 @@ files = [
 ]
 
 [[package]]
-name = "tomlkit"
-version = "0.15.1"
-description = "Style preserving TOML library"
-optional = false
-python-versions = ">=3.9"
-groups = ["dev"]
-files = [
-    {file = "tomlkit-0.15.1-py3-none-any.whl", hash = "sha256:177a05aece5a8ca5266fd3c448abb47b8d352f09d477d3ca8332db4d89b24304"},
-    {file = "tomlkit-0.15.1.tar.gz", hash = "sha256:e25bbf38843005246210a12982776f27f99cb9be67160e14434d0c0d21ee1e97"},
-]
-
-[[package]]
-name = "tomlq"
-version = "0.1.0"
-description = "A Python wrapper for yq exposing the toml functionality"
-optional = false
-python-versions = "*"
-groups = ["dev"]
-files = [
-    {file = "tomlq-0.1.0-py2.py3-none-any.whl", hash = "sha256:4b966fd999ed2bf69081b7c7f5caadbc4c9542d0ed5fcf2e9b7b4d8d7ada3c82"},
-    {file = "tomlq-0.1.0.tar.gz", hash = "sha256:e775720e90da3e405142b9fe476145e71c0389f787b1ff9933f92a1704d8c6e7"},
-]
-
-[package.dependencies]
-yq = {version = ">=2.7.2", extras = ["toml"]}
-
-[[package]]
 name = "typeguard"
 version = "4.5.2"
 description = "Run-time type checker for Python"
@@ -1140,43 +1113,7 @@ files = [
 [package.dependencies]
 typing-extensions = ">=4.12.0"
 
-[[package]]
-name = "xmltodict"
-version = "1.0.4"
-description = "Makes working with XML feel like you are working with JSON"
-optional = false
-python-versions = ">=3.9"
-groups = ["dev"]
-files = [
-    {file = "xmltodict-1.0.4-py3-none-any.whl", hash = "sha256:a4a00d300b0e1c59fc2bfccb53d7b2e88c32f200df138a0dd2229f842497026a"},
-    {file = "xmltodict-1.0.4.tar.gz", hash = "sha256:6d94c9f834dd9e44514162799d344d815a3a4faec913717a9ecbfa5be1bb8e61"},
-]
-
-[package.extras]
-test = ["pytest", "pytest-cov"]
-
-[[package]]
-name = "yq"
-version = "3.4.3"
-description = "Command-line YAML/XML processor - jq wrapper for YAML/XML documents"
-optional = false
-python-versions = ">=3.8"
-groups = ["dev"]
-files = [
-    {file = "yq-3.4.3-py3-none-any.whl", hash = "sha256:547e34bc3caacce83665fd3429bf7c85f8e8b6b9aaee3f953db1ad716ff3434d"},
-    {file = "yq-3.4.3.tar.gz", hash = "sha256:ba586a1a6f30cf705b2f92206712df2281cd320280210e7b7b80adcb8f256e3b"},
-]
-
-[package.dependencies]
-argcomplete = ">=1.8.1"
-PyYAML = ">=5.3.1"
-tomlkit = ">=0.11.6"
-xmltodict = ">=0.11.0"
-
-[package.extras]
-tests = ["build", "coverage", "mypy", "ruff", "wheel"]
-
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "8f27f5c4b35d8eb9b365c8a5939ca24b6edc45c6060308e9fdbed1e0afd59dce"
+content-hash = "969a305d8e20998d63252e2bd93978e16cdd163717db1ad0bad68d157840499a"
