@@ -1,0 +1,55 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwdFilters.yaml
+type: object
+properties:
+  status:
+    $ref: StringArrayFilter.yaml
+    examples:
+      - operator: in
+        value:
+          - awarded
+          - completed
+    description: "`status.value` matches one of the following values"
+  opportunityId:
+    $ref: StringArrayFilter.yaml
+    examples:
+      - operator: in
+        value:
+          - 018f2e77-3a4b-7c1d-9e2f-abcdef123456
+    description: "`opportunity.id` matches one of the following values"
+  awardDateRange:
+    $ref: DateRangeFilter.yaml
+    examples:
+      - operator: between
+        value:
+          min: 2026-01-01
+          max: 2026-12-31
+    description: "`keyDates.awardDate` is between the given range"
+  awardedAmountRange:
+    $ref: MoneyRangeFilter.yaml
+    examples:
+      - operator: between
+        value:
+          min:
+            amount: "100000"
+            currency: USD
+          max:
+            amount: "500000"
+            currency: USD
+    description: |-
+      `funding.awardedAmount` is between the given range
+
+      Funding amounts that are denominated in a different currency will
+      be excluded from the search.
+  customFilters:
+    $ref: "#/$defs/RecordDefaultFilter"
+    description: Additional implementation-defined filters to apply to the search
+unevaluatedProperties:
+  not: {}
+description: Filters to apply when searching for awards
+$defs:
+  RecordDefaultFilter:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: DefaultFilter.yaml

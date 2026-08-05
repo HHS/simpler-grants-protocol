@@ -12,11 +12,15 @@ namespace QuestionBank.OrgUei;
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
-  #{ uei: #{ field: "organizations.primary.uei" } }
+  #{ uei: #{ field: "organizations.primary.identifiers.org:us:uei.id" } }
 )
 @extension(
   "x-mapping-to-cg",
-  #{ organizations: #{ primary: #{ uei: #{ field: "uei" } } } }
+  #{
+    organizations: #{
+      primary: #{ identifiers: #{ `org:us:uei`: #{ id: #{ field: "uei" } } } },
+    },
+  }
 )
 @extension(
   "x-ui-schema",

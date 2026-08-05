@@ -6,12 +6,6 @@ import { Paths } from "@/lib/schema/paths";
 import { CUSTOM_FILTER_TYPES } from "@/lib/plugins/types";
 
 describe("filterDocsHref", () => {
-  // The protocol has no boolean filter model, so no boolean anchor is ever
-  // emitted. Catches "completing" the map by pattern with a made-up anchor.
-  it("sends booleanComparison to the filters index, not an anchor", () => {
-    expect(filterDocsHref("booleanComparison")).toBe("/protocol/filters/");
-  });
-
   // starlight-links-validator parses markdown, so it never sees links emitted
   // from the .astro plugin pages — confirmed by building with a deliberately
   // dead anchor and watching it report all links valid. Nothing else catches a
@@ -20,7 +14,6 @@ describe("filterDocsHref", () => {
     for (const filterType of CUSTOM_FILTER_TYPES) {
       const href = filterDocsHref(filterType);
       const [page, anchor] = href.replace("/protocol/filters/", "").split("#");
-      if (!anchor) continue;
       const mdx = fs.readFileSync(
         path.join(Paths.PROTOCOL_DOCS_DIR, "filters", `${page}.mdx`),
         "utf-8",

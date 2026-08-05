@@ -11,9 +11,6 @@ class BooleanComparisonFilter(CommonGrantsBaseModel):
 
     Strict boolean: 1/0 and "true"/"false" are rejected, matching the Zod
     ``z.boolean()`` semantics of the TS SDK's ``BooleanComparisonFilterSchema``.
-
-    No spec model backs this filter yet: the core spec defines no boolean
-    filter, so both SDKs carry an SDK-level model until one lands.
     """
 
     operator: EquivalenceOperator = Field(

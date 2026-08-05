@@ -29,17 +29,5 @@ describe("plugins loader", () => {
       // Authored per filter in index.json; "" means the wiring dropped it.
       expect(agency?.description).not.toBe("");
     });
-
-    // The one filter type with no protocol model of its own, so it is the one
-    // whose href comes from the fallback rather than the anchor map.
-    it("sends a booleanComparison filter to the filters index", () => {
-      const plugin = loadAllPlugins().find((p) => p.id === "cg-grants-gov");
-      const costSharing = plugin?.resolvedFilters.find(
-        (f) => f.name === "costSharing",
-      );
-
-      expect(costSharing?.filterType).toBe("booleanComparison");
-      expect(costSharing?.docsHref).toBe("/protocol/filters/");
-    });
   });
 });

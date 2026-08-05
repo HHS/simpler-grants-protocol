@@ -13,13 +13,21 @@ namespace QuestionBank.FiscalSponsorEin;
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",
-  #{ ein: #{ field: "organizations.otherOrgs.fiscalSponsor.ein" } }
+  #{
+    ein: #{
+      field: "organizations.otherOrgs.fiscalSponsor.identifiers.org:us:ein.id",
+    },
+  }
 )
 @extension(
   "x-mapping-to-cg",
   #{
     organizations: #{
-      otherOrgs: #{ fiscalSponsor: #{ ein: #{ field: "ein" } } },
+      otherOrgs: #{
+        fiscalSponsor: #{
+          identifiers: #{ `org:us:ein`: #{ id: #{ field: "ein" } } },
+        },
+      },
     },
   }
 )
@@ -36,5 +44,5 @@ namespace QuestionBank.FiscalSponsorEin;
     ],
   }
 )
-@example(#{ ein: "98-7654321" })
+@example(#{ ein: "987654321" })
 model QuestionFiscalSponsorEin extends QuestionEin.QuestionEin {}

@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ExtensibleEnum.yaml
+type: object
+properties:
+  value:
+    description: The selected value, from a predefined set of options
+  customValue:
+    type: string
+    description: A custom value, used when the selected value is the `custom` option
+  description:
+    type: string
+    description: A human-readable description of the value
+required:
+  - value
+unevaluatedProperties:
+  not: {}
+examples:
+  - value: custom
+    customValue: underReview
+    description: The application is under review by the program team
+description: A value from a predefined set of options that can be extended with a custom value when needed

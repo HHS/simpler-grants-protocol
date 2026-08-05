@@ -19,7 +19,7 @@ using TypeSpec.JsonSchema;
  * @route("/pets")
  * namespace Pets {
  *   @get
- *   op getPets(): Responses.Ok<Pet> | Responses.Unauthorized;
+ *   op getPets(): Responses.OkT<Pet> | Responses.Unauthorized;
  * }
  * ```
  */
