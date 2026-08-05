@@ -64,7 +64,6 @@ examples:
     instructions: Competition 1 instructions
     status:
       value: open
-      customValue: custom
       description: Competition is open for applications
     keyDates:
       openDate:

@@ -31,29 +31,13 @@ sorted:
         }
       }
   jsonSchema:
-    code: |
-      $schema: https://json-schema.org/draft/2020-12/schema
-      $id: Sorted.yaml
-      type: object
-      properties:
-        items:
-          type: array
-          description: Items from the current page
-        paginationInfo:
-          $ref: PaginatedResultsInfo.yaml
-        sortInfo:
-          $ref: SortedResultsInfo.yaml
-      allOf:
-        - $ref: Success.yaml
-      required:
-        - items
-        - paginationInfo
-        - sortInfo
+    file:
+      path: "website/public/schemas/yaml/Sorted.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 104
-      endLine: 112
+      startLine: 125
+      endLine: 141
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
@@ -95,7 +79,7 @@ A 200 response with a paginated list of sorted items.
 
 ### Usage
 
-Here's an example of how to use the `Sorted` response within a an API operation:
+Use the `SortedT<T>` template to define a 200 response with a paginated list of sorted, typed items within an API operation:
 
 ```typespec
 import "@common-grants/core";
@@ -113,5 +97,9 @@ model TestModel {
 @summary("List test models")
 @doc("Get a paginated list of test models")
 @get
-op listTest(...PaginatedQueryParams): Sorted<TestModel>;
+op listTest(...PaginatedQueryParams): SortedT<TestModel>;
 ```
+
+### Changelog
+
+<SchemaChangelog schema="Sorted" />

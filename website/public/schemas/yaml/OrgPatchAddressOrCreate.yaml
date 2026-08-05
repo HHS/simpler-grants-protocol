@@ -1,0 +1,53 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgPatchAddressOrCreate.yaml
+type: object
+properties:
+  street1:
+    type: string
+    description: The primary street address line.
+  street2:
+    anyOf:
+      - type: string
+      - type: "null"
+    description: Additional street address information (e.g., apartment number, suite, etc.).
+  city:
+    type: string
+    description: The city or municipality name.
+  stateOrProvince:
+    type: string
+    description: The state, province, or region name.
+  country:
+    type: string
+    description: The country name or ISO country code.
+  postalCode:
+    type: string
+    description: The postal or ZIP code for the address.
+  latitude:
+    anyOf:
+      - type: number
+      - type: "null"
+    description: The latitude coordinate of the address location.
+  longitude:
+    anyOf:
+      - type: number
+      - type: "null"
+    description: The longitude coordinate of the address location.
+  geography:
+    anyOf:
+      - $ref: "#/$defs/OrgPatchRecordOrCreateUnknown"
+      - type: "null"
+    description: Additional geospatial data in GeoJSON format.
+unevaluatedProperties:
+  not: {}
+examples:
+  - street1: 123 Main St
+    city: Anytown
+    stateOrProvince: CA
+    country: US
+    postalCode: "12345"
+description: A mailing address.
+$defs:
+  OrgPatchRecordOrCreateUnknown:
+    type: object
+    properties: {}
+    unevaluatedProperties: {}

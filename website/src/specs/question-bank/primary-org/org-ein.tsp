@@ -12,11 +12,15 @@ namespace QuestionBank.OrgEin;
 @extension("x-entity", #[Entities.primaryOrg])
 @extension(
   "x-mapping-from-cg",
-  #{ ein: #{ field: "organizations.primary.ein" } }
+  #{ ein: #{ field: "organizations.primary.identifiers.org:us:ein.id" } }
 )
 @extension(
   "x-mapping-to-cg",
-  #{ organizations: #{ primary: #{ ein: #{ field: "ein" } } } }
+  #{
+    organizations: #{
+      primary: #{ identifiers: #{ `org:us:ein`: #{ id: #{ field: "ein" } } } },
+    },
+  }
 )
 @extension(
   "x-ui-schema",
@@ -31,7 +35,7 @@ namespace QuestionBank.OrgEin;
     ],
   }
 )
-@example(#{ ein: "12-3456789" })
+@example(#{ ein: "123456789" })
 model QuestionOrgEin {
   /** The organization's Employer Identification Number */
   ein: employerTaxId;

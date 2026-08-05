@@ -30,7 +30,7 @@ interface Competitions {
   read(
     /** The ID of the competition to view */
     @path compId: Types.uuid,
-  ): Responses.Ok<Models.CompetitionBase> | Responses.NotFound;
+  ): Responses.OkT<Models.CompetitionBase> | Responses.NotFound;
 
   // ###############################
   // Apply to a competition
@@ -47,7 +47,7 @@ interface Competitions {
     /** The application to apply to the competition */
     @body application: Models.ApplicationBase,
   ):
-    | Responses.Created<Models.ApplicationBase>
+    | Responses.CreatedT<Models.ApplicationBase>
     | Responses.NotFound
     | Responses.Unauthorized;
 }

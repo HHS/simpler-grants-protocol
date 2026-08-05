@@ -27,28 +27,13 @@ paginated:
         }
       }
   jsonSchema:
-    code: |
-      $schema: https://json-schema.org/draft/2020-12/schema
-      $id: Paginated.yaml
-      type: object
-      properties:
-        items:
-          type: array
-          description: Items from the current page
-        paginationInfo:
-          $ref: PaginatedResultsInfo.yaml
-      allOf:
-        - $ref: Success.yaml
-      required:
-        - status
-        - message
-        - items
-        - paginationInfo
+    file:
+      path: "website/public/schemas/yaml/Paginated.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 70
-      endLine: 82
+      startLine: 72
+      endLine: 90
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
@@ -89,7 +74,7 @@ A 200 response with a paginated list of items.
 
 ### Usage
 
-Here's an example of how to use the `Paginated` response within a an API operation:
+Use the `PaginatedT<T>` template to define a 200 response with a paginated list of typed items within an API operation:
 
 ```typespec
 import "@common-grants/core";
@@ -107,5 +92,9 @@ model TestModel {
 @summary("List test models")
 @doc("Get a paginated list of test models")
 @get
-op listTest(...PaginatedQueryParams): Paginated<TestModel>;
+op listTest(...PaginatedQueryParams): PaginatedT<TestModel>;
 ```
+
+### Changelog
+
+<SchemaChangelog schema="Paginated" />

@@ -1,0 +1,15 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwdSorting.yaml
+type: object
+properties:
+  sortBy:
+    $ref: AwdSortBy.yaml
+    examples:
+      - lastModifiedAt
+    description: The field to sort by
+required:
+  - sortBy
+allOf:
+  - $ref: SortBodyParams.yaml
+unevaluatedProperties:
+  not: {}

@@ -37,6 +37,18 @@ const createTestSchemas = (): Map<string, JsonSchema> => {
     required: ["id", "name"],
   });
 
+  // Schema added in v0.2.0 with a `legacyCode` field removed in v0.3.0
+  schemas.set("Widget", {
+    $id: "Widget.yaml",
+    type: "object",
+    properties: {
+      id: { type: "string" },
+      name: { type: "string" },
+      legacyCode: { type: "string" },
+    },
+    required: ["id", "legacyCode"],
+  });
+
   // Schema that references FormBase (to test $ref updates)
   schemas.set("Competition", {
     $id: "Competition.yaml",
@@ -89,6 +101,24 @@ const createTestChangelog = (): Changelog => ({
           action: Action.Added,
           targetKind: TargetType.ModelProperty,
           currTargetName: "version",
+        },
+      ],
+    },
+    Widget: {
+      "0.2.0": [
+        {
+          message: "Added `Widget` model",
+          action: Action.Added,
+          targetKind: TargetType.Model,
+          currTargetName: "Widget",
+        },
+      ],
+      "0.3.0": [
+        {
+          message: "Removed `legacyCode` field",
+          action: Action.Removed,
+          targetKind: TargetType.ModelProperty,
+          currTargetName: "legacyCode",
         },
       ],
     },
@@ -239,6 +269,35 @@ describe("Version Generator", () => {
       expect(formBaseV3?.properties).toHaveProperty("id");
       expect(formBaseV3?.properties).toHaveProperty("name");
       expect(formBaseV3?.properties).toHaveProperty("description");
+    });
+  });
+
+  // #############################################################################
+  // # Field removals
+  // #############################################################################
+
+  describe("Field removals", () => {
+    it("should include removed fields in versions before the removal", () => {
+      // legacyCode was removed from Widget in v0.3.0, so it exists in v0.2.0
+      const resultV2 = generateSchemaVersions("0.2.0", changelog, schemas);
+      const widgetV2 = resultV2.schemas.get("Widget") as JsonSchema;
+
+      expect(widgetV2?.properties).toHaveProperty("legacyCode");
+      expect(widgetV2?.required).toContain("legacyCode");
+    });
+
+    it("should exclude removed fields starting from the version they were removed", () => {
+      // legacyCode was removed from Widget in v0.3.0
+      const resultV3 = generateSchemaVersions("0.3.0", changelog, schemas);
+      const widgetV3 = resultV3.schemas.get("Widget") as JsonSchema;
+
+      // v0.3.0 should NOT have legacyCode, in properties or required
+      expect(widgetV3?.properties).not.toHaveProperty("legacyCode");
+      expect(widgetV3?.required ?? []).not.toContain("legacyCode");
+
+      // Other fields should remain
+      expect(widgetV3?.properties).toHaveProperty("id");
+      expect(widgetV3?.properties).toHaveProperty("name");
     });
   });
 

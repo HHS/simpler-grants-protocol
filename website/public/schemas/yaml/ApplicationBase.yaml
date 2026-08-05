@@ -5,9 +5,9 @@ properties:
   id:
     $ref: uuid.yaml
     description: The unique identifier for the application
-  name:
+  title:
     type: string
-    description: The name of the application
+    description: The title of the application
   competitionId:
     $ref: uuid.yaml
     description: The unique identifier for the competition
@@ -43,7 +43,7 @@ properties:
     description: The timestamp (in UTC) at which the record was last modified.
 required:
   - id
-  - name
+  - title
   - competitionId
   - opportunityId
   - formResponses
@@ -54,7 +54,7 @@ unevaluatedProperties:
   not: {}
 examples:
   - id: 123e4567-e89b-12d3-a456-426614174000
-    name: My Application
+    title: My Application
     competitionId: 123e4567-e89b-12d3-a456-426614174000
     opportunityId: ad3b469a-d89a-42d3-c439-6c1234567890
     formResponses:

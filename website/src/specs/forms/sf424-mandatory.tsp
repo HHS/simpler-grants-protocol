@@ -503,7 +503,7 @@ model SF424Mandatory {
   orgName: QuestionOrgName;
 
   /** Employer Identification Number (EIN) of the applicant organization */
-  @example(#{ ein: "12-3456789" })
+  @example(#{ ein: "123456789" })
   @extension(
     "x-overrides",
     #{
