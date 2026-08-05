@@ -1,0 +1,59 @@
+name: "Deps: Scheduled Dependency Audit"
+
+# Daily workspace-wide advisory sweep on main. New GHSAs published against
+# deps already on main surface here as a tracking issue within a day, instead
+# of redding every open PR the moment they drop. PRs that actually change
+# deps are still gated by the audit in ci-catalog-validation.yml (any dep
+# change updates the root lockfile, which triggers it).
+on:
+  schedule:
+    # Daily at ~7-8am PT (15:00 UTC = 8am PDT / 7am PST)
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+  # Smoke-test on changes here.
+  pull_request:
+    paths:
+      - .github/workflows/deps-audit.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit all workspace packages
+        # No --audit-level: pnpm's default is low, so the sweep reports
+        # everything, including advisories below the moderate threshold that
+        # gates dep-changing PRs in ci-catalog-validation.yml.
+        run: pnpm audit
+
+      - name: Open tracking issue on scheduled failure
+        if: failure() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TITLE="Scheduled dependency audit is failing"
+          EXISTING=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "Still failing: $RUN_URL"
+          else
+            gh issue create --title "$TITLE" --label dependencies \
+              --body "The daily workspace-wide dependency audit found advisories against deps on \`main\`. See the run log for details: $RUN_URL"
+          fi
