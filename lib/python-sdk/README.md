@@ -44,46 +44,80 @@ for opp in response.items:
 
 ### Kitchen sink example
 
-This example shows how the SDK's modules work together: fetching data with the client, validating it with schemas, and accessing typed custom fields via extensions.
+This example shows how the SDK's modules work together: declaring a plugin with typed custom fields and a custom filter, getting a pre-bound client from it, searching with both standard and custom filters, and validating standalone data with schemas.
 
 ```python
-from common_grants_sdk.client import Client, Auth
-from common_grants_sdk.client.config import Config
-from common_grants_sdk.schemas.pydantic import (
-    OpportunityBase,
-    OppStatusOptions,
-    CustomFieldType,
-)
-from common_grants_sdk.extensions.specs import CustomFieldSpec
+from typing import Optional
 
-# Extend the base schema with custom fields
-CustomOpportunity = OpportunityBase.with_custom_fields(
-    custom_fields={
-        "programArea": CustomFieldSpec(
-            field_type=CustomFieldType.STRING,
-            description="Grant program area",
-        ),
-        "legacyId": CustomFieldSpec(
-            field_type=CustomFieldType.INTEGER,
-            description="Legacy system ID",
-        ),
+from pydantic import Field
+
+from common_grants_sdk.client import Config
+from common_grants_sdk.extensions import (
+    CustomField,
+    CustomFieldSet,
+    PluginMeta,
+    PluginRoutes,
+    PluginSchemas,
+    ResourceRoutes,
+    define_plugin,
+    f,
+    schema,
+)
+from common_grants_sdk.schemas.pydantic.filters.opportunity import (
+    OpportunityFilters,
+    StringArray,
+)
+from common_grants_sdk.schemas.pydantic.models import OpportunityBase
+
+
+# Custom fields attach to schemas. The value type on CustomField[V] flows through
+# to opp.custom_fields.<field>.value on every parsed response row.
+class OppFields(CustomFieldSet):
+    program_area: Optional[CustomField[str]] = Field(
+        default=None, description="Grant program area"
+    )
+    legacy_id: Optional[CustomField[int]] = Field(
+        default=None, description="Legacy system ID"
+    )
+
+
+# Custom filters attach to routes. This one subclass both registers the filter
+# and types the consumer's search(filters=...) call site.
+class OppSearchFilters(OpportunityFilters, total=False):
+    agency: StringArray
+
+
+plugin = define_plugin(
+    PluginSchemas(Opportunity=schema(common_schema=OpportunityBase[OppFields])),
+    routes=PluginRoutes(opportunities=ResourceRoutes(search=OppSearchFilters)),
+    meta=PluginMeta(name="my-system", source_system="my-system.example.gov"),
+)
+
+# A plugin-bound client parses responses with the plugin's schemas and types
+# search(filters=...) by the filters it registered — no per-call schema argument.
+client = plugin.get_client(
+    Config(base_url="https://api.example.org", api_key="YOUR_API_KEY")
+)
+
+result = client.opportunities.search(
+    search="education",
+    filters={
+        "status": f.in_(["open"]),  # standard filter → top-level request field
+        "agency": f.in_(["HHS"]),   # registered custom filter → customFilters
     },
-    model_name="CustomOpportunity",
 )
 
-# Create a client
-config = Config(base_url="https://api.example.org", api_key="YOUR_API_KEY")
-client = Client(config=config, auth=Auth.api_key("YOUR_API_KEY"))
-
-# Fetch opportunities using the extended schema
-response = client.opportunities.list(schema=CustomOpportunity)
-for opp in response.items:
+for opp in result.items:
     print(f"{opp.title} ({opp.status.value})")
 
-    # Access typed custom fields
-    if opp.status.value == OppStatusOptions.OPEN:
-        program = opp.get_custom_field_value("programArea", str)
-        print(f"  Program area: {program}")
+    # Custom fields are fully typed
+    fields = opp.custom_fields
+    if fields is not None and fields.program_area is not None:
+        print(f"  Program area: {fields.program_area.value}")  # typed as str
+
+# Rows that failed to parse are partitioned out rather than raising
+for err in result.errors:
+    print(f"  parse error at row {err.index}: {err.message}")
 
 # Validate standalone data directly against the schema
 raw = {
@@ -104,22 +138,22 @@ The SDK is organized into modules, each with its own documentation:
 
 | Module | Description |
 |---|---|
-| [Client](common_grants_sdk/client/README.md) | HTTP client with auth, pagination, and low-level HTTP methods |
-| [Schemas](common_grants_sdk/schemas/README.md) | Pydantic models, validation, and generic response schemas |
-| [Extensions](common_grants_sdk/extensions/README.md) | Custom fields and plugin framework |
+| [Client](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/client/README.md) | HTTP client with auth, pagination, and low-level HTTP methods |
+| [Schemas](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/schemas/README.md) | Pydantic models, validation, and generic response schemas |
+| [Extensions](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) | Custom fields and plugin framework |
 
 ### API Client
 
-HTTP client with built-in authentication, auto-pagination, and environment variable configuration. See the [Client guide](common_grants_sdk/client/README.md) for setup, authentication, and usage examples.
+HTTP client with built-in authentication, auto-pagination, and environment variable configuration. See the [Client guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/client/README.md) for setup, authentication, and usage examples.
 
 ### Schemas and Validation
 
-[Pydantic v2](https://docs.pydantic.dev/) models for validating and parsing CommonGrants data, along with type-safe enum constants. See the [Schemas guide](common_grants_sdk/schemas/README.md) for validation examples, type safety patterns, and the full API reference.
+[Pydantic v2](https://docs.pydantic.dev/) models for validating and parsing CommonGrants data, along with type-safe enum constants. See the [Schemas guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/schemas/README.md) for validation examples, type safety patterns, and the full API reference.
 
 ### Extensions and Plugins
 
-Extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc or as reusable plugins. See the [Extensions guide](common_grants_sdk/extensions/README.md) for the full guide.
+Extension framework for adding typed custom fields to CommonGrants schemas, either ad hoc or as reusable plugins. See the [Extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) for the full guide.
 
 ## License
 
-See [LICENSE](../../LICENSE.md)
+See [LICENSE](https://github.com/HHS/simpler-grants-protocol/blob/main/LICENSE.md)
