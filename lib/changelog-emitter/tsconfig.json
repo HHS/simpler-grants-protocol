@@ -5,6 +5,9 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
+    // Declared explicitly: automatic @types discovery stops finding node once
+    // @typespec/compiler 1.14 changes the dependency layout.
+    "types": ["node"],
     "rootDir": ".",
     "outDir": "dist",
     "sourceMap": true,
