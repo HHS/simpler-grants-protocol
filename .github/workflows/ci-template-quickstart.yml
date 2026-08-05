@@ -30,10 +30,11 @@ jobs:
           cache-dependency-path: templates/quickstart/pnpm-lock.yaml
 
       - name: Install dependencies
-        # Installs dependencies directly from pnpm-lock.yaml
-        # and skips dependency resolution. Uses --ignore-workspace
-        # since this template is standalone.
-        run: pnpm install --frozen-lockfile --ignore-workspace
+        # Installs dependencies directly from pnpm-lock.yaml and skips
+        # dependency resolution. The template's own pnpm-workspace.yaml
+        # marks it as a standalone root (and holds its security overrides),
+        # so pnpm does not resolve into the monorepo workspace.
+        run: pnpm install --frozen-lockfile
 
       - name: Run checks
         run: pnpm run checks
@@ -42,7 +43,4 @@ jobs:
         run: pnpm run typespec
 
       - name: Audit dependencies
-        # Calls the npm bulk advisory endpoint directly as a workaround for
-        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
-        # revert to `pnpm audit --ignore-workspace` once pnpm ships native support.
-        run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js
+        run: pnpm audit
