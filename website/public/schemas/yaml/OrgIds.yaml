@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgIds.yaml
+type: object
+properties:
+  org:us:ein:
+    $ref: OrgIdEin.yaml
+    description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+  org:us:uei:
+    $ref: OrgIdUei.yaml
+    description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+  org:xi:duns:
+    $ref: OrgIdDuns.yaml
+    description: The organization's Data Universal Numbering System (DUNS) number.
+allOf:
+  - $ref: IdentifierCollection.yaml
+unevaluatedProperties:
+  not: {}
+description: |-
+  A collection of identifiers associated with an organization.
+
+  Extends the generic identifier collection with the base identifiers CommonGrants
+  defines for organizations. Additional registries can be published under `otherIds`.

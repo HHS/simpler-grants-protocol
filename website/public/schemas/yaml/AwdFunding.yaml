@@ -1,0 +1,29 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AwdFunding.yaml
+type: object
+properties:
+  details:
+    type: string
+    description: Details about the award's funding that don't fit other fields
+  requestedAmount:
+    $ref: Money.yaml
+    description: Amount of funding requested by the recipient
+  awardedAmount:
+    $ref: Money.yaml
+    description: Amount of funding awarded to the recipient
+  disbursedAmount:
+    $ref: Money.yaml
+    description: Amount of funding disbursed to the recipient so far
+unevaluatedProperties:
+  not: {}
+examples:
+  - requestedAmount:
+      amount: "500000.00"
+      currency: USD
+    awardedAmount:
+      amount: "450000.00"
+      currency: USD
+    disbursedAmount:
+      amount: "150000.00"
+      currency: USD
+description: Financial details about the award, including the amounts requested, awarded, and disbursed

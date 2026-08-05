@@ -10,6 +10,7 @@ import {
   getOrCreateChanges,
   getNameAtVersion,
   getVersionString,
+  dedupeVersions,
 } from "./index.js";
 import { Log } from "./logging.js";
 import { TargetType } from "../types.js";
@@ -113,7 +114,7 @@ function logModelAdditions(
   const renamedFromData = getRenamedFrom(context.program, model);
 
   if (modelAddedVersions && modelAddedVersions.length > 0) {
-    for (const version of modelAddedVersions) {
+    for (const version of dedupeVersions(modelAddedVersions)) {
       const changes = getOrCreateChanges(modelLogs, getVersionString(version));
       const modelNameAtVersion = getNameAtVersion(
         model.name,
@@ -152,7 +153,7 @@ function logModelRemovals(
   const renamedFromData = getRenamedFrom(context.program, model);
 
   if (modelRemovedVersions && modelRemovedVersions.length > 0) {
-    for (const version of modelRemovedVersions) {
+    for (const version of dedupeVersions(modelRemovedVersions)) {
       const changes = getOrCreateChanges(modelLogs, getVersionString(version));
       const modelNameAtVersion = getNameAtVersion(
         model.name,
@@ -217,7 +218,7 @@ function logModelPropertyAdditions(
   const renamedFromData = getRenamedFrom(context.program, property);
 
   if (propertyAddedVersions && propertyAddedVersions.length > 0) {
-    for (const version of propertyAddedVersions) {
+    for (const version of dedupeVersions(propertyAddedVersions)) {
       const changes = getOrCreateChanges(modelLogs, getVersionString(version));
       const propertyNameAtVersion = getNameAtVersion(
         property.name,
@@ -244,7 +245,7 @@ function logModelPropertyRemovals(
   const renamedFromData = getRenamedFrom(context.program, property);
 
   if (propertyRemovedVersions && propertyRemovedVersions.length > 0) {
-    for (const version of propertyRemovedVersions) {
+    for (const version of dedupeVersions(propertyRemovedVersions)) {
       const changes = getOrCreateChanges(modelLogs, getVersionString(version));
       const propertyNameAtVersion = getNameAtVersion(
         property.name,

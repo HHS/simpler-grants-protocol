@@ -13,13 +13,21 @@ namespace QuestionBank.FiscalSponsorUei;
 @extension("x-entity", #[Entities.fiscalSponsor])
 @extension(
   "x-mapping-from-cg",
-  #{ uei: #{ field: "organizations.otherOrgs.fiscalSponsor.uei" } }
+  #{
+    uei: #{
+      field: "organizations.otherOrgs.fiscalSponsor.identifiers.org:us:uei.id",
+    },
+  }
 )
 @extension(
   "x-mapping-to-cg",
   #{
     organizations: #{
-      otherOrgs: #{ fiscalSponsor: #{ uei: #{ field: "uei" } } },
+      otherOrgs: #{
+        fiscalSponsor: #{
+          identifiers: #{ `org:us:uei`: #{ id: #{ field: "uei" } } },
+        },
+      },
     },
   }
 )

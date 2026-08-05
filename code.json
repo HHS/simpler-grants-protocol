@@ -23,9 +23,9 @@
   "disclaimerURL": "",
   "disclaimerText": "",
   "vcs": "git",
-  "laborHours": 14587,
+  "laborHours": 15036,
   "reuseFrequency": {
-    "forks": 9,
+    "forks": 10,
     "clones": 0
   },
   "platforms": [],
@@ -51,8 +51,8 @@
   "partners": [],
   "date": {
     "created": "2024-12-19T21:14:35Z",
-    "lastModified": "2026-06-26T15:31:50Z",
-    "metadataLastUpdated": "2026-07-01T00:23:40.971Z"
+    "lastModified": "2026-07-30T22:22:45Z",
+    "metadataLastUpdated": "2026-08-01T00:17:29.174Z"
   },
   "tags": [
     "api",

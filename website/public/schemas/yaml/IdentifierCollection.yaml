@@ -1,0 +1,30 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: IdentifierCollection.yaml
+type: object
+properties:
+  systemId:
+    $ref: SystemId.yaml
+    description: The hosting system's own identifier for this record.
+  otherIds:
+    $ref: "#/$defs/RecordIdentifier"
+    description: |-
+      Additional identifiers keyed by their registry code, for registries the
+      protocol does not define as a base identifier on the model.
+examples:
+  - systemId:
+      registry:
+        code: org:grants.gov:system
+        url: https://commongrants.org/registries/org-grants-gov-system
+      id: 01912a8b-7c3d-7890-abcd-ef1234567890
+    otherIds:
+      org:candid:bridge:
+        registry:
+          code: org:candid:bridge
+        id: "1234567"
+description: A collection of identifiers associated with a record.
+$defs:
+  RecordIdentifier:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: Identifier.yaml
