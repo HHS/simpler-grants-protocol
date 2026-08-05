@@ -1,13 +1,13 @@
 """Negative type fixtures — these SHOULD fail pyright.
 
-Reviewers validate the unhappy path (the guards the happy-path example relies on)
-by running pyright against this file directly::
+This file is excluded from the main type gate (``pyrightconfig.json``) so its
+intentional errors do not fail ``make check-types``; it exists to prove the type
+guards fire. It has its own config, ``pyrightconfig.fixtures.json``, and::
 
-    cd lib/python-sdk && poetry run pyright examples/typed_custom_filters_failures.py
+    cd lib/python-sdk && make check-fixtures
 
-Expected: pyright reports errors on the lines marked ``# EXPECT-ERROR`` — a route
-typo and a wrong filter value. This file is excluded from the type gate so its
-intentional errors do not fail CI; it exists to prove the type guards fire.
+verifies that pyright reports exactly one error per ``# EXPECT-ERROR`` marker
+below — a route typo and a wrong filter value.
 """
 
 from __future__ import annotations

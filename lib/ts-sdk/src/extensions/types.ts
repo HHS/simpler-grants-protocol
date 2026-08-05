@@ -56,7 +56,7 @@ export interface CustomFieldSpec {
 // ############################################################################
 
 /**
- * The 11-value enum of supported custom filter types.
+ * The 10-value enum of supported custom filter types.
  *
  * Each value maps 1:1 to a base filter type with auto-derived operators.
  * Operators are NOT authored — they are derived from the filterType at

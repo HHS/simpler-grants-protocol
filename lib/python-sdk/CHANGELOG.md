@@ -1,5 +1,11 @@
 # common-grants-sdk
 
+## 0.8.1
+
+### Patch Changes
+
+- c29565d: Document custom filters in the extensions README, and correct two broken snippets plus the package README's kitchen sink example.
+
 ## 0.8.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @common-grants/sdk
 
+## 0.7.1
+
+### Patch Changes
+
+- c29565d: Correct the package README's kitchen sink example, which did not compile, and fix a stale filter-type count in the extensions docs.
+
 ## 0.7.0
 
 ### Minor Changes
