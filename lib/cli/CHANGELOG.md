@@ -1,5 +1,11 @@
 # @common-grants/cli
 
+## 0.3.9
+
+### Patch Changes
+
+- 90a2f7b: Bump js-yaml from 4.3.0 to 4.3.1, resolving a high-severity advisory where `!!omap` resolution consumes quadratic CPU on a crafted document (GHSA-5p4m-2wfm-xmqj).
+
 ## 0.3.8
 
 ### Patch Changes
