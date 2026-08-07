@@ -118,7 +118,7 @@ jobs:
         # creating a Worker per PR. Cloudflare keeps the last 100 versions, so
         # previews from earlier commits remain available even after a PR closes
         # (until 100 subsequent versions are uploaded) and nothing needs to be
-        # cleaned up.
+        # cleaned up separately.
         #
         # pnpm dlx fetches wrangler on demand — avoids a full workspace install
         # just to get wrangler on PATH. Pin to major @4 to match the devDep in
