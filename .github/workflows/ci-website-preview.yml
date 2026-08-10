@@ -6,6 +6,7 @@ on:
     paths:
       - website/**
       - .github/workflows/ci-website-preview.yml
+      - .github/scripts/upload-worker-preview.sh
       - pnpm-lock.yaml
 
 defaults:
@@ -113,44 +114,21 @@ jobs:
 
       - name: Upload Worker version (preview)
         id: upload
-        # `versions upload` publishes a new, undeployed version of the Worker
-        # named in wrangler.jsonc and points --preview-alias at it, rather than
-        # creating a Worker per PR. Cloudflare keeps the last 100 versions, so
-        # previews from earlier commits remain available even after a PR closes
-        # (until 100 subsequent versions are uploaded) and nothing needs to be
-        # cleaned up separately.
-        #
-        # pnpm dlx fetches wrangler on demand — avoids a full workspace install
-        # just to get wrangler on PATH. Pin to major @4 to match the devDep in
-        # website/package.json and avoid silent v5+ drift.
-        # --allow-build list: wrangler pulls in workerd/esbuild/sharp, each of
-        # which wants to run a postinstall build; pnpm's default rejects those
-        # unless explicitly allowed.
+        # Run a script to:
+        #  1. Upload a new website preview to the worker defined in wrangler.jsonc
+        #  2. Parse the URL of that preview and print it to the GitHub output
+        #  3. OR fail if the website isn't uploaded or the URL isn't parsed correctly
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          # Stream wrangler's output to the log via tee (so failures are visible)
-          # while still capturing it to parse the preview URL. pipefail makes a
-          # wrangler failure fail the step instead of being swallowed.
-          set -o pipefail
-          pnpm --allow-build=workerd --allow-build=esbuild --allow-build=sharp \
-            dlx wrangler@4 versions upload \
-            --preview-alias "pr-${PR_NUMBER}" \
-            --message "PR #${PR_NUMBER} @ ${HEAD_SHA}" 2>&1 | tee upload.log
-          url=$(grep -E 'Version Preview Alias URL:' upload.log \
-            | sed -E 's/.*URL:[[:space:]]*//' \
-            | head -n1 || true)
-          if [ -z "$url" ]; then
-            echo "::warning::Could not extract preview URL from wrangler output"
-          fi
-          echo "url=${url}" >> "$GITHUB_OUTPUT"
+          ../.github/scripts/upload-worker-preview.sh \
+            "pr-${PR_NUMBER}" "PR #${PR_NUMBER} @ ${HEAD_SHA}"
 
       - name: Find existing comment
         id: find-comment
-        if: steps.upload.outputs.url != ''
         uses: peter-evans/find-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -158,7 +136,6 @@ jobs:
           body-includes: Website Preview Deployed
 
       - name: Post preview link comment
-        if: steps.upload.outputs.url != ''
         uses: peter-evans/create-or-update-comment@v5
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
