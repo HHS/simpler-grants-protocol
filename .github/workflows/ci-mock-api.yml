@@ -1,0 +1,165 @@
+name: "CI - Mock API: Run Checks and Deploy Worker"
+
+# Deliberately minimal, and deliberately NOT modelled on ci-website-preview.yml.
+# That workflow uploads *versions* of the shared `common-grants` Worker and
+# aliases them per PR; this is a separate service with its own name
+# (`cg-mock-api` in mock-api/wrangler.jsonc), so a plain `wrangler deploy` is the
+# right primitive. Do not merge the two flows.
+#
+# Deploys target a PERSONAL Cloudflare account and a `*.workers.dev` URL — a
+# known interim state for the #1077 experiment, not a productionized setup. Moving
+# to the org account is tracked separately; see mock-api/FINDINGS.md (#1077-T7).
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - mock-api/**
+      - .github/workflows/ci-mock-api.yml
+  # Deploying is manual on purpose: the experiment is timeboxed and a single
+  # fixed Worker name means every deploy claims the same slot, so an automatic
+  # deploy-per-push would just fight itself.
+  workflow_dispatch:
+
+# One deploy at a time — `cg-mock-api` is a single deployment slot. Deliberately NOT
+# keyed on `github.ref`: every ref deploys to the same Worker, so a ref-scoped group
+# would put two dispatches from different branches in different groups and let them
+# race the one slot — exactly what this is meant to prevent.
+concurrency:
+  group: mock-api-deploy
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Worker bundle
+        run: pnpm --filter @common-grants/mock-api run build
+
+      - name: Run checks
+        run: pnpm --filter @common-grants/mock-api run checks
+
+      # The conformance suite (#1077-T4) validates the fixture against the docs
+      # pipeline's generated per-version schemas, which are gitignored build
+      # output. This step is that pipeline — it compiles the website's TypeSpec
+      # and emits `website/public/schemas/yaml/versions/`. Kept as its own step
+      # rather than folded into `run ci` so the cross-package dependency is
+      # visible in the CI log; the suite fails loudly if it is ever skipped.
+      - name: Generate versioned schemas (for conformance tests)
+        run: pnpm --filter @common-grants/mock-api run schemas
+
+      - name: Run tests
+        run: pnpm --filter @common-grants/mock-api run test
+
+      - name: Audit dependencies
+        # Gated to PRs into `main` (and main-context workflow_call invocations) so
+        # advisories that live on `main` and can only be fixed there don't block
+        # PRs into HOLD-* batching branches or other non-main bases. The HOLD → main
+        # checkpoint PR re-runs this audit, so anything live at merge time is gated
+        # at the actionable boundary.
+        #
+        # `workflow_dispatch` is added to the sibling workflows' condition because
+        # here `validate` gates a real `wrangler deploy`. `base_ref` is empty for
+        # dispatch, so without this the condition collapses to `ref == main` and a
+        # dispatch from any other branch would skip the audit — silently publishing
+        # a public Worker whose lockfile was never audited.
+        if: |
+          github.event_name == 'workflow_dispatch'
+          || github.base_ref == 'main'
+          || github.ref == 'refs/heads/main'
+        run: pnpm --filter @common-grants/mock-api run audit
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: validate
+    # Manual dispatch only, and only after validate passes.
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Worker
+        id: deploy
+        working-directory: ./mock-api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        # pipefail matters: without it the pipeline reports `tee`'s exit code and a
+        # failed deploy would pass. Steps with no `shell:` key run under GitHub's
+        # default `bash -e {0}`; only an explicit `shell: bash` gets
+        # `--noprofile --norc -eo pipefail {0}`. So this is load-bearing, not decoration.
+        run: |
+          set -o pipefail
+          pnpm exec wrangler deploy 2>&1 | tee deploy.log
+
+      # The deployed URL is the ticket's verification artifact, so pull it out of
+      # the deploy log rather than leaving it buried there.
+      - name: Resolve deployed URL
+        id: url
+        working-directory: ./mock-api
+        run: |
+          url="$(grep -Eo 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -n 1)"
+          if [ -z "$url" ]; then
+            echo "No workers.dev URL found in wrangler output" >&2
+            exit 1
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # A deploy that succeeds while serving a broken Worker should fail the run,
+      # so assert the two routes #1077-T5 names as its verification: the health
+      # route, and a versioned opportunity list that actually returns records.
+      - name: Smoke-test the deployed Worker
+        env:
+          URL: ${{ steps.url.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          echo "Health route:"
+          curl -fsS --retry 5 --retry-connrefused --retry-delay 2 "$URL/" | tee health.json
+          jq -e '.name == "@common-grants/mock-api" and (.supportedVersions | index("0.3.0"))' health.json > /dev/null
+
+          echo "Opportunity list (v0.3.0):"
+          curl -fsS --retry 3 --retry-connrefused --retry-delay 2 "$URL/v0.3.0/common-grants/opportunities" | tee list.json > /dev/null
+          count="$(jq '.items | length' list.json)"
+          echo "  returned $count records"
+          test "$count" -gt 0
+
+      - name: Summarize deployment
+        env:
+          URL: ${{ steps.url.outputs.url }}
+        run: |
+          {
+            echo "### Mock API deployed"
+            echo
+            echo "- URL: \`$URL\`"
+            echo "- Health: \`$URL/\`"
+            echo "- Opportunities (v0.3.0): \`$URL/v0.3.0/common-grants/opportunities\`"
+            echo "- Smoke test: passed"
+          } >> "$GITHUB_STEP_SUMMARY"

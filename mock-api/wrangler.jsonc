@@ -4,6 +4,10 @@
   "name": "cg-mock-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-01",
+  // Explicit because the `*.workers.dev` URL *is* the experiment's deliverable
+  // (#1077-T5): it's the one origin the docs "Try it out", a copied curl, and the
+  // TS SDK all hit. Default-on today, but not something to leave implicit.
+  "workers_dev": true,
   "observability": {
     "enabled": true,
   },
