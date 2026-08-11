@@ -5,11 +5,7 @@
  * pure `fetch(Request) => Response` shape.
  */
 
-/**
- * Spec versions this mock serves. Moves to `src/data/fixtures.ts` in #1077-T2,
- * which owns the fixture records and their per-version shaping.
- */
-export const SUPPORTED_VERSIONS = ["0.1.0", "0.2.0", "0.3.0", "0.4.0"] as const;
+import { SUPPORTED_VERSIONS } from "./data/fixtures";
 
 const SERVICE_NAME = "@common-grants/mock-api";
 
