@@ -1,0 +1,11 @@
+{
+  // Tests run under Node (vitest), not workerd, so they get Node's types on top
+  // of the Worker globals. Kept separate from `tsconfig.json` so `src/` stays
+  // typechecked against the Worker runtime alone — a stray `process`/`fs` in the
+  // Worker entrypoint is a build error there, not something Node's types excuse.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["@cloudflare/workers-types", "node"]
+  },
+  "include": ["src/**/*", "__tests__/**/*", "vitest.config.ts"]
+}

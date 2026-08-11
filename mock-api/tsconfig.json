@@ -13,6 +13,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "__tests__/**/*", "vitest.config.ts"],
+  // `src/` only. The tests live in `tsconfig.test.json`, which adds Node's types.
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
