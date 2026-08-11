@@ -1,0 +1,33 @@
+/**
+ * Standalone Cloudflare Worker serving deterministic CommonGrants mock data.
+ *
+ * Scaffold only: the opportunity routes land in #1077-T3, which reuses this
+ * pure `fetch(Request) => Response` shape.
+ */
+
+/**
+ * Spec versions this mock serves. Moves to `src/data/fixtures.ts` in #1077-T2,
+ * which owns the fixture records and their per-version shaping.
+ */
+export const SUPPORTED_VERSIONS = ["0.1.0", "0.2.0", "0.3.0", "0.4.0"] as const;
+
+const SERVICE_NAME = "@common-grants/mock-api";
+
+function healthResponse(): Response {
+  return Response.json({
+    name: SERVICE_NAME,
+    supportedVersions: SUPPORTED_VERSIONS,
+  });
+}
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    const { pathname } = new URL(request.url);
+
+    if (pathname === "/") {
+      return healthResponse();
+    }
+
+    return new Response("Not Found", { status: 404 });
+  },
+} satisfies ExportedHandler;

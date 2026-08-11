@@ -4,6 +4,7 @@ packages:
   - lib/python-sdk
   - lib/changelog-emitter
   - lib/ts-sdk
+  - mock-api
   - website
 
 allowBuilds:

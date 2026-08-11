@@ -1,0 +1,10 @@
+{
+  // Standalone from the docs-site Worker (`common-grants` in website/wrangler.jsonc,
+  // which is assets-only): this one has a real script entrypoint.
+  "name": "cg-mock-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "observability": {
+    "enabled": true,
+  },
+}

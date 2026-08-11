@@ -1,0 +1,40 @@
+{
+  "name": "@common-grants/mock-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Cloudflare Worker serving deterministic CommonGrants mock data",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --fix",
+    "format": "prettier --write .",
+    "check:lint": "eslint",
+    "check:format": "prettier --check .",
+    "check:types": "tsc --noEmit",
+    "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
+    "ci": "pnpm run checks && pnpm run build && pnpm run test",
+    "audit": "pnpm audit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260810.1",
+    "@eslint/js": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "@vitest/eslint-plugin": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "^4.117.0"
+  }
+}
