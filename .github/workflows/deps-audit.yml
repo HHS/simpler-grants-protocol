@@ -2,9 +2,11 @@ name: "Deps: Scheduled Dependency Audit"
 
 # Daily workspace-wide advisory sweep on main. New GHSAs published against
 # deps already on main surface here as a tracking issue within a day, instead
-# of redding every open PR the moment they drop. PRs that actually change
-# deps are still gated by the audit in ci-catalog-validation.yml (any dep
-# change updates the root lockfile, which triggers it).
+# of redding every open PR the moment they drop. PRs that change a pnpm
+# dep are still gated by the audit in ci-catalog-validation.yml (that
+# updates the root lockfile, which triggers it). The Python SDK resolves
+# through its own poetry.lock and is covered by neither; see
+# DEPENDENCY_MANAGEMENT.md.
 on:
   schedule:
     # Daily at ~7-8am PT (15:00 UTC = 8am PDT / 7am PST)
@@ -18,6 +20,13 @@ on:
 permissions:
   contents: read
   issues: write
+
+# Serialize runs so the list-then-file below can't race itself. A manual
+# dispatch landing on top of the scheduled run would otherwise let both
+# runs see no open issue and file one each. Queue rather than cancel.
+concurrency:
+  group: deps-audit
+  cancel-in-progress: false
 
 jobs:
   audit:
@@ -38,13 +47,21 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Audit all workspace packages
+        id: dependency-audit
         # No --audit-level: pnpm's default is low, so the sweep reports
         # everything, including advisories below the moderate threshold that
         # gates dep-changing PRs in ci-catalog-validation.yml.
         run: pnpm audit
 
       - name: Open tracking issue on scheduled failure
-        if: failure() && github.event_name != 'pull_request'
+        # Gated on the audit step's own outcome, not failure(): a checkout,
+        # setup or install failure would otherwise file an issue claiming
+        # advisories were found when the audit never ran. Those surface
+        # through the scheduled-run failure notification instead.
+        # !cancelled() is required because Actions applies a default
+        # success() to any if without a status function, which would never
+        # be true here.
+        if: ${{ !cancelled() && steps.dependency-audit.outcome == 'failure' && github.event_name != 'pull_request' }}
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

@@ -117,18 +117,29 @@ Audits run where dependencies actually change, plus a daily sweep of `main`.
 
 | Workflow | Command | Blocks on | Runs when |
 |----------|---------|-----------|-----------|
-| `ci-catalog-validation.yml` | `pnpm audit --audit-level=moderate` | moderate and above | A PR touches `pnpm-workspace.yaml`, `pnpm-lock.yaml`, or `.github/dependabot.yml` |
-| `deps-audit.yml` | `pnpm audit` | low and above | Daily at 15:00 UTC on `main`; also `workflow_dispatch` |
+| `ci-catalog-validation.yml` | `pnpm audit --audit-level=moderate` | moderate and above | A PR touches `pnpm-workspace.yaml`, `pnpm-lock.yaml`, or `.github/dependabot.yml`; also `workflow_dispatch` |
+| `deps-audit.yml` | `pnpm audit` | low and above | Daily at 15:00 UTC on `main`; also `workflow_dispatch`, and a PR touching the workflow itself as a smoke test |
 | `ci-template-quickstart.yml`, `ci-template-express-js.yml` | `pnpm audit` | low and above | A PR touches that template |
 | `ci-template-fast-api.yml`, `ci-example-california-api.yml`, `ci-example-pennsylvania-api.yml` | `poetry audit` | nothing (`continue-on-error`) | A PR touches that template or example |
+| `ci-lib-pysdk.yml` | none | nothing | No audit gate today. See the Python SDK note below |
 
-The per-package workflows (`ci-lib-*`, `ci-website-preview.yml`) do **not** audit. An advisory published against a dep already on `main` would otherwise fail every open PR for that package, with no fix available from inside the PR. Dependency-changing PRs are still gated: any dep change updates the root `pnpm-lock.yaml`, which triggers `ci-catalog-validation.yml`.
+The per-package workflows (`ci-lib-*`, `ci-website-preview.yml`) do **not** audit. An advisory published against a dep already on `main` would otherwise fail every open PR for that package, with no fix available from inside the PR. PRs that change a pnpm dependency are still gated: that updates the root `pnpm-lock.yaml`, which triggers `ci-catalog-validation.yml`.
 
-When the daily sweep fails it opens (or reuses) an issue labeled `dependencies`, so advisories that land with no dependency PR in flight surface within a day instead of waiting for the next unrelated PR to trip over them.
+**The Python SDK is not covered.** `lib/python-sdk` resolves its dependencies through its own `lib/python-sdk/poetry.lock`, which no workflow watches and which `pnpm audit` cannot see, so its `package.json` contributes nothing to the audit graph (it exists only for Changesets detection). A Dependabot bump there passes through with no advisory check, and the daily sweep does not reach it. `common-grants-sdk` publishes to PyPI, so this is a real gap rather than a scoping choice.
+
+When the audit step in the daily sweep fails it opens an issue labeled `audit-sweep` and `dependencies`, or comments on the open one, so advisories that land with no dependency PR in flight surface within a day instead of waiting for the next unrelated PR to trip over them. It never closes that issue: once the advisory is resolved or ignored the comments stop, and closing is a manual step.
 
 The Python template and examples are non-blocking because they are manually maintained (see [Maintenance tiers](#maintenance-tiers)) — no automated PR is queued to fix what a blocking audit would flag.
 
-**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. Reach for `auditConfig.ignoreGhsas` only when no patched version exists anywhere.
+**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. Reach for an audit ignore only when no patched version exists anywhere:
+
+```yaml
+audit:
+  ignore:
+    - GHSA-xxxx-yyyy-zzzz
+```
+
+`audit.ignore` replaced `auditConfig.ignoreGhsas` in pnpm 11.16.0. The old spelling still works but is deprecated, and pnpm ignores it with a warning if both are set, so new entries use `audit.ignore`.
 
 Suppressing a GHSA is a deferral, not a resolution, so every ignore entry needs both of these before it lands:
 
