@@ -1,0 +1,46 @@
+{
+  "name": "@common-grants/mock-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Cloudflare Worker serving deterministic CommonGrants mock data",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --fix",
+    "format": "prettier --write .",
+    "check:lint": "eslint",
+    "check:format": "prettier --check .",
+    "check:types": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
+    "schemas": "pnpm --filter website run typespec && pnpm --filter website run generate:versioned-schemas",
+    "ci": "pnpm run checks && pnpm run build && pnpm run schemas && pnpm run test",
+    "audit": "pnpm audit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260810.1",
+    "@eslint/js": "catalog:",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "@vitest/eslint-plugin": "catalog:",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
+    "js-yaml": "^4.3.1",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "^4.117.0"
+  }
+}
