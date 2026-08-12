@@ -59,7 +59,12 @@
     "categoricals",
     "withastro",
     "PKCE",
-    "frontends"
+    "frontends",
+    "preflights",
+    "prerendered",
+    "productionized",
+    "underserved",
+    "worktree"
   ],
   "ignoreWords": [
     "opblock",
@@ -112,7 +117,9 @@
     "allof",
     "pypi",
     "Pypi",
-    "functools"
+    "functools",
+    "cloudflareworkermock",
+    "vabc"
   ],
   "import": []
 }
