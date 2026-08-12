@@ -47,13 +47,15 @@ jobs:
         if: failure() && github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUNS_URL: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/deps-audit.yml
         run: |
           TITLE="Scheduled dependency audit is failing"
           EXISTING=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')
+          # One open issue is the whole signal. An advisory with no upstream fix
+          # yet would otherwise draw a "still failing" comment every single day.
           if [ -n "$EXISTING" ]; then
-            gh issue comment "$EXISTING" --body "Still failing: $RUN_URL"
-          else
-            gh issue create --title "$TITLE" --label dependencies \
-              --body "The daily workspace-wide dependency audit found advisories against deps on \`main\`. See the run log for details: $RUN_URL"
+            echo "Tracking issue #$EXISTING is already open; nothing to do."
+            exit 0
           fi
+          gh issue create --title "$TITLE" --label dependencies \
+            --body "The daily workspace-wide dependency audit found advisories against deps on \`main\`. Latest run: $RUNS_URL"
