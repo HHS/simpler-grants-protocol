@@ -111,6 +111,25 @@ Any PR that touches `pnpm-workspace.yaml` triggers `ci-catalog-validation.yml`. 
 
 This catches breakage that individual package CI workflows would miss, since a TypeSpec version bump can affect every downstream package simultaneously.
 
+## Dependency audits
+
+Audits run where dependencies actually change, plus a daily sweep of `main`.
+
+| Workflow | Command | Blocks on | Runs when |
+|----------|---------|-----------|-----------|
+| `ci-catalog-validation.yml` | `pnpm audit --audit-level=moderate` | moderate and above | A PR touches `pnpm-workspace.yaml`, `pnpm-lock.yaml`, or `.github/dependabot.yml` |
+| `deps-audit.yml` | `pnpm audit` | low and above | Daily at 15:00 UTC on `main`; also `workflow_dispatch` |
+| `ci-template-quickstart.yml`, `ci-template-express-js.yml` | `pnpm audit` | low and above | A PR touches that template |
+| `ci-template-fast-api.yml`, `ci-example-california-api.yml`, `ci-example-pennsylvania-api.yml` | `poetry audit` | nothing (`continue-on-error`) | A PR touches that template or example |
+
+The per-package workflows (`ci-lib-*`, `ci-website-preview.yml`) do **not** audit. An advisory published against a dep already on `main` would otherwise fail every open PR for that package, with no fix available from inside the PR. Dependency-changing PRs are still gated: any dep change updates the root `pnpm-lock.yaml`, which triggers `ci-catalog-validation.yml`.
+
+When the daily sweep fails it opens (or reuses) an issue labeled `dependencies`, so advisories that land with no dependency PR in flight surface within a day instead of waiting for the next unrelated PR to trip over them.
+
+The Python template and examples are non-blocking because they are manually maintained (see [Maintenance tiers](#maintenance-tiers)) — no automated PR is queued to fix what a blocking audit would flag.
+
+**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. If no patched version exists yet, `auditConfig.ignoreGhsas` suppresses a specific GHSA — use it only with a comment naming the advisory and what would let it be removed, and remove it once a fix ships.
+
 ## Adding a new workspace package
 
 1. Add the package directory to `pnpm-workspace.yaml` under `packages:`
