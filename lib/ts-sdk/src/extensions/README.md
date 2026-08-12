@@ -716,7 +716,7 @@ Each filter entry is a `CustomFilterSpec`: `{ filterType: CustomFilterType; desc
 
 ### Filter-type catalog and the `F.*` helpers
 
-`CustomFilterType` is an 11-value enum. Each value maps to a base filter schema with auto-derived operators:
+`CustomFilterType` is a 10-value enum. Each value maps to a base filter schema with auto-derived operators:
 
 | `filterType`        | Operators                             | Value shape    |
 | ------------------- | ------------------------------------- | -------------- |
@@ -743,37 +743,28 @@ F.between("2025-01-01", "2025-12-31"); // { operator: "between", value: { min: "
 // Full set: eq, neq, gt, gte, lt, lte, in, notIn, like, notLike, between, outside
 ```
 
-> **Cross-SDK note.** TypeScript uses `F.in` (`"in"` as an object key — valid JS). The Python sibling SDK ([#869](https://github.com/HHS/simpler-grants-protocol/issues/869)) uses `f.in_` (trailing underscore, Python convention for reserved words). This is a documented naming divergence across SDKs.
-
 ### Classifying consumer filters into the request body
 
-`definePlugin()` registers filter **declarations** — which filter names exist and what type each one is. `classifyFilters()` is the separate **search-time** step: it takes the consumer's actual filter values and produces the body of the request sent to the API. The client calls it internally on every `search()`; consumers normally never call it directly.
-
-`classifyFilters()` accepts the plugin's `routes`, a resource name, a method name, and the consumer's flat `filters` object. It returns an `OppFilters` request body conforming to ADR-0012 — and it is **fail-fast**: an invalid value on any key (standard, registered, or ad-hoc) throws `FilterError` before a request body exists:
+`definePlugin()` registers filter **declarations** — which filter names exist and what type each one is. At search time, the client sorts the consumer's actual filter values into the body of the request sent to the API — an `OppFilters` request body conforming to ADR-0012. Classification is **fail-fast**: an invalid value on any key (standard, registered, or ad-hoc) throws `FilterError` before a request body exists:
 
 ```typescript
-import { classifyFilters } from "@common-grants/sdk/extensions";
+const client = grantsGovPlugin.getClient({ baseUrl: "https://api.example.gov" });
 
-const consumerFilters = {
-  // Default filters → top-level named fields on the request body
-  status: F.in(["open", "forecasted"]),
-  closeDateRange: F.between("2025-01-01", "2025-12-31"),
+const results = await client.opportunities.search({
+  filters: {
+    // Default filters → top-level named fields on the request body
+    status: F.in(["open", "forecasted"]),
+    closeDateRange: F.between("2025-01-01", "2025-12-31"),
 
-  // Pre-registered custom filters → customFilters record
-  agency: F.in(["HHS", "DOE"]),
-  fundingProgram: F.like("*Conservation*"),
+    // Pre-registered custom filters → customFilters record
+    agency: F.in(["HHS", "DOE"]),
+    fundingProgram: F.like("*Conservation*"),
 
-  // Ad-hoc filter (not declared in the plugin) → customFilters passthrough
-  legacyTag: F.eq("conservation-2024"),
-};
-
-const requestBody = classifyFilters(
-  grantsGovPlugin.routes!, // routes is optional on Plugin; assert non-null when known
-  "opportunities",
-  "search",
-  consumerFilters
-);
-// requestBody shape (ADR-0012):
+    // Ad-hoc filter (not declared in the plugin) → customFilters passthrough
+    legacyTag: F.eq("conservation-2024"),
+  },
+});
+// Request body sent (ADR-0012):
 // {
 //   status: { operator: "in", value: ["open", "forecasted"] },
 //   closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
@@ -795,23 +786,14 @@ For a complete runnable example with assertions, see [`examples/custom-filters.t
 
 ### Validation — registration-time and call-time
 
-`validateRoutes()` is called at registration time. It throws `FilterError` if:
+Route declarations are validated at registration time — `definePlugin()` throws `FilterError` at the definition site, so a misspelled route or an invalid filter registration surfaces for the plugin author rather than for a consumer later (the compile-time closed route keys catch the same mistakes for TypeScript authors). Registration fails if:
 
 - A filter spec uses an unknown `filterType` value.
 - A custom filter name collides with a default filter field name (e.g. registering `"status"` would shadow the protocol's standard `status` filter).
 
-Call-time validation runs automatically inside `classifyFilters()` for every filter key — registered filters are checked for operator/value shape against the declared `filterType`, ad-hoc filters get a shape-only check (`DefaultFilterSchema`). Any failure **throws `FilterError` before the request is sent**; `filterInfo.errors` on the response carries server-returned errors only.
-
-`definePlugin()` runs `validateRoutes()` at definition time, so a misspelled route or an invalid filter registration throws at the definition site (the compile-time closed route keys catch the same mistakes for TypeScript authors).
+Call-time validation runs automatically on every `search()` for every filter key — registered filters are checked for operator/value shape against the declared `filterType`, ad-hoc filters get a shape-only check. Any failure **throws `FilterError` before the request is sent**; `filterInfo.errors` on the response carries server-returned errors only.
 
 > **PII note:** as with transforms, `FilterError.sourceValue` carries the raw input — here, the consumer's filter value. The [PII warning](#error-handling) above applies equally; log a redacted projection.
-
-```typescript
-import { validateRoutes } from "@common-grants/sdk/extensions";
-
-// Registration-time — throws FilterError on unknown filterType or collision
-validateRoutes(grantsGovPlugin.routes!);
-```
 
 ### The `as const` trap
 
@@ -929,39 +911,37 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 ### Transforms (PoC)
 
-| Export                                               | Kind      | Description                                                                                                                                                                                                                                                      | Demonstrated in                                                         |
-| ---------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [`buildTransforms()`](./transforms.ts)               | function  | Compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables. Positional params: `(toCommonMapping, fromCommonMapping, handlers?, commonSchema?, sourceSchema?)`. Validates mapping structure at call time; collisions with built-ins throw. | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
-| [`BuiltTransforms`](./transforms.ts)                 | interface | Return shape of `buildTransforms()` — `{ toCommon, fromCommon }`.                                                                                                                                                                                                |                                                                         |
-| [`transformFromMapping()`](./transformation.ts)      | function  | Low-level mapping walker used by `buildTransforms()`. Useful if you want to drive a single mapping pass without the call-time validation or error-wrapping layer.                                                                                                |                                                                         |
-| [`TransformFromMappingOptions`](./transformation.ts) | interface | Options for `transformFromMapping()`: optional `handlers` registry (`Map<string, Handler>`).                                                                                                                                                                     |                                                                         |
-| [`DEFAULT_HANDLERS`](./transformation.ts)            | const     | `Map<string, Handler>` of built-in handlers: `const`, `field`, `match`, `numberToString`, `stringToNumber`, `switch`.                                                                                                                                            | [Built-in mapping handlers](#built-in-mapping-handlers)                 |
-| [`getFromPath()`](./transformation.ts)               | function  | Walks an object via dot-notation; returns `undefined` (or a provided default) when the path is missing or traverses a non-object.                                                                                                                                |                                                                         |
-| [`TransformResult`](./types.ts)                      | interface | Unconditional return shape `{ result, errors }` for `toCommon` / `fromCommon`.                                                                                                                                                                                   | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
-| [`TransformError`](./types.ts)                       | class     | Structured transformation error carrying `path`, `handler`, `sourceValue`, `cause`. Extends `Error`.                                                                                                                                                             | [Error handling](#error-handling)                                       |
-| [`Handler`](./types.ts)                              | type      | Signature for mapping handler functions: `(data, arg) => unknown`.                                                                                                                                                                                               | [Custom handlers](#custom-handlers)                                     |
-| [`PluginMeta`](./types.ts)                           | interface | Plugin identity: `name` (required), `sourceSystem` (required), optional `version` and `capabilities`.                                                                                                                                                            | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
-| [`PluginCapability`](./types.ts)                     | type      | Literal union of capability names: `"customFields" \| "customFilters" \| "transforms"`.                                                                                                                                                                          |                                                                         |
-| [`PluginSchemasInput`](./define-plugin.ts)           | type      | Map from extensible model name to `SchemaInput`. The shape of `DefinePluginOptions.schemas`.                                                                                                                                                                     | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
-| [`SchemaInput`](./types.ts)                          | type      | Author-provided input per object: `{ sourceSchema?, customFields?, mappings? }` or `{ sourceSchema?, customFields?, toCommon?, fromCommon? }`. XOR: `mappings` and explicit callables cannot both be present.                                                    | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
-| [`SchemaOnly`](./types.ts)                           | interface | Compiled output for schema-only entries: `{ commonSchema, sourceSchema? }`. Produced when no transforms are configured.                                                                                                                                          |                                                                         |
-| [`SchemaWithTransforms`](./types.ts)                 | interface | Compiled output for entries with transforms: `{ commonSchema, sourceSchema?, toCommon, fromCommon }`. Produced when `mappings` or explicit callables are provided.                                                                                               |                                                                         |
-| [`SchemaMappings`](./types.ts)                       | interface | Declarative `{ toCommon?, fromCommon? }` mapping dicts. Stored inside `SchemaInput.mappings`.                                                                                                                                                                    |                                                                         |
-| [`TransformTypes`](./transform-helpers.ts)           | interface | Named argument for `ToCommon` / `FromCommon`: `{ model, sourceSchema, customFields? }`. `model` selects the base schema; the common type is resolved from `customFields`.                                                                                        |                                                                         |
-| [`ToCommon`](./transform-helpers.ts)                 | type      | Helper type for a hand-written `toCommon`. Takes a `TransformTypes` arg; `source` is typed from `sourceSchema`, the return checked against the resolved common **input** type.                                                                                   |                                                                         |
-| [`FromCommon`](./transform-helpers.ts)               | type      | Helper type for a hand-written `fromCommon`. Takes a `TransformTypes` arg; `common` is the resolved common **output** type, the return the source type.                                                                                                          |                                                                         |
+| Export                                                      | Kind      | Description                                                                                                                                                                                                                                                      | Demonstrated in                                                         |
+| ----------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [`buildTransforms()`](./transforms.ts)                      | function  | Compiles a pair of mapping objects into typed `(toCommon, fromCommon)` callables. Positional params: `(toCommonMapping, fromCommonMapping, handlers?, commonSchema?, sourceSchema?)`. Validates mapping structure at call time; collisions with built-ins throw. | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
+| [`BuiltTransforms`](./transforms.ts)                        | interface | Return shape of `buildTransforms()` — `{ toCommon, fromCommon }`.                                                                                                                                                                                                |                                                                         |
+| [`transformFromMapping()`](../utils/transformation.ts)      | function  | Low-level mapping walker used by `buildTransforms()`. Useful if you want to drive a single mapping pass without the call-time validation or error-wrapping layer.                                                                                                |                                                                         |
+| [`TransformFromMappingOptions`](../utils/transformation.ts) | interface | Options for `transformFromMapping()`: optional `handlers` registry (`Map<string, Handler>`).                                                                                                                                                                     |                                                                         |
+| [`DEFAULT_HANDLERS`](../utils/transformation.ts)            | const     | `Map<string, Handler>` of built-in handlers: `const`, `field`, `match`, `numberToString`, `stringToNumber`, `switch`.                                                                                                                                            | [Built-in mapping handlers](#built-in-mapping-handlers)                 |
+| [`getFromPath()`](../utils/transformation.ts)               | function  | Walks an object via dot-notation; returns `undefined` (or a provided default) when the path is missing or traverses a non-object.                                                                                                                                |                                                                         |
+| [`TransformResult`](./types.ts)                             | interface | Unconditional return shape `{ result, errors }` for `toCommon` / `fromCommon`.                                                                                                                                                                                   | [Defining bidirectional transforms](#defining-bidirectional-transforms) |
+| [`TransformError`](./types.ts)                              | class     | Structured transformation error carrying `path`, `handler`, `sourceValue`, `cause`. Extends `Error`.                                                                                                                                                             | [Error handling](#error-handling)                                       |
+| [`Handler`](./types.ts)                                     | type      | Signature for mapping handler functions: `(data, arg) => unknown`.                                                                                                                                                                                               | [Custom handlers](#custom-handlers)                                     |
+| [`PluginMeta`](./types.ts)                                  | interface | Plugin identity: `name` (required), `sourceSystem` (required), optional `version` and `capabilities`.                                                                                                                                                            | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
+| [`PluginCapability`](./types.ts)                            | type      | Literal union of capability names: `"customFields" \| "customFilters" \| "transforms"`.                                                                                                                                                                          |                                                                         |
+| [`PluginSchemasInput`](./define-plugin.ts)                  | type      | Map from extensible model name to `SchemaInput`. The shape of `DefinePluginOptions.schemas`.                                                                                                                                                                     | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
+| [`SchemaInput`](./types.ts)                                 | type      | Author-provided input per object: `{ sourceSchema?, customFields?, mappings? }` or `{ sourceSchema?, customFields?, toCommon?, fromCommon? }`. XOR: `mappings` and explicit callables cannot both be present.                                                    | [Wiring transforms into a plugin](#wiring-transforms-into-a-plugin)     |
+| [`SchemaOnly`](./types.ts)                                  | interface | Compiled output for schema-only entries: `{ commonSchema, sourceSchema? }`. Produced when no transforms are configured.                                                                                                                                          |                                                                         |
+| [`SchemaWithTransforms`](./types.ts)                        | interface | Compiled output for entries with transforms: `{ commonSchema, sourceSchema?, toCommon, fromCommon }`. Produced when `mappings` or explicit callables are provided.                                                                                               |                                                                         |
+| [`SchemaMappings`](./types.ts)                              | interface | Declarative `{ toCommon?, fromCommon? }` mapping dicts. Stored inside `SchemaInput.mappings`.                                                                                                                                                                    |                                                                         |
+| [`TransformTypes`](./transform-helpers.ts)                  | interface | Named argument for `ToCommon` / `FromCommon`: `{ model, sourceSchema, customFields? }`. `model` selects the base schema; the common type is resolved from `customFields`.                                                                                        |                                                                         |
+| [`ToCommon`](./transform-helpers.ts)                        | type      | Helper type for a hand-written `toCommon`. Takes a `TransformTypes` arg; `source` is typed from `sourceSchema`, the return checked against the resolved common **input** type.                                                                                   |                                                                         |
+| [`FromCommon`](./transform-helpers.ts)                      | type      | Helper type for a hand-written `fromCommon`. Takes a `TransformTypes` arg; `common` is the resolved common **output** type, the return the source type.                                                                                                          |                                                                         |
 
 ### Custom filters
 
-| Export                                     | Kind      | Description                                                                                                                                                                                                                                                         | Demonstrated in                                                                     |
-| ------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [`classifyFilters()`](./custom-filters.ts) | function  | Fail-fast three-bucket classifier. Maps a flat consumer `filters` object to the ADR-0012 `OppFilters` request body (default fields → top-level named fields; registered custom + ad-hoc → `customFilters` record); throws `FilterError` on the first invalid value. | [Classifying consumer filters](#classifying-consumer-filters-into-the-request-body) |
-| [`validateRoutes()`](./custom-filters.ts)  | function  | Registration-time validator. Throws `FilterError` on unknown `filterType` or default-field name collisions.                                                                                                                                                         | [Validation](#validation--registration-time-and-call-time)                          |
-| [`F`](./custom-filters.ts)                 | namespace | Helper namespace. `F.eq`, `F.neq`, `F.gt`, `F.gte`, `F.lt`, `F.lte`, `F.in`, `F.notIn`, `F.like`, `F.notLike`, `F.between`, `F.outside` — each compiles to `{ operator, value }`. Note: `F.in` is `"in"` as an object property key.                                 | [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers) |
-| [`CustomFilterSpec`](./types.ts)           | interface | Per-filter declaration: `{ filterType: CustomFilterType; description?: string }`. Operators are derived from `filterType`; no `value` field.                                                                                                                        | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
-| [`CustomFilterType`](./types.ts)           | type      | 10-value literal union: `stringComparison \| stringArray \| numberComparison \| numberArray \| numberRange \| booleanComparison \| dateComparison \| dateRange \| moneyComparison \| moneyRange`.                                                                   | [Filter-type catalog](#filter-type-catalog-and-the-f-helpers)                       |
-| [`PluginRoutes`](./types.ts)               | type      | `Partial<Record<ResourceName, RouteMethods>>` — the `routes` value on `DefinePluginOptions`. Both key levels are closed unions, so a misspelled resource or method is a compile error.                                                                              | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
-| [`RouteDeclarations`](./types.ts)          | interface | Per-method filter map: `{ filters?: Record<string, CustomFilterSpec> }`.                                                                                                                                                                                            |                                                                                     |
+| Export                            | Kind      | Description                                                                                                                                                                                                                         | Demonstrated in                                                                     |
+| --------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [`F`](./custom-filters.ts)        | namespace | Helper namespace. `F.eq`, `F.neq`, `F.gt`, `F.gte`, `F.lt`, `F.lte`, `F.in`, `F.notIn`, `F.like`, `F.notLike`, `F.between`, `F.outside` — each compiles to `{ operator, value }`. Note: `F.in` is `"in"` as an object property key. | [Filter-type catalog and the `F.*` helpers](#filter-type-catalog-and-the-f-helpers) |
+| [`CustomFilterSpec`](./types.ts)  | interface | Per-filter declaration: `{ filterType: CustomFilterType; description?: string }`. Operators are derived from `filterType`; no `value` field.                                                                                        | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
+| [`CustomFilterType`](./types.ts)  | type      | 10-value literal union: `stringComparison \| stringArray \| numberComparison \| numberArray \| numberRange \| booleanComparison \| dateComparison \| dateRange \| moneyComparison \| moneyRange`.                                   | [Filter-type catalog](#filter-type-catalog-and-the-f-helpers)                       |
+| [`PluginRoutes`](./types.ts)      | type      | `Partial<Record<ResourceName, RouteMethods>>` — the `routes` value on `DefinePluginOptions`. Both key levels are closed unions, so a misspelled resource or method is a compile error.                                              | [Declaring custom filters on a route](#declaring-custom-filters-on-a-route)         |
+| [`RouteDeclarations`](./types.ts) | interface | Per-method filter map: `{ filters?: Record<string, CustomFilterSpec> }`.                                                                                                                                                            |                                                                                     |
 
 ### Shared types
 

@@ -4,7 +4,7 @@ This folder contains example scripts demonstrating how to use the CommonGrants P
 
 ## Prerequisites
 
-You can run these examples against a mock API (no backend required), the California Grants FastAPI example, or a remote API.
+You can run these examples against a mock API (no backend required), the Pennsylvania Grants FastAPI example, or a remote API.
 
 ### Option A: Mock API (easiest, no Python/FastAPI)
 
@@ -18,9 +18,9 @@ pnpm example:server
 Then in another terminal run any example. The mock server listens on `http://localhost:8000` and serves list, get, and search with sample data including custom fields.
 
 
-### Option B: Pennslyvania Grants FastAPI API
+### Option B: Pennsylvania Grants FastAPI API
 
-By default the examples use `http://localhost:8000`. To use the Pennslyvania Grants example API instead of the mock server:
+By default the examples use `http://localhost:8000`. To use the Pennsylvania Grants example API instead of the mock server:
 
 From the repository root:
 
@@ -37,20 +37,17 @@ make dev
 To connect to a remote CommonGrants-compatible API instead of localhost, set the following environment variables:
 
 ```bash
-export CG_BASE_URL="https://your-api-endpoint.com"
+export CG_API_BASE_URL="https://your-api-endpoint.com"
 export CG_API_KEY="your-api-key"
 ```
 
-Then install the SDK dependencies from the `lib/ts-sdk` directory:
-
-```bash
-pnpm install
-```
+The environment variables only apply to scripts that construct `Config()` with no
+arguments — see [Configuration](#configuration) below.
 
 
 ## Running the Examples
 
-From the `lib/py-sdk` directory run:
+From the `lib/python-sdk` directory run:
 
 ```bash
 
@@ -161,17 +158,92 @@ See the [extensions README](../common_grants_sdk/extensions/README.md) for the f
 plugin and mapping-format documentation.
 
 
-## Configuration
+# Custom filters examples
 
-Each example script connects to `http://localhost:8000` by default. You can configure the API endpoint and authentication using environment variables:
-
-| Variable      | Description                          | Default                 |
-| ------------- | ------------------------------------ | ----------------------- |
-| `CG_BASE_URL` | The base URL of the CommonGrants API | `http://localhost:8000` |
-| `CG_API_KEY`  | Your API key for authentication      | `<your-api-key>`        |
-
-**Example:**
+`examples/custom_filters.py` covers the custom-filter surface end to end in three
+scenarios: the happy path against the mock server, authoring errors that
+`define_plugin` rejects, and consumer errors that `search()` rejects before any
+request is sent. Scenario 1 needs a server — start this package's own mock in
+another terminal — and the two offline scenarios run either way:
 
 ```bash
-CG_BASE_URL="https://api.example.com" CG_API_KEY="my-secret-key" pnpm example:list
+poetry run python examples/mock_api_server.py   # in another terminal
+poetry run python examples/custom_filters.py
+```
+
+**Output Example:**
+
+```
+=== Scenario 1: happy path (mock server) ===
+  items returned: 1
+  per-row parse failures: 0
+  first opportunity: STEM Education Grant Program
+  first program code: STEM-ED
+  filters sent to the server: {"status": {"operator": "in", "value": ["open"]}, "customFilters": {"region": ..., "fundingType": ...}}
+
+=== Scenario 2: authoring errors ===
+  non-filter registration rejected: routes.opportunities.search.region - ...
+  misspelled resource rejected: ...
+
+=== Scenario 3: consumer errors (search, no request sent) ===
+  registered filter, wrong kind of value: filters.region - ...
+  ad-hoc filter, value does not fit operator: filters.fundingType - ...
+```
+
+`examples/typed_custom_filters.py` is the typed authoring-and-consuming experience:
+one plugin declaring both custom fields and a custom filter, with `assert_type`
+lines proving the consumer's typing. Its runtime unhappy-path check needs no API:
+
+```bash
+poetry run python -c "import examples.typed_custom_filters as e; e.demo_invalid_filter_raises()"
+```
+
+The matching negative type fixtures live in
+`examples/typed_custom_filters_failures.py`. That file is *meant* to fail type
+checking, so it sits in `pyrightconfig.json`'s `exclude` list to keep the type
+gate green; it is checked instead through its own config
+(`pyrightconfig.fixtures.json`). To see the guards fire, run:
+
+```bash
+make check-fixtures
+```
+
+The target passes only when pyright reports exactly one error per
+`# EXPECT-ERROR` marker — a guard that stops firing and a new unintended error
+both fail it. It runs as part of `make checks`.
+
+`examples/consumer_search_with_filters.py` is the full downstream consumer flow —
+plugin author registers filters, consumer builds a filter dict with the `f.*`
+builders and searches through `plugin.get_client()`. It needs a CommonGrants
+endpoint on `http://localhost:8000`:
+
+```bash
+poetry run python examples/consumer_search_with_filters.py
+```
+
+
+## Configuration
+
+The example scripts set `base_url` and `api_key` inline when they build their
+`Config`, so they point at `http://localhost:8000` as written — edit the script,
+or set the environment variables below and construct `Config()` with no arguments.
+
+`Config` reads these when the corresponding argument is omitted:
+
+| Variable                | Description                          | Default              |
+| ----------------------- | ------------------------------------ | -------------------- |
+| `CG_API_BASE_URL`       | The base URL of the CommonGrants API | none — required      |
+| `CG_API_KEY`            | Your API key for authentication      | none — required      |
+| `CG_API_TIMEOUT`        | Request timeout in seconds           | `10.0`               |
+| `CG_API_PAGE_SIZE`      | Response max page size               | `100`                |
+
+`base_url` and `api_key` have no fallback default: `Config()` raises `ValueError`
+when neither the argument nor the environment variable is set.
+
+**Example** — `examples/typed_custom_filters.py` constructs `Config()` with no
+arguments, so it picks the environment values up (with the mock server running):
+
+```bash
+CG_API_BASE_URL="http://localhost:8000" CG_API_KEY="my-secret-key" \
+  poetry run python examples/typed_custom_filters.py
 ```

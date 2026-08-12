@@ -38,7 +38,7 @@ export interface TransformTypes {
   /** The extensible model this transform targets (selects the base schema). */
   model: ExtensibleSchemaName;
   /** The source-system Zod schema; `source` is typed as its inferred type. */
-  sourceSchema: z.ZodTypeAny;
+  sourceSchema: z.ZodType;
   /** The custom field specs declared on the entry (NOT a prebuilt common schema). */
   customFields?: Record<string, CustomFieldSpec>;
 }

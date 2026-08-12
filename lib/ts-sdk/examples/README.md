@@ -77,6 +77,15 @@ pnpm example:get-custom-fields <opportunityId>
 
 # Plugin framework: define, compose, and validate
 pnpm example:plugins
+
+# Custom filters: declare on a route, classify a consumer filter bag
+pnpm example:custom-filters
+
+# Bidirectional transforms: mappings, handlers, and round-trips
+pnpm example:transforms
+
+# A realistic grants.gov plugin: custom fields + transforms
+pnpm example:grants-gov
 ```
 
 ## Examples
@@ -186,7 +195,7 @@ pnpm example:get-custom-fields <opportunityId>
 
 ### Plugins
 
-Demonstrates the plugin framework: defining standalone plugins with `definePlugin()`, composing them with `mergeExtensions()`, and validating data with the combined schema. No server required.
+Demonstrates the plugin framework: defining plugins with `definePlugin({ schemas })`, accessing the typed `commonSchema` for validation, and reading typed custom field values. No server required.
 
 ```bash
 pnpm example:plugins
@@ -204,15 +213,6 @@ pnpm example:plugins
 
   category: STEM Education (typed as string)
   priority: 1 (typed as number)
-
---- Composed plugins ---
-
-  STEM Education Grant Program
-
-  legacyId.system: grants-v1
-  legacyId.id:     42
-  category:        STEM Education
-  priority:        1
 
 --- Validation ---
 
@@ -240,6 +240,68 @@ Validation failed (as expected):
   Message: Expected number, received string
 
 === Example Complete ===
+```
+
+### Custom Filters
+
+Demonstrates the custom-filter surface end to end: declaring filters on a route with `definePlugin({ routes })`, classifying a consumer filter bag into the ADR-0012 request body, and the errors that fire at registration time and at call time. Scenario 1 needs the mock server (`pnpm example:server`); the two error scenarios run without it.
+
+```bash
+pnpm example:custom-filters
+```
+
+**Output Example:**
+
+```
+=== Scenario 1: happy path (mock server) ===
+  (skipped: could not reach http://localhost:8000; run `pnpm example:server` first)
+
+=== Scenario 2: authoring errors (definePlugin) ===
+  default-name collision rejected: Custom filter name "status" collides with a default filter field...
+  unknown filterType rejected: Unknown filterType "strin" for filter "region". Must be one of: ...
+  misspelled resource rejected: Route "opportunties.search" does not support custom filters ...
+  misspelled method rejected: Route "opportunities.serach" does not support custom filters ...
+
+=== Scenario 3: consumer errors (search, no request sent) ===
+  registered wrong value family rejected: Filter "region" (filterType: "stringArray") failed validation ...
+  ad-hoc operator/value mismatch rejected: Ad-hoc filter "fundingType" has an invalid operator/value combination: operator "in" expects an array value
+
+✓ custom-filters example complete
+```
+
+### Transforms
+
+Demonstrates bidirectional transforms wired through `definePlugin()`: declarative mappings, hand-written `toCommon` / `fromCommon` callables, a no-custom-fields plugin, and the runtime rejection when both mappings and callables are supplied. Round-trips are asserted, including that a `null` ("doesn't apply") survives in both directions. No server required.
+
+```bash
+pnpm example:transforms
+```
+
+**Output Example:**
+
+```
+=== Transforms via definePlugin ===
+
+--- Scenario 1: declarative mappings ---
+✓ mappings inspectable
+✓ mappings: opportunity_uuid round-trips
+✓ mappings: source_url null ('doesn't apply') preserved
+✓ mappings: legacy opportunity_id round-trips
+
+--- Scenario 2: hand-written functions ---
+✓ functions: opportunity_uuid round-trips
+...
+
+=== Example complete ===
+```
+
+### Grants.gov Transforms
+
+A realistic plugin for a live grants.gov opportunity: custom fields plus a transform with a custom handler. Requires an opportunity ID:
+
+```bash
+pnpm example:grants-gov <opportunityId>
+# or: GRANTS_GOV_OPP_ID=<opportunityId> pnpm example:grants-gov
 ```
 
 ## Configuration
