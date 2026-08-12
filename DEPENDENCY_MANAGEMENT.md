@@ -128,7 +128,14 @@ When the daily sweep fails it opens (or reuses) an issue labeled `dependencies`,
 
 The Python template and examples are non-blocking because they are manually maintained (see [Maintenance tiers](#maintenance-tiers)) — no automated PR is queued to fix what a blocking audit would flag.
 
-**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. If no patched version exists yet, `auditConfig.ignoreGhsas` suppresses a specific GHSA — use it only with a comment naming the advisory and what would let it be removed, and remove it once a fix ships.
+**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. Reach for `auditConfig.ignoreGhsas` only when no patched version exists anywhere.
+
+Suppressing a GHSA is a deferral, not a resolution, so every ignore entry needs both of these before it lands:
+
+1. **An upstream issue to watch.** If the vulnerable package's own repo already has an issue tracking the fix, link that. If it doesn't, open one there first, then link it.
+2. **A tracking issue in this repo**, labeled `dependencies`, referencing the GHSA and that upstream issue. It stays open until the fix ships, at which point it covers bumping the dep and removing the ignore entry.
+
+The entry itself carries a comment naming the advisory and linking the tracking issue, so the exit condition is visible where the suppression lives. An ignore entry with no tracking issue behind it is a hole nobody is watching.
 
 ## Adding a new workspace package
 
