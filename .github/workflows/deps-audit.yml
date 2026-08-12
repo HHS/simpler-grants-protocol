@@ -49,11 +49,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          TITLE="Scheduled dependency audit is failing"
-          EXISTING=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')
+          # Look up the tracking issue by label over REST rather than
+          # `gh issue list`, which resolves both --search and --label through
+          # GitHub's issue search index. Two runs close together can each miss
+          # a just-filed issue there and open a duplicate. REST reads through,
+          # and returns PRs alongside issues, hence the filter. audit-sweep is
+          # the dedupe key; dependencies stays for categorization.
+          EXISTING=$(gh api "repos/$GITHUB_REPOSITORY/issues?state=open&labels=audit-sweep" \
+            --jq '[.[] | select(.pull_request == null)] | .[0].number // empty')
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body "Still failing: $RUN_URL"
           else
-            gh issue create --title "$TITLE" --label dependencies \
+            gh issue create --title "Scheduled dependency audit is failing" \
+              --label audit-sweep --label dependencies \
               --body "The daily workspace-wide dependency audit found advisories against deps on \`main\`. See the run log for details: $RUN_URL"
           fi
