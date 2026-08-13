@@ -90,19 +90,15 @@ describe("Check Args Validation", () => {
   // #########################################################
 
   describe("CheckSpecOptionsSchema", () => {
-    it("should accept valid protocolVersion 0.1.0", () => {
-      const result = CheckSpecOptionsSchema.safeParse({
-        protocolVersion: "0.1.0",
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("should accept valid protocolVersion 0.2.0", () => {
-      const result = CheckSpecOptionsSchema.safeParse({
-        protocolVersion: "0.2.0",
-      });
-      expect(result.success).toBe(true);
-    });
+    it.each(["0.1.0", "0.2.0", "0.3.0", "0.4.0"])(
+      "should accept valid protocolVersion %s",
+      version => {
+        const result = CheckSpecOptionsSchema.safeParse({
+          protocolVersion: version,
+        });
+        expect(result.success).toBe(true);
+      }
+    );
 
     it("should reject invalid protocolVersion", () => {
       const result = CheckSpecOptionsSchema.safeParse({
