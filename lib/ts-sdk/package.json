@@ -109,7 +109,7 @@
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-prettier": "catalog:",
     "js-yaml": "^4.3.1",
-    "json-schema-faker": "^0.6.2",
+    "json-schema-faker": "^0.6.3",
     "prettier": "catalog:",
     "ts-node": "catalog:",
     "tsx": "^4.23.12",
