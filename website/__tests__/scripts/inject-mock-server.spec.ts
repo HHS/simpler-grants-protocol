@@ -1,0 +1,183 @@
+/**
+ * Script-level tests for `src/scripts/inject-mock-server.ts` and
+ * `src/lib/mock/docs-wiring.ts` (#1078-T2, PLAN.md).
+ *
+ * Ported from the 3A standalone-Worker experiment's
+ * `__tests__/scripts/inject-mock-server.spec.ts` (#1077-T6). The `injectServers`
+ * / `versionFromSpecFilename` string-surgery tests carry over unchanged — they
+ * pin string surgery, not URLs. What's new here is the 3B contract: the mock is
+ * served same-origin, so there is no configurable base URL to normalize, only a
+ * boolean build-time gate (`MOCK_API_ENABLED`) and a relative URL built from the
+ * router's own `MOCK_API_BASE_PATH` constant.
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import {
+  injectServers,
+  versionFromSpecFilename,
+  MockServerInjector,
+} from "@/scripts/inject-mock-server";
+import { isMockApiEnabled, serverUrlFor } from "@/lib/mock/docs-wiring";
+import { MOCK_API_BASE_PATH } from "@/lib/mock/router";
+
+// A small fixture that mimics the real spec's shape: a few top-level keys,
+// no `servers:` key, then a top-level `paths:` line followed by indented
+// path entries (some of which nest an unrelated `servers:` key).
+const FIXTURE_YAML = `openapi: 3.0.0
+info:
+  title: CommonGrants Base API
+  version: 0.4.0
+tags:
+  - name: Opportunities
+    description: Endpoints related to funding opportunities
+paths:
+  /common-grants/opportunities:
+    get:
+      operationId: Opportunities_listOpportunities
+      summary: List opportunities
+      x-fake-nested-block:
+        servers:
+          - url: https://not-a-real-top-level-key.example.com
+`;
+
+describe("serverUrlFor", () => {
+  it("builds the version-prefixed server URL relative to MOCK_API_BASE_PATH", () => {
+    expect(serverUrlFor("0.4.0")).toBe(`${MOCK_API_BASE_PATH}/v0.4.0`);
+  });
+});
+
+describe("versionFromSpecFilename", () => {
+  it("extracts the version from a versioned spec filename", () => {
+    expect(versionFromSpecFilename("openapi.0.4.0.yaml")).toBe("0.4.0");
+    expect(versionFromSpecFilename("openapi.0.1.0.yaml")).toBe("0.1.0");
+  });
+
+  it("returns null for filenames that are not versioned specs", () => {
+    expect(versionFromSpecFilename("README.md")).toBeNull();
+    expect(versionFromSpecFilename("openapi.yaml")).toBeNull();
+  });
+});
+
+describe("injectServers", () => {
+  const serverUrl = `${MOCK_API_BASE_PATH}/v0.4.0`;
+
+  it("inserts a top-level servers block immediately before the top-level paths line", () => {
+    const result = injectServers(FIXTURE_YAML, serverUrl);
+
+    expect(result).toContain(`servers:\n  - url: ${serverUrl}`);
+
+    const serversIndex = result.indexOf("servers:");
+    const pathsIndex = result.indexOf("\npaths:");
+    expect(serversIndex).toBeGreaterThan(-1);
+    expect(pathsIndex).toBeGreaterThan(-1);
+    expect(serversIndex).toBeLessThan(pathsIndex);
+  });
+
+  it("preserves every original line byte-for-byte, adding only the servers block", () => {
+    const result = injectServers(FIXTURE_YAML, serverUrl);
+
+    const injectedBlock = `servers:\n  - url: ${serverUrl}\n`;
+    expect(result).toContain(injectedBlock);
+
+    const withInjectedBlockRemoved = result.replace(injectedBlock, "");
+    expect(withInjectedBlockRemoved).toBe(FIXTURE_YAML);
+  });
+
+  it("does not mistake a nested indented servers key for the top-level one", () => {
+    const result = injectServers(FIXTURE_YAML, serverUrl);
+
+    // The nested fake servers block should remain exactly where it was.
+    expect(result).toContain(
+      "      x-fake-nested-block:\n        servers:\n          - url: https://not-a-real-top-level-key.example.com",
+    );
+
+    // Only one top-level (unindented) `servers:` key should exist.
+    const topLevelServersMatches = result.match(/^servers:/gm) ?? [];
+    expect(topLevelServersMatches).toHaveLength(1);
+  });
+
+  it("is idempotent: replaces an existing top-level servers block rather than duplicating it", () => {
+    const firstPass = injectServers(FIXTURE_YAML, serverUrl);
+    const newerServerUrl = `${MOCK_API_BASE_PATH}/v0.5.0`;
+    const secondPass = injectServers(firstPass, newerServerUrl);
+
+    const topLevelServersMatches = secondPass.match(/^servers:/gm) ?? [];
+    expect(topLevelServersMatches).toHaveLength(1);
+    expect(secondPass).toContain(`servers:\n  - url: ${newerServerUrl}`);
+    expect(secondPass).not.toContain(serverUrl);
+  });
+});
+
+describe("isMockApiEnabled", () => {
+  const originalMockApiEnabled = process.env.MOCK_API_ENABLED;
+
+  afterEach(() => {
+    if (originalMockApiEnabled === undefined) {
+      delete process.env.MOCK_API_ENABLED;
+    } else {
+      process.env.MOCK_API_ENABLED = originalMockApiEnabled;
+    }
+  });
+
+  it("is false when MOCK_API_ENABLED is unset", () => {
+    delete process.env.MOCK_API_ENABLED;
+
+    expect(isMockApiEnabled()).toBe(false);
+  });
+
+  it("is false when MOCK_API_ENABLED is blank or whitespace-only", () => {
+    process.env.MOCK_API_ENABLED = "   ";
+
+    expect(isMockApiEnabled()).toBe(false);
+  });
+
+  it("is true when MOCK_API_ENABLED is set to a non-blank value", () => {
+    process.env.MOCK_API_ENABLED = "true";
+
+    expect(isMockApiEnabled()).toBe(true);
+  });
+
+  // A gate keyed on mere presence would read "false" and "0" as ON — the exact
+  // opposite of what someone writing `MOCK_API_ENABLED: "false"` in a workflow
+  // intends, and it would silently enable Execute buttons on a build meant to be
+  // production-inert.
+  it.each(["false", "FALSE", "0", "off", "no"])(
+    "is false for the falsy value %s",
+    (value) => {
+      process.env.MOCK_API_ENABLED = value;
+
+      expect(isMockApiEnabled()).toBe(false);
+    },
+  );
+
+  it.each(["1", "true", "TRUE", "yes", "on"])(
+    "is true for the truthy value %s",
+    (value) => {
+      process.env.MOCK_API_ENABLED = value;
+
+      expect(isMockApiEnabled()).toBe(true);
+    },
+  );
+});
+
+describe("MockServerInjector", () => {
+  const originalMockApiEnabled = process.env.MOCK_API_ENABLED;
+
+  beforeEach(() => {
+    delete process.env.MOCK_API_ENABLED;
+  });
+
+  afterEach(() => {
+    if (originalMockApiEnabled === undefined) {
+      delete process.env.MOCK_API_ENABLED;
+    } else {
+      process.env.MOCK_API_ENABLED = originalMockApiEnabled;
+    }
+  });
+
+  it("is a clean no-op when MOCK_API_ENABLED is unset, writing nothing", () => {
+    const result = MockServerInjector.inject();
+
+    expect(result).toEqual({ skipped: true, written: [] });
+  });
+});

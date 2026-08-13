@@ -39,9 +39,27 @@ jobs:
         run: pnpm --filter website build
 
       - name: Upload Pages artifact
+        # `dist/client`, not `dist`: adding the `@astrojs/cloudflare` adapter
+        # (#1078-T2) splits the build output into `dist/client` (the prerendered
+        # site) and `dist/server` (the Worker for the one dynamic API route).
+        # Uploading `dist` wholesale would publish the site one level down, under
+        # /client/, and ship the Worker bundle as public files.
+        #
+        # GitHub Pages cannot run the API route at all, so `/api/*` 404s here —
+        # expected, and why the docs' mock wiring is gated off in this build (no
+        # `MOCK_API_ENABLED`, so no `servers:` block and no Execute button).
+        #
+        # KNOWN REGRESSION (#1078-T2, unresolved): the adapter also takes over
+        # redirects. `astro.config.mjs`'s `redirects` block used to be emitted as
+        # meta-refresh HTML pages; the adapter writes it to
+        # `dist/client/_redirects` instead and emits no HTML, and `build.redirects:
+        # true` does not override that. GitHub Pages does not read `_redirects`, so
+        # all 8 redirect patterns (4 opp-model consolidations, 4 forms migrations
+        # including `/forms-new/[slug]`) 404 on production until either the
+        # Cloudflare migration lands or the pages are emitted some other way.
         uses: actions/upload-pages-artifact@v5
         with:
-          path: ./website/dist
+          path: ./website/dist/client
 
   deploy:
     needs: build

@@ -62,8 +62,11 @@
     "frontends",
     "preflights",
     "prerendered",
+    "prerendering",
+    "prerenders",
     "productionized",
     "underserved",
+    "workerd",
     "worktree"
   ],
   "ignoreWords": [

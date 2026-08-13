@@ -1,6 +1,7 @@
 ---
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import "swagger-ui-dist/swagger-ui.css";
+import { isMockApiEnabled } from "@/lib/mock/docs-wiring";
 
 // Available OpenAPI versions (mirror of the emitted specs in public/openapi/)
 const availableVersions = [
@@ -9,6 +10,16 @@ const availableVersions = [
   { version: "0.2.0", label: "v0.2.0" },
   { version: "0.1.0", label: "v0.1.0" },
 ];
+
+// "Try it out" is gated on the same build-time signal that
+// `scripts/inject-mock-server.ts` keys off (#1078-T2) — shared via
+// `lib/mock/docs-wiring` so the two can't disagree. Enabling it unconditionally
+// would put Execute buttons on production GitHub Pages, where the specs carry no
+// `servers:` block and nothing can serve `/api/*`: Swagger UI would resolve
+// requests against the docs origin itself and answer 404s. Gating keeps
+// production exactly as it is today, and means the button only appears where the
+// mock is actually reachable.
+const tryItOutEnabled = isMockApiEnabled();
 ---
 
 <StarlightPage frontmatter={{ title: "OpenAPI docs", tableOfContents: false }}>
@@ -25,7 +36,7 @@ const availableVersions = [
     </label>
   </div>
 
-  <div id="swagger-ui"></div>
+  <div id="swagger-ui" data-try-it-out={String(tryItOutEnabled)}></div>
 </StarlightPage>
 
 <style>
@@ -81,11 +92,20 @@ const availableVersions = [
   import { SwaggerUIBundle } from "swagger-ui-dist";
   import { resolveVersion } from "@/lib/api-docs-version";
 
+  // Set from the build-time `MOCK_API_ENABLED` gate in this file's frontmatter.
+  // Read off the mount point because client scripts are bundled, so they can't
+  // close over frontmatter values directly.
+  const mount = document.querySelector<HTMLElement>("#swagger-ui");
+  const tryItOut = mount?.dataset.tryItOut === "true";
+
   const render = (version: string): void => {
     SwaggerUIBundle({
       url: `/openapi/openapi.${version}.yaml`,
       dom_id: "#swagger-ui",
-      supportedSubmitMethods: [],
+      // Empty disables the Execute button entirely, which is what production
+      // wants: with no mock injected there is nothing to call. The mock serves
+      // GET and POST only, so those are the only methods worth enabling.
+      supportedSubmitMethods: tryItOut ? ["get", "post"] : [],
       deepLinking: true,
     });
   };

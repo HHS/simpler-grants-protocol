@@ -43,6 +43,13 @@ jobs:
 
       - name: Build site
         id: build
+        # `MOCK_API_ENABLED` wires the docs to the same-origin mock API on
+        # previews only (#1078-T2): it makes `inject-mock-server.ts` write a
+        # `servers: /api/v{version}` block into each rendered spec and turns on
+        # Swagger UI's Execute button. Deliberately absent from
+        # `cd-deploy-website.yml`, since GitHub Pages cannot serve the endpoint.
+        env:
+          MOCK_API_ENABLED: "1"
         run: pnpm run build
 
       - name: Upload build output
@@ -125,7 +132,8 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           ../.github/scripts/upload-worker-preview.sh \
-            "pr-${PR_NUMBER}" "PR #${PR_NUMBER} @ ${HEAD_SHA}"
+            "pr-${PR_NUMBER}" "PR #${PR_NUMBER} @ ${HEAD_SHA}" \
+            dist/server/wrangler.json
 
       - name: Find existing comment
         id: find-comment
