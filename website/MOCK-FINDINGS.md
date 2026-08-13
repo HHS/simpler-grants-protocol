@@ -123,8 +123,13 @@ What it does not buy:
 
 ## Deployment overhead
 
-This is where the experiment produced its most decisive results. Adding
-`@astrojs/cloudflare` is not a one-line change.
+Adding `@astrojs/cloudflare` is not a one-line change. Two caveats before the list,
+both learned the hard way: some of what follows was **misconfiguration on my part, not
+adapter tax**, and a working in-house Cloudflare-hosted Astro site
+([widal001/wyman-park-dell]) settled several of these faster than reading source did.
+Items 1–3 are inherent; item 4 was self-inflicted and is fixed; item 5 was real and is
+now fixed too. An earlier draft presented all five as the adapter's cost, which
+overstated it.
 
 1. **`nodejs_compat` and `prerenderEnvironment: "node"` are both mandatory.** The
    adapter prerenders inside a workerd sandbox by default, where `process.cwd()` is
@@ -138,11 +143,28 @@ This is where the experiment produced its most decisive results. Adding
 3. **The deployable wrangler config moves into the build output.** `main` cannot live
    in the checked-in `wrangler.jsonc`, because `@cloudflare/vite-plugin` validates it
    while resolving config — before the build has created it. The adapter generates
-   `dist/server/wrangler.json` with the built `main` and its own `assets.directory`,
-   so deploys and local previews must pass `--config dist/server/wrangler.json`.
-   `upload-worker-preview.sh` gained an optional argument for this.
-4. **A KV namespace is provisioned for sessions the site never uses.** The adapter
-   declares a `SESSION` KV binding by default, auto-provisioned on first deploy.
+   `dist/server/wrangler.json` with the built `main` and its own `assets.directory`.
+   The build also writes `.wrangler/deploy/config.json` pointing at it, so a plain
+   `wrangler deploy` in the build directory resolves it with no `--config` flag.
+   That does not survive our pipeline: `.wrangler/` is gitignored and the preview
+   workflow hands `dist/` between two jobs as an artifact, so the upload job has no
+   `.wrangler/` to read. Hence the explicit `--config dist/server/wrangler.json` in
+   `upload-worker-preview.sh` — a consequence of splitting build from deploy, not of
+   the adapter.
+4. ~~**A KV namespace is provisioned for sessions the site never uses.**~~
+   **Self-inflicted — fixed.** The adapter injects a `SESSION` KV binding and an
+   `IMAGES` binding by default, and auto-provisions the KV namespace on deploy. Both
+   are avoidable from config: `session: { driver: sessionDrivers.lruCache() }` stops
+   the KV binding being injected at all, and `imageService: "compile"` optimizes with
+   Sharp at build time instead of requiring the Images binding and a runtime
+   `/_image` endpoint. With both set, the generated config carries
+   `kv_namespaces: []` and no `images` block.
+
+   This one was worth catching rather than shipping: auto-provisioning **fails once
+   the namespace exists** (`already exists [code: 10014]`), which is precisely the
+   repeat-upload pattern `wrangler versions upload` uses for PR previews. Left as it
+   was, previews would likely have worked once and then broken.
+
 5. **Redirects silently stopped working on GitHub Pages — since fixed.** The adapter
    converts the `redirects` block in `astro.config.mjs` from emitted meta-refresh HTML
    pages into `dist/client/_redirects`, which GitHub Pages does not read. All 8
@@ -405,3 +427,4 @@ Explicitly not done:
 [#1077-T5]: https://github.com/HHS/simpler-grants-protocol/issues/1077
 [#1078]: https://github.com/HHS/simpler-grants-protocol/issues/1078
 [ADR-0003]: https://github.com/HHS/simpler-grants-protocol/issues/334
+[widal001/wyman-park-dell]: https://github.com/widal001/wyman-park-dell

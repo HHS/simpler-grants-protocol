@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from "astro/config";
+import { defineConfig, sessionDrivers } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightLinksValidator from "starlight-links-validator";
 
@@ -31,7 +31,21 @@ export default defineConfig({
     // /.extension-schemas`. Only the single dynamic API route needs the
     // Cloudflare runtime, and it gets it at request time either way.
     prerenderEnvironment: "node",
+    // Optimize images with Sharp at build time (`sharp` is already a dependency)
+    // rather than the adapter's default `cloudflare-binding`, which defers
+    // optimization to a runtime `/_image` endpoint and requires an `IMAGES`
+    // binding. Every page carrying an image is prerendered, so there is nothing
+    // for a runtime image service to do, and build-time output stays immutably
+    // cacheable.
+    imageService: "compile",
   }),
+  // We don't use Astro sessions, but `@astrojs/cloudflare` v14 injects a `SESSION`
+  // KV binding by default and auto-provisions the namespace on deploy — which
+  // fails once it already exists (`already exists [code: 10014]`), exactly the
+  // repeat-upload pattern `wrangler versions upload` uses for PR previews. A
+  // non-KV in-memory driver stops the adapter injecting the binding at all, so
+  // there is no namespace to create, collide with, or manage.
+  session: { driver: sessionDrivers.lruCache() },
   security: {
     // Left ON deliberately, and stated rather than defaulted so it reads as a
     // decision (#1078-T2). This CSRF guard answers 403 before the mock route runs

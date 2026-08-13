@@ -127,7 +127,9 @@
     "Pypi",
     "functools",
     "cloudflareworkermock",
-    "vabc"
+    "vabc",
+    "wyman",
+    "widal001"
   ],
   "import": []
 }
