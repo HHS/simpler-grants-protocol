@@ -10,7 +10,8 @@ Both experiments are throwaway. The deliverable is this comparison, not merged c
 [Recommendation](#recommendation); the short version is that 3B's central premise —
 that the website's existing harness would absorb most of the Worker's surface area —
 did not survive measurement, and 3B additionally forces the GitHub Pages →
-Cloudflare hosting migration that [ADR-0003] flags as its real cost.
+Cloudflare hosting migration that [ADR-0003] flags as its real cost. GitHub Pages runs
+no code, so no choice of adapter can serve the endpoint from it.
 
 ## What was built
 
@@ -30,18 +31,26 @@ build time; `src/pages/api/[...path].ts` is the only route with
 ## Surface area
 
 The hypothesis in [#1078] was that the integrated shape "may cost only ~5–6 ported
-files". It cost 26.
+files". It cost 41.
 
 |                           | 3A (standalone Worker) | 3B (integrated endpoint) |
 | ------------------------- | ---------------------- | ------------------------ |
-| Files                     | 31                     | 26                       |
-| Lines added               | ~4,430                 | ~4,690                   |
+| Files                     | 31                     | 41                       |
+| Lines added               | ~4,430                 | ~4,950                   |
 | New packages              | 1                      | 0                        |
 | New workflows             | 1                      | 0                        |
 | Existing workflows edited | 1                      | 2 (+1 shared script)     |
 
-Both columns exclude `pnpm-lock.yaml`. So 3B is five files smaller and roughly 260
-lines _larger_ — not the order-of-magnitude reduction the hypothesis anticipated.
+Both columns exclude `pnpm-lock.yaml` and each experiment's own findings write-up.
+**3B is ten files and ~520 lines _larger_ than the shape it was supposed to
+undercut** — the opposite of the hypothesis, not merely short of it.
+
+3B's 41 breaks down as 26 files for the port and the adapter, plus the 15 files
+(261 lines) that fixing the redirect fallout took: 14 committed meta-refresh pages
+and their guard test. Those exist only because 3B introduced an adapter, so they
+belong in its column. An earlier draft of this table counted only the first 26 and
+concluded 3B was "five files smaller"; that was wrong in the direction that
+flattered the experiment.
 
 3A's headline figure of "21 files + 1 workflow + 3 root-config edits" undercounted its
 own website-side work. Counted the same way as 3B — everything the experiment touched
@@ -77,6 +86,9 @@ deploy is true, and it is the strongest thing 3B has going for it.
   `wrangler.jsonc`, `cd-deploy-website.yml`, and the shared
   `upload-worker-preview.sh`. Each is small; collectively they mean the mock is now
   entangled with how the whole site builds and deploys.
+- **15 files repairing the adapter's fallout** (261 lines) — the committed
+  meta-refresh redirect pages and their guard test. Pure overhead: they restore
+  behavior the site already had before the adapter arrived.
 
 ### The honest asterisk
 
@@ -131,15 +143,17 @@ This is where the experiment produced its most decisive results. Adding
    `upload-worker-preview.sh` gained an optional argument for this.
 4. **A KV namespace is provisioned for sessions the site never uses.** The adapter
    declares a `SESSION` KV binding by default, auto-provisioned on first deploy.
-5. **Redirects stop working on GitHub Pages.** The adapter converts the `redirects`
-   block in `astro.config.mjs` from emitted meta-refresh HTML pages into
-   `dist/client/_redirects`, which GitHub Pages does not read. All 8 redirect
-   patterns — the four opp-model consolidations and the four forms migrations, 14
-   rules once trailing-slash variants are expanded — stop resolving on production.
+5. **Redirects silently stopped working on GitHub Pages — since fixed.** The adapter
+   converts the `redirects` block in `astro.config.mjs` from emitted meta-refresh HTML
+   pages into `dist/client/_redirects`, which GitHub Pages does not read. All 8
+   redirect patterns — the four opp-model consolidations and the four forms
+   migrations — stopped resolving on production. This is now fixed; see
+   [The redirect fix](#the-redirect-fix). It is listed here because _discovering_ it
+   cost real time, and because nothing in the test suite noticed.
 
 ### How item 5 was established, without deploying to production
 
-The claim is load-bearing enough to show the evidence rather than assert it:
+The claim was load-bearing enough to show the evidence rather than assert it:
 
 - `@astrojs/cloudflare` calls `updateConfig({ build: { redirects: false } })`
   unconditionally in its `astro:config:setup` hook (`dist/index.js:180-182`).
@@ -160,33 +174,66 @@ such feature — `_redirects` is a Cloudflare Pages and Netlify convention — a
 static-server run above is the stand-in for it. Everything else is verified from
 source and from the build output.
 
-### Why this is a transition cost, not a permanent one
+### The redirect fix
 
-Worth stating plainly, because it cuts against the framing above: **after a migration
-to Cloudflare, `_redirects` is strictly better than what the site has today** — real
-301s instead of meta-refresh HTML. The breakage exists only in the window where the
-build targets Cloudflare while production still serves from GitHub Pages.
+Committed meta-refresh HTML under `website/public/<source>/index.html`, one per
+redirect source. Files in `public/` are copied verbatim into the output and never pass
+through Astro's route or redirect handling, so `build.redirects: false` cannot suppress
+them. The pages copy Astro's own `redirectTemplate` — same title, meta refresh, robots
+directive, canonical link, and anchor fallback — so what ships is what the site emitted
+before the adapter arrived, give or take prettier's formatting.
 
-That does not rescue 3B, but it narrows the charge. The accurate statement is not
-"3B breaks redirects" but **"3B and GitHub Pages production are not simultaneously
-satisfiable"**: serving a dynamic route from the docs site requires an adapter, and
-that adapter assumes a host that can run one. So 3B's cost is not "add an adapter" but
-"complete the hosting migration" — precisely what [ADR-0003] predicted.
+14 files: 7 for the static sources, plus 7 enumerating `/forms-new/[slug]` over the
+form ids. Both hosts are now served — GitHub Pages follows the meta refresh,
+Cloudflare's real 301 from `_redirects` takes precedence where it applies. Verified by
+serving `dist/client` from a plain static file server: all 8 patterns return 200 with
+the correct target, and real pages are unaffected.
 
-### Would a different adapter avoid it?
+`__tests__/redirects.spec.ts` is the guard. It reads the redirect map out of
+`astro.config.mjs` and asserts a matching page exists in the built output with the
+right refresh target, so adding a redirect to the config without a `public/` page
+fails a test instead of silently 404ing in production. Slugs for the dynamic pattern
+come from `getFormIds()` — the same list `src/pages/forms/[slug].astro` feeds to
+`getStaticPaths` — rather than from directory names, which would pick up unrelated
+directories. Negative-controlled: deleting one page fails exactly that case.
 
-No, and the reason is worth being precise about, since `build.redirects: false` is set
-by the adapter rather than by Astro — so in principle another adapter could behave
-differently.
+**This demotes item 5 from a blocker to a chore**, and an earlier draft of these
+findings called it "the finding that decides the question". That was wrong: it costs
+14 committed files and a guard test. The reason 3B still loses is the next section,
+which the redirect symptom was only ever a vivid illustration of.
 
-It does not help, because the redirects are a symptom rather than the problem. GitHub
-Pages serves static files; it cannot run an endpoint under any adapter. `@astrojs/node`
-needs a Node server; the Netlify and Vercel adapters move hosting to those vendors.
-Every option that makes the endpoint work implies a host that runs code, which is the
-same migration wearing a different logo.
+Worth adding that after a migration to Cloudflare, `_redirects` is _better_ than what
+the site had before — real 301s rather than meta-refresh — so the `public/` pages
+become redundant belt-and-braces at that point, not a permanent tax.
 
-The genuinely different option is **no adapter**: leave the docs site fully static, and
-serve the mock from its own origin. That is Option 3A.
+### Why no adapter can serve the endpoint from GitHub Pages
+
+This is the part that actually decides it, and it has nothing to do with redirects.
+
+GitHub Pages is a static file server. It serves bytes that exist in the published
+tree and runs no code — no request-time execution of any kind. The mock endpoint is
+defined by the opposite property: `src/pages/api/[...path].ts` sets
+`prerender = false` precisely because its response depends on the request (path
+version, `oppId`, query params, POST body). There is no set of files that can be
+published ahead of time to answer `POST /api/v0.4.0/common-grants/opportunities/search`
+for an arbitrary filter body.
+
+An Astro adapter does not change that; it is the thing that _tells Astro a runtime
+exists_. That is why the choice of adapter is irrelevant here:
+
+- `@astrojs/cloudflare` targets Workers — code runs, but on Cloudflare, not Pages.
+- `@astrojs/node` emits a Node server — something has to host and run that process.
+- The Netlify and Vercel adapters relocate hosting to those vendors.
+
+Every adapter that makes the endpoint work presupposes a host that executes requests,
+and GitHub Pages is by definition not one. So the redirect breakage was never the
+obstacle — it was a side effect of pointing the build at a runtime host. The obstacle
+is that **the integrated shape needs the docs origin to be able to run code**, and
+today it cannot.
+
+That leaves two coherent options, which is the real decision: migrate the docs site to
+a runtime host, or serve the mock from a different origin that already is one. The
+second is Option 3A.
 
 ### What a GitHub Pages → Cloudflare cutover requires
 
@@ -296,7 +343,7 @@ Assuming the mock itself (fixtures, handlers, versioning) is kept as-is:
 | ------------------------------------------------------------ | ------------------------------- |
 | Port the conformance test from 3A                            | 0.5 day                         |
 | Fix the SDK base-path bug + regression test                  | 0.5 day                         |
-| Redirect parity for GH Pages, or accept the regression       | 0.5 day / 0                     |
+| Redirect parity for GH Pages                                 | done                            |
 | Verify + harden the preview upload path                      | 0.5–1 day                       |
 | Remaining spec resources (awards, orgs, applications, forms) | 3–5 days                        |
 | Seeded fixture generation                                    | 1–2 days                        |
@@ -311,14 +358,16 @@ last row is what choosing 3B commits to, and it dwarfs everything above it.
 
 3B was worth building — the premise was testable and the test came back negative:
 
-1. **The surface-area argument does not hold.** 26 files versus 32, and more lines,
-   with ~420 lines of conformance coverage still owed. The harness savings are real
-   but small (~10 files), and they are paid for by config entanglement with the whole
+1. **The surface-area argument inverts.** 41 files versus 31, ~520 more lines, and
+   ~420 lines of conformance coverage still owed on top. The harness savings are real
+   but small (~10 files) and are more than consumed by the adapter's fallout — the
+   redirect pages alone gave back 15 files — plus config entanglement with the whole
    site's build and deploy.
-2. **It forces a hosting migration.** The redirects finding is not a rough edge; it is
-   structural. Production reachability for the endpoint means moving off GitHub Pages,
-   contradicting ADR-0003, and that decision should not be made as a side effect of
-   wanting a mock API.
+2. **It forces a hosting migration.** Not because of the redirects — those are fixed —
+   but because GitHub Pages runs no code, so no adapter can serve the endpoint from it.
+   Production reachability means moving the docs site to a runtime host, contradicting
+   ADR-0003, and that decision should be made on its own merits rather than as a side
+   effect of wanting a mock API.
 3. **It puts middleware between the kernel and its callers**, so equivalence has to be
    re-established at the host boundary rather than reasoned about once.
 4. **It slows the mock's own feedback loop** to the website's build time.
@@ -340,7 +389,10 @@ Explicitly not done:
 
 - The conformance test was not ported ([#1077-T4]).
 - No real PR preview was deployed; verification used the built artifact locally.
-- The redirect regression was not fixed — accepted and documented instead.
+- The redirect regression **was** fixed (14 `public/` pages + a guard test), but the
+  `public/` pages duplicate the redirect map in `astro.config.mjs`. The guard test
+  turns that duplication into a test failure rather than a silent production 404,
+  which is a mitigation, not an elimination.
 - The SDK `list()` bug was diagnosed and written up here, but no GitHub issue has been
   filed against `lib/ts-sdk` yet, and it is not fixed.
 - `MockServerInjector.inject()`'s write path has integration coverage only.
