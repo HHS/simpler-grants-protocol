@@ -1,78 +1,58 @@
 name: "CD - Deploy Python Package to PyPI"
 
 on:
+  # Called by release-please.yml when a Python SDK release is created
+  workflow_call:
+    inputs:
+      release_tag:
+        description: "Release tag (e.g., common-grants-sdk@0.3.0)"
+        required: true
+        type: string
+    secrets:
+      PYPI_TOKEN:
+        required: true
+  # Manual fallback for re-running a publish against an existing tag
   workflow_dispatch:
     inputs:
       release_tag:
         description: "Release tag (e.g., common-grants-sdk@0.3.0)"
         required: true
         type: string
-      previous_tag:
-        description: "Previous tag (e.g., common-grants-sdk@0.2.0) - optional"
-        required: false
-        type: string
-      dry_run:
-        description: "Dry run mode (default: false) - set to true to preview the release notes"
-        required: false
-        type: boolean
-        default: false
 
 jobs:
-  create-release-from-tag:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Validate tags and generate release notes
-        id: release-notes
-        run: |
-          DRY_RUN_FLAG=""
-          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
-            DRY_RUN_FLAG="--dry-run"
-          fi
-          .github/scripts/validate-and-generate-release-notes.sh \
-            --prefix "common-grants-sdk@" \
-            --config-file ".github/release-config/lib-pysdk.yml" \
-            --release-tag "${{ github.event.inputs.release_tag }}" \
-            --previous-tag "${{ github.event.inputs.previous_tag }}" \
-            --repository "${{ github.repository }}" \
-            $DRY_RUN_FLAG
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create release
-        if: github.event.inputs.dry_run != 'true'
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ github.event.inputs.release_tag }}
-          body: ${{ steps.release-notes.outputs.notes }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   deploy:
-    needs: create-release-from-tag
-    if: github.event.inputs.dry_run != 'true'
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/common-grants-sdk
     permissions:
       contents: read
-      id-token: write
     defaults:
       run:
         working-directory: ./lib/python-sdk
 
     steps:
+      # Rejects another package's tag or a malformed version on the manual
+      # workflow_dispatch fallback; release-please's own tag always passes.
+      # Runs before checkout (in the bare workspace) so nothing ever touches
+      # content from an unvalidated ref.
+      - name: Validate release tag
+        working-directory: .
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^common-grants-sdk@[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.+-]+)?$ ]]; then
+            echo "::error::release_tag must look like 'common-grants-sdk@X.Y.Z'. Got: $RELEASE_TAG"
+            exit 1
+          fi
+
+      # The refs/tags/ qualifier pins the checkout to the tag namespace — a
+      # branch with the same name can't be substituted, and a nonexistent tag
+      # fails the checkout outright.
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.inputs.release_tag }}
+          ref: refs/tags/${{ inputs.release_tag }}
 
       - name: Install Python
         uses: actions/setup-python@v6
@@ -93,6 +73,8 @@ jobs:
           poetry publish
 
       - name: Notify completion
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           echo "Python SDK deployed to PyPI"
-          echo "Tag: ${{ github.event.inputs.release_tag }}"
+          echo "Tag: $RELEASE_TAG"

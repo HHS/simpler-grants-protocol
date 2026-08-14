@@ -84,20 +84,20 @@ The `website` catalog has its own `vitest` version (`^4.x`). The update script i
 ./.github/scripts/update-catalog-deps.sh
 ```
 
-## Changeset expectations
+## Release expectations
 
-Most dependency PRs don't need a changeset. You only need one when a **production dependency changes in a published package**.
+Version bumps are driven by [release-please](https://github.com/googleapis/release-please) from the merged PR's conventional-commit title — there is no separate file to add. What matters is choosing the right type: `chore(deps)` does **not** trigger a release (unless marked breaking with `!`), while `fix(deps)` (or `fix(<scope>)`) does.
 
-| Package | Published to | Needs changeset when... |
+Most dependency PRs should stay `chore(deps)`. Use a releasing type only when a **production dependency changes in a published package**:
+
+| Package | Published to | Needs a releasing title when... |
 |---------|-------------|------------------------|
 | `lib/core` (`@common-grants/core`) | npm | TypeSpec peer dep ranges change |
 | `lib/cli` (`@common-grants/cli`) | npm | Runtime dep versions change |
 | `lib/ts-sdk` (`@common-grants/sdk`) | npm | Runtime dep versions change |
 | `lib/python-sdk` (`common-grants-sdk`) | PyPI | Runtime dep versions change |
 
-Dev-only dep bumps (vitest, eslint, type definitions, etc.) don't need changesets. When in doubt: if the dep appears in `dependencies` or `peerDependencies` in the package's `package.json`, add a changeset. If it's in `devDependencies`, skip it.
-
-Run `pnpm changeset` from the repo root to create one.
+Dev-only dep bumps (vitest, eslint, type definitions, etc.) don't warrant a release. When in doubt: if the dep appears in `dependencies` or `peerDependencies` in the package's manifest, retitle the PR `fix(<package>): ...` before merging. If it's in `devDependencies`, keep `chore(deps)`.
 
 ## Catalog validation
 

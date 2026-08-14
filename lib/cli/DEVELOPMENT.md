@@ -37,15 +37,14 @@ Steps to follow when preparing a new release of the CommonGrants core library.
     - [ ] The [man page](./man/cg.1) has been updated to include them
   - [ ] `npm pack` has been run, the package has been installed in a new directory outside this repo, and all the commands listed in the [README](README.md#usage) have been tested
   - [ ] (Optional) A pre-release of the new version with an `alpha`, `beta`, or `rc` tag has been manually published to test the installation from npm
-  - [ ] A [changeset](../README.md#step-2-generate-a-changeset) has been created with the correct revision type (MAJOR, MINOR, PATCH) and a meaningful summary of the changes made in this version
+  - [ ] The PR title uses the [conventional commit type](../README.md#step-2-title-your-pr-with-a-conventional-commit) matching the intended release impact (`fix` = patch, `feat` = minor, `!` = breaking) and meaningfully summarizes the change
 - [ ] After merging:
-  - [ ] The [CI - Bump Version & Create Tag](https://github.com/HHS/simpler-grants-protocol/actions/workflows/ci-bump-version.yml) GitHub action ran successfully
-  - [ ] A new `@common-grants/cli` [tag](https://github.com/HHS/simpler-grants-protocol/tags) was created
+  - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/release-please.yml) workflow ran and updated (or opened) the `@common-grants/cli` Release PR
 
 ### Release checklist
 
-- [ ] [CD - Deploy CLI Package to npm](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-deploy-lib-cli.yml) has been manually triggered with the new `@common-grants/cli` tag
-- [ ] A new [GitHub release](https://github.com/HHS/simpler-grants-protocol/releases) has been created, and the auto-generated release notes are accurate
+- [ ] The `@common-grants/cli` Release PR has been merged — this tags the release, creates the [GitHub release](https://github.com/HHS/simpler-grants-protocol/releases), and publishes to npm automatically
+- [ ] The auto-generated release notes are accurate
 - [ ] The new version appears on [npm](https://www.npmjs.com/package/@common-grants/cli)
 
 ### Post-release checklist

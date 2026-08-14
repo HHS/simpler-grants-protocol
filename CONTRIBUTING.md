@@ -123,6 +123,24 @@ If you've implemented a new feature, fixed a bug, or made some documentation cle
 5. **Submit a pull request:** When you're ready to make your contribution, [submit a pull request against the upstream repo](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork) and fill out the PR template sections so that project maintainers can begin to review your contributions.
 6. **Fix requested changes:** As maintainers review your proposed contribution, they may request specific changes. If so, simply add and commit those changes to the feature branch directly and they'll automatically show up on the PR.
 
+#### PR title format
+
+PR titles must follow the [Conventional Commits](https://www.conventionalcommits.org/) format — `type(scope): description` — and a CI check enforces this. PRs are squash-merged with the PR title as the commit subject, and that history drives releases: [release-please](https://github.com/googleapis/release-please) reads the commit type to decide version bumps and changelog entries for the published packages.
+
+| Type | Effect on the touched package(s) | Example |
+|------|----------------------------------|---------|
+| `fix` | Patch release | `fix(ts-sdk): preserve plain dates in JSON` |
+| `feat` | Minor release | `feat(core): add award schemas` |
+| `feat!` or `fix!` (or a `BREAKING CHANGE:` footer) | Breaking release (minor while pre-1.0) | `feat(cli)!: drop Node 20 support` |
+| `perf`, `revert`, `docs`, `refactor`, `build` | Patch release | `docs(core): clarify filter usage` |
+| `chore`, `ci`, `test` | No release; hidden from changelogs (a `!` marker still cuts a breaking release) | `chore(deps): bump the runtime group` |
+
+The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). Releases are scoped by path rather than by that scope: only files under `lib/core/`, `lib/cli/`, `lib/ts-sdk/`, or `lib/python-sdk/` can trigger one, so `docs(website): ...` releases nothing. Inside those paths a releasing type does release the package — `docs` included, since `README.md` ships in the published artifact. Use `chore` for a package's internal notes that shouldn't ship.
+
+A PR touching two packages bumps both at the title's type. That is usually right, since both packages changed; split the PR when they warrant different bumps, such as a `feat` in `lib/core/` alongside a mechanical regeneration in `lib/ts-sdk/`.
+
+GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this check — retitle it `revert: <description>` before merging. release-please cannot parse `Revert "..."` either, so a revert merged under that title would ship with no version bump and no error. See [lib/README.md](lib/README.md) for how releases are cut from this history.
+
 ## Getting started
 
 **CommonGrants resources**
