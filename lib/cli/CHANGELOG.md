@@ -1,5 +1,12 @@
 # @common-grants/cli
 
+## [0.4.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/cli@0.3.9...@common-grants/cli@0.4.0) (2026-08-14)
+
+
+### Features
+
+* **cli:** bundle the v0.4.0 base spec and release a minor version ([#1090](https://github.com/HHS/simpler-grants-protocol/issues/1090)) ([2152bea](https://github.com/HHS/simpler-grants-protocol/commit/2152beaa73e24f6e6000a7f7ae917d400b0cb26b))
+
 ## 0.3.9
 
 ### Patch Changes
