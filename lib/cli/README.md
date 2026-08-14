@@ -85,7 +85,7 @@ Validate an API specification against the CommonGrants base protocol. You can op
 cg check spec openapi.yaml
 
 # Using a specific protocol version
-cg check spec openapi.yaml --protocol-version 0.1.0
+cg check spec openapi.yaml --protocol-version 0.4.0
 
 # Using the path to a locally compiled base spec
 cg check spec openapi.yaml --base <path-to-base-spec>
