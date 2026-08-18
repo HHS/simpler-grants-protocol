@@ -1,0 +1,23 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AppRef.yaml
+type: object
+properties:
+  id:
+    $ref: uuid.yaml
+    description: The unique identifier for the application
+  title:
+    type: string
+    description: The title of the application
+required:
+  - id
+  - title
+unevaluatedProperties:
+  not: {}
+examples:
+  - id: 123e4567-e89b-12d3-a456-426614174000
+    title: My Application
+description: |-
+  A reference to an application, previewing the key fields a consumer needs
+  to identify it and look it up or join it to another response. Appears
+  wherever another record points to an application, such as the application
+  an award resulted from.

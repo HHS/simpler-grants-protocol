@@ -46,7 +46,7 @@ export interface CustomFieldSpec {
   /** The JSON schema type for the field */
   fieldType: CustomFieldType;
   /** Optional Zod schema to validate the value property. Defaults based on fieldType */
-  value?: z.ZodTypeAny;
+  value?: z.ZodType;
   /** Optional description; used as the default for CustomField.description when present */
   description?: string;
 }
@@ -56,7 +56,7 @@ export interface CustomFieldSpec {
 // ############################################################################
 
 /**
- * The 11-value enum of supported custom filter types.
+ * The 10-value enum of supported custom filter types.
  *
  * Each value maps 1:1 to a base filter type with auto-derived operators.
  * Operators are NOT authored — they are derived from the filterType at
@@ -148,7 +148,7 @@ export type PluginRoutes = Partial<Record<ResourceName, RouteMethods>>;
 /**
  * The expected Zod type for a `customFields` property on an extensible schema.
  *
- * Matches `z.record(CustomFieldSchema).nullish()`, which is the pattern used
+ * Matches `z.record(z.string(), CustomFieldSchema).nullish()`, which is the pattern used
  * by all base schemas in the SDK. The type is intentionally permissive about
  * the wrapping order (e.g. `.nullish()` vs `.optional().nullable()`) by
  * constraining only the output type.
@@ -164,11 +164,7 @@ type CustomFieldsZodType = z.ZodType<Record<string, CustomField> | null | undefi
  * Used to constrain the `baseSchema` parameter of `withCustomFields()` so that
  * schemas without a properly typed `customFields` are rejected at compile time.
  */
-export type HasCustomFields = z.ZodObject<
-  { customFields: CustomFieldsZodType } & z.ZodRawShape,
-  z.UnknownKeysParam,
-  z.ZodTypeAny
->;
+export type HasCustomFields = z.ZodObject<{ customFields: CustomFieldsZodType } & z.ZodRawShape>;
 
 /**
  * An object with an optional `customFields` property.
@@ -366,7 +362,7 @@ export interface MappingsSchemaInput {
   /** Custom fields to attach via `withCustomFields()`. */
   customFields?: Record<string, CustomFieldSpec>;
   /** Source-system Zod schema (the shape a source system returns). */
-  sourceSchema: z.ZodTypeAny;
+  sourceSchema: z.ZodType;
   /** Declarative mappings compiled into transforms by `definePlugin()`. */
   mappings: SchemaMappings;
   toCommon?: never;
@@ -388,7 +384,7 @@ export interface FunctionsSchemaInput {
   /** Custom fields to attach via `withCustomFields()`. */
   customFields?: Record<string, CustomFieldSpec>;
   /** Source-system Zod schema (the shape a source system returns). */
-  sourceSchema: z.ZodTypeAny;
+  sourceSchema: z.ZodType;
   mappings?: never;
   /** Map a source record to the common-schema shape. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

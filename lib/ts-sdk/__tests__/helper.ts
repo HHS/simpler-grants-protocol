@@ -1,4 +1,4 @@
-import { ZodSchema } from "zod";
+import { ZodType } from "zod";
 import { expect } from "vitest";
 import { checkZodMatchesJsonSchema } from "./utils/fuzz-test";
 
@@ -10,7 +10,7 @@ import { checkZodMatchesJsonSchema } from "./utils/fuzz-test";
  * @param jsonSchemaId - The JSON schema ID
  */
 export async function expectZodMatchesJsonSchema(
-  zodSchema: ZodSchema,
+  zodSchema: ZodType,
   jsonSchemaId: string
 ): Promise<void> {
   const result = await checkZodMatchesJsonSchema(zodSchema, jsonSchemaId);

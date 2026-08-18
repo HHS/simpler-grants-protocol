@@ -1,6 +1,6 @@
 {
   "name": "@common-grants/sdk",
-  "version": "0.6.0",
+  "version": "0.7.1",
   "engines": {
     "node": ">=22.0.0"
   },
@@ -108,11 +108,11 @@
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-prettier": "catalog:",
-    "js-yaml": "^4.3.0",
-    "json-schema-faker": "^0.6.2",
+    "js-yaml": "^4.3.1",
+    "json-schema-faker": "^0.6.3",
     "prettier": "catalog:",
     "ts-node": "catalog:",
-    "tsx": "^4.23.1",
+    "tsx": "^4.23.12",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:"

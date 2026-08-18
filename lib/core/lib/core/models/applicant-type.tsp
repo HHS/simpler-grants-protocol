@@ -8,16 +8,7 @@ namespace CommonGrants.Models;
 @example(Examples.ApplicantType.organization)
 @example(Examples.ApplicantType.individual)
 @Versioning.added(CommonGrants.Versions.v0_2)
-model ApplicantType {
-  /** The type of applicant */
-  value: ApplicantTypeOptions;
-
-  /** The custom value for the applicant type */
-  customValue?: string;
-
-  /** The description of the applicant type */
-  description?: string;
-}
+model ApplicantType is Fields.ExtensibleEnumT<ApplicantTypeOptions>;
 
 // #########################################################
 // ApplicantTypeOptions

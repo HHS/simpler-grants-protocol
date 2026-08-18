@@ -6,22 +6,22 @@ namespace CommonGrants.Models;
 @example(Examples.Organization.exampleOrg)
 @Versioning.added(CommonGrants.Versions.v0_2)
 model OrganizationBase {
-  /** The organization's unique identifier. */
-  id: Types.uuid;
-
-  /** The organization's legal name as registered with relevant authorities. */
-  name: string;
+  // Identity fields shared with the OrgRef reference model
+  ...OrgRef;
 
   /** The organization's type within the Philanthropy Classification System (PCS). */
   orgType?: Fields.PCSOrgType;
 
   /** The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS. */
+  @Versioning.removed(CommonGrants.Versions.v0_4)
   ein?: Types.employerTaxId;
 
   /** The organization's Unique Entity Identifier (UEI) from SAM.gov, used for federal contracting. */
+  @Versioning.removed(CommonGrants.Versions.v0_4)
   uei?: Types.samUEI;
 
   /** The organization's Data Universal Numbering System (DUNS) number, a unique identifier for businesses. */
+  @Versioning.removed(CommonGrants.Versions.v0_4)
   duns?: Types.duns;
 
   /** Collection of physical addresses associated with the organization. */
@@ -44,6 +44,80 @@ model OrganizationBase {
 
   /** Custom fields for the organization. */
   customFields?: Record<Fields.CustomField>;
+}
+
+// #########################################################
+// Organization identifiers
+// #########################################################
+
+/** An organization's Employer Identification Number (EIN), assigned by the IRS. */
+@example(Examples.OrgId.ein)
+@Versioning.added(CommonGrants.Versions.v0_4)
+model OrgIdEin is Fields.IdentifierT<Types.employerTaxId, "org:us:ein">;
+
+/** An organization's Unique Entity Identifier (UEI) from SAM.gov. */
+@example(Examples.OrgId.uei)
+@Versioning.added(CommonGrants.Versions.v0_4)
+model OrgIdUei is Fields.IdentifierT<Types.samUEI, "org:us:uei">;
+
+/** An organization's Data Universal Numbering System (DUNS) number. */
+@example(Examples.OrgId.duns)
+@Versioning.added(CommonGrants.Versions.v0_4)
+model OrgIdDuns is Fields.IdentifierT<Types.duns, "org:xi:duns">;
+
+/** A collection of identifiers associated with an organization.
+ *
+ * Extends the generic identifier collection with the base identifiers CommonGrants
+ * defines for organizations. Additional registries can be published under `otherIds`.
+ */
+@Versioning.added(CommonGrants.Versions.v0_4)
+model OrgIds extends Fields.IdentifierCollection {
+  /** The organization's Employer Identification Number (EIN), assigned by the IRS. */
+  `org:us:ein`?: OrgIdEin;
+
+  /** The organization's Unique Entity Identifier (UEI) from SAM.gov. */
+  `org:us:uei`?: OrgIdUei;
+
+  /** The organization's Data Universal Numbering System (DUNS) number. */
+  `org:xi:duns`?: OrgIdDuns;
+}
+
+// #########################################################
+// Organization references
+// #########################################################
+
+/** A reference to an organization, previewing the key fields a consumer needs
+ * to identify it and look it up or join it to another response. Appears
+ * wherever another record points to an organization, such as an award's funder
+ * or recipient.
+ */
+@example(Examples.OrgRef.funder)
+@Versioning.added(CommonGrants.Versions.v0_2)
+model OrgRef {
+  /** The organization's unique identifier. */
+  @visibility(Lifecycle.Read)
+  id: Types.uuid;
+
+  /** The organization's legal name as registered with relevant authorities. */
+  name: string;
+
+  /** Identifiers associated with the organization, keyed by registry code. */
+  @Versioning.added(CommonGrants.Versions.v0_4)
+  identifiers?: OrgIds;
+}
+
+/** A group of organization references, with a primary organization and
+ * optional others. Appears wherever several organizations share a role on a
+ * record, such as an award's funders or recipient organizations.
+ */
+@example(Examples.OrgRef.funders)
+@Versioning.added(CommonGrants.Versions.v0_4)
+model OrgRefCollection {
+  /** The primary organization in the collection. */
+  primary: OrgRef;
+
+  /** Other organizations in the collection, keyed by an implementation-defined role. */
+  otherOrgs?: Record<OrgRef>;
 }
 
 // #########################################################
@@ -85,9 +159,22 @@ namespace Examples.Organization {
     id: "083b4567-e89d-42c8-a439-6c1234567890",
     name: "Example Organization",
     orgType: Fields.Examples.PCS.orgTypeTerm,
-    ein: "12-3456789",
-    uei: "AB1234567890",
-    duns: "123456789012",
+    identifiers: #{
+      `org:us:ein`: #{
+        registry: #{
+          code: "org:us:ein",
+          url: "https://commongrants.org/registries/org-us-ein",
+        },
+        id: "123456789",
+      },
+      `org:us:uei`: #{
+        registry: #{
+          code: "org:us:uei",
+          url: "https://commongrants.org/registries/org-us-uei",
+        },
+        id: "AB0123456789",
+      },
+    },
     addresses: Fields.Examples.Address.orgCollection,
     phones: Fields.Examples.Phone.orgCollection,
     emails: Fields.Examples.Email.orgCollection,
@@ -104,4 +191,57 @@ namespace Examples.Organization {
     linkedin: "https://www.linkedin.com/company/example",
     otherSocials: #{ youtube: "https://www.youtube.com/example" },
   };
+}
+
+namespace Examples.OrgId {
+  const ein = #{
+    registry: #{
+      code: "org:us:ein",
+      url: "https://commongrants.org/registries/org-us-ein",
+    },
+    id: "123456789",
+  };
+
+  const uei = #{
+    registry: #{
+      code: "org:us:uei",
+      url: "https://commongrants.org/registries/org-us-uei",
+    },
+    id: "AB0123456789",
+  };
+
+  const duns = #{
+    registry: #{
+      code: "org:xi:duns",
+      url: "https://commongrants.org/registries/org-xi-duns",
+    },
+    id: "123456789",
+  };
+}
+
+namespace Examples.OrgRef {
+  const funder = #{
+    id: "018f2e77-4b5c-7d2e-9f3a-bcdef1234567",
+    name: "Health Resources and Services Administration",
+    identifiers: #{
+      otherIds: #{
+        `org:grants.gov:agency`: #{
+          registry: #{ code: "org:grants.gov:agency" },
+          id: "HRSA",
+        },
+      },
+    },
+  };
+
+  const recipient = #{
+    id: "018f2e77-6d7e-7f4a-9b5c-def123456789",
+    name: "Riverside Community Health Center",
+    identifiers: #{
+      `org:us:ein`: #{ registry: #{ code: "org:us:ein" }, id: "123456789" },
+    },
+  };
+
+  const funders = #{ primary: funder };
+
+  const recipients = #{ primary: recipient };
 }

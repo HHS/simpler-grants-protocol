@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "bump-minor-pre-major": true,
+  "include-component-in-tag": true,
+  "tag-separator": "@",
+  "include-v-in-tag": false,
+  "separate-pull-requests": true,
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance Improvements" },
+    { "type": "revert", "section": "Reverts" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "refactor", "section": "Refactoring" },
+    { "type": "build", "section": "Build System" },
+    { "type": "chore", "section": "Miscellaneous", "hidden": true },
+    { "type": "ci", "section": "Miscellaneous", "hidden": true },
+    { "type": "test", "section": "Miscellaneous", "hidden": true }
+  ],
+  "packages": {
+    "lib/core": {
+      "package-name": "@common-grants/core",
+      "component": "@common-grants/core",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "lib/cli": {
+      "package-name": "@common-grants/cli",
+      "component": "@common-grants/cli",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "lib/ts-sdk": {
+      "package-name": "@common-grants/sdk",
+      "component": "@common-grants/sdk",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "lib/python-sdk": {
+      "release-type": "python",
+      "package-name": "common-grants-sdk",
+      "component": "common-grants-sdk",
+      "changelog-path": "CHANGELOG.md"
+    }
+  }
+}

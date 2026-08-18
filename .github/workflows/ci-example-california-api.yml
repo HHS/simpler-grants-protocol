@@ -43,9 +43,10 @@ jobs:
         run: make install
 
       - name: Audit dependencies for vulnerabilities
-        # Non-blocking: examples are Tier 2 manually-maintained per
-        # DEPENDENCY_MANAGEMENT.md, and CVE tracking is handled outside CI.
-        # The step still surfaces findings in logs and PR annotations.
+        # Non-blocking: examples are manually maintained with no automated
+        # dependency PRs (DEPENDENCY_MANAGEMENT.md, "Maintenance tiers"), so
+        # gating would park a failure nothing is queued to fix. Findings still
+        # surface in logs and PR annotations.
         continue-on-error: true
         run: poetry audit
 

@@ -1,5 +1,39 @@
 # @common-grants/cli
 
+## [0.4.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/cli@0.3.9...@common-grants/cli@0.4.0) (2026-08-14)
+
+
+### Features
+
+* **cli:** bundle the v0.4.0 base spec and release a minor version ([#1090](https://github.com/HHS/simpler-grants-protocol/issues/1090)) ([2152bea](https://github.com/HHS/simpler-grants-protocol/commit/2152beaa73e24f6e6000a7f7ae917d400b0cb26b))
+
+  Bundles the v0.4.0 CommonGrants base spec (#1052), so `cg check spec` can validate an
+  implementation against protocol version 0.4.0 via `--protocol-version 0.4.0`. Relative to
+  0.3.0, the 0.4.0 base spec adds the Awards (`/common-grants/awards`) and Organizations
+  (`/common-grants/orgs`) route groups.
+
+  `cg check spec` resolves the default base spec to the highest bundled version, so a run
+  without `--protocol-version` now validates against 0.4.0 instead of 0.3.0. Implementations
+  that were compliant with 0.3.0 remain compliant: every route the 0.4.0 base spec adds is
+  tagged `experimental`, and the only `required`-tagged routes are
+  `GET /common-grants/opportunities` and `GET /common-grants/opportunities/{oppId}`, unchanged
+  since 0.3.0. Pass `--protocol-version 0.3.0` to pin the previous base spec, or `--base <path>`
+  to supply your own.
+
+## 0.3.9
+
+### Patch Changes
+
+- 90a2f7b: Bump js-yaml from 4.3.0 to 4.3.1, resolving a high-severity advisory where `!!omap` resolution consumes quadratic CPU on a crafted document (GHSA-5p4m-2wfm-xmqj).
+
+## 0.3.8
+
+### Patch Changes
+
+- be7a3a7: Bump zod to v4. zod is a runtime dependency of the published SDK and CLI; this updates its declared range (`^3.25.76` → `^4.4.3`), adapts internal usage to v4 (two-argument `z.record(z.string(), …)`, `ZodType`/`ZodObject` generic signatures, `ZodSafeParseResult`, and the `Invalid URL` message wording), and replaces the forms v4 deprecates (`z.ZodTypeAny` / `z.ZodSchema` → `z.ZodType`, `z.string().uuid()` / `.url()` / `.email()` and `.date()` / `.time()` / `.datetime()` → their top-level and `z.iso.*` equivalents, `.passthrough()` → `.loose()`, `.merge(B)` → `.extend(B.shape)`). No public API changes.
+
+  The SDK is `minor` rather than `patch` because zod reaches consumers through its exported schema types: a consumer on zod 3 passing their own schema into an SDK generic gets a type error, and a consumer pinning zod 3 via an override cannot compile the SDK's declarations at all. Plugins depending on the SDK need a matching zod bump. The CLI stays `patch` — it ships as a `cg` executable with no importable typed surface, so its zod version is not observable to consumers.
+
 ## 0.3.7
 
 ### Patch Changes

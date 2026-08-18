@@ -84,20 +84,20 @@ The `website` catalog has its own `vitest` version (`^4.x`). The update script i
 ./.github/scripts/update-catalog-deps.sh
 ```
 
-## Changeset expectations
+## Release expectations
 
-Most dependency PRs don't need a changeset. You only need one when a **production dependency changes in a published package**.
+Version bumps are driven by [release-please](https://github.com/googleapis/release-please) from the merged PR's conventional-commit title — there is no separate file to add. What matters is choosing the right type: `chore(deps)` does **not** trigger a release (unless marked breaking with `!`), while `fix(deps)` (or `fix(<scope>)`) does.
 
-| Package | Published to | Needs changeset when... |
+Most dependency PRs should stay `chore(deps)`. Use a releasing type only when a **production dependency changes in a published package**:
+
+| Package | Published to | Needs a releasing title when... |
 |---------|-------------|------------------------|
 | `lib/core` (`@common-grants/core`) | npm | TypeSpec peer dep ranges change |
 | `lib/cli` (`@common-grants/cli`) | npm | Runtime dep versions change |
 | `lib/ts-sdk` (`@common-grants/sdk`) | npm | Runtime dep versions change |
 | `lib/python-sdk` (`common-grants-sdk`) | PyPI | Runtime dep versions change |
 
-Dev-only dep bumps (vitest, eslint, type definitions, etc.) don't need changesets. When in doubt: if the dep appears in `dependencies` or `peerDependencies` in the package's `package.json`, add a changeset. If it's in `devDependencies`, skip it.
-
-Run `pnpm changeset` from the repo root to create one.
+Dev-only dep bumps (vitest, eslint, type definitions, etc.) don't warrant a release. When in doubt: if the dep appears in `dependencies` or `peerDependencies` in the package's manifest, retitle the PR `fix(<package>): ...` before merging. If it's in `devDependencies`, keep `chore(deps)`.
 
 ## Catalog validation
 
@@ -110,6 +110,43 @@ Any PR that touches `pnpm-workspace.yaml` triggers `ci-catalog-validation.yml`. 
 5. `website` (checks + build + test)
 
 This catches breakage that individual package CI workflows would miss, since a TypeSpec version bump can affect every downstream package simultaneously.
+
+## Dependency audits
+
+Audits run where dependencies actually change, plus a daily sweep of `main`.
+
+| Workflow | Command | Blocks on | Runs when |
+|----------|---------|-----------|-----------|
+| `ci-catalog-validation.yml` | `pnpm audit --audit-level=moderate` | moderate and above | A PR touches `pnpm-workspace.yaml`, `pnpm-lock.yaml`, or `.github/dependabot.yml`; also `workflow_dispatch` |
+| `deps-audit.yml` | `pnpm audit` | low and above | Daily at 15:00 UTC on `main`; also `workflow_dispatch`, and a PR touching the workflow itself as a smoke test |
+| `ci-template-quickstart.yml`, `ci-template-express-js.yml` | `pnpm audit` | low and above | A PR touches that template |
+| `ci-template-fast-api.yml`, `ci-example-california-api.yml`, `ci-example-pennsylvania-api.yml` | `poetry audit` | nothing (`continue-on-error`) | A PR touches that template or example |
+| `ci-lib-pysdk.yml` | none | nothing | No audit gate today. See the Python SDK note below |
+
+The per-package workflows (`ci-lib-*`, `ci-website-preview.yml`) do **not** audit. An advisory published against a dep already on `main` would otherwise fail every open PR for that package, with no fix available from inside the PR. PRs that change a pnpm dependency are still gated: that updates the root `pnpm-lock.yaml`, which triggers `ci-catalog-validation.yml`.
+
+**The Python SDK is not covered.** `lib/python-sdk` resolves its dependencies through its own `lib/python-sdk/poetry.lock`, and its CI workflow runs no vulnerability audit. `pnpm audit` cannot see that dependency tree, so the SDK's `package.json` contributes nothing to the audit graph (it exists only for Changesets detection). A Dependabot bump there passes through with no advisory check, and the daily sweep does not reach it. `common-grants-sdk` publishes to PyPI, so this is a real gap rather than a scoping choice.
+
+When the audit step in the daily sweep fails it opens an issue labeled `audit-sweep` and `dependencies`, or comments on the open one, so advisories that land with no dependency PR in flight surface within a day instead of waiting for the next unrelated PR to trip over them. It never closes that issue: once the advisory is resolved or ignored the comments stop, and closing is a manual step.
+
+The Python template and examples are non-blocking because they are manually maintained (see [Maintenance tiers](#maintenance-tiers)) — no automated PR is queued to fix what a blocking audit would flag.
+
+**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. Reach for an audit ignore only when no patched version exists anywhere:
+
+```yaml
+audit:
+  ignore:
+    - GHSA-xxxx-yyyy-zzzz
+```
+
+`audit.ignore` replaced `auditConfig.ignoreGhsas` in pnpm 11.16.0. The old spelling still works but is deprecated, and pnpm ignores it with a warning if both are set, so new entries use `audit.ignore`.
+
+Suppressing a GHSA is a deferral, not a resolution, so every ignore entry needs both of these before it lands:
+
+1. **An upstream issue to watch.** If the vulnerable package's own repo already has an issue tracking the fix, link that. If it doesn't, open one there first, then link it.
+2. **A tracking issue in this repo**, labeled `dependencies`, referencing the GHSA and that upstream issue. It stays open until the fix ships, at which point it covers bumping the dep and removing the ignore entry.
+
+The entry itself carries a comment naming the advisory and linking the tracking issue, so the exit condition is visible where the suppression lives. An ignore entry with no tracking issue behind it is a hole nobody is watching.
 
 ## Adding a new workspace package
 

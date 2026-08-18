@@ -108,7 +108,7 @@ export const CustomFieldSchema = z.object({
   fieldType: CustomFieldTypeEnum,
 
   /** Link to the full JSON schema */
-  schema: z.string().url().nullish(),
+  schema: z.url().nullish(),
 
   /** Value of the custom field */
   value: z.unknown(),

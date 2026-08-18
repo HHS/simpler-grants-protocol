@@ -50,16 +50,7 @@ model CompetitionBase {
 /** The status of the competition */
 @example(Examples.Competition.status)
 @Versioning.added(CommonGrants.Versions.v0_2)
-model CompetitionStatus {
-  /** The status of the competition, from a predefined set of options */
-  value: CompetitionStatusOptions;
-
-  /** A custom value for the status */
-  customValue?: string;
-
-  /** A human-readable description of the status */
-  description?: string;
-}
+model CompetitionStatus is Fields.ExtensibleEnumT<CompetitionStatusOptions>;
 
 // #########################################################
 // CompetitionStatusOptions
@@ -151,7 +142,6 @@ namespace Examples.Competition {
 
   const status = #{
     value: CompetitionStatusOptions.open,
-    customValue: "custom",
     description: "Competition is open for applications",
   };
 

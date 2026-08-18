@@ -1,0 +1,83 @@
+name: "Deps: Scheduled Dependency Audit"
+
+# Daily workspace-wide advisory sweep on main. New GHSAs published against
+# deps already on main surface here as a tracking issue within a day, instead
+# of redding every open PR the moment they drop. PRs that change a pnpm
+# dep are still gated by the audit in ci-catalog-validation.yml (that
+# updates the root lockfile, which triggers it). The Python SDK resolves
+# through its own poetry.lock and is covered by neither; see
+# DEPENDENCY_MANAGEMENT.md.
+on:
+  schedule:
+    # Daily at ~7-8am PT (15:00 UTC = 8am PDT / 7am PST)
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+  # Smoke-test on changes here.
+  pull_request:
+    paths:
+      - .github/workflows/deps-audit.yml
+
+permissions:
+  contents: read
+  issues: write
+
+# Serialize runs so the list-then-file below can't race itself. A manual
+# dispatch landing on top of the scheduled run would otherwise let both
+# runs see no open issue and file one each. Queue rather than cancel.
+concurrency:
+  group: deps-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit all workspace packages
+        id: dependency-audit
+        # No --audit-level: pnpm's default is low, so the sweep reports
+        # everything, including advisories below the moderate threshold that
+        # gates dep-changing PRs in ci-catalog-validation.yml.
+        run: pnpm audit
+
+      - name: Open tracking issue on scheduled failure
+        # Gated on the audit step's own outcome, not failure(): a checkout,
+        # setup or install failure would otherwise file an issue claiming
+        # advisories were found when the audit never ran. Those surface
+        # through the scheduled-run failure notification instead.
+        # !cancelled() is required because Actions applies a default
+        # success() to any if without a status function, which would never
+        # be true here.
+        if: ${{ !cancelled() && steps.dependency-audit.outcome == 'failure' && github.event_name != 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # Look up the tracking issue by label over REST rather than
+          # `gh issue list`, which resolves both --search and --label through
+          # GitHub's issue search index. Two runs close together can each miss
+          # a just-filed issue there and open a duplicate. REST reads through,
+          # and returns PRs alongside issues, hence the filter. audit-sweep is
+          # the dedupe key; dependencies stays for categorization.
+          EXISTING=$(gh api "repos/$GITHUB_REPOSITORY/issues?state=open&labels=audit-sweep" \
+            --jq '[.[] | select(.pull_request == null)] | .[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "Still failing: $RUN_URL"
+          else
+            gh issue create --title "Scheduled dependency audit is failing" \
+              --label audit-sweep --label dependencies \
+              --body "The daily workspace-wide dependency audit found advisories against deps on \`main\`. See the run log for details: $RUN_URL"
+          fi

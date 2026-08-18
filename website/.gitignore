@@ -21,7 +21,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
+upload.log
 
 # environment variables
 .env

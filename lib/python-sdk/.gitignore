@@ -11,5 +11,9 @@ __pycache__/
 .pytest_cache/
 .coverage
 
+# Virtual environments
+.venv/
+venv/
+
 #Generated Schema objects
 generated/

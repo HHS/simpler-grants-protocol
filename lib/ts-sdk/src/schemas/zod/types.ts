@@ -12,7 +12,7 @@ import { z } from "zod";
 // String types
 // ############################################################################
 
-export const UuidSchema = z.string().uuid();
+export const UuidSchema = z.uuid();
 
 // ############################################################################
 // Numeric types
@@ -56,19 +56,30 @@ const acceptDate =
   (val: unknown): unknown =>
     val instanceof Date && !isNaN(val.getTime()) ? toStr(val) : val;
 
+/**
+ * A `Date` whose `toJSON()` emits the date-only wire format (`YYYY-MM-DD`)
+ * so values parsed by `ISODateSchema` round-trip through `JSON.stringify`.
+ * Copies (e.g. `structuredClone()` or `new Date(value)`) are ordinary
+ * `Date`s and lose this behavior.
+ */
+class PlainDate extends Date {
+  override toJSON(): string;
+  override toJSON(): string | null {
+    const value = super.toJSON();
+    return value === null ? null : value.slice(0, 10);
+  }
+}
+
 /** Schema for UTC datetime fields (accepts an ISO string or a `Date`; outputs a `Date`) */
 export const UTCDateTimeSchema = z.preprocess(
   acceptDate(d => d.toISOString()),
-  z.string().datetime().transform(ensureUTC)
+  z.iso.datetime().transform(ensureUTC)
 );
 
 /** Schema for ISO date format: YYYY-MM-DD (accepts a YYYY-MM-DD string or a `Date`; outputs a `Date`) */
 export const ISODateSchema = z.preprocess(
   acceptDate(d => d.toISOString().slice(0, 10)),
-  z
-    .string()
-    .date()
-    .transform(str => new Date(str))
+  z.iso.date().transform<Date>(str => new PlainDate(str))
 );
 
 /** Schema for ISO time format: HH:MM:SS with optional fractional seconds and timezone (RFC 3339 partial-time) */
@@ -79,13 +90,10 @@ export const ISOTimeSchema = z.preprocess(val => {
     return val.replace(/(Z|[+-]\d{2}:\d{2})$/, "");
   }
   return val;
-}, z.string().time());
+}, z.iso.time());
 
 /** Schema for offset datetime fields (accepts an ISO 8601 offset string or a `Date`; outputs a `Date`) */
 export const OffsetDateTimeSchema = z.preprocess(
   acceptDate(d => d.toISOString()),
-  z
-    .string()
-    .datetime({ offset: true })
-    .transform(str => new Date(str))
+  z.iso.datetime({ offset: true }).transform(str => new Date(str))
 );

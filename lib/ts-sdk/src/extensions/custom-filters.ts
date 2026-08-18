@@ -66,7 +66,7 @@ export const FILTER_TYPE_SCHEMAS = {
   dateRange: DateRangeFilterSchema,
   moneyComparison: MoneyComparisonFilterSchema,
   moneyRange: MoneyRangeFilterSchema,
-} as const satisfies Record<CustomFilterType, z.ZodTypeAny>;
+} as const satisfies Record<CustomFilterType, z.ZodType>;
 
 /** Input type accepted for a registered custom filter of the given filterType. */
 export type CustomFilterInput<FT extends CustomFilterType> = z.input<
@@ -349,7 +349,7 @@ export function classifyFilters(
     if (DEFAULT_FILTER_NAMES.has(key)) {
       // Bucket 1: default filter → top-level named field, validated against its
       // real type from OppDefaultFiltersSchema. An invalid value throws.
-      const fieldSchema = (OppDefaultFiltersSchema.shape as Record<string, z.ZodTypeAny>)[key];
+      const fieldSchema = (OppDefaultFiltersSchema.shape as Record<string, z.ZodType>)[key];
       const result = fieldSchema.safeParse(value);
       if (!result.success) {
         throw new FilterError(

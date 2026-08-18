@@ -66,7 +66,7 @@ export const oppTimelineSchema = z.object({
   appDeadline: eventSchema.optional(),
 
   /** An optional map of other key dates in the opportunity timeline */
-  otherDates: z.record(eventSchema).optional(),
+  otherDates: z.record(z.string(), eventSchema).optional(),
 });
 
 export type OppTimeline = z.infer<typeof oppTimelineSchema>;
@@ -78,7 +78,7 @@ export type OppTimeline = z.infer<typeof oppTimelineSchema>;
 export const opportunityBaseSchema = z
   .object({
     /** Globally unique id for the opportunity */
-    id: z.string().uuid(),
+    id: z.uuid(),
 
     /** Title or name of the funding opportunity */
     title: z.string(),
@@ -96,12 +96,12 @@ export const opportunityBaseSchema = z
     keyDates: oppTimelineSchema,
 
     /** URL for the original source of the opportunity */
-    source: z.string().url().optional(),
+    source: z.url().optional(),
 
     /** Additional custom fields specific to this opportunity */
-    customFields: z.record(customFieldSchema).optional(),
+    customFields: z.record(z.string(), customFieldSchema).optional(),
   })
-  .merge(systemMetadataSchema);
+  .extend(systemMetadataSchema.shape);
 
 export type OpportunityBase = z.infer<typeof opportunityBaseSchema>;
 
@@ -155,7 +155,7 @@ export type OppDefaultFilters = z.infer<typeof oppDefaultFiltersSchema>;
 
 export const oppFiltersSchema = oppDefaultFiltersSchema.extend({
   /** Additional implementation-defined filters */
-  customFilters: z.record(defaultFilterSchema).optional(),
+  customFilters: z.record(z.string(), defaultFilterSchema).optional(),
 });
 
 export type OppFilters = z.infer<typeof oppFiltersSchema>;

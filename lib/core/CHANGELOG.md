@@ -1,5 +1,97 @@
 # @common-grants/core
 
+## 0.4.0
+
+### Minor Changes
+
+- 896535c: Add an `AwardBase` model and award routes to the core library (#954).
+
+  `AwardBase` tracks the funder, recipient, and financial details of a grant award,
+  with references to the source opportunity and application, and support for both
+  organization and individual recipients. It is accompanied by the `AwdStatus`,
+  `AwdFunding`, `AwdTimeline`, `AwdIds`, `AwdRef`, and `AwdRecipientIndividual`
+  sub-models, plus `AwdFilters`/`AwdSorting` for search. New experimental routes
+  are added: `GET /common-grants/awards/`,
+  `POST /common-grants/awards/search`, and `GET /common-grants/awards/{awdId}`.
+
+  Introduces lightweight reference forms for the models an award points at:
+  `OppRef`, `AppRef`, and `OrgRef` (plus `OrgRefCollection`). Each
+  reference carries the identity fields of its base model and is spread into that
+  base (like `SystemMetadata`), so the base and its reference form stay in sync and
+  reference-field changes surface in the base model's changelog.
+
+  Also renames `ApplicationBase.name` to `title` (versioned via `@renamedFrom`) so
+  it aligns with `AppRef`. All changes are added at protocol version 0.4.0.
+
+- 896535c: Add `BooleanComparisonFilter` to the core filter catalog (#895). `BooleanComparisonFilter`
+  compares a boolean value with `eq`/`neq`. It is added at protocol version 0.4.0 and emitted to
+  JSON Schema output.
+- 896535c: Add an `ExtensibleEnum` base model and `ExtensibleEnumT<T>` templated model to the core
+  fields library (#961), formalizing the extensible enum pattern (a `value` from a predefined
+  set of options, plus optional `customValue` and `description`). Every extensible enum field —
+  `OppStatus`, `AppStatus`, `ApplicantType`, `FormResponseStatus`, `CompetitionStatus`, and the
+  0.4.0 additions `AwdStatus` and `RevisionStatus` — is now defined via `ExtensibleEnumT`, so the
+  pattern has a single source of truth. Also adds the previously missing `custom` option to
+  `FormResponseStatusOptions` at protocol version 0.4.0. Emitted schema shapes are unchanged
+  apart from property description wording.
+- 896535c: Add identifier models to the core library (#957).
+
+  Introduces the models that carry a record's external identifiers, following
+  the pattern in ADR-0023:
+
+  - `IdentifierT<Id, Code>`, a template that pins an identifier's value type and
+    its `registry.code`, plus the generic `Identifier` it instantiates and the
+    `IdentifierStatus` options (`active`, `archived`) used by `allIds`.
+  - `SystemId`, the hosting system's own UUID for a record, whose registry code
+    names that system (e.g. `org:grants.gov:system`).
+  - `IdentifierCollection`, which holds a record's `systemId` plus any
+    registries the protocol does not define as base identifiers, under
+    `otherIds`.
+  - `OrgIds`, the organization collection, which adds the `org:us:ein`,
+    `org:us:uei`, and `org:xi:duns` base identifiers as `OrgIdEin`, `OrgIdUei`,
+    and `OrgIdDuns`. Registry codes follow `<schema>:<scope>:<prop>`.
+
+  Breaking: `OrganizationBase.ein`, `uei`, and `duns` are removed in favor of
+  the `identifiers` collection, so a producer that sent `ein` now sends
+  `identifiers["org:us:ein"].id`.
+
+  Breaking: the `employerTaxId`, `samUEI`, and `duns` scalars are tightened to
+  their registry formats. `employerTaxId` and `duns` now require nine digits
+  with no separators, where `employerTaxId` previously required the hyphenated
+  `12-3456789` form and `duns` accepted several separator styles. `samUEI` now
+  excludes the letters `I` and `O` and no longer accepts lowercase.
+
+  All changes are added at protocol version 0.4.0.
+
+- 896535c: Add organization profile syncing models and routes to the core library (#962).
+
+  Introduces the models needed to view and sync organization profiles across
+  systems, following the contract in ADR-0026:
+
+  - `OrgPatchData`, a JSON Merge Patch (RFC 7396) body derived from
+    `OrganizationBase` where every field is optional, clearable fields accept
+    `null`, and read-only fields like `id` are excluded.
+  - `RevisionT<SnapshotT, PatchT>`, a generic change record with a
+    `status`, `source`, `patch`, and `snapshot`, plus its untyped form `Revision`,
+    `RevisionStatus`, and the status options (`pending`, `accepted`, `denied`,
+    `superseded`, `custom`). `OrgRevision` binds it to `OrganizationBase` and
+    `OrgPatchData`.
+  - `Responses.AcceptedT<T>`, a `202` envelope with a `Location` header for
+    changes that are accepted for review, plus its non-templated `Accepted`
+    schema and the `Responses.Forbidden` error alias the org routes return.
+
+  Adds six experimental routes under `/common-grants/orgs`, each requiring an
+  OAuth 2.0 scope: `GET /orgs` (`org:read`), `GET /orgs/{orgId}` (`org:read`),
+  `PATCH /orgs/{orgId}` (`org:write`), `POST /orgs/{orgId}/changes`
+  (`org.changes:write`), `GET /orgs/{orgId}/changes` (`org.changes:read`), and
+  `GET /orgs/{orgId}/changes/{changeId}` (`org.changes:read`). The routes declare
+  an OAuth2 security scheme with the client credentials and authorization code
+  flows; the flow URLs are illustrative placeholders each deployment overrides.
+
+  All changes are added at protocol version 0.4.0 and marked experimental.
+
+- 896535c: Add non-templated response schemas (`Ok`, `Paginated`, `Sorted`, `Filtered`, `Created`) so they are emitted as standalone JSON schemas, and rename the templated variants with a `T` suffix (`OkT<T>`, `PaginatedT<T>`, `SortedT<T>`, `FilteredT<ItemsT, FilterT>`, `CreatedT<T>`). Routes now use the `T`-suffixed templates; specs consuming the old templated names (e.g. `Responses.Ok<T>`) must switch to the `T`-suffixed equivalents. The wire contract of route responses is unchanged.
+
 ## 0.3.5
 
 ### Patch Changes

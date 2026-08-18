@@ -6,20 +6,17 @@ on:
     paths:
       - website/**
       - .github/workflows/ci-website-preview.yml
-      - .github/workflows/ci-website-cleanup.yml
+      - .github/scripts/upload-worker-preview.sh
       - pnpm-lock.yaml
 
 defaults:
   run:
     working-directory: ./website
 
-env:
-  CLOUDFLARE_WORKERS_DOMAIN: billy-daly.workers.dev
-
 jobs:
-  # Install, build, and run checks/tests/audit. All post-build steps are
-  # sequential but each runs regardless of the previous step's pass/fail so
-  # lint, test, and audit failures all surface in a single CI run.
+  # Install, build, and run checks/tests. All post-build steps are sequential
+  # but each runs regardless of the previous step's pass/fail so lint and test
+  # failures all surface in a single CI run.
   validate:
     runs-on: ubuntu-latest
     outputs:
@@ -77,21 +74,15 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: pnpm run test
 
-      - name: Audit dependencies
-        # Calls the npm bulk advisory endpoint directly as a workaround for
-        # pnpm audit 410 errors (pnpm/pnpm#11265). Remove this script and
-        # revert to `pnpm run audit:high` once pnpm ships native support.
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: node ${GITHUB_WORKSPACE}/.github/scripts/audit-deps.js --level high
-
-  # Deploy the built artifact to a per-PR Cloudflare Worker. Decoupled from
-  # the test/check/audit outcome (via artifact_ready) so previews stay
-  # available for reviewing UI changes on PRs that have unrelated failures.
+  # Upload the built artifact as a new version of the shared preview Worker,
+  # aliased to this PR. Decoupled from the test/check outcome (via
+  # artifact_ready) so previews stay available for reviewing UI changes on PRs
+  # that have unrelated failures.
   deploy-preview:
     runs-on: ubuntu-latest
     needs: validate
     # !cancelled() (not always()) so a user-cancelled run skips the deploy.
-    # Dependabot and workflow_call skipped: no PR number to name the worker.
+    # Dependabot and workflow_call skipped: no PR number to build the alias.
     if: |
       !cancelled()
       && needs.validate.outputs.artifact_ready == 'true'
@@ -117,17 +108,20 @@ jobs:
           name: website-build
           path: website
 
-      - name: Deploy PR preview
-        # pnpm dlx fetches wrangler on demand — avoids a full workspace install
-        # just to get wrangler on PATH. Pin to major @4 to match the devDep in
-        # website/package.json and avoid silent v5+ drift.
-        # --allow-build list: wrangler pulls in workerd/esbuild/sharp, each of
-        # which wants to run a postinstall build; pnpm 10's default rejects
-        # those unless explicitly allowed.
-        run: pnpm --allow-build=workerd --allow-build=esbuild --allow-build=sharp dlx wrangler@4 deploy --name cg-pr-${{ github.event.pull_request.number }}
+      - name: Upload Worker version (preview)
+        id: upload
+        # Run a script to:
+        #  1. Upload a new website preview to the worker defined in wrangler.jsonc
+        #  2. Parse the URL of that preview and print it to the GitHub output
+        #  3. OR fail if the website isn't uploaded or the URL isn't parsed correctly
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          ../.github/scripts/upload-worker-preview.sh \
+            "pr-${PR_NUMBER}" "PR #${PR_NUMBER} @ ${HEAD_SHA}"
 
       - name: Find existing comment
         id: find-comment
@@ -145,7 +139,7 @@ jobs:
           body: |
             🚀 **Website Preview Deployed!**
 
-            Preview your changes at: https://cg-pr-${{ github.event.pull_request.number }}.${{ env.CLOUDFLARE_WORKERS_DOMAIN }}
+            Preview your changes at: ${{ steps.upload.outputs.url }}
 
-            This preview will be automatically deleted when the PR is closed.
+            Built from commit ${{ github.event.pull_request.head.sha }}
           edit-mode: replace

@@ -137,6 +137,15 @@ describe("ISODate Schema", () => {
     expect(parsed.getUTCSeconds()).toBe(0);
   });
 
+  it("should round-trip through JSON as a plain date", () => {
+    const parsed = ISODateSchema.parse("2025-01-01");
+    const serialized = JSON.parse(JSON.stringify(parsed));
+
+    expect(serialized).toBe("2025-01-01");
+    expect(ISODateSchema.parse(serialized)).toBeInstanceOf(Date);
+    expect(ISODateSchema.safeParse("2025-01-01T00:00:00.000Z").success).toBe(false);
+  });
+
   it("should handle edge dates", () => {
     // Leap year date
     const leapYear = "2024-02-29";
@@ -236,7 +245,7 @@ describe("ISOTime Schema", () => {
 
   it("should handle non-string input in preprocess", () => {
     // Test the else branch in preprocess (non-string input)
-    // Note: This will fail at the z.string().time() validation, but we're testing the preprocess branch
+    // Note: This will fail at the z.iso.time() validation, but we're testing the preprocess branch
     // The preprocess should return the value as-is if it's not a string
     expect(() => ISOTimeSchema.parse(123)).toThrow();
     expect(() => ISOTimeSchema.parse(null)).toThrow();

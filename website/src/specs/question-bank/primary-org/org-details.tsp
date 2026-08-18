@@ -17,9 +17,9 @@ namespace QuestionBank.OrgDetails;
   "x-mapping-from-cg",
   #{
     name: #{ field: "organizations.primary.name" },
-    ein: #{ field: "organizations.primary.ein" },
-    uei: #{ field: "organizations.primary.uei" },
-    duns: #{ field: "organizations.primary.duns" },
+    ein: #{ field: "organizations.primary.identifiers.org:us:ein.id" },
+    uei: #{ field: "organizations.primary.identifiers.org:us:uei.id" },
+    duns: #{ field: "organizations.primary.identifiers.org:xi:duns.id" },
     mission: #{ field: "organizations.primary.mission" },
     yearFounded: #{ field: "organizations.primary.yearFounded" },
     address: #{
@@ -51,9 +51,11 @@ namespace QuestionBank.OrgDetails;
     organizations: #{
       primary: #{
         name: #{ field: "name" },
-        ein: #{ field: "ein" },
-        uei: #{ field: "uei" },
-        duns: #{ field: "duns" },
+        identifiers: #{
+          `org:us:ein`: #{ id: #{ field: "ein" } },
+          `org:us:uei`: #{ id: #{ field: "uei" } },
+          `org:xi:duns`: #{ id: #{ field: "duns" } },
+        },
         mission: #{ field: "mission" },
         yearFounded: #{ field: "yearFounded" },
         addresses: #{
