@@ -50,13 +50,13 @@ jobs:
       # branch with the same name can't be substituted, and a nonexistent tag
       # fails the checkout outright.
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: refs/tags/${{ inputs.release_tag }}
 
       # Setup .npmrc file to publish to npm
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           registry-url: https://registry.npmjs.org
