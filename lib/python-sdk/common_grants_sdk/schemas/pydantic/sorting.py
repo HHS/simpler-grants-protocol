@@ -5,6 +5,8 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, Field, model_validator
 
+from .base import CAMEL_WIRE_CONFIG
+
 
 class SortOrder(str, Enum):
     """Sort order enumeration."""
@@ -18,18 +20,16 @@ class SortBase(BaseModel):
 
     sort_by: Union[str, None] = Field(
         ...,
-        alias="sortBy",
         description="The field to sort by",
         examples=["lastModifiedAt"],
     )
     custom_sort_by: Optional[str] = Field(
         default=None,
-        alias="customSortBy",
         description="Implementation-defined sort key",
         examples=["customField"],
     )
 
-    model_config = {"populate_by_name": True}
+    model_config = CAMEL_WIRE_CONFIG
 
 
 class SortQueryParams(SortBase):
@@ -37,7 +37,6 @@ class SortQueryParams(SortBase):
 
     sort_order: Optional[SortOrder] = Field(
         default=None,
-        alias="sortOrder",
         description="The order to sort by",
         examples=[SortOrder.ASC],
     )
@@ -48,7 +47,6 @@ class SortBodyParams(SortBase):
 
     sort_order: Optional[SortOrder] = Field(
         default=None,
-        alias="sortOrder",
         description="The order to sort by",
         examples=[SortOrder.ASC],
     )
@@ -59,7 +57,6 @@ class SortedResultsInfo(SortBase):
 
     sort_order: str = Field(
         ...,
-        alias="sortOrder",
         description="The order in which the results are sorted",
     )
     errors: Optional[list[str]] = Field(
@@ -90,17 +87,14 @@ class OppSorting(BaseModel):
     sort_by: OppSortBy = Field(
         ...,
         description="The field to sort by",
-        alias="sortBy",
     )
     sort_order: str = Field(
         default="desc",
         description="The sort order (asc or desc)",
-        alias="sortOrder",
     )
     custom_sort_by: Optional[str] = Field(
         default=None,
         description="The custom field to sort by when sortBy is 'custom'",
-        alias="customSortBy",
     )
 
     @model_validator(mode="after")
@@ -111,4 +105,4 @@ class OppSorting(BaseModel):
             raise ValueError(e)
         return self
 
-    model_config = {"populate_by_name": True}
+    model_config = CAMEL_WIRE_CONFIG

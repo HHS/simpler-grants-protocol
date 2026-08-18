@@ -36,7 +36,6 @@ class OppStatus(CommonGrantsBaseModel):
     )
     custom_value: Optional[str] = Field(
         default=None,
-        alias="customValue",
         description="A custom status value",
     )
     description: Optional[str] = Field(

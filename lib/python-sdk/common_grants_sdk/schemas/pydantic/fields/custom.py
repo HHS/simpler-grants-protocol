@@ -30,9 +30,10 @@ class CustomField(CommonGrantsBaseModel, Generic[V]):
     Generic over its value type ``V`` (default ``Any``): the bare ``CustomField``
     keeps the protocol's untyped-value behavior, while ``CustomField[int]`` (or a
     Pydantic model) gives plugin authors and consumers a concrete, inspectable
-    ``value`` type. ``populate_by_name`` plus ``validation_alias``/
-    ``serialization_alias`` keep JSON I/O camelCase (``fieldType``) while
-    snake_case field-name construction (``CustomField(field_type=...)``) type-checks.
+    ``value`` type. Wire naming comes from the base alias generator (camelCase
+    ``fieldType`` on the wire, ``CustomField(field_type=...)`` in code); the one
+    irregular wire name, ``schema_url`` -> ``"schema"``, keeps an explicit
+    field-level alias.
     """
 
     model_config = ConfigDict(populate_by_name=True)
@@ -44,8 +45,6 @@ class CustomField(CommonGrantsBaseModel, Generic[V]):
     )
     field_type: CustomFieldType = Field(
         ...,
-        validation_alias="fieldType",
-        serialization_alias="fieldType",
         description="The JSON schema type to use when de-serializing the `value` field",
     )
     schema_url: Optional[HttpUrl] = Field(
