@@ -50,12 +50,12 @@ jobs:
       # branch with the same name can't be substituted, and a nonexistent tag
       # fails the checkout outright.
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: refs/tags/${{ inputs.release_tag }}
 
       - name: Install Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
