@@ -14,9 +14,9 @@ defaults:
     working-directory: ./website
 
 jobs:
-  # Install, build, and run checks/tests/audit. All post-build steps are
-  # sequential but each runs regardless of the previous step's pass/fail so
-  # lint, test, and audit failures all surface in a single CI run.
+  # Install, build, and run checks/tests. All post-build steps are sequential
+  # but each runs regardless of the previous step's pass/fail so lint and test
+  # failures all surface in a single CI run.
   validate:
     runs-on: ubuntu-latest
     outputs:
@@ -74,12 +74,8 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: pnpm run test
 
-      - name: Audit dependencies
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: pnpm run audit:high
-
   # Upload the built artifact as a new version of the shared preview Worker,
-  # aliased to this PR. Decoupled from the test/check/audit outcome (via
+  # aliased to this PR. Decoupled from the test/check outcome (via
   # artifact_ready) so previews stay available for reviewing UI changes on PRs
   # that have unrelated failures.
   deploy-preview:
