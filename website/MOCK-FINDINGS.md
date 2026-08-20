@@ -6,12 +6,74 @@ as the standalone-Worker experiment ([#1077], Option 3A).
 
 Both experiments are throwaway. The deliverable is this comparison, not merged code.
 
+> **Superseded 2026-08-19** — the team decided to migrate the site to Cloudflare,
+> which triggers the carve-out at the end of [Recommendation](#recommendation). See
+> the [Addendum](#addendum-the-2026-08-19-migration-decision). The analysis below is
+> kept as written.
+
 **Recommendation: ship 3A, the standalone Worker.** The reasoning is in
 [Recommendation](#recommendation); the short version is that 3B's central premise —
 that the website's existing harness would absorb most of the Worker's surface area —
 did not survive measurement, and 3B additionally forces the GitHub Pages →
 Cloudflare hosting migration that [ADR-0003] flags as its real cost. GitHub Pages runs
 no code, so no choice of adapter can serve the endpoint from it.
+
+## Addendum: the 2026-08-19 migration decision
+
+**The recommendation is superseded.** At the 2026-08-19 sprint planning and the
+follow-up Kari/Billy 1:1, the team decided there is no concern about moving the
+website off GitHub Pages onto Cloudflare. That triggers this document's own carve-out,
+stated at the end of [Recommendation](#recommendation):
+
+> If the team independently decides to migrate the docs site to Cloudflare, this
+> calculus changes and 3B becomes the better shape.
+
+The fact that changed is the analysis's fixed point: every section below treats
+GitHub Pages as the immovable production host. The migration is now planned work —
+parallel Cloudflare deploy on every merge, verification on `beta.commongrants.org`,
+DNS cutover of the apex, then retiring the Pages deploy — so reason 2's migration
+cost stops counting against 3B, and this branch becomes the launch vehicle rather
+than a closed experiment.
+
+Knock-on corrections, deliberately left uncorrected in the body (the analysis
+stands as a record of what was true under the GH-Pages assumption):
+
+- **Surface area (reason 1):** the 14-page redirect workaround is backed out of
+  this branch — GH Pages compatibility is no longer a requirement, and on
+  Cloudflare the adapter's generated `dist/client/_redirects` serves real 301s,
+  strictly better than the meta-refresh pages
+  ([The redirect fix](#the-redirect-fix) said as much). The guard test survives,
+  re-pointed at `_redirects`. The same revert drops `cd-deploy-website.yml` from
+  3B's column, so "existing workflows edited" is 1 (+1 shared script), matching 3A
+  rather than doubling it. Dropping the 14 pages and that workflow takes the
+  comparison from 41-vs-31 to **26-vs-31**, un-inverting it.
+- **Deployment overhead item 5** documents a constraint that no longer binds, as do
+  [How item 5 was established](#how-item-5-was-established-without-deploying-to-production)
+  and [The redirect fix](#the-redirect-fix); those are historical.
+  [Why no adapter can serve the endpoint from GitHub Pages](#why-no-adapter-can-serve-the-endpoint-from-github-pages)
+  is **not** superseded — it is the structural reason a migration was a prerequisite
+  at all, and it stays true.
+- **Productionizing estimate:** the last row (GH Pages → Cloudflare migration,
+  "separate project, 1–2 weeks") is now scheduled team work, not a cost of
+  choosing 3B; "Redirect parity for GH Pages — done" becomes "reverted — no longer
+  needed."
+- **[What a cutover requires](#what-a-github-pages--cloudflare-cutover-requires)**
+  is now the actual plan, and two of its worries resolved in the 1:1: the repo's
+  existing `CLOUDFLARE_*` secrets deploy to the right Worker (no new account or
+  token needed), and production shares the `common-grants` Worker with PR
+  previews — a deploy is a versions-upload plus a traffic shift, so
+  post-migration every PR preview is a not-yet-deployed version of main.
+
+What the decision does **not** change: reasons 3 and 4 (host middleware in front
+of the kernel; the mock's feedback loop tied to the website build) remain real
+costs of the integrated shape, and `security.checkOrigin`'s 403-vs-404 divergence
+on `PUT`/`DELETE` requests without an `Origin` header becomes permanent
+production behavior. The decision accepts them.
+
+Status: the branch has been cleaned to its post-decision shape — the workaround
+is backed out and the boundary drawn, in `5c84b57`. It merges only after the
+migration lands; a merge today would break the still-live GH Pages deploy, which
+is exactly the sequencing risk the migration plan exists to avoid.
 
 ## What was built
 
@@ -375,6 +437,9 @@ The first four rows are the same for either shape, give or take the redirect row
 last row is what choosing 3B commits to, and it dwarfs everything above it.
 
 ## Recommendation
+
+> **Superseded 2026-08-19** — see the
+> [Addendum](#addendum-the-2026-08-19-migration-decision).
 
 **Ship 3A, the standalone Worker.** Keep [#1077]'s PR; close this one unmerged.
 
