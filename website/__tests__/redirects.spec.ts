@@ -1,52 +1,66 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 import type { RedirectConfig } from "astro";
 import { Paths } from "@/lib/schema/paths";
-import { getFormIds } from "@/lib/forms";
 import astroConfig from "../astro.config.mjs";
 
 /**
- * Regression guard for #1078-T2.
+ * Regression guard for #1078-T5.
  *
- * Adding the `@astrojs/cloudflare` adapter unconditionally sets
+ * The `@astrojs/cloudflare` adapter unconditionally sets
  * `build: { redirects: false }` (see `@astrojs/cloudflare/dist/index.js:180-182`),
- * so Astro stops writing the meta-refresh HTML page it used to generate for
- * every entry in `astro.config.mjs`'s `redirects` map
- * (`astro/dist/core/build/generate.js:332` is the branch that now skips it) and
- * instead only emits a Cloudflare-specific `dist/client/_redirects` file.
- * GitHub Pages — which serves production today via
- * `.github/workflows/cd-deploy-website.yml` — has no `_redirects` support, so
- * every configured redirect silently began 404ing there, and nothing in the
- * suite noticed.
+ * so Astro never writes the meta-refresh HTML page it would otherwise generate
+ * for every entry in `astro.config.mjs`'s `redirects` map
+ * (`astro/dist/core/build/generate.js:332` is the branch that skips it).
+ * Instead the adapter emits a single Cloudflare-specific `dist/client/_redirects`
+ * file, translating each configured pattern into a whitespace-delimited
+ * `source destination status` line.
  *
- * The fix is committed meta-refresh HTML under `website/public/<source>/index.html`
- * for each redirect source: files under `public/` are copied verbatim and
- * bypass Astro's redirect handling entirely, so `build.redirects: false` cannot
- * suppress them. This test reads the redirect map straight out of
- * `astro.config.mjs` and checks the *built* output under `dist/client` for
- * exactly that artifact, so adding a new redirect to the config without a
- * matching `public/` page fails here instead of silently 404ing in production.
+ * GitHub Pages has no `_redirects` support, so it cannot read that file — which
+ * is exactly why this PR's merge is gated on the Cloudflare Pages/Workers
+ * migration rather than continuing to serve from GitHub Pages. This test reads
+ * the redirect map straight out of `astro.config.mjs` and checks the *built*
+ * `dist/client/_redirects` for exactly the lines it should have produced, so a
+ * redirect added to the config but dropped by the adapter's output fails here
+ * instead of silently 404ing in production.
+ *
+ * Requires a build: `pnpm --filter website build` writes the file under test.
  */
 
 interface AstroConfigWithRedirects {
   redirects: Record<string, RedirectConfig>;
 }
 
+interface RedirectRule {
+  source: string;
+  destination: string;
+  status: string;
+}
+
 function destinationOf(value: RedirectConfig): string {
   return typeof value === "string" ? value : value.destination;
 }
 
-function extractRefreshTarget(html: string): string | undefined {
-  const metaTag = html.match(
-    /<meta[^>]*http-equiv=["']refresh["'][^>]*>/i,
-  )?.[0];
-  return metaTag?.match(/content=["']\s*\d+\s*;\s*url=([^"']+)["']/i)?.[1];
+function parseRedirectsFile(content: string): RedirectRule[] {
+  return content
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const [source, destination, status] = line.split(/\s+/);
+      return { source, destination, status };
+    });
 }
 
 const { redirects } = astroConfig as AstroConfigWithRedirects;
 
-const DIST_CLIENT_DIR = path.join(Paths.WEBSITE_ROOT, "dist", "client");
+const REDIRECTS_PATH = path.join(
+  Paths.WEBSITE_ROOT,
+  "dist",
+  "client",
+  "_redirects",
+);
 
 // `/forms-new/[slug]` is the one dynamic pattern (8 configured redirects, 7
 // static); it's handled separately below.
@@ -54,7 +68,13 @@ const staticRedirects = Object.entries(redirects).filter(
   ([source]) => !source.includes("["),
 );
 
-describe("redirect meta-refresh pages", () => {
+describe("adapter-emitted _redirects", () => {
+  let rules: RedirectRule[];
+
+  beforeAll(() => {
+    rules = parseRedirectsFile(fs.readFileSync(REDIRECTS_PATH, "utf-8"));
+  });
+
   // `it.each([])` registers zero cases and reports green, so an emptied or
   // shrunken `redirects` map would make every assertion below silently vanish —
   // the same "nothing noticed" failure this suite exists to prevent. Pin the
@@ -64,48 +84,56 @@ describe("redirect meta-refresh pages", () => {
     expect(redirects["/forms-new/[slug]"]).toBeDefined();
   });
 
+  // The parsed-rule count is the same guard one layer down: a file the adapter
+  // emitted empty, or one this parser fails to split into rules, would leave
+  // every `find` below returning `undefined` for a reason unrelated to the
+  // redirects themselves. 7 static patterns are doubled (trailing-slash and
+  // bare) and the dynamic one is emitted once, so 7 * 2 + 1.
+  it("pins the total line count so a parse that silently yields nothing can't pass vacuously", () => {
+    expect(rules.length).toBe(15);
+  });
+
   it.each(staticRedirects)(
-    "%s serves a meta-refresh page matching its configured destination",
+    "%s is emitted with both a trailing-slash and bare variant pointing at its configured destination",
     (source, value) => {
       const destination = destinationOf(value);
-      const indexPath = path.join(DIST_CLIENT_DIR, source, "index.html");
 
-      expect(fs.existsSync(indexPath)).toBe(true);
+      const withTrailingSlash = rules.find(
+        (rule) => rule.source === `${source}/`,
+      );
+      const bare = rules.find((rule) => rule.source === source);
 
-      const html = fs.readFileSync(indexPath, "utf-8");
-      expect(html).toContain('http-equiv="refresh"');
-      expect(extractRefreshTarget(html)).toBe(destination);
+      expect(withTrailingSlash).toEqual({
+        source: `${source}/`,
+        destination,
+        status: "301",
+      });
+      expect(bare).toEqual({ source, destination, status: "301" });
     },
   );
 
-  // The `/forms-new/[slug]` pattern is dynamic, so no finite set of static pages
-  // can cover the whole space `[slug]` could match. What it can cover is every
-  // slug the site actually builds a form page for, which is the only set the old
-  // `/forms-new/<slug>` URLs could ever have pointed at.
-  it("covers every built form slug under the dynamic /forms-new/[slug] redirect", () => {
+  // The adapter rewrites Astro's `[slug]` placeholder to Cloudflare's `:slug`
+  // form and emits a single line rather than one per built page, since
+  // `_redirects` patterns are matched at request time. The destination also
+  // gains an `/index.html` suffix, from Astro's directory build format for the
+  // `/forms/[slug]` page the redirect ultimately targets — a naive translation
+  // of the config would miss both transforms.
+  it("rewrites the dynamic /forms-new/[slug] redirect to :slug with the directory build's /index.html suffix", () => {
     const sourceTemplate = "/forms-new/[slug]";
     const destinationTemplate = destinationOf(redirects[sourceTemplate]);
 
-    // Taken from `getFormIds()` — the same list `src/pages/forms/[slug].astro`
-    // feeds to `getStaticPaths` — rather than scraped from directory names under
-    // `dist/client/forms`. Scraping picks up anything else that happens to live
-    // there, including the `/forms/library` redirect page this very fix adds.
-    const formSlugs = getFormIds();
+    const expectedSource = sourceTemplate.replace("[slug]", ":slug");
+    const expectedDestination = `${destinationTemplate.replace(
+      "[slug]",
+      ":slug",
+    )}/index.html`;
 
-    expect(formSlugs.length).toBeGreaterThan(0);
+    const rule = rules.find((r) => r.source === expectedSource);
 
-    for (const slug of formSlugs) {
-      const indexPath = path.join(
-        DIST_CLIENT_DIR,
-        sourceTemplate.replace("[slug]", slug),
-        "index.html",
-      );
-      const destination = destinationTemplate.replace("[slug]", slug);
-
-      expect(fs.existsSync(indexPath)).toBe(true);
-
-      const html = fs.readFileSync(indexPath, "utf-8");
-      expect(extractRefreshTarget(html)).toBe(destination);
-    }
+    expect(rule).toEqual({
+      source: expectedSource,
+      destination: expectedDestination,
+      status: "301",
+    });
   });
 });
