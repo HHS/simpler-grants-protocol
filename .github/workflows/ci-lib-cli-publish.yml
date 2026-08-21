@@ -32,6 +32,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build core library
+        id: build_core
         run: pnpm --filter @common-grants/core run build
 
       - name: Run checks
@@ -47,10 +48,16 @@ jobs:
       # npm runs outside the checkout because the root package.json's npm
       # `workspaces: ["lib/**"]` glob also matches the built
       # `lib/changelog-emitter/dist/`, which npm rejects as a duplicate package.
+      # Packaging is independent of lint/format/type checks above, so gate it on
+      # its build prerequisite and surface both failure classes in one CI run.
       - name: Pack package
+        id: pack
+        if: ${{ !cancelled() && steps.build_core.outcome == 'success' }}
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
       - name: Install npm matching the release workflow
+        id: npm_setup
+        if: ${{ !cancelled() && steps.pack.outcome == 'success' }}
         working-directory: ${{ runner.temp }}
         run: npm install -g "npm@^11.5.1"
 
@@ -62,5 +69,6 @@ jobs:
       # still fail a release that PR CI passed. --dry-run keeps anything here
       # from reaching the registry.
       - name: Dry run publish
+        if: ${{ !cancelled() && steps.pack.outcome == 'success' && steps.npm_setup.outcome == 'success' }}
         working-directory: ${{ runner.temp }}
         run: npm publish --dry-run --force --access public package.tgz
