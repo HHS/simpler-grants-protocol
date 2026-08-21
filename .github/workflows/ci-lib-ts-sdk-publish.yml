@@ -32,7 +32,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Mirrors the release workflow's packaging and client: pnpm packs
-      # (resolving the workspace-local specifiers), then npm checks the tarball
+      # (resolving the `catalog:` specifiers), then npm checks the tarball
       # is publishable — it reads, its manifest parses, the version is valid
       # semver, the dist-tag is legal. Deeper validation lives behind the real
       # publish, and --provenance cannot run without the OIDC token this
@@ -48,12 +48,13 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: npm install -g "npm@^11.5.1"
 
-      # --force drops npm's registry-state checks: version already published
-      # (always true on a PR, since the bump lands in the Release PR), version
-      # lower than the current latest, and prerelease published without --tag.
-      # Without it every PR here fails. Those checks still guard the real
-      # publish, which passes no --force, so they can still fail a release that
-      # PR CI passed. --dry-run keeps anything here from reaching the registry.
+      # --force drops three of npm's publish checks: two registry-state ones —
+      # version already published (always true on a PR, since the bump lands in
+      # the Release PR) and version lower than the current latest — plus the
+      # local prerelease-needs---tag check. Without it every PR here fails. All
+      # three still guard the real publish, which passes no --force, so they can
+      # still fail a release that PR CI passed. --dry-run keeps anything here
+      # from reaching the registry.
       - name: Dry run publish
         working-directory: ${{ runner.temp }}
         run: npm publish --dry-run --force --access public package.tgz

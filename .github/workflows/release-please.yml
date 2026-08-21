@@ -51,22 +51,25 @@ jobs:
       py_sdk_released: ${{ steps.release.outputs['lib/python-sdk--release_created'] }}
       py_sdk_tag: ${{ steps.release.outputs['lib/python-sdk--tag_name'] }}
 
-  # Publishes fan out from the outputs above. Tags and releases created with
-  # GITHUB_TOKEN do not trigger other workflows, so the deploys must be called
-  # from this run rather than via `on: release`.
+  # On push, publishes fan out from the outputs above. Tags and releases created
+  # with GITHUB_TOKEN do not trigger other workflows, so the deploys must be
+  # called from this run rather than via `on: release`.
   #
   # Each npm job serves both paths: the release outputs on push, the dispatch
   # inputs on a manual republish. Since release-please is skipped on dispatch,
   # the conditions need a status function or GitHub would skip the publish along
-  # with it — hence `!cancelled()`, paired with an explicit result check so a
-  # *failed* release still stops the push path.
+  # with it — hence `!cancelled()`. The `result` check pairs with it so a release
+  # that failed *after* emitting one package's outputs still cannot publish.
+  #
+  # Each package name below has to match an option in the dispatch input; a
+  # selection no job claims would run green having published nothing.
   #
   # The npm deploys authenticate over OIDC, and a called workflow cannot hold a
   # permission its caller lacks — the workflow-level block above leaves id-token
   # at none — so each npm publish job grants that scope itself.
   publish-core:
     needs: release-please
-    if: >-
+    if: |
       !cancelled()
       && (
         (github.event_name == 'push'
@@ -84,7 +87,7 @@ jobs:
 
   publish-cli:
     needs: release-please
-    if: >-
+    if: |
       !cancelled()
       && (
         (github.event_name == 'push'
@@ -102,7 +105,7 @@ jobs:
 
   publish-ts-sdk:
     needs: release-please
-    if: >-
+    if: |
       !cancelled()
       && (
         (github.event_name == 'push'

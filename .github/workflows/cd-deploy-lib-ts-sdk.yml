@@ -67,10 +67,10 @@ jobs:
       - name: Run checks
         run: pnpm --filter @common-grants/sdk run checks
 
-      # pnpm resolves the workspace-local specifiers (`catalog:`, `workspace:`)
-      # while packing. npm would ship them verbatim, and a `catalog:` range left
-      # in a published dependency field breaks every install — so pnpm builds
-      # the tarball and npm only uploads it.
+      # pnpm resolves this workspace's `catalog:` specifiers while packing. npm
+      # would ship them verbatim, and a `catalog:` range left in a published
+      # dependency field breaks every install — so pnpm builds the tarball and
+      # npm only uploads it.
       - name: Pack package
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
@@ -86,12 +86,13 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: npm install -g "npm@^11.5.1"
 
-      # Below either floor the OIDC exchange is skipped and npm falls back to the
-      # placeholder credential setup-node left in .npmrc, so the job fails at the
-      # registry with nothing pointing at the real cause. `.nvmrc` is not
-      # release-scoped, so assert the Node floor rather than trusting it. This
-      # makes a floor violation legible at release time; it does not catch one
-      # earlier, since only the release workflows run this step.
+      # Below the npm floor there is no OIDC code path at all: npm falls back to
+      # the placeholder credential setup-node left in .npmrc and fails at the
+      # registry with nothing pointing at the real cause. The Node floor is
+      # asserted because npm documents it, not because npm's own code gates on
+      # it. `.nvmrc` is not release-scoped, so assert both rather than trusting
+      # them. This makes a violation legible at release time; it does not catch
+      # one earlier, since only the release workflows run this step.
       - name: Check publish runtime
         working-directory: ${{ runner.temp }}
         run: |

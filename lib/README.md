@@ -75,7 +75,11 @@ Merging a package's Release PR:
 
 ### Re-running a failed publish
 
-The per-package deploy workflows (`cd-deploy-lib-*.yml`) keep a `workflow_dispatch` trigger. To retry a publish for an existing tag, run the matching workflow from the **Actions** tab and enter the release tag.
+To retry an npm publish for an existing tag, dispatch `release-please.yml` from the **Actions** tab, pick the package, and enter the release tag. npm binds each package's trusted publisher to the *calling* workflow's filename, so the three npm deploy workflows have no dispatch trigger of their own — running one directly would not authenticate.
+
+That dispatch publishes only. It does not re-run Release Please, so it cannot create or modify a release; the Release PR flow above is the only way a release is cut.
+
+The Python SDK is unaffected: `cd-deploy-lib-pysdk.yml` keeps its own `workflow_dispatch`, because PyPI auth is a repository secret rather than a caller-bound trusted publisher.
 
 ---
 
