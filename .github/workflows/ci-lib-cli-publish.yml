@@ -34,23 +34,19 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build core library
-        id: build_core
         run: pnpm --filter @common-grants/core run build
 
       - name: Run checks
         run: pnpm --filter @common-grants/cli run checks
 
       # Match release packaging: pnpm resolves workspace `catalog:` specs into
-      # the tarball. Gate packing on the core build so checks report independently.
+      # the tarball.
       - name: Pack package
-        id: pack
-        if: ${{ !cancelled() && steps.build_core.outcome == 'success' }}
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
       # Run npm from runner.temp to avoid the workspace duplicate. --force skips
       # checks that reject current PR versions; real publish keeps them, while
       # --dry-run prevents upload.
       - name: Dry run publish
-        if: ${{ !cancelled() && steps.pack.outcome == 'success' }}
         working-directory: ${{ runner.temp }}
         run: npm publish --dry-run --force --access public package.tgz
