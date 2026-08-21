@@ -23,7 +23,9 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: .nvmrc
+          # Node 24 supplies the same npm 11 publishing client used by releases.
+          node-version: 24
+          package-manager-cache: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -55,12 +57,6 @@ jobs:
         if: ${{ !cancelled() && steps.build_core.outcome == 'success' }}
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
-      - name: Install npm matching the release workflow
-        id: npm_setup
-        if: ${{ !cancelled() && steps.pack.outcome == 'success' }}
-        working-directory: ${{ runner.temp }}
-        run: npm install -g "npm@^11.5.1"
-
       # --force drops three of npm's publish checks: two registry-state ones —
       # version already published (always true on a PR, since the bump lands in
       # the Release PR) and version lower than the current latest — plus the
@@ -69,6 +65,6 @@ jobs:
       # still fail a release that PR CI passed. --dry-run keeps anything here
       # from reaching the registry.
       - name: Dry run publish
-        if: ${{ !cancelled() && steps.pack.outcome == 'success' && steps.npm_setup.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.pack.outcome == 'success' }}
         working-directory: ${{ runner.temp }}
         run: npm publish --dry-run --force --access public package.tgz

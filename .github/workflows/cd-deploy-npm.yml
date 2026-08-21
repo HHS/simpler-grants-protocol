@@ -65,12 +65,15 @@ jobs:
         with:
           ref: refs/tags/${{ inputs.release_tag }}
 
+      # Node 24 supplies the npm 11 client trusted publishing requires. Normal
+      # package CI continues to exercise the repository's Node 22 baseline.
       # registry-url pins the publish registry; OIDC supplies the credential.
-      - name: Install Node.js
+      - name: Install Node.js publishing runtime
         uses: actions/setup-node@v6
         with:
-          node-version-file: .nvmrc
+          node-version: 24
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -89,40 +92,8 @@ jobs:
         working-directory: ${{ inputs.directory }}
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
-      # Node 22 still bundles npm 10, so install the npm that supports trusted
-      # publishing. Pinned to the 11 line: a future npm major must not silently
-      # change the release runtime.
-      #
-      # Every npm step runs from outside the checkout. The root package.json
-      # declares npm `workspaces: ["lib/**"]`, whose glob also matches the built
-      # `lib/changelog-emitter/dist/`, and npm aborts on the duplicate package
-      # name before it resolves any config.
-      - name: Install npm with trusted publishing support
-        working-directory: ${{ runner.temp }}
-        run: npm install -g "npm@^11.5.1"
-
-      # Below the npm floor there is no OIDC code path at all: npm falls back to
-      # the placeholder credential setup-node left in .npmrc and fails at the
-      # registry with nothing pointing at the real cause. The Node floor is
-      # asserted because npm documents it, not because npm's own code gates on
-      # it. `.nvmrc` is not release-scoped, so assert both rather than trusting
-      # them. This makes a violation legible at release time; it does not catch
-      # one earlier, since only the release workflows run this step.
-      - name: Check publish runtime
-        working-directory: ${{ runner.temp }}
-        run: |
-          node_version="$(node -v | tr -d v)"
-          npm_version="$(npm -v)"
-          echo "node $node_version, npm $npm_version"
-          if ! printf '22.14.0\n%s\n' "$node_version" | sort -VC; then
-            echo "::error::node $node_version is below the 22.14.0 that npm trusted publishing requires"
-            exit 1
-          fi
-          if ! printf '11.5.1\n%s\n' "$npm_version" | sort -VC; then
-            echo "::error::npm $npm_version is below the 11.5.1 that npm trusted publishing requires"
-            exit 1
-          fi
-
+      # npm runs outside the checkout because the root `workspaces` glob also
+      # matches the built changelog emitter and npm rejects the duplicate name.
       # --provenance is redundant under trusted publishing, where npm attests
       # automatically, but pinning it keeps attestations from depending on that
       # default staying put.
