@@ -53,7 +53,7 @@ jobs:
         with:
           ref: refs/tags/${{ inputs.release_tag }}
 
-      # Setup .npmrc file to publish to npm
+      # registry-url pins the publish registry; OIDC supplies the credential.
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
@@ -69,24 +69,40 @@ jobs:
       - name: Run checks
         run: pnpm --filter @common-grants/sdk run checks
 
-      # pnpm resolves this workspace's `catalog:` and `workspace:` specifiers
-      # while packing; npm would publish them verbatim and break every install.
-      # So pnpm builds the tarball and npm only uploads it.
+      # pnpm resolves the workspace-local specifiers (`catalog:`, `workspace:`)
+      # while packing. npm would ship them verbatim, and a `catalog:` range left
+      # in `dependencies` breaks every install — so pnpm builds the tarball and
+      # npm only uploads it.
       - name: Pack package
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
-      # Trusted publishing needs npm >= 11.5.1 and Node >= 22.14.0, and Node 22
-      # still bundles npm 10. Pinned to the 11 line so a future npm major cannot
-      # silently change the release runtime.
+      # Node 22 still bundles npm 10, so install the npm that supports trusted
+      # publishing. Pinned to the 11 line: a future npm major must not silently
+      # change the release runtime.
       #
-      # Every npm step runs from outside the checkout: the root package.json
+      # Every npm step runs from outside the checkout. The root package.json
       # declares npm `workspaces: ["lib/**"]`, whose glob also matches the built
       # `lib/changelog-emitter/dist/`, and npm aborts on the duplicate package
       # name before it resolves any config.
       - name: Install npm with trusted publishing support
         working-directory: ${{ runner.temp }}
-        run: npm install --global "npm@^11.5.1"
+        run: npm install -g "npm@^11.5.1"
 
+      # Below either floor npm falls back to token auth and fails with a bare
+      # ENEEDAUTH that says nothing about OIDC. `.nvmrc` is not release-scoped,
+      # so assert the Node floor rather than trusting it.
+      - name: Check publish runtime
+        working-directory: ${{ runner.temp }}
+        run: |
+          node -v && npm -v
+          printf '22.14.0\n%s\n' "$(node -v | tr -d v)" | sort -VC \
+            || { echo "::error::Node $(node -v) is below the 22.14.0 that npm trusted publishing requires"; exit 1; }
+          printf '11.5.1\n%s\n' "$(npm -v)" | sort -VC \
+            || { echo "::error::npm $(npm -v) is below the 11.5.1 that npm trusted publishing requires"; exit 1; }
+
+      # --provenance is redundant under trusted publishing, where npm attests
+      # automatically, but pinning it keeps attestations from depending on that
+      # default staying put.
       - name: Publish to npm
         working-directory: ${{ runner.temp }}
         run: npm publish --provenance --access public package.tgz
