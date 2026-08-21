@@ -3,11 +3,8 @@ name: "Release Please"
 on:
   push:
     branches: [main]
-  # Manual publish fallback for an already-tagged release. npm binds each
-  # package's trusted publisher to the *calling* workflow's filename, so a
-  # republish has to be dispatched from here — the per-package deploy workflows
-  # no longer accept a direct dispatch, which npm would attribute to the wrong
-  # caller.
+  # npm authenticates trusted publishers against the calling workflow filename,
+  # so manual npm retries dispatch here instead of from the reusable deploy.
   workflow_dispatch:
     inputs:
       package:
@@ -28,8 +25,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Skipped on a manual dispatch: that path republishes an existing tag and must
-  # not create or modify a release.
   release-please:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -51,22 +46,10 @@ jobs:
       py_sdk_released: ${{ steps.release.outputs['lib/python-sdk--release_created'] }}
       py_sdk_tag: ${{ steps.release.outputs['lib/python-sdk--tag_name'] }}
 
-  # On push, publishes fan out from the outputs above. Tags and releases created
-  # with GITHUB_TOKEN do not trigger other workflows, so the deploys must be
-  # called from this run rather than via `on: release`.
-  #
-  # Each npm job serves both paths: the release outputs on push, the dispatch
-  # inputs on a manual republish. Since release-please is skipped on dispatch,
-  # the conditions need a status function or GitHub would skip the publish along
-  # with it — hence `!cancelled()`. The `result` check pairs with it so a release
-  # that failed *after* emitting one package's outputs still cannot publish.
-  #
-  # Each package name below has to match an option in the dispatch input; a
-  # selection no job claims would run green having published nothing.
-  #
-  # The npm deploys authenticate over OIDC, and a called workflow cannot hold a
-  # permission its caller lacks — the workflow-level block above leaves id-token
-  # at none — so each npm publish job grants that scope itself.
+  # GITHUB_TOKEN tags do not trigger workflows, so deploys are called here.
+  # !cancelled() passes the skipped release job on retry; result blocks a failed
+  # push. Keep dispatch choices aligned with predicates. Callers grant OIDC
+  # because reusable workflows cannot elevate permissions.
   publish-core:
     needs: release-please
     if: |

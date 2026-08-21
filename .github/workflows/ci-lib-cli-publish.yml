@@ -40,30 +40,16 @@ jobs:
       - name: Run checks
         run: pnpm --filter @common-grants/cli run checks
 
-      # Mirrors the release workflow's packaging and client: pnpm packs
-      # (resolving the `catalog:` specifiers), then npm checks the tarball
-      # is publishable — it reads, its manifest parses, the version is valid
-      # semver, the dist-tag is legal. Deeper validation lives behind the real
-      # publish, and --provenance cannot run without the OIDC token this
-      # workflow deliberately does not get.
-      #
-      # npm runs outside the checkout because the root package.json's npm
-      # `workspaces: ["lib/**"]` glob also matches the built
-      # `lib/changelog-emitter/dist/`, which npm rejects as a duplicate package.
-      # Packaging is independent of lint/format/type checks above, so gate it on
-      # its build prerequisite and surface both failure classes in one CI run.
+      # Match release packaging: pnpm resolves workspace `catalog:` specs into
+      # the tarball. Gate packing on the core build so checks report independently.
       - name: Pack package
         id: pack
         if: ${{ !cancelled() && steps.build_core.outcome == 'success' }}
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
-      # --force drops three of npm's publish checks: two registry-state ones —
-      # version already published (always true on a PR, since the bump lands in
-      # the Release PR) and version lower than the current latest — plus the
-      # local prerelease-needs---tag check. Without it every PR here fails. All
-      # three still guard the real publish, which passes no --force, so they can
-      # still fail a release that PR CI passed. --dry-run keeps anything here
-      # from reaching the registry.
+      # Run npm from runner.temp to avoid the workspace duplicate. --force skips
+      # checks that reject current PR versions; real publish keeps them, while
+      # --dry-run prevents upload.
       - name: Dry run publish
         if: ${{ !cancelled() && steps.pack.outcome == 'success' }}
         working-directory: ${{ runner.temp }}

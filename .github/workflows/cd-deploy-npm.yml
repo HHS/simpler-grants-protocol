@@ -1,12 +1,8 @@
 name: "CD - Deploy npm Package"
 
 on:
-  # Only ever called by release-please.yml — for a release it just created, or
-  # for a republish dispatched there. This file has no dispatch entry point of
-  # its own: npm binds the trusted publisher to the calling workflow's filename,
-  # so a direct dispatch would advertise a fallback that cannot authenticate.
-  # The callee's own filename is invisible to npm, so all three npm packages
-  # share this one.
+  # npm authenticates the caller, not this reusable callee. release-please.yml
+  # owns release/retry entry points; this callee serves all npm packages.
   workflow_call:
     inputs:
       package:
@@ -43,12 +39,8 @@ jobs:
       RELEASE_TAG: ${{ inputs.release_tag }}
 
     steps:
-      # Rejects another package's tag or a malformed version. release-please's
-      # own tag always passes; this is the guard on the tag a human typed into
-      # the manual republish dispatch, and on that dispatch picking a package
-      # whose tag belongs to a different one.
-      # Runs before checkout (in the bare workspace) so nothing ever touches
-      # content from an unvalidated ref.
+      # Validate manual retry tags against the selected package before checkout,
+      # so untrusted ref content never enters the workspace.
       - name: Validate release tag
         run: |
           tag_pattern="^${PACKAGE}@[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.+-]+)?$"
@@ -57,9 +49,7 @@ jobs:
             exit 1
           fi
 
-      # The refs/tags/ qualifier pins the checkout to the tag namespace — a
-      # branch with the same name can't be substituted, and a nonexistent tag
-      # fails the checkout outright.
+      # Restrict checkout to tag refs; a same-named branch cannot satisfy it.
       - name: Checkout code
         uses: actions/checkout@v6
         with:
@@ -84,19 +74,14 @@ jobs:
       - name: Run checks
         run: pnpm --filter "$PACKAGE" run checks
 
-      # pnpm resolves this workspace's `catalog:` specifiers while packing. npm
-      # would ship them verbatim, and a `catalog:` range left in a published
-      # dependency field breaks every install — so pnpm builds the tarball and
-      # npm only uploads it.
+      # Pack with pnpm so workspace `catalog:` specs are resolved before npm
+      # uploads the tarball.
       - name: Pack package
         working-directory: ${{ inputs.directory }}
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
-      # npm runs outside the checkout because the root `workspaces` glob also
-      # matches the built changelog emitter and npm rejects the duplicate name.
-      # --provenance is redundant under trusted publishing, where npm attests
-      # automatically, but pinning it keeps attestations from depending on that
-      # default staying put.
+      # Publish from runner.temp to avoid npm's root-workspace duplicate-package
+      # error. Trusted publishing generates provenance; keep the flag explicit.
       - name: Publish to npm
         working-directory: ${{ runner.temp }}
         run: npm publish --provenance --access public package.tgz
