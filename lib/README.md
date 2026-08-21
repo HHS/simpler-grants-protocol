@@ -75,7 +75,9 @@ Merging a package's Release PR:
 
 ### Re-running a failed publish
 
-The per-package deploy workflows (`cd-deploy-lib-*.yml`) keep a `workflow_dispatch` trigger. To retry a publish for an existing tag, run the matching workflow from the **Actions** tab and enter the release tag.
+- **npm retry:** Dispatch `release-please.yml` with the package and tag. This publishes only; npm authenticates its caller.
+- **Release Please retry:** Re-run the failed Action or merge another commit to `main`.
+- **Python SDK retry:** Dispatch `cd-deploy-lib-pysdk.yml`; PyPI uses a repository secret.
 
 ---
 

@@ -3,7 +3,22 @@ name: "Release Please"
 on:
   push:
     branches: [main]
+  # npm authenticates trusted publishers against the calling workflow filename,
+  # so manual npm retries dispatch here instead of from the reusable deploy.
   workflow_dispatch:
+    inputs:
+      package:
+        description: "npm package to republish"
+        required: true
+        type: choice
+        options:
+          - "@common-grants/core"
+          - "@common-grants/cli"
+          - "@common-grants/sdk"
+      release_tag:
+        description: "Existing release tag to publish (e.g. @common-grants/core@0.4.0)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -11,6 +26,9 @@ permissions:
 
 jobs:
   release-please:
+    # Dispatch is the npm retry path only. A failed release-please run is
+    # recovered by re-running the Action, which replays its push event.
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Run release-please
@@ -30,35 +48,72 @@ jobs:
       py_sdk_released: ${{ steps.release.outputs['lib/python-sdk--release_created'] }}
       py_sdk_tag: ${{ steps.release.outputs['lib/python-sdk--tag_name'] }}
 
-  # Publishes fan out from the outputs above. Tags and releases created with
-  # GITHUB_TOKEN do not trigger other workflows, so the deploys must be called
-  # from this run rather than via `on: release`.
+  # GITHUB_TOKEN tags do not trigger workflows, so deploys are called here.
+  # !cancelled() passes the skipped release job on retry; result blocks a failed
+  # push. Keep dispatch choices aligned with predicates. Callers grant OIDC
+  # because reusable workflows cannot elevate permissions.
   publish-core:
     needs: release-please
-    if: needs.release-please.outputs.core_released == 'true'
-    uses: ./.github/workflows/cd-deploy-lib-core.yml
+    if: |
+      !cancelled()
+      && (
+        (github.event_name == 'push'
+          && needs.release-please.result == 'success'
+          && needs.release-please.outputs.core_released == 'true')
+        || (github.event_name == 'workflow_dispatch'
+          && inputs.package == '@common-grants/core')
+      )
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/cd-deploy-npm.yml
     with:
-      release_tag: ${{ needs.release-please.outputs.core_tag }}
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      package: "@common-grants/core"
+      directory: lib/core
+      environment: npm-core
+      release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || needs.release-please.outputs.core_tag }}
 
   publish-cli:
     needs: release-please
-    if: needs.release-please.outputs.cli_released == 'true'
-    uses: ./.github/workflows/cd-deploy-lib-cli.yml
+    if: |
+      !cancelled()
+      && (
+        (github.event_name == 'push'
+          && needs.release-please.result == 'success'
+          && needs.release-please.outputs.cli_released == 'true')
+        || (github.event_name == 'workflow_dispatch'
+          && inputs.package == '@common-grants/cli')
+      )
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/cd-deploy-npm.yml
     with:
-      release_tag: ${{ needs.release-please.outputs.cli_tag }}
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      package: "@common-grants/cli"
+      directory: lib/cli
+      environment: npm-cli
+      release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || needs.release-please.outputs.cli_tag }}
 
   publish-ts-sdk:
     needs: release-please
-    if: needs.release-please.outputs.ts_sdk_released == 'true'
-    uses: ./.github/workflows/cd-deploy-lib-ts-sdk.yml
+    if: |
+      !cancelled()
+      && (
+        (github.event_name == 'push'
+          && needs.release-please.result == 'success'
+          && needs.release-please.outputs.ts_sdk_released == 'true')
+        || (github.event_name == 'workflow_dispatch'
+          && inputs.package == '@common-grants/sdk')
+      )
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/cd-deploy-npm.yml
     with:
-      release_tag: ${{ needs.release-please.outputs.ts_sdk_tag }}
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      package: "@common-grants/sdk"
+      directory: lib/ts-sdk
+      environment: npm-sdk
+      release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || needs.release-please.outputs.ts_sdk_tag }}
 
   publish-py-sdk:
     needs: release-please
