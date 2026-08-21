@@ -26,6 +26,8 @@ permissions:
 
 jobs:
   release-please:
+    # Dispatch is the npm retry path only. A failed release-please run is
+    # recovered by re-running the Action, which replays its push event.
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
