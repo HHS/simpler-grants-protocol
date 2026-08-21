@@ -3,14 +3,35 @@ name: "Release Please"
 on:
   push:
     branches: [main]
+  # Manual publish fallback for an already-tagged release. npm binds each
+  # package's trusted publisher to the *calling* workflow's filename, so a
+  # republish has to be dispatched from here — the per-package deploy workflows
+  # no longer accept a direct dispatch, which npm would attribute to the wrong
+  # caller.
   workflow_dispatch:
+    inputs:
+      package:
+        description: "npm package to republish"
+        required: true
+        type: choice
+        options:
+          - "@common-grants/core"
+          - "@common-grants/cli"
+          - "@common-grants/sdk"
+      release_tag:
+        description: "Existing release tag to publish (e.g. @common-grants/core@0.4.0)"
+        required: true
+        type: string
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
+  # Skipped on a manual dispatch: that path republishes an existing tag and must
+  # not create or modify a release.
   release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Run release-please
@@ -34,38 +55,68 @@ jobs:
   # GITHUB_TOKEN do not trigger other workflows, so the deploys must be called
   # from this run rather than via `on: release`.
   #
+  # Each npm job serves both paths: the release outputs on push, the dispatch
+  # inputs on a manual republish. Since release-please is skipped on dispatch,
+  # the conditions need a status function or GitHub would skip the publish along
+  # with it — hence `!cancelled()`, paired with an explicit result check so a
+  # *failed* release still stops the push path.
+  #
   # The npm deploys authenticate over OIDC, and a called workflow cannot hold a
   # permission its caller lacks — the workflow-level block above leaves id-token
   # at none — so each npm publish job grants that scope itself.
   publish-core:
     needs: release-please
-    if: needs.release-please.outputs.core_released == 'true'
+    if: >-
+      !cancelled()
+      && (
+        (github.event_name == 'push'
+          && needs.release-please.result == 'success'
+          && needs.release-please.outputs.core_released == 'true')
+        || (github.event_name == 'workflow_dispatch'
+          && inputs.package == '@common-grants/core')
+      )
     permissions:
       contents: read
       id-token: write
     uses: ./.github/workflows/cd-deploy-lib-core.yml
     with:
-      release_tag: ${{ needs.release-please.outputs.core_tag }}
+      release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || needs.release-please.outputs.core_tag }}
 
   publish-cli:
     needs: release-please
-    if: needs.release-please.outputs.cli_released == 'true'
+    if: >-
+      !cancelled()
+      && (
+        (github.event_name == 'push'
+          && needs.release-please.result == 'success'
+          && needs.release-please.outputs.cli_released == 'true')
+        || (github.event_name == 'workflow_dispatch'
+          && inputs.package == '@common-grants/cli')
+      )
     permissions:
       contents: read
       id-token: write
     uses: ./.github/workflows/cd-deploy-lib-cli.yml
     with:
-      release_tag: ${{ needs.release-please.outputs.cli_tag }}
+      release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || needs.release-please.outputs.cli_tag }}
 
   publish-ts-sdk:
     needs: release-please
-    if: needs.release-please.outputs.ts_sdk_released == 'true'
+    if: >-
+      !cancelled()
+      && (
+        (github.event_name == 'push'
+          && needs.release-please.result == 'success'
+          && needs.release-please.outputs.ts_sdk_released == 'true')
+        || (github.event_name == 'workflow_dispatch'
+          && inputs.package == '@common-grants/sdk')
+      )
     permissions:
       contents: read
       id-token: write
     uses: ./.github/workflows/cd-deploy-lib-ts-sdk.yml
     with:
-      release_tag: ${{ needs.release-please.outputs.ts_sdk_tag }}
+      release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || needs.release-please.outputs.ts_sdk_tag }}
 
   publish-py-sdk:
     needs: release-please
