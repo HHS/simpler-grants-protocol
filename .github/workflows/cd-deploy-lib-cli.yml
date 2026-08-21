@@ -71,8 +71,8 @@ jobs:
 
       # pnpm resolves the workspace-local specifiers (`catalog:`, `workspace:`)
       # while packing. npm would ship them verbatim, and a `catalog:` range left
-      # in `dependencies` breaks every install — so pnpm builds the tarball and
-      # npm only uploads it.
+      # in a published dependency field breaks every install — so pnpm builds
+      # the tarball and npm only uploads it.
       - name: Pack package
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
@@ -88,17 +88,26 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: npm install -g "npm@^11.5.1"
 
-      # Below either floor npm falls back to token auth and fails with a bare
-      # ENEEDAUTH that says nothing about OIDC. `.nvmrc` is not release-scoped,
-      # so assert the Node floor rather than trusting it.
+      # Below either floor the OIDC exchange is skipped and npm falls back to the
+      # placeholder credential setup-node left in .npmrc, so the job fails at the
+      # registry with nothing pointing at the real cause. `.nvmrc` is not
+      # release-scoped, so assert the Node floor rather than trusting it. This
+      # makes a floor violation legible at release time; it does not catch one
+      # earlier, since only the release workflows run this step.
       - name: Check publish runtime
         working-directory: ${{ runner.temp }}
         run: |
-          node -v && npm -v
-          printf '22.14.0\n%s\n' "$(node -v | tr -d v)" | sort -VC \
-            || { echo "::error::Node $(node -v) is below the 22.14.0 that npm trusted publishing requires"; exit 1; }
-          printf '11.5.1\n%s\n' "$(npm -v)" | sort -VC \
-            || { echo "::error::npm $(npm -v) is below the 11.5.1 that npm trusted publishing requires"; exit 1; }
+          node_version="$(node -v | tr -d v)"
+          npm_version="$(npm -v)"
+          echo "node $node_version, npm $npm_version"
+          if ! printf '22.14.0\n%s\n' "$node_version" | sort -VC; then
+            echo "::error::node $node_version is below the 22.14.0 that npm trusted publishing requires"
+            exit 1
+          fi
+          if ! printf '11.5.1\n%s\n' "$npm_version" | sort -VC; then
+            echo "::error::npm $npm_version is below the 11.5.1 that npm trusted publishing requires"
+            exit 1
+          fi
 
       # --provenance is redundant under trusted publishing, where npm attests
       # automatically, but pinning it keeps attestations from depending on that
