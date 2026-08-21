@@ -1,30 +1,46 @@
-name: "CD - Deploy TypeScript SDK to npm"
+name: "CD - Deploy npm Package"
 
 on:
   # Only ever called by release-please.yml — for a release it just created, or
   # for a republish dispatched there. This file has no dispatch entry point of
   # its own: npm binds the trusted publisher to the calling workflow's filename,
   # so a direct dispatch would advertise a fallback that cannot authenticate.
+  # The callee's own filename is invisible to npm, so all three npm packages
+  # share this one.
   workflow_call:
     inputs:
+      package:
+        description: "npm package name (e.g., @common-grants/core)"
+        required: true
+        type: string
+      directory:
+        description: "Workspace directory holding the package (e.g., lib/core)"
+        required: true
+        type: string
+      environment:
+        description: "GitHub environment the package's npm trusted publisher is registered against (e.g., npm-core)"
+        required: true
+        type: string
       release_tag:
-        description: "Release tag (e.g., @common-grants/sdk@0.2.0)"
+        description: "Release tag (e.g., @common-grants/core@0.2.0)"
         required: true
         type: string
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # npm matches the environment as well as the calling workflow, so each
+    # package keeps its own.
     environment:
-      name: npm-sdk
-      url: https://www.npmjs.com/package/@common-grants/sdk
+      name: ${{ inputs.environment }}
+      url: https://www.npmjs.com/package/${{ inputs.package }}
     permissions:
       contents: read
       # OIDC token for npm trusted publishing.
       id-token: write
-    defaults:
-      run:
-        working-directory: ./lib/ts-sdk
+    env:
+      PACKAGE: ${{ inputs.package }}
+      RELEASE_TAG: ${{ inputs.release_tag }}
 
     steps:
       # Rejects another package's tag or a malformed version. release-please's
@@ -34,12 +50,10 @@ jobs:
       # Runs before checkout (in the bare workspace) so nothing ever touches
       # content from an unvalidated ref.
       - name: Validate release tag
-        working-directory: .
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          if [[ ! "$RELEASE_TAG" =~ ^@common-grants/sdk@[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.+-]+)?$ ]]; then
-            echo "::error::release_tag must look like '@common-grants/sdk@X.Y.Z'. Got: $RELEASE_TAG"
+          tag_pattern="^${PACKAGE}@[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.+-]+)?$"
+          if [[ ! "$RELEASE_TAG" =~ $tag_pattern ]]; then
+            echo "::error::release_tag must look like '${PACKAGE}@X.Y.Z'. Got: $RELEASE_TAG"
             exit 1
           fi
 
@@ -65,13 +79,14 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run checks
-        run: pnpm --filter @common-grants/sdk run checks
+        run: pnpm --filter "$PACKAGE" run checks
 
       # pnpm resolves this workspace's `catalog:` specifiers while packing. npm
       # would ship them verbatim, and a `catalog:` range left in a published
       # dependency field breaks every install — so pnpm builds the tarball and
       # npm only uploads it.
       - name: Pack package
+        working-directory: ${{ inputs.directory }}
         run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
 
       # Node 22 still bundles npm 10, so install the npm that supports trusted
@@ -116,8 +131,4 @@ jobs:
         run: npm publish --provenance --access public package.tgz
 
       - name: Notify completion
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
-        run: |
-          echo "TypeScript SDK package deployed to npm"
-          echo "Tag: $RELEASE_TAG"
+        run: echo "$PACKAGE deployed to npm from $RELEASE_TAG"

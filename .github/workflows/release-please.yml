@@ -81,8 +81,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ./.github/workflows/cd-deploy-lib-core.yml
+    uses: ./.github/workflows/cd-deploy-npm.yml
     with:
+      package: "@common-grants/core"
+      directory: lib/core
+      environment: npm-core
       release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || needs.release-please.outputs.core_tag }}
 
   publish-cli:
@@ -99,8 +102,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ./.github/workflows/cd-deploy-lib-cli.yml
+    uses: ./.github/workflows/cd-deploy-npm.yml
     with:
+      package: "@common-grants/cli"
+      directory: lib/cli
+      environment: npm-cli
       release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || needs.release-please.outputs.cli_tag }}
 
   publish-ts-sdk:
@@ -117,8 +123,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ./.github/workflows/cd-deploy-lib-ts-sdk.yml
+    uses: ./.github/workflows/cd-deploy-npm.yml
     with:
+      package: "@common-grants/sdk"
+      directory: lib/ts-sdk
+      environment: npm-sdk
       release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || needs.release-please.outputs.ts_sdk_tag }}
 
   publish-py-sdk:
