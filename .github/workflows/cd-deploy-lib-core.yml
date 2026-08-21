@@ -8,9 +8,6 @@ on:
         description: "Release tag (e.g., @common-grants/core@0.2.0)"
         required: true
         type: string
-    secrets:
-      NPM_TOKEN:
-        required: true
   # Manual fallback for re-running a publish against an existing tag
   workflow_dispatch:
     inputs:
@@ -27,6 +24,8 @@ jobs:
       url: https://www.npmjs.com/package/@common-grants/core
     permissions:
       contents: read
+      # OIDC token for npm trusted publishing.
+      id-token: write
     defaults:
       run:
         working-directory: ./lib/core
@@ -70,10 +69,27 @@ jobs:
       - name: Run checks
         run: pnpm --filter @common-grants/core run checks
 
+      # pnpm resolves this workspace's `catalog:` and `workspace:` specifiers
+      # while packing; npm would publish them verbatim and break every install.
+      # So pnpm builds the tarball and npm only uploads it.
+      - name: Pack package
+        run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
+
+      # Trusted publishing needs npm >= 11.5.1 and Node >= 22.14.0, and Node 22
+      # still bundles npm 10. Pinned to the 11 line so a future npm major cannot
+      # silently change the release runtime.
+      #
+      # Every npm step runs from outside the checkout: the root package.json
+      # declares npm `workspaces: ["lib/**"]`, whose glob also matches the built
+      # `lib/changelog-emitter/dist/`, and npm aborts on the duplicate package
+      # name before it resolves any config.
+      - name: Install npm with trusted publishing support
+        working-directory: ${{ runner.temp }}
+        run: npm install --global "npm@^11.5.1"
+
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm publish --access public --no-git-checks
+        working-directory: ${{ runner.temp }}
+        run: npm publish --provenance --access public package.tgz
 
       - name: Notify completion
         env:

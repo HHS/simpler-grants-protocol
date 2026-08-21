@@ -37,7 +37,18 @@ jobs:
       - name: Run checks
         run: pnpm --filter @common-grants/cli run checks
 
+      # Mirrors the release workflow's publish path so PR CI exercises the same
+      # client: pnpm packs (resolving `catalog:`/`workspace:` specifiers), npm
+      # inspects the tarball. npm runs outside the checkout because the root
+      # package.json's npm `workspaces: ["lib/**"]` glob also matches the built
+      # `lib/changelog-emitter/dist/`, which npm rejects as a duplicate package.
+      - name: Pack package
+        run: pnpm pack --out "$RUNNER_TEMP/package.tgz"
+
+      - name: Install npm matching the release workflow
+        working-directory: ${{ runner.temp }}
+        run: npm install --global "npm@^11.5.1"
+
       - name: Dry run publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm publish --access public --dry-run --no-git-checks
+        working-directory: ${{ runner.temp }}
+        run: npm publish --dry-run --access public package.tgz

@@ -33,32 +33,39 @@ jobs:
   # Publishes fan out from the outputs above. Tags and releases created with
   # GITHUB_TOKEN do not trigger other workflows, so the deploys must be called
   # from this run rather than via `on: release`.
+  #
+  # The npm deploys authenticate over OIDC, and a called workflow cannot hold a
+  # permission its caller lacks — the workflow-level block above leaves id-token
+  # at none — so each npm publish job grants that scope itself.
   publish-core:
     needs: release-please
     if: needs.release-please.outputs.core_released == 'true'
+    permissions:
+      contents: read
+      id-token: write
     uses: ./.github/workflows/cd-deploy-lib-core.yml
     with:
       release_tag: ${{ needs.release-please.outputs.core_tag }}
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-cli:
     needs: release-please
     if: needs.release-please.outputs.cli_released == 'true'
+    permissions:
+      contents: read
+      id-token: write
     uses: ./.github/workflows/cd-deploy-lib-cli.yml
     with:
       release_tag: ${{ needs.release-please.outputs.cli_tag }}
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-ts-sdk:
     needs: release-please
     if: needs.release-please.outputs.ts_sdk_released == 'true'
+    permissions:
+      contents: read
+      id-token: write
     uses: ./.github/workflows/cd-deploy-lib-ts-sdk.yml
     with:
       release_tag: ${{ needs.release-please.outputs.ts_sdk_tag }}
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-py-sdk:
     needs: release-please
