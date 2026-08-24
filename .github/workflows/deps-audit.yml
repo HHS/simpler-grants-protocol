@@ -1,11 +1,13 @@
 name: "Deps: Scheduled Dependency Audit"
 
-# Workspace-wide advisory sweep at production boundaries. New GHSAs published
-# against deps already on main surface in the daily run as a tracking issue,
-# while Release Please version PRs run the same audit before a package ships.
-# PRs that change a pnpm dep are also gated by ci-catalog-validation.yml (the
-# root lockfile change triggers it). The Python SDK resolves through its own
-# poetry.lock and is covered by neither pnpm audit; see DEPENDENCY_MANAGEMENT.md.
+# Daily workspace-wide advisory sweep on main. New GHSAs published against
+# deps already on main surface here as a tracking issue within a day, instead
+# of redding every open PR the moment they drop. PRs that change a pnpm
+# dep are still gated by the audit in ci-catalog-validation.yml (that
+# updates the root lockfile, which triggers it). The Python SDK resolves
+# through its own poetry.lock and is covered by neither; see
+# DEPENDENCY_MANAGEMENT.md.
+# Release Please version PRs rerun the same audit before a package ships.
 on:
   schedule:
     # Daily at ~7-8am PT (15:00 UTC = 8am PDT / 7am PST)
