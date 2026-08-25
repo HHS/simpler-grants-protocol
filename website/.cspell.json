@@ -61,6 +61,7 @@
     "PKCE",
     "frontends",
     "cutover",
+    "predevelopment",
     "preflights",
     "prerender",
     "prerendered",

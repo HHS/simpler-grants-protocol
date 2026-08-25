@@ -20,9 +20,11 @@ import {
 const STATUS_VALUES = ["forecasted", "open", "closed", "custom"];
 
 describe("OPPORTUNITY_FIXTURES", () => {
-  it("contains between 8 and 12 detail-shaped records", () => {
-    expect(OPPORTUNITY_FIXTURES.length).toBeGreaterThanOrEqual(8);
-    expect(OPPORTUNITY_FIXTURES.length).toBeLessThanOrEqual(12);
+  // Pin raised deliberately from 8–12 when #3C-1-T1 grew the set to 25 so
+  // pagination/sorting/filtering visibly bite; see the pageSize=20 test below.
+  it("contains between 24 and 30 detail-shaped records", () => {
+    expect(OPPORTUNITY_FIXTURES.length).toBeGreaterThanOrEqual(24);
+    expect(OPPORTUNITY_FIXTURES.length).toBeLessThanOrEqual(30);
   });
 
   // Swagger UI pre-fills the `oppId` box with the specs' `Types.uuid` example.
@@ -97,6 +99,21 @@ describe("OPPORTUNITY_FIXTURES", () => {
     expect(customRecords.length).toBeGreaterThan(0);
     for (const opp of customRecords) {
       expect(typeof opp.status.customValue).toBe("string");
+    }
+  });
+
+  // The spec's documented example pageSize is 20 (@example(20) on
+  // PaginatedResultsInfo.pageSize). With at least 24 records, listing at that
+  // page size yields a visible second page, and every status has enough
+  // records that filtering by status visibly narrows the results rather than
+  // collapsing to a single known record.
+  it("has enough records for pagination and status filtering to have visible effect at pageSize=20", () => {
+    expect(OPPORTUNITY_FIXTURES.length).toBeGreaterThanOrEqual(24);
+
+    const values = OPPORTUNITY_FIXTURES.map((opp) => opp.status.value);
+    for (const status of STATUS_VALUES) {
+      const count = values.filter((value) => value === status).length;
+      expect(count).toBeGreaterThanOrEqual(2);
     }
   });
 });

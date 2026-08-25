@@ -598,10 +598,10 @@ describe("opportunities routes", () => {
     });
 
     it("partitions the fixture set into disjoint, complementary halves when the same maxAwardAmountRange bound is queried with `between` vs `outside`", async () => {
-      // Bound chosen against the real fixture data (see fixtures.ts): splits
-      // the records' `funding.maxAwardAmount` values (25k, 30k, 50k, 50k, 60k,
-      // 75k, 100k, 120k, 250k, 500k, 2M) across [50000, 250000], so neither
-      // half is degenerate.
+      // Bound chosen against the real fixture data (see fixtures.ts): the
+      // records' `funding.maxAwardAmount` values run from 7.5k to 2M, with
+      // values on both sides of [50000, 250000], so neither half is
+      // degenerate.
       const bound = {
         min: { amount: "50000.00", currency: "USD" },
         max: { amount: "250000.00", currency: "USD" },
