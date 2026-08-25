@@ -85,7 +85,7 @@ jobs:
             - [ ] If TypeSpec packages updated: verify `pnpm run typespec` output is sensible
             - [ ] If website deps updated: spot-check key pages render correctly
             - [ ] If SDK-affecting deps updated: verify SDK examples still work
-            - [ ] Add changeset if peerDep ranges changed for `@common-grants/core`
+            - [ ] If peerDep ranges changed for `@common-grants/core`, retitle this PR `fix(core): ...` so the change ships in a release (`chore(deps)` does not trigger a version bump)
           labels: |
             dependencies
           commit-message: "chore(deps): update catalog dependencies"
