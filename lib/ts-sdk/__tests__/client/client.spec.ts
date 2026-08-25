@@ -127,6 +127,44 @@ describe("Client", () => {
       expect(url.searchParams.get("active")).toBe("true");
     });
 
+    it("does not duplicate the baseUrl path prefix when appending params", async () => {
+      let capturedUrl: string | undefined;
+
+      server.use(
+        http.get("/api/v0.4.0/test-resource", ({ request }) => {
+          capturedUrl = request.url;
+          return HttpResponse.json({ data: "test" });
+        })
+      );
+
+      const client = new Client({ baseUrl: `${BASE_URL}/api/v0.4.0` });
+      const response = await client.get("/test-resource", { params: { page: 2 } });
+
+      expect(response.ok).toBe(true);
+      const url = new URL(capturedUrl!);
+      expect(url.pathname).toBe("/api/v0.4.0/test-resource");
+      expect(url.searchParams.get("page")).toBe("2");
+    });
+
+    it("merges params with a query string already present in the path", async () => {
+      let capturedUrl: string | undefined;
+
+      server.use(
+        http.get("/test-resource", ({ request }) => {
+          capturedUrl = request.url;
+          return HttpResponse.json({ data: "test" });
+        })
+      );
+
+      await defaultClient.get("/test-resource?status=open&page=1", {
+        params: { page: 2 },
+      });
+
+      const url = new URL(capturedUrl!);
+      expect(url.searchParams.get("status")).toBe("open");
+      expect(url.searchParams.get("page")).toBe("2");
+    });
+
     it("works without params", async () => {
       let capturedUrl: string | undefined;
 

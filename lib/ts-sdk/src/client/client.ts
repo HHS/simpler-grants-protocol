@@ -149,13 +149,17 @@ export class Client {
   async get(path: string, options?: GetOptions): Promise<Response> {
     let fullPath = path;
 
-    // Append query params if provided
+    // Append query params if provided. Build the query string from the path
+    // alone — extracting it from the full URL would fold the baseUrl's path
+    // prefix (e.g. "/api/v0.4.0") into fullPath, duplicating it in fetch().
     if (options?.params && Object.keys(options.params).length > 0) {
-      const url = new URL(this.url(path));
+      const queryIndex = path.indexOf("?");
+      const pathname = queryIndex === -1 ? path : path.slice(0, queryIndex);
+      const searchParams = new URLSearchParams(queryIndex === -1 ? "" : path.slice(queryIndex + 1));
       for (const [key, value] of Object.entries(options.params)) {
-        url.searchParams.set(key, String(value));
+        searchParams.set(key, String(value));
       }
-      fullPath = url.pathname + url.search;
+      fullPath = `${pathname}?${searchParams.toString()}`;
     }
 
     return this.fetch(fullPath, {
