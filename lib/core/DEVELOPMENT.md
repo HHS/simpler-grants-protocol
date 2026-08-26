@@ -43,7 +43,7 @@ Steps to follow when preparing a new release of the CommonGrants core library.
   - [ ] The PR title uses the [conventional commit type](../README.md#step-2-title-your-pr-with-a-conventional-commit) matching the intended release impact (`fix` = patch, `feat` = minor, `!` = breaking) and meaningfully summarizes the change
   - [ ] If the change affects the CLI's vendored spec output, the regenerated [`lib/cli/lib/openapi/`](../cli/lib/openapi/) files are included in the PR — touching those paths is what carries the change into the next CLI release
 - [ ] After merging:
-  - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/release-please.yml) workflow ran and updated (or opened) the `@common-grants/core` Release PR — and the `@common-grants/cli` Release PR if CLI files were touched
+  - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-release.yml) workflow ran and updated (or opened) the `@common-grants/core` Release PR — and the `@common-grants/cli` Release PR if CLI files were touched
 
 ### Release checklist
 

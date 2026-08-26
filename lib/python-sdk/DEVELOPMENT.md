@@ -68,7 +68,7 @@ Steps to follow when preparing a new release of the CommonGrants Python SDK libr
   - [ ] An API using this SDK passes the CommonGrants CLI `check spec` command
   - [ ] The PR title uses the [conventional commit type](../README.md#step-2-title-your-pr-with-a-conventional-commit) matching the intended release impact (`fix` = patch, `feat` = minor, `!` = breaking) and meaningfully summarizes the change
 - [ ] After merging:
-  - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/release-please.yml) workflow ran and updated (or opened) the `common-grants-sdk` Release PR
+  - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-release.yml) workflow ran and updated (or opened) the `common-grants-sdk` Release PR
 
 ### Release checklist
 

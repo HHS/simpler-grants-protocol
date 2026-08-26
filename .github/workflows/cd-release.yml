@@ -1,0 +1,183 @@
+name: "CD - Release"
+
+on:
+  push:
+    branches: [main]
+  # Manual republish of an existing tag. npm trusted publishing checks the
+  # filename of the workflow that ran `pnpm publish`, so npm retries live here.
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Package to republish"
+        required: true
+        type: choice
+        options:
+          - "@common-grants/core"
+          - "@common-grants/cli"
+          - "@common-grants/sdk"
+          - "common-grants-sdk"
+      release_tag:
+        description: "Existing release tag to publish (e.g. @common-grants/core@0.4.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      # Only a push can cut a release. A manual dispatch skips this step and
+      # goes straight to selecting the one package to republish.
+      - name: Run release-please
+        if: github.event_name == 'push'
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          manifest-file: .release-please-manifest.json
+          config-file: release-please-config.json
+
+      # Decide what publishes in this run. On push: every package release-please
+      # just released. On dispatch: the selected package and tag. npm packages
+      # become the matrix for `publish-npm`; the Python SDK gets its own tag.
+      - name: Select packages to publish
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          DISPATCH_PACKAGE: ${{ inputs.package }}
+          DISPATCH_TAG: ${{ inputs.release_tag }}
+          CORE_TAG: ${{ steps.release.outputs['lib/core--release_created'] == 'true' && steps.release.outputs['lib/core--tag_name'] || '' }}
+          CLI_TAG: ${{ steps.release.outputs['lib/cli--release_created'] == 'true' && steps.release.outputs['lib/cli--tag_name'] || '' }}
+          SDK_TAG: ${{ steps.release.outputs['lib/ts-sdk--release_created'] == 'true' && steps.release.outputs['lib/ts-sdk--tag_name'] || '' }}
+          PY_TAG: ${{ steps.release.outputs['lib/python-sdk--release_created'] == 'true' && steps.release.outputs['lib/python-sdk--tag_name'] || '' }}
+        run: |
+          selected=$(jq -cn --arg event "$EVENT" --arg pkg "$DISPATCH_PACKAGE" --arg tag "$DISPATCH_TAG" '
+            [ {package: "@common-grants/core", directory: "lib/core",       environment: "npm-core", release_tag: env.CORE_TAG},
+              {package: "@common-grants/cli",  directory: "lib/cli",        environment: "npm-cli",  release_tag: env.CLI_TAG},
+              {package: "@common-grants/sdk",  directory: "lib/ts-sdk",     environment: "npm-sdk",  release_tag: env.SDK_TAG},
+              {package: "common-grants-sdk",   directory: "lib/python-sdk", environment: "pypi",     release_tag: env.PY_TAG} ]
+            | if $event == "workflow_dispatch"
+              then map(select(.package == $pkg) | .release_tag = $tag)
+              else map(select(.release_tag != "")) end')
+          echo "Publishing: $selected"
+          {
+            echo "npm_matrix=$(jq -c 'map(select(.package != "common-grants-sdk"))' <<<"$selected")"
+            echo "py_sdk_tag=$(jq -r 'map(select(.package == "common-grants-sdk"))[0].release_tag // ""' <<<"$selected")"
+          } >> "$GITHUB_OUTPUT"
+    outputs:
+      npm_matrix: ${{ steps.plan.outputs.npm_matrix }}
+      py_sdk_tag: ${{ steps.plan.outputs.py_sdk_tag }}
+
+  # Tags created with GITHUB_TOKEN do not trigger other workflows, so publishes
+  # run from this workflow instead of `on: release`.
+  publish-npm:
+    needs: release-please
+    if: needs.release-please.outputs.npm_matrix != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.release-please.outputs.npm_matrix) }}
+    runs-on: ubuntu-latest
+    # npm's trusted publisher for each package is bound to this workflow file
+    # plus the package's own environment.
+    environment:
+      name: ${{ matrix.environment }}
+      url: https://www.npmjs.com/package/${{ matrix.package }}
+    permissions:
+      contents: read
+      id-token: write # OIDC token for npm trusted publishing
+    env:
+      PACKAGE: ${{ matrix.package }}
+      RELEASE_TAG: ${{ matrix.release_tag }}
+    steps:
+      # A manual retry could name another package's tag; reject it before any
+      # checkout so untrusted ref content never enters the workspace.
+      - name: Validate release tag
+        run: |
+          tag_pattern="^${PACKAGE}@[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.+-]+)?$"
+          if [[ ! "$RELEASE_TAG" =~ $tag_pattern ]]; then
+            echo "::error::release_tag must look like '${PACKAGE}@X.Y.Z'. Got: $RELEASE_TAG"
+            exit 1
+          fi
+
+      # refs/tags/ pins the checkout to the tag namespace; a same-named branch
+      # cannot be substituted.
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ matrix.release_tag }}
+
+      # Native `pnpm publish` handles the OIDC exchange itself (pnpm >= 11.1.3
+      # with pnpm/action-setup >= 6.0.6). The pnpm version comes from
+      # `packageManager` in package.json.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run checks
+        run: pnpm --filter "$PACKAGE" run checks
+
+      # pnpm resolves workspace `catalog:` specs into the published manifest.
+      # --no-git-checks: the checkout is a detached tag, not the main branch.
+      - name: Publish to npm
+        working-directory: ${{ matrix.directory }}
+        run: pnpm publish --provenance --access public --no-git-checks
+
+  publish-py-sdk:
+    needs: release-please
+    if: needs.release-please.outputs.py_sdk_tag != ''
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/common-grants-sdk
+    permissions:
+      contents: read
+    env:
+      RELEASE_TAG: ${{ needs.release-please.outputs.py_sdk_tag }}
+    defaults:
+      run:
+        working-directory: ./lib/python-sdk
+    steps:
+      - name: Validate release tag
+        working-directory: .
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^common-grants-sdk@[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.+-]+)?$ ]]; then
+            echo "::error::release_tag must look like 'common-grants-sdk@X.Y.Z'. Got: $RELEASE_TAG"
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ needs.release-please.outputs.py_sdk_tag }}
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: Gr1N/setup-poetry@v9
+
+      - name: Install dependencies
+        run: poetry install
+
+      # PyPI still authenticates with a repository secret; trusted publishing
+      # for PyPI is a separate change.
+      - name: Publish to PyPI
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          poetry build
+          poetry publish
