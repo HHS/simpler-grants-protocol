@@ -110,9 +110,6 @@ jobs:
         with:
           ref: refs/tags/${{ matrix.release_tag }}
 
-      # Native `pnpm publish` handles the OIDC exchange itself (pnpm >= 11.1.3
-      # with pnpm/action-setup >= 6.0.6). The pnpm version comes from
-      # `packageManager` in package.json.
       - name: Install pnpm
         uses: pnpm/action-setup@v6
 
