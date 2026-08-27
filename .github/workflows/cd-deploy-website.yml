@@ -46,11 +46,6 @@ jobs:
 
       - name: Upload build output
         # Shared with deploy-cloudflare so both targets ship the same build.
-        # Path-structure invariant (same as ci-website-preview.yml): every
-        # entry must stay under `website/` so upload-artifact strips that
-        # common prefix and the download (path: website) restores them at
-        # website/dist, etc. Adding a path outside website/ shrinks the
-        # prefix and silently shifts download locations.
         uses: actions/upload-artifact@v7
         with:
           name: website-build
