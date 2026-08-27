@@ -1,10 +1,8 @@
 /**
- * Regenerates `golden-envelopes.json` from the 3A standalone Worker (#1078).
- *
- * The byte-identity AC compares this site's Astro endpoint against the Worker's
- * actual output, but `mock-api/` does not exist on this branch — it lives on
- * `karina/1077-cloudflareworkermock`. So the corpus is captured once from a
- * worktree of that branch and checked in.
+ * Regenerates `golden-envelopes.json` from the 3A standalone Worker (#1078),
+ * which lives on `karina/1077-cloudflareworkermock`, not this branch. Before
+ * capturing, copy this branch's current fixture data over the worktree's so
+ * both hosts serve the same records.
  *
  * Usage (from `website/`):
  *
@@ -12,18 +10,7 @@
  *   pnpm exec tsx __tests__/lib/mock/__fixtures__/capture-golden.ts \
  *     /tmp/3a-worktree/mock-api/src/index.ts
  *
- * Since #1101 the fixture records' home is this site's copy
- * (`src/lib/mock/data/fixtures.ts`), which has grown past the 3A branch's
- * committed set. Before capturing, copy it over the worktree's
- * `mock-api/src/data/fixtures.ts` (the module is self-contained, so the copy
- * is safe) — the corpus then pins handler parity over the same data, which is
- * the guarantee this suite is for. Capturing without that copy regresses the
- * corpus to the old 11-record set.
- *
- * The Worker's handler is a pure `fetch(Request) => Response` over standard
- * Fetch API globals, so Node 22 replays it faithfully with no wrangler process
- * and no network. The module path is an argument rather than a static import
- * because it points outside this package — `tsc` must not try to resolve it.
+ * The module path is an argument so `tsc` does not try to resolve it.
  */
 
 import { writeFile } from "node:fs/promises";

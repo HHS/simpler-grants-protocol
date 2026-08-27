@@ -1,14 +1,8 @@
 /**
- * Script-level tests for `src/scripts/inject-mock-server.ts` and
- * `src/lib/mock/docs-wiring.ts` (#1078, PLAN.md).
- *
- * Ported from the 3A standalone-Worker experiment's
- * `__tests__/scripts/inject-mock-server.spec.ts` (#1077). The `injectServers`
- * / `versionFromSpecFilename` string-surgery tests carry over unchanged — they
- * pin string surgery, not URLs. What's new here is the 3B contract: the mock is
- * served same-origin, so there is no configurable base URL to normalize, only a
- * boolean build-time gate (`MOCK_API_ENABLED`) and a relative URL built from the
- * router's own `MOCK_API_BASE_PATH` constant.
+ * Tests for `src/scripts/inject-mock-server.ts` and
+ * `src/lib/mock/docs-wiring.ts` (#1078). The mock is served same-origin, so
+ * there is no configurable base URL — only the `MOCK_API_ENABLED` build-time
+ * gate and a relative URL built from `MOCK_API_BASE_PATH`.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
@@ -20,9 +14,8 @@ import {
 import { isMockApiEnabled, serverUrlFor } from "@/lib/mock/docs-wiring";
 import { MOCK_API_BASE_PATH } from "@/lib/mock/router";
 
-// A small fixture that mimics the real spec's shape: a few top-level keys,
-// no `servers:` key, then a top-level `paths:` line followed by indented
-// path entries (some of which nest an unrelated `servers:` key).
+// Mimics the real spec's shape: no top-level `servers:` key, a top-level
+// `paths:` line, and a nested unrelated `servers:` key.
 const FIXTURE_YAML = `openapi: 3.0.0
 info:
   title: CommonGrants Base API
@@ -86,12 +79,10 @@ describe("injectServers", () => {
   it("does not mistake a nested indented servers key for the top-level one", () => {
     const result = injectServers(FIXTURE_YAML, serverUrl);
 
-    // The nested fake servers block should remain exactly where it was.
     expect(result).toContain(
       "      x-fake-nested-block:\n        servers:\n          - url: https://not-a-real-top-level-key.example.com",
     );
 
-    // Only one top-level (unindented) `servers:` key should exist.
     const topLevelServersMatches = result.match(/^servers:/gm) ?? [];
     expect(topLevelServersMatches).toHaveLength(1);
   });
@@ -137,10 +128,8 @@ describe("isMockApiEnabled", () => {
     expect(isMockApiEnabled()).toBe(true);
   });
 
-  // A gate keyed on mere presence would read "false" and "0" as ON — the exact
-  // opposite of what someone writing `MOCK_API_ENABLED: "false"` in a workflow
-  // intends, and it would silently enable Execute buttons on a build meant to be
-  // production-inert.
+  // A gate keyed on mere presence would read "false" and "0" as ON, silently
+  // enabling Execute buttons on a build meant to be production-inert.
   it.each(["false", "FALSE", "0", "off", "no"])(
     "is false for the falsy value %s",
     (value) => {

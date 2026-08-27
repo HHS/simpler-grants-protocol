@@ -1,8 +1,6 @@
 /**
- * Fixture suite ported verbatim from the 3A standalone Worker (#1078):
- * `mock-api/__tests__/data/fixtures.spec.ts` on branch
- * `karina/1077-cloudflareworkermock`. The only edit is the import path — the
- * records under test are byte-identical to the Worker's.
+ * Fixture suite ported verbatim from the 3A standalone Worker (#1078);
+ * only the import path changed.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -27,9 +25,8 @@ describe("OPPORTUNITY_FIXTURES", () => {
     expect(OPPORTUNITY_FIXTURES.length).toBeLessThanOrEqual(30);
   });
 
-  // Swagger UI pre-fills the `oppId` box with the specs' `Types.uuid` example.
-  // If no fixture carries that id, the first Execute a visitor runs — with the
-  // field untouched — answers 404 instead of the documented record.
+  // Swagger UI pre-fills `oppId` with this id; without a matching fixture,
+  // an untouched Execute would answer 404.
   it("carries the id the specs publish as their uuid example", () => {
     const canonical = getById(CANONICAL_OPPORTUNITY_ID);
 

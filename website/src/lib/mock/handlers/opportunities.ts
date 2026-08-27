@@ -1,22 +1,7 @@
 /**
- * Deterministic, fixture-backed handlers for the CommonGrants opportunity list,
- * detail, and search endpoints (#1077).
- *
- * Ported from the MSW mock-playground spike (#1049, branch
- * `karina/playground-spike`, `website/src/lib/mock/opportunities/handlers.ts`).
- * MSW touched this module in exactly two places, both removed here:
- *  - `http.get/post(PATH, resolver)` registration → the three exported
- *    `(Request, Version) => Response` functions below, dispatched by the router
- *    in `src/index.ts`.
- *  - `HttpResponse.json` → `Response.json` (see `src/http/envelope.ts`).
- *
- * Every filter, sort, pagination, and validation rule is carried over
- * unchanged, so the Worker's envelopes stay byte-identical to the spike's for
- * the same inputs.
- *
- * Bodies are static projections of `OPPORTUNITY_FIXTURES`, so repeat calls
- * return identical results and the list, detail, and search endpoints resolve
- * to the same records.
+ * Deterministic, fixture-backed handlers for the opportunity list, detail, and
+ * search endpoints. Bodies are static projections of `OPPORTUNITY_FIXTURES`,
+ * so repeat calls return identical results.
  */
 
 import {
@@ -131,10 +116,6 @@ function sortKey(opp: Opportunity, sortBy: string): string | number {
 /**
  * `GET /v{version}/common-grants/opportunities` — the paginated list, ordered
  * newest-modified first.
- *
- * @param request - Carries the `page`/`pageSize` query params.
- * @param version - Protocol version to shape responses for (v0.1 omits
- * `acceptedApplicantTypes`; `competitions` is detail-only, so never present here).
  */
 export function listOpportunities(
   request: Request,
@@ -163,12 +144,9 @@ export function listOpportunities(
 }
 
 /**
- * `GET /v{version}/common-grants/opportunities/{oppId}` — a single record.
- *
- * @param oppId - The path segment as received; validated as UUID-shaped here
- * rather than in the router, so a malformed id answers 400 (not a route miss).
- * @param version - Protocol version to shape the response for (v0.1 returns the
- * `OpportunityBase` shape rather than `OpportunityDetails`).
+ * `GET /v{version}/common-grants/opportunities/{oppId}` — a single record. The
+ * id is validated here, not in the router, so a malformed id answers 400
+ * rather than a route miss.
  */
 export function getOpportunity(oppId: string, version: Version): Response {
   if (!isUuid(oppId)) {
@@ -192,9 +170,6 @@ export function getOpportunity(oppId: string, version: Version): Response {
 /**
  * `POST /v{version}/common-grants/opportunities/search` — filtered, sorted,
  * paginated search over the same fixture set.
- *
- * @param request - Carries the `OppSearchRequest` JSON body.
- * @param version - Protocol version to shape the returned items for.
  */
 export async function searchOpportunities(
   request: Request,
@@ -233,9 +208,8 @@ export async function searchOpportunities(
       });
       continue;
     }
-    // Validate the bounds themselves, not just their presence. An
-    // malformed bound used to be silently dropped, which returned a
-    // result set that contradicted the filter the caller asked for.
+    // Validate the bounds themselves; a malformed bound must not be
+    // silently dropped.
     const isDateRange = field === "closeDateRange";
     for (const bound of ["min", "max"] as const) {
       const value = filter.value[bound];
@@ -259,8 +233,8 @@ export async function searchOpportunities(
   if (!pagination.ok) {
     errors.push(...pagination.errors);
   }
-  // The defaults here are unreachable: an invalid pagination pair pushed
-  // errors above, and the guard below returns before they are used.
+  // The defaults are unreachable: invalid pagination pushed errors above, and
+  // the guard below returns before they are used.
   const { page, pageSize } = pagination.ok
     ? pagination
     : { page: DEFAULT_PAGE, pageSize: DEFAULT_PAGE_SIZE };
@@ -326,10 +300,8 @@ export async function searchOpportunities(
     items = orderBy(items, (opp) => sortKey(opp, sortBy), sortOrder);
   }
 
-  // `filterInfo.errors` is the spec's channel for "non-fatal errors that
-  // occurred during filtering". `customFilters` are implementation-defined,
-  // so this mock echoes them but can't apply them — say so rather than
-  // letting the echo imply they narrowed the results.
+  // `customFilters` are implementation-defined: the mock echoes them but does
+  // not apply them, and says so via `filterInfo.errors`.
   const filterErrors: string[] = [];
   const customFilterNames = Object.keys(filters.customFilters ?? {});
   if (customFilterNames.length > 0) {

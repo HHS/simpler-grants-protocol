@@ -1,12 +1,7 @@
 /**
- * Handler suite ported from the 3A standalone Worker (#1078):
- * `mock-api/__tests__/handlers/opportunities.spec.ts` on branch
- * `karina/1077-cloudflareworkermock`. Three mechanical edits, no assertions
- * touched: imports moved to `@/lib/mock/*`, `worker.fetch(...)` became
- * `handleMockRequest(...)`, and the request URLs gained the `/api` base this
- * site mounts the mock under. Whether that port preserved behavior is not taken
- * on faith — `golden-envelopes.spec.ts` compares raw response bodies against a
- * corpus captured from the Worker itself.
+ * Handler suite ported from the 3A standalone Worker (#1078): imports, entry
+ * point, and base path adjusted, assertions unchanged.
+ * `golden-envelopes.spec.ts` verifies the port against the Worker's output.
  */
 import { describe, it, expect } from "vitest";
 import { handleMockRequest } from "@/lib/mock/router";
@@ -170,15 +165,12 @@ describe("opportunities routes", () => {
   });
 
   describe("GET /v{version}/common-grants/opportunities/{oppId} (detail)", () => {
-    // Picks a fixture that carries `competitions` (present on the
-    // OpportunityDetails shape, stripped from the OpportunityBase/list
-    // projection) so this test can't pass by accident on a record where the
-    // two shapes happen to coincide.
+    // A fixture that carries `competitions` (detail-only field), so the
+    // list/detail shape tests can't pass by accident.
     const STEM_ID = "573525f2-8e15-4405-83fb-e6523511d893";
 
-    // Swagger UI pre-fills the `oppId` box with the specs' `Types.uuid`
-    // example, so this is the request a visitor sends when they click "Try it
-    // out" and then "Execute" without touching anything. It must not 404.
+    // Swagger UI pre-fills `oppId` with this id, so an untouched "Execute"
+    // sends exactly this request. It must not 404.
     it.each(VERSIONS)(
       "answers 200 for the id Swagger UI pre-fills, for v%s",
       async (version) => {
@@ -195,7 +187,7 @@ describe("opportunities routes", () => {
         };
 
         expect(body.data.id).toBe(CANONICAL_OPPORTUNITY_ID);
-        // The values the spec's own "Example Value" pane advertises.
+        // The value the spec's own "Example Value" pane advertises.
         expect(body.data.title).toBe("Small business grant program");
       },
     );
@@ -210,7 +202,7 @@ describe("opportunities routes", () => {
       };
       const listItem = listBody.items.find((item) => item.id === STEM_ID);
       expect(listItem).toBeDefined();
-      // The list (OpportunityBase) projection never carries `competitions`.
+      // The list projection never carries `competitions`.
       expect(listItem).not.toHaveProperty("competitions");
 
       const detailResponse = await handleMockRequest(
@@ -226,14 +218,11 @@ describe("opportunities routes", () => {
       };
 
       expect(detailBody.status).toBe(200);
-      // id echo: the returned record's id matches the requested :oppId.
       expect(detailBody.data.id).toBe(STEM_ID);
-      // consistency: every field the list projection carries matches the
-      // detail record's value for that same field (same underlying record).
+      // Every field the list projection carries must match the detail record.
       for (const [field, value] of Object.entries(listItem!)) {
         expect(detailBody.data[field]).toEqual(value);
       }
-      // detail-only field: OpportunityDetails adds `competitions`.
       expect(detailBody.data.competitions).toBeDefined();
     });
 
@@ -374,10 +363,8 @@ describe("opportunities routes", () => {
         };
 
         expect(detailBody.status).toBe(200);
-        // id echo: the returned record's id matches the requested :oppId.
         expect(detailBody.data.id).toBe(STEM_ID);
-        // consistency: every field the list projection carries matches the
-        // detail record's value for that same field (same underlying record).
+        // Every field the list projection carries must match the detail record.
         for (const [field, value] of Object.entries(listItem!)) {
           expect(detailBody.data[field]).toEqual(value);
         }
@@ -442,8 +429,8 @@ describe("opportunities routes", () => {
     it.each(VERSIONS)(
       "reorders items in reverse when sortOrder flips from asc to desc, for the same sortBy field, for v%s",
       async (version) => {
-        // `funding.maxAwardAmount` is present (and distinct) on every fixture
-        // record, so this sort key has no ties/undefined-handling ambiguity.
+        // `funding.maxAwardAmount` is present and distinct on every fixture,
+        // so this sort key has no ties.
         const ascBody = await runSearch(version, {
           sorting: { sortBy: "funding.maxAwardAmount", sortOrder: "asc" },
         });
@@ -454,8 +441,7 @@ describe("opportunities routes", () => {
         const ascIds = ascBody.items.map((item) => item.id);
         const descIds = descBody.items.map((item) => item.id);
 
-        // Guard against a no-op sort implementation trivially "passing" by both
-        // orderings being identical (e.g. both left in fixture/insertion order).
+        // Guard against a no-op sort passing with two identical orderings.
         expect(ascIds).not.toEqual(descIds);
         expect(ascIds).toEqual([...descIds].reverse());
       },
@@ -510,8 +496,7 @@ describe("opportunities routes", () => {
         value: ["open"],
       });
 
-      // customFilters is echoed only, so results are still narrowed purely by
-      // the applied `status` filter.
+      // customFilters is echoed only; results are narrowed by `status` alone.
       expect(body.items.length).toBeGreaterThan(0);
       for (const item of body.items) {
         expect(item.status.value).toBe("open");
@@ -542,11 +527,8 @@ describe("opportunities routes", () => {
       expect(body.errors.length).toBeGreaterThan(0);
     });
 
-    // `JSON.parse` accepts any JSON *value*, not just an object, so these bodies
-    // clear the try/catch around `request.json()` and then get treated as an
-    // `OppSearchRequest`. Reaching for `.filters` on a non-object is a crash, not
-    // a 400 — and a crash escaping the handler means the browser sees an opaque
-    // CORS failure instead of the protocol error envelope.
+    // Valid JSON values that are not objects clear `request.json()` but must
+    // still get a 400, not a crash that escapes the handler.
     it.each(["null", "[]", '"a string"', "42", "true"])(
       "returns 400 with the protocol Error shape for the valid-JSON-but-not-an-object body %s",
       async (rawBody) => {
@@ -573,10 +555,8 @@ describe("opportunities routes", () => {
       },
     );
 
-    // The router sends GET on the `/search` path to the detail handler, which
-    // rejects `search` as a non-UUID `oppId`. That mirrors the #1049 spike, where
-    // only POST was registered on `/search` and a GET fell through to the
-    // `:oppId` pattern. Pinned because the router comments call it out by name.
+    // The router sends GET /search to the detail handler, which rejects
+    // "search" as a non-UUID oppId — same as the #1049 spike.
     it("answers GET on the search path with the detail handler's 400, as the spike's :oppId pattern did", async () => {
       const response = await handleMockRequest(
         new Request(opportunitiesUrl("0.3.0", "/search")),
@@ -598,10 +578,8 @@ describe("opportunities routes", () => {
     });
 
     it("partitions the fixture set into disjoint, complementary halves when the same maxAwardAmountRange bound is queried with `between` vs `outside`", async () => {
-      // Bound chosen against the real fixture data (see fixtures.ts): the
-      // records' `funding.maxAwardAmount` values run from 7.5k to 2M, with
-      // values on both sides of [50000, 250000], so neither half is
-      // degenerate.
+      // Splits the fixtures' `funding.maxAwardAmount` values across
+      // [50000, 250000], so neither half is degenerate.
       const bound = {
         min: { amount: "50000.00", currency: "USD" },
         max: { amount: "250000.00", currency: "USD" },
@@ -628,13 +606,12 @@ describe("opportunities routes", () => {
       expect(betweenIds.size).toBeGreaterThan(0);
       expect(outsideIds.size).toBeGreaterThan(0);
 
-      // Disjoint: no id appears in both the "between" and "outside" results.
+      // Disjoint: no id appears in both results.
       for (const id of betweenIds) {
         expect(outsideIds.has(id)).toBe(false);
       }
 
-      // Complementary: together they cover every fixture record that has a
-      // `funding.maxAwardAmount` value at all.
+      // Complementary: together they cover every record with a maxAwardAmount.
       const unionIds = new Set([...betweenIds, ...outsideIds]);
       expect(unionIds.size).toBe(recordsWithMaxAward.length);
       for (const opp of recordsWithMaxAward) {
@@ -643,8 +620,7 @@ describe("opportunities routes", () => {
     });
 
     it("returns an empty items array with a well-formed envelope when a maxAwardAmountRange bound matches no fixture record", async () => {
-      // Every fixture's `funding.maxAwardAmount` tops out at 2,000,000.00, so
-      // this bound is clearly outside all of them.
+      // A bound above every fixture's `funding.maxAwardAmount`.
       const body = await runSearch("0.3.0", {
         filters: {
           maxAwardAmountRange: {
@@ -665,8 +641,7 @@ describe("opportunities routes", () => {
         page: 1,
         pageSize: 100,
         totalItems: 0,
-        // An empty result set reports zero pages, matching how the list
-        // endpoint derives `totalPages` (both go through `paginationInfo()`).
+        // An empty result set reports zero pages, not one.
         totalPages: 0,
       });
 
@@ -678,11 +653,8 @@ describe("opportunities routes", () => {
     });
 
     it("excludes every fixture record from a maxAwardAmountRange bound denominated in a different currency, regardless of operator", async () => {
-      // Every fixture's `funding.maxAwardAmount` is USD-denominated (see
-      // fixtures.ts's `usd()` helper), and this EUR-denominated bound is wide
-      // enough to numerically contain every fixture's amount if currency were
-      // ignored. Per the protocol (`lib/core/lib/core/models/opportunity/search.tsp`),
-      // a currency mismatch excludes the record regardless of `operator`.
+      // All fixture money is USD. Per the protocol, a currency mismatch
+      // excludes the record regardless of operator.
       const bound = {
         min: { amount: "0.00", currency: "EUR" },
         max: { amount: "999999999.00", currency: "EUR" },
@@ -708,9 +680,7 @@ describe("opportunities routes", () => {
         },
       });
 
-      // The currency mismatch excludes the record unconditionally, before the
-      // operator is even considered, so `outside` also returns zero items
-      // rather than inverting to the whole fixture set.
+      // So `outside` also returns zero items, not the whole fixture set.
       expect(outsideBody.items).toHaveLength(0);
     });
 
@@ -793,10 +763,8 @@ describe("opportunities routes", () => {
     });
 
     it("filters using only the given bound when a maxAwardAmountRange filter omits max", async () => {
-      // Bound chosen against the real fixture data (see fixtures.ts): the
-      // records' `funding.maxAwardAmount` values (25k, 30k, 50k, 50k, 60k,
-      // 75k, 100k, 120k, 250k, 500k, 2M) split into those at-or-above 50000
-      // and two below it, so this is a proper, non-degenerate subset.
+      // 50000 splits the fixtures' `funding.maxAwardAmount` values into a
+      // proper, non-degenerate subset.
       const body = await runSearch("0.3.0", {
         filters: {
           maxAwardAmountRange: {
@@ -828,9 +796,8 @@ describe("opportunities routes", () => {
       }
     });
 
-    // A malformed bound used to be dropped silently, which answered a
-    // filtered request with the entire unfiltered set — the response
-    // contradicting the filter the caller sent.
+    // A malformed bound was once dropped silently, answering a filtered
+    // request with the entire unfiltered set.
     it.each([
       [
         "closeDateRange",
@@ -886,8 +853,7 @@ describe("opportunities routes", () => {
         },
       });
 
-      // Echoed, but explicitly not applied — so the echo can't be read as
-      // "these narrowed the results".
+      // Echoed but not applied, so the result set stays unfiltered.
       expect(body.items).toHaveLength(OPPORTUNITY_FIXTURES.length);
       expect(body.filterInfo.filters.customFilters).toEqual({
         agency: { operator: "in", value: ["NSF"] },

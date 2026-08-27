@@ -1,10 +1,7 @@
 /**
- * CORS suite ported from the 3A standalone Worker (#1078):
- * `mock-api/__tests__/http/cors.spec.ts` on branch
- * `karina/1077-cloudflareworkermock` — imports, entry point, and base path
- * adjusted; assertions unchanged. Same-origin serving makes CORS largely moot
- * for Swagger UI on the docs site, but the headers stay so external `curl` and
- * SDK callers keep working.
+ * CORS suite ported from the 3A standalone Worker (#1078); assertions
+ * unchanged. Same-origin serving makes CORS moot for Swagger UI, but the
+ * headers stay so external `curl` and SDK callers keep working.
  */
 import { describe, it, expect, vi } from "vitest";
 import { handleMockRequest } from "@/lib/mock/router";
@@ -135,8 +132,7 @@ describe("CORS", () => {
           new Request(url, { method: "OPTIONS" }),
         );
 
-        // 204 is the conventional preflight answer; allowing 200 too so this
-        // doesn't fail on that choice alone.
+        // 204 is the conventional preflight answer; 200 is allowed too.
         expect([200, 204]).toContain(response.status);
 
         expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
@@ -226,10 +222,8 @@ describe("CORS", () => {
     });
   });
 
-  // A response that never gets built can't carry CORS headers, so an exception
-  // thrown inside routing costs the caller more than a 500: the browser reports
-  // an opaque CORS failure and the real cause never reaches the console. These
-  // pin the last-resort handler that keeps a thrown error on the CORS path.
+  // A throw that escapes routing yields no response at all, so the browser
+  // reports an opaque CORS failure instead of a 500.
   describe("unexpected failures stay on the CORS path", () => {
     it("answers a JSON body that is valid but not an object without throwing, and with the CORS header", async () => {
       const response = await handleMockRequest(
@@ -245,9 +239,7 @@ describe("CORS", () => {
     });
 
     // No request can currently make `route()` throw, so this exercises the
-    // composition `src/index.ts` applies — `withCors(await withErrorBoundary(…))`
-    // — against a thunk that does. Without the boundary the throw escapes
-    // `fetch()` entirely and the caller gets no response at all, CORS or not.
+    // `withCors(await withErrorBoundary(...))` composition directly.
     it("turns a throw inside routing into a 500 envelope that still carries the CORS header", async () => {
       const consoleError = vi
         .spyOn(console, "error")
