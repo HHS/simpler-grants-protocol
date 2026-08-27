@@ -1,11 +1,18 @@
 /**
- * Protocol response envelopes, shared by the router and the opportunity
- * handlers so a version-prefix 404 and a handler-level 404 are the same shape
- * on the wire.
+ * Protocol response envelopes, shared by the router and every resource handler
+ * so a version-prefix 404 and a handler-level 404 are the same shape on the
+ * wire.
  *
  * Ported from the #1049 spike's `handlers.ts`, with MSW's `HttpResponse.json`
  * swapped for the platform `Response.json` — the only behavioral difference is
  * the constructor; both emit `application/json` with the given status.
+ *
+ * The 201/202 builders arrived with #3C-2-T1, which added the first write
+ * endpoints: `POST /applications/start` answers `Responses.CreatedT` and
+ * `POST /orgs/{orgId}/changes` answers `Responses.AcceptedT`. Every builder
+ * writes the HTTP status into the body's `status` field as well, because
+ * `Responses.Success` declares one and the protocol's own examples mirror the
+ * transport status there.
  */
 
 /** A single `{field, message}` validation error carried in the `errors` array. */
@@ -26,6 +33,38 @@ export function errorResponse(
 /** Builds the protocol success envelope (`status: 200`, `message`, plus the endpoint-specific body). */
 export function successResponse(body: Record<string, unknown>): Response {
   return Response.json({ status: 200, message: "Success", ...body });
+}
+
+/**
+ * Builds a `Responses.CreatedT` envelope — HTTP 201 with the created record
+ * under `data`.
+ */
+export function createdResponse(data: unknown): Response {
+  return Response.json(
+    { status: 201, message: "Success", data },
+    { status: 201 },
+  );
+}
+
+/**
+ * Builds a `Responses.AcceptedT` envelope — HTTP 202 with the accepted record
+ * under `data`.
+ *
+ * `AcceptedT` declares an optional `Location` header pointing at where the
+ * accepted resource can be retrieved, so callers polling a queued change have
+ * somewhere to poll. It is sent whenever the caller gave us a URL to build.
+ *
+ * @param data - The accepted record.
+ * @param location - Absolute or root-relative URL for the accepted resource.
+ */
+export function acceptedResponse(data: unknown, location?: string): Response {
+  return Response.json(
+    { status: 202, message: "Success", data },
+    {
+      status: 202,
+      headers: location === undefined ? undefined : { Location: location },
+    },
+  );
 }
 
 /**

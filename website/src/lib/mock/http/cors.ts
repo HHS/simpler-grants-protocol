@@ -20,10 +20,16 @@
  * the other whenever auth is configured (`Auth.apiKey()` / bearer). Both are
  * non-simple request headers, so a browser refuses the request unless the
  * preflight names them explicitly — even though this mock ignores their values.
+ *
+ * `PUT` and `PATCH` joined the method list with #3C-2-T1, which added the first
+ * write endpoints (`PUT /applications/{appId}/submit`, `PATCH /orgs/{orgId}`,
+ * and the rest). A method the mock routes but the preflight omits is invisible
+ * to a cross-origin browser caller regardless of what the handler returns, so
+ * this list has to track the router's.
  */
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, X-API-Key, Authorization",
   "Access-Control-Max-Age": "86400",
 };

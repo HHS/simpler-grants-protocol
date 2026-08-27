@@ -25,6 +25,8 @@
  *    for v0.1 and from any `list`-variant projection.
  */
 
+import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
+
 /**
  * Protocol versions this fixture knows how to shape, matching the versions the
  * docs site publishes specs for (`website/public/openapi/openapi.{v}.yaml`).
@@ -234,16 +236,21 @@ const programCode = (value: string): CustomField => ({
  * — answers 404. It is also the id used throughout the rendered "Example Value"
  * panes, so the record carrying it mirrors those documented values field for
  * field.
+ *
+ * Since #3C-2-T1 the value lives in `./ids` as `CANONICAL_RECORD_ID`, because
+ * every other resource's path parameter resolves to the same `Types.uuid`
+ * example and so needs the same id at the head of its own fixture set. This
+ * name is kept as the opportunity-shaped alias — the existing suites and the
+ * golden request matrix address it by this name.
  */
-export const CANONICAL_OPPORTUNITY_ID = "30a12e5e-5940-4c08-921c-17a8960fcf4b";
+export const CANONICAL_OPPORTUNITY_ID = CANONICAL_RECORD_ID;
 
 /**
  * A well-formed UUID deliberately absent from the fixture, reserved so the
  * detail endpoint's 404 branch has a stable id to demonstrate — it must never
  * be given to a record.
  */
-export const RESERVED_MISSING_OPPORTUNITY_ID =
-  "00000000-0000-0000-0000-000000000000";
+export const RESERVED_MISSING_OPPORTUNITY_ID = RESERVED_MISSING_ID;
 
 /**
  * The fixture set: 25 opportunities spanning all four statuses, a range of

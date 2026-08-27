@@ -162,9 +162,16 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     expect(body.errors[0].field).toBe("version");
   });
 
-  it("flags a non-opportunity path with field: 'path' and the opportunity-endpoints-only message", async () => {
+  // Replaced when #3C-2-T1 extended the mock past opportunities. This case used
+  // to request `/v0.4.0/common-grants/awards` and assert an
+  // "opportunity endpoints only" 404 — awards are now served, so that path
+  // answers 200 and the message would be false. What is still worth pinning is
+  // the *discrimination*: a path outside the served surface reports
+  // `field: "path"`, not a resource-level field, so a caller can tell "this is
+  // not a route" from "this record does not exist".
+  it("flags a path outside the served surface with field: 'path'", async () => {
     const response = await handleMockRequest(
-      new Request("https://docs.example/api/v0.4.0/common-grants/awards"),
+      new Request("https://docs.example/api/v0.4.0/common-grants/proposals"),
     );
 
     expect(response.status).toBe(404);
@@ -173,7 +180,70 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
       errors: Array<{ field: string; message: string }>;
     };
     expect(body.errors[0].field).toBe("path");
-    expect(body.errors[0].message).toContain("opportunity endpoints only");
+    expect(body.errors[0].message).toContain("No route matches");
+  });
+
+  // The other half of that discrimination, and new with #3C-2-T1: a resource
+  // that IS in the protocol but not in the requested version reports which
+  // version added it, rather than the bare "no route" it would have got before.
+  it("names the adding version for a resource absent from the requested version", async () => {
+    const response = await handleMockRequest(
+      new Request("https://docs.example/api/v0.2.0/common-grants/awards"),
+    );
+
+    expect(response.status).toBe(404);
+
+    const body = (await response.json()) as {
+      errors: Array<{ field: string; message: string }>;
+    };
+    expect(body.errors[0].field).toBe("path");
+    expect(body.errors[0].message).toContain("added in v0.4.0");
+  });
+
+  // Regression: `RESOURCE_ROUTE` originally captured remainder segments as
+  // `[^/]*`, so a bare trailing slash matched with an EMPTY id and reached the
+  // detail handler, which answered 400 "Invalid <x> id". `/opportunities/` had
+  // always answered 404, because its own regex uses `[^/]+`. Two answers to the
+  // same shape of request, decided by which resource you asked for. Pinned
+  // across all six so the quantifiers cannot drift apart again.
+  it.each([
+    "opportunities",
+    "awards",
+    "orgs",
+    "applications",
+    "forms",
+    "competitions",
+  ])(
+    "answers a bare trailing slash on /%s with a route miss, not a 400",
+    async (resource) => {
+      const response = await handleMockRequest(
+        new Request(
+          `https://docs.example/api/v0.4.0/common-grants/${resource}/`,
+        ),
+      );
+
+      expect(response.status).toBe(404);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(body.errors[0].field).toBe("path");
+    },
+  );
+
+  it("answers a path nested deeper than any route with a route miss", async () => {
+    const response = await handleMockRequest(
+      new Request(
+        "https://docs.example/api/v0.4.0/common-grants/opportunities/foo/bar",
+      ),
+    );
+
+    expect(response.status).toBe(404);
+
+    const body = (await response.json()) as {
+      errors: Array<{ field: string; message: string }>;
+    };
+    expect(body.errors[0].field).toBe("path");
   });
 
   it("flags an unsupported method on an otherwise-valid path with field: 'path'", async () => {
