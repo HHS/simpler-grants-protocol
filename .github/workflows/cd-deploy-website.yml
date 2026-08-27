@@ -105,9 +105,7 @@ jobs:
 
       - name: Deploy to Cloudflare Worker
         # Uploads a new version of the Worker named in website/wrangler.jsonc
-        # (common-grants) and switches live traffic to it. PR previews are
-        # versions of this same Worker, uploaded (not deployed) with a
-        # preview alias by .github/scripts/upload-worker-preview.sh.
+        # (common-grants) and switches live traffic to it. PR previews are versions of this same Worker
         working-directory: ./website
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
