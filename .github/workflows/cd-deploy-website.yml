@@ -73,20 +73,14 @@ jobs:
         uses: actions/deploy-pages@v5
 
   # Parallel production deploy to the shared `common-grants` Cloudflare Worker
-  # (beta.commongrants.org) during the GH Pages -> Cloudflare migration
-  # window (#1110). Independent of deploy-github-pages so a failure in one
-  # target never blocks the other.
+  # (beta.commongrants.org) during the GH Pages deploy
   deploy-cloudflare:
     needs: build
     runs-on: ubuntu-latest
-    # This job doesn't touch Pages or OIDC; drop the workflow-level grants.
     permissions:
       contents: read
     # Only deploy from main branch
     if: github.ref == 'refs/heads/main'
-    # One deploy at a time, never cancelled mid-flight. GitHub keeps only the
-    # newest queued run per group, so back-to-back merges may skip an
-    # intermediate deploy -- the latest commit still ends up live.
     concurrency:
       group: deploy-cloudflare
       cancel-in-progress: false
