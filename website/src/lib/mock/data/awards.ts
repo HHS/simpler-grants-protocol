@@ -1,31 +1,10 @@
 /**
- * Hand-written award fixtures for the three `/awards` endpoints (#334).
- *
- * Awards are the most cross-referential resource in the mock: one record can
- * point at the opportunity it came from, the application that won it, the
- * organizations that funded and received it, and a parent award it amends. Every
- * one of those references is built from the other fixture modules —
- * `oppRefFor()` and `appRefFor()` below, and `orgRefCollection()` from
- * `./organizations` — so none of them can dangle. That is the whole of
- * #334's "ids referenced across resources resolve to records that exist"
- * criterion, enforced at module load rather than hoped for.
- *
- * Values follow `lib/core/lib/core/models/award.tsp`'s `@example` decorators.
- * The first record mirrors the documented `AwardBase` example's own fields (see
- * `CANONICAL_AWARD_ID` for why its id differs); the second carries the id the
- * example itself publishes, so both resolve. The *references* are the one place
- * fidelity to the example deliberately loses to referential consistency: the
- * example points at an opportunity id and an org EIN that exist only inside
- * that example, so this record's `opportunity` and `recipientOrganizations`
- * derive from the live fixture records instead — an example-verbatim reference
- * would be a dangling one.
- *
- * **No version shaping.** Awards are `@added(Versions.v0_4)` in their entirety,
- * so the only version that serves them is the only version whose models they
- * have — there is no earlier shape to project down to. The router 404s
- * `/v0.1.0`–`/v0.3.0` before a handler is reached (see `data/availability.ts`),
- * which is why this module has no `shapeAwardForVersion` counterpart to
- * `shapeOpportunityForVersion`.
+ * Hand-written award fixtures for the `/awards` endpoints. Every reference is
+ * built from the other fixture modules, so none can dangle. The canonical
+ * record mirrors the documented `AwardBase` example, except its references,
+ * which derive from live fixture records on purpose: the example's own ids
+ * exist only inside the example. Awards are v0.4-only, so this module has no
+ * version shaping.
  */
 
 import { OPPORTUNITY_FIXTURES, type Money } from "./fixtures";
@@ -61,13 +40,9 @@ export interface AwdTimeline {
 }
 
 /**
- * Identifiers for an award (mirrors `Models.AwdIds`).
- *
- * `awd:us:fain` is a *base* identifier the protocol defines for awards, so it
- * gets its own top-level key — `otherIds` is only for registries the protocol
- * does not define on the model. Filing the FAIN under `otherIds` validates
- * (the collection is open), but it is not the shape the `AwardBase` example
- * publishes, and the docs pane and the live response should agree.
+ * Identifiers for an award (mirrors `Models.AwdIds`). `awd:us:fain` is a base
+ * identifier with its own top-level key, never filed under `otherIds`, which
+ * is only for registries the protocol does not define on the model.
  */
 export interface AwdIds {
   systemId?: Identifier;
@@ -84,10 +59,7 @@ export interface PersonName {
   suffix?: string;
 }
 
-/**
- * An individual award recipient (mirrors `Models.AwdRecipientIndividual`) —
- * the shape an award takes when the money went to a person, not an org.
- */
+/** An individual award recipient (mirrors `Models.AwdRecipientIndividual`). */
 export interface AwdRecipientIndividual {
   name?: PersonName;
   identifiers?: {
@@ -137,10 +109,7 @@ export interface Award {
   lastModifiedAt: string;
 }
 
-/**
- * The id Swagger UI pre-fills into the `awdId` box, and therefore the id of the
- * first award record. See `./ids`.
- */
+/** The id Swagger UI pre-fills into the `awdId` box (see `./ids`). */
 export const CANONICAL_AWARD_ID = CANONICAL_RECORD_ID;
 
 /** The id published on the `Models.AwardBase` example itself. */
@@ -196,10 +165,7 @@ function fain(value: string, systemId: string): AwdIds {
   };
 }
 
-/**
- * Builds an `OppRef` from an opportunity index, reading the title off the real
- * record so a reference can never disagree with the opportunity it names.
- */
+/** Builds an `OppRef` from an opportunity index, reading the real record. */
 function oppRefFor(index: number): OppRef {
   const opportunity = OPPORTUNITY_FIXTURES[index];
   if (!opportunity) {
@@ -218,17 +184,9 @@ function appRefFor(index: number): AppRef {
 }
 
 /**
- * The fixture set: 11 awards spanning all four `AwdStatus` values, a range of
- * awarded amounts, and award dates across three years — enough that
- * `POST /awards/search` visibly narrows on status, opportunity, amount, and
- * date. One award (the fellowship) goes to a `recipientIndividual` rather than
- * an organization, so the person-recipient half of the model is demonstrated
- * and not just declared.
- *
- * The canonical record carries the newest `lastModifiedAt`, so it sorts first
- * under the list endpoint's default ordering — the same invariant the
- * opportunity set holds, and for the same reason: the first row a visitor sees
- * should be the record the docs pane describes.
+ * The fixture set: 11 awards spanning all four `AwdStatus` values. The
+ * canonical record must carry the newest `lastModifiedAt` so it sorts first
+ * under the list endpoint's default ordering.
  */
 export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   // ---- The canonical record: the spec's documented AwardBase example ----
@@ -358,9 +316,8 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
     title: "Workforce Apprenticeship Program Award",
     identifiers: {
       ...fain("ETA0000318", "01912a8b-7c3d-7894-abcd-ef1234567894"),
-      // A registry the protocol does not define on the model, so it goes under
-      // `otherIds` — the one legitimate use of that map now that the FAIN sits
-      // on its own base key.
+      // A registry the protocol does not define on the model, so it belongs
+      // under `otherIds`.
       otherIds: {
         "awd:usaspending:generated": {
           registry: { code: "awd:usaspending:generated" },
@@ -412,9 +369,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
     opportunity: oppRefFor(7),
     funders: orgRefCollection(NSF),
     recipientOrganizations: orgRefCollection(COASTAL_RESEARCH),
-    // The parent is the base award above. Its title and identifiers are the
-    // same values that record carries — a mismatch here would be the exact
-    // dangling reference the cross-resource suite looks for.
+    // The parent is the base award above; title and identifiers must match it.
     parent: {
       id: "aa1b2c3d-4e5f-4061-8a7b-8c9d0e1f2032",
       title: "Clean Energy Innovation Demonstration Award",
@@ -511,11 +466,8 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    // The one award to a person rather than an organization. `Civic Tech
-    // Fellows` is the natural opportunity for it, and the record deliberately
-    // carries `recipientIndividual` *instead of* `recipientOrganizations` —
-    // the model allows both, but an award that names an org and a person as
-    // recipients would demonstrate confusion, not coverage.
+    // The one award to a person: it carries `recipientIndividual` instead of
+    // `recipientOrganizations` on purpose.
     id: "23293a4b-c6d7-48e9-9253-64a5b6c7d8e9",
     title: "Civic Tech Fellowship Award — Cohort 4",
     identifiers: fain("CTF0000104", "01912a8b-7c3d-7894-abcd-ef1234567900"),

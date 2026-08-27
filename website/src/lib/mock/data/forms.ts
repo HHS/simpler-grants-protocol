@@ -1,24 +1,8 @@
 /**
- * Hand-written form fixtures for `GET /forms` and `GET /forms/{formId}`
- * (#334).
- *
- * Same rules as the opportunity set in `./fixtures`: a fixed, hand-authored
- * dataset in the fullest (`Models.FormBase`) shape, with semantic values taken
- * from the spec's own `@example` decorators (`lib/core/lib/core/models/form.tsp`)
- * rather than generated noise, so the docs' "Example Value" pane and the live
- * response agree.
- *
- * The forms are the leaf of the mock's reference graph — nothing here points at
- * another resource — which is why this module is written first and imported by
- * the competition and application fixtures rather than the other way round.
- * `CompetitionForms` embeds whole `FormBase` records, and an application's form
- * responses carry a `formId`; both read from `FORM_FIXTURES`, so a response can
- * never name a form that doesn't exist.
- *
- * `jsonSchema` / `uiSchema` are real JSON-Forms pairs rather than placeholders,
- * because the docs site already renders forms from exactly this pair (see
- * `src/lib/forms/`), so a visitor who copies one out of the playground gets
- * something that actually renders.
+ * Hand-written form fixtures for `GET /forms` and `GET /forms/{formId}`.
+ * Values follow the spec's `@example` decorators. Forms are the leaf of the
+ * reference graph: the competition and application fixtures embed these
+ * records rather than re-typing them.
  */
 
 import { CANONICAL_RECORD_ID } from "./ids";
@@ -58,11 +42,8 @@ export interface MappingField {
 
 /**
  * A (possibly nested) mapping between form and CommonGrants field paths.
- *
- * `undefined` is admitted by the index signature so that object literals
- * assigned to this type can differ in which keys they set — without it, TypeScript
- * widens the fixture array to a union of literal types whose absent keys are
- * `undefined`, and each one then fails the index signature.
+ * `undefined` is admitted so fixture literals that differ in which keys they
+ * set still satisfy the index signature.
  */
 export type MappingSchema = {
   [key: string]: MappingField | MappingSchema | undefined;
@@ -74,7 +55,7 @@ export interface Form {
   name: string;
   description?: string;
   version?: string;
-  /** Prose, or attached documents — the model allows either. */
+  /** Prose or attached documents; the model allows either. */
   instructions?: string | FileAttachment[];
   jsonSchema?: FormJsonSchema;
   uiSchema?: FormUISchema;
@@ -86,21 +67,15 @@ export interface Form {
 }
 
 /**
- * The id Swagger UI pre-fills into the `formId` box, and therefore the id of
- * the first form record. See `./ids` for why every resource shares one.
- *
- * Load-bearing twice over: `GET /forms/{formId}` pre-fills it, and so does the
- * `formId` box on `GET|PUT /applications/{appId}/forms/{formId}` — where the
- * `appId` box pre-fills with the same value. So the canonical application must
- * also carry a response to *this* form; `./applications` enforces that.
+ * The id Swagger UI pre-fills into the `formId` box (see `./ids`). Both boxes
+ * on `/applications/{appId}/forms/{formId}` pre-fill with the same value, so
+ * the canonical application must also carry a response to this form.
  */
 export const CANONICAL_FORM_ID = CANONICAL_RECORD_ID;
 
 /**
- * The id the specs publish as the `example` on `Models.FormBase` itself. It is
- * not the `Types.uuid` example, so a visitor who copies the id out of the
- * rendered example rather than accepting the pre-filled one sends this instead
- * — record 2 carries it so both resolve.
+ * The id published on the `Models.FormBase` example itself. Record 2 carries
+ * it so an id copied out of the rendered example also resolves.
  */
 export const DOCUMENTED_FORM_ID = "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a";
 
@@ -138,12 +113,7 @@ const APPLICANT_DETAILS_UI: FormUISchema = {
   ],
 };
 
-/**
- * The fixture set: 6 forms, spanning a short applicant-details form, a budget
- * form with numeric fields, and a narrative form — enough that `GET /forms`
- * returns a list worth paginating and that a competition can require more than
- * one distinct form.
- */
+/** The fixture set: 6 forms of varying shape. */
 export const FORM_FIXTURES: readonly Form[] = Object.freeze<Form[]>([
   // ---- The canonical record (see CANONICAL_FORM_ID) ----
   {
@@ -271,9 +241,7 @@ export const FORM_FIXTURES: readonly Form[] = Object.freeze<Form[]>([
     name: "Organization eligibility",
     description: "Registration and eligibility attestations",
     version: "3.0.0",
-    // `instructions` as attached files rather than prose — the model declares
-    // `string | File[]`, and without this record the `Fields.File` shape would
-    // exist nowhere in the mock for a consumer to see.
+    // The one record showing the `File[]` variant of `instructions`.
     instructions: [
       {
         downloadUrl:

@@ -1,22 +1,9 @@
 /**
- * Hand-written competition fixtures for `GET /competitions/{compId}` (#334).
- *
- * Competitions are the join in the mock's reference graph: each one names the
- * opportunity it belongs to (`opportunityId`) and embeds the forms an applicant
- * must complete (`forms.forms`). Both sides are read from the existing fixture
- * modules rather than re-typed, so a competition can never point at an
- * opportunity or a form that doesn't exist — the cross-resource consistency
- * criterion of #334 is satisfied by construction here, and asserted in
- * `__tests__/lib/mock/data/cross-resource.spec.ts`.
- *
- * **Why this is a separate `Competition` type from the one in `./fixtures`.**
- * `fixtures.ts` already has a `Competition` interface, but it is deliberately
- * trimmed: it models the *nested* competitions on `OpportunityDetails` and omits
- * the required `forms` object, which is a known, pinned deviation (see the
- * `competitions deviation` suite in the conformance spec). The records here are
- * served as `Models.CompetitionBase` in their own right, so they carry `forms`
- * and validate against the real schema. The nested previews stay as they are —
- * changing them would rewrite the opportunity envelopes the golden corpus pins.
+ * Hand-written competition fixtures for `GET /competitions/{compId}`.
+ * Each record's opportunity and forms come from the other fixture modules, so
+ * references cannot dangle. This `Competition` type is deliberately separate
+ * from the trimmed one in `./fixtures`, which models the nested previews on
+ * `OpportunityDetails` and omits the required `forms` object.
  */
 
 import { OPPORTUNITY_FIXTURES, type CustomField } from "./fixtures";
@@ -49,7 +36,7 @@ export interface Competition {
   opportunityId: string;
   title: string;
   description?: string;
-  /** Prose, or attached documents — the model allows either. */
+  /** Prose or attached documents; the model allows either. */
   instructions?: string | FileAttachment[];
   status: CompetitionStatus;
   keyDates?: CompetitionTimeline;
@@ -60,10 +47,7 @@ export interface Competition {
   lastModifiedAt: string;
 }
 
-/**
- * The id Swagger UI pre-fills into the `compId` box, and therefore the id of the
- * first competition record. See `./ids`.
- */
+/** The id Swagger UI pre-fills into the `compId` box (see `./ids`). */
 export const CANONICAL_COMPETITION_ID = CANONICAL_RECORD_ID;
 
 /** The id published on the `Models.CompetitionBase` example itself. */
@@ -75,15 +59,9 @@ function dateEvent(name: string, date: string): SingleDateEvent {
 }
 
 /**
- * Assembles a `CompetitionForms` from form *ids*, so the embedded records are
- * always the live fixtures rather than copies that could drift from them.
- *
- * Throws on an unknown id. A competition naming a form that doesn't exist is a
- * fixture authoring bug, and failing at module load surfaces it on the first
- * test run instead of serving a competition whose `forms` map has a hole in it.
- *
- * @param entries - Map of `forms` key to the form id it should embed.
- * @param required - Which of those keys an applicant must complete.
+ * Builds a `CompetitionForms` from form ids, embedding the live fixture
+ * records. Throws on an unknown id on purpose: a dangling reference should
+ * fail at module load.
  */
 function formsFrom(
   entries: Record<string, string>,
@@ -111,13 +89,8 @@ const ORG_ELIGIBILITY = FORM_FIXTURES[4].id;
 const PERFORMANCE_MEASURES = FORM_FIXTURES[5].id;
 
 /**
- * The fixture set: 6 competitions across 6 distinct opportunities, spanning all
- * three `CompetitionStatus` values, with form requirements of varying size so a
- * visitor can see a one-form competition and a five-form one.
- *
- * `opportunityId` values are read out of `OPPORTUNITY_FIXTURES` by index rather
- * than pasted, so reordering or renaming an opportunity cannot silently orphan a
- * competition.
+ * The fixture set: 6 competitions across 6 opportunities, spanning all three
+ * `CompetitionStatus` values.
  */
 export const COMPETITION_FIXTURES: readonly Competition[] = Object.freeze<
   Competition[]
@@ -205,9 +178,7 @@ export const COMPETITION_FIXTURES: readonly Competition[] = Object.freeze<
     title: "Rural Broadband Expansion — planning grants",
     description:
       "Planning-grant track for rural broadband feasibility studies and network design.",
-    // `instructions` as an attached file — `CompetitionBase` declares the same
-    // `string | File[]` union `FormBase` does, and each variant should appear
-    // on each model that declares it, not just once somewhere.
+    // The one record showing the `File[]` variant of `instructions` here.
     instructions: [
       {
         downloadUrl:
@@ -333,10 +304,8 @@ export const COMPETITION_FIXTURES: readonly Competition[] = Object.freeze<
     ),
     acceptedApplicantTypes: [
       {
-        // The enum spells this one `non_profit_with_501c3` while its sibling is
-        // `nonprofit_without_501c3` — an inconsistency in
-        // `ApplicantTypeOptions` itself, not a typo here. The conformance suite
-        // is what caught the wrong spelling.
+        // `ApplicantTypeOptions` really spells this `non_profit_with_501c3`
+        // (its sibling is `nonprofit_without_501c3`); not a typo here.
         value: "non_profit_with_501c3",
         description: "Nonprofits with 501(c)(3) status",
       },

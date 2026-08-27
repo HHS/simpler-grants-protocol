@@ -21,11 +21,8 @@
  * non-simple request headers, so a browser refuses the request unless the
  * preflight names them explicitly — even though this mock ignores their values.
  *
- * `PUT` and `PATCH` joined the method list with #334, which added the first
- * write endpoints (`PUT /applications/{appId}/submit`, `PATCH /orgs/{orgId}`,
- * and the rest). A method the mock routes but the preflight omits is invisible
- * to a cross-origin browser caller regardless of what the handler returns, so
- * this list has to track the router's.
+ * The method list must track the router's: a method the preflight omits is
+ * unusable by a cross-origin browser caller.
  */
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",

@@ -1,12 +1,7 @@
 /**
- * Handler + fixture suite for the awards endpoints (#334), the first
- * resource added past opportunities. `Models.AwardBase` and the `Awards`
- * router interface were both added in protocol v0.4
- * (`lib/core/lib/core/models/award.tsp`, `lib/core/lib/core/routes/awards.tsp`),
- * so every call here targets version "0.4.0" directly against the handler
- * functions rather than through `handleMockRequest` — the router doesn't yet
- * know the `/awards` path exists, and wiring it (plus the pre-v0.4 404) is a
- * separate ticket's router spec, not this one.
+ * Handler + fixture suite for the awards endpoints. Awards are v0.4-only, so
+ * every call targets "0.4.0" directly against the handler functions; router
+ * wiring is covered by the router spec.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -21,10 +16,7 @@ import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "@/lib/mock/data/ids";
 const VERSION = "0.4.0";
 const STATUS_VALUES = ["awarded", "completed", "cancelled", "custom"];
 
-/** Builds a request URL carrying the given query/path suffix. Only used to
- * construct valid `Request` objects for the handlers below — since they are
- * called directly rather than through the router, the host/base path are
- * placeholders. */
+/** Builds a request URL; the host/base path are placeholders. */
 function awardsUrl(suffix = ""): string {
   return `https://docs.example/api/v${VERSION}/common-grants/awards${suffix}`;
 }
@@ -62,9 +54,8 @@ describe("AWARD_FIXTURES", () => {
     }
   });
 
-  // Enough records, with every status represented, so status filtering (see
-  // the searchAwards suite below) visibly narrows the result set rather than
-  // collapsing to zero or to the whole set.
+  // Enough records that status filtering narrows to a proper, non-empty
+  // subset.
   it("contains at least 8 records, with every status value represented", () => {
     expect(AWARD_FIXTURES.length).toBeGreaterThanOrEqual(8);
 
@@ -157,9 +148,6 @@ describe("GET /v{version}/common-grants/awards (list)", () => {
 });
 
 describe("GET /v{version}/common-grants/awards/{awdId} (detail)", () => {
-  // Swagger UI pre-fills every path parameter box with the specs' single
-  // `CommonGrants.Types.uuid` example (see `data/ids.ts`'s docstring), so this
-  // is the id an untouched "Try it out" sends for this route. It must not 404.
   it("returns 200 for the id Swagger UI pre-fills into every path parameter box", async () => {
     const response = getAward(CANONICAL_AWARD_ID, VERSION);
 
@@ -261,9 +249,8 @@ describe("POST /v{version}/common-grants/awards/search", () => {
     }
   });
 
-  // The id is drawn from a real fixture record's `opportunity.id` rather than
-  // hardcoded, so the test doesn't assume a specific fixture layout — only
-  // that at least one award references an opportunity.
+  // The id comes from a real fixture rather than being hardcoded, so the test
+  // only assumes at least one award references an opportunity.
   it("narrows results when filtering on opportunityId", async () => {
     const withOpportunity = AWARD_FIXTURES.find(
       (award) => award.opportunity?.id !== undefined,
@@ -291,8 +278,7 @@ describe("POST /v{version}/common-grants/awards/search", () => {
     expect(amounts.length).toBeGreaterThan(1);
 
     const sorted = [...amounts].sort((a, b) => a - b);
-    // A bound covering only the lower half of the observed amounts, so the
-    // filtered result set is a proper, non-empty subset of the fixtures.
+    // Covers only the lower half, so the result is a proper, non-empty subset.
     const midpoint = sorted[Math.floor(sorted.length / 2)];
 
     const body = await runSearch({
@@ -316,10 +302,6 @@ describe("POST /v{version}/common-grants/awards/search", () => {
     }
   });
 
-  // Valid `AwdSortBy` wire values (`lib/core/lib/core/models/award.tsp`):
-  // lastModifiedAt, createdAt, title, status.value, keyDates.awardDate,
-  // funding.awardedAmount, custom. Anything else must be rejected rather than
-  // silently ignored.
   it("returns 400 with a sorting.sortBy field error for an unknown sortBy value", async () => {
     const response = await searchAwards(
       new Request(awardsUrl("/search"), {

@@ -28,14 +28,12 @@ import type { GoldenEnvelope } from "./__fixtures__/capture-golden";
  *  1. `security.checkOrigin`, Astro's CSRF guard, is on by default and answers
  *     403 to a non-GET/HEAD request that carries no `Origin` header, or that is
  *     cross-origin with a form-ish content type. So `PUT`/`DELETE` get a bare
- *     403 where the Worker gave a protocol-shaped 404. This one applies to built
+ *     403 where the Worker gave a protocol-shaped 404. This applies to built
  *     SSR output too, not just dev — #1078 decides whether to set
- *     `checkOrigin: false`. Since #334 it is no longer harmless: exactly one
- *     served route, `PUT /applications/{appId}/submit` (which has no body), sends
- *     neither `Origin` nor `Content-Type` from `curl` and so gets the bare 403.
- *     Every other write route sends a JSON body, which clears the guard. See
- *     `submitApplication` in `handlers/applications.ts` for the full statement
- *     and the one-flag `curl` workaround.
+ *     `checkOrigin: false`. Since #334, `PUT /applications/{appId}/submit`
+ *     (which has no body) sends neither `Origin` nor `Content-Type` from
+ *     `curl` and gets that bare 403; every other write route sends a JSON
+ *     body, which clears the guard.
  *  2. Under `astro dev` only, Vite's own CORS middleware answers `OPTIONS`
  *     preflights before the route, with its own header set — and no
  *     `Access-Control-Allow-Origin` at all — so `preflightResponse()` is
@@ -50,16 +48,8 @@ import type { GoldenEnvelope } from "./__fixtures__/capture-golden";
  * a real caller receives is only the same thing where nothing intercepts first —
  * which for the three served endpoints, over `astro dev`, it does not.
  *
- * **Scope narrowed by #334.** The mock now serves awards, organizations,
- * competitions, applications, and forms as well, and the 3A Worker served none
- * of them. So this corpus covers the *opportunity* endpoints — the surface both
- * hosts implement — and nothing else. That is the guarantee it was always
- * really making; extending the mock is what forced it to be said out loud. One
- * case was retired in the process (`route-miss-other-resource`, which asked for
- * `/awards` and expected a 404): see `request-matrix.ts` for why no unserved
- * path can replace it, and `router.spec.ts` for where that behavior is pinned
- * now. Point 1 below also grew teeth: `PUT` and `PATCH` are no longer methods
- * "the mock doesn't serve".
+ * Since #334 the mock serves more than the 3A Worker ever did, so this corpus
+ * covers only the opportunity endpoints — the surface both hosts implement.
  *
  * Both are recorded as findings for #1078 rather than worked around here:
  * "the host framework can rewrite the kernel's envelopes" is a real difference

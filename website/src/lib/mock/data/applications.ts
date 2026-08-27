@@ -1,22 +1,8 @@
 /**
- * Hand-written application fixtures, including the nested form responses the
- * `/applications/{appId}/forms/{formId}` routes serve (#334).
- *
- * Applications sit at the deepest point of the reference graph: each one names a
- * competition, the opportunity behind it, and a set of form responses keyed by
- * form. All three are derived from the other fixture modules rather than
- * re-typed — `appFor()` reads the competition, takes its `opportunityId` from
- * the record itself, and builds one response per required form — so an
- * application cannot reference a competition, opportunity, or form that doesn't
- * exist, and cannot claim a response to a form its competition never asked for.
- *
- * **Statuses are chosen to make the submit route demonstrable.** `PUT
- * /applications/{appId}/submit` answers `Responses.ApplicationSubmissionError`
- * when an application has validation errors and 200 when it doesn't (see
- * `handlers/applications.ts`). Both branches need a fixture: the canonical
- * record is submit-ready, and `BLOCKED_APPLICATION_ID` names one that is not.
- * Without that pair, half the route's documented behavior would be unreachable
- * from the playground.
+ * Hand-written application fixtures, including the nested form responses.
+ * `appFor()` derives each record from its competition, so references cannot
+ * dangle. The canonical record is submit-ready and `BLOCKED_APPLICATION_ID`
+ * is not, so both branches of the submit route are reachable.
  */
 
 import {
@@ -76,33 +62,22 @@ export interface Application {
   lastModifiedAt: string;
 }
 
-/**
- * The id Swagger UI pre-fills into the `appId` box, and therefore the id of the
- * first application record. See `./ids`.
- */
+/** The id Swagger UI pre-fills into the `appId` box (see `./ids`). */
 export const CANONICAL_APPLICATION_ID = CANONICAL_RECORD_ID;
 
 /** The id published on the `Models.ApplicationBase` example itself. */
 export const DOCUMENTED_APPLICATION_ID = "123e4567-e89b-12d3-a456-426614174000";
 
 /**
- * An application deliberately carrying validation errors, so
- * `PUT /applications/{appId}/submit` has a record that exercises its
- * `ApplicationSubmissionError` branch. Must never be made submit-ready.
+ * Deliberately carries validation errors so the submit route can demonstrate
+ * its error branch. Must never be made submit-ready.
  */
 export const BLOCKED_APPLICATION_ID = "5f607182-93a4-4b5c-8d6e-7f8091a2b3c4";
 
 /**
- * The id returned by `POST /applications/start`.
- *
- * The mock is stateless (see the module docstring in
- * `handlers/applications.ts`), so starting an application cannot mint and keep a
- * new id — and it must not invent a random one either, since a body that
- * differs per call would break the deterministic-response guarantee the whole
- * fixture set is built on. So `start` echoes a single reserved draft id, every
- * time. It is absent from `APPLICATION_FIXTURES` on purpose: a subsequent
- * `GET /applications/{that id}` answers 404, which is the honest reply from a
- * mock that did not actually create anything.
+ * The id the stateless `POST /applications/start` echoes on every call. It is
+ * absent from `APPLICATION_FIXTURES` on purpose: the mock creates nothing, so
+ * a follow-up GET answers 404.
  */
 export const DRAFT_APPLICATION_ID = "9a0b1c2d-3e4f-4051-8617-28394a5b6c7d";
 
@@ -151,10 +126,7 @@ const RESPONSE_BY_FORM_NAME: Record<string, Record<string, unknown>> = {
 };
 
 /**
- * Custom fields attached to a form's responses, keyed by form name — the same
- * routing idea as `RESPONSE_BY_FORM_NAME`, so the field suits the form. Only
- * non-empty responses get them: a `notStarted` response with an attachment
- * would claim work that never happened.
+ * Custom fields per form name. Only non-empty responses get them.
  */
 const RESPONSE_CUSTOM_FIELDS_BY_FORM_NAME: Record<
   string,
@@ -179,7 +151,7 @@ const RESPONSE_CUSTOM_FIELDS_BY_FORM_NAME: Record<
   },
 };
 
-/** A form response's id, derived from its application and form ids. */
+/** A stable form-response id, derived from the response's index. */
 function responseId(index: number): string {
   return `7a8b9c0d-1e2f-40${String(30 + index).padStart(2, "0")}-8a1b-2c3d4e5f60${String(
     70 + index,
@@ -187,12 +159,9 @@ function responseId(index: number): string {
 }
 
 /**
- * Builds one `AppFormResponse` for a form the competition requires.
- *
- * The response body is chosen by the form's *name* rather than generated, so it
- * plausibly satisfies that form's `jsonSchema` — a budget form gets numbers, a
- * narrative form gets prose. A form with no canned body gets an empty response
- * and `notStarted`, which is a legitimate state rather than a gap.
+ * Builds one `AppFormResponse`. The body is chosen by form name so it suits
+ * the form's schema; a form with no canned body reads `notStarted`. Throws on
+ * an unknown form id on purpose: a dangling reference should fail at load.
  */
 function formResponse(
   applicationId: string,
@@ -248,12 +217,8 @@ interface AppOptions {
 
 /**
  * Assembles an application from its competition, so `opportunityId` and the
- * `formResponses` keys are always the competition's own — never a second,
- * hand-maintained copy that could disagree with it.
- *
- * Throws on an unknown competition id, for the same reason `formsFrom` in
- * `./competitions` does: a dangling reference is an authoring bug, and failing
- * at module load surfaces it on the first test run.
+ * `formResponses` keys always match it. Throws on an unknown competition id
+ * on purpose: a dangling reference should fail at load.
  */
 function appFor(options: AppOptions): Application {
   const competition: Competition | undefined = getCompetitionById(
@@ -308,11 +273,7 @@ function appFor(options: AppOptions): Application {
   };
 }
 
-/**
- * The fixture set: 7 applications spanning every `AppStatus` value, across four
- * competitions, so `POST /applications/search` has something to filter and the
- * status filter visibly narrows results.
- */
+/** The fixture set: 7 applications spanning every `AppStatus` value. */
 export const APPLICATION_FIXTURES: readonly Application[] = Object.freeze<
   Application[]
 >([
@@ -436,9 +397,8 @@ export const APPLICATION_FIXTURES: readonly Application[] = Object.freeze<
       customValue: "withdrawn",
       description: "The applicant withdrew the application before review.",
     },
-    // The withdrawn record carries the two FormResponseStatus values no other
-    // fixture reaches: its answered form is `custom` (locked on withdrawal),
-    // and its budget form was never started at all.
+    // Covers the two FormResponseStatus values no other fixture reaches:
+    // `custom` (locked) and `notStarted`.
     responseStatus: {
       value: "custom",
       customValue: "locked",
@@ -462,14 +422,8 @@ export function allApplications(): Application[] {
 }
 
 /**
- * Finds an application's response to a given form, by form *id* rather than by
- * the `formResponses` key.
- *
- * The routes address a response as `/{appId}/forms/{formId}`, so the id is what
- * a caller has; the key is an internal naming convention of the competition.
- * Looking up by id is also what makes the doubly-pre-filled Execute work: both
- * boxes arrive holding `CANONICAL_RECORD_ID`, and the canonical application's
- * first required form *is* `CANONICAL_FORM_ID`, so the lookup resolves.
+ * Finds a response by form id (what the route carries), not by the
+ * `formResponses` key.
  */
 export function getFormResponse(
   application: Application,
@@ -481,13 +435,9 @@ export function getFormResponse(
 }
 
 /**
- * Whether the canonical application answers the canonical form — the invariant
- * that keeps `GET /applications/{appId}/forms/{formId}` working with both
- * parameter boxes left at their pre-filled values.
- *
- * Exported so `__tests__/lib/mock/data/cross-resource.spec.ts` can assert it
- * rather than re-deriving the lookup, and so the reason it matters lives next to
- * the data it constrains.
+ * The canonical application must answer the canonical form, or the doubly
+ * pre-filled `GET /applications/{appId}/forms/{formId}` answers 404.
+ * Exported so the cross-resource spec can assert it.
  */
 export function canonicalPrefillResolves(): boolean {
   const application = getApplicationById(CANONICAL_APPLICATION_ID);

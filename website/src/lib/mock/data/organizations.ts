@@ -1,28 +1,9 @@
 /**
- * Hand-written organization fixtures, plus the revision (change) records behind
- * the four `/orgs/{orgId}/changes` routes (#334).
- *
- * Organizations are the other leaf of the reference graph — nothing here points
- * outward — but they are the most-referenced resource: an award's `funders` and
- * `recipientOrganizations` are `OrgRefCollection`s, and `./awards` builds those
- * from `orgRef()` below rather than from re-typed literals, so a funder always
- * resolves to a real `GET /orgs/{orgId}`.
- *
- * Values follow the spec's `@example` decorators
- * (`lib/core/lib/core/models/organization.tsp`, `organization-sync.tsp`),
- * including the first record, which mirrors the documented `OrganizationBase`
- * example field for field — name "Example Organization" and all — so the docs'
- * "Example Value" pane and the live response agree. That is the same rule the
- * opportunity fixture follows for its canonical record, and the reason to keep
- * it here is the same: a visitor comparing pane to response should find them
- * identical, not merely similar.
- *
- * **Revisions are fixtures, not state.** `PATCH /orgs/{orgId}` and
- * `POST /orgs/{orgId}/changes` are validate-and-echo (see
- * `handlers/organizations.ts`), so the change *history* a caller can list has to
- * come from somewhere: it comes from `ORG_REVISION_FIXTURES` here. A change
- * submitted by a caller is echoed back but never appended to that history —
- * stated so the two can't be mistaken for one mechanism.
+ * Hand-written organization fixtures, plus the revision records behind the
+ * `/orgs/{orgId}/changes` routes. Awards build their org references from
+ * `orgRef()` here, so a funder always resolves. The write routes are
+ * validate-and-echo, so the change history callers can list comes entirely
+ * from `ORG_REVISION_FIXTURES`; a submitted change is never appended to it.
  */
 
 import { CANONICAL_RECORD_ID } from "./ids";
@@ -153,11 +134,8 @@ export interface RevisionStatus {
 
 /**
  * A change to an organization profile (mirrors `Models.OrgRevision`).
- *
- * `orgId` is **not** part of the protocol model — it is carried here so the
- * fixture set can be filtered per organization, and the handlers strip it
- * before serialization. `shapeRevision()` is the single place that happens, so
- * a non-protocol field can't leak into a response body.
+ * `orgId` is fixture-only, not part of the protocol model; `shapeRevision()`
+ * must strip it before a revision is served.
  */
 export interface OrgRevision {
   id: string;
@@ -173,18 +151,12 @@ export interface OrgRevision {
 /** The `OrgRevision` shape actually sent on the wire — `orgId` removed. */
 export type WireOrgRevision = Omit<OrgRevision, "orgId">;
 
-/**
- * The id Swagger UI pre-fills into the `orgId` box, and therefore the id of the
- * first organization record. See `./ids`.
- */
+/** The id Swagger UI pre-fills into the `orgId` box (see `./ids`). */
 export const CANONICAL_ORGANIZATION_ID = CANONICAL_RECORD_ID;
 
 /**
- * The id Swagger UI pre-fills into the `changeId` box on
- * `GET /orgs/{orgId}/changes/{changeId}` — the same value as `orgId`, since both
- * parameters resolve to the same `Types.uuid` example. So the canonical
- * organization needs a change carrying it, or the pre-filled two-parameter
- * Execute answers 404 even though the org itself resolves.
+ * `changeId` pre-fills with the same value as `orgId`, so the canonical org
+ * must have a change carrying this id or the pre-filled Execute answers 404.
  */
 export const CANONICAL_ORG_REVISION_ID = CANONICAL_RECORD_ID;
 
@@ -240,21 +212,14 @@ function usPhone(number: string, isMobile = false): Phone {
   return { countryCode: "+1", number, isMobile };
 }
 
-/**
- * The fixture set: 8 organizations spanning federal funders, research
- * institutes, and recipient nonprofits and businesses, so an award's `funders`
- * and `recipientOrganizations` can point at plausibly different kinds of org.
- */
+/** The fixture set: 8 organizations spanning funders and recipients. */
 export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
   Organization[]
 >([
   // ---- The canonical record: the spec's documented OrganizationBase example ----
   {
-    // Field values are copied from the `@example` decorator the spec renders in
-    // Swagger UI's "Example Value" pane for `GET /orgs/{orgId}`, so the pane and
-    // the live response agree. Only the id differs, and it has to: the pane
-    // shows the model's own example id, while the *parameter* box pre-fills with
-    // the `Types.uuid` example. Record 2 carries the model's id so both resolve.
+    // Mirrors the spec's documented OrganizationBase example field for field,
+    // oddities included. Only the id differs (see `./ids`).
     id: CANONICAL_ORGANIZATION_ID,
     name: "Example Organization",
     orgType: {
@@ -280,9 +245,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
         postalCode: "12345",
       },
       otherAddresses: {
-        // Identical to `primary`, street2 included — that is what the
-        // OrganizationBase example publishes, and this record's whole job is to
-        // match that example, oddities and all.
+        // Duplicate of `primary` on purpose; the published example does this.
         satellite: {
           street1: "456 Main St",
           street2: "Suite 100",
@@ -310,7 +273,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
       },
       otherPhones: {
         support: usPhone("333-456-1230"),
-        // Same number as `primary` — again, the example's own value.
+        // Same number as `primary` on purpose; the example's own value.
         marketing: usPhone("444-456-1230", true),
       },
     },
@@ -343,10 +306,8 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
       code: "EO000000",
     },
     identifiers: {
-      // `allIds` carries the registry's full history: the EIN this org held
-      // before a 2003 reorganization sits alongside the current one, archived.
-      // The scalar `ein` field and `id` here stay the *current* value — allIds
-      // is the only place an archived value belongs.
+      // `allIds` carries the full registry history, archived values included;
+      // the scalar `ein` and `id` stay the current value.
       "org:us:ein": {
         ...ein("234567890"),
         allIds: [
@@ -441,8 +402,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
       },
       "org:us:ein": ein("345678901"),
       "org:us:uei": uei("CD2345678901"),
-      // Matches the scalar `duns` below — the collection entry and the
-      // convenience scalar are two views of one fact and must not disagree.
+      // Must match the scalar `duns` below.
       "org:xi:duns": dunsId("456789012"),
     },
     ein: "345678901",
@@ -555,17 +515,11 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
 ]);
 
 /**
- * The change history the `/changes` routes serve: 5 revisions across 3
- * organizations, covering every non-`custom` `RevisionStatus` plus one `custom`,
- * so a visitor listing changes sees a real lifecycle rather than one row.
- *
- * The first entry carries `CANONICAL_ORG_REVISION_ID` on the canonical
- * organization, which is what makes the doubly-pre-filled
- * `GET /orgs/{orgId}/changes/{changeId}` resolve.
- *
- * `snapshot` is omitted on `pending` and `denied` changes on purpose: the
- * protocol describes it as "a full snapshot of the record with the change
- * applied", which a change that was never applied does not have.
+ * The change history the `/changes` routes serve. The first entry carries
+ * `CANONICAL_ORG_REVISION_ID` on the canonical org, which keeps the doubly
+ * pre-filled `GET /orgs/{orgId}/changes/{changeId}` resolving. `snapshot` is
+ * omitted on `pending` and `denied` changes on purpose: a change that was
+ * never applied has no snapshot.
  */
 export const ORG_REVISION_FIXTURES: readonly OrgRevision[] = Object.freeze<
   OrgRevision[]
@@ -655,12 +609,8 @@ export function allOrganizations(): Organization[] {
 }
 
 /**
- * Builds an `OrgRef` from an organization id, so every reference in another
- * resource is derived from the real record rather than re-typed beside it.
- *
- * Throws on an unknown id: a dangling reference is a fixture authoring bug, and
- * failing at module load surfaces it on the first test run instead of shipping
- * an award whose funder 404s.
+ * Builds an `OrgRef` from the real record. Throws on an unknown id on
+ * purpose: a dangling reference should fail at module load.
  */
 export function orgRef(id: string): OrgRef {
   const org = getOrganizationById(id);
@@ -708,13 +658,9 @@ export function getRevision(
 }
 
 /**
- * Projects a fixture revision to the exact `Models.OrgRevision` shape. Every
- * revision leaves this module through here.
- *
- * Built field by field rather than by spreading and deleting `orgId`: an
- * allowlist means a *future* fixture-only field added for bookkeeping cannot
- * ride along onto the wire by default, which is the failure this function
- * exists to prevent in the first place.
+ * Projects a revision to the wire shape, dropping the fixture-only `orgId`.
+ * Every served revision must pass through here. Built as an allowlist so a
+ * future fixture-only field cannot leak onto the wire.
  */
 export function shapeRevision(revision: OrgRevision): WireOrgRevision {
   return {

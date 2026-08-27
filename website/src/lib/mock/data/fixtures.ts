@@ -237,11 +237,8 @@ const programCode = (value: string): CustomField => ({
  * panes, so the record carrying it mirrors those documented values field for
  * field.
  *
- * Since #334 the value lives in `./ids` as `CANONICAL_RECORD_ID`, because
- * every other resource's path parameter resolves to the same `Types.uuid`
- * example and so needs the same id at the head of its own fixture set. This
- * name is kept as the opportunity-shaped alias — the existing suites and the
- * golden request matrix address it by this name.
+ * Since #334 the value lives in `./ids` as `CANONICAL_RECORD_ID`; this name
+ * is kept as the alias the existing suites and golden matrix address.
  */
 export const CANONICAL_OPPORTUNITY_ID = CANONICAL_RECORD_ID;
 
@@ -253,12 +250,9 @@ export const CANONICAL_OPPORTUNITY_ID = CANONICAL_RECORD_ID;
 export const RESERVED_MISSING_OPPORTUNITY_ID = RESERVED_MISSING_ID;
 
 /**
- * The fixture set: 25 opportunities spanning all four statuses, a range of
- * funding amounts, and varied close dates so filtering, sorting, and
- * pagination visibly change results — at the docs' example page size of 20
- * (`@example(20)` on `PaginatedResultsInfo.pageSize`), the list runs to a
- * real second page. The canonical record carries the newest `lastModifiedAt`
- * so it sorts first under the list endpoint's default ordering.
+ * The fixture set: 25 opportunities, enough for a real second page at the
+ * docs' example page size of 20. The canonical record must carry the newest
+ * `lastModifiedAt` so it sorts first under the default ordering.
  */
 export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   // ---- The spec's own documented example (see CANONICAL_OPPORTUNITY_ID) ----
@@ -674,11 +668,9 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
     createdAt: "2024-04-01T00:00:00Z",
     lastModifiedAt: "2024-11-01T00:00:00Z",
   },
-  // ---- Growth records (#1101): enough volume that pagination, sorting,
-  // and the search filters visibly bite at the docs' example page size (20).
-  // Every `lastModifiedAt` stays before the canonical record's 2025-06-01 so
-  // the documented example keeps sorting first. All amounts stay USD — the
-  // handler suite pins that a EUR-denominated bound matches zero records. ----
+  // ---- Growth records (#1101). Keep every `lastModifiedAt` before the
+  // canonical record's, and keep all amounts USD (a test pins that a
+  // EUR-denominated bound matches zero records). ----
   {
     id: "8091a2b3-c4d5-46e7-8293-9d0e1f203142",
     title: "Urban Tree Canopy Grant",

@@ -1,9 +1,6 @@
 /**
- * Handler + fixture suite for the forms endpoints (#334): `GET /forms`
- * (list) and `GET /forms/{formId}` (detail). Modeled on `awards.spec.ts` —
- * forms carry no search endpoint in the spec
- * (`lib/core/lib/core/routes/forms.tsp` instantiates only `list` and `read`),
- * so there is no `searchForms` suite here.
+ * Handler + fixture suite for the forms endpoints (list and detail). The spec
+ * defines no form search endpoint, so there is no search suite here.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -18,10 +15,7 @@ import type { Version } from "@/lib/mock/data/fixtures";
 
 const VERSION: Version = "0.4.0";
 
-/** Builds a request URL carrying the given query/path suffix. Only used to
- * construct valid `Request` objects for the handlers below — since they are
- * called directly rather than through the router, the host/base path are
- * placeholders. */
+/** Builds a request URL; the host/base path are placeholders. */
 function formsUrl(suffix = ""): string {
   return `https://docs.example/api/v${VERSION}/common-grants/forms${suffix}`;
 }
@@ -42,8 +36,7 @@ describe("FORM_FIXTURES", () => {
     expect(getFormById(RESERVED_MISSING_ID)).toBeUndefined();
   });
 
-  // The docs site renders a form from exactly a `jsonSchema` / `uiSchema`
-  // pair (see `src/lib/forms/`), so at least one fixture must carry both.
+  // The docs site renders a form from exactly this pair (`src/lib/forms/`).
   it("includes at least one record carrying both a jsonSchema and a uiSchema", () => {
     const rendered = FORM_FIXTURES.filter(
       (form) => form.jsonSchema !== undefined && form.uiSchema !== undefined,
@@ -156,9 +149,6 @@ describe("GET /v{version}/common-grants/forms (list)", () => {
 });
 
 describe("GET /v{version}/common-grants/forms/{formId} (detail)", () => {
-  // Swagger UI pre-fills every path parameter box with the specs' single
-  // `CommonGrants.Types.uuid` example (see `data/ids.ts`'s docstring), so this
-  // is the id an untouched "Try it out" sends for this route. It must not 404.
   it("returns 200 for the id Swagger UI pre-fills into every path parameter box", async () => {
     const response = getForm(CANONICAL_FORM_ID, VERSION);
 
@@ -173,10 +163,6 @@ describe("GET /v{version}/common-grants/forms/{formId} (detail)", () => {
     expect(body.data.id).toBe(CANONICAL_FORM_ID);
   });
 
-  // The id published on the `FormBase` example itself is a different id from
-  // the Swagger-UI-prefill one, so a visitor who copies it out of the
-  // rendered example rather than accepting the pre-filled value must also
-  // resolve.
   it("returns 200 for the id the FormBase example itself publishes", async () => {
     const response = getForm(DOCUMENTED_FORM_ID, VERSION);
 

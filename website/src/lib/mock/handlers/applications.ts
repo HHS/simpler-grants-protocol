@@ -1,41 +1,12 @@
 /**
- * Deterministic, fixture-backed handlers for the applications and form-response
- * endpoints (#334).
+ * Fixture-backed handlers for the application and form-response endpoints.
+ * Writes are validate-and-echo and stateless: reserved ids and fixed
+ * timestamps keep responses deterministic, and nothing is retained.
  *
- * Six operations across two route interfaces (`Routes.Applications` and
- * `Routes.FormResponses`), all mounted under `/applications` by `api.tsp`, which
- * is why they share one module: `PUT /{appId}/forms/{formId}` and
- * `PUT /{appId}/submit` are sibling paths, and splitting them across files would
- * put the two halves of one resource's routing in two places.
- *
- * **Writes are validate-and-echo, and stateless.** `POST /start`,
- * `PUT /{appId}/submit`, and `PUT /{appId}/forms/{formId}` validate their input
- * and return the record the write *would* have produced, without retaining
- * anything. So `POST /start` reports one reserved draft id
- * (`DRAFT_APPLICATION_ID`) on every call and a following
- * `GET /applications/{that id}` answers 404; a form response written by a caller
- * is echoed but does not change what the next `GET` of it returns. See the
- * module docstring in `handlers/organizations.ts` for why a module-level store
- * was rejected.
- *
- * **Two spec quirks are handled here rather than smoothed over:**
- *
- * 1. `startApplication`'s title field is `@renamedFrom(Versions.v0_4, "name")`,
- *    so the *request* field is `name` in v0.2/v0.3 and `title` in v0.4. The
- *    handler reads whichever the request's version prefix calls for, and rejects
- *    the other — accepting both would teach a caller a field name their target
- *    version's spec doesn't document.
- *
- * 2. `searchApplications` declares `filters` and `sorting` as **required query
- *    parameters** (`@query`), not a request body — unlike every other search in
- *    the spec, which takes a JSON body. That is almost certainly an oversight in
- *    `core/routes/applications.tsp`, and it is a poor fit for the shape of the
- *    data (a deeply nested filter object url-encoded into a query string). The
- *    mock accepts **both**: query params, as published, and a JSON body, as every
- *    sibling search does. Deliberate leniency, in the one direction that cannot
- *    mislead — a caller following the published spec works, and a caller
- *    following the pattern the rest of the API establishes also works. Flagged
- *    as a protocol finding rather than silently normalized.
+ * Two spec quirks: the start request's title field is `name` before v0.4
+ * (`@renamedFrom`), and `searchApplications` is published with query params —
+ * likely a spec oversight — so the mock accepts both those and a JSON body
+ * like every sibling search.
  */
 
 import {
@@ -112,13 +83,7 @@ interface SearchRequest {
   pagination?: { page?: number; pageSize?: number };
 }
 
-/**
- * The timestamp stamped on an echoed record.
- *
- * Fixed rather than `new Date()`, for the same reason as
- * `handlers/organizations.ts`: a wall-clock value would make every response
- * differ and break the determinism the fixture suites assert.
- */
+/** Fixed timestamp on echoed records — a wall-clock value would break determinism. */
 const ECHOED_AT = "2026-06-22T00:00:00Z";
 
 /** The id every echoed form response reports. */
@@ -136,8 +101,8 @@ function sortKey(application: Application, sortBy: string): string | number {
     case "status.value":
       return application.status.value;
     case "submittedAt":
-      // An application that was never submitted sorts as epoch 0, so `desc` puts
-      // submitted ones first — which is the useful ordering for a reviewer.
+      // Never-submitted applications sort as epoch 0, so `desc` puts
+      // submitted ones first.
       return dateTime(application.submittedAt) ?? 0;
     default:
       // "custom" (application-defined field) - no built-in ordering to apply.
@@ -188,26 +153,16 @@ function lookupApplication(appId: string): AppLookup {
 }
 
 /**
- * The request field carrying an application's title, for a given version.
- *
- * `@renamedFrom(Versions.v0_4, "name")` means the field was *called* `name` up
- * to and including v0.3 and is called `title` from v0.4 on.
+ * The request field carrying an application's title: `name` up to v0.3,
+ * `title` from v0.4 (`@renamedFrom`).
  */
 function titleFieldFor(version: Version): "name" | "title" {
   return isAtLeastVersion(version, "0.4.0") ? "title" : "name";
 }
 
 /**
- * `POST /v{version}/common-grants/applications/start` — begin an application.
- *
- * Answers 201 with the `Models.ApplicationBase` the write would have created:
- * the caller's title, the competition they named, and that competition's own
- * `opportunityId`, with an empty `formResponses` map and `inProgress` status.
- * Nothing is retained — see the module docstring.
- *
- * @param request - Carries `competitionId`, the version's title field, and an
- * optional `organizationId`.
- * @param version - Protocol version; decides which title field is expected.
+ * `POST /v{version}/common-grants/applications/start` — answers 201 with the
+ * application the write would have created. Nothing is retained.
  */
 export async function startApplication(
   request: Request,
@@ -283,10 +238,6 @@ export async function startApplication(
 /**
  * `GET /v{version}/common-grants/applications/{appId}` — a single application,
  * with its form responses and validation errors.
- *
- * @param appId - The path segment as received.
- * @param version - Protocol version; application models are unshaped across
- * v0.2–v0.4, so this is taken only to keep one signature across handlers.
  */
 export function getApplication(appId: string, version: Version): Response {
   void version;
@@ -299,27 +250,12 @@ export function getApplication(appId: string, version: Version): Response {
 }
 
 /**
- * `PUT /v{version}/common-grants/applications/{appId}/submit` — submit for
- * review.
+ * `PUT /v{version}/common-grants/applications/{appId}/submit`. Whether it
+ * answers 200 or 400 is decided by the fixture's own `validationErrors`, so
+ * both branches are reachable.
  *
- * The spec gives this route two outcomes: 200, or
- * `Responses.ApplicationSubmissionError` (a 400) when validation errors block
- * submission. Which one a fixture gets is decided by its own
- * `validationErrors`, so both branches are reachable from the playground —
- * `BLOCKED_APPLICATION_ID` exists to make the error branch demonstrable.
- *
- * **Host caveat.** This is the mock's only non-GET route with no request body,
- * which puts it on the wrong side of Astro's CSRF guard: `security.checkOrigin` (on
- * deliberately, see `astro.config.mjs`) answers 403 to a non-GET request that
- * carries no `Origin` *and* no `Content-Type`. Same-origin "Try it out" sends
- * `Origin` and passes; a copied `curl` sends neither and gets a bare 403
- * instead of the envelope below. Adding `-H 'Content-Type: application/json'`
- * to the curl is enough to clear the guard. This extends the 403-vs-404
- * divergence already accepted in #1078 to one route that the mock now
- * actually serves.
- *
- * @param appId - The path segment as received.
- * @param version - Protocol version (unused; see `getApplication`).
+ * Host caveat: this non-GET route takes no body, so it trips Astro's CSRF
+ * guard from bare curl (403); adding a `Content-Type` header clears it.
  */
 export async function submitApplication(
   appId: string,
@@ -355,16 +291,9 @@ export async function submitApplication(
 }
 
 /**
- * Reads the search request from either the query string or the JSON body.
- *
- * The spec publishes `filters` and `sorting` as required query params on this
- * route while every sibling search takes a body; the mock accepts both (see the
- * module docstring). Query params win when both are present, since they are what
- * the published operation defines.
- *
- * A query param that isn't valid JSON is a 400 rather than a silent fallback to
- * the body: the caller clearly meant to filter, and quietly returning the
- * unfiltered set would be the worst possible answer.
+ * Reads the search from the query string (as published) or the JSON body (like
+ * every sibling search); query params win when both are present. A param that
+ * isn't valid JSON is a 400, not a silent fallback.
  */
 async function readSearchRequest(
   request: Request,
@@ -412,8 +341,7 @@ async function readSearchRequest(
     fromQuery.search = search;
   }
 
-  // A GET-shaped request (no body) with query params is complete on its own; a
-  // body is read only when one was sent.
+  // A body is read only when one was sent.
   const raw = await request.text();
   if (raw.trim() === "") {
     return { ok: true, body: fromQuery };
@@ -443,16 +371,9 @@ async function readSearchRequest(
 }
 
 /**
- * `POST /v{version}/common-grants/applications/search` — filtered, sorted,
- * paginated search.
- *
- * `@added(Versions.v0_3)`, unlike its v0.2 siblings, so v0.2 gets the same
- * protocol-shaped 404 a resource that doesn't exist yet gets. The gate lives
- * here rather than in the router because it is finer-grained than a resource:
- * the rest of `/applications` *is* served at v0.2.
- *
- * @param request - Carries the search as query params, a JSON body, or both.
- * @param version - Protocol version; below v0.3 this route does not exist.
+ * `POST /v{version}/common-grants/applications/search`. Added in v0.3, so
+ * v0.2 answers a protocol-shaped 404 — gated here, not in the router, because
+ * the rest of `/applications` is served at v0.2.
  */
 export async function searchApplications(
   request: Request,
@@ -612,12 +533,8 @@ function lookupForm(
 }
 
 /**
- * `GET /v{version}/common-grants/applications/{appId}/forms/{formId}` — read one
- * form response.
- *
- * @param appId - The application the response belongs to.
- * @param formId - The form being responded to.
- * @param version - Protocol version (unused; see `getApplication`).
+ * `GET /v{version}/common-grants/applications/{appId}/forms/{formId}` — read
+ * one form response.
  */
 export function readFormResponse(
   appId: string,
@@ -649,18 +566,9 @@ export function readFormResponse(
 }
 
 /**
- * `PUT /v{version}/common-grants/applications/{appId}/forms/{formId}` — set or
- * update a form response.
- *
- * Echoes the submitted body back inside a `Models.AppFormResponse` envelope.
- * The response is reported `complete` when the body has any fields and
- * `notStarted` when it is empty, which is the one piece of judgment the echo
- * makes — a caller who submits `{}` should not be told their form is done.
- *
- * @param appId - The application whose response is being written.
- * @param formId - The form being responded to.
- * @param request - Carries the response object as its JSON body.
- * @param version - Protocol version (unused; see `getApplication`).
+ * `PUT /v{version}/common-grants/applications/{appId}/forms/{formId}` — echoes
+ * the body back in an `AppFormResponse` envelope: `notStarted` for an empty
+ * body, `complete` otherwise.
  */
 export async function writeFormResponse(
   appId: string,

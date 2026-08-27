@@ -207,22 +207,10 @@ const edgeCases: MatrixCase[] = [
 
   // --- route misses (these quote the request path back; see `pathEchoing`) ---
   //
-  // There used to be a second case here, `route-miss-other-resource`, requesting
-  // `GET /v0.4.0/common-grants/awards` and expecting the Worker's
-  // "This mock serves the opportunity endpoints only" 404. #334 removed it,
-  // because awards are now served and that path answers 200 with an award list.
-  //
-  // It was not replaced with a different unserved path, and that is the honest
-  // call rather than a gap: the Worker's route-miss message *named its own
-  // surface*, so once the two hosts serve different surfaces, no unserved path
-  // produces the same bytes on both. Byte-identity on route-miss wording is not
-  // recoverable, so it is retired here and the behavior is pinned structurally
-  // in `router.spec.ts` instead ("flags a path outside the served surface with
-  // field: 'path'" and its version-gating sibling).
-  //
-  // The case below survives because it is a route miss *on the shared surface*:
-  // `PUT /opportunities` matches no route on either host, and both answer the same
-  // "No route matches" body, so it is still a real byte-level comparison.
+  // `route-miss-other-resource` (GET /awards, expecting a 404) was retired
+  // when #334 made awards a served route, and not replaced: no unserved path
+  // now yields the same bytes on both hosts, since the Worker's route-miss
+  // message named its own surface. Pinned structurally in `router.spec.ts`.
   {
     name: "route-miss-unsupported-method",
     method: "PUT",

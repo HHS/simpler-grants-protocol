@@ -200,9 +200,6 @@ export async function searchOpportunities(
   request: Request,
   version: Version,
 ): Promise<Response> {
-  // Both the parse failure and the "valid JSON, but not an object" case are
-  // decided by `readJsonObjectBody` (see its docstring for why the second one
-  // is rejected rather than treated as an empty search request).
   const parsed = await readJsonObjectBody(request);
   if (!parsed.ok) {
     return parsed.response;

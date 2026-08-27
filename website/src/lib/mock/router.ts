@@ -1,43 +1,10 @@
 /**
- * Routes mock API requests to the fixture-backed resource handlers.
+ * Routes mock API requests to the fixture-backed resource handlers. Mounted
+ * under `/api` by the Astro endpoint (`src/pages/api/[...path].ts`).
  *
- * This is the website's re-authored equivalent of the 3A standalone Worker's
- * `mock-api/src/index.ts` (#1078). It is the one piece of that experiment
- * that could *not* be copied: the Worker's entrypoint is a
- * `export default { fetch } satisfies ExportedHandler`, and it owns the whole
- * origin, so its routes hang off `/`. Here the docs site owns `/`, the mock is
- * mounted under `/api`, and the entrypoint is an Astro endpoint
- * (`src/pages/api/[...path].ts`) that delegates to `handleMockRequest` below.
- * Everything downstream of routing — fixtures, filtering, sorting, pagination,
- * envelopes, CORS — is shared, host-agnostic code.
- *
- * Byte-identity with the Worker for the opportunity endpoints (asserted by
- * `__tests__/lib/mock/golden-envelopes.spec.ts`) is structural rather than
- * incidental: `stripBasePath` reduces the pathname to exactly what the Worker
- * would have seen, and `OPPORTUNITIES_ROUTE` below is its regex verbatim. So
- * anything the two hosts could disagree about on that surface is decided in one
- * place, and behavior at the edges — a trailing slash, a `%2F`, a doubled slash
- * — is inherited from the Worker rather than re-litigated here.
- *
- * **#334 extended the surface past opportunities.** The mock now serves all
- * 18 non-opportunity endpoints `lib/core/lib/api.tsp` publishes — awards,
- * organizations (including the `/changes` sub-resource), competitions,
- * applications with their form responses, and forms — so "Try it out" no longer
- * 404s on the default docs page. Two consequences worth stating:
- *
- *  - The Worker's surface was opportunities only, so the corpus can no longer be
- *    a *total* contract: `GET /v0.4.0/common-grants/awards` returned a route-miss
- *    404 there and returns an award list here. The guarantee narrowed to what it
- *    was always really about — the opportunity endpoints, which both hosts serve
- *    and which are pinned byte for byte. See the corpus spec for the two entries
- *    that changed and why.
- *  - Route misses no longer say "opportunity endpoints only". That message was
- *    accurate when it was written and would be a lie now.
- *
- * Version gating lives in `data/availability.ts`, not here: a resource is served
- * only from the version its `@added` decorator names, and earlier version
- * prefixes get a protocol-shaped 404 — the honest reply, since on a real v0.2 API
- * the awards path genuinely is not a route.
+ * Opportunities keep the 3A Worker's regex verbatim and are matched first, so
+ * the golden byte-identity corpus (`golden-envelopes.spec.ts`) stays pinned.
+ * Version gating lives in `data/availability.ts`.
  */
 
 import {
@@ -80,49 +47,24 @@ import { errorResponse, withErrorBoundary } from "./http/envelope";
 const SERVICE_NAME = "CommonGrants mock API";
 
 /**
- * Where the mock is mounted on the docs origin. Exported because #1078 needs
- * the same value to write per-version `servers:` entries into the rendered
- * OpenAPI specs — the base path and the URL Swagger UI calls have to agree, so
- * they read from one constant.
+ * Where the mock is mounted. The rendered OpenAPI `servers:` entries read the
+ * same constant so Swagger UI calls the same URL.
  */
 export const MOCK_API_BASE_PATH = "/api";
 
 /**
- * `/v{version}/common-grants/opportunities` with an optional trailing segment:
- * an `oppId` on GET, the literal `search` on POST. Verbatim from the Worker, and
- * applied to a base-stripped pathname so it keeps matching the same strings.
- *
- * The protocol version rides in the path rather than a header or query param so
- * that an SDK `baseUrl` of `https://commongrants.org/api/v0.4.0` works unchanged
- * (`Client.url()` concatenates base + path), and each rendered spec file can
- * carry a version-correct `servers:` URL.
- *
- * `version` is captured loosely (`[^/]+`) and narrowed by `isSupportedVersion`,
- * so `/vabc/...` and `/v9.9.9/...` both reach the same "unsupported version"
- * answer instead of falling through to a bare route miss.
+ * `/v{version}/common-grants/opportunities` with an optional trailing segment.
+ * Verbatim from the Worker so the corpus-pinned surface matches identically;
+ * `version` is captured loosely and narrowed by `isSupportedVersion`.
  */
 const OPPORTUNITIES_ROUTE =
   /^\/v([^/]+)\/common-grants\/opportunities(?:\/([^/]+))?$/;
 
 /**
- * The version prefix and the resource segment, for every non-opportunity route.
- *
- * Matched in one place so the version is captured identically for all resources
- * and narrowed by `isSupportedVersion` before any resource-specific matching —
- * which is what makes an unsupported version answer the same way on every path
- * rather than depending on which resource happened to match first.
- *
- * The remainder is captured raw and matched per resource below, rather than
- * enumerating every shape here: the org routes alone have four distinct
- * remainders, and one regex covering all of them would be unreadable.
- *
- * Each remainder segment is `[^/]+`, not `[^/]*`, so an *empty* segment does not
- * match: `/awards/` and `/orgs//changes` fall through to a route-miss 404 rather
- * than reaching a handler with an empty-string id, which would have answered 400
- * "Invalid award id" — a different answer from the one `/opportunities/` has
- * always given, since `OPPORTUNITIES_ROUTE` requires `[^/]+` too. Keeping the two
- * quantifiers the same is what makes the trailing-slash claim in
- * `stripBasePath` true of every resource rather than only the original one.
+ * Version prefix + resource segment for every non-opportunity route; the
+ * remainder is matched per resource below. Segments use `[^/]+`, never
+ * `[^/]*`, so a trailing slash is a route-miss 404 rather than a 400 from an
+ * empty id — matching what `/opportunities/` has always answered.
  */
 const RESOURCE_ROUTE = /^\/v([^/]+)\/common-grants\/([^/]+)((?:\/[^/]+)*)$/;
 
@@ -151,10 +93,8 @@ function healthResponse(): Response {
 }
 
 /**
- * Protocol-shaped 404 for anything outside the served endpoints. Echoes the
- * *full* requested path, base included, because that is what the caller typed —
- * the only respect in which these bodies differ from the Worker's, and the
- * reason `golden-envelopes.spec.ts` marks such cases `pathEchoing`.
+ * Protocol-shaped 404 for a route miss. Echoes the full path, base included —
+ * the one way these bodies differ from the Worker's.
  */
 function routeMissResponse(method: string, pathname: string): Response {
   return errorResponse(404, "Not found", [
@@ -166,12 +106,8 @@ function routeMissResponse(method: string, pathname: string): Response {
 }
 
 /**
- * Protocol-shaped 404 for a resource that exists in the protocol but not in the
- * requested version.
- *
- * Distinct from a bare route miss on purpose: "this path is not a route" and
- * "this path became a route two versions after the one you asked for" are
- * different facts, and the second one tells a caller exactly what to change.
+ * 404 for a resource added after the requested version. Deliberately distinct
+ * from a plain route miss — it tells the caller what to change.
  */
 function resourceNotInVersionResponse(
   resource: ResourceName,
@@ -196,14 +132,9 @@ function unsupportedVersionResponse(version: string): Response {
 }
 
 /**
- * Reduces a docs-origin pathname to the path the Worker would have received, or
- * `undefined` when the request never belonged to the mock at all.
- *
- * Astro routes `/api/**` here, but `request.url` carries the raw path as typed,
- * so this is also the one place trailing slashes are considered: `/api` and
- * `/api/` are both the mount point itself (the health route), while a trailing
- * slash deeper in the path stays in the remainder and is judged by the resource
- * regexes — which reject it, exactly as the Worker does.
+ * Reduces a docs-origin pathname to the path the Worker would have seen, or
+ * `undefined` when the request isn't the mock's. `/api` and `/api/` are both
+ * the health route; deeper trailing slashes are judged by the resource regexes.
  */
 function stripBasePath(pathname: string): string | undefined {
   if (pathname === MOCK_API_BASE_PATH) return "/";
@@ -214,18 +145,16 @@ function stripBasePath(pathname: string): string | undefined {
 }
 
 /**
- * Dispatches the opportunity endpoints — unchanged from #1078, and matched
- * before anything else so the corpus-pinned surface cannot be affected by the
- * routing added around it.
+ * Dispatches the opportunity endpoints — matched before anything else so the
+ * corpus-pinned surface is unaffected by the routing added around it.
  */
 async function routeOpportunities(
   request: Request,
   version: Version,
   segment: string | undefined,
 ): Promise<Response | undefined> {
-  // `GET .../opportunities/search` deliberately falls through to the detail
-  // handler, which answers 400 "Must be a valid UUID" — the same answer the
-  // Worker gives, since only POST is registered on `/search`.
+  // `GET .../search` falls through to the detail handler and answers 400
+  // "Must be a valid UUID", as the Worker does — only POST serves `/search`.
   if (request.method === "GET") {
     return segment === undefined
       ? listOpportunities(request, version)
@@ -325,9 +254,8 @@ async function routeApplications(
     if (segment === "search") return searchApplications(request, version);
     return undefined;
   }
-  // As with opportunities, `GET .../applications/search` falls through to the
-  // detail handler and answers 400 "Must be a valid UUID" — only POST is
-  // registered on `/search` and `/start`.
+  // As with opportunities, `GET .../search` falls through to the detail
+  // handler — only POST serves `/search` and `/start`.
   return request.method === "GET"
     ? getApplication(segment, version)
     : undefined;
@@ -366,14 +294,12 @@ async function route(request: Request): Promise<Response> {
     return routeMissResponse(request.method, pathname);
   }
 
-  // The Worker's health route lives at `/`; here that belongs to the docs
-  // homepage, so it answers at the mount point instead.
+  // The health route answers at the mount point; the docs homepage owns `/`.
   if (path === "/") {
     return healthResponse();
   }
 
-  // Opportunities keep their own regex and their own first look, so the
-  // corpus-pinned surface is decided exactly as it was before #334.
+  // Opportunities get their own regex and the first look (see module doc).
   const opportunityMatch = OPPORTUNITIES_ROUTE.exec(path);
   if (opportunityMatch) {
     const [, version, segment] = opportunityMatch;
@@ -425,26 +351,19 @@ function dispatch(
     case "competitions":
       return routeCompetitions(request, version, remainder);
     case "opportunities":
-      // Always a no-op, but reachable: `OPPORTUNITIES_ROUTE` allows at most one
-      // trailing segment, while `RESOURCE_ROUTE` allows several, so a path like
-      // `/opportunities/foo/bar` reaches here after the first regex rejects it.
-      // Returning `undefined` turns it into the route miss it should be.
+      // Reachable when a path like `/opportunities/foo/bar` fails the stricter
+      // OPPORTUNITIES_ROUTE; `undefined` makes it the route miss it should be.
       return Promise.resolve(undefined);
   }
 }
 
-/**
- * Entry point for the mock: same contract as the Worker's `fetch`, so the ported
- * test suites drive this function the way they drove the Worker.
- */
+/** Entry point for the mock: same contract as the Worker's `fetch`. */
 export async function handleMockRequest(request: Request): Promise<Response> {
   if (request.method === "OPTIONS") {
     return preflightResponse();
   }
 
-  // Single choke point for everything `route()` can produce — success,
-  // validation error, route miss — plus, via the error boundary, anything it
-  // throws. Preflights are the one path that skips it, and
+  // Every non-preflight response passes through CORS and the error boundary;
   // `preflightResponse()` sets the same headers itself.
   return withCors(await withErrorBoundary(() => route(request)));
 }

@@ -1,11 +1,7 @@
 /**
- * Handler suite for the organizations endpoints (#334). `Models.OrgRef`
- * and the `Organizations` router interface were both added in protocol v0.4
- * (`lib/core/lib/core/models/organization.tsp`,
- * `lib/core/lib/core/routes/orgs.tsp`), so every call here targets version
- * "0.4.0" directly against the handler functions rather than through
- * `handleMockRequest` — the router doesn't yet know the `/orgs` path exists,
- * and wiring it is a separate ticket's router spec, not this one.
+ * Handler suite for the organizations endpoints. The /orgs routes are
+ * v0.4-only, so every call targets "0.4.0" directly against the handler
+ * functions; router wiring is covered by the router spec.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -30,10 +26,7 @@ import type { Version } from "@/lib/mock/data/fixtures";
 
 const VERSION: Version = "0.4.0";
 
-/** Builds a request URL carrying the given query/path suffix. Only used to
- * construct valid `Request` objects for the handlers below — since they are
- * called directly rather than through the router, the host/base path are
- * placeholders. */
+/** Builds a request URL; the host/base path are placeholders. */
 function orgsUrl(suffix = ""): string {
   return `https://docs.example/api/v${VERSION}/common-grants/orgs${suffix}`;
 }
@@ -96,10 +89,8 @@ describe("GET /v{version}/common-grants/orgs (list)", () => {
     ]);
   });
 
-  // `?registry=org:us:ein&id=123456789` is the spec's documented
-  // external-identifier lookup (`@doc` on `Organizations.list`). Derived from
-  // the fixture set itself, rather than hardcoding an id, so the assertion
-  // stays true to whichever record actually carries that identifier.
+  // `?registry=&id=` is the spec's documented external-identifier lookup. The
+  // expected record comes from the fixture set rather than being hardcoded.
   it("narrows to exactly the organization carrying the given registry + id pair", async () => {
     const expected = ORGANIZATION_FIXTURES.find(
       (org) => org.identifiers?.["org:us:ein"]?.id === "123456789",
@@ -138,8 +129,6 @@ describe("GET /v{version}/common-grants/orgs (list)", () => {
     expect(body.errors.some((error) => error.field === "id")).toBe(true);
   });
 
-  // A lookup that matches nothing is an empty result, not a bad request: an
-  // unrecognized registry code is not itself invalid input.
   it("returns 200 with zero items for an unrecognized registry code, rather than 400", async () => {
     const response = listOrganizations(
       new Request(orgsUrl("?registry=org:does-not-exist&id=anything")),
@@ -159,9 +148,6 @@ describe("GET /v{version}/common-grants/orgs (list)", () => {
 });
 
 describe("GET /v{version}/common-grants/orgs/{orgId} (read)", () => {
-  // Swagger UI pre-fills the `orgId` box with the specs' `Types.uuid` example,
-  // so this is the request a visitor sends when they click "Try it out" and
-  // then "Execute" without touching anything. It must not 404.
   it("returns 200 for the id Swagger UI pre-fills", async () => {
     const response = getOrganization(
       CANONICAL_ORGANIZATION_ID,
@@ -460,9 +446,6 @@ describe("GET /v{version}/common-grants/orgs/{orgId}/changes (list changes)", ()
 });
 
 describe("GET /v{version}/common-grants/orgs/{orgId}/changes/{changeId} (view change)", () => {
-  // Swagger UI pre-fills *both* the `orgId` and `changeId` boxes with the same
-  // `Types.uuid` example, so this two-parameter pair must resolve for an
-  // untouched "Try it out" to succeed.
   it("returns 200 for the id Swagger UI pre-fills into both path parameter boxes", () => {
     const response = getOrgChange(
       CANONICAL_ORGANIZATION_ID,
@@ -484,8 +467,6 @@ describe("GET /v{version}/common-grants/orgs/{orgId}/changes/{changeId} (view ch
     expect(body.data.id).toBe(CANONICAL_ORG_REVISION_ID);
   });
 
-  // Changes are scoped to their organization, not globally addressable: a
-  // changeId that belongs to a different org must not resolve here.
   it("returns 404 for a changeId that belongs to a different organization", () => {
     const foreignChangeId = revisionsForOrg(DOCUMENTED_ORGANIZATION_ID)[0]!.id;
 

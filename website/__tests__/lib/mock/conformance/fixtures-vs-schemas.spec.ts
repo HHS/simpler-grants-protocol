@@ -1,33 +1,8 @@
 /**
  * Every fixture record, shaped per version, validated against the generated
- * per-version JSON Schemas (#334, extending #1077's pattern).
- *
- * #1077 built this for opportunities on the 3A Worker; #1078's port to this
- * site left it behind. This restores it and generalizes it to all six resources,
- * because hand-written fixtures across six resources are exactly the situation
- * where a schema check earns its keep — and it earned it immediately: it caught
- * two competition fixtures using `local_government` and `nonprofit_with_501c3`,
- * neither of which is in `ApplicantTypeOptions` (the enum spells the second
- * `non_profit_with_501c3`, while its sibling is `nonprofit_without_501c3`).
- *
- * **What this catches, and what it does not.** It catches drift in the resource
- * models' own declared fields — a renamed property, a wrong type, a missing
- * required field, an out-of-enum value, a malformed uuid or timestamp. It does
- * NOT catch: (1) drift in the enum/status models the resources reference, because
- * of the version-generator overlay limitation documented in
- * `./schema-validator.ts`; (2) properties a model does not declare, because
- * `unevaluatedProperties` is stripped for ajv's sake (also documented there); and
- * (3) semantic freshness — a coherent record describing a grant that closed in
- * 2019 conforms perfectly. Schema conformance is not the same as a good fixture.
- *
- * **Version resolution is asserted, not assumed.** Two facts make that
- * necessary. The form model is emitted as `Form.yaml` at v0.2.0 and
- * `FormBase.yaml` from v0.3.0 on — a rename the resolution below has to follow,
- * or a version would silently validate against no schema at all. And
- * `getValidator` throws rather than falling back when a model is missing for a
- * version, so a generated output that lost a schema fails loudly instead of
- * quietly validating against a weaker one. That failure mode — green CI over a
- * downgraded schema — is what #1077 flagged as the thing most worth guarding.
+ * per-version JSON Schemas. This catches drift in the models' own declared
+ * fields; drift in referenced enum models and undeclared properties are not
+ * covered (see `./schema-validator.ts`).
  */
 
 import { describe, it, expect } from "vitest";
@@ -61,12 +36,8 @@ import {
   schemasAvailable,
 } from "./schema-validator";
 
-// Guard: fail loudly (never silently skip) if the generated schemas aren't on
-// disk, so a missing build step can't make CI falsely green. Deliberately at
-// module scope rather than in `beforeAll`: the `describe.each` blocks below call
-// `getValidator` during vitest's collection phase, which runs before any hook
-// fires, so a `beforeAll` version of this check would be dead code that only
-// looked load-bearing.
+// Must stay at module scope: `describe.each` calls `getValidator` at
+// collection time, before any hook runs. Fail loudly, never skip.
 if (!schemasAvailable()) {
   throw new Error(
     "Generated schemas not found. Run `pnpm --filter website run build` " +
@@ -80,10 +51,7 @@ interface ResourceCase {
   resource: ResourceName;
   /** Human label used in test names. */
   label: string;
-  /**
-   * The schema file for a version. A function rather than a constant because the
-   * form model was renamed between versions.
-   */
+  /** The schema file for a version — a function because of the form rename. */
   schemaFor: (version: Version) => string;
   /** The records to validate, shaped for that version. */
   recordsFor: (version: Version) => unknown[];
@@ -125,8 +93,7 @@ const RESOURCE_CASES: ResourceCase[] = [
 ];
 
 describe("schema resolution", () => {
-  // The availability table drives the router's version gating, so if it and the
-  // generated schema set disagree, one of them is wrong and the mock is either
+  // If the availability table and the generated schemas disagree, the mock is
   // serving a route the version doesn't have or 404-ing one it does.
   it.each(RESOURCE_CASES)(
     "has a $label schema in every version the router serves $label from",
@@ -143,12 +110,9 @@ describe("schema resolution", () => {
     },
   );
 
-  // Deliberately one-directional. The reverse ("no schema ⇒ not served") does
-  // NOT hold, and asserting it would fail: `OrganizationBase.yaml` is emitted
-  // into v0.2.0 and v0.3.0 even though the `/orgs` *routes* are
-  // `@added(Versions.v0_4)`, because the model predates the routes — other
-  // models reference it. Model availability and route availability are different
-  // facts, and `data/availability.ts` is about routes.
+  // One-directional on purpose: OrganizationBase.yaml exists in v0.2 schemas
+  // though the /orgs routes are v0.4. Model availability is not route
+  // availability.
   it("does not require the reverse: a model may exist before its routes do", () => {
     expect(RESOURCE_MIN_VERSION.orgs).toBe("0.4.0");
     expect(schemaExistsForVersion("0.2.0", "OrganizationBase.yaml")).toBe(true);
@@ -162,12 +126,8 @@ describe("schema resolution", () => {
   });
 
   it("throws rather than downgrading when a model is missing for a version", () => {
-    // Awards do not exist before v0.4. The overlay's fallback layer holds the
-    // *current* schema set, so without a guard `AwardBase.yaml` resolves at
-    // v0.2.0 anyway — to today's shape — and every award assertion would pass
-    // while validating against the wrong version. `requireVersioned` is that
-    // guard, and this is the test that proves it is doing something: the same
-    // call without it does NOT throw.
+    // Without `requireVersioned`, the fallback resolves AwardBase.yaml at
+    // v0.2.0 to today's shape — this proves the guard does something.
     expect(schemaExistsForVersion("0.2.0", "AwardBase.yaml")).toBe(false);
     expect(() => getValidator("0.2.0", "AwardBase.yaml")).not.toThrow();
     expect(() =>
@@ -181,9 +141,6 @@ describe("new resources conform to their generated schemas", () => {
     describe(testCase.label, () => {
       for (const version of versionsServing(testCase.resource)) {
         const schemaName = testCase.schemaFor(version);
-        // `requireVersioned`: this version is supposed to have its own copy of
-        // the model, so a fallback here would mean validating v0.2 data against
-        // v0.4 shapes. See `GetValidatorOptions`.
         const { validate, errorText } = getValidator(version, schemaName, {
           requireVersioned: true,
         });
@@ -206,9 +163,7 @@ describe("new resources conform to their generated schemas", () => {
 });
 
 describe("sub-resources conform to their generated schemas", () => {
-  // Organization revisions are served by the four `/changes` routes, so they are
-  // a response shape in their own right — and `shapeRevision` is the only thing
-  // standing between the fixture's bookkeeping `orgId` field and the wire.
+  // `shapeRevision` strips the fixture-only `orgId` bookkeeping field.
   it("validates every organization revision against v0.4.0's OrgRevision", () => {
     const { validate, errorText } = getValidator("0.4.0", "OrgRevision.yaml", {
       requireVersioned: true,
@@ -223,9 +178,6 @@ describe("sub-resources conform to their generated schemas", () => {
     }
   });
 
-  // `AppFormResponse` is what `GET|PUT /applications/{appId}/forms/{formId}`
-  // returns, and it is nested inside every application, so it is validated
-  // twice over — once here on its own, and once as part of `ApplicationBase`.
   it.each(versionsServing("applications"))(
     "validates every nested form response against v%s's AppFormResponse",
     (version) => {
@@ -251,10 +203,8 @@ describe("sub-resources conform to their generated schemas", () => {
 });
 
 describe("opportunities conform to their generated schemas (#1077, restored)", () => {
-  // Carried over from the 3A suite. `getValidator` throws where the 3A helper
-  // fell back to `OpportunityBase`, so the v0.1 case names that schema outright
-  // rather than relying on a fallback — v0.1 predates `OpportunityDetails`, and
-  // `OpportunityBase` is what the mock actually serves for a v0.1 detail read.
+  // v0.1 predates `OpportunityDetails`; the mock serves `OpportunityBase` for
+  // a v0.1 detail read.
   const detailSchemaFor = (version: Version): string =>
     version === "0.1.0" ? "OpportunityBase.yaml" : "OpportunityDetails.yaml";
 
@@ -277,18 +227,14 @@ describe("opportunities conform to their generated schemas (#1077, restored)", (
 
     it("shapes every record into a valid detail record, competitions omitted", () => {
       const schemaName = detailSchemaFor(version);
-      // Not `requireVersioned`: v0.1 has no `OpportunityDetails` and is
-      // deliberately validated against its own `OpportunityBase`, which is what
-      // the mock actually serves for a v0.1 detail read.
+      // Not `requireVersioned`: the v0.1 fallback here is deliberate.
       const { validate, errorText } = getValidator(version, schemaName);
 
       for (const opp of OPPORTUNITY_FIXTURES) {
         const shaped = shapeOpportunityForVersion(opp, version, "detail");
 
-        // The nested `Competition` preview in `data/fixtures.ts` deliberately
-        // omits `CompetitionBase`'s required `forms` object, so a record still
-        // carrying `competitions` fails. That deviation is pinned explicitly
-        // below; dropping it here lets this test pin the rest of the shape.
+        // The nested `Competition` preview omits the required `forms` object,
+        // so `competitions` is dropped here; the deviation is pinned below.
         const withoutCompetitions = { ...shaped };
         delete withoutCompetitions.competitions;
 
@@ -309,16 +255,9 @@ describe("opportunities conform to their generated schemas (#1077, restored)", (
       expect(withCompetitions.length).toBeGreaterThan(0);
     });
 
-    // If these start failing, the nested `Competition` type grew a `forms`
-    // object and now matches the full model — DELETE this block and fold
-    // `competitions` back into the detail test above (dropping the omission),
-    // rather than patching these assertions.
-    //
-    // Worth noting what #334 did NOT do here: `data/competitions.ts` has a
-    // full `CompetitionBase` type that DOES carry `forms`, so the nested preview
-    // could have been switched to it. It wasn't, because those previews are
-    // inside the opportunity envelopes the golden corpus pins byte for byte —
-    // changing them would rewrite that corpus for no gain to this ticket.
+    // If these start failing, the nested `Competition` type gained `forms` —
+    // DELETE this block and fold `competitions` back into the detail test
+    // above, rather than patching these assertions.
     it.each(SUPPORTED_VERSIONS.filter((v) => v !== "0.1.0"))(
       "fails OpportunityDetails validation for v%s when competitions are left in",
       (version) => {
@@ -341,9 +280,8 @@ describe("opportunities conform to their generated schemas (#1077, restored)", (
 });
 
 describe("drifted records (negative path)", () => {
-  // Without these, a validator that silently accepted everything — a broken
-  // overlay, a schema that failed to register — would leave every test above
-  // green while checking nothing.
+  // A validator that silently accepted everything would leave every test
+  // above green while checking nothing.
   it("rejects an award whose status is a bare string", () => {
     const award = { ...AWARD_FIXTURES[0], status: "awarded" };
     const { validate, errorText } = getValidator("0.4.0", "AwardBase.yaml");
@@ -378,7 +316,6 @@ describe("drifted records (negative path)", () => {
   });
 
   it("rejects a competition with an out-of-enum applicant type", () => {
-    // The exact drift this suite caught for real when it was written.
     const competition = {
       ...COMPETITION_FIXTURES[0],
       acceptedApplicantTypes: [{ value: "local_government" }],

@@ -162,13 +162,8 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     expect(body.errors[0].field).toBe("version");
   });
 
-  // Replaced when #334 extended the mock past opportunities. This case used
-  // to request `/v0.4.0/common-grants/awards` and assert an
-  // "opportunity endpoints only" 404 — awards are now served, so that path
-  // answers 200 and the message would be false. What is still worth pinning is
-  // the *discrimination*: a path outside the served surface reports
-  // `field: "path"`, not a resource-level field, so a caller can tell "this is
-  // not a route" from "this record does not exist".
+  // `field: "path"` lets a caller tell "this is not a route" from "this
+  // record does not exist".
   it("flags a path outside the served surface with field: 'path'", async () => {
     const response = await handleMockRequest(
       new Request("https://docs.example/api/v0.4.0/common-grants/proposals"),
@@ -183,9 +178,6 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     expect(body.errors[0].message).toContain("No route matches");
   });
 
-  // The other half of that discrimination, and new with #334: a resource
-  // that IS in the protocol but not in the requested version reports which
-  // version added it, rather than the bare "no route" it would have got before.
   it("names the adding version for a resource absent from the requested version", async () => {
     const response = await handleMockRequest(
       new Request("https://docs.example/api/v0.2.0/common-grants/awards"),
@@ -200,12 +192,8 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     expect(body.errors[0].message).toContain("added in v0.4.0");
   });
 
-  // Regression: `RESOURCE_ROUTE` originally captured remainder segments as
-  // `[^/]*`, so a bare trailing slash matched with an EMPTY id and reached the
-  // detail handler, which answered 400 "Invalid <x> id". `/opportunities/` had
-  // always answered 404, because its own regex uses `[^/]+`. Two answers to the
-  // same shape of request, decided by which resource you asked for. Pinned
-  // across all six so the quantifiers cannot drift apart again.
+  // Regression: `[^/]*` in the route regex let a bare trailing slash reach
+  // the detail handler with an empty id and answer 400 instead of 404.
   it.each([
     "opportunities",
     "awards",

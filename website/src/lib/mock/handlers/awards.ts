@@ -1,23 +1,8 @@
 /**
- * Deterministic, fixture-backed handlers for the CommonGrants award list,
- * detail, and search endpoints (#334).
- *
- * The opportunity handler is the template this follows, and the differences are
- * only the ones the spec forces:
- *  - `Models.AwdSortBy` and `Models.AwdFilters` replace their `Opp*`
- *    counterparts, so the legal sort fields and filter names differ.
- *  - `opportunityId` is a `StringArrayFilter` over a *reference* field
- *    (`opportunity.id`) rather than over a value on the record itself — the one
- *    filter in the mock that reads across a resource boundary.
- *  - There is no version shaping. Awards are `@added(Versions.v0_4)` whole, so
- *    the router 404s earlier versions and every request that reaches here is
- *    v0.4. `version` is still taken as a parameter so all handlers share one
- *    signature and the router does not special-case awards.
- *
- * Everything else — pagination defaults and validation, the total-order sort,
- * `between`/`outside` range semantics, the `filterInfo.errors` channel for
- * filters the mock can't apply — comes from `http/query.ts`, shared with every
- * other resource so the protocol's rules are decided once.
+ * Fixture-backed handlers for the award list, detail, and search endpoints.
+ * The `opportunityId` filter matches on the referenced opportunity's id.
+ * Awards exist only in v0.4, so there is no version shaping — `version` is
+ * taken only to keep one handler signature.
  */
 
 import { allAwards, getAwardById, type Award } from "../data/awards";
@@ -114,9 +99,8 @@ function arrayFilterValue(
   award: Award,
   field: (typeof ARRAY_FILTER_FIELDS)[number],
 ): string {
-  // `opportunityId` filters on the *referenced* opportunity. An award with no
-  // opportunity reference has no id to match, so it falls out of an `in` filter
-  // and stays in a `notIn` one — the same treatment an absent scalar gets.
+  // `opportunityId` matches on the referenced opportunity's id; an award with
+  // no reference behaves like any absent scalar.
   return field === "status"
     ? award.status.value
     : (award.opportunity?.id ?? "");
@@ -130,10 +114,6 @@ function moneyFilterValue(award: Award): Money | undefined {
 /**
  * `GET /v{version}/common-grants/awards` — the paginated list, ordered
  * newest-modified first.
- *
- * @param request - Carries the `page`/`pageSize` query params.
- * @param version - Protocol version; awards exist only in v0.4, so this is
- * always `"0.4.0"` by the time the router dispatches here.
  */
 export function listAwards(request: Request, version: Version): Response {
   void version;
@@ -160,11 +140,8 @@ export function listAwards(request: Request, version: Version): Response {
 }
 
 /**
- * `GET /v{version}/common-grants/awards/{awdId}` — a single record.
- *
- * @param awdId - The path segment as received; validated as UUID-shaped here
- * rather than in the router, so a malformed id answers 400 (not a route miss).
- * @param version - Protocol version; always v0.4 here (see `listAwards`).
+ * `GET /v{version}/common-grants/awards/{awdId}` — a single record. A
+ * malformed id answers 400, not a route miss.
  */
 export function getAward(awdId: string, version: Version): Response {
   void version;
@@ -187,9 +164,6 @@ export function getAward(awdId: string, version: Version): Response {
 /**
  * `POST /v{version}/common-grants/awards/search` — filtered, sorted, paginated
  * search over the same fixture set.
- *
- * @param request - Carries the `AwdSearchRequest` JSON body.
- * @param version - Protocol version; always v0.4 here (see `listAwards`).
  */
 export async function searchAwards(
   request: Request,
@@ -231,9 +205,7 @@ export async function searchAwards(
       });
       continue;
     }
-    // Validate the bounds themselves, not just their presence — a malformed
-    // bound silently dropped would return a result set that contradicts the
-    // filter the caller asked for.
+    // A malformed bound silently dropped would contradict the filter asked for.
     const isDateRange = field === "awardDateRange";
     for (const bound of ["min", "max"] as const) {
       const value = filter.value[bound];
@@ -257,8 +229,8 @@ export async function searchAwards(
   if (!pagination.ok) {
     errors.push(...pagination.errors);
   }
-  // The defaults here are unreachable: an invalid pagination pair pushed errors
-  // above, and the guard below returns before they are used.
+  // Unreachable defaults: invalid pagination pushed errors, so the guard
+  // below returns first.
   const { page, pageSize } = pagination.ok
     ? pagination
     : { page: DEFAULT_PAGE, pageSize: DEFAULT_PAGE_SIZE };
@@ -310,10 +282,8 @@ export async function searchAwards(
     items = orderBy(items, (award) => sortKey(award, sortBy), sortOrder);
   }
 
-  // `filterInfo.errors` is the spec's channel for "non-fatal errors that
-  // occurred during filtering". `customFilters` are implementation-defined, so
-  // this mock echoes them but can't apply them — say so rather than letting the
-  // echo imply they narrowed the results.
+  // `filterInfo.errors` is the spec's channel for non-fatal filter problems.
+  // `customFilters` are echoed but not applied, so say so.
   const filterErrors: string[] = [];
   const customFilterNames = Object.keys(filters.customFilters ?? {});
   if (customFilterNames.length > 0) {

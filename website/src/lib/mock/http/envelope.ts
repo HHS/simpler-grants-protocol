@@ -7,12 +7,8 @@
  * swapped for the platform `Response.json` — the only behavioral difference is
  * the constructor; both emit `application/json` with the given status.
  *
- * The 201/202 builders arrived with #334, which added the first write
- * endpoints: `POST /applications/start` answers `Responses.CreatedT` and
- * `POST /orgs/{orgId}/changes` answers `Responses.AcceptedT`. Every builder
- * writes the HTTP status into the body's `status` field as well, because
- * `Responses.Success` declares one and the protocol's own examples mirror the
- * transport status there.
+ * Every builder mirrors the HTTP status into the body's `status` field, as
+ * `Responses.Success` declares.
  */
 
 /** A single `{field, message}` validation error carried in the `errors` array. */
@@ -35,10 +31,7 @@ export function successResponse(body: Record<string, unknown>): Response {
   return Response.json({ status: 200, message: "Success", ...body });
 }
 
-/**
- * Builds a `Responses.CreatedT` envelope — HTTP 201 with the created record
- * under `data`.
- */
+/** Builds a `Responses.CreatedT` envelope — 201 with the record under `data`. */
 export function createdResponse(data: unknown): Response {
   return Response.json(
     { status: 201, message: "Success", data },
@@ -47,15 +40,8 @@ export function createdResponse(data: unknown): Response {
 }
 
 /**
- * Builds a `Responses.AcceptedT` envelope — HTTP 202 with the accepted record
- * under `data`.
- *
- * `AcceptedT` declares an optional `Location` header pointing at where the
- * accepted resource can be retrieved, so callers polling a queued change have
- * somewhere to poll. It is sent whenever the caller gave us a URL to build.
- *
- * @param data - The accepted record.
- * @param location - Absolute or root-relative URL for the accepted resource.
+ * Builds a `Responses.AcceptedT` envelope — 202 with the record under `data`,
+ * plus an optional `Location` header for polling.
  */
 export function acceptedResponse(data: unknown, location?: string): Response {
   return Response.json(

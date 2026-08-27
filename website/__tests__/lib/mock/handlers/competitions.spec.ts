@@ -1,12 +1,7 @@
 /**
- * Handler + fixture suite for the competitions endpoint (#334):
- * `GET /competitions/{compId}`. Modeled on `awards.spec.ts`.
- *
- * The spec instantiates only `read` for competitions
- * (`lib/core/lib/api.tsp`) — the `apply` operation exists on the reusable
- * route interface but is not part of the API surface — so there is
- * deliberately no list endpoint and no apply endpoint, and therefore no
- * `listCompetitions` or `applyToCompetition` suite here.
+ * Handler + fixture suite for the competitions endpoint. The spec instantiates
+ * only `read` for competitions, so there is deliberately no list or apply
+ * suite here.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -83,9 +78,6 @@ describe("COMPETITION_FIXTURES", () => {
 });
 
 describe("GET /v{version}/common-grants/competitions/{compId} (detail)", () => {
-  // Swagger UI pre-fills every path parameter box with the specs' single
-  // `CommonGrants.Types.uuid` example (see `data/ids.ts`'s docstring), so this
-  // is the id an untouched "Try it out" sends for this route. It must not 404.
   it("returns 200 for the id Swagger UI pre-fills into every path parameter box", async () => {
     const response = getCompetition(CANONICAL_COMPETITION_ID, VERSION);
 
@@ -100,10 +92,6 @@ describe("GET /v{version}/common-grants/competitions/{compId} (detail)", () => {
     expect(body.data.id).toBe(CANONICAL_COMPETITION_ID);
   });
 
-  // The id published on the `CompetitionBase` example itself is a different
-  // id from the Swagger-UI-prefill one, so a visitor who copies it out of the
-  // rendered example rather than accepting the pre-filled value must also
-  // resolve.
   it("returns 200 for the id the CompetitionBase example itself publishes", async () => {
     const response = getCompetition(DOCUMENTED_COMPETITION_ID, VERSION);
 

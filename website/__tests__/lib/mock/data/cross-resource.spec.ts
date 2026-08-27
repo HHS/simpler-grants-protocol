@@ -1,26 +1,8 @@
 /**
- * Cross-resource referential consistency across the whole fixture set
- * (#334).
- *
- * The acceptance criterion is short — "ids referenced across resources resolve
- * to records that exist" — but it is the one property that no per-resource suite
- * can check, because every one of them only knows its own module. An award's
- * `funders.primary.id` is just a string to `awards.spec.ts`; whether it names a
- * real organization is a question only this file is in a position to ask.
- *
- * Most of these references are built by helpers that already throw on a bad id
- * (`orgRef` in `data/organizations.ts`, `formsFrom` in `data/competitions.ts`,
- * `appFor` in `data/applications.ts`), so a dangling reference usually fails at
- * module load rather than here. This suite is the backstop for the ones that are
- * written as literals — an award's `parent`, the `competitions` previews nested
- * on an opportunity — and, more importantly, it is where the *reason* each
- * reference has to resolve is written down. A helper that throws tells you the
- * id was wrong; it does not tell you that a visitor's first click on
- * "Try it out" is what breaks.
- *
- * The `Types.uuid` prefill invariants at the bottom are the ones most likely to
- * be broken by a well-meaning future edit — "these three fixtures all have the
- * same id, let me fix that" — so they are asserted with the reason attached.
+ * Referential consistency across the whole fixture set — the one property no
+ * per-resource suite can check. Most references are built by helpers that
+ * already throw on a bad id; this suite is the backstop for the ones written
+ * as literals.
  */
 
 import { describe, it, expect } from "vitest";
@@ -87,9 +69,8 @@ describe("awards reference records that exist", () => {
         opportunity,
         `award ${award.id} references opportunity ${award.opportunity.id}`,
       ).toBeDefined();
-      // The title is checked too, not just the id: a reference carrying a stale
-      // title is a dangling reference a caller can actually see, since the
-      // preview is the whole point of `OppRef`.
+      // A reference carrying a stale title is a dangling reference a caller
+      // can actually see.
       expect(award.opportunity.title).toBe(opportunity!.title);
     }
   });
@@ -127,8 +108,7 @@ describe("awards reference records that exist", () => {
   it("points every `parent` award at a real award, with its real title", () => {
     const withParents = AWARD_FIXTURES.filter((award) => award.parent);
 
-    // Written as a literal rather than through a helper, so this is the case the
-    // suite genuinely guards rather than merely restates.
+    // `parent` is written as a literal, not built by a throwing helper.
     expect(withParents.length).toBeGreaterThan(0);
 
     for (const award of withParents) {
@@ -165,9 +145,8 @@ describe("competitions reference records that exist", () => {
       expect(embedded.length).toBeGreaterThan(0);
 
       for (const form of embedded) {
-        // Identity, not just id equality: the competition fixtures embed the
-        // live records from `FORM_FIXTURES`, so a copy that had drifted from the
-        // original would fail here even though its id still resolved.
+        // Identity, not id equality: competitions embed the live FORM_FIXTURES
+        // records, so a drifted copy fails even though its id resolves.
         expect(getFormById(form.id)).toBe(form);
       }
     }
@@ -201,9 +180,7 @@ describe("applications reference records that exist", () => {
     for (const application of APPLICATION_FIXTURES) {
       const competition = getCompetitionById(application.competitionId)!;
 
-      // The two could disagree without either being dangling — which is exactly
-      // the kind of inconsistency a hand-written fixture set drifts into, and
-      // what a visitor comparing an application to its competition would notice.
+      // The two could disagree without either being dangling.
       expect(application.opportunityId).toBe(competition.opportunityId);
     }
   });
@@ -249,8 +226,7 @@ describe("organizations and their changes", () => {
 
   it("gives every accepted revision a snapshot, and every pending one none", () => {
     for (const revision of ORG_REVISION_FIXTURES) {
-      // The protocol describes `snapshot` as the record "with the change
-      // applied", which a change that was never applied does not have.
+      // The protocol defines `snapshot` as the record with the change applied.
       if (revision.status.value === "accepted") {
         expect(revision.snapshot, `revision ${revision.id}`).toBeDefined();
       }
@@ -282,13 +258,8 @@ describe("opportunities' nested competition previews", () => {
 });
 
 describe("the Types.uuid prefill invariant", () => {
-  // Every path parameter in the spec — oppId, awdId, orgId, appId, formId,
-  // compId, changeId — resolves to the same `CommonGrants.Types.uuid` schema,
-  // which publishes one `example`. Swagger UI pre-fills a path box from that
-  // example, so EVERY detail route's first Execute arrives carrying the same
-  // uuid. These assertions are what stop a future edit from "cleaning up" the
-  // shared id and silently putting 404s back on the docs page — which is the
-  // exact failure #334 was opened to remove.
+  // Swagger UI pre-fills every path box from the single `Types.uuid` example,
+  // so every detail route's first Execute sends the same uuid. It must not 404.
   it("gives every resource a canonical record carrying the shared uuid example", () => {
     expect(CANONICAL_OPPORTUNITY_ID).toBe(CANONICAL_RECORD_ID);
     expect(CANONICAL_AWARD_ID).toBe(CANONICAL_RECORD_ID);
@@ -321,9 +292,7 @@ describe("the Types.uuid prefill invariant", () => {
   });
 
   it("keeps the reserved 404 id absent from every resource", () => {
-    // Each resource's detail route needs a stable id to demonstrate its 404
-    // branch with. Handing it to a record in any one of them would silently turn
-    // that documented 404 into a 200.
+    // Giving this id to any record would turn a documented 404 into a 200.
     expect(
       OPPORTUNITY_FIXTURES.some((opp) => opp.id === RESERVED_MISSING_ID),
     ).toBe(false);
@@ -356,12 +325,9 @@ describe("the Types.uuid prefill invariant", () => {
 });
 
 describe("model-surface representativeness", () => {
-  // These pin the fields a coverage audit (fixtures vs each model's declared
-  // properties) originally found demonstrated NOWHERE in the mock. Each is a
-  // whole shape a consumer could only learn exists by reading the spec — the
-  // playground exists so they can see it instead. If one of these fails after a
-  // fixture edit, a model's only exemplar was deleted; restore one rather than
-  // deleting the assertion.
+  // These pin fields that once had no exemplar anywhere in the mock. If one
+  // fails after a fixture edit, restore an exemplar — don't delete the
+  // assertion.
   it("demonstrates an award to an individual, not just to organizations", () => {
     const individual = AWARD_FIXTURES.filter(
       (award) => award.recipientIndividual !== undefined,
@@ -372,8 +338,7 @@ describe("model-surface representativeness", () => {
       // `Fields.Name` requires both halves.
       expect(typeof award.recipientIndividual!.name?.firstName).toBe("string");
       expect(typeof award.recipientIndividual!.name?.lastName).toBe("string");
-      // A person-recipient award naming recipient orgs too would demonstrate
-      // confusion, not coverage.
+      // A person-recipient award must not also name recipient orgs.
       expect(award.recipientOrganizations).toBeUndefined();
     }
   });
@@ -410,7 +375,7 @@ describe("model-surface representativeness", () => {
 
   it("keeps every identifier-collection entry consistent with its scalar twin", () => {
     // `ein`/`uei`/`duns` scalars and their collection entries are two views of
-    // one fact; a fixture where they disagree teaches consumers the two can.
+    // one fact; they must never disagree.
     const pairs: Array<
       ["ein" | "uei" | "duns", "org:us:ein" | "org:us:uei" | "org:xi:duns"]
     > = [

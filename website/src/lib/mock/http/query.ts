@@ -1,24 +1,7 @@
 /**
  * Pagination, sorting, filtering, and body-parsing primitives shared by every
- * resource handler (#334).
- *
- * All of this began life inline in `handlers/opportunities.ts` (#1077), where
- * it was the only copy. Extending the mock past opportunities would have meant
- * five more copies of the same `page`/`pageSize` validation, the same
- * total-order sort, and the same `between`/`outside` range semantics — five
- * more places for the protocol's rules to drift apart. So the primitives moved
- * here and the opportunity handler now calls them.
- *
- * The extraction is behavior-preserving by construction: the generic helpers
- * take a value extractor where the originals hard-coded an opportunity field,
- * and nothing else changed. `__tests__/lib/mock/golden-envelopes.spec.ts`
- * compares raw response text for the opportunity endpoints against a corpus
- * captured from the 3A Worker, so any drift in these rules — a different
- * default, a lost tiebreaker, a reordered error list — fails there rather than
- * being discovered in a preview.
- *
- * Nothing here knows about a resource. Anything resource-specific — which sort
- * fields are legal, which filters exist — stays in that resource's handler.
+ * resource handler. Nothing here knows about a resource — legal sort fields
+ * and filter names stay in each handler.
  */
 
 import { errorResponse, type FieldError } from "./envelope";
@@ -30,15 +13,12 @@ export const DEFAULT_PAGE_SIZE = 100;
 const MIN_PAGE_VALUE = 1;
 
 /**
- * UUID-shaped value (8-4-4-4-12 hex, matching the protocol's `uuid` format).
- * Not a full RFC 4122 conformance check — it deliberately accepts the nil
- * UUID (`00000000-…`), which every resource uses as its "well-formed but
- * unknown" case (`RESERVED_MISSING_ID`).
+ * UUID-shaped value (8-4-4-4-12 hex). Deliberately accepts the nil UUID,
+ * which every resource uses as its "well-formed but unknown" id.
  */
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** True when `value` is UUID-shaped per `UUID_PATTERN`. */
 export function isUuid(value: string): boolean {
   return UUID_PATTERN.test(value);
 }
@@ -50,10 +30,8 @@ export interface Money {
 }
 
 /**
- * The filter shapes below describe what a *well-formed* request looks like.
- * Bodies arrive as untrusted JSON, so each handler validates every field —
- * operator, bound presence, and bound value — and answers 400 before any of
- * these types are relied on.
+ * Well-formed filter shapes. Bodies are untrusted JSON, so handlers validate
+ * every field and answer 400 before relying on these types.
  */
 export interface StringArrayFilter {
   operator: string;
@@ -110,14 +88,7 @@ function compare(a: string | number, b: string | number): number {
 
 /**
  * Orders items by an extracted sort key, breaking ties on `id`. The tiebreaker
- * makes the ordering a total order: without it, records sharing a sort value
- * keep their incoming order under a stable sort, so `desc` would not be the
- * exact reverse of `asc`. Negating the composed comparator — tiebreaker
- * included — is what makes the two directions mirror each other exactly.
- *
- * @param items - Records to order; the input array is not mutated.
- * @param sortKey - Extracts the value to order by from one record.
- * @param sortOrder - `"asc"`, or anything else for descending.
+ * makes the ordering total, so `desc` is the exact reverse of `asc`.
  */
 export function orderBy<T extends { id: string }>(
   items: T[],
@@ -130,10 +101,7 @@ export function orderBy<T extends { id: string }>(
   });
 }
 
-/**
- * Applies a `StringArrayFilter` (`in`/`notIn`) over a string field extracted by
- * `getValue`.
- */
+/** Applies a `StringArrayFilter` (`in`/`notIn`) over an extracted string field. */
 export function applyStringArrayFilter<T>(
   items: T[],
   filter: StringArrayFilter,
@@ -147,9 +115,8 @@ export function applyStringArrayFilter<T>(
 }
 
 /**
- * Applies a date `RangeFilter` (`between`/`outside`) over a field extracted by
- * `getValue`. Either bound may be omitted (filters on the one given); a record
- * whose field is absent never matches, whichever operator was asked for.
+ * Applies a date `RangeFilter` (`between`/`outside`). Either bound may be
+ * omitted; a record whose field is absent never matches.
  */
 export function applyDateRangeFilter<T>(
   items: T[],
@@ -170,10 +137,8 @@ export function applyDateRangeFilter<T>(
 }
 
 /**
- * Applies a `MoneyRangeFilter` (`between`/`outside`) over a `Money` field
- * extracted by `getMoney`. Either bound may be omitted (filters on the one
- * given). Per the protocol, amounts denominated in a different currency than
- * the filter bound are excluded from the match regardless of `operator`.
+ * Applies a `MoneyRangeFilter` (`between`/`outside`). Per the protocol,
+ * amounts in a different currency than the filter bound never match.
  */
 export function applyMoneyRangeFilter<T>(
   items: T[],
@@ -204,19 +169,7 @@ export interface SortingRequest {
   sortOrder?: string;
 }
 
-/**
- * Validates a `sorting` block against a resource's own legal sort fields.
- *
- * The *set* of legal fields is per-resource (`OppSortBy`, `AwdSortBy`,
- * `AppSortBy` name different things), but the checks over that set — is the
- * field known, is the order one of `asc`/`desc` — are identical everywhere, and
- * so are the error messages. Three copies of them meant three chances for one
- * resource's phrasing to drift from the others'.
- *
- * @param sorting - The block as received, or `undefined` when omitted.
- * @param validSortBy - Wire values this resource's `*SortBy` enum permits.
- * @param errors - Collector appended to for each problem found.
- */
+/** Validates a `sorting` block against a resource's own legal sort fields. */
 export function validateSorting(
   sorting: SortingRequest | undefined,
   validSortBy: ReadonlySet<string>,
@@ -242,22 +195,8 @@ export function validateSorting(
 }
 
 /**
- * Validates each named `StringArrayFilter` on a filters object: a known
- * `in`/`notIn` operator and an array value.
- *
- * Like `validateSorting`, only the field *names* are per-resource. The range
- * filters are deliberately NOT covered here — those genuinely differ by resource
- * (a date range and a money range validate their bounds differently, and the
- * resources have different numbers of them), so folding them in would trade real
- * duplication for a parameter list nobody can read.
- *
- * Generic over the field names rather than taking `Record<string, unknown>`, so
- * a resource passing a field its own `*Filters` interface does not declare is a
- * compile error rather than a silently skipped check.
- *
- * @param fields - Filter names to check, from the resource's `*DefaultFilters`.
- * @param filters - The filters object as received.
- * @param errors - Collector appended to for each problem found.
+ * Validates each named `StringArrayFilter`: a known `in`/`notIn` operator and
+ * an array value. Range filters validate per resource, not here.
  */
 export function validateArrayFilters<Field extends string>(
   fields: readonly Field[],
@@ -288,21 +227,8 @@ export type PaginationResult =
   | { ok: false; errors: FieldError[] };
 
 /**
- * Resolves one pagination param against the spec
- * (`Pagination.PaginatedQueryParams` / `PaginatedBodyParams`): an optional
- * `integer` with `minimum: 1`, defaulting to 1 (`page`) / 100 (`pageSize`), and
- * **no** declared maximum.
- *
- * An absent value takes the default. A present value that isn't an integer, or
- * that falls below the minimum, is a validation error rather than something to
- * silently clamp — clamping would answer a request the caller didn't make, and
- * surfacing it as a 400 gives the playground another error case to demonstrate.
- *
- * @param raw - The value as received: a query string, a JSON body value, or
- * `undefined`/`""` when the caller omitted it.
- * @param field - Dotted path used in the `{field, message}` error entry.
- * @param fallback - The spec default for this param.
- * @param errors - Collector appended to on failure.
+ * Resolves one pagination param (optional integer, `minimum: 1`, no maximum).
+ * A non-integer or below-minimum value is a 400, not silently clamped.
  */
 function resolvePaginationParam(
   raw: string | number | undefined,
@@ -359,9 +285,8 @@ export function resolveQueryPagination(request: Request): PaginationResult {
 }
 
 /**
- * Builds `Pagination.PaginatedResultsInfo`. Shared by every list and search
- * endpoint so `totalPages` is derived the same way on all of them — an empty
- * result set reports zero pages, not one.
+ * Builds `Pagination.PaginatedResultsInfo`. An empty result set reports zero
+ * pages, not one.
  */
 export function paginationInfo(
   page: number,
@@ -389,17 +314,9 @@ export type JsonObjectBody =
 
 /**
  * Reads a request body as a JSON *object*, answering 400 for anything else.
- *
- * `JSON.parse` accepts any JSON *value*, so `null`, `[]`, `42`, and a bare
- * quoted string all clear the parse and then pose as a request model. The #1049
- * spike cast straight to its body type and read `.filters`, which crashed on
- * `null`/strings and — worse — quietly answered 200 with the whole unfiltered
- * set for `[]`/`42`/`true`, since those have no `.filters` to find. Rejecting
- * non-objects here is the only way the caller learns the body was wrong.
- *
- * `allowEmpty` covers write endpoints that take no body: `PUT /{appId}/submit`
- * accepts none at all, so an empty string is a valid request there and an object
- * everywhere else.
+ * Valid-JSON non-objects (`null`, arrays, scalars) are rejected on purpose —
+ * they would otherwise pose as an empty request. `allowEmpty` covers write
+ * endpoints that take no body.
  */
 export async function readJsonObjectBody(
   request: Request,

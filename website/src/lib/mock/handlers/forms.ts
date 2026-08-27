@@ -1,18 +1,7 @@
 /**
- * Deterministic, fixture-backed handlers for the two form endpoints (#334).
- *
- * The smallest resource in the mock: `Routes.Forms` declares only `list` and
- * `read`, both `@added(Versions.v0_2)`, and neither takes a filter or a sort
- * parameter. So there is no search handler here and no `Models.FormSortBy` to
- * validate against — the list is ordered `lastModifiedAt` descending, which is
- * what the operation's own `@doc` promises ("sorted by `lastModifiedAt` with
- * most recent first").
- *
- * Forms are served whole. `Models.FormBase` carries the `jsonSchema` /
- * `uiSchema` pair the docs site's own form renderer consumes
- * (`src/lib/forms/`), so a visitor can copy a form out of the playground and
- * render it — which is only true if the mock returns the pair rather than a
- * trimmed preview of it.
+ * Fixture-backed handlers for the two form endpoints (`list` and `read`).
+ * Forms are served whole, `jsonSchema`/`uiSchema` included, so a copied form
+ * renders with the docs site's own form renderer.
  */
 
 import { allForms, getFormById } from "../data/forms";
@@ -28,11 +17,7 @@ import {
 
 /**
  * `GET /v{version}/common-grants/forms` — the paginated list, ordered
- * newest-modified first.
- *
- * @param request - Carries the `page`/`pageSize` query params.
- * @param version - Protocol version; forms are unshaped across v0.2–v0.4, so
- * this is taken only to keep one signature across all list handlers.
+ * newest-modified first per the operation's `@doc`.
  */
 export function listForms(request: Request, version: Version): Response {
   void version;
@@ -59,11 +44,8 @@ export function listForms(request: Request, version: Version): Response {
 }
 
 /**
- * `GET /v{version}/common-grants/forms/{formId}` — a single form.
- *
- * @param formId - The path segment as received; validated as UUID-shaped here
- * rather than in the router, so a malformed id answers 400 (not a route miss).
- * @param version - Protocol version (unused; see `listForms`).
+ * `GET /v{version}/common-grants/forms/{formId}` — a single form. A malformed
+ * id answers 400, not a route miss.
  */
 export function getForm(formId: string, version: Version): Response {
   void version;

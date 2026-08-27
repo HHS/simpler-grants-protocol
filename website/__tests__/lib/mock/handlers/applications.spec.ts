@@ -1,15 +1,8 @@
 /**
- * Handler + fixture suite for the application and form-response endpoints
- * (#334): `POST /applications/start`, `GET /applications/{appId}`,
- * `PUT /applications/{appId}/submit`, `POST /applications/search`, and
- * `GET|PUT /applications/{appId}/forms/{formId}`. Modeled on `awards.spec.ts`.
- *
- * Applications are `@added(Versions.v0_2)` (`lib/core/lib/core/models/application.tsp`),
- * so every call here targets version "0.4.0" directly against the handler
- * functions rather than through `handleMockRequest` — the router doesn't yet
- * know the `/applications` path exists, and wiring it is a separate ticket's
- * router spec, not this one. Two tests deliberately target an earlier version:
- * the `title`/`name` rename (added v0.4) and `searchApplications`'s v0.3 floor.
+ * Handler + fixture suite for the application and form-response endpoints.
+ * Calls target "0.4.0" directly against the handler functions; router wiring
+ * is covered by the router spec. Two tests deliberately target earlier
+ * versions: the title/name rename and searchApplications' v0.3 floor.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -188,10 +181,8 @@ describe("POST /v{version}/common-grants/applications/start", () => {
     );
   });
 
-  // `title` is `@Versioning.renamedFrom(Versions.v0_4, "name")`
-  // (`lib/core/lib/core/routes/applications.tsp`), so a pre-v0.4 request sends
-  // `name` instead, and a v0.4 request that still sends `name` is missing the
-  // now-required `title` field.
+  // `title` was renamed from `name` at v0.4, so a pre-v0.4 request sends
+  // `name`, and a v0.4 request still sending `name` is missing `title`.
   it("accepts the pre-v0.4 name field in place of title, and rejects a v0.4 request that still uses name", async () => {
     const preV04Response = await runStart("0.3.0", {
       competitionId: CANONICAL_COMPETITION_ID,
@@ -237,9 +228,6 @@ describe("POST /v{version}/common-grants/applications/start", () => {
 });
 
 describe("GET /v{version}/common-grants/applications/{appId} (detail)", () => {
-  // Swagger UI pre-fills every path parameter box with the specs' single
-  // `Types.uuid` example (see `data/ids.ts`), so this is the id an untouched
-  // "Try it out" sends for this route. It must not 404.
   it("returns 200 for the id Swagger UI pre-fills into every path parameter box", async () => {
     const response = getApplication(CANONICAL_APPLICATION_ID, VERSION);
 
@@ -273,9 +261,6 @@ describe("GET /v{version}/common-grants/applications/{appId} (detail)", () => {
     expect(body.errors.some((error) => error.field === "appId")).toBe(true);
   });
 
-  // The mock is stateless: `start` echoes a single reserved draft id without
-  // adding it to the fixture set (see `DRAFT_APPLICATION_ID`'s docstring), so a
-  // subsequent read of that id must 404 rather than pretend the draft persisted.
   it("returns 404 for DRAFT_APPLICATION_ID, since start echoes without actually creating a record", async () => {
     const response = getApplication(DRAFT_APPLICATION_ID, VERSION);
 
@@ -290,10 +275,8 @@ describe("PUT /v{version}/common-grants/applications/{appId}/submit", () => {
     expect(response.status).toBe(200);
   });
 
-  // `ApplicationSubmissionError` is the spec's 400 branch for a submit that
-  // can't proceed because the application has outstanding validation errors
-  // (`lib/core/lib/core/responses/error.tsp`). BLOCKED_APPLICATION_ID is the
-  // fixture built to exercise it.
+  // `ApplicationSubmissionError` is the spec's 400 branch for a submit with
+  // outstanding validation errors; BLOCKED_APPLICATION_ID exercises it.
   it("returns 400 with errors derived from the application's validationErrors for a blocked application", async () => {
     const blockedApplication = getApplicationById(BLOCKED_APPLICATION_ID);
     expect(blockedApplication?.validationErrors?.length).toBeGreaterThan(0);
@@ -360,9 +343,8 @@ describe("POST /v{version}/common-grants/applications/search", () => {
     }
   });
 
-  // The id is drawn from the fixture set itself — a competitionId shared by
-  // more than one application — rather than hardcoded, so the test doesn't
-  // assume a specific fixture layout beyond "at least one is shared".
+  // The id comes from the fixture set rather than being hardcoded; the test
+  // only assumes at least one competitionId is shared.
   it("narrows results when filtering on a competitionId shared by more than one fixture", async () => {
     const counts = new Map<string, number>();
     for (const application of APPLICATION_FIXTURES) {
@@ -394,10 +376,6 @@ describe("POST /v{version}/common-grants/applications/search", () => {
     }
   });
 
-  // Valid `AppSortBy` wire values (`lib/core/lib/core/models/application.tsp`):
-  // lastModifiedAt, createdAt, submittedAt, status.value, opportunityId,
-  // competitionId, custom. Anything else must be rejected rather than silently
-  // ignored.
   it("returns 400 with a sorting.sortBy field error for an unknown sortBy value", async () => {
     const response = await searchApplications(
       new Request(applicationsUrl(VERSION, "/search"), {
@@ -420,11 +398,8 @@ describe("POST /v{version}/common-grants/applications/search", () => {
     );
   });
 
-  // Unlike every other search route, `searchApplications` declares `filters`
-  // and `sorting` as `@query` parameters, not body fields
-  // (`lib/core/lib/core/routes/applications.tsp`). A caller who follows the
-  // spec sends them on the query string; this asserts that request narrows the
-  // results exactly as the body form does.
+  // Uniquely, the spec declares this route's `filters`/`sorting` as @query
+  // parameters, so the query-string form must filter exactly like the body.
   it("filters identically whether filters arrive via the query string (the spec's declared location for this route) or the request body", async () => {
     const filters = { status: { operator: "in", value: ["submitted"] } };
 
@@ -450,10 +425,6 @@ describe("POST /v{version}/common-grants/applications/search", () => {
     );
   });
 
-  // `searchApplications` is `@added(Versions.v0_3)` while its sibling
-  // operations (`start`, `get`, `submit`) are `@added(Versions.v0_2)`
-  // (`lib/core/lib/core/routes/applications.tsp`), so a v0.2 request must 404
-  // rather than fall through to an unversioned implementation.
   it("returns 404 with the protocol Error shape at v0.2, since searchApplications is v0.3+ while its siblings are v0.2+", async () => {
     const response = await searchApplications(
       new Request(applicationsUrl("0.2.0", "/search"), {
@@ -478,10 +449,6 @@ describe("POST /v{version}/common-grants/applications/search", () => {
 });
 
 describe("GET /v{version}/common-grants/applications/{appId}/forms/{formId} (read)", () => {
-  // Both the `appId` and `formId` boxes pre-fill with the same
-  // `CommonGrants.Types.uuid` example (see `data/ids.ts`), so an untouched
-  // "Try it out" sends this exact pair. `canonicalPrefillResolves()` is the
-  // fixture-authoring invariant that keeps it resolvable.
   it("resolves the doubly pre-filled (appId, formId) pair Swagger UI arrives with", async () => {
     expect(canonicalPrefillResolves()).toBe(true);
 
