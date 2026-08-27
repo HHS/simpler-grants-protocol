@@ -1,27 +1,8 @@
 /**
- * Ported from the 3A standalone Worker (#1078):
- * `mock-api/__tests__/handlers/sdk-envelope.spec.ts` on branch
- * `karina/1077-cloudflareworkermock` — imports, entry point, and base path
- * adjusted; assertions unchanged.
- */
-/**
- * Pins the envelope details the TS SDK's zod schemas depend on (#1077,
- * PLAN.md): the search response's `sortInfo` + strict-parsed `filterInfo`
- * (no extra keys), and `paginationInfo.totalPages: 0` for empty result sets
- * on both the search and list endpoints.
- *
- * These aren't asserted against `@common-grants/sdk` directly — this package
- * doesn't depend on it — but the key sets below are transcribed from the
- * actual zod schemas so a drift here is a drift the SDK would choke on:
- *
- *  - `lib/ts-sdk/src/schemas/zod/responses.ts:132-139` — `filterInfo` is a
- *    `.strict()` zod object with exactly `filters` and an optional `errors`.
- *    `.strict()` means any *other* key inside `filterInfo` makes the SDK's
- *    `client.opportunities.search()` throw rather than ignore it.
- *  - `lib/ts-sdk/src/schemas/zod/sorting.ts:55-67` — `SortedResultsInfoSchema`
- *    (the `sortInfo` value) requires `sortBy` (string) and `sortOrder`
- *    (`"asc" | "desc"`), with optional `customSortBy` and `errors`. Not
- *    `.strict()`, but missing either required field fails SDK parsing.
+ * Ported from the 3A standalone Worker (#1078); assertions unchanged. Pins
+ * the envelope details the TS SDK's zod schemas parse strictly (#1077): the
+ * key sets below are transcribed from `lib/ts-sdk/src/schemas/zod`, so a
+ * drift here is a drift the SDK would reject.
  */
 
 import { describe, it, expect } from "vitest";
@@ -68,9 +49,8 @@ async function runSearch(body: unknown) {
 
 describe("search/list envelope shapes the TS SDK's strict zod schemas depend on", () => {
   describe("filterInfo carries no keys beyond filters and errors", () => {
-    // lib/ts-sdk/src/schemas/zod/responses.ts:132-139 — `.strict()` object.
-    // These three requests never populate filterInfo.errors, so the allowed
-    // key set is exactly `["filters"]`.
+    // `filterInfo` is a `.strict()` zod object (responses.ts). These requests
+    // never populate `errors`, so the allowed key set is exactly ["filters"].
     it.each([
       ["a bare {} body with no filters at all", {}],
       [
@@ -78,8 +58,7 @@ describe("search/list envelope shapes the TS SDK's strict zod schemas depend on"
         { filters: { status: { operator: "in", value: ["open"] } } },
       ],
       [
-        // "archived" is a `customValue`, never a `status.value` on any
-        // fixture record (see src/data/fixtures.ts), so this matches zero.
+        // "archived" is never a `status.value` on any fixture record.
         "a body whose filters match zero records",
         { filters: { status: { operator: "in", value: ["archived"] } } },
       ],
@@ -90,10 +69,8 @@ describe("search/list envelope shapes the TS SDK's strict zod schemas depend on"
     });
 
     it("holds on the customFilters path too, where filterInfo.errors is also present", async () => {
-      // customFilters is the path that populates filterInfo.errors (see
-      // "reports unapplied customFilters via filterInfo.errors" in
-      // opportunities.spec.ts), so here the allowed set is exactly the two
-      // fields — this is the path most likely to accidentally grow a third.
+      // customFilters is the one path that populates `filterInfo.errors`, so
+      // here the allowed set is exactly the two fields.
       const body = await runSearch({
         filters: {
           customFilters: { agency: { operator: "in", value: ["NSF"] } },
@@ -108,7 +85,7 @@ describe("search/list envelope shapes the TS SDK's strict zod schemas depend on"
   });
 
   describe("sortInfo is present on every search response with the SDK's required fields", () => {
-    // lib/ts-sdk/src/schemas/zod/sorting.ts:55-67 — sortBy/sortOrder required.
+    // The SDK schema (sorting.ts) requires sortBy and sortOrder.
     it("defaults to lastModifiedAt/desc when the request body omits sorting entirely", async () => {
       const body = await runSearch({});
 
@@ -141,8 +118,8 @@ describe("search/list envelope shapes the TS SDK's strict zod schemas depend on"
 
   describe("paginationInfo.totalPages is 0, not 1, for an empty result set", () => {
     it("reports totalPages: 0 when a search's filters match zero fixture records", async () => {
-      // Math.ceil(0 / pageSize) === 0. An SDK that auto-paginates on
-      // `page < totalPages` would loop forever against a `1` here.
+      // An SDK that auto-paginates on `page < totalPages` would loop forever
+      // against a 1 here.
       const body = await runSearch({
         filters: { status: { operator: "in", value: ["archived"] } },
       });
@@ -158,9 +135,8 @@ describe("search/list envelope shapes the TS SDK's strict zod schemas depend on"
   });
 
   describe("the list endpoint's paginationInfo uses the identical derivation", () => {
-    // The fixture list is non-empty, so the list route itself can never
-    // produce a `totalPages: 0` case — that's pinned above via search, which
-    // shares the same `paginationInfo()` helper (src/handlers/opportunities.ts).
+    // The list route can never produce an empty set; it shares the
+    // `paginationInfo()` helper pinned above via search.
     it.each([100, 4])(
       "derives totalPages via Math.ceil(totalItems / pageSize) for pageSize=%i",
       async (pageSize) => {

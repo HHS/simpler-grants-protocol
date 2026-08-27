@@ -1,11 +1,6 @@
 /**
- * Protocol response envelopes, shared by the router and the opportunity
- * handlers so a version-prefix 404 and a handler-level 404 are the same shape
- * on the wire.
- *
- * Ported from the #1049 spike's `handlers.ts`, with MSW's `HttpResponse.json`
- * swapped for the platform `Response.json` — the only behavioral difference is
- * the constructor; both emit `application/json` with the given status.
+ * Protocol response envelopes, shared by the router and the handlers so every
+ * error is the same shape on the wire.
  */
 
 /** A single `{field, message}` validation error carried in the `errors` array. */
@@ -29,17 +24,9 @@ export function successResponse(body: Record<string, unknown>): Response {
 }
 
 /**
- * Runs `handle`, converting an unexpected throw into a protocol-shaped 500.
- *
- * Under MSW the same throw surfaced as a test-time unhandled rejection. On a
- * real cross-origin Worker it costs the caller much more: no response object
- * means no CORS headers, so the browser reports an opaque CORS failure and the
- * actual cause never reaches the console. Returning an envelope keeps every
- * outcome on the path that `withCors` decorates.
- *
- * No reachable throw is known today — the search handler validates its body
- * rather than trusting it — so this is a backstop for later changes, not a live
- * code path.
+ * Runs `handle`, converting an uncaught throw into a protocol-shaped 500. An
+ * uncaught throw would skip `withCors`, so the browser would report an opaque
+ * CORS error instead of the actual failure.
  */
 export async function withErrorBoundary(
   handle: () => Promise<Response>,

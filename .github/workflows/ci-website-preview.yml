@@ -43,11 +43,9 @@ jobs:
 
       - name: Build site
         id: build
-        # `MOCK_API_ENABLED` wires the docs to the same-origin mock API on
-        # previews only (#1078): it makes `inject-mock-server.ts` write a
-        # `servers: /api/v{version}` block into each rendered spec and turns on
-        # Swagger UI's Execute button. Deliberately absent from
-        # `cd-deploy-website.yml`, since GitHub Pages cannot serve the endpoint.
+        # Wires the docs to the same-origin mock API (#1078): injects a servers
+        # block into each spec and enables Swagger UI's Execute button.
+        # Preview-only on purpose — absent from `cd-deploy-website.yml`.
         env:
           MOCK_API_ENABLED: "1"
         run: pnpm run build

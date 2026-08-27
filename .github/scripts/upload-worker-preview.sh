@@ -20,12 +20,9 @@ set -euo pipefail
 # Example, from website/:
 #   ../.github/scripts/upload-worker-preview.sh pr-1079 "PR #1079 @ 38d81c1"
 #
-# `config` is an optional path to a wrangler config file. The website needs it
-# since #1078: with the `@astrojs/cloudflare` adapter the deployable config is
-# the one the build generates at `dist/server/wrangler.json` (it carries the
-# built `main` and points `assets` at `dist/client`), and the checked-in
-# `website/wrangler.jsonc` deliberately omits `main` because the Cloudflare Vite
-# plugin validates it before the build can create it.
+# `config` is an optional wrangler config path. The website passes the
+# build-generated `dist/server/wrangler.json` (#1078), since the checked-in
+# `website/wrangler.jsonc` deliberately omits `main`.
 #
 # Exit codes:
 #   0 = version uploaded and preview URL found
@@ -35,8 +32,7 @@ ALIAS="${1:?usage: upload-worker-preview.sh <alias> <message> [config]}"
 MESSAGE="${2:?usage: upload-worker-preview.sh <alias> <message> [config]}"
 CONFIG="${3:-}"
 
-# Built as an array so an empty CONFIG contributes no argument at all, rather
-# than an empty string wrangler would reject.
+# An array so an empty CONFIG contributes no argument at all.
 config_args=()
 if [[ -n "$CONFIG" ]]; then
   if [[ ! -f "$CONFIG" ]]; then

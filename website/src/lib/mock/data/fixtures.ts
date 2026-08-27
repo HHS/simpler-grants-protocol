@@ -1,41 +1,13 @@
 /**
- * Shared opportunity fixture for the standalone Worker mock (#1077).
- *
- * Ported unchanged from the MSW mock-playground spike (#1049, branch
- * `karina/playground-spike`), which carried zero MSW imports in this file —
- * only its sibling `handlers.ts` was coupled to MSW, which is why the records
- * and shaping moved over as-is while the handlers get rewritten (#1077).
- *
- * A fixed, hand-authored dataset that the deterministic opportunity handlers
- * draw from, so the list, detail, and search endpoints stay mutually
- * consistent and return the same body on every call. Values are
- * assembled from the TypeSpec `@example` decorators under
- * `lib/core/lib/core/models/opportunity/` (semantic, not faker noise). The
- * first record reproduces the spec's own published example (see
- * `CANONICAL_OPPORTUNITY_ID`) so the docs pane and the live response agree, and
- * the next three are carried over verbatim (id + title) from
- * `lib/ts-sdk/examples/mock-api-server.ts` so cross-repo examples stay
- * recognizable.
- *
- * Records are stored in their fullest (v0.3+, detail) shape.
- * `shapeOpportunityForVersion` projects them down to the version/variant a given
- * endpoint should emit:
- *  - `acceptedApplicantTypes` was added in v0.2 → stripped for v0.1.
- *  - `competitions` lives only on `OpportunityDetails` (added v0.2) → stripped
- *    for v0.1 and from any `list`-variant projection.
+ * Hand-authored opportunity fixtures for the deterministic mock handlers.
+ * Records are stored in their fullest (v0.3+, detail) shape;
+ * `shapeOpportunityForVersion` projects them down per version and variant.
  */
 
 /**
- * Protocol versions this fixture knows how to shape, matching the versions the
- * docs site publishes specs for (`website/public/openapi/openapi.{v}.yaml`).
- * Shipping a spec version the docs offer without adding it here is caught by
- * `isSupportedVersion`, which keeps the mock from silently 404-ing a version a
- * visitor can select.
- *
- * v0.4.0 (#976) added awards/organizations routes but left the opportunity
- * models untouched, so it shapes identically to v0.3.0 — no new branch in
- * `shapeOpportunityForVersion`. #1077 verifies that against the generated
- * per-version schemas rather than trusting this comment.
+ * Protocol versions the fixture can shape, matching the specs the docs site
+ * publishes. v0.4.0 left the opportunity models untouched, so it shapes
+ * identically to v0.3.0.
  */
 export const SUPPORTED_VERSIONS = ["0.1.0", "0.2.0", "0.3.0", "0.4.0"] as const;
 
@@ -92,17 +64,13 @@ export interface OtherEvent {
   description?: string;
 }
 
-/**
- * Any `Fields.Event` variant. Named `TimelineEvent` rather than `Event` so it
- * doesn't shadow the DOM global in files that use both.
- */
+/** Any `Fields.Event` variant. Named to avoid shadowing the DOM `Event`. */
 export type TimelineEvent = SingleDateEvent | DateRangeEvent | OtherEvent;
 
 /**
  * Key dates for an opportunity (mirrors `Models.OppTimeline`). `postDate` and
- * `closeDate` are narrowed to `SingleDateEvent` — the protocol allows any
- * `Event` variant, but the close-date filter and sort read `.date`, so the
- * fixture only ever uses single dates for those two.
+ * `closeDate` are narrowed to `SingleDateEvent` because the close-date filter
+ * and sort read `.date`.
  */
 export interface OppTimeline {
   postDate?: SingleDateEvent;
@@ -155,11 +123,8 @@ export interface CompetitionTimeline {
 }
 
 /**
- * A trimmed competition (mirrors the identifying fields of
- * `Models.CompetitionBase`, added v0.2). The full model carries a required
- * `forms` object; the mock omits it deliberately since these bodies are served
- * as-is (not schema-validated at runtime) and the deep form nesting adds no
- * demo value.
+ * A trimmed competition (mirrors `Models.CompetitionBase`, added v0.2). The
+ * full model requires a `forms` object; the mock omits it deliberately.
  */
 export interface Competition {
   id: string;
@@ -227,39 +192,29 @@ const programCode = (value: string): CustomField => ({
 });
 
 /**
- * The id the specs publish as the `example` on `CommonGrants.Types.uuid`, which
- * Swagger UI pre-fills into the `oppId` box when a visitor clicks "Try it out"
- * on `GET /common-grants/opportunities/{oppId}`. A fixture record MUST carry
- * this id, or the very first Execute a visitor runs — with the field untouched
- * — answers 404. It is also the id used throughout the rendered "Example Value"
- * panes, so the record carrying it mirrors those documented values field for
- * field.
+ * The id the specs publish as the `uuid` example, which Swagger UI pre-fills
+ * into the `oppId` box. A fixture record MUST carry this id and mirror the
+ * spec's published example values.
  */
 export const CANONICAL_OPPORTUNITY_ID = "30a12e5e-5940-4c08-921c-17a8960fcf4b";
 
 /**
- * A well-formed UUID deliberately absent from the fixture, reserved so the
- * detail endpoint's 404 branch has a stable id to demonstrate — it must never
+ * A well-formed UUID reserved for demonstrating the 404 branch — it must never
  * be given to a record.
  */
 export const RESERVED_MISSING_OPPORTUNITY_ID =
   "00000000-0000-0000-0000-000000000000";
 
 /**
- * The fixture set: 11 opportunities spanning all four statuses, a range of
- * funding amounts, and varied close dates so filtering and sorting visibly
- * change results. Sorted newest-first by `lastModifiedAt` to match the list
- * endpoint's default ordering.
+ * 11 opportunities spanning all four statuses, varied funding amounts, and
+ * varied close dates, so filtering and sorting visibly change results.
  */
 export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   // ---- The spec's own documented example (see CANONICAL_OPPORTUNITY_ID) ----
   {
-    // Field values here are copied verbatim from the `@example` decorators the
-    // spec renders in Swagger UI's "Example Value" pane for this endpoint
-    // (`Types.uuid`, `OpportunityBase.title`/`.description`, `OppStatus`,
-    // `OppFunding`, `OppTimeline`), so the documented example and the mock's
-    // live response agree field for field. Do not "fix" the 2024 dates against
-    // the `open` status — matching the published example is the point.
+    // Values copied verbatim from the spec's `@example` decorators so the docs
+    // and the live response agree. Do not "fix" the 2024 dates — matching the
+    // published example is the point.
     id: CANONICAL_OPPORTUNITY_ID,
     title: "Small business grant program",
     status: {
@@ -344,14 +299,12 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         },
       },
     ],
-    // No `@example` exists for the readOnly audit timestamps; these are chosen
-    // so this record sorts first under the list endpoint's default
-    // `lastModifiedAt desc` ordering, putting the documented example at the top
-    // of the list response.
+    // Chosen so this record sorts first under the list endpoint's default
+    // `lastModifiedAt desc` ordering.
     createdAt: "2024-01-15T00:00:00Z",
     lastModifiedAt: "2025-06-01T00:00:00Z",
   },
-  // ---- Carried over from lib/ts-sdk/examples/mock-api-server.ts (id + title) ----
+  // ---- These three share id + title with lib/ts-sdk/examples/mock-api-server.ts on purpose ----
   {
     id: "573525f2-8e15-4405-83fb-e6523511d893",
     title: "STEM Education Grant Program",
@@ -668,14 +621,8 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
 ]);
 
 /**
- * Projects an opportunity down to the shape a given protocol version + endpoint
- * variant should emit. Strips fields that don't exist in the target version and
- * removes `competitions` from list-variant projections.
- *
- * @param opp - A full (v0.3+, detail) fixture record.
- * @param version - Target protocol version.
- * @param variant - `"list"` (OpportunityBase) or `"detail"` (OpportunityDetails).
- * @returns A shallow copy projected to the target shape (original is untouched).
+ * Projects a record down to the shape a given version + variant should emit.
+ * Returns a shallow copy; the original is untouched.
  */
 export function shapeOpportunityForVersion(
   opp: Opportunity,

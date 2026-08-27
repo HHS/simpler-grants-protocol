@@ -1,17 +1,9 @@
 /**
- * The request matrix behind the byte-identity guarantee (#1078).
- *
- * One list, two consumers: `capture-golden.ts` replays it against the 3A
- * standalone Worker to produce `golden-envelopes.json`, and
- * `golden-envelopes.spec.ts` replays it against this site's Astro endpoint and
- * asserts the responses match byte for byte. Adding a case here means
- * re-running the capture script — a case with no golden entry fails the spec
- * rather than being skipped.
- *
- * `path` is written **relative to the mock's base path**, so the same entry
- * addresses `https://<worker>.workers.dev/v0.4.0/...` on the Worker and
- * `https://<site>/api/v0.4.0/...` here. That difference in base is the only
- * thing the two hosts are allowed to disagree about; see `pathEchoing`.
+ * One request matrix, two consumers (#1078): `capture-golden.ts` replays it
+ * against the 3A Worker to produce `golden-envelopes.json`, and
+ * `golden-envelopes.spec.ts` replays it against this site's endpoint. Adding
+ * a case means re-running the capture script. `path` is relative to the
+ * mock's base path, so the same entry works on both hosts.
  */
 
 import {
@@ -26,17 +18,11 @@ export interface MatrixCase {
   method: string;
   /** Path below the base, always starting with `/v{version}`. */
   path: string;
-  /**
-   * Sent verbatim as the request body — a string, so malformed-JSON cases can
-   * be expressed. `undefined` means no body.
-   */
+  /** Sent verbatim as a string, so malformed-JSON cases can be expressed. */
   body?: string;
   /**
-   * True when the response body quotes the request path back to the caller
-   * (the router's route-miss 404s do). Those bodies necessarily differ between
-   * the two hosts by the `/api` base prefix, so the spec re-inserts the base
-   * into the golden text before comparing instead of demanding raw equality.
-   * Every other case is compared byte for byte with no normalization at all.
+   * True when the response body quotes the request path back (route-miss 404s
+   * do). The spec re-inserts the `/api` base into the golden text for those.
    */
   pathEchoing?: boolean;
 }
@@ -46,10 +32,7 @@ function opportunities(version: string, suffix = ""): string {
   return `/v${version}/common-grants/opportunities${suffix}`;
 }
 
-/**
- * Exercises filters, sorting, and pagination in one body so the search
- * envelope's `filterInfo` / `sortInfo` / `paginationInfo` are all pinned.
- */
+/** Exercises filters, sorting, and pagination in one body. */
 const REPRESENTATIVE_SEARCH = JSON.stringify({
   filters: {
     status: { operator: "in", value: ["open", "forecasted"] },
@@ -65,7 +48,7 @@ const REPRESENTATIVE_SEARCH = JSON.stringify({
   pagination: { page: 1, pageSize: 5 },
 });
 
-/** The three endpoints across all four versions — the AC's 3 × 4 core. */
+/** The three endpoints across all four versions. */
 const versionedCases: MatrixCase[] = SUPPORTED_VERSIONS.flatMap((version) => [
   { name: `list-v${version}`, method: "GET", path: opportunities(version) },
   {
@@ -81,10 +64,7 @@ const versionedCases: MatrixCase[] = SUPPORTED_VERSIONS.flatMap((version) => [
   },
 ]);
 
-/**
- * The #1077 edge cases, pinned on 0.3.0 (shaping is identical on 0.4.0 and
- * the error envelopes don't vary by version at all).
- */
+/** Edge cases, pinned on 0.3.0 — they don't vary by version. */
 const edgeCases: MatrixCase[] = [
   // --- list: pagination ---
   {
@@ -119,8 +99,7 @@ const edgeCases: MatrixCase[] = [
     method: "GET",
     path: opportunities("0.3.0", `/${RESERVED_MISSING_OPPORTUNITY_ID}`),
   },
-  // `GET .../search` deliberately falls through to the detail handler, which
-  // answers 400 "Must be a valid UUID" — the Worker's documented behavior.
+  // GET on /search falls through to the detail handler, matching the Worker.
   {
     name: "detail-get-search-falls-through",
     method: "GET",
@@ -146,8 +125,8 @@ const edgeCases: MatrixCase[] = [
     path: opportunities("0.3.0", "/search"),
     body: "{}",
   },
-  // `sortBy: "custom"` is a valid wire value with no built-in ordering: the
-  // items come back unsorted and `sortInfo.errors` carries a non-fatal note.
+  // "custom" is a valid sortBy with no built-in ordering: items come back
+  // unsorted and `sortInfo.errors` carries a non-fatal note.
   {
     name: "search-sort-by-custom",
     method: "POST",
@@ -160,8 +139,8 @@ const edgeCases: MatrixCase[] = [
     path: opportunities("0.3.0", "/search"),
     body: JSON.stringify({ sorting: { sortBy: "nope" } }),
   },
-  // Fixture money is USD throughout, so an EUR bound matches nothing and the
-  // envelope must report `totalPages: 0` rather than 1.
+  // Fixture money is all USD, so an EUR bound matches nothing and the
+  // envelope must report `totalPages: 0`.
   {
     name: "search-money-currency-mismatch",
     method: "POST",

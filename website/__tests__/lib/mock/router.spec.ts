@@ -1,14 +1,7 @@
 /**
- * Router-level tests for the not-yet-written `src/lib/mock/router.ts` and its
- * thin Astro wiring at `src/pages/api/[...path].ts` (#1078, PLAN.md).
- *
- * `handlers/opportunities.spec.ts`, `http/cors.spec.ts`, and
- * `handlers/sdk-envelope.spec.ts` already pin the handler/CORS behavior
- * end-to-end through `handleMockRequest`, so this file covers only what's new
- * in the website's port: the Astro route module itself, the `/api` base-path
- * stripping the standalone Worker never had to do, that the requested version
- * actually threads through to the handler (not just "200"), and the 404
- * discrimination the ported suites leave at status-level only.
+ * Covers what's new in the website's port (#1078): the Astro route module,
+ * the `/api` base-path stripping, version threading, and 404 discrimination.
+ * Handler and CORS behavior is pinned by the ported suites.
  */
 
 import { describe, it, expect } from "vitest";
@@ -34,9 +27,7 @@ describe("Astro route wiring (src/pages/api/[...path].ts)", () => {
   });
 
   it("delegates ALL to handleMockRequest untouched, for a real opportunities request", async () => {
-    // Minimal Astro-ish context: the ALL handler only needs `request` to
-    // delegate correctly, so casting past the rest of `APIContext` keeps this
-    // from depending on Astro's dev server just to build a full context.
+    // The ALL handler only needs `request`; the rest of APIContext is cast away.
     const context = {
       request: new Request(opportunitiesUrl("0.3.0")),
     } as unknown as APIContext;
@@ -82,10 +73,8 @@ describe("base-path handling (new in the website port, no Worker analogue)", () 
     expect(body.errors[0].field).toBe("path");
   });
 
-  // Inherited from the Worker's regex, not re-decided here: `OPPORTUNITIES_ROUTE`
-  // has no trailing-slash alternative, so once `/api` is stripped off, the
-  // remainder (`/v0.3.0/common-grants/opportunities/`) fails the exact same
-  // regex the Worker itself would have rejected.
+  // Inherited from the Worker's route regex, which has no trailing-slash
+  // alternative — not re-decided here.
   it("treats a trailing slash on an opportunities path as a route miss, same as the Worker", async () => {
     const response = await handleMockRequest(
       new Request(opportunitiesUrl("0.3.0", "/")),
@@ -128,8 +117,8 @@ describe("the requested version actually reaches the handler, not merely 200", (
 
     expect(v01Item).toBeDefined();
     expect(v03Item).toBeDefined();
-    // Same underlying record via two version prefixes: if the router dropped
-    // `version` and always shaped for one of them, this pair would collapse.
+    // If the router dropped `version` and always shaped for one of them,
+    // this pair would collapse.
     expect(v01Item).not.toHaveProperty("acceptedApplicantTypes");
     expect(v03Item).toHaveProperty("acceptedApplicantTypes");
   });

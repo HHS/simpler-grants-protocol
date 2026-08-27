@@ -9,53 +9,27 @@ import cloudflare from "@astrojs/cloudflare";
 // https://astro.build/config
 export default defineConfig({
   site: "https://commongrants.org",
-  // Every page here is prerendered at build time; `output: "static"` is declared
-  // explicitly (rather than left to Astro's default) because it is a deliberate
-  // constraint of the mock-API experiment, not an incidental setting — see
-  // #1078 in the ADR discussion. The one exception is
-  // `src/pages/api/[...path].ts`, which opts out per-route with
-  // `export const prerender = false`; that single dynamic route is the only
-  // reason an adapter is needed at all.
+  // Every page is prerendered. The one exception, `src/pages/api/[...path].ts`,
+  // opts out with `prerender = false` and is the only reason an adapter is needed.
   output: "static",
-  // Required to serve the one dynamic route from a build. In static mode the
-  // adapter emits the prerendered site plus a small Worker for that route, so the
-  // deploy artifact becomes a Worker-with-assets instead of assets alone — see
-  // `wrangler.jsonc`.
+  // Serves the one dynamic route: the adapter emits the prerendered site plus
+  // a small Worker for that route — see `wrangler.jsonc`.
   adapter: cloudflare({
-    // Keep prerendering in Node. The adapter defaults to prerendering inside a
-    // workerd sandbox, which this site cannot survive: its build-time code reads
-    // ~1000 generated files off disk (extension schemas, OpenAPI specs, forms,
-    // plugin metadata), and `Paths` in `src/lib/schema/paths.ts` derives every
-    // one of those locations from `process.cwd()` — which is `/` in workerd. The
-    // symptom is a build that dies with `Schema CustomLegacySerialId not found in
-    // /.extension-schemas`. Only the single dynamic API route needs the
-    // Cloudflare runtime, and it gets it at request time either way.
+    // Prerender in Node, not the adapter's default workerd sandbox: build-time
+    // code reads ~1000 generated files via `process.cwd()`, which is `/` there.
     prerenderEnvironment: "node",
-    // Optimize images with Sharp at build time (`sharp` is already a dependency)
-    // rather than the adapter's default `cloudflare-binding`, which defers
-    // optimization to a runtime `/_image` endpoint and requires an `IMAGES`
-    // binding. Every page carrying an image is prerendered, so there is nothing
-    // for a runtime image service to do, and build-time output stays immutably
-    // cacheable.
+    // Optimize images with Sharp at build time; the default `cloudflare-binding`
+    // defers to a runtime endpoint and needs an `IMAGES` binding.
     imageService: "compile",
   }),
-  // We don't use Astro sessions, but `@astrojs/cloudflare` v14 injects a `SESSION`
-  // KV binding by default and auto-provisions the namespace on deploy — which
-  // fails once it already exists (`already exists [code: 10014]`), exactly the
-  // repeat-upload pattern `wrangler versions upload` uses for PR previews. A
-  // non-KV in-memory driver stops the adapter injecting the binding at all, so
-  // there is no namespace to create, collide with, or manage.
+  // Sessions are unused, but a non-KV driver stops the adapter injecting a
+  // `SESSION` KV binding, whose auto-provisioning fails on repeat preview uploads.
   session: { driver: sessionDrivers.lruCache() },
   security: {
-    // Left ON deliberately, and stated rather than defaulted so it reads as a
-    // decision (#1078). This CSRF guard answers 403 before the mock route runs
-    // for a non-GET/HEAD request carrying no `Origin` header, where the 3A
-    // standalone Worker returned a protocol-shaped 404 — the one case out of 31
-    // where byte-identity doesn't hold end-to-end. It costs nothing real: only
-    // `PUT`/`DELETE` and form-content-type POSTs are affected, none of which the
-    // mock serves, while `GET` and `POST /search` with a JSON body pass even
-    // cross-origin. Disabling a site-wide guard to recover a 404's exact wording
-    // would be the worse trade.
+    // Left ON deliberately (#1078). This CSRF guard answers a bare 403 to a
+    // cross-origin non-GET that takes no body, where the 3A Worker returned a
+    // protocol-shaped 404 — the accepted trade-off. The mock's own GET and
+    // JSON POST requests pass even cross-origin.
     checkOrigin: true,
   },
   // Restore the documented GFM default for .mdx files. Astro 6.4.x stopped

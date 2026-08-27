@@ -11,14 +11,9 @@ const availableVersions = [
   { version: "0.1.0", label: "v0.1.0" },
 ];
 
-// "Try it out" is gated on the same build-time signal that
-// `scripts/inject-mock-server.ts` keys off (#1078) — shared via
-// `lib/mock/docs-wiring` so the two can't disagree. Enabling it unconditionally
-// would put Execute buttons on production GitHub Pages, where the specs carry no
-// `servers:` block and nothing can serve `/api/*`: Swagger UI would resolve
-// requests against the docs origin itself and answer 404s. Gating keeps
-// production exactly as it is today, and means the button only appears where the
-// mock is actually reachable.
+// Same build-time gate as `scripts/inject-mock-server.ts`, shared via
+// `lib/mock/docs-wiring` so the two can't disagree. Keeps Execute buttons off
+// builds that cannot serve `/api/*`.
 const tryItOutEnabled = isMockApiEnabled();
 ---
 
@@ -92,9 +87,8 @@ const tryItOutEnabled = isMockApiEnabled();
   import { SwaggerUIBundle } from "swagger-ui-dist";
   import { resolveVersion } from "@/lib/api-docs-version";
 
-  // Set from the build-time `MOCK_API_ENABLED` gate in this file's frontmatter.
-  // Read off the mount point because client scripts are bundled, so they can't
-  // close over frontmatter values directly.
+  // Client scripts are bundled and can't close over frontmatter values, so the
+  // gate is read off the mount point.
   const mount = document.querySelector<HTMLElement>("#swagger-ui");
   const tryItOut = mount?.dataset.tryItOut === "true";
 
@@ -102,9 +96,7 @@ const tryItOutEnabled = isMockApiEnabled();
     SwaggerUIBundle({
       url: `/openapi/openapi.${version}.yaml`,
       dom_id: "#swagger-ui",
-      // Empty disables the Execute button entirely, which is what production
-      // wants: with no mock injected there is nothing to call. The mock serves
-      // GET and POST only, so those are the only methods worth enabling.
+      // Empty disables Execute entirely; the mock serves GET and POST only.
       supportedSubmitMethods: tryItOut ? ["get", "post"] : [],
       deepLinking: true,
     });

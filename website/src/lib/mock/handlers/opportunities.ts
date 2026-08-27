@@ -1,22 +1,7 @@
 /**
- * Deterministic, fixture-backed handlers for the CommonGrants opportunity list,
- * detail, and search endpoints (#1077).
- *
- * Ported from the MSW mock-playground spike (#1049, branch
- * `karina/playground-spike`, `website/src/lib/mock/opportunities/handlers.ts`).
- * MSW touched this module in exactly two places, both removed here:
- *  - `http.get/post(PATH, resolver)` registration → the three exported
- *    `(Request, Version) => Response` functions below, dispatched by the router
- *    in `src/index.ts`.
- *  - `HttpResponse.json` → `Response.json` (see `src/http/envelope.ts`).
- *
- * Every filter, sort, pagination, and validation rule is carried over
- * unchanged, so the Worker's envelopes stay byte-identical to the spike's for
- * the same inputs.
- *
- * Bodies are static projections of `OPPORTUNITY_FIXTURES`, so repeat calls
- * return identical results and the list, detail, and search endpoints resolve
- * to the same records.
+ * Deterministic, fixture-backed handlers for the opportunity list, detail, and
+ * search endpoints. Bodies are static projections of `OPPORTUNITY_FIXTURES`,
+ * so repeat calls return identical results.
  */
 
 import {
@@ -58,10 +43,8 @@ const VALID_ARRAY_OPERATORS = new Set(["in", "notIn"]);
 const VALID_RANGE_OPERATORS = new Set(["between", "outside"]);
 
 /**
- * The filter/sort/pagination shapes below describe what a *well-formed* request
- * body looks like. Bodies arrive as untrusted JSON, so the search handler
- * validates every field — operator, bound presence, and bound value — and
- * answers 400 before any of these types are relied on.
+ * Shapes of a well-formed request body. Bodies arrive as untrusted JSON; the
+ * search handler validates every field before these types are relied on.
  */
 interface StringArrayFilter {
   operator: string;
@@ -166,12 +149,9 @@ function applyDateRangeFilter(
 }
 
 /**
- * Applies a `MoneyRangeFilter` (`between`/`outside`) over a `Money` field
- * extracted by `getMoney`. Either bound may be omitted (filters on the one
- * given). Per the protocol (`totalFundingAvailableRange` et al. in
- * `lib/core/lib/core/models/opportunity/search.tsp`), amounts denominated in a
- * different currency than the filter bound are excluded from the match
- * regardless of `operator`.
+ * Applies a `MoneyRangeFilter` (`between`/`outside`); either bound may be
+ * omitted. Per the protocol, amounts in a different currency than the filter
+ * bound are excluded regardless of `operator`.
  */
 function applyMoneyRangeFilter(
   items: Opportunity[],
@@ -231,11 +211,7 @@ function compare(a: string | number, b: string | number): number {
 
 /**
  * Orders items by `sortBy`, breaking ties on `id`. The tiebreaker makes the
- * ordering a total order: without it, records sharing a sort value (two
- * opportunities with the same `funding.maxAwardAmount`, say) keep their
- * incoming order under a stable sort, so `desc` would not be the exact reverse
- * of `asc`. Negating the composed comparator — tiebreaker included — is what
- * makes the two directions mirror each other exactly.
+ * ordering total, so `desc` is the exact mirror of `asc`.
  */
 function orderBy(
   items: Opportunity[],
@@ -255,20 +231,9 @@ type PaginationResult =
   | { ok: false; errors: FieldError[] };
 
 /**
- * Resolves one pagination param against the spec
- * (`Pagination.PaginatedQueryParams` / `PaginatedBodyParams`): an optional
- * `integer` with `minimum: 1`, defaulting to 1 (`page`) / 100 (`pageSize`), and
- * **no** declared maximum.
- *
- * An absent value takes the default. A present value that isn't an integer, or
- * that falls below the minimum, is a validation error rather than something to
- * silently clamp — clamping would answer a request the caller didn't make, and
- * surfacing it as a 400 gives the playground another error case to demonstrate.
- *
- * @param raw - The value as received: a query string, a JSON body value, or
- * `undefined`/`""` when the caller omitted it.
- * @param field - Dotted path used in the `{field, message}` error entry.
- * @param fallback - The spec default for this param.
+ * Resolves one pagination param (optional integer, `minimum: 1`, spec default
+ * when absent). A value below the minimum, or a non-integer, is a 400 — not
+ * silently clamped.
  */
 function resolvePaginationParam(
   raw: string | number | undefined,
@@ -316,17 +281,15 @@ function resolvePagination(
 }
 
 /**
- * UUID-shaped value (8-4-4-4-12 hex, matching the protocol's `uuid` format).
- * Not a full RFC 4122 conformance check — it deliberately accepts the nil
- * UUID (`00000000-…`), used as this suite's "well-formed but unknown" case.
+ * UUID-shaped (8-4-4-4-12 hex), not full RFC 4122: it deliberately accepts the
+ * nil UUID, used as the "well-formed but unknown" case.
  */
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Builds `Pagination.PaginatedResultsInfo`. Shared by the list and search
- * endpoints so `totalPages` is derived the same way on both — an empty result
- * set reports zero pages, not one.
+ * Builds `Pagination.PaginatedResultsInfo`. An empty result set reports zero
+ * pages, not one.
  */
 function paginationInfo(page: number, pageSize: number, totalItems: number) {
   return {
@@ -340,10 +303,6 @@ function paginationInfo(page: number, pageSize: number, totalItems: number) {
 /**
  * `GET /v{version}/common-grants/opportunities` — the paginated list, ordered
  * newest-modified first.
- *
- * @param request - Carries the `page`/`pageSize` query params.
- * @param version - Protocol version to shape responses for (v0.1 omits
- * `acceptedApplicantTypes`; `competitions` is detail-only, so never present here).
  */
 export function listOpportunities(
   request: Request,
@@ -374,12 +333,9 @@ export function listOpportunities(
 }
 
 /**
- * `GET /v{version}/common-grants/opportunities/{oppId}` — a single record.
- *
- * @param oppId - The path segment as received; validated as UUID-shaped here
- * rather than in the router, so a malformed id answers 400 (not a route miss).
- * @param version - Protocol version to shape the response for (v0.1 returns the
- * `OpportunityBase` shape rather than `OpportunityDetails`).
+ * `GET /v{version}/common-grants/opportunities/{oppId}` — a single record. The
+ * id is validated here, not in the router, so a malformed id answers 400
+ * rather than a route miss.
  */
 export function getOpportunity(oppId: string, version: Version): Response {
   if (!UUID_PATTERN.test(oppId)) {
@@ -403,9 +359,6 @@ export function getOpportunity(oppId: string, version: Version): Response {
 /**
  * `POST /v{version}/common-grants/opportunities/search` — filtered, sorted,
  * paginated search over the same fixture set.
- *
- * @param request - Carries the `OppSearchRequest` JSON body.
- * @param version - Protocol version to shape the returned items for.
  */
 export async function searchOpportunities(
   request: Request,
@@ -420,15 +373,8 @@ export async function searchOpportunities(
     ]);
   }
 
-  // `JSON.parse` accepts any JSON *value*, so `null`, `[]`, `42`, and a bare
-  // quoted string all clear the parse above and then pose as an
-  // `OppSearchRequest`. The spike cast straight to `SearchRequestBody` and read
-  // `.filters`, which crashed on `null`/strings and — worse — quietly answered
-  // 200 with the whole unfiltered set for `[]`/`42`/`true`, since those have no
-  // `.filters` to find. Rejecting non-objects here is the only way the caller
-  // learns the body was wrong. (This is the one deliberate behavior change from
-  // the #1049 port; every input that produced an envelope there still produces
-  // the same envelope.)
+  // Valid-JSON non-objects (`null`, `[]`, `42`) clear the parse above; they
+  // are rejected on purpose rather than posing as an empty search request.
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     return errorResponse(400, "Malformed JSON body", [
       { field: "body", message: "Request body must be a JSON object" },
@@ -491,9 +437,8 @@ export async function searchOpportunities(
       });
       continue;
     }
-    // Validate the bounds themselves, not just their presence. An
-    // malformed bound used to be silently dropped, which returned a
-    // result set that contradicted the filter the caller asked for.
+    // Validate the bounds themselves; a malformed bound must not be
+    // silently dropped.
     const isDateRange = field === "closeDateRange";
     for (const bound of ["min", "max"] as const) {
       const value = filter.value[bound];
@@ -517,8 +462,8 @@ export async function searchOpportunities(
   if (!pagination.ok) {
     errors.push(...pagination.errors);
   }
-  // The defaults here are unreachable: an invalid pagination pair pushed
-  // errors above, and the guard below returns before they are used.
+  // The defaults are unreachable: invalid pagination pushed errors above, and
+  // the guard below returns before they are used.
   const { page, pageSize } = pagination.ok
     ? pagination
     : { page: DEFAULT_PAGE, pageSize: DEFAULT_PAGE_SIZE };
@@ -580,10 +525,8 @@ export async function searchOpportunities(
     items = orderBy(items, sortBy, sortOrder);
   }
 
-  // `filterInfo.errors` is the spec's channel for "non-fatal errors that
-  // occurred during filtering". `customFilters` are implementation-defined,
-  // so this mock echoes them but can't apply them — say so rather than
-  // letting the echo imply they narrowed the results.
+  // `customFilters` are implementation-defined: the mock echoes them but does
+  // not apply them, and says so via `filterInfo.errors`.
   const filterErrors: string[] = [];
   const customFilterNames = Object.keys(filters.customFilters ?? {});
   if (customFilterNames.length > 0) {
