@@ -149,9 +149,10 @@ export class Client {
   async get(path: string, options?: GetOptions): Promise<Response> {
     let fullPath = path;
 
-    // Append query params if provided
+    // Append query params if provided. Parse the path against a placeholder
+    // origin: fetch() prepends the baseUrl, so it must not leak into fullPath.
     if (options?.params && Object.keys(options.params).length > 0) {
-      const url = new URL(this.url(path));
+      const url = new URL(path, "http://placeholder");
       for (const [key, value] of Object.entries(options.params)) {
         url.searchParams.set(key, String(value));
       }
