@@ -3,7 +3,7 @@
   // `common-grants` Worker by name and publishes PR previews as versions of it.
   "name": "common-grants",
   "compatibility_date": "2025-08-01",
-  // `nodejs_compat` is required by the `@astrojs/cloudflare` adapter (#1078-T2),
+  // `nodejs_compat` is required by the `@astrojs/cloudflare` adapter (#1078),
   // not by the mock itself: the adapter prerenders the static pages inside a
   // workerd sandbox, and the site's build-time code (schema loaders, content
   // collections) imports `node:fs`. Without this flag the build fails at the

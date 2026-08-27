@@ -12,7 +12,7 @@ export default defineConfig({
   // Every page here is prerendered at build time; `output: "static"` is declared
   // explicitly (rather than left to Astro's default) because it is a deliberate
   // constraint of the mock-API experiment, not an incidental setting — see
-  // #1078-T2 in the ADR discussion. The one exception is
+  // #1078 in the ADR discussion. The one exception is
   // `src/pages/api/[...path].ts`, which opts out per-route with
   // `export const prerender = false`; that single dynamic route is the only
   // reason an adapter is needed at all.
@@ -48,7 +48,7 @@ export default defineConfig({
   session: { driver: sessionDrivers.lruCache() },
   security: {
     // Left ON deliberately, and stated rather than defaulted so it reads as a
-    // decision (#1078-T2). This CSRF guard answers 403 before the mock route runs
+    // decision (#1078). This CSRF guard answers 403 before the mock route runs
     // for a non-GET/HEAD request carrying no `Origin` header, where the 3A
     // standalone Worker returned a protocol-shaped 404 — the one case out of 31
     // where byte-identity doesn't hold end-to-end. It costs nothing real: only

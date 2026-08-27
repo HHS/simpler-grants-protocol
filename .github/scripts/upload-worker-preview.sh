@@ -21,7 +21,7 @@ set -euo pipefail
 #   ../.github/scripts/upload-worker-preview.sh pr-1079 "PR #1079 @ 38d81c1"
 #
 # `config` is an optional path to a wrangler config file. The website needs it
-# since #1078-T2: with the `@astrojs/cloudflare` adapter the deployable config is
+# since #1078: with the `@astrojs/cloudflare` adapter the deployable config is
 # the one the build generates at `dist/server/wrangler.json` (it carries the
 # built `main` and points `assets` at `dist/client`), and the checked-in
 # `website/wrangler.jsonc` deliberately omits `main` because the Cloudflare Vite

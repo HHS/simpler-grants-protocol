@@ -1,5 +1,5 @@
 /**
- * Regenerates `golden-envelopes.json` from the 3A standalone Worker (#1078-T1).
+ * Regenerates `golden-envelopes.json` from the 3A standalone Worker (#1078).
  *
  * The byte-identity AC compares this site's Astro endpoint against the Worker's
  * actual output, but `mock-api/` does not exist on this branch — it lives on

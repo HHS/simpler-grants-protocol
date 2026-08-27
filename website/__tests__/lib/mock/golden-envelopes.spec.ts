@@ -6,7 +6,7 @@ import type { GoldenEnvelope } from "./__fixtures__/capture-golden";
 
 /**
  * Byte-identity between this site's Astro mock endpoint and the 3A standalone
- * Worker (#1078-T1).
+ * Worker (#1078).
  *
  * `mock-api/` — the 3A Worker this site is meant to reproduce — is not on this
  * branch (see `capture-golden.ts`), so its actual output was captured once and
@@ -32,7 +32,7 @@ import type { GoldenEnvelope } from "./__fixtures__/capture-golden";
  *     actually serves is unaffected: GET list/detail pass, and `POST /search`
  *     with `Content-Type: application/json` passes even cross-origin, so the TS
  *     SDK and a copied `curl` still work. This one applies to built SSR output
- *     too, not just dev — #1078-T2 decides whether to set `checkOrigin: false`.
+ *     too, not just dev — #1078 decides whether to set `checkOrigin: false`.
  *  2. Under `astro dev` only, Vite's own CORS middleware answers `OPTIONS`
  *     preflights before the route, with its own header set — and no
  *     `Access-Control-Allow-Origin` at all — so `preflightResponse()` is
@@ -41,13 +41,13 @@ import type { GoldenEnvelope } from "./__fixtures__/capture-golden";
  *     first) is blocked in dev, even though the same request from `curl`
  *     succeeds and this suite is green. Same-origin "Try it out" on the docs
  *     site is unaffected, since same-origin requests never preflight. No Vite in
- *     a built deploy, so #1078-T2 re-checks the preflight on the real preview.
+ *     a built deploy, so #1078 re-checks the preflight on the real preview.
  *
  * So read this suite for what it is: the router's contract, pinned exactly. What
  * a real caller receives is only the same thing where nothing intercepts first —
  * which for the three served endpoints, over `astro dev`, it does not.
  *
- * Both are recorded as findings for #1078-T3 rather than worked around here:
+ * Both are recorded as findings for #1078 rather than worked around here:
  * "the host framework can rewrite the kernel's envelopes" is a real difference
  * between the integrated and standalone shapes, and the point of the experiment.
  */

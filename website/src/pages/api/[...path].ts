@@ -1,5 +1,5 @@
 /**
- * The mock API's only route (#1078-T1): everything under `/api/**` is handed to
+ * The mock API's only route (#1078): everything under `/api/**` is handed to
  * `handleMockRequest`, which owns matching, versioning, and CORS.
  *
  * A catch-all rather than nested `[version]/common-grants/opportunities/`
@@ -13,7 +13,7 @@
  * static site: `astro.config.mjs` keeps `output: "static"`, so every docs page
  * is still prerendered at build time and only this file needs a server at
  * request time. Serving it from a build requires the `@astrojs/cloudflare`
- * adapter, which #1078-T2 adds; until then the route runs under `astro dev` and
+ * adapter, which #1078 adds; until then the route runs under `astro dev` and
  * in the vitest suites, which import this module directly.
  */
 

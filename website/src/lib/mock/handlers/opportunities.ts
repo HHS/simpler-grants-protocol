@@ -1,6 +1,6 @@
 /**
  * Deterministic, fixture-backed handlers for the CommonGrants opportunity list,
- * detail, and search endpoints (#1077-T3).
+ * detail, and search endpoints (#1077).
  *
  * Ported from the MSW mock-playground spike (#1049, branch
  * `karina/playground-spike`, `website/src/lib/mock/opportunities/handlers.ts`).

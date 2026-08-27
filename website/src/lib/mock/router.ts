@@ -1,5 +1,5 @@
 /**
- * Routes mock API requests to the ported opportunity handlers (#1078-T1).
+ * Routes mock API requests to the ported opportunity handlers (#1078).
  *
  * This is the website's re-authored equivalent of the 3A standalone Worker's
  * `mock-api/src/index.ts`. It is the one piece of that experiment that could
@@ -36,7 +36,7 @@ import { errorResponse, withErrorBoundary } from "./http/envelope";
 const SERVICE_NAME = "CommonGrants mock API";
 
 /**
- * Where the mock is mounted on the docs origin. Exported because #1078-T2 needs
+ * Where the mock is mounted on the docs origin. Exported because #1078 needs
  * the same value to write per-version `servers:` entries into the rendered
  * OpenAPI specs — the base path and the URL Swagger UI calls have to agree, so
  * they read from one constant.

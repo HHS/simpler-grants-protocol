@@ -12,7 +12,7 @@
  * `Access-Control-Allow-Origin: *` is correct here because the mock serves
  * public, deterministic fixture data and holds no credentials or session state.
  * A productionized mock with per-key rate limits would need an origin allowlist
- * instead — noted in the findings write-up (#1077-T7).
+ * instead — noted in the findings write-up (#1077).
  */
 
 /**

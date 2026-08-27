@@ -1,10 +1,10 @@
 /**
- * Shared opportunity fixture for the standalone Worker mock (#1077-T2).
+ * Shared opportunity fixture for the standalone Worker mock (#1077).
  *
  * Ported unchanged from the MSW mock-playground spike (#1049, branch
  * `karina/playground-spike`), which carried zero MSW imports in this file —
  * only its sibling `handlers.ts` was coupled to MSW, which is why the records
- * and shaping moved over as-is while the handlers get rewritten (#1077-T3).
+ * and shaping moved over as-is while the handlers get rewritten (#1077).
  *
  * A fixed, hand-authored dataset that the deterministic opportunity handlers
  * draw from, so the list, detail, and search endpoints stay mutually
@@ -34,7 +34,7 @@
  *
  * v0.4.0 (#976) added awards/organizations routes but left the opportunity
  * models untouched, so it shapes identically to v0.3.0 — no new branch in
- * `shapeOpportunityForVersion`. #1077-T4 verifies that against the generated
+ * `shapeOpportunityForVersion`. #1077 verifies that against the generated
  * per-version schemas rather than trusting this comment.
  */
 export const SUPPORTED_VERSIONS = ["0.1.0", "0.2.0", "0.3.0", "0.4.0"] as const;

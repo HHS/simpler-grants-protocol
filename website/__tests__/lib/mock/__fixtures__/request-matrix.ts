@@ -1,5 +1,5 @@
 /**
- * The request matrix behind the byte-identity guarantee (#1078-T1).
+ * The request matrix behind the byte-identity guarantee (#1078).
  *
  * One list, two consumers: `capture-golden.ts` replays it against the 3A
  * standalone Worker to produce `golden-envelopes.json`, and
@@ -82,7 +82,7 @@ const versionedCases: MatrixCase[] = SUPPORTED_VERSIONS.flatMap((version) => [
 ]);
 
 /**
- * The #1077-T3 edge cases, pinned on 0.3.0 (shaping is identical on 0.4.0 and
+ * The #1077 edge cases, pinned on 0.3.0 (shaping is identical on 0.4.0 and
  * the error envelopes don't vary by version at all).
  */
 const edgeCases: MatrixCase[] = [

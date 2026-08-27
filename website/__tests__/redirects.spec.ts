@@ -6,7 +6,7 @@ import { Paths } from "@/lib/schema/paths";
 import astroConfig from "../astro.config.mjs";
 
 /**
- * Regression guard for #1078-T5.
+ * Regression guard for #1078.
  *
  * The `@astrojs/cloudflare` adapter unconditionally sets
  * `build: { redirects: false }` (see `@astrojs/cloudflare/dist/index.js:180-182`),

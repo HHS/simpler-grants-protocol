@@ -1,5 +1,5 @@
 /**
- * Fixture suite ported verbatim from the 3A standalone Worker (#1078-T1):
+ * Fixture suite ported verbatim from the 3A standalone Worker (#1078):
  * `mock-api/__tests__/data/fixtures.spec.ts` on branch
  * `karina/1077-cloudflareworkermock`. The only edit is the import path — the
  * records under test are byte-identical to the Worker's.

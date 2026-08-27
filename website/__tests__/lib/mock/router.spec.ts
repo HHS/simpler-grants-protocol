@@ -1,6 +1,6 @@
 /**
  * Router-level tests for the not-yet-written `src/lib/mock/router.ts` and its
- * thin Astro wiring at `src/pages/api/[...path].ts` (#1078-T1, PLAN.md).
+ * thin Astro wiring at `src/pages/api/[...path].ts` (#1078, PLAN.md).
  *
  * `handlers/opportunities.spec.ts`, `http/cors.spec.ts`, and
  * `handlers/sdk-envelope.spec.ts` already pin the handler/CORS behavior

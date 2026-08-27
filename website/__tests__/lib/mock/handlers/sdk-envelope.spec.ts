@@ -1,11 +1,11 @@
 /**
- * Ported from the 3A standalone Worker (#1078-T1):
+ * Ported from the 3A standalone Worker (#1078):
  * `mock-api/__tests__/handlers/sdk-envelope.spec.ts` on branch
  * `karina/1077-cloudflareworkermock` — imports, entry point, and base path
  * adjusted; assertions unchanged.
  */
 /**
- * Pins the envelope details the TS SDK's zod schemas depend on (#1077-T3,
+ * Pins the envelope details the TS SDK's zod schemas depend on (#1077,
  * PLAN.md): the search response's `sortInfo` + strict-parsed `filterInfo`
  * (no extra keys), and `paginationInfo.totalPages: 0` for empty result sets
  * on both the search and list endpoints.
