@@ -35,7 +35,9 @@ jobs:
           python-version: "3.13"
 
       - name: Run script (dry run)
-        if: github.event_name == 'pull_request'
+        # Dependabot and fork PRs run without repository secrets; skip the dry
+        # run there instead of failing on the missing token.
+        if: github.event_name == 'pull_request' && env.FIDER_API_TOKEN != ''
         run: |
           python run.py \
             --org "${{ github.repository_owner }}" \
