@@ -1,4 +1,4 @@
-name: "CD - Deploy Website to GH Pages"
+name: "CD - Deploy Website"
 
 on:
   # Trigger the workflow every time we push to the `main` branch
@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - "website/**"
+      - ".github/workflows/cd-deploy-website.yml"
   # Allows us to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
 
@@ -43,7 +44,27 @@ jobs:
         with:
           path: ./website/dist
 
-  deploy:
+      - name: Upload build output
+        # Shared with deploy-cloudflare so both targets ship the same build.
+        # Path-structure invariant (same as ci-website-preview.yml): every
+        # entry must stay under `website/` so upload-artifact strips that
+        # common prefix and the download (path: website) restores them at
+        # website/dist, etc. Adding a path outside website/ shrinks the
+        # prefix and silently shifts download locations.
+        uses: actions/upload-artifact@v7
+        with:
+          name: website-build
+          path: |
+            website/dist
+            website/tsp-output
+            website/.extension-schemas
+            website/cache
+            website/public/schemas/yaml
+            website/public/openapi
+          retention-days: 1
+          if-no-files-found: error
+
+  deploy-github-pages:
     needs: build
     runs-on: ubuntu-latest
     # Only deploy from main branch
@@ -55,3 +76,51 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+  # Parallel production deploy to the shared `common-grants` Cloudflare Worker
+  # (beta.commongrants.org) during the GH Pages -> Cloudflare migration
+  # window (#1110). Independent of deploy-github-pages so a failure in one
+  # target never blocks the other.
+  deploy-cloudflare:
+    needs: build
+    runs-on: ubuntu-latest
+    # This job doesn't touch Pages or OIDC; drop the workflow-level grants.
+    permissions:
+      contents: read
+    # Only deploy from main branch
+    if: github.ref == 'refs/heads/main'
+    # One deploy at a time, never cancelled mid-flight. GitHub keeps only the
+    # newest queued run per group, so back-to-back merges may skip an
+    # intermediate deploy -- the latest commit still ends up live.
+    concurrency:
+      group: deploy-cloudflare
+      cancel-in-progress: false
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+
+      - name: Download build output
+        uses: actions/download-artifact@v8
+        with:
+          name: website-build
+          path: website
+
+      - name: Deploy to Cloudflare Worker
+        # Uploads a new version of the Worker named in website/wrangler.jsonc
+        # (common-grants) and switches live traffic to it. PR previews are
+        # versions of this same Worker, uploaded (not deployed) with a
+        # preview alias by .github/scripts/upload-worker-preview.sh.
+        working-directory: ./website
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm dlx wrangler@4 deploy
