@@ -1,5 +1,5 @@
 /**
- * Ids the whole mock agrees on (#3C-2-T1).
+ * Ids the whole mock agrees on (#334).
  *
  * Extracted when the mock grew past opportunities, because the interesting
  * property of these two values is that they are *not* per-resource.
@@ -11,7 +11,7 @@
  * Swagger UI pre-fills a path box from that example, so *every* "Try it out" on
  * *every* detail route arrives carrying the same uuid. A resource whose fixture
  * set doesn't contain it answers 404 on the first Execute a visitor runs with
- * the field untouched — which is exactly the failure #3C-2-T1 exists to remove.
+ * the field untouched — which is exactly the failure #334 exists to remove.
  *
  * Reusing one uuid across resource types is legal, not a collision: ids are
  * unique within a resource, and nothing in the protocol says an award and an

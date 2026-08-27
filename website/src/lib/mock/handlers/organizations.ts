@@ -1,6 +1,6 @@
 /**
  * Deterministic, fixture-backed handlers for the six organization endpoints
- * (#3C-2-T1).
+ * (#334).
  *
  * Organizations are the mock's most complex resource: two reads, two writes,
  * and two more reads over a sub-resource (`/changes`). They are also the only

@@ -1,5 +1,5 @@
 /**
- * Hand-written award fixtures for the three `/awards` endpoints (#3C-2-T1).
+ * Hand-written award fixtures for the three `/awards` endpoints (#334).
  *
  * Awards are the most cross-referential resource in the mock: one record can
  * point at the opportunity it came from, the application that won it, the
@@ -7,7 +7,7 @@
  * one of those references is built from the other fixture modules —
  * `oppRefFor()` and `appRefFor()` below, and `orgRefCollection()` from
  * `./organizations` — so none of them can dangle. That is the whole of
- * #3C-2-T1's "ids referenced across resources resolve to records that exist"
+ * #334's "ids referenced across resources resolve to records that exist"
  * criterion, enforced at module load rather than hoped for.
  *
  * Values follow `lib/core/lib/core/models/award.tsp`'s `@example` decorators.

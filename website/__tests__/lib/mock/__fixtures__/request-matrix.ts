@@ -1,5 +1,5 @@
 /**
- * The request matrix behind the byte-identity guarantee (#1078-T1).
+ * The request matrix behind the byte-identity guarantee (#1078).
  *
  * One list, two consumers: `capture-golden.ts` replays it against the 3A
  * standalone Worker to produce `golden-envelopes.json`, and
@@ -82,7 +82,7 @@ const versionedCases: MatrixCase[] = SUPPORTED_VERSIONS.flatMap((version) => [
 ]);
 
 /**
- * The #1077-T3 edge cases, pinned on 0.3.0 (shaping is identical on 0.4.0 and
+ * The #1077 edge cases, pinned on 0.3.0 (shaping is identical on 0.4.0 and
  * the error envelopes don't vary by version at all).
  */
 const edgeCases: MatrixCase[] = [
@@ -209,7 +209,7 @@ const edgeCases: MatrixCase[] = [
   //
   // There used to be a second case here, `route-miss-other-resource`, requesting
   // `GET /v0.4.0/common-grants/awards` and expecting the Worker's
-  // "This mock serves the opportunity endpoints only" 404. #3C-2-T1 removed it,
+  // "This mock serves the opportunity endpoints only" 404. #334 removed it,
   // because awards are now served and that path answers 200 with an award list.
   //
   // It was not replaced with a different unserved path, and that is the honest

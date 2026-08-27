@@ -7,7 +7,7 @@
  * swapped for the platform `Response.json` — the only behavioral difference is
  * the constructor; both emit `application/json` with the given status.
  *
- * The 201/202 builders arrived with #3C-2-T1, which added the first write
+ * The 201/202 builders arrived with #334, which added the first write
  * endpoints: `POST /applications/start` answers `Responses.CreatedT` and
  * `POST /orgs/{orgId}/changes` answers `Responses.AcceptedT`. Every builder
  * writes the HTTP status into the body's `status` field as well, because

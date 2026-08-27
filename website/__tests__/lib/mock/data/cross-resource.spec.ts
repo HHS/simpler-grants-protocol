@@ -1,6 +1,6 @@
 /**
  * Cross-resource referential consistency across the whole fixture set
- * (#3C-2-T1).
+ * (#334).
  *
  * The acceptance criterion is short — "ids referenced across resources resolve
  * to records that exist" — but it is the one property that no per-resource suite
@@ -288,7 +288,7 @@ describe("the Types.uuid prefill invariant", () => {
   // example, so EVERY detail route's first Execute arrives carrying the same
   // uuid. These assertions are what stop a future edit from "cleaning up" the
   // shared id and silently putting 404s back on the docs page — which is the
-  // exact failure #3C-2-T1 was opened to remove.
+  // exact failure #334 was opened to remove.
   it("gives every resource a canonical record carrying the shared uuid example", () => {
     expect(CANONICAL_OPPORTUNITY_ID).toBe(CANONICAL_RECORD_ID);
     expect(CANONICAL_AWARD_ID).toBe(CANONICAL_RECORD_ID);

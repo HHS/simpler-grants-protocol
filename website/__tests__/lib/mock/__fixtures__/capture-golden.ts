@@ -1,5 +1,5 @@
 /**
- * Regenerates `golden-envelopes.json` from the 3A standalone Worker (#1078-T1).
+ * Regenerates `golden-envelopes.json` from the 3A standalone Worker (#1078).
  *
  * The byte-identity AC compares this site's Astro endpoint against the Worker's
  * actual output, but `mock-api/` does not exist on this branch — it lives on
@@ -12,7 +12,7 @@
  *   pnpm exec tsx __tests__/lib/mock/__fixtures__/capture-golden.ts \
  *     /tmp/3a-worktree/mock-api/src/index.ts
  *
- * Since #3C-1-T1 the fixture records' home is this site's copy
+ * Since #1101 the fixture records' home is this site's copy
  * (`src/lib/mock/data/fixtures.ts`), which has grown past the 3A branch's
  * committed set. Before capturing, copy it over the worktree's
  * `mock-api/src/data/fixtures.ts` (the module is self-contained, so the copy

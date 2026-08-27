@@ -1,8 +1,8 @@
 /**
  * Pagination, sorting, filtering, and body-parsing primitives shared by every
- * resource handler (#3C-2-T1).
+ * resource handler (#334).
  *
- * All of this began life inline in `handlers/opportunities.ts` (#1077-T3), where
+ * All of this began life inline in `handlers/opportunities.ts` (#1077), where
  * it was the only copy. Extending the mock past opportunities would have meant
  * five more copies of the same `page`/`pageSize` validation, the same
  * total-order sort, and the same `between`/`outside` range semantics — five

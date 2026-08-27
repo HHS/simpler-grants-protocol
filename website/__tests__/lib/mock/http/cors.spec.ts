@@ -1,5 +1,5 @@
 /**
- * CORS suite ported from the 3A standalone Worker (#1078-T1):
+ * CORS suite ported from the 3A standalone Worker (#1078):
  * `mock-api/__tests__/http/cors.spec.ts` on branch
  * `karina/1077-cloudflareworkermock` — imports, entry point, and base path
  * adjusted; assertions unchanged. Same-origin serving makes CORS largely moot

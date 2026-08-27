@@ -1,5 +1,5 @@
 /**
- * Fixture suite ported verbatim from the 3A standalone Worker (#1078-T1):
+ * Fixture suite ported verbatim from the 3A standalone Worker (#1078):
  * `mock-api/__tests__/data/fixtures.spec.ts` on branch
  * `karina/1077-cloudflareworkermock`. The only edit is the import path — the
  * records under test are byte-identical to the Worker's.
@@ -20,7 +20,7 @@ import {
 const STATUS_VALUES = ["forecasted", "open", "closed", "custom"];
 
 describe("OPPORTUNITY_FIXTURES", () => {
-  // Pin raised deliberately from 8–12 when #3C-1-T1 grew the set to 25 so
+  // Pin raised deliberately from 8–12 when #1101 grew the set to 25 so
   // pagination/sorting/filtering visibly bite; see the pageSize=20 test below.
   it("contains between 24 and 30 detail-shaped records", () => {
     expect(OPPORTUNITY_FIXTURES.length).toBeGreaterThanOrEqual(24);

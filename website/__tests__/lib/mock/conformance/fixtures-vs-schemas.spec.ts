@@ -1,8 +1,8 @@
 /**
  * Every fixture record, shaped per version, validated against the generated
- * per-version JSON Schemas (#3C-2-T1, extending #1077-T4's pattern).
+ * per-version JSON Schemas (#334, extending #1077's pattern).
  *
- * #1077-T4 built this for opportunities on the 3A Worker; #1078-T1's port to this
+ * #1077 built this for opportunities on the 3A Worker; #1078's port to this
  * site left it behind. This restores it and generalizes it to all six resources,
  * because hand-written fixtures across six resources are exactly the situation
  * where a schema check earns its keep — and it earned it immediately: it caught
@@ -27,7 +27,7 @@
  * `getValidator` throws rather than falling back when a model is missing for a
  * version, so a generated output that lost a schema fails loudly instead of
  * quietly validating against a weaker one. That failure mode — green CI over a
- * downgraded schema — is what #1077-T4 flagged as the thing most worth guarding.
+ * downgraded schema — is what #1077 flagged as the thing most worth guarding.
  */
 
 import { describe, it, expect } from "vitest";
@@ -250,7 +250,7 @@ describe("sub-resources conform to their generated schemas", () => {
   );
 });
 
-describe("opportunities conform to their generated schemas (#1077-T4, restored)", () => {
+describe("opportunities conform to their generated schemas (#1077, restored)", () => {
   // Carried over from the 3A suite. `getValidator` throws where the 3A helper
   // fell back to `OpportunityBase`, so the v0.1 case names that schema outright
   // rather than relying on a fallback — v0.1 predates `OpportunityDetails`, and
@@ -314,7 +314,7 @@ describe("opportunities conform to their generated schemas (#1077-T4, restored)"
     // `competitions` back into the detail test above (dropping the omission),
     // rather than patching these assertions.
     //
-    // Worth noting what #3C-2-T1 did NOT do here: `data/competitions.ts` has a
+    // Worth noting what #334 did NOT do here: `data/competitions.ts` has a
     // full `CompetitionBase` type that DOES carry `forms`, so the nested preview
     // could have been switched to it. It wasn't, because those previews are
     // inside the opportunity envelopes the golden corpus pins byte for byte —

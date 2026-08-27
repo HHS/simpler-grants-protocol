@@ -12,7 +12,7 @@ const availableVersions = [
 ];
 
 // "Try it out" is gated on the same build-time signal that
-// `scripts/inject-mock-server.ts` keys off (#1078-T2) — shared via
+// `scripts/inject-mock-server.ts` keys off (#1078) — shared via
 // `lib/mock/docs-wiring` so the two can't disagree. Enabling it unconditionally
 // would put Execute buttons on production GitHub Pages, where the specs carry no
 // `servers:` block and nothing can serve `/api/*`: Swagger UI would resolve

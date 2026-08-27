@@ -1,6 +1,6 @@
 /**
  * Deterministic, fixture-backed handlers for the applications and form-response
- * endpoints (#3C-2-T1).
+ * endpoints (#334).
  *
  * Six operations across two route interfaces (`Routes.Applications` and
  * `Routes.FormResponses`), all mounted under `/applications` by `api.tsp`, which
@@ -315,7 +315,7 @@ export function getApplication(appId: string, version: Version): Response {
  * `Origin` and passes; a copied `curl` sends neither and gets a bare 403
  * instead of the envelope below. Adding `-H 'Content-Type: application/json'`
  * to the curl is enough to clear the guard. This extends the 403-vs-404
- * divergence already accepted in #1078-T6 to one route that the mock now
+ * divergence already accepted in #1078 to one route that the mock now
  * actually serves.
  *
  * @param appId - The path segment as received.

@@ -1,10 +1,10 @@
 /**
- * Shared opportunity fixture for the standalone Worker mock (#1077-T2).
+ * Shared opportunity fixture for the standalone Worker mock (#1077).
  *
  * Ported unchanged from the MSW mock-playground spike (#1049, branch
  * `karina/playground-spike`), which carried zero MSW imports in this file —
  * only its sibling `handlers.ts` was coupled to MSW, which is why the records
- * and shaping moved over as-is while the handlers get rewritten (#1077-T3).
+ * and shaping moved over as-is while the handlers get rewritten (#1077).
  *
  * A fixed, hand-authored dataset that the deterministic opportunity handlers
  * draw from, so the list, detail, and search endpoints stay mutually
@@ -36,7 +36,7 @@ import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
  *
  * v0.4.0 (#976) added awards/organizations routes but left the opportunity
  * models untouched, so it shapes identically to v0.3.0 — no new branch in
- * `shapeOpportunityForVersion`. #1077-T4 verifies that against the generated
+ * `shapeOpportunityForVersion`. #1077 verifies that against the generated
  * per-version schemas rather than trusting this comment.
  */
 export const SUPPORTED_VERSIONS = ["0.1.0", "0.2.0", "0.3.0", "0.4.0"] as const;
@@ -237,7 +237,7 @@ const programCode = (value: string): CustomField => ({
  * panes, so the record carrying it mirrors those documented values field for
  * field.
  *
- * Since #3C-2-T1 the value lives in `./ids` as `CANONICAL_RECORD_ID`, because
+ * Since #334 the value lives in `./ids` as `CANONICAL_RECORD_ID`, because
  * every other resource's path parameter resolves to the same `Types.uuid`
  * example and so needs the same id at the head of its own fixture set. This
  * name is kept as the opportunity-shaped alias — the existing suites and the
@@ -674,7 +674,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
     createdAt: "2024-04-01T00:00:00Z",
     lastModifiedAt: "2024-11-01T00:00:00Z",
   },
-  // ---- Growth records (#3C-1-T1): enough volume that pagination, sorting,
+  // ---- Growth records (#1101): enough volume that pagination, sorting,
   // and the search filters visibly bite at the docs' example page size (20).
   // Every `lastModifiedAt` stays before the canonical record's 2025-06-01 so
   // the documented example keeps sorting first. All amounts stay USD — the

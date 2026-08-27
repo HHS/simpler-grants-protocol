@@ -12,7 +12,7 @@
  * `Access-Control-Allow-Origin: *` is correct here because the mock serves
  * public, deterministic fixture data and holds no credentials or session state.
  * A productionized mock with per-key rate limits would need an origin allowlist
- * instead — noted in the findings write-up (#1077-T7).
+ * instead — noted in the findings write-up (#1077).
  */
 
 /**
@@ -21,7 +21,7 @@
  * non-simple request headers, so a browser refuses the request unless the
  * preflight names them explicitly — even though this mock ignores their values.
  *
- * `PUT` and `PATCH` joined the method list with #3C-2-T1, which added the first
+ * `PUT` and `PATCH` joined the method list with #334, which added the first
  * write endpoints (`PUT /applications/{appId}/submit`, `PATCH /orgs/{orgId}`,
  * and the rest). A method the mock routes but the preflight omits is invisible
  * to a cross-origin browser caller regardless of what the handler returns, so

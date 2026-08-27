@@ -1,5 +1,5 @@
 /**
- * How the rendered docs wire themselves to the mock API (#1078-T2).
+ * How the rendered docs wire themselves to the mock API (#1078).
  *
  * Single source of truth for the two consumers that have to agree on whether the
  * mock is wired in: `scripts/inject-mock-server.ts` (which writes a `servers:`
@@ -12,7 +12,7 @@
  * (`pages/api/[...path].ts`), so there is no origin to configure — which is the
  * whole point of the integrated shape. The standalone-Worker experiment needed a
  * `MOCK_API_URL` env var carrying a full `https://<worker>.workers.dev` origin
- * (#1077-T6); here the path alone is enough, and it is built from the router's
+ * (#1077); here the path alone is enough, and it is built from the router's
  * own `MOCK_API_BASE_PATH` so the specs cannot advertise a path the endpoint
  * doesn't serve.
  *

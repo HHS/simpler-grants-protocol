@@ -1,5 +1,5 @@
 /**
- * Handler suite ported from the 3A standalone Worker (#1078-T1):
+ * Handler suite ported from the 3A standalone Worker (#1078):
  * `mock-api/__tests__/handlers/opportunities.spec.ts` on branch
  * `karina/1077-cloudflareworkermock`. Three mechanical edits, no assertions
  * touched: imports moved to `@/lib/mock/*`, `worker.fetch(...)` became

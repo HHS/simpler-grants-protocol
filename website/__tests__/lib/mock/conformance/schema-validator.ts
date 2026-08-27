@@ -2,9 +2,9 @@
  * Ajv validator for the generated per-version protocol schemas.
  *
  * Ported from the 3A standalone Worker's `mock-api/__tests__/utils/schema-validator.ts`
- * (#1077-T4, branch `karina/1077-cloudflareworkermock`), which #1078-T1's port to
+ * (#1077, branch `karina/1077-cloudflareworkermock`), which #1078's port to
  * this site left behind — the conformance suite was the one piece of the Worker's
- * test surface that did not come across. #3C-2-T1 brings it over and generalizes
+ * test surface that did not come across. #334 brings it over and generalizes
  * it from "the opportunity schemas" to "any model, any version", because the new
  * resources need the same guard and there is no reason for two mechanisms.
  *
@@ -21,7 +21,7 @@
  * `public/schemas/yaml/` set fills those gaps while letting the versioned copy
  * win wherever it exists.
  *
- * KNOWN LIMITATION of that overlay, carried over verbatim from #1077-T4 because
+ * KNOWN LIMITATION of that overlay, carried over verbatim from #1077 because
  * the cause is still upstream: a `$ref` target missing from a version's
  * directory falls back to the *current* schema, so it is validated against
  * today's shape rather than a genuine historical one. For invariant scalars
@@ -268,7 +268,7 @@ export interface GetValidatorOptions {
    * dangerous: a model that a version genuinely lacks — or that went missing
    * from the generated output — still resolves, to *today's* shape, and every
    * assertion against it would pass while checking the wrong thing. That is
-   * precisely the "green CI over a downgraded schema" failure #1077-T4 flagged.
+   * precisely the "green CI over a downgraded schema" failure #1077 flagged.
    *
    * So the choice is made per call rather than globally. Pass `true` when the
    * version is supposed to have its own copy (every resource model in the

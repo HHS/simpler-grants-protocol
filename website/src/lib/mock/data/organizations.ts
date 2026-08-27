@@ -1,6 +1,6 @@
 /**
  * Hand-written organization fixtures, plus the revision (change) records behind
- * the four `/orgs/{orgId}/changes` routes (#3C-2-T1).
+ * the four `/orgs/{orgId}/changes` routes (#334).
  *
  * Organizations are the other leaf of the reference graph — nothing here points
  * outward — but they are the most-referenced resource: an award's `funders` and

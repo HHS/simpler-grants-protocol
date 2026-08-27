@@ -1,6 +1,6 @@
 /**
  * Deterministic, fixture-backed handlers for the CommonGrants award list,
- * detail, and search endpoints (#3C-2-T1).
+ * detail, and search endpoints (#334).
  *
  * The opportunity handler is the template this follows, and the differences are
  * only the ones the spec forces:

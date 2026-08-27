@@ -1,5 +1,5 @@
 /**
- * Handler suite for the organizations endpoints (#3C-2-T1). `Models.OrgRef`
+ * Handler suite for the organizations endpoints (#334). `Models.OrgRef`
  * and the `Organizations` router interface were both added in protocol v0.4
  * (`lib/core/lib/core/models/organization.tsp`,
  * `lib/core/lib/core/routes/orgs.tsp`), so every call here targets version

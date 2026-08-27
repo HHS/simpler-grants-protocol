@@ -1,12 +1,12 @@
 /**
- * Hand-written competition fixtures for `GET /competitions/{compId}` (#3C-2-T1).
+ * Hand-written competition fixtures for `GET /competitions/{compId}` (#334).
  *
  * Competitions are the join in the mock's reference graph: each one names the
  * opportunity it belongs to (`opportunityId`) and embeds the forms an applicant
  * must complete (`forms.forms`). Both sides are read from the existing fixture
  * modules rather than re-typed, so a competition can never point at an
  * opportunity or a form that doesn't exist — the cross-resource consistency
- * criterion of #3C-2-T1 is satisfied by construction here, and asserted in
+ * criterion of #334 is satisfied by construction here, and asserted in
  * `__tests__/lib/mock/data/cross-resource.spec.ts`.
  *
  * **Why this is a separate `Competition` type from the one in `./fixtures`.**

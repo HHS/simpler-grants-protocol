@@ -5,7 +5,7 @@ import { isMockApiEnabled, serverUrlFor } from "../lib/mock/docs-wiring";
 
 /**
  * Build-time script to point the rendered OpenAPI specs at this site's own mock
- * endpoint (#1078-T2).
+ * endpoint (#1078).
  *
  * Swagger UI reads its base URL from the spec's own `servers:` block, so this is
  * how the mock reaches the docs "Try it out" panel and the `curl` command it
@@ -21,7 +21,7 @@ import { isMockApiEnabled, serverUrlFor } from "../lib/mock/docs-wiring";
  * no one can review.
  *
  * Ported from the standalone-Worker experiment's script of the same name
- * (#1077-T6); the string surgery below is unchanged, while the URL it writes is
+ * (#1077); the string surgery below is unchanged, while the URL it writes is
  * now same-origin and the gate is a boolean rather than a URL.
  */
 

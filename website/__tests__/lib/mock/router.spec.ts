@@ -1,6 +1,6 @@
 /**
  * Router-level tests for the not-yet-written `src/lib/mock/router.ts` and its
- * thin Astro wiring at `src/pages/api/[...path].ts` (#1078-T1, PLAN.md).
+ * thin Astro wiring at `src/pages/api/[...path].ts` (#1078, PLAN.md).
  *
  * `handlers/opportunities.spec.ts`, `http/cors.spec.ts`, and
  * `handlers/sdk-envelope.spec.ts` already pin the handler/CORS behavior
@@ -162,7 +162,7 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     expect(body.errors[0].field).toBe("version");
   });
 
-  // Replaced when #3C-2-T1 extended the mock past opportunities. This case used
+  // Replaced when #334 extended the mock past opportunities. This case used
   // to request `/v0.4.0/common-grants/awards` and assert an
   // "opportunity endpoints only" 404 — awards are now served, so that path
   // answers 200 and the message would be false. What is still worth pinning is
@@ -183,7 +183,7 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     expect(body.errors[0].message).toContain("No route matches");
   });
 
-  // The other half of that discrimination, and new with #3C-2-T1: a resource
+  // The other half of that discrimination, and new with #334: a resource
   // that IS in the protocol but not in the requested version reports which
   // version added it, rather than the bare "no route" it would have got before.
   it("names the adding version for a resource absent from the requested version", async () => {

@@ -1,6 +1,6 @@
 /**
  * Deterministic, fixture-backed handler for the one competition endpoint
- * (#3C-2-T1).
+ * (#334).
  *
  * **Why there is only one.** `Routes.Competitions` declares two operations,
  * `read` and `apply`, but `lib/core/lib/api.tsp` instantiates only `read`:

@@ -1,9 +1,9 @@
 /**
  * Script-level tests for `src/scripts/inject-mock-server.ts` and
- * `src/lib/mock/docs-wiring.ts` (#1078-T2, PLAN.md).
+ * `src/lib/mock/docs-wiring.ts` (#1078, PLAN.md).
  *
  * Ported from the 3A standalone-Worker experiment's
- * `__tests__/scripts/inject-mock-server.spec.ts` (#1077-T6). The `injectServers`
+ * `__tests__/scripts/inject-mock-server.spec.ts` (#1077). The `injectServers`
  * / `versionFromSpecFilename` string-surgery tests carry over unchanged — they
  * pin string surgery, not URLs. What's new here is the 3B contract: the mock is
  * served same-origin, so there is no configurable base URL to normalize, only a

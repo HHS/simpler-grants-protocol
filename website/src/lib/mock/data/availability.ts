@@ -1,5 +1,5 @@
 /**
- * Which protocol version each resource first appears in (#3C-2-T1).
+ * Which protocol version each resource first appears in (#334).
  *
  * The mock serves one path prefix per version, so a request for a resource that
  * did not exist yet in that version has to answer *something*. It answers a

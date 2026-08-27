@@ -1,5 +1,5 @@
 /**
- * Handler + fixture suite for the competitions endpoint (#3C-2-T1):
+ * Handler + fixture suite for the competitions endpoint (#334):
  * `GET /competitions/{compId}`. Modeled on `awards.spec.ts`.
  *
  * The spec instantiates only `read` for competitions

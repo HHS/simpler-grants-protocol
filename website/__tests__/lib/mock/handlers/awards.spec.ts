@@ -1,5 +1,5 @@
 /**
- * Handler + fixture suite for the awards endpoints (#3C-2-T1), the first
+ * Handler + fixture suite for the awards endpoints (#334), the first
  * resource added past opportunities. `Models.AwardBase` and the `Awards`
  * router interface were both added in protocol v0.4
  * (`lib/core/lib/core/models/award.tsp`, `lib/core/lib/core/routes/awards.tsp`),

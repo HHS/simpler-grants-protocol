@@ -2,7 +2,7 @@
  * Routes mock API requests to the fixture-backed resource handlers.
  *
  * This is the website's re-authored equivalent of the 3A standalone Worker's
- * `mock-api/src/index.ts` (#1078-T1). It is the one piece of that experiment
+ * `mock-api/src/index.ts` (#1078). It is the one piece of that experiment
  * that could *not* be copied: the Worker's entrypoint is a
  * `export default { fetch } satisfies ExportedHandler`, and it owns the whole
  * origin, so its routes hang off `/`. Here the docs site owns `/`, the mock is
@@ -19,7 +19,7 @@
  * place, and behavior at the edges — a trailing slash, a `%2F`, a doubled slash
  * — is inherited from the Worker rather than re-litigated here.
  *
- * **#3C-2-T1 extended the surface past opportunities.** The mock now serves all
+ * **#334 extended the surface past opportunities.** The mock now serves all
  * 18 non-opportunity endpoints `lib/core/lib/api.tsp` publishes — awards,
  * organizations (including the `/changes` sub-resource), competitions,
  * applications with their form responses, and forms — so "Try it out" no longer
@@ -80,7 +80,7 @@ import { errorResponse, withErrorBoundary } from "./http/envelope";
 const SERVICE_NAME = "CommonGrants mock API";
 
 /**
- * Where the mock is mounted on the docs origin. Exported because #1078-T2 needs
+ * Where the mock is mounted on the docs origin. Exported because #1078 needs
  * the same value to write per-version `servers:` entries into the rendered
  * OpenAPI specs — the base path and the URL Swagger UI calls have to agree, so
  * they read from one constant.
@@ -214,7 +214,7 @@ function stripBasePath(pathname: string): string | undefined {
 }
 
 /**
- * Dispatches the opportunity endpoints — unchanged from #1078-T1, and matched
+ * Dispatches the opportunity endpoints — unchanged from #1078, and matched
  * before anything else so the corpus-pinned surface cannot be affected by the
  * routing added around it.
  */
@@ -373,7 +373,7 @@ async function route(request: Request): Promise<Response> {
   }
 
   // Opportunities keep their own regex and their own first look, so the
-  // corpus-pinned surface is decided exactly as it was before #3C-2-T1.
+  // corpus-pinned surface is decided exactly as it was before #334.
   const opportunityMatch = OPPORTUNITIES_ROUTE.exec(path);
   if (opportunityMatch) {
     const [, version, segment] = opportunityMatch;
