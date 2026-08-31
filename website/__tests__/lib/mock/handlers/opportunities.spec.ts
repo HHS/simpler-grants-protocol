@@ -555,6 +555,35 @@ describe("opportunities routes", () => {
       },
     );
 
+    // A truthy non-string `search` used to reach `.toLowerCase()` and escape
+    // the handler as a 500, unlike every other malformed field.
+    it.each([
+      ["a number", 123],
+      ["an object", { q: "grant" }],
+      ["an array", ["grant"]],
+    ])(
+      "returns 400 with the protocol Error shape when search is %s",
+      async (_label, search) => {
+        const response = await handleMockRequest(
+          new Request(opportunitiesUrl("0.3.0", "/search"), {
+            method: "POST",
+            body: JSON.stringify({ search }),
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+
+        expect(response.status).toBe(400);
+
+        const body = (await response.json()) as {
+          status: number;
+          errors: { field: string }[];
+        };
+
+        expect(body.status).toBe(400);
+        expect(body.errors.map(({ field }) => field)).toContain("search");
+      },
+    );
+
     // The router sends GET /search to the detail handler, which rejects
     // "search" as a non-UUID oppId — same as the #1049 spike.
     it("answers GET on the search path with the detail handler's 400, as the spike's :oppId pattern did", async () => {
