@@ -128,6 +128,16 @@ describe("GET /v{version}/common-grants/awards (list)", () => {
     });
   });
 
+  // The fixture module promises the canonical record carries the newest
+  // `lastModifiedAt`; without this the promise silently rotted as records
+  // with later dates were added.
+  it("leads with the canonical record, which the docs use as their example", async () => {
+    const response = listAwards(new Request(awardsUrl()), VERSION);
+    const body = (await response.json()) as { items: Array<{ id: string }> };
+
+    expect(body.items[0].id).toBe(CANONICAL_AWARD_ID);
+  });
+
   it("returns 400 with the protocol Error shape for page=0", async () => {
     const response = listAwards(new Request(awardsUrl("?page=0")), VERSION);
 

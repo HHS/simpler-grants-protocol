@@ -215,7 +215,10 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
     recipientOrganizations: orgRefCollection(RIVERSIDE_CHC),
     source: "https://www.usaspending.gov/award/ASST_NON_H80CS00001",
     createdAt: "2026-03-01T00:00:00Z",
-    lastModifiedAt: "2026-07-01T00:00:00Z",
+    // Must stay the newest in the set so this record leads `GET /awards`
+    // under the default ordering — a test pins it. The spec's own example
+    // says 2026-06-01, which would sort this record into the middle.
+    lastModifiedAt: "2026-11-01T00:00:00Z",
   },
 
   // ---- The id published on the AwardBase example ----
