@@ -1,4 +1,4 @@
-name: "CD - Deploy Website to GH Pages"
+name: "CD - Deploy Website"
 
 on:
   # Trigger the workflow every time we push to the `main` branch
@@ -7,8 +7,16 @@ on:
     branches: [main]
     paths:
       - "website/**"
+      - ".github/workflows/cd-deploy-website.yml"
   # Allows us to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
+
+# Serialize whole runs (build + deploys) so a slow older build can't deploy
+# after a newer one. The default single pending slot skips stale intermediate
+# runs; only the newest queued run deploys.
+concurrency:
+  group: deploy-website-${{ github.ref }}
+  cancel-in-progress: false
 
 # Allow this job to clone the repo and create a page deployment
 permissions:
@@ -39,11 +47,26 @@ jobs:
         run: pnpm --filter website build
 
       - name: Upload Pages artifact
+        # Nonblocking so an upload failure for one deploy target
+        # doesn't take down the other one.
+        continue-on-error: true
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./website/dist
 
-  deploy:
+      - name: Upload build output
+        # Shared with deploy-cloudflare so both targets ship the same build.
+        # Nonblocking so an upload failure for one deploy target
+        # doesn't take down the other one.
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: website-build
+          path: website/dist
+          retention-days: 1
+          if-no-files-found: error
+
+  deploy-github-pages:
     needs: build
     runs-on: ubuntu-latest
     # Only deploy from main branch
@@ -55,3 +78,43 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+  # Parallel production deploy to the shared `common-grants` Cloudflare Worker
+  # (beta.commongrants.org) during the GH Pages deploy
+  deploy-cloudflare:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # Only deploy from main branch
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: cloudflare
+      url: https://beta.commongrants.org
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+
+      - name: Download build output
+        uses: actions/download-artifact@v8
+        with:
+          name: website-build
+          path: website/dist
+
+      - name: Deploy to Cloudflare Worker
+        # Uploads a new version of the Worker named in website/wrangler.jsonc
+        # (common-grants) and switches live traffic to it. PR previews are versions of this same Worker
+        working-directory: ./website
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm dlx wrangler@4 deploy
