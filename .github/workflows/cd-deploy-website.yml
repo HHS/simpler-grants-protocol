@@ -11,6 +11,13 @@ on:
   # Allows us to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
 
+# Serialize whole runs (build + deploys) so a slow older build can't deploy
+# after a newer one. The default single pending slot skips stale intermediate
+# runs; only the newest queued run deploys.
+concurrency:
+  group: deploy-website-${{ github.ref }}
+  cancel-in-progress: false
+
 # Allow this job to clone the repo and create a page deployment
 permissions:
   contents: read
@@ -40,22 +47,22 @@ jobs:
         run: pnpm --filter website build
 
       - name: Upload Pages artifact
+        # Nonblocking so an upload failure for one deploy target
+        # doesn't take down the other one.
+        continue-on-error: true
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./website/dist
 
       - name: Upload build output
         # Shared with deploy-cloudflare so both targets ship the same build.
+        # Nonblocking so an upload failure for one deploy target
+        # doesn't take down the other one.
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: website-build
-          path: |
-            website/dist
-            website/tsp-output
-            website/.extension-schemas
-            website/cache
-            website/public/schemas/yaml
-            website/public/openapi
+          path: website/dist
           retention-days: 1
           if-no-files-found: error
 
@@ -81,9 +88,9 @@ jobs:
       contents: read
     # Only deploy from main branch
     if: github.ref == 'refs/heads/main'
-    concurrency:
-      group: deploy-cloudflare
-      cancel-in-progress: false
+    environment:
+      name: cloudflare
+      url: https://beta.commongrants.org
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -101,7 +108,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: website-build
-          path: website
+          path: website/dist
 
       - name: Deploy to Cloudflare Worker
         # Uploads a new version of the Worker named in website/wrangler.jsonc
