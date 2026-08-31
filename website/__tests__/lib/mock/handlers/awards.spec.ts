@@ -312,6 +312,287 @@ describe("POST /v{version}/common-grants/awards/search", () => {
     }
   });
 
+  /**
+   * `awardDateRange` shares its validation loop with `awardedAmountRange` but
+   * takes the other side of the `isDateRange` branch, which no test reached:
+   * a swapped condition would have validated dates as Money and vice versa.
+   */
+  describe("awardDateRange", () => {
+    /** Awards carrying an `awardDate`, which alone can match a date range. */
+    const datedAwards = AWARD_FIXTURES.filter(
+      (award) => award.keyDates?.awardDate?.date !== undefined,
+    );
+
+    it("narrows results to awards issued inside the range", async () => {
+      const dates = datedAwards
+        .map((award) => award.keyDates!.awardDate!.date)
+        .sort();
+      const cutoff = dates[Math.floor(dates.length / 2)];
+
+      const body = await runSearch({
+        filters: {
+          awardDateRange: {
+            operator: "between",
+            value: { min: dates[0], max: cutoff },
+          },
+        },
+      });
+
+      const expected = datedAwards.filter(
+        (award) =>
+          award.keyDates!.awardDate!.date >= dates[0] &&
+          award.keyDates!.awardDate!.date <= cutoff,
+      );
+
+      expect(body.items).toHaveLength(expected.length);
+      expect(body.items.length).toBeLessThan(AWARD_FIXTURES.length);
+      expect(new Set(body.items.map((item) => item.id))).toEqual(
+        new Set(expected.map((award) => award.id)),
+      );
+    });
+
+    it("inverts the range for the outside operator", async () => {
+      const dates = datedAwards
+        .map((award) => award.keyDates!.awardDate!.date)
+        .sort();
+      const range = { min: dates[0], max: dates[Math.floor(dates.length / 2)] };
+
+      const inside = await runSearch({
+        filters: { awardDateRange: { operator: "between", value: range } },
+      });
+      const outside = await runSearch({
+        filters: { awardDateRange: { operator: "outside", value: range } },
+      });
+
+      const insideIds = new Set(inside.items.map((item) => item.id));
+      const outsideIds = new Set(outside.items.map((item) => item.id));
+
+      for (const id of insideIds) {
+        expect(outsideIds.has(id)).toBe(false);
+      }
+      // Every dated award falls on one side or the other.
+      expect(insideIds.size + outsideIds.size).toBe(datedAwards.length);
+    });
+
+    it("returns 400 for a bound that is not a valid ISO 8601 date", async () => {
+      const response = await searchAwards(
+        new Request(awardsUrl("/search"), {
+          method: "POST",
+          body: JSON.stringify({
+            filters: {
+              awardDateRange: {
+                operator: "between",
+                value: { min: "not-a-date" },
+              },
+            },
+          }),
+          headers: { "Content-Type": "application/json" },
+        }),
+        VERSION,
+      );
+
+      expect(response.status).toBe(400);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(
+        body.errors.some(
+          (error) => error.field === "filters.awardDateRange.value.min",
+        ),
+      ).toBe(true);
+    });
+
+    it("returns 400 for an unknown range operator", async () => {
+      const response = await searchAwards(
+        new Request(awardsUrl("/search"), {
+          method: "POST",
+          body: JSON.stringify({
+            filters: {
+              awardDateRange: {
+                operator: "sometimes",
+                value: { min: "2026-01-01" },
+              },
+            },
+          }),
+          headers: { "Content-Type": "application/json" },
+        }),
+        VERSION,
+      );
+
+      expect(response.status).toBe(400);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(
+        body.errors.some(
+          (error) => error.field === "filters.awardDateRange.operator",
+        ),
+      ).toBe(true);
+    });
+
+    it("returns 400 when neither min nor max is given", async () => {
+      const response = await searchAwards(
+        new Request(awardsUrl("/search"), {
+          method: "POST",
+          body: JSON.stringify({
+            filters: { awardDateRange: { operator: "between", value: {} } },
+          }),
+          headers: { "Content-Type": "application/json" },
+        }),
+        VERSION,
+      );
+
+      expect(response.status).toBe(400);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(
+        body.errors.some(
+          (error) => error.field === "filters.awardDateRange.value",
+        ),
+      ).toBe(true);
+    });
+
+    it("returns 400 for a money bound where a Money object is required", async () => {
+      const response = await searchAwards(
+        new Request(awardsUrl("/search"), {
+          method: "POST",
+          body: JSON.stringify({
+            filters: {
+              awardedAmountRange: {
+                operator: "between",
+                value: { min: "50000" },
+              },
+            },
+          }),
+          headers: { "Content-Type": "application/json" },
+        }),
+        VERSION,
+      );
+
+      expect(response.status).toBe(400);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(
+        body.errors.some(
+          (error) => error.field === "filters.awardedAmountRange.value.min",
+        ),
+      ).toBe(true);
+    });
+  });
+
+  /**
+   * `sortKey` maps each `AwdSortBy` wire value onto a field. Nothing exercised
+   * the mapping, so a `sortKey` that returned a constant for every award would
+   * have passed: the default-order test only checks `lastModifiedAt`.
+   */
+  describe("sorting", () => {
+    /** Reads the ordered values one sort field produced. */
+    async function sortedBy(sortBy: string, sortOrder: "asc" | "desc") {
+      const body = await runSearch({ sorting: { sortBy, sortOrder } });
+      return body.items;
+    }
+
+    it("orders by title", async () => {
+      const items = await sortedBy("title", "asc");
+      const titles = items.map((item) => item.title as string);
+
+      expect(titles).toEqual([...titles].sort((a, b) => a.localeCompare(b)));
+    });
+
+    it("orders by status.value", async () => {
+      const items = await sortedBy("status.value", "asc");
+      const statuses = items.map((item) => item.status.value);
+
+      expect(statuses).toEqual(
+        [...statuses].sort((a, b) => a.localeCompare(b)),
+      );
+    });
+
+    it("orders by keyDates.awardDate", async () => {
+      const items = await sortedBy("keyDates.awardDate", "asc");
+      const dates = items.map(
+        (item) =>
+          (item.keyDates as { awardDate?: { date?: string } } | undefined)
+            ?.awardDate?.date ?? "",
+      );
+
+      expect(dates).toEqual([...dates].sort());
+    });
+
+    it("orders by funding.awardedAmount numerically, not as strings", async () => {
+      const items = await sortedBy("funding.awardedAmount", "asc");
+      const amounts = items.map((item) =>
+        Number(item.funding?.awardedAmount?.amount ?? 0),
+      );
+
+      expect(amounts).toEqual([...amounts].sort((a, b) => a - b));
+    });
+
+    it("mirrors asc exactly when sorting desc", async () => {
+      const asc = await sortedBy("title", "asc");
+      const desc = await sortedBy("title", "desc");
+
+      expect(desc.map((item) => item.id)).toEqual(
+        asc.map((item) => item.id).reverse(),
+      );
+    });
+
+    it("reports a sortInfo error for a custom sort it cannot apply", async () => {
+      const body = await runSearch({
+        sorting: { sortBy: "custom", customSortBy: "reviewScore" },
+      });
+
+      const sortInfo = body.sortInfo as {
+        sortBy: string;
+        customSortBy?: string;
+        errors?: string[];
+      };
+
+      expect(sortInfo.sortBy).toBe("custom");
+      expect(sortInfo.customSortBy).toBe("reviewScore");
+      expect(sortInfo.errors?.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("matches free-text search against the title and the description", async () => {
+    const target = AWARD_FIXTURES[0];
+    const byTitle = await runSearch({ search: target.title });
+
+    expect(byTitle.items.some((item) => item.id === target.id)).toBe(true);
+    expect(byTitle.items.length).toBeLessThan(AWARD_FIXTURES.length);
+
+    // A term only the description carries still matches.
+    const descriptionTerm = target.description.split(" ").slice(0, 4).join(" ");
+    const byDescription = await runSearch({ search: descriptionTerm });
+
+    expect(byDescription.items.some((item) => item.id === target.id)).toBe(
+      true,
+    );
+  });
+
+  it("echoes custom filters back with a filterInfo error, having not applied them", async () => {
+    const unfiltered = await runSearch({});
+    const body = await runSearch({
+      filters: { customFilters: { region: { operator: "in", value: ["NW"] } } },
+    });
+
+    const filterInfo = body.filterInfo as {
+      filters: Record<string, unknown>;
+      errors?: string[];
+    };
+
+    expect(filterInfo.errors?.length).toBeGreaterThan(0);
+    expect(filterInfo.errors?.[0]).toContain("region");
+    // Not applied means the result set is untouched.
+    expect(body.items).toHaveLength(unfiltered.items.length);
+  });
+
   it("returns 400 with a sorting.sortBy field error for an unknown sortBy value", async () => {
     const response = await searchAwards(
       new Request(awardsUrl("/search"), {
