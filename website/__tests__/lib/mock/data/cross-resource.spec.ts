@@ -89,6 +89,37 @@ describe("awards reference records that exist", () => {
     }
   });
 
+  // The builders resolve each reference on its own, so nothing stops an award
+  // from citing a real opportunity and a real application that belong to
+  // different opportunities. Only agreement between the two catches that.
+  it("cites an application submitted to the same opportunity the award is for", () => {
+    for (const award of AWARD_FIXTURES) {
+      if (!award.application || !award.opportunity) continue;
+
+      const application = getApplicationById(award.application.id)!;
+
+      expect(
+        application.opportunityId,
+        `award ${award.id} is for opportunity ${award.opportunity.id} but cites application ${application.id}, which was submitted to ${application.opportunityId}`,
+      ).toBe(award.opportunity.id);
+    }
+  });
+
+  // An award is the outcome of an application that won, so a rejected one
+  // cannot have produced it.
+  it("cites no application whose status contradicts the award existing", () => {
+    for (const award of AWARD_FIXTURES) {
+      if (!award.application) continue;
+
+      const application = getApplicationById(award.application.id)!;
+
+      expect(
+        application.status.value,
+        `award ${award.id} cites application ${application.id}, which is ${application.status.value}`,
+      ).not.toBe("rejected");
+    }
+  });
+
   it("points every funder and recipient organization at a real organization", () => {
     for (const award of AWARD_FIXTURES) {
       const ids = [

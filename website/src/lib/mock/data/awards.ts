@@ -398,8 +398,10 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
       awardDate: awardedOn("2025-11-01"),
       periodOfPerformance: performedOver("2026-01-01", "2026-12-31"),
     },
+    // No `application` reference: the fixtures hold no application to the
+    // Arts & Culture opportunity, and an award must not point at an
+    // application submitted to a different opportunity.
     opportunity: oppRefFor(10),
-    application: appRefFor(5),
     funders: orgRefCollection(NSF),
     recipientOrganizations: orgRefCollection(LAKESIDE_ARTS),
     createdAt: "2025-11-01T00:00:00Z",
