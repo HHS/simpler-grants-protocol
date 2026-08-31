@@ -285,6 +285,120 @@ describe("PATCH /v{version}/common-grants/orgs/{orgId} (update)", () => {
     expect(body.data.snapshot).not.toHaveProperty("mission");
   });
 
+  /**
+   * RFC 7396's recursive rules, which the top-level set/delete tests above do
+   * not reach. These are the parts of merge patch that are easy to get wrong:
+   * a nested object merges key by key rather than replacing its target, a
+   * nested null deletes just that key, and an array replaces wholesale
+   * instead of merging index by index.
+   */
+  describe("RFC 7396 recursion", () => {
+    /** Fetches the snapshot a patch produces, asserting the 200 on the way. */
+    async function snapshotAfter(
+      orgId: string,
+      patch: unknown,
+    ): Promise<Record<string, never>> {
+      const response = await runUpdate(orgId, patch);
+      expect(response.status).toBe(200);
+
+      const body = (await response.json()) as {
+        data: { snapshot: Record<string, never> };
+      };
+      return body.data.snapshot;
+    }
+
+    it("merges a nested object key by key instead of replacing it", async () => {
+      const canonical = getOrganizationById(CANONICAL_ORGANIZATION_ID)!;
+      const primary = canonical.addresses!.primary;
+
+      const snapshot = await snapshotAfter(CANONICAL_ORGANIZATION_ID, {
+        addresses: { primary: { city: "Newtown" } },
+      });
+
+      const patched = (
+        snapshot as unknown as {
+          addresses: { primary: Record<string, string> };
+        }
+      ).addresses.primary;
+
+      expect(patched.city).toBe("Newtown");
+      // Untouched siblings survive; a replace would have dropped them.
+      expect(patched.street1).toBe(primary.street1);
+      expect(patched.postalCode).toBe(primary.postalCode);
+    });
+
+    it("leaves sibling keys of a merged branch alone", async () => {
+      const canonical = getOrganizationById(CANONICAL_ORGANIZATION_ID)!;
+
+      const snapshot = await snapshotAfter(CANONICAL_ORGANIZATION_ID, {
+        addresses: { primary: { city: "Newtown" } },
+      });
+
+      const addresses = (
+        snapshot as unknown as {
+          addresses: { otherAddresses?: Record<string, unknown> };
+        }
+      ).addresses;
+
+      expect(addresses.otherAddresses).toEqual(
+        canonical.addresses!.otherAddresses,
+      );
+    });
+
+    it("deletes only the nested key a null targets", async () => {
+      const canonical = getOrganizationById(CANONICAL_ORGANIZATION_ID)!;
+
+      const snapshot = await snapshotAfter(CANONICAL_ORGANIZATION_ID, {
+        addresses: { primary: { street2: null } },
+      });
+
+      const patched = (
+        snapshot as unknown as {
+          addresses: { primary: Record<string, string> };
+        }
+      ).addresses.primary;
+
+      expect(patched).not.toHaveProperty("street2");
+      expect(patched.street1).toBe(canonical.addresses!.primary.street1);
+    });
+
+    it("replaces an array wholesale rather than merging it index by index", async () => {
+      const documented = getOrganizationById(DOCUMENTED_ORGANIZATION_ID)!;
+      // The fixture carries two entries, one of them archived.
+      expect(documented.identifiers!["org:us:ein"]!.allIds).toHaveLength(2);
+
+      const snapshot = await snapshotAfter(DOCUMENTED_ORGANIZATION_ID, {
+        identifiers: {
+          "org:us:ein": { allIds: [{ id: "999888777", status: "active" }] },
+        },
+      });
+
+      const allIds = (
+        snapshot as unknown as {
+          identifiers: {
+            "org:us:ein": { allIds: Array<{ id: string; status: string }> };
+          };
+        }
+      ).identifiers["org:us:ein"].allIds;
+
+      expect(allIds).toEqual([{ id: "999888777", status: "active" }]);
+    });
+
+    it("adds a nested key that the target does not have", async () => {
+      const snapshot = await snapshotAfter(DOCUMENTED_ORGANIZATION_ID, {
+        addresses: { primary: { street2: "Building C" } },
+      });
+
+      const patched = (
+        snapshot as unknown as {
+          addresses: { primary: Record<string, string> };
+        }
+      ).addresses.primary;
+
+      expect(patched.street2).toBe("Building C");
+    });
+  });
+
   it("returns identical bodies across two calls with the same body (stateless determinism)", async () => {
     const patch = { mission: "Repeatable mission" };
 
