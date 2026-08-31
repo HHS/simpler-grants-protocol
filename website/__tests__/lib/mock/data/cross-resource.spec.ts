@@ -120,6 +120,71 @@ describe("awards reference records that exist", () => {
     }
   });
 
+  it("is never issued before the opportunity it came from was posted", () => {
+    for (const award of AWARD_FIXTURES) {
+      const awardDate = award.keyDates?.awardDate?.date;
+      if (!award.opportunity || !awardDate) continue;
+
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      )!;
+      const postDate = opportunity.keyDates?.postDate?.date;
+      if (!postDate) continue;
+
+      expect(
+        awardDate >= postDate,
+        `award ${award.id} is dated ${awardDate}, before opportunity ${opportunity.id} was posted on ${postDate}`,
+      ).toBe(true);
+    }
+  });
+
+  /**
+   * The canonical award's funding is copied verbatim from the spec's
+   * `AwardBase` example, which was written against an opportunity of its own;
+   * opportunity 0 is byte-pinned by the golden corpus, so the pair cannot be
+   * reconciled. Every other award is expected to fit its opportunity's cap.
+   */
+  it("awards no more than the opportunity's maxAwardAmount, outside the documented example", () => {
+    for (const award of AWARD_FIXTURES) {
+      if (award.id === CANONICAL_AWARD_ID) continue;
+
+      const awarded = Number(award.funding?.awardedAmount?.amount);
+      if (!award.opportunity || Number.isNaN(awarded)) continue;
+
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      )!;
+      const max = Number(opportunity.funding?.maxAwardAmount?.amount);
+      if (Number.isNaN(max)) continue;
+
+      expect(
+        awarded <= max,
+        `award ${award.id} awarded ${awarded}, over opportunity ${opportunity.id}'s max of ${max}`,
+      ).toBe(true);
+    }
+  });
+
+  it("never reports more disbursed than awarded, nor more awarded than requested", () => {
+    for (const award of AWARD_FIXTURES) {
+      const requested = Number(award.funding?.requestedAmount?.amount);
+      const awarded = Number(award.funding?.awardedAmount?.amount);
+      const disbursed = Number(award.funding?.disbursedAmount?.amount);
+
+      if (!Number.isNaN(awarded) && !Number.isNaN(disbursed)) {
+        expect(
+          disbursed <= awarded,
+          `award ${award.id} disbursed ${disbursed} of an awarded ${awarded}`,
+        ).toBe(true);
+      }
+      if (!Number.isNaN(awarded) && !Number.isNaN(requested)) {
+        expect(
+          awarded <= requested,
+          `award ${award.id} awarded ${awarded} against a request for ${requested}`,
+        ).toBe(true);
+      }
+    }
+  });
+
   it("points every funder and recipient organization at a real organization", () => {
     for (const award of AWARD_FIXTURES) {
       const ids = [

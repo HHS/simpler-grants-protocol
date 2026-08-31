@@ -200,6 +200,10 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
       value: "awarded",
       description: "Award has been issued and funds are being disbursed.",
     },
+    // Verbatim from the spec's `AwardBase` example. It exceeds opportunity 0's
+    // `maxAwardAmount` because the example was written against an opportunity
+    // of its own; opportunity 0 is byte-pinned by the golden corpus and cannot
+    // be widened to suit it. Every other award stays within its cap.
     funding: {
       requestedAmount: usd("500000.00"),
       awardedAmount: usd("450000.00"),
@@ -263,9 +267,9 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
     },
     funding: {
       details: "Awarded in two tranches, contingent on year-one milestones.",
-      requestedAmount: usd("2400000.00"),
-      awardedAmount: usd("2100000.00"),
-      disbursedAmount: usd("1050000.00"),
+      requestedAmount: usd("520000.00"),
+      awardedAmount: usd("480000.00"),
+      disbursedAmount: usd("240000.00"),
     },
     keyDates: {
       awardDate: awardedOn("2026-06-10"),
@@ -335,18 +339,19 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
       description: "The award's period of performance has ended.",
     },
     funding: {
-      requestedAmount: usd("950000.00"),
-      awardedAmount: usd("900000.00"),
-      disbursedAmount: usd("900000.00"),
+      requestedAmount: usd("125000.00"),
+      awardedAmount: usd("115000.00"),
+      disbursedAmount: usd("115000.00"),
     },
     keyDates: {
-      awardDate: awardedOn("2024-08-15"),
-      periodOfPerformance: performedOver("2024-10-01", "2026-03-31"),
+      // Opportunity 8 closed 2025-02-28, so the award cannot predate that.
+      awardDate: awardedOn("2025-04-15"),
+      periodOfPerformance: performedOver("2025-06-01", "2026-03-31"),
     },
     opportunity: oppRefFor(8),
     funders: orgRefCollection(HRSA, { passThrough: NSF }),
     recipientOrganizations: orgRefCollection(CASCADE_WORKFORCE),
-    createdAt: "2024-08-15T00:00:00Z",
+    createdAt: "2025-04-15T00:00:00Z",
     lastModifiedAt: "2026-04-10T00:00:00Z",
   },
 
@@ -393,8 +398,8 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
       description: "The award was terminated at the recipient's request.",
     },
     funding: {
-      requestedAmount: usd("85000.00"),
-      awardedAmount: usd("80000.00"),
+      requestedAmount: usd("32000.00"),
+      awardedAmount: usd("28000.00"),
       disbursedAmount: usd("12000.00"),
     },
     keyDates: {
@@ -423,8 +428,8 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
         "The award was cancelled after the recipient declined the terms.",
     },
     funding: {
-      requestedAmount: usd("420000.00"),
-      awardedAmount: usd("400000.00"),
+      requestedAmount: usd("78000.00"),
+      awardedAmount: usd("70000.00"),
       disbursedAmount: usd("0.00"),
     },
     keyDates: { awardDate: awardedOn("2025-06-15") },
@@ -447,9 +452,9 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
       description: "Disbursements are paused pending a compliance review.",
     },
     funding: {
-      requestedAmount: usd("640000.00"),
-      awardedAmount: usd("620000.00"),
-      disbursedAmount: usd("310000.00"),
+      requestedAmount: usd("62000.00"),
+      awardedAmount: usd("55000.00"),
+      disbursedAmount: usd("27500.00"),
     },
     keyDates: {
       awardDate: awardedOn("2026-01-20"),
@@ -529,9 +534,9 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
         "The recipient has appealed a reduction in the awarded amount.",
     },
     funding: {
-      requestedAmount: usd("240000.00"),
-      awardedAmount: usd("150000.00"),
-      disbursedAmount: usd("37500.00"),
+      requestedAmount: usd("42000.00"),
+      awardedAmount: usd("38000.00"),
+      disbursedAmount: usd("9500.00"),
     },
     keyDates: {
       awardDate: awardedOn("2026-04-05"),
