@@ -18,6 +18,7 @@ import {
   CANONICAL_COMPETITION_ID,
 } from "@/lib/mock/data/competitions";
 import { CANONICAL_FORM_ID } from "@/lib/mock/data/forms";
+import { CANONICAL_ORGANIZATION_ID } from "@/lib/mock/data/organizations";
 import { RESERVED_MISSING_ID } from "@/lib/mock/data/ids";
 import type { Version } from "@/lib/mock/data/fixtures";
 import {
@@ -181,6 +182,33 @@ describe("POST /v{version}/common-grants/applications/start", () => {
     );
   });
 
+  // `organizationId` is optional, so both of its branches need saying: absent
+  // is fine, present-but-malformed is a 400. Neither was exercised.
+  it("accepts a well-formed organizationId and rejects a malformed one", async () => {
+    const accepted = await runStart(VERSION, {
+      competitionId: CANONICAL_COMPETITION_ID,
+      title: "My new application",
+      organizationId: CANONICAL_ORGANIZATION_ID,
+    });
+
+    expect(accepted.status).toBe(201);
+
+    const rejected = await runStart(VERSION, {
+      competitionId: CANONICAL_COMPETITION_ID,
+      title: "My new application",
+      organizationId: "not-a-uuid",
+    });
+
+    expect(rejected.status).toBe(400);
+
+    const body = (await rejected.json()) as {
+      errors: Array<{ field: string; message: string }>;
+    };
+    expect(body.errors.some((error) => error.field === "organizationId")).toBe(
+      true,
+    );
+  });
+
   // `title` was renamed from `name` at v0.4, so a pre-v0.4 request sends
   // `name`, and a v0.4 request still sending `name` is missing `title`.
   it("accepts the pre-v0.4 name field in place of title, and rejects a v0.4 request that still uses name", async () => {
@@ -275,6 +303,43 @@ describe("PUT /v{version}/common-grants/applications/{appId}/submit", () => {
     const response = await submitApplication(CANONICAL_APPLICATION_ID, VERSION);
 
     expect(response.status).toBe(200);
+  });
+
+  // Asserting only the 200 above would pass on a handler that echoed the
+  // application back untouched; submitting has to move the record on.
+  it("returns the application marked submitted, with a submittedAt", async () => {
+    const before = getApplicationById(CANONICAL_APPLICATION_ID)!;
+    expect(before.status.value).not.toBe("submitted");
+    expect(before.submittedAt ?? null).toBeNull();
+
+    const response = await submitApplication(CANONICAL_APPLICATION_ID, VERSION);
+    const body = (await response.json()) as {
+      data: {
+        id: string;
+        status: { value: string };
+        submittedAt: string | null;
+        lastModifiedAt: string;
+      };
+    };
+
+    expect(body.data.id).toBe(CANONICAL_APPLICATION_ID);
+    expect(body.data.status.value).toBe("submitted");
+    expect(body.data.submittedAt).not.toBeNull();
+    expect(body.data.lastModifiedAt).toBe(body.data.submittedAt);
+  });
+
+  it("leaves the fixture untouched, so a second submit answers identically", async () => {
+    const first = await (
+      await submitApplication(CANONICAL_APPLICATION_ID, VERSION)
+    ).json();
+    const second = await (
+      await submitApplication(CANONICAL_APPLICATION_ID, VERSION)
+    ).json();
+
+    expect(first).toEqual(second);
+    expect(getApplicationById(CANONICAL_APPLICATION_ID)!.status.value).not.toBe(
+      "submitted",
+    );
   });
 
   // `ApplicationSubmissionError` is the spec's 400 branch for a submit with
@@ -427,6 +492,93 @@ describe("POST /v{version}/common-grants/applications/search", () => {
     );
   });
 
+  /**
+   * The rest of `readSearchRequest`: this route is the only one parsing JSON
+   * out of the query string, so its failure modes and its precedence rule are
+   * behaviour no sibling search shares.
+   */
+  describe("query-string parsing", () => {
+    /** POSTs to `/search?{query}` with no body and returns the raw response. */
+    function runSearchQuery(query: string): Promise<Response> {
+      return searchApplications(
+        new Request(applicationsUrl(VERSION, `/search?${query}`), {
+          method: "POST",
+        }),
+        VERSION,
+      );
+    }
+
+    it("returns 400 for a filters parameter that is not valid JSON", async () => {
+      const response = await runSearchQuery("filters=%7Bnot-json");
+
+      expect(response.status).toBe(400);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(body.errors.some((error) => error.field === "filters")).toBe(true);
+    });
+
+    it("returns 400 for a sorting parameter holding valid JSON that is not an object", async () => {
+      const response = await runSearchQuery(
+        `sorting=${encodeURIComponent("[1,2]")}`,
+      );
+
+      expect(response.status).toBe(400);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(body.errors.some((error) => error.field === "sorting")).toBe(true);
+    });
+
+    it("lets a query parameter win over the same field in the body", async () => {
+      const fromQuery = { status: { operator: "in", value: ["submitted"] } };
+      const fromBody = { status: { operator: "in", value: ["inProgress"] } };
+
+      const response = await searchApplications(
+        new Request(
+          applicationsUrl(
+            VERSION,
+            `/search?filters=${encodeURIComponent(JSON.stringify(fromQuery))}`,
+          ),
+          {
+            method: "POST",
+            body: JSON.stringify({ filters: fromBody }),
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+        VERSION,
+      );
+
+      expect(response.status).toBe(200);
+
+      const body = (await response.json()) as {
+        items: Array<{ status: { value: string } }>;
+        filterInfo: { filters: Record<string, unknown> };
+      };
+
+      expect(body.items.length).toBeGreaterThan(0);
+      for (const item of body.items) {
+        expect(item.status.value).toBe("submitted");
+      }
+      expect(body.filterInfo.filters).toEqual(fromQuery);
+    });
+
+    it("reads the free-text search term from the query string", async () => {
+      const target = APPLICATION_FIXTURES[0];
+      const response = await runSearchQuery(
+        `search=${encodeURIComponent(target.title)}`,
+      );
+
+      expect(response.status).toBe(200);
+
+      const body = (await response.json()) as { items: Array<{ id: string }> };
+      expect(body.items.some((item) => item.id === target.id)).toBe(true);
+      expect(body.items.length).toBeLessThan(APPLICATION_FIXTURES.length);
+    });
+  });
+
   it("returns 404 with the protocol Error shape at v0.2, since searchApplications is v0.3+ while its siblings are v0.2+", async () => {
     const response = await searchApplications(
       new Request(applicationsUrl("0.2.0", "/search"), {
@@ -551,6 +703,42 @@ describe("PUT /v{version}/common-grants/applications/{appId}/forms/{formId} (wri
     expect(body.data.response).toEqual(responseBody);
     expect(body.data.formId).toBe(CANONICAL_FORM_ID);
     expect(body.data.applicationId).toBe(CANONICAL_APPLICATION_ID);
+  });
+
+  // The handler derives the status from whether the body has any keys.
+  // Neither side of that ternary was asserted.
+  it("reports the response complete when the body has content, and notStarted when it is empty", async () => {
+    /** PUTs `body` to the canonical application's canonical form. */
+    async function writeBody(body: Record<string, unknown>) {
+      const response = await writeFormResponse(
+        CANONICAL_APPLICATION_ID,
+        CANONICAL_FORM_ID,
+        new Request(
+          applicationsUrl(
+            VERSION,
+            `/${CANONICAL_APPLICATION_ID}/forms/${CANONICAL_FORM_ID}`,
+          ),
+          {
+            method: "PUT",
+            body: JSON.stringify(body),
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+        VERSION,
+      );
+
+      expect(response.status).toBe(200);
+      return (await response.json()) as {
+        data: { status: { value: string }; response: Record<string, unknown> };
+      };
+    }
+
+    const filled = await writeBody({ email: "taylor.reyes@example.org" });
+    expect(filled.data.status.value).toBe("complete");
+
+    const empty = await writeBody({});
+    expect(empty.data.status.value).toBe("notStarted");
+    expect(empty.data.response).toEqual({});
   });
 
   it("returns identical bodies across two identical writeFormResponse calls", async () => {
