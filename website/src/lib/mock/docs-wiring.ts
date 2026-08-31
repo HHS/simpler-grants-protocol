@@ -37,3 +37,17 @@ export function isMockApiEnabled(): boolean {
 export function serverUrlFor(version: string): string {
   return `${MOCK_API_BASE_PATH}/v${version}`;
 }
+
+/**
+ * Public directory holding the mock-advertising copies of the specs, written by
+ * `scripts/inject-mock-server.ts` on gated builds only. A sibling of
+ * `public/openapi/` rather than an edit of it: those specs are generated from
+ * the TypeSpec source and tracked, and rewriting them in place left the
+ * working tree dirty with artifacts that must never be committed.
+ */
+export const MOCK_SPEC_DIR_NAME = "openapi-mock";
+
+/** Root-relative directory the docs page loads specs from. */
+export function specDirFor(mockEnabled: boolean): string {
+  return mockEnabled ? `/${MOCK_SPEC_DIR_NAME}` : "/openapi";
+}
