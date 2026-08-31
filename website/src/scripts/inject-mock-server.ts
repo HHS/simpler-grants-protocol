@@ -2,6 +2,10 @@ import { readdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { Paths } from "../lib/schema/paths";
 import { isMockApiEnabled, serverUrlFor } from "../lib/mock/docs-wiring";
+import {
+  SUPPORTED_VERSIONS,
+  isSupportedVersion,
+} from "../lib/mock/data/fixtures";
 
 /**
  * Build-time script that writes a `servers:` block pointing at the mock into
@@ -50,6 +54,26 @@ export function injectServers(yamlText: string, serverUrl: string): string {
   return withoutExisting.replace(TOP_LEVEL_PATHS, () => `${block}paths:`);
 }
 
+/**
+ * Guards the drift this script can otherwise cause: it advertises a server for
+ * every emitted spec it finds, but the router only serves the versions the
+ * fixtures know how to shape. Without this, adding a protocol version to
+ * `lib/core` would ship a docs page whose every Execute answers 404, with
+ * nothing failing at build time to say so.
+ */
+export function assertMockServesVersion(
+  version: string,
+  filename: string,
+): void {
+  if (isSupportedVersion(version)) return;
+
+  throw new Error(
+    `${filename} would advertise ${serverUrlFor(version)}, which the mock router does not serve ` +
+      `(it serves ${SUPPORTED_VERSIONS.join(", ")}). Teach src/lib/mock/data/fixtures.ts to shape ` +
+      `v${version} — SUPPORTED_VERSIONS and shapeOpportunityForVersion — before enabling the mock on it.`,
+  );
+}
+
 /** Outcome of a run, so callers (and tests) can assert the no-op path. */
 export interface InjectResult {
   /** True when `MOCK_API_ENABLED` was unset and nothing was written. */
@@ -83,6 +107,8 @@ class MockServerInjector {
       if (version === null) {
         continue;
       }
+
+      assertMockServesVersion(version, filename);
 
       const specPath = join(Paths.OPENAPI_DIR, filename);
       const serverUrl = serverUrlFor(version);

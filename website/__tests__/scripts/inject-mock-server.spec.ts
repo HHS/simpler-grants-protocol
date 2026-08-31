@@ -7,12 +7,14 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
+  assertMockServesVersion,
   injectServers,
   versionFromSpecFilename,
   MockServerInjector,
 } from "@/scripts/inject-mock-server";
 import { isMockApiEnabled, serverUrlFor } from "@/lib/mock/docs-wiring";
 import { MOCK_API_BASE_PATH } from "@/lib/mock/router";
+import { SUPPORTED_VERSIONS } from "@/lib/mock/data/fixtures";
 
 // Mimics the real spec's shape: no top-level `servers:` key, a top-level
 // `paths:` line, and a nested unrelated `servers:` key.
@@ -147,6 +149,26 @@ describe("isMockApiEnabled", () => {
       expect(isMockApiEnabled()).toBe(true);
     },
   );
+});
+
+describe("assertMockServesVersion", () => {
+  it.each(SUPPORTED_VERSIONS)(
+    "accepts v%s, which the router serves",
+    (version) => {
+      expect(() =>
+        assertMockServesVersion(version, `openapi.${version}.yaml`),
+      ).not.toThrow();
+    },
+  );
+
+  // The injector advertises a server for every emitted spec, so a protocol
+  // version the fixtures cannot shape has to fail the build rather than ship a
+  // docs page whose every Execute answers 404.
+  it("throws for a spec version the router does not serve", () => {
+    expect(() =>
+      assertMockServesVersion("0.5.0", "openapi.0.5.0.yaml"),
+    ).toThrowError(/openapi\.0\.5\.0\.yaml.*does not serve/s);
+  });
 });
 
 describe("MockServerInjector", () => {
