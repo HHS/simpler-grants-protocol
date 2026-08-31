@@ -16,7 +16,7 @@ allowBuilds:
 
 catalog:
   '@eslint/js': ^10.0.1
-  '@types/node': ^22.19.21
+  '@types/node': ^26.4.0
   '@typespec/compiler': ^1.13.0
   '@typespec/http': ^1.13.0
   '@typespec/json-schema': ^1.13.0
@@ -32,7 +32,7 @@ catalog:
   globals: ^17.0.0
   prettier: ^3.8.4
   ts-node: ^10.9.2
-  typescript: ^6.0.3
+  typescript: ^7.0.2
   typescript-eslint: ^8.61.1
   vitest: ^4.1.8
   zod: ^4.4.3
