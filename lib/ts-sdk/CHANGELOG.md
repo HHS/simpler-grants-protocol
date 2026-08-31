@@ -1,5 +1,12 @@
 # @common-grants/sdk
 
+## [0.7.2](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/sdk@0.7.1...@common-grants/sdk@0.7.2) (2026-08-31)
+
+
+### Bug Fixes
+
+* **sdk:** stop duplicating baseUrl path prefix in Client.get query params ([#1118](https://github.com/HHS/simpler-grants-protocol/issues/1118)) ([685a9f2](https://github.com/HHS/simpler-grants-protocol/commit/685a9f2ff51cbd68e1bbe46c4c965779115493e8))
+
 ## 0.7.1
 
 ### Patch Changes
