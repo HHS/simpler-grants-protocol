@@ -14,10 +14,20 @@ import { MOCK_API_BASE_PATH } from "./router";
  */
 const TRUTHY_VALUES = new Set(["1", "true", "yes", "on"]);
 
+/**
+ * Reads one raw gate value. Split out from `isMockApiEnabled` for the `/api`
+ * route, which cannot reach `process.env`: inside the deployed Worker it is
+ * empty, so the route gets the value inlined at build time (see
+ * `astro.config.mjs`) and parses it with this.
+ */
+export function isGateValueEnabled(value: string | undefined): boolean {
+  const raw = value?.trim().toLowerCase();
+  return raw !== undefined && TRUTHY_VALUES.has(raw);
+}
+
 /** True when `MOCK_API_ENABLED` is set to a truthy value (case-insensitive). */
 export function isMockApiEnabled(): boolean {
-  const raw = process.env.MOCK_API_ENABLED?.trim().toLowerCase();
-  return raw !== undefined && TRUTHY_VALUES.has(raw);
+  return isGateValueEnabled(process.env.MOCK_API_ENABLED);
 }
 
 /**
