@@ -192,6 +192,25 @@ describe("opportunities routes", () => {
       },
     );
 
+    // The id pattern accepts either case, and RFC 4122 compares UUIDs without
+    // regard to case, so the uppercase form must reach the same record.
+    it("answers 200 for the uppercase form of a stored id", async () => {
+      const response = await handleMockRequest(
+        new Request(
+          opportunitiesUrl(
+            "0.3.0",
+            `/${CANONICAL_OPPORTUNITY_ID.toUpperCase()}`,
+          ),
+        ),
+      );
+
+      expect(response.status).toBe(200);
+
+      const body = (await response.json()) as { data: { id: string } };
+
+      expect(body.data.id).toBe(CANONICAL_OPPORTUNITY_ID);
+    });
+
     it("echoes the requested oppId and matches the list item's shared fields, while adding the detail-only competitions field", async () => {
       const listResponse = await handleMockRequest(
         new Request(opportunitiesUrl("0.3.0")),

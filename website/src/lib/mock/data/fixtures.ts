@@ -645,9 +645,14 @@ export function shapeOpportunityForVersion(
   return shaped;
 }
 
-/** Looks up a fixture record by its exact id. */
+/**
+ * Looks up a fixture record by id, case-insensitively: UUIDs compare without
+ * regard to case (RFC 4122) and the handler's id pattern accepts either, so an
+ * uppercase form of a stored id must not read as missing.
+ */
 export function getById(id: string): Opportunity | undefined {
-  return OPPORTUNITY_FIXTURES.find((opp) => opp.id === id);
+  const wanted = id.toLowerCase();
+  return OPPORTUNITY_FIXTURES.find((opp) => opp.id.toLowerCase() === wanted);
 }
 
 /** Returns every fixture projected to the list (OpportunityBase) shape for a version. */
