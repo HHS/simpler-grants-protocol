@@ -191,10 +191,12 @@ describe("POST /v{version}/common-grants/applications/start", () => {
 
     expect(preV04Response.status).toBe(201);
 
+    // The response echoes the field back under the name that version uses.
     const preV04Body = (await preV04Response.json()) as {
-      data: { title: string };
+      data: Record<string, unknown>;
     };
-    expect(preV04Body.data.title).toBe("My legacy-named application");
+    expect(preV04Body.data.name).toBe("My legacy-named application");
+    expect(preV04Body.data).not.toHaveProperty("title");
 
     const v04Response = await runStart(VERSION, {
       competitionId: CANONICAL_COMPETITION_ID,
@@ -633,5 +635,91 @@ describe("PUT /v{version}/common-grants/applications/{appId}/forms/{formId} (wri
     );
 
     expect(response.status).toBe(404);
+  });
+});
+
+/**
+ * `title` is `@renamedFrom(v0_4, "name")` and `opportunityId` is
+ * `@added(v0_3)`, so what an application looks like on the wire depends on the
+ * version asked for. These assert against the per-version OpenAPI documents:
+ * the versioned JSON Schemas can't be used here because their generator does
+ * not apply renames (see `shapeApplicationForVersion`).
+ */
+describe("per-version application response shape", () => {
+  /** What each version calls the title field, per `openapi.{version}.yaml`. */
+  const TITLE_FIELD: Record<Version, "name" | "title"> = {
+    "0.1.0": "name",
+    "0.2.0": "name",
+    "0.3.0": "name",
+    "0.4.0": "title",
+  };
+
+  /** Versions whose `ApplicationBase` declares `opportunityId`. */
+  const HAS_OPPORTUNITY_ID: Record<Version, boolean> = {
+    "0.1.0": false,
+    "0.2.0": false,
+    "0.3.0": true,
+    "0.4.0": true,
+  };
+
+  /** The applications routes start at v0.2; v0.1 never reaches a handler. */
+  const SERVED: Version[] = ["0.2.0", "0.3.0", "0.4.0"];
+
+  it.each(SERVED)(
+    "names the title field as v%s documents it, on the detail route",
+    async (version) => {
+      const response = getApplication(CANONICAL_APPLICATION_ID, version);
+      const body = (await response.json()) as {
+        data: Record<string, unknown>;
+      };
+
+      const expected = TITLE_FIELD[version];
+      const absent = expected === "title" ? "name" : "title";
+
+      expect(typeof body.data[expected]).toBe("string");
+      expect(body.data).not.toHaveProperty(absent);
+    },
+  );
+
+  it.each(SERVED)(
+    "includes opportunityId only where v%s declares it, on the detail route",
+    async (version) => {
+      const response = getApplication(CANONICAL_APPLICATION_ID, version);
+      const body = (await response.json()) as {
+        data: Record<string, unknown>;
+      };
+
+      expect(Object.hasOwn(body.data, "opportunityId")).toBe(
+        HAS_OPPORTUNITY_ID[version],
+      );
+    },
+  );
+
+  it("shapes the records the search route returns, not just the detail route", async () => {
+    // Search is v0.3+, where the field is still `name`.
+    const body = await runSearchBody("0.3.0", {});
+    const items = body.items as Array<Record<string, unknown>>;
+
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      expect(typeof item.name).toBe("string");
+      expect(item).not.toHaveProperty("title");
+    }
+  });
+
+  it("shapes the record the submit route echoes back", async () => {
+    const response = await submitApplication(CANONICAL_APPLICATION_ID, "0.3.0");
+    const body = (await response.json()) as { data: Record<string, unknown> };
+
+    expect(response.status).toBe(200);
+    expect(typeof body.data.name).toBe("string");
+    expect(body.data).not.toHaveProperty("title");
+  });
+
+  it("leaves the v0.4 shape untouched", async () => {
+    const response = getApplication(CANONICAL_APPLICATION_ID, "0.4.0");
+    const body = (await response.json()) as { data: Record<string, unknown> };
+
+    expect(body.data).toEqual(getApplicationById(CANONICAL_APPLICATION_ID));
   });
 });

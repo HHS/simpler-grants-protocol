@@ -3,10 +3,13 @@
  * Writes are validate-and-echo and stateless: reserved ids and fixed
  * timestamps keep responses deterministic, and nothing is retained.
  *
- * Two spec quirks: the start request's title field is `name` before v0.4
- * (`@renamedFrom`), and `searchApplications` is published with query params —
- * likely a spec oversight — so the mock accepts both those and a JSON body
- * like every sibling search.
+ * Two spec quirks: the title field is `name` before v0.4 (`@renamedFrom`), on
+ * responses as well as on the start request, and `searchApplications` is
+ * published with query params — likely a spec oversight — so the mock accepts
+ * both those and a JSON body like every sibling search.
+ *
+ * Every application leaves here through `shapeApplicationForVersion`, so the
+ * response matches the version the caller asked for.
  */
 
 import {
@@ -14,6 +17,7 @@ import {
   allApplications,
   getApplicationById,
   getFormResponse,
+  shapeApplicationForVersion,
   type Application,
   type AppFormResponse,
 } from "../data/applications";
@@ -219,20 +223,25 @@ export async function startApplication(
     ]);
   }
 
-  return createdResponse({
-    id: DRAFT_APPLICATION_ID,
-    title: rawTitle as string,
-    competitionId: competition.id,
-    opportunityId: competition.opportunityId,
-    formResponses: {},
-    status: {
-      value: "inProgress",
-      description: "The application is in progress.",
-    },
-    submittedAt: null,
-    createdAt: ECHOED_AT,
-    lastModifiedAt: ECHOED_AT,
-  });
+  return createdResponse(
+    shapeApplicationForVersion(
+      {
+        id: DRAFT_APPLICATION_ID,
+        title: rawTitle as string,
+        competitionId: competition.id,
+        opportunityId: competition.opportunityId,
+        formResponses: {},
+        status: {
+          value: "inProgress",
+          description: "The application is in progress.",
+        },
+        submittedAt: null,
+        createdAt: ECHOED_AT,
+        lastModifiedAt: ECHOED_AT,
+      },
+      version,
+    ),
+  );
 }
 
 /**
@@ -240,13 +249,14 @@ export async function startApplication(
  * with its form responses and validation errors.
  */
 export function getApplication(appId: string, version: Version): Response {
-  void version;
   const lookup = lookupApplication(appId);
   if (!lookup.ok) {
     return lookup.response;
   }
 
-  return successResponse({ data: lookup.application });
+  return successResponse({
+    data: shapeApplicationForVersion(lookup.application, version),
+  });
 }
 
 /**
@@ -261,7 +271,6 @@ export async function submitApplication(
   appId: string,
   version: Version,
 ): Promise<Response> {
-  void version;
   const lookup = lookupApplication(appId);
   if (!lookup.ok) {
     return lookup.response;
@@ -278,15 +287,18 @@ export async function submitApplication(
   }
 
   return successResponse({
-    data: {
-      ...application,
-      status: {
-        value: "submitted",
-        description: "The application has been submitted.",
+    data: shapeApplicationForVersion(
+      {
+        ...application,
+        status: {
+          value: "submitted",
+          description: "The application has been submitted.",
+        },
+        submittedAt: ECHOED_AT,
+        lastModifiedAt: ECHOED_AT,
       },
-      submittedAt: ECHOED_AT,
-      lastModifiedAt: ECHOED_AT,
-    },
+      version,
+    ),
   });
 }
 
@@ -492,7 +504,9 @@ export async function searchApplications(
   }
 
   return successResponse({
-    items: pageOf(items, page, pageSize),
+    items: pageOf(items, page, pageSize).map((application) =>
+      shapeApplicationForVersion(application, version),
+    ),
     paginationInfo: paginationInfo(page, pageSize, items.length),
     sortInfo: {
       sortBy,

@@ -10,9 +10,10 @@ import {
   getCompetitionById,
   type Competition,
 } from "./competitions";
+import { isAtLeastVersion } from "./availability";
 import { CANONICAL_RECORD_ID } from "./ids";
 import { CANONICAL_FORM_ID, getFormById } from "./forms";
-import type { CustomField } from "./fixtures";
+import type { CustomField, Version } from "./fixtures";
 
 /** The status of an application (mirrors `Models.AppStatus`). */
 export interface AppStatus {
@@ -410,6 +411,69 @@ export const APPLICATION_FIXTURES: readonly Application[] = Object.freeze<
     lastModifiedAt: "2026-04-14T00:00:00Z",
   }),
 ]);
+
+/**
+ * First version carrying `opportunityId` (`@added(v0_3)` in
+ * `lib/core/lib/core/models/application.tsp`).
+ */
+const OPPORTUNITY_ID_MIN_VERSION: Version = "0.3.0";
+
+/**
+ * First version calling the title field `title`; before it the same field is
+ * `name` (`@renamedFrom(v0_4, "name")` on `Models.AppRef`).
+ */
+const TITLE_RENAMED_VERSION: Version = "0.4.0";
+
+/**
+ * An application as a given version puts it on the wire: `title` is `name`
+ * before v0.4, and `opportunityId` is absent before v0.3.
+ */
+export type WireApplication = Omit<Application, "title" | "opportunityId"> & {
+  title?: string;
+  name?: string;
+  opportunityId?: string;
+};
+
+/** Renames one key in place, keeping its position in the key order. */
+function renameKey(
+  source: Record<string, unknown>,
+  from: string,
+  to: string,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(source).map(([key, value]) => [
+      key === from ? to : key,
+      value,
+    ]),
+  );
+}
+
+/**
+ * Projects a fixture onto the shape a version documents. Without this the
+ * playground answers `title` at v0.2/v0.3 while the docs pane beside it shows
+ * `name`, which is the mismatch the mock exists to avoid.
+ *
+ * The conformance suite cannot catch a drift here: the versioned JSON Schema
+ * generator applies `@added`/`@removed` but not `@renamedFrom`, so every
+ * version's `ApplicationBase.yaml` still says `title`. The per-version wire
+ * contract lives in the OpenAPI documents, which is what these tests assert
+ * against.
+ */
+export function shapeApplicationForVersion(
+  application: Application,
+  version: Version,
+): WireApplication {
+  let shaped: Record<string, unknown> = { ...application };
+
+  if (!isAtLeastVersion(version, OPPORTUNITY_ID_MIN_VERSION)) {
+    delete shaped.opportunityId;
+  }
+  if (!isAtLeastVersion(version, TITLE_RENAMED_VERSION)) {
+    shaped = renameKey(shaped, "title", "name");
+  }
+
+  return shaped as WireApplication;
+}
 
 /** Looks up an application fixture by its exact id. */
 export function getApplicationById(id: string): Application | undefined {
