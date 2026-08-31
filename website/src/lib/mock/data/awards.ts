@@ -7,15 +7,27 @@
  * version shaping.
  */
 
-import { OPPORTUNITY_FIXTURES, type Money } from "./fixtures";
+import { OPPORTUNITY_FIXTURES, usd } from "./fixtures";
 import { APPLICATION_FIXTURES, type Application } from "./applications";
 import { CANONICAL_RECORD_ID } from "./ids";
 import {
+  CASCADE_WORKFORCE_ORG_ID,
+  COASTAL_RESEARCH_ORG_ID,
+  DOCUMENTED_ORGANIZATION_ID,
+  HRSA_ORG_ID,
+  LAKESIDE_ARTS_ORG_ID,
+  NSF_ORG_ID,
+  PRAIRIE_BROADBAND_ORG_ID,
   orgRefCollection,
   type Identifier,
   type OrgRefCollection,
 } from "./organizations";
-import type { CustomField, DateRangeEvent, SingleDateEvent } from "./fixtures";
+import type {
+  CustomField,
+  DateRangeEvent,
+  Money,
+  SingleDateEvent,
+} from "./fixtures";
 
 /** The lifecycle status of an award (mirrors `Models.AwdStatus`). */
 export interface AwdStatus {
@@ -115,20 +127,19 @@ export const CANONICAL_AWARD_ID = CANONICAL_RECORD_ID;
 /** The id published on the `Models.AwardBase` example itself. */
 export const DOCUMENTED_AWARD_ID = "01912a8b-7c3d-7894-abcd-ef1234567890";
 
-/** Organization ids referenced below, named for readability at the call sites. */
-const HRSA = "018f2e77-4b5c-7d2e-9f3a-bcdef1234567";
-const NSF = "018f2e77-5c6d-7e3f-8a4b-cdef12345678";
-const RIVERSIDE_CHC = "083b4567-e89d-42c8-a439-6c1234567890";
-const CASCADE_WORKFORCE = "018f2e77-6d7e-7f4a-9b5c-def123456789";
-const LAKESIDE_ARTS = "018f2e77-7e8f-7a5b-8c6d-ef1234567890";
-const PRAIRIE_BROADBAND = "018f2e77-8f90-7b6c-8d7e-f12345678901";
-const COASTAL_RESEARCH = "018f2e77-9012-7c7d-8e8f-123456789012";
+/**
+ * Organization ids referenced below, aliased for readability at the call
+ * sites. The values themselves live in `./organizations`, so they cannot
+ * drift from the records they name.
+ */
+const HRSA = HRSA_ORG_ID;
+const NSF = NSF_ORG_ID;
+const RIVERSIDE_CHC = DOCUMENTED_ORGANIZATION_ID;
+const CASCADE_WORKFORCE = CASCADE_WORKFORCE_ORG_ID;
+const LAKESIDE_ARTS = LAKESIDE_ARTS_ORG_ID;
+const PRAIRIE_BROADBAND = PRAIRIE_BROADBAND_ORG_ID;
+const COASTAL_RESEARCH = COASTAL_RESEARCH_ORG_ID;
 const EXAMPLE_ORG = CANONICAL_RECORD_ID;
-
-/** Builds a `Money` amount in USD. */
-function usd(amount: string): Money {
-  return { amount, currency: "USD" };
-}
 
 /** Builds a single-date award event. */
 function awardedOn(date: string): SingleDateEvent {

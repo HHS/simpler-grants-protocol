@@ -5,7 +5,7 @@
  * records rather than re-typing them.
  */
 
-import { CANONICAL_RECORD_ID } from "./ids";
+import { CANONICAL_RECORD_ID, DOCUMENTED_EXAMPLE_ID } from "./ids";
 import type { CustomField } from "./fixtures";
 
 /** A JSON Schema for a form's responses (mirrors `Models.FormJsonSchema`). */
@@ -77,7 +77,7 @@ export const CANONICAL_FORM_ID = CANONICAL_RECORD_ID;
  * The id published on the `Models.FormBase` example itself. Record 2 carries
  * it so an id copied out of the rendered example also resolves.
  */
-export const DOCUMENTED_FORM_ID = "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a";
+export const DOCUMENTED_FORM_ID = DOCUMENTED_EXAMPLE_ID;
 
 /** The applicant-details schema shared by the two general-purpose forms. */
 const APPLICANT_DETAILS_SCHEMA: FormJsonSchema = {

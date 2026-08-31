@@ -154,7 +154,7 @@ export interface Opportunity {
 }
 
 /** Convenience builder for a `Money` amount in USD. */
-function usd(amount: string): Money {
+export function usd(amount: string): Money {
   return { amount, currency: "USD" };
 }
 

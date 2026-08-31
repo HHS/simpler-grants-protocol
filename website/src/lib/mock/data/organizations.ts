@@ -164,6 +164,18 @@ export const CANONICAL_ORG_REVISION_ID = CANONICAL_RECORD_ID;
 export const DOCUMENTED_ORGANIZATION_ID =
   "083b4567-e89d-42c8-a439-6c1234567890";
 
+/**
+ * Ids of the organizations that other fixture modules cite as funders or
+ * recipients. Exported so those modules import one definition instead of
+ * re-typing the UUID, which no reference builder could catch drifting.
+ */
+export const HRSA_ORG_ID = "018f2e77-4b5c-7d2e-9f3a-bcdef1234567";
+export const NSF_ORG_ID = "018f2e77-5c6d-7e3f-8a4b-cdef12345678";
+export const CASCADE_WORKFORCE_ORG_ID = "018f2e77-6d7e-7f4a-9b5c-def123456789";
+export const LAKESIDE_ARTS_ORG_ID = "018f2e77-7e8f-7a5b-8c6d-ef1234567890";
+export const PRAIRIE_BROADBAND_ORG_ID = "018f2e77-8f90-7b6c-8d7e-f12345678901";
+export const COASTAL_RESEARCH_ORG_ID = "018f2e77-9012-7c7d-8e8f-123456789012";
+
 /** Builds an EIN identifier entry. */
 function ein(value: string): Identifier {
   return {
@@ -331,7 +343,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
   },
 
   {
-    id: "018f2e77-4b5c-7d2e-9f3a-bcdef1234567",
+    id: HRSA_ORG_ID,
     name: "Health Resources and Services Administration",
     orgType: {
       term: "Government agencies",
@@ -358,7 +370,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
   },
 
   {
-    id: "018f2e77-5c6d-7e3f-8a4b-cdef12345678",
+    id: NSF_ORG_ID,
     name: "National Science Foundation",
     orgType: {
       term: "Government agencies",
@@ -385,7 +397,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
   },
 
   {
-    id: "018f2e77-6d7e-7f4a-9b5c-def123456789",
+    id: CASCADE_WORKFORCE_ORG_ID,
     name: "Cascade Workforce Alliance",
     orgType: {
       term: "Employment services",
@@ -398,7 +410,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
           code: "org:grants.gov:system",
           url: "https://commongrants.org/registries/org-grants-gov-system",
         },
-        id: "018f2e77-6d7e-7f4a-9b5c-def123456789",
+        id: CASCADE_WORKFORCE_ORG_ID,
       },
       "org:us:ein": ein("345678901"),
       "org:us:uei": uei("CD2345678901"),
@@ -437,7 +449,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
   },
 
   {
-    id: "018f2e77-7e8f-7a5b-8c6d-ef1234567890",
+    id: LAKESIDE_ARTS_ORG_ID,
     name: "Lakeside Arts Collective",
     orgType: {
       term: "Arts and culture",
@@ -461,7 +473,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
   },
 
   {
-    id: "018f2e77-8f90-7b6c-8d7e-f12345678901",
+    id: PRAIRIE_BROADBAND_ORG_ID,
     name: "Prairie Broadband Cooperative",
     orgType: {
       term: "Business and industry",
@@ -486,7 +498,7 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
   },
 
   {
-    id: "018f2e77-9012-7c7d-8e8f-123456789012",
+    id: COASTAL_RESEARCH_ORG_ID,
     name: "Coastal Research Institute",
     orgType: {
       term: "Research institutes",
@@ -574,7 +586,7 @@ export const ORG_REVISION_FIXTURES: readonly OrgRevision[] = Object.freeze<
   },
   {
     id: "3d4e5f60-7182-4394-8d0e-1f2031425364",
-    orgId: "018f2e77-6d7e-7f4a-9b5c-def123456789",
+    orgId: CASCADE_WORKFORCE_ORG_ID,
     status: {
       value: "custom",
       customValue: "escalated",

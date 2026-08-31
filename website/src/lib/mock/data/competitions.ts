@@ -13,7 +13,7 @@ import {
   type FileAttachment,
   type Form,
 } from "./forms";
-import { CANONICAL_RECORD_ID } from "./ids";
+import { CANONICAL_RECORD_ID, DOCUMENTED_EXAMPLE_ID } from "./ids";
 import type {
   ApplicantType,
   CompetitionStatus,
@@ -51,7 +51,7 @@ export interface Competition {
 export const CANONICAL_COMPETITION_ID = CANONICAL_RECORD_ID;
 
 /** The id published on the `Models.CompetitionBase` example itself. */
-export const DOCUMENTED_COMPETITION_ID = "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a";
+export const DOCUMENTED_COMPETITION_ID = DOCUMENTED_EXAMPLE_ID;
 
 /** Builds a single-date competition event. */
 function dateEvent(name: string, date: string): SingleDateEvent {
