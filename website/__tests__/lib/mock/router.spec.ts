@@ -181,6 +181,32 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     expect(body.errors[0].message).toContain("added in v0.4.0");
   });
 
+  // The gate is driven by the RESOURCE_MIN_VERSION table, so every entry
+  // should behave alike; only awards was covered.
+  it.each([
+    { resource: "orgs", version: "0.3.0", addedIn: "0.4.0" },
+    { resource: "competitions", version: "0.1.0", addedIn: "0.2.0" },
+    { resource: "applications", version: "0.1.0", addedIn: "0.2.0" },
+    { resource: "forms", version: "0.1.0", addedIn: "0.2.0" },
+  ])(
+    "404s $resource at v$version, naming v$addedIn as the version that added it",
+    async ({ resource, version, addedIn }) => {
+      const response = await handleMockRequest(
+        new Request(
+          `https://docs.example/api/v${version}/common-grants/${resource}`,
+        ),
+      );
+
+      expect(response.status).toBe(404);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(body.errors[0].field).toBe("path");
+      expect(body.errors[0].message).toContain(`added in v${addedIn}`);
+    },
+  );
+
   // Regression: `[^/]*` in the route regex let a bare trailing slash reach
   // the detail handler with an empty id and answer 400 instead of 404.
   it.each([

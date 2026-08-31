@@ -112,6 +112,28 @@ describe("GET /v{version}/common-grants/orgs (list)", () => {
     expect(body.items[0].id).toBe(expected!.id);
   });
 
+  // `identifierFor` checks the named `OrgIds` keys first and then `otherIds`.
+  // Only the first path was covered, so a lookup by a registry the protocol
+  // does not model went untested.
+  it("finds an organization by a registry that lives under otherIds", async () => {
+    const expected = ORGANIZATION_FIXTURES.find(
+      (org) =>
+        org.identifiers?.otherIds?.["org:grants.gov:agency"]?.id === "HRSA",
+    );
+    expect(expected).toBeDefined();
+
+    const response = listOrganizations(
+      new Request(orgsUrl("?registry=org:grants.gov:agency&id=HRSA")),
+      VERSION,
+    );
+
+    expect(response.status).toBe(200);
+
+    const body = (await response.json()) as { items: Array<{ id: string }> };
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0].id).toBe(expected!.id);
+  });
+
   it("returns 400 with a {field: 'id', ...} error when registry is given without id", async () => {
     const response = listOrganizations(
       new Request(orgsUrl("?registry=org:us:ein")),
@@ -471,6 +493,42 @@ describe("POST /v{version}/common-grants/orgs/{orgId}/changes (submit)", () => {
     expect(location).toBeDefined();
     expect(location).not.toBeNull();
     expect(location!.endsWith(`/${ECHOED_REVISION_ID}`)).toBe(true);
+  });
+
+  // A pending change has not been applied, so `echoedRevision` deliberately
+  // gives it no `snapshot` — unlike the accepted revision a PATCH echoes.
+  it("omits the snapshot from a pending revision, and echoes the patch", async () => {
+    const patch = { mission: "Proposed mission" };
+    const response = await submitOrgChange(
+      CANONICAL_ORGANIZATION_ID,
+      new Request(orgsUrl(`/${CANONICAL_ORGANIZATION_ID}/changes`), {
+        method: "POST",
+        body: JSON.stringify(patch),
+        headers: { "Content-Type": "application/json" },
+      }),
+      VERSION,
+    );
+
+    const body = (await response.json()) as {
+      data: Record<string, unknown>;
+    };
+
+    expect(body.data).not.toHaveProperty("snapshot");
+    expect(body.data.patch).toEqual(patch);
+    // `orgId` is fixture bookkeeping, never part of the wire model.
+    expect(body.data).not.toHaveProperty("orgId");
+  });
+
+  // The mock stores nothing, so the id the Location header advertises does
+  // not resolve. Documented on ECHOED_REVISION_ID; pinned here.
+  it("advertises a Location whose change id then answers 404", async () => {
+    const response = getOrgChange(
+      CANONICAL_ORGANIZATION_ID,
+      ECHOED_REVISION_ID,
+      VERSION,
+    );
+
+    expect(response.status).toBe(404);
   });
 
   it("returns 404 for an unknown orgId", async () => {
