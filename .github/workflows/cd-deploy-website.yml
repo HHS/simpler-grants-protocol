@@ -47,12 +47,15 @@ jobs:
         run: pnpm --filter website build
 
       - name: Upload Pages artifact
+        # `dist/client`, not `dist`: the Cloudflare adapter splits the build
+        # output into `dist/client` (the prerendered site) and `dist/server`
+        # (the Worker). `dist` itself has no `index.html` at its root.
         # Nonblocking so an upload failure for one deploy target
         # doesn't take down the other one.
         continue-on-error: true
         uses: actions/upload-pages-artifact@v5
         with:
-          path: ./website/dist
+          path: ./website/dist/client
 
       - name: Upload build output
         # Shared with deploy-cloudflare so both targets ship the same build.
