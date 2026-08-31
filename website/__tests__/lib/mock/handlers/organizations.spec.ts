@@ -560,7 +560,7 @@ describe("GET /v{version}/common-grants/orgs/{orgId}/changes (list changes)", ()
 });
 
 describe("GET /v{version}/common-grants/orgs/{orgId}/changes/{changeId} (view change)", () => {
-  it("returns 200 for the id Swagger UI pre-fills into both path parameter boxes", () => {
+  it("returns 200 echoing the id Swagger UI pre-fills into both path parameter boxes", async () => {
     const response = getOrgChange(
       CANONICAL_ORGANIZATION_ID,
       CANONICAL_ORG_REVISION_ID,
@@ -568,14 +568,6 @@ describe("GET /v{version}/common-grants/orgs/{orgId}/changes/{changeId} (view ch
     );
 
     expect(response.status).toBe(200);
-  });
-
-  it("echoes the requested changeId in the response body", async () => {
-    const response = getOrgChange(
-      CANONICAL_ORGANIZATION_ID,
-      CANONICAL_ORG_REVISION_ID,
-      VERSION,
-    );
 
     const body = (await response.json()) as { data: { id: string } };
     expect(body.data.id).toBe(CANONICAL_ORG_REVISION_ID);

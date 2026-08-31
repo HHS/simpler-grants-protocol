@@ -10,7 +10,6 @@ import {
   DOCUMENTED_COMPETITION_ID,
   getCompetitionById,
 } from "@/lib/mock/data/competitions";
-import { getFormById } from "@/lib/mock/data/forms";
 import { getCompetition } from "@/lib/mock/handlers/competitions";
 import { RESERVED_MISSING_ID } from "@/lib/mock/data/ids";
 import type { Version } from "@/lib/mock/data/fixtures";
@@ -31,35 +30,9 @@ describe("COMPETITION_FIXTURES", () => {
     }
   });
 
-  it("embeds real form fixtures in forms.forms, not copies — every value resolves via getFormById", () => {
-    for (const competition of COMPETITION_FIXTURES) {
-      const forms = competition.forms.forms;
-      expect(Object.keys(forms).length).toBeGreaterThan(0);
-
-      for (const form of Object.values(forms)) {
-        const fixture = getFormById(form.id);
-        expect(fixture).toBeDefined();
-        expect(form).toEqual(fixture);
-      }
-    }
-  });
-
-  it("names keys of forms.forms in forms.validation.required, not form ids", () => {
-    for (const competition of COMPETITION_FIXTURES) {
-      const required = competition.forms.validation?.required;
-      if (!required) continue;
-
-      const formKeys = Object.keys(competition.forms.forms);
-      const formIds = Object.values(competition.forms.forms).map(
-        (form) => form.id,
-      );
-
-      for (const key of required) {
-        expect(formKeys).toContain(key);
-        expect(formIds).not.toContain(key);
-      }
-    }
-  });
+  // Embedded-form identity and the `validation.required` key rule are pinned
+  // in `data/cross-resource.spec.ts`, which checks them by object identity
+  // rather than deep equality and so catches strictly more.
 
   it("gives every fixture a status.value in open/closed/custom, with a customValue on every custom one", () => {
     for (const competition of COMPETITION_FIXTURES) {

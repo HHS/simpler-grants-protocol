@@ -18,11 +18,12 @@ import {
 const STATUS_VALUES = ["forecasted", "open", "closed", "custom"];
 
 describe("OPPORTUNITY_FIXTURES", () => {
-  // Pin raised deliberately from 8–12 when #1101 grew the set to 25 so
+  // Pin raised deliberately from 8 when #1101 grew the set to 25 so
   // pagination/sorting/filtering visibly bite; see the pageSize=20 test below.
-  it("contains between 24 and 30 detail-shaped records", () => {
+  // Only the floor carries meaning — an upper bound would just make every
+  // future fixture addition a test edit.
+  it("contains at least 24 detail-shaped records", () => {
     expect(OPPORTUNITY_FIXTURES.length).toBeGreaterThanOrEqual(24);
-    expect(OPPORTUNITY_FIXTURES.length).toBeLessThanOrEqual(30);
   });
 
   // Swagger UI pre-fills `oppId` with this id; without a matching fixture,

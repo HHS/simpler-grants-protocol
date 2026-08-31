@@ -495,7 +495,7 @@ describe("POST /v{version}/common-grants/applications/search", () => {
   /**
    * The rest of `readSearchRequest`: this route is the only one parsing JSON
    * out of the query string, so its failure modes and its precedence rule are
-   * behaviour no sibling search shares.
+   * behavior no sibling search shares.
    */
   describe("query-string parsing", () => {
     /** POSTs to `/search?{query}` with no body and returns the raw response. */
@@ -509,7 +509,9 @@ describe("POST /v{version}/common-grants/applications/search", () => {
     }
 
     it("returns 400 for a filters parameter that is not valid JSON", async () => {
-      const response = await runSearchQuery("filters=%7Bnot-json");
+      const response = await runSearchQuery(
+        `filters=${encodeURIComponent("{ this is not json")}`,
+      );
 
       expect(response.status).toBe(400);
 
