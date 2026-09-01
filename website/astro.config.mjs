@@ -25,6 +25,19 @@ export default defineConfig({
   // Sessions are unused, but a non-KV driver stops the adapter injecting a
   // `SESSION` KV binding, whose auto-provisioning fails on repeat preview uploads.
   session: { driver: sessionDrivers.lruCache() },
+  vite: {
+    define: {
+      // Bakes the `MOCK_API_ENABLED` gate into the Worker bundle, so the
+      // `/api` route cannot outlive the docs that advertise it. It has to be
+      // inlined: `process.env` is empty inside the deployed Worker, so a
+      // runtime read would report the gate as off even on the previews that do
+      // enable it. Left as the raw value, which `isGateValueEnabled` reads —
+      // the same parse the injector and the api-docs page get.
+      "import.meta.env.MOCK_API_ENABLED": JSON.stringify(
+        process.env.MOCK_API_ENABLED ?? "",
+      ),
+    },
+  },
   security: {
     // Left ON deliberately (#1078). This CSRF guard answers a bare 403 to a
     // cross-origin non-GET that takes no body, where the 3A Worker returned a

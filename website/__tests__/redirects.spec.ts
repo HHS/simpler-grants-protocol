@@ -58,6 +58,15 @@ describe("adapter-emitted _redirects", () => {
   let rules: RedirectRule[];
 
   beforeAll(() => {
+    // The bare read fails with an ENOENT that reads like a broken suite rather
+    // than a missing prerequisite, so say which command produces the file.
+    if (!fs.existsSync(REDIRECTS_PATH)) {
+      throw new Error(
+        `${REDIRECTS_PATH} does not exist. This suite checks built output — ` +
+          "run `pnpm --filter website build` before `pnpm --filter website test`.",
+      );
+    }
+
     rules = parseRedirectsFile(fs.readFileSync(REDIRECTS_PATH, "utf-8"));
   });
 

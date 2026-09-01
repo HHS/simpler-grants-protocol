@@ -1,14 +1,33 @@
-import { readdirSync, readFileSync, writeFileSync } from "fs";
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "fs";
 import { join } from "path";
 import { Paths } from "../lib/schema/paths";
-import { isMockApiEnabled, serverUrlFor } from "../lib/mock/docs-wiring";
+import {
+  MOCK_SPEC_DIR_NAME,
+  isMockApiEnabled,
+  serverUrlFor,
+} from "../lib/mock/docs-wiring";
+import {
+  SUPPORTED_VERSIONS,
+  isSupportedVersion,
+} from "../lib/mock/data/fixtures";
 
 /**
- * Build-time script that writes a `servers:` block pointing at the mock into
- * each rendered OpenAPI spec, which is how Swagger UI's "Try it out" finds it.
- * No-op unless `MOCK_API_ENABLED` is set (see `lib/mock/docs-wiring.ts`).
- * Injection is targeted string insertion, not a YAML parse/dump, which would
- * rewrite the whole file.
+ * Build-time script that copies each rendered OpenAPI spec into
+ * `public/openapi-mock/` with a `servers:` block pointing at the mock, which is
+ * how Swagger UI's "Try it out" finds it. No-op unless `MOCK_API_ENABLED` is
+ * set (see `lib/mock/docs-wiring.ts`). Injection is targeted string insertion,
+ * not a YAML parse/dump, which would rewrite the whole file.
+ *
+ * The copies live in a gitignored sibling directory rather than replacing
+ * `public/openapi/` in place: those specs are generated from the TypeSpec
+ * source and tracked, so rewriting them left the working tree carrying
+ * artifacts that must never be committed.
  */
 
 /** `openapi.0.4.0.yaml` — the emitted per-version spec files. */
@@ -50,6 +69,29 @@ export function injectServers(yamlText: string, serverUrl: string): string {
   return withoutExisting.replace(TOP_LEVEL_PATHS, () => `${block}paths:`);
 }
 
+/**
+ * Guards the drift this script can otherwise cause: it advertises a server for
+ * every emitted spec it finds, but the router only serves the versions the
+ * fixtures know how to shape. Without this, adding a protocol version to
+ * `lib/core` would ship a docs page whose every Execute answers 404, with
+ * nothing failing at build time to say so.
+ */
+export function assertMockServesVersion(
+  version: string,
+  filename: string,
+): void {
+  if (isSupportedVersion(version)) return;
+
+  throw new Error(
+    `${filename} would advertise ${serverUrlFor(version)}, which the mock router does not serve ` +
+      `(it serves ${SUPPORTED_VERSIONS.join(", ")}). Teach src/lib/mock/data/fixtures.ts to shape ` +
+      `v${version} — SUPPORTED_VERSIONS and shapeOpportunityForVersion — before enabling the mock on it.`,
+  );
+}
+
+/** Where the mock-advertising copies go. Gitignored; regenerated per build. */
+const MOCK_SPEC_DIR = join(Paths.PUBLIC_DIR, MOCK_SPEC_DIR_NAME);
+
 /** Outcome of a run, so callers (and tests) can assert the no-op path. */
 export interface InjectResult {
   /** True when `MOCK_API_ENABLED` was unset and nothing was written. */
@@ -60,10 +102,14 @@ export interface InjectResult {
 
 class MockServerInjector {
   /**
-   * Rewrites every versioned spec in `Paths.OPENAPI_DIR` to advertise the
-   * mock; skipped when the gate is off.
+   * Copies every versioned spec in `Paths.OPENAPI_DIR` into `MOCK_SPEC_DIR`
+   * advertising the mock; skipped when the gate is off.
    */
   static inject(): InjectResult {
+    // The copies belong to gated builds only, so an ungated one must not
+    // inherit a directory left behind by an earlier gated build.
+    rmSync(MOCK_SPEC_DIR, { recursive: true, force: true });
+
     if (!isMockApiEnabled()) {
       console.log(
         "MOCK_API_ENABLED not set — leaving OpenAPI specs untouched (no mock server injected).",
@@ -75,8 +121,7 @@ class MockServerInjector {
 
     // Two passes so writes are all-or-nothing: an anchor failure throws
     // before any file has been written.
-    const planned: { filename: string; specPath: string; updated: string }[] =
-      [];
+    const planned: { filename: string; updated: string }[] = [];
 
     for (const filename of readdirSync(Paths.OPENAPI_DIR).sort()) {
       const version = versionFromSpecFilename(filename);
@@ -84,13 +129,14 @@ class MockServerInjector {
         continue;
       }
 
-      const specPath = join(Paths.OPENAPI_DIR, filename);
+      assertMockServesVersion(version, filename);
+
       const serverUrl = serverUrlFor(version);
+      const source = join(Paths.OPENAPI_DIR, filename);
 
       planned.push({
         filename,
-        specPath,
-        updated: injectServers(readFileSync(specPath, "utf-8"), serverUrl),
+        updated: injectServers(readFileSync(source, "utf-8"), serverUrl),
       });
       console.log(`  ${filename} -> ${serverUrl}`);
     }
@@ -101,18 +147,15 @@ class MockServerInjector {
       );
     }
 
-    for (const { specPath, updated } of planned) {
-      writeFileSync(specPath, updated, "utf-8");
+    mkdirSync(MOCK_SPEC_DIR, { recursive: true });
+    for (const { filename, updated } of planned) {
+      writeFileSync(join(MOCK_SPEC_DIR, filename), updated, "utf-8");
     }
 
     const written = planned.map(({ filename }) => filename);
 
-    // `public/openapi/*.yaml` are TRACKED files rewritten in place — they must
-    // not be committed with the mock's `servers:` block.
-    console.log(`\n✓ Injected mock server into ${written.length} spec(s)`);
     console.log(
-      "⚠ public/openapi/*.yaml are tracked files and have been rewritten in place.\n" +
-        "  Do not commit them — run `git checkout -- website/public/openapi/` first.",
+      `\n✓ Wrote ${written.length} mock-advertising spec(s) to public/${MOCK_SPEC_DIR_NAME}/`,
     );
 
     return { skipped: false, written };

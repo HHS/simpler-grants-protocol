@@ -185,6 +185,16 @@ export async function searchOpportunities(
   const filters = body.filters ?? {};
   const sorting = body.sorting;
 
+  // The only field the filter passes below never re-check: a non-string would
+  // reach `.toLowerCase()` and answer 500 where every other malformed field
+  // answers 400.
+  if (body.search !== undefined && typeof body.search !== "string") {
+    errors.push({
+      field: "search",
+      message: `Must be a string, received: ${JSON.stringify(body.search)}`,
+    });
+  }
+
   validateSorting(sorting, VALID_SORT_BY, errors);
   validateArrayFilters(ARRAY_FILTER_FIELDS, filters, errors);
   for (const field of ["closeDateRange", ...MONEY_RANGE_FIELDS] as const) {

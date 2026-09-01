@@ -1,7 +1,7 @@
 ---
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import "swagger-ui-dist/swagger-ui.css";
-import { isMockApiEnabled } from "@/lib/mock/docs-wiring";
+import { isMockApiEnabled, specDirFor } from "@/lib/mock/docs-wiring";
 
 // Available OpenAPI versions (mirror of the emitted specs in public/openapi/)
 const availableVersions = [
@@ -15,6 +15,10 @@ const availableVersions = [
 // `lib/mock/docs-wiring` so the two can't disagree. Keeps Execute buttons off
 // builds that cannot serve `/api/*`.
 const tryItOutEnabled = isMockApiEnabled();
+
+// Gated builds load the injector's copies, which carry the `servers:` block;
+// every other build loads the untouched generated specs.
+const specDir = specDirFor(tryItOutEnabled);
 ---
 
 <StarlightPage frontmatter={{ title: "OpenAPI docs", tableOfContents: false }}>
@@ -31,7 +35,12 @@ const tryItOutEnabled = isMockApiEnabled();
     </label>
   </div>
 
-  <div id="swagger-ui" data-try-it-out={String(tryItOutEnabled)}></div>
+  <div
+    id="swagger-ui"
+    data-try-it-out={String(tryItOutEnabled)}
+    data-spec-dir={specDir}
+  >
+  </div>
 </StarlightPage>
 
 <style>
@@ -88,13 +97,14 @@ const tryItOutEnabled = isMockApiEnabled();
   import { resolveVersion } from "@/lib/api-docs-version";
 
   // Client scripts are bundled and can't close over frontmatter values, so the
-  // gate is read off the mount point.
+  // gate and the spec directory are read off the mount point.
   const mount = document.querySelector<HTMLElement>("#swagger-ui");
   const tryItOut = mount?.dataset.tryItOut === "true";
+  const specDir = mount?.dataset.specDir ?? "/openapi";
 
   const render = (version: string): void => {
     SwaggerUIBundle({
-      url: `/openapi/openapi.${version}.yaml`,
+      url: `${specDir}/openapi.${version}.yaml`,
       dom_id: "#swagger-ui",
       // Empty disables Execute entirely; the mock serves GET and POST only.
       supportedSubmitMethods: tryItOut ? ["get", "post"] : [],

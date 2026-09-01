@@ -192,6 +192,25 @@ describe("opportunities routes", () => {
       },
     );
 
+    // The id pattern accepts either case, and RFC 4122 compares UUIDs without
+    // regard to case, so the uppercase form must reach the same record.
+    it("answers 200 for the uppercase form of a stored id", async () => {
+      const response = await handleMockRequest(
+        new Request(
+          opportunitiesUrl(
+            "0.3.0",
+            `/${CANONICAL_OPPORTUNITY_ID.toUpperCase()}`,
+          ),
+        ),
+      );
+
+      expect(response.status).toBe(200);
+
+      const body = (await response.json()) as { data: { id: string } };
+
+      expect(body.data.id).toBe(CANONICAL_OPPORTUNITY_ID);
+    });
+
     it("echoes the requested oppId and matches the list item's shared fields, while adding the detail-only competitions field", async () => {
       const listResponse = await handleMockRequest(
         new Request(opportunitiesUrl("0.3.0")),
@@ -552,6 +571,35 @@ describe("opportunities routes", () => {
         expect(typeof body.message).toBe("string");
         expect(Array.isArray(body.errors)).toBe(true);
         expect(body.errors.length).toBeGreaterThan(0);
+      },
+    );
+
+    // A truthy non-string `search` used to reach `.toLowerCase()` and escape
+    // the handler as a 500, unlike every other malformed field.
+    it.each([
+      ["a number", 123],
+      ["an object", { q: "grant" }],
+      ["an array", ["grant"]],
+    ])(
+      "returns 400 with the protocol Error shape when search is %s",
+      async (_label, search) => {
+        const response = await handleMockRequest(
+          new Request(opportunitiesUrl("0.3.0", "/search"), {
+            method: "POST",
+            body: JSON.stringify({ search }),
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+
+        expect(response.status).toBe(400);
+
+        const body = (await response.json()) as {
+          status: number;
+          errors: { field: string }[];
+        };
+
+        expect(body.status).toBe(400);
+        expect(body.errors.map(({ field }) => field)).toContain("search");
       },
     );
 
