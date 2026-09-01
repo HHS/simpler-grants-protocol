@@ -85,9 +85,14 @@ jobs:
 
       - name: Deploy to Cloudflare Worker
         # Uploads a new version of the Worker named in website/wrangler.jsonc
-        # (common-grants) and switches live traffic to it. PR previews are versions of this same Worker
+        # (common-grants) and switches live traffic to it. PR previews are versions of this same Worker.
+        #
+        # `--config dist/server/wrangler.json` (the same config the preview
+        # upload uses): the checked-in wrangler.jsonc is the adapter's INPUT and
+        # describes an assets-only Worker with no `main`, so deploying it
+        # directly would ship the static site without its Worker entrypoint.
         working-directory: ./website
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm dlx wrangler@4 deploy
+        run: pnpm dlx wrangler@4 deploy --config dist/server/wrangler.json

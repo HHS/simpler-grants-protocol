@@ -15,17 +15,32 @@ set -euo pipefail
 # See https://developers.cloudflare.com/workers/configuration/previews/#rules-and-limitations
 #
 # Usage:
-#   <path to>/upload-worker-preview.sh <alias> <message>
+#   <path to>/upload-worker-preview.sh <alias> <message> [config]
 #
 # Example, from website/:
 #   ../.github/scripts/upload-worker-preview.sh pr-1079 "PR #1079 @ 38d81c1"
+#
+# `config` is an optional wrangler config path. The website passes the
+# build-generated `dist/server/wrangler.json` (#1078), since the checked-in
+# `website/wrangler.jsonc` deliberately omits `main`.
 #
 # Exit codes:
 #   0 = version uploaded and preview URL found
 #   1 = bad arguments, wrangler failure, or no preview URL in wrangler's output
 
-ALIAS="${1:?usage: upload-worker-preview.sh <alias> <message>}"
-MESSAGE="${2:?usage: upload-worker-preview.sh <alias> <message>}"
+ALIAS="${1:?usage: upload-worker-preview.sh <alias> <message> [config]}"
+MESSAGE="${2:?usage: upload-worker-preview.sh <alias> <message> [config]}"
+CONFIG="${3:-}"
+
+# An array so an empty CONFIG contributes no argument at all.
+config_args=()
+if [[ -n "$CONFIG" ]]; then
+  if [[ ! -f "$CONFIG" ]]; then
+    echo "::error::wrangler config '$CONFIG' not found. Did the build run?"
+    exit 1
+  fi
+  config_args=(--config "$CONFIG")
+fi
 
 # The label wrangler prints before the alias URL. It's the only machine-readable
 # handle on the URL, so a reworded label has to fail loudly rather than yield an
@@ -38,6 +53,7 @@ LABEL="Version Preview Alias URL"
 # tee keeps wrangler's output in the CI log while capturing it for parsing
 # pipefail (set above) makes a wrangler failure fail this script as well
 pnpm dlx wrangler@4 versions upload \
+  "${config_args[@]+"${config_args[@]}"}" \
   --preview-alias "$ALIAS" \
   --message "$MESSAGE" 2>&1 | tee upload.log
 

@@ -1,0 +1,88 @@
+/**
+ * Regenerates `golden-envelopes.json` from the 3A standalone Worker (#1078),
+ * which lives on `karina/1077-cloudflareworkermock`, not this branch. Before
+ * capturing, copy this branch's current fixture data over the worktree's so
+ * both hosts serve the same records.
+ *
+ * Usage (from `website/`):
+ *
+ *   git worktree add /tmp/3a-worktree karina/1077-cloudflareworkermock
+ *   pnpm exec tsx __tests__/lib/mock/__fixtures__/capture-golden.ts \
+ *     /tmp/3a-worktree/mock-api/src/index.ts
+ *
+ * The module path is an argument so `tsc` does not try to resolve it.
+ */
+
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+import { REQUEST_MATRIX } from "./request-matrix";
+
+/** Host used for capture; nothing in the envelopes echoes the origin. */
+const CAPTURE_ORIGIN = "https://mock.example";
+
+/** The Worker's default export, narrowed to the one method used here. */
+interface WorkerModule {
+  default: { fetch(request: Request): Promise<Response> };
+}
+
+export interface GoldenEnvelope {
+  status: number;
+  contentType: string | null;
+  /** Raw response text — never re-serialized, so key order is preserved. */
+  body: string;
+}
+
+/** Replays the matrix against `worker` and returns entries keyed by case name. */
+export async function captureGoldenEnvelopes(
+  worker: WorkerModule["default"],
+): Promise<Record<string, GoldenEnvelope>> {
+  const captured: Record<string, GoldenEnvelope> = {};
+
+  for (const testCase of REQUEST_MATRIX) {
+    const request = new Request(`${CAPTURE_ORIGIN}${testCase.path}`, {
+      method: testCase.method,
+      body: testCase.body,
+      headers:
+        testCase.body === undefined
+          ? undefined
+          : { "Content-Type": "application/json" },
+    });
+    const response = await worker.fetch(request);
+
+    captured[testCase.name] = {
+      status: response.status,
+      contentType: response.headers.get("Content-Type"),
+      body: await response.text(),
+    };
+  }
+
+  return captured;
+}
+
+async function main(): Promise<void> {
+  const workerPath = process.argv[2];
+  if (!workerPath) {
+    console.error(
+      "Usage: tsx capture-golden.ts <path to mock-api/src/index.ts on karina/1077-cloudflareworkermock>",
+    );
+    process.exit(1);
+  }
+
+  const worker = (await import(path.resolve(workerPath))) as WorkerModule;
+  const captured = await captureGoldenEnvelopes(worker.default);
+
+  const outputPath = path.join(import.meta.dirname, "golden-envelopes.json");
+  await writeFile(
+    outputPath,
+    `${JSON.stringify(captured, null, 2)}\n`,
+    "utf-8",
+  );
+
+  console.log(
+    `Captured ${Object.keys(captured).length} envelopes to ${outputPath}`,
+  );
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await main();
+}

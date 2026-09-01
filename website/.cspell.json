@@ -59,7 +59,22 @@
     "categoricals",
     "withastro",
     "PKCE",
-    "frontends"
+    "frontends",
+    "cutover",
+    "preflights",
+    "prerender",
+    "prerendered",
+    "prerendering",
+    "prerenders",
+    "productionized",
+    "productionizing",
+    "timebox",
+    "undercounted",
+    "underserved",
+    "ungated",
+    "unstub",
+    "workerd",
+    "worktree"
   ],
   "ignoreWords": [
     "opblock",
@@ -112,7 +127,11 @@
     "allof",
     "pypi",
     "Pypi",
-    "functools"
+    "functools",
+    "cloudflareworkermock",
+    "vabc",
+    "wyman",
+    "widal001"
   ],
   "import": []
 }

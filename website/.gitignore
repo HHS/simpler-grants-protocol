@@ -11,6 +11,8 @@ tsp-output/
 # generated json cache
 cache/
 public/schemas/yaml/versions/**
+# mock-advertising copies of the OpenAPI specs (gated builds only)
+public/openapi-mock/
 .docs/*
 
 # dependencies
