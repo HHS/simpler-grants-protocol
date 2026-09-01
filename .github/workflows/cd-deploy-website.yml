@@ -11,18 +11,16 @@ on:
   # Allows us to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
 
-# Serialize whole runs (build + deploys) so a slow older build can't deploy
+# Serialize whole runs (build + deploy) so a slow older build can't deploy
 # after a newer one. The default single pending slot skips stale intermediate
 # runs; only the newest queued run deploys.
 concurrency:
   group: deploy-website-${{ github.ref }}
   cancel-in-progress: false
 
-# Allow this job to clone the repo and create a page deployment
+# Allow this job to clone the repo
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   build:
@@ -46,19 +44,9 @@ jobs:
       - name: Build website
         run: pnpm --filter website build
 
-      - name: Upload Pages artifact
-        # Nonblocking so an upload failure for one deploy target
-        # doesn't take down the other one.
-        continue-on-error: true
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: ./website/dist
-
       - name: Upload build output
-        # Shared with deploy-cloudflare so both targets ship the same build.
-        # Nonblocking so an upload failure for one deploy target
-        # doesn't take down the other one.
-        continue-on-error: true
+        # Handed to deploy-cloudflare so the deploy ships this exact build
+        # instead of rebuilding it.
         uses: actions/upload-artifact@v7
         with:
           name: website-build
@@ -66,26 +54,11 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  deploy-github-pages:
-    needs: build
-    runs-on: ubuntu-latest
-    # Only deploy from main branch
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
-
-  # Parallel production deploy to the shared `common-grants` Cloudflare Worker
-  # (beta.commongrants.org) during the GH Pages deploy
+  # Production deploy to the shared `common-grants` Cloudflare Worker. Serves
+  # beta.commongrants.org until the DNS cutover points commongrants.org here.
   deploy-cloudflare:
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     # Only deploy from main branch
     if: github.ref == 'refs/heads/main'
     environment:
