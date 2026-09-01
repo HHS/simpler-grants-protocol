@@ -185,12 +185,11 @@ const edgeCases: MatrixCase[] = [
   },
 
   // --- route misses (these quote the request path back; see `pathEchoing`) ---
-  {
-    name: "route-miss-other-resource",
-    method: "GET",
-    path: "/v0.4.0/common-grants/awards",
-    pathEchoing: true,
-  },
+  //
+  // `route-miss-other-resource` (GET /awards, expecting a 404) was retired
+  // when #334 made awards a served route, and not replaced: no unserved path
+  // now yields the same bytes on both hosts, since the Worker's route-miss
+  // message named its own surface. Pinned structurally in `router.spec.ts`.
   {
     name: "route-miss-unsupported-method",
     method: "PUT",

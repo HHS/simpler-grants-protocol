@@ -1,16 +1,12 @@
 /**
- * Deterministic, fixture-backed handlers for the opportunity list, detail, and
- * search endpoints. Bodies are static projections of `OPPORTUNITY_FIXTURES`,
- * so repeat calls return identical results.
+ * Fixture-backed handlers for the award list, detail, and search endpoints.
+ * The `opportunityId` filter matches on the referenced opportunity's id.
+ * Awards exist only in v0.4, so there is no version shaping — `version` is
+ * taken only to keep one handler signature.
  */
 
-import {
-  allForVersion,
-  getById,
-  shapeOpportunityForVersion,
-  type Opportunity,
-  type Version,
-} from "../data/fixtures";
+import { allAwards, getAwardById, type Award } from "../data/awards";
+import type { Version } from "../data/fixtures";
 import {
   errorResponse,
   successResponse,
@@ -36,44 +32,35 @@ import {
   validateArrayFilters,
   validateSorting,
   type DateRangeFilter,
+  type Money,
   type MoneyRangeFilter,
   type StringArrayFilter,
 } from "../http/query";
 
-/** Wire values of `Models.OppSortBy` (`lib/core/lib/core/models/opportunity/search.tsp`). */
+/** Wire values of `Models.AwdSortBy` (`lib/core/lib/core/models/award.tsp`). */
 const VALID_SORT_BY = new Set([
   "lastModifiedAt",
   "createdAt",
   "title",
   "status.value",
-  "keyDates.closeDate",
-  "funding.maxAwardAmount",
-  "funding.minAwardAmount",
-  "funding.totalAmountAvailable",
-  "funding.estimatedAwardCount",
+  "keyDates.awardDate",
+  "funding.awardedAmount",
   "custom",
 ]);
 
-/** The string-array filter fields of `Models.OppFilters`. */
-const ARRAY_FILTER_FIELDS = ["status"] as const;
+/** The string-array filter fields of `Models.AwdDefaultFilters`. */
+const ARRAY_FILTER_FIELDS = ["status", "opportunityId"] as const;
 
-/** The money-range filter fields of `Models.OppFilters`. */
-const MONEY_RANGE_FIELDS = [
-  "totalFundingAvailableRange",
-  "minAwardAmountRange",
-  "maxAwardAmountRange",
-] as const;
-
-interface OppFilters {
+/** Filters accepted on `POST /awards/search` (`Models.AwdFilters`). */
+interface AwdFilters {
   status?: StringArrayFilter;
-  closeDateRange?: DateRangeFilter;
-  totalFundingAvailableRange?: MoneyRangeFilter;
-  minAwardAmountRange?: MoneyRangeFilter;
-  maxAwardAmountRange?: MoneyRangeFilter;
+  opportunityId?: StringArrayFilter;
+  awardDateRange?: DateRangeFilter;
+  awardedAmountRange?: MoneyRangeFilter;
   customFilters?: Record<string, unknown>;
 }
 
-interface OppSorting {
+interface AwdSorting {
   sortBy: string;
   customSortBy?: string;
   sortOrder?: string;
@@ -81,46 +68,55 @@ interface OppSorting {
 
 interface SearchRequestBody {
   search?: string;
-  filters?: OppFilters;
-  sorting?: OppSorting;
+  filters?: AwdFilters;
+  sorting?: AwdSorting;
   pagination?: { page?: number; pageSize?: number };
 }
 
-/** Extracts the field an `OppSortBy` wire value sorts on, as a string or number. */
-function sortKey(opp: Opportunity, sortBy: string): string | number {
+/** Extracts the field an `AwdSortBy` wire value sorts on. */
+function sortKey(award: Award, sortBy: string): string | number {
   switch (sortBy) {
     case "lastModifiedAt":
-      return new Date(opp.lastModifiedAt).getTime();
+      return new Date(award.lastModifiedAt).getTime();
     case "createdAt":
-      return new Date(opp.createdAt).getTime();
+      return new Date(award.createdAt).getTime();
     case "title":
-      return opp.title;
+      return award.title;
     case "status.value":
-      return opp.status.value;
-    case "keyDates.closeDate":
-      return dateTime(opp.keyDates?.closeDate?.date) ?? 0;
-    case "funding.maxAwardAmount":
-      return moneyAmount(opp.funding?.maxAwardAmount) ?? 0;
-    case "funding.minAwardAmount":
-      return moneyAmount(opp.funding?.minAwardAmount) ?? 0;
-    case "funding.totalAmountAvailable":
-      return moneyAmount(opp.funding?.totalAmountAvailable) ?? 0;
-    case "funding.estimatedAwardCount":
-      return opp.funding?.estimatedAwardCount ?? 0;
+      return award.status.value;
+    case "keyDates.awardDate":
+      return dateTime(award.keyDates?.awardDate?.date) ?? 0;
+    case "funding.awardedAmount":
+      return moneyAmount(award.funding?.awardedAmount) ?? 0;
     default:
       // "custom" (application-defined field) - no built-in ordering to apply.
       return 0;
   }
 }
 
+/** The value an array filter matches against, per filter field name. */
+function arrayFilterValue(
+  award: Award,
+  field: (typeof ARRAY_FILTER_FIELDS)[number],
+): string {
+  // `opportunityId` matches on the referenced opportunity's id; an award with
+  // no reference behaves like any absent scalar.
+  return field === "status"
+    ? award.status.value
+    : (award.opportunity?.id ?? "");
+}
+
+/** The `Money` field a money-range filter reads, per filter field name. */
+function moneyFilterValue(award: Award): Money | undefined {
+  return award.funding?.awardedAmount;
+}
+
 /**
- * `GET /v{version}/common-grants/opportunities` — the paginated list, ordered
+ * `GET /v{version}/common-grants/awards` — the paginated list, ordered
  * newest-modified first.
  */
-export function listOpportunities(
-  request: Request,
-  version: Version,
-): Response {
+export function listAwards(request: Request, version: Version): Response {
+  void version;
   const pagination = resolveQueryPagination(request);
   if (!pagination.ok) {
     return errorResponse(
@@ -132,8 +128,8 @@ export function listOpportunities(
   const { page, pageSize } = pagination;
 
   const sorted = orderBy(
-    allForVersion(version),
-    (opp) => sortKey(opp, "lastModifiedAt"),
+    allAwards(),
+    (award) => sortKey(award, "lastModifiedAt"),
     "desc",
   );
 
@@ -144,37 +140,36 @@ export function listOpportunities(
 }
 
 /**
- * `GET /v{version}/common-grants/opportunities/{oppId}` — a single record. The
- * id is validated here, not in the router, so a malformed id answers 400
- * rather than a route miss.
+ * `GET /v{version}/common-grants/awards/{awdId}` — a single record. A
+ * malformed id answers 400, not a route miss.
  */
-export function getOpportunity(oppId: string, version: Version): Response {
-  if (!isUuid(oppId)) {
-    return errorResponse(400, "Invalid opportunity id", [
-      { field: "oppId", message: "Must be a valid UUID" },
+export function getAward(awdId: string, version: Version): Response {
+  void version;
+  if (!isUuid(awdId)) {
+    return errorResponse(400, "Invalid award id", [
+      { field: "awdId", message: "Must be a valid UUID" },
     ]);
   }
 
-  const opp = getById(oppId);
-  if (!opp) {
-    return errorResponse(404, "Opportunity not found", [
-      { field: "oppId", message: `No opportunity found with id ${oppId}` },
+  const award = getAwardById(awdId);
+  if (!award) {
+    return errorResponse(404, "Award not found", [
+      { field: "awdId", message: `No award found with id ${awdId}` },
     ]);
   }
 
-  return successResponse({
-    data: shapeOpportunityForVersion(opp, version, "detail"),
-  });
+  return successResponse({ data: award });
 }
 
 /**
- * `POST /v{version}/common-grants/opportunities/search` — filtered, sorted,
- * paginated search over the same fixture set.
+ * `POST /v{version}/common-grants/awards/search` — filtered, sorted, paginated
+ * search over the same fixture set.
  */
-export async function searchOpportunities(
+export async function searchAwards(
   request: Request,
   version: Version,
 ): Promise<Response> {
+  void version;
   const parsed = await readJsonObjectBody(request);
   if (!parsed.ok) {
     return parsed.response;
@@ -185,19 +180,11 @@ export async function searchOpportunities(
   const filters = body.filters ?? {};
   const sorting = body.sorting;
 
-  // The only field the filter passes below never re-check: a non-string would
-  // reach `.toLowerCase()` and answer 500 where every other malformed field
-  // answers 400.
-  if (body.search !== undefined && typeof body.search !== "string") {
-    errors.push({
-      field: "search",
-      message: `Must be a string, received: ${JSON.stringify(body.search)}`,
-    });
-  }
-
   validateSorting(sorting, VALID_SORT_BY, errors);
+
   validateArrayFilters(ARRAY_FILTER_FIELDS, filters, errors);
-  for (const field of ["closeDateRange", ...MONEY_RANGE_FIELDS] as const) {
+
+  for (const field of ["awardDateRange", "awardedAmountRange"] as const) {
     const filter = filters[field];
     if (!filter) continue;
     if (!VALID_RANGE_OPERATORS.has(filter.operator)) {
@@ -218,9 +205,8 @@ export async function searchOpportunities(
       });
       continue;
     }
-    // Validate the bounds themselves; a malformed bound must not be
-    // silently dropped.
-    const isDateRange = field === "closeDateRange";
+    // A malformed bound silently dropped would contradict the filter asked for.
+    const isDateRange = field === "awardDateRange";
     for (const bound of ["min", "max"] as const) {
       const value = filter.value[bound];
       if (value === undefined) continue;
@@ -243,8 +229,8 @@ export async function searchOpportunities(
   if (!pagination.ok) {
     errors.push(...pagination.errors);
   }
-  // The defaults are unreachable: invalid pagination pushed errors above, and
-  // the guard below returns before they are used.
+  // Unreachable defaults: invalid pagination pushed errors, so the guard
+  // below returns first.
   const { page, pageSize } = pagination.ok
     ? pagination
     : { page: DEFAULT_PAGE, pageSize: DEFAULT_PAGE_SIZE };
@@ -253,47 +239,33 @@ export async function searchOpportunities(
     return errorResponse(400, "Invalid search request", errors);
   }
 
-  let items = allForVersion(version);
+  let items = allAwards();
 
   if (body.search) {
     const q = body.search.toLowerCase();
     items = items.filter(
-      (opp) =>
-        opp.title.toLowerCase().includes(q) ||
-        opp.description.toLowerCase().includes(q),
+      (award) =>
+        award.title.toLowerCase().includes(q) ||
+        award.description.toLowerCase().includes(q),
     );
   }
-  if (filters.status) {
-    items = applyStringArrayFilter(
-      items,
-      filters.status,
-      (opp) => opp.status.value,
+  for (const field of ARRAY_FILTER_FIELDS) {
+    const filter = filters[field];
+    if (!filter) continue;
+    items = applyStringArrayFilter(items, filter, (award) =>
+      arrayFilterValue(award, field),
     );
   }
-  if (filters.closeDateRange) {
-    items = applyDateRangeFilter(items, filters.closeDateRange, (opp) =>
-      dateTime(opp.keyDates?.closeDate?.date),
+  if (filters.awardDateRange) {
+    items = applyDateRangeFilter(items, filters.awardDateRange, (award) =>
+      dateTime(award.keyDates?.awardDate?.date),
     );
   }
-  if (filters.totalFundingAvailableRange) {
+  if (filters.awardedAmountRange) {
     items = applyMoneyRangeFilter(
       items,
-      filters.totalFundingAvailableRange,
-      (opp) => opp.funding?.totalAmountAvailable,
-    );
-  }
-  if (filters.minAwardAmountRange) {
-    items = applyMoneyRangeFilter(
-      items,
-      filters.minAwardAmountRange,
-      (opp) => opp.funding?.minAwardAmount,
-    );
-  }
-  if (filters.maxAwardAmountRange) {
-    items = applyMoneyRangeFilter(
-      items,
-      filters.maxAwardAmountRange,
-      (opp) => opp.funding?.maxAwardAmount,
+      filters.awardedAmountRange,
+      moneyFilterValue,
     );
   }
 
@@ -307,11 +279,11 @@ export async function searchOpportunities(
         : "Custom sort requested without customSortBy; results are unsorted.",
     );
   } else {
-    items = orderBy(items, (opp) => sortKey(opp, sortBy), sortOrder);
+    items = orderBy(items, (award) => sortKey(award, sortBy), sortOrder);
   }
 
-  // `customFilters` are implementation-defined: the mock echoes them but does
-  // not apply them, and says so via `filterInfo.errors`.
+  // `filterInfo.errors` is the spec's channel for non-fatal filter problems.
+  // `customFilters` are echoed but not applied, so say so.
   const filterErrors: string[] = [];
   const customFilterNames = Object.keys(filters.customFilters ?? {});
   if (customFilterNames.length > 0) {

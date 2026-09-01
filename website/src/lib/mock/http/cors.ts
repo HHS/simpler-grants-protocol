@@ -6,11 +6,12 @@
 
 /**
  * `X-API-Key` and `Authorization` are listed because the TS SDK sends them
- * when auth is configured; a preflight must name non-simple headers.
+ * when auth is configured; a preflight must name non-simple headers. The
+ * method list must track the router's.
  */
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, X-API-Key, Authorization",
   "Access-Control-Max-Age": "86400",
 };

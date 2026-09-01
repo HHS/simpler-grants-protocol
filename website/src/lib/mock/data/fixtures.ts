@@ -4,6 +4,8 @@
  * `shapeOpportunityForVersion` projects them down per version and variant.
  */
 
+import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
+
 /**
  * Protocol versions the fixture can shape, matching the specs the docs site
  * publishes. v0.4.0 left the opportunity models untouched, so it shapes
@@ -152,7 +154,7 @@ export interface Opportunity {
 }
 
 /** Convenience builder for a `Money` amount in USD. */
-function usd(amount: string): Money {
+export function usd(amount: string): Money {
   return { amount, currency: "USD" };
 }
 
@@ -194,20 +196,22 @@ const programCode = (value: string): CustomField => ({
 /**
  * The id the specs publish as the `uuid` example, which Swagger UI pre-fills
  * into the `oppId` box. A fixture record MUST carry this id and mirror the
- * spec's published example values.
+ * spec's published example values. The value lives in `./ids` as
+ * `CANONICAL_RECORD_ID`; this name is the alias the existing suites and the
+ * golden matrix address.
  */
-export const CANONICAL_OPPORTUNITY_ID = "30a12e5e-5940-4c08-921c-17a8960fcf4b";
+export const CANONICAL_OPPORTUNITY_ID = CANONICAL_RECORD_ID;
 
 /**
  * A well-formed UUID reserved for demonstrating the 404 branch — it must never
  * be given to a record.
  */
-export const RESERVED_MISSING_OPPORTUNITY_ID =
-  "00000000-0000-0000-0000-000000000000";
+export const RESERVED_MISSING_OPPORTUNITY_ID = RESERVED_MISSING_ID;
 
 /**
- * 11 opportunities spanning all four statuses, varied funding amounts, and
- * varied close dates, so filtering and sorting visibly change results.
+ * The fixture set: 25 opportunities, enough for a real second page at the
+ * docs' example page size of 20. The canonical record must carry the newest
+ * `lastModifiedAt` so it sorts first under the default ordering.
  */
 export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   // ---- The spec's own documented example (see CANONICAL_OPPORTUNITY_ID) ----
@@ -617,6 +621,465 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
     ],
     createdAt: "2024-04-01T00:00:00Z",
     lastModifiedAt: "2024-11-01T00:00:00Z",
+  },
+  // ---- Growth records (#1101). Keep every `lastModifiedAt` before the
+  // canonical record's, and keep all amounts USD (a test pins that a
+  // EUR-denominated bound matches zero records). ----
+  {
+    id: "8091a2b3-c4d5-46e7-8293-9d0e1f203142",
+    title: "Urban Tree Canopy Grant",
+    status: { value: "open", description: "Currently accepting applications" },
+    description:
+      "Planting and maintaining urban tree canopy in heat-vulnerable neighborhoods.",
+    funding: {
+      totalAmountAvailable: usd("900000.00"),
+      minAwardAmount: usd("25000.00"),
+      maxAwardAmount: usd("150000.00"),
+      minAwardCount: 4,
+      maxAwardCount: 15,
+      estimatedAwardCount: 8,
+    },
+    keyDates: {
+      postDate: postOn("2025-03-15"),
+      closeDate: closeOn("2025-10-15"),
+    },
+    acceptedApplicantTypes: [
+      { value: "government_municipal", description: "City governments" },
+      {
+        value: "non_profit_with_501c3",
+        description: "Urban forestry non-profits",
+      },
+    ],
+    customFields: {
+      legacyId: legacyId(12348),
+      programCode: programCode("URBAN-TREE"),
+    },
+    createdAt: "2025-03-15T00:00:00Z",
+    lastModifiedAt: "2025-03-20T00:00:00Z",
+  },
+  {
+    id: "91a2b3c4-d5e6-47f8-93a4-0e1f20314253",
+    title: "Rural Health Clinic Modernization",
+    status: { value: "open", description: "Currently accepting applications" },
+    description:
+      "Modernizing facilities and equipment at rural health clinics.",
+    funding: {
+      totalAmountAvailable: usd("3200000.00"),
+      minAwardAmount: usd("100000.00"),
+      maxAwardAmount: usd("400000.00"),
+      estimatedAwardCount: 8,
+    },
+    keyDates: {
+      postDate: postOn("2025-04-01"),
+      closeDate: closeOn("2025-12-01"),
+    },
+    acceptedApplicantTypes: [
+      {
+        value: "non_profit_with_501c3",
+        description: "Non-profit clinic operators",
+      },
+      { value: "government_county", description: "County health departments" },
+    ],
+    competitions: [
+      {
+        id: "c3c4d5e6-f708-4192-8c3d-4e5f6a7b8c92",
+        opportunityId: "91a2b3c4-d5e6-47f8-93a4-0e1f20314253",
+        title: "Rural Health Clinic Modernization — FY25 Round",
+        description: "The fiscal-year 2025 application round.",
+        status: { value: "open", description: "Accepting applications" },
+        keyDates: { closeDate: closeOn("2025-12-01") },
+      },
+    ],
+    createdAt: "2025-04-01T00:00:00Z",
+    lastModifiedAt: "2025-04-10T00:00:00Z",
+  },
+  {
+    id: "a2b3c4d5-e6f7-4809-84b5-1f2031425364",
+    title: "Watershed Restoration Partnership",
+    status: { value: "open", description: "Currently accepting applications" },
+    description:
+      "Restoring degraded watersheds through multi-stakeholder partnerships.",
+    funding: {
+      totalAmountAvailable: usd("1800000.00"),
+      minAwardAmount: usd("50000.00"),
+      maxAwardAmount: usd("300000.00"),
+      minAwardCount: 4,
+      maxAwardCount: 12,
+      estimatedAwardCount: 6,
+    },
+    keyDates: {
+      postDate: postOn("2025-05-01"),
+      closeDate: closeOn("2026-03-31"),
+    },
+    acceptedApplicantTypes: [
+      {
+        value: "government_state",
+        description: "State environmental agencies",
+      },
+      {
+        value: "non_profit_with_501c3",
+        description: "Watershed conservation non-profits",
+      },
+    ],
+    createdAt: "2025-05-01T00:00:00Z",
+    lastModifiedAt: "2025-05-08T00:00:00Z",
+  },
+  {
+    id: "b3c4d5e6-f708-491a-95c6-203142536475",
+    title: "Digital Literacy for Seniors",
+    status: { value: "open", description: "Currently accepting applications" },
+    description:
+      "Teaching digital skills to older adults through community programs.",
+    funding: {
+      totalAmountAvailable: usd("320000.00"),
+      minAwardAmount: usd("8000.00"),
+      maxAwardAmount: usd("40000.00"),
+      estimatedAwardCount: 12,
+    },
+    keyDates: {
+      postDate: postOn("2025-02-20"),
+      closeDate: closeOn("2025-08-31"),
+    },
+    acceptedApplicantTypes: [
+      {
+        value: "non_profit_with_501c3",
+        description: "Senior services non-profits",
+      },
+      { value: "organization", description: "Community organizations" },
+    ],
+    customFields: {
+      legacyId: legacyId(12349),
+      programCode: programCode("DIG-LIT"),
+    },
+    createdAt: "2025-02-20T00:00:00Z",
+    lastModifiedAt: "2025-02-25T00:00:00Z",
+  },
+  {
+    id: "c4d5e6f7-0819-42ab-86d7-314253647586",
+    title: "First-Time Farmer Support",
+    status: {
+      value: "forecasted",
+      description: "Anticipated to open in early 2026",
+    },
+    description:
+      "Startup support for first-time farmers and beginning ranchers.",
+    funding: {
+      totalAmountAvailable: usd("640000.00"),
+      minAwardAmount: usd("20000.00"),
+      maxAwardAmount: usd("80000.00"),
+      estimatedAwardCount: 10,
+    },
+    keyDates: {
+      postDate: postOn("2026-01-15"),
+      closeDate: closeOn("2026-04-30"),
+    },
+    acceptedApplicantTypes: [
+      { value: "individual", description: "Individual farmers" },
+      {
+        value: "for_profit_small_business",
+        description: "Small family farm businesses",
+      },
+    ],
+    createdAt: "2025-04-20T00:00:00Z",
+    lastModifiedAt: "2025-04-22T00:00:00Z",
+  },
+  {
+    id: "d5e6f708-192a-43bc-97e8-425364758697",
+    title: "Regional Transit Electrification",
+    status: {
+      value: "forecasted",
+      description: "Anticipated to open in Q4",
+    },
+    description:
+      "Converting regional bus fleets to zero-emission vehicles with charging infrastructure.",
+    funding: {
+      details:
+        "Large capital awards for zero-emission bus fleets and charging infrastructure.",
+      totalAmountAvailable: usd("12000000.00"),
+      minAwardAmount: usd("500000.00"),
+      maxAwardAmount: usd("1500000.00"),
+      minAwardCount: 4,
+      maxAwardCount: 10,
+      estimatedAwardCount: 6,
+    },
+    keyDates: {
+      postDate: postOn("2025-11-01"),
+      closeDate: closeOn("2026-06-30"),
+    },
+    acceptedApplicantTypes: [
+      {
+        value: "government_special_district",
+        description: "Transit authorities",
+      },
+      { value: "government_municipal", description: "City governments" },
+    ],
+    createdAt: "2025-03-05T00:00:00Z",
+    lastModifiedAt: "2025-03-30T00:00:00Z",
+  },
+  {
+    id: "e6f70819-2a3b-44cd-88f9-536475869708",
+    title: "Tribal Cultural Preservation",
+    status: {
+      value: "forecasted",
+      description: "Anticipated to open in the fall",
+    },
+    description: "Preserving tribal languages, traditions, and cultural sites.",
+    funding: {
+      totalAmountAvailable: usd("450000.00"),
+      minAwardAmount: usd("15000.00"),
+      maxAwardAmount: usd("90000.00"),
+      estimatedAwardCount: 6,
+    },
+    keyDates: {
+      postDate: postOn("2025-09-01"),
+      closeDate: closeOn("2026-02-28"),
+    },
+    acceptedApplicantTypes: [
+      { value: "government_tribal", description: "Tribal governments" },
+      {
+        value: "organization_tribal_other",
+        description: "Tribal cultural organizations",
+      },
+    ],
+    createdAt: "2025-01-25T00:00:00Z",
+    lastModifiedAt: "2025-02-03T00:00:00Z",
+  },
+  {
+    id: "f708192a-3b4c-45de-990a-647586970819",
+    title: "Disaster Preparedness Micro-grants",
+    status: {
+      value: "closed",
+      description: "No longer accepting applications",
+    },
+    description:
+      "Micro-grants for neighborhood-level disaster preparedness projects.",
+    funding: {
+      details:
+        "Micro-grants disbursed on a rolling basis until funds were exhausted.",
+      totalAmountAvailable: usd("150000.00"),
+      minAwardAmount: usd("2500.00"),
+      maxAwardAmount: usd("7500.00"),
+      maxAwardCount: 60,
+      estimatedAwardCount: 45,
+    },
+    keyDates: {
+      postDate: postOn("2024-05-01"),
+      closeDate: closeOn("2024-08-15"),
+    },
+    acceptedApplicantTypes: [
+      {
+        value: "non_profit_with_501c3",
+        description: "Community preparedness non-profits",
+      },
+      { value: "organization", description: "Neighborhood associations" },
+    ],
+    createdAt: "2024-05-01T00:00:00Z",
+    lastModifiedAt: "2024-08-20T00:00:00Z",
+  },
+  {
+    id: "08192a3b-4c5d-46ef-8a1b-758697081920",
+    title: "Veteran Entrepreneurship Initiative",
+    status: {
+      value: "closed",
+      description: "No longer accepting applications",
+    },
+    description:
+      "Business startup grants and mentorship for veteran entrepreneurs.",
+    funding: {
+      totalAmountAvailable: usd("480000.00"),
+      minAwardAmount: usd("12000.00"),
+      maxAwardAmount: usd("60000.00"),
+      estimatedAwardCount: 10,
+    },
+    keyDates: {
+      postDate: postOn("2024-10-01"),
+      closeDate: closeOn("2025-01-31"),
+    },
+    acceptedApplicantTypes: [
+      { value: "individual", description: "Individual veterans" },
+      {
+        value: "for_profit_small_business",
+        description: "Veteran-owned small businesses",
+      },
+    ],
+    customFields: {
+      legacyId: legacyId(12350),
+      programCode: programCode("VET-BIZ"),
+    },
+    createdAt: "2024-10-01T00:00:00Z",
+    lastModifiedAt: "2025-02-01T00:00:00Z",
+  },
+  {
+    id: "192a3b4c-5d6e-4701-8b2c-869708192a3b",
+    title: "School Nutrition Improvement",
+    status: {
+      value: "closed",
+      description: "No longer accepting applications",
+    },
+    description:
+      "Upgrading school kitchens and sourcing fresh local ingredients.",
+    funding: {
+      totalAmountAvailable: usd("720000.00"),
+      minAwardAmount: usd("18000.00"),
+      maxAwardAmount: usd("90000.00"),
+      estimatedAwardCount: 8,
+    },
+    keyDates: {
+      postDate: postOn("2024-07-15"),
+      closeDate: closeOn("2024-11-30"),
+    },
+    acceptedApplicantTypes: [
+      {
+        value: "school_district_independent",
+        description: "Independent school districts",
+      },
+      { value: "government_municipal", description: "Municipal school boards" },
+    ],
+    createdAt: "2024-07-15T00:00:00Z",
+    lastModifiedAt: "2024-12-05T00:00:00Z",
+  },
+  {
+    id: "2a3b4c5d-6e7f-4812-9c3d-970819202a3b",
+    title: "Affordable Housing Predevelopment",
+    status: {
+      value: "closed",
+      description: "No longer accepting applications",
+    },
+    description:
+      "Predevelopment financing for affordable housing projects seeking site control.",
+    funding: {
+      totalAmountAvailable: usd("2500000.00"),
+      minAwardAmount: usd("100000.00"),
+      maxAwardAmount: usd("500000.00"),
+      minAwardCount: 3,
+      maxAwardCount: 8,
+      estimatedAwardCount: 5,
+    },
+    keyDates: {
+      postDate: postOn("2024-08-01"),
+      closeDate: closeOn("2025-03-15"),
+    },
+    acceptedApplicantTypes: [
+      {
+        value: "non_profit_with_501c3",
+        description: "Non-profit housing developers",
+      },
+      {
+        value: "government_municipal",
+        description: "Municipal housing authorities",
+      },
+    ],
+    competitions: [
+      {
+        id: "c4d5e6f7-0819-42ab-9d4e-5f6a7b8ca3b4",
+        opportunityId: "2a3b4c5d-6e7f-4812-9c3d-970819202a3b",
+        title: "Affordable Housing Predevelopment — Round 2",
+        description: "The second and final application round.",
+        status: { value: "closed", description: "Round closed" },
+        keyDates: { closeDate: closeOn("2025-03-15") },
+      },
+    ],
+    createdAt: "2024-08-01T00:00:00Z",
+    lastModifiedAt: "2025-03-21T00:00:00Z",
+  },
+  {
+    id: "3b4c5d6e-7f80-4923-8d4e-08192a3b4c5d",
+    title: "Civic Tech Fellows",
+    status: {
+      value: "custom",
+      customValue: "paused",
+      description: "The program is paused pending a funding review",
+    },
+    description:
+      "Fellowships placing technologists in local government for a year of service.",
+    funding: {
+      totalAmountAvailable: usd("600000.00"),
+      minAwardAmount: usd("50000.00"),
+      maxAwardAmount: usd("100000.00"),
+      estimatedAwardCount: 6,
+    },
+    keyDates: {
+      postDate: postOn("2025-01-20"),
+      closeDate: closeOn("2025-04-30"),
+    },
+    acceptedApplicantTypes: [
+      { value: "individual", description: "Individual technologists" },
+      {
+        value: "higher_education_public",
+        description: "Public university partners",
+      },
+    ],
+    createdAt: "2025-01-20T00:00:00Z",
+    lastModifiedAt: "2025-05-02T00:00:00Z",
+  },
+  {
+    id: "4c5d6e7f-8091-4a34-9e5f-192a3b4c5d6e",
+    title: "Main Street Revitalization",
+    status: {
+      value: "custom",
+      customValue: "awarded",
+      description:
+        "Awards have been announced and agreements are being executed",
+    },
+    description:
+      "Restoring historic commercial corridors and supporting storefront businesses.",
+    funding: {
+      totalAmountAvailable: usd("1100000.00"),
+      minAwardAmount: usd("30000.00"),
+      maxAwardAmount: usd("110000.00"),
+      estimatedAwardCount: 10,
+    },
+    keyDates: {
+      postDate: postOn("2024-03-01"),
+      closeDate: closeOn("2024-09-30"),
+    },
+    acceptedApplicantTypes: [
+      { value: "government_municipal", description: "City governments" },
+      {
+        value: "non_profit_with_501c3",
+        description: "Main street organizations",
+      },
+    ],
+    customFields: {
+      legacyId: legacyId(12351),
+      programCode: programCode("MAIN-ST"),
+    },
+    createdAt: "2024-03-01T00:00:00Z",
+    lastModifiedAt: "2024-12-15T00:00:00Z",
+  },
+  {
+    id: "5d6e7f80-91a2-4b45-8f60-2a3b4c5d6e7f",
+    title: "Ocean Plastics Research Challenge",
+    status: {
+      value: "custom",
+      customValue: "under_review",
+      description:
+        "Submissions are under peer review; results expected next quarter",
+    },
+    description:
+      "Research into scalable methods for removing plastics from marine environments.",
+    funding: {
+      totalAmountAvailable: usd("950000.00"),
+      minAwardAmount: usd("75000.00"),
+      maxAwardAmount: usd("190000.00"),
+      estimatedAwardCount: 5,
+    },
+    keyDates: {
+      postDate: postOn("2024-12-01"),
+      closeDate: closeOn("2025-05-31"),
+    },
+    acceptedApplicantTypes: [
+      {
+        value: "higher_education_public",
+        description: "Public research universities",
+      },
+      {
+        value: "higher_education_private",
+        description: "Private research universities",
+      },
+    ],
+    createdAt: "2024-12-01T00:00:00Z",
+    lastModifiedAt: "2025-05-30T00:00:00Z",
   },
 ]);
 

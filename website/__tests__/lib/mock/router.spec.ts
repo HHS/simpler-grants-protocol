@@ -175,9 +175,11 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     expect(body.errors[0].field).toBe("version");
   });
 
-  it("flags a non-opportunity path with field: 'path' and the opportunity-endpoints-only message", async () => {
+  // `field: "path"` lets a caller tell "this is not a route" from "this
+  // record does not exist".
+  it("flags a path outside the served surface with field: 'path'", async () => {
     const response = await handleMockRequest(
-      new Request("https://docs.example/api/v0.4.0/common-grants/awards"),
+      new Request("https://docs.example/api/v0.4.0/common-grants/proposals"),
     );
 
     expect(response.status).toBe(404);
@@ -186,7 +188,89 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
       errors: Array<{ field: string; message: string }>;
     };
     expect(body.errors[0].field).toBe("path");
-    expect(body.errors[0].message).toContain("opportunity endpoints only");
+    expect(body.errors[0].message).toContain("No route matches");
+  });
+
+  it("names the adding version for a resource absent from the requested version", async () => {
+    const response = await handleMockRequest(
+      new Request("https://docs.example/api/v0.2.0/common-grants/awards"),
+    );
+
+    expect(response.status).toBe(404);
+
+    const body = (await response.json()) as {
+      errors: Array<{ field: string; message: string }>;
+    };
+    expect(body.errors[0].field).toBe("path");
+    expect(body.errors[0].message).toContain("added in v0.4.0");
+  });
+
+  // The gate is driven by the RESOURCE_MIN_VERSION table, so every entry
+  // should behave alike; only awards was covered.
+  it.each([
+    { resource: "orgs", version: "0.3.0", addedIn: "0.4.0" },
+    { resource: "competitions", version: "0.1.0", addedIn: "0.2.0" },
+    { resource: "applications", version: "0.1.0", addedIn: "0.2.0" },
+    { resource: "forms", version: "0.1.0", addedIn: "0.2.0" },
+  ])(
+    "404s $resource at v$version, naming v$addedIn as the version that added it",
+    async ({ resource, version, addedIn }) => {
+      const response = await handleMockRequest(
+        new Request(
+          `https://docs.example/api/v${version}/common-grants/${resource}`,
+        ),
+      );
+
+      expect(response.status).toBe(404);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(body.errors[0].field).toBe("path");
+      expect(body.errors[0].message).toContain(`added in v${addedIn}`);
+    },
+  );
+
+  // Regression: `[^/]*` in the route regex let a bare trailing slash reach
+  // the detail handler with an empty id and answer 400 instead of 404.
+  it.each([
+    "opportunities",
+    "awards",
+    "orgs",
+    "applications",
+    "forms",
+    "competitions",
+  ])(
+    "answers a bare trailing slash on /%s with a route miss, not a 400",
+    async (resource) => {
+      const response = await handleMockRequest(
+        new Request(
+          `https://docs.example/api/v0.4.0/common-grants/${resource}/`,
+        ),
+      );
+
+      expect(response.status).toBe(404);
+
+      const body = (await response.json()) as {
+        errors: Array<{ field: string; message: string }>;
+      };
+      expect(body.errors[0].field).toBe("path");
+    },
+  );
+
+  it("answers a path nested deeper than any route with a route miss", async () => {
+    const response = await handleMockRequest(
+      new Request(
+        "https://docs.example/api/v0.4.0/common-grants/opportunities/foo/bar",
+      ),
+    );
+
+    expect(response.status).toBe(404);
+
+    const body = (await response.json()) as {
+      errors: Array<{ field: string; message: string }>;
+    };
+    expect(body.errors[0].field).toBe("path");
   });
 
   it("flags an unsupported method on an otherwise-valid path with field: 'path'", async () => {
