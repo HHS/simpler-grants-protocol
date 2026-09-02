@@ -4,10 +4,14 @@
  * Handler and CORS behavior is pinned by the ported suites.
  */
 
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import type { APIContext } from "astro";
 import { handleMockRequest, MOCK_API_BASE_PATH } from "@/lib/mock/router";
+import { SUPPORTED_METHODS } from "@/lib/mock/http/methods";
 import { CANONICAL_OPPORTUNITY_ID } from "@/lib/mock/data/fixtures";
+import { CANONICAL_APPLICATION_ID } from "@/lib/mock/data/applications";
+import { CANONICAL_FORM_ID } from "@/lib/mock/data/forms";
+import { CANONICAL_ORGANIZATION_ID } from "@/lib/mock/data/organizations";
 import * as apiRoute from "@/pages/api/[...path]";
 
 /** Builds `https://docs.example/api/v{version}/common-grants/opportunities{suffix}`. */
@@ -22,17 +26,11 @@ describe("MOCK_API_BASE_PATH", () => {
 });
 
 describe("Astro route wiring (src/pages/api/[...path].ts)", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
   it("disables prerendering, since the mock must run per-request", () => {
     expect(apiRoute.prerender).toBe(false);
   });
 
   it("delegates ALL to handleMockRequest untouched, for a real opportunities request", async () => {
-    vi.stubEnv("MOCK_API_ENABLED", "1");
-
     // The ALL handler only needs `request`; the rest of APIContext is cast away.
     const context = {
       request: new Request(opportunitiesUrl("0.3.0")),
@@ -46,24 +44,102 @@ describe("Astro route wiring (src/pages/api/[...path].ts)", () => {
     expect(routed.status).toBe(direct.status);
     expect(await routed.json()).toEqual(await direct.json());
   });
+});
 
-  // The endpoint is gated on the same flag as the docs that advertise it, so
-  // an ungated build — every production deploy — must not serve fixtures.
-  it.each([undefined, "", "0", "false"])(
-    "answers 404 without reaching the mock when MOCK_API_ENABLED is %s",
-    async (gate) => {
-      vi.stubEnv("MOCK_API_ENABLED", gate);
+describe("method allowlist", () => {
+  const V = "0.4.0";
+  const ORG = `/api/v${V}/common-grants/orgs/${CANONICAL_ORGANIZATION_ID}`;
 
-      const context = {
-        request: new Request(opportunitiesUrl("0.3.0")),
-      } as unknown as APIContext;
+  /**
+   * One route per supported verb, each chosen because it actually serves that
+   * verb. Between them they cover every entry in `SUPPORTED_METHODS`, which is
+   * what makes the assertions below bite in both directions: drop a verb from
+   * the constant and its route keeps answering, so the 404 sweep fails.
+   */
+  const ROUTE_SERVING: Record<string, string> = {
+    GET: ORG,
+    POST: `/api/v${V}/common-grants/opportunities/search`,
+    PUT: `/api/v${V}/common-grants/applications/${CANONICAL_APPLICATION_ID}/forms/${CANONICAL_FORM_ID}`,
+    PATCH: ORG,
+  };
 
-      const response = await apiRoute.ALL(context);
+  /**
+   * `TRACE`, `CONNECT` and `TRACK` are absent because the Fetch spec forbids
+   * them in the `Request` constructor, so the router can never see one.
+   */
+  const CONSTRUCTIBLE_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "HEAD",
+    "OPTIONS",
+  ];
 
-      expect(response.status).toBe(404);
-      expect(await response.text()).toBe("");
+  /**
+   * Derived, not hand-listed. `OPTIONS` is excluded because
+   * `handleMockRequest` answers preflights before routing.
+   */
+  const unlistedMethods = CONSTRUCTIBLE_METHODS.filter(
+    (method) =>
+      method !== "OPTIONS" &&
+      !(SUPPORTED_METHODS as readonly string[]).includes(method),
+  );
+
+  function call(method: string, path: string): Promise<Response> {
+    const url = `https://docs.example${path}`;
+    return handleMockRequest(
+      method === "GET" || method === "HEAD"
+        ? new Request(url, { method })
+        : new Request(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
+          }),
+    );
+  }
+
+  // Guards the two suites below: without a route per supported verb the 404
+  // sweep can pass while the router quietly serves an unlisted one, and without
+  // an unlisted verb there is nothing to sweep.
+  it("pairs every supported verb with a route that serves it", () => {
+    expect(Object.keys(ROUTE_SERVING).sort()).toEqual(
+      [...SUPPORTED_METHODS].sort(),
+    );
+  });
+
+  it("leaves at least one verb unlisted", () => {
+    expect(unlistedMethods.length).toBeGreaterThan(0);
+  });
+
+  it.each([...SUPPORTED_METHODS])(
+    "serves %s on the route that declares it",
+    async (method) => {
+      const response = await call(method, ROUTE_SERVING[method]);
+
+      expect(response.status).not.toBe(404);
     },
   );
+
+  it.each(unlistedMethods)(
+    "answers 404 to %s on every route that serves a listed verb",
+    async (method) => {
+      for (const path of new Set(Object.values(ROUTE_SERVING))) {
+        const response = await call(method, path);
+
+        expect(response.status).toBe(404);
+      }
+    },
+  );
+
+  it("advertises exactly these verbs, plus OPTIONS, in the CORS preflight", async () => {
+    const response = await call("OPTIONS", ROUTE_SERVING.GET);
+
+    expect(response.headers.get("Access-Control-Allow-Methods")).toBe(
+      [...SUPPORTED_METHODS, "OPTIONS"].join(", "),
+    );
+  });
 });
 
 describe("base-path handling (new in the website port, no Worker analogue)", () => {
