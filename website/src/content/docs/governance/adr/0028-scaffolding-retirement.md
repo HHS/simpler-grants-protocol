@@ -5,29 +5,29 @@ description: ADR documenting the decision to retire the cg init command and the 
 
 The repository root contains five standalone projects outside the pnpm workspace: three `cg init` templates (`quickstart`, `express-js`, and `fast-api`) and two example APIs (`examples/ca-opportunity-example/` and `examples/pa-opportunity-example/`). The [dependency audit in issue #761](https://github.com/HHS/simpler-grants-protocol/issues/761) documents their dependencies, automation, and documentation relationships.
 
-Published CLI releases that implement remote scaffolding fetch `templates/template.json` from the `main` branch at runtime, as shown by the [initializer source before this decision](https://github.com/HHS/simpler-grants-protocol/blob/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/lib/cli/src/commands/init/init-service.ts#L6). The manifest currently lists relative file paths, so TypeSpec resolves those files from the same branch. Changes to the manifest or its referenced files therefore change what those installed releases generate. Deleting the manifest causes their initialization command to fail. The earlier `0.1.0-alpha.1` package did not implement remote scaffolding and is not part of this compatibility concern.
+Published CLI releases containing remote scaffolding, beginning with [`0.1.0-alpha.2`](https://unpkg.com/@common-grants/cli@0.1.0-alpha.2/dist/services/init.service.js), fetch `templates/template.json` from the `main` branch at runtime, as shown by the [initializer source before this decision](https://github.com/HHS/simpler-grants-protocol/blob/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/lib/cli/src/commands/init/init-service.ts#L6). The manifest currently lists relative file paths, so TypeSpec resolves those files from the same branch. Changes to the manifest or its referenced files therefore change what those installed releases generate. Deleting the manifest causes their initialization command to fail.
 
 Issue [#612](https://github.com/HHS/simpler-grants-protocol/issues/612) moved these projects to the manual maintenance tier. Since then, their package pins have diverged from published packages, documentation has accumulated stale names and links, and their workflows have had no automatic scheduled or release-triggered signal. Manual and reusable workflow runs remain possible, but upstream breakage is not detected automatically.
 
-The existing documentation uses the artifacts in different ways. Getting Started generates a small TypeSpec specification from `quickstart`; the TypeScript and Python guides generate framework applications from `express-js` and `fast-api`. Available package-download and code-search evidence cannot identify how many people run `cg init`, so reliance on the command is treated as unknown rather than zero.
+The existing documentation uses the artifacts in different ways. Getting Started generates a small TypeSpec specification from `quickstart`; the TypeScript and Python guides generate framework applications from `express-js` and `fast-api`. Because this decision has no direct measurement of command usage, it treats reliance on `cg init` as unknown rather than zero.
 
 ## Decision
 
 1. **Retire `cg init`.** The `check`, `compile`, and `preview` commands are unaffected.
 2. **Retire the root template projects.** Getting Started will present a complete small TypeSpec project directly in the guide, including its package manifest or explicit dependency-install command. Readers will still compile and preview the result.
 3. **Rewrite the TypeScript and Python guides around integration.** Both will begin with an existing application and teach SDK and plugin integration rather than generate an Express or FastAPI application. No maintained full application replaces those templates.
-4. **Delete the legacy monorepo CA and PA example applications.** The active [`agilesix/cg-api-ca`](https://github.com/agilesix/cg-api-ca/tree/55f535fdbb3747e4c8b05fea4ef2f8293df492a1) and [`agilesix/cg-api-pa`](https://github.com/agilesix/cg-api-pa/tree/4d067a4559cb51aefa10290a11314ef37e8a8cb9) repositories are separate and unaffected. Comparison with the pinned legacy [CA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/ca-opportunity-example) and [PA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/pa-opportunity-example) trees found no reason to retain either legacy application as executable software. Legacy transformation behavior, including synthetic date sentinels and former UUID namespaces, is not adopted by the active applications.
+4. **Delete the legacy monorepo CA and PA example applications.** The active [California](https://github.com/agilesix/cg-api-ca/tree/55f535fdbb3747e4c8b05fea4ef2f8293df492a1) and [Pennsylvania](https://github.com/agilesix/cg-api-pa/tree/4d067a4559cb51aefa10290a11314ef37e8a8cb9) API repositories are separate and unaffected. Comparison with the pinned legacy [CA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/ca-opportunity-example) and [PA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/pa-opportunity-example) trees found no reason to retain either legacy application as executable software. Legacy transformation behavior, including synthetic date sentinels and former UUID namespaces, is not adopted by the active applications.
 5. **Provide a 90-day commit-pinned compatibility bridge.** Already-published CLIs will continue fetching `templates/template.json` from `main`, but that manifest will point every template file to an absolute raw GitHub URL containing the full commit SHA of the final template snapshot. The referenced template files can then be deleted from `main`; only the manifest remains during the bridge.
 
 The retirement release starts the 90-day window. Its implementation must:
 
 - verify the rewritten manifest with affected published CLI lines before deleting the root template files;
-- protect the retained manifest with review controls and an automated integrity check that permits only the approved full commit SHA;
+- protect the retained manifest with review controls and an automated integrity check that verifies the whole manifest against an approved digest;
 - announce the retirement in the release notes, changelog, and replacement guides;
 - name a removal owner and calendar deadline; and
 - delete the manifest at the deadline, after which affected old initialization commands fail normally when their fixed URL is unavailable.
 
-The archived template content is unsupported during the bridge. It receives no dependency updates and has no compatibility guarantee with future package releases. Its remote-install and aging-dependency exposure remains for 90 days; pinning prevents ordinary changes to `main` from changing the archived files, while the manifest integrity check protects the remaining mutable redirect point.
+The approved manifest fixes the template IDs and fields, the raw GitHub host, repository, full commit SHA, source paths, and relative destination paths. It adds no libraries, emitters, or package-generation behavior beyond the frozen template files. The archived content is unsupported during the bridge: it receives no dependency updates and has no compatibility guarantee with future package releases. Its remote-install and aging-dependency exposure remains for 90 days; pinning prevents ordinary changes to `main` from changing the archived files, while the whole-manifest check protects the remaining mutable redirect point.
 
 Package-local examples under `lib/ts-sdk/examples/` and `lib/python-sdk/examples/` are out of scope. They remain inside package boundaries and under their packages' CI.
 
@@ -72,7 +72,7 @@ The retirement option is selected because the evaluator outcome can be preserved
 
 ## Compatibility bridge
 
-An installed CLI cannot be republished in place with a new manifest URL. The manifest it already requests can, however, direct TypeSpec to absolute file URLs at an immutable commit:
+An installed CLI cannot be republished in place with a new manifest URL. The manifest it already requests can, however, direct TypeSpec to absolute file URLs at an immutable commit. The [TypeSpec 0.66 initialization code](https://unpkg.com/@typespec/compiler@0.66.0/dist/src/init/scaffold.js) resolves every `files[].path` through a [URL resolver](https://unpkg.com/@typespec/compiler@0.66.0/dist/src/utils/misc.js) that leaves absolute URLs unchanged:
 
 ```text
 affected cg init
@@ -81,7 +81,7 @@ affected cg init
     -> frozen template files no longer present on main
 ```
 
-Only the manifest remains mutable. The integrity check and normal review protection guard that file until the removal owner deletes it at the 90-day deadline. This is a compatibility bridge, not a supported template maintenance tier.
+Only the manifest remains mutable. Its approved digest and normal review protection guard that file until the removal owner deletes it at the 90-day deadline. This is a compatibility bridge, not a supported template maintenance tier.
 
 ## Replacement journeys
 
