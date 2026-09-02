@@ -16,18 +16,18 @@ The existing documentation uses the artifacts in different ways. Getting Started
 1. **Retire `cg init`.** The `check`, `compile`, and `preview` commands are unaffected.
 2. **Retire the root template projects.** Getting Started will present a complete small TypeSpec project directly in the guide, including its package manifest or explicit dependency-install command. Readers will still compile and preview the result.
 3. **Rewrite the TypeScript and Python guides around integration.** Both will begin with an existing application and teach SDK and plugin integration rather than generate an Express or FastAPI application. No maintained full application replaces those templates.
-4. **Delete the legacy monorepo CA and PA example applications.** The active [California](https://github.com/agilesix/cg-api-ca/tree/55f535fdbb3747e4c8b05fea4ef2f8293df492a1) and [Pennsylvania](https://github.com/agilesix/cg-api-pa/tree/4d067a4559cb51aefa10290a11314ef37e8a8cb9) API repositories are separate and unaffected. Comparison with the pinned legacy [CA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/ca-opportunity-example) and [PA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/pa-opportunity-example) trees found no reason to retain either legacy application as executable software. Legacy date-transformation sentinel constants and former UUID namespaces are not adopted by the active applications.
+4. **Delete the root `examples/` directory.** This includes the legacy CA and PA applications, `examples/README.md`, and the unreferenced `examples/opportunity_example.py`. The active [California](https://github.com/agilesix/cg-api-ca/tree/55f535fdbb3747e4c8b05fea4ef2f8293df492a1) and [Pennsylvania](https://github.com/agilesix/cg-api-pa/tree/4d067a4559cb51aefa10290a11314ef37e8a8cb9) API repositories are separate and unaffected. Comparison with the pinned legacy [CA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/ca-opportunity-example) and [PA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/pa-opportunity-example) trees found no reason to retain either legacy application as executable software. The active applications carry over neither the legacy date-transformation constants nor the former UUID namespaces.
 5. **Provide a 90-day commit-pinned compatibility bridge.** Already-published CLIs will continue fetching `templates/template.json` from `main`, but that manifest will point every template file to an absolute raw GitHub URL containing the full commit SHA of the final template snapshot. The referenced template files can then be deleted from `main`; only the manifest remains during the bridge.
 
 The retirement release starts the 90-day window. Its implementation must:
 
-- verify the rewritten manifest across the affected published CLI and bundled-compiler families before deleting the root template files;
+- verify the rewritten manifest across affected published CLI families, including their bundled or runtime-resolved compiler behavior, before deleting the root template files;
 - protect the retained manifest with review controls and an automated integrity check that verifies the whole manifest against an approved digest;
 - announce the retirement in the release and replacement documentation;
 - name a removal owner and calendar deadline; and
 - delete the manifest at the deadline. Scaffold attempts then fail with a download error; `cg init --list` logs that error but displays its existing hard-coded fallback names.
 
-The approved digest covers the complete manifest, including file sources, write destinations, dependencies, and generation settings. This prevents a manifest change from redirecting content, writing to new destinations, or injecting dependencies without an explicit review of the new digest. The archived content is unsupported during the bridge: it receives no dependency updates and has no compatibility guarantee with future package releases. Its remote-install and aging-dependency exposure remains for 90 days.
+The approved digest covers the complete manifest, including file sources, write destinations, dependency declarations, and generation settings. This prevents a manifest change from redirecting content, writing to new destinations, or injecting dependencies without an explicit review of the new digest. The archived content is unsupported during the bridge: it receives no dependency updates and has no compatibility guarantee with future package releases. Its remote-install and aging-dependency exposure remains for 90 days.
 
 Package-local examples under `lib/ts-sdk/examples/` and `lib/python-sdk/examples/` are out of scope. They remain inside package boundaries and under their packages' CI.
 
@@ -45,10 +45,10 @@ For this decision, existing-system integration and evaluator clarity take priori
 
 - The generated on-ramp and the maintained Express and FastAPI applications disappear.
 - Three documentation flows require end-to-end replacement work.
-- `templates/template.json` remains a security-sensitive runtime input on `main` for 90 days: it controls fetched content, write destinations, and generated dependencies. The whole-manifest digest and review controls are required throughout that window.
+- `templates/template.json` remains a security-sensitive runtime input on `main` for 90 days.
 - The Node templates install frozen lockfile graphs, while FastAPI resolves unlocked dependency ranges. Neither receives maintenance during the bridge.
 - Affected old CLIs fail to initialize after the manifest is removed, and that behavior cannot be changed in packages users already installed.
-- The merged mock API playground provides a separate interactive evaluation path, but it is not a maintained full application in either language. [Issue #1111](https://github.com/HHS/simpler-grants-protocol/issues/1111) records the completed QA pass that established the path works today.
+- No maintained full application replaces the retired templates. The merged mock API playground provides only an interactive evaluation path; [issue #1111](https://github.com/HHS/simpler-grants-protocol/issues/1111) records the completed QA pass that established it works today.
 
 ## Criteria
 
@@ -70,7 +70,7 @@ For this decision, existing-system integration and evaluator clarity take priori
 | Keep only a quickstart initializer           | Preserves a short evaluator path at lower cost                     | Retains the manifest contract, ownership, and freshness obligations | Rejected |
 | Retire immediately with no bridge            | Ends the `main` runtime contract during implementation             | Breaks affected installed clients immediately                       | Rejected |
 
-The retirement option is selected because the evaluator outcome can be preserved directly in Getting Started without preserving a generator. Immediate removal was also considered. The 90-day bridge was selected instead because reliance cannot be measured directly and the commit-pinned design bounds compatibility without retaining mutable template projects on `main`.
+The retirement option is selected because the evaluator outcome can be preserved directly in Getting Started without preserving a generator. The 90-day bridge was selected over immediate removal because reliance cannot be measured directly and the commit-pinned design bounds compatibility without retaining mutable template projects on `main`.
 
 ## Compatibility bridge
 
@@ -96,12 +96,11 @@ The commit SHA fixes the content but not the availability of these URLs. An unav
 - A named adopter reports relying on `cg init` or the generated applications.
 - Product direction explicitly adopts greenfield application generation as a supported journey.
 - Onboarding evaluation shows that the direct guide materially reduces successful first use.
-- A named owner accepts the permanent maintenance and automation obligations of a template surface.
 - Observed failures show that the public mock API playground is unreliable as an interactive evaluation path.
 
 ## Conformance
 
-This decision changes no protocol wire shape, authentication boundary, personal-data flow, runtime service, storage path, or performance characteristic; privacy, observability, and infrastructure cost are therefore unaffected.
+This decision changes no authentication boundary, personal-data flow, runtime service, storage path, or performance characteristic; privacy, observability, and infrastructure cost are therefore unaffected.
 
 | Aspect                                     | Convention                                                                                                                                                                                           | Conforms / Diverges                                                                                                      |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
