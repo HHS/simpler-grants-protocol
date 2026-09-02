@@ -4,7 +4,7 @@
  * Handler and CORS behavior is pinned by the ported suites.
  */
 
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import type { APIContext } from "astro";
 import { handleMockRequest, MOCK_API_BASE_PATH } from "@/lib/mock/router";
 import { CANONICAL_OPPORTUNITY_ID } from "@/lib/mock/data/fixtures";
@@ -22,17 +22,11 @@ describe("MOCK_API_BASE_PATH", () => {
 });
 
 describe("Astro route wiring (src/pages/api/[...path].ts)", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
   it("disables prerendering, since the mock must run per-request", () => {
     expect(apiRoute.prerender).toBe(false);
   });
 
   it("delegates ALL to handleMockRequest untouched, for a real opportunities request", async () => {
-    vi.stubEnv("MOCK_API_ENABLED", "1");
-
     // The ALL handler only needs `request`; the rest of APIContext is cast away.
     const context = {
       request: new Request(opportunitiesUrl("0.3.0")),
@@ -46,24 +40,6 @@ describe("Astro route wiring (src/pages/api/[...path].ts)", () => {
     expect(routed.status).toBe(direct.status);
     expect(await routed.json()).toEqual(await direct.json());
   });
-
-  // The endpoint is gated on the same flag as the docs that advertise it, so
-  // an ungated build — every production deploy — must not serve fixtures.
-  it.each([undefined, "", "0", "false"])(
-    "answers 404 without reaching the mock when MOCK_API_ENABLED is %s",
-    async (gate) => {
-      vi.stubEnv("MOCK_API_ENABLED", gate);
-
-      const context = {
-        request: new Request(opportunitiesUrl("0.3.0")),
-      } as unknown as APIContext;
-
-      const response = await apiRoute.ALL(context);
-
-      expect(response.status).toBe(404);
-      expect(await response.text()).toBe("");
-    },
-  );
 });
 
 describe("base-path handling (new in the website port, no Worker analogue)", () => {

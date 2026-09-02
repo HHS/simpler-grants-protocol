@@ -1,20 +1,22 @@
 /**
  * Tests for `src/scripts/inject-mock-server.ts` and
- * `src/lib/mock/docs-wiring.ts` (#1078). The mock is served same-origin, so
- * there is no configurable base URL — only the `MOCK_API_ENABLED` build-time
- * gate and a relative URL built from `MOCK_API_BASE_PATH`.
+ * `src/lib/mock/docs-wiring.ts` (#1078). The mock is same-origin, so there is
+ * no configurable base URL — just a relative one from `MOCK_API_BASE_PATH`.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { readdirSync, readFileSync } from "fs";
+import { join } from "path";
+import { describe, it, expect } from "vitest";
 import {
   assertMockServesVersion,
   injectServers,
   versionFromSpecFilename,
   MockServerInjector,
 } from "@/scripts/inject-mock-server";
-import { isMockApiEnabled, serverUrlFor } from "@/lib/mock/docs-wiring";
+import { MOCK_SPEC_DIR_NAME, serverUrlFor } from "@/lib/mock/docs-wiring";
 import { MOCK_API_BASE_PATH } from "@/lib/mock/router";
 import { SUPPORTED_VERSIONS } from "@/lib/mock/data/fixtures";
+import { Paths } from "@/lib/schema/paths";
 
 // Mimics the real spec's shape: no top-level `servers:` key, a top-level
 // `paths:` line, and a nested unrelated `servers:` key.
@@ -101,56 +103,6 @@ describe("injectServers", () => {
   });
 });
 
-describe("isMockApiEnabled", () => {
-  const originalMockApiEnabled = process.env.MOCK_API_ENABLED;
-
-  afterEach(() => {
-    if (originalMockApiEnabled === undefined) {
-      delete process.env.MOCK_API_ENABLED;
-    } else {
-      process.env.MOCK_API_ENABLED = originalMockApiEnabled;
-    }
-  });
-
-  it("is false when MOCK_API_ENABLED is unset", () => {
-    delete process.env.MOCK_API_ENABLED;
-
-    expect(isMockApiEnabled()).toBe(false);
-  });
-
-  it("is false when MOCK_API_ENABLED is blank or whitespace-only", () => {
-    process.env.MOCK_API_ENABLED = "   ";
-
-    expect(isMockApiEnabled()).toBe(false);
-  });
-
-  it("is true when MOCK_API_ENABLED is set to a non-blank value", () => {
-    process.env.MOCK_API_ENABLED = "true";
-
-    expect(isMockApiEnabled()).toBe(true);
-  });
-
-  // A gate keyed on mere presence would read "false" and "0" as ON, silently
-  // enabling Execute buttons on a build meant to be production-inert.
-  it.each(["false", "FALSE", "0", "off", "no"])(
-    "is false for the falsy value %s",
-    (value) => {
-      process.env.MOCK_API_ENABLED = value;
-
-      expect(isMockApiEnabled()).toBe(false);
-    },
-  );
-
-  it.each(["1", "true", "TRUE", "yes", "on"])(
-    "is true for the truthy value %s",
-    (value) => {
-      process.env.MOCK_API_ENABLED = value;
-
-      expect(isMockApiEnabled()).toBe(true);
-    },
-  );
-});
-
 describe("assertMockServesVersion", () => {
   it.each(SUPPORTED_VERSIONS)(
     "accepts v%s, which the router serves",
@@ -172,23 +124,30 @@ describe("assertMockServesVersion", () => {
 });
 
 describe("MockServerInjector", () => {
-  const originalMockApiEnabled = process.env.MOCK_API_ENABLED;
+  /** From disk, not `SUPPORTED_VERSIONS` — that's what the injector walks. */
+  const emittedSpecs = readdirSync(Paths.OPENAPI_DIR)
+    .sort()
+    .flatMap((filename) => {
+      const version = versionFromSpecFilename(filename);
+      return version === null ? [] : [{ filename, version }];
+    });
 
-  beforeEach(() => {
-    delete process.env.MOCK_API_ENABLED;
+  it("writes a mock-advertising copy of every emitted spec", () => {
+    const { written } = MockServerInjector.inject();
+
+    expect(written).toEqual(emittedSpecs.map(({ filename }) => filename));
   });
 
-  afterEach(() => {
-    if (originalMockApiEnabled === undefined) {
-      delete process.env.MOCK_API_ENABLED;
-    } else {
-      process.env.MOCK_API_ENABLED = originalMockApiEnabled;
+  it("points each copy's servers block at that spec's version of the mock", () => {
+    MockServerInjector.inject();
+
+    for (const { filename, version } of emittedSpecs) {
+      const copy = readFileSync(
+        join(Paths.PUBLIC_DIR, MOCK_SPEC_DIR_NAME, filename),
+        "utf-8",
+      );
+
+      expect(copy).toContain(`servers:\n  - url: ${serverUrlFor(version)}`);
     }
-  });
-
-  it("is a clean no-op when MOCK_API_ENABLED is unset, writing nothing", () => {
-    const result = MockServerInjector.inject();
-
-    expect(result).toEqual({ skipped: true, written: [] });
   });
 });

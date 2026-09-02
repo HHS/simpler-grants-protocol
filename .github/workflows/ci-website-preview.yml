@@ -43,11 +43,6 @@ jobs:
 
       - name: Build site
         id: build
-        # Wires the docs to the same-origin mock API (#1078): injects a servers
-        # block into each spec and enables Swagger UI's Execute button.
-        # Preview-only on purpose — absent from `cd-deploy-website.yml`.
-        env:
-          MOCK_API_ENABLED: "1"
         run: pnpm run build
 
       - name: Upload build output

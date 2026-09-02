@@ -7,11 +7,7 @@ import {
 } from "fs";
 import { join } from "path";
 import { Paths } from "../lib/schema/paths";
-import {
-  MOCK_SPEC_DIR_NAME,
-  isMockApiEnabled,
-  serverUrlFor,
-} from "../lib/mock/docs-wiring";
+import { MOCK_SPEC_DIR_NAME, serverUrlFor } from "../lib/mock/docs-wiring";
 import {
   SUPPORTED_VERSIONS,
   isSupportedVersion,
@@ -20,9 +16,8 @@ import {
 /**
  * Build-time script that copies each rendered OpenAPI spec into
  * `public/openapi-mock/` with a `servers:` block pointing at the mock, which is
- * how Swagger UI's "Try it out" finds it. No-op unless `MOCK_API_ENABLED` is
- * set (see `lib/mock/docs-wiring.ts`). Injection is targeted string insertion,
- * not a YAML parse/dump, which would rewrite the whole file.
+ * how Swagger UI's "Try it out" finds it. Injection is targeted string
+ * insertion, not a YAML parse/dump, which would rewrite the whole file.
  *
  * The copies live in a gitignored sibling directory rather than replacing
  * `public/openapi/` in place: those specs are generated from the TypeSpec
@@ -85,17 +80,15 @@ export function assertMockServesVersion(
   throw new Error(
     `${filename} would advertise ${serverUrlFor(version)}, which the mock router does not serve ` +
       `(it serves ${SUPPORTED_VERSIONS.join(", ")}). Teach src/lib/mock/data/fixtures.ts to shape ` +
-      `v${version} — SUPPORTED_VERSIONS and shapeOpportunityForVersion — before enabling the mock on it.`,
+      `v${version} — SUPPORTED_VERSIONS and shapeOpportunityForVersion — before emitting a spec for it.`,
   );
 }
 
 /** Where the mock-advertising copies go. Gitignored; regenerated per build. */
 const MOCK_SPEC_DIR = join(Paths.PUBLIC_DIR, MOCK_SPEC_DIR_NAME);
 
-/** Outcome of a run, so callers (and tests) can assert the no-op path. */
+/** Outcome of a run. */
 export interface InjectResult {
-  /** True when `MOCK_API_ENABLED` was unset and nothing was written. */
-  skipped: boolean;
   /** Filenames processed, in sorted order. */
   written: string[];
 }
@@ -103,19 +96,11 @@ export interface InjectResult {
 class MockServerInjector {
   /**
    * Copies every versioned spec in `Paths.OPENAPI_DIR` into `MOCK_SPEC_DIR`
-   * advertising the mock; skipped when the gate is off.
+   * advertising the mock.
    */
   static inject(): InjectResult {
-    // The copies belong to gated builds only, so an ungated one must not
-    // inherit a directory left behind by an earlier gated build.
+    // Cleared first so a dropped spec can't linger as a stale copy.
     rmSync(MOCK_SPEC_DIR, { recursive: true, force: true });
-
-    if (!isMockApiEnabled()) {
-      console.log(
-        "MOCK_API_ENABLED not set — leaving OpenAPI specs untouched (no mock server injected).",
-      );
-      return { skipped: true, written: [] };
-    }
 
     console.log("Injecting same-origin mock server into OpenAPI specs...");
 
@@ -158,7 +143,7 @@ class MockServerInjector {
       `\n✓ Wrote ${written.length} mock-advertising spec(s) to public/${MOCK_SPEC_DIR_NAME}/`,
     );
 
-    return { skipped: false, written };
+    return { written };
   }
 }
 
