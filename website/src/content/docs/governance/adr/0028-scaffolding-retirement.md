@@ -81,14 +81,6 @@ affected cg init
     -> frozen template files no longer present on main
 ```
 
-Only the manifest remains mutable. Its approved digest and normal review protection guard that file until the removal owner deletes it at the 90-day deadline. This is a compatibility bridge, not a supported template maintenance tier.
-
-## Replacement journeys
-
-Getting Started will show the package manifest or explicit commands that install every required compiler, emitter, and CommonGrants dependency, along with `main.tsp`, `routes.tsp`, and `tspconfig.yaml`. The reader will install dependencies, compile the specification, and preview it without `cg init`.
-
-The TypeScript and Python guides will start from an existing API and demonstrate modeling data through the SDK, mapping custom fields, filters, and transforms at the plugin boundary, and validating the resulting contract.
-
 ## Deferred
 
 - **A future template service.** This ADR removes the current surface rather than choosing a versioned home for a replacement. A later ADR may reconsider one if usage evidence justifies its ownership and operational cost.
@@ -104,7 +96,7 @@ The TypeScript and Python guides will start from an existing API and demonstrate
 
 ## Conformance
 
-This decision does not change an endpoint, model, identifier, query parameter, header, field name, response shape, authentication boundary, personal-data flow, runtime service, storage path, or request performance characteristic. Protocol wire conventions, privacy, observability, performance, and infrastructure cost are therefore not affected.
+This decision changes no protocol wire shape, authentication boundary, personal-data flow, runtime service, storage path, or performance characteristic; privacy, observability, and infrastructure cost are therefore unaffected.
 
 | Aspect                                     | Convention                                                                      | Conforms / Diverges                                                                                                                            |
 | ------------------------------------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
