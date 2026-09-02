@@ -2,6 +2,7 @@
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import "swagger-ui-dist/swagger-ui.css";
 import { SPEC_DIR_URL } from "@/lib/mock/docs-wiring";
+import { SUPPORTED_METHODS } from "@/lib/mock/http/methods";
 
 // Available OpenAPI versions (mirror of the emitted specs in public/openapi/)
 const availableVersions = [
@@ -26,7 +27,12 @@ const availableVersions = [
     </label>
   </div>
 
-  <div id="swagger-ui" data-spec-dir={SPEC_DIR_URL}></div>
+  <div
+    id="swagger-ui"
+    data-spec-dir={SPEC_DIR_URL}
+    data-submit-methods={SUPPORTED_METHODS.join(",").toLowerCase()}
+  >
+  </div>
 </StarlightPage>
 
 <style>
@@ -86,14 +92,19 @@ const availableVersions = [
   // and importing `docs-wiring` would drag the mock router into this bundle.
   const mount = document.querySelector<HTMLElement>("#swagger-ui");
   const specDir = mount?.dataset.specDir ?? "/openapi-mock";
+  // `filter(Boolean)` so a missing attribute yields [] rather than [""], which
+  // Swagger would read as a verb.
+  const submitMethods = (mount?.dataset.submitMethods ?? "")
+    .split(",")
+    .filter(Boolean);
 
   const render = (version: string): void => {
     SwaggerUIBundle({
       url: `${specDir}/openapi.${version}.yaml`,
       dom_id: "#swagger-ui",
-      // The verbs the mock implements. Listed explicitly because Swagger UI
-      // otherwise offers Execute on DELETE and friends, which it never serves.
-      supportedSubmitMethods: ["get", "post", "put", "patch"],
+      // From the router's own `SUPPORTED_METHODS`; Swagger UI would otherwise
+      // offer Execute on DELETE and friends, which the mock never serves.
+      supportedSubmitMethods: submitMethods,
       deepLinking: true,
     });
   };
