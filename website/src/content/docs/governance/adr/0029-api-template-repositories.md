@@ -33,7 +33,7 @@ The retirement release starts the 90-day window. Its implementation must:
 - name a removal owner and calendar deadline; and
 - delete the manifest at the deadline. Scaffold attempts then fail with a download error.
 
-The approved digest covers the complete manifest, including file sources, write destinations, dependency declarations, and generation settings. The archived content is unsupported during the bridge: it receives no dependency updates and has no compatibility guarantee with future package releases. Its remote-install and aging-dependency exposure remains for 90 days.
+The approved digest covers the complete manifest, including file sources, write destinations, dependency declarations, and generation settings. The archived content is unsupported during the bridge: it receives no dependency updates and has no compatibility guarantee with future package releases.
 
 Each standalone template is a supported developer-tooling surface. Before the corresponding monorepo project is removed, its repository must have:
 
