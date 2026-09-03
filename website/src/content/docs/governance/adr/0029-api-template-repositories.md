@@ -3,13 +3,13 @@ title: Separating API templates from the protocol monorepo
 description: ADR documenting the decision to retire cg init and maintain framework-specific CommonGrants API templates in standalone repositories.
 ---
 
-The repository root contains five standalone projects outside the pnpm workspace: three `cg init` templates (`quickstart`, `express-js`, and `fast-api`) and two example APIs (`examples/ca-opportunity-example/` and `examples/pa-opportunity-example/`). The [dependency audit produced for issue #761](https://github.com/user-attachments/files/31036461/templates-examples-dependency-audit.md) documents their dependencies, automation, and documentation relationships.
+The repository root contains five standalone projects outside the pnpm workspace: three `cg init` templates (`quickstart`, `express-js`, and `fast-api`) and two example APIs (`examples/ca-opportunity-example/` and `examples/pa-opportunity-example/`). A [dependency audit](https://github.com/user-attachments/files/31036461/templates-examples-dependency-audit.md) documents their dependencies, automation, and documentation relationships.
 
 Published CLI releases containing remote scaffolding, beginning with [`0.1.0-alpha.2`](https://unpkg.com/@common-grants/cli@0.1.0-alpha.2/dist/services/init.service.js), fetch `templates/template.json` from the `main` branch at runtime, as shown by the [initializer source before this decision](https://github.com/HHS/simpler-grants-protocol/blob/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/lib/cli/src/commands/init/init-service.ts#L6). The manifest currently lists relative file paths, so TypeSpec resolves those files from the same branch. Changes to the manifest or its referenced files therefore change what installed releases generate. Deleting the manifest causes their initialization command to fail.
 
-Issue [#612](https://github.com/HHS/simpler-grants-protocol/issues/612) moved the root templates and examples to a manual maintenance tier. Their package pins and documentation subsequently drifted, and their workflows have no scheduled or release-triggered signal.
+The repository's [dependency policy](https://github.com/HHS/simpler-grants-protocol/blob/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/DEPENDENCY_MANAGEMENT.md) moved the root templates and examples to a manual maintenance tier. Their package pins and documentation subsequently drifted, and their workflows have no scheduled or release-triggered signal.
 
-Current developer-tooling work calls for maintained TypeScript and Python API templates, documentation, and usability tests beginning from existing data sources ([#576](https://github.com/HHS/simpler-grants-protocol/issues/576)). Separate implementation issues define the Express ([#332](https://github.com/HHS/simpler-grants-protocol/issues/332)) and Hono ([#1152](https://github.com/HHS/simpler-grants-protocol/issues/1152)) template outcomes. The Express issue still names `cg init`, so this decision also separates template ownership from CLI distribution.
+CommonGrants needs maintained TypeScript and Python API templates that help adopters turn existing data sources into working APIs. The current `cg init` distribution model couples those templates to the protocol repository and to already-published CLI releases.
 
 The existing documentation uses the current artifacts in different ways. Getting Started generates a small TypeSpec specification from `quickstart`; the TypeScript and Python guides generate framework applications from `express-js` and `fast-api`. From 2025-09-01 through 2026-08-31, npm reported [3,840 downloads of the CLI package](https://api.npmjs.org/downloads/point/2025-09-01:2026-08-31/@common-grants/cli). That package-level proxy does not identify which command ran, so this decision treats reliance on `cg init` as unknown rather than zero.
 
@@ -41,8 +41,6 @@ Each standalone template is a supported developer-tooling surface. Before the co
 - integration with the applicable CommonGrants SDK for request and response validation;
 - a generated OpenAPI document and automated CommonGrants contract validation;
 - dependency automation and tests against its supported SDK range.
-
-[Issue #576](https://github.com/HHS/simpler-grants-protocol/issues/576)'s three usability tests remain a portfolio-level obligation.
 
 Package-local example code under `lib/ts-sdk/examples/` and `lib/python-sdk/examples/` remains inside package boundaries and under package CI. References from those examples to the legacy CA and PA backends are part of the migration: they must point to a maintained template, package-local mock, or active external API before the root `examples/` directory is deleted.
 
@@ -154,11 +152,11 @@ This option is best if limiting maintenance to one TypeScript and one Python tem
 :::
 
 - **Pros**
-  - Satisfies issue #576's language-level requirements with two repositories instead of three.
+  - Provides TypeScript and Python paths with two repositories instead of three.
   - Gives each language one default onboarding path.
   - Reduces duplicated TypeScript compatibility and documentation work.
 - **Cons**
-  - Requires choosing between Express and Hono even though issues #332 and #1152 request each separately.
+  - Requires choosing between the two planned TypeScript framework paths.
   - Removes an existing framework path without usage evidence or a recorded supersession decision.
 
 ### Use one standalone repository per framework template
@@ -188,14 +186,13 @@ This option is best if reducing maintenance is more important than the developer
   - Keeps onboarding concentrated in protocol and SDK documentation.
   - Requires no new repository ownership.
 - **Cons**
-  - Does not satisfy issue #576's TypeScript and Python template outcomes.
-  - Removes the Express and FastAPI journeys while issue #1152 creates another framework journey.
+  - Does not provide the TypeScript and Python starter paths.
   - Leaves teams to assemble validation, OpenAPI generation, and project structure themselves.
 
 ## Deferred
 
 - **Template creation mechanism beyond direct repository use.** A future `npm create` command or other generator may be considered separately; the standalone repositories do not require a central runtime service.
-- **Additional frameworks.** The open [Go template issue #333](https://github.com/HHS/simpler-grants-protocol/issues/333) depends on a Go SDK and is not selected or rejected by this three-template decision.
+- **Additional frameworks.** A Go template depends on a Go SDK and is not selected or rejected by this three-template decision.
 - **Website treatment of the active CA and PA repositories.** The active repositories remain available; deciding whether and how to present them as reference material is separate documentation work.
 
 ## Revisit triggers
@@ -204,22 +201,3 @@ This option is best if reducing maintenance is more important than the developer
 - A template lacks an owner or repeatedly misses its declared SDK compatibility window.
 - User evidence supports adding or retiring a framework path.
 - A shared generator becomes necessary to keep the standalone repositories consistent.
-
-## Conformance
-
-The template repositories demonstrate framework-specific transports without adding those transports to the CommonGrants protocol contract. This ADR does not define production authentication, personal-data handling, logging, rate limits, or deployment behavior; those remain responsibilities of adopters and template implementation issues. The decision adds repository and CI cost but changes no protocol runtime, storage path, or wire-shape performance characteristic.
-
-| Aspect                                     | Convention                                                                                                                                                                          | Conforms / Diverges                                                                                                                                           |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Pagination                                 | [ADR 0011](/governance/adr/0011-pagination/) uses `page` and `pageSize`                                                                                                             | N/A — no pagination changes                                                                                                                                   |
-| Identifiers                                | [ADR 0023](/governance/adr/0023-org-ids/) and the `{resource}Id` path convention                                                                                                    | N/A — no identifier changes                                                                                                                                   |
-| Headers                                    | Existing headers in `lib/core/lib/core/routes/`                                                                                                                                     | N/A — no header changes                                                                                                                                       |
-| Field names                                | `createdAt` and `lastModifiedAt` in `lib/core/lib/core/fields/metadata.tsp`                                                                                                         | N/A — no field-name changes                                                                                                                                   |
-| Response shapes                            | Existing success and error wrappers in `lib/core/lib/core/responses/`                                                                                                               | N/A — no response-shape changes                                                                                                                               |
-| Transport boundary                         | [ADR 0022](/governance/adr/0022-plugin-framework/) defines typed integration slots while leaving concrete transport behavior to plugin authors and deployments                      | Conforms — templates demonstrate transports without making a framework part of the protocol                                                                   |
-| Dependency maintenance                     | [`DEPENDENCY_MANAGEMENT.md`](https://github.com/HHS/simpler-grants-protocol/blob/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/DEPENDENCY_MANAGEMENT.md) defines the current manual tier | N/A — implementation removes the monorepo tier entries; each standalone repository defines its own automated policy                                           |
-| CLI deprecation, reliability, and security | No prior ADR defines this retirement shape                                                                                                                                          | N/A — the bridge is new territory and explicitly retains remote-install exposure until removal                                                                |
-| Bridge freshness                           | [Issue #1089](https://github.com/HHS/simpler-grants-protocol/issues/1089) requires automated freshness for retained artifacts                                                       | Diverges — the frozen bridge uses exact-content integrity instead of updating dependencies                                                                    |
-| Operations                                 | Release, rollback, migration, and versioning consequences must be explicit                                                                                                          | Conforms — replacement gates protect migration; the retirement release starts the bridge; a named owner removes the protected manifest on a calendar deadline |
-
-**Bridge-freshness exception.** This is a scoped exception to #1089's freshness requirement for the 90-day compatibility bridge, not for the maintained template repositories. It serves users of affected installed CLIs during a bounded deprecation period. Updating the archived content would restore mutable output and maintenance obligations, so the bridge preserves an exact reviewed manifest and snapshot until its scheduled deletion.
