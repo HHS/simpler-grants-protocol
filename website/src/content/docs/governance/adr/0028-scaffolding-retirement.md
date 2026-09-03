@@ -89,7 +89,7 @@ The commit SHA fixes the content but not the availability of these URLs. An unav
 
 - **A future template service.** This ADR removes the current surface rather than choosing a versioned home for a replacement. A later ADR may reconsider one if usage evidence justifies its ownership and operational cost.
 - **Website treatment of the active CA and PA repositories.** The active repositories remain available; deciding whether and how to present them as reference material is separate documentation work.
-- **Held template maintenance.** Retirement supersedes the premise of [issue #506](https://github.com/HHS/simpler-grants-protocol/issues/506); implementation tracking will disposition that issue.
+- **Held template maintenance.** Retirement supersedes the premise of [issue #506](https://github.com/HHS/simpler-grants-protocol/issues/506) — the templates it would update are being removed. The implementation tickets close #506 as superseded.
 
 ## Revisit triggers
 
