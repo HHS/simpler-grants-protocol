@@ -26,7 +26,33 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Release Please creates tags, GitHub releases, and publish fan-out in one
+  # run. Audit first so none of those effects in this automated release path
+  # can begin while the dependency gate is failing.
+  dependency-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit all workspace packages
+        run: pnpm audit
+
   release-please:
+    needs: dependency-audit
     runs-on: ubuntu-latest
     steps:
       # Only a push can cut a release. A manual dispatch skips this step and

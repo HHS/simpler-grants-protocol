@@ -119,6 +119,7 @@ Audits run where dependencies actually change, at the Release Please production 
 |----------|---------|-----------|-----------|
 | `ci-catalog-validation.yml` | `pnpm audit --audit-level=moderate` | moderate and above | A PR touches `pnpm-workspace.yaml`, `pnpm-lock.yaml`, or `.github/dependabot.yml`; also `workflow_dispatch` |
 | `deps-audit.yml` | `pnpm audit` | low and above | Daily at 15:00 UTC on `main`; every Release Please version PR (identified by its `.release-please-manifest.json` update); also `workflow_dispatch`, and a PR touching the workflow itself as a smoke test |
+| `cd-release.yml` | `pnpm audit` | low and above | Before Release Please can update a version PR, create a tag or GitHub release, or start its publish fan-out |
 | `ci-template-quickstart.yml`, `ci-template-express-js.yml` | `pnpm audit` | low and above | A PR touches that template |
 | `ci-template-fast-api.yml`, `ci-example-california-api.yml`, `ci-example-pennsylvania-api.yml` | `poetry audit` | nothing (`continue-on-error`) | A PR touches that template or example |
 | `ci-lib-pysdk.yml` | none | nothing | No audit gate today. See the Python SDK note below |
