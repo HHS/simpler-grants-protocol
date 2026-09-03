@@ -1,4 +1,4 @@
-name: "CD - Deploy Website to GH Pages"
+name: "CD - Deploy Website"
 
 on:
   # Trigger the workflow every time we push to the `main` branch
@@ -7,14 +7,20 @@ on:
     branches: [main]
     paths:
       - "website/**"
+      - ".github/workflows/cd-deploy-website.yml"
   # Allows us to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
 
-# Allow this job to clone the repo and create a page deployment
+# Serialize whole runs (build + deploy) so a slow older build can't deploy
+# after a newer one. The default single pending slot skips stale intermediate
+# runs; only the newest queued run deploys.
+concurrency:
+  group: deploy-website-${{ github.ref }}
+  cancel-in-progress: false
+
+# Allow this job to clone the repo
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   build:
@@ -38,20 +44,55 @@ jobs:
       - name: Build website
         run: pnpm --filter website build
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+      - name: Upload build output
+        # Handed to deploy-cloudflare so the deploy ships this exact build
+        # instead of rebuilding it.
+        uses: actions/upload-artifact@v7
         with:
-          path: ./website/dist
+          name: website-build
+          path: website/dist
+          retention-days: 1
+          if-no-files-found: error
 
-  deploy:
+  # Production deploy to the shared `common-grants` Cloudflare Worker, which
+  # serves commongrants.org.
+  deploy-cloudflare:
     needs: build
     runs-on: ubuntu-latest
     # Only deploy from main branch
     if: github.ref == 'refs/heads/main'
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: cloudflare
+      url: https://commongrants.org
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+
+      - name: Download build output
+        uses: actions/download-artifact@v8
+        with:
+          name: website-build
+          path: website/dist
+
+      - name: Deploy to Cloudflare Worker
+        # Uploads a new version of the Worker named in website/wrangler.jsonc
+        # (common-grants) and switches live traffic to it. PR previews are versions of this same Worker.
+        #
+        # `--config dist/server/wrangler.json` (the same config the preview
+        # upload uses): the checked-in wrangler.jsonc is the adapter's INPUT and
+        # describes an assets-only Worker with no `main`, so deploying it
+        # directly would ship the static site without its Worker entrypoint.
+        working-directory: ./website
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm dlx wrangler@4 deploy --config dist/server/wrangler.json

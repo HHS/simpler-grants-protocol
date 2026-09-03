@@ -1,7 +1,15 @@
 {
+  // Keep this name: `.github/scripts/upload-worker-preview.sh` targets the
+  // `common-grants` Worker by name and publishes PR previews as versions of it.
   "name": "common-grants",
   "compatibility_date": "2025-08-01",
+  // Required by the `@astrojs/cloudflare` adapter, whose build imports `node:fs`.
+  "compatibility_flags": ["nodejs_compat"],
+  // No `main` on purpose — the adapter injects one at build time. This file
+  // alone describes an assets-only Worker; deploys and local previews must use
+  // the generated config: `--config dist/server/wrangler.json`.
   "assets": {
-    "directory": "./dist",
+    // `dist/client`, not `dist`: the adapter splits the build output.
+    "directory": "./dist/client",
   },
 }

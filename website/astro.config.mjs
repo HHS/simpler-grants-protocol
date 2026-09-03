@@ -1,13 +1,37 @@
 // @ts-check
-import { defineConfig } from "astro/config";
+import { defineConfig, sessionDrivers } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightLinksValidator from "starlight-links-validator";
 
 import react from "@astrojs/react";
+import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
   site: "https://commongrants.org",
+  // Every page is prerendered. The one exception, `src/pages/api/[...path].ts`,
+  // opts out with `prerender = false` and is the only reason an adapter is needed.
+  output: "static",
+  // Serves the one dynamic route: the adapter emits the prerendered site plus
+  // a small Worker for that route — see `wrangler.jsonc`.
+  adapter: cloudflare({
+    // Prerender in Node, not the adapter's default workerd sandbox: build-time
+    // code reads ~1000 generated files via `process.cwd()`, which is `/` there.
+    prerenderEnvironment: "node",
+    // Optimize images with Sharp at build time; the default `cloudflare-binding`
+    // defers to a runtime endpoint and needs an `IMAGES` binding.
+    imageService: "compile",
+  }),
+  // Sessions are unused, but a non-KV driver stops the adapter injecting a
+  // `SESSION` KV binding, whose auto-provisioning fails on repeat preview uploads.
+  session: { driver: sessionDrivers.lruCache() },
+  security: {
+    // Left ON deliberately (#1078). This CSRF guard answers a bare 403 to a
+    // cross-origin non-GET that takes no body, where the 3A Worker returned a
+    // protocol-shaped 404 — the accepted trade-off. The mock's own GET and
+    // JSON POST requests pass even cross-origin.
+    checkOrigin: true,
+  },
   // Restore the documented GFM default for .mdx files. Astro 6.4.x stopped
   // populating `markdown.gfm`, and the @astrojs/mdx version bundled by
   // Starlight 0.39.x silently drops remark-gfm when the value is absent,
