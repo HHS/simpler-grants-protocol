@@ -14,11 +14,15 @@ const { hasSidebar, sidebar } = Astro.locals.starlightRoute;
         aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}
       >
         <MobileMenuToggle />
-        <div id="starlight__sidebar" class="sidebar-pane">
+        <sl-sidebar-pane
+          popover=""
+          id="starlight__sidebar"
+          class="sidebar-pane"
+        >
           <div class="sidebar-content sl-flex">
             <slot name="sidebar" />
           </div>
-        </div>
+        </sl-sidebar-pane>
       </nav>
     )
   }
@@ -29,16 +33,55 @@ const { hasSidebar, sidebar } = Astro.locals.starlightRoute;
         aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}
       >
         <MobileMenuToggle />
-        <div id="starlight__sidebar-splash" class="sidebar-pane md:sl-hidden">
+        {/* Mobile-only sidebar for splash pages, which have no sidebar slot.
+            The id must stay `starlight__sidebar` — Starlight's MobileMenuToggle
+            hardcodes `popovertarget="starlight__sidebar"`. */}
+        <sl-sidebar-pane
+          popover=""
+          id="starlight__sidebar"
+          class="sidebar-pane md:sl-hidden"
+        >
           <div class="sidebar-content sl-flex">
             <Sidebar sidebar={sidebar} />
           </div>
-        </div>
+        </sl-sidebar-pane>
       </nav>
     )
   }
   <div class="main-frame"><slot /></div>
 </div>
+
+<script>
+  // The mobile menu uses the popover API to open and close without JavaScript.
+  // We enhance this behavior with focus trapping while the menu is open.
+  // Mirrors Starlight's own PageFrame; kept in sync on Starlight upgrades.
+  class StarlightSidebarPane extends HTMLElement {
+    constructor() {
+      super();
+
+      // Close the menu when the viewport is resized between mobile and desktop.
+      matchMedia("(min-width: 50em)").addEventListener("change", () =>
+        this.hidePopover(),
+      );
+
+      // Update the menu state when the sidebar popover is toggled.
+      this.addEventListener("toggle", (event) => {
+        this.trapFocus((event as ToggleEvent).newState === "open");
+      });
+    }
+
+    /** Trap keyboard focus inside the header and menu when the menu is expanded. */
+    trapFocus(shouldTrap: boolean) {
+      document
+        .querySelectorAll<HTMLElement>(".main-frame, .sl-skip-link")
+        .forEach((el) => {
+          el.toggleAttribute("inert", shouldTrap);
+        });
+    }
+  }
+
+  customElements.define("sl-sidebar-pane", StarlightSidebarPane);
+</script>
 
 <style>
   @layer starlight.core {
@@ -56,7 +99,6 @@ const { hasSidebar, sidebar } = Astro.locals.starlightRoute;
       height: var(--sl-nav-height);
       border-bottom: 1px solid var(--sl-color-hairline-shade);
       padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
-      padding-inline-end: var(--sl-nav-pad-x);
       background-color: var(--sl-color-bg-nav);
       padding-inline-end: calc(
         var(--sl-nav-gap) + var(--sl-nav-pad-x) + var(--sl-menu-button-size)
@@ -64,7 +106,12 @@ const { hasSidebar, sidebar } = Astro.locals.starlightRoute;
     }
 
     .sidebar-pane {
-      visibility: var(--sl-sidebar-visibility, hidden);
+      /* User agents apply opinionated styles to popovers, which we don't want. */
+      border: unset;
+      padding: unset;
+      height: unset;
+      color: unset;
+
       position: fixed;
       z-index: var(--sl-z-index-menu);
       inset-block: var(--sl-nav-height) 0;
@@ -72,10 +119,7 @@ const { hasSidebar, sidebar } = Astro.locals.starlightRoute;
       width: 100%;
       background-color: var(--sl-color-black);
       overflow-y: auto;
-    }
-
-    :global([aria-expanded="true"]) ~ .sidebar-pane {
-      --sl-sidebar-visibility: visible;
+      scrollbar-gutter: stable;
     }
 
     .sidebar-content {
@@ -103,7 +147,10 @@ const { hasSidebar, sidebar } = Astro.locals.starlightRoute;
         padding-inline-end: var(--sl-nav-pad-x);
       }
       .sidebar-pane {
-        --sl-sidebar-visibility: visible;
+        /* Visible on larger screens instead of deferring to popover state.
+           The splash pane carries `md:sl-hidden`, which wins here because the
+           starlight.utils layer is declared after starlight.core. */
+        display: block;
         width: var(--sl-sidebar-width);
         background-color: var(--sl-color-bg-sidebar);
         border-inline-end: 1px solid var(--sl-color-hairline-shade);

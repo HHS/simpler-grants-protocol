@@ -32,12 +32,6 @@ export default defineConfig({
     // JSON POST requests pass even cross-origin.
     checkOrigin: true,
   },
-  // Restore the documented GFM default for .mdx files. Astro 6.4.x stopped
-  // populating `markdown.gfm`, and the @astrojs/mdx version bundled by
-  // Starlight 0.39.x silently drops remark-gfm when the value is absent,
-  // breaking tables in .mdx pages. See withastro/astro#16971. This line can
-  // be removed once Starlight is on @astrojs/mdx@^6 (Starlight >= 0.40.0).
-  markdown: { gfm: true },
   redirects: {
     // These pages were consolidated into a single page for the opportunity models.
     "/protocol/models/opp-base": "/protocol/models/opportunity#opportunitybase",

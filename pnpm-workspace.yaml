@@ -41,6 +41,11 @@ catalogs:
   website:
     vitest: ^4.1.9
 
+supportedArchitectures:
+  cpu:
+    - current
+    - wasm32
+
 overrides:
   '@humanfs/node@<0.16.8': '>=0.16.8 <0.17'
   axios@<1.15.0: '>=1.15.0'
