@@ -47,13 +47,13 @@
     "@types/react-dom": "^18.3.7",
     "ajv": "^8.20.0",
     "astro": "^7.2.1",
-    "js-yaml": "^4.3.1",
+    "js-yaml": "^4.3.2",
     "json-schema-merge-allof": "^0.8.1",
     "openapi-sampler": "^1.7.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "sharp": "^0.35.3",
-    "swagger-ui-dist": "^5.32.13",
+    "sharp": "^0.35.4",
+    "swagger-ui-dist": "^5.32.14",
     "tsx": "^4.23.12",
     "typescript": "catalog:",
     "typespec-versioning-changelog": "workspace:*",
@@ -84,6 +84,6 @@
     "starlight-links-validator": "^0.24.0",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
-    "wrangler": "^4.123.0"
+    "wrangler": "^4.127.1"
   }
 }
