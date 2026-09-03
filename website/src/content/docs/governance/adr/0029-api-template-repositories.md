@@ -23,7 +23,7 @@ The existing documentation uses the current artifacts in different ways. Getting
 6. **Delete the root `examples/` directory.** This includes the legacy CA and PA applications, `examples/README.md`, and the unreferenced `examples/opportunity_example.py`. The active [California](https://github.com/agilesix/cg-api-ca/tree/55f535fdbb3747e4c8b05fea4ef2f8293df492a1) and [Pennsylvania](https://github.com/agilesix/cg-api-pa/tree/4d067a4559cb51aefa10290a11314ef37e8a8cb9) API repositories are separate and unaffected. Comparison with the pinned legacy [CA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/ca-opportunity-example) and [PA](https://github.com/HHS/simpler-grants-protocol/tree/b99d2cfcef34c7dcfde6e5376ae3c7e2b41e116e/examples/pa-opportunity-example) trees found no behavior that requires retaining either legacy application as a second executable reference.
 7. **Provide a 90-day commit-pinned compatibility bridge.** Already-published CLIs will continue fetching `templates/template.json` from `main`, but that manifest will point every legacy template file to an absolute raw GitHub URL containing the full commit SHA of the final monorepo snapshot. The root template projects can then be removed from `main`; only the manifest remains during the bridge. The bridge preserves old output temporarily and does not distribute or update the standalone replacements.
 
-TypeSpec leaves absolute template file URLs unchanged, so the retained manifest can resolve the removed files at the pinned commit. The SHA fixes their content but not their availability.
+TypeSpec [leaves absolute template file URLs unchanged](https://unpkg.com/@typespec/compiler@1.13.0/dist/src/utils/misc.js), so the retained manifest can resolve the removed files at the pinned commit. The SHA fixes their content but not their availability.
 
 The retirement release starts the 90-day window. Its implementation must:
 
@@ -80,7 +80,7 @@ Package-local example code under `lib/ts-sdk/examples/` and `lib/python-sdk/exam
 - **Keep and refresh all templates in this monorepo** — Rejected.
 - **Move all maintained templates into one external repository** — Rejected.
 - **Maintain one template per language** — Rejected.
-- **Use one standalone repository per framework template** — Selected.
+- **Treat artifact classes differently: move the quickstart into the guide, use one standalone repository per framework template, and delete the legacy examples** — Selected.
 - **Retire all full application templates** — Rejected.
 
 The standalone-repository option is selected because the template portfolio is an intentional developer-tooling product, while the protocol monorepo is not the right maintenance boundary for three framework applications. Staleness in the current projects is evidence that they need explicit ownership and automation, not evidence that their user journeys should be removed. Separate repositories also let Express and Hono remain distinct TypeScript choices while FastAPI serves Python adopters.
