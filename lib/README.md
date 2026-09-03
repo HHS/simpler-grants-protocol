@@ -61,7 +61,7 @@ A `BREAKING CHANGE:` footer in the squashed commit body also triggers a breaking
 
 ### Step 3: Merge the PR
 
-Once the PR is merged into `main`, the `release-please.yml` workflow updates (or opens) a **Release PR** for each affected package. The Release PR accumulates every releasable commit since the package's last release, and contains the version bump (`package.json` for Node packages, `pyproject.toml` and `common_grants_sdk/__init__.py` for Python) plus the generated `CHANGELOG.md` entry.
+Once the PR is merged into `main`, the `cd-release.yml` workflow updates (or opens) a **Release PR** for each affected package. The Release PR accumulates every releasable commit since the package's last release, and contains the version bump (`package.json` for Node packages, `pyproject.toml` and `common_grants_sdk/__init__.py` for Python) plus the generated `CHANGELOG.md` entry.
 
 Nothing is published at this point — merges can stack in the Release PR until the team is ready to ship.
 
@@ -71,11 +71,12 @@ Merging a package's Release PR:
 
 1. Tags `main` with the new version (e.g. `@common-grants/core@0.4.0`, `common-grants-sdk@0.9.0`)
 2. Creates the GitHub release with the changelog entry as its notes
-3. Triggers the package's deploy workflow, publishing to npm (Node packages) or PyPI (Python SDK)
+3. Publishes the package from the same workflow run, to npm (Node packages) or PyPI (Python SDK)
 
 ### Re-running a failed publish
 
-The per-package deploy workflows (`cd-deploy-lib-*.yml`) keep a `workflow_dispatch` trigger. To retry a publish for an existing tag, run the matching workflow from the **Actions** tab and enter the release tag.
+- **Publish retry (npm or PyPI):** Dispatch `cd-release.yml` with the package and its existing tag. This publishes only; it does not create a release.
+- **Release Please retry:** Re-run the failed Action or merge another commit to `main`.
 
 ---
 

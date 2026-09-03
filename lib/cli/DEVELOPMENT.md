@@ -39,7 +39,7 @@ Steps to follow when preparing a new release of the CommonGrants core library.
   - [ ] (Optional) A pre-release of the new version with an `alpha`, `beta`, or `rc` tag has been manually published to test the installation from npm
   - [ ] The PR title uses the [conventional commit type](../README.md#step-2-title-your-pr-with-a-conventional-commit) matching the intended release impact (`fix` = patch, `feat` = minor, `!` = breaking) and meaningfully summarizes the change
 - [ ] After merging:
-  - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/release-please.yml) workflow ran and updated (or opened) the `@common-grants/cli` Release PR
+  - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-release.yml) workflow ran and updated (or opened) the `@common-grants/cli` Release PR
 
 ### Release checklist
 
