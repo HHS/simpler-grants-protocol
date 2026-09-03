@@ -7,14 +7,18 @@ name: "Deps: Scheduled Dependency Audit"
 # updates the root lockfile, which triggers it). The Python SDK resolves
 # through its own poetry.lock and is covered by neither; see
 # DEPENDENCY_MANAGEMENT.md.
+# Release Please version PRs rerun the same audit before a package ships.
 on:
   schedule:
     # Daily at ~7-8am PT (15:00 UTC = 8am PDT / 7am PST)
     - cron: "0 15 * * *"
   workflow_dispatch:
-  # Smoke-test on changes here.
+  # Release Please updates the manifest in every version PR, making it a stable
+  # trigger across all four independently released packages. Changes to this
+  # workflow also trigger the job as an end-to-end smoke test.
   pull_request:
     paths:
+      - .release-please-manifest.json
       - .github/workflows/deps-audit.yml
 
 permissions:
