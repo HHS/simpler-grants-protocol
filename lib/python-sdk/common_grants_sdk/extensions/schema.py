@@ -217,8 +217,9 @@ def _output_field_names(model: type[BaseModel]) -> set[str]:
     """Valid top-level output keys for a model: field names plus their aliases."""
     names: set[str] = set(model.model_fields.keys())
     for info in model.model_fields.values():
-        if info.alias:
-            names.add(info.alias)
+        for alias in (info.alias, info.validation_alias, info.serialization_alias):
+            if isinstance(alias, str):
+                names.add(alias)
     return names
 
 

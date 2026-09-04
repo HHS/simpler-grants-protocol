@@ -41,7 +41,6 @@ class ApplicantType(CommonGrantsBaseModel):
     )
     custom_value: Optional[str] = Field(
         default=None,
-        alias="customValue",
         description="A custom applicant type value, only meaningful when value='custom'",
     )
     description: Optional[str] = Field(
