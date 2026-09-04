@@ -7,6 +7,7 @@ import SiteTitle from "@astrojs/starlight/components/SiteTitle.astro";
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
 import MobileMenuToggle from "@astrojs/starlight/components/MobileMenuToggle.astro";
+import Sidebar from "@astrojs/starlight/components/Sidebar.astro";
 import { LinkButton } from "@astrojs/starlight/components";
 import NavMenuItem, {
   type Props as NavMenuItemProps,
@@ -84,6 +85,8 @@ const props: Props = {
 
 const { ctaButton, navMenuItems } = props;
 
+const { hasSidebar, sidebar } = Astro.locals.starlightRoute;
+
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
  */
@@ -92,7 +95,7 @@ const shouldRenderSearch =
   config.components.Search !== "@astrojs/starlight/components/Search.astro";
 ---
 
-<div class="header">
+<div class:list={["header", !hasSidebar && "reserve-menu-button"]}>
   <div class="title-wrapper sl-flex">
     <SiteTitle />
   </div>
@@ -117,12 +120,93 @@ const shouldRenderSearch =
         </LinkButton>
       )
     }
-    <MobileMenuToggle />
   </div>
 </div>
 
+{
+  !hasSidebar && (
+    <nav
+      class="print:hidden"
+      aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}
+    >
+      <MobileMenuToggle />
+      {/* Starlight renders no sidebar on splash pages, so the navbar links
+          would otherwise be unreachable on mobile (#261). The id must stay
+          `starlight__sidebar` — MobileMenuToggle hardcodes
+          `popovertarget="starlight__sidebar"`. */}
+      <div
+        popover
+        id="starlight__sidebar"
+        class="sidebar-pane md:sl-hidden"
+        data-splash-sidebar
+      >
+        <div class="sidebar-content sl-flex">
+          <Sidebar sidebar={sidebar} />
+        </div>
+      </div>
+    </nav>
+  )
+}
+
+<script>
+  // Focus-trap the splash-page menu while it is open, mirroring what
+  // Starlight's own PageFrame does for pages that have a sidebar. Scoped to
+  // our pane so it never double-binds upstream's on regular docs pages.
+  const pane = document.querySelector<HTMLElement>("[data-splash-sidebar]");
+
+  if (pane) {
+    matchMedia("(min-width: 50em)").addEventListener("change", () =>
+      pane.hidePopover(),
+    );
+
+    pane.addEventListener("toggle", (event) => {
+      const open = (event as ToggleEvent).newState === "open";
+      document
+        .querySelectorAll<HTMLElement>(".main-frame, .sl-skip-link")
+        .forEach((el) => el.toggleAttribute("inert", open));
+    });
+  }
+</script>
+
 <style>
   @layer starlight.core {
+    /* Splash-page mobile menu. Mobile-only: the pane carries `md:sl-hidden`,
+       and the starlight.utils layer is declared after starlight.core, so that
+       wins above 50rem — no desktop rules needed here. */
+    .sidebar-pane {
+      /* User agents apply opinionated styles to popovers, which we don't want. */
+      border: unset;
+      padding: unset;
+      height: unset;
+      color: unset;
+
+      position: fixed;
+      z-index: var(--sl-z-index-menu);
+      inset-block: var(--sl-nav-height) 0;
+      inset-inline-start: 0;
+      width: 100%;
+      background-color: var(--sl-color-black);
+      overflow-y: auto;
+      scrollbar-gutter: stable;
+    }
+
+    .sidebar-content {
+      height: 100%;
+      min-height: max-content;
+      padding: 1rem var(--sl-sidebar-pad-x) 0;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Starlight's PageFrame reserves room for the fixed menu button only on
+       pages carrying [data-has-sidebar]. Splash pages need it too now that
+       they render a button. */
+    .reserve-menu-button {
+      padding-inline-end: calc(
+        var(--sl-nav-gap) + var(--sl-nav-pad-x) + var(--sl-menu-button-size)
+      );
+    }
+
     .search-container {
       max-width: 10rem;
     }
