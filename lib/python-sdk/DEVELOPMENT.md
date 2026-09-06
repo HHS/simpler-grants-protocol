@@ -30,7 +30,7 @@ poetry run pytest
 
 Run tests with coverage report:
 ```bash
-poetry run pytest --cov=common_grants --cov-report=term-missing
+poetry run pytest --cov=common_grants_sdk --cov-report=term-missing
 ```
 
 ### Code Quality
