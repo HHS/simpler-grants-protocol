@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { throwHttpError } from "../errors";
 import type { Client } from "../client";
 import type { PluginRoutes } from "../../extensions/types";
 
@@ -32,9 +33,7 @@ export abstract class Resource<TItem> {
     const response = await this.client[method](path, payload);
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to ${method.toUpperCase()} ${path}: ${response.status} ${response.statusText}`
-      );
+      await throwHttpError(response);
     }
 
     return opts.responseSchema.parse(await response.json());

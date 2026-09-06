@@ -142,9 +142,9 @@ describe("Opportunities", () => {
       expect(opp.status.value).toBe("open");
     });
 
-    it("throws on 404", async () => {
+    it("throws ClientError on 404", async () => {
       await expect(client.opportunities.get(NOT_FOUND_UUID)).rejects.toThrow(
-        `Failed to get opportunity ${NOT_FOUND_UUID}: 404`
+        `404: Request failed`
       );
     });
 

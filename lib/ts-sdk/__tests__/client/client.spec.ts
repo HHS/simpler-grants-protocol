@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
 import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
-import { Client, Auth, BatchParseError } from "../../src/client";
+import { Client, Auth, BatchParseError, ClientError } from "../../src/client";
 
 // =============================================================================
 // Mock data helpers
@@ -518,8 +518,11 @@ describe("Client", () => {
         })
       );
 
-      await expect(defaultClient.fetchMany("/test-items", { pageSize: 5 })).rejects.toThrow("500");
+      await expect(defaultClient.fetchMany("/test-items", { pageSize: 5 })).rejects.toThrow(ClientError);
     });
+
+
+
 
     it("calls schema.safeParse for each item when provided", async () => {
       const parseCalls: unknown[] = [];

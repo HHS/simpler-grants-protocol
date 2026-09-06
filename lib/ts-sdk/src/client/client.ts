@@ -7,6 +7,7 @@ import { Auth, buildAuthHeaders, type AuthMethod } from "./auth";
 import { Opportunities } from "./resources/opportunities";
 import { EXTENSIBLE_SCHEMA_MAP } from "../extensions/types";
 import { parseBatch, type OnParseError, type ParseFailure } from "./results";
+import { throwHttpError } from "./errors";
 import type { Paginated } from "../types";
 import type { z } from "zod";
 
@@ -269,7 +270,7 @@ export class Client {
     const allItems: T[] = [...firstResult.items.slice(0, maxItems)];
     // Per-row parse failures aggregate across pages; each failure's `index` is
     // relative to its own page's rows. Failures are reported for every fetched
-    // row â€” including rows past the maxItems cap, which truncates items only.
+    // row â€?including rows past the maxItems cap, which truncates items only.
     const allErrors: ParseFailure[] = [...firstResult.errors];
 
     // Fetch remaining pages, up to maxItems.
@@ -341,7 +342,7 @@ export class Client {
 
     // Throw an error if the response is not OK.
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
+      await throwHttpError(response);
     }
 
     // Parse/validate items if schema is provided; valid rows partition into
@@ -352,7 +353,7 @@ export class Client {
       ? parseBatch(options.schema, rawItems, options?.onParseError ?? "collect")
       : { items: rawItems as T[], errors: [] as ParseFailure[] };
 
-    // Determine if this is the last page from the RAW row count â€” a
+    // Determine if this is the last page from the RAW row count â€?a
     // parse-shrunk page must not read as the last page.
     const totalPages = paginationInfo.totalPages ?? undefined;
     const isLastPage =

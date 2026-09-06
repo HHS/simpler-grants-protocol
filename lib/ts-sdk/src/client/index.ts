@@ -28,4 +28,5 @@ export { RESOURCE_REGISTRY } from "./resources/registry";
 export { Auth, type AuthMethod } from "./auth";
 export { type ClientConfig, type ResolvedConfig } from "./config";
 export { parseBatch, BatchParseError } from "./results";
+export { ClientError, throwHttpError } from "./errors";
 export type { ParseFailure, OnParseError, ListResult, SearchResult } from "./results";

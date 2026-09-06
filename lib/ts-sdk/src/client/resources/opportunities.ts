@@ -20,6 +20,7 @@ import type { CustomFilterType, PluginRoutes } from "../../extensions/types";
 import { parseBatch } from "../results";
 import type { ListResult, OnParseError, SearchResult } from "../results";
 import { Resource } from "./base";
+import { throwHttpError } from "../errors";
 
 // =============================================================================
 // Schema type constraint
@@ -192,7 +193,7 @@ export class Opportunities<
     const response = await this.client.get(`${this.basePath}/${encodeURIComponent(id)}`);
 
     if (!response.ok) {
-      throw new Error(`Failed to get opportunity ${id}: ${response.status} ${response.statusText}`);
+      await throwHttpError(response);
     }
 
     const json = await response.json();
@@ -247,7 +248,7 @@ export class Opportunities<
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to list opportunities: ${response.status} ${response.statusText}`);
+      await throwHttpError(response);
       }
 
       const json = await response.json();
@@ -419,7 +420,7 @@ export class Opportunities<
     const response = await this.client.post(`${this.basePath}/search`, requestBody, { signal });
 
     if (!response.ok) {
-      throw new Error(`Failed to search opportunities: ${response.status} ${response.statusText}`);
+      await throwHttpError(response);
     }
 
     const json = await response.json();
