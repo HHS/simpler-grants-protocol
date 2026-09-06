@@ -36,7 +36,7 @@ jobs:
         run: make checks
 
       - name: Run tests
-        run: make test
+        run: make test-coverage
 
       - name: Build package
         run: make build
