@@ -1,5 +1,9 @@
 RUNTIME_PREFIX := poetry run
-.PHONY: install format lint test build check-format check-lint check-types check-fixtures checks
+SRC_DIR := src/
+TEST_DIR := tests/
+PYTHON_DIRS := $(SRC_DIR) $(TEST_DIR)
+MIN_TEST_COVERAGE := 80
+.PHONY: install format lint test test-coverage build check-format check-lint check-types check-fixtures checks
 
 install:
 	poetry install
@@ -11,7 +15,10 @@ lint:
 	$(RUNTIME_PREFIX) ruff check .
 
 test:
-	$(RUNTIME_PREFIX) pytest
+	$(RUNTIME_PREFIX) pytest $(TEST_DIR) --cov=$(SRC_DIR) --cov-report=term-missing
+
+test-coverage: test
+	$(RUNTIME_PREFIX) coverage report --show-missing --fail-under=$(MIN_TEST_COVERAGE)
 
 build:
 	poetry build
@@ -38,4 +45,4 @@ check-fixtures:
 		exit 1; \
 	fi
 
-checks: check-format check-lint check-types check-fixtures
+checks: check-format check-lint check-types check-fixtures test-coverage
