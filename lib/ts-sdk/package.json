@@ -6,13 +6,7 @@
   },
   "license": "CC0-1.0",
   "description": "The CommonGrants protocol TypeScript SDK",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
     "./client": {
       "types": "./dist/src/client/index.d.ts",
       "default": "./dist/src/client/index.js"
