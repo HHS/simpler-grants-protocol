@@ -20,3 +20,4 @@ __all__ = [
     "define_plugin",
     "schema",
 ]
+from .utils.safe_access import SafeAccess
