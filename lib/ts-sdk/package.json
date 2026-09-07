@@ -6,6 +6,7 @@
   },
   "license": "CC0-1.0",
   "description": "The CommonGrants protocol TypeScript SDK",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
