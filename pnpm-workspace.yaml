@@ -16,7 +16,7 @@ allowBuilds:
 
 catalog:
   '@eslint/js': ^10.0.1
-  '@types/node': ^22.19.21
+  '@types/node': ^26.5.0
   '@typespec/compiler': ^1.13.0
   '@typespec/http': ^1.13.0
   '@typespec/json-schema': ^1.13.0
@@ -24,7 +24,7 @@ catalog:
   '@typespec/openapi3': ^1.13.0
   '@typespec/rest': ^0.83.0
   '@typespec/versioning': ^0.83.0
-  '@vitest/coverage-v8': ^4.1.8
+  '@vitest/coverage-v8': ^5.0.0
   '@vitest/eslint-plugin': ^1.6.20
   eslint: ^10.5.0
   eslint-config-prettier: ^10.1.8
@@ -32,14 +32,17 @@ catalog:
   globals: ^17.0.0
   prettier: ^3.8.4
   ts-node: ^10.9.2
-  typescript: ^6.0.3
+  typescript: ^7.0.2
   typescript-eslint: ^8.61.1
-  vitest: ^4.1.8
+  vitest: ^5.0.0
   zod: ^4.4.3
 
 catalogs:
   website:
-    vitest: ^4.1.9
+    vitest: ^5.0.0
+
+minimumReleaseAgeExclude:
+  - '@types/node@26.5.0'
 
 overrides:
   '@humanfs/node@<0.16.8': '>=0.16.8 <0.17'
