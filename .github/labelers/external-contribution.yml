@@ -1,0 +1,2 @@
+external-contribution:
+  - "created-by:not-(aviars|halprin|mezawebdev)"

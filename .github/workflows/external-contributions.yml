@@ -1,0 +1,68 @@
+name: "External Contributions: Label and Notify"
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if author is core team
+        id: check
+        env:
+          AUTHOR: ${{ github.event.sender.login }}
+          CORE_TEAM: aviars,halprin,mezawebdev
+        run: |
+          if IFS=',' read -ra TEAM <<< "$CORE_TEAM"; then
+            for member in "${TEAM[@]}"; do
+              if [[ "$AUTHOR" == "$member" ]]; then
+                echo "is-core=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            done
+          fi
+          echo "is-core=false" >> "$GITHUB_OUTPUT"
+
+      - name: Label external contribution
+        if: steps.check.outputs.is-core == 'false'
+        uses: actions/labeler@v6
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labelers/external-contribution.yml
+
+      - name: Post to Slack
+        if: steps.check.outputs.is-core == 'false'
+        uses: slackapi/slack-github-action@v2
+        with:
+          payload: |
+            {
+              "text": "<@here> New external contribution!",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*New external contribution*<br/>\
+                      <${{ github.event.issue.html_url || github.event.pull_request.html_url }}|\
+                      ${{ github.event.issue.title || github.event.pull_request.title }}>\
+                      by *${{ github.event.sender.login }}*<br/>\
+                      ${{ github.event.pull_request.number && 'PR' || 'Issue' }} in \
+                      ${{ github.repository }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
