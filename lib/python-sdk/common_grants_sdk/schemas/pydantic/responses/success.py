@@ -29,6 +29,17 @@ class Success(DefaultResponse):
     )
 
 
+class Created(Success, Generic[T]):
+    """Template for a 201 response with data."""
+
+    status: int = Field(
+        default=201,
+        description='The HTTP status code',
+        examples=[201],
+    )
+    data: T = Field(..., description='Response data')
+
+
 class Paginated(Success, Generic[ItemsT]):
     """Template for a response with a paginated list of items."""
 

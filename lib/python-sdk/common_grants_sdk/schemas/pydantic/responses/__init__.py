@@ -8,6 +8,7 @@ from .opportunity import (
     OpportunityResponse,
 )
 from .success import (
+    Created,
     Filtered,
     FilterInfo,
     Paginated,
@@ -26,4 +27,5 @@ __all__ = [
     "Paginated",
     "Sorted",
     "Success",
+    "Created",
 ]

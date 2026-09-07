@@ -435,6 +435,19 @@ describe("Created Schema", () => {
       })
     ).toThrow();
   });
+
+  it("should reject status 200 for CreatedSchema ¡ª must be 201", () => {
+    const ObjectDataSchema = CreatedSchema(
+      z.object({ id: z.string() })
+    );
+    expect(() =>
+      ObjectDataSchema.parse({
+        status: 200,
+        message: "Created",
+        data: { id: "123" },
+      })
+    ).toThrow();
+  });
 });
 
 // ############################################################################

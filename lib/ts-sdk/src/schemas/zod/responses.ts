@@ -158,6 +158,8 @@ export const FilteredSchema = <ItemsT extends z.ZodType, FilterT extends z.ZodTy
  */
 export const CreatedSchema = <T extends z.ZodType>(dataSchema: T) =>
   SuccessSchema.extend({
+    /** HTTP status code ¡ª always 201 for created resources */
+    status: z.literal(201),
     /** Response data */
     data: dataSchema,
   });
