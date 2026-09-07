@@ -59,8 +59,7 @@ export const ApplicantTypeSchema = z
 
     /** The description of the applicant type */
     description: z.string().nullish(),
-  })
-  .strict();
+  });
 
 // ############################################################################
 // Funding models
@@ -88,8 +87,7 @@ export const OppFundingSchema = z
 
     /** Estimated number of awards that will be granted */
     estimatedAwardCount: z.number().int().nullish(),
-  })
-  .strict();
+  });
 
 // ############################################################################
 // Timeline models
@@ -105,8 +103,7 @@ export const OppTimelineSchema = z
 
     /** An optional map of other key dates or events in the opportunity timeline */
     otherDates: z.record(z.string(), EventSchema).nullish(),
-  })
-  .strict();
+  });
 
 // ############################################################################
 // Base Opportunity model

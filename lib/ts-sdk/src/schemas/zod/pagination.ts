@@ -1,7 +1,9 @@
 /**
  * Pagination schemas for the CommonGrants API.
  *
- * These schemas define pagination query parameters, body parameters, and result information.
+ * These schemas define pagination parameters and result information.
+ * Query and body parameters share the same shape — consolidated into a single
+ * PaginatedParamsSchema to avoid duplication (#1130).
  *
  * @packageDocumentation
  */
@@ -9,11 +11,11 @@
 import { z } from "zod";
 
 // ############################################################################
-// Query Parameters
+// Shared Params (query + body)
 // ############################################################################
 
-/** Query parameters for paginated routes */
-export const PaginatedQueryParamsSchema = z.object({
+/** Pagination parameters (used for both query and body) */
+export const PaginatedParamsSchema = z.object({
   /** The page to return */
   page: z.number().int().min(1).nullish().default(1),
 
@@ -21,18 +23,11 @@ export const PaginatedQueryParamsSchema = z.object({
   pageSize: z.number().int().min(1).nullish().default(100),
 });
 
-// ############################################################################
-// Body Parameters
-// ############################################################################
+/** Query parameters for paginated routes (alias for backwards compat) */
+export const PaginatedQueryParamsSchema = PaginatedParamsSchema;
 
-/** Body parameters for paginated routes */
-export const PaginatedBodyParamsSchema = z.object({
-  /** The page to return */
-  page: z.number().int().min(1).nullish().default(1),
-
-  /** The number of items to return per page */
-  pageSize: z.number().int().min(1).nullish().default(100),
-});
+/** Body parameters for paginated routes (alias for backwards compat) */
+export const PaginatedBodyParamsSchema = PaginatedParamsSchema;
 
 // ############################################################################
 // Results Info

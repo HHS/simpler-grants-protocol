@@ -1,7 +1,9 @@
 /**
  * Sorting schemas for the CommonGrants API.
  *
- * These schemas define sorting query parameters, body parameters, and result information.
+ * These schemas define sorting parameters and result information.
+ * Query and body parameters share the same shape — consolidated into a single
+ * SortParamsSchema to avoid duplication (#1130).
  *
  * @packageDocumentation
  */
@@ -16,11 +18,11 @@ import { z } from "zod";
 export const SortOrderEnum = z.enum(["asc", "desc"]);
 
 // ############################################################################
-// Query Parameters
+// Shared Params (query + body)
 // ############################################################################
 
-/** Query parameters for sorting */
-export const SortQueryParamsSchema = z.object({
+/** Sorting parameters (used for both query and body) */
+export const SortParamsSchema = z.object({
   /** The field to sort by */
   sortBy: z.unknown(),
 
@@ -31,21 +33,11 @@ export const SortQueryParamsSchema = z.object({
   sortOrder: SortOrderEnum.nullish(),
 });
 
-// ############################################################################
-// Body Parameters
-// ############################################################################
+/** Query parameters for sorting (alias for backwards compat) */
+export const SortQueryParamsSchema = SortParamsSchema;
 
-/** Sorting parameters included in the request body */
-export const SortBodyParamsSchema = z.object({
-  /** The field to sort by */
-  sortBy: z.unknown(),
-
-  /** Implementation-defined sort key */
-  customSortBy: z.string().nullish(),
-
-  /** The order to sort by */
-  sortOrder: SortOrderEnum.nullish(),
-});
+/** Body parameters for sorting (alias for backwards compat) */
+export const SortBodyParamsSchema = SortParamsSchema;
 
 // ############################################################################
 // Results Info
