@@ -3,7 +3,7 @@ title: Mock API hosting
 description: Records the decision to serve the fixture-backed mock CommonGrants API from the docs website itself, so the browser, curl, and the SDK all hit the same endpoint and see the same data.
 ---
 
-We want visitors to test the CommonGrants API against a mock for every published spec version (v0.1.0 to v0.4.0). We're turning Swagger UI's "Try it out" back on in the browser-- but our core goal is **determinism**. A user should be able to try a request in the browser, copy the `curl` command and run it in their terminal, point the SDK at the same URL, and get the **same data** every time. The mock also gives the quickstart a sandbox: a new SDK user can fetch realistic grant data with no local setup.
+We want visitors to test the CommonGrants API against a mock for every published spec version (v0.1.0 to v0.4.0). We're turning Swagger UI's "Try it out" back on in the browser, but our core goal is **determinism**. A user should be able to try a request in the browser, copy the `curl` command and run it in their terminal, point the SDK at the same URL, and get the **same data** every time. The mock also gives the quickstart a sandbox: a new SDK user can fetch realistic grant data with no local setup.
 
 So the mock has three consumers:
 
@@ -15,59 +15,59 @@ A browser-only mock cannot serve the last two. The question became where a real 
 
 ### Why this matters
 
-Before this, the docs described every route and field, but you could not interact with any of it. To see a real response you had to stand up an implementation or read the schema and imagine. Now every documented endpoint has a working mock behind it, at the same address as the docs, with no key, account, or install. Here is what that unlocks: 
+Before this, the docs described every route and field, but you could not interact with any of it. To see a real response you had to stand up an implementation or read the schema and imagine. Now every documented endpoint has a working mock behind it, at the same address as the docs, with no key, account, or install. Here is what that unlocks:
 
-   - **Someone evaluating CommonGrants** opens the docs, expands an endpoint, and clicks Execute. Every ID box is pre-filled with a record that exists, so the first click returns realistic data. Learning the protocol becomes interactive.
+- **Someone evaluating CommonGrants** opens the docs, expands an endpoint, and clicks Execute. Every ID box is pre-filled with a record that exists, so the first click returns realistic data. Learning the protocol becomes interactive.
 
-     - ![Swagger UI on the docs site after clicking Execute on GET /common-grants/opportunities/{oppId}. The oppId box is pre-filled, the Servers box reads /api/v0.4.0, and the server response shows the "Small business grant program" record with a copyable curl command above it.](../../../../assets/adr-0028-playground-read.png)
+  - ![Swagger UI on the docs site after clicking Execute on GET /common-grants/opportunities/{oppId}. The oppId box is pre-filled, the Servers box reads /api/v0.4.0, and the server response shows the "Small business grant program" record with a copyable curl command above it.](../../../../assets/adr-0028-playground-read.png)
 
-   - **A partner still on an older version** switches the dropdown to v0.1.0 and asks for the same record. Fields added later are gone, and resources that did not exist yet drop out of the page. The version rides in the URL, so the view can be shared as a link.
+- **A partner still on an older version** switches the dropdown to v0.1.0 and asks for the same record. Fields added later are gone, and resources that did not exist yet drop out of the page. The version rides in the URL, so the view can be shared as a link.
 
-      - ![The docs page with the API Version dropdown set to v0.1.0. The Servers box reads /api/v0.1.0 and only the Opportunities endpoints are listed.](../../../../assets/adr-0028-version-switch.png)
+  - ![The docs page with the API Version dropdown set to v0.1.0. The Servers box reads /api/v0.1.0 and only the Opportunities endpoints are listed.](../../../../assets/adr-0028-version-switch.png)
 
-   - **An integration engineer** points Postman, `curl`, or the SDK at the sandbox URL and starts building today, before any funder has shipped a real endpoint. The dataset is big enough that paging, sorting, and filtering visibly change what comes back. What they build against the sandbox is what they will ship against a real implementation. The `curl` the docs generate runs unchanged:
+- **An integration engineer** points Postman, `curl`, or the SDK at the sandbox URL and starts building today, before any funder has shipped a real endpoint. The dataset is big enough that paging, sorting, and filtering visibly change what comes back. What they build against the sandbox is what they will ship against a real implementation. The `curl` the docs generate runs unchanged:
 
-      ```bash
-      BASE=https://commongrants.org/api
-      OPP=30a12e5e-5940-4c08-921c-17a8960fcf4b
+  ```bash
+  BASE=https://commongrants.org/api
+  OPP=30a12e5e-5940-4c08-921c-17a8960fcf4b
 
-      curl -s $BASE | jq .supportedVersions
-      # ["0.1.0","0.2.0","0.3.0","0.4.0"]
+  curl -s $BASE | jq .supportedVersions
+  # ["0.1.0","0.2.0","0.3.0","0.4.0"]
 
-      curl -s $BASE/v0.4.0/common-grants/opportunities/$OPP | jq .data.title
-      # "Small business grant program"
+  curl -s $BASE/v0.4.0/common-grants/opportunities/$OPP | jq .data.title
+  # "Small business grant program"
 
-      curl -s $BASE/v0.1.0/common-grants/opportunities/$OPP | jq '.data | keys'
-      # same record, no "competitions" or "acceptedApplicantTypes"
+  curl -s $BASE/v0.1.0/common-grants/opportunities/$OPP | jq '.data | keys'
+  # same record, no "competitions" or "acceptedApplicantTypes"
 
-      curl -s "$BASE/v0.4.0/common-grants/opportunities?page=3&pageSize=10" | jq .paginationInfo
-      # {"page":3,"pageSize":10,"totalItems":25,"totalPages":3}
-      ```
+  curl -s "$BASE/v0.4.0/common-grants/opportunities?page=3&pageSize=10" | jq .paginationInfo
+  # {"page":3,"pageSize":10,"totalItems":25,"totalPages":3}
+  ```
 
-      The TypeScript SDK needs one environment variable. Swap it for a funder's real endpoint later and nothing else changes:
+  The TypeScript SDK needs one environment variable. Swap it for a funder's real endpoint later and nothing else changes:
 
-      ```bash
-      CG_BASE_URL=https://commongrants.org/api/v0.4.0 pnpm --filter @common-grants/sdk run example:list
-      ```
+  ```bash
+  CG_BASE_URL=https://commongrants.org/api/v0.4.0 pnpm --filter @common-grants/sdk run example:list
+  ```
 
-   - **Someone who is implementing error handling** learns the error shape by making mistakes. Every 400 and 404 is the protocol's own error envelope: status, message, and a list of field and message pairs. A missing record names the field. A malformed ID gets a 400 in the same shape. Asking v0.2.0 for awards does not return a blank 404; it says awards arrived in v0.4.0.
+- **Someone who is implementing error handling** learns the error shape by making mistakes. Every 400 and 404 is the protocol's own error envelope: status, message, and a list of field and message pairs. A missing record names the field. A malformed ID gets a 400 in the same shape. Asking v0.2.0 for awards does not return a blank 404; it says awards arrived in v0.4.0.
 
-      - ![Swagger UI after executing GET /common-grants/opportunities/{oppId} with an all-zeros ID. The server response is a 404 whose body reads "Opportunity not found" with an errors entry naming the oppId field.](../../../../assets/adr-0028-error-404.png)
+  - ![Swagger UI after executing GET /common-grants/opportunities/{oppId} with an all-zeros ID. The server response is a 404 whose body reads "Opportunity not found" with an errors entry naming the oppId field.](../../../../assets/adr-0028-error-404.png)
 
-      ```json
+  ```json
+  {
+    "status": 404,
+    "message": "Not found",
+    "errors": [
       {
-        "status": 404,
-        "message": "Not found",
-        "errors": [
-          {
-            "field": "path",
-            "message": "The awards endpoints were added in v0.4.0 and are not served by v0.2.0"
-          }
-        ]
+        "field": "path",
+        "message": "The awards endpoints were added in v0.4.0 and are not served by v0.2.0"
       }
-      ```
+    ]
+  }
+  ```
 
-- **Someone building an apply flow** can walk an application from start to submit: look up the competition, start an application (201), fill in a form (echoed back as complete), and submit (200). Submitting an application with problems returns a 400 that lists exactly which fields are wrong--  this reflects the protocol's validation-error shape, live.
+- **Someone building an apply flow** can walk an application from start to submit: look up the competition, start an application (201), fill in a form (echoed back as complete), and submit (200). Submitting an application with problems returns a 400 that lists exactly which fields are wrong. That is the protocol's validation-error shape, live.
 
 Three properties hold across all of this:
 
@@ -79,7 +79,7 @@ Three properties hold across all of this:
 
 We serve the mock API **from the docs website itself**. It is one dynamic Astro route, mounted at `/api/v{version}/common-grants/...`, deployed with the rest of the site as a Cloudflare Worker. The site keeps `output: "static"`. Every docs page is still prerendered, and the API route is the only code that runs at request time.
 
-The deciding fact came from outside this ADR. The team chose to move the website from GitHub Pages to Cloudflare-- this [ADR 0003](/governance/adr/0003-website-hosting/) noted the switch would be needed if server-side code ever became a requirement. GitHub Pages runs no code. While it was the production host, serving a dynamic route from the site was impossible and the standalone Workers was the only workable shape. The migration is now complete: name servers moved, every merge to `main` was verified on beta.commongrants.org, and the DNS cutover retired the GitHub Pages deploy. With that the `an endpoint served by the docs website itself` option's one big cost is gone and same-origin serving is the simpler shape. Details are under [Option 3](#option-3-real-mock-endpoint-on-cloudflare-chosen-as-3b).
+The deciding fact came from outside this ADR. The team chose to move the website from GitHub Pages to Cloudflare, a switch [ADR 0003](/governance/adr/0003-website-hosting/) noted would be needed if server-side code ever became a requirement. GitHub Pages runs no code. While it was the production host, serving a dynamic route from the site was impossible and the standalone Worker was the only workable shape. The migration is now complete: name servers moved, every merge to `main` was verified on beta.commongrants.org, and the DNS cutover retired the GitHub Pages deploy. With that, the integrated option's one big cost is gone and same-origin serving is the simpler shape. Details are under [Option 3](#option-3-real-mock-endpoint-on-cloudflare-chosen-as-3b).
 
 What shipped:
 
