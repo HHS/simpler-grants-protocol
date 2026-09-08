@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, Field
 
+from .base import CAMEL_WIRE_CONFIG
+
 
 class PaginatedBase(BaseModel):
     """Parameters for pagination."""
@@ -13,12 +15,11 @@ class PaginatedBase(BaseModel):
     )
     page_size: int = Field(
         default=10,
-        alias="pageSize",
         description="The number of items per page",
         ge=1,
     )
 
-    model_config = {"populate_by_name": True}
+    model_config = CAMEL_WIRE_CONFIG
 
 
 class PaginatedBodyParams(PaginatedBase):
@@ -34,13 +35,11 @@ class PaginatedResultsInfo(PaginatedBase):
 
     total_items: int = Field(
         ...,
-        alias="totalItems",
         description="The total number of items",
     )
     total_pages: int = Field(
         ...,
-        alias="totalPages",
         description="The total number of pages",
     )
 
-    model_config = {"populate_by_name": True}
+    model_config = CAMEL_WIRE_CONFIG

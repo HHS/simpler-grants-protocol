@@ -55,9 +55,13 @@ def add_custom_fields(
             if hasattr(cls, "model_fields"):
                 for attr, field_info in cls.model_fields.items():
                     known.add(attr)
-                    alias = getattr(field_info, "alias", None)
-                    if alias:
-                        known.add(alias)
+                    for alias in (
+                        getattr(field_info, "alias", None),
+                        getattr(field_info, "validation_alias", None),
+                        getattr(field_info, "serialization_alias", None),
+                    ):
+                        if isinstance(alias, str):
+                            known.add(alias)
             for key, val in list(values.items()):
                 if key not in known and isinstance(val, dict) and "fieldType" in val:
                     # Inject the key as the name if not already present
@@ -80,7 +84,7 @@ def add_custom_fields(
         __base__=cls,
         custom_fields=(
             Optional[CustomFieldsContainer],
-            Field(default=None, alias="customFields"),
+            Field(default=None),
         ),
     )
 
@@ -160,10 +164,10 @@ def create_custom_field_schema(
         CustomFieldForAttr = create_model(
             _create_model_name(name=name, key=key),
             __base__=CustomField,
-            # pin expected type (still accepts wire key "fieldType" via alias)
+            # pin expected type
             field_type=(
                 CustomFieldType,
-                Field(default=field.field_type, alias="fieldType"),
+                Field(default=field.field_type),
             ),
             # pin name and description from spec
             name=(str, Field(default=field.name or key)),

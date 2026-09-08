@@ -299,32 +299,19 @@ f = _FHelpers()
 #: field (an alias-only set would silently drop snake_case keys into ``customFilters``).
 DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
     list(OppDefaultFilters.model_fields.keys())
-    + [v.alias for v in OppDefaultFilters.model_fields.values() if v.alias]
+    + [
+        name
+        for v in OppDefaultFilters.model_fields.values()
+        for name in (v.alias, v.validation_alias, v.serialization_alias)
+        if isinstance(name, str)
+    ]
 )
 
-# ---------------------------------------------------------------------------
-# Alias-normalization maps for classify_filters
-#
-# OppDefaultFilters uses snake_case field names with camelCase aliases but does NOT
-# set populate_by_name=True.  Pydantic v2 therefore requires the alias form when
-# constructing OppFilters via **kwargs — passing the snake_case field name silently
-# results in None (the alias is the required construction key).
-#
-# classify_filters normalizes consumer keys to the alias (or field-name for fields
-# without an alias) before passing them to OppFilters(**...):
-#   - snake_case keys with a camelCase alias → converted to the alias (closeDateRange)
-#   - camelCase alias keys → kept as-is (already the alias)
-#   - keys with no alias (e.g. "status") → kept as-is (snake == request key)
-# ---------------------------------------------------------------------------
-
-# Map from snake_case field name → camelCase alias (used for OppFilters construction).
-# Only fields that declare an alias are included; alias-form keys and fields without
-# aliases fall through ``_SNAKE_TO_ALIAS.get(key, key)`` unchanged — one lookup
-# normalizes all three key classes.
+# snake_case field name → camelCase wire alias, for OppFilters construction.
 _SNAKE_TO_ALIAS: dict[str, str] = {
-    field_name: field_info.alias
+    field_name: wire_name
     for field_name, field_info in OppDefaultFilters.model_fields.items()
-    if field_info.alias
+    if (wire_name := field_info.serialization_alias or field_info.alias)
 }
 
 # ---------------------------------------------------------------------------
@@ -598,15 +585,10 @@ def classify_filters(
     then validated against the known-model union, exactly like ad-hoc input. Call
     sites must pass the same resource/method strings the plugin declared.
 
-    Construction normalizes all default consumer keys to the form that
-    ``OppFilters(**kwargs)`` accepts.  Because ``OppDefaultFilters`` does NOT set
-    ``populate_by_name=True``, Pydantic v2 requires the alias form (e.g.
-    ``closeDateRange``) for aliased fields.  Snake_case keys (e.g.
-    ``close_date_range``) are therefore mapped to their alias via ``_SNAKE_TO_ALIAS``
-    before construction.  Fields without aliases (e.g. ``status``) pass through
-    unchanged.  The alternative — enabling ``populate_by_name=True`` on
-    ``OppFilters.model_config`` — is deliberately avoided: the classifier must not
-    modify core schema model config.
+    Default consumer keys are normalized to the wire alias via ``_SNAKE_TO_ALIAS``
+    before ``OppFilters(**kwargs)`` construction. ``populate_by_name`` would accept
+    either form directly, but normalizing first collapses a snake_case key and its
+    camelCase alias onto one kwarg instead of passing pydantic both.
 
     Args:
         routes: Plugin route declarations (used to identify registered custom filters).
@@ -636,10 +618,6 @@ def classify_filters(
         if key in DEFAULT_FILTER_NAMES:
             # Bucket 1: a standard filter. Validate it against the type declared for
             # that field (for example, "status" is validated as a StringArrayFilter).
-            # OppFilters is constructed with keyword arguments and does not set
-            # populate_by_name, so a snake_case key is first converted to its alias.
-            # Keys that are already in alias form, and keys that have no alias, pass
-            # through unchanged.
             alias_key = _SNAKE_TO_ALIAS.get(key, key)
             if alias_key in default_fields:
                 # Snake and camel forms of the same field normalize to one key.
@@ -670,9 +648,7 @@ def classify_filters(
                 raise error
             custom_buckets[key] = validated  # type: ignore[assignment]
 
-    # OppFilters requires the alias form for construction (populate_by_name is not set).
-    # Use "customFilters" (the alias) rather than "custom_filters" (the field name).
     return OppFilters(
         **default_fields,
-        customFilters=custom_buckets if custom_buckets else None,
+        custom_filters=custom_buckets if custom_buckets else None,
     )

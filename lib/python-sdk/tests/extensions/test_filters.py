@@ -247,12 +247,7 @@ def test_classify_empty_filters_dict_yields_empty_body():
 
 
 def test_classify_default_snake_form_of_aliased_key_normalizes_to_alias():
-    """A snake_case key for an aliased field lands in the named field, not customFilters.
-
-    Without the alias normalization, OppFilters(close_date_range=...) would be
-    silently dropped by pydantic (populate_by_name is not set) and the field would
-    stay None.
-    """
+    """A snake_case key for an aliased field lands in the named field, not customFilters."""
     result = classify_filters(
         SAMPLE_ROUTES,
         "opportunities",
