@@ -20,9 +20,3 @@ overrides:
   "tar@<7.5.21": "7.5.21"
   "vite@>=7.0.0 <=7.3.1": ">=7.3.2"
   "yaml@>=2 <2.8.3": "2.8.3"
-
-# Audit exceptions. Remove each once a patched release exists upstream.
-#   GHSA-2q42-4q24-7rgv  high  @typespec/compiler + @typespec/openapi3 <=1.15.0 (no patched version as of 2026-09-08)
-auditConfig:
-  ignoreGhsas:
-    - GHSA-2q42-4q24-7rgv
