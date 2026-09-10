@@ -98,17 +98,16 @@ namespace CommonGrants.Patch {
   model OrgProfileWritable {
     ...OmitProperties<
       Models.OrganizationBase,
-
-        | "ein"
-        | "uei"
-        | "duns"
-        | "identifiers"
-        | "orgType"
-        | "addresses"
-        | "phones"
-        | "emails"
-        | "socials"
-        | "customFields"
+      | "ein"
+      | "uei"
+      | "duns"
+      | "identifiers"
+      | "orgType"
+      | "addresses"
+      | "phones"
+      | "emails"
+      | "socials"
+      | "customFields"
     >;
 
     /** Identifiers associated with the organization, keyed by registry code. */
@@ -148,11 +147,10 @@ namespace CommonGrants.Models {
    */
   @example(Examples.OrgPatch.patch)
   @Versioning.added(CommonGrants.Versions.v0_4)
-  model OrgPatchData
-    is TypeSpec.Http.MergePatchUpdate<
-      CommonGrants.Patch.OrgProfileWritable,
-      "OrgPatch{name}"
-    >;
+  model OrgPatchData is TypeSpec.Http.MergePatchUpdate<
+    CommonGrants.Patch.OrgProfileWritable,
+    "OrgPatch{name}"
+  >;
 
   /** A single change to an organization profile, recorded in the change ledger.
    *
