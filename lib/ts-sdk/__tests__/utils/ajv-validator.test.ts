@@ -3,7 +3,18 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { ajv, validate } from "./ajv-validator";
+import Ajv2020 from "ajv/dist/2020";
+import addFormats from "ajv-formats";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import {
+  ajv,
+  assertFormatValidationActive,
+  createAjvFromDefs,
+  createAjvValidator,
+  validate,
+} from "./ajv-validator";
 
 describe("AJV validator utility", () => {
   // #########################################################
@@ -103,5 +114,81 @@ describe("AJV validator utility", () => {
     expect(result.isValid).toBe(false);
     expect(result.errors).not.toBeNull();
     expect(result.errors?.length).toBe(4);
+  });
+});
+
+// #########################################################
+// Harness setup integrity
+//
+// The parity harness is only as trustworthy as the reference it compares
+// against. These tests cover the ways that reference can quietly stop
+// validating anything while the suite still reports parity.
+// #########################################################
+
+describe("createAjvFromDefs", () => {
+  it("should register synthetic schemas by $id", () => {
+    const probe = createAjvFromDefs(
+      { Probe: { $id: "Probe.yaml", type: "object", properties: { n: { type: "integer" } } } },
+      "synthetic:test"
+    );
+
+    expect(validate(probe, "Probe.yaml", { n: 1 }).isValid).toBe(true);
+    expect(validate(probe, "Probe.yaml", { n: "one" }).isValid).toBe(false);
+  });
+
+  it("should keep schema registries separate between instances", () => {
+    createAjvFromDefs({ Isolated: { $id: "Isolated.yaml", type: "string" } }, "synthetic:test");
+
+    // The shared production instance must not have learned about the synthetic schema.
+    expect(() => validate(ajv, "Isolated.yaml", "x")).toThrow(/not found/);
+  });
+});
+
+describe("assertFormatValidationActive", () => {
+  it("should pass for an instance built by createAjvFromDefs", () => {
+    const probe = createAjvFromDefs({ Probe: { $id: "Probe.yaml", type: "string" } }, "test");
+
+    expect(() => assertFormatValidationActive(probe, "test")).not.toThrow();
+  });
+
+  it("should throw when formats are registered but not enforced", () => {
+    // `validateFormats: false` is the silent killer: every `format:` constraint
+    // in the protocol schemas passes, so the harness reports parity while
+    // checking nothing about uuid, uri, or date-time.
+    const inert = new Ajv2020({ strict: false, validateFormats: false });
+    addFormats(inert);
+
+    expect(() => assertFormatValidationActive(inert, "inert-instance")).toThrow(
+      /format validation is not active/i
+    );
+  });
+
+  it("should throw when no format validators are registered at all", () => {
+    const bare = new Ajv2020({ strict: false, validateFormats: true });
+
+    expect(() => assertFormatValidationActive(bare, "bare-instance")).toThrow(
+      /format validation is not active/i
+    );
+  });
+});
+
+describe("createAjvValidator", () => {
+  it("should name the missing file and the remedy when the reference is absent", () => {
+    // The bundle is TypeSpec build output, so "missing" almost always means
+    // "not built yet" — say so instead of surfacing a bare ENOENT.
+    expect(() => createAjvValidator("/nonexistent/schemas.yaml")).toThrow(
+      /\/nonexistent\/schemas\.yaml[\s\S]*pnpm build/
+    );
+  });
+
+  it("should reject a bundle that carries no $defs", () => {
+    const empty = path.join(os.tmpdir(), `cg-empty-bundle-${process.pid}.yaml`);
+    fs.writeFileSync(empty, "openapi: 3.0.0\n");
+
+    try {
+      expect(() => createAjvValidator(empty)).toThrow(/does not contain \$defs/);
+    } finally {
+      fs.unlinkSync(empty);
+    }
   });
 });
