@@ -26,7 +26,6 @@ CommonGrants is an open standard for sharing data about funding opportunities, a
     - [@common-grants/sdk](lib/ts-sdk): The TypeScript SDK to streamline adoption of CommonGrants in TypeScript applications.
     - [python-sdk](lib/python-sdk): The Python SDK to streamline adoption of CommonGrants in Python applications.
   - [Templates](templates): Templates with boilerplate code for implementing the CommonGrants protocol.
-  - [Examples](examples): Examples implementations of the CommonGrants protocol.
 - Community docs:
   - [Code of conduct](CODE_OF_CONDUCT.md): Our community guidelines.
   - [Contributing](CONTRIBUTING.md): How to contribute to the CommonGrants project.

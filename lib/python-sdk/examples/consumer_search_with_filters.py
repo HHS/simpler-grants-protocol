@@ -23,10 +23,11 @@ the route registered — each key narrows to its value model (the ``assert_type`
 prove it).
 
 Run against a CommonGrants endpoint on http://localhost:8000 (see examples/README.md).
-The Pennsylvania reference API (``examples/pa-opportunity-example``) accepts the
-``customFilters`` body and echoes it back in ``filterInfo`` (it narrows results on the
-standard ``status`` filter; how a deployment applies custom filters is its own concern):
+This package's own mock server (``examples/mock_api_server.py``) accepts the
+``customFilters`` body and narrows results on the standard ``status`` filter; it does
+not apply the custom filters itself (how a deployment applies them is its own concern):
 
+    poetry run python examples/mock_api_server.py   # in another terminal
     poetry run python examples/consumer_search_with_filters.py
 """
 

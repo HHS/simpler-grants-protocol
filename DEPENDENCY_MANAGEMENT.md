@@ -31,7 +31,7 @@ Dependencies are maintained at different cadences depending on whether they are 
 | Tier | Scope | Cadence |
 |------|-------|---------|
 | **Core** | `lib/*`, `website`, root workspace | Automated — Dependabot + catalog workflow. Merge promptly. |
-| **Templates and examples** | `templates/*`, `examples/*` | Manual — no automated PRs. Refreshed deliberately when a maintainer chooses to. |
+| **Templates** | `templates/*` | Manual — no automated PRs. Refreshed deliberately when a maintainer chooses to. |
 | **GitHub Actions** | `.github/workflows` | Automated — Dependabot weekly. Merge when green. |
 
 ## Dependabot scope
@@ -51,7 +51,7 @@ Dependabot runs on three "worlds":
 |-----------|----------|-------|
 | `lib/python-sdk` | Weekly, Wednesdays | pip/Poetry, all deps grouped |
 
-Templates and examples are now manually maintained and do not have Dependabot entries.
+Templates are now manually maintained and do not have Dependabot entries.
 
 **World C: GitHub Actions** (weekly, Mondays)
 - All Actions grouped into a single PR
@@ -121,7 +121,7 @@ Audits run where dependencies actually change, at the Release Please production 
 | `deps-audit.yml` | `pnpm audit` | low and above | Daily at 15:00 UTC on `main`; every Release Please version PR (identified by its `.release-please-manifest.json` update); also `workflow_dispatch`, and a PR touching the workflow itself as a smoke test |
 | `cd-release.yml` | `pnpm audit` | low and above | Before Release Please can update a version PR, create a tag or GitHub release, or start its publish fan-out |
 | `ci-template-quickstart.yml`, `ci-template-express-js.yml` | `pnpm audit` | low and above | A PR touches that template |
-| `ci-template-fast-api.yml`, `ci-example-california-api.yml`, `ci-example-pennsylvania-api.yml` | `poetry audit` | nothing (`continue-on-error`) | A PR touches that template or example |
+| `ci-template-fast-api.yml` | `poetry audit` | nothing (`continue-on-error`) | A PR touches that template |
 | `ci-lib-pysdk.yml` | none | nothing | No audit gate today. See the Python SDK note below |
 
 The per-package workflows (`ci-lib-*`, `ci-website-preview.yml`) do **not** audit. An advisory published against a dep already on `main` would otherwise fail every open PR for that package, with no fix available from inside the PR. PRs that change a pnpm dependency are still gated: that updates the root `pnpm-lock.yaml`, which triggers `ci-catalog-validation.yml`.
@@ -130,7 +130,7 @@ The per-package workflows (`ci-lib-*`, `ci-website-preview.yml`) do **not** audi
 
 When the audit step in the daily sweep fails it opens an issue labeled `audit-sweep` and `dependencies`, or comments on the open one, so advisories that land with no dependency PR in flight surface within a day instead of waiting for the next unrelated PR to trip over them. It never closes that issue: once the advisory is resolved or ignored the comments stop, and closing is a manual step.
 
-The Python template and examples are non-blocking because they are manually maintained (see [Maintenance tiers](#maintenance-tiers)) — no automated PR is queued to fix what a blocking audit would flag.
+The Python template is non-blocking because it is manually maintained (see [Maintenance tiers](#maintenance-tiers)) — no automated PR is queued to fix what a blocking audit would flag.
 
 **Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. Reach for an audit ignore only when no patched version exists anywhere:
 
@@ -155,7 +155,7 @@ The entry itself carries a comment naming the advisory and linking the tracking 
 2. If the package uses catalog deps, no extra steps needed — it inherits from the catalog automatically
 3. If the package has non-catalog deps that Dependabot should track, they'll be picked up automatically by the root workspace entry
 4. If the package has its own isolated lockfile (like `lib/python-sdk`), add a new entry to `.github/dependabot.yml` under World B
-5. New templates and examples should not be added to Dependabot; they follow the manual maintenance tier
+5. New templates should not be added to Dependabot; they follow the manual maintenance tier
 
 ## Adding a new catalog dep
 

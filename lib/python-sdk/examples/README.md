@@ -4,35 +4,21 @@ This folder contains example scripts demonstrating how to use the CommonGrants P
 
 ## Prerequisites
 
-You can run these examples against a mock API (no backend required), the Pennsylvania Grants FastAPI example, or a remote API.
+You can run these examples against a mock API (no backend required) or a remote API.
 
-### Option A: Mock API (easiest, no Python/FastAPI)
+### Option A: Mock API (easiest, no external backend)
 
-From the `lib/ts-sdk` directory, start the built-in mock server in one terminal:
+From the `lib/python-sdk` directory, start this package's own mock server in one terminal:
 
 ```bash
-pnpm install
-pnpm example:server
+poetry install
+poetry run python examples/mock_api_server.py
 ```
 
 Then in another terminal run any example. The mock server listens on `http://localhost:8000` and serves list, get, and search with sample data including custom fields.
 
 
-### Option B: Pennsylvania Grants FastAPI API
-
-By default the examples use `http://localhost:8000`. To use the Pennsylvania Grants example API instead of the mock server:
-
-From the repository root:
-
-```bash
-cd examples/pa-opportunity-example
-make install
-make dev
-```
-
-
-
-### Option C: Remote API
+### Option B: Remote API
 
 To connect to a remote CommonGrants-compatible API instead of localhost, set the following environment variables:
 

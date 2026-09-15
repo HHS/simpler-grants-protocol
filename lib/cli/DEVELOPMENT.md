@@ -58,4 +58,3 @@ Steps to follow when preparing a new release of the CommonGrants core library.
   - [ ] [Using TypeScript](../../website/src/content/docs/guides/using-typescript.mdx)
 - [ ] If the `check spec` command was updated, references to that command in the following locations have been updated:
   - [ ] [FastAPI template Makefile](../../templates/fast-api/Makefile)
-  - [ ] [California API example Makefile](../../examples/ca-opportunity-example/Makefile)
