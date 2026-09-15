@@ -182,13 +182,14 @@ describe("createAjvValidator", () => {
   });
 
   it("should reject a bundle that carries no $defs", () => {
-    const empty = path.join(os.tmpdir(), `cg-empty-bundle-${process.pid}.yaml`);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cg-empty-bundle-"));
+    const empty = path.join(dir, "schemas.yaml");
     fs.writeFileSync(empty, "openapi: 3.0.0\n");
 
     try {
       expect(() => createAjvValidator(empty)).toThrow(/does not contain \$defs/);
     } finally {
-      fs.unlinkSync(empty);
+      fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 });

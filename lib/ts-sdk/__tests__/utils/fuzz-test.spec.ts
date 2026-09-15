@@ -545,9 +545,12 @@ describe("wire representation", () => {
   it("should not throw on a value with no JSON representation", async () => {
     const result = await checkZodMatchesJsonSchema(UTCDateTimeSchema, "Dt.yaml", {
       ajv: dateTimeAjv,
-      cases: [{ label: "undefined", value: undefined }],
+      cases: [
+        { label: "undefined", value: undefined },
+        { label: "bigint", value: 10n },
+      ],
     });
 
-    expect(result.validated).toBe(SAMPLE_SIZE + 1);
+    expect(result.validated).toBe(SAMPLE_SIZE + 2);
   });
 });
