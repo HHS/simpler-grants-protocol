@@ -8,11 +8,11 @@ You can run these examples against a mock API (no backend required) or a remote 
 
 ### Option A: Mock API (easiest, no external backend)
 
-From the `lib/python-sdk` directory, start this package's own mock server in one terminal:
+From the `lib/ts-sdk` directory, start the built-in mock server in one terminal:
 
 ```bash
-poetry install
-poetry run python examples/mock_api_server.py
+pnpm install
+pnpm example:server
 ```
 
 Then in another terminal run any example. The mock server listens on `http://localhost:8000` and serves list, get, and search with sample data including custom fields.
