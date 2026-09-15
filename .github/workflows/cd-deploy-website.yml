@@ -27,13 +27,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout your repository using git
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: "pnpm"
@@ -66,13 +66,13 @@ jobs:
       url: https://commongrants.org
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: "pnpm"

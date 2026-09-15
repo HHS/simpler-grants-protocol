@@ -35,10 +35,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
 
@@ -60,7 +60,7 @@ jobs:
       - name: Run release-please
         if: github.event_name == 'push'
         id: release
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           manifest-file: .release-please-manifest.json
@@ -132,7 +132,7 @@ jobs:
       # refs/tags/ pins the checkout to the tag namespace; a same-named branch
       # cannot be substituted.
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: refs/tags/${{ matrix.release_tag }}
 
@@ -140,7 +140,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -181,12 +181,12 @@ jobs:
           fi
 
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: refs/tags/${{ needs.release-please.outputs.py_sdk_tag }}
 
       - name: Install Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
