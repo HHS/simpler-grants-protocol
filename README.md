@@ -95,7 +95,7 @@ flowchart LR
     subgraph website["Website"]
     direction LR
         HHS/simpler-grants-protocol#330["Create a custom fields catalog ✔️"]:::Done
-        HHS/simpler-grants-protocol#334["Add mock API playground to CommonGrants.org"]
+        HHS/simpler-grants-protocol#334["Add mock API playground to CommonGrants.org ✔️"]:::Done
     end
 
 
@@ -136,6 +136,8 @@ flowchart LR
     HHS/simpler-grants-protocol#323 --> HHS/simpler-grants-protocol#333
     HHS/simpler-grants-protocol#323 --> HHS/simpler-grants-protocol#329
     HHS/simpler-grants-protocol#331 --> HHS/simpler-grants-protocol#335
+    HHS/simpler-grants-protocol#332 --> HHS/simpler-grants-protocol#1186
+    HHS/simpler-grants-protocol#332 --> HHS/simpler-grants-protocol#1184
     HHS/simpler-grants-protocol#342 --> HHS/simpler-grants-protocol#343
     HHS/simpler-grants-protocol#342 --> HHS/simpler-grants-protocol#324
 
