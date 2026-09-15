@@ -1,5 +1,5 @@
 {
-  "lib/core": "0.4.0",
+  "lib/core": "0.4.1",
   "lib/cli": "0.4.0",
   "lib/ts-sdk": "0.7.2",
   "lib/python-sdk": "0.8.1"

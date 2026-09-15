@@ -1,5 +1,12 @@
 # @common-grants/core
 
+## [0.4.1](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/core@0.4.0...@common-grants/core@0.4.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **deps:** bump GitHub Actions majors and clear the September audit advisories ([#1093](https://github.com/HHS/simpler-grants-protocol/issues/1093)) ([47326da](https://github.com/HHS/simpler-grants-protocol/commit/47326da429e5d2c1bb1aaf34f0a22bede4b392ac))
+
 ## 0.4.0
 
 ### Minor Changes
