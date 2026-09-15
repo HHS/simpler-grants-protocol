@@ -185,13 +185,10 @@ describe("PaginatedResultsInfo Schema", () => {
         issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
       },
       {
-        label:
-          "page above the protocol's int32 ceiling (SDK has no upper bound; " +
-          "the bound itself is not yet covered by an issue — filed against the " +
-          "pagination consolidation work)",
+        label: "page above the protocol's int32 ceiling (SDK safe-integer, protocol int32)",
         value: { ...valid, page: 2147483648 },
         expect: "divergent",
-        issue: "https://github.com/HHS/simpler-grants-protocol/issues/1130",
+        issue: "https://github.com/HHS/simpler-grants-protocol/issues/1196",
       },
     ]);
 
@@ -203,6 +200,7 @@ describe("PaginatedResultsInfo Schema", () => {
       new Set([
         "https://github.com/HHS/simpler-grants-protocol/issues/1130",
         "https://github.com/HHS/simpler-grants-protocol/issues/1192",
+        "https://github.com/HHS/simpler-grants-protocol/issues/1196",
       ])
     );
   });
