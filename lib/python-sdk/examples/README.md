@@ -6,7 +6,7 @@ This folder contains example scripts demonstrating how to use the CommonGrants P
 
 You can run these examples against a mock API (no backend required) or a remote API.
 
-### Option A: Mock API (easiest, no external backend)
+### Option A: Mock API (easiest, no backend required)
 
 From the `lib/ts-sdk` directory, start the built-in mock server in one terminal:
 
@@ -201,9 +201,11 @@ both fail it. It runs as part of `make checks`.
 `examples/consumer_search_with_filters.py` is the full downstream consumer flow —
 plugin author registers filters, consumer builds a filter dict with the `f.*`
 builders and searches through `plugin.get_client()`. It needs a CommonGrants
-endpoint on `http://localhost:8000`:
+endpoint on `http://localhost:8000`; this package's own mock is the one it is written
+against:
 
 ```bash
+poetry run python examples/mock_api_server.py   # in another terminal
 poetry run python examples/consumer_search_with_filters.py
 ```
 
