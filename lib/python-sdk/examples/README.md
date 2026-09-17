@@ -17,6 +17,8 @@ pnpm example:server
 
 Then in another terminal run any example. The mock server listens on `http://localhost:8000` and serves list, get, and search with sample data including custom fields.
 
+The custom-filter examples below use this package's own `examples/mock_api_server.py` instead — run one mock at a time, both listen on port 8000.
+
 
 ### Option B: Remote API
 
