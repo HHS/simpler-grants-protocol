@@ -119,10 +119,12 @@ Audits run where dependencies actually change, at the Release Please production 
 |----------|---------|-----------|-----------|
 | `ci-catalog-validation.yml` | `pnpm audit --audit-level=moderate` | moderate and above | A PR touches `pnpm-workspace.yaml`, `pnpm-lock.yaml`, or `.github/dependabot.yml`; also `workflow_dispatch` |
 | `deps-audit.yml` | `pnpm audit` | low and above | Daily at 15:00 UTC on `main`; every Release Please version PR (identified by its `.release-please-manifest.json` update); also `workflow_dispatch`, and a PR touching the workflow itself as a smoke test |
-| `cd-release.yml` | `pnpm audit` | low and above | Before Release Please can update a version PR, create a tag or GitHub release, or start its publish fan-out |
+| `cd-release.yml` | `pnpm audit --audit-level=high` | high and above | Before Release Please can update a version PR, create a tag or GitHub release, or start its publish fan-out |
 | `ci-template-quickstart.yml`, `ci-template-express-js.yml` | `pnpm audit` | low and above | A PR touches that template |
 | `ci-template-fast-api.yml`, `ci-example-california-api.yml`, `ci-example-pennsylvania-api.yml` | `poetry audit` | nothing (`continue-on-error`) | A PR touches that template or example |
 | `ci-lib-pysdk.yml` | none | nothing | No audit gate today. See the Python SDK note below |
+
+**The release gate blocks at high; the sweep reports at low.** The sweep exists to surface every advisory within a day, so it runs at pnpm's default and opens a tracking issue. The release gate exists to stop a publish that would ship a dangerous advisory, so it blocks on high and critical only. Between 2026-09-03 and 2026-09-18 the gate ran at low and blocked five pushes to `main`, two of them docs-only commits. Three of those blocks were for moderate advisories alone (vitest and `@vitest/mocker` in `lib/*` devDependencies, devalue in the website tree), none in a published runtime graph; a high gate lets those through. The other two carried a critical (astro) and several highs (sharp, svgo, `@typespec/compiler`, `@typespec/openapi3`) and stay blocked at high. Advisories below high still surface through the sweep and still gate dependency-changing PRs at moderate through `ci-catalog-validation.yml`; they are fixed on the normal maintenance cadence instead of blocking a release.
 
 The per-package workflows (`ci-lib-*`, `ci-website-preview.yml`) do **not** audit. An advisory published against a dep already on `main` would otherwise fail every open PR for that package, with no fix available from inside the PR. PRs that change a pnpm dependency are still gated: that updates the root `pnpm-lock.yaml`, which triggers `ci-catalog-validation.yml`.
 
@@ -132,7 +134,7 @@ When the audit step in the daily sweep fails it opens an issue labeled `audit-sw
 
 The Python template and examples are non-blocking because they are manually maintained (see [Maintenance tiers](#maintenance-tiers)) — no automated PR is queued to fix what a blocking audit would flag.
 
-**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. Reach for an audit ignore only when no patched version exists anywhere:
+**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. Bound the floor to the affected major line (`'>=1.20.6 <2'`): an unbounded floor such as `'>=1.20.6'` lets pnpm satisfy it with the next major, which is how a `body-parser` floor once moved express 4's stack to body-parser 2.x in this repo's resolution of the CLI's dependency graph (overrides never reach consumers). Drop a floor once the parents' own ranges resolve at or above it; a stale floor changes nothing and hides that fact. Reach for an audit ignore only when no patched version exists anywhere:
 
 ```yaml
 audit:

@@ -54,7 +54,8 @@ jobs:
         id: dependency-audit
         # No --audit-level: pnpm's default is low, so the sweep reports
         # everything, including advisories below the moderate threshold that
-        # gates dep-changing PRs in ci-catalog-validation.yml.
+        # gates dep-changing PRs in ci-catalog-validation.yml, and below the high
+        # threshold that gates releases in cd-release.yml.
         run: pnpm audit
 
       - name: Open tracking issue on scheduled failure
