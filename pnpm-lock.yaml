@@ -75,8 +75,8 @@ catalogs:
       version: 4.1.11
 
 overrides:
-  sharp@<0.35.4: '>=0.35.4'
-  yaml@>=2.0.0 <2.8.3: '>=2.8.3'
+  sharp@<0.35.4: '>=0.35.4 <0.36'
+  yaml@>=2.0.0 <2.8.3: '>=2.8.3 <3'
 
 importers:
 
@@ -5343,7 +5343,7 @@ packages:
       sugarss: ^5.0.0
       terser: ^5.16.0
       tsx: ^4.8.1
-      yaml: '>=2.8.3'
+      yaml: '>=2.8.3 <3'
     peerDependenciesMeta:
       '@types/node':
         optional: true
