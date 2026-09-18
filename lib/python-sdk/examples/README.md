@@ -4,9 +4,9 @@ This folder contains example scripts demonstrating how to use the CommonGrants P
 
 ## Prerequisites
 
-You can run these examples against a mock API (no backend required), the Pennsylvania Grants FastAPI example, or a remote API.
+You can run these examples against a mock API (no backend required) or a remote API.
 
-### Option A: Mock API (easiest, no Python/FastAPI)
+### Option A: Mock API (easiest, no backend required)
 
 From the `lib/ts-sdk` directory, start the built-in mock server in one terminal:
 
@@ -17,22 +17,10 @@ pnpm example:server
 
 Then in another terminal run any example. The mock server listens on `http://localhost:8000` and serves list, get, and search with sample data including custom fields.
 
-
-### Option B: Pennsylvania Grants FastAPI API
-
-By default the examples use `http://localhost:8000`. To use the Pennsylvania Grants example API instead of the mock server:
-
-From the repository root:
-
-```bash
-cd examples/pa-opportunity-example
-make install
-make dev
-```
+The custom-filter examples below use this package's own `examples/mock_api_server.py` instead — run one mock at a time, both listen on port 8000.
 
 
-
-### Option C: Remote API
+### Option B: Remote API
 
 To connect to a remote CommonGrants-compatible API instead of localhost, set the following environment variables:
 
@@ -215,9 +203,11 @@ both fail it. It runs as part of `make checks`.
 `examples/consumer_search_with_filters.py` is the full downstream consumer flow —
 plugin author registers filters, consumer builds a filter dict with the `f.*`
 builders and searches through `plugin.get_client()`. It needs a CommonGrants
-endpoint on `http://localhost:8000`:
+endpoint on `http://localhost:8000`; this package's own mock is the one it is written
+against:
 
 ```bash
+poetry run python examples/mock_api_server.py   # in another terminal
 poetry run python examples/consumer_search_with_filters.py
 ```
 

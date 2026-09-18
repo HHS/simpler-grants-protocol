@@ -4,9 +4,9 @@ This folder contains example scripts demonstrating how to use the CommonGrants T
 
 ## Prerequisites
 
-You can run these examples against a mock API (no backend required), the California Grants FastAPI example, or a remote API.
+You can run these examples against a mock API (no backend required) or a remote API.
 
-### Option A: Mock API (easiest, no Python/FastAPI)
+### Option A: Mock API (easiest, no backend required)
 
 From the `lib/ts-sdk` directory, start the built-in mock server in one terminal:
 
@@ -17,29 +17,7 @@ pnpm example:server
 
 Then in another terminal run any example. The mock server listens on `http://localhost:8000` and serves list, get, and search with sample data including custom fields.
 
-### Option B: California Grants FastAPI API
-
-By default the examples use `http://localhost:8000`. To use the California Grants example API instead of the mock server:
-
-From the repository root:
-
-```bash
-cd examples/ca-opportunity-example
-make install
-make dev
-```
-
-> [!NOTE]
-> The commands above require both Python and Poetry to be installed.
-> For more details, see the [California grants example API README](../../../examples/ca-opportunity-example/README.md).
-
-From the `lib/ts-sdk` directory:
-
-```bash
-pnpm install
-```
-
-### Option C: Remote API
+### Option B: Remote API
 
 To connect to a remote CommonGrants-compatible API instead of localhost, set the following environment variables:
 
