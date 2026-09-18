@@ -29,10 +29,7 @@ jobs:
   # Release Please creates tags, GitHub releases, and publish fan-out in one
   # run. Audit first so none of those effects in this automated release path
   # can begin while the dependency gate is failing.
-  # The gate blocks at high: its job is to stop a publish that would ship a
-  # dangerous advisory, not to report every advisory. The daily sweep in
-  # deps-audit.yml still reports at low, and dependency-changing PRs stay gated
-  # at moderate by ci-catalog-validation.yml.
+  # Blocks at high; rationale in DEPENDENCY_MANAGEMENT.md.
   dependency-audit:
     runs-on: ubuntu-latest
     permissions:
