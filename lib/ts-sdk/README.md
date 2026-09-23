@@ -109,7 +109,7 @@ const validated: OpportunityBase = OpportunityBaseSchema.parse(rawJson);
 
 ## Modules
 
-The SDK is organized into modules, each available as a separate import path:
+The SDK is organized into modules, each available as a separate import path. The package has no root export, so import from one of these paths rather than from `@common-grants/sdk` itself:
 
 | Module                                         | Import path                     | Description                                   |
 | ---------------------------------------------- | ------------------------------- | --------------------------------------------- |

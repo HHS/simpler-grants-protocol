@@ -12,7 +12,6 @@
 | `pnpm install`           | Installs dependencies                                            |
 | `pnpm run build`         | Compiles TypeScript code to JavaScript and runs TypeSpec         |
 | `pnpm run typespec`      | Compile and emit TypeSpec outputs (i.e. OpenAPI and JSON schema) |
-| `pnpm run dev`           | Run the entry point with ts-node                                 |
 | `pnpm run test`          | Run Vitest test suite                                            |
 | `pnpm run test:watch`    | Run Vitest in watch mode                                         |
 | `pnpm run test:coverage` | Run Vitest with coverage report                                  |
