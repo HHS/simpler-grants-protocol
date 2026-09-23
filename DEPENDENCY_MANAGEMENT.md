@@ -119,12 +119,12 @@ Audits run where dependencies actually change, at the Release Please production 
 |----------|---------|-----------|-----------|
 | `ci-catalog-validation.yml` | `pnpm audit --audit-level=moderate` | moderate and above | A PR touches `pnpm-workspace.yaml`, `pnpm-lock.yaml`, or `.github/dependabot.yml`; also `workflow_dispatch` |
 | `deps-audit.yml` | `pnpm audit` | low and above | Daily at 15:00 UTC on `main`; every Release Please version PR (identified by its `.release-please-manifest.json` update); also `workflow_dispatch`, and a PR touching the workflow itself as a smoke test |
-| `cd-release.yml` | `pnpm audit --audit-level=high` | high and above | Before Release Please can update a version PR, create a tag or GitHub release, or start its publish fan-out |
+| `cd-release.yml` | `pnpm audit --prod --audit-level=moderate`, then `pnpm audit --audit-level=high` | moderate and above in any production dependency tree; high and above anywhere | Before Release Please can update a version PR, create a tag or GitHub release, or start its publish fan-out |
 | `ci-template-quickstart.yml`, `ci-template-express-js.yml` | `pnpm audit` | low and above | A PR touches that template |
 | `ci-template-fast-api.yml`, `ci-example-california-api.yml`, `ci-example-pennsylvania-api.yml` | `poetry audit` | nothing (`continue-on-error`) | A PR touches that template or example |
 | `ci-lib-pysdk.yml` | none | nothing | No audit gate today. See the Python SDK note below |
 
-**The release gate blocks at high; the sweep reports at low.** The sweep exists to surface every advisory within a day, so it runs at pnpm's default and opens a tracking issue. The release gate exists to stop a release that would ship a high or critical advisory. The same low-level audit also runs on every Release Please version PR, so whoever merges a release sees every open advisory first and can raise a floor before merging; only high and critical stop the release itself. Anything below high is fixed on the normal maintenance cadence; it still surfaces through the sweep and still gates dependency-changing PRs at moderate through `ci-catalog-validation.yml`.
+**The release gate blocks on production trees at moderate and on everything at high; the sweep reports at low.** `pnpm audit --prod` covers the `dependencies` and `optionalDependencies` of every workspace package. That includes the website: it is never published, but its Astro tree is deployed to the public, so it is a production tree for this purpose. Dev dependencies never ship, so they hold a release only at high. The sweep exists to surface every advisory within a day, so it runs at pnpm's default and opens a tracking issue; a tracked advisory is not a fixed one, which is why the gate does not defer to it. The same low-level audit also runs on every Release Please version PR, so whoever merges a release sees every open advisory first. Anything below the gate's thresholds is fixed on the normal maintenance cadence and still gates dependency-changing PRs at moderate through `ci-catalog-validation.yml`.
 
 The per-package workflows (`ci-lib-*`, `ci-website-preview.yml`) do **not** audit. An advisory published against a dep already on `main` would otherwise fail every open PR for that package, with no fix available from inside the PR. PRs that change a pnpm dependency are still gated: that updates the root `pnpm-lock.yaml`, which triggers `ci-catalog-validation.yml`.
 
@@ -134,7 +134,7 @@ When the audit step in the daily sweep fails it opens an issue labeled `audit-sw
 
 The Python template and examples are non-blocking because they are manually maintained (see [Maintenance tiers](#maintenance-tiers)) — no automated PR is queued to fix what a blocking audit would flag.
 
-**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. Bound the floor to the affected major line (`'>=1.20.6 <2'`); an unbounded floor lets pnpm satisfy it with the next major. Drop a floor once the parents' own ranges resolve at or above it. Reach for an audit ignore only when no patched version exists anywhere:
+**Advisories with no upstream fix.** The default remedy is a version floor in `pnpm-workspace.yaml` under `overrides:`. Bound the floor to the affected major line (`'>=1.20.6 <2'`); an unbounded floor lets pnpm satisfy it with the next major. Drop a floor once the parents' own ranges resolve at or above it. Reach for an audit ignore when no patched version exists anywhere, or when an urgent release cannot wait for one; in the urgent case add the entry in the release PR and open the follow-up that removes it, since the ignore also silences the daily sweep for that advisory until it is gone:
 
 ```yaml
 audit:
