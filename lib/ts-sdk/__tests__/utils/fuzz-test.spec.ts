@@ -447,7 +447,34 @@ describe("tracked divergences", () => {
 
   const permissive = z.object({ n: z.number().int().min(0) });
 
-  it("should tolerate a divergence that is still real, and report it", async () => {
+  it("should tolerate a declared divergence that is still real, and report it", async () => {
+    const result = await checkZodMatchesJsonSchema(permissive, "Bounded.yaml", {
+      ajv: boundedAjv,
+      cases: [
+        {
+          label: "n at zero",
+          value: { n: 0 },
+          expect: "divergent",
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1130",
+        },
+      ],
+      expectedDivergences: 1,
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.mismatches).toEqual([]);
+    expect(result.knownDivergences).toEqual([
+      { label: "n at zero", issue: "https://github.com/HHS/simpler-grants-protocol/issues/1130" },
+    ]);
+    expect(result.resolvedDivergences).toEqual([]);
+    // A tolerated divergence is not an agreement, so only the generated
+    // samples count as successes.
+    expect(result.successCount).toBe(SAMPLE_SIZE);
+  });
+
+  it("should fail when a tolerated divergence is not declared", async () => {
+    // The entry names its owner and still diverges, so nothing is stale. It
+    // fails anyway: the caller never said it was tolerating anything.
     const result = await checkZodMatchesJsonSchema(permissive, "Bounded.yaml", {
       ajv: boundedAjv,
       cases: [
@@ -460,12 +487,9 @@ describe("tracked divergences", () => {
       ],
     });
 
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.mismatches).toEqual([]);
-    expect(result.knownDivergences).toEqual([
-      { label: "n at zero", issue: "https://github.com/HHS/simpler-grants-protocol/issues/1130" },
-    ]);
-    expect(result.resolvedDivergences).toEqual([]);
+    expect(result.knownDivergences).toHaveLength(1);
   });
 
   it("should fail once a tracked divergence has been fixed", async () => {
@@ -483,6 +507,7 @@ describe("tracked divergences", () => {
           issue: "https://github.com/HHS/simpler-grants-protocol/issues/1130",
         },
       ],
+      expectedDivergences: 1,
     });
 
     expect(result.passed).toBe(false);

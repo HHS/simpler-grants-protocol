@@ -60,7 +60,11 @@ export interface TrackedDivergence {
 export interface FuzzTestResult {
   /** Whether the run is clean: every sample accounted for and every expectation met. */
   passed: boolean;
-  /** Number of samples on which the two schemas agreed as expected. */
+  /**
+   * Number of samples on which the two validators agreed. A tolerated
+   * divergence is not an agreement and is not counted here; see
+   * {@link knownDivergences}.
+   */
   successCount: number;
   /** Samples the harness tried to generate from the protocol schema. */
   generationAttempted: number;
@@ -90,6 +94,12 @@ export interface FuzzTestOptions {
    * schema accepts, since generated samples are protocol-valid by construction.
    */
   cases?: BoundaryCase[];
+  /**
+   * How many of `cases` are expected to still diverge. Defaults to 0, so a
+   * caller tolerating a divergence has to say so; the run fails when the
+   * observed count differs in either direction.
+   */
+  expectedDivergences?: number;
   /**
    * The validator holding the reference schemas. Defaults to the shared
    * instance built from the TypeSpec output. Tests override it to compare
@@ -260,6 +270,7 @@ export async function checkZodMatchesJsonSchema(
     seed = DEFAULT_SEED,
     ajv = defaultAjv,
     cases = [],
+    expectedDivergences = 0,
     generateSample = generateWithFaker,
   } = options;
 
@@ -392,7 +403,6 @@ export async function checkZodMatchesJsonSchema(
     const tracked = { label: boundaryCase.label, issue: boundaryCase.issue as string };
     if (disagreement) {
       knownDivergences.push(tracked);
-      successCount++;
     } else {
       // The two schemas now agree, so the entry describes a divergence that no
       // longer exists. Fail, so the list cannot outlive what it tracks.
@@ -407,7 +417,8 @@ export async function checkZodMatchesJsonSchema(
       generationFailures.length === 0 &&
       validated === SAMPLE_SIZE + cases.length &&
       mismatches.length === 0 &&
-      resolvedDivergences.length === 0,
+      resolvedDivergences.length === 0 &&
+      knownDivergences.length === expectedDivergences,
     successCount,
     generationAttempted: SAMPLE_SIZE,
     generationSucceeded,

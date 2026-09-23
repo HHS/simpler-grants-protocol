@@ -35,23 +35,33 @@ const DEFAULT_SCHEMAS_PATH = path.resolve(
  * `addFormats`, or flip `validateFormats`, and every one of those constraints
  * silently starts accepting anything — while the parity harness still reports
  * that the SDK matches the protocol. Nothing else in the suite would notice, so
- * the setup asserts it up front.
+ * the setup asserts it up front. Each format is probed on its own, because
+ * ajv-formats registers them one at a time: a list narrowed to `uuid` leaves
+ * `uri` and `date-time` inert while a uuid-only probe still passes.
  *
  * @param ajv - The instance to check
  * @param source - Where its schemas came from, used in the error message
  */
 export function assertFormatValidationActive(ajv: Ajv2020, source: string): void {
-  // No $id, so nothing is registered and there is nothing to clean up. A throw
-  // from compile() is already loud, so it is left to propagate as-is.
-  const probe = ajv.compile({ type: "string", format: "uuid" });
+  const probes: Array<[format: string, invalid: string]> = [
+    ["uuid", "not-a-uuid"],
+    ["uri", "not a uri"],
+    ["date-time", "not-a-date-time"],
+  ];
 
-  if (probe("not-a-uuid") === true) {
-    throw new Error(
-      `Format validation is not active for schemas from ${source}: ` +
-        `the string "not-a-uuid" validated against { format: "uuid" }. ` +
-        `Check that ajv-formats is registered and validateFormats is enabled — ` +
-        `without it the harness compares nothing for uuid, uri, and date-time fields.`
-    );
+  for (const [format, invalid] of probes) {
+    // No $id, so nothing is registered and there is nothing to clean up. A throw
+    // from compile() is already loud, so it is left to propagate as-is.
+    const probe = ajv.compile({ type: "string", format });
+
+    if (probe(invalid) === true) {
+      throw new Error(
+        `Format validation is not active for schemas from ${source}: ` +
+          `the string "${invalid}" validated against { format: "${format}" }. ` +
+          `Check that ajv-formats is registered for every format and validateFormats ` +
+          `is enabled — without it the harness compares nothing for ${format} fields.`
+      );
+    }
   }
 }
 

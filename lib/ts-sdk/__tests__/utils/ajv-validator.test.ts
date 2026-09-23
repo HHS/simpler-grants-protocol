@@ -163,6 +163,17 @@ describe("assertFormatValidationActive", () => {
     );
   });
 
+  it("should throw when only some of the guarded formats are registered", () => {
+    // ajv-formats registers formats one at a time. A list narrowed to uuid
+    // passes a uuid-only probe while uri and date-time silently accept anything.
+    const partial = new Ajv2020({ strict: false, validateFormats: true });
+    addFormats(partial, ["uuid"]);
+
+    expect(() => assertFormatValidationActive(partial, "partial-instance")).toThrow(
+      /format: "uri"/
+    );
+  });
+
   it("should throw when no format validators are registered at all", () => {
     const bare = new Ajv2020({ strict: false, validateFormats: true });
 

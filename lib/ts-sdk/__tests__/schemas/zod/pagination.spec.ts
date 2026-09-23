@@ -154,48 +154,52 @@ describe("PaginatedResultsInfo Schema", () => {
   it("should match PaginatedResultsInfo.yaml", async () => {
     const valid = { page: 1, pageSize: 20 };
 
-    const result = await expectZodMatchesJsonSchema(PaginatedResultsInfoSchema, jsonSchemaId, [
-      // Controls: both sides must agree on these.
-      { label: "pageSize at the protocol floor", value: { ...valid, pageSize: 1 } },
-      { label: "page below one", value: { ...valid, page: 0 } },
-      { label: "page not an integer", value: { ...valid, page: 1.5 } },
-      { label: "required page omitted", value: { pageSize: 20 } },
-      { label: "totalItems present and valid", value: { ...valid, totalItems: 100 } },
+    const result = await expectZodMatchesJsonSchema(
+      PaginatedResultsInfoSchema,
+      jsonSchemaId,
+      [
+        // Controls: both sides must agree on these.
+        { label: "pageSize at the protocol floor", value: { ...valid, pageSize: 1 } },
+        { label: "page below one", value: { ...valid, page: 0 } },
+        { label: "page not an integer", value: { ...valid, page: 1.5 } },
+        { label: "required page omitted", value: { pageSize: 20 } },
+        { label: "totalItems present and valid", value: { ...valid, totalItems: 100 } },
 
-      // Values the SDK accepts that the protocol does not. Each names the issue
-      // that owns the fix; the harness fails if one stops reproducing, so these
-      // cannot outlive the divergence they track. Fixing them here would change
-      // a production schema from a harness issue.
-      {
-        label: "pageSize at zero (SDK allows min 0, protocol requires min 1)",
-        value: { ...valid, pageSize: 0 },
-        expect: "divergent",
-        issue: "https://github.com/HHS/simpler-grants-protocol/issues/1130",
-      },
-      {
-        label: "totalItems explicitly null (SDK nullish, protocol integer-only)",
-        value: { ...valid, totalItems: null },
-        expect: "divergent",
-        issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
-      },
-      {
-        label: "totalPages explicitly null (SDK nullish, protocol integer-only)",
-        value: { ...valid, totalPages: null },
-        expect: "divergent",
-        issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
-      },
-      {
-        label: "page above the protocol's int32 ceiling (SDK safe-integer, protocol int32)",
-        value: { ...valid, page: 2147483648 },
-        expect: "divergent",
-        issue: "https://github.com/HHS/simpler-grants-protocol/issues/1196",
-      },
-    ]);
+        // Values the SDK accepts that the protocol does not. Each names the issue
+        // that owns the fix; the harness fails if one stops reproducing, so these
+        // cannot outlive the divergence they track. Fixing them here would change
+        // a production schema from a harness issue.
+        {
+          label: "pageSize at zero (SDK allows min 0, protocol requires min 1)",
+          value: { ...valid, pageSize: 0 },
+          expect: "divergent",
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1130",
+        },
+        {
+          label: "totalItems explicitly null (SDK nullish, protocol integer-only)",
+          value: { ...valid, totalItems: null },
+          expect: "divergent",
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
+        },
+        {
+          label: "totalPages explicitly null (SDK nullish, protocol integer-only)",
+          value: { ...valid, totalPages: null },
+          expect: "divergent",
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
+        },
+        {
+          label: "page above the protocol's int32 ceiling (SDK safe-integer, protocol int32)",
+          value: { ...valid, page: 2147483648 },
+          expect: "divergent",
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1196",
+        },
+      ],
+      4
+    );
 
     // This schema is not at full parity. State what is still outstanding, so a
     // green test does not read as agreement, and so adding or dropping a
     // divergence has to be a deliberate edit here.
-    expect(result.knownDivergences).toHaveLength(4);
     expect(new Set(result.knownDivergences.map(d => d.issue))).toEqual(
       new Set([
         "https://github.com/HHS/simpler-grants-protocol/issues/1130",

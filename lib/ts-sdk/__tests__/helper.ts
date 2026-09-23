@@ -16,16 +16,22 @@ import {
  *   samples cannot reach, because every generated sample is protocol-valid by
  *   construction. Required to catch a Zod schema more permissive than the
  *   protocol.
- * @returns The comparison result. A caller carrying tracked divergences should
- *   assert on `knownDivergences`, so that a passing test states which
- *   disagreements remain instead of implying full parity.
+ * @param expectedDivergences - How many of `cases` are expected to still
+ *   diverge. Defaults to 0, so tolerating a divergence has to be declared here,
+ *   next to the entries that name their owning issues, and the test fails when
+ *   the observed count differs.
+ * @returns The comparison result.
  */
 export async function expectZodMatchesJsonSchema(
   zodSchema: ZodType,
   jsonSchemaId: string,
-  cases: BoundaryCase[] = []
+  cases: BoundaryCase[] = [],
+  expectedDivergences = 0
 ): Promise<FuzzTestResult> {
-  const result = await checkZodMatchesJsonSchema(zodSchema, jsonSchemaId, { cases });
+  const result = await checkZodMatchesJsonSchema(zodSchema, jsonSchemaId, {
+    cases,
+    expectedDivergences,
+  });
 
   if (!result.passed) {
     const mismatchDetails = result.mismatches
@@ -52,6 +58,13 @@ Mismatch ${i + 1} (${m.source}):
         result.resolvedDivergences.map(d => `  ${d.label} — ${d.issue}`).join("\n")
       : "";
 
+    const divergenceDetails =
+      result.knownDivergences.length !== expectedDivergences
+        ? `\n${result.knownDivergences.length} tolerated divergence(s) observed but ` +
+          `${expectedDivergences} declared. Update the expectedDivergences argument:\n` +
+          result.knownDivergences.map(d => `  ${d.label} — ${d.issue}`).join("\n")
+        : "";
+
     throw new Error(
       `Zod schema does not match JSON schema "${jsonSchemaId}". ` +
         `${result.mismatches.length} mismatch(es) found across ${result.validated} validated ` +
@@ -60,6 +73,7 @@ Mismatch ${i + 1} (${m.source}):
         `Success rate: ${result.successCount}/${result.validated}\n` +
         generationDetails +
         staleDetails +
+        divergenceDetails +
         mismatchDetails
     );
   }
