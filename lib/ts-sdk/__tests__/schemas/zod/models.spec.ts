@@ -202,7 +202,64 @@ describe("OpportunityBase Schema", () => {
   });
 
   it("should match opportunityBase.yaml", async () => {
-    await expectZodMatchesJsonSchema(OpportunityBaseSchema, jsonSchemaId);
+    const valid = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      title: "Sample Grant Opportunity",
+      status: { value: "open" },
+      description: "A sample grant opportunity for testing",
+      createdAt: "2025-01-01T00:00:00Z",
+      lastModifiedAt: "2025-01-02T00:00:00Z",
+    };
+
+    // Genuinely absent, rather than present-and-undefined: only the reference
+    // side is serialized, so an undefined-valued key would vanish for the
+    // protocol check while Zod's strict pass still saw it.
+    const withoutTitle: Partial<typeof valid> = { ...valid };
+    delete withoutTitle.title;
+
+    const result = await expectZodMatchesJsonSchema(
+      OpportunityBaseSchema,
+      jsonSchemaId,
+      [
+        // Controls: both sides must agree on these.
+        { label: "required fields only", value: valid },
+        { label: "required title omitted", value: withoutTitle },
+        { label: "id is not a uuid", value: { ...valid, id: "not-a-uuid" } },
+        { label: "source is not a uri", value: { ...valid, source: "not a uri" } },
+        // The SDK accepts a Date for datetime fields and the protocol describes
+        // the serialized string, so this agrees only if the comparison is made
+        // against the wire form.
+        { label: "createdAt as a Date instance", value: { ...valid, createdAt: new Date() } },
+
+        // Values the SDK accepts that the protocol does not: every optional field
+        // is `.nullish()` in Zod, while the protocol declares it optional but not
+        // nullable. This is the disagreement Hono template verification hit, and
+        // ADR 0024 alignment (#1192) owns the fix. The harness fails if one stops
+        // reproducing, so these entries cannot outlive it.
+        ...(
+          [
+            ["funding", { funding: null }],
+            ["keyDates", { keyDates: null }],
+            ["source", { source: null }],
+            ["customFields", { customFields: null }],
+            ["acceptedApplicantTypes", { acceptedApplicantTypes: null }],
+          ] as const
+        ).map(([field, override]) => ({
+          label: `${field} explicitly null (SDK nullish, protocol optional but not nullable)`,
+          value: { ...valid, ...override },
+          expect: "divergent" as const,
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
+        })),
+      ],
+      5
+    );
+
+    // Not full parity: every optional field on this model still accepts null
+    // where the protocol does not. Stated here so a green test does not read as
+    // agreement.
+    expect(new Set(result.knownDivergences.map(d => d.issue))).toEqual(
+      new Set(["https://github.com/HHS/simpler-grants-protocol/issues/1192"])
+    );
   });
 
   it("should raise an error for an invalid OpportunityBase", () => {
