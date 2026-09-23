@@ -13,10 +13,8 @@ on:
     - cron: "0 15 * * *"
   workflow_dispatch:
   # Changes to this workflow trigger the job as an end-to-end smoke test.
-  # Release Please version PRs get no run of their own: release-please opens
-  # them with GITHUB_TOKEN, and GitHub holds every workflow on such a PR
-  # behind "approve workflows to run". The push-to-main gate in
-  # cd-release.yml is the check that counts.
+  # Release Please version PRs are not audited here; the push-to-main gate
+  # in cd-release.yml is the check that counts.
   pull_request:
     paths:
       - .github/workflows/deps-audit.yml
