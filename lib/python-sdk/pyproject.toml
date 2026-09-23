@@ -22,7 +22,7 @@ pytest-cov = "^5.0.0"
 cg-grants-gov = ">=0.2,<0.4"
 ruff = ">=0.11,<0.17"
 types-pyyaml = "^6.0.12.20250915"
-datamodel-code-generator = ">=0.43.1,<0.81.0"
+datamodel-code-generator = ">=0.43.1,<0.83.0"
 
 [tool.pytest.ini_options]
 # Put the package root on sys.path so tests can import the runnable examples/.
