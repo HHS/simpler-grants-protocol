@@ -36,6 +36,6 @@ holds its overrides, so steps 4-6 pick them up from the template directory. Don'
 pass `--ignore-workspace`: pnpm skips that file, and the template's security
 overrides go with it.
 
-Repeat the above steps as needed for the templates and examples directories.
+Repeat the above steps as needed for each template directory.
 
 
