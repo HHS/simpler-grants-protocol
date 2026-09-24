@@ -117,7 +117,7 @@ importers:
         version: 8.61.1(eslint@10.5.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
+        version: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
 
   lib/cli:
     dependencies:
@@ -226,7 +226,7 @@ importers:
         version: 8.61.1(eslint@10.5.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
+        version: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
 
   lib/core:
     dependencies:
@@ -353,8 +353,8 @@ importers:
         specifier: 'catalog:'
         version: 10.9.2(@types/node@22.20.0)(typescript@6.0.3)
       tsx:
-        specifier: ^4.23.13
-        version: 4.23.13
+        specifier: ^4.23.15
+        version: 4.23.15
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -363,7 +363,7 @@ importers:
         version: 8.61.1(eslint@10.5.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
+        version: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
 
   website:
     dependencies:
@@ -372,13 +372,13 @@ importers:
         version: 15.5.2(@types/json-schema@7.0.15)
       '@astrojs/cloudflare':
         specifier: ^14.2.1
-        version: 14.2.1(@types/node@22.20.0)(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(esbuild@0.28.2)(tsx@4.23.13)(wrangler@4.136.0(@types/node@22.20.0))(yaml@2.8.3)
+        version: 14.2.1(@types/node@22.20.0)(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(esbuild@0.28.2)(tsx@4.23.15)(wrangler@4.136.0(@types/node@22.20.0))(yaml@2.8.3)
       '@astrojs/react':
         specifier: ^6.0.1
-        version: 6.0.1(@types/node@22.20.0)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(esbuild@0.28.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(supports-color@10.2.2)(tsx@4.23.13)(yaml@2.8.3)
+        version: 6.0.1(@types/node@22.20.0)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(esbuild@0.28.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(supports-color@10.2.2)(tsx@4.23.15)(yaml@2.8.3)
       '@astrojs/starlight':
         specifier: ^0.41.2
-        version: 0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3)
+        version: 0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3)
       '@jsonforms/core':
         specifier: ^3.8.0
         version: 3.8.0
@@ -399,7 +399,7 @@ importers:
         version: 8.20.0
       astro:
         specifier: ~7.2.10
-        version: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3)
+        version: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3)
       js-yaml:
         specifier: ^4.3.2
         version: 4.3.2
@@ -422,8 +422,8 @@ importers:
         specifier: ^5.33.0
         version: 5.33.0
       tsx:
-        specifier: ^4.23.13
-        version: 4.23.13
+        specifier: ^4.23.15
+        version: 4.23.15
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -499,13 +499,13 @@ importers:
         version: 0.14.1
       starlight-links-validator:
         specifier: ^0.24.0
-        version: 0.24.0(@astrojs/starlight@0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3))(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(supports-color@10.2.2)
+        version: 0.24.0(@astrojs/starlight@0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3))(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(supports-color@10.2.2)
       typescript-eslint:
         specifier: 'catalog:'
         version: 8.61.1(eslint@10.5.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       vitest:
         specifier: catalog:website
-        version: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
+        version: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
       wrangler:
         specifier: ^4.136.0
         version: 4.136.0(@types/node@22.20.0)
@@ -5106,8 +5106,8 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
-  tsx@4.23.13:
-    resolution: {integrity: sha512-BL5MGkRln6aDYhb0xbQlEAGw743BaZYWdbWtdJOBriYJboKgUUYCadFp2/FpBBZquBC/ezNBn7wMMPx7FDZUDw==}
+  tsx@4.23.15:
+    resolution: {integrity: sha512-Yiex1Ovn8z2xPpOWckIiysV1SSyRMY9BkLF++q0yKiDxCqRhosKfMg3janKkiLBwZ5c/YryloKwGZcrEmtwxKw==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -5728,14 +5728,14 @@ snapshots:
       - prettier
       - prettier-plugin-astro
 
-  '@astrojs/cloudflare@14.2.1(@types/node@22.20.0)(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(esbuild@0.28.2)(tsx@4.23.13)(wrangler@4.136.0(@types/node@22.20.0))(yaml@2.8.3)':
+  '@astrojs/cloudflare@14.2.1(@types/node@22.20.0)(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(esbuild@0.28.2)(tsx@4.23.15)(wrangler@4.136.0(@types/node@22.20.0))(yaml@2.8.3)':
     dependencies:
       '@astrojs/internal-helpers': 0.10.2
       '@astrojs/underscore-redirects': 1.0.4
-      '@cloudflare/vite-plugin': 1.51.3(@types/node@22.20.0)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))(wrangler@4.136.0(@types/node@22.20.0))
-      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3)
+      '@cloudflare/vite-plugin': 1.51.3(@types/node@22.20.0)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))(wrangler@4.136.0(@types/node@22.20.0))
+      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3)
       piccolore: 0.1.3
-      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.8.3)
+      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.8.3)
       wrangler: 4.136.0(@types/node@22.20.0)
     transitivePeerDependencies:
       - '@types/node'
@@ -5907,13 +5907,13 @@ snapshots:
       github-slugger: 2.0.0
       satteri: 0.10.5
 
-  '@astrojs/mdx@7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(supports-color@10.2.2)':
+  '@astrojs/mdx@7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(supports-color@10.2.2)':
     dependencies:
       '@astrojs/internal-helpers': 0.10.1
       '@astrojs/markdown-remark': 7.2.1(supports-color@10.2.2)
       '@mdx-js/mdx': 3.1.1(supports-color@10.2.2)
       acorn: 8.16.0
-      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3)
+      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3)
       es-module-lexer: 2.1.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -5933,17 +5933,17 @@ snapshots:
     dependencies:
       prismjs: 1.30.0
 
-  '@astrojs/react@6.0.1(@types/node@22.20.0)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(esbuild@0.28.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(supports-color@10.2.2)(tsx@4.23.13)(yaml@2.8.3)':
+  '@astrojs/react@6.0.1(@types/node@22.20.0)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(esbuild@0.28.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(supports-color@10.2.2)(tsx@4.23.15)(yaml@2.8.3)':
     dependencies:
       '@astrojs/internal-helpers': 0.10.1
       '@types/react': 18.3.28
       '@types/react-dom': 18.3.7(@types/react@18.3.28)
-      '@vitejs/plugin-react': 5.2.0(supports-color@10.2.2)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
+      '@vitejs/plugin-react': 5.2.0(supports-color@10.2.2)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
       devalue: 5.9.2
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       ultrahtml: 1.6.0
-      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.8.3)
+      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.8.3)
     transitivePeerDependencies:
       - '@types/node'
       - '@vitejs/devtools'
@@ -5965,17 +5965,17 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 4.4.3
 
-  '@astrojs/starlight@0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3)':
+  '@astrojs/starlight@0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3)':
     dependencies:
       '@astrojs/markdown-satteri': 0.3.4
-      '@astrojs/mdx': 7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(supports-color@10.2.2)
+      '@astrojs/mdx': 7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(supports-color@10.2.2)
       '@astrojs/sitemap': 3.7.3
       '@pagefind/default-ui': 1.5.2
       '@types/hast': 3.0.5
       '@types/js-yaml': 4.0.9
       '@types/mdast': 4.0.4
-      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3)
-      astro-expressive-code: 0.44.1(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))
+      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3)
+      astro-expressive-code: 0.44.1(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.3
       hast-util-select: 6.0.4
@@ -6220,12 +6220,12 @@ snapshots:
     optionalDependencies:
       workerd: 1.20260921.1
 
-  '@cloudflare/vite-plugin@1.51.3(@types/node@22.20.0)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))(wrangler@4.136.0(@types/node@22.20.0))':
+  '@cloudflare/vite-plugin@1.51.3(@types/node@22.20.0)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))(wrangler@4.136.0(@types/node@22.20.0))':
     dependencies:
       '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260804.1)
       miniflare: 5.20260804.1-alpha(@types/node@22.20.0)
       unenv: 2.0.0-rc.24
-      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
+      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)
       workerd: 1.20260804.1
       wrangler: 4.136.0(@types/node@22.20.0)
       ws: 8.21.0
@@ -7669,7 +7669,7 @@ snapshots:
 
   '@ungap/structured-clone@1.3.1': {}
 
-  '@vitejs/plugin-react@5.2.0(supports-color@10.2.2)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))':
+  '@vitejs/plugin-react@5.2.0(supports-color@10.2.2)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))':
     dependencies:
       '@babel/core': 7.29.7(supports-color@10.2.2)
       '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.7(supports-color@10.2.2))
@@ -7677,7 +7677,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
+      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -7693,7 +7693,7 @@ snapshots:
       obug: 2.1.2
       std-env: 4.0.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
+      vitest: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
 
   '@vitest/eslint-plugin@1.6.20(@typescript-eslint/eslint-plugin@8.61.1(@typescript-eslint/parser@8.61.1(eslint@10.5.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.5.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.5.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(vitest@4.1.11)':
     dependencies:
@@ -7703,7 +7703,7 @@ snapshots:
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 8.61.1(@typescript-eslint/parser@8.61.1(eslint@10.5.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.5.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       typescript: 6.0.3
-      vitest: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
+      vitest: 4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -7716,13 +7716,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.11(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))':
+  '@vitest/mocker@4.1.11(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))':
     dependencies:
       '@vitest/spy': 4.1.11
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
+      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)
 
   '@vitest/pretty-format@4.1.11':
     dependencies:
@@ -7928,13 +7928,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  astro-expressive-code@0.44.1(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3)):
+  astro-expressive-code@0.44.1(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3)):
     dependencies:
-      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3)
+      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3)
       rehype-expressive-code: 0.44.1
       url-extras: 0.1.0
 
-  astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3):
+  astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3):
     dependencies:
       '@astrojs/compiler-rs': 0.4.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)
       '@astrojs/internal-helpers': 0.11.0
@@ -7984,8 +7984,8 @@ snapshots:
       ultrahtml: 1.6.0
       unifont: 0.7.5
       unstorage: 1.17.5
-      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.8.3)
-      vitefu: 1.1.3(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
+      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.8.3)
+      vitefu: 1.1.3(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
       xxhash-wasm: 1.1.0
       yargs-parser: 22.0.0
       zod: 4.4.3
@@ -10723,11 +10723,11 @@ snapshots:
 
   stackback@0.0.2: {}
 
-  starlight-links-validator@0.24.0(@astrojs/starlight@0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3))(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(supports-color@10.2.2):
+  starlight-links-validator@0.24.0(@astrojs/starlight@0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3))(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(supports-color@10.2.2):
     dependencies:
-      '@astrojs/starlight': 0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3)
+      '@astrojs/starlight': 0.41.4(astro@7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3)
       '@types/picomatch': 4.0.3
-      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.13)(yaml@2.8.3)
+      astro: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@22.20.0)(tsx@4.23.15)(yaml@2.8.3)
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.3
       is-absolute-url: 5.0.0
@@ -10938,7 +10938,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsx@4.23.13:
+  tsx@4.23.15:
     dependencies:
       esbuild: 0.28.2
     optionalDependencies:
@@ -11121,7 +11121,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.8.3):
+  vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.8.3):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.5
@@ -11132,10 +11132,10 @@ snapshots:
       '@types/node': 22.20.0
       esbuild: 0.28.2
       fsevents: 2.3.3
-      tsx: 4.23.13
+      tsx: 4.23.15
       yaml: 2.8.3
 
-  vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0):
+  vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.5
@@ -11146,17 +11146,17 @@ snapshots:
       '@types/node': 22.20.0
       esbuild: 0.28.2
       fsevents: 2.3.3
-      tsx: 4.23.13
+      tsx: 4.23.15
       yaml: 2.9.0
 
-  vitefu@1.1.3(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)):
+  vitefu@1.1.3(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)):
     optionalDependencies:
-      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
+      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  vitest@4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)):
+  vitest@4.1.11(@types/node@22.20.0)(@vitest/coverage-v8@4.1.11)(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.11
-      '@vitest/mocker': 4.1.11(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0))
+      '@vitest/mocker': 4.1.11(vite@8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
       '@vitest/pretty-format': 4.1.11
       '@vitest/runner': 4.1.11
       '@vitest/snapshot': 4.1.11
@@ -11173,7 +11173,7 @@ snapshots:
       tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
-      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
+      vite: 8.1.5(@types/node@22.20.0)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.20.0

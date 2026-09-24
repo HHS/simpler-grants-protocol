@@ -104,7 +104,7 @@
     "json-schema-faker": "^0.6.3",
     "prettier": "catalog:",
     "ts-node": "catalog:",
-    "tsx": "^4.23.13",
+    "tsx": "^4.23.15",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:"
