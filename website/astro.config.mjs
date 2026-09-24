@@ -58,6 +58,7 @@ export default defineConfig({
       ],
       favicon: "/favicon.ico",
       customCss: ["./src/styles/custom.css"],
+      routeMiddleware: "./src/routeData.ts",
       components: {
         Header: "./src/components/starlight-overrides/Header.astro",
       },
