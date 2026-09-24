@@ -54,7 +54,7 @@
     "react-dom": "^18.3.1",
     "sharp": "^0.35.4",
     "swagger-ui-dist": "^5.33.0",
-    "tsx": "^4.23.13",
+    "tsx": "^4.23.15",
     "typescript": "catalog:",
     "typespec-versioning-changelog": "workspace:*",
     "zod": "catalog:"
