@@ -146,13 +146,15 @@ describe("Starlight markup the landing-page rules in custom.css rely on", () => 
     ).toBe(true);
   });
 
-  it.each(["--sl-content-inline-start", "--sl-content-width"])(
-    "still lays out content with %s",
-    (property) => {
-      expect(
-        styles.includes(`var(${property})`),
-        `Starlight's CSS no longer reads ${property}, so overriding it in custom.css does nothing`,
-      ).toBe(true);
-    },
-  );
+  // Starlight's PageFrame and ContentPanel declarations. Matching any var()
+  // read isn't enough: Header.astro reads --sl-content-width too.
+  it.each([
+    ["--sl-content-inline-start", "padding-inline-start"],
+    ["--sl-content-width", "max-width"],
+  ])("still lays out content with %s", (property, declaration) => {
+    expect(
+      styles.includes(`${declaration}:var(${property})`),
+      `Starlight's CSS no longer sets ${declaration} from ${property}, so overriding it in custom.css does nothing`,
+    ).toBe(true);
+  });
 });
