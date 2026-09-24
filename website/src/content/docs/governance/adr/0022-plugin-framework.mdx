@@ -133,10 +133,7 @@ interface SchemaMappings {
 // "moneyComparison"); each maps 1:1 to a base filter with auto-derived operators.
 // See the SDK for the enumerated set.
 type CustomFilterType =
-  | "stringComparison"
-  | "stringArray"
-  | "dateRange"
-  | "moneyComparison";
+  "stringComparison" | "stringArray" | "dateRange" | "moneyComparison";
 
 interface CustomFilterSpec {
   filterType: CustomFilterType;
