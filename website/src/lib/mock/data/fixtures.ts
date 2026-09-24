@@ -9,9 +9,16 @@ import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
 /**
  * Protocol versions the fixture can shape, matching the specs the docs site
  * publishes. v0.4.0 left the opportunity models untouched, so it shapes
- * identically to v0.3.0.
+ * identically to v0.3.0. v0.5.0 adds `OppRef.identifiers`, which the fixtures
+ * do not carry yet, so for now it shapes identically to v0.4.0.
  */
-export const SUPPORTED_VERSIONS = ["0.1.0", "0.2.0", "0.3.0", "0.4.0"] as const;
+export const SUPPORTED_VERSIONS = [
+  "0.1.0",
+  "0.2.0",
+  "0.3.0",
+  "0.4.0",
+  "0.5.0",
+] as const;
 
 /** A protocol version the opportunity handlers can shape responses for. */
 export type Version = (typeof SUPPORTED_VERSIONS)[number];

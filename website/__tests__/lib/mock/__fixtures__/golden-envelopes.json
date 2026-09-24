@@ -137,12 +137,12 @@
   "version-unsupported": {
     "status": 404,
     "contentType": "application/json",
-    "body": "{\"status\":404,\"message\":\"Unsupported protocol version\",\"errors\":[{\"field\":\"version\",\"message\":\"Version 9.9.9 is not served by this mock; supported versions are 0.1.0, 0.2.0, 0.3.0, 0.4.0\"}]}"
+    "body": "{\"status\":404,\"message\":\"Unsupported protocol version\",\"errors\":[{\"field\":\"version\",\"message\":\"Version 9.9.9 is not served by this mock; supported versions are 0.1.0, 0.2.0, 0.3.0, 0.4.0, 0.5.0\"}]}"
   },
   "version-malformed": {
     "status": 404,
     "contentType": "application/json",
-    "body": "{\"status\":404,\"message\":\"Unsupported protocol version\",\"errors\":[{\"field\":\"version\",\"message\":\"Version abc is not served by this mock; supported versions are 0.1.0, 0.2.0, 0.3.0, 0.4.0\"}]}"
+    "body": "{\"status\":404,\"message\":\"Unsupported protocol version\",\"errors\":[{\"field\":\"version\",\"message\":\"Version abc is not served by this mock; supported versions are 0.1.0, 0.2.0, 0.3.0, 0.4.0, 0.5.0\"}]}"
   },
   "route-miss-unsupported-method": {
     "status": 404,

@@ -195,6 +195,6 @@ describe("isSupportedVersion", () => {
   });
 
   it("rejects a version the fixture cannot shape", () => {
-    expect(isSupportedVersion("0.5.0")).toBe(false);
+    expect(isSupportedVersion("0.6.0")).toBe(false);
   });
 });
