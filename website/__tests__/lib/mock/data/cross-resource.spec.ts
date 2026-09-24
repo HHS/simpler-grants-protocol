@@ -75,6 +75,20 @@ describe("awards reference records that exist", () => {
     }
   });
 
+  it("copies the referenced opportunity's identifiers onto `opportunity.identifiers`, verbatim", () => {
+    for (const award of AWARD_FIXTURES) {
+      if (!award.opportunity) continue;
+
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      )!;
+
+      // Opportunities without identifiers must not have any invented for the
+      // award's reference either.
+      expect(award.opportunity.identifiers).toEqual(opportunity.identifiers);
+    }
+  });
+
   it("points every `application` reference at a real application, with its real title", () => {
     for (const award of AWARD_FIXTURES) {
       if (!award.application) continue;

@@ -12,6 +12,7 @@ import {
 } from "@/lib/mock/data/awards";
 import { listAwards, getAward, searchAwards } from "@/lib/mock/handlers/awards";
 import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "@/lib/mock/data/ids";
+import { OPPORTUNITY_FIXTURES } from "@/lib/mock/data/fixtures";
 
 const VERSION = "0.4.0";
 const STATUS_VALUES = ["awarded", "completed", "cancelled", "custom"];
@@ -197,6 +198,38 @@ describe("GET /v{version}/common-grants/awards/{awdId} (detail)", () => {
     expect(body.status).toBe(404);
     expect(Array.isArray(body.errors)).toBe(true);
     expect(body.errors.some((error) => error.field === "awdId")).toBe(true);
+  });
+
+  it("includes `opportunity.identifiers`, matching the referenced opportunity, at 0.5.0", async () => {
+    const response = getAward(CANONICAL_AWARD_ID, "0.5.0");
+
+    expect(response.status).toBe(200);
+
+    const body = (await response.json()) as {
+      data: { opportunity?: { id: string; identifiers?: unknown } };
+    };
+
+    const opportunity = OPPORTUNITY_FIXTURES.find(
+      (opp) => opp.id === body.data.opportunity?.id,
+    );
+
+    expect(opportunity).toBeDefined();
+    expect(body.data.opportunity?.identifiers).toEqual(
+      opportunity!.identifiers,
+    );
+  });
+
+  it("omits `opportunity.identifiers` entirely at 0.4.0", async () => {
+    const response = getAward(CANONICAL_AWARD_ID, VERSION);
+
+    expect(response.status).toBe(200);
+
+    const body = (await response.json()) as {
+      data: { opportunity?: Record<string, unknown> };
+    };
+
+    expect(body.data.opportunity).toBeDefined();
+    expect(Object.hasOwn(body.data.opportunity!, "identifiers")).toBe(false);
   });
 });
 

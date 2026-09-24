@@ -5,12 +5,13 @@
  */
 
 import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
+import type { Identifier } from "./organizations";
 
 /**
  * Protocol versions the fixture can shape, matching the specs the docs site
  * publishes. v0.4.0 left the opportunity models untouched, so it shapes
- * identically to v0.3.0. v0.5.0 adds `OppRef.identifiers`, which the fixtures
- * do not carry yet, so for now it shapes identically to v0.4.0.
+ * identically to v0.3.0. v0.5.0 adds `OppRef.identifiers`, which
+ * `shapeOpportunityForVersion` strips for every earlier version.
  */
 export const SUPPORTED_VERSIONS = [
   "0.1.0",
@@ -145,9 +146,23 @@ export interface Competition {
 }
 
 /** A funding opportunity in its fullest (v0.3+, detail) shape. */
+/**
+ * Identifiers for an opportunity (mirrors `Models.OppIds`). `opp:us:fon` and
+ * `opp:us:aln` are base identifiers with their own top-level keys, never filed
+ * under `otherIds`, which is only for registries the protocol does not define
+ * on the model.
+ */
+export interface OppIds {
+  systemId?: Identifier;
+  "opp:us:fon"?: Identifier;
+  "opp:us:aln"?: Identifier;
+  otherIds?: Record<string, Identifier>;
+}
+
 export interface Opportunity {
   id: string;
   title: string;
+  identifiers?: OppIds;
   status: OppStatus;
   description: string;
   funding?: OppFunding;
@@ -220,6 +235,36 @@ export const RESERVED_MISSING_OPPORTUNITY_ID = RESERVED_MISSING_ID;
  * docs' example page size of 20. The canonical record must carry the newest
  * `lastModifiedAt` so it sorts first under the default ordering.
  */
+/** Builds a Federal Opportunity Number entry. */
+function fon(value: string): Identifier {
+  return {
+    registry: {
+      code: "opp:us:fon",
+      url: "https://commongrants.org/registries/opp-us-fon",
+    },
+    id: value,
+  };
+}
+
+/** Builds an Assistance Listing Number entry. */
+function aln(value: string): Identifier {
+  return {
+    registry: {
+      code: "opp:us:aln",
+      url: "https://commongrants.org/registries/opp-us-aln",
+    },
+    id: value,
+  };
+}
+
+/** Builds the hosting system's own identifier for an opportunity. */
+function oppSystemId(value: string): Identifier {
+  return {
+    registry: { code: "opp:grants.gov:system" },
+    id: value,
+  };
+}
+
 export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   // ---- The spec's own documented example (see CANONICAL_OPPORTUNITY_ID) ----
   {
@@ -228,6 +273,11 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
     // published example is the point.
     id: CANONICAL_OPPORTUNITY_ID,
     title: "Small business grant program",
+    identifiers: {
+      systemId: oppSystemId(CANONICAL_OPPORTUNITY_ID),
+      "opp:us:fon": fon("SBA-2024-SBG-0001"),
+      "opp:us:aln": aln("59.037"),
+    },
     status: {
       value: "open",
       description: "The opportunity is currently accepting applications",
@@ -319,6 +369,18 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "573525f2-8e15-4405-83fb-e6523511d893",
     title: "STEM Education Grant Program",
+    identifiers: {
+      "opp:us:fon": fon("ED-GRANTS-2024-STEM-001"),
+      "opp:us:aln": aln("84.215"),
+      otherIds: {
+        // Grants.gov's own numeric opportunity id, distinct from the FON and
+        // not a registry the protocol defines as a base identifier.
+        "opp:grants.gov:oppId": {
+          registry: { code: "opp:grants.gov:oppId" },
+          id: "356789",
+        },
+      },
+    },
     status: { value: "open", description: "Currently accepting applications" },
     description:
       "A grant program focused on improving STEM education in under-resourced schools.",
@@ -667,6 +729,9 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "91a2b3c4-d5e6-47f8-93a4-0e1f20314253",
     title: "Rural Health Clinic Modernization",
+    identifiers: {
+      "opp:us:aln": aln("93.224"),
+    },
     status: { value: "open", description: "Currently accepting applications" },
     description:
       "Modernizing facilities and equipment at rural health clinics.",
@@ -1110,6 +1175,16 @@ export function shapeOpportunityForVersion(
   if (version === "0.1.0") {
     delete shaped.acceptedApplicantTypes;
     delete shaped.competitions;
+  }
+
+  // `OppRef.identifiers` is `@added(v0_5)`. Ordering is compared inline rather
+  // than via `isAtLeastVersion`, because `availability.ts` imports this module
+  // and the reverse import would be a runtime cycle. `awards.ts` has no such
+  // constraint and uses the helper.
+  if (
+    SUPPORTED_VERSIONS.indexOf(version) < SUPPORTED_VERSIONS.indexOf("0.5.0")
+  ) {
+    delete shaped.identifiers;
   }
 
   return shaped;
