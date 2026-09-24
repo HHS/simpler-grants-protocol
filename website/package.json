@@ -86,6 +86,6 @@
     "starlight-links-validator": "^0.26.0",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
-    "wrangler": "^4.136.0"
+    "wrangler": "^4.137.0"
   }
 }
