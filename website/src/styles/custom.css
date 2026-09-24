@@ -30,3 +30,22 @@
   --sl-color-black: #ffffff;
   --sl-color-crazy: #ff0000;
 }
+
+/* The landing page gets Starlight's mobile menu (src/routeData.ts) but keeps
+   its splash layout on desktop: no sidebar, full width, same header spacing. */
+:root[data-has-hero] {
+  --sl-content-width: 67.5rem;
+}
+@media (min-width: 50em) {
+  :root[data-has-hero] {
+    --sl-content-inline-start: 0rem;
+  }
+  :root[data-has-hero] .sidebar-pane {
+    display: none;
+  }
+  :root[data-has-hero] header.header {
+    padding-inline-end: calc(
+      var(--sl-nav-gap) + var(--sl-nav-pad-x) + var(--sl-menu-button-size)
+    );
+  }
+}
