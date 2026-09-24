@@ -9,6 +9,7 @@ export interface Props {
 }
 
 const { label, items } = Astro.props;
+const slug = label.toLowerCase().replace(/\s+/g, "-");
 ---
 
 <div class="nav-menu-item">
@@ -16,8 +17,8 @@ const { label, items } = Astro.props;
     class="nav-menu-button"
     aria-haspopup="true"
     aria-expanded="false"
-    aria-controls="nav-menu-{label.toLowerCase().replace(/\s+/g, '-')}"
-    id="nav-button-{label.toLowerCase().replace(/\s+/g, '-')}"
+    aria-controls={`nav-menu-${slug}`}
+    id={`nav-button-${slug}`}
   >
     {label}
     <svg
@@ -41,8 +42,8 @@ const { label, items } = Astro.props;
   <div
     class="nav-menu-dropdown"
     role="menu"
-    aria-labelledby="nav-button-{label.toLowerCase().replace(/\s+/g, '-')}"
-    id="nav-menu-{label.toLowerCase().replace(/\s+/g, '-')}"
+    aria-labelledby={`nav-button-${slug}`}
+    id={`nav-menu-${slug}`}
   >
     {
       items.map((item) => (
