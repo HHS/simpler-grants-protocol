@@ -35,7 +35,7 @@ catalog:
   typescript: ^6.0.3
   typescript-eslint: ^8.70.1
   vitest: ^4.1.11
-  zod: ^4.6.5
+  zod: ^4.4.3
 
 catalogs:
   website:
