@@ -1,4 +1,12 @@
-import { EmitContext, Model, ModelProperty } from "@typespec/compiler";
+import {
+  DecoratorApplication,
+  EmitContext,
+  EnumMember,
+  Model,
+  ModelProperty,
+  Program,
+} from "@typespec/compiler";
+import { SyntaxKind } from "@typespec/compiler/ast";
 import {
   getAddedOnVersions,
   getRemovedOnVersions,
@@ -110,10 +118,14 @@ function logModelAdditions(
   allVersions: Version[],
   modelLogs: { [version: string]: ChangeRecord[] },
 ): void {
-  const modelAddedVersions = getAddedOnVersions(context.program, model);
+  const modelAddedVersions = versionsWrittenOn(
+    context.program,
+    model,
+    "$added",
+  );
   const renamedFromData = getRenamedFrom(context.program, model);
 
-  if (modelAddedVersions && modelAddedVersions.length > 0) {
+  if (modelAddedVersions.length > 0) {
     for (const version of dedupeVersions(modelAddedVersions)) {
       const changes = getOrCreateChanges(modelLogs, getVersionString(version));
       const modelNameAtVersion = getNameAtVersion(
@@ -142,6 +154,75 @@ function logModelAdditions(
 }
 
 /**
+ * The versions a model was added to or removed from, as its own declaration
+ * says.
+ *
+ * `model A is B` copies B's decorators onto A, so A carries B's `@added`
+ * alongside its own and `getAddedOnVersions` reports both. When the two name
+ * different versions, the decorator written on A says when A was added and
+ * the copied one says when B was. A decorator written on the model wins. A
+ * model with none of its own exists from whenever the model it `is` does, so
+ * it takes that model's answer, all the way up a chain of `is`. A model with
+ * nothing written anywhere keeps whatever it carries.
+ */
+function versionsWrittenOn(
+  program: Program,
+  model: Model,
+  kind: "$added" | "$removed",
+): readonly Version[] {
+  const all =
+    (kind === "$added"
+      ? getAddedOnVersions(program, model)
+      : getRemovedOnVersions(program, model)) ?? [];
+  if (all.length === 0) return all;
+
+  const ownMembers = new Set<EnumMember>();
+  for (const application of model.decorators) {
+    if (application.decorator.name !== kind) continue;
+    if (!isWrittenOn(program, application, model)) continue;
+    const member = application.args[0]?.value;
+    if (isEnumMember(member)) ownMembers.add(member);
+  }
+  const own = all.filter((version) => ownMembers.has(version.enumMember));
+  if (own.length > 0) return own;
+
+  if (model.sourceModel) {
+    const inherited = versionsWrittenOn(program, model.sourceModel, kind);
+    if (inherited.length > 0) return inherited;
+  }
+  return all;
+}
+
+/**
+ * Whether a decorator application was written on the model itself, rather
+ * than copied from an `is` source. An inline decorator belongs to the
+ * declaration it sits on; an augment decorator (`@@added(Model, ...)`) belongs
+ * to whatever it targets.
+ */
+function isWrittenOn(
+  program: Program,
+  application: DecoratorApplication,
+  model: Model,
+): boolean {
+  const node = application.node;
+  if (!node) return true;
+  if (node.kind === SyntaxKind.AugmentDecoratorStatement) {
+    const target = program.checker.getTypeForNode(node.targetType);
+    return target.node === model.node;
+  }
+  return node.parent === model.node;
+}
+
+function isEnumMember(entity: unknown): entity is EnumMember {
+  return (
+    typeof entity === "object" &&
+    entity !== null &&
+    "kind" in entity &&
+    entity.kind === "EnumMember"
+  );
+}
+
+/**
  * Record a changelog entry each time the model was removed from the namespace.
  */
 function logModelRemovals(
@@ -149,10 +230,14 @@ function logModelRemovals(
   model: Model,
   modelLogs: { [version: string]: ChangeRecord[] },
 ): void {
-  const modelRemovedVersions = getRemovedOnVersions(context.program, model);
+  const modelRemovedVersions = versionsWrittenOn(
+    context.program,
+    model,
+    "$removed",
+  );
   const renamedFromData = getRenamedFrom(context.program, model);
 
-  if (modelRemovedVersions && modelRemovedVersions.length > 0) {
+  if (modelRemovedVersions.length > 0) {
     for (const version of dedupeVersions(modelRemovedVersions)) {
       const changes = getOrCreateChanges(modelLogs, getVersionString(version));
       const modelNameAtVersion = getNameAtVersion(
