@@ -1,11 +1,16 @@
 /**
  * Fixture-backed handlers for the award list, detail, and search endpoints.
  * The `opportunityId` filter matches on the referenced opportunity's id.
- * Awards exist only in v0.4, so there is no version shaping — `version` is
- * taken only to keep one handler signature.
+ * Awards start at v0.4; `shapeAwardForVersion` projects each record down to
+ * what the requested version declares.
  */
 
-import { allAwards, getAwardById, type Award } from "../data/awards";
+import {
+  allAwards,
+  getAwardById,
+  shapeAwardForVersion,
+  type Award,
+} from "../data/awards";
 import type { Version } from "../data/fixtures";
 import {
   errorResponse,
@@ -116,7 +121,6 @@ function moneyFilterValue(award: Award): Money | undefined {
  * newest-modified first.
  */
 export function listAwards(request: Request, version: Version): Response {
-  void version;
   const pagination = resolveQueryPagination(request);
   if (!pagination.ok) {
     return errorResponse(
@@ -134,7 +138,9 @@ export function listAwards(request: Request, version: Version): Response {
   );
 
   return successResponse({
-    items: pageOf(sorted, page, pageSize),
+    items: pageOf(sorted, page, pageSize).map((award) =>
+      shapeAwardForVersion(award, version),
+    ),
     paginationInfo: paginationInfo(page, pageSize, sorted.length),
   });
 }
@@ -144,7 +150,6 @@ export function listAwards(request: Request, version: Version): Response {
  * malformed id answers 400, not a route miss.
  */
 export function getAward(awdId: string, version: Version): Response {
-  void version;
   if (!isUuid(awdId)) {
     return errorResponse(400, "Invalid award id", [
       { field: "awdId", message: "Must be a valid UUID" },
@@ -158,7 +163,7 @@ export function getAward(awdId: string, version: Version): Response {
     ]);
   }
 
-  return successResponse({ data: award });
+  return successResponse({ data: shapeAwardForVersion(award, version) });
 }
 
 /**
@@ -169,7 +174,6 @@ export async function searchAwards(
   request: Request,
   version: Version,
 ): Promise<Response> {
-  void version;
   const parsed = await readJsonObjectBody(request);
   if (!parsed.ok) {
     return parsed.response;
@@ -293,7 +297,9 @@ export async function searchAwards(
   }
 
   return successResponse({
-    items: pageOf(items, page, pageSize),
+    items: pageOf(items, page, pageSize).map((award) =>
+      shapeAwardForVersion(award, version),
+    ),
     paginationInfo: paginationInfo(page, pageSize, items.length),
     sortInfo: {
       sortBy,

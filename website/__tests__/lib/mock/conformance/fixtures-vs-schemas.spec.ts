@@ -15,7 +15,7 @@ import {
   versionsServing,
   type ResourceName,
 } from "@/lib/mock/data/availability";
-import { AWARD_FIXTURES } from "@/lib/mock/data/awards";
+import { AWARD_FIXTURES, shapeAwardForVersion } from "@/lib/mock/data/awards";
 import { COMPETITION_FIXTURES } from "@/lib/mock/data/competitions";
 import {
   CANONICAL_OPPORTUNITY_ID,
@@ -62,7 +62,8 @@ const RESOURCE_CASES: ResourceCase[] = [
     resource: "awards",
     label: "awards",
     schemaFor: () => "AwardBase.yaml",
-    recordsFor: () => [...AWARD_FIXTURES],
+    recordsFor: (version) =>
+      AWARD_FIXTURES.map((award) => shapeAwardForVersion(award, version)),
   },
   {
     resource: "orgs",
