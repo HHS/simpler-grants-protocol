@@ -244,6 +244,7 @@ describe("OpportunityBase Schema", () => {
             ["customFields", { customFields: null }],
             ["acceptedApplicantTypes", { acceptedApplicantTypes: null }],
             ["identifiers", { identifiers: null }],
+            ["funders", { funders: null }],
           ] as const
         ).map(([field, override]) => ({
           label: `${field} explicitly null (SDK nullish, protocol optional but not nullable)`,
@@ -266,8 +267,22 @@ describe("OpportunityBase Schema", () => {
           expect: "divergent" as const,
           issue: "https://github.com/HHS/simpler-grants-protocol/issues/1244",
         },
+
+        // `funders` is any object on the SDK side until the Zod organization
+        // models land (#1156), while the protocol requires `OrgRefCollection` to
+        // carry a `primary` property. Non-objects still agree.
+        {
+          label: "funders is not an object",
+          value: { ...valid, funders: "not an object" },
+        },
+        {
+          label: "funders without primary (SDK any object, protocol requires primary)",
+          value: { ...valid, funders: { otherOrgs: {} } },
+          expect: "divergent" as const,
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1156",
+        },
       ],
-      7
+      9
     );
 
     // Not full parity: every optional field on this model still accepts null

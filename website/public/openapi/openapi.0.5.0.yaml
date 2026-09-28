@@ -4269,6 +4269,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppFunding'
           description: Details about the funding available
+        funders:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRefCollection'
+          description: Organization(s) offering the funding for this opportunity
         keyDates:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppTimeline'
