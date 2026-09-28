@@ -4,6 +4,7 @@ export type {
   CustomFieldSchemaData,
   CustomField,
   CustomFieldMap,
+  DeprecationNotice,
   FilterOptions,
 } from "./types";
 
