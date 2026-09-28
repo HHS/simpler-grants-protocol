@@ -1,6 +1,6 @@
 ---
 import type { CustomField } from "@/lib/custom-fields";
-import { LinkButton, CardGrid } from "@astrojs/starlight/components";
+import { LinkButton, CardGrid, Aside } from "@astrojs/starlight/components";
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import { SchemaDocMapper } from "@/lib/schema/schema-doc-mapper";
 import { Paths } from "@/lib/schema/paths";
@@ -52,6 +52,22 @@ const exampleCode = JSON.stringify(exampleObject, null, 2);
 ---
 
 <div class="custom-field-details">
+  {
+    /* Documentation-level deprecation notice. Prose only: the field stays in
+       the catalog, keeps its filters, and remains valid for the schemas listed
+       under "Valid For Schemas" below. */
+  }
+  {
+    field.deprecated && (
+      <Aside type="caution" title="Deprecated for opportunities">
+        <p>
+          {field.deprecated.note}{" "}
+          <a href={field.deprecated.href}>Read the migration guidance</a>.
+        </p>
+      </Aside>
+    )
+  }
+
   <!-- Summary Section -->
   <section class="section">
     <h2>Summary</h2>
