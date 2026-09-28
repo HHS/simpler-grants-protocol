@@ -24,6 +24,9 @@ properties:
   funding:
     $ref: OppFunding.yaml
     description: Details about the funding available
+  funders:
+    $ref: OrgRefCollection.yaml
+    description: Organization(s) offering the funding for this opportunity
   keyDates:
     $ref: OppTimeline.yaml
     description: Key dates for the opportunity, such as when the application opens and closes

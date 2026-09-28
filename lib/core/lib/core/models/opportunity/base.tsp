@@ -1,6 +1,7 @@
 import "./status.tsp";
 import "./funding.tsp";
 import "./timeline.tsp";
+import "../organization.tsp";
 import "../../fields/index.tsp";
 import "../../types.tsp";
 
@@ -23,15 +24,17 @@ using Types;
  * using CommonGrants.Fields;
  * using CommonGrants.Models;
  *
- * model Agency extends CustomField {
+ * model ProgramArea extends CustomField {
+ *   name: "programArea";
+ *
  *   fieldType: CustomFieldType.string;
  *
- *   @example("Department of Transportation")
+ *   @example("Healthcare Innovation")
  *   value: string;
  * }
  *
  * model NewFields extends CustomFieldMap {
- *   agency: Agency;
+ *   programArea: ProgramArea;
  * }
  *
  * model CustomOpportunity extends OpportunityBase {
@@ -54,6 +57,10 @@ model OpportunityBase {
 
   /** Details about the funding available */
   funding?: OppFunding;
+
+  /** Organization(s) offering the funding for this opportunity */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  funders?: OrgRefCollection;
 
   /** Key dates for the opportunity, such as when the application opens and closes */
   keyDates?: OppTimeline;
