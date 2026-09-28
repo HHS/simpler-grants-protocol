@@ -129,6 +129,15 @@ export const OpportunityBaseSchema = z
     /** Details about the funding available */
     funding: OppFundingSchema.nullish(),
 
+    /**
+     * Organization(s) offering the funding for this Opportunity.
+     *
+     * Protocol v0.5 adds `OrgRefCollection` here. The SDK does not model the
+     * organization reference shapes yet, so any object is accepted until the
+     * Zod organization models land with the award schemas (#1156).
+     */
+    funders: z.record(z.string(), z.unknown()).nullish(),
+
     /** Key dates for the Opportunity */
     keyDates: OppTimelineSchema.nullish(),
 

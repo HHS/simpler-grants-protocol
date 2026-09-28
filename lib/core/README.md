@@ -45,21 +45,21 @@ using CommonGrants.Fields;
 namespace CustomAPI.CustomModels;
 
 // Define a custom field
-model Agency extends CustomField {
-  name: "Agency";
+model ProgramArea extends CustomField {
+  name: "programArea";
   fieldType: CustomFieldType.string;
 
-  @example("Department of Transportation")
+  @example("Healthcare Innovation")
   value: string;
 
-  description: "The agency responsible for this opportunity";
+  description: "Primary focus area of the grant program";
 }
 
 // Extend the `OpportunityBase` model to create a new `CustomOpportunity` model
-// that includes the new `Agency` field in its `customFields` property
+// that includes the new `ProgramArea` field in its `customFields` property
 model CustomOpportunity extends OpportunityBase {
   customFields: {
-    agency: Agency;
+    programArea: ProgramArea;
   };
 }
 ```
