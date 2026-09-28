@@ -143,17 +143,18 @@ import { CustomFieldType } from "@common-grants/sdk/constants";
 import { withCustomFields } from "@common-grants/sdk/extensions";
 
 // Define a value schema for structured types
-const AgencyValueSchema = z.object({
-  code: z.string().optional(),
-  name: z.string().optional(),
+const CostSharingValueSchema = z.object({
+  isRequired: z.boolean().optional(),
+  percentage: z.number().optional(),
+  details: z.string().optional(),
 });
 
 // Extend the base schema with typed custom fields
 const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
-  agency: {
+  costSharing: {
     fieldType: CustomFieldType.object,
-    value: AgencyValueSchema,
-    description: "The agency offering this opportunity",
+    value: CostSharingValueSchema,
+    description: "Cost sharing or matching requirement for the opportunity",
   },
   category: {
     fieldType: CustomFieldType.string,
@@ -166,7 +167,7 @@ const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
 <TabItem label="Python">
 
 ```python
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from common_grants_sdk.schemas.pydantic import (
     OpportunityBase,
     CustomFieldType,
@@ -174,17 +175,19 @@ from common_grants_sdk.schemas.pydantic import (
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 # Define a value type for structured types
-class AgencyValue(BaseModel):
-    code: str | None = None
-    name: str | None = None
+class CostSharingValue(BaseModel):
+    # The wire format is camelCase, so snake_case attributes need an alias
+    is_required: bool | None = Field(default=None, alias="isRequired")
+    percentage: float | None = None
+    details: str | None = None
 
 # Extend the base model with typed custom fields
 Opportunity = OpportunityBase.with_custom_fields(
     custom_fields={
-        "agency": CustomFieldSpec(
+        "costSharing": CustomFieldSpec(
             field_type=CustomFieldType.OBJECT,
-            value=AgencyValue,
-            description="The agency offering this opportunity",
+            value=CostSharingValue,
+            description="Cost sharing or matching requirement for the opportunity",
         ),
         "category": CustomFieldSpec(
             field_type=CustomFieldType.STRING,
@@ -213,17 +216,17 @@ import { getCustomFieldValue } from "@common-grants/sdk/extensions";
 const opportunity = OpportunitySchema.parse(responseData);
 
 // Access custom fields directly on the parsed object
-const agencyField = opportunity.customFields?.agency;
-console.log(agencyField?.value.code); // typed as string | undefined
-console.log(agencyField?.value.name); // typed as string | undefined
+const costSharingField = opportunity.customFields?.costSharing;
+console.log(costSharingField?.value.isRequired); // typed as boolean | undefined
+console.log(costSharingField?.value.percentage); // typed as number | undefined
 
 // Or use getCustomFieldValue() to extract just the value
-const agency = getCustomFieldValue(
+const costSharing = getCustomFieldValue(
   opportunity.customFields,
-  "agency",
-  AgencyValueSchema,
+  "costSharing",
+  CostSharingValueSchema,
 );
-console.log(agency?.code); // typed as string | undefined
+console.log(costSharing?.isRequired); // typed as boolean | undefined
 
 const category = getCustomFieldValue(
   opportunity.customFields,
@@ -241,13 +244,13 @@ console.log(category); // typed as string | undefined
 opp = Opportunity.model_validate(response_data)
 
 # Access custom fields directly on the parsed object
-agency_field = opp.custom_fields.agency
-print(agency_field.value.code)  # typed as str | None
-print(agency_field.value.name)  # typed as str | None
+cost_sharing_field = opp.custom_fields.cost_sharing
+print(cost_sharing_field.value.is_required)  # typed as bool | None
+print(cost_sharing_field.value.percentage)  # typed as float | None
 
 # Or use get_custom_field_value() to extract just the value
-agency = opp.get_custom_field_value("agency", AgencyValue)
-print(agency.code)  # typed as str | None
+cost_sharing = opp.get_custom_field_value("costSharing", CostSharingValue)
+print(cost_sharing.is_required)  # typed as bool | None
 
 category = opp.get_custom_field_value("category", str)
 print(category)  # typed as str | None
@@ -276,7 +279,7 @@ New custom fields are proposed by opening a pull request against the [CommonGran
 
 1. **Define the field in TypeSpec.** Create a new `.tsp` file in `website/src/specs/custom-fields/` that extends `CustomField` with your field's metadata.
 
-   Here's an example based on the `agency` field:
+   Here's the `fiscalYear` field, one of the simpler entries in the catalog:
 
    ```tsp
    import "@common-grants/core";
@@ -286,32 +289,21 @@ New custom fields are proposed by opening a pull request against the [CommonGran
    using CommonGrants.Fields;
    using JsonSchema;
 
-   namespace CustomFields.Agency;
+   namespace CustomFields.FiscalYear;
 
-   @extension("x-tags", #[Tags.organization])
+   /** The fiscal year associated with this opportunity */
+   @extension("x-tags", #[Tags.funding])
    @extension("x-author", "CommonGrants")
    @extension("x-version", "0.1.0")
-   @extension(
-     "x-valid-schemas",
-     #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase]
-   )
-   model CustomAgency extends CustomField {
-     name: "agency";
-     fieldType: CustomFieldType.object;
+   @extension("x-valid-schemas", #[ValidSchemas.OpportunityBase])
+   model CustomFiscalYear extends CustomField {
+     name: "fiscalYear";
+     fieldType: CustomFieldType.integer;
 
-     @example(#{
-       code: "CMS",
-       name: "Centers for Medicare & Medicaid Services",
-     })
-     value: {
-       /** The agency's acronym or code */
-       code?: string;
+     @example(2025)
+     value: integer;
 
-       /** The full name of the agency */
-       name?: string;
-     };
-
-     description: "Information about the agency offering this opportunity";
+     description: "The fiscal year associated with this opportunity";
    }
    ```
 
