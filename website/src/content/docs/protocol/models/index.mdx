@@ -85,25 +85,25 @@ import "@common-grants/core"
 // without a `CommonGrants` prefix
 using CommonGrants;
 
-model Agency extends Fields.CustomField {
-  name: "Agency";
+model ProgramArea extends Fields.CustomField {
+  name: "programArea";
   type: Fields.CustomFieldType.string;
   value: string;
-  description: "The agency managing the funding opportunity.";
+  description: "Primary focus area of the grant program.";
 }
 
 // Create a custom Opportunity type using the template
 model CustomOpportunity extends Models.OpportunityBase {
   @example(#{
-    agency: #{
-      name: "Agency",
+    programArea: #{
+      name: "programArea",
       type: Fields.CustomFieldType.string,
-      value: "Department of Energy",
-      description: "The agency managing the funding opportunity.",
+      value: "Healthcare Innovation",
+      description: "Primary focus area of the grant program.",
     },
   })
   customFields: {
-    agency: Agency;
+    programArea: ProgramArea;
   };
 }
 ```
