@@ -119,7 +119,7 @@ import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## AwardBase
 
-A grant award, tracking the funder, recipient, and financial details of a grant that resulted from an opportunity. It references the source [opportunity](/protocol/models/opportunity#oppref) and [application](/protocol/models/application#appref), and its funders and recipient organizations via [OrgRef](/protocol/models/organization#orgref).
+A grant award, tracking the funder, recipient, and financial details of a grant that resulted from an opportunity. It references the source [opportunity](/protocol/models/opportunity#oppref) and [application](/protocol/models/application#appref), and its funders and recipient organizations via [OrgRef](/protocol/models/organization#orgref). Since v0.5 that opportunity link is also published in the other direction: an opportunity's detail record can list the awards it produced under [`OpportunityDetails.awards`](/protocol/models/opportunity#opportunitydetails).
 
 ### Table
 
@@ -139,7 +139,7 @@ A grant award, tracking the funder, recipient, and financial details of a grant 
 
 ## AwdRef
 
-A reference to an award, previewing the key fields a consumer needs to identify it and look it up or join it to another response. Appears wherever another record points to an award, such as a parent award for an amendment or tranche.
+A reference to an award, previewing the key fields a consumer needs to identify it and look it up or join it to another response. Appears wherever another record points to an award, such as a parent award for an amendment or tranche, or, since v0.5, the awards an opportunity produced on [OpportunityDetails](/protocol/models/opportunity#opportunitydetails).
 
 ### Table
 
