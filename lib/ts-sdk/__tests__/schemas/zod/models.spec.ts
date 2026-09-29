@@ -268,21 +268,58 @@ describe("OpportunityBase Schema", () => {
           issue: "https://github.com/HHS/simpler-grants-protocol/issues/1156",
         },
 
-        // `funders` is any object on the SDK side until the Zod organization
-        // models land (#1156), while the protocol requires `OrgRefCollection` to
-        // carry a `primary` property. Non-objects still agree.
+        // `funders` is typed against the draft `OrgRefCollectionSchema` in this
+        // pass, so these are all controls: a non-object, a missing `primary`,
+        // and an unknown nested key must be rejected by both sides.
         {
           label: "funders is not an object",
           value: { ...valid, funders: "not an object" },
         },
+        // #1220-T5: with `funders` typed against the draft OrgRefCollection
+        // schema these AGREE, where the loose stopgap diverged on the first.
+        // The positive case is what pins that typing did not simply make the
+        // SDK reject everything.
         {
-          label: "funders without primary (SDK any object, protocol requires primary)",
+          label: "funders without primary (both require primary)",
           value: { ...valid, funders: { otherOrgs: {} } },
-          expect: "divergent" as const,
-          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1156",
+        },
+        {
+          label: "funders with a well-formed primary (both accept)",
+          value: {
+            ...valid,
+            funders: {
+              primary: {
+                id: "018f2e77-4b5c-7d2e-9f3a-bcdef1234567",
+                name: "Health Resources and Services Administration",
+              },
+            },
+          },
+        },
+        {
+          label: "funders primary missing name (both reject)",
+          value: {
+            ...valid,
+            funders: { primary: { id: "018f2e77-4b5c-7d2e-9f3a-bcdef1234567" } },
+          },
+        },
+        // Pins `.strict()` on the nested OrgRef: the harness only applies
+        // strictness at the root, so without the flag this key would slip past
+        // Zod while the protocol's `unevaluatedProperties: {not: {}}` rejects it.
+        {
+          label: "funders primary carries an unknown key (both reject)",
+          value: {
+            ...valid,
+            funders: {
+              primary: {
+                id: "018f2e77-4b5c-7d2e-9f3a-bcdef1234567",
+                name: "Health Resources and Services Administration",
+                unexpected: 1,
+              },
+            },
+          },
         },
       ],
-      9
+      8
     );
 
     // Not full parity: every optional field on this model still accepts null

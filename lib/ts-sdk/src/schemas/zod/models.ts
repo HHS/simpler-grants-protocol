@@ -7,6 +7,7 @@ import {
   DefaultFilterSchema,
 } from "./filters";
 import { UuidSchema } from "./types";
+import { OrgRefCollectionSchema } from "./organizations";
 
 // ############################################################################
 // Status models
@@ -132,11 +133,10 @@ export const OpportunityBaseSchema = z
     /**
      * Organization(s) offering the funding for this Opportunity.
      *
-     * Protocol v0.5 adds `OrgRefCollection` here. The SDK does not model the
-     * organization reference shapes yet, so any object is accepted until the
-     * Zod organization models land with the award schemas (#1156).
+     * DRAFT (#1220-T5): typed against the draft `OrgRefCollectionSchema`
+     * instead of the loose record the stopgap shipped.
      */
-    funders: z.record(z.string(), z.unknown()).nullish(),
+    funders: OrgRefCollectionSchema.nullish(),
 
     /** Key dates for the Opportunity */
     keyDates: OppTimelineSchema.nullish(),

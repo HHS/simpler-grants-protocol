@@ -12,6 +12,7 @@ from ..base import CommonGrantsBaseModel
 from ..fields import CustomField, SystemMetadata
 from .opp_applicant_type import ApplicantType
 from .opp_funding import OppFunding
+from .org_ref import OrgRefCollection
 from .opp_status import OppStatus
 from .opp_timeline import OppTimeline
 from common_grants_sdk.utils.custom_fields import (
@@ -46,6 +47,11 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel, Generic[CF]):
     funding: Optional[OppFunding] = Field(
         default=None,
         description="Details about the funding available",
+    )
+    # DRAFT (#1220-T5): protocol v0.5 adds `funders` here.
+    funders: Optional[OrgRefCollection] = Field(
+        default=None,
+        description="Organization(s) offering the funding for this opportunity",
     )
     key_dates: Optional[OppTimeline] = Field(
         default=None,
