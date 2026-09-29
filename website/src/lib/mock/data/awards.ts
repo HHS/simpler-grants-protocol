@@ -11,8 +11,21 @@
 import { OPPORTUNITY_FIXTURES, usd } from "./fixtures";
 import type { OppIds, Version } from "./fixtures";
 import { isAtLeastVersion } from "./availability";
+import { fain } from "./award-identifiers";
 import { APPLICATION_FIXTURES, type Application } from "./applications";
-import { CANONICAL_RECORD_ID } from "./ids";
+import {
+  ARTS_CULTURE_AWARD_ID,
+  CANONICAL_RECORD_ID,
+  CIVIC_TECH_AWARD_ID,
+  CLEAN_ENERGY_AMENDMENT_AWARD_ID,
+  CLEAN_ENERGY_AWARD_ID,
+  COASTAL_RESILIENCE_AWARD_ID,
+  DIGITAL_LITERACY_AWARD_ID,
+  DOCUMENTED_AWARD_ID,
+  HEALTH_OUTREACH_AWARD_ID,
+  RURAL_BROADBAND_AWARD_ID,
+  WORKFORCE_APPRENTICESHIP_AWARD_ID,
+} from "./ids";
 import {
   CASCADE_WORKFORCE_ORG_ID,
   COASTAL_RESEARCH_ORG_ID,
@@ -128,8 +141,14 @@ export interface Award {
 /** The id Swagger UI pre-fills into the `awdId` box (see `./ids`). */
 export const CANONICAL_AWARD_ID = CANONICAL_RECORD_ID;
 
-/** The id published on the `Models.AwardBase` example itself. */
-export const DOCUMENTED_AWARD_ID = "01912a8b-7c3d-7894-abcd-ef1234567890";
+/**
+ * The id published on the `Models.AwardBase` example itself. Defined in
+ * `./ids` so the opportunity fixtures can reference this award without
+ * importing this module, and re-exported here so each resource module still
+ * exposes its own `DOCUMENTED_*_ID` (the `forms.ts` and `competitions.ts`
+ * pattern).
+ */
+export { DOCUMENTED_AWARD_ID };
 
 /**
  * Organization ids referenced below, aliased for readability at the call
@@ -163,20 +182,6 @@ function performedOver(startDate: string, endDate: string): DateRangeEvent {
     startDate,
     endDate,
     description: "The period during which the funded work is performed.",
-  };
-}
-
-/** Builds a FAIN identifier collection, FAIN on its base (top-level) key. */
-function fain(value: string, systemId: string): AwdIds {
-  return {
-    systemId: { registry: { code: "awd:grants.gov:system" }, id: systemId },
-    "awd:us:fain": {
-      registry: {
-        code: "awd:us:fain",
-        url: "https://commongrants.org/registries/awd-us-fain",
-      },
-      id: value,
-    },
   };
 }
 
@@ -277,7 +282,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "aa1b2c3d-4e5f-4061-8a7b-8c9d0e1f2032",
+    id: CLEAN_ENERGY_AWARD_ID,
     title: "Clean Energy Innovation Demonstration Award",
     identifiers: fain("DE0000101", "01912a8b-7c3d-7894-abcd-ef1234567892"),
     description:
@@ -313,7 +318,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "bb2c3d4e-5f60-4172-8b8c-9d0e1f203143",
+    id: RURAL_BROADBAND_AWARD_ID,
     title: "Rural Broadband Expansion Planning Award",
     identifiers: fain("RUS0000045", "01912a8b-7c3d-7894-abcd-ef1234567893"),
     description:
@@ -340,7 +345,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "cc3d4e5f-6071-4283-8c9d-0e1f20314254",
+    id: WORKFORCE_APPRENTICESHIP_AWARD_ID,
     title: "Workforce Apprenticeship Program Award",
     identifiers: {
       ...fain("ETA0000318", "01912a8b-7c3d-7894-abcd-ef1234567894"),
@@ -377,7 +382,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "dd4e5f60-7182-4394-8d0e-1f2031425365",
+    id: CLEAN_ENERGY_AMENDMENT_AWARD_ID,
     title: "Clean Energy Innovation Demonstration Award — Amendment 1",
     identifiers: fain("DE0000101-A1", "01912a8b-7c3d-7894-abcd-ef1234567895"),
     description:
@@ -400,7 +405,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
     recipientOrganizations: orgRefCollection(COASTAL_RESEARCH),
     // The parent is the base award above; title and identifiers must match it.
     parent: {
-      id: "aa1b2c3d-4e5f-4061-8a7b-8c9d0e1f2032",
+      id: CLEAN_ENERGY_AWARD_ID,
       title: "Clean Energy Innovation Demonstration Award",
       identifiers: fain("DE0000101", "01912a8b-7c3d-7894-abcd-ef1234567892"),
     },
@@ -409,7 +414,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "ee5f6071-8293-44a5-8e1f-2031425364a5",
+    id: ARTS_CULTURE_AWARD_ID,
     title: "Arts & Culture Preservation Award",
     identifiers: fain("NEA0000772", "01912a8b-7c3d-7894-abcd-ef1234567896"),
     description:
@@ -438,7 +443,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "ff607182-93a4-45b6-8f20-31425364a5b6",
+    id: COASTAL_RESILIENCE_AWARD_ID,
     title: "Coastal Resilience Planning Award",
     identifiers: fain("NOAA0000914", "01912a8b-7c3d-7894-abcd-ef1234567897"),
     description:
@@ -462,7 +467,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "01718293-a4b5-46c7-9031-425364a5b6c7",
+    id: HEALTH_OUTREACH_AWARD_ID,
     title: "Community Health Outreach Continuation Award",
     identifiers: fain("H80CS00003", "01912a8b-7c3d-7894-abcd-ef1234567898"),
     description:
@@ -499,7 +504,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   {
     // The one award to a person: it carries `recipientIndividual` instead of
     // `recipientOrganizations` on purpose.
-    id: "23293a4b-c6d7-48e9-9253-64a5b6c7d8e9",
+    id: CIVIC_TECH_AWARD_ID,
     title: "Civic Tech Fellowship Award — Cohort 4",
     identifiers: fain("CTF0000104", "01912a8b-7c3d-7894-abcd-ef1234567900"),
     description:
@@ -543,7 +548,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "1218293a-b5c6-47d8-9142-5364a5b6c7d8",
+    id: DIGITAL_LITERACY_AWARD_ID,
     title: "Digital Literacy for Seniors Award",
     identifiers: fain("IMLS0000205", "01912a8b-7c3d-7894-abcd-ef1234567899"),
     description:
