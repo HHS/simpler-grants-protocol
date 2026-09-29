@@ -119,7 +119,7 @@ import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## AwardBase
 
-A grant award, tracking the funder, recipient, and financial details of a grant that resulted from an opportunity. It references the source [opportunity](/protocol/models/opportunity#oppref) and [application](/protocol/models/application#appref), and its funders and recipient organizations via [OrgRef](/protocol/models/organization#orgref). Since v0.5 that opportunity link is also published in the other direction: an opportunity's detail record can list the awards it produced under [`OpportunityDetails.awards`](/protocol/models/opportunity#opportunitydetails).
+A grant award, tracking the funder, recipient, and financial details of a grant that resulted from an opportunity. It references the source [opportunity](/protocol/models/opportunity#oppref) and [application](/protocol/models/application#appref), and its funders and recipient organizations via [OrgRef](/protocol/models/organization#orgref). Since v0.5 that opportunity link is also published in the other direction: an opportunity's detail record can list the awards it produced under [`OpportunityDetails.awards`](/protocol/models/opportunity#opportunitydetails). Since v0.5 the routes that serve this model are optional rather than experimental, so an implementation may omit them, but a breaking change to them now requires incrementing the `Major` protocol version; see [Award routes](/protocol/specification#award-routes).
 
 ### Table
 
