@@ -143,6 +143,23 @@ model OppRef {
 model OpportunityDetails extends OpportunityBase {
   /** The competitions associated with the opportunity */
   competitions?: CompetitionBase[];
+
+  /** Awards that resulted from this opportunity, as references.
+   *
+   * Each entry references an award that resulted from this opportunity; the
+   * award's `opportunity.id`, when it is published, is this record's `id`.
+   * An entry is a reference, not the award record: `GET /awards/<id>` is the
+   * canonical record only where an implementation serves the award routes,
+   * and otherwise the entry's `identifiers`, where the publisher supplies
+   * them, are the key for joining the award in another system. A consumer
+   * must not assume a reference can be dereferenced through this API.
+   *
+   * Absent means the implementation does not publish this link for the
+   * record, and an empty array means the link is published and no awards are
+   * known. Entries carry no ordering guarantee.
+   */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  awards?: AwdRef[];
 }
 
 // ########################################
