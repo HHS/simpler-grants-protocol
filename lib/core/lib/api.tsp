@@ -117,18 +117,20 @@ namespace Opportunities {
 // #########################################################
 
 @tag("Awards")
-@tag("experimental")
 @route("/awards")
 namespace Awards {
   alias Router = Routes.Awards;
 
   @added(Versions.v0_4)
+  @tag("optional")
   op list is Router.list;
 
   @added(Versions.v0_4)
+  @tag("optional")
   op read is Router.read;
 
   @added(Versions.v0_4)
+  @tag("optional")
   op search is Router.search;
 }
 

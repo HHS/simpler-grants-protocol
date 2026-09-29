@@ -356,7 +356,7 @@ paths:
                 description: A 200 response with a paginated list of typed items
       tags:
         - Awards
-        - experimental
+        - optional
   /common-grants/awards/search:
     post:
       operationId: Awards_search
@@ -407,7 +407,7 @@ paths:
                 description: A paginated list of typed items with a typed filter
       tags:
         - Awards
-        - experimental
+        - optional
       requestBody:
         required: true
         content:
@@ -472,7 +472,7 @@ paths:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
       tags:
         - Awards
-        - experimental
+        - optional
   /common-grants/competitions/{compId}:
     get:
       operationId: Competitions_read
