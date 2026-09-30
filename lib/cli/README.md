@@ -91,6 +91,8 @@ cg check spec openapi.yaml --protocol-version 0.4.0
 cg check spec openapi.yaml --base <path-to-base-spec>
 ```
 
+Findings are reported as either errors or warnings. Errors fail the command with exit code 1. Warnings are printed, marked `(warning)`, and the command still succeeds with exit code 0, because a route the base spec tags `optional` MAY be omitted by a compliant implementation.
+
 ## Development status
 
 This CLI is under active development and only supports the following commands:
