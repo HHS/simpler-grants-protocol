@@ -330,7 +330,7 @@ namespace Quickstart.Models;
 
 model ProgramArea extends CustomField {
   name: "programArea";
-  type: CustomFieldType.string;
+  fieldType: CustomFieldType.string;
   value: string;
   description: "Primary focus area of the grant program.";
 }
@@ -340,7 +340,7 @@ model CustomOpportunity extends OpportunityBase {
   @example(#{
     programArea: #{
       name: "programArea",
-      type: CustomFieldType.string,
+      fieldType: CustomFieldType.string,
       value: "Healthcare Innovation",
       description: "Primary focus area of the grant program.",
     },
@@ -377,13 +377,13 @@ There's a lot happening here, so let's break it down section by section.
    ```tsp
    model ProgramArea extends CustomField {
      name: "programArea";
-     type: CustomFieldType.string;
+     fieldType: CustomFieldType.string;
      value: string;
      description: "Primary focus area of the grant program.";
    }
    ```
 
-   The `ProgramArea` model defines literal values for the field's `name`, `type`, and `description` metadata properties, and requires the `value` property to be a string.
+   The `ProgramArea` model defines literal values for the field's `name`, `fieldType`, and `description` metadata properties, and requires the `value` property to be a string.
 
 5. Extend the `OpportunityBase` model to include this custom field.
    ```tsp
@@ -401,7 +401,7 @@ There's a lot happening here, so let's break it down section by section.
         #{
             programArea: #{
                 name: "programArea",
-                type: Fields.CustomFieldType.string,
+                fieldType: Fields.CustomFieldType.string,
                 value: "Healthcare Innovation",
                 description: "Primary focus area of the grant program."
             }
