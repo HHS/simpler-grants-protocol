@@ -145,8 +145,8 @@ export const OpportunityBaseSchema = z
      * System and registry-specific identifiers for the Opportunity.
      *
      * Protocol v0.5 adds `OppIds` here. The SDK does not model the identifier
-     * shapes yet, so any object is accepted until the Zod identifier models
-     * land with the award schemas (#1156).
+     * shapes yet, so any object is accepted until the opportunity schemas are
+     * aligned with Core v0.5 (#1244).
      */
     identifiers: z.record(z.string(), z.unknown()).nullish(),
   })

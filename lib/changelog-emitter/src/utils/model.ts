@@ -164,6 +164,13 @@ function logModelAdditions(
  * model with none of its own exists from whenever the model it `is` does, so
  * it takes that model's answer, all the way up a chain of `is`. A model with
  * nothing written anywhere keeps whatever it carries.
+ *
+ * This is the changelog's view, and it can differ from the compiler's. The
+ * copied decorator is still recorded, so `getAvailabilityMap` continues to
+ * treat an `is`-derived model as present from the version it inherited. The
+ * two only diverge in output if something reachable from an older version
+ * references such a model, which would emit it into that version's artifacts
+ * while the changelog reports the later one.
  */
 function versionsWrittenOn(
   program: Program,

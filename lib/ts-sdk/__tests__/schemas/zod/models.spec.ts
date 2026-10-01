@@ -253,7 +253,7 @@ describe("OpportunityBase Schema", () => {
         })),
 
         // `identifiers` is any object on the SDK side until the Zod identifier
-        // models land (#1156), while the protocol seals `OppIds` to its base
+        // models land (#1244), while the protocol seals `OppIds` to its base
         // registries plus `systemId` and `otherIds`. Non-objects still agree.
         {
           label: "identifiers is not an object",
@@ -264,7 +264,7 @@ describe("OpportunityBase Schema", () => {
             "identifiers with an unregistered top-level key (SDK any object, protocol sealed OppIds)",
           value: { ...valid, identifiers: { "opp:made:up": { id: "x" } } },
           expect: "divergent" as const,
-          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1156",
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1244",
         },
       ],
       7
@@ -276,7 +276,7 @@ describe("OpportunityBase Schema", () => {
     expect(new Set(result.knownDivergences.map(d => d.issue))).toEqual(
       new Set([
         "https://github.com/HHS/simpler-grants-protocol/issues/1192",
-        "https://github.com/HHS/simpler-grants-protocol/issues/1156",
+        "https://github.com/HHS/simpler-grants-protocol/issues/1244",
       ])
     );
   });
