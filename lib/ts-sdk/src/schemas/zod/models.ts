@@ -134,7 +134,8 @@ export const OpportunityBaseSchema = z
      *
      * Protocol v0.5 adds `OrgRefCollection` here. The SDK does not model the
      * organization reference shapes yet, so any object is accepted until the
-     * Zod organization models land with the award schemas (#1156).
+     * opportunity schemas are aligned with Core v0.5 (#1244), which is the
+     * change that actually removes this divergence.
      */
     funders: z.record(z.string(), z.unknown()).nullish(),
 

@@ -279,7 +279,7 @@ describe("OpportunityBase Schema", () => {
           label: "funders without primary (SDK any object, protocol requires primary)",
           value: { ...valid, funders: { otherOrgs: {} } },
           expect: "divergent" as const,
-          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1156",
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1244",
         },
       ],
       9

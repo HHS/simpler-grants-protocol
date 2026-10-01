@@ -31,6 +31,9 @@ describe("custom-fields loader", () => {
     it("leaves every other field's deprecated undefined", () => {
       const fields = loadAllCustomFields();
 
+      // Without this the loop asserts nothing when the catalog fails to build.
+      expect(Object.keys(fields).length).toBeGreaterThan(1);
+
       for (const [id, field] of Object.entries(fields)) {
         if (id === "agency") continue;
         expect(field.deprecated).toBeUndefined();
