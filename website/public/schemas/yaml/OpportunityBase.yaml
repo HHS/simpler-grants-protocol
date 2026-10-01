@@ -10,6 +10,9 @@ properties:
     examples:
       - Small business grant program
     description: Title or name of the funding opportunity
+  identifiers:
+    $ref: OppIds.yaml
+    description: System and registry-specific identifiers for the opportunity
   status:
     $ref: OppStatus.yaml
     description: Status of the opportunity

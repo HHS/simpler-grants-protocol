@@ -73,6 +73,35 @@ model OpportunityBase {
 }
 
 // ########################################
+// Opportunity identifiers
+// ########################################
+
+/** An opportunity's Federal Opportunity Number (FON), assigned by the awarding agency. */
+@example(Examples.Opportunity.fon)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OppIdFon is Fields.IdentifierT<string, "opp:us:fon">;
+
+/** An opportunity's Assistance Listing Number (ALN), formerly the CFDA number. */
+@example(Examples.Opportunity.aln)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OppIdAln is Fields.IdentifierT<string, "opp:us:aln">;
+
+/** A collection of identifiers associated with an opportunity.
+ *
+ * Extends the generic identifier collection with the base identifiers CommonGrants
+ * defines for opportunities. Additional registries can be published under `otherIds`.
+ */
+@example(Examples.Opportunity.identifiers)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OppIds extends Fields.IdentifierCollection {
+  /** The opportunity's Federal Opportunity Number (FON). */
+  `opp:us:fon`?: OppIdFon;
+
+  /** The opportunity's Assistance Listing Number (ALN). */
+  `opp:us:aln`?: OppIdAln;
+}
+
+// ########################################
 // Opportunity reference
 // ########################################
 
@@ -91,6 +120,10 @@ model OppRef {
   /** Title or name of the funding opportunity */
   @example("Small business grant program")
   title: string;
+
+  /** System and registry-specific identifiers for the opportunity */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  identifiers?: OppIds;
 }
 
 // ########################################
@@ -108,8 +141,37 @@ model OpportunityDetails extends OpportunityBase {
 // Model examples
 // ########################################
 
-/** Examples of the OppRef model */
+/** Examples of the opportunity identifier and reference models */
 namespace Examples.Opportunity {
+  const fon = #{
+    registry: #{
+      code: "opp:us:fon",
+      url: "https://commongrants.org/registries/opp-us-fon",
+    },
+    id: "HHS-2026-ACF-OCC-YD-0001",
+  };
+
+  const aln = #{
+    registry: #{
+      code: "opp:us:aln",
+      url: "https://commongrants.org/registries/opp-us-aln",
+    },
+    id: "93.575",
+  };
+
+  const identifiers = #{
+    systemId: #{
+      registry: #{ code: "opp:grants.gov:system" },
+      id: "018f2e77-3a4b-7c1d-9e2f-abcdef123456",
+    },
+    `opp:us:fon`: fon,
+    `opp:us:aln`: aln,
+  };
+
+  // Deliberately without `identifiers`. The emitter does not project `@example`
+  // values per version (see `OrgRef`, whose v0.2/v0.3 schemas show the v0.4
+  // `identifiers` field in `examples` but not in `properties`), so adding it
+  // here would surface a v0.5 field in the v0.1-v0.4 `OppRef` examples.
   const ref = #{
     id: "018f2e77-3a4b-7c1d-9e2f-abcdef123456",
     title: "Health Center Capital Improvement Program",

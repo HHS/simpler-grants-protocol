@@ -2,7 +2,7 @@
  * Fixture suite ported verbatim from the 3A standalone Worker (#1078);
  * only the import path changed.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import {
   CANONICAL_OPPORTUNITY_ID,
   OPPORTUNITY_FIXTURES,
@@ -114,6 +114,54 @@ describe("OPPORTUNITY_FIXTURES", () => {
       expect(count).toBeGreaterThanOrEqual(2);
     }
   });
+
+  // #1219-T3: pins the identifiers the 0.5.0 mock must demonstrate.
+  it("demonstrates opp:us:fon and opp:us:aln together, plus a systemId and an otherIds example", () => {
+    const withBoth = OPPORTUNITY_FIXTURES.filter(
+      (opp) =>
+        opp.identifiers?.["opp:us:fon"] !== undefined &&
+        opp.identifiers?.["opp:us:aln"] !== undefined,
+    );
+    expect(withBoth.length).toBeGreaterThan(0);
+
+    expect(
+      OPPORTUNITY_FIXTURES.some(
+        (opp) => opp.identifiers?.systemId !== undefined,
+      ),
+    ).toBe(true);
+    expect(
+      OPPORTUNITY_FIXTURES.some(
+        (opp) => Object.keys(opp.identifiers?.otherIds ?? {}).length > 0,
+      ),
+    ).toBe(true);
+  });
+
+  it("never duplicates a base identifier key under otherIds", () => {
+    const withIdentifiers = OPPORTUNITY_FIXTURES.filter(
+      (opp) => opp.identifiers !== undefined,
+    );
+    expect(withIdentifiers.length).toBeGreaterThan(0);
+
+    // `otherIds` is only for registries the protocol does not define on the
+    // model, so no key with its own slot may also appear there.
+    const baseCodes = [
+      "opp:us:fon",
+      "opp:us:aln",
+      "opp:grants.gov:system",
+      "systemId",
+    ];
+
+    for (const opp of withIdentifiers) {
+      const otherIds = opp.identifiers!.otherIds ?? {};
+      for (const code of baseCodes) {
+        expect(otherIds[code]).toBeUndefined();
+      }
+      // A system id belongs on `systemId`, never re-filed by its registry code.
+      for (const entry of Object.values(otherIds)) {
+        expect(entry.registry.code).not.toBe("opp:grants.gov:system");
+      }
+    }
+  });
 });
 
 describe("shapeOpportunityForVersion", () => {
@@ -166,6 +214,54 @@ describe("shapeOpportunityForVersion", () => {
       shapeOpportunityForVersion(detailRecord, "0.3.0", "detail"),
     );
   });
+
+  // #1219-T3: v0.5.0 adds `OppRef.identifiers`; earlier versions predate it.
+  const identifiedRecord = OPPORTUNITY_FIXTURES.find(
+    (opp) => opp.identifiers !== undefined,
+  );
+
+  // Both tests below are meaningless without such a record, so fail loudly here
+  // rather than with a TypeError inside the shaper.
+  beforeAll(() => {
+    expect(
+      identifiedRecord!,
+      "no opportunity fixture carries identifiers",
+    ).toBeDefined();
+  });
+
+  it("keeps identifiers for v0.5.0 detail and list records", () => {
+    const list = shapeOpportunityForVersion(identifiedRecord!, "0.5.0", "list");
+    const detail = shapeOpportunityForVersion(
+      identifiedRecord!,
+      "0.5.0",
+      "detail",
+    );
+
+    expect(list.identifiers).toEqual(identifiedRecord!.identifiers);
+    expect(detail.identifiers).toEqual(identifiedRecord!.identifiers);
+  });
+
+  it("strips identifiers for every version below 0.5.0, both variants", () => {
+    const olderVersions = SUPPORTED_VERSIONS.filter(
+      (version) => version !== "0.5.0",
+    );
+
+    for (const version of olderVersions) {
+      const list = shapeOpportunityForVersion(
+        identifiedRecord!,
+        version,
+        "list",
+      );
+      const detail = shapeOpportunityForVersion(
+        identifiedRecord!,
+        version,
+        "detail",
+      );
+
+      expect(list).not.toHaveProperty("identifiers");
+      expect(detail).not.toHaveProperty("identifiers");
+    }
+  });
 });
 
 describe("getById", () => {
@@ -195,6 +291,6 @@ describe("isSupportedVersion", () => {
   });
 
   it("rejects a version the fixture cannot shape", () => {
-    expect(isSupportedVersion("0.5.0")).toBe(false);
+    expect(isSupportedVersion("0.6.0")).toBe(false);
   });
 });
