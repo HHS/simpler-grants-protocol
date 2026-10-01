@@ -37,6 +37,94 @@ The catalog has two primary goals:
 The field promotion pipeline is aspirational. The catalog lays the groundwork for this process, but the governance details for promoting fields into the core protocol are still being developed.
 :::
 
+## Migrating from `agency` to `funders`
+
+The `agency` custom field is deprecated for opportunities. Protocol v0.5 added [`funders`](/protocol/models/opportunity/#opportunitybase) to `OpportunityBase`, so the organization offering an opportunity now has a home in the core protocol and no longer needs a custom field.
+
+The field is **not** deprecated for competitions or forms, which have no `funders` equivalent. Only opportunity usage should migrate.
+
+### Mapping
+
+`funders` is an [`OrgRefCollection`](/protocol/models/organization/#orgrefcollection): a required `primary` organization plus optional `otherOrgs` keyed by role. The four `agency` values map onto it as follows.
+
+| `agency` value | Maps to                                                                     |
+| -------------- | --------------------------------------------------------------------------- |
+| `name`         | `funders.primary.name`                                                      |
+| `code`         | `funders.primary.identifiers.otherIds["org:grants.gov:agency"].id`          |
+| `parentName`   | `funders.otherOrgs.<role>.name`                                             |
+| `parentCode`   | `funders.otherOrgs.<role>.identifiers.otherIds["org:grants.gov:agency"].id` |
+
+An opportunity that previously carried this custom field:
+
+```json
+{
+  "customFields": {
+    "agency": {
+      "name": "agency",
+      "fieldType": "object",
+      "value": {
+        "code": "HRSA",
+        "name": "Health Resources and Services Administration",
+        "parentCode": "HHS",
+        "parentName": "Health and Human Services"
+      }
+    }
+  }
+}
+```
+
+carries the same information under `funders`:
+
+```json
+{
+  "funders": {
+    "primary": {
+      "id": "018f2e77-4b5c-7d2e-9f3a-bcdef1234567",
+      "name": "Health Resources and Services Administration",
+      "identifiers": {
+        "otherIds": {
+          "org:grants.gov:agency": {
+            "registry": { "code": "org:grants.gov:agency" },
+            "id": "HRSA"
+          }
+        }
+      }
+    },
+    "otherOrgs": {
+      "parent": {
+        "id": "018f2e77-4b5c-7d2e-9f3a-bcdef1234568",
+        "name": "Health and Human Services",
+        "identifiers": {
+          "otherIds": {
+            "org:grants.gov:agency": {
+              "registry": { "code": "org:grants.gov:agency" },
+              "id": "HHS"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Note that `org:grants.gov:agency` is not a registered code in the [identifier registry catalog](/registries/). It is carried under `otherIds`, which is where unregistered codes belong.
+
+### Requirements for a migration
+
+A migration MUST NOT silently discard data. If a source record supplies any of `code`, `name`, `parentCode`, or `parentName`, every value it supplies has to survive the mapping. Dropping the parent agency because `OrgRefCollection` has only one `primary` is a loss, not a simplification: the parent belongs under `otherOrgs`.
+
+`OrgRef` requires both `id` and `name`, and grants.gov agency records supply neither a UUID nor, in every case, a full name. Resolving that gap is what makes this a mapping decision rather than a rename.
+
+### Decisions owned by the plugin tickets
+
+The exact grants.gov mapping lives in the TypeScript and Python plugin packages, not here. Those tickets decide:
+
+- How to derive the required `OrgRef.id` deterministically from a source record, or whether to fail the record when no stable identifier exists.
+- Whether `agency` keeps being emitted alongside `funders` during the transition, and which one wins when a record carries both.
+- Which `otherOrgs` role key names the parent agency, so consumers can rely on it.
+- Whether to register `org:grants.gov:agency` in the registry catalog, which would move it out of `otherIds`.
+
 ## Using custom fields
 
 Both the TypeScript and Python SDKs provide helper functions for extending base models with typed custom fields.
@@ -55,17 +143,18 @@ import { CustomFieldType } from "@common-grants/sdk/constants";
 import { withCustomFields } from "@common-grants/sdk/extensions";
 
 // Define a value schema for structured types
-const AgencyValueSchema = z.object({
-  code: z.string().optional(),
-  name: z.string().optional(),
+const CostSharingValueSchema = z.object({
+  isRequired: z.boolean().optional(),
+  percentage: z.number().optional(),
+  details: z.string().optional(),
 });
 
 // Extend the base schema with typed custom fields
 const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
-  agency: {
+  costSharing: {
     fieldType: CustomFieldType.object,
-    value: AgencyValueSchema,
-    description: "The agency offering this opportunity",
+    value: CostSharingValueSchema,
+    description: "Cost sharing or matching requirement for the opportunity",
   },
   category: {
     fieldType: CustomFieldType.string,
@@ -78,7 +167,7 @@ const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
 <TabItem label="Python">
 
 ```python
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from common_grants_sdk.schemas.pydantic import (
     OpportunityBase,
     CustomFieldType,
@@ -86,17 +175,19 @@ from common_grants_sdk.schemas.pydantic import (
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 # Define a value type for structured types
-class AgencyValue(BaseModel):
-    code: str | None = None
-    name: str | None = None
+class CostSharingValue(BaseModel):
+    # The wire format is camelCase, so snake_case attributes need an alias
+    is_required: bool | None = Field(default=None, alias="isRequired")
+    percentage: float | None = None
+    details: str | None = None
 
 # Extend the base model with typed custom fields
 Opportunity = OpportunityBase.with_custom_fields(
     custom_fields={
-        "agency": CustomFieldSpec(
+        "costSharing": CustomFieldSpec(
             field_type=CustomFieldType.OBJECT,
-            value=AgencyValue,
-            description="The agency offering this opportunity",
+            value=CostSharingValue,
+            description="Cost sharing or matching requirement for the opportunity",
         ),
         "category": CustomFieldSpec(
             field_type=CustomFieldType.STRING,
@@ -125,17 +216,17 @@ import { getCustomFieldValue } from "@common-grants/sdk/extensions";
 const opportunity = OpportunitySchema.parse(responseData);
 
 // Access custom fields directly on the parsed object
-const agencyField = opportunity.customFields?.agency;
-console.log(agencyField?.value.code); // typed as string | undefined
-console.log(agencyField?.value.name); // typed as string | undefined
+const costSharingField = opportunity.customFields?.costSharing;
+console.log(costSharingField?.value.isRequired); // typed as boolean | undefined
+console.log(costSharingField?.value.percentage); // typed as number | undefined
 
 // Or use getCustomFieldValue() to extract just the value
-const agency = getCustomFieldValue(
+const costSharing = getCustomFieldValue(
   opportunity.customFields,
-  "agency",
-  AgencyValueSchema,
+  "costSharing",
+  CostSharingValueSchema,
 );
-console.log(agency?.code); // typed as string | undefined
+console.log(costSharing?.isRequired); // typed as boolean | undefined
 
 const category = getCustomFieldValue(
   opportunity.customFields,
@@ -153,13 +244,13 @@ console.log(category); // typed as string | undefined
 opp = Opportunity.model_validate(response_data)
 
 # Access custom fields directly on the parsed object
-agency_field = opp.custom_fields.agency
-print(agency_field.value.code)  # typed as str | None
-print(agency_field.value.name)  # typed as str | None
+cost_sharing_field = opp.custom_fields.cost_sharing
+print(cost_sharing_field.value.is_required)  # typed as bool | None
+print(cost_sharing_field.value.percentage)  # typed as float | None
 
 # Or use get_custom_field_value() to extract just the value
-agency = opp.get_custom_field_value("agency", AgencyValue)
-print(agency.code)  # typed as str | None
+cost_sharing = opp.get_custom_field_value("costSharing", CostSharingValue)
+print(cost_sharing.is_required)  # typed as bool | None
 
 category = opp.get_custom_field_value("category", str)
 print(category)  # typed as str | None
@@ -188,7 +279,7 @@ New custom fields are proposed by opening a pull request against the [CommonGran
 
 1. **Define the field in TypeSpec.** Create a new `.tsp` file in `website/src/specs/custom-fields/` that extends `CustomField` with your field's metadata.
 
-   Here's an example based on the `agency` field:
+   Here's the `fiscalYear` field, one of the simpler entries in the catalog:
 
    ```tsp
    import "@common-grants/core";
@@ -198,32 +289,21 @@ New custom fields are proposed by opening a pull request against the [CommonGran
    using CommonGrants.Fields;
    using JsonSchema;
 
-   namespace CustomFields.Agency;
+   namespace CustomFields.FiscalYear;
 
-   @extension("x-tags", #[Tags.organization])
+   /** The fiscal year associated with this opportunity */
+   @extension("x-tags", #[Tags.funding])
    @extension("x-author", "CommonGrants")
    @extension("x-version", "0.1.0")
-   @extension(
-     "x-valid-schemas",
-     #[ValidSchemas.OpportunityBase, ValidSchemas.CompetitionBase]
-   )
-   model CustomAgency extends CustomField {
-     name: "agency";
-     fieldType: CustomFieldType.object;
+   @extension("x-valid-schemas", #[ValidSchemas.OpportunityBase])
+   model CustomFiscalYear extends CustomField {
+     name: "fiscalYear";
+     fieldType: CustomFieldType.integer;
 
-     @example(#{
-       code: "CMS",
-       name: "Centers for Medicare & Medicaid Services",
-     })
-     value: {
-       /** The agency's acronym or code */
-       code?: string;
+     @example(2025)
+     value: integer;
 
-       /** The full name of the agency */
-       name?: string;
-     };
-
-     description: "Information about the agency offering this opportunity";
+     description: "The fiscal year associated with this opportunity";
    }
    ```
 
