@@ -87,7 +87,7 @@ using CommonGrants;
 
 model ProgramArea extends Fields.CustomField {
   name: "programArea";
-  type: Fields.CustomFieldType.string;
+  fieldType: Fields.CustomFieldType.string;
   value: string;
   description: "Primary focus area of the grant program.";
 }
@@ -97,7 +97,7 @@ model CustomOpportunity extends Models.OpportunityBase {
   @example(#{
     programArea: #{
       name: "programArea",
-      type: Fields.CustomFieldType.string,
+      fieldType: Fields.CustomFieldType.string,
       value: "Healthcare Innovation",
       description: "Primary focus area of the grant program.",
     },
