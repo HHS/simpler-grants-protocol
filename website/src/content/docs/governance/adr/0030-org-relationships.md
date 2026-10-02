@@ -43,7 +43,7 @@ Against keyed singular references, arrays can represent broader same-kind relati
 
 **Weighted preferences** are kind-local updates, direct known-kind access, traversal across unfamiliar kinds, and a small public model. They are not equally weighted scores.
 
-**Broader same-kind hierarchy** is a proposed capability, not demonstrated adopter demand. Joint control is a constructed, unverified counterexample, not one of the supplied records. The recommendation permits it without giving array order a primary-parent or ranking meaning. Accepting this capability would prioritize evolution cost over the repository's real-problem guidance to defer conjectured needs. Neither Fluxx's one-per-kind position nor the later potentially-multiple-parent discussion establishes this choice as accepted.
+**Broader same-kind hierarchy** is a proposed capability, not demonstrated adopter demand. Joint control is a constructed, unverified counterexample, not one of the supplied records. The recommendation permits it without giving array order a primary-parent or ranking meaning. Accepting this capability would prioritize avoiding a later value-type change over deferring capability no adopter has requested. Neither Fluxx's one-per-kind position nor the later potentially-multiple-parent discussion establishes this choice as accepted.
 
 ### Options considered
 
@@ -148,7 +148,7 @@ One list is best if uniform enumeration of every edge dominates, but writers can
 - **Cons**
   - A sponsor edit replaces unrelated hierarchy and identity edges.
   - Singular limits and category classification need validation.
-  - Does not preserve the settled separate named links, so it is not recommended.
+  - Does not preserve the proposed separate named links, so it is not recommended.
 
 ### Option 3: Keyed singular hierarchy
 
@@ -199,7 +199,7 @@ Keyed arrays are best if narrow updates and broader relationships dominate, but 
   - Same-kind demand remains unverified, and stale writes within a kind remain possible.
   - If one-per-kind is selected, isolation does not justify arrays over keyed singular values.
 
-The recommendation gives the demonstrated synchronization concern more weight than native wire iteration. The preference for arrays over singular values remains an evolution judgment, not a supplied repeated-kind requirement.
+The recommendation gives the earlier synchronization concern more weight than native wire iteration. The preference for arrays over singular values remains an evolution judgment, not a supplied repeated-kind requirement.
 
 ### Custom-kind representation
 
