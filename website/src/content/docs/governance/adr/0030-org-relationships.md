@@ -250,7 +250,7 @@ Existing OrgSync authorization governs source-record changes; a relationship gra
 
 This decision partially supersedes ADR 0023's root-parent placement, not its reference-content or identifier decisions. It serves vendor engineers who need defined parent meanings and partial writers who must preserve data they do not model. A single root parent with a kind could serve one hierarchy link alongside sponsorship; we group hierarchy for kind-local updates, not because those meanings cannot coexist at the root.
 
-ADR 0023's parent placement and example require a reciprocal update when this decision lands. Its other identifier decisions remain in force.
+ADR 0023 carries a partial-supersession notice and shows the new placement in its example. Its other identifier decisions remain in force.
 
 **Lesson:** a reference's identity content does not determine the number or kinds of structural relationships. Keep identity, hierarchy labels, and cardinality explicit rather than interpreting every relationship as a parent.
 
