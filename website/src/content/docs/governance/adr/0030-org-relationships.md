@@ -9,7 +9,7 @@ This decision weighs a typed hierarchy array's native traversal against kind-key
 
 ## Decision
 
-We use an optional `relationships` container, with hierarchy grouped into kind-keyed arrays under `relationships.parents`. We keep `fiscalSponsor`, `successor`, and `duplicateOf` as distinct singular references, put current DBA names directly on the organization as a string array, and omit division.
+We use an optional `relationships` container, with hierarchy grouped into kind-keyed arrays under `relationships.parents`. We keep `fiscalSponsor`, `successor`, and `duplicateOf` as distinct singular references, put current DBA names directly on the organization as a string array, and add no separate division kind because `department` covers internal units.
 
 The deciding preference is **kind-local update isolation**. [ADR 0026](https://commongrants.org/governance/adr/0026-org-profile-syncing/) uses JSON Merge Patch: arrays replace whole, objects merge recursively, omitted members remain unchanged, and `null` removes members. A typed hierarchy array requires a writer changing one kind to preserve and resend all other hierarchy entries. A keyed representation lets that writer replace just the addressed kind. Consumers can normalize buckets locally into labeled edges for traversal; writers cannot obtain kind-local array updates without preserving other entries or changing the patch mechanism.
 
@@ -39,9 +39,9 @@ We choose arrays over keyed singular references to permit same-kind multiplicity
 - Preserve existing Merge Patch semantics and coherent target identity.
 - Distinguish custom hierarchy kinds from nonhierarchical extensions.
 - Limit this decision to organizations. Opportunities, awards, and `Award.parent` are unchanged. Organization status is handled separately in [PR 1252](https://github.com/HHS/simpler-grants-protocol/pull/1252).
-- Put DBA names on the organization and omit division.
+- Put DBA names on the organization and cover divisions with `department`.
 
-**Weighted preferences** are kind-local updates, direct known-kind access, traversal across unfamiliar kinds, and a small public model. They are not equally weighted scores.
+**Weighted preferences** are kind-local updates, direct known-kind access, traversal across unfamiliar kinds, inline custom-kind metadata, and a small public model. They are not equally weighted scores.
 
 **Same-kind multiplicity** is a deliberate evolution tradeoff, not a demonstrated adopter requirement. We prioritize avoiding a later value-type change over deferring it. Array order carries no primary-parent or ranking meaning.
 
