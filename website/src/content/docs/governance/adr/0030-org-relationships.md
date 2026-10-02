@@ -1,21 +1,21 @@
 ---
 title: Organization relationships
-description: ADR evaluating typed parent arrays and kind-keyed collections for organization relationships.
+description: ADR documenting the decision to use kind-keyed hierarchy arrays and distinct singular references for organization relationships.
 ---
 
 Organizations need to identify a containing organization without merging the two organizations' identities. Fluxx's examples also distinguish fiscal sponsorship, trading names, replacement organizations, and duplicate records. A department's parent reference can carry the university's identifiers so downstream systems can match it without interpreting Fluxx's local ID. [ADR 0023](https://commongrants.org/governance/adr/0023-org-ids/) established that reference content.
 
-The design question is whether a typed `parents` array or kind-keyed collections best balance uniform traversal, direct access, and partial updates. The [design discussion](https://github.com/HHS/simpler-grants-protocol/issues/1223) explored several representations. The later discussion moved toward a typed hierarchy array; this draft weighs that direction against kind-keyed arrays rather than treating either as an accepted design. Fluxx's stated cardinality is concurrent different kinds, but never two of the same kind. Its parent-plus-sponsor example does not establish repeated same-kind hierarchy.
+The [design discussion](https://github.com/HHS/simpler-grants-protocol/issues/1223) explored several representations and later moved toward a typed hierarchy array. This decision weighs its native traversal against kind-keyed collections' direct access and partial updates. Fluxx's stated cardinality is concurrent different kinds, but never two of the same kind. Its parent-plus-sponsor example does not establish repeated same-kind hierarchy.
 
 ## Decision
 
-**Recommendation for review:** use an optional `relationships` container, with hierarchy grouped into named arrays under `relationships.parents`. Keep `fiscalSponsor`, `successor`, and `duplicateOf` as separate singular references. Put current DBA names directly on the organization as a string array. This is a proposed decision, not a record of stakeholder acceptance.
+We use an optional `relationships` container, with hierarchy grouped into kind-keyed arrays under `relationships.parents`. We keep `fiscalSponsor`, `successor`, and `duplicateOf` as distinct singular references, put current DBA names directly on the organization as a string array, and omit division.
 
 The deciding preference is **kind-local update isolation**. [ADR 0026](https://commongrants.org/governance/adr/0026-org-profile-syncing/) uses JSON Merge Patch: arrays replace whole, objects merge recursively, omitted members remain unchanged, and `null` removes members. A typed hierarchy array requires a writer changing one kind to preserve and resend all other hierarchy entries. A keyed representation lets that writer replace just the addressed kind. Consumers can normalize buckets locally into labeled edges for traversal; writers cannot obtain kind-local array updates without preserving other entries or changing the patch mechanism.
 
-A typed array remains the strongest alternative when native uniform iteration and inline kind metadata outweigh narrow writes. This recommendation does not claim measured performance, a verified Fluxx writing workload, or lower total implementation cost.
+A typed array is the strongest alternative: it provides native uniform iteration and inline kind metadata. We give kind-local writes more weight than those benefits. This weighting is a design judgment, not measured performance, a verified Fluxx writing workload, or a claim of lower total implementation cost.
 
-Against keyed singular references, arrays can represent broader same-kind relationships, avoid a later singular-to-array change, and replace hierarchy references whole rather than recursively retaining metadata. Kind-local isolation itself does not distinguish keyed arrays from keyed singular values. If one-per-kind is the protocol rule, singular values remain a credible smaller alternative; arrays limited to one entry must earn their extra handling through evolution flexibility and whole-reference replacement.
+We choose arrays over keyed singular references to permit same-kind multiplicity without a later value-type change and to replace hierarchy references whole rather than recursively retaining metadata. Kind-local isolation does not distinguish these two keyed options. The cost is array handling even for a single target; multiplicity is an evolution tradeoff, not demonstrated Fluxx demand.
 
 - **Positive consequences**
   - Known-kind lookup returns the complete addressed collection directly.
@@ -43,17 +43,19 @@ Against keyed singular references, arrays can represent broader same-kind relati
 
 **Weighted preferences** are kind-local updates, direct known-kind access, traversal across unfamiliar kinds, and a small public model. They are not equally weighted scores.
 
-**Broader same-kind hierarchy** is a proposed capability, not demonstrated adopter demand. Joint control is a constructed, unverified counterexample, not one of the supplied records. The recommendation permits it without giving array order a primary-parent or ranking meaning. Accepting this capability would prioritize avoiding a later value-type change over deferring capability no adopter has requested. Neither Fluxx's one-per-kind position nor the later potentially-multiple-parent discussion establishes this choice as accepted.
+**Same-kind multiplicity** is a deliberate evolution tradeoff, not a required capability derived from adopter evidence. Joint control is a constructed, unverified counterexample, not a supplied record. Arrays permit multiple targets without giving order a primary-parent or ranking meaning. We prioritize avoiding a later value-type change over deferring this capability; we do not attribute that choice to Fluxx or to stakeholder consensus.
 
 ### Options considered
 
-1. Named singular hierarchy fields, with separate singular links.
-2. One typed list containing every relationship category.
-3. Hierarchy keyed by kind with singular reference values.
-4. A typed hierarchy array, with separate singular links.
-5. Hierarchy keyed by kind with array values, with separate singular links (recommended).
+| Option                                         | Result   | Deciding reason                                                                           |
+| ---------------------------------------------- | -------- | ----------------------------------------------------------------------------------------- |
+| Named singular hierarchy fields                | Rejected | One-per-kind limits require a later value-type change for multiplicity.                   |
+| One typed list for every relationship category | Rejected | Loses distinct named singular links and couples all edge updates.                         |
+| Kind-keyed singular hierarchy                  | Rejected | Keeps narrow writes, but limits cardinality and recursively merges references.            |
+| Typed hierarchy array                          | Rejected | Native traversal and inline metadata do not outweigh replacing unrelated kinds on writes. |
+| Kind-keyed hierarchy arrays                    | Selected | Isolates writes by kind while allowing multiplicity and whole-reference replacement.      |
 
-### Proposed representation
+### Representation
 
 This is an illustrative read structure, not compiled TypeSpec or a tested payload. `OrgRef` means the existing ID, name, and optional identifiers. Its ID is read-only, so writable relationship targets require a distinct write-reference variant rather than reuse of the read type without changes.
 
@@ -77,13 +79,13 @@ OrgParents
   otherParents: documented hierarchy label -> OrgRef array
 ```
 
-Both extension maps are optional. Read schemas must preserve [ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/)'s absent/null/value distinction. Patch null means removal independently of read null semantics; nullable schema emission has not been verified for this proposal.
+Both extension maps are optional. Read schemas must preserve [ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/)'s absent/null/value distinction. Patch null means removal independently of read null semantics; nullable schema emission has not been verified for this structure.
 
 ### Relationship meanings
 
 Every reference is stated on the source organization and points to its target. Hierarchy labels describe the source's relationship to its direct containing organization:
 
-- `parent`: confirmed containment when no more specific supported subtype is known. This proposed named fallback preserves the original parent need without forcing a subtype classification. Use the specific kind when known; do not repeat the same link as both generic parent and its subtype.
+- `parent`: confirmed containment when no more specific supported subtype is known. This named fallback preserves the original parent need without forcing a subtype classification. Use the specific kind when known; do not repeat the same link as both generic parent and its subtype.
 - `department`: an internal organizational unit within the target.
 - `chapter`: a local or regional unit under the target's organizational structure, not merely a network member.
 - `subsidiary`: a separate entity owned or controlled by the target. Several ownership interests do not automatically establish several controlling parents.
@@ -92,7 +94,7 @@ Every reference is stated on the source organization and points to its target. H
 - `duplicateOf`: the canonical record represents the same organization, not a replacement entity.
 - `dbaNames`: current trading names, not organization references or former-name history.
 
-The thread's `supersededBy` duplicate meaning maps to `duplicateOf`; `succeededBy` maps to the proposed `successor` name. The later design discussion moved away from a separately linked DBA record toward string names. These terminology and placement choices must not conflate the underlying meanings.
+The thread's `supersededBy` duplicate meaning maps to `duplicateOf`; `succeededBy` maps to `successor`. The later design discussion moved away from a separately linked DBA record toward string names. These terminology and placement choices must not conflate the underlying meanings.
 
 Custom parent labels must document containment and direction. Nonhierarchical labels belong in `otherRelationships`. Neither extension map may disguise additional fiscal sponsors, successors, or duplicate targets. Name-collision checks alone do not enforce this semantic boundary.
 
@@ -100,30 +102,49 @@ For duplicates, preserve the losing record and its link so an old reference can 
 
 ### Updates and reference integrity
 
-A patch to `relationships.parents.department` replaces that array only. Other kinds and singular links remain unchanged when omitted. A patch to one extension-map label replaces that label's array. `[]` leaves a present empty collection; `null` removes the member. No append, element merge, or merge-by-ID behavior is introduced. An empty collection must not automatically be equated with a read-side not-applicable assertion.
+| Patch input                              | Effect                                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `relationships.parents.department` array | Replaces only that kind; omitted kinds and singular links remain unchanged.                |
+| One extension-map label's array          | Replaces only that label's references.                                                     |
+| `[]`                                     | Leaves a present empty collection, not automatically a read-side not-applicable assertion. |
+| `null`                                   | Removes the addressed member.                                                              |
 
-Singular reference objects still merge recursively. When a target changes, providers resolve its identity and refresh its name and provider-derived identifiers, removing stale values when unavailable. Reject unresolved targets and contradictory metadata explicitly supplied by the sender atomically. Metadata retained from the old target by merging is refreshed before validation, not treated as contradictory sender input. Thus a resolvable ID-only target change can succeed. The same coherence checks apply when queued proposals are accepted against current state.
+No append, element merge, or merge-by-ID behavior is introduced.
 
-Proposed integrity checks reject self-links and identical edges, check hierarchy cycles across kinds, and check successor and duplicate cycles separately within the provider's known graph. An identical hierarchy edge has the same effective kind and target ID. These are proposed provider obligations, not claims that schemas enforce them or that one provider knows a complete cross-system graph.
+Singular reference objects still merge recursively. Providers apply the following coherence rules, including when queued proposals are accepted against current state:
+
+1. Resolve a changed target's identity and refresh its name and provider-derived identifiers; remove stale values when unavailable.
+2. Refresh metadata retained from the old target before validation, rather than treating it as contradictory sender input. A resolvable ID-only target change can succeed.
+3. Reject unresolved targets and contradictory metadata explicitly supplied by the sender atomically.
+
+Providers reject self-links and identical edges, check hierarchy cycles across kinds, and check successor and duplicate cycles separately within their known graph. An identical hierarchy edge has the same effective kind and target ID. These are provider obligations, not claims that schemas enforce them or that one provider knows a complete cross-system graph.
 
 ## Evaluation
 
 ### Side-by-side
 
-Required correctness screens come before preferences. There is no total score. “Multiple” describes what a shape can represent, not established demand.
+- ✅ Criterion met
+- ❌ Criterion not met
+- 🟡 Partially met or requires additional handling
 
-| Criterion                      | Named singular   | All-edge list                           | Keyed singular         | Typed parents               | Keyed arrays          |
-| ------------------------------ | ---------------- | --------------------------------------- | ---------------------- | --------------------------- | --------------------- |
-| Distinct named singular links  | Separate members | Extra category limits; no named members | Separate members       | Separate members            | Separate members      |
-| Existing Merge Patch           | Preserved        | Preserved                               | Preserved              | Preserved                   | Preserved             |
-| Different kinds concurrently   | Yes              | Yes                                     | Yes                    | Yes                         | Yes                   |
-| Same-kind hierarchy (proposed) | No               | Representable                           | No                     | Representable               | Representable         |
-| Known-kind access              | Direct reference | Filter all matches                      | Direct reference       | Filter all matches          | Direct complete array |
-| Hierarchy update boundary      | Member           | All relationships                       | Kind                   | All parents                 | Kind                  |
-| Uniform traversal              | Normalize fields | Iterate and classify                    | Normalize buckets      | Native labeled entries      | Normalize buckets     |
-| Custom kinds                   | Extension map    | Typed entries                           | Label-to-reference map | Typed entries with metadata | Label-to-array map    |
+Required capabilities screen out incompatible shapes before preferences are weighed. There is no checkmark total or equally weighted score. Multiplicity is a chosen evolution tradeoff, not established demand.
 
-### Option 1: Named singular hierarchy fields
+| Criterion                                        | Weight              | Named singular | All-edge list | Keyed singular | Typed parents | Keyed arrays |
+| ------------------------------------------------ | ------------------- | :------------: | :-----------: | :------------: | :-----------: | :----------: |
+| Distinct named singular links                    | Required            |       ✅       |      ❌       |       ✅       |      ✅       |      ✅      |
+| Existing Merge Patch semantics                   | Required            |       ✅       |      ✅       |       ✅       |      ✅       |      ✅      |
+| Different kinds concurrently                     | Required            |       ✅       |      ✅       |       ✅       |      ✅       |      ✅      |
+| Coherent target identity                         | Required            |       🟡       |      🟡       |       🟡       |      🟡       |      🟡      |
+| Distinguish custom hierarchy from other links    | Required            |       ✅       |      🟡       |       ✅       |      ✅       |      ✅      |
+| Kind-local hierarchy updates                     | Deciding preference |       ✅       |      ❌       |       ✅       |      ❌       |      ✅      |
+| Direct complete known-kind access                | Preference          |       ✅       |      ❌       |       ✅       |      ❌       |      ✅      |
+| Native uniform hierarchy traversal               | Preference          |       ❌       |      🟡       |       ❌       |      ✅       |      ❌      |
+| Inline custom-kind metadata                      | Preference          |       ❌       |      ✅       |       ❌       |      ✅       |      ❌      |
+| Same-kind multiplicity without value-type change | Evolution tradeoff  |       ❌       |      ✅       |       ❌       |      ✅       |      ✅      |
+
+All shapes need provider checks for coherent target identity. The all-edge list also needs category classification and singular-limit enforcement. Keyed shapes require traversal normalization; the all-edge list requires filtering hierarchy from other categories. These handling costs do not make traversal impossible.
+
+### Option 1: Named singular hierarchy fields — Rejected
 
 :::note[Bottom line]
 Named singular fields are best if direct access and one-per-kind dominate, but consumers can compromise on generic traversal and future same-kind multiplicity.
@@ -136,7 +157,7 @@ Named singular fields are best if direct access and one-per-kind dominate, but c
   - Cannot represent several standard parents of one kind.
   - Require field-aware traversal and coherence checks for recursive reference merging.
 
-### Option 2: One typed list for every category
+### Option 2: One typed list for every category — Rejected
 
 :::note[Bottom line]
 One list is best if uniform enumeration of every edge dominates, but writers can compromise on update isolation and consumers on named access to singular links.
@@ -148,12 +169,12 @@ One list is best if uniform enumeration of every edge dominates, but writers can
 - **Cons**
   - A sponsor edit replaces unrelated hierarchy and identity edges.
   - Singular limits and category classification need validation.
-  - Does not preserve the proposed separate named links, so it is not recommended.
+  - Does not preserve the required separate named links.
 
-### Option 3: Keyed singular hierarchy
+### Option 3: Keyed singular hierarchy — Rejected
 
 :::note[Bottom line]
-Keyed singular values are best if one-per-kind becomes the rule, but consumers can compromise on native uniform traversal and a later value-type change.
+Keyed singular values minimize single-target handling and retain kind-local writes, but impose one-per-kind cardinality. We reject that limit in favor of multiplicity without a later value-type change.
 :::
 
 - **Pros**
@@ -163,10 +184,10 @@ Keyed singular values are best if one-per-kind becomes the rule, but consumers c
   - A broader same-kind case requires changing the value type.
   - Traversal requires normalization, and recursive reference merging needs coherence checks.
 
-### Option 4: Typed hierarchy array
+### Option 4: Typed hierarchy array — Rejected
 
 :::note[Bottom line]
-A typed hierarchy array is best if native uniform traversal and inline kind metadata dominate, but partial writers can preserve and resend unfamiliar hierarchy entries.
+A typed hierarchy array provides native uniform traversal and inline kind metadata. We reject its whole-hierarchy write boundary: partial writers must preserve and resend unfamiliar kinds to change one kind.
 :::
 
 This is the later discussion's direction and the strongest alternative to keyed arrays. Each entry contains `OrgRef` content and a kind. Standard kinds cover parent, department, chapter, and subsidiary; custom kinds carry documented label metadata. The three distinct singular links remain outside the array.
@@ -182,10 +203,10 @@ This is the later discussion's direction and the strongest alternative to keyed 
 
 One-per-kind is a validation question, not something inherently impossible with an array. The emitted schema and provider enforcement still need verification. This option's advantage is native entry uniformity, not exclusive support for traversal or multiplicity.
 
-### Option 5: Kind-keyed arrays (recommended)
+### Option 5: Kind-keyed arrays — Selected
 
 :::note[Bottom line]
-Keyed arrays are best if narrow updates and broader relationships dominate, but consumers can normalize buckets and obtain custom-label documentation separately.
+We select keyed arrays for kind-local updates, complete known-kind access, and multiplicity without a value-type change. We accept traversal normalization and separate custom-label documentation.
 :::
 
 - **Pros**
@@ -197,13 +218,18 @@ Keyed arrays are best if narrow updates and broader relationships dominate, but 
   - Traversal must normalize standard properties and custom-map members.
   - Custom labels lack inline extensible-enum metadata.
   - Same-kind demand remains unverified, and stale writes within a kind remain possible.
-  - If one-per-kind is selected, isolation does not justify arrays over keyed singular values.
+  - Single-target cases still require array handling; isolation alone does not justify arrays over keyed singular values.
 
-The recommendation gives the earlier synchronization concern more weight than native wire iteration. The preference for arrays over singular values remains an evolution judgment, not a supplied repeated-kind requirement.
+The preference for arrays over singular values is an evolution judgment, not a supplied repeated-kind requirement.
 
 ### Custom-kind representation
 
-A label-to-reference-array map preserves per-label replacement and deletion. A typed custom list preserves inline kind metadata but replaces all custom entries together. A label-to-group object with description and references can combine metadata and isolation but adds a public model and traversal rule; defer it without an established inline-metadata need. A fully dynamic map makes standard and custom traversal uniform but gives up generated named standard properties.
+| Representation                                        | Result   | Tradeoff                                                                                       |
+| ----------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| Label-to-reference-array map                          | Selected | Per-label replacement and deletion; documentation stays separate.                              |
+| Typed custom list                                     | Rejected | Inline metadata, but all custom entries replace together.                                      |
+| Label-to-group object with description and references | Rejected | Metadata and isolation, but an extra public model without an established inline-metadata need. |
+| Fully dynamic map                                     | Rejected | Uniform standard/custom traversal, but no generated named standard properties.                 |
 
 ### Supplied examples and limits
 
@@ -241,17 +267,17 @@ Existing OrgSync authorization governs source-record changes; a relationship gra
 | Field names           | camelCase; `other<Plural>` maps                     | Conforms: `otherParents`, `otherRelationships`         |
 | Response shapes       | Existing OrgSync envelopes and revisions            | Unchanged                                              |
 | Read nullability      | ADR 0024 absent/null/value                          | Conformance required; schema emission unverified       |
-| Parent placement      | ADR 0023 root parent                                | Diverges; partial-supersession proposal below          |
-| Extension cardinality | Existing single-reference extension maps            | Diverges; proposed array-valued exception below        |
+| Parent placement      | ADR 0023 root parent                                | Diverges; partial supersession below                   |
+| Extension cardinality | Existing single-reference extension maps            | Diverges; array-valued exception below                 |
 
 #### Parent placement and partial supersession
 
-The proposal changes ADR 0023's root-parent placement, not its reference-content or identifier decisions. It serves Fluxx's need for defined parent meanings and partial writers' need to preserve data they do not model. A single root parent with a kind could serve one hierarchy link alongside sponsorship; grouping is recommended for kind-local updates, not because those meanings cannot coexist at the root.
+This decision partially supersedes ADR 0023's root-parent placement, not its reference-content or identifier decisions. It serves Fluxx's need for defined parent meanings and partial writers' need to preserve data they do not model. A single root parent with a kind could serve one hierarchy link alongside sponsorship; we group hierarchy for kind-local updates, not because those meanings cannot coexist at the root.
 
-If accepted, amend ADR 0023's parent placement and example with a reciprocal link to this decision. Its other identifier decisions remain in force. No change to ADR 0023 is represented as accepted by this draft.
+ADR 0023's parent placement and example require a reciprocal update when this decision lands. Its other identifier decisions remain in force.
 
 **Lesson:** a reference's identity content does not determine the number or kinds of structural relationships. Keep identity, hierarchy labels, and cardinality explicit rather than interpreting every relationship as a parent.
 
-#### Proposed array-valued extension exception
+#### Array-valued extension exception
 
-Array-valued relationship maps differ from existing single-value extension maps. They would serve vendor engineers representing several targets under one documented label, but no named adopter demonstrated that need in the supplied evidence. Accepting the exception would prioritize avoiding a future value-type change over deferring conjectured capability. It is not a verified Fluxx requirement. Existing identifier and organization-reference collections remain unchanged; if this tradeoff is rejected, use single-value extensions or revisit the proposed capability rather than treating it as approved.
+We use array-valued maps for relationship extensions rather than the existing single-value extension pattern. This exception serves vendor engineers representing several targets under one documented label, but no named adopter demonstrated that need in the supplied evidence. We prioritize avoiding a future value-type change over deferring conjectured capability. It is not a verified Fluxx requirement. The exception is limited to relationship maps; existing identifier and organization-reference collections remain unchanged.
